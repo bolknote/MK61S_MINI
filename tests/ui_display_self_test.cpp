@@ -37,6 +37,9 @@ bool bulk_owned = false;
 
 MK61Display* main_lcd_pointer = nullptr;
 
+// Rendering may service device I/O. This host fixture has no storage worker.
+void storage_io_process() {}
+
 namespace exclusive_buffer {
 bool acquire(Owner owner, usize size) {
   if(owner != Owner::DISPLAY_FONT || !ui_display_test::bulk_bytes || size > ui_display_test::bulk_size) return false;

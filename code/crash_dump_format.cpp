@@ -80,6 +80,33 @@ class ReportBuilder {
       }
     }
 
+    // Keep the repeated label/value pair shared in the resident image.
+    // Formatting and truncation still use the same bounded primitives.
+    __attribute__((noinline)) void hex_field(const char* label, u32 value) {
+      text(label);
+      hex(value);
+    }
+    __attribute__((noinline)) void decimal_field(const char* label, u32 value) {
+      text(label);
+      decimal(value);
+    }
+
+    // Each NUL-separated label consumes the next adjacent record word.
+    // Read the object representation without treating member subobjects as
+    // an array; the compiler lowers the fixed-size copy to a word load.
+    __attribute__((noinline)) void hex_fields(const char* labels,
+                                             const Record& record,
+                                             usize offset) {
+      const u8* value = reinterpret_cast<const u8*>(&record) + offset;
+      while(*labels != 0) {
+        u32 word;
+        __builtin_memcpy(&word, value, sizeof(word));
+        hex_field(labels, word);
+        value += sizeof(u32);
+        while(*labels++ != 0) {}
+      }
+    }
+
     bool ok(void) const { return valid_; }
     usize length(void) const { return length_; }
 
@@ -90,25 +117,27 @@ class ReportBuilder {
     bool valid_;
 };
 
+// Record v1 fixes both field types and order. Guard the adjacent spans
+// consumed by hex_fields if a future edit changes that layout.
+static_assert(
+    offsetof(Record, stacked_xpsr) == offsetof(Record, stacked_r0) + 7 * sizeof(u32) &&
+    offsetof(Record, r11) == offsetof(Record, r4) + 7 * sizeof(u32) &&
+    offsetof(Record, psp) == offsetof(Record, msp) + sizeof(u32) &&
+    offsetof(Record, faultmask) == offsetof(Record, control) + 3 * sizeof(u32) &&
+    offsetof(Record, afsr) == offsetof(Record, cfsr) + 3 * sizeof(u32) &&
+    offsetof(Record, shcsr) == offsetof(Record, icsr) + sizeof(u32) &&
+    offsetof(Record, rcc_csr_after_reboot) == offsetof(Record, rcc_csr_at_fault) + sizeof(u32),
+    "Crash report word groups must remain adjacent");
+
 void append_registers(ReportBuilder& report, const Record& record) {
-  report.text("r0="); report.hex(record.stacked_r0);
-  report.text(",r1="); report.hex(record.stacked_r1);
-  report.text(",r2="); report.hex(record.stacked_r2);
-  report.text(",r3="); report.hex(record.stacked_r3);
-  report.text("\nr12="); report.hex(record.stacked_r12);
-  report.text(",lr="); report.hex(record.stacked_lr);
-  report.text(",pc="); report.hex(record.stacked_pc);
-  report.text(",xpsr="); report.hex(record.stacked_xpsr);
+  report.hex_fields("r0=\0,r1=\0,r2=\0,r3=\0"
+                    "\nr12=\0,lr=\0,pc=\0,xpsr=\0",
+                    record, offsetof(Record, stacked_r0));
   report.character('\n');
   if((record.capture_flags & CALLEE_SAVED_VALID) != 0) {
-    report.text("r4="); report.hex(record.r4);
-    report.text(",r5="); report.hex(record.r5);
-    report.text(",r6="); report.hex(record.r6);
-    report.text(",r7="); report.hex(record.r7);
-    report.text("\nr8="); report.hex(record.r8);
-    report.text(",r9="); report.hex(record.r9);
-    report.text(",r10="); report.hex(record.r10);
-    report.text(",r11="); report.hex(record.r11);
+    report.hex_fields("r4=\0,r5=\0,r6=\0,r7=\0"
+                      "\nr8=\0,r9=\0,r10=\0,r11=\0",
+                      record, offsetof(Record, r4));
     report.character('\n');
   }
 }
@@ -148,16 +177,13 @@ u16 format_report(const Record& record, u32 current_build_id,
   if(!valid(record) || output == 0 || capacity == 0) return 0;
 
   ReportBuilder report(output, capacity);
-  report.text("MK61 CRASH DUMP 1\nsequence=");
-  report.decimal(record.sequence);
+  report.decimal_field("MK61 CRASH DUMP 1\nsequence=", record.sequence);
   report.text(",exception=");
   report.text(exception_name(record.exception_number));
   report.character('(');
   report.decimal(record.exception_number);
-  report.text(")\nbuild=");
-  report.hex(record.build_id);
-  report.text(",current_build=");
-  report.hex(current_build_id);
+  report.hex_field(")\nbuild=", record.build_id);
+  report.hex_field(",current_build=", current_build_id);
   if(metadata != nullptr && metadata->device_public_id != nullptr &&
      metadata->current_build_profile != nullptr) {
     report.text("\ndevice_public=");
@@ -165,8 +191,7 @@ u16 format_report(const Record& record, u32 current_build_id,
     report.text(",current_profile=");
     report.text(metadata->current_build_profile);
   }
-  report.text("\nexc_return=");
-  report.hex(record.exc_return);
+  report.hex_field("\nexc_return=", record.exc_return);
   report.text(",frame=");
   report.text((record.capture_flags & FRAME_VALID) != 0 ? "valid" : "invalid");
   report.text(",stack=");
@@ -174,43 +199,31 @@ u16 format_report(const Record& record, u32 current_build_id,
   report.text(",fp=");
   report.text((record.capture_flags & EXTENDED_FP_FRAME) != 0
                   ? "extended" : "basic");
-  report.text(",persisted=");
-  report.decimal((record.capture_flags & PERSISTED_TO_C5) != 0 ? 1 : 0);
+  report.decimal_field(",persisted=", (record.capture_flags & PERSISTED_TO_C5) != 0 ? 1 : 0);
   report.character('\n');
 
   append_registers(report, record);
 
-  report.text("msp="); report.hex(record.msp);
-  report.text(",psp="); report.hex(record.psp);
-  report.text(",control="); report.hex(record.control);
-  report.text(",primask="); report.hex(record.primask);
-  report.text(",basepri="); report.hex(record.basepri);
-  report.text(",faultmask="); report.hex(record.faultmask);
+  report.hex_fields("msp=\0,psp=\0", record, offsetof(Record, msp));
+  report.hex_fields(",control=\0,primask=\0,basepri=\0,faultmask=\0", record, offsetof(Record, control));
   report.character('\n');
 
-  report.text("cfsr="); report.hex(record.cfsr);
-  report.text(",hfsr="); report.hex(record.hfsr);
-  report.text(",dfsr="); report.hex(record.dfsr);
-  report.text(",afsr="); report.hex(record.afsr);
-  report.text("\nmmfar="); report.hex(record.mmfar);
-  report.text(",mmfar_valid=");
-  report.decimal((record.cfsr & (1UL << 7)) != 0 ? 1 : 0);
-  report.text(",bfar="); report.hex(record.bfar);
-  report.text(",bfar_valid=");
-  report.decimal((record.cfsr & (1UL << 15)) != 0 ? 1 : 0);
-  report.text(",icsr="); report.hex(record.icsr);
-  report.text(",shcsr="); report.hex(record.shcsr);
+  report.hex_fields("cfsr=\0,hfsr=\0,dfsr=\0,afsr=\0", record, offsetof(Record, cfsr));
+  report.hex_field("\nmmfar=", record.mmfar);
+  report.decimal_field(",mmfar_valid=", (record.cfsr & (1UL << 7)) != 0 ? 1 : 0);
+  report.hex_field(",bfar=", record.bfar);
+  report.decimal_field(",bfar_valid=", (record.cfsr & (1UL << 15)) != 0 ? 1 : 0);
+  report.hex_fields(",icsr=\0,shcsr=\0", record, offsetof(Record, icsr));
   report.character('\n');
 
-  report.text("rcc_at_fault="); report.hex(record.rcc_csr_at_fault);
-  report.text(",rcc_after_reboot="); report.hex(record.rcc_csr_after_reboot);
-  report.text("\nuptime_ms="); report.decimal(record.runtime_uptime_ms);
-  report.text(",runtime_state="); report.decimal(record.runtime_state);
-  report.text(",runtime_detail="); report.hex(record.runtime_detail);
-  report.text("\nclassic_ticks="); report.decimal(record.classic_ticks);
-  report.text(",steps="); report.decimal(record.classic_steps);
-  report.text(",missed="); report.decimal(record.classic_missed);
-  report.text(",pending="); report.decimal(record.classic_pending);
+  report.hex_fields("rcc_at_fault=\0,rcc_after_reboot=\0", record, offsetof(Record, rcc_csr_at_fault));
+  report.decimal_field("\nuptime_ms=", record.runtime_uptime_ms);
+  report.decimal_field(",runtime_state=", record.runtime_state);
+  report.hex_field(",runtime_detail=", record.runtime_detail);
+  report.decimal_field("\nclassic_ticks=", record.classic_ticks);
+  report.decimal_field(",steps=", record.classic_steps);
+  report.decimal_field(",missed=", record.classic_missed);
+  report.decimal_field(",pending=", record.classic_pending);
   report.character('\n');
 
   return report.ok() && report.length() <= 0xFFFFU

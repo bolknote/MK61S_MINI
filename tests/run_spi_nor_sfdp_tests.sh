@@ -2,6 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
+out="${TMPDIR:-/tmp}/mk61_spi_nor_sfdp_self_test"
 CXX=${CXX:-c++}
 FLAGS=(-std=c++17 -Wall -Wextra -Werror -I"$root/code")
 
@@ -10,5 +11,5 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
 fi
 
 "$CXX" "${FLAGS[@]}" "$root/tests/spi_nor_sfdp_self_test.cpp" \
-  -o /tmp/mk61_spi_nor_sfdp_self_test
-/tmp/mk61_spi_nor_sfdp_self_test
+  -o "$out"
+"$out"

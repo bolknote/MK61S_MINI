@@ -18,7 +18,8 @@
     (defined(STM32F401xC) || defined(STM32F401xE)) && \
     defined(__GNUC__) && !defined(__clang__) && defined(__cplusplus) && \
     !defined(MK61_CORE_TRANSLATION_UNIT)
-  #pragma GCC optimize ("no-caller-saves", "no-schedule-insns2", "ira-algorithm=priority", "ira-region=one", "no-partial-inlining", "no-shrink-wrap")
+  // Match the native preset: share cold helpers instead of expanding each caller.
+  #pragma GCC optimize ("no-caller-saves", "no-schedule-insns2", "ira-algorithm=priority", "ira-region=one", "no-partial-inlining", "no-shrink-wrap", "no-inline-functions-called-once")
   // Keep large APP service handlers out of their common dispatcher. Smaller
   // register lifetimes recover Flash without changing the service ABI.
   #define MK61_F401_COLD_OUTLINE __attribute__((noinline, noclone))
