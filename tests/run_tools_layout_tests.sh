@@ -35,6 +35,8 @@ expected="$(
     certify_m0_pow_exact_small.py \
     certify_m0_pow_fast.py \
     certify_m0_pow_interval.py \
+    certify_m0_pow_near.py \
+    certify_m0_pow_short.py \
     certify_m0_small_sine.py \
     certify_m0_trig_inverse.py \
     font_preview_study.py \
