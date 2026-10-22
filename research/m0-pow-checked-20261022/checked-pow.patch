@@ -1,0 +1,1409 @@
+--- a/code/native_eabi_m0.hpp
++++ b/code/native_eabi_m0.hpp
+@@ -45,6 +45,9 @@
+ MK61_SOFT_PCS double mk61_m0_cr_log10(double);
+ MK61_SOFT_PCS double mk61_m0_cr_exp(double);
+ MK61_SOFT_PCS double mk61_m0_cr_pow(double,double);
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++MK61_SOFT_PCS double mk61_m0_cr_pow_refined(double,double);
++#endif
+ MK61_SOFT_PCS double mk61_m0_pow_fast(double,double);
+ MK61_SOFT_PCS double mk61_m0_exp(double);
+ uint64_t mk61_m0_mul_q62(uint64_t,uint64_t);
+--- a/code/native_eabi_m0_cr.cpp
++++ b/code/native_eabi_m0_cr.cpp
+@@ -120,6 +120,13 @@
+ #undef exit
+ #define exit(n) __builtin_trap()
+ extern "C" double mk61_m0_cr_pow(double x,double y) { return core_pow::cr_pow(x,y); }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++// Internal precondition: positive finite normal x != 1, finite y, and
++// |y*log(x)| < 700, already checked by pow_refine_checked's Q94 stage.
++extern "C" double mk61_m0_cr_pow_refined(double x,double y) {
++  return core_pow::pow_accurate(x,y,1.0,x,core_pow::is_exact(x,y));
++}
++#endif
+ #undef CORE_MATH_POW
+ #undef CR_POW_H
+ #undef DINT_H
+--- a/code/native_eabi_m0_pow_fast.inc
++++ b/code/native_eabi_m0_pow_fast.inc
+@@ -186,18 +186,96 @@
+   else {t.low+=q.low;t.high+=q.high+U(t.low<old);}
+   return {t,94,128+(n+1)/2,k<0};
+ }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++__attribute__((always_inline)) inline U pow_log_third70(U);
++// Exact floor(v*delta/2^shift); callers prove the result fits uint64_t.
++__attribute__((always_inline)) inline U pow_near_mul_shift(U v,uint32_t delta,unsigned shift) {
++  const U lo=wide32(uint32_t(v),delta);
++  const U hi=wide32(uint32_t(v>>32),delta)+(lo>>32);
++  const U low=(hi<<32)|uint32_t(lo);
++  return (low>>shift)|((hi>>32)<<(64-shift));
++}
++// Let f=|x-1|<=2^-26 and D=ey-clz(f*2^62) in[3,6]. Then
++// 16<=|y*f|<512, and its Q80 encoding is exact in fewer than90bits.
++// The four logarithm terms, including integer floors, enclose the true
++// argument within8 Q80 units. See the exact-rational certificate.
++__attribute__((optimize("Os"),noinline,section(".m0_pow_near_one_refine")))
++static bool pow_near_one_refined_argument(U xb,U yb,Product &argument,bool &negative) {
++  const U one=UINT64_C(0x3FF0000000000000),ym=yb&D::Magnitude;
++  const bool below=xb<one;const unsigned p=below?53U:52U;
++  const U distance=below?one-xb:xb-one;
++  if(!distance || distance>(U(1)<<(p-26))) return false;
++  const unsigned leading=clz64(distance)+p-62;
++  const int ey=int(ym>>52)-1023;
++  if(unsigned(ey-int(leading)-3)>3) return false;
++  const uint32_t delta=uint32_t(distance);const U sy=(ym&D::Fraction)|D::Hidden;
++  const U p0=wide32(uint32_t(sy),delta);
++  const U p1=wide32(uint32_t(sy>>32),delta)+(p0>>32);
++  const U low=(p1<<32)|uint32_t(p0),high=p1>>32;
++  const unsigned shift=unsigned(ey+28-int(p)); //5..35
++  Product linear={(high<<shift)|(low>>(64-shift)),low<<shift};
++  const U q0=wide32(uint32_t(linear.low),delta);
++  const U q1=wide32(uint32_t(linear.low>>32),delta)+(q0>>32);
++  const U q2=wide32(uint32_t(linear.high),delta)+(q1>>32);
++  const U qlow=(q1<<32)|uint32_t(q0);
++  const U quadratic=(qlow>>(p+1))|(q2<<(63-p));
++  const U cubic=pow_log_third70(pow_near_mul_shift(quadratic,delta,p-1));
++  const U quartic=pow_near_mul_shift(3*cubic,delta,p+2);
++  const U tail=below?quadratic+cubic+quartic:quadratic-cubic+quartic;
++  const U previous=linear.low;
++  if(below) {linear.low+=tail;linear.high+=linear.low<previous;}
++  else {linear.low-=tail;linear.high-=linear.low>previous;}
++  argument={(linear.high<<16)|(linear.low>>48),linear.low<<16};
++  negative=below^bool(yb&D::Sign);return true;
++}
++#endif
++
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++__attribute__((always_inline)) inline uint32_t pow_exp_linear32(uint32_t);
++__attribute__((always_inline)) inline bool pow_exp_argument_checked(const Product &argument,unsigned input_error,bool negative_argument,U &out) {
++#define M0_POW_EXP_REJECT() return false
++#define M0_POW_EXP_RESULT(value) do {out=(value);return true;} while(0)
++#define M0_POW_EXP_ZERO() do {out=0;return true;} while(0)
++#include "native_eabi_m0_pow_exp_body.inc"
++#undef M0_POW_EXP_REJECT
++#undef M0_POW_EXP_RESULT
++#undef M0_POW_EXP_ZERO
++}
++#endif
++
+ __attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension"))) static double pow_refine_checked(double x,double y) {
+   const U xb=bits(x),yb=bits(y),ym=yb&D::Magnitude;
+   const int ey=int(ym>>52)-1023;
+   if(xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity || ey < -12 || ey>64 || xb==UINT64_C(0x3FF0000000000000))
+     return mk61_m0_cr_pow(x,y);
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  Product argument;unsigned input_error;bool negative_argument;
++  if(pow_near_one_refined_argument(xb,yb,argument,negative_argument)) {
++    // The argument's Q80 enclosure has radius8. Its floor in Q64
++    // therefore has radius <1+8*2^-16, enclosed by2units.
++    const Product fast_argument={argument.high>>32,(argument.low>>32)|(argument.high<<32)};
++    U result;
++    if(pow_exp_argument_checked(fast_argument,2,negative_argument,result)) return real(result);
++    input_error=8U<<16;
++    goto pow_refined_exp;
++  }
++  {
++#endif
+   const PowRefinedLog logarithm=pow_refined_log(xb);
+   const int shift=int(logarithm.scale)-44-ey;
+   if(shift<0) return mk61_m0_cr_pow(x,y);
++#if !defined(MK61_M0_RP2040_EABI) || !MK61_M0_RP2040_EABI
+   Product argument;unsigned input_error;
++#endif
+   if(!pow_scaled_argument(logarithm.q,(ym&D::Fraction)|D::Hidden,unsigned(shift),argument) ||
+      !pow_argument_error(logarithm.error,unsigned(shift),input_error)) return mk61_m0_cr_pow(x,y);
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  negative_argument=logarithm.negative^bool(yb&D::Sign);
++  }
++pow_refined_exp:
++#else
+   const bool negative_argument=logarithm.negative^bool(yb&D::Sign);
++#endif
+   if((argument.high>>32)>=(negative_argument?746U:710U)) return real(negative_argument?0:D::Infinity);
+   if((argument.high>>32)>=700) return mk61_m0_cr_pow(x,y);
+   const U p0=wide32(uint32_t(argument.high),0xB8AA3B29U);
+@@ -235,7 +313,13 @@
+   q=r96_product(q,{(U(row[1])<<32)|row[0],row[2]});
+   U result;
+   if(r96_pack(q,(signed_n-int(index))/512,0,(1U<<24)+input_error,result)) return real(result);
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  // The failed Q94 enclosure is stronger than phase_1's software-double
++  // approximation. Enter its independent integer refinement directly.
++  return mk61_m0_cr_pow_refined(x,y);
++#else
+   return mk61_m0_cr_pow(x,y);
++#endif
+ }
+
+ // For |f|=|x-1|<=2^-36 and |y*f|<700, form y*(f-f*f/2)
+@@ -279,12 +363,22 @@
+
+ // Checked binary64 pow first tier. Every accepted cell contains its full interval.
+ struct PowFastLog {U low;uint32_t high,error;bool negative;unsigned scale;};
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++__attribute__((optimize("Os"),noinline,section(".m0_pow_extension"))) static PowFastLog pow_fast_log(int ey,U b) {
++#else
+ __attribute__((optimize("Os"),noinline,section(".m0_pow_extension"))) static PowFastLog pow_fast_log(U b) {
++#endif
+   if(b>=UINT64_C(0x3FEFFF8000000000) && b<=UINT64_C(0x3FF0004000000000)) {
+     const bool negative=b<UINT64_C(0x3FF0000000000000);
+     const U s=(b&D::Fraction)|D::Hidden;
+     const U a=negative?((D::Hidden<<1)-s)<<9:(s-D::Hidden)<<10;
+     const unsigned leading=clz64(a);
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++    // Here |f|<=2^-14. In this D range, |y*ln(x)|<513 cannot
++    // hit a far endpoint, but first-tier error is always>=260.
++    // The ordinary caller's scale check enters Q94 immediately.
++    if(unsigned(ey-int(leading)-3)<=3) return {0,0,0,false,0};
++#endif
+     const U q=a<<(leading-1),one=U(1)<<62,half=a>>1;
+     U factor=one+(negative?half:U(0)-half);unsigned error=4;
+     if(a>(U(1)<<27)) {
+@@ -363,7 +457,11 @@
+     const int ey=int(ym>>52)-1023;
+     if(xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity || ey < -12 || ey>64)
+       return pow_refine_checked(x,y);
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++    const PowFastLog logarithm=pow_fast_log(ey,xb);
++#else
+     const PowFastLog logarithm=pow_fast_log(xb);
++#endif
+     const U sy=(ym&D::Fraction)|D::Hidden;
+     const int signed_shift=int(logarithm.scale)-12-ey;
+     if(signed_shift<0) return pow_refine_checked(x,y);
+@@ -377,83 +475,13 @@
+     negative_argument=logarithm.negative^bool(yb&D::Sign);
+   }
+ pow_exp_argument:
+-  // The same certified residual polynomial covers finite results up
+-  // through overflow and gradual underflow. Far endpoints remain exact.
+-  if(argument.high>=(negative_argument?746U:710U)) return real(negative_argument?0:D::Infinity);
+-  const U p0=wide32(uint32_t(argument.low>>32),0xB8AA3B29U);
+-  const U p1=wide32(uint32_t(argument.high),0xB8AA3B29U)+(p0>>32);
+-  const uint32_t n=uint32_t((p1+(1U<<21))>>22);
+-  const U reduction=wide32(uint32_t(exp_step_high),n)+(U(uint32_t(exp_step_high>>32)*n)<<32);
+-  U r=argument.low-reduction-uint32_t(wide32(n,exp_step_low)>>32);
+-  int k=int(n);
+-  if(negative_argument) {r=U(0)-r;k=-k;}
+-  const bool negative=(r>>63)!=0;
+-  const U magnitude=negative?U(0)-r:r;
+-  // Protect the polynomial's certified domain independently of the segment
+-  // estimate. Opposing truncations keep split reduction error below
+-  // 1.001 Q64 units; certify_m0_exp_fast.py checks the complete interval.
+-  if(magnitude>UINT64_C(12912720851596686)) return pow_refine_checked(x,y); // 0.0007
+-  const U z=exp_high_square(magnitude)&((U(1)<<44)-1);
+-  const uint32_t t=uint32_t((magnitude+(1U<<21))>>22); // |r| in Q42
+-  // Evaluate r/6+r*r/24+r*r*r/120 in Q44; it still fits int32.
+-  // The combined coefficient error is <3 Q44 units. Including the fifth
+-  // term costs fewer wide products than the old Q40 fourth-degree path.
+-  const uint32_t linear=pow_exp_linear32(t);
+-  const uint32_t square=uint32_t((z+(1U<<22))>>23);
+-  const uint32_t quadratic=uint32_t(wide32(square+1,0xAAAAAAABU)>>33);
+-  const uint32_t cubic=(uint32_t(z>>32)*(t>>16)+(1U<<16))>>17;
+-  const uint32_t fifth=((cubic+7)*2185U)>>15;
+-  const int32_t tail=(negative?-int32_t(linear):int32_t(linear))+int32_t(quadratic)+
+-    (negative?-int32_t(fifth):int32_t(fifth));
+-  const uint32_t tail_magnitude=tail<0?uint32_t(-tail):uint32_t(tail);
+-  const U p=wide32(uint32_t(z),tail_magnitude);
+-  const U c=(wide32(uint32_t(z>>32),tail_magnitude)+(p>>32))>>12;
+-  const U delta=r+(z>>1)+(tail<0?U(0)-c:c);
+-  const unsigned index=unsigned(k)&511U;
+-  k=(k-int(index))/512;
+-  U q=exp_table[index];
+-  const bool below=(delta>>63)!=0;
+-  const U d=below?U(0)-delta:delta;
+-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+-  // The rounded13-product specialization has error<=1/2+2^-15.
+-  const U correction=mk61_m0_pow_exp_product(q,d);
+-#else
+-  const U cross=wide32(uint32_t(q),uint32_t(d>>32))+
+-    wide32(uint32_t(q>>32),uint32_t(d));
+-  const U correction=wide32(uint32_t(q>>32),uint32_t(d>>32))+(cross>>32)+1;
+-#endif
+-  q=below?q-correction:q+correction;
+-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+-  unsigned error=(input_error<=129?3U:4U)+(input_error+1)/2;
+-#else
+-  unsigned error=4+(input_error+1)/2;
+-#endif
+-  if(error>=256) return pow_refine_checked(x,y);
+-  if(q<(U(1)<<62)) {q<<=1;--k;error*=2;}
+-  if(k>1023) {
+-    // At exponent1024 the overflow midpoint is Q62 2^62-256.
+-    if(k>1024 || q-(U(1)<<62)+256>error) return real(D::Infinity);
+-    return pow_refine_checked(x,y);
+-  }
+-  if(k<-1022) {
+-    if(k<-1075) {
+-      const U half=U(1)<<63;
+-      if(k<-1076 || (q<half && half-q>error)) return 0.0;
+-    } else {
+-      const unsigned shift=unsigned(-k-1012);
+-      const U mask=(U(1)<<shift)-1,half=U(1)<<(shift-1),tail=q&mask;
+-      const U distance=tail>half?tail-half:half-tail;
+-      if(distance>error) {
+-        const U retained=q>>shift;
+-        return real(retained+U(tail>half || (tail==half && (retained&1))));
+-      }
+-    }
+-    return pow_refine_checked(x,y);
+-  }
+-  const uint32_t rounding_tail=uint32_t(q)&1023U;
+-  if(uint32_t(rounding_tail-(512U-error))<=2*error) return pow_refine_checked(x,y);
+-  const U rounded=(q+511+((q>>10)&1))>>10;
+-  return real((U(k+1022)<<52)+rounded);
++#define M0_POW_EXP_REJECT() return pow_refine_checked(x,y)
++#define M0_POW_EXP_RESULT(value) return real(value)
++#define M0_POW_EXP_ZERO() return 0.0
++#include "native_eabi_m0_pow_exp_body.inc"
++#undef M0_POW_EXP_REJECT
++#undef M0_POW_EXP_RESULT
++#undef M0_POW_EXP_ZERO
+ }
+
+ __attribute__((optimize("Os"),noinline,section(".m0_pow_dispatch_extension"))) MK61_SOFT_PCS double mk61_m0_pow_dispatch(double x,double y) {
+--- /dev/null
++++ b/code/native_eabi_m0_pow_exp_body.inc
+@@ -0,0 +1,78 @@
++// Shared checked Q62 exp argument stage; no coefficient or error-bound changes.
++  // The same certified residual polynomial covers finite results up
++  // through overflow and gradual underflow. Far endpoints remain exact.
++  if(argument.high>=(negative_argument?746U:710U)) M0_POW_EXP_RESULT(negative_argument?0:D::Infinity);
++  const U p0=wide32(uint32_t(argument.low>>32),0xB8AA3B29U);
++  const U p1=wide32(uint32_t(argument.high),0xB8AA3B29U)+(p0>>32);
++  const uint32_t n=uint32_t((p1+(1U<<21))>>22);
++  const U reduction=wide32(uint32_t(exp_step_high),n)+(U(uint32_t(exp_step_high>>32)*n)<<32);
++  U r=argument.low-reduction-uint32_t(wide32(n,exp_step_low)>>32);
++  int k=int(n);
++  if(negative_argument) {r=U(0)-r;k=-k;}
++  const bool negative=(r>>63)!=0;
++  const U magnitude=negative?U(0)-r:r;
++  // Protect the polynomial's certified domain independently of the segment
++  // estimate. Opposing truncations keep split reduction error below
++  // 1.001 Q64 units; certify_m0_exp_fast.py checks the complete interval.
++  if(magnitude>UINT64_C(12912720851596686)) M0_POW_EXP_REJECT(); // 0.0007
++  const U z=exp_high_square(magnitude)&((U(1)<<44)-1);
++  const uint32_t t=uint32_t((magnitude+(1U<<21))>>22); // |r| in Q42
++  // Evaluate r/6+r*r/24+r*r*r/120 in Q44; it still fits int32.
++  // The combined coefficient error is <3 Q44 units. Including the fifth
++  // term costs fewer wide products than the old Q40 fourth-degree path.
++  const uint32_t linear=pow_exp_linear32(t);
++  const uint32_t square=uint32_t((z+(1U<<22))>>23);
++  const uint32_t quadratic=uint32_t(wide32(square+1,0xAAAAAAABU)>>33);
++  const uint32_t cubic=(uint32_t(z>>32)*(t>>16)+(1U<<16))>>17;
++  const uint32_t fifth=((cubic+7)*2185U)>>15;
++  const int32_t tail=(negative?-int32_t(linear):int32_t(linear))+int32_t(quadratic)+
++    (negative?-int32_t(fifth):int32_t(fifth));
++  const uint32_t tail_magnitude=tail<0?uint32_t(-tail):uint32_t(tail);
++  const U p=wide32(uint32_t(z),tail_magnitude);
++  const U c=(wide32(uint32_t(z>>32),tail_magnitude)+(p>>32))>>12;
++  const U delta=r+(z>>1)+(tail<0?U(0)-c:c);
++  const unsigned index=unsigned(k)&511U;
++  k=(k-int(index))/512;
++  U q=exp_table[index];
++  const bool below=(delta>>63)!=0;
++  const U d=below?U(0)-delta:delta;
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  // The rounded13-product specialization has error<=1/2+2^-15.
++  const U correction=mk61_m0_pow_exp_product(q,d);
++#else
++  const U cross=wide32(uint32_t(q),uint32_t(d>>32))+
++    wide32(uint32_t(q>>32),uint32_t(d));
++  const U correction=wide32(uint32_t(q>>32),uint32_t(d>>32))+(cross>>32)+1;
++#endif
++  q=below?q-correction:q+correction;
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  unsigned error=(input_error<=129?3U:4U)+(input_error+1)/2;
++#else
++  unsigned error=4+(input_error+1)/2;
++#endif
++  if(error>=256) M0_POW_EXP_REJECT();
++  if(q<(U(1)<<62)) {q<<=1;--k;error*=2;}
++  if(k>1023) {
++    // At exponent1024 the overflow midpoint is Q62 2^62-256.
++    if(k>1024 || q-(U(1)<<62)+256>error) M0_POW_EXP_RESULT(D::Infinity);
++    M0_POW_EXP_REJECT();
++  }
++  if(k<-1022) {
++    if(k<-1075) {
++      const U half=U(1)<<63;
++      if(k<-1076 || (q<half && half-q>error)) M0_POW_EXP_ZERO();
++    } else {
++      const unsigned shift=unsigned(-k-1012);
++      const U mask=(U(1)<<shift)-1,half=U(1)<<(shift-1),tail=q&mask;
++      const U distance=tail>half?tail-half:half-tail;
++      if(distance>error) {
++        const U retained=q>>shift;
++        M0_POW_EXP_RESULT(retained+U(tail>half || (tail==half && (retained&1))));
++      }
++    }
++    M0_POW_EXP_REJECT();
++  }
++  const uint32_t rounding_tail=uint32_t(q)&1023U;
++  if(uint32_t(rounding_tail-(512U-error))<=2*error) M0_POW_EXP_REJECT();
++  const U rounded=(q+511+((q>>10)&1))>>10;
++  M0_POW_EXP_RESULT((U(k+1022)<<52)+rounded);
+--- a/third_party/core_math/pow/pow.c
++++ b/third_party/core_math/pow/pow.c
+@@ -1494,6 +1494,15 @@
+   return -1074 <= e * (int) n && e * (int) n + t <= 1024;
+ }
+
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++// The integer phases recompute their enclosure independently of phase_1.
++// Keep one body for the normal fallback and for an undecided Q94 interval.
++__attribute__((noipa,section(".m0_pow_accurate")))
++static double pow_accurate(double x,double y,double s,double x0,int exact) {
++#include "pow_accurate_body.inc"
++}
++#endif
++
+ // Correctly rounded power function
+ double cr_pow (double x, double y) {
+   double s = 1.0; /* sign of the result */
+@@ -1804,159 +1813,9 @@
+     return 1.0;
+ #endif /* ENABLE_FP */
+
+-  uint64_t rd; // used in the 2nd and 3rd phases
+-
+-// Second iteration of rounding
+-#if ENABLE_ZIV2 > 0
+-  dint64_t X, Y;
+-  dint_fromd (&X, x); /* exact: |x| = 2^(X->ex-63) * X->hi (X->lo = 0) */
+-  dint_fromd (&Y, y); /* exact: |y| = 2^(Y->ex-63) * Y->hi (Y->lo = 0) */
+-
+-  X.sgn = 0x0; /* force the sign of X to +1 */
+-
+-  dint64_t R;
+-  log_2 (&R, &X); /* relative error bounded by 2^-122.88 */
+-
+-  mul_dint_21 (&R, &R, &Y);
+-  /* The rounding error of mul_dint_21() is bounded by 2 ulps, which is at most
+-     2*2^-127 in terms of relative error. Thus the relative error on R is
+-     bounded by (1+e1)*(1+e2)-1 with e1=2^-122.88 and e2=2*2^-127,
+-     which gives: R = y*log|x| * (1+eps1) with |eps1| < 2^-122.72 */
+-
+-  exp_2 (&R, &R); /* relative error < 2^-121.70:
+-                     R = exp(R_in) * (1+eps2) with |eps2| < 2^-121.70 */
+-
+-  /* We thus have R = |x|^y * exp(y*log|x|*eps1) * (1+eps2).
+-     Since y*log|x| < 744.45, we have |y*log|x|*eps1| < 744.45*2^-122.72
+-     < eps3 = 2^-113.179 thus the relative error is bounded by
+-     exp(eps3)*(1+eps2)-1 < 2^-113.17.
+-     This corresponds to an error of at most 2^-113.17*2^128 < 29126 ulps. */
+-
+-  /* Remark: since eps3 = 2^-113.179, it would suffice to get about 113 bits
+-     of accuracy in exp_2(). We tried to reduce the degree of the minimax
+-     polynomial in q_2() from 7 to 6, or to use only 64 bits for the degree-3
+-     coefficient, but in both cases the accuracy was too small. */
+-
+-  // Rounding test
+-
+-  // 2^R.ex <= R < 2^(R.ex+1)
+-
+-  /* case R < 2^-1075: underflow case */
+-  if (R.ex < -1075) {
+-#ifdef CORE_MATH_SUPPORT_ERRNO
+-    errno = ERANGE; // underflow
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  return pow_accurate(x,y,s,x0,exact);
++#else
++#include "pow_accurate_body.inc"
+ #endif
+-    return 0.5 * (s * 0x1p-1074);
+-  }
+-
+-  if (R.ex < -1022) { /* subnormal case */
+-    // for x^y = 2^-1022, we can have R < 2^-1022 here
+-
+-    /* -1075 <= R.ex <= -1023 thus 2^-1075 <= R < 2^-1022 */
+-    uint64_t ex = -(1022 + R.ex); /* 1 <= ex <= 53 */
+-    // the significand has to be shifted right by ex bits
+-    uint64_t m = R.lo >> (10 + ex) | R.hi << (54 - ex);
+-
+-    /* We always have underflow when ex >= 2. However for ex=1,
+-       where 2^-1023 <= R < 2^-1022, we might not have underflow
+-       for rounding up if R >= 2^-1022 - 2^-1075, and for rounding
+-       to nearest for R >= 2^-1022 - 2^-1076. */
+-
+-    /* In principle, the bound 28 which holds for the normal case below
+-       should be replaced by ceil(28/2^ex) since the relative error bound
+-       is the same as for the normal case, but since the round bit is 'shifted'
+-       by 'ex' bits to the left, we get 'ex' extra bits after the round bit.
+-       Since ex>=1 we replace 28 by 14. */
+-
+-    rd = m + 14 > (2*14);
+-
+-  } else {
+-#define ERR_BND_2 28
+-    uint64_t lo = R.lo >> 10 | R.hi << 54;
+-    /* lo contains the 64 bits after the round bit */
+-    rd = lo + ERR_BND_2 > (2*ERR_BND_2);
+-    /* The value 28 comes from floor(29126/2^10): rd is 0 when lo <= 28 or
+-       lo >= 2^64 - 28, which means that the approximation R is at distance
+-       < 29*2^10 = 29696 ulps of a rounding boundary */
+-  }
+-
+-  R.sgn = s == -1.0;
+-
+-  if (rd)
+-    // dint_tod should deal with underflow/overflow/errno issues
+-    return dint_tod (&R, exact);
+-
+-#if ENABLE_EXACT > 0
+-  // Detect rounding boundary cases
+-  double e;
+-
+-  if (exact_pow (&e, x0, y, &R, exact))
+-    return e;
+-#endif /* ENABLE_EXACT */
+-#endif /* ENABLE_ZIV2 */
+-
+-  /* Note: exact and midpoint cases should be filtered by
+-     exact_pow() above, and should not enter the 2nd iteration.
+-     Thus check.sh might fail when POW_ITERATION | 2 == 0
+-     or POW_ITERATION | 4 == 0. */
+-
+-#if ENABLE_ZIV3
+-  // Hard to round cases
+-  qint64_t qX, qY;
+-  qint_fromd (&qX, x); /* exact */
+-  qint_fromd (&qY, y); /* exact */
+-
+-  qX.sgn = 0x0; /* force the sign of X to +1 */
+-
+-  qint64_t qR;
+-  log_3 (&qR, &qX); /* relative error bounded by 2^-250.74 */
+-
+-  mul_qint_41 (&qR, &qR, &qY);
+-  /* The rounding error of mul_qint_41() is bounded by 2 ulps, which is at most
+-     2*2^-255 in terms of relative error. Thus the relative error on qR is
+-     bounded by (1+e1)*(1+e2)-1 with e1=2^-250.74 and e2=2*2^-255,
+-     which gives a relative error less than 2^-250.59:
+-     qR = y*log|x| * (1+eps1) with |eps1| < 2^-250.59 */
+-
+-  qint64_t qZ;
+-  exp_3 (&qZ, &qR); /* relative error < 2^-241.10:
+-                       qZ = exp(qR) * (1+eps2) with |eps2| < 2^-241.10 */
+-
+-  /* We thus have qZ = |x|^y * exp(y*log|x|*eps1) * (1+eps2).
+-     Since y*log|x| < 744.45, we have |y*log|x|*eps1| < 744.45*2^-250.59
+-     < eps3 = 2^-241.049 thus the relative error is bounded by
+-     exp(eps3)*(1+eps2)-1 < 2^-240.07.
+-     This corresponds to an error of at most 2^-240.07*2^256 < 62433 ulps. */
+-
+-  /* extra rounding test */
+-#define ERR_BND_3 60 /* floor(62433/2^10) */
+-  uint64_t r1 = qZ.hh << 54 | qZ.hl >> 10;
+-  uint64_t r2 = qZ.hl << 54 | qZ.lh >> 10;
+-  uint64_t r3 = qZ.lh << 54 | qZ.ll >> 10;
+-  rd = !((r1 == 0 && r2 == 0 && r3 <= ERR_BND_3) ||
+-         (~r1 == 0 && ~r2 == 0 && r3 + (2*ERR_BND_3) <= ERR_BND_3));
+-
+-  if (rd)
+-  {
+-    qZ.sgn = s == -1.0;
+-    qZ.ll = qZ.ll & (~0ull << 10);
+-
+-    return qint_tod (&qZ);
+-  }
+-
+-  /* We can end up here for x^y very close to 1. For |qR| < 2^-55,
+-     we have 1-2^-54 < exp(qR) < 1+2^-53, thus exp(qR) rounds either
+-     to nextbelow(1), to 1 or to nextabove(1). */
+-  if (qR.ex < -56) /* the upper limb h of qR encodes h/2^63, thus a number
+-                      in [1, 2) */
+-    return (qR.sgn == 0x0) ? 1.0 + 0x1p-100 : 1.0 - 0x1p-100;
+-
+-  printf ("Unexpected worst-case found.\n");
+-  printf ("Please report to core-math@inria.fr:\n");
+-  printf ("Worst-case of pow found: x,y=%la,%la\n", x, y);
+-  exit (1);
+-
+-#else
+-  return -0.0;
+-#endif /* ENABLE_ZIV3 */
+ }
+--- /dev/null
++++ b/third_party/core_math/pow/pow_accurate_body.inc
+@@ -0,0 +1,212 @@
++/* Correctly-rounded power function for two binary64 values.
++
++Copyright (c) 2022-2025 CERN and Inria
++Authors: Tom Hubrecht and Paul Zimmermann
++
++This file is part of the CORE-MATH project
++(https://core-math.gitlabpages.inria.fr/).
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all
++copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++SOFTWARE.
++*/
++
++/* For reference, the files in this directory were copied from the private
++   git repository gitlab.inria.fr:zimmerma/core-math-power.git, branch
++   two_step, revision f153eb68, before edition in the CORE-MATH git
++   repository. */
++
++/* References:
++   [1] Note on FastTwoSum with Directed Rounding, Paul Zimmermann,
++       https://hal.inria.fr/hal-03798376/, 2022.
++   [2] An efficient rounding boundary test for pow(x,y) in double precision,
++       Christoph Lauter, Vincent Lefèvre,
++       https://hal-ens-lyon.archives-ouvertes.fr/ensl-00169409, 2007.
++   [3] Arrondi correct de fonctions mathématiques, Fonctions univariées et
++       bivariées, certification et automatisation, Christoph Quirin Lauter,
++       PhD thesis, 2008, in french,
++       http://www.ens-lyon.fr/LIP/Pub/Rapports/PhD/PhD2008/PhD2008-07.pdf
++   [4] An efficient rounding boundary test for pow(x,y) in double precision,
++       Christoph Lauter, Vincent Lefèvre, IEEE Transactions on Computers,
++       volume 58, number 2, 197-207, 2009.
++   [5] Towards a correctly-rounded and fast power function in binary64
++       arithmetic, Tom Hubrecht, Claude-Pierre Jeannerod, Paul Zimmermann,
++       ARITH 2023 - 30th IEEE Symposium on Computer Arithmetic, 2023.
++       Detailed version (with full proofs) available at
++       https://inria.hal.science/hal-04159652.
++   [6] On Ziv's rounding test, F. De Dinechin, C. Lauter, J.-M. Muller,
++       S. Torres, ACM Trans. Math. Soft., volume 39, number 3, 2013.
++
++   This code corresponds to reference [5].       
++*/
++
++// Shared without changes from cr_pow: integer phases and final guard.
++  uint64_t rd; // used in the 2nd and 3rd phases
++
++// Second iteration of rounding
++#if ENABLE_ZIV2 > 0
++  dint64_t X, Y;
++  dint_fromd (&X, x); /* exact: |x| = 2^(X->ex-63) * X->hi (X->lo = 0) */
++  dint_fromd (&Y, y); /* exact: |y| = 2^(Y->ex-63) * Y->hi (Y->lo = 0) */
++
++  X.sgn = 0x0; /* force the sign of X to +1 */
++
++  dint64_t R;
++  log_2 (&R, &X); /* relative error bounded by 2^-122.88 */
++
++  mul_dint_21 (&R, &R, &Y);
++  /* The rounding error of mul_dint_21() is bounded by 2 ulps, which is at most
++     2*2^-127 in terms of relative error. Thus the relative error on R is
++     bounded by (1+e1)*(1+e2)-1 with e1=2^-122.88 and e2=2*2^-127,
++     which gives: R = y*log|x| * (1+eps1) with |eps1| < 2^-122.72 */
++
++  exp_2 (&R, &R); /* relative error < 2^-121.70:
++                     R = exp(R_in) * (1+eps2) with |eps2| < 2^-121.70 */
++
++  /* We thus have R = |x|^y * exp(y*log|x|*eps1) * (1+eps2).
++     Since y*log|x| < 744.45, we have |y*log|x|*eps1| < 744.45*2^-122.72
++     < eps3 = 2^-113.179 thus the relative error is bounded by
++     exp(eps3)*(1+eps2)-1 < 2^-113.17.
++     This corresponds to an error of at most 2^-113.17*2^128 < 29126 ulps. */
++
++  /* Remark: since eps3 = 2^-113.179, it would suffice to get about 113 bits
++     of accuracy in exp_2(). We tried to reduce the degree of the minimax
++     polynomial in q_2() from 7 to 6, or to use only 64 bits for the degree-3
++     coefficient, but in both cases the accuracy was too small. */
++
++  // Rounding test
++
++  // 2^R.ex <= R < 2^(R.ex+1)
++
++  /* case R < 2^-1075: underflow case */
++  if (R.ex < -1075) {
++#ifdef CORE_MATH_SUPPORT_ERRNO
++    errno = ERANGE; // underflow
++#endif
++    return 0.5 * (s * 0x1p-1074);
++  }
++
++  if (R.ex < -1022) { /* subnormal case */
++    // for x^y = 2^-1022, we can have R < 2^-1022 here
++
++    /* -1075 <= R.ex <= -1023 thus 2^-1075 <= R < 2^-1022 */
++    uint64_t ex = -(1022 + R.ex); /* 1 <= ex <= 53 */
++    // the significand has to be shifted right by ex bits
++    uint64_t m = R.lo >> (10 + ex) | R.hi << (54 - ex);
++
++    /* We always have underflow when ex >= 2. However for ex=1,
++       where 2^-1023 <= R < 2^-1022, we might not have underflow
++       for rounding up if R >= 2^-1022 - 2^-1075, and for rounding
++       to nearest for R >= 2^-1022 - 2^-1076. */
++
++    /* In principle, the bound 28 which holds for the normal case below
++       should be replaced by ceil(28/2^ex) since the relative error bound
++       is the same as for the normal case, but since the round bit is 'shifted'
++       by 'ex' bits to the left, we get 'ex' extra bits after the round bit.
++       Since ex>=1 we replace 28 by 14. */
++
++    rd = m + 14 > (2*14);
++
++  } else {
++#define ERR_BND_2 28
++    uint64_t lo = R.lo >> 10 | R.hi << 54;
++    /* lo contains the 64 bits after the round bit */
++    rd = lo + ERR_BND_2 > (2*ERR_BND_2);
++    /* The value 28 comes from floor(29126/2^10): rd is 0 when lo <= 28 or
++       lo >= 2^64 - 28, which means that the approximation R is at distance
++       < 29*2^10 = 29696 ulps of a rounding boundary */
++  }
++
++  R.sgn = s == -1.0;
++
++  if (rd)
++    // dint_tod should deal with underflow/overflow/errno issues
++    return dint_tod (&R, exact);
++
++#if ENABLE_EXACT > 0
++  // Detect rounding boundary cases
++  double e;
++
++  if (exact_pow (&e, x0, y, &R, exact))
++    return e;
++#endif /* ENABLE_EXACT */
++#endif /* ENABLE_ZIV2 */
++
++  /* Note: exact and midpoint cases should be filtered by
++     exact_pow() above, and should not enter the 2nd iteration.
++     Thus check.sh might fail when POW_ITERATION | 2 == 0
++     or POW_ITERATION | 4 == 0. */
++
++#if ENABLE_ZIV3
++  // Hard to round cases
++  qint64_t qX, qY;
++  qint_fromd (&qX, x); /* exact */
++  qint_fromd (&qY, y); /* exact */
++
++  qX.sgn = 0x0; /* force the sign of X to +1 */
++
++  qint64_t qR;
++  log_3 (&qR, &qX); /* relative error bounded by 2^-250.74 */
++
++  mul_qint_41 (&qR, &qR, &qY);
++  /* The rounding error of mul_qint_41() is bounded by 2 ulps, which is at most
++     2*2^-255 in terms of relative error. Thus the relative error on qR is
++     bounded by (1+e1)*(1+e2)-1 with e1=2^-250.74 and e2=2*2^-255,
++     which gives a relative error less than 2^-250.59:
++     qR = y*log|x| * (1+eps1) with |eps1| < 2^-250.59 */
++
++  qint64_t qZ;
++  exp_3 (&qZ, &qR); /* relative error < 2^-241.10:
++                       qZ = exp(qR) * (1+eps2) with |eps2| < 2^-241.10 */
++
++  /* We thus have qZ = |x|^y * exp(y*log|x|*eps1) * (1+eps2).
++     Since y*log|x| < 744.45, we have |y*log|x|*eps1| < 744.45*2^-250.59
++     < eps3 = 2^-241.049 thus the relative error is bounded by
++     exp(eps3)*(1+eps2)-1 < 2^-240.07.
++     This corresponds to an error of at most 2^-240.07*2^256 < 62433 ulps. */
++
++  /* extra rounding test */
++#define ERR_BND_3 60 /* floor(62433/2^10) */
++  uint64_t r1 = qZ.hh << 54 | qZ.hl >> 10;
++  uint64_t r2 = qZ.hl << 54 | qZ.lh >> 10;
++  uint64_t r3 = qZ.lh << 54 | qZ.ll >> 10;
++  rd = !((r1 == 0 && r2 == 0 && r3 <= ERR_BND_3) ||
++         (~r1 == 0 && ~r2 == 0 && r3 + (2*ERR_BND_3) <= ERR_BND_3));
++
++  if (rd)
++  {
++    qZ.sgn = s == -1.0;
++    qZ.ll = qZ.ll & (~0ull << 10);
++
++    return qint_tod (&qZ);
++  }
++
++  /* We can end up here for x^y very close to 1. For |qR| < 2^-55,
++     we have 1-2^-54 < exp(qR) < 1+2^-53, thus exp(qR) rounds either
++     to nextbelow(1), to 1 or to nextabove(1). */
++  if (qR.ex < -56) /* the upper limb h of qR encodes h/2^63, thus a number
++                      in [1, 2) */
++    return (qR.sgn == 0x0) ? 1.0 + 0x1p-100 : 1.0 - 0x1p-100;
++
++  printf ("Unexpected worst-case found.\n");
++  printf ("Please report to core-math@inria.fr:\n");
++  printf ("Worst-case of pow found: x,y=%la,%la\n", x, y);
++  exit (1);
++
++#else
++  return -0.0;
++#endif /* ENABLE_ZIV3 */
+--- a/third_party/core_math/provenance.json
++++ b/third_party/core_math/provenance.json
+@@ -60,7 +60,7 @@
+     },
+     "pow/pow.c": {
+       "upstream_sha256": "678fcee66219574d754b7fbd0091461b9caa85cceaf95dd39978efebc62b9757",
+-      "ported_sha256": "dd671f8191c81b5b70d81671e0d6e93afb385fe9e01b9d26d726f375aa66ffa1"
++      "ported_sha256": "9de7dbb7618725402faeed6b77f8ee060d215b4a7bc426cd507c073cd5242b2a"
+     },
+     "pow/pow.h": {
+       "upstream_sha256": "b7c21d4cf273c09e5d0d347907832de6013d18199bdf67f532132567dd9fcb0c",
+@@ -75,5 +75,11 @@
+       "log/dint.h"
+     ]
+   },
+-  "constant_storage": "C++ port shares byte-identical sin/cos/tan S,C and ln/log10 INVERSE_2,LOG_INV_2,P_2 arrays by const references with identical neutral storage types. No coefficients or mathematical algorithms changed."
++  "constant_storage": "C++ port shares byte-identical sin/cos/tan S,C and ln/log10 INVERSE_2,LOG_INV_2,P_2 arrays by const references with identical neutral storage types. No coefficients or mathematical algorithms changed.",
++  "pow_integer_body": {
++    "path": "pow/pow_accurate_body.inc",
++    "adapted_pow_sha256": "dd671f8191c81b5b70d81671e0d6e93afb385fe9e01b9d26d726f375aa66ffa1",
++    "sha256": "bcad277964a1cf39dead82972b436ece5a4b6acbaafc364d2f4c25cae2807b8d",
++    "description": "Extracted verbatim from the existing cr_pow integer128/exact/integer256 tail, including all rounding guards and the final rescue call. RP2040 shares one noipa body and can enter it after its Q94 guard; generic ARMv6-M retains the original expanded token stream."
++  }
+ }
+--- a/third_party/core_math/README.md
++++ b/third_party/core_math/README.md
+@@ -26,3 +26,12 @@
+ qualification reports.
+
+ Official project: https://core-math.gitlabpages.inria.fr/
++
++The RP2040 port shares the unmodified pow integer tail in
++`pow/pow_accurate_body.inc`. A checked internal entry can skip phase_1 after
++an undecided Q94 enclosure. The normal special/FP entry still reaches the
++same integer body. Both integer rounding tests, exact boundary detection,
++and the owned rescue remain unchanged. `provenance.json` also pins the
++original adapted pow file and the generated include; the vendor tool
++reproduces both from the same pinned upstream bytes. Other ARMv6-M builds
++expand the original body in place; Cortex-M4 does not compile this unit.
+--- a/tools/vendor_m0_core_math.py
++++ b/tools/vendor_m0_core_math.py
+@@ -83,6 +83,22 @@
+             log_type.replace('dint64_t;', 'Log;') + '\n' +
+             'static_assert(sizeof(Trig)==32 && sizeof(Log)==32,"CORE-MATH constant layout");\n}\n')
+
++def split_pow_integer_body(text):
++    """Share the existing integer phases; the generic token stream is retained."""
++    anchor='  uint64_t rd; // used in the 2nd and 3rd phases\n'
++    assert text.count(anchor)==1 and text.endswith('\n}\n')
++    head,tail=text.split(anchor)
++    tail=anchor+tail[:-2]
++    notice=text[:text.index('#include')]
++    marker='// Correctly rounded power function\n'
++    assert head.count(marker)==1
++    function='#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI\n// The integer phases recompute their enclosure independently of phase_1.\n// Keep one body for the normal fallback and for an undecided Q94 interval.\n__attribute__((noipa,section(".m0_pow_accurate")))\nstatic double pow_accurate(double x,double y,double s,double x0,int exact) {\n#include "pow_accurate_body.inc"\n}\n#endif\n\n'
++    head=head.replace(marker,function+marker)
++    entry='#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI\n  return pow_accurate(x,y,s,x0,exact);\n#else\n#include "pow_accurate_body.inc"\n#endif\n}\n'
++    body=notice+'// Shared without changes from cr_pow: integer phases and final guard.\n'+tail
++    return (head+entry).encode(),body.encode()
++
++
+ def main():
+     parser=argparse.ArgumentParser(description=__doc__)
+     parser.add_argument('--source',type=Path,required=True,help='core-math-binary64 checkout')
+@@ -96,6 +112,14 @@
+         assert hashlib.sha256(raw).hexdigest()==hashes['upstream_sha256'],filename
+         name=filename.split('/')[0]
+         result=share_storage(name,source.name,adapt(name,source.name,raw.decode())).encode()
++        if filename=='pow/pow.c' and 'pow_integer_body' in pin:
++            extra=pin['pow_integer_body']
++            assert hashlib.sha256(result).hexdigest()==extra['adapted_pow_sha256']
++            result,body=split_pow_integer_body(result.decode())
++            assert hashlib.sha256(body).hexdigest()==extra['sha256']
++            target=dest/extra['path']
++            if args.check:assert target.read_bytes()==body,extra['path']
++            else:target.write_bytes(body)
+         assert hashlib.sha256(result).hexdigest()==hashes['ported_sha256'],filename
+         target=dest/filename
+         if args.check:
+--- a/ports/picocalc/m0_math_extension.ld
++++ b/ports/picocalc/m0_math_extension.ld
+@@ -4,16 +4,579 @@
+  * Both code and tables execute/read directly from flash, with no RAM copy.
+  */
+ SECTIONS {
+-    /* Existing numerical bodies and constants retain their V75 cache indices. */
++    /* Preserve every pre-existing math input address after tail extraction. */
+     .m0_math_cold_text 0x100e17c0 : {
++        . = 0x0;
++        *compact_math.cpp.o*(.text._ZN12compact_math3sinEd)
++        . = 0xc;
++        *compact_math.cpp.o*(.text._ZN12compact_math3cosEd)
++        . = 0x18;
++        *compact_math.cpp.o*(.text._ZN12compact_math3tanEd)
++        . = 0x24;
++        *native_eabi_m0.cpp.o*(.text.unlikely.checked_trig_tan_sixth)
++        . = 0xae;
++        *native_eabi_m0.cpp.o*(.text.unlikely.checked_trig_backend)
++        . = 0xcc;
++        *native_eabi_m0.cpp.o*(.text.unlikely.atan_inverse_correction.constprop.0)
++        . = 0x440;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi3jamEyj)
++        . = 0x47e;
++        *native_eabi_m0.cpp.o*(.text.atan_fast_reciprocal)
++        . = 0x68a;
++        *native_eabi_m0.cpp.o*(.text.atan_fast_ratio)
++        . = 0x6cc;
++        *native_eabi_m0.cpp.o*(.text.unlikely.ln_refine)
++        . = 0x2018;
++        *native_eabi_m0.cpp.o*(.text.ln_near_one)
++        . = 0x24fc;
++        *native_eabi_m0.cpp.o*(.text.ln_near_interval)
++        . = 0x288c;
++        *native_eabi_m0.cpp.o*(.text.unlikely.atan_refine)
++        . = 0x3390;
++        *native_eabi_m0.cpp.o*(.text.atan_fast)
++        . = 0x3a60;
++        *native_eabi_m0.cpp.o*(.text.unlikely.checked_trig_tan_midpoint.isra.0)
++        . = 0x3c80;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi19divide_significandsEyyRy)
++        . = 0x3f30;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_atan_reduced)
++        . = 0x4420;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_ln)
++        . = 0x4918;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_atan)
++        . = 0x4c84;
++        *native_eabi_m0.cpp.o*(.text.__aeabi_lmul)
++        . = 0x4c8c;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_udiv32)
++        . = 0x4cd4;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi6BinaryILj52ELj11EE9normalizeEyRi)
++        . = 0x4d14;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_sqrt_slow)
++        . = 0x4d94;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi6BinaryILj52ELj11EE4packEyiy)
++        . = 0x4e2c;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi5fusedEyyy)
++        . = 0x5350;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_fma)
++        . = 0x5362;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi6BinaryILj23ELj8EE9normalizeEyRi)
++        . = 0x53a0;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi6extendEy)
++        . = 0x53f4;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_f2d_slow)
++        . = 0x53fe;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi6BinaryILj23ELj8EE4packEyiy)
++        . = 0x5498;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi6narrowEy)
++        . = 0x550c;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_d2f_slow)
++        . = 0x5514;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi6BinaryILj52ELj11EE3addEyy)
++        . = 0x5684;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_dadd_slow)
++        . = 0x568c;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi6BinaryILj52ELj11EE3mulEyy)
++        . = 0x586c;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_dmul_slow)
++        . = 0x5874;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi6BinaryILj52ELj11EE3divEyy)
++        . = 0x59bc;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_ddiv_slow)
++        . = 0x59c4;
++        *native_eabi_m0.cpp.o*(.text._ZN7m0_eabi6BinaryILj52ELj11EE17magnitude_integerEy)
++        . = 0x5a1c;
++        *native_eabi_m0.cpp.o*(.text.__aeabi_d2uiz)
++        . = 0x5a36;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_d2ulz_slow)
++        . = 0x5a4e;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_d2lz_slow)
++        . = 0x5a70;
++        *native_eabi_m0.cpp.o*(.text.mk61_m0_d2iz_slow)
++        . = 0x5aa0;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_sinL12cmp_dint_absEPKN14core_m0_shared4TrigES3_)
++        . = 0x5b78;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_sinL7cp_dintEPN14core_m0_shared4TrigEPKS1_)
++        . = 0x5b98;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_sinL8dint_todEPN14core_m0_shared4TrigE)
++        . = 0x5d7c;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN9core_asinL16as_asin_databaseEdd)
++        . = 0x5e2c;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_logL7cp_dintEPN14core_m0_shared3LogEPKS1_)
++        . = 0x5e4e;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_logL8cmp_dintEPKN14core_m0_shared3LogES3_)
++        . = 0x5eb4;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_logL8dint_todEPN14core_m0_shared3LogE)
++        . = 0x5f58;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL7cp_dintEPNS_8dint64_tEPKS0_)
++        . = 0x5f76;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL7cp_qintEPNS_8qint64_tEPKS0_)
++        . = 0x5fa4;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_expL15as_exp_databaseEdd)
++        . = 0x6074;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_sinL5a_mulEPdS0_dd)
++        . = 0x60bc;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_sinL5d_mulEPdS0_dddd)
++        . = 0x6100;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_sinL5s_mulEPdS0_ddd)
++        . = 0x6134;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_sinL10evalPSfastEPdS0_dddd)
++        . = 0x6214;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_sinL10evalPCfastEPdS0_dd)
++        . = 0x62d0;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN9core_atanL9muldd_accEddddPd)
++        . = 0x6370;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_sinL6set_ddEPdS0_yy)
++        . = 0x6510;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_sinL10dint_fromdEPN14core_m0_shared4TrigEd)
++        . = 0x65a0;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_sinL9normalizeEPN14core_m0_shared4TrigE)
++        . = 0x663a;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL12cmp_dint_absEPKNS_8dint64_tES2_)
++        . = 0x6704;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN9core_atanL15as_atan_refine2Edd)
++        . = 0x6d64;
++        *native_eabi_m0_cr.cpp.o*(.text._Z14mk61_m0_wide32mm)
++        . = 0x6d90;
++        *native_eabi_m0_cr.cpp.o*(.text._Zml15mk61_m0_uint128S_)
++        . = 0x6e3e;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_logL8mul_dintEPN14core_m0_shared3LogEPKS1_S4_)
++        . = 0x7034;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN10core_log10L8mul_dintEPN14core_m0_shared3LogEPKS1_S4_)
++        . = 0x722a;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL8mul_qintEPNS_8qint64_tEPKS0_S3_)
++        . = 0x77c6;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL11mul_qint_41EPNS_8qint64_tEPKS0_S3_)
++        . = 0x7a70;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_sinL6reduceEPN14core_m0_shared4TrigE)
++        . = 0x7f4c;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL10mul_qint_2EPNS_8qint64_tExPKS0_.constprop.0)
++        . = 0x8240;
++        *native_eabi_m0_cr.cpp.o*(.text._Z10core_rounddi)
++        . = 0x8354;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_sinL11reduce_fastEPdS0_dS0_)
++        . = 0x86bc;
++        *native_eabi_m0_cr.cpp.o*(.text._Z10core_ctzlly)
++        . = 0x86d8;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN9core_asinL16roundeven_finiteEd)
++        . = 0x8758;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN9core_acosL14as_acos_refineEdd)
++        . = 0x8f24;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_expL15as_exp_accurateEd)
++        . = 0x9464;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL6is_intEd)
++        . = 0x947c;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN9core_asinL14as_asin_refineEdd)
++        . = 0x9ad8;
++        *native_eabi_m0_cr.cpp.o*(.text._ZlsIiLi0EE15mk61_m0_uint128S0_T_)
++        . = 0x9b6c;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL14mul_dint_int64EPNS_8dint64_tEPKS0_x.constprop.0)
++        . = 0x9d70;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN9core_atan7cr_atanEd)
++        . = 0xa184;
++        *native_eabi_m0_cr.cpp.o*(.text.mk61_m0_cr_atan)
++        . = 0xa18c;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN9core_asin7cr_asinEd)
++        . = 0xa53c;
++        *native_eabi_m0_cr.cpp.o*(.text.mk61_m0_cr_asin)
++        . = 0xa544;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN9core_acos7cr_acosEd)
++        . = 0xa9b4;
++        *native_eabi_m0_cr.cpp.o*(.text.mk61_m0_cr_acos)
++        . = 0xa9bc;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_exp6cr_expEd)
++        . = 0xad10;
++        *native_eabi_m0_cr.cpp.o*(.text.mk61_m0_cr_exp)
++        . = 0xad18;
++        *native_eabi_m0_cr.cpp.o*(.text._ZrsIyLi0EE15mk61_m0_uint128S0_T_)
++        . = 0xada8;
++        *native_eabi_m0_cr.cpp.o*(.text._ZrsIiLi0EE15mk61_m0_uint128S0_T_)
++        . = 0xae30;
++        *native_eabi_m0_cr.cpp.o*(.text._ZlsIyLi0EE15mk61_m0_uint128S0_T_)
++        . = 0xaecc;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_sinL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_)
++        . = 0xb2c0;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_cosL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_)
++        . = 0xb6b4;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_tanL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_)
++        . = 0xbaa8;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL8add_dintEPNS_8dint64_tEPKS0_S3_)
++        . = 0xbe9c;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL11add_qint_22EPNS_8qint64_tEPKS0_S3_)
++        . = 0xc2f0;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL8add_qintEPNS_8qint64_tEPKS0_S3_)
++        . = 0xcefc;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_sinL11mul_dint_21EPN14core_m0_shared4TrigEPKS1_S4_)
++        . = 0xd014;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely._ZN8core_sinL8mul_dintEPN14core_m0_shared4TrigEPKS1_S4_)
++        . = 0xd1ac;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_cos6cr_cosEd)
++        . = 0xd880;
++        *native_eabi_m0_cr.cpp.o*(.text.mk61_m0_cr_cos)
++        . = 0xd888;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_tanL8inv_dintEPN14core_m0_shared4TrigES2_)
++        . = 0xdba4;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_tanL12tan_accurateEd)
++        . = 0xdf30;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_tan6cr_tanEd)
++        . = 0xe80c;
++        *native_eabi_m0_cr.cpp.o*(.text.mk61_m0_cr_tan)
++        . = 0xe814;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_sin6cr_sinEd)
++        . = 0xef20;
++        *native_eabi_m0_cr.cpp.o*(.text.mk61_m0_cr_sin)
++        . = 0xef28;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_logL8add_dintEPN14core_m0_shared3LogEPKS1_S4_)
++        . = 0xf264;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_log6cr_logEd)
++        . = 0xf98c;
++        *native_eabi_m0_cr.cpp.o*(.text.mk61_m0_cr_ln)
++        . = 0xf994;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN10core_log10L8add_dintEPN14core_m0_shared3LogEPKS1_S4_)
++        . = 0xfcd0;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN10core_log108cr_log10Ed)
++        . = 0x10440;
++        *native_eabi_m0_cr.cpp.o*(.text.mk61_m0_cr_log10)
++        . = 0x10448;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL11mul_dint_11EPNS_8dint64_tEPKS0_S3_)
++        . = 0x104f8;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL11add_dint_11EPNS_8dint64_tEPKS0_S3_)
++        . = 0x10734;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL11mul_dint_21EPNS_8dint64_tEPKS0_S3_)
++        . = 0x10842;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL8mul_dintEPNS_8dint64_tEPKS0_S3_)
++        . = 0x109d0;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL11mul_qint_11EPNS_8qint64_tEPKS0_S3_)
++        . = 0x10a88;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE9normalizeEyRyRi)
++        . = 0x10ae8;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE5timesERKNS1_1BEy)
++        . = 0x10b68;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE3addERKNS1_1BES4_)
++        . = 0x10b98;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE7compareERKNS1_1BES4_)
++        . = 0x10bba;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE8subtractERKNS1_1BES4_)
++        . = 0x10bf8;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE9shifted64ERKNS1_1BEj)
++        . = 0x10c64;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE10differenceERKNS1_1BES4_)
++        . = 0x10c9c;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE9normalizeEyRyRi)
++        . = 0x10cfc;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE5timesERKNS1_1BEy)
++        . = 0x10d7c;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE3addERKNS1_1BES4_)
++        . = 0x10dac;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE7compareERKNS1_1BES4_)
++        . = 0x10dce;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE8subtractERKNS1_1BES4_)
++        . = 0x10e0c;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE9shifted64ERKNS1_1BEj)
++        . = 0x10e78;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE10differenceERKNS1_1BES4_)
++        . = 0x10eae;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE12word_productEmm)
++        . = 0x10eda;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE9incrementERKNS1_1BE)
++        . = 0x10f02;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE7productERKNS1_1BES4_b)
++        . = 0x10fb0;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE6divideERKNS1_1BEmb)
++        . = 0x11014;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE12log_mantissaEy)
++        . = 0x111c4;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE12exp_endpointERKNS1_1SE)
++        . = 0x11318;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE9any_belowERKNS1_1BEj)
++        . = 0x1135e;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE5shiftERKNS1_1BEib)
++        . = 0x1144c;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE7roundedERKNS1_1BEi)
++        . = 0x11518;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE14exact_boundaryEyyRy)
++        . = 0x1185c;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj512EE8evaluateEyyRy)
++        . = 0x11c74;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE12word_productEmm)
++        . = 0x11ca0;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE9incrementERKNS1_1BE)
++        . = 0x11cc8;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE7productERKNS1_1BES4_b)
++        . = 0x11d78;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE6divideERKNS1_1BEmb)
++        . = 0x11ddc;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE12log_mantissaEy)
++        . = 0x11fc4;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE12exp_endpointERKNS1_1SE)
++        . = 0x12134;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE9any_belowERKNS1_1BEj)
++        . = 0x1217a;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE5shiftERKNS1_1BEib)
++        . = 0x12268;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE7roundedERKNS1_1BEi)
++        . = 0x12330;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE14exact_boundaryEyyRy)
++        . = 0x12674;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN15m0_pow_interval5FixedILj1024EE8evaluateEyyRy)
++        . = 0x12b5c;
++        *native_eabi_m0_cr.cpp.o*(.text.unlikely.mk61_m0_pow_rescue)
++        . = 0x12bc4;
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_pow6cr_powEdd)
++        /* The extracted body and exactness test fit inside the old pow slot.
++         * The next fixed input offset rejects any accidental overlap. */
++        . = ALIGN(4);
++        *(.m0_pow_accurate)
++        *native_eabi_m0_cr.cpp.o*(.text._ZN8core_powL8is_exactEdd)
++        . = 0x15a08;
++        *native_eabi_m0_cr.cpp.o*(.text.mk61_m0_cr_pow)
++        . = 0x15a10;
++        *native_eabi_m0.S.o*(.text.__aeabi_i2d)
++        . = 0x15d7c;
++        *native_eabi_m0.S.o*(.text.__aeabi_d2f)
++        . = 0x15dc0;
++        *native_eabi_m0.S.o*(.text.__aeabi_dcmpeq)
++        . = 0x15df4;
++        *native_eabi_m0.S.o*(.text.__aeabi_dcmplt)
++        . = 0x15e54;
++        *native_eabi_m0.S.o*(.text.__aeabi_dcmple)
++        . = 0x15eb4;
++        *native_eabi_m0.S.o*(.text.__aeabi_dcmpge)
++        . = 0x15f14;
++        *native_eabi_m0.S.o*(.text.__aeabi_dcmpgt)
++        . = 0x15f74;
++        *native_eabi_m0.S.o*(.text.__aeabi_dcmpun)
++        . = 0x15fa0;
++        *native_eabi_m0.S.o*(.text.__aeabi_d2iz)
++        . = 0x15ff0;
++        *native_eabi_m0.S.o*(.text.__aeabi_d2lz)
++        . = 0x1606c;
++        *native_eabi_m0.S.o*(.text.__aeabi_d2ulz)
++        . = 0x160d4;
++        *native_eabi_m0.S.o*(.text.mk61_m0_product62)
++        . = 0x161a0;
++        *native_eabi_m0.S.o*(.text.__aeabi_uidiv)
++        . = 0x161a8;
++        *native_eabi_m0.S.o*(.text.mk61_m0_math_udiv32)
++        . = 0x161cc;
++        *native_eabi_m0.S.o*(.text.__aeabi_idiv0)
++        . = 0x161ce;
++        *native_eabi_m0.S.o*(.text.__aeabi_ldiv0)
++        . = 0x161d0;
++        *native_eabi_m0_rp2040.S.o*(.text.mk61_rp2040_arithmetic)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    /* Do not move the pre-existing long-call veneer group after adding code. */
++    .m0_pow_new_cold 0x100f8400 : {
+         *compact_math.cpp.o*(.text*)
+         *native_eabi_m0.cpp.o*(.text*)
+         *native_eabi_m0_cr.cpp.o*(.text*)
+         *native_eabi_m0.S.o*(.text*)
+         *native_eabi_m0_rp2040.S.o*(.text*)
+-        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+-    } > FLASH
++        *(.m0_pow_near_one_refine)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    ASSERT(ADDR(.m0_math_cold_text) + SIZEOF(.m0_math_cold_text) <= ADDR(.m0_pow_new_cold),
++           "Existing math veneers overlap new pow helpers")
++    ASSERT(ADDR(.m0_pow_new_cold) + SIZEOF(.m0_pow_new_cold) <= 0x100fa070,
++           "New pow helpers overlap existing constants")
+     .m0_math_cold_data 0x100fa070 : {
++        . = 0x0;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL19trig94_coefficientsE)
++        . = 0x60;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL14trig_tan_tableE)
++        . = 0x6520;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL12trig94_tableE)
++        . = 0xb0b0;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL10log70_highE)
++        . = 0xb4b0;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL9log70_lowE)
++        . = 0xd4b0;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL17refine_atan_tableE)
++        . = 0xd7bc;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL16refine_log_tableE)
++        . = 0x137bc;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL16refine_exp_tableE)
++        . = 0x14fc0;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL14log_near_tableE)
++        . = 0x15fc0;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL8trig_pi2E)
++        . = 0x15fd8;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL9exp_tableE)
++        . = 0x16fd8;
++        *native_eabi_m0.cpp.o*(.rodata._ZN7m0_eabiL16reciprocal_seedsE)
++        . = 0x170d8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN8core_pow6cr_powEddE3err)
++        . = 0x170e8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN8core_powL8is_exactEddE4xmax)
++        . = 0x171f8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN8core_powL5log_1EPdS0_dE2cm)
++        . = 0x17208;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL2T2E)
++        . = 0x17608;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL2T1E)
++        . = 0x17a08;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL8_LOG_INVE)
++        . = 0x18568;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL8_INVERSEE)
++        . = 0x18b18;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL3Q_3E)
++        . = 0x18de8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL3P_3E)
++        . = 0x19148;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL4T2_3E)
++        . = 0x19d48;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL4T1_3E)
++        . = 0x1a948;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL12_LOG_INV_3_2E)
++        . = 0x1c178;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL12_LOG_INV_3_1E)
++        . = 0x1d2b8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL12_INVERSE_3_2E)
++        . = 0x1eae8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL12_INVERSE_3_1E)
++        . = 0x1fc28;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL6ZERO_QE)
++        . = 0x1fc58;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL10LOG2_INV_QE)
++        . = 0x1fc88;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL6LOG2_QE)
++        . = 0x1fcb8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL7M_ONE_QE)
++        . = 0x1fce8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL3Q_2E)
++        . = 0x1fde8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL3P_2E)
++        . = 0x1ff08;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL4T2_2E)
++        . = 0x20708;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL4T1_2E)
++        . = 0x20f08;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL12_LOG_INV_2_2E)
++        . = 0x21f28;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL12_LOG_INV_2_1E)
++        . = 0x22aa8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL12_INVERSE_2_2E)
++        . = 0x23ac8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL12_INVERSE_2_1E)
++        . = 0x24648;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL4ZEROE)
++        . = 0x24668;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL8LOG2_INVE)
++        . = 0x24688;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_powL5M_ONEE)
++        . = 0x246a8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN15m0_pow_intervalL8ln2_1024E)
++        . = 0x24728;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN8core_expL15as_exp_accurateEdE2ch)
++        . = 0x24798;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_expL2t1E)
++        . = 0x24b98;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_expL2t0E)
++        . = 0x24f98;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN8core_expL15as_exp_databaseEddE2s2)
++        . = 0x24fa8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_expL2dbE)
++        . = 0x25140;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN10core_log108cr_log10EdE5pow10)
++        . = 0x25240;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN10core_log10L8_LOG_INVE)
++        . = 0x268f0;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN10core_log10L8_INVERSEE)
++        . = 0x27448;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN10core_log10L4ZEROE)
++        . = 0x27468;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN10core_log10L14ONE_OVER_LOG10E)
++        . = 0x27488;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN10core_log10L5M_ONEE)
++        . = 0x274a8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN8core_logL11cr_log_fastEPdS0_iNS_6d64u64EE2cm)
++        . = 0x274b8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN8core_logL11cr_log_fastEPdS0_iNS_6d64u64EE2cy)
++        . = 0x274c8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_logL8_LOG_INVE)
++        . = 0x28b78;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_logL8_INVERSEE)
++        . = 0x296d0;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_logL3P_2E)
++        . = 0x29870;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_logL10_LOG_INV_2E)
++        . = 0x2b670;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_logL10_INVERSE_2E)
++        . = 0x2d470;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_logL4ZEROE)
++        . = 0x2d490;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_logL5M_ONEE)
++        . = 0x2d4b0;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN9core_acosL14as_acos_refineEddE1c)
++        . = 0x2d500;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN9core_acos7cr_acosEdE3off)
++        . = 0x2d520;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN9core_acos7cr_acosEdE2cc)
++        . = 0x2dd60;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN9core_asinL16as_asin_databaseEddE2db)
++        . = 0x2e018;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN9core_asinL14as_asin_refineEddE1c)
++        . = 0x2e068;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN9core_asinL14as_asin_refineEddE1s)
++        . = 0x2e278;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN9core_asin7cr_asinEdE3off)
++        . = 0x2e298;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN9core_asin7cr_asinEdE2cc)
++        . = 0x2ead8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN9core_atanL15as_atan_refine2EddE2db)
++        . = 0x2ebf8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN9core_atanL15as_atan_refine2EddE2ch)
++        . = 0x2ec28;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN9core_atanL1cE)
++        . = 0x2ece8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN9core_atanL1AE)
++        . = 0x2f4f8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN8core_tanL12tan_accurateEdE10exceptions)
++        . = 0x2f528;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_tanL2PCE)
++        . = 0x2f5e8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_tanL2PSE)
++        . = 0x2f6a8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_tanL4TinvE)
++        . = 0x2fea8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_tanL5MAGICE)
++        . = 0x2fec8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_tanL3ONEE)
++        . = 0x2fee8;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_tanL4ZEROE)
++        . = 0x2ff08;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN8core_cosL12cos_accurateEdE10exceptions)
++        . = 0x2ff80;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_cosL2PCE)
++        . = 0x30040;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_cosL2PSE)
++        . = 0x30100;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_cosL5MAGICE)
++        . = 0x30120;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_cosL4ZEROE)
++        . = 0x30140;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN8core_sinL12sin_accurateEdE10exceptions)
++        . = 0x30170;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZZN8core_sinL8sin_fastEPdS0_dE3sgn)
++        . = 0x30180;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_sinL2SCE)
++        . = 0x31980;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_sinL2PCE)
++        . = 0x31a40;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_sinL2PSE)
++        . = 0x31b00;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_sinL1CE)
++        . = 0x33b00;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_sinL1SE)
++        . = 0x35b00;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_sinL1TE)
++        . = 0x35ba0;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_sinL5MAGICE)
++        . = 0x35bc0;
++        *native_eabi_m0_cr.cpp.o*(.rodata._ZN8core_sinL4ZEROE)
++        . = 0x35be0;
++        *native_eabi_m0_cr.cpp.o*(.rodata)
++        . = 0x35bf0;
+         *native_eabi_m0.cpp.o*(.rodata*)
+         *native_eabi_m0_cr.cpp.o*(.rodata*)
+         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));

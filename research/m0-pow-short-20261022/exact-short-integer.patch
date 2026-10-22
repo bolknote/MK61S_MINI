@@ -1,0 +1,48 @@
+--- a/code/native_eabi_m0_pow_integer.inc
++++ b/code/native_eabi_m0_pow_integer.inc
+@@ -8,6 +8,30 @@
+   if(a&(U(1)<<63)) {a>>=1;++ea;error=(error>>1)+1;}
+   return true;
+ }
++// A short odd significand can be raised exactly in one uint64_t.
++// Enter only for powers3..8; its bit-length bound proves every product fits.
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++__attribute__((optimize("Os"),noinline,section(".m0_pow_exact_extension"))) static U pow_short_integer(U xb,unsigned n) {
++  const U undecided=D::Infinity|D::Quiet;
++  if(n<3 || n>8 || xb>=D::Infinity) return undecided;
++  if(xb<UINT64_C(0x0010000000000000)) return 0;
++  const U full=(xb&D::Fraction)|D::Hidden;
++  const unsigned zeros=63-clz64(full&(U(0)-full));
++  if((53-zeros)*n>64) return undecided;
++  const uint32_t a=uint32_t(full>>zeros);
++  U power=a;
++  if(a!=1) for(unsigned i=1;i<n;++i) {
++    const U low=wide32(uint32_t(power),a);
++    const uint32_t high=uint32_t(power>>32)*a+uint32_t(low>>32);
++    power=(U(high)<<32)|uint32_t(low);
++  }
++  const unsigned top=63-clz64(power);
++  const int scale=(int(xb>>52)-1075+int(zeros))*int(n);
++  const U significand=top>55?jam(power,top-55):power<<(55-top);
++  return D::pack(0,scale+int(top),significand);
++}
++#endif
++
+ __attribute__((optimize("Os"),noinline,section(".m0_pow_extension"))) static U pow_small_integer(U xb,uint32_t yh) {
+   unsigned n;
+   switch(yh) {
+@@ -19,6 +43,14 @@
+   case 0x40200000U:n=8;break;
+   default:return D::Infinity|D::Quiet;
+   }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  // A supported odd coefficient has <=21bits, hence >=32 trailing zeros
++  // in the normal binary64 significand. Full mantissas skip this branch.
++  if(!uint32_t(xb)) {
++    const U exact=pow_short_integer(xb,n);
++    if(exact!=(D::Infinity|D::Quiet)) return exact;
++  }
++#endif
+   if(xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity) return D::Infinity|D::Quiet;
+   const U base=((xb&D::Fraction)|D::Hidden)<<10;
+   const int base_e=int(xb>>52)-1023;

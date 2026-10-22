@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "recorded_at": "2026-10-21T20:31:14.320779+00:00",
-  "status": "PASS_OFFLINE_STABLE_ARENA_PLATFORM_ACCEPTANCE_PENDING",
+  "recorded_at": "2026-10-22T05:05:43.617433+00:00",
+  "status": "OFFLINE_QUALIFIED_TWO_HARD_POW_SPEED_GAPS_REMAIN",
   "objective": "M0+ speed at least Qfplib with correctly rounded binary64 results; M4 code unchanged.",
   "physical_v7": {
     "artifact": {
@@ -1577,10 +1577,9 @@
     ]
   },
   "remaining": [
-    "Wait for platform acceptance and the agreed memory-function window, then obtain explicit device release and the final immutable source/restore. The current 7AEA snapshot is unaccepted.",
-    "Rebase the arena onto that final platform, verify owned object payloads/addresses and resources, and qualify before hardware timing.",
-    "Measure the complete 114-group hardware matrix, including the three V72 speed gaps. Isolated cache models and instruction counts do not establish speed parity.",
-    "General binary64 pow totality outside the 224 exact-stage exponent values remains unproved; the final undecided trap is retained."
+    "Remove the observed regular/moderate hard pow speed gaps without weakening RNE.",
+    "Establish general pow totality outside the224 exact-stage exponents.",
+    "After cold-USB repair and platform/memory acceptance, rebase on the final frozen source/restore and perform physical timing; also check the two tied instruction streams."
   ],
   "semantics": "RNE return values. errno and floating-point exception flags are not implemented.",
   "physical_v7_fixed_layout_probe": {
@@ -10783,7 +10782,7 @@
       ]
     }
   },
-  "previous_goal_turn_assessment": "PROGRESS_V75_HELPERS_AND_SQRT_OFFLINE_QUALIFIED",
+  "previous_goal_turn_assessment": "PROGRESS_REAL_ROM_AND_MEMORY_COMPOSITIONS_QUALIFIED",
   "compact_log_v53_20261020": {
     "status": "PRODUCTION_NUMERIC_AND_RESOURCE_GATES_PASS_READY_FOR_HIL_NOT_PROMOTED",
     "source": ".build/m0-log-compact-v53-20261020/source",
@@ -12093,7 +12092,7 @@
       }
     ]
   },
-  "next_action": "After accepted platform and memory integration, rebase the fixed arena on the final frozen source, validate and perform the complete math hardware comparison.",
+  "next_action": "Accelerate the remaining small-dyadic and tiny-near-one hard pow families, keeping all RNE guards and M4 isolation. V87 is isolated and unpromoted. Rebase/physical timing requires final accepted platform/memory source, immutable matching restore and explicit USB release.",
   "trig_word_normalization_v61_20261021": {
     "status": "PASS_OFFLINE_GATES_PHYSICAL_PENDING",
     "work": ".build/m0-trig-word-normalization-v61-20261021",
@@ -12173,7 +12172,7 @@
     "gates": ".build/m0-cos70-v65-20261021/gates.json",
     "reason": "Correct cosine kernel resolves other smallcos cases, but the three targeted slowcos inputs select sine after reduction. V66 moves secondary refinement into a packed small-trig callee, adds sine kernels and removes the broader dispatcher liveness penalty."
   },
-  "hardware_constraint": "Platform acceptance is pending. The agreed sequence is platform, memory scout/SRAM-Flash integration, then math; no math USB access before explicit release.",
+  "hardware_constraint": "Platform owner retains USB:11HIL+10warm resets passed, but the real battery/USB cold cut repeats the USB HardFault on2/2 boots. Await platform fix/acceptance and memory window; math made no USB access.",
   "small_trig_v66_20261021": {
     "status": "V66_FULL_OFFLINE_QUALIFICATION_PASS_PHYSICAL_PENDING_NOT_PROMOTED",
     "report": "doc/measurements/m0-small-trig-20261021.json",
@@ -12699,7 +12698,7 @@
     "M4": "PASS_BYTE_IDENTITY",
     "generic_M0": "PASS_BYTE_IDENTITY"
   },
-  "current_candidate": ".build/m0-stable-arena-v77-20261021",
+  "current_candidate": ".build/m0-pow-stable-v87-20261022",
   "f2d_no_literal_v74_20261021": {
     "report": "doc/measurements/m0-f2d-no-literal-v74-20261021.json",
     "root_promoted": false,
@@ -12750,5 +12749,101 @@
     "physical_timing_available": false,
     "M4": "PASS_BYTE_IDENTITY",
     "generic_M0": "PASS_BYTE_IDENTITY"
+  },
+  "current_goal_turn_assessment": "PROGRESS_SHARED_POW_TAIL_Q80_NEAR_ONE_AND_EXP_REUSE_ONE_HARD_GAP_REMOVED",
+  "real_ROM_v78_20261021": {
+    "report": "doc/measurements/m0-real-rom-v78-20261021.json",
+    "root_promoted": false,
+    "rounding_cases": 265409,
+    "instruction_cases": 23091,
+    "instruction_groups_faster": 112,
+    "instruction_groups_equal": 2,
+    "instruction_groups_slower": 0,
+    "CLZ_memory_models": 0,
+    "physical_timing_available": false
+  },
+  "memory_composition_v79_20261021": {
+    "report": "doc/measurements/m0-memory-compose-v79-20261021.json",
+    "root_promoted": false,
+    "platform_acceptance": "NOT_ACCEPTED",
+    "hardware_accessed": false,
+    "variants": {
+      "sram": {
+        "build": "b2ed0fcc",
+        "source": ".build/m0-memory-compose-v79-20261021/sram/source",
+        "rounding_cases": 265409,
+        "instruction_cases": 23091,
+        "instruction_groups_faster": 112,
+        "instruction_groups_equal": 2,
+        "instruction_groups_slower": 0,
+        "cold_inputs_at_identical_addresses": 274,
+        "additional_main_ram_bytes_vs_memory_candidate": 0,
+        "heap_bytes": 27944,
+        "direct_interval_cases_per_precision": 20,
+        "physical_timing_available": false
+      },
+      "flash": {
+        "build": "02480920",
+        "source": ".build/m0-memory-compose-v79-20261021/flash/source",
+        "rounding_cases": 265409,
+        "instruction_cases": 23091,
+        "instruction_groups_faster": 112,
+        "instruction_groups_equal": 2,
+        "instruction_groups_slower": 0,
+        "cold_inputs_at_identical_addresses": 274,
+        "additional_main_ram_bytes_vs_memory_candidate": 0,
+        "heap_bytes": 30520,
+        "direct_interval_cases_per_precision": 20,
+        "physical_timing_available": false
+      }
+    }
+  },
+  "pow_hard_v80_20261022": {
+    "report": "doc/measurements/m0-pow-hard-audit-v80-20261022.json",
+    "V79_full_saved_worst_cases": 1003177,
+    "wrong_rounding": 0,
+    "additional_hard_streams": 3,
+    "additional_hard_cases": 261,
+    "additional_hard_streams_slower_by_instructions": 3,
+    "old_114_group_matrix_is_complete_speed_audit": false,
+    "physical_timing_available": false
+  },
+  "pow_short_v81_20261022": {
+    "report": "doc/measurements/m0-pow-short-v81-20261022.json",
+    "patch": "research/m0-pow-short-20261022/exact-short-integer.patch",
+    "root_promoted": false,
+    "build": "ac29c39a",
+    "memory_placement_in_private_prototype": "flash",
+    "production_memory_selection_pending": true,
+    "rounding_cases": 265409,
+    "exact_integer_cases": 27647,
+    "new_acceptance_worst_cases": 5717,
+    "allocated_flash_delta_bytes": 280,
+    "additional_main_ram_bytes": 0,
+    "new_tables": 0,
+    "M4": "PASS_BYTE_IDENTITY",
+    "generic_M0": "PASS_BYTE_IDENTITY",
+    "physical_timing_available": false
+  },
+  "pow_checked_v87_20261022": {
+    "artifact": {
+      "path": "doc/measurements/m0-pow-checked-v87-20261022.json",
+      "sha256": "f1122ee775e029cf7b75ffe1c4a3388ed018267a094cf66b4e394935df140573"
+    },
+    "status": "OFFLINE_QUALIFIED_TWO_HARD_POW_SPEED_GAPS_REMAIN",
+    "final_instruction_groups_faster": 113,
+    "equal": 2,
+    "slower": 2,
+    "groups": 117,
+    "cases": 23352,
+    "full_million_algorithm_parent_V86_cases": 1003177,
+    "final_V87_all_function_cases": 265409,
+    "new_tables": 0,
+    "additional_main_ram_bytes": 0,
+    "allocated_flash_delta_vs_V81": 2576,
+    "root_promoted": false,
+    "hardware_installed": false,
+    "physical_timing_available": false,
+    "goal_complete": false
   }
 }

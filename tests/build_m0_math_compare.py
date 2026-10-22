@@ -8,6 +8,7 @@ identified production ELF supplies all owned code and RAM initializers.
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import shutil
 import struct
@@ -109,6 +110,37 @@ def corpus(folder,extra):
     return groups,p['adapter_source'] if 'adapter_source' in p else json.loads((folder/'final-remaining-profile.json').read_text())['adapter_source']
 
 
+def hard_pow_corpus(path):
+    """Add source-pinned difficult inputs, rechecking every expected value."""
+    report=json.loads(path.read_text())
+    assert report['status']=='PASS_PROFILE' and report['owned_wrong_rounding']==0
+    assert report['qfplib_source_sha256']==QFP_SHA
+    oracle=Oracle();groups=[]
+    expected_streams={'regular_exponents','near_one_large_exponents','moderate'}
+    assert len(report['groups'])==3 and {g['stream'] for g in report['groups']}==expected_streams
+    for group in report['groups']:
+        vectors=[]
+        for row in group['cases']:
+            a,b=int(row['a'],16),int(row['b'],16)
+            x,y=real(a),real(b)
+            assert math.isfinite(x) and math.isfinite(y) and x>0 and x!=1 and y!=0
+            if group['stream']=='near_one_large_exponents':
+                assert abs(x-1)<=2.**-20 and 16<abs(y)<=2.**52
+                assert abs(math.log(x)*y)<=512
+            else:
+                assert .01<=x<=100 and abs(y)<=16
+            expected=oracle.reference('pow',a,b)
+            assert expected==int(row['expected'],16),row
+            vectors.append((a,b,expected))
+        assert vectors
+        groups.append(dict(operation='pow',stream='hard_pow_'+group['stream'],kind=0,
+            own_symbol='_ZN12compact_math3powEdd',qfplib_symbol='qfp_composed_pow',vectors=vectors,
+            target_calls_per_round=512,
+            reference_kind='qfplib_composition',reference_formula='exp(mul(y, ln(x)))',
+            reference_domain='positive normal base; bounded finite exponent/logarithm-product; saved hard pow inputs'))
+    return groups
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--snapshot',type=Path,required=True)
@@ -123,9 +155,12 @@ def main():
     p.add_argument('--comparison-set',choices=('direct','composed','all'),default='direct',
                    help='Composed baselines explicitly combine Qfplib calls for asin/acos/log10/pow.')
     p.add_argument('--prepared-corpus',type=Path,help='Reuse exact hashed direct-comparison inputs from a prior benchmark build.')
+    p.add_argument('--hard-pow-profile',type=Path,help='Append three source-pinned difficult pow streams and revalidate their MPFR results')
     p.add_argument('--preserve-production-link',action='store_true',
                    help='Link only the reference, then join it to the production ELF without changing its veneers or RAM initializer.')
     a=p.parse_args()
+    if a.hard_pow_profile and a.comparison_set=='direct':
+        p.error('--hard-pow-profile requires --comparison-set composed or all')
     assert a.directory.startswith('MK61S-M0-TIMING-') and all(c.isalnum() or c=='-' for c in a.directory)
     assert sha(a.qfplib_source)==QFP_SHA,'Use the pinned comparison source'
     out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
@@ -141,6 +176,9 @@ def main():
     if composed:
         from m0_qfplib_compositions import corpus as composed_corpus
         groups=(groups if a.comparison_set=='all' else [])+composed_corpus()
+    if a.hard_pow_profile:
+        hard_groups=hard_pow_corpus(a.hard_pow_profile)
+        groups+=hard_groups
     # Keep the reference out of .text/.rodata so it cannot move the owned
     # tables or change their cache aliases compared with production.
     reference_section='.section .m0_qfplib,"ax",%progbits\n'
@@ -186,7 +224,9 @@ def main():
     inputs=out/'inputs';inputs.mkdir(exist_ok=True);chunks=[]
     for stream,g in enumerate(groups):
         for part,start in enumerate(range(0,len(g['vectors']),512)):
-            vectors=g['vectors'][start:start+512];index=len(chunks);loops=max(1,2048//len(vectors))
+            vectors=g['vectors'][start:start+512];index=len(chunks)
+            target_calls=g.get('target_calls_per_round',2048)
+            loops=max(1,target_calls//len(vectors))
             own,qfp=(elf.symbols[g[k]]|1 for k in ('own_symbol','qfplib_symbol'))
             assert 0x10000000<qfp<0x10200000
             assert 0x10000000<own<0x10200000 or 0x20000000<own<0x20042000
@@ -198,6 +238,7 @@ def main():
                 kind=g['kind'],cases=len(vectors),loops=loops,input=str(target),input_sha256=sha(target),
                 own_symbol=g['own_symbol'],qfplib_symbol=g['qfplib_symbol'],own_address=own,qfplib_address=qfp))
             chunks[-1].update({k:g[k] for k in ('reference_kind','reference_formula','reference_domain') if k in g})
+            if 'target_calls_per_round' in g:chunks[-1]['target_calls_per_round']=target_calls
     fixture=out/'TIMING-fixture.c';shutil.copy2(ROOT/'tests/fixtures/m0_math_compare_benchmark.c',fixture)
     assert '#define ROUNDS 12U' in fixture.read_text(),'Update the wire/estimator contract when changing round count'
     wrapper=out/'TIMING.c';wrapper.write_text(('#define MK61_M0_TIMING_CACHE 1\n' if a.cache_counters else '')+
@@ -221,6 +262,10 @@ def main():
             ' Owned math addresses and bytes match production; Qfplib is isolated at 0x10180000. Both libraries warm up inside the APP for at least 1000000 us before timing.',
         purpose='Private hardware comparison. Qfplib is included only in this diagnostic image; the production image does not link it.')
     report['comparison_set']=a.comparison_set
+    if a.hard_pow_profile:
+        report['hard_pow_profile']=dict(path=str(a.hard_pow_profile.resolve()),sha256=sha(a.hard_pow_profile),
+            streams=len(hard_groups),cases=sum(len(g['vectors']) for g in hard_groups),
+            scope='Exact encodings from the additional difficult pow profile; every expected result independently revalidated with directed MPFR bounds.')
     if a.prepared_corpus:
         report['prepared_corpus']=dict(path=str(a.prepared_corpus.resolve()),
             benchmark_sha256=sha(a.prepared_corpus/'benchmark.json'),scope='Exact input/result bits reused; function addresses resolved from the newly linked image.')

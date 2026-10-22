@@ -79,13 +79,14 @@ def corpus(name,samples):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--elf',type=Path,required=True)
+    parser.add_argument('--bootrom',type=Path,help='Execute captured RP2040 ROM bit/memory routines, without intrinsic models')
     parser.add_argument('--samples',type=int,default=10000)
     parser.add_argument('--operations',nargs='+',choices=OPERATIONS,default=OPERATIONS)
     parser.add_argument('--audit',action='store_true',help='Record mismatches instead of stopping; never reports PASS on a mismatch')
     parser.add_argument('--json',type=Path,required=True)
     args=parser.parse_args()
     sha=hashlib.sha256(args.elf.read_bytes()).hexdigest()
-    machine=Machine(args.elf,True)
+    machine=Machine(args.elf,True,bootrom=args.bootrom)
     oracle=Oracle()
     report={}
     for name in args.operations:
@@ -117,6 +118,9 @@ def main():
                     'The upstream pow guard after its 256-bit pass traps on an unknown worst case.'
                 ] if 'pow' in args.operations else [],
                 scope='Finite corpus, not an exhaustive proof over every binary64 input.')
+    if machine.bootrom_sha256:
+        result['actual_bootrom']=dict(sha256=machine.bootrom_sha256,initializers=machine.rom_initializers,
+                                     intrinsic_models=machine.rom_models)
     args.json.parent.mkdir(parents=True,exist_ok=True)
     args.json.write_text(json.dumps(result,indent=2)+'\n')
     if result['status']!='PASS':raise SystemExit(1)

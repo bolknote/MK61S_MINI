@@ -37,7 +37,7 @@ def quotient(x,y):
     return x/y
 
 class Machine:
-    def __init__(self,path,rp2040=False,stack_bytes=4096,instruction_budget=1000000):
+    def __init__(self,path,rp2040=False,stack_bytes=4096,instruction_budget=1000000,bootrom=None):
         assert 0<stack_bytes<=32768 and instruction_budget>0
         self.stack_bytes=stack_bytes
         self.instruction_budget=instruction_budget
@@ -52,13 +52,24 @@ class Machine:
         self.uc.mem_map(0xD0000000,0x1000)
         self.elf.load(self.uc)
         self.rom_models=[]
+        self.rom_initializers=[]
+        self.bootrom_sha256=None
+        self.rom_init_write_ranges=[]
+        if bootrom is not None:
+            assert rp2040,'A BootROM dump requires the RP2040 machine'
+            rom=Path(bootrom).read_bytes()
+            assert len(rom)==0x4000,'Expected the complete 16 KiB RP2040 BootROM'
+            self.uc.mem_map(0,0x4000)
+            self.uc.mem_write(0,rom)
+            self.bootrom_sha256=hashlib.sha256(rom).hexdigest()
         # Production Pico SDK wrappers normally resolve their ROM pointers at
         # boot. A function-only ELF test has not run that initializer. Model
-        # only CLZ and ISO C memory intrinsics; all floating arithmetic and
-        # quotient/remainder correction still execute the actual ARM code.
+        # only CLZ and ISO C memory intrinsics unless an exact ROM is supplied.
+        # In the latter mode execute the real SDK lookup initializers, wrappers
+        # and ROM bodies, including their instructions and memory accesses.
         for symbol,operation in (('__wrap___clzsi2','clz32'),('__wrap___clzdi2','clz64'),
             ('__wrap_memcpy','memcpy'),('__wrap_memset','memset')):
-            if symbol not in self.elf.symbols:continue
+            if bootrom is not None or symbol not in self.elf.symbols:continue
             self.rom_models.append(symbol)
             address=self.elf.symbols[symbol]&~1
             self.uc.hook_add(UC_HOOK_CODE,self.rom_intrinsic,operation,begin=address,end=address)
@@ -66,6 +77,24 @@ class Machine:
         self.uc.hook_add(UC_HOOK_MEM_READ,self.read_sio,begin=0xD0000070,end=0xD0000073)
         self.divisor_write_pc=0
         self.calls=0
+        if bootrom is not None:
+            for name,table in (('__aeabi_bits_init','aeabi_bits_funcs'),
+                               ('__aeabi_mem_init','aeabi_mem_funcs')):
+                if name not in self.elf.symbols:continue
+                begin=self.elf.symbols[table]
+                end=self.elf.symbols[table+'_end']
+                assert begin<end and (end-begin)%4==0 and end-begin<=256,(name,'lookup table')
+                self.rom_init_write_ranges=[(begin,end)]
+                try:
+                    returned=self.call(name,0,count=True)[0]&0xffffffff
+                finally:
+                    self.rom_init_write_ranges=[]
+                assert returned==1,(name,'ROM lookup failed')
+                pointers=struct.unpack('<'+'I'*((end-begin)//4),self.uc.mem_read(begin,end-begin))
+                assert all(0<value<0x4000 and value&1 for value in pointers),(name,pointers)
+                self.rom_initializers.append(dict(name=name,table=table,pointers=[hex(v) for v in pointers]))
+            self.calls=0
+            self.stack_lowest=SP
     def rom_intrinsic(self,uc,address,size,operation):
         del address,size
         a,b,n=(uc.reg_read(r) for r in (UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2))
@@ -106,6 +135,9 @@ class Machine:
             assert size==4
             uc.mem_write(0xD0000078,struct.pack('<I',3))
             return
+        if any(begin<=address and address+size<=end for begin,end in self.rom_init_write_ranges):
+            assert size==4 and address%4==0,('ROM initializer table write',hex(address),size)
+            return
         assert SP-self.stack_bytes<=address and address+size<=SP,('non-stack write',hex(address),size)
         self.stack_lowest=min(self.stack_lowest,address)
     def read_sio(self,uc,access,address,size,value,user):
@@ -143,7 +175,9 @@ class Machine:
         instructions=[0]
         def tick(*unused):instructions[0]+=1
         hook=uc.hook_add(UC_HOOK_CODE,tick) if count else None
-        if count:uc.ctl_remove_cache(0x08000000,0x10200000)
+        # Hooks are compiled into translation blocks. Flush all of them:
+        # cached ROM, flash and SRAM paths may have run without a code hook.
+        if count:uc.ctl_flush_tb()
         try:uc.emu_start(self.elf.symbols[name]|1,STOP,count=self.instruction_budget)
         finally:
             if hook is not None:uc.hook_del(hook)
@@ -363,6 +397,7 @@ def main():
     p.add_argument('--output-dir',type=Path,default=ROOT/'.build/m0-eabi-test')
     p.add_argument('--samples',type=int,default=1000)
     p.add_argument('--rp2040',action='store_true',help='Test SDK-derived normal kernels with a functional SIO divider model')
+    p.add_argument('--bootrom',type=Path,help='Execute RP2040 ROM bit/memory routines instead of modeling them')
     p.add_argument('--math-only',action='store_true',help='Qualify a production ELF whose unused helper symbols were removed by section GC')
     p.add_argument('--json',type=Path)
     a=p.parse_args()
@@ -370,7 +405,7 @@ def main():
     else:
         sys.path.insert(0,str(ROOT/'tools'));from build_picocalc import compiler_bin
         elf=build(compiler_bin(a.toolchain),a.output_dir,a.rp2040)
-    m=Machine(elf,a.rp2040)
+    m=Machine(elf,a.rp2040,bootrom=a.bootrom)
     nearby_calls=muldiv_calls=0
     if not a.math_only:
         arithmetic(m,a.samples);fast_path_boundaries(m);addition_rounding(m)
@@ -394,6 +429,7 @@ def main():
         'abi':'Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes '+('stack and SIO divider only' if a.rp2040 else 'stack only'),
         'timing_note':'Instruction counts are emulator diagnostics, not measured RP2040 cycles.'}
     if m.rom_models:report['sdk_rom_intrinsic_models']=m.rom_models
+    if m.bootrom_sha256:report['actual_bootrom']=dict(sha256=m.bootrom_sha256,initializers=m.rom_initializers)
     print(json.dumps(report,indent=2),flush=True)
     if a.json:a.json.write_text(json.dumps(report,indent=2)+'\n')
 if __name__=='__main__':main()

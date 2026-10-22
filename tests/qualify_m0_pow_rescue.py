@@ -22,17 +22,25 @@ def build(snapshot,output,force1024,force_exact_small=False,interval_hint=False)
         shutil.copytree(snapshot/directory,stage/directory,dirs_exist_ok=True)
     (stage/'tests/fixtures').mkdir(parents=True,exist_ok=True)
     shutil.copy2(ROOT/'tests/fixtures/m0_cr_memory.c',stage/'tests/fixtures/m0_cr_memory.c')
-    path=stage/'third_party/core_math/pow/pow.c';source=path.read_text()
+    paths=[stage/'third_party/core_math/pow/pow.c']
+    shared=stage/'third_party/core_math/pow/pow_accurate_body.inc'
+    if shared.exists():paths.append(shared)
+    sources={path:path.read_text() for path in paths}
     patches={
         'if (__builtin_expect (res_min == res_max, 1)) {':'if (false && __builtin_expect (res_min == res_max, 1)) {',
         'if (rd)\n    // dint_tod':'if (rd && R.ex > 1023)\n    // dint_tod',
         'if (exact_pow (&e, x0, y, &R, exact))':'if (false && exact_pow (&e, x0, y, &R, exact))',
         '  if (rd)\n  {\n    qZ.sgn':'  if (false && rd)\n  {\n    qZ.sgn',
     }
+    patch_locations={}
     for old,new in patches.items():
-        assert source.count(old)==1,('Inspect upstream before changing test-only patches',old)
-        source=source.replace(old,new)
-    path.write_text(source)
+        owners=[path for path,source in sources.items() if old in source]
+        assert len(owners)==1,('Inspect upstream before changing test-only patches',old,owners)
+        path=owners[0];source=sources[path]
+        assert source.count(old)==1,('Test-only patch must be unique',old,path)
+        sources[path]=source.replace(old,new)
+        patch_locations[old]=str(path.relative_to(stage))
+    for path,source in sources.items():path.write_text(source)
     if force1024 or force_exact_small:
         path=stage/'code/native_eabi_m0_cr.cpp';source=path.read_text()
         old='m0_pow_interval::Fixed<512>::evaluate(a,b,result)';assert source.count(old)==1
@@ -56,7 +64,8 @@ def build(snapshot,output,force1024,force_exact_small=False,interval_hint=False)
         path.write_text(source)
     arm.ROOT=stage.resolve()
     elf=arm.build(compiler_bin(None),(output/'arm').resolve(),True)
-    return elf,dict(patches=patches,force1024=force1024,force_exact_small=force_exact_small,
+    return elf,dict(patches=patches,patch_locations=patch_locations,
+                    force1024=force1024,force_exact_small=force_exact_small,
                     interval_hint=interval_hint,interval_patches=interval_patches)
 
 
@@ -111,15 +120,29 @@ def main():
         pairs += [(x,y) for x in (-1.25,-2.,-9.) for y in (3.,-3.,17.,33.)]
         pairs += [(9.,17.),(81.,.75),(2.,-1074.),(-2.,-1073.),(-2.,-1075.),
                   (float.fromhex('0x1p-1074'),.25),(1.-2.**-53,2.**60)]
-    digest=hashlib.sha256()
+    digest=hashlib.sha256();direct_underflow_rescues=0
     maximum_hint_comparisons=0
     for i,(x,y) in enumerate(pairs):
         a_bits,b_bits=arm.bits(x),arm.bits(y);expected=oracle.reference('pow',a_bits,b_bits)
         expected_magnitude[0]=expected&0x7FFFFFFFFFFFFFFF
         before_comparisons,before_hits=comparisons[0],exact_hits[0]
-        entry='mk61_m0_cr_pow' if a.force_exact_small else '_ZN12compact_math3powEdd'
+        before_rescue=hits[0]
+        # This test forces CORE-MATH's guards, not the independent public
+        # fast tiers. Enter the forced fallback directly so a successful
+        # fast result cannot silently bypass the path under qualification.
+        entry='mk61_m0_cr_pow'
         actual=machine.call(entry,a_bits,b_bits)[0]
         assert actual==expected,(i,x,y,hex(actual),hex(expected))
+        if hits[0]==before_rescue:
+            # CORE-MATH can return the exact half-minimum underflow before
+            # any of the patched rounding guards. Check that result, then
+            # test the rescue's normalized magnitude/sign ABI separately.
+            assert (x,y) in ((-2.,-1075.),(2.**-215,5.)),(i,'Unexpected early CORE result',x,y)
+            sign=arm.bits(-1. if expected>>63 else 1.)
+            rescued=machine.call('mk61_m0_pow_rescue',a_bits&0x7FFFFFFFFFFFFFFF,b_bits,c=sign)[0]
+            assert rescued==expected,(i,'Direct underflow rescue',hex(rescued),hex(expected))
+            direct_underflow_rescues+=1
+        assert hits[0]==before_rescue+1,(i,'Forced fallback did not enter rescue',x,y)
         if a.interval_hint:
             used=comparisons[0]-before_comparisons;entered=exact_hits[0]-before_hits
             assert entered<=used<=2*entered,(i,entered,used)
@@ -134,7 +157,8 @@ def main():
         interval_hint=a.interval_hint,checked_hint_calls=len(hint_distances),
         maximum_hint_distance=max(hint_distances,default=None),
         maximum_hint_comparisons=maximum_hint_comparisons,
-        maximum_stack_bytes=arm.SP-machine.stack_lowest,
+        maximum_stack_bytes=arm.SP-machine.stack_lowest,entry_symbol=entry,
+        direct_underflow_rescues=direct_underflow_rescues,
         allowed_stack_bytes=machine.stack_bytes,instruction_budget_per_call=machine.instruction_budget,
         elf_sha256=sha,sha256=digest.hexdigest(),source_patch=patch,mpfr=oracle.version,
         scope=('Private copy forces all three rounding tests to fail and bypasses exact_pow. '
@@ -142,7 +166,7 @@ def main():
                   'the test-only exact-boundary shortcut is bypassed. '
                   if a.interval_hint else
                   'Exact-small mode disables both interval passes. ' if a.force_exact_small else '') +
-               'Exact-small modes enter the CORE-MATH wrapper directly. '
+               'Every case enters the CORE-MATH wrapper directly. Known exact half-minimum underflow shortcuts are checked and followed by a direct normalized magnitude/sign rescue call; every case must test the rescue once. '
                'Checks real ARM call/return, result sign, exact midpoints, subnormals and bounded caller stack. '
                'Not an all-input totality proof.'))
     (a.output/'result.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2),flush=True)

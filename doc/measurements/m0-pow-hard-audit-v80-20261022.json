@@ -1,0 +1,3896 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-10-21T22:01:40.823975+00:00",
+  "status": "FULL_V79_WORST_CORPUS_PASS_HARD_POW_SPEED_GAPS_FOUND",
+  "baseline_qualification": {
+    "status": "PASS",
+    "cases": 1003177,
+    "complete_corpus": true,
+    "wrong_rounding": 0,
+    "mpfr": "4.2.2",
+    "elf_sha256": "4bf1e5633ddc95fe84ba045ba5280930ac0fe73ddb130865d24b92f8b90943ba",
+    "corpus_sha256": "deb40211a63a53023c0f5cd9dd47b51a8e3706b18e6811fb8875f8b98aa40863",
+    "checked_this_run": 1003177,
+    "start_case": 0,
+    "signaling_nan_cases": 68,
+    "runner_sha256": "96f0f8537bf4b75895efc32120094852ba5156b96d5827b85614a3ed875dfabb",
+    "machine_sha256": "ecb6776b3f334a32d0b572dd3b813c7a06067810f9cf6161866ef6497a216cc3",
+    "allowed_stack_bytes": 16384,
+    "instruction_budget_per_call": 200000000,
+    "maximum_observed_stack_bytes": 2044,
+    "sdk_rom_intrinsic_models": [],
+    "actual_bootrom": {
+      "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "initializers": [
+        {
+          "name": "__aeabi_bits_init",
+          "table": "aeabi_bits_funcs",
+          "pointers": [
+            "0x309",
+            "0x357",
+            "0x38f",
+            "0x32d"
+          ]
+        },
+        {
+          "name": "__aeabi_mem_init",
+          "table": "aeabi_mem_funcs",
+          "pointers": [
+            "0x26b9",
+            "0x261d",
+            "0x26ad",
+            "0x2605"
+          ]
+        }
+      ]
+    },
+    "prefix_report": null,
+    "new_cases_result_sha256": "11cd959f484a68e45f6146eec648ae7922693fe734c13708671da1c9b1a251d0",
+    "oracle": "Directed MPFR bounds must round to the same binary64; signaling NaNs separately require a quiet NaN result.",
+    "abi": "Every ARM call verifies R4-R11, SP and bounded stack writes.",
+    "scope": "Saved worst-case corpus; not a totality proof over all binary64 pairs.",
+    "known_limitations": [
+      "The owned 512/1024-bit fallback preserves a final undecided-interval trap; totality is unproved."
+    ]
+  },
+  "baseline_elf": ".build/m0-memory-compose-v79-20261021/flash/firmware/mk61s-picocalc-pico-h.elf",
+  "baseline_source_archive": {
+    "native_eabi_m0_arm_self_test.py": {
+      "path": "research/m0-pow-hard-20261022/source-used/native_eabi_m0_arm_self_test.py.txt",
+      "sha256": "ecb6776b3f334a32d0b572dd3b813c7a06067810f9cf6161866ef6497a216cc3"
+    },
+    "qualify_m0_pow_worst.py": {
+      "path": "research/m0-pow-hard-20261022/source-used/qualify_m0_pow_worst.py.txt",
+      "sha256": "96f0f8537bf4b75895efc32120094852ba5156b96d5827b85614a3ed875dfabb"
+    }
+  },
+  "hard_instruction_profile": {
+    "status": "PASS_PROFILE",
+    "corpus_sha256": "deb40211a63a53023c0f5cd9dd47b51a8e3706b18e6811fb8875f8b98aa40863",
+    "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "elf_sha256": {
+      "own": "4bf1e5633ddc95fe84ba045ba5280930ac0fe73ddb130865d24b92f8b90943ba",
+      "qfplib": "60be71dbd85c56204fe4a88bfd13ce6e87f5cb8294cb2446c2be19dba88a0c9c"
+    },
+    "machine_sha256": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3",
+    "producer_sha256": "31dc9f45e69806188d98c9e8b876add099061f42df2f584cb29b69215dfeced8",
+    "qfplib_source_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654",
+    "groups": [
+      {
+        "stream": "regular_exponents",
+        "eligible_corpus_entries": 6908,
+        "cases": [
+          {
+            "corpus_line": 73,
+            "a": "3FE7560C09BFFBEC",
+            "b": "3FE3B3BA326FF93A",
+            "expected": "3FEA58BFD2C6E68F",
+            "own": {
+              "instructions": 1252,
+              "result": "3FEA58BFD2C6E68F"
+            },
+            "qfplib": {
+              "instructions": 1514,
+              "result": "3FEA58BFD2C6E68F"
+            }
+          },
+          {
+            "corpus_line": 4365,
+            "a": "3FEB5346814B93CF",
+            "b": "4020800000000000",
+            "expected": "3FD1646266D83E24",
+            "own": {
+              "instructions": 1297,
+              "result": "3FD1646266D83E24"
+            },
+            "qfplib": {
+              "instructions": 1612,
+              "result": "3FD1646266D83E24"
+            }
+          },
+          {
+            "corpus_line": 4534,
+            "a": "3FE6600C38EFDABB",
+            "b": "4021000000000000",
+            "expected": "3FA8768ED208EE11",
+            "own": {
+              "instructions": 55225,
+              "result": "3FA8768ED208EE11"
+            },
+            "qfplib": {
+              "instructions": 1541,
+              "result": "3FA8768ED208EE12"
+            }
+          },
+          {
+            "corpus_line": 4589,
+            "a": "3FF4E8ED808D4357",
+            "b": "3FE2000000000000",
+            "expected": "3FF29975BA84146A",
+            "own": {
+              "instructions": 1231,
+              "result": "3FF29975BA84146A"
+            },
+            "qfplib": {
+              "instructions": 1490,
+              "result": "3FF29975BA84146A"
+            }
+          },
+          {
+            "corpus_line": 4766,
+            "a": "3FEAEC61B8FD832B",
+            "b": "4013000000000000",
+            "expected": "3FDC2C452BFA6FFF",
+            "own": {
+              "instructions": 52046,
+              "result": "3FDC2C452BFA6FFF"
+            },
+            "qfplib": {
+              "instructions": 1538,
+              "result": "3FDC2C452BFA6FFF"
+            }
+          },
+          {
+            "corpus_line": 4806,
+            "a": "3FEDF3B42850D2E7",
+            "b": "4004000000000000",
+            "expected": "3FEB1F7FD1F56826",
+            "own": {
+              "instructions": 52663,
+              "result": "3FEB1F7FD1F56826"
+            },
+            "qfplib": {
+              "instructions": 1534,
+              "result": "3FEB1F7FD1F56826"
+            }
+          },
+          {
+            "corpus_line": 5026,
+            "a": "3FE74460D9A5823C",
+            "b": "3FE5000000000000",
+            "expected": "3FE9F5FE54731716",
+            "own": {
+              "instructions": 52058,
+              "result": "3FE9F5FE54731716"
+            },
+            "qfplib": {
+              "instructions": 1522,
+              "result": "3FE9F5FE54731716"
+            }
+          },
+          {
+            "corpus_line": 5041,
+            "a": "3FF654E7580FA958",
+            "b": "3FE5000000000000",
+            "expected": "3FF3E9D51AF35305",
+            "own": {
+              "instructions": 49808,
+              "result": "3FF3E9D51AF35305"
+            },
+            "qfplib": {
+              "instructions": 1534,
+              "result": "3FF3E9D51AF35305"
+            }
+          },
+          {
+            "corpus_line": 5093,
+            "a": "3FE3EA03DB876B5B",
+            "b": "3FF6000000000000",
+            "expected": "3FE0AB5227499F43",
+            "own": {
+              "instructions": 1284,
+              "result": "3FE0AB5227499F43"
+            },
+            "qfplib": {
+              "instructions": 1526,
+              "result": "3FE0AB5227499F43"
+            }
+          },
+          {
+            "corpus_line": 5329,
+            "a": "3FED782226040405",
+            "b": "4027000000000000",
+            "expected": "3FD8D07A88CA7A61",
+            "own": {
+              "instructions": 52435,
+              "result": "3FD8D07A88CA7A61"
+            },
+            "qfplib": {
+              "instructions": 1551,
+              "result": "3FD8D07A88CA7A61"
+            }
+          },
+          {
+            "corpus_line": 5347,
+            "a": "3FEFFFFFFFFFFFFC",
+            "b": "3FF8000000000000",
+            "expected": "3FEFFFFFFFFFFFFA",
+            "own": {
+              "instructions": 1367,
+              "result": "3FEFFFFFFFFFFFFA"
+            },
+            "qfplib": {
+              "instructions": 1373,
+              "result": "3FEFFFFFFFFFFFFA"
+            }
+          },
+          {
+            "corpus_line": 5410,
+            "a": "3FEFFFFFFFFFFFF8",
+            "b": "3FD8000000000000",
+            "expected": "3FEFFFFFFFFFFFFD",
+            "own": {
+              "instructions": 1338,
+              "result": "3FEFFFFFFFFFFFFD"
+            },
+            "qfplib": {
+              "instructions": 1368,
+              "result": "3FEFFFFFFFFFFFFD"
+            }
+          },
+          {
+            "corpus_line": 5509,
+            "a": "3FE84FD5844E80E0",
+            "b": "3FB8000000000000",
+            "expected": "3FEF2FAB81744864",
+            "own": {
+              "instructions": 52373,
+              "result": "3FEF2FAB81744864"
+            },
+            "qfplib": {
+              "instructions": 1570,
+              "result": "3FEF2FAB81744864"
+            }
+          },
+          {
+            "corpus_line": 5510,
+            "a": "3FE8F059B519F287",
+            "b": "3FB8000000000000",
+            "expected": "3FEF42C05ECB9BC6",
+            "own": {
+              "instructions": 52516,
+              "result": "3FEF42C05ECB9BC6"
+            },
+            "qfplib": {
+              "instructions": 1568,
+              "result": "3FEF42C05ECB9BC7"
+            }
+          },
+          {
+            "corpus_line": 5736,
+            "a": "3FE324306A0A992A",
+            "b": "3FDA000000000000",
+            "expected": "3FE9F8823EAF8116",
+            "own": {
+              "instructions": 54875,
+              "result": "3FE9F8823EAF8116"
+            },
+            "qfplib": {
+              "instructions": 1580,
+              "result": "3FE9F8823EAF8116"
+            }
+          },
+          {
+            "corpus_line": 5883,
+            "a": "3FE74B35D913DE7B",
+            "b": "402B000000000000",
+            "expected": "3F8C278BBF9EEDD8",
+            "own": {
+              "instructions": 1284,
+              "result": "3F8C278BBF9EEDD8"
+            },
+            "qfplib": {
+              "instructions": 1571,
+              "result": "3F8C278BBF9EEDD7"
+            }
+          },
+          {
+            "corpus_line": 5887,
+            "a": "3FE95DB66321EA86",
+            "b": "3FFC000000000000",
+            "expected": "3FE54F526B768093",
+            "own": {
+              "instructions": 1302,
+              "result": "3FE54F526B768093"
+            },
+            "qfplib": {
+              "instructions": 1538,
+              "result": "3FE54F526B768093"
+            }
+          },
+          {
+            "corpus_line": 5965,
+            "a": "3FEBF3E2674ED432",
+            "b": "3FDC000000000000",
+            "expected": "3FEE296AEAE2A7AB",
+            "own": {
+              "instructions": 50784,
+              "result": "3FEE296AEAE2A7AB"
+            },
+            "qfplib": {
+              "instructions": 1520,
+              "result": "3FEE296AEAE2A7AC"
+            }
+          },
+          {
+            "corpus_line": 6106,
+            "a": "3FE430FB672E08D5",
+            "b": "3FED000000000000",
+            "expected": "3FE51503CA80F09C",
+            "own": {
+              "instructions": 54658,
+              "result": "3FE51503CA80F09C"
+            },
+            "qfplib": {
+              "instructions": 1568,
+              "result": "3FE51503CA80F09C"
+            }
+          },
+          {
+            "corpus_line": 6153,
+            "a": "3FE5E00F2E7233DA",
+            "b": "401D000000000000",
+            "expected": "3FB03D2F6CC8CF18",
+            "own": {
+              "instructions": 55564,
+              "result": "3FB03D2F6CC8CF18"
+            },
+            "qfplib": {
+              "instructions": 1550,
+              "result": "3FB03D2F6CC8CF17"
+            }
+          },
+          {
+            "corpus_line": 6175,
+            "a": "3FEB160F3DC4471C",
+            "b": "400E000000000000",
+            "expected": "3FE1201B170FA76D",
+            "own": {
+              "instructions": 52168,
+              "result": "3FE1201B170FA76D"
+            },
+            "qfplib": {
+              "instructions": 1532,
+              "result": "3FE1201B170FA76C"
+            }
+          },
+          {
+            "corpus_line": 6357,
+            "a": "3FED6D1B8CD8CE06",
+            "b": "402F000000000000",
+            "expected": "3FD172956CDB5235",
+            "own": {
+              "instructions": 51938,
+              "result": "3FD172956CDB5235"
+            },
+            "qfplib": {
+              "instructions": 1558,
+              "result": "3FD172956CDB5235"
+            }
+          },
+          {
+            "corpus_line": 9322,
+            "a": "3FE0CD882E24AF80",
+            "b": "4009000000000000",
+            "expected": "3FC1190598960455",
+            "own": {
+              "instructions": 1333,
+              "result": "3FC1190598960455"
+            },
+            "qfplib": {
+              "instructions": 1482,
+              "result": "3FC1190598960455"
+            }
+          },
+          {
+            "corpus_line": 9350,
+            "a": "3FFBE5A1BCF1F434",
+            "b": "3FFE000000000000",
+            "expected": "4006AFFB727C10D5",
+            "own": {
+              "instructions": 136490,
+              "result": "4006AFFB727C10D5"
+            },
+            "qfplib": {
+              "instructions": 1487,
+              "result": "4006AFFB727C10D6"
+            }
+          },
+          {
+            "corpus_line": 9604,
+            "a": "3FE05314DB73C549",
+            "b": "4022000000000000",
+            "expected": "3F632B5C46978760",
+            "own": {
+              "instructions": 54145,
+              "result": "3F632B5C46978760"
+            },
+            "qfplib": {
+              "instructions": 1462,
+              "result": "3F632B5C46978761"
+            }
+          },
+          {
+            "corpus_line": 31266,
+            "a": "3FE442F848880000",
+            "b": "3FF8000000000000",
+            "expected": "3FE01F641992FBE4",
+            "own": {
+              "instructions": 1297,
+              "result": "3FE01F641992FBE4"
+            },
+            "qfplib": {
+              "instructions": 1526,
+              "result": "3FE01F641992FBE4"
+            }
+          },
+          {
+            "corpus_line": 31391,
+            "a": "3FE4470C7A200000",
+            "b": "3FF8000000000000",
+            "expected": "3FE02442ADA34320",
+            "own": {
+              "instructions": 1297,
+              "result": "3FE02442ADA34320"
+            },
+            "qfplib": {
+              "instructions": 1500,
+              "result": "3FE02442ADA34320"
+            }
+          },
+          {
+            "corpus_line": 31461,
+            "a": "3FE45ECEC4020000",
+            "b": "3FF8000000000000",
+            "expected": "3FE040A98F964980",
+            "own": {
+              "instructions": 55368,
+              "result": "3FE040A98F964980"
+            },
+            "qfplib": {
+              "instructions": 1510,
+              "result": "3FE040A98F964981"
+            }
+          },
+          {
+            "corpus_line": 31505,
+            "a": "3FE44337F1220000",
+            "b": "3FF8000000000000",
+            "expected": "3FE01FB0152D67E4",
+            "own": {
+              "instructions": 55908,
+              "result": "3FE01FB0152D67E4"
+            },
+            "qfplib": {
+              "instructions": 1534,
+              "result": "3FE01FB0152D67E3"
+            }
+          },
+          {
+            "corpus_line": 52142,
+            "a": "4000000000000000",
+            "b": "C022000000000000",
+            "expected": "3F60000000000000",
+            "own": {
+              "instructions": 1299,
+              "result": "3F60000000000000"
+            },
+            "qfplib": {
+              "instructions": 1334,
+              "result": "3F60000000000000"
+            }
+          },
+          {
+            "corpus_line": 58435,
+            "a": "3FF1863E65B0EBC1",
+            "b": "4010000000000000",
+            "expected": "3FF7069023CD4350",
+            "own": {
+              "instructions": 436,
+              "result": "3FF7069023CD4350"
+            },
+            "qfplib": {
+              "instructions": 1545,
+              "result": "3FF7069023CD4350"
+            }
+          },
+          {
+            "corpus_line": 58511,
+            "a": "3FF5FB9C06979C25",
+            "b": "4010000000000000",
+            "expected": "400C81B30AB9F43D",
+            "own": {
+              "instructions": 447,
+              "result": "400C81B30AB9F43D"
+            },
+            "qfplib": {
+              "instructions": 1624,
+              "result": "400C81B30AB9F43D"
+            }
+          },
+          {
+            "corpus_line": 58521,
+            "a": "3FF679709A4F1E41",
+            "b": "4010000000000000",
+            "expected": "400F249BECE69F5C",
+            "own": {
+              "instructions": 447,
+              "result": "400F249BECE69F5C"
+            },
+            "qfplib": {
+              "instructions": 1542,
+              "result": "400F249BECE69F5C"
+            }
+          },
+          {
+            "corpus_line": 58643,
+            "a": "3FFC6B5D4900B0EF",
+            "b": "4010000000000000",
+            "expected": "4023E83B54F6A39B",
+            "own": {
+              "instructions": 51033,
+              "result": "4023E83B54F6A39B"
+            },
+            "qfplib": {
+              "instructions": 1521,
+              "result": "4023E83B54F6A39C"
+            }
+          },
+          {
+            "corpus_line": 58770,
+            "a": "3FF4DF093EE096DE",
+            "b": "4014000000000000",
+            "expected": "400E372F9DC87042",
+            "own": {
+              "instructions": 49503,
+              "result": "400E372F9DC87042"
+            },
+            "qfplib": {
+              "instructions": 1580,
+              "result": "400E372F9DC87042"
+            }
+          },
+          {
+            "corpus_line": 58816,
+            "a": "3FF97E4CEC0CDAB1",
+            "b": "4014000000000000",
+            "expected": "402489D1672D3EE6",
+            "own": {
+              "instructions": 588,
+              "result": "402489D1672D3EE6"
+            },
+            "qfplib": {
+              "instructions": 1551,
+              "result": "402489D1672D3EE5"
+            }
+          },
+          {
+            "corpus_line": 58825,
+            "a": "3FFAA03244502D1D",
+            "b": "4014000000000000",
+            "expected": "40298605FCC13DA8",
+            "own": {
+              "instructions": 588,
+              "result": "40298605FCC13DA8"
+            },
+            "qfplib": {
+              "instructions": 1562,
+              "result": "40298605FCC13DAA"
+            }
+          },
+          {
+            "corpus_line": 58863,
+            "a": "3FFFFBBA8C1B7719",
+            "b": "4014000000000000",
+            "expected": "403FEAAA6F4BB1B7",
+            "own": {
+              "instructions": 599,
+              "result": "403FEAAA6F4BB1B7"
+            },
+            "qfplib": {
+              "instructions": 1516,
+              "result": "403FEAAA6F4BB1B5"
+            }
+          },
+          {
+            "corpus_line": 58952,
+            "a": "3FFB0805732B3913",
+            "b": "4018000000000000",
+            "expected": "403740D952DAE83A",
+            "own": {
+              "instructions": 52844,
+              "result": "403740D952DAE83A"
+            },
+            "qfplib": {
+              "instructions": 1526,
+              "result": "403740D952DAE83A"
+            }
+          },
+          {
+            "corpus_line": 58957,
+            "a": "3FFB41115E368CAA",
+            "b": "4018000000000000",
+            "expected": "40386D6CD45AD95B",
+            "own": {
+              "instructions": 585,
+              "result": "40386D6CD45AD95B"
+            },
+            "qfplib": {
+              "instructions": 1538,
+              "result": "40386D6CD45AD95C"
+            }
+          },
+          {
+            "corpus_line": 59005,
+            "a": "3FF0E18572F3B7D6",
+            "b": "401C000000000000",
+            "expected": "3FF748B1F1C66401",
+            "own": {
+              "instructions": 687,
+              "result": "3FF748B1F1C66401"
+            },
+            "qfplib": {
+              "instructions": 1544,
+              "result": "3FF748B1F1C66401"
+            }
+          },
+          {
+            "corpus_line": 59031,
+            "a": "3FF36740E4E6C10F",
+            "b": "401C000000000000",
+            "expected": "400EDBF45217B9B0",
+            "own": {
+              "instructions": 698,
+              "result": "400EDBF45217B9B0"
+            },
+            "qfplib": {
+              "instructions": 1518,
+              "result": "400EDBF45217B9B1"
+            }
+          },
+          {
+            "corpus_line": 59141,
+            "a": "3FFF95A270EC745C",
+            "b": "401C000000000000",
+            "expected": "405D33D30C1EF98A",
+            "own": {
+              "instructions": 733,
+              "result": "405D33D30C1EF98A"
+            },
+            "qfplib": {
+              "instructions": 1540,
+              "result": "405D33D30C1EF98C"
+            }
+          },
+          {
+            "corpus_line": 59214,
+            "a": "3FF3C18B55569333",
+            "b": "4020000000000000",
+            "expected": "40159CB5CAFFA702",
+            "own": {
+              "instructions": 50758,
+              "result": "40159CB5CAFFA702"
+            },
+            "qfplib": {
+              "instructions": 1569,
+              "result": "40159CB5CAFFA701"
+            }
+          },
+          {
+            "corpus_line": 59255,
+            "a": "3FF644802B670502",
+            "b": "4020000000000000",
+            "expected": "402C260085EC72ED",
+            "own": {
+              "instructions": 50525,
+              "result": "402C260085EC72ED"
+            },
+            "qfplib": {
+              "instructions": 1532,
+              "result": "402C260085EC72EF"
+            }
+          },
+          {
+            "corpus_line": 59293,
+            "a": "3FF8A92FB4C544A1",
+            "b": "4020000000000000",
+            "expected": "403FD998E2D4CA5A",
+            "own": {
+              "instructions": 569,
+              "result": "403FD998E2D4CA5A"
+            },
+            "qfplib": {
+              "instructions": 1582,
+              "result": "403FD998E2D4CA5C"
+            }
+          },
+          {
+            "corpus_line": 59425,
+            "a": "3FF3076BB9B46972",
+            "b": "4022000000000000",
+            "expected": "40130AD98EB960CF",
+            "own": {
+              "instructions": 50242,
+              "result": "40130AD98EB960CF"
+            },
+            "qfplib": {
+              "instructions": 1546,
+              "result": "40130AD98EB960D0"
+            }
+          },
+          {
+            "corpus_line": 59530,
+            "a": "3FFF25C51E8C5718",
+            "b": "4022000000000000",
+            "expected": "407918B6BF50ABC1",
+            "own": {
+              "instructions": 1244,
+              "result": "407918B6BF50ABC1"
+            },
+            "qfplib": {
+              "instructions": 1552,
+              "result": "407918B6BF50ABC3"
+            }
+          },
+          {
+            "corpus_line": 59544,
+            "a": "3FF08538721F8FBC",
+            "b": "4024000000000000",
+            "expected": "3FF609196CF1672C",
+            "own": {
+              "instructions": 1231,
+              "result": "3FF609196CF1672C"
+            },
+            "qfplib": {
+              "instructions": 1569,
+              "result": "3FF609196CF1672C"
+            }
+          },
+          {
+            "corpus_line": 59641,
+            "a": "3FFDA2F6FE938FB9",
+            "b": "4024000000000000",
+            "expected": "407DB6C9410F506B",
+            "own": {
+              "instructions": 1224,
+              "result": "407DB6C9410F506B"
+            },
+            "qfplib": {
+              "instructions": 1624,
+              "result": "407DB6C9410F5066"
+            }
+          },
+          {
+            "corpus_line": 59644,
+            "a": "3FFDF77ED0BF1ED9",
+            "b": "4024000000000000",
+            "expected": "4080990A25137FD3",
+            "own": {
+              "instructions": 1224,
+              "result": "4080990A25137FD3"
+            },
+            "qfplib": {
+              "instructions": 1511,
+              "result": "4080990A25137FCF"
+            }
+          },
+          {
+            "corpus_line": 59678,
+            "a": "3FF34643EA61509B",
+            "b": "4026000000000000",
+            "expected": "401F0367D0544B4F",
+            "own": {
+              "instructions": 50750,
+              "result": "401F0367D0544B4F"
+            },
+            "qfplib": {
+              "instructions": 1498,
+              "result": "401F0367D0544B50"
+            }
+          },
+          {
+            "corpus_line": 59799,
+            "a": "3FF39099EF13F963",
+            "b": "402A000000000000",
+            "expected": "402B54E2314B002A",
+            "own": {
+              "instructions": 50123,
+              "result": "402B54E2314B002A"
+            },
+            "qfplib": {
+              "instructions": 1568,
+              "result": "402B54E2314B002A"
+            }
+          },
+          {
+            "corpus_line": 59830,
+            "a": "3FFB6335C6A198D2",
+            "b": "402A000000000000",
+            "expected": "4090EC026C44C2F4",
+            "own": {
+              "instructions": 51842,
+              "result": "4090EC026C44C2F4"
+            },
+            "qfplib": {
+              "instructions": 1511,
+              "result": "4090EC026C44C2F5"
+            }
+          },
+          {
+            "corpus_line": 59858,
+            "a": "3FF20C67197A59C5",
+            "b": "402C000000000000",
+            "expected": "40159AAD6F53D22C",
+            "own": {
+              "instructions": 49919,
+              "result": "40159AAD6F53D22C"
+            },
+            "qfplib": {
+              "instructions": 1573,
+              "result": "40159AAD6F53D22C"
+            }
+          },
+          {
+            "corpus_line": 59884,
+            "a": "3FF77B4360D18DB5",
+            "b": "402C000000000000",
+            "expected": "406AE0AD15B03C8B",
+            "own": {
+              "instructions": 50994,
+              "result": "406AE0AD15B03C8B"
+            },
+            "qfplib": {
+              "instructions": 1532,
+              "result": "406AE0AD15B03C8E"
+            }
+          },
+          {
+            "corpus_line": 68137,
+            "a": "3FF60E08AA312590",
+            "b": "C008000000000000",
+            "expected": "3FD86F9B00869381",
+            "own": {
+              "instructions": 1244,
+              "result": "3FD86F9B00869381"
+            },
+            "qfplib": {
+              "instructions": 1523,
+              "result": "3FD86F9B00869381"
+            }
+          },
+          {
+            "corpus_line": 68171,
+            "a": "3FFCF57AEF214AB9",
+            "b": "C008000000000000",
+            "expected": "3FC596AB05F034FC",
+            "own": {
+              "instructions": 52696,
+              "result": "3FC596AB05F034FC"
+            },
+            "qfplib": {
+              "instructions": 1532,
+              "result": "3FC596AB05F034FD"
+            }
+          },
+          {
+            "corpus_line": 68192,
+            "a": "3FFFFFFFFFFFFFFF",
+            "b": "C008000000000000",
+            "expected": "3FC0000000000002",
+            "own": {
+              "instructions": 48668,
+              "result": "3FC0000000000002"
+            },
+            "qfplib": {
+              "instructions": 1302,
+              "result": "3FC0000000000003"
+            }
+          },
+          {
+            "corpus_line": 68233,
+            "a": "3FF003617E9EB44E",
+            "b": "C010000000000000",
+            "expected": "3FEFE5024EA203CF",
+            "own": {
+              "instructions": 1244,
+              "result": "3FEFE5024EA203CF"
+            },
+            "qfplib": {
+              "instructions": 1487,
+              "result": "3FEFE5024EA203CF"
+            }
+          },
+          {
+            "corpus_line": 68246,
+            "a": "3FF0B1957A030E6A",
+            "b": "C010000000000000",
+            "expected": "3FEB00E88AB03218",
+            "own": {
+              "instructions": 51355,
+              "result": "3FEB00E88AB03218"
+            },
+            "qfplib": {
+              "instructions": 1510,
+              "result": "3FEB00E88AB03218"
+            }
+          },
+          {
+            "corpus_line": 68257,
+            "a": "3FEADC414D8160F9",
+            "b": "BFD0000000000000",
+            "expected": "3FF0B7447D3CC645",
+            "own": {
+              "instructions": 1284,
+              "result": "3FF0B7447D3CC645"
+            },
+            "qfplib": {
+              "instructions": 1546,
+              "result": "3FF0B7447D3CC645"
+            }
+          },
+          {
+            "corpus_line": 68306,
+            "a": "3FF363AD26D675E5",
+            "b": "C010000000000000",
+            "expected": "3FDDAD10E40B73FD",
+            "own": {
+              "instructions": 51136,
+              "result": "3FDDAD10E40B73FD"
+            },
+            "qfplib": {
+              "instructions": 1549,
+              "result": "3FDDAD10E40B73FD"
+            }
+          },
+          {
+            "corpus_line": 68374,
+            "a": "3FF5918393549F42",
+            "b": "C010000000000000",
+            "expected": "3FD361A90C5AF62F",
+            "own": {
+              "instructions": 51160,
+              "result": "3FD361A90C5AF62F"
+            },
+            "qfplib": {
+              "instructions": 1612,
+              "result": "3FD361A90C5AF630"
+            }
+          },
+          {
+            "corpus_line": 68524,
+            "a": "3FFE922D5346C53F",
+            "b": "C010000000000000",
+            "expected": "3FB3353C66CE539E",
+            "own": {
+              "instructions": 1244,
+              "result": "3FB3353C66CE539E"
+            },
+            "qfplib": {
+              "instructions": 1528,
+              "result": "3FB3353C66CE539E"
+            }
+          },
+          {
+            "corpus_line": 68601,
+            "a": "3FF977F3F33E1473",
+            "b": "C014000000000000",
+            "expected": "3FB90CF15D538645",
+            "own": {
+              "instructions": 53107,
+              "result": "3FB90CF15D538645"
+            },
+            "qfplib": {
+              "instructions": 1527,
+              "result": "3FB90CF15D538646"
+            }
+          },
+          {
+            "corpus_line": 68672,
+            "a": "3FFDC3DEADA42106",
+            "b": "C014000000000000",
+            "expected": "3FA6FAA28F2465AC",
+            "own": {
+              "instructions": 1231,
+              "result": "3FA6FAA28F2465AC"
+            },
+            "qfplib": {
+              "instructions": 1546,
+              "result": "3FA6FAA28F2465AA"
+            }
+          },
+          {
+            "corpus_line": 68673,
+            "a": "3FFCD84FD272C703",
+            "b": "C014000000000000",
+            "expected": "3FAAE2B602CCEE18",
+            "own": {
+              "instructions": 51842,
+              "result": "3FAAE2B602CCEE18"
+            },
+            "qfplib": {
+              "instructions": 1591,
+              "result": "3FAAE2B602CCEE18"
+            }
+          },
+          {
+            "corpus_line": 68709,
+            "a": "3FF3385D057CA34E",
+            "b": "C018000000000000",
+            "expected": "3FD54C82E0A66159",
+            "own": {
+              "instructions": 1238,
+              "result": "3FD54C82E0A66159"
+            },
+            "qfplib": {
+              "instructions": 1582,
+              "result": "3FD54C82E0A66159"
+            }
+          },
+          {
+            "corpus_line": 68754,
+            "a": "3FFA11CB465D3CAF",
+            "b": "C018000000000000",
+            "expected": "3FAB5D65E3E74306",
+            "own": {
+              "instructions": 54042,
+              "result": "3FAB5D65E3E74306"
+            },
+            "qfplib": {
+              "instructions": 1589,
+              "result": "3FAB5D65E3E74307"
+            }
+          },
+          {
+            "corpus_line": 68829,
+            "a": "3FF3B927815D8918",
+            "b": "C01C000000000000",
+            "expected": "3FCD97FBF528256B",
+            "own": {
+              "instructions": 51509,
+              "result": "3FCD97FBF528256B"
+            },
+            "qfplib": {
+              "instructions": 1551,
+              "result": "3FCD97FBF528256C"
+            }
+          },
+          {
+            "corpus_line": 68858,
+            "a": "3FF75D32952C7519",
+            "b": "C01C000000000000",
+            "expected": "3FB214F347FDEBC1",
+            "own": {
+              "instructions": 1238,
+              "result": "3FB214F347FDEBC1"
+            },
+            "qfplib": {
+              "instructions": 1536,
+              "result": "3FB214F347FDEBC2"
+            }
+          },
+          {
+            "corpus_line": 68967,
+            "a": "3FF0ED5BDAE9D450",
+            "b": "C020000000000000",
+            "expected": "3FE4640597FDA497",
+            "own": {
+              "instructions": 51075,
+              "result": "3FE4640597FDA497"
+            },
+            "qfplib": {
+              "instructions": 1536,
+              "result": "3FE4640597FDA498"
+            }
+          },
+          {
+            "corpus_line": 69087,
+            "a": "3FF837884FE59E7B",
+            "b": "C020000000000000",
+            "expected": "3FA297066F78548C",
+            "own": {
+              "instructions": 53963,
+              "result": "3FA297066F78548C"
+            },
+            "qfplib": {
+              "instructions": 1518,
+              "result": "3FA297066F78548D"
+            }
+          },
+          {
+            "corpus_line": 69125,
+            "a": "3FFC1BF0B60A8ECE",
+            "b": "C020000000000000",
+            "expected": "3F86919F24F4ABF4",
+            "own": {
+              "instructions": 53765,
+              "result": "3F86919F24F4ABF4"
+            },
+            "qfplib": {
+              "instructions": 1498,
+              "result": "3F86919F24F4ABF6"
+            }
+          },
+          {
+            "corpus_line": 69126,
+            "a": "3FFC445C9B44C7FC",
+            "b": "C020000000000000",
+            "expected": "3F85946DAB988C08",
+            "own": {
+              "instructions": 53648,
+              "result": "3F85946DAB988C08"
+            },
+            "qfplib": {
+              "instructions": 1568,
+              "result": "3F85946DAB988C08"
+            }
+          },
+          {
+            "corpus_line": 69292,
+            "a": "3FF6A1B7E7455D42",
+            "b": "C022000000000000",
+            "expected": "3FA696BB46B5DECF",
+            "own": {
+              "instructions": 1251,
+              "result": "3FA696BB46B5DECF"
+            },
+            "qfplib": {
+              "instructions": 1542,
+              "result": "3FA696BB46B5DED1"
+            }
+          },
+          {
+            "corpus_line": 69327,
+            "a": "3FFB82D32C20BCBD",
+            "b": "C022000000000000",
+            "expected": "3F7F2E1AD9DC8956",
+            "own": {
+              "instructions": 1244,
+              "result": "3F7F2E1AD9DC8956"
+            },
+            "qfplib": {
+              "instructions": 1511,
+              "result": "3F7F2E1AD9DC8952"
+            }
+          },
+          {
+            "corpus_line": 69331,
+            "a": "3FFED2BEFBD7D007",
+            "b": "C022000000000000",
+            "expected": "3F666A9CA2733B0E",
+            "own": {
+              "instructions": 1231,
+              "result": "3F666A9CA2733B0E"
+            },
+            "qfplib": {
+              "instructions": 1586,
+              "result": "3F666A9CA2733B0A"
+            }
+          },
+          {
+            "corpus_line": 69355,
+            "a": "3FFE2FA2BE501E2D",
+            "b": "C022000000000000",
+            "expected": "3F6B0D7A074DF8C2",
+            "own": {
+              "instructions": 1244,
+              "result": "3F6B0D7A074DF8C2"
+            },
+            "qfplib": {
+              "instructions": 1547,
+              "result": "3F6B0D7A074DF8C1"
+            }
+          },
+          {
+            "corpus_line": 69357,
+            "a": "3FFE32DBB34C7E4F",
+            "b": "C022000000000000",
+            "expected": "3F6AF389F8E916EB",
+            "own": {
+              "instructions": 52537,
+              "result": "3F6AF389F8E916EB"
+            },
+            "qfplib": {
+              "instructions": 1594,
+              "result": "3F6AF389F8E916EC"
+            }
+          },
+          {
+            "corpus_line": 69435,
+            "a": "3FF8833C93C0AD35",
+            "b": "C024000000000000",
+            "expected": "3F8CBFD6D6FCA52B",
+            "own": {
+              "instructions": 54493,
+              "result": "3F8CBFD6D6FCA52B"
+            },
+            "qfplib": {
+              "instructions": 1531,
+              "result": "3F8CBFD6D6FCA52D"
+            }
+          },
+          {
+            "corpus_line": 69470,
+            "a": "3FFBBB189214791C",
+            "b": "C024000000000000",
+            "expected": "3F70BF26FEDFE25E",
+            "own": {
+              "instructions": 52777,
+              "result": "3F70BF26FEDFE25E"
+            },
+            "qfplib": {
+              "instructions": 1590,
+              "result": "3F70BF26FEDFE25B"
+            }
+          },
+          {
+            "corpus_line": 69473,
+            "a": "3FFC3A5AE6386D07",
+            "b": "C024000000000000",
+            "expected": "3F6C0A8B785BC6CA",
+            "own": {
+              "instructions": 52405,
+              "result": "3F6C0A8B785BC6CA"
+            },
+            "qfplib": {
+              "instructions": 1595,
+              "result": "3F6C0A8B785BC6CB"
+            }
+          },
+          {
+            "corpus_line": 69489,
+            "a": "3FFE2DFB91F93A5E",
+            "b": "C024000000000000",
+            "expected": "3F5CBD5C727BC6D1",
+            "own": {
+              "instructions": 53927,
+              "result": "3F5CBD5C727BC6D1"
+            },
+            "qfplib": {
+              "instructions": 1511,
+              "result": "3F5CBD5C727BC6D3"
+            }
+          },
+          {
+            "corpus_line": 69568,
+            "a": "3FF2C7DE5B557A7D",
+            "b": "C028000000000000",
+            "expected": "3FC2B607BC82DBE3",
+            "own": {
+              "instructions": 51802,
+              "result": "3FC2B607BC82DBE3"
+            },
+            "qfplib": {
+              "instructions": 1526,
+              "result": "3FC2B607BC82DBE3"
+            }
+          },
+          {
+            "corpus_line": 69594,
+            "a": "3FF99B5E84829AF3",
+            "b": "C028000000000000",
+            "expected": "3F6D027C91A3EBAE",
+            "own": {
+              "instructions": 1244,
+              "result": "3F6D027C91A3EBAE"
+            },
+            "qfplib": {
+              "instructions": 1581,
+              "result": "3F6D027C91A3EBAF"
+            }
+          },
+          {
+            "corpus_line": 69633,
+            "a": "3FF2A4269F8149D1",
+            "b": "C02A000000000000",
+            "expected": "3FC19031D705C3EA",
+            "own": {
+              "instructions": 1251,
+              "result": "3FC19031D705C3EA"
+            },
+            "qfplib": {
+              "instructions": 1536,
+              "result": "3FC19031D705C3EA"
+            }
+          },
+          {
+            "corpus_line": 69642,
+            "a": "3FF4B1DD264786A5",
+            "b": "C02A000000000000",
+            "expected": "3FA20E8574F55E66",
+            "own": {
+              "instructions": 50505,
+              "result": "3FA20E8574F55E66"
+            },
+            "qfplib": {
+              "instructions": 1568,
+              "result": "3FA20E8574F55E66"
+            }
+          },
+          {
+            "corpus_line": 69655,
+            "a": "3FF7F2C8D0A05041",
+            "b": "C02A000000000000",
+            "expected": "3F75A4C6CE09AA90",
+            "own": {
+              "instructions": 52905,
+              "result": "3F75A4C6CE09AA90"
+            },
+            "qfplib": {
+              "instructions": 1556,
+              "result": "3F75A4C6CE09AA91"
+            }
+          },
+          {
+            "corpus_line": 69684,
+            "a": "3FFB1ED88796A456",
+            "b": "C02A000000000000",
+            "expected": "3F512EF980C70409",
+            "own": {
+              "instructions": 1244,
+              "result": "3F512EF980C70409"
+            },
+            "qfplib": {
+              "instructions": 1558,
+              "result": "3F512EF980C7040B"
+            }
+          },
+          {
+            "corpus_line": 69693,
+            "a": "3FFE42674F60D224",
+            "b": "C02A000000000000",
+            "expected": "3F308D61F50B53F4",
+            "own": {
+              "instructions": 52365,
+              "result": "3F308D61F50B53F4"
+            },
+            "qfplib": {
+              "instructions": 1568,
+              "result": "3F308D61F50B53F1"
+            }
+          },
+          {
+            "corpus_line": 69714,
+            "a": "3FF584A3123085E5",
+            "b": "C02C000000000000",
+            "expected": "3F902BA0121EC305",
+            "own": {
+              "instructions": 1251,
+              "result": "3F902BA0121EC305"
+            },
+            "qfplib": {
+              "instructions": 1548,
+              "result": "3F902BA0121EC302"
+            }
+          },
+          {
+            "corpus_line": 69739,
+            "a": "3FFB5CA0A3C2FB99",
+            "b": "C02C000000000000",
+            "expected": "3F41E8FDDA152F03",
+            "own": {
+              "instructions": 53684,
+              "result": "3F41E8FDDA152F03"
+            },
+            "qfplib": {
+              "instructions": 1550,
+              "result": "3F41E8FDDA152EFE"
+            }
+          },
+          {
+            "corpus_line": 69765,
+            "a": "3FF0A92423EB2AA1",
+            "b": "C02E000000000000",
+            "expected": "3FE170A7F1229EDD",
+            "own": {
+              "instructions": 1251,
+              "result": "3FE170A7F1229EDD"
+            },
+            "qfplib": {
+              "instructions": 1568,
+              "result": "3FE170A7F1229EDD"
+            }
+          },
+          {
+            "corpus_line": 69777,
+            "a": "3FF1E16A89458F48",
+            "b": "C02E000000000000",
+            "expected": "3FC82BE603CAE859",
+            "own": {
+              "instructions": 51797,
+              "result": "3FC82BE603CAE859"
+            },
+            "qfplib": {
+              "instructions": 1575,
+              "result": "3FC82BE603CAE858"
+            }
+          },
+          {
+            "corpus_line": 69815,
+            "a": "3FFBFAEF686F442B",
+            "b": "C02E000000000000",
+            "expected": "3F2DF5CBAA211376",
+            "own": {
+              "instructions": 52499,
+              "result": "3F2DF5CBAA211376"
+            },
+            "qfplib": {
+              "instructions": 1595,
+              "result": "3F2DF5CBAA21136C"
+            }
+          },
+          {
+            "corpus_line": 69873,
+            "a": "3FF6D13DB1694B29",
+            "b": "C030000000000000",
+            "expected": "3F6BFE7FF1DE0575",
+            "own": {
+              "instructions": 1238,
+              "result": "3F6BFE7FF1DE0575"
+            },
+            "qfplib": {
+              "instructions": 1577,
+              "result": "3F6BFE7FF1DE0578"
+            }
+          },
+          {
+            "corpus_line": 69937,
+            "a": "3FFCCF092EEC84EA",
+            "b": "C030000000000000",
+            "expected": "3F157B5E7726785A",
+            "own": {
+              "instructions": 1244,
+              "result": "3F157B5E7726785A"
+            },
+            "qfplib": {
+              "instructions": 1574,
+              "result": "3F157B5E77267857"
+            }
+          },
+          {
+            "corpus_line": 78212,
+            "a": "3FED69EAB61CB1B3",
+            "b": "4014000000000000",
+            "expected": "3FE4FF281A0D1B08",
+            "own": {
+              "instructions": 599,
+              "result": "3FE4FF281A0D1B08"
+            },
+            "qfplib": {
+              "instructions": 1574,
+              "result": "3FE4FF281A0D1B08"
+            }
+          },
+          {
+            "corpus_line": 78250,
+            "a": "3FE04775BB6CB8D7",
+            "b": "401C000000000000",
+            "expected": "3F820F2CBF1C4219",
+            "own": {
+              "instructions": 687,
+              "result": "3F820F2CBF1C4219"
+            },
+            "qfplib": {
+              "instructions": 1588,
+              "result": "3F820F2CBF1C421B"
+            }
+          },
+          {
+            "corpus_line": 78349,
+            "a": "3FE88E4A50AF66E5",
+            "b": "4024000000000000",
+            "expected": "3FB22012B37D1244",
+            "own": {
+              "instructions": 1282,
+              "result": "3FB22012B37D1244"
+            },
+            "qfplib": {
+              "instructions": 1564,
+              "result": "3FB22012B37D1245"
+            }
+          },
+          {
+            "corpus_line": 78365,
+            "a": "3FEE379BBEB68464",
+            "b": "4024000000000000",
+            "expected": "3FE209CD2DD73F12",
+            "own": {
+              "instructions": 50857,
+              "result": "3FE209CD2DD73F12"
+            },
+            "qfplib": {
+              "instructions": 1504,
+              "result": "3FE209CD2DD73F12"
+            }
+          },
+          {
+            "corpus_line": 78542,
+            "a": "3FE4F7541F308283",
+            "b": "4030000000000000",
+            "expected": "3F52E4BAA46F47AE",
+            "own": {
+              "instructions": 1297,
+              "result": "3F52E4BAA46F47AE"
+            },
+            "qfplib": {
+              "instructions": 1544,
+              "result": "3F52E4BAA46F47AE"
+            }
+          },
+          {
+            "corpus_line": 990869,
+            "a": "3FEFFFFFFFFFFFE5",
+            "b": "BFEFFFFFFFFFFFE5",
+            "expected": "3FF000000000000D",
+            "own": {
+              "instructions": 119307,
+              "result": "3FF000000000000D"
+            },
+            "qfplib": {
+              "instructions": 1303,
+              "result": "3FF000000000000E"
+            }
+          },
+          {
+            "corpus_line": 990904,
+            "a": "3FF000000000000A",
+            "b": "BFF000000000000A",
+            "expected": "3FEFFFFFFFFFFFEC",
+            "own": {
+              "instructions": 1340,
+              "result": "3FEFFFFFFFFFFFEC"
+            },
+            "qfplib": {
+              "instructions": 1400,
+              "result": "3FEFFFFFFFFFFFEC"
+            }
+          },
+          {
+            "corpus_line": 990938,
+            "a": "3FEFFFFFFFFFFFDC",
+            "b": "BFDFFFFFFFFFFFE5",
+            "expected": "3FF0000000000009",
+            "own": {
+              "instructions": 1279,
+              "result": "3FF0000000000009"
+            },
+            "qfplib": {
+              "instructions": 1298,
+              "result": "3FF0000000000009"
+            }
+          },
+          {
+            "corpus_line": 990942,
+            "a": "3FEFFFFFFFFFFFE0",
+            "b": "BFDFFFFFFFFFFFE8",
+            "expected": "3FF0000000000008",
+            "own": {
+              "instructions": 1279,
+              "result": "3FF0000000000008"
+            },
+            "qfplib": {
+              "instructions": 1296,
+              "result": "3FF0000000000008"
+            }
+          },
+          {
+            "corpus_line": 990979,
+            "a": "3FEFFFFFFFFFFFEE",
+            "b": "BFFFFFFFFFFFFFE5",
+            "expected": "3FF0000000000012",
+            "own": {
+              "instructions": 1310,
+              "result": "3FF0000000000012"
+            },
+            "qfplib": {
+              "instructions": 1303,
+              "result": "3FF0000000000012"
+            }
+          },
+          {
+            "corpus_line": 990984,
+            "a": "3FEFFFFFFFFFFFFE",
+            "b": "BFFFFFFFFFFFFFFD",
+            "expected": "3FF0000000000002",
+            "own": {
+              "instructions": 1310,
+              "result": "3FF0000000000002"
+            },
+            "qfplib": {
+              "instructions": 1316,
+              "result": "3FF0000000000002"
+            }
+          },
+          {
+            "corpus_line": 990998,
+            "a": "3FF0000000000008",
+            "b": "C00000000000000C",
+            "expected": "3FEFFFFFFFFFFFE0",
+            "own": {
+              "instructions": 1340,
+              "result": "3FEFFFFFFFFFFFE0"
+            },
+            "qfplib": {
+              "instructions": 1392,
+              "result": "3FEFFFFFFFFFFFE0"
+            }
+          },
+          {
+            "corpus_line": 991223,
+            "a": "3FF0000000000003",
+            "b": "BFF555555555555A",
+            "expected": "3FEFFFFFFFFFFFF8",
+            "own": {
+              "instructions": 1340,
+              "result": "3FEFFFFFFFFFFFF8"
+            },
+            "qfplib": {
+              "instructions": 1406,
+              "result": "3FEFFFFFFFFFFFF8"
+            }
+          },
+          {
+            "corpus_line": 991258,
+            "a": "3FF0000000000002",
+            "b": "4013FFFFFFFFFFFB",
+            "expected": "3FF000000000000A",
+            "own": {
+              "instructions": 1315,
+              "result": "3FF000000000000A"
+            },
+            "qfplib": {
+              "instructions": 1341,
+              "result": "3FF000000000000A"
+            }
+          },
+          {
+            "corpus_line": 991287,
+            "a": "3FF0000000000006",
+            "b": "BFFAAAAAAAAAAAB8",
+            "expected": "3FEFFFFFFFFFFFEC",
+            "own": {
+              "instructions": 1340,
+              "result": "3FEFFFFFFFFFFFEC"
+            },
+            "qfplib": {
+              "instructions": 1393,
+              "result": "3FEFFFFFFFFFFFEC"
+            }
+          },
+          {
+            "corpus_line": 991522,
+            "a": "3FEFFFFFFFFFFFEC",
+            "b": "3FD333333333332F",
+            "expected": "3FEFFFFFFFFFFFFA",
+            "own": {
+              "instructions": 1306,
+              "result": "3FEFFFFFFFFFFFFA"
+            },
+            "qfplib": {
+              "instructions": 1368,
+              "result": "3FEFFFFFFFFFFFFA"
+            }
+          },
+          {
+            "corpus_line": 991544,
+            "a": "3FF000000000000B",
+            "b": "BFD1745D1745D17C",
+            "expected": "3FEFFFFFFFFFFFFA",
+            "own": {
+              "instructions": 1311,
+              "result": "3FEFFFFFFFFFFFFA"
+            },
+            "qfplib": {
+              "instructions": 1400,
+              "result": "3FEFFFFFFFFFFFFA"
+            }
+          },
+          {
+            "corpus_line": 991589,
+            "a": "3FEFFFFFFFFFFF7C",
+            "b": "3FB555555555552D",
+            "expected": "3FEFFFFFFFFFFFF5",
+            "own": {
+              "instructions": 1308,
+              "result": "3FEFFFFFFFFFFFF5"
+            },
+            "qfplib": {
+              "instructions": 1347,
+              "result": "3FEFFFFFFFFFFFF5"
+            }
+          },
+          {
+            "corpus_line": 991603,
+            "a": "3FEFFFFFFFFFFFF3",
+            "b": "3FB3B13B13B13B10",
+            "expected": "3FEFFFFFFFFFFFFF",
+            "own": {
+              "instructions": 1306,
+              "result": "3FEFFFFFFFFFFFFF"
+            },
+            "qfplib": {
+              "instructions": 1367,
+              "result": "3FEFFFFFFFFFFFFF"
+            }
+          },
+          {
+            "corpus_line": 991648,
+            "a": "3FEFFFFFFFFFFFC8",
+            "b": "3FD6DB6DB6DB6DAA",
+            "expected": "3FEFFFFFFFFFFFEC",
+            "own": {
+              "instructions": 1304,
+              "result": "3FEFFFFFFFFFFFEC"
+            },
+            "qfplib": {
+              "instructions": 1359,
+              "result": "3FEFFFFFFFFFFFEC"
+            }
+          },
+          {
+            "corpus_line": 991726,
+            "a": "3FF000000000000F",
+            "b": "3FF2222222222221",
+            "expected": "3FF0000000000011",
+            "own": {
+              "instructions": 1315,
+              "result": "3FF0000000000011"
+            },
+            "qfplib": {
+              "instructions": 1333,
+              "result": "3FF0000000000011"
+            }
+          },
+          {
+            "corpus_line": 991826,
+            "a": "3FEFFFFFFFFFFF10",
+            "b": "BFA5555555555502",
+            "expected": "3FF0000000000005",
+            "own": {
+              "instructions": 1283,
+              "result": "3FF0000000000005"
+            },
+            "qfplib": {
+              "instructions": 1288,
+              "result": "3FF0000000000005"
+            }
+          },
+          {
+            "corpus_line": 991983,
+            "a": "3FEFFFFFFFFFFFDA",
+            "b": "BF9AF286BCA1AF18",
+            "expected": "3FF0000000000001",
+            "own": {
+              "instructions": 119235,
+              "result": "3FF0000000000001"
+            },
+            "qfplib": {
+              "instructions": 1310,
+              "result": "3FF0000000000000"
+            }
+          },
+          {
+            "corpus_line": 992026,
+            "a": "3FEFFFFFFFFFFFD5",
+            "b": "BFD05F417D05F40A",
+            "expected": "3FF0000000000005",
+            "own": {
+              "instructions": 120194,
+              "result": "3FF0000000000005"
+            },
+            "qfplib": {
+              "instructions": 1302,
+              "result": "3FF0000000000006"
+            }
+          },
+          {
+            "corpus_line": 992059,
+            "a": "3FF000000000002F",
+            "b": "3FE72620AE4C4166",
+            "expected": "3FF0000000000022",
+            "own": {
+              "instructions": 1284,
+              "result": "3FF0000000000022"
+            },
+            "qfplib": {
+              "instructions": 1323,
+              "result": "3FF0000000000022"
+            }
+          },
+          {
+            "corpus_line": 992088,
+            "a": "3FF0000000000068",
+            "b": "3FAD89D89D89D8F8",
+            "expected": "3FF0000000000006",
+            "own": {
+              "instructions": 1288,
+              "result": "3FF0000000000006"
+            },
+            "qfplib": {
+              "instructions": 1320,
+              "result": "3FF0000000000006"
+            }
+          },
+          {
+            "corpus_line": 992105,
+            "a": "3FF000000000001B",
+            "b": "3F92F684BDA12F78",
+            "expected": "3FF0000000000001",
+            "own": {
+              "instructions": 122836,
+              "result": "3FF0000000000001"
+            },
+            "qfplib": {
+              "instructions": 1328,
+              "result": "3FF0000000000000"
+            }
+          },
+          {
+            "corpus_line": 992133,
+            "a": "3FEFFFFFFFFFFFC5",
+            "b": "BFEA08AD8F2FBA68",
+            "expected": "3FF0000000000018",
+            "own": {
+              "instructions": 1279,
+              "result": "3FF0000000000018"
+            },
+            "qfplib": {
+              "instructions": 1298,
+              "result": "3FF0000000000018"
+            }
+          },
+          {
+            "corpus_line": 992249,
+            "a": "3FEFFFFFFFFFFF99",
+            "b": "3FED83BA68636ADC",
+            "expected": "3FEFFFFFFFFFFFA1",
+            "own": {
+              "instructions": 1304,
+              "result": "3FEFFFFFFFFFFFA1"
+            },
+            "qfplib": {
+              "instructions": 1348,
+              "result": "3FEFFFFFFFFFFFA1"
+            }
+          }
+        ],
+        "mean_instructions": {
+          "own": 27507.4140625,
+          "qfplib": 1501.546875
+        },
+        "wrong_results": {
+          "own": 0,
+          "qfplib": 63
+        },
+        "own_slower_cases": 60,
+        "median_instructions": {
+          "own": 1340,
+          "qfplib": 1534
+        },
+        "own_over_qfplib": 18.31938417673441
+      },
+      {
+        "stream": "near_one_large_exponents",
+        "eligible_corpus_entries": 5,
+        "cases": [
+          {
+            "corpus_line": 31129,
+            "a": "3FF000000166666A",
+            "b": "422FFFFFFFFFFFFF",
+            "expected": "6040B3CE3D8A58E4",
+            "own": {
+              "instructions": 4417,
+              "result": "6040B3CE3D8A58E4"
+            },
+            "qfplib": {
+              "instructions": 1563,
+              "result": "6040B3CE3C5F0F57"
+            }
+          },
+          {
+            "corpus_line": 31130,
+            "a": "3FF0000001CCCCCE",
+            "b": "422FFFFFFFFFFFFF",
+            "expected": "697BBD749AF20183",
+            "own": {
+              "instructions": 4357,
+              "result": "697BBD749AF20183"
+            },
+            "qfplib": {
+              "instructions": 1668,
+              "result": "697BBD7498B9E710"
+            }
+          },
+          {
+            "corpus_line": 31131,
+            "a": "3FF0000001800001",
+            "b": "422FFFFFFFFFFFFF",
+            "expected": "628FE32EF7DFCDBD",
+            "own": {
+              "instructions": 4370,
+              "result": "628FE32EF7DFCDBD"
+            },
+            "qfplib": {
+              "instructions": 1582,
+              "result": "628FE32EF7DFD017"
+            }
+          },
+          {
+            "corpus_line": 31132,
+            "a": "3FF0000001800000",
+            "b": "422FFFFFFFFFFFFF",
+            "expected": "628FE30F14C0CA6D",
+            "own": {
+              "instructions": 4367,
+              "result": "628FE30F14C0CA6D"
+            },
+            "qfplib": {
+              "instructions": 1575,
+              "result": "628FE30F14C0C9CA"
+            }
+          },
+          {
+            "corpus_line": 399535,
+            "a": "3FEFFFFEDDE9A651",
+            "b": "40B4050000000000",
+            "expected": "3FEFE9589EBB3605",
+            "own": {
+              "instructions": 1412,
+              "result": "3FEFE9589EBB3605"
+            },
+            "qfplib": {
+              "instructions": 1481,
+              "result": "3FEFE9589EBB35FF"
+            }
+          }
+        ],
+        "mean_instructions": {
+          "own": 3784.6,
+          "qfplib": 1573.8
+        },
+        "wrong_results": {
+          "own": 0,
+          "qfplib": 5
+        },
+        "own_slower_cases": 4,
+        "median_instructions": {
+          "own": 4367,
+          "qfplib": 1575
+        },
+        "own_over_qfplib": 2.40475282755115
+      },
+      {
+        "stream": "moderate",
+        "eligible_corpus_entries": 2232,
+        "cases": [
+          {
+            "corpus_line": 4498,
+            "a": "401248D195B79002",
+            "b": "3FE1000000000000",
+            "expected": "4001EFA06B66797B",
+            "own": {
+              "instructions": 1282,
+              "result": "4001EFA06B66797B"
+            },
+            "qfplib": {
+              "instructions": 1523,
+              "result": "4001EFA06B66797B"
+            }
+          },
+          {
+            "corpus_line": 4597,
+            "a": "4010523ECAA7025C",
+            "b": "3FE2000000000000",
+            "expected": "4001A4F347838A7B",
+            "own": {
+              "instructions": 1277,
+              "result": "4001A4F347838A7B"
+            },
+            "qfplib": {
+              "instructions": 1511,
+              "result": "4001A4F347838A7B"
+            }
+          },
+          {
+            "corpus_line": 4678,
+            "a": "400DD9B911CDD1C2",
+            "b": "3FD2000000000000",
+            "expected": "3FF72BEDD69F5F03",
+            "own": {
+              "instructions": 1295,
+              "result": "3FF72BEDD69F5F03"
+            },
+            "qfplib": {
+              "instructions": 1533,
+              "result": "3FF72BEDD69F5F03"
+            }
+          },
+          {
+            "corpus_line": 4687,
+            "a": "40169DD62B446FED",
+            "b": "3FD2000000000000",
+            "expected": "3FFA0B7FD76ECF3B",
+            "own": {
+              "instructions": 1297,
+              "result": "3FFA0B7FD76ECF3B"
+            },
+            "qfplib": {
+              "instructions": 1492,
+              "result": "3FFA0B7FD76ECF3B"
+            }
+          },
+          {
+            "corpus_line": 4756,
+            "a": "40162A4FFD14B468",
+            "b": "3FE3000000000000",
+            "expected": "40061C7125912CBF",
+            "own": {
+              "instructions": 1288,
+              "result": "40061C7125912CBF"
+            },
+            "qfplib": {
+              "instructions": 1553,
+              "result": "40061C7125912CBF"
+            }
+          },
+          {
+            "corpus_line": 4950,
+            "a": "400977079D5C9B44",
+            "b": "3FC4000000000000",
+            "expected": "3FF32C4BBBD7246D",
+            "own": {
+              "instructions": 50859,
+              "result": "3FF32C4BBBD7246D"
+            },
+            "qfplib": {
+              "instructions": 1472,
+              "result": "3FF32C4BBBD7246C"
+            }
+          },
+          {
+            "corpus_line": 4967,
+            "a": "40167F83B40657F6",
+            "b": "3FC4000000000000",
+            "expected": "3FF4F4E40016AB97",
+            "own": {
+              "instructions": 1275,
+              "result": "3FF4F4E40016AB97"
+            },
+            "qfplib": {
+              "instructions": 1557,
+              "result": "3FF4F4E40016AB97"
+            }
+          },
+          {
+            "corpus_line": 4986,
+            "a": "402856A843018A95",
+            "b": "3FC4000000000000",
+            "expected": "3FF7A4778F86F707",
+            "own": {
+              "instructions": 52820,
+              "result": "3FF7A4778F86F707"
+            },
+            "qfplib": {
+              "instructions": 1568,
+              "result": "3FF7A4778F86F708"
+            }
+          },
+          {
+            "corpus_line": 5063,
+            "a": "40106D478C41D888",
+            "b": "3FE5000000000000",
+            "expected": "4004374E30A30829",
+            "own": {
+              "instructions": 53055,
+              "result": "4004374E30A30829"
+            },
+            "qfplib": {
+              "instructions": 1503,
+              "result": "4004374E30A30829"
+            }
+          },
+          {
+            "corpus_line": 5074,
+            "a": "401FB34C9D8CF59F",
+            "b": "3FE5000000000000",
+            "expected": "400F1F205F79242E",
+            "own": {
+              "instructions": 52035,
+              "result": "400F1F205F79242E"
+            },
+            "qfplib": {
+              "instructions": 1559,
+              "result": "400F1F205F79242E"
+            }
+          },
+          {
+            "corpus_line": 5210,
+            "a": "400015556B21D33C",
+            "b": "3FD6000000000000",
+            "expected": "3FF45752C90970C4",
+            "own": {
+              "instructions": 50706,
+              "result": "3FF45752C90970C4"
+            },
+            "qfplib": {
+              "instructions": 1520,
+              "result": "3FF45752C90970C3"
+            }
+          },
+          {
+            "corpus_line": 5231,
+            "a": "4029EAC00EC20D8B",
+            "b": "3FD6000000000000",
+            "expected": "40034C7F1F04DD14",
+            "own": {
+              "instructions": 1277,
+              "result": "40034C7F1F04DD14"
+            },
+            "qfplib": {
+              "instructions": 1591,
+              "result": "40034C7F1F04DD14"
+            }
+          },
+          {
+            "corpus_line": 5490,
+            "a": "40136208CC85FD91",
+            "b": "3FC8000000000000",
+            "expected": "3FF5825D2B5292B0",
+            "own": {
+              "instructions": 53199,
+              "result": "3FF5825D2B5292B0"
+            },
+            "qfplib": {
+              "instructions": 1515,
+              "result": "3FF5825D2B5292B1"
+            }
+          },
+          {
+            "corpus_line": 5570,
+            "a": "401B52A7D14F71ED",
+            "b": "3FB8000000000000",
+            "expected": "3FF32875AF2AF43A",
+            "own": {
+              "instructions": 53191,
+              "result": "3FF32875AF2AF43A"
+            },
+            "qfplib": {
+              "instructions": 1494,
+              "result": "3FF32875AF2AF439"
+            }
+          },
+          {
+            "corpus_line": 6040,
+            "a": "4005936608F83C8E",
+            "b": "3FCC000000000000",
+            "expected": "3FF3E0C927941C22",
+            "own": {
+              "instructions": 52855,
+              "result": "3FF3E0C927941C22"
+            },
+            "qfplib": {
+              "instructions": 1536,
+              "result": "3FF3E0C927941C23"
+            }
+          },
+          {
+            "corpus_line": 6043,
+            "a": "400C05E2467CBB99",
+            "b": "3FCC000000000000",
+            "expected": "3FF50C5006D346F6",
+            "own": {
+              "instructions": 52661,
+              "result": "3FF50C5006D346F6"
+            },
+            "qfplib": {
+              "instructions": 1549,
+              "result": "3FF50C5006D346F7"
+            }
+          },
+          {
+            "corpus_line": 6056,
+            "a": "40157AE1D94B6C89",
+            "b": "3FCC000000000000",
+            "expected": "3FF71C2FC32647FE",
+            "own": {
+              "instructions": 51684,
+              "result": "3FF71C2FC32647FE"
+            },
+            "qfplib": {
+              "instructions": 1585,
+              "result": "3FF71C2FC32647FE"
+            }
+          },
+          {
+            "corpus_line": 6077,
+            "a": "402A60CC9C9BF9D4",
+            "b": "3FCC000000000000",
+            "expected": "3FFC213B19B5D602",
+            "own": {
+              "instructions": 52981,
+              "result": "3FFC213B19B5D602"
+            },
+            "qfplib": {
+              "instructions": 1642,
+              "result": "3FFC213B19B5D603"
+            }
+          },
+          {
+            "corpus_line": 6266,
+            "a": "4009AA6EB21E8792",
+            "b": "3FDE000000000000",
+            "expected": "3FFBA2199CC67B3E",
+            "own": {
+              "instructions": 52144,
+              "result": "3FFBA2199CC67B3E"
+            },
+            "qfplib": {
+              "instructions": 1590,
+              "result": "3FFBA2199CC67B3F"
+            }
+          },
+          {
+            "corpus_line": 6286,
+            "a": "402885DA136169C7",
+            "b": "3FDE000000000000",
+            "expected": "4009E711D8F9EA76",
+            "own": {
+              "instructions": 1297,
+              "result": "4009E711D8F9EA76"
+            },
+            "qfplib": {
+              "instructions": 1530,
+              "result": "4009E711D8F9EA76"
+            }
+          },
+          {
+            "corpus_line": 8010,
+            "a": "4014FA5B3D70031B",
+            "b": "3FE4000000000000",
+            "expected": "400689953CE292D0",
+            "own": {
+              "instructions": 51499,
+              "result": "400689953CE292D0"
+            },
+            "qfplib": {
+              "instructions": 1559,
+              "result": "400689953CE292D1"
+            }
+          },
+          {
+            "corpus_line": 8021,
+            "a": "4020FD2CAEB72B72",
+            "b": "3FE4000000000000",
+            "expected": "400E770742F2F2CD",
+            "own": {
+              "instructions": 53006,
+              "result": "400E770742F2F2CD"
+            },
+            "qfplib": {
+              "instructions": 1566,
+              "result": "400E770742F2F2CD"
+            }
+          },
+          {
+            "corpus_line": 8049,
+            "a": "4032C8E0EACC5DAC",
+            "b": "3FE4000000000000",
+            "expected": "401903A58BD25D95",
+            "own": {
+              "instructions": 1284,
+              "result": "401903A58BD25D95"
+            },
+            "qfplib": {
+              "instructions": 1554,
+              "result": "401903A58BD25D95"
+            }
+          },
+          {
+            "corpus_line": 8053,
+            "a": "4036F34BAF385174",
+            "b": "3FE4000000000000",
+            "expected": "401C599BDBC2A994",
+            "own": {
+              "instructions": 1290,
+              "result": "401C599BDBC2A994"
+            },
+            "qfplib": {
+              "instructions": 1618,
+              "result": "401C599BDBC2A994"
+            }
+          },
+          {
+            "corpus_line": 8057,
+            "a": "403A64B72AFC0DCF",
+            "b": "3FE4000000000000",
+            "expected": "401EF02CAA567D24",
+            "own": {
+              "instructions": 1284,
+              "result": "401EF02CAA567D24"
+            },
+            "qfplib": {
+              "instructions": 1542,
+              "result": "401EF02CAA567D23"
+            }
+          },
+          {
+            "corpus_line": 8071,
+            "a": "40478D80DBAF6D1B",
+            "b": "3FE4000000000000",
+            "expected": "402637BD4C26499B",
+            "own": {
+              "instructions": 1295,
+              "result": "402637BD4C26499B"
+            },
+            "qfplib": {
+              "instructions": 1569,
+              "result": "402637BD4C26499B"
+            }
+          },
+          {
+            "corpus_line": 8079,
+            "a": "404E76390E32BB46",
+            "b": "3FE4000000000000",
+            "expected": "402A17C324A809D7",
+            "own": {
+              "instructions": 52938,
+              "result": "402A17C324A809D7"
+            },
+            "qfplib": {
+              "instructions": 1628,
+              "result": "402A17C324A809DA"
+            }
+          },
+          {
+            "corpus_line": 8114,
+            "a": "40135638BDA216B2",
+            "b": "3FF6000000000000",
+            "expected": "4021750FF1A27D24",
+            "own": {
+              "instructions": 1277,
+              "result": "4021750FF1A27D24"
+            },
+            "qfplib": {
+              "instructions": 1525,
+              "result": "4021750FF1A27D25"
+            }
+          },
+          {
+            "corpus_line": 8186,
+            "a": "40323AF181A4771B",
+            "b": "3FE2000000000000",
+            "expected": "401479FC2A59DCD9",
+            "own": {
+              "instructions": 52719,
+              "result": "401479FC2A59DCD9"
+            },
+            "qfplib": {
+              "instructions": 1513,
+              "result": "401479FC2A59DCD9"
+            }
+          },
+          {
+            "corpus_line": 8201,
+            "a": "403790261E31BF1B",
+            "b": "3FE2000000000000",
+            "expected": "4017A7ECDD52E29D",
+            "own": {
+              "instructions": 1295,
+              "result": "4017A7ECDD52E29D"
+            },
+            "qfplib": {
+              "instructions": 1624,
+              "result": "4017A7ECDD52E29E"
+            }
+          },
+          {
+            "corpus_line": 8218,
+            "a": "404B772DA63E1739",
+            "b": "3FE2000000000000",
+            "expected": "40230A5C58BD32C0",
+            "own": {
+              "instructions": 1288,
+              "result": "40230A5C58BD32C0"
+            },
+            "qfplib": {
+              "instructions": 1593,
+              "result": "40230A5C58BD32BE"
+            }
+          },
+          {
+            "corpus_line": 8230,
+            "a": "40579C6941E4ED70",
+            "b": "3FE2000000000000",
+            "expected": "4029D394D76377BE",
+            "own": {
+              "instructions": 52000,
+              "result": "4029D394D76377BE"
+            },
+            "qfplib": {
+              "instructions": 1550,
+              "result": "4029D394D76377BD"
+            }
+          },
+          {
+            "corpus_line": 8367,
+            "a": "402D4FA472B2C061",
+            "b": "3FD4000000000000",
+            "expected": "40028334DAE3E7A3",
+            "own": {
+              "instructions": 1290,
+              "result": "40028334DAE3E7A3"
+            },
+            "qfplib": {
+              "instructions": 1557,
+              "result": "40028334DAE3E7A3"
+            }
+          },
+          {
+            "corpus_line": 8371,
+            "a": "40311798700A18C3",
+            "b": "3FD4000000000000",
+            "expected": "40036C8C8F277D65",
+            "own": {
+              "instructions": 1277,
+              "result": "40036C8C8F277D65"
+            },
+            "qfplib": {
+              "instructions": 1523,
+              "result": "40036C8C8F277D65"
+            }
+          },
+          {
+            "corpus_line": 8404,
+            "a": "404641B9C84E1D7A",
+            "b": "3FD4000000000000",
+            "expected": "400A324F22307789",
+            "own": {
+              "instructions": 1284,
+              "result": "400A324F22307789"
+            },
+            "qfplib": {
+              "instructions": 1574,
+              "result": "400A324F22307789"
+            }
+          },
+          {
+            "corpus_line": 8545,
+            "a": "4012B6E73B8FFF6B",
+            "b": "3FDC000000000000",
+            "expected": "3FFF6D30C1CD7EB7",
+            "own": {
+              "instructions": 1290,
+              "result": "3FFF6D30C1CD7EB7"
+            },
+            "qfplib": {
+              "instructions": 1530,
+              "result": "3FFF6D30C1CD7EB7"
+            }
+          },
+          {
+            "corpus_line": 8564,
+            "a": "401EA03A5806D8E7",
+            "b": "3FDC000000000000",
+            "expected": "40037DE8663758F2",
+            "own": {
+              "instructions": 53329,
+              "result": "40037DE8663758F2"
+            },
+            "qfplib": {
+              "instructions": 1577,
+              "result": "40037DE8663758F1"
+            }
+          },
+          {
+            "corpus_line": 8591,
+            "a": "4037AB22F2CD1735",
+            "b": "3FDC000000000000",
+            "expected": "400FEFC9F02A320E",
+            "own": {
+              "instructions": 53081,
+              "result": "400FEFC9F02A320E"
+            },
+            "qfplib": {
+              "instructions": 1556,
+              "result": "400FEFC9F02A320E"
+            }
+          },
+          {
+            "corpus_line": 8601,
+            "a": "4040D8280C6682D7",
+            "b": "3FDC000000000000",
+            "expected": "4012A29DA5123214",
+            "own": {
+              "instructions": 1295,
+              "result": "4012A29DA5123214"
+            },
+            "qfplib": {
+              "instructions": 1543,
+              "result": "4012A29DA5123213"
+            }
+          },
+          {
+            "corpus_line": 8608,
+            "a": "404CEAE86554B145",
+            "b": "3FDC000000000000",
+            "expected": "40179B173DC638E7",
+            "own": {
+              "instructions": 52361,
+              "result": "40179B173DC638E7"
+            },
+            "qfplib": {
+              "instructions": 1586,
+              "result": "40179B173DC638E8"
+            }
+          },
+          {
+            "corpus_line": 8796,
+            "a": "40118E3E978A83D1",
+            "b": "3FED000000000000",
+            "expected": "400E90AA364F1AE1",
+            "own": {
+              "instructions": 1275,
+              "result": "400E90AA364F1AE1"
+            },
+            "qfplib": {
+              "instructions": 1540,
+              "result": "400E90AA364F1AE1"
+            }
+          },
+          {
+            "corpus_line": 8808,
+            "a": "4020B7E97230F329",
+            "b": "3FED000000000000",
+            "expected": "401B66BEA3796245",
+            "own": {
+              "instructions": 1277,
+              "result": "401B66BEA3796245"
+            },
+            "qfplib": {
+              "instructions": 1588,
+              "result": "401B66BEA3796246"
+            }
+          },
+          {
+            "corpus_line": 8819,
+            "a": "402C23719669EC12",
+            "b": "3FED000000000000",
+            "expected": "4025F5FCA9EAC08E",
+            "own": {
+              "instructions": 1290,
+              "result": "4025F5FCA9EAC08E"
+            },
+            "qfplib": {
+              "instructions": 1553,
+              "result": "4025F5FCA9EAC08D"
+            }
+          },
+          {
+            "corpus_line": 8822,
+            "a": "402DAF61B1319C5F",
+            "b": "3FED000000000000",
+            "expected": "40270D52914DFC15",
+            "own": {
+              "instructions": 53329,
+              "result": "40270D52914DFC15"
+            },
+            "qfplib": {
+              "instructions": 1546,
+              "result": "40270D52914DFC14"
+            }
+          },
+          {
+            "corpus_line": 8841,
+            "a": "4049A6DE5B12D286",
+            "b": "3FED000000000000",
+            "expected": "4041BBBFF1C5899D",
+            "own": {
+              "instructions": 1288,
+              "result": "4041BBBFF1C5899D"
+            },
+            "qfplib": {
+              "instructions": 1519,
+              "result": "4041BBBFF1C5899C"
+            }
+          },
+          {
+            "corpus_line": 9269,
+            "a": "402EE12B334ECCB3",
+            "b": "3FF6000000000000",
+            "expected": "40458B95D00992B6",
+            "own": {
+              "instructions": 1297,
+              "result": "40458B95D00992B6"
+            },
+            "qfplib": {
+              "instructions": 1579,
+              "result": "40458B95D00992B5"
+            }
+          },
+          {
+            "corpus_line": 9283,
+            "a": "40392B3372F4C78C",
+            "b": "3FF6000000000000",
+            "expected": "405517A3E9A0D0F6",
+            "own": {
+              "instructions": 1275,
+              "result": "405517A3E9A0D0F6"
+            },
+            "qfplib": {
+              "instructions": 1573,
+              "result": "405517A3E9A0D0F7"
+            }
+          },
+          {
+            "corpus_line": 9289,
+            "a": "403BABC514D18B82",
+            "b": "3FF6000000000000",
+            "expected": "40580740EA0EC0A5",
+            "own": {
+              "instructions": 1277,
+              "result": "40580740EA0EC0A5"
+            },
+            "qfplib": {
+              "instructions": 1534,
+              "result": "40580740EA0EC0A2"
+            }
+          },
+          {
+            "corpus_line": 9298,
+            "a": "40457423A5EAB16B",
+            "b": "3FF6000000000000",
+            "expected": "4065F5DF03AA908E",
+            "own": {
+              "instructions": 51029,
+              "result": "4065F5DF03AA908E"
+            },
+            "qfplib": {
+              "instructions": 1567,
+              "result": "4065F5DF03AA908D"
+            }
+          },
+          {
+            "corpus_line": 9309,
+            "a": "404F04390B0A9B1B",
+            "b": "3FF6000000000000",
+            "expected": "40723A569C65AAC4",
+            "own": {
+              "instructions": 52626,
+              "result": "40723A569C65AAC4"
+            },
+            "qfplib": {
+              "instructions": 1585,
+              "result": "40723A569C65AAC4"
+            }
+          },
+          {
+            "corpus_line": 9311,
+            "a": "4051D3C1FC14F49B",
+            "b": "3FF6000000000000",
+            "expected": "407613DB142CE17B",
+            "own": {
+              "instructions": 51538,
+              "result": "407613DB142CE17B"
+            },
+            "qfplib": {
+              "instructions": 1579,
+              "result": "407613DB142CE178"
+            }
+          },
+          {
+            "corpus_line": 9316,
+            "a": "40560208B307A809",
+            "b": "3FF6000000000000",
+            "expected": "407D7EE8E496DE40",
+            "own": {
+              "instructions": 1290,
+              "result": "407D7EE8E496DE40"
+            },
+            "qfplib": {
+              "instructions": 1578,
+              "result": "407D7EE8E496DE44"
+            }
+          },
+          {
+            "corpus_line": 9366,
+            "a": "400B3816EEC5184B",
+            "b": "3FFE000000000000",
+            "expected": "4023DDDC8FFB0BBA",
+            "own": {
+              "instructions": 1297,
+              "result": "4023DDDC8FFB0BBA"
+            },
+            "qfplib": {
+              "instructions": 1585,
+              "result": "4023DDDC8FFB0BBB"
+            }
+          },
+          {
+            "corpus_line": 9390,
+            "a": "402494BA072CA144",
+            "b": "3FFE000000000000",
+            "expected": "4053C809A4033080",
+            "own": {
+              "instructions": 1297,
+              "result": "4053C809A4033080"
+            },
+            "qfplib": {
+              "instructions": 1523,
+              "result": "4053C809A4033085"
+            }
+          },
+          {
+            "corpus_line": 9394,
+            "a": "4026C3C0B5F88F2C",
+            "b": "3FFE000000000000",
+            "expected": "4057E60E27239A60",
+            "own": {
+              "instructions": 52956,
+              "result": "4057E60E27239A60"
+            },
+            "qfplib": {
+              "instructions": 1588,
+              "result": "4057E60E27239A60"
+            }
+          },
+          {
+            "corpus_line": 9411,
+            "a": "404597FCA84B49DD",
+            "b": "3FFE000000000000",
+            "expected": "409233A989C4E32D",
+            "own": {
+              "instructions": 1277,
+              "result": "409233A989C4E32D"
+            },
+            "qfplib": {
+              "instructions": 1593,
+              "result": "409233A989C4E32D"
+            }
+          },
+          {
+            "corpus_line": 9415,
+            "a": "4049483DC49E226F",
+            "b": "3FFE000000000000",
+            "expected": "409876CDF7ACA459",
+            "own": {
+              "instructions": 1295,
+              "result": "409876CDF7ACA459"
+            },
+            "qfplib": {
+              "instructions": 1628,
+              "result": "409876CDF7ACA45A"
+            }
+          },
+          {
+            "corpus_line": 9425,
+            "a": "4055401E0CFA851E",
+            "b": "3FFE000000000000",
+            "expected": "40B032772B4C3418",
+            "own": {
+              "instructions": 1284,
+              "result": "40B032772B4C3418"
+            },
+            "qfplib": {
+              "instructions": 1519,
+              "result": "40B032772B4C3419"
+            }
+          },
+          {
+            "corpus_line": 9440,
+            "a": "40093F4AE6681ABA",
+            "b": "3FE2000000000000",
+            "expected": "3FFE8A62E0631527",
+            "own": {
+              "instructions": 1290,
+              "result": "3FFE8A62E0631527"
+            },
+            "qfplib": {
+              "instructions": 1564,
+              "result": "3FFE8A62E0631527"
+            }
+          },
+          {
+            "corpus_line": 9445,
+            "a": "400AD4420B74048F",
+            "b": "3FE2000000000000",
+            "expected": "3FFF9A455776C886",
+            "own": {
+              "instructions": 1297,
+              "result": "3FFF9A455776C886"
+            },
+            "qfplib": {
+              "instructions": 1580,
+              "result": "3FFF9A455776C887"
+            }
+          },
+          {
+            "corpus_line": 9472,
+            "a": "400EDCC6263E4877",
+            "b": "3FF6000000000000",
+            "expected": "40199A28EA42892E",
+            "own": {
+              "instructions": 1284,
+              "result": "40199A28EA42892E"
+            },
+            "qfplib": {
+              "instructions": 1496,
+              "result": "40199A28EA42892E"
+            }
+          },
+          {
+            "corpus_line": 9497,
+            "a": "4003BB231416BD1D",
+            "b": "4002000000000000",
+            "expected": "401E7E152FFEDA65",
+            "own": {
+              "instructions": 1277,
+              "result": "401E7E152FFEDA65"
+            },
+            "qfplib": {
+              "instructions": 1560,
+              "result": "401E7E152FFEDA64"
+            }
+          },
+          {
+            "corpus_line": 9502,
+            "a": "4008AC47880BCBC2",
+            "b": "4002000000000000",
+            "expected": "402935CD0E51C64E",
+            "own": {
+              "instructions": 51875,
+              "result": "402935CD0E51C64E"
+            },
+            "qfplib": {
+              "instructions": 1552,
+              "result": "402935CD0E51C64F"
+            }
+          },
+          {
+            "corpus_line": 9504,
+            "a": "400AA7A3E3ED4B15",
+            "b": "4002000000000000",
+            "expected": "402DFF297FFBA31F",
+            "own": {
+              "instructions": 52987,
+              "result": "402DFF297FFBA31F"
+            },
+            "qfplib": {
+              "instructions": 1542,
+              "result": "402DFF297FFBA31D"
+            }
+          },
+          {
+            "corpus_line": 9516,
+            "a": "4018C75B04E5706C",
+            "b": "4002000000000000",
+            "expected": "404E45213EC7D9D1",
+            "own": {
+              "instructions": 1288,
+              "result": "404E45213EC7D9D1"
+            },
+            "qfplib": {
+              "instructions": 1530,
+              "result": "404E45213EC7D9CD"
+            }
+          },
+          {
+            "corpus_line": 9542,
+            "a": "401438D6822DDE7B",
+            "b": "4009000000000000",
+            "expected": "4063C7134979A51C",
+            "own": {
+              "instructions": 1335,
+              "result": "4063C7134979A51C"
+            },
+            "qfplib": {
+              "instructions": 1505,
+              "result": "4063C7134979A51A"
+            }
+          },
+          {
+            "corpus_line": 9589,
+            "a": "404A4136AD8E7ED0",
+            "b": "4009000000000000",
+            "expected": "410CFF3AE2E5A518",
+            "own": {
+              "instructions": 53355,
+              "result": "410CFF3AE2E5A518"
+            },
+            "qfplib": {
+              "instructions": 1552,
+              "result": "410CFF3AE2E5A516"
+            }
+          },
+          {
+            "corpus_line": 9618,
+            "a": "4000E51E8BB37497",
+            "b": "3FEC000000000000",
+            "expected": "3FFEC684CAAA248D",
+            "own": {
+              "instructions": 1284,
+              "result": "3FFEC684CAAA248D"
+            },
+            "qfplib": {
+              "instructions": 1526,
+              "result": "3FFEC684CAAA248D"
+            }
+          },
+          {
+            "corpus_line": 9630,
+            "a": "400801F2F2F08405",
+            "b": "3FEC000000000000",
+            "expected": "4004ED1F5CEA1794",
+            "own": {
+              "instructions": 1282,
+              "result": "4004ED1F5CEA1794"
+            },
+            "qfplib": {
+              "instructions": 1525,
+              "result": "4004ED1F5CEA1794"
+            }
+          },
+          {
+            "corpus_line": 9665,
+            "a": "4055FDB03FFFFFF7",
+            "b": "3FEC000000000000",
+            "expected": "404921EDFFFFFFF7",
+            "own": {
+              "instructions": 1297,
+              "result": "404921EDFFFFFFF7"
+            },
+            "qfplib": {
+              "instructions": 1632,
+              "result": "404921EDFFFFFFF8"
+            }
+          },
+          {
+            "corpus_line": 32137,
+            "a": "402044F83736B190",
+            "b": "3FF2000000000000",
+            "expected": "402524953FA026AE",
+            "own": {
+              "instructions": 1297,
+              "result": "402524953FA026AE"
+            },
+            "qfplib": {
+              "instructions": 1557,
+              "result": "402524953FA026AF"
+            }
+          },
+          {
+            "corpus_line": 32150,
+            "a": "402C9ADF492B6211",
+            "b": "3FF2000000000000",
+            "expected": "4033F1F73AD4A7BF",
+            "own": {
+              "instructions": 1290,
+              "result": "4033F1F73AD4A7BF"
+            },
+            "qfplib": {
+              "instructions": 1575,
+              "result": "4033F1F73AD4A7C0"
+            }
+          },
+          {
+            "corpus_line": 32151,
+            "a": "402D2286C7D961B9",
+            "b": "3FF2000000000000",
+            "expected": "40345C7F8F9DC79B",
+            "own": {
+              "instructions": 52873,
+              "result": "40345C7F8F9DC79B"
+            },
+            "qfplib": {
+              "instructions": 1565,
+              "result": "40345C7F8F9DC79B"
+            }
+          },
+          {
+            "corpus_line": 32208,
+            "a": "40069683AC6FCBA9",
+            "b": "3FF2000000000000",
+            "expected": "4009B79FEB79ED5D",
+            "own": {
+              "instructions": 50925,
+              "result": "4009B79FEB79ED5D"
+            },
+            "qfplib": {
+              "instructions": 1516,
+              "result": "4009B79FEB79ED5C"
+            }
+          },
+          {
+            "corpus_line": 36073,
+            "a": "40339953F23EF196",
+            "b": "4002000000000000",
+            "expected": "408941AA15B20ACA",
+            "own": {
+              "instructions": 52528,
+              "result": "408941AA15B20ACA"
+            },
+            "qfplib": {
+              "instructions": 1518,
+              "result": "408941AA15B20ACC"
+            }
+          },
+          {
+            "corpus_line": 36090,
+            "a": "4048AC47880BCBC2",
+            "b": "4002000000000000",
+            "expected": "40B935CD0E51C64E",
+            "own": {
+              "instructions": 52228,
+              "result": "40B935CD0E51C64E"
+            },
+            "qfplib": {
+              "instructions": 1575,
+              "result": "40B935CD0E51C64B"
+            }
+          },
+          {
+            "corpus_line": 36096,
+            "a": "405418098BF239F3",
+            "b": "4002000000000000",
+            "expected": "40D2E3CF97FB24F2",
+            "own": {
+              "instructions": 51538,
+              "result": "40D2E3CF97FB24F2"
+            },
+            "qfplib": {
+              "instructions": 1559,
+              "result": "40D2E3CF97FB24F5"
+            }
+          },
+          {
+            "corpus_line": 58471,
+            "a": "4002C31F3522C45F",
+            "b": "3FD0000000000000",
+            "expected": "3FF3CCD6618C01E0",
+            "own": {
+              "instructions": 52045,
+              "result": "3FF3CCD6618C01E0"
+            },
+            "qfplib": {
+              "instructions": 1532,
+              "result": "3FF3CCD6618C01E0"
+            }
+          },
+          {
+            "corpus_line": 58482,
+            "a": "4005F8905B28A33F",
+            "b": "3FD0000000000000",
+            "expected": "3FF498E6D48D3CC9",
+            "own": {
+              "instructions": 50867,
+              "result": "3FF498E6D48D3CC9"
+            },
+            "qfplib": {
+              "instructions": 1511,
+              "result": "3FF498E6D48D3CC8"
+            }
+          },
+          {
+            "corpus_line": 58492,
+            "a": "4007F8CB060E7F08",
+            "b": "3FD0000000000000",
+            "expected": "3FF50D0EC22D295C",
+            "own": {
+              "instructions": 1295,
+              "result": "3FF50D0EC22D295C"
+            },
+            "qfplib": {
+              "instructions": 1513,
+              "result": "3FF50D0EC22D295C"
+            }
+          },
+          {
+            "corpus_line": 58533,
+            "a": "4010BEA2BFC85C5E",
+            "b": "3FD0000000000000",
+            "expected": "3FF6E2DF8E718D26",
+            "own": {
+              "instructions": 1275,
+              "result": "3FF6E2DF8E718D26"
+            },
+            "qfplib": {
+              "instructions": 1575,
+              "result": "3FF6E2DF8E718D26"
+            }
+          },
+          {
+            "corpus_line": 58549,
+            "a": "40152FF5AE598CD6",
+            "b": "3FD0000000000000",
+            "expected": "3FF845E5B65C016D",
+            "own": {
+              "instructions": 1288,
+              "result": "3FF845E5B65C016D"
+            },
+            "qfplib": {
+              "instructions": 1504,
+              "result": "3FF845E5B65C016D"
+            }
+          },
+          {
+            "corpus_line": 58614,
+            "a": "4021165DDED0AC56",
+            "b": "3FD0000000000000",
+            "expected": "3FFB5ACADD12622A",
+            "own": {
+              "instructions": 52421,
+              "result": "3FFB5ACADD12622A"
+            },
+            "qfplib": {
+              "instructions": 1586,
+              "result": "3FFB5ACADD12622A"
+            }
+          },
+          {
+            "corpus_line": 58630,
+            "a": "40226DB5205B1200",
+            "b": "3FD0000000000000",
+            "expected": "3FFBE055AF587AA6",
+            "own": {
+              "instructions": 1284,
+              "result": "3FFBE055AF587AA6"
+            },
+            "qfplib": {
+              "instructions": 1574,
+              "result": "3FFBE055AF587AA6"
+            }
+          },
+          {
+            "corpus_line": 58679,
+            "a": "402874662500E400",
+            "b": "3FD0000000000000",
+            "expected": "3FFDEB5E523E05A5",
+            "own": {
+              "instructions": 52438,
+              "result": "3FFDEB5E523E05A5"
+            },
+            "qfplib": {
+              "instructions": 1564,
+              "result": "3FFDEB5E523E05A6"
+            }
+          },
+          {
+            "corpus_line": 58698,
+            "a": "402D29DB61AD94D9",
+            "b": "3FD0000000000000",
+            "expected": "3FFF4418FA386FEE",
+            "own": {
+              "instructions": 52470,
+              "result": "3FFF4418FA386FEE"
+            },
+            "qfplib": {
+              "instructions": 1568,
+              "result": "3FFF4418FA386FEF"
+            }
+          },
+          {
+            "corpus_line": 58721,
+            "a": "402FFFFFFFFFFFFC",
+            "b": "3FD0000000000000",
+            "expected": "3FFFFFFFFFFFFFFF",
+            "own": {
+              "instructions": 1295,
+              "result": "3FFFFFFFFFFFFFFF"
+            },
+            "qfplib": {
+              "instructions": 1370,
+              "result": "3FFFFFFFFFFFFFFF"
+            }
+          },
+          {
+            "corpus_line": 59200,
+            "a": "4010BC3EA6C05626",
+            "b": "3FC0000000000000",
+            "expected": "3FF3226D979D3C70",
+            "own": {
+              "instructions": 50727,
+              "result": "3FF3226D979D3C70"
+            },
+            "qfplib": {
+              "instructions": 1422,
+              "result": "3FF3226D979D3C70"
+            }
+          },
+          {
+            "corpus_line": 59218,
+            "a": "4018D10B3F994EE4",
+            "b": "3FC0000000000000",
+            "expected": "3FF419B5649C44BA",
+            "own": {
+              "instructions": 53489,
+              "result": "3FF419B5649C44BA"
+            },
+            "qfplib": {
+              "instructions": 1478,
+              "result": "3FF419B5649C44BB"
+            }
+          },
+          {
+            "corpus_line": 59246,
+            "a": "402765792468333A",
+            "b": "3FC0000000000000",
+            "expected": "3FF5C2404EECAB9F",
+            "own": {
+              "instructions": 1284,
+              "result": "3FF5C2404EECAB9F"
+            },
+            "qfplib": {
+              "instructions": 1511,
+              "result": "3FF5C2404EECAB9F"
+            }
+          },
+          {
+            "corpus_line": 59253,
+            "a": "402BBCB76912E37F",
+            "b": "3FC0000000000000",
+            "expected": "3FF63A05BA5353C9",
+            "own": {
+              "instructions": 52551,
+              "result": "3FF63A05BA5353C9"
+            },
+            "qfplib": {
+              "instructions": 1581,
+              "result": "3FF63A05BA5353CA"
+            }
+          },
+          {
+            "corpus_line": 59260,
+            "a": "402FCDF82C925FAE",
+            "b": "3FC0000000000000",
+            "expected": "3FF69C2F4D2ABD6B",
+            "own": {
+              "instructions": 52662,
+              "result": "3FF69C2F4D2ABD6B"
+            },
+            "qfplib": {
+              "instructions": 1527,
+              "result": "3FF69C2F4D2ABD6A"
+            }
+          },
+          {
+            "corpus_line": 59985,
+            "a": "400350B8DE465A94",
+            "b": "3FB0000000000000",
+            "expected": "3FF0E7FC068B4D7C",
+            "own": {
+              "instructions": 52405,
+              "result": "3FF0E7FC068B4D7C"
+            },
+            "qfplib": {
+              "instructions": 1496,
+              "result": "3FF0E7FC068B4D7C"
+            }
+          },
+          {
+            "corpus_line": 59990,
+            "a": "400E24E367E95E36",
+            "b": "3FB0000000000000",
+            "expected": "3FF162123D52033B",
+            "own": {
+              "instructions": 51703,
+              "result": "3FF162123D52033B"
+            },
+            "qfplib": {
+              "instructions": 1574,
+              "result": "3FF162123D52033A"
+            }
+          },
+          {
+            "corpus_line": 66401,
+            "a": "40504A28B5F48AA3",
+            "b": "3F80000000000000",
+            "expected": "3FF087DCF3B21863",
+            "own": {
+              "instructions": 53058,
+              "result": "3FF087DCF3B21863"
+            },
+            "qfplib": {
+              "instructions": 1562,
+              "result": "3FF087DCF3B21863"
+            }
+          },
+          {
+            "corpus_line": 68346,
+            "a": "3FD575BE3E3352F2",
+            "b": "BFD0000000000000",
+            "expected": "3FF506ABCE84EEB5",
+            "own": {
+              "instructions": 1295,
+              "result": "3FF506ABCE84EEB5"
+            },
+            "qfplib": {
+              "instructions": 1595,
+              "result": "3FF506ABCE84EEB5"
+            }
+          },
+          {
+            "corpus_line": 68404,
+            "a": "3FC128311A80CBDD",
+            "b": "BFD0000000000000",
+            "expected": "3FFA716E1A1C61D8",
+            "own": {
+              "instructions": 52594,
+              "result": "3FFA716E1A1C61D8"
+            },
+            "qfplib": {
+              "instructions": 1592,
+              "result": "3FFA716E1A1C61D7"
+            }
+          },
+          {
+            "corpus_line": 68434,
+            "a": "3FBA6BA7382328A1",
+            "b": "BFD0000000000000",
+            "expected": "3FFC3A9C13392A9D",
+            "own": {
+              "instructions": 1277,
+              "result": "3FFC3A9C13392A9D"
+            },
+            "qfplib": {
+              "instructions": 1550,
+              "result": "3FFC3A9C13392A9D"
+            }
+          },
+          {
+            "corpus_line": 68460,
+            "a": "3FB125D569AD6B68",
+            "b": "BFD0000000000000",
+            "expected": "3FFF7355D836E0FD",
+            "own": {
+              "instructions": 1284,
+              "result": "3FFF7355D836E0FD"
+            },
+            "qfplib": {
+              "instructions": 1584,
+              "result": "3FFF7355D836E0FD"
+            }
+          },
+          {
+            "corpus_line": 68993,
+            "a": "3FBFBF0990BF0A68",
+            "b": "BFC0000000000000",
+            "expected": "3FF4C524D13C910C",
+            "own": {
+              "instructions": 50986,
+              "result": "3FF4C524D13C910C"
+            },
+            "qfplib": {
+              "instructions": 1505,
+              "result": "3FF4C524D13C910C"
+            }
+          },
+          {
+            "corpus_line": 69003,
+            "a": "3FC6017DB8B8B448",
+            "b": "BFC0000000000000",
+            "expected": "3FF3F064422ED2DB",
+            "own": {
+              "instructions": 52966,
+              "result": "3FF3F064422ED2DB"
+            },
+            "qfplib": {
+              "instructions": 1544,
+              "result": "3FF3F064422ED2DB"
+            }
+          },
+          {
+            "corpus_line": 69051,
+            "a": "3F982157544A78C1",
+            "b": "BFC0000000000000",
+            "expected": "3FF98FC2164A09AA",
+            "own": {
+              "instructions": 1282,
+              "result": "3FF98FC2164A09AA"
+            },
+            "qfplib": {
+              "instructions": 1562,
+              "result": "3FF98FC2164A09AA"
+            }
+          },
+          {
+            "corpus_line": 69063,
+            "a": "3F968EBD5B980468",
+            "b": "BFC0000000000000",
+            "expected": "3FF9C71E2DF27264",
+            "own": {
+              "instructions": 52549,
+              "result": "3FF9C71E2DF27264"
+            },
+            "qfplib": {
+              "instructions": 1516,
+              "result": "3FF9C71E2DF27264"
+            }
+          },
+          {
+            "corpus_line": 69068,
+            "a": "3F9CB40EE7C5CAF4",
+            "b": "BFC0000000000000",
+            "expected": "3FF903546812BB1F",
+            "own": {
+              "instructions": 50293,
+              "result": "3FF903546812BB1F"
+            },
+            "qfplib": {
+              "instructions": 1638,
+              "result": "3FF903546812BB1F"
+            }
+          },
+          {
+            "corpus_line": 69103,
+            "a": "3F986CFBC7A5BB24",
+            "b": "BFC0000000000000",
+            "expected": "3FF985CF7647C0F5",
+            "own": {
+              "instructions": 50754,
+              "result": "3FF985CF7647C0F5"
+            },
+            "qfplib": {
+              "instructions": 1546,
+              "result": "3FF985CF7647C0F4"
+            }
+          },
+          {
+            "corpus_line": 69111,
+            "a": "3F9246CF13876B3A",
+            "b": "BFC0000000000000",
+            "expected": "3FFA7704E4BEFF95",
+            "own": {
+              "instructions": 52713,
+              "result": "3FFA7704E4BEFF95"
+            },
+            "qfplib": {
+              "instructions": 1518,
+              "result": "3FFA7704E4BEFF95"
+            }
+          },
+          {
+            "corpus_line": 69134,
+            "a": "3F89ECDCFC034EE2",
+            "b": "BFC0000000000000",
+            "expected": "3FFBA04D71B37C51",
+            "own": {
+              "instructions": 51059,
+              "result": "3FFBA04D71B37C51"
+            },
+            "qfplib": {
+              "instructions": 1566,
+              "result": "3FFBA04D71B37C50"
+            }
+          },
+          {
+            "corpus_line": 69140,
+            "a": "3F89C1A2900EDC2E",
+            "b": "BFC0000000000000",
+            "expected": "3FFBA614EE0D2C27",
+            "own": {
+              "instructions": 52077,
+              "result": "3FFBA614EE0D2C27"
+            },
+            "qfplib": {
+              "instructions": 1592,
+              "result": "3FFBA614EE0D2C27"
+            }
+          },
+          {
+            "corpus_line": 69150,
+            "a": "3F8B621723C9611B",
+            "b": "BFC0000000000000",
+            "expected": "3FFB7019CE245068",
+            "own": {
+              "instructions": 1277,
+              "result": "3FFB7019CE245068"
+            },
+            "qfplib": {
+              "instructions": 1544,
+              "result": "3FFB7019CE245068"
+            }
+          },
+          {
+            "corpus_line": 70958,
+            "a": "3FB24FE707AAC23E",
+            "b": "BFA0000000000000",
+            "expected": "3FF15FEB40BEF2A9",
+            "own": {
+              "instructions": 1288,
+              "result": "3FF15FEB40BEF2A9"
+            },
+            "qfplib": {
+              "instructions": 1508,
+              "result": "3FF15FEB40BEF2A9"
+            }
+          },
+          {
+            "corpus_line": 70969,
+            "a": "3FA2595E2B9CE616",
+            "b": "BFA0000000000000",
+            "expected": "3FF1C10779B3E134",
+            "own": {
+              "instructions": 50464,
+              "result": "3FF1C10779B3E134"
+            },
+            "qfplib": {
+              "instructions": 1518,
+              "result": "3FF1C10779B3E134"
+            }
+          },
+          {
+            "corpus_line": 73062,
+            "a": "3FB1B5FD0635D872",
+            "b": "BF90000000000000",
+            "expected": "3FF0AE8FA4C1F708",
+            "own": {
+              "instructions": 1293,
+              "result": "3FF0AE8FA4C1F708"
+            },
+            "qfplib": {
+              "instructions": 1518,
+              "result": "3FF0AE8FA4C1F708"
+            }
+          },
+          {
+            "corpus_line": 913585,
+            "a": "3FB0000000000000",
+            "b": "C010000000000000",
+            "expected": "40F0000000000000",
+            "own": {
+              "instructions": 1289,
+              "result": "40F0000000000000"
+            },
+            "qfplib": {
+              "instructions": 1400,
+              "result": "40EFFFFFFFFFFFFD"
+            }
+          },
+          {
+            "corpus_line": 917194,
+            "a": "3FB0000000000000",
+            "b": "C020000000000000",
+            "expected": "41F0000000000000",
+            "own": {
+              "instructions": 1297,
+              "result": "41F0000000000000"
+            },
+            "qfplib": {
+              "instructions": 1400,
+              "result": "41EFFFFFFFFFFFF9"
+            }
+          },
+          {
+            "corpus_line": 918098,
+            "a": "4030000000000000",
+            "b": "C028000000000000",
+            "expected": "3CF0000000000000",
+            "own": {
+              "instructions": 1299,
+              "result": "3CF0000000000000"
+            },
+            "qfplib": {
+              "instructions": 1344,
+              "result": "3CF000000000000D"
+            }
+          },
+          {
+            "corpus_line": 927278,
+            "a": "3FD0000000000000",
+            "b": "C016000000000000",
+            "expected": "40A0000000000000",
+            "own": {
+              "instructions": 1289,
+              "result": "40A0000000000000"
+            },
+            "qfplib": {
+              "instructions": 1327,
+              "result": "40A0000000000000"
+            }
+          },
+          {
+            "corpus_line": 929207,
+            "a": "4050000000000000",
+            "b": "C004000000000000",
+            "expected": "3F00000000000000",
+            "own": {
+              "instructions": 1299,
+              "result": "3F00000000000000"
+            },
+            "qfplib": {
+              "instructions": 1350,
+              "result": "3F00000000000002"
+            }
+          },
+          {
+            "corpus_line": 942942,
+            "a": "4050000000000000",
+            "b": "C022000000000000",
+            "expected": "3C90000000000000",
+            "own": {
+              "instructions": 1299,
+              "result": "3C90000000000000"
+            },
+            "qfplib": {
+              "instructions": 1344,
+              "result": "3C9000000000001B"
+            }
+          },
+          {
+            "corpus_line": 949150,
+            "a": "3FB0000000000000",
+            "b": "C004000000000000",
+            "expected": "4090000000000000",
+            "own": {
+              "instructions": 1289,
+              "result": "4090000000000000"
+            },
+            "qfplib": {
+              "instructions": 1406,
+              "result": "4090000000000000"
+            }
+          },
+          {
+            "corpus_line": 949209,
+            "a": "3FB0000000000000",
+            "b": "C023000000000000",
+            "expected": "4250000000000000",
+            "own": {
+              "instructions": 1289,
+              "result": "4250000000000000"
+            },
+            "qfplib": {
+              "instructions": 1406,
+              "result": "424FFFFFFFFFFFFE"
+            }
+          },
+          {
+            "corpus_line": 950243,
+            "a": "4030000000000000",
+            "b": "C02B800000000000",
+            "expected": "3C80000000000000",
+            "own": {
+              "instructions": 1299,
+              "result": "3C80000000000000"
+            },
+            "qfplib": {
+              "instructions": 1344,
+              "result": "3C80000000000012"
+            }
+          },
+          {
+            "corpus_line": 954872,
+            "a": "3F90000000000000",
+            "b": "C010000000000000",
+            "expected": "4170000000000000",
+            "own": {
+              "instructions": 1289,
+              "result": "4170000000000000"
+            },
+            "qfplib": {
+              "instructions": 1396,
+              "result": "416FFFFFFFFFFFF3"
+            }
+          },
+          {
+            "corpus_line": 997133,
+            "a": "4043088000000000",
+            "b": "4010000000000000",
+            "expected": "41400512D01F2F20",
+            "own": {
+              "instructions": 51940,
+              "result": "41400512D01F2F20"
+            },
+            "qfplib": {
+              "instructions": 1519,
+              "result": "41400512D01F2F23"
+            }
+          },
+          {
+            "corpus_line": 998059,
+            "a": "3F8BB40000000000",
+            "b": "4014000000000000",
+            "expected": "3DFF1F596972C55E",
+            "own": {
+              "instructions": 54655,
+              "result": "3DFF1F596972C55E"
+            },
+            "qfplib": {
+              "instructions": 1561,
+              "result": "3DFF1F596972C54F"
+            }
+          },
+          {
+            "corpus_line": 999280,
+            "a": "4058600000000000",
+            "b": "401C000000000000",
+            "expected": "42D30B6CBC24B5E6",
+            "own": {
+              "instructions": 51705,
+              "result": "42D30B6CBC24B5E6"
+            },
+            "qfplib": {
+              "instructions": 1563,
+              "result": "42D30B6CBC24B5EC"
+            }
+          },
+          {
+            "corpus_line": 999432,
+            "a": "4049C00000000000",
+            "b": "4020000000000000",
+            "expected": "42C6809A7790E5E0",
+            "own": {
+              "instructions": 53479,
+              "result": "42C6809A7790E5E0"
+            },
+            "qfplib": {
+              "instructions": 1523,
+              "result": "42C6809A7790E5E1"
+            }
+          },
+          {
+            "corpus_line": 999433,
+            "a": "404A400000000000",
+            "b": "4020000000000000",
+            "expected": "42CA3EB0827E1920",
+            "own": {
+              "instructions": 53545,
+              "result": "42CA3EB0827E1920"
+            },
+            "qfplib": {
+              "instructions": 1508,
+              "result": "42CA3EB0827E1924"
+            }
+          },
+          {
+            "corpus_line": 999507,
+            "a": "403E800000000000",
+            "b": "4022000000000000",
+            "expected": "42B4C5E1C7E84EAE",
+            "own": {
+              "instructions": 52594,
+              "result": "42B4C5E1C7E84EAE"
+            },
+            "qfplib": {
+              "instructions": 1587,
+              "result": "42B4C5E1C7E84EB5"
+            }
+          }
+        ],
+        "mean_instructions": {
+          "own": 25597.2734375,
+          "qfplib": 1535.453125
+        },
+        "wrong_results": {
+          "own": 0,
+          "qfplib": 71
+        },
+        "own_slower_cases": 61,
+        "median_instructions": {
+          "own": 1299,
+          "qfplib": 1550
+        },
+        "own_over_qfplib": 16.670827015640743
+      }
+    ],
+    "owned_wrong_rounding": 0,
+    "scope": "Seeded reservoir of published hard pow inputs in three explicit finite domains. Positive normal bases and bounded logarithm-products keep the composed Qfplib ln/mul/exp comparison meaningful. Actual production/diagnostic ARM and captured ROM execute on separate identical emulator instances. Instruction counts are not physical cycles or timings. This is additional coverage, not a replacement for the 114-group matrix or an all-input proof.",
+    "physical_timing_available": false,
+    "goal_complete": false
+  },
+  "initial_unit_base_sample_superseded": true,
+  "selection": "Seeded reservoir from the saved pow.wc corpus; x=1 is excluded so trivial exact answers do not dilute the difficult-input profile. All selected input encodings are recorded.",
+  "interpretation": "The former 114-group comparison did not contain these hard-input streams. All three additional streams are slower by mean instruction count, so the library speed objective is not achieved.",
+  "counter_fix": {
+    "before_negative_test": ".build/m0-pow-short-v81-20261022/counter-before.log",
+    "before_negative_test_sha256": "c04d8886ff431c72f1fcd735ee648c29cd8f692bfc05f4044cf4d81dc4be3b0e",
+    "regression": {
+      "status": "PASS",
+      "elf_sha256": "01dae2be28e5476666265d65f786ff1c2a5f29417b0c35da6f3e17f7b410a5c4",
+      "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "results": [
+        {
+          "symbol": "_ZN12compact_math3powEdd",
+          "a": "404A400000000000",
+          "b": "4020000000000000",
+          "fresh": 591,
+          "mixed": [
+            591,
+            591,
+            591
+          ]
+        },
+        {
+          "symbol": "_ZN12compact_math3powEdd",
+          "a": "3FF4CCCCCCCCCCCD",
+          "b": "401C000000000000",
+          "fresh": 1846,
+          "mixed": [
+            1846,
+            1846,
+            1846
+          ]
+        },
+        {
+          "symbol": "_ZN12compact_math3tanEd",
+          "a": "3FE6666666666666",
+          "b": "0000000000000000",
+          "fresh": 906,
+          "mixed": [
+            906,
+            906,
+            906
+          ]
+        },
+        {
+          "symbol": "_ZN12compact_math4sqrtEd",
+          "a": "4000000000000000",
+          "b": "0000000000000000",
+          "fresh": 136,
+          "mixed": [
+            136,
+            136,
+            136
+          ]
+        },
+        {
+          "symbol": "__aeabi_dmul",
+          "a": "3FE6666666666666",
+          "b": "3FF4CCCCCCCCCCCD",
+          "fresh": 124,
+          "mixed": [
+            124,
+            124,
+            124
+          ]
+        },
+        {
+          "symbol": "__aeabi_ddiv",
+          "a": "3FE6666666666666",
+          "b": "3FF4CCCCCCCCCCCD",
+          "fresh": 144,
+          "mixed": [
+            144,
+            144,
+            144
+          ]
+        },
+        {
+          "symbol": "__aeabi_f2d",
+          "a": "000000003FA00000",
+          "b": "0000000000000000",
+          "fresh": 13,
+          "mixed": [
+            13,
+            13,
+            13
+          ]
+        }
+      ],
+      "scope": "Actual ROM/flash/SRAM code; mixed counted and uncounted calls must have the same nonzero instruction count as a fresh machine. This guards emulator instrumentation, not hardware timing."
+    },
+    "uniform_matrix_and_baseline_hard_case_counts_identical_after_fix": true,
+    "note": "Unicorn retained uninstrumented translated code after uncounted calls. Counted calls now flush the complete translation cache. Numeric results were unaffected; the original always-counted profiles replay identically."
+  },
+  "complete_current_binary64_pow_totality": false,
+  "physical_timing_available": false,
+  "goal_complete": false
+}
