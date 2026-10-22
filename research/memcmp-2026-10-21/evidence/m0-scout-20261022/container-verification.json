@@ -1,0 +1,26 @@
+[
+  {
+    "name": "sram-app",
+    "app_bytes": 3014,
+    "memory_bytes": 17108,
+    "status": "PASS"
+  },
+  {
+    "name": "sram-shared-app",
+    "app_bytes": 2960,
+    "memory_bytes": 15672,
+    "status": "PASS"
+  },
+  {
+    "name": "flash-app",
+    "app_bytes": 3035,
+    "memory_bytes": 17140,
+    "status": "PASS"
+  },
+  {
+    "name": "flash-shared-app",
+    "app_bytes": 3006,
+    "memory_bytes": 16376,
+    "status": "PASS"
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "cpu": "m0",
+    "elf_sha256": "0399e57f5df749d92b8a1e7ce589c0deae930dccecc34422c7ad0cfea45d2cbf",
+    "results": [
+      {
+        "name": "memcpy",
+        "cases": 4837,
+        "bytes": 568,
+        "status": "PASS"
+      }
+    ]
+  }
+]

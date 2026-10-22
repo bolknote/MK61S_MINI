@@ -1,0 +1,20 @@
+{
+  "name": "CMPBEN",
+  "target": "picocalc-pico-h",
+  "abi": 6,
+  "load_address": 536870912,
+  "native_display": true,
+  "graphics_width": 320,
+  "graphics_height": 320,
+  "relocations": 43,
+  "relocation_bytes": 49,
+  "entry_offset": 0,
+  "image_bytes": 4516,
+  "bss_bytes": 12068,
+  "memory_bytes": 16584,
+  "app_bytes": 3187,
+  "compression": "ZX0+BCJ",
+  "zx0_parser": "greedy",
+  "resident_imports": 0,
+  "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+}

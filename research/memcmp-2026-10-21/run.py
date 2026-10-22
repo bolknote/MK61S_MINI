@@ -76,7 +76,9 @@ def main():
     chunks=[cases[i:i+12] for i in range(0,len(cases),12)]
     report=dict(recorded_at=datetime.now(timezone.utc).isoformat(),status='INCOMPLETE',cpu=a.cpu,app_sha256=hashlib.sha256(a.app.read_bytes()).hexdigest(),
         method='Physical CPU; TIMERAWL us at 125 MHz on M0+, DWT cycles at 96 MHz on M4; 7 rotating-order batches, paired empty call; Loop count based on compared prefix; IRQs enabled; warm caches; instructions in SRAM except real resident or explicit Flash payload.',runs=a.runs,groups=[])
-    created=False
+    created=False;failure=None
+    def save():
+        (a.output/'result.json').write_text(json.dumps(report,indent=2)+'\n')
     with (old.BenchPort(a.port,keyboard_layout=0) if a.cpu=='m0' else connect(a.port,wait=0)) as port:
         if a.cpu=='m0':
             mode=port.status()
@@ -95,6 +97,11 @@ def main():
         report.update(identity=str(identity),initial_status=mode,awake_status=awake)
         before={c:canon(port.command(c)) for c in commands}
         assert a.directory[1:] not in port.command('ls /')
+        # A disconnect can also break cleanup. Persist recovery inputs before
+        # the first SD write; the publisher excludes this private device state.
+        report.update(before=before,directory=a.directory,calculator_data_preserved=False,
+                      files_preserved=False,temporary_directory_removed=False)
+        save()
         try:
             answer=port.command('mkdir '+a.directory);assert 'ERROR' not in answer,answer
             created=True;print('State saved; installing benchmark APP',flush=True);write_file(port,a.directory+'/CMPBEN.APP',a.app.read_bytes())
@@ -116,26 +123,34 @@ def main():
                     print('run',run,'chunk',index+1,'/',len(chunks),'checks',group['checks'],'last',rows[-1],{k:round(v['median_cycles'],2) for k,v in group['rows'][-1]['timings'].items()},flush=True)
             report['status']='PASS'
         except BaseException as error:
+            failure=error
             report['status']='FAIL';report['failure']=repr(error);raise
         finally:
-            port.command('fsput cancel')
-            if a.cpu=='m0':os.write(port.fd,b'\x1e\x1b\x1b\x1f');port.pump(.3)
-            if created:
-                answer=port.command('rm -r '+a.directory,timeout=30);assert 'ERROR' not in answer,answer
-            after={c:canon(port.command(c)) for c in before};assert before==after,'Calculator data changed'
-            if a.cpu=='m0':
-                assert sorted(root_before)==sorted(listing_entries(port.command('ls /'))),'Root listing changed'
-                final=port.status()
-                for pattern in (r'BUILD=([0-9A-F]+)',r'BOOTS=(\d+)',r'IP=(\d+)'):assert re.search(pattern,final)[1]==re.search(pattern,awake)[1]
-                for token in ('FIRMWARE_CRC=valid','CRASH=NONE','RUNTIME=NONE','SERVICE=CLOSED'):assert token in final,(token,final)
-                if 'SLEEP=1 ' in mode:port.command('display off');port.pump(.2)
-                if 'TERMINAL=COMMAND' not in mode:os.write(port.fd,b'\x1e');port.pump(.2)
-                report['final_status']=port.status()
-            else:
-                report['files_after']=fingerprint(port);assert report['files_before']==report['files_after'],'Filesystem changed'
-                assert parse_identity(port.command('identity'))==identity
-                report['final_status']=health(port,identity.build)
-            report.update(calculator_data_preserved=True,files_preserved=True,temporary_directory_removed=created)
-            (a.output/'transcript.bin').write_bytes(port.text)
-            (a.output/'result.json').write_text(json.dumps(report,indent=2)+'\n')
+            report['cleanup_pending']=created
+            try:
+                port.command('fsput cancel')
+                if a.cpu=='m0':os.write(port.fd,b'\x1e\x1b\x1b\x1f');port.pump(.3)
+                if created:
+                    answer=port.command('rm -r '+a.directory,timeout=30);assert 'ERROR' not in answer,answer
+                    report.update(temporary_directory_removed=True,cleanup_pending=False)
+                after={c:canon(port.command(c)) for c in before};assert before==after,'Calculator data changed'
+                if a.cpu=='m0':
+                    assert sorted(root_before)==sorted(listing_entries(port.command('ls /'))),'Root listing changed'
+                    final=port.status()
+                    for pattern in (r'BUILD=([0-9A-F]+)',r'BOOTS=(\d+)',r'IP=(\d+)'):assert re.search(pattern,final)[1]==re.search(pattern,awake)[1]
+                    for token in ('FIRMWARE_CRC=valid','CRASH=NONE','RUNTIME=NONE','SERVICE=CLOSED'):assert token in final,(token,final)
+                    if 'SLEEP=1 ' in mode:port.command('display off');port.pump(.2)
+                    if 'TERMINAL=COMMAND' not in mode:os.write(port.fd,b'\x1e');port.pump(.2)
+                    report['final_status']=port.status()
+                else:
+                    report['files_after']=fingerprint(port);assert report['files_before']==report['files_after'],'Filesystem changed'
+                    assert parse_identity(port.command('identity'))==identity
+                    report['final_status']=health(port,identity.build)
+                report.update(calculator_data_preserved=True,files_preserved=True)
+            except BaseException as error:
+                report.update(status='FAIL',cleanup_failure=repr(error))
+                if failure is None:raise
+            finally:
+                (a.output/'transcript.bin').write_bytes(port.text)
+                save()
 if __name__=='__main__':main()

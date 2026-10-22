@@ -1,0 +1,50 @@
+{
+  "status": "PRELIMINARY_SRAM_SCOUT_NOT_FINAL_SELECTION",
+  "build": "4AFD4305",
+  "diagnostic_base": true,
+  "physical_cpu": "RP2040 Cortex-M0+ 125MHz",
+  "repetitions": 1,
+  "rotation_rounds": 7,
+  "successful_sessions": {
+    "scout": {
+      "status": "PASS_SCOUT",
+      "timed_rows": 144,
+      "correctness_checks": 68832,
+      "app_sha256": "f815300431297d08fb621b90cd5d2d47b83b01c6abc782f6af6883edc1ad5e9a",
+      "data_preserved": true,
+      "files_preserved": true
+    },
+    "shared": {
+      "status": "PASS_SCOUT",
+      "timed_rows": 144,
+      "correctness_checks": 68832,
+      "app_sha256": "9c93266ae1642acf85c308a90006e09f827b505afa784ffba59d53d22e4631dc",
+      "data_preserved": true,
+      "files_preserved": true
+    },
+    "v2": {
+      "status": "PASS_SCOUT",
+      "timed_rows": 144,
+      "correctness_checks": 68832,
+      "app_sha256": "a482ece2db8a7a8a80479bc2c5d6ad4c341815bc6ea065b494992fbf97ff6627",
+      "data_preserved": true,
+      "files_preserved": true
+    }
+  },
+  "successful_hardware_correctness_checks": 206496,
+  "flash_candidate_measured": false,
+  "v2_runtime_measured": false,
+  "production_enabled": false,
+  "recovery": {
+    "status": "DELEGATED_TO_PLATFORM_OWNER",
+    "our_serial_closed": true,
+    "incomplete_upload_directory": "/MCMP-R03",
+    "firmware_reset_or_flash_performed": false
+  },
+  "remaining_work": [
+    "Choose full candidate after remaining short/early regression checks",
+    "Measure identical candidate in Flash and SRAM on a qualified frozen base",
+    "Repeat full final standalone and actual runtime timings",
+    "Qualify selected production placement including heap/large APPs"
+  ]
+}

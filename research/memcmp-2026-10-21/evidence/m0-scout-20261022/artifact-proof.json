@@ -1,0 +1,122 @@
+{
+  "status": "READY_NOT_MEASURED",
+  "physical_measurements": false,
+  "payload_sha256": "98ce9901521594c80d9557169726513b8491544abcb0dc18a311b88c8d956a85",
+  "apps": {
+    "sram-app": {
+      "app_sha256": "f815300431297d08fb621b90cd5d2d47b83b01c6abc782f6af6883edc1ad5e9a",
+      "elf_sha256": "0cce97dc119eb1830f45c1da4956f57b059e39e8a03a2001a1d5b75465a5e6de",
+      "memory_bytes": 17108,
+      "directory": "/MCMP-M02",
+      "selected_runtime": false,
+      "placement": false,
+      "bodies": {
+        "baseline": {
+          "address": "0x20000051",
+          "bytes": 44,
+          "code_sha256": "4cfa5e8274e7c962ef4ee1dfed67e574d9bd84a75e7375de42a347fbfd7445e9"
+        },
+        "own4": {
+          "address": "0x20000925",
+          "bytes": 166,
+          "code_sha256": "62731e24da9388c9aaded23b81fbc93e7c32fd8e12f51c796c7844e5c1fc891b"
+        },
+        "own16": {
+          "address": "0x200009cd",
+          "bytes": 696,
+          "code_sha256": "4e1edf64b157da4e01cb5073f992ec7c9157979bfc35c5a395ef14fd700165eb"
+        },
+        "own64": {
+          "address": "0x20000c85",
+          "bytes": 834,
+          "code_sha256": "87c42c3b797e674dce75064509519925bea84910eedc731fde1b9fc3abd3c069"
+        },
+        "memcmp": {
+          "address": "0x20001079",
+          "bytes": 834,
+          "code_sha256": "87c42c3b797e674dce75064509519925bea84910eedc731fde1b9fc3abd3c069"
+        }
+      }
+    },
+    "sram-shared-app": {
+      "app_sha256": "9c93266ae1642acf85c308a90006e09f827b505afa784ffba59d53d22e4631dc",
+      "elf_sha256": "3dfaa0cb387a543b2bae4c6392173c2b59a40dff553538fe5266fe66e93fecd2",
+      "memory_bytes": 15672,
+      "directory": "/MCMP-R02",
+      "selected_runtime": true,
+      "placement": false,
+      "bodies": {
+        "baseline": {
+          "address": "0x200000e9",
+          "bytes": 44,
+          "code_sha256": "4cfa5e8274e7c962ef4ee1dfed67e574d9bd84a75e7375de42a347fbfd7445e9"
+        },
+        "own4": {
+          "address": "0x2000099d",
+          "bytes": 166,
+          "code_sha256": "62731e24da9388c9aaded23b81fbc93e7c32fd8e12f51c796c7844e5c1fc891b"
+        },
+        "own64": {
+          "address": "0x20000a45",
+          "bytes": 834,
+          "code_sha256": "87c42c3b797e674dce75064509519925bea84910eedc731fde1b9fc3abd3c069"
+        }
+      }
+    },
+    "flash-app": {
+      "app_sha256": "d29102cd126652a42a2246970ed7493c90862fcc79bfc594aca1676ce8c07564",
+      "elf_sha256": "d5f9d454e1c3fa0603ff3f24c93bd451bdc93bccfbb2c7150f7060eb6235a40e",
+      "memory_bytes": 17140,
+      "directory": "/MCMP-F02",
+      "selected_runtime": false,
+      "placement": true,
+      "bodies": {
+        "own4": {
+          "address": "0x20000941",
+          "bytes": 166,
+          "code_sha256": "62731e24da9388c9aaded23b81fbc93e7c32fd8e12f51c796c7844e5c1fc891b"
+        },
+        "own16": {
+          "address": "0x200009e9",
+          "bytes": 696,
+          "code_sha256": "4e1edf64b157da4e01cb5073f992ec7c9157979bfc35c5a395ef14fd700165eb"
+        },
+        "own64": {
+          "address": "0x20000ca1",
+          "bytes": 834,
+          "code_sha256": "87c42c3b797e674dce75064509519925bea84910eedc731fde1b9fc3abd3c069"
+        },
+        "memcmp": {
+          "address": "0x20001095",
+          "bytes": 834,
+          "code_sha256": "87c42c3b797e674dce75064509519925bea84910eedc731fde1b9fc3abd3c069"
+        }
+      }
+    },
+    "flash-shared-app": {
+      "app_sha256": "ac4e0233ddaf72ce53c525e201313744e154b9b112074119dac4ae2c3d226525",
+      "elf_sha256": "05a021b2e5c347ec086bd0609e30286ff5b4b993e7dc8fbfd9ea12492c44d139",
+      "memory_bytes": 16376,
+      "directory": "/MCMP-X02",
+      "selected_runtime": true,
+      "placement": true,
+      "bodies": {
+        "own4": {
+          "address": "0x200009b1",
+          "bytes": 166,
+          "code_sha256": "62731e24da9388c9aaded23b81fbc93e7c32fd8e12f51c796c7844e5c1fc891b"
+        },
+        "own16": {
+          "address": "0x20000a59",
+          "bytes": 696,
+          "code_sha256": "4e1edf64b157da4e01cb5073f992ec7c9157979bfc35c5a395ef14fd700165eb"
+        },
+        "own64": {
+          "address": "0x20000d11",
+          "bytes": 834,
+          "code_sha256": "87c42c3b797e674dce75064509519925bea84910eedc731fde1b9fc3abd3c069"
+        }
+      }
+    }
+  }
+}

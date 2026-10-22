@@ -1,0 +1,306 @@
+--- a/research/memcmp-2026-10-21/candidates.S
++++ b/research/memcmp-2026-10-21/candidates.S
+@@ -113,6 +113,10 @@
+ .endm
+ .macro compare name,words
+ function \name
++ .if \words==16
++ cmp r2,#4
++ beq .Lfour\name
++ .endif
+  cmp r2,#0
+  beq .Lzero\name
+  cmp r0,r1
+@@ -126,14 +130,31 @@
+  beq .Lreturn\name
+  mov r0,r12
+  cmp r2,#8
++ .if \words==16
++ blo .Ltiny\name
++ .else
+  blo .Lsmall\name
++ .endif
+  movs r3,r0
+  eors r3,r1
+  lsls r3,r3,#30
++ .if \words==16
++ bne .LdifferentAlignment\name
++ lsls r3,r0,#30
++ bne .LsameUnaligned\name
++ b .Lprepare\name
++.LsameUnaligned\name:
++ b .LmergePrefix\name
++.LdifferentAlignment\name:
++ cmp r2,#24
++ blo .Lsmall\name
++ b .LmergePrefix\name
++ .else
+  beq .Lprepare\name
+  .if \words>1
+  cmp r2,#24
+  bhs .Lprepare\name
++ .endif
+  .endif
+ .Lsmall\name:
+  push {r4}
+@@ -141,6 +162,7 @@
+  adds r0,#1
+  adds r1,#1
+  subs r2,#1
++.LsmallRemaining\name:
+  .if \words>1
+  cmp r2,#4
+  blo .LsmallTail\name
+@@ -174,8 +196,99 @@
+ .Lzero\name:
+  movs r0,#0
+  bx lr
++ .if \words==16
++.Lfour\name:
++ /* The frequent naturally aligned four-byte case needs no saved registers. */
++ cmp r0,r1
++ beq .Lzero\name
++ mov r12,r0
++ ldrb r0,[r0]
++ ldrb r3,[r1]
++ subs r0,r0,r3
++ bne .Lreturn\name
++ mov r0,r12
++ movs r3,r0
++ orrs r3,r1
++ lsls r3,r3,#30
++ bne .Ltiny\name
++ ldr r3,[r0]
++ ldr r0,[r1]
++ cmp r3,r0
++ bne .LfourDiff\name
++ movs r0,#0
++ bx lr
++.LfourDiff\name:
++ rev r1,r0
++ rev r0,r3
++ cmp r0,r1
++ sbcs r0,r0
++ movs r1,#1
++ orrs r0,r1
++ bx lr
++.Ltiny\name:
++ /* Keep 2..7-byte comparisons entirely in caller-saved registers. */
++ mov r0,r12
++ ldrb r0,[r0,#1]
++ ldrb r3,[r1,#1]
++ subs r0,r0,r3
++ bne .Lreturn\name
++ cmp r2,#2
++ beq .Lreturn\name
++ mov r0,r12
++ ldrb r0,[r0,#2]
++ ldrb r3,[r1,#2]
++ subs r0,r0,r3
++ bne .Lreturn\name
++ cmp r2,#3
++ beq .Lreturn\name
++ mov r0,r12
++ ldrb r0,[r0,#3]
++ ldrb r3,[r1,#3]
++ subs r0,r0,r3
++ bne .Lreturn\name
++ cmp r2,#4
++ beq .Lreturn\name
++ mov r0,r12
++ ldrb r0,[r0,#4]
++ ldrb r3,[r1,#4]
++ subs r0,r0,r3
++ bne .Lreturn\name
++ cmp r2,#5
++ beq .Lreturn\name
++ mov r0,r12
++ ldrb r0,[r0,#5]
++ ldrb r3,[r1,#5]
++ subs r0,r0,r3
++ bne .Lreturn\name
++ cmp r2,#6
++ beq .Lreturn\name
++ mov r0,r12
++ ldrb r0,[r0,#6]
++ ldrb r3,[r1,#6]
++ subs r0,r0,r3
++ bx lr
++.LmergePrefix\name:
++ /* Resolve early differences before the shifted-word merge setup. */
++ push {r4}
++ byte_pair \name,1
++ byte_pair \name,2
++ byte_pair \name,3
++ byte_pair \name,4
++ cmp r2,#12
++ bhs .LprefixContinue\name
++ adds r0,#5
++ adds r1,#5
++ subs r2,#5
++ b .LsmallRemaining\name
++.LprefixContinue\name:
++ adds r0,#4
++ adds r1,#4
++ subs r2,#4
++ b .LprepareSaved\name
++ .endif
+ .Lprepare\name:
+  push {r4}
++.LprepareSaved\name:
+  lsls r3,r0,#30
+  beq .Laligned\name
+  /* Skip the already checked first byte before aligning the left span. */
+--- a/code/memcmp_m0.inc
++++ b/code/memcmp_m0.inc
+@@ -80,6 +80,10 @@
+ " b .Lmk61_compare_byteDiff\\tag\n"
+ ".endm\n"
+ ".macro mk61_compare_compare name,words\n"
++" .if \\words==16\n"
++" cmp r2,#4\n"
++" beq .Lmk61_compare_four\\name\n"
++" .endif\n"
+ " cmp r2,#0\n"
+ " beq .Lmk61_compare_zero\\name\n"
+ " cmp r0,r1\n"
+@@ -93,14 +97,31 @@
+ " beq .Lmk61_compare_return\\name\n"
+ " mov r0,r12\n"
+ " cmp r2,#8\n"
++" .if \\words==16\n"
++" blo .Lmk61_compare_tiny\\name\n"
++" .else\n"
+ " blo .Lmk61_compare_small\\name\n"
++" .endif\n"
+ " movs r3,r0\n"
+ " eors r3,r1\n"
+ " lsls r3,r3,#30\n"
++" .if \\words==16\n"
++" bne .Lmk61_compare_differentAlignment\\name\n"
++" lsls r3,r0,#30\n"
++" bne .Lmk61_compare_sameUnaligned\\name\n"
++" b .Lmk61_compare_prepare\\name\n"
++".Lmk61_compare_sameUnaligned\\name:\n"
++" b .Lmk61_compare_mergePrefix\\name\n"
++".Lmk61_compare_differentAlignment\\name:\n"
++" cmp r2,#24\n"
++" blo .Lmk61_compare_small\\name\n"
++" b .Lmk61_compare_mergePrefix\\name\n"
++" .else\n"
+ " beq .Lmk61_compare_prepare\\name\n"
+ " .if \\words>1\n"
+ " cmp r2,#24\n"
+ " bhs .Lmk61_compare_prepare\\name\n"
++" .endif\n"
+ " .endif\n"
+ ".Lmk61_compare_small\\name:\n"
+ " push {r4}\n"
+@@ -108,6 +129,7 @@
+ " adds r0,#1\n"
+ " adds r1,#1\n"
+ " subs r2,#1\n"
++".Lmk61_compare_smallRemaining\\name:\n"
+ " .if \\words>1\n"
+ " cmp r2,#4\n"
+ " blo .Lmk61_compare_smallTail\\name\n"
+@@ -141,8 +163,99 @@
+ ".Lmk61_compare_zero\\name:\n"
+ " movs r0,#0\n"
+ " bx lr\n"
++" .if \\words==16\n"
++".Lmk61_compare_four\\name:\n"
++" /* The frequent naturally aligned four-byte case needs no saved registers. */\n"
++" cmp r0,r1\n"
++" beq .Lmk61_compare_zero\\name\n"
++" mov r12,r0\n"
++" ldrb r0,[r0]\n"
++" ldrb r3,[r1]\n"
++" subs r0,r0,r3\n"
++" bne .Lmk61_compare_return\\name\n"
++" mov r0,r12\n"
++" movs r3,r0\n"
++" orrs r3,r1\n"
++" lsls r3,r3,#30\n"
++" bne .Lmk61_compare_tiny\\name\n"
++" ldr r3,[r0]\n"
++" ldr r0,[r1]\n"
++" cmp r3,r0\n"
++" bne .Lmk61_compare_fourDiff\\name\n"
++" movs r0,#0\n"
++" bx lr\n"
++".Lmk61_compare_fourDiff\\name:\n"
++" rev r1,r0\n"
++" rev r0,r3\n"
++" cmp r0,r1\n"
++" sbcs r0,r0\n"
++" movs r1,#1\n"
++" orrs r0,r1\n"
++" bx lr\n"
++".Lmk61_compare_tiny\\name:\n"
++" /* Keep 2..7-byte comparisons entirely in caller-saved registers. */\n"
++" mov r0,r12\n"
++" ldrb r0,[r0,#1]\n"
++" ldrb r3,[r1,#1]\n"
++" subs r0,r0,r3\n"
++" bne .Lmk61_compare_return\\name\n"
++" cmp r2,#2\n"
++" beq .Lmk61_compare_return\\name\n"
++" mov r0,r12\n"
++" ldrb r0,[r0,#2]\n"
++" ldrb r3,[r1,#2]\n"
++" subs r0,r0,r3\n"
++" bne .Lmk61_compare_return\\name\n"
++" cmp r2,#3\n"
++" beq .Lmk61_compare_return\\name\n"
++" mov r0,r12\n"
++" ldrb r0,[r0,#3]\n"
++" ldrb r3,[r1,#3]\n"
++" subs r0,r0,r3\n"
++" bne .Lmk61_compare_return\\name\n"
++" cmp r2,#4\n"
++" beq .Lmk61_compare_return\\name\n"
++" mov r0,r12\n"
++" ldrb r0,[r0,#4]\n"
++" ldrb r3,[r1,#4]\n"
++" subs r0,r0,r3\n"
++" bne .Lmk61_compare_return\\name\n"
++" cmp r2,#5\n"
++" beq .Lmk61_compare_return\\name\n"
++" mov r0,r12\n"
++" ldrb r0,[r0,#5]\n"
++" ldrb r3,[r1,#5]\n"
++" subs r0,r0,r3\n"
++" bne .Lmk61_compare_return\\name\n"
++" cmp r2,#6\n"
++" beq .Lmk61_compare_return\\name\n"
++" mov r0,r12\n"
++" ldrb r0,[r0,#6]\n"
++" ldrb r3,[r1,#6]\n"
++" subs r0,r0,r3\n"
++" bx lr\n"
++".Lmk61_compare_mergePrefix\\name:\n"
++" /* Resolve early differences before the shifted-word mk61_compare_merge setup. */\n"
++" push {r4}\n"
++" mk61_compare_byte_pair \\name,1\n"
++" mk61_compare_byte_pair \\name,2\n"
++" mk61_compare_byte_pair \\name,3\n"
++" mk61_compare_byte_pair \\name,4\n"
++" cmp r2,#12\n"
++" bhs .Lmk61_compare_prefixContinue\\name\n"
++" adds r0,#5\n"
++" adds r1,#5\n"
++" subs r2,#5\n"
++" b .Lmk61_compare_smallRemaining\\name\n"
++".Lmk61_compare_prefixContinue\\name:\n"
++" adds r0,#4\n"
++" adds r1,#4\n"
++" subs r2,#4\n"
++" b .Lmk61_compare_prepareSaved\\name\n"
++" .endif\n"
+ ".Lmk61_compare_prepare\\name:\n"
+ " push {r4}\n"
++".Lmk61_compare_prepareSaved\\name:\n"
+ " lsls r3,r0,#30\n"
+ " beq .Lmk61_compare_aligned\\name\n"
+ " /* Skip the already checked first byte before aligning the left span. */\n"

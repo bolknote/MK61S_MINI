@@ -1,0 +1,34 @@
+{
+  "status": "PREPARED_NOT_HARDWARE_MEASURED",
+  "body": {
+    "bytes": 1032,
+    "code_sha256": "86d0b70fcecf8897f7625c92ffad554923eadd5e31f49f4220c2a296848b8878"
+  },
+  "apps": {
+    "v3-prepared-sram": {
+      "app_sha256": "2ff9d8681620747cdb80ad070971eeff5c279ce99686659b3219012b47f6c7f5",
+      "elf_sha256": "c858ff779bca9aed3af46d2c4c724f011663718771d698f0eb9efc23de6b2b77",
+      "memory_bytes": 17508
+    },
+    "v3-prepared-runtime": {
+      "app_sha256": "b712da5414c26c15c0a77ec35eee706b8189fae406ee5b9addc6372e18c9deac",
+      "elf_sha256": "2b6f0ccad4d893e43f59d6cd28c6e08d99e2de31fa999e68dcaa97c03e83c161",
+      "memory_bytes": 15864
+    },
+    "v3-prepared-flash": {
+      "app_sha256": "b946770e11e48fbcc6c451c4cf911291fb7de7b60ecdb814932029b488134a74",
+      "elf_sha256": "28c585fd5c69d3fcb9c9c4ce9b734b8b6f70fbe3b1133d6675cd93009e5fcab8",
+      "memory_bytes": 17524
+    },
+    "v3-prepared-flash-runtime": {
+      "app_sha256": "412b8a0fa1dea211a7747c5e76ae4c959a3cb779b10e70a1a7a114f3d68080f4",
+      "elf_sha256": "44319868a992b9a0245d3c490a7c2964563d81d55bfe0138b52bf07b1cd4f45e",
+      "memory_bytes": 16584
+    }
+  },
+  "payload_sha256": "4262d06058e1690437c74875d60b4c51991dc551f19f68c7ffc77dfce0e90004",
+  "payload_bytes": 4732,
+  "flash_location_not_yet_verified_free": true,
+  "physical_measurements": false,
+  "production_enabled": false
+}

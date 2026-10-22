@@ -1,0 +1,12 @@
+{
+  "cpu": "m0",
+  "elf_sha256": "6df46d6ba4b7b91de755e1d38467f5e8aafa4754b74384b052824f87f2e1110e",
+  "results": [
+    {
+      "name": "own64",
+      "cases": 53357,
+      "bytes": 1032,
+      "status": "PASS"
+    }
+  ]
+}

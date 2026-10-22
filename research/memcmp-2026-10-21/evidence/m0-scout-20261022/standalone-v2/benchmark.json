@@ -1,0 +1,15 @@
+{
+  "target": "picocalc-pico-h",
+  "shared": false,
+  "selected_runtime": false,
+  "selected_body": "own64",
+  "placement": false,
+  "directory": "/MCMP-M03",
+  "flash_header_sha256": null,
+  "app_sha256": "a482ece2db8a7a8a80479bc2c5d6ad4c341815bc6ea065b494992fbf97ff6627",
+  "sources": {
+    "benchmark.c": "1debea1d34bd12e1b740e4ce14634b2fefabdc7af74c2bd4c32e259344381711",
+    "candidates.S": "df2cc1224311075c4352783d66d43c1fa01b80292836ef47fde8dccb162bcd18",
+    "baseline-memory.h": "62053fb50449bac6cc503de51c3861cd73985bd2ac440f04c1dc2e81c6b2ca61"
+  }
+}
