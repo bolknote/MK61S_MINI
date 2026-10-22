@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "recorded_at": "2026-10-22T05:05:43.617433+00:00",
+  "recorded_at": "2026-10-22T18:45:37.825538+00:00",
   "status": "OFFLINE_QUALIFIED_TWO_HARD_POW_SPEED_GAPS_REMAIN",
   "objective": "M0+ speed at least Qfplib with correctly rounded binary64 results; M4 code unchanged.",
   "physical_v7": {
@@ -1577,9 +1577,9 @@
     ]
   },
   "remaining": [
-    "Remove the observed regular/moderate hard pow speed gaps without weakening RNE.",
-    "Establish general pow totality outside the224 exact-stage exponents.",
-    "After cold-USB repair and platform/memory acceptance, rebase on the final frozen source/restore and perform physical timing; also check the two tied instruction streams."
+    "Two hard pow instruction streams remain above Qfplib; physical speed cannot be inferred solely from those counts.",
+    "General pow totality remains unproved outside exact-stage224 exponents; the final undecided interval trap is retained.",
+    "Rebase and physical qualification await accepted frozen platform+memory source, matching immutable restore and explicit USB handoff from the coordinator."
   ],
   "semantics": "RNE return values. errno and floating-point exception flags are not implemented.",
   "physical_v7_fixed_layout_probe": {
@@ -10782,7 +10782,7 @@
       ]
     }
   },
-  "previous_goal_turn_assessment": "PROGRESS_REAL_ROM_AND_MEMORY_COMPOSITIONS_QUALIFIED",
+  "previous_goal_turn_assessment": "PROGRESS_FIRST_SEED_AND_EXACT_SQUARE_HARD_STREAMS_23_AND_42_PERCENT_FEWER_INSTRUCTIONS_VS_V93",
   "compact_log_v53_20261020": {
     "status": "PRODUCTION_NUMERIC_AND_RESOURCE_GATES_PASS_READY_FOR_HIL_NOT_PROMOTED",
     "source": ".build/m0-log-compact-v53-20261020/source",
@@ -11567,7 +11567,7 @@
       "scope": "Measured checked-ln fork versus pinned original Qfplib, both in isolated flash. Does not compare against the canonical owned ln or establish an all-input latency bound."
     }
   },
-  "next_numeric_experiment": "Finish V60 rebase onto accepted0.8.13/5F1E85DF, qualify actual linked math/layout/CRC/APP and measure full116 chunks with previous slow streams first. Hardware is released but not yet reserved. Before flashing use fresh data/IP/elapsedRTC backup and restore only the current5F1E85DF immutable package, never the historical BE246AF2 image.",
+  "next_numeric_experiment": "Investigate a separately certified two-cell bracket entry using the first-tier enclosure, reducing duplicate midpoint powers while preserving the existing untrusted-hint API and safe binade/endpoint fallbacks.",
   "constant_sharing_v54_20261021": {
     "status": "PRIVATE_OFFLINE_QUALIFIED_NOT_PROMOTED",
     "source": ".build/m0-constant-sharing-v54-20261021/source",
@@ -12092,7 +12092,7 @@
       }
     ]
   },
-  "next_action": "Accelerate the remaining small-dyadic and tiny-near-one hard pow families, keeping all RNE guards and M4 isolation. V87 is isolated and unpromoted. Rebase/physical timing requires final accepted platform/memory source, immutable matching restore and explicit USB release.",
+  "next_action": "Investigate a separately certified first-tier two-cell enclosure to reduce repeated midpoint powers. V98 is isolated and unpromoted. Rebase and physical timing require the final accepted frozen platform/memory source, matching immutable restore and explicit USB handoff.",
   "trig_word_normalization_v61_20261021": {
     "status": "PASS_OFFLINE_GATES_PHYSICAL_PENDING",
     "work": ".build/m0-trig-word-normalization-v61-20261021",
@@ -12172,7 +12172,7 @@
     "gates": ".build/m0-cos70-v65-20261021/gates.json",
     "reason": "Correct cosine kernel resolves other smallcos cases, but the three targeted slowcos inputs select sine after reduction. V66 moves secondary refinement into a packed small-trig callee, adds sine kernels and removes the broader dispatcher liveness penalty."
   },
-  "hardware_constraint": "Platform owner retains USB:11HIL+10warm resets passed, but the real battery/USB cold cut repeats the USB HardFault on2/2 boots. Await platform fix/acceptance and memory window; math made no USB access.",
+  "hardware_constraint": "Coordinator 01a164b7-9caa-7011-90d1-807e9630921c retains the device queue. The accepted restore is A7483AE6; the V3 memory/placement matrix is still in progress. Provisional 53ABCF2C is not hardware accepted. V98 uses its older provisional 7AEA parent and is not install-ready. Math made no USB access.",
   "small_trig_v66_20261021": {
     "status": "V66_FULL_OFFLINE_QUALIFICATION_PASS_PHYSICAL_PENDING_NOT_PROMOTED",
     "report": "doc/measurements/m0-small-trig-20261021.json",
@@ -12487,7 +12487,7 @@
     "report": "doc/measurements/m0-asin-nearest-root-20261021.json",
     "status": "QUALIFIED_CHECKPOINT"
   },
-  "completed_human_commit": "171866abfbd8df757141b66926f6a9819930428a",
+  "completed_human_commit": "a89e99ea730c786716df18d28ec68d842eed55c0",
   "pow_exact_small_v70_20261021": {
     "report": "doc/measurements/m0-pow-exact-small-20261021.json",
     "exponent_values": 224,
@@ -12698,7 +12698,7 @@
     "M4": "PASS_BYTE_IDENTITY",
     "generic_M0": "PASS_BYTE_IDENTITY"
   },
-  "current_candidate": ".build/m0-pow-stable-v87-20261022",
+  "current_candidate": ".build/m0-pow-square-kernel-v98-20261022",
   "f2d_no_literal_v74_20261021": {
     "report": "doc/measurements/m0-f2d-no-literal-v74-20261021.json",
     "root_promoted": false,
@@ -12750,7 +12750,7 @@
     "M4": "PASS_BYTE_IDENTITY",
     "generic_M0": "PASS_BYTE_IDENTITY"
   },
-  "current_goal_turn_assessment": "PROGRESS_SHARED_POW_TAIL_Q80_NEAR_ONE_AND_EXP_REUSE_ONE_HARD_GAP_REMOVED",
+  "current_goal_turn_assessment": "PROGRESS_FIRST_SEED_AND_EXACT_SQUARE_HARD_STREAMS_23_AND_42_PERCENT_FEWER_INSTRUCTIONS_VS_V93",
   "real_ROM_v78_20261021": {
     "report": "doc/measurements/m0-real-rom-v78-20261021.json",
     "root_promoted": false,
@@ -12843,6 +12843,73 @@
     "allocated_flash_delta_vs_V81": 2576,
     "root_promoted": false,
     "hardware_installed": false,
+    "physical_timing_available": false,
+    "goal_complete": false
+  },
+  "pow_binomial_v90_20261022": {
+    "artifact": {
+      "path": "doc/measurements/m0-pow-binomial-v90-20261022.json",
+      "sha256": "317bdb55bb8ef7cbdc322099e7371803ddd4e019ce98040e522f16cefda4658d"
+    },
+    "status": "OFFLINE_QUALIFIED_BINOMIAL_POW_TWO_HARD_SPEED_GAPS_REMAIN",
+    "groups": 117,
+    "cases": 23352,
+    "fewer": 113,
+    "equal": 2,
+    "slower": 2,
+    "compiled_helper_cases": 14180,
+    "all_function_cases": 265409,
+    "affected_million_corpus_cases": 787,
+    "allocated_flash_delta_vs_V87": 2040,
+    "new_tables": 0,
+    "additional_main_ram_bytes": 0,
+    "root_promoted": false,
+    "hardware_installed": false,
+    "physical_timing_available": false,
+    "goal_complete": false
+  },
+  "pow_integer_dyadic_v93_20261022": {
+    "artifact": {
+      "path": "doc/measurements/m0-pow-integer-dyadic-v93-20261022.json",
+      "sha256": "ce7695a218974bc13600cc19c3e2ff4d4a92fe9449673723b6125b1f7a4a0eaa"
+    },
+    "status": "OFFLINE_QUALIFIED_INTEGER_DYADIC_REFINEMENT_TWO_SPEED_GAPS_REMAIN",
+    "groups": 117,
+    "cases": 23352,
+    "fewer": 113,
+    "equal": 2,
+    "slower": 2,
+    "all_function_cases": 265409,
+    "affected_million_corpus_cases": 75229,
+    "allocated_flash_delta_vs_V90": 3560,
+    "new_tables": 0,
+    "additional_main_ram_bytes": 0,
+    "root_promoted": false,
+    "hardware_installed": false,
+    "physical_timing_available": false,
+    "goal_complete": false
+  },
+  "pow_first_seed_v98_20261022": {
+    "artifact": {
+      "path": "research/m0-pow-first-seed-20261022/evidence.json",
+      "sha256": "13d073aa4c840c17ac952a09cbb5566b3bbea845c45ec975fcd902cbcf1b4469"
+    },
+    "status": "OFFLINE_QUALIFIED_FIRST_SEED_AND_SQUARE_TWO_INSTRUCTION_GAPS_REMAIN",
+    "groups": 117,
+    "cases": 23352,
+    "fewer": 113,
+    "equal": 2,
+    "slower": 2,
+    "all_function_cases": 265409,
+    "affected_million_corpus_cases": 75229,
+    "allocated_flash_delta_vs_V93": 760,
+    "scratch_reserved_bytes": 4096,
+    "scratch_used_bytes": 4088,
+    "new_tables": 0,
+    "additional_main_ram_bytes": 0,
+    "root_promoted": false,
+    "hardware_installed": false,
+    "hardware_ready": false,
     "physical_timing_available": false,
     "goal_complete": false
   }

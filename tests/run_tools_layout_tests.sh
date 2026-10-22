@@ -34,9 +34,13 @@ expected="$(
     certify_m0_pow_boundary.py \
     certify_m0_pow_exact_small.py \
     certify_m0_pow_fast.py \
+    certify_m0_pow_first_seed.py \
+    certify_m0_pow_integer128.py \
     certify_m0_pow_interval.py \
     certify_m0_pow_near.py \
     certify_m0_pow_short.py \
+    certify_m0_pow_tiny.py \
+    certify_m0_pow_tiny32.py \
     certify_m0_small_sine.py \
     certify_m0_trig_inverse.py \
     font_preview_study.py \
@@ -91,6 +95,7 @@ expected="$(
     seal-firmware.ps1 \
     seal-firmware.sh \
     seal_picocalc.py \
+    select_m0_pow_refinement_corpus.py \
     sync_picocalc_clock.py \
     vendor_m0_core_math.py \
     vm_program_builder.hpp |

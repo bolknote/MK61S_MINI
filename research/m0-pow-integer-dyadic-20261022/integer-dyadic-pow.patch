@@ -1,0 +1,300 @@
+--- a/code/native_eabi_m0_pow_integer.inc
++++ b/code/native_eabi_m0_pow_integer.inc
+@@ -51,27 +51,32 @@
+     if(exact!=(D::Infinity|D::Quiet)) return exact;
+   }
+ #endif
+-  if(xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity) return D::Infinity|D::Quiet;
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++#define M0_POW_INTEGER_REJECT() return pow_integer128(xb,U(yh)<<32)
++#else
++#define M0_POW_INTEGER_REJECT() return D::Infinity|D::Quiet
++#endif
++  if(xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity) M0_POW_INTEGER_REJECT();
+   const U base=((xb&D::Fraction)|D::Hidden)<<10;
+   const int base_e=int(xb>>52)-1023;
+   U q=base;int k=base_e;unsigned error=0;
+-  if(!pow_integer_product(q,k,error,base,base_e,0)) return D::Infinity|D::Quiet;
++  if(!pow_integer_product(q,k,error,base,base_e,0)) M0_POW_INTEGER_REJECT();
+   if(n==3) {
+-    if(!pow_integer_product(q,k,error,base,base_e,0)) return D::Infinity|D::Quiet;
++    if(!pow_integer_product(q,k,error,base,base_e,0)) M0_POW_INTEGER_REJECT();
+   } else {
+     const U square=q;const int square_e=k;const unsigned square_error=error;
+-    if(!pow_integer_product(q,k,error,square,square_e,square_error)) return D::Infinity|D::Quiet;
++    if(!pow_integer_product(q,k,error,square,square_e,square_error)) M0_POW_INTEGER_REJECT();
+     if(n==8) {
+       const U fourth=q;const int fourth_e=k;const unsigned fourth_error=error;
+-      if(!pow_integer_product(q,k,error,fourth,fourth_e,fourth_error)) return D::Infinity|D::Quiet;
++      if(!pow_integer_product(q,k,error,fourth,fourth_e,fourth_error)) M0_POW_INTEGER_REJECT();
+     } else if(n>=5) {
+-      if(n>=6 && !pow_integer_product(q,k,error,square,square_e,square_error)) return D::Infinity|D::Quiet;
+-      if(n!=6 && !pow_integer_product(q,k,error,base,base_e,0)) return D::Infinity|D::Quiet;
++      if(n>=6 && !pow_integer_product(q,k,error,square,square_e,square_error)) M0_POW_INTEGER_REJECT();
++      if(n!=6 && !pow_integer_product(q,k,error,base,base_e,0)) M0_POW_INTEGER_REJECT();
+     }
+   }
+   if(k>1023) {
+     if(k>1024 || q-(U(1)<<62)+256>error) return D::Infinity;
+-    return D::Infinity|D::Quiet;
++    M0_POW_INTEGER_REJECT();
+   }
+   if(k<-1022) {
+     if(k<-1075) {
+@@ -86,10 +91,12 @@
+         return retained+U(tail>half || (tail==half && (retained&1)));
+       }
+     }
+-    return D::Infinity|D::Quiet;
++    M0_POW_INTEGER_REJECT();
+   }
+   const uint32_t tail=uint32_t(q)&1023U;
+-  if(uint32_t(tail-(512U-error))<=2*error) return D::Infinity|D::Quiet;
++  if(uint32_t(tail-(512U-error))<=2*error) M0_POW_INTEGER_REJECT();
+   const U rounded=(q+511+((q>>10)&1))>>10;
+   return (U(k+1022)<<52)+rounded;
+ }
++
++#undef M0_POW_INTEGER_REJECT
+--- a/code/native_eabi_m0_pow_fast.inc
++++ b/code/native_eabi_m0_pow_fast.inc
+@@ -204,6 +204,11 @@
+ }
+ #endif
+
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++#include "native_eabi_m0_pow_integer128.inc"
++#include "native_eabi_m0_pow_dyadic128.inc"
++#endif
++
+ struct PowRefinedLog {Product q;unsigned scale,error;bool negative;};
+ __attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension"))) static PowRefinedLog pow_refined_log(U b) {
+   if(b>=UINT64_C(0x3FEFFFE000000000) && b<=UINT64_C(0x3FF0001000000000)) {
+@@ -320,6 +325,10 @@
+   if(xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity || ey < -12 || ey>64 || xb==UINT64_C(0x3FF0000000000000))
+     return mk61_m0_cr_pow(x,y);
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  if(!uint32_t(yb)) {
++    const U result=pow_integer128(xb,yb);
++    if(result!=(D::Infinity|D::Quiet)) return real(result);
++  }
+   Product argument;unsigned input_error;bool negative_argument;
+   if(pow_near_one_refined_argument(xb,yb,argument,negative_argument)) {
+     // The argument's Q80 enclosure has radius8. Its floor in Q64
+@@ -385,6 +394,20 @@
+   U result;
+   if(r96_pack(q,(signed_n-int(index))/512,0,(1U<<24)+input_error,result)) return real(result);
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  if(q.high && !uint32_t(yb)) {
++    // The rounded approximation is only a search hint. Independent
++    // integer midpoint enclosures must certify both cell boundaries.
++    const unsigned width=32-clz32(q.high),keep=width+11;
++    const int exponent=int(width)-31+(signed_n-int(index))/512;
++    if(exponent>=-1022 && exponent<=1023) {
++      const U retained=(q.low>>keep)|(U(q.high)<<(64-keep));
++      const U half=U(1)<<(keep-1),tail=q.low&((half<<1)-1);
++      const U hint=(U(exponent+1022)<<52)+retained+
++        U(tail>half || (tail==half && (retained&1)));
++      const U checked=pow_dyadic128(xb,yb,hint);
++      if(checked!=(D::Infinity|D::Quiet)) return real(checked);
++    }
++  }
+   // The failed Q94 enclosure is stronger than phase_1's software-double
+   // approximation. Enter its independent integer refinement directly.
+   return mk61_m0_cr_pow_refined(x,y);
+--- /dev/null
++++ b/code/native_eabi_m0_pow_integer128.inc
+@@ -0,0 +1,100 @@
++// Checked small integer powers. No rounded intermediate doubles are used
++// for the positive power. Reciprocal candidates are independently checked
++// by multiplying both adjacent exact midpoints against the same enclosure.
++struct PowInteger128 {U high,low;int exponent;unsigned error;};
++
++__attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_near_one_refine")))
++static void pow_integer128_multiply(PowInteger128 &a,const PowInteger128 &b) {
++  const U ah=a.high,al=a.low,bh=b.high,bl=b.low;
++  const int exponent=a.exponent+b.exponent;
++  unsigned error=a.error+b.error;
++  Product product=multiply(ah,bh);
++  if(al) {
++    const U previous=product.low;
++    product.low+=multiply(al,bh).high;product.high+=U(product.low<previous);
++  }
++  if(bl) {
++    const U previous=product.low;
++    product.low+=multiply(ah,bl).high;product.high+=U(product.low<previous);
++  }
++  // If both low words vanish, the mantissa product is exact. Otherwise
++  // omitting the low cross products loses <3units; operand errors and
++  // their product give the indicated conservative integer error radius.
++  error+=al&&bl?4:(al||bl?2:(error?1:0));
++  a.exponent=exponent;
++  if(product.high>>63) ++a.exponent;
++  else {
++    product.high=(product.high<<1)|(product.low>>63);product.low<<=1;
++    error<<=1;
++  }
++  a.high=product.high;a.low=product.low;a.error=error;
++}
++
++__attribute__((always_inline)) inline U pow_integer128_hint(const PowInteger128 &a) {
++  const U retained=a.high>>11,tail=a.high&2047U;
++  const bool up=tail>1024U || (tail==1024U && (a.low || (retained&1)));
++  return (U(a.exponent+1022)<<52)+retained+U(up);
++}
++
++// The sign of x^n*midpoint-1. Zero means that the enclosure is
++// inconclusive, including an exact boundary. All midpoints here are normal.
++__attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_near_one_refine")))
++static int pow_integer128_boundary(const PowInteger128 &power,U cell) {
++  if(cell<UINT64_C(0x0010000000000000) || cell>=UINT64_C(0x7FEFFFFFFFFFFFFF)) return 0;
++  const U coefficient=(((cell&D::Fraction)|D::Hidden)<<1)+1;
++  const PowInteger128 midpoint={coefficient<<10,0,int(cell>>52)-1023,0};
++  PowInteger128 q=power;
++  pow_integer128_multiply(q,midpoint);
++  if(q.exponent>0) return 1;
++  if(q.exponent < -1) return -1;
++  if(!q.exponent) {
++    if(q.high>(U(1)<<63) || q.low>q.error) return 1;
++    return 0;
++  }
++  if(q.high!=UINT64_MAX || q.low<U(0)-U(q.error)) return -1;
++  return 0;
++}
++
++__attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_near_one_refine")))
++static U pow_integer128(U xb,U yb) {
++  const U undecided=D::Infinity|D::Quiet,ym=yb&D::Magnitude;
++  const int ey=int(ym>>52)-1023;
++  if(uint32_t(yb) || unsigned(ey)>5 || xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity)
++    return undecided;
++  const U sy=(ym&D::Fraction)|D::Hidden;
++  const unsigned shift=52-unsigned(ey);
++  if(sy&((U(1)<<shift)-1)) return undecided;
++  const unsigned n=unsigned(sy>>shift);
++  if(n>32) return undecided;
++  const PowInteger128 base={((xb&D::Fraction)|D::Hidden)<<11,0,int(xb>>52)-1023,0};
++  PowInteger128 q=base;
++  unsigned bit=31-clz32(n);
++  while(bit) {
++    --bit;
++    pow_integer128_multiply(q,q);
++    if(n&(1U<<bit)) pow_integer128_multiply(q,base);
++  }
++  if(q.exponent < -1022 || q.exponent>1023) return undecided;
++  const U hint=pow_integer128_hint(q);
++  if(!(yb&D::Sign)) {
++    if(q.error) {
++      const U tail=q.high&2047U;
++      if((tail==1024U && q.low<=q.error) ||
++         (tail==1023U && q.low>=U(0)-U(q.error))) return undecided;
++    }
++    return hint;
++  }
++  if(hint<UINT64_C(0x0010000000000000) || hint>=D::Infinity) return undecided;
++  const U reciprocal=bits(1.0/real(hint));
++  if(reciprocal<=UINT64_C(0x0010000000000001) || reciprocal>=UINT64_C(0x7FEFFFFFFFFFFFFE)) return undecided;
++  const int side=pow_integer128_boundary(q,reciprocal);
++  if(!side) return undecided;
++  if(side<0) {
++    // The reciprocal exceeds the midpoint above the hint.
++    return pow_integer128_boundary(q,reciprocal+1)>0?reciprocal+1:undecided;
++  }
++  const int previous=pow_integer128_boundary(q,reciprocal-1);
++  if(previous<0) return reciprocal;
++  if(previous>0 && pow_integer128_boundary(q,reciprocal-2)<0) return reciprocal-1;
++  return undecided;
++}
+--- /dev/null
++++ b/code/native_eabi_m0_pow_dyadic128.inc
+@@ -0,0 +1,90 @@
++// Compare two normalized enclosures, aligning only a one-bit exponent gap.
++__attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_near_one_refine")))
++static int pow_dyadic128_compare(PowInteger128 a,PowInteger128 b) {
++  const int distance=a.exponent-b.exponent;
++  if(distance>=2) return 1;
++  if(distance<=-2) return -1;
++  if(distance<0) {
++    a.low=(a.low>>1)|(a.high<<63);a.high>>=1;a.error=(a.error>>1)+1;
++  } else if(distance>0) {
++    b.low=(b.low>>1)|(b.high<<63);b.high>>=1;b.error=(b.error>>1)+1;
++  }
++  if(a.high==b.high && a.low==b.low) return 0;
++  const bool smaller=a.high<b.high || (a.high==b.high && a.low<b.low);
++  const U ah=smaller?b.high:a.high,al=smaller?b.low:a.low;
++  const U bh=smaller?a.high:b.high,bl=smaller?a.low:b.low;
++  const U low=al-bl,high=ah-bh-U(al<bl);
++  if(high || low>U(a.error+b.error)) return smaller?-1:1;
++  return 0;
++}
++
++__attribute__((always_inline)) inline void pow_dyadic128_raise(PowInteger128 &q,unsigned n) {
++  const PowInteger128 base=q;
++  unsigned bit=31-clz32(n);
++  while(bit) {
++    --bit;
++    pow_integer128_multiply(q,q);
++    if(n&(1U<<bit)) pow_integer128_multiply(q,base);
++  }
++}
++
++// Sign of x^(+/-p/q)-midpoint. Every result is certified by integer
++// power enclosures; the seed has no authority over rounding acceptance.
++__attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_near_one_refine")))
++static int pow_dyadic128_boundary(const PowInteger128 &power,unsigned denominator,bool inverse,U cell) {
++  if(cell<UINT64_C(0x0010000000000000) || cell>=UINT64_C(0x7FEFFFFFFFFFFFFF)) return 0;
++  const U coefficient=(((cell&D::Fraction)|D::Hidden)<<1)+1;
++  PowInteger128 midpoint={coefficient<<10,0,int(cell>>52)-1023,0};
++  pow_dyadic128_raise(midpoint,denominator);
++  if(!inverse) return pow_dyadic128_compare(power,midpoint);
++  pow_integer128_multiply(midpoint,power);
++  if(midpoint.exponent>0) return -1;
++  if(midpoint.exponent < -1) return 1;
++  if(!midpoint.exponent) {
++    if(midpoint.high>(U(1)<<63) || midpoint.low>midpoint.error) return -1;
++    return 0;
++  }
++  if(midpoint.high!=UINT64_MAX || midpoint.low<U(0)-U(midpoint.error)) return 1;
++  return 0;
++}
++
++__attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_near_one_refine")))
++static U pow_dyadic128(U xb,U yb,U hint) {
++  const U undecided=D::Infinity|D::Quiet,ym=yb&D::Magnitude;
++  if(uint32_t(yb) || !ym || ym>=D::Infinity || xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity ||
++     hint<=UINT64_C(0x0010000000000001) || hint>=UINT64_C(0x7FEFFFFFFFFFFFFE)) return undecided;
++  U coefficient=(ym&D::Fraction)|D::Hidden;
++  const unsigned zeros=63-clz64(coefficient&(U(0)-coefficient));
++  coefficient>>=zeros;
++  const int shift=int(ym>>52)-1075+int(zeros);
++  if(coefficient>32 || shift < -7 || shift>5) return undecided;
++  unsigned numerator=unsigned(coefficient),denominator=1;
++  if(shift>=0) {
++    numerator<<=unsigned(shift);
++    if(numerator>32) return undecided;
++  } else denominator=1U<<unsigned(-shift);
++  if(numerator==3 && denominator==2 && !(yb&D::Sign)) {
++    // When sqrt(x) is exactly dyadic, x*sqrt(x) needs only one final
++    // binary64 rounding, including an exact midpoint tie. Certify the
++    // proposed root by its exact106-bit square, not a rounded double test.
++    const U root=bits(mk61_m0_sqrt(real(xb)));
++    if(root>=UINT64_C(0x0010000000000000) && root<D::Infinity) {
++      PowInteger128 square={((root&D::Fraction)|D::Hidden)<<11,0,int(root>>52)-1023,0};
++      pow_integer128_multiply(square,square);
++      if(!square.error && !square.low && square.high==(((xb&D::Fraction)|D::Hidden)<<11) &&
++         square.exponent==int(xb>>52)-1023) return bits(real(xb)*real(root));
++    }
++  }
++  PowInteger128 power={((xb&D::Fraction)|D::Hidden)<<11,0,int(xb>>52)-1023,0};
++  pow_dyadic128_raise(power,numerator);
++  const bool inverse=bool(yb&D::Sign);
++  const int side=pow_dyadic128_boundary(power,denominator,inverse,hint);
++  if(!side) return undecided;
++  if(side>0) {
++    return pow_dyadic128_boundary(power,denominator,inverse,hint+1)<0?hint+1:undecided;
++  }
++  const int previous=pow_dyadic128_boundary(power,denominator,inverse,hint-1);
++  if(previous>0) return hint;
++  if(previous<0 && pow_dyadic128_boundary(power,denominator,inverse,hint-2)>0) return hint-1;
++  return undecided;
++}

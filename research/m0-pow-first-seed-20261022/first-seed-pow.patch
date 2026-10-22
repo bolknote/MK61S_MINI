@@ -1,0 +1,163 @@
+--- a/code/native_eabi_m0_pow_integer128.inc
++++ b/code/native_eabi_m0_pow_integer128.inc
+@@ -26,6 +26,35 @@
+   else {
+     product.high=(product.high<<1)|(product.low>>63);product.low<<=1;
+     error<<=1;
++  }
++  a.high=product.high;a.low=product.low;a.error=error;
++}
++
++// Exact64-bit square with three32x32 products. Keeping the cross term
++// once avoids the duplicated carry calculation in a generic64x64 product.
++__attribute__((always_inline)) inline Product pow_integer128_square64(U a) {
++  const uint32_t low=uint32_t(a),high=uint32_t(a>>32);
++  const U bottom=wide32(low,low),cross=wide32(low,high),top=wide32(high,high);
++  const U middle=(bottom>>32)+(U(uint32_t(cross))<<1);
++  return {top+((cross>>32)<<1)+(middle>>32),(middle<<32)|uint32_t(bottom)};
++}
++
++__attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_near_one_refine")))
++static void pow_integer128_square(PowInteger128 &a) {
++  const U high=a.high,low=a.low;
++  Product product=pow_integer128_square64(high);
++  if(low) {
++    const U cross=multiply(low,high).high;
++    U previous=product.low;
++    product.low+=cross;product.high+=U(product.low<previous);
++    previous=product.low;
++    product.low+=cross;product.high+=U(product.low<previous);
++  }
++  unsigned error=2*a.error+(low?4:(a.error?1:0));
++  a.exponent*=2;
++  if(product.high>>63) ++a.exponent;
++  else {
++    product.high=(product.high<<1)|(product.low>>63);product.low<<=1;error<<=1;
+   }
+   a.high=product.high;a.low=product.low;a.error=error;
+ }
+@@ -71,7 +100,7 @@
+   unsigned bit=31-clz32(n);
+   while(bit) {
+     --bit;
+-    pow_integer128_multiply(q,q);
++    pow_integer128_square(q);
+     if(n&(1U<<bit)) pow_integer128_multiply(q,base);
+   }
+   if(q.exponent < -1022 || q.exponent>1023) return undecided;
+--- a/code/native_eabi_m0_pow_dyadic128.inc
++++ b/code/native_eabi_m0_pow_dyadic128.inc
+@@ -23,7 +23,7 @@
+   unsigned bit=31-clz32(n);
+   while(bit) {
+     --bit;
+-    pow_integer128_multiply(q,q);
++    pow_integer128_square(q);
+     if(n&(1U<<bit)) pow_integer128_multiply(q,base);
+   }
+ }
+@@ -70,7 +70,7 @@
+     const U root=bits(mk61_m0_sqrt(real(xb)));
+     if(root>=UINT64_C(0x0010000000000000) && root<D::Infinity) {
+       PowInteger128 square={((root&D::Fraction)|D::Hidden)<<11,0,int(root>>52)-1023,0};
+-      pow_integer128_multiply(square,square);
++      pow_integer128_square(square);
+       if(!square.error && !square.low && square.high==(((xb&D::Fraction)|D::Hidden)<<11) &&
+          square.exponent==int(xb>>52)-1023) return bits(real(xb)*real(root));
+     }
+--- a/code/native_eabi_m0_pow_fast.inc
++++ b/code/native_eabi_m0_pow_fast.inc
+@@ -117,19 +117,39 @@
+ // has magnitude <2^-55. The exact linear term is on the 2^-53 grid.
+ // Its only midpoint case is x<1,y<0; convexity makes that tie round up.
+ __attribute__((optimize("Os"),noinline,section(MK61_M0_POW_HOT_SECTION))) static bool pow_tiny_integer(U xb,U yb,U &out) {
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  const uint32_t yh=uint32_t(yb>>32)&0x7FFFFFFFU;
++  const int e=int(yh>>20)-1023;
++  if(unsigned(e)>16 || uint32_t(yb)) return false;
++  const uint32_t significand=(yh&0xFFFFFU)|0x100000U;
++  const unsigned shift=20-unsigned(e);
++  if(significand&((1U<<shift)-1)) return false;
++  const uint32_t n=significand>>shift;if(n>65536) return false;
++#else
+   const U ym=yb&D::Magnitude;const int e=int(ym>>52)-1023;
+   if(e<0 || e>16) return false;
+   const U significand=(ym&D::Fraction)|D::Hidden;
+   const unsigned shift=52-unsigned(e);
+   if(significand&((U(1)<<shift)-1)) return false;
+   const uint32_t n=uint32_t(significand>>shift);if(n>65536) return false;
++#endif
+   const U one=UINT64_C(0x3FF0000000000000);
+   const bool below=xb<one;
+   const uint32_t delta=uint32_t(below?one-xb:xb-one);
+-  const U units=wide32(delta,n);const unsigned fraction=below?53:52;
++  const U units=wide32(delta,n);
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  const uint32_t limit=below?1U<<25:1U<<24;
++  if(uint32_t(units>>32) || uint32_t(units)>limit) return false;
++  const uint32_t short_units=uint32_t(units);
++  const bool negative=below^bool(yb&D::Sign);
++  out=negative?one-U(below?short_units:short_units<<1):
++    one+U(below?((short_units+1)>>1):short_units);
++#else
++  const unsigned fraction=below?53:52;
+   if(units>(U(1)<<(fraction-28))) return false;
+   const bool negative=below^bool(yb&D::Sign);
+   out=negative?one-(units<<(53-fraction)):one+(below?((units+1)>>1):units);
++#endif
+   return true;
+ }
+
+@@ -416,6 +436,17 @@
+ #endif
+ }
+
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++// A first-tier approximation is only a hint. Independent integer
++// midpoint checks retain sole authority to accept the rounding cell.
++__attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_near_one_refine")))
++static double pow_first_candidate(const double *px,const double *py,U hint) {
++  const double x=*px,y=*py;
++  const U checked=pow_dyadic128(bits(x),bits(y),hint);
++  return checked!=(D::Infinity|D::Quiet)?real(checked):pow_refine_checked(x,y);
++}
++#endif
++
+ // For |f|=|x-1|<=2^-36 and |y*f|<700, form y*(f-f*f/2)
+ // without first rounding ln(x). The omitted logarithmic tail is <1 Q64
+ // unit. Exact 32x32 products and two floors give a full +-4 enclosure.
+@@ -569,6 +600,9 @@
+     negative_argument=logarithm.negative^bool(yb&D::Sign);
+   }
+ pow_exp_argument:
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++#define M0_POW_EXP_CANDIDATE(value) return pow_first_candidate(&x,&y,value)
++#endif
+ #define M0_POW_EXP_REJECT() return pow_refine_checked(x,y)
+ #define M0_POW_EXP_RESULT(value) return real(value)
+ #define M0_POW_EXP_ZERO() return 0.0
+@@ -576,6 +610,9 @@
+ #undef M0_POW_EXP_REJECT
+ #undef M0_POW_EXP_RESULT
+ #undef M0_POW_EXP_ZERO
++#ifdef M0_POW_EXP_CANDIDATE
++#undef M0_POW_EXP_CANDIDATE
++#endif
+ }
+
+ __attribute__((optimize("Os"),noinline,section(".m0_pow_dispatch_extension"))) MK61_SOFT_PCS double mk61_m0_pow_dispatch(double x,double y) {
+--- a/code/native_eabi_m0_pow_exp_body.inc
++++ b/code/native_eabi_m0_pow_exp_body.inc
+@@ -73,6 +73,12 @@
+     M0_POW_EXP_REJECT();
+   }
+   const uint32_t rounding_tail=uint32_t(q)&1023U;
++#ifdef M0_POW_EXP_CANDIDATE
++  const U rounded=(q+511+((q>>10)&1))>>10;
++  if(uint32_t(rounding_tail-(512U-error))<=2*error)
++    M0_POW_EXP_CANDIDATE((U(k+1022)<<52)+rounded);
++#else
+   if(uint32_t(rounding_tail-(512U-error))<=2*error) M0_POW_EXP_REJECT();
+   const U rounded=(q+511+((q>>10)&1))>>10;
++#endif
+   M0_POW_EXP_RESULT((U(k+1022)<<52)+rounded);
