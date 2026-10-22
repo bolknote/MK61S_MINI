@@ -1,0 +1,114 @@
+[
+  {
+    "cpu": "m0",
+    "elf_sha256": "4f348097a89b63facf6309512cff940a06cffd1e1b895b16ecff1e60e68dad0a",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 834,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m0",
+    "elf_sha256": "53d3c4044ab054fc98ce8b4830363d6e9ee007242c1923328ed39309dd009aeb",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 834,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": true
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "c53f657131702a923f867513fc0d22da0da2c963262c3a1f11f527bf268c760a",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 502,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "5126b7cda67a79b67e065c8fe8d4d4a3817fef27b95ab67eba96508ddeacfe8f",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 502,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": true
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "dc26f7bab575c6cddb160b9cfeecd4678918bcef1abefa377e9b70677aa8d06b",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 560,
+        "status": "PASS"
+      }
+    ],
+    "source": "code/system_memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "293b24f5044ee41b0030e9752a51cfa0ca10f7c918b3862bbca12e48a42ddb77",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 560,
+        "status": "PASS"
+      }
+    ],
+    "source": "code/system_memory.c",
+    "lto": true
+  },
+  {
+    "cpu": "m0",
+    "elf_sha256": "b585a973b404c82646a33c2a644dfe42c7a311733867ee532e3d217eea76b7e5",
+    "results": [
+      {
+        "name": "__wrap_memcmp",
+        "cases": 53357,
+        "bytes": 834,
+        "status": "PASS"
+      }
+    ],
+    "source": "ports/picocalc/memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m0",
+    "elf_sha256": "d6b0842d018b1a60a386ddfb1a87f236cdd567313a40c14e1840a0a6bfac1f08",
+    "results": [
+      {
+        "name": "__wrap_memcmp",
+        "cases": 53357,
+        "bytes": 834,
+        "status": "PASS"
+      }
+    ],
+    "source": "ports/picocalc/memory.c",
+    "lto": true
+  }
+]

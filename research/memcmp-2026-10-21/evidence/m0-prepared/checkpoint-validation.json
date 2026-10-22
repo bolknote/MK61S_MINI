@@ -1,0 +1,38 @@
+{
+  "status": "OFFLINE_CHECKPOINT",
+  "prototype_patch_base": "a89e99ea730c786716df18d28ec68d842eed55c0",
+  "prototype_patch_applies": true,
+  "prototype_source_hashes_match_prior_arm_validation": true,
+  "physical_timing_available": false,
+  "hardware_installed": false,
+  "production_enabled": false,
+  "flash_preflight": {
+    "status": "PASS",
+    "unsafe_inputs_rejected": 9,
+    "actual_payload_receipts_verified": true
+  },
+  "heap_verification": {
+    "status": "PASS",
+    "results": [
+      {
+        "case": "legacy",
+        "heap_bytes": 33880,
+        "expected_pass": true,
+        "matched": true
+      },
+      {
+        "case": "sram",
+        "heap_bytes": 27944,
+        "expected_pass": false,
+        "matched": true
+      },
+      {
+        "case": "flash",
+        "heap_bytes": 30520,
+        "expected_pass": true,
+        "matched": true
+      }
+    ]
+  },
+  "placement_payload_receipts": "PASS"
+}

@@ -1,0 +1,26 @@
+{
+  "status": "PREPARED_NOT_HARDWARE_ACCEPTED",
+  "base_build": "7aea549e",
+  "base_manifest_sha256": "e5b67f5af6dcecf91323f747ddbfb55d49b1909196d66a18feb63909fcfbe693",
+  "base_source_sha256": "3bfc198d721e918faa8dfa78adf0cfb80f62fb9b85d3880f6e6d4e57d74e0121",
+  "placement": "flash",
+  "overlay_sha256": {
+    "code/memcmp_m0.inc": "785d955838d2f36bfa4ad8f6d5acc827e7e754600f3a95a50cf9272655f1bfba",
+    "code/memcmp_m4.inc": "718fa7bb0c1dbb130669d96516ca5ebc0deb9d64a4fd7c5fcbc5a9018785f123",
+    "code/memcmp_m4_flash.inc": "b4431884e78a6a2aa70701b26f293d49dcee092274c70c2dd8c69b9b53779acd",
+    "code/memcpy_m0.inc": "bb062c308799908bb20b2fd7a954c19e53818691e88c16c90e28f3674910e175",
+    "code/memcpy_m4.inc": "4dc278442328680058e7c6103ca31e5e30eb5c0d0868706461cc9ae466247c60",
+    "code/memmove_m0.inc": "8f1dc4564d3b56b6e5b403f0382bfd8afb1deafd04661d39c74d37f81129fc45",
+    "code/memmove_m4.inc": "264ad693a4088e64ad4645e1e6a953d29d64fa7a59ad4b539f676c332f079f3b",
+    "code/memory_compare_arm.h": "b85019a785164dee276f6431e7daf203d6851e7eb5ff75345a9587c7904dd46e",
+    "code/memory_copy_arm.h": "c4a3493c80755735016414062d4dd342b672838d7ad6f58c5d040f88c061e167",
+    "code/memory_move_arm.h": "f55dc6ad283a489fcf2731267ef1765eb0b74dcf81f3102fd5ca9c51ba799f90",
+    "code/memory_word_ops.h": "62053fb50449bac6cc503de51c3861cd73985bd2ac440f04c1dc2e81c6b2ca61",
+    "code/system_memory.c": "d90bb36ea9323b216aa349dc16d1c79f01d405c99f33036760bcf517951403f0",
+    "ports/picocalc/CMakeLists.txt": "ac846200b7f8820d8a337f1b26832179c9725990aeebfd2ec5fdbcedc53119da",
+    "ports/picocalc/memory.c": "9afea5d25552a3f159307a44c58a23882b3fd436841f475bd092f8a1c491f4e4",
+    "ports/picocalc/memory_fill.S": "6d10acf56b1180dd45e33139c08024e92e4a0e2fd92ed16056729e7ffbf94cf3",
+    "sdk/portable/memory.c": "cb4546e2ceaf62d8396dc83e4b68f2b78e8076f900315c5108e8800b47970e13"
+  },
+  "other_source_files_unchanged": true
+}

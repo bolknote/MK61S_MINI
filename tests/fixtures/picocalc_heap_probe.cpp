@@ -21,6 +21,9 @@ extern "C" unsigned heap_trial(unsigned initialize) {
     void* volatile previous=std::malloc(20000);
     if(!previous) return 1;
     std::free(previous);
+    // Newlib may retain leading alignment padding when __end__ is only
+    // four-byte aligned. Compare against the empty arena, not literal zero.
+    const auto empty_used=mallinfo().uordblks;
     void* volatile stream=std::malloc(1024);
     void* volatile frame=std::malloc(12800);
     void* volatile paths=std::malloc(900);
@@ -39,6 +42,6 @@ extern "C" unsigned heap_trial(unsigned initialize) {
     if(large_app) result|=16;
     std::free(large_app);
     const auto heap=mallinfo();
-    if(heap.uordblks==0) result|=32;
+    if(heap.uordblks==empty_used) result|=32;
     return result;
 }

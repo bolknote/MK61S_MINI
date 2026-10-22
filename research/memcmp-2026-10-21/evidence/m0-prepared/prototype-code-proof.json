@@ -1,0 +1,71 @@
+{
+  "m4_flash": {
+    "address": "0x8062751",
+    "bytes": 560,
+    "code_sha256": "5108abc4b125342954ce17dbbf90c211ed677e267183237e551db533d2c2e098",
+    "elf_sha256": "080da3b952eaeb3407dab5fa018bbb2caa11d736034d17c7edf0e8ae79229284"
+  },
+  "m4_sram_candidate": {
+    "address": "0x8062559",
+    "bytes": 502,
+    "code_sha256": "659f53f6817f0801eeabf00f7693815aeb3a93634cfc91c82d34bf24b1f220ff",
+    "elf_sha256": "080da3b952eaeb3407dab5fa018bbb2caa11d736034d17c7edf0e8ae79229284"
+  },
+  "m4_app": {
+    "address": "0x20001151",
+    "bytes": 502,
+    "code_sha256": "659f53f6817f0801eeabf00f7693815aeb3a93634cfc91c82d34bf24b1f220ff",
+    "elf_sha256": "0ec3c2a729ce39aa9f83084461606b336e0aa37d43038b7cbdf5f953c56ccfbb",
+    "baseline_code_sha256": "118db551dbe2187ac02141b8c199c17a99b75991e35dadde3a32ff11a95521ac"
+  },
+  "f411": {
+    "address": "0x8003f55",
+    "bytes": 560,
+    "code_sha256": "5108abc4b125342954ce17dbbf90c211ed677e267183237e551db533d2c2e098",
+    "elf_sha256": "98c4811a7cbfeb78229cb833d9ccdd6b58cbc634bb065dc2d90eb57bda82af11",
+    "runtime_slot_25": "0x8003f55"
+  },
+  "f401": {
+    "address": "0x8002a05",
+    "bytes": 560,
+    "code_sha256": "5108abc4b125342954ce17dbbf90c211ed677e267183237e551db533d2c2e098",
+    "elf_sha256": "e4875702bd7486255cbe2ac9b2929af4dd03440045c17381ab45505f9b592429",
+    "runtime_slot_25": "0x8002a05"
+  },
+  "pico": {
+    "address": "0x20005625",
+    "bytes": 834,
+    "code_sha256": "87c42c3b797e674dce75064509519925bea84910eedc731fde1b9fc3abd3c069",
+    "elf_sha256": "b03636cea664ce248b68a2e9cb8e224b402ceaa97bc7c94060a79bce26c832af",
+    "runtime_slot_25": "0x20005625"
+  },
+  "m0_app": {
+    "address": "0x20001079",
+    "bytes": 834,
+    "code_sha256": "87c42c3b797e674dce75064509519925bea84910eedc731fde1b9fc3abd3c069",
+    "elf_sha256": "9a8634bc86879368167cfd3a61899a731563940e0f35d203a5dd101f33a98bb7",
+    "baseline_code_sha256": "4cfa5e8274e7c962ef4ee1dfed67e574d9bd84a75e7375de42a347fbfd7445e9"
+  },
+  "m0_shared_target": {
+    "address": "0x20000d11",
+    "bytes": 834,
+    "code_sha256": "87c42c3b797e674dce75064509519925bea84910eedc731fde1b9fc3abd3c069",
+    "elf_sha256": "283631695101bff63a45191e1bf995ee838a704652524b6927333dc67d1f9721"
+  },
+  "m0_flash": {
+    "address": "0x101e0db1",
+    "bytes": 834,
+    "code_sha256": "87c42c3b797e674dce75064509519925bea84910eedc731fde1b9fc3abd3c069",
+    "elf_sha256": "98ce9901521594c80d9557169726513b8491544abcb0dc18a311b88c8d956a85"
+  },
+  "sources": {
+    "code/memory_compare_arm.h": "b85019a785164dee276f6431e7daf203d6851e7eb5ff75345a9587c7904dd46e",
+    "code/memcmp_m0.inc": "785d955838d2f36bfa4ad8f6d5acc827e7e754600f3a95a50cf9272655f1bfba",
+    "code/memcmp_m4.inc": "718fa7bb0c1dbb130669d96516ca5ebc0deb9d64a4fd7c5fcbc5a9018785f123",
+    "code/memcmp_m4_flash.inc": "b4431884e78a6a2aa70701b26f293d49dcee092274c70c2dd8c69b9b53779acd",
+    "sdk/portable/memory.c": "cb4546e2ceaf62d8396dc83e4b68f2b78e8076f900315c5108e8800b47970e13",
+    "code/system_memory.c": "d90bb36ea9323b216aa349dc16d1c79f01d405c99f33036760bcf517951403f0",
+    "ports/picocalc/memory.c": "a4e3e7d4a7372f4fb2947f57b97216b29a87be9ad6ae099ddab0a9c6df977b37"
+  },
+  "status": "PASS"
+}

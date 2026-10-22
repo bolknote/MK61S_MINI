@@ -1,0 +1,398 @@
+diff --git a/code/memory_compare_arm.h b/code/memory_compare_arm.h
+index e876c9d02..a60a84d3c 100644
+--- a/code/memory_compare_arm.h
++++ b/code/memory_compare_arm.h
+@@ -5,7 +5,8 @@
+  * The first differing unsigned byte determines the sign. No input writes,
+  * out-of-range reads, global state or nested calls are needed. */
+ #if defined(__GNUC__) && !defined(__clang__) && \
+-    (defined(__ARM_ARCH_7EM__) && defined(__ARM_FEATURE_UNALIGNED))
++    (defined(__ARM_ARCH_6M__) || \
++     (defined(__ARM_ARCH_7EM__) && defined(__ARM_FEATURE_UNALIGNED)))
+ #define MK61_ARM_MEMCMP 1
+ #ifndef MK61_MEMCMP_NAME
+ #define MK61_MEMCMP_NAME memcmp
+@@ -18,7 +19,9 @@ int MK61_MEMCMP_NAME(const void* left __attribute__((unused)),
+                     const void* right __attribute__((unused)),
+                     size_t size __attribute__((unused))) {
+   __asm__(
+-#if defined(MK61_MEMCMP_M4_FLASH)
++#if defined(__ARM_ARCH_6M__)
++#include "memcmp_m0.inc"
++#elif defined(MK61_MEMCMP_M4_FLASH)
+ /* The Flash instruction buffer hides the wider r12 loads. Avoid the
+  * r4 save/restore here; SRAM APPs benefit from the narrow r4 loads. */
+ #include "memcmp_m4_flash.inc"
+diff --git a/ports/picocalc/CMakeLists.txt b/ports/picocalc/CMakeLists.txt
+index 0b1c86ab0..a650b70fa 100644
+--- a/ports/picocalc/CMakeLists.txt
++++ b/ports/picocalc/CMakeLists.txt
+@@ -125,7 +125,7 @@ pico_add_library(pico_mem_ops_mk61)
+ target_sources(pico_mem_ops_mk61 INTERFACE
+     "${CMAKE_CURRENT_LIST_DIR}/memory.c" "${CMAKE_CURRENT_LIST_DIR}/memory_fill.S")
+ target_link_libraries(pico_mem_ops_mk61 INTERFACE pico_base pico_bootrom)
+-foreach(MK61_MEM_OP memcpy memset memmove __aeabi_memmove __aeabi_memmove4 __aeabi_memmove8
++foreach(MK61_MEM_OP memcpy memset memmove memcmp __aeabi_memmove __aeabi_memmove4 __aeabi_memmove8
+         __aeabi_memcpy __aeabi_memcpy4 __aeabi_memcpy8
+         __aeabi_memset __aeabi_memset4 __aeabi_memset8)
+     pico_wrap_function(pico_mem_ops_mk61 ${MK61_MEM_OP})
+diff --git a/ports/picocalc/memory.c b/ports/picocalc/memory.c
+index 5d0d3746f..aa2892d13 100644
+--- a/ports/picocalc/memory.c
++++ b/ports/picocalc/memory.c
+@@ -15,4 +15,7 @@ void* __wrap___aeabi_memcpy8(void*,const void*,size_t) __attribute__((alias("__w
+ void* __wrap___aeabi_memmove(void*,const void*,size_t) __attribute__((alias("__wrap_memmove")));
+ void* __wrap___aeabi_memmove4(void*,const void*,size_t) __attribute__((alias("__wrap_memmove")));
+ void* __wrap___aeabi_memmove8(void*,const void*,size_t) __attribute__((alias("__wrap_memmove")));
++#define MK61_MEMCMP_NAME __wrap_memcmp
++#define MK61_MEMCMP_ATTRIBUTES __attribute__((section(".time_critical.memcmp")))
++#include "memory_compare_arm.h"
+ #endif
+diff --git a/tests/picocalc_memory_arm_self_test.py b/tests/picocalc_memory_arm_self_test.py
+index 7f3f6e8b6..3e11377cf 100644
+--- a/tests/picocalc_memory_arm_self_test.py
++++ b/tests/picocalc_memory_arm_self_test.py
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env python3
+-"""Check linked Pico memcpy/memmove routing and execute the retained ROM memset bridge."""
++"""Check linked Pico memcpy/memmove/memcmp and execute the retained ROM memset bridge."""
+ import argparse
+ import hashlib
+ import json
+@@ -17,7 +17,7 @@ from check_stm32_vectors import ElfImage
+ ROOT = Path(__file__).resolve().parents[1]
+ 
+ 
+-def verify(elf, rom):
++def verify(elf, rom, placement='sram'):
+     image = ElfImage(elf)
+     machine = Uc(UC_ARCH_ARM, UC_MODE_THUMB | UC_MODE_MCLASS)
+     machine.ctl_set_cpu_model(UC_CPU_ARM_CORTEX_M0)
+@@ -42,8 +42,9 @@ def verify(elf, rom):
+         assert all(machine.reg_read(reg) == value for reg, value in saved.items()), (name, 'AAPCS')
+         return machine.reg_read(UC_ARM_REG_R0)
+ 
++    lower, upper = {'sram': (0x20000000, 0x20042000), 'flash': (0x10000000, 0x10200000)}[placement]
+     copy = image.symbols['__wrap_memcpy']
+-    assert 0x20000000 <= copy < 0x20042000, ('memcpy must execute in SRAM', hex(copy))
++    assert lower <= copy < upper, ('memcpy placement', placement, hex(copy))
+     for alias in ('__wrap___aeabi_memcpy', '__wrap___aeabi_memcpy4', '__wrap___aeabi_memcpy8'):
+         assert image.symbols[alias] == copy, alias
+     runtime = image.symbols['_ZN8picocalc14native_runtimeE']
+@@ -51,11 +52,15 @@ def verify(elf, rom):
+     assert struct.unpack('<I', machine.mem_read(runtime + 23 * 4, 4))[0] == image.symbols['__wrap_memset']
+ 
+     move = image.symbols['__wrap_memmove']
+-    assert 0x20000000 <= move < 0x20042000, ('memmove must execute in SRAM', hex(move))
++    assert lower <= move < upper, ('memmove placement', placement, hex(move))
+     for alias in ('__wrap___aeabi_memmove', '__wrap___aeabi_memmove4', '__wrap___aeabi_memmove8'):
+         assert image.symbols[alias] == move, alias
+     assert struct.unpack('<I', machine.mem_read(runtime + 24 * 4, 4))[0] == move
+ 
++    compare = image.symbols['__wrap_memcmp']
++    assert lower <= compare < upper, ('memcmp placement', placement, hex(compare))
++    assert struct.unpack('<I', machine.mem_read(runtime + 25 * 4, 4))[0] == compare
++
+     table = image.symbols['aeabi_mem_funcs']
+     assert image.symbols['aeabi_mem_funcs_end'] - table == 16
+     assert struct.unpack('<4I', machine.mem_read(table, 16)) == (0x534d, 0x434d, 0x3453, 0x3443)
+@@ -79,11 +84,12 @@ def verify(elf, rom):
+                     assert bytes(machine.mem_read(dest - 16, size + 48)) == expected_bytes, (name, size, offset, value)
+                     cases += 1
+         results.append(dict(name=name, cases=cases, status='PASS'))
+-    return dict(status='PASS', elf_sha256=hashlib.sha256(elf.read_bytes()).hexdigest(),
++    return dict(status='PASS', placement=placement, elf_sha256=hashlib.sha256(elf.read_bytes()).hexdigest(),
+                 bootrom_sha256=hashlib.sha256(rom.read_bytes()).hexdigest(),
+                 memcpy_address=hex(copy), memcpy_bytes=image.sizes['__wrap_memcpy'],
+                 memmove_address=hex(move), memmove_bytes=image.sizes['__wrap_memmove'],
+-                runtime_slots='memcpy=22, memset=23, memmove=24', rom_mem_funcs=[hex(value) for value in expected],
++                memcmp_address=hex(compare), memcmp_bytes=image.sizes['__wrap_memcmp'],
++                runtime_slots='memcpy=22, memset=23, memmove=24, memcmp=25', rom_mem_funcs=[hex(value) for value in expected],
+                 results=results)
+ 
+ 
+@@ -92,8 +98,9 @@ def main():
+     parser.add_argument('elf', type=Path)
+     parser.add_argument('--bootrom', type=Path, default=ROOT / 'research/rp2040-memset-2026-10-21/capture/bootrom.bin')
+     parser.add_argument('--output', type=Path)
++    parser.add_argument('--memory-placement', choices=('sram', 'flash'), default='sram')
+     args = parser.parse_args()
+-    result = verify(args.elf, args.bootrom)
++    result = verify(args.elf, args.bootrom, args.memory_placement)
+     print(json.dumps(result, indent=2))
+     if args.output:
+         args.output.write_text(json.dumps(result, indent=2) + '\n')
+diff --git a/tests/system_memcmp_arm_self_test.py b/tests/system_memcmp_arm_self_test.py
+index d15470ad3..823a4edd6 100644
+--- a/tests/system_memcmp_arm_self_test.py
++++ b/tests/system_memcmp_arm_self_test.py
+@@ -147,7 +147,8 @@ def main():
+         assert tc, 'Pass --arm-toolchain-bin'
+         variants = [('m0', 'sdk/portable/memory.c', 'memcmp', []),
+                     ('m4', 'sdk/portable/memory.c', 'memcmp', []),
+-                    ('m4', 'code/system_memory.c', 'memcmp', ['-DMK61_MEMORY_TEST_BUILD=1'])]
++                    ('m4', 'code/system_memory.c', 'memcmp', ['-DMK61_MEMORY_TEST_BUILD=1']),
++                    ('m0', 'ports/picocalc/memory.c', '__wrap_memcmp', ['-DPICO_ON_DEVICE=1'])]
+         result = []
+         with tempfile.TemporaryDirectory(prefix='mk61-memcmp-arm-') as tmp:
+             elf = Path(tmp) / 'compare.elf'
+diff --git a/code/memcmp_m0.inc b/code/memcmp_m0.inc
+new file mode 100644
+index 000000000..6d8d065d4
+--- /dev/null
++++ b/code/memcmp_m0.inc
+@@ -0,0 +1,254 @@
++/* Bounded, read-only unsigned lexicographic comparison.
++ * Returns the ISO C sign; unequal word results may be -1 or +1.
++ * Generated from research/memcmp-2026-10-21/candidates.S by export.py. */
++".syntax unified\n"
++".cpu cortex-m0plus\n"
++".macro mk61_compare_byte_pair tag,mk61_compare_offset\n"
++" ldrb r3,[r0,#\\mk61_compare_offset]\n"
++" ldrb r4,[r1,#\\mk61_compare_offset]\n"
++" subs r3,r3,r4\n"
++" bne .Lmk61_compare_byteDiff\\tag\n"
++".endm\n"
++".macro mk61_compare_word_pair tag\n"
++" ldmia r0!,{r3}\n"
++" ldmia r1!,{r4}\n"
++" cmp r3,r4\n"
++" bne .Lmk61_compare_wordDiff\\tag\n"
++".endm\n"
++".macro mk61_compare_merged_pair tag,h\n"
++" ldmia r0!,{r3}\n"
++" ldmia r1!,{r6}\n"
++" lsls r4,r6,#(\\h*8)\n"
++" orrs r4,r5\n"
++" cmp r3,r4\n"
++" bne .Lmk61_compare_mergeDiff\\tag\\h\n"
++" lsrs r5,r6,#(32-\\h*8)\n"
++".endm\n"
++".macro mk61_compare_merge tag,h\n"
++".Lmk61_compare_merge\\tag\\h:\n"
++" push {r5,r6}\n"
++" .if \\h==1\n"
++" ldrb r5,[r1]\n"
++" .elseif \\h==2\n"
++" ldrh r5,[r1]\n"
++" .else\n"
++" ldrb r5,[r1]\n"
++" adds r1,#1\n"
++" ldrh r4,[r1]\n"
++" lsls r4,r4,#8\n"
++" orrs r5,r4\n"
++" .endif\n"
++" .if \\h==3\n"
++" adds r1,#2\n"
++" .else\n"
++" adds r1,#\\h\n"
++" .endif\n"
++" subs r2,#(4+\\h)\n"
++" cmp r2,#12\n"
++" blo .Lmk61_compare_mergeWord\\tag\\h\n"
++" subs r2,#12\n"
++".Lmk61_compare_merge16\\tag\\h:\n"
++" .rept 4\n"
++" mk61_compare_merged_pair \\tag,\\h\n"
++" .endr\n"
++" subs r2,#16\n"
++" bhs .Lmk61_compare_merge16\\tag\\h\n"
++" adds r2,#12\n"
++" bcc .Lmk61_compare_mergeTail\\tag\\h\n"
++".Lmk61_compare_mergeWord\\tag\\h:\n"
++" mk61_compare_merged_pair \\tag,\\h\n"
++" subs r2,#4\n"
++" bhs .Lmk61_compare_mergeWord\\tag\\h\n"
++".Lmk61_compare_mergeTail\\tag\\h:\n"
++" /* The carry contains exactly h bytes already read inside the span. */\n"
++" .rept \\h\n"
++" ldrb r3,[r0]\n"
++" uxtb r4,r5\n"
++" subs r3,r3,r4\n"
++" bne .Lmk61_compare_mergeByteDiff\\tag\\h\n"
++" adds r0,#1\n"
++" lsrs r5,r5,#8\n"
++" .endr\n"
++" adds r2,#4\n"
++" pop {r5,r6}\n"
++" b .Lmk61_compare_tail\\tag\n"
++".Lmk61_compare_mergeDiff\\tag\\h:\n"
++" pop {r5,r6}\n"
++" b .Lmk61_compare_wordDiff\\tag\n"
++".Lmk61_compare_mergeByteDiff\\tag\\h:\n"
++" pop {r5,r6}\n"
++" b .Lmk61_compare_byteDiff\\tag\n"
++".endm\n"
++".macro mk61_compare_compare name,words\n"
++" cmp r2,#0\n"
++" beq .Lmk61_compare_zero\\name\n"
++" cmp r0,r1\n"
++" beq .Lmk61_compare_zero\\name\n"
++" mov r12,r0\n"
++" ldrb r0,[r0]\n"
++" ldrb r3,[r1]\n"
++" subs r0,r0,r3\n"
++" bne .Lmk61_compare_return\\name\n"
++" cmp r2,#1\n"
++" beq .Lmk61_compare_return\\name\n"
++" mov r0,r12\n"
++" cmp r2,#8\n"
++" blo .Lmk61_compare_small\\name\n"
++" movs r3,r0\n"
++" eors r3,r1\n"
++" lsls r3,r3,#30\n"
++" beq .Lmk61_compare_prepare\\name\n"
++" .if \\words>1\n"
++" cmp r2,#24\n"
++" bhs .Lmk61_compare_prepare\\name\n"
++" .endif\n"
++".Lmk61_compare_small\\name:\n"
++" push {r4}\n"
++" /* Byte zero was checked before any register save or word-loop setup. */\n"
++" adds r0,#1\n"
++" adds r1,#1\n"
++" subs r2,#1\n"
++" .if \\words>1\n"
++" cmp r2,#4\n"
++" blo .Lmk61_compare_smallTail\\name\n"
++".Lmk61_compare_smallFour\\name:\n"
++" mk61_compare_byte_pair \\name,0\n"
++" mk61_compare_byte_pair \\name,1\n"
++" mk61_compare_byte_pair \\name,2\n"
++" mk61_compare_byte_pair \\name,3\n"
++" adds r0,#4\n"
++" adds r1,#4\n"
++" subs r2,#4\n"
++" cmp r2,#4\n"
++" bhs .Lmk61_compare_smallFour\\name\n"
++".Lmk61_compare_smallTail\\name:\n"
++" cmp r2,#0\n"
++" beq .Lmk61_compare_equal\\name\n"
++" .endif\n"
++".Lmk61_compare_smallByte\\name:\n"
++" mk61_compare_byte_pair \\name,0\n"
++" adds r0,#1\n"
++" adds r1,#1\n"
++" subs r2,#1\n"
++" bne .Lmk61_compare_smallByte\\name\n"
++".Lmk61_compare_equal\\name:\n"
++" movs r3,#0\n"
++".Lmk61_compare_byteDiff\\name:\n"
++" movs r0,r3\n"
++" pop {r4}\n"
++".Lmk61_compare_return\\name:\n"
++" bx lr\n"
++".Lmk61_compare_zero\\name:\n"
++" movs r0,#0\n"
++" bx lr\n"
++".Lmk61_compare_prepare\\name:\n"
++" push {r4}\n"
++" lsls r3,r0,#30\n"
++" beq .Lmk61_compare_aligned\\name\n"
++" /* Skip the already checked first byte before aligning the left span. */\n"
++" adds r0,#1\n"
++" adds r1,#1\n"
++" subs r2,#1\n"
++" lsls r3,r0,#30\n"
++" beq .Lmk61_compare_aligned\\name\n"
++".Lmk61_compare_prefix\\name:\n"
++" mk61_compare_byte_pair \\name,0\n"
++" adds r0,#1\n"
++" adds r1,#1\n"
++" subs r2,#1\n"
++" lsls r3,r0,#30\n"
++" bne .Lmk61_compare_prefix\\name\n"
++".Lmk61_compare_aligned\\name:\n"
++" .if \\words>1\n"
++" lsls r3,r1,#30\n"
++" beq .Lmk61_compare_words\\name\n"
++" movs r3,#3\n"
++" ands r3,r1\n"
++" cmp r3,#1\n"
++" bne .Lmk61_compare_not3\\name\n"
++" b .Lmk61_compare_merge\\name\\()3\n"
++".Lmk61_compare_not3\\name:\n"
++" cmp r3,#2\n"
++" bne .Lmk61_compare_not2\\name\n"
++" b .Lmk61_compare_merge\\name\\()2\n"
++".Lmk61_compare_not2\\name:\n"
++" b .Lmk61_compare_merge\\name\\()1\n"
++" .else\n"
++" b .Lmk61_compare_words\\name\n"
++" .endif\n"
++".Lmk61_compare_wordDiff\\name:\n"
++" rev r0,r3\n"
++" rev r1,r4\n"
++" cmp r0,r1\n"
++" sbcs r0,r0\n"
++" movs r1,#1\n"
++" orrs r0,r1\n"
++" pop {r4}\n"
++" bx lr\n"
++".Lmk61_compare_words\\name:\n"
++" .if \\words>1\n"
++" cmp r2,#(4*\\words)\n"
++" .if \\words>4\n"
++" blo .Lmk61_compare_medium\\name\n"
++" .else\n"
++" blo .Lmk61_compare_word\\name\n"
++" .endif\n"
++".Lmk61_compare_bulk\\name:\n"
++" .rept \\words\n"
++" mk61_compare_word_pair \\name\n"
++" .endr\n"
++" subs r2,#(4*\\words)\n"
++" cmp r2,#(4*\\words)\n"
++" bhs .Lmk61_compare_bulk\\name\n"
++" .if \\words>4\n"
++".Lmk61_compare_medium\\name:\n"
++" cmp r2,#16\n"
++" blo .Lmk61_compare_wordCheck\\name\n"
++".Lmk61_compare_16\\name:\n"
++" .rept 4\n"
++" mk61_compare_word_pair \\name\n"
++" .endr\n"
++" subs r2,#16\n"
++" cmp r2,#16\n"
++" bhs .Lmk61_compare_16\\name\n"
++".Lmk61_compare_wordCheck\\name:\n"
++" .endif\n"
++" cmp r2,#4\n"
++" blo .Lmk61_compare_tail\\name\n"
++" .endif\n"
++".Lmk61_compare_word\\name:\n"
++" mk61_compare_word_pair \\name\n"
++" subs r2,#4\n"
++" cmp r2,#4\n"
++" bhs .Lmk61_compare_word\\name\n"
++".Lmk61_compare_tail\\name:\n"
++" cmp r2,#0\n"
++" beq .Lmk61_compare_wordEqual\\name\n"
++".Lmk61_compare_tailByte\\name:\n"
++" ldrb r3,[r0]\n"
++" ldrb r4,[r1]\n"
++" subs r3,r3,r4\n"
++" bne .Lmk61_compare_tailDiff\\name\n"
++" adds r0,#1\n"
++" adds r1,#1\n"
++" subs r2,#1\n"
++" bne .Lmk61_compare_tailByte\\name\n"
++".Lmk61_compare_wordEqual\\name:\n"
++" movs r3,#0\n"
++".Lmk61_compare_tailDiff\\name:\n"
++" movs r0,r3\n"
++" pop {r4}\n"
++" bx lr\n"
++" .if \\words>1\n"
++" mk61_compare_merge \\name,3\n"
++" mk61_compare_merge \\name,2\n"
++" mk61_compare_merge \\name,1\n"
++" .endif\n"
++".endm\n"
++"\n"
++"mk61_compare_compare body,16\n"
++".purgem mk61_compare_compare\n"
++".purgem mk61_compare_word_pair\n"
++".purgem mk61_compare_byte_pair\n"
++".purgem mk61_compare_merged_pair\n"
++".purgem mk61_compare_merge\n"

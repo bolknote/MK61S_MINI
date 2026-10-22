@@ -1,0 +1,12 @@
+{
+  "cpu": "m0",
+  "elf_sha256": "98ce9901521594c80d9557169726513b8491544abcb0dc18a311b88c8d956a85",
+  "results": [
+    {
+      "name": "memmove",
+      "cases": 24281,
+      "bytes": 1192,
+      "status": "PASS"
+    }
+  ]
+}

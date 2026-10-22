@@ -1,0 +1,11 @@
+{
+  "status": "PREPARED_NOT_HARDWARE_ACCEPTED",
+  "base_build": "7AEA549E",
+  "flash_source_sha256": "248bbc8f6fc4e7ae47e4910fe971d6f98c5fa98b3f8cc53d6f32ffc04254abce",
+  "sram_source_sha256": "2e183f452f79e22e59769ea0f5d1f64d79bddbf941037ec1b8151cd872c18339",
+  "changed_relative_to_flash": [
+    "ports/picocalc/memory.c"
+  ],
+  "sram_memory_c_sha256": "36a7a1381ca2c02ce3f68f9aca65d31495823a4388f6631830a252cb7633e8de",
+  "change": "Only section placement for memcpy/memmove/memcmp, plus the placement comment"
+}

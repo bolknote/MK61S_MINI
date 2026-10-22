@@ -1,0 +1,20 @@
+{
+  "passed": false,
+  "heap_bytes": 27944,
+  "heap_start": "0x200312d8",
+  "heap_limit": "0x20038000",
+  "without_initialization": 32,
+  "with_initialization": 32,
+  "initialized_checks": {
+    "markdown_allocated": false,
+    "image_allocated": false,
+    "large_app_allocated": false,
+    "all_released": true
+  },
+  "required_allocations": {
+    "markdown_bytes": 15296,
+    "image_bytes": 8326,
+    "app_bytes": 30000
+  },
+  "writes_bounded": true
+}

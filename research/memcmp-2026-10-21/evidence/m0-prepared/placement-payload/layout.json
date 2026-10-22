@@ -1,0 +1,44 @@
+{
+  "cpu": "m0",
+  "base": 270401536,
+  "bytes": 4340,
+  "crc32": 355434109,
+  "sha256": "3973eb0a2f0317dd00884c36063994890370025cd854cb76a6ae76c03cc4af00",
+  "entries": {
+    "BASELINE": {
+      "symbol": "baseline",
+      "address": 270401537,
+      "bytes": 44
+    },
+    "OWN4": {
+      "symbol": "own4",
+      "address": 270401581,
+      "bytes": 166
+    },
+    "OWN16": {
+      "symbol": "own16",
+      "address": 270401749,
+      "bytes": 696
+    },
+    "OWN64": {
+      "symbol": "own64",
+      "address": 270402445,
+      "bytes": 834
+    },
+    "SDK": {
+      "symbol": "memcmp",
+      "address": 270405041,
+      "bytes": 834
+    },
+    "COPY": {
+      "symbol": "memcpy",
+      "address": 270403281,
+      "bytes": 568
+    },
+    "MOVE": {
+      "symbol": "memmove",
+      "address": 270403849,
+      "bytes": 1192
+    }
+  }
+}
