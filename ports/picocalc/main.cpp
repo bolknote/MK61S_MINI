@@ -175,8 +175,8 @@ void report(unsigned math_failures) {
     std::printf("X_RAW=[%s] PANEL_INIT=%u PHYSICAL_KEYS=%lu LAST_PHYSICAL=0x%02X\n",
                 raw, panel_ready, (unsigned long)physical_keys, last_physical_key);
     const auto battery=keyboard.battery();
-    std::printf("BATTERY_PERCENT=%d BATTERY_CHARGING=%u BATTERY_AVAILABLE=%u BATTERY_ERRORS=%lu\n",
-        battery.percent,battery.charging,battery.available,(unsigned long)keyboard.battery_errors());
+    std::printf("BATTERY_PERCENT=%d BATTERY_BIOS_FLAG7=%u BATTERY_AVAILABLE=%u BATTERY_ERRORS=%lu\n",
+        battery.percent,battery.bios_flag7,battery.available,(unsigned long)keyboard.battery_errors());
     std::printf("CONSOLE=%s CONSOLE_SWITCHES=%lu RX_USB=%lu RX_UART=%lu\n",
         picocalc::console::routing.selected()?(picocalc::console::routing.output()==picocalc::console::Channel::USB?"USB":"UART"):"BOOT",
         (unsigned long)picocalc::console::routing.switches(),

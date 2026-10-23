@@ -10,18 +10,22 @@ enum class Channel : unsigned { USB,UART };
 class Route {
     int pending_[2]{-1,-1};
     Channel output_=Channel::UART,input_=Channel::UART;
+    Channel next_=Channel::USB;
     bool selected_=false;
     bool cr_[2]{};
     uint32_t switches_=0,received_[2]{};
 public:
     template<class Backend> int read(Backend& backend,bool exclusive) {
-        for(Channel source:{Channel::USB,Channel::UART}) {
+        // Alternate eligible streams so an active UART line and valid USB
+        // protocol packets both advance under continuous traffic.
+        const Channel first=next_,second=first==Channel::USB?Channel::UART:Channel::USB;
+        for(Channel source:{first,second}) {
             const unsigned index=(unsigned)source;
             if(exclusive && source!=output_ && (source==Channel::UART || pending_[index]>=0)) continue;
             int value=pending_[index];
             if(value>=0) pending_[index]=-1;
             else { value=backend.read(source);if(value>=0) ++received_[index]; }
-            if(value>=0) { input_=source;return value; }
+            if(value>=0) { input_=source;next_=source==Channel::USB?Channel::UART:Channel::USB;return value; }
         }
         return -1;
     }

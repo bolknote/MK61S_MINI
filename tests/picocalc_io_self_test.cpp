@@ -136,11 +136,12 @@ void console_route_test() {
     assert(route.output()==Channel::UART && route.uart_output_enabled());
     assert(!route.skip_lf('\n'));
     // A USB packet can be consumed without changing the running UART shell.
-    backend.usb={0,7};
+    backend.uart.clear();backend.usb={0,7};
     assert(route.read(backend,true)==0);assert(route.output()==Channel::UART && route.uart_output_enabled());
     assert(route.read(backend,true)==7);assert(route.output()==Channel::UART && route.uart_output_enabled());
     backend.usb={'z'};
     assert(route.read(backend,true)=='z' && !route.accept('z',true));
+    backend.uart={'y','\r'};
     assert(route.read(backend,true)=='y' && route.accept('y',true));
     assert(route.read(backend,true)=='\r' && route.accept('\r',true));
     assert(route.read(backend,true)<0);
@@ -153,27 +154,33 @@ void console_route_test() {
 }
 void battery_test() {
     picocalc::BatteryStatus lost;
-    assert(lost.decode(0x0B,0x80|75) && lost.charging);
+    assert(lost.decode(0x0B,0x80|75) && lost.bios_flag7);
     lost.clear_reading();
-    assert(lost.available && lost.percent==-1 && !lost.charging);
+    assert(lost.available && lost.percent==-1 && !lost.bios_flag7);
     picocalc::BatteryStatus status;
     assert(!status.available);
     for(unsigned raw=0;raw<256;++raw) {
         const bool valid=status.decode(0x0B,(uint8_t)raw);
         assert(valid==((raw&127)<=100));
-        if(valid) assert(status.percent==(int)(raw&127) && status.charging==((raw&128)!=0) && status.available);
-        else assert(status.percent<0 && !status.charging);
+        if(valid) assert(status.percent==(int)(raw&127) && status.bios_flag7==((raw&128)!=0) && status.available);
+        else assert(status.percent<0 && !status.bios_flag7);
     }
     assert(!status.decode(0,45));
     for(int charge:{0,1}) for(int value:{-1,0,1,49,100}) {
         status={(int16_t)value,charge!=0,true};
         unsigned pixels=0;
         picocalc::battery_icon(status,[&](unsigned x,unsigned y) {
-            assert(x>=282 && x<312 && y>=11 && y<=22);++pixels;
+            assert(x>=290 && x<312 && y>=11 && y<=22);++pixels;
         });
         assert(pixels>=68 && pixels<=240);
     }
-    std::puts("Pico battery: register/percent/charging validation and native bounded icon PASS");
+    std::array<bool,320*320> plain{},flagged{};
+    status={75,false,true};
+    picocalc::battery_icon(status,[&](unsigned x,unsigned y){plain[y*320+x]=true;});
+    status.bios_flag7=true;
+    picocalc::battery_icon(status,[&](unsigned x,unsigned y){flagged[y*320+x]=true;});
+    assert(plain==flagged); // Raw BIOS flag cannot imply charging in the HUD.
+    std::puts("Pico battery: register/percent/raw BIOS flag validation and native bounded icon PASS");
 }
 void console_text_test() {
 #if defined(_WIN32)
