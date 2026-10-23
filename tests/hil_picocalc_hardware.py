@@ -78,7 +78,16 @@ def main():
         diagnostic_seconds=time.monotonic()-began
         healthy(sleeping,report['build'])
         assert 'POWER_MODE=SLEEP_USB SYS_HZ=48000000' in sleeping,sleeping
-        assert field(sleeping,'UART_SLEEP_HOLDS')>0,sleeping
+        usb_console='CONSOLE=USB ' in sleeping
+        if usb_console:
+            # A second USB reply must neither enqueue UART bytes nor flush
+            # that transport. Clock/sleep boundaries still explicitly drain it.
+            independent=p.status();healthy(independent,report['build'])
+            assert 'CONSOLE=USB ' in independent
+            for name in ('UART_BYTES','UART_WAIT_US','UART_FLUSH_US','UART_FLUSHES','UART_SLEEP_HOLDS'):
+                assert field(independent,name)==field(sleeping,name),(name,sleeping,independent)
+            report['usb_uart_independent']=dict(before=sleeping,after=independent)
+        else:assert field(sleeping,'UART_SLEEP_HOLDS')>0,sleeping
         assert abs(field(sleeping,'UART_BAUD')-115200)<500,sleeping
         # A status reply must finish while the device is still asleep. Its
         # temporary UART/DMA/SRAM clock lease must already be released.
@@ -87,7 +96,8 @@ def main():
         assert not mask(sleeping,'SLEEP_CLOCK1')&0x3C0,sleeping
         report['sleep_uart']=dict(status_seconds=diagnostic_seconds,status=sleeping,
             temporary_clock_lease_restored=True)
-        passed('UART diagnostics finish in 48 MHz sleep; temporary DMA/UART/SRAM clock lease restores the sleep mask')
+        passed('USB replies are independent of UART in 48 MHz sleep' if usb_console else
+               'UART diagnostics finish in 48 MHz sleep; temporary DMA/UART/SRAM clock lease restores the sleep mask')
         end=time.monotonic()+10
         while time.monotonic()<end:
             p.pump(.1)

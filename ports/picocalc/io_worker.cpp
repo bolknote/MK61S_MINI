@@ -3,6 +3,7 @@
 #include "dma_support.hpp"
 #include "event_wait.hpp"
 #include "sleep_clock_lease.hpp"
+#include "console_route.hpp"
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
 #include "hardware/i2c.h"
@@ -148,6 +149,10 @@ void uart_flush() {
     uart_flush_us.fetch_add((u32)(time_us_64()-start),std::memory_order_relaxed);
     uart_flushes.fetch_add(1,std::memory_order_relaxed);
 }
+// SDK stdio_flush visits every driver even when stdio_filter_driver selects
+// USB. Its implicit printf flush must not wait for a separate UART stream.
+// drain() still calls uart_flush directly at clock/sleep/reset boundaries.
+void uart_stdio_flush() { if(console::routing.uart_output_enabled()) uart_flush(); }
 void worker() {
     flash_safe_execute_core_init();
     ready.store(true,std::memory_order_release);__sev();
@@ -183,7 +188,7 @@ void start() {
     // Preserve the SDK's pins, baud rate, CRLF handling, RX IRQ and input
     // callbacks. Only its blocking TX callback becomes a lossless queue.
     stdio_uart.out_chars=uart_output;
-    stdio_uart.out_flush=uart_flush;
+    stdio_uart.out_flush=uart_stdio_flush;
 #endif
 }
 bool request_i2c(bool read,const u8* bytes,unsigned length) {

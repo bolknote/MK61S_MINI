@@ -1,6 +1,9 @@
 #include "io_queue.hpp"
 #include "console.hpp"
 #include "lcd_update.hpp"
+#include "battery.hpp"
+#include "lcd_scroll.hpp"
+#include <deque>
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
@@ -71,6 +74,103 @@ void lcd_updates_test() {
     }
     std::puts("PicoCalc LCD windows: exact pixel reconstruction, sparse regions, edges, merging, fragmentation and RGB565 PASS");
 }
+void lcd_scroll_test() {
+    using namespace picocalc::lcd;
+    uint32_t random=0x8F1DC039;
+    auto byte=[&]() -> uint8_t { random^=random<<13;random^=random>>17;random^=random<<5;return (uint8_t)random; };
+    for(Region region:{Region{0,320},Region{40,240},Region{42,238}}) {
+        std::array<uint8_t,BYTES> previous{},next{},ram{},visible{};
+        for(auto& value:previous) value=byte();
+        ram=previous;Scroll mapping{region,0};
+        for(unsigned step=0;step<100;++step) {
+            const int delta=step%2?-(int)(1+step%47):(int)(1+step%61);
+            next=previous;
+            for(unsigned y=0;y<region.height;++y) {
+                const int source=(int)y+delta;
+                for(unsigned x=0;x<STRIDE;++x)
+                    next[(region.top+y)*STRIDE+x]=source>=0 && source<region.height?previous[(region.top+source)*STRIDE+x]:byte();
+            }
+            // Also change fixed title/footer pixels. They must remain fixed.
+            if(region.top) next[1]^=1;
+            if(region.top+region.height<HEIGHT) next.back()^=1;
+            assert(Scroll::find(previous.data(),next.data(),region)==delta);
+            mapping.rotate(previous.data(),delta);
+            Update update;update.plan(previous.data(),next.data());
+            assert(update.bytes<WIDTH*HEIGHT*2);
+            for(unsigned i=0;i<update.count;++i) {
+                const auto& rect=update.rectangles[i];
+                for(unsigned row=0;row<rect.height;) {
+                    const unsigned y=rect.y+row,n=mapping.run(y,rect.height-row),physical=mapping.map(y);
+                    assert(n && physical+n<=HEIGHT);
+                    for(unsigned dy=0;dy<n;++dy)
+                        std::memcpy(ram.data()+(physical+dy)*STRIDE+rect.x/8,next.data()+(y+dy)*STRIDE+rect.x/8,rect.width/8);
+                    row+=n;
+                }
+            }
+            for(unsigned y=0;y<HEIGHT;++y) std::memcpy(visible.data()+y*STRIDE,ram.data()+mapping.map(y)*STRIDE,STRIDE);
+            assert(visible==next);previous=next;
+            assert(!Scroll::find(previous.data(),next.data(),region));
+        }
+    }
+    assert(!Scroll::find(nullptr,nullptr,{319,2}));
+    std::puts("LCD scroll: 300 exact physical-GRAM reconstructions, both directions, wrapping, unaligned fixed areas and changed headers PASS");
+}
+void console_route_test() {
+    using namespace picocalc::console;
+    struct Backend {
+        std::deque<int> usb,uart;
+        int read(Channel channel) {
+            auto& queue=channel==Channel::USB?usb:uart;
+            if(queue.empty()) return -1;
+            const int value=queue.front();queue.pop_front();return value;
+        }
+    } backend;
+    Route route;assert(route.uart_output_enabled());backend.usb={'a','b','\r'};backend.uart={'x','y','\r'};
+    assert(route.read(backend,false)=='a' && route.accept('a',false));
+    assert(route.output()==Channel::USB && !route.uart_output_enabled());
+    assert(!route.skip_lf('\r'));
+    assert(route.read(backend,true)=='b' && route.accept('b',true));
+    assert(route.read(backend,true)=='\r' && route.accept('\r',true));
+    assert(route.read(backend,true)<0 && backend.uart.size()==3);
+    assert(route.read(backend,false)=='x' && route.accept('x',false));
+    assert(route.output()==Channel::UART && route.uart_output_enabled());
+    assert(!route.skip_lf('\n'));
+    // A USB packet can be consumed without changing the running UART shell.
+    backend.usb={0,7};
+    assert(route.read(backend,true)==0);assert(route.output()==Channel::UART && route.uart_output_enabled());
+    assert(route.read(backend,true)==7);assert(route.output()==Channel::UART && route.uart_output_enabled());
+    backend.usb={'z'};
+    assert(route.read(backend,true)=='z' && !route.accept('z',true));
+    assert(route.read(backend,true)=='y' && route.accept('y',true));
+    assert(route.read(backend,true)=='\r' && route.accept('\r',true));
+    assert(route.read(backend,true)<0);
+    assert(route.read(backend,false)=='z' && route.accept('z',false));
+    assert(route.output()==Channel::USB && route.received(Channel::USB)==6 && route.received(Channel::UART)==3);
+    assert(route.skip_lf('\n'));
+    assert(!route.skip_lf('\n'));
+    assert(route.switches()==3 && route.read(backend,false)<0);
+    std::puts("Pico console routing: exact streams, partial-line ownership, USB packets, UART deferred and no byte loss PASS");
+}
+void battery_test() {
+    picocalc::BatteryStatus status;
+    assert(!status.available);
+    for(unsigned raw=0;raw<256;++raw) {
+        const bool valid=status.decode(0x0B,(uint8_t)raw);
+        assert(valid==((raw&127)<=100));
+        if(valid) assert(status.percent==(int)(raw&127) && status.charging==((raw&128)!=0) && status.available);
+        else assert(status.percent<0 && !status.charging);
+    }
+    assert(!status.decode(0,45));
+    for(int charge:{0,1}) for(int value:{-1,0,1,49,100}) {
+        status={(int16_t)value,charge!=0,true};
+        unsigned pixels=0;
+        picocalc::battery_icon(status,[&](unsigned x,unsigned y) {
+            assert(x>=282 && x<312 && y>=11 && y<=22);++pixels;
+        });
+        assert(pixels>=68 && pixels<=240);
+    }
+    std::puts("Pico battery: register/percent/charging validation and native bounded icon PASS");
+}
 void console_text_test() {
 #if defined(_WIN32)
     const auto descriptor=&_fileno;const auto duplicate=&_dup;
@@ -97,7 +197,10 @@ void console_text_test() {
 
 void picocalc_io_test() {
     lcd_updates_test();
+    lcd_scroll_test();
     console_text_test();
+    console_route_test();
+    battery_test();
     picocalc::IoQueue<uint32_t,4> small;
     uint32_t value=17;
     assert(!small.pop(value) && value==17 && small.empty());
