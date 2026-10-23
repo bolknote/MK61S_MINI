@@ -1,0 +1,69 @@
+{
+  "status": "AUTHOR_PASS_SIGNED64_ENTRY_NOT_PRODUCTION",
+  "cases": 30222,
+  "ARM_calls": 90666,
+  "all_cases_profiled": true,
+  "vs_parent": {
+    "faster": 6899,
+    "equal": 23323
+  },
+  "negative_l2d_instruction_savings": {
+    "5": 2684,
+    "1": 4215
+  },
+  "old16_cases": {
+    "cases": 16,
+    "candidate_no_slower_correct_Qfplib": 16,
+    "count_pairs": {
+      "41/46/41": 4,
+      "23/28/26": 4,
+      "28/33/31": 5,
+      "43/48/46": 3
+    }
+  },
+  "expanded_correct_Qfplib_deficits_resolved": 420,
+  "candidate_slower_correct_Qfplib": 0,
+  "candidate_wrong": 0,
+  "parent_wrong": 0,
+  "Qfplib_wrong": 0,
+  "source_sha256": "cdb5955b2acc0fe6a0f2f157da60d8af0e1cc895bbda0faa7ce9b657e55f3dc2",
+  "candidate_ELF_sha256": "a905d4bc8a1e1ac48e9164bbf8bdbb8086dec72eeea409291651d3adff0d8f90",
+  "code_bytes_delta": 8,
+  "stack_bytes_written": 0,
+  "linked_BL_callers": 8,
+  "independent_review": "not_claimed",
+  "production_or_hardware_GO": false,
+  "canonical_or_frozen_changed": false,
+  "goal_complete": false,
+  "files": {
+    "linked-callers.json": "f732716f97a76d3e60d6453e7d00557920dbea4b3f1befcb61e3df7bfef8ca9d",
+    "candidate.elf": "a905d4bc8a1e1ac48e9164bbf8bdbb8086dec72eeea409291651d3adff0d8f90",
+    "build.py": "9e757bd2949ec73dd5411214414f0e69318ac4fefaea735f650c94f13a207899",
+    "native_eabi_m0.S": "1a9d2183fcf3ee72ef5eb523150329f884cd6a1b9f67ca266a2a44229b5d8b44",
+    "M4_soft-control.o": "ff20f202e576eae54ac16b6a33a1e35ccd28fc5d96cdc4ed999f247671ba6a84",
+    "PROOF.md": "d866437c32eca537a6e9b9c71ee6d6502872298ed209b7794c4ad1bdbd2e6e2a",
+    "qualification.json": "d6b56d481c6c123bf81feb7cd75bc4fe6dc5239633fccf3f65465e975719bb2f",
+    "generic_M0-control.o": "b654802ce490053ab30f72dc99431130e097363699cd5536ec4329d3230e868e",
+    "M4_hard-candidate.o": "607c0964c415f74ffb89a4336373274ba50e660a1bac13fe59c2db5c89cbb1cc",
+    "signed64-entry-only.patch": "9ac0bd1efde21b992cf887cd96bff57df841c14f139233d26fc8689015bfff11",
+    "control-full.o": "b5cb213dab4f5854c467c84df883587e32700f3a2da1cdfa1dd01d6aa5ff4652",
+    "native_eabi_m0_convert.inc": "cdb5955b2acc0fe6a0f2f157da60d8af0e1cc895bbda0faa7ce9b657e55f3dc2",
+    "candidate-full.o": "7aafbf8734c90100f495962249202a2563c322b9b70bdc02572d7eb1b7d136f6",
+    "candidate.dis": "a67b5ac561405fd7aad12184462cfb9b9783ff82c30853e09d08fe5acde09dd1",
+    "signed-entry.S.txt": "0cec2331512c27b39361cde02acb495f98767c775c7d5e5da277a75455563808",
+    "isolate.py": "265c89eaa4af968b8f3931714866e054603422718e304d3115fe78dbaf51b073",
+    "generic_M0-candidate.o": "b654802ce490053ab30f72dc99431130e097363699cd5536ec4329d3230e868e",
+    "candidate.ld": "5d1918eb7841f3be28705317f17b20ad2254572dc56c32d8fdc2ee46e5152f81",
+    "M4_soft-candidate.o": "ff20f202e576eae54ac16b6a33a1e35ccd28fc5d96cdc4ed999f247671ba6a84",
+    "M4_hard-control.o": "607c0964c415f74ffb89a4336373274ba50e660a1bac13fe59c2db5c89cbb1cc",
+    "candidate.S": "9138916a4a5845043ec589fb2ade3b8b53fa15c13e2880597f09fbfc187832a2",
+    "isolation.json": "b75c3c5b15e5aa5db33119e748422ba5593a8d4124e7ef483684222e36d2eb66",
+    "candidate.o": "f8551278bf2a22f9ff4718ff0855e7e5320a74f0ad032c0a10d159eef947e221",
+    "input-pins.json": "062cf7fa2eb7b0cfb45483ce2530029b0fc8145b60465efad153f8ac26f21ab5",
+    "candidate.bin": "09343b8604bb28dfb2e1ab7e99f52ab500023702d004743454d20fa1a40c45be",
+    "smoke.json": "a57133d42a0c67fdeb106a6ac5258cdc7b6511811b849064ac97e8f3e2d0c1a4",
+    "HANDOFF.md": "30369e6412a7bf9b2be881cce40fbef476f48905b04d96d92a3c90df91b0e9a7",
+    "qualify.py": "c5db3c3d18c44ea0a6f28aea5156e61fbc3f3fa4f3b38cb1f57eb3ab26b35ebb",
+    "build.json": "8549856e0a1b12fe2a0cc22bf6f9b5a11950c3b79661171bc57dcd6faeb1f299"
+  }
+}

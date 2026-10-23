@@ -1,0 +1,90 @@
+{
+  "status": "PASS_EXACT_RATIONAL_ATAN_LOCAL_ENCLOSURES",
+  "parent_certificate_sha256": "93440654b3b7bc79180ba1890b4a97044ad45021e9ec7db441888f8ad38e45a4",
+  "unchanged_parent_selection_endpoint_checks": 458752,
+  "reciprocal_error": "249230325401261187232401061025710081/20769187434139310514121985316880384",
+  "global_error": "16117171951309105189533991288336452743329665623351492433315148262045533/303280888079174834122029676325667074885236818975093062638952943452160",
+  "small_h_cap": "1/256",
+  "small_h_error": "17449873323245950871131098796124062898351625134399673450311511329238521/485271635238203570876816574205031844048196177294334953550479915745280",
+  "small_h_error_float": 35.95898061233353,
+  "small_h_radius_Q70": 36,
+  "narrow_h_cap": "47/8192",
+  "narrow_normalized_numerator_strict_cap": "49*2^56",
+  "narrow_ratio_error": "20852267917263751348262397882082033713/1329227995784915872903807060280344576",
+  "narrow_error_Q70": "349381585584565831874564545001409814446859432974383913529326648544120300567/15901100154587793319892492179609171879481122083532656043874244072497479680",
+  "narrow_error_Q70_float": 21.97216432749542,
+  "narrow_error_Q73": "349381585584565831874564545001409814446859432974383913529326648544120300567/1987637519323474164986561522451146484935140260441582005484280509062184960",
+  "narrow_radius_Q73": 176,
+  "reciprocal_strict_upper_error": 3,
+  "reciprocal_one_sided_reason": "The exact Newton step T satisfies T-R=-d*(S-R)^2/2^126<=0. Truncating its correction changes it by <r/2^30+1<=3; subtract/add branches preserve this upper bound.",
+  "directional_radii_Q73": {
+    "global": [
+      282,
+      426
+    ],
+    "small_h": [
+      144,
+      288
+    ],
+    "narrow_noninverted": [
+      121,
+      176
+    ],
+    "tiny_normalized_n": [
+      91,
+      100
+    ]
+  },
+  "directional_error_Q70": {
+    "global_positive": "10658113740717182711388805986111456156236070207359653600241701630539613/303280888079174834122029676325667074885236818975093062638952943452160",
+    "small_positive": "8714980328528459822965446137116185187671559808463638342566450595655161/485271635238203570876816574205031844048196177294334953550479915745280",
+    "narrow_positive": "239813022670616220149886125240763441139363243911106462769719395505558283287/15901100154587793319892492179609171879481122083532656043874244072497479680",
+    "tiny_positive": "5500055745075361165906536333007849220852260133888669275294521153842681/485271635238203570876816574205031844048196177294334953550479915745280",
+    "tiny_negative": "6045986557245204356416889624195841577769764216759671469528587449691641/485271635238203570876816574205031844048196177294334953550479915745280"
+  },
+  "tiny_normalized_n_strict_cap": "2^59; implies h<2^60+33<2^62",
+  "table_error_noninverted": "1/2 Q70 (one rounded atan grid value)",
+  "denominator_truncation_noninverted": 0,
+  "normalization": [
+    {
+      "exponent": -5,
+      "denominator_lower": 9223372036854775808,
+      "denominator_strict_upper": 18446744073709551616,
+      "normalization_shift": 0
+    },
+    {
+      "exponent": -4,
+      "denominator_lower": 4611686018427387904,
+      "denominator_strict_upper": 9223372036854775808,
+      "normalization_shift": 1
+    },
+    {
+      "exponent": -3,
+      "denominator_lower": 2305843009213693952,
+      "denominator_strict_upper": 4611686018427387904,
+      "normalization_shift": 2
+    },
+    {
+      "exponent": -2,
+      "denominator_lower": 1152921504606846976,
+      "denominator_strict_upper": 2305843009213693952,
+      "normalization_shift": 3
+    },
+    {
+      "exponent": -1,
+      "denominator_lower": 576460752303423488,
+      "denominator_strict_upper": 1152921504606846976,
+      "normalization_shift": 4
+    }
+  ],
+  "high_word_test": "For k=e+5 in0..4, (uint32_t(n>>32)>>(24-k))<49 iff (n<<k)<49*2^56; geometry ensures no wrap.",
+  "normalized_numerator_identity": "n_normalized = 2^69*abs(x-index/64) for this non-inverted domain.",
+  "packing": "Non-inverted base exponent e=-6..0; inverted base exponent0. Center exponent is base or base-1. Use upper/lower radii according to correction sign and invert, then accept8*midpoint_distance>=radius73. All actual errors are strictly below radius.",
+  "minimum_pack_shift": 11,
+  "maximum_pack_shift": 18,
+  "all_centers_exact_halfway_decline": true,
+  "no_approximation_or_table_changed": true,
+  "hardware_accessed": false,
+  "canonical_or_frozen_changed": false,
+  "goal_complete": false
+}

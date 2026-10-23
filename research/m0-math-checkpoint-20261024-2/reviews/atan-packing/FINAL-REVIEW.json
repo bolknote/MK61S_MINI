@@ -1,0 +1,391 @@
+{
+  "status": "TECHNICAL_GO_PRIVATE_ATAN_PACKING_ENCLOSURE_DELTA_WITH_FOUR_SPEED_INPUTS_OPEN",
+  "blockers": [],
+  "created_UTC": "2026-10-23T22:41:47.207546+00:00",
+  "scope": "OnlyRP2040 fast atan output packing and certified directional/regional enclosure; no completeatan/library/production/hardware claim.",
+  "handoff_sha256": "d912b45003f48351a951fb19e22138dfccfd95d18bd5f08fedf66ca8acf803bf",
+  "author_result_sha256": "82dbe45fe869c8984cc94b38be5003d633e8232c16bbf5834e0cb2760e5fe3a9",
+  "source_sha256": "502deb2e33c2736eb7d7f672e250a61c716e616362a8574ad1367620bc7ae541",
+  "public_object_sha256": "fe74189c9165e4d9378b4a182130fdb24f827579896a34f3ec43d5372333366e",
+  "executed_ELF_sha256": "93830c121ef76ccc3278233bd54b4ed2a5f2a4313a466d8854115c097f02f946",
+  "source_object_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-original-goal-independent-20261024/SOURCE-OBJECT-PROOF.json",
+    "sha256": "e372d1431cad0c6b539e29acfbe36994715e04c83efd22f3e2efc7efd80bfe78"
+  },
+  "exact_bounds_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-original-goal-independent-20261024/EXACT-LOCAL-BOUNDS.json",
+    "sha256": "e09773779c9a9593f4cb52a8b498747ad0f3bb44596695d367064305f3756980"
+  },
+  "actual_ARM_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-original-goal-independent-20261024/SELECTED-ARM-ATAN.json",
+    "sha256": "80cd7d5827cc18e5177c252e2026f5858a9934069e13f0b6c8348f9d40c86bd9"
+  },
+  "own_oracle_intervals": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-original-goal-independent-20261024/OWN-ORACLE-INTERVALS.json",
+    "sha256": "bc7501b6b349e5f7486280f91076df84b224d08c99150df4ed20d3aa88f23d14"
+  },
+  "own_review_script": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-original-goal-independent-20261024/review.py",
+    "sha256": "d7961d6a055b3a78b0e5629ad2b3fc5b97344b8557ccc03fc47fb624a96d1a56"
+  },
+  "pins_before_after": {
+    "author_files": 56,
+    "input_files": 16,
+    "all_match": true
+  },
+  "findings": [
+    "Fullownpublic recompilation objectfe74189c and ENTIRE linked candidateELF93830c12 match without exclusions. Rebuiltparent all259764 allocatedbytes equal frozenoriginal; sole changed section.text.atan_fast1744->1648.",
+    "Newpack/call removed mechanically reconstructs exact oldsource. Geometry/reciprocal/polynomial/refine/fallback/780B atan table remain exact; no added section/globalRAM/table/externaldependency. GenericM0/M4 sealed contributions exact.",
+    "One-sided reciprocal derivation is sound: exactNewtonstep belowtrueR, truncationdelta<3, lowererrorB unchanged and finalproduct proven<2^64. Directional signs swap on negative XOR inversion.",
+    "OwnFraction re-evaluation verifies strictQ73 radii282/426,144/288,121/176,91/100. Binade inequalities cover base orbase-1 and shifts11..18; no undefinedshift/distanceoverflow.144 admitted synthetic intervals round to one binary64cell; exactcenter ties decline.",
+    "For noninvertede=-5..-1, index nearestgrid makes n_normalized=2^69*abs(x-index/64)<=2^62, hence no wrapping. k=e+5 and integer highword comparisons exactly match normalized49*2^56 /2^59 thresholds.",
+    "Eight selected unchangedtable rows0/1/2/7/31/32/63/64 independently enclosed withinhalfQ70 with own rational atanintervals, noMPFR or tableoracle reuse.",
+    "108 selectedrawinputs \u00d7READY/DIRTY\u00d74engines=864 actualARMcalls. Own mathematically outward Taylor/Machin Fraction intervals round uniquely. NaNrawsign/payload follows parent; signedzero retained.",
+    "Historical2 candidateREADY1362/1304,DIRTY1548/1470 vs bit-correct auditreference1796. Every selected rebuiltcontrol result/count equals residentparent and candidate no slower thanparent.",
+    "Observed residenthelpers and capturedROM are actualdependencies; this is notbarefirmware. R4-R11/SP/boundedstack checked everycall, maxcandidate872 versusparent880. DIRTY entirestate exact; READY divider may beused but staysclean. NounexpectedMMIO/codeescape.",
+    "Actual referenceadapter and BL inspected; every runtime call observes qfp_datan2(originalraw,1.0). It is unchanged audit_atan composition, not a public Qfplibatan API.56 selected rawreference wronganswers retained."
+  ],
+  "ARM_unique_inputs": 108,
+  "READY_DIRTY_cases": 216,
+  "actual_ARM_calls": 864,
+  "Unicorn_version": "2.1.4",
+  "historical2_actual": [
+    {
+      "input": "3fb97996f4e5f9f0",
+      "group": "historical2",
+      "SIO": "READY",
+      "expected": "3fb964309c79b7a8",
+      "outputs": {
+        "parent": "3fb964309c79b7a8",
+        "control": "3fb964309c79b7a8",
+        "candidate": "3fb964309c79b7a8",
+        "Qfplib": "3fb964309c79b7a8"
+      },
+      "instructions": {
+        "parent": 3066,
+        "control": 3066,
+        "candidate": 1362,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fb97996f4e5f9f0",
+      "group": "historical2",
+      "SIO": "DIRTY",
+      "expected": "3fb964309c79b7a8",
+      "outputs": {
+        "parent": "3fb964309c79b7a8",
+        "control": "3fb964309c79b7a8",
+        "candidate": "3fb964309c79b7a8",
+        "Qfplib": "3fb964309c79b7a8"
+      },
+      "instructions": {
+        "parent": 3942,
+        "control": 3942,
+        "candidate": 1548,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdd440162570130",
+      "group": "historical2",
+      "SIO": "READY",
+      "expected": "bfdb72e65095f539",
+      "outputs": {
+        "parent": "bfdb72e65095f539",
+        "control": "bfdb72e65095f539",
+        "candidate": "bfdb72e65095f539",
+        "Qfplib": "bfdb72e65095f539"
+      },
+      "instructions": {
+        "parent": 3041,
+        "control": 3041,
+        "candidate": 1304,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdd440162570130",
+      "group": "historical2",
+      "SIO": "DIRTY",
+      "expected": "bfdb72e65095f539",
+      "outputs": {
+        "parent": "bfdb72e65095f539",
+        "control": "bfdb72e65095f539",
+        "candidate": "bfdb72e65095f539",
+        "Qfplib": "bfdb72e65095f539"
+      },
+      "instructions": {
+        "parent": 3914,
+        "control": 3914,
+        "candidate": 1470,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    }
+  ],
+  "remaining_correctness_or_speed_work": {
+    "preexisting_inputs": [
+      "3FE5D1004FC925B6",
+      "BFE5D1004FC925B6",
+      "3FECB99548F4FA32",
+      "BFECB99548F4FA32"
+    ],
+    "actual_remaining_rows": [
+      {
+        "input": "3fe5d1004fc925b6",
+        "group": "remaining4-preexistingCORE",
+        "SIO": "READY",
+        "expected": "3fe325f02778dc00",
+        "outputs": {
+          "parent": "3fe325f02778dc00",
+          "control": "3fe325f02778dc00",
+          "candidate": "3fe325f02778dc00",
+          "Qfplib": "3fe325f02778dc00"
+        },
+        "instructions": {
+          "parent": 21085,
+          "control": 21085,
+          "candidate": 21081,
+          "Qfplib": 1784
+        },
+        "stack_bytes": {
+          "parent": 880,
+          "control": 880,
+          "candidate": 872,
+          "Qfplib": 76
+        },
+        "CORE_entries": 1
+      },
+      {
+        "input": "3fe5d1004fc925b6",
+        "group": "remaining4-preexistingCORE",
+        "SIO": "DIRTY",
+        "expected": "3fe325f02778dc00",
+        "outputs": {
+          "parent": "3fe325f02778dc00",
+          "control": "3fe325f02778dc00",
+          "candidate": "3fe325f02778dc00",
+          "Qfplib": "3fe325f02778dc00"
+        },
+        "instructions": {
+          "parent": 22468,
+          "control": 22468,
+          "candidate": 22464,
+          "Qfplib": 1784
+        },
+        "stack_bytes": {
+          "parent": 880,
+          "control": 880,
+          "candidate": 872,
+          "Qfplib": 76
+        },
+        "CORE_entries": 1
+      },
+      {
+        "input": "bfe5d1004fc925b6",
+        "group": "remaining4-preexistingCORE",
+        "SIO": "READY",
+        "expected": "bfe325f02778dc00",
+        "outputs": {
+          "parent": "bfe325f02778dc00",
+          "control": "bfe325f02778dc00",
+          "candidate": "bfe325f02778dc00",
+          "Qfplib": "bfe325f02778dc00"
+        },
+        "instructions": {
+          "parent": 21107,
+          "control": 21107,
+          "candidate": 21103,
+          "Qfplib": 1791
+        },
+        "stack_bytes": {
+          "parent": 880,
+          "control": 880,
+          "candidate": 872,
+          "Qfplib": 76
+        },
+        "CORE_entries": 1
+      },
+      {
+        "input": "bfe5d1004fc925b6",
+        "group": "remaining4-preexistingCORE",
+        "SIO": "DIRTY",
+        "expected": "bfe325f02778dc00",
+        "outputs": {
+          "parent": "bfe325f02778dc00",
+          "control": "bfe325f02778dc00",
+          "candidate": "bfe325f02778dc00",
+          "Qfplib": "bfe325f02778dc00"
+        },
+        "instructions": {
+          "parent": 22490,
+          "control": 22490,
+          "candidate": 22486,
+          "Qfplib": 1791
+        },
+        "stack_bytes": {
+          "parent": 880,
+          "control": 880,
+          "candidate": 872,
+          "Qfplib": 76
+        },
+        "CORE_entries": 1
+      },
+      {
+        "input": "3fecb99548f4fa32",
+        "group": "remaining4-preexistingCORE",
+        "SIO": "READY",
+        "expected": "3fe76897850fe9cd",
+        "outputs": {
+          "parent": "3fe76897850fe9cd",
+          "control": "3fe76897850fe9cd",
+          "candidate": "3fe76897850fe9cd",
+          "Qfplib": "3fe76897850fe9cd"
+        },
+        "instructions": {
+          "parent": 20874,
+          "control": 20874,
+          "candidate": 20861,
+          "Qfplib": 1783
+        },
+        "stack_bytes": {
+          "parent": 880,
+          "control": 880,
+          "candidate": 872,
+          "Qfplib": 76
+        },
+        "CORE_entries": 1
+      },
+      {
+        "input": "3fecb99548f4fa32",
+        "group": "remaining4-preexistingCORE",
+        "SIO": "DIRTY",
+        "expected": "3fe76897850fe9cd",
+        "outputs": {
+          "parent": "3fe76897850fe9cd",
+          "control": "3fe76897850fe9cd",
+          "candidate": "3fe76897850fe9cd",
+          "Qfplib": "3fe76897850fe9cd"
+        },
+        "instructions": {
+          "parent": 22301,
+          "control": 22301,
+          "candidate": 22288,
+          "Qfplib": 1783
+        },
+        "stack_bytes": {
+          "parent": 880,
+          "control": 880,
+          "candidate": 872,
+          "Qfplib": 76
+        },
+        "CORE_entries": 1
+      },
+      {
+        "input": "bfecb99548f4fa32",
+        "group": "remaining4-preexistingCORE",
+        "SIO": "READY",
+        "expected": "bfe76897850fe9cd",
+        "outputs": {
+          "parent": "bfe76897850fe9cd",
+          "control": "bfe76897850fe9cd",
+          "candidate": "bfe76897850fe9cd",
+          "Qfplib": "bfe76897850fe9cd"
+        },
+        "instructions": {
+          "parent": 20901,
+          "control": 20901,
+          "candidate": 20888,
+          "Qfplib": 1790
+        },
+        "stack_bytes": {
+          "parent": 880,
+          "control": 880,
+          "candidate": 872,
+          "Qfplib": 76
+        },
+        "CORE_entries": 1
+      },
+      {
+        "input": "bfecb99548f4fa32",
+        "group": "remaining4-preexistingCORE",
+        "SIO": "DIRTY",
+        "expected": "bfe76897850fe9cd",
+        "outputs": {
+          "parent": "bfe76897850fe9cd",
+          "control": "bfe76897850fe9cd",
+          "candidate": "bfe76897850fe9cd",
+          "Qfplib": "bfe76897850fe9cd"
+        },
+        "instructions": {
+          "parent": 22328,
+          "control": 22328,
+          "candidate": 22315,
+          "Qfplib": 1790
+        },
+        "stack_bytes": {
+          "parent": 880,
+          "control": 880,
+          "candidate": 872,
+          "Qfplib": 76
+        },
+        "CORE_entries": 1
+      }
+    ],
+    "all_observed_CORE_fallback": true,
+    "speed_goal_complete": false
+  },
+  "unchanged_author_large_corpora_replayed": false,
+  "parent458752_selector_endpoint_sweep_repeated": false,
+  "author147456_reciprocal_sweep_repeated": false,
+  "physical_cycles_measured": false,
+  "whole_atan_GO": false,
+  "whole_library_GO": false,
+  "production_integration_GO": false,
+  "mixed_image_qualification": false,
+  "hardware_GO": false,
+  "limitations": [
+    "Source/rationalcertificate specialization plus compact independentreplay; not exhaustiveallinput/cycleproof.",
+    "Only sealed generic/M4 object contributions checked; no new wholeM4firmware build.",
+    "Earlier accepted mathdeltas are not merged or qualified by this standalonecomponent fixture."
+  ],
+  "USB_Flash_Git_lease_canonical_access": false,
+  "own_artifacts": {
+    "EXACT-LOCAL-BOUNDS.json": "e09773779c9a9593f4cb52a8b498747ad0f3bb44596695d367064305f3756980",
+    "OWN-ORACLE-INTERVALS.json": "bc7501b6b349e5f7486280f91076df84b224d08c99150df4ed20d3aa88f23d14",
+    "SELECTED-ARM-ATAN.json": "80cd7d5827cc18e5177c252e2026f5858a9934069e13f0b6c8348f9d40c86bd9",
+    "SOURCE-OBJECT-PROOF.json": "e372d1431cad0c6b539e29acfbe36994715e04c83efd22f3e2efc7efd80bfe78",
+    "candidate-full.o": "fe74189c9165e4d9378b4a182130fdb24f827579896a34f3ec43d5372333366e",
+    "candidate.elf": "93830c121ef76ccc3278233bd54b4ed2a5f2a4313a466d8854115c097f02f946",
+    "control-full.o": "eb30fea50e79e1419951ead765906acde907f10e201b4ea59be578330a813be7",
+    "review.py": "d7961d6a055b3a78b0e5629ad2b3fc5b97344b8557ccc03fc47fb624a96d1a56"
+  }
+}

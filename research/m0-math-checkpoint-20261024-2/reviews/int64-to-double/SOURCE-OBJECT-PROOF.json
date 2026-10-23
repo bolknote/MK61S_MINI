@@ -1,0 +1,79 @@
+{
+  "status": "PASS_EXACT_RP_SIGNED64_ENTRY_PUBLIC_EXECUTED_BODY",
+  "artifact_count": 29,
+  "own_full_objects_byte_exact": true,
+  "public_executed_body_bytes": 884,
+  "exclusions": [],
+  "entry_offsets": {
+    "l2d": 140,
+    "ul2d": 170,
+    "i2d": 0,
+    "ui2d": 16
+  },
+  "source_only_RP_signed_entry_changed": true,
+  "normalization_RNE_unsigned_and_32bit_sources_unchanged": true,
+  "standalone_undefined": [],
+  "standalone_relocations": [],
+  "BL_BLX_or_trap": false,
+  "full_dependencies_equal": true,
+  "unrelated_allocated_sections_equal": true,
+  "allocated_NOBITS_equal": {
+    ".bss": 0
+  },
+  "contexts": [
+    {
+      "context": "generic_M0",
+      "allocated_bytes": 14468,
+      "equal": true
+    },
+    {
+      "context": "M4_soft",
+      "allocated_bytes": 0,
+      "equal": true
+    },
+    {
+      "context": "M4_hard",
+      "allocated_bytes": 0,
+      "equal": true
+    }
+  ],
+  "extra_bytes": 8,
+  "new_tables_literals_global_RAM": false,
+  "earlier_uint32_delta_merged": false,
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-DMK61_USE_M0_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-independent-20261024/parent.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-DMK61_USE_M0_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/native_eabi_m0.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-independent-20261024/public.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-objdump",
+      "-dr",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/candidate.elf"
+    ]
+  ],
+  "hardware_access": false
+}

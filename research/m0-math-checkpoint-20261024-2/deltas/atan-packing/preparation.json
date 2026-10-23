@@ -1,0 +1,10 @@
+{
+  "status": "PRIVATE_RP2040_ATAN_PACKING_BOUND_CANDIDATE",
+  "source_sha256": "502deb2e33c2736eb7d7f672e250a61c716e616362a8574ad1367620bc7ae541",
+  "parent_sha256": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+  "new_tables": 0,
+  "new_global_RAM": 0,
+  "canonical_or_frozen_changed": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

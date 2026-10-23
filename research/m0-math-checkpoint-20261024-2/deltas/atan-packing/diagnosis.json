@@ -1,0 +1,575 @@
+{
+  "status": "READ_ONLY_ACTUAL_V164_ATAN_DIAGNOSIS",
+  "ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "records": [
+    {
+      "x": "3FB97996F4E5F9F0",
+      "output": "3FB964309C79B7A8",
+      "instructions": 3066,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            4108712432,
+            1069119894,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            4108712432,
+            1069119894,
+            4108712432,
+            2718102
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            1604255744,
+            395931470,
+            3177438112,
+            1083758985
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            2059908928,
+            2167517971,
+            31,
+            1
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            4108712432,
+            1069119894,
+            6,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            1604255744,
+            395931470,
+            0,
+            0
+          ]
+        }
+      ],
+      "index": 6,
+      "exponent": -4,
+      "invert": false,
+      "negative_reduction": false,
+      "numerator": "0x17996f4e5f9f0000",
+      "denominator": "0x4098d989bd63dba0",
+      "h": "0x5d8660302596d270",
+      "h_error": 4.198849636737306,
+      "q": "0x6590c271e6dea1fea",
+      "midpoint_distance_Q70": 22,
+      "q_error_Q70": 2.8054614168587615,
+      "true_midpoint_distance_Q70": 24.805461416858762,
+      "source_radius": 64,
+      "c3": 219594626530892,
+      "c5": 7155440641,
+      "c7": 233158
+    },
+    {
+      "x": "BFDD440162570130",
+      "output": "BFDB72E65095F539",
+      "instructions": 3041,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            1649869104,
+            3218949121,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            1649869104,
+            3218949121,
+            1649869104,
+            5063681
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            1880293376,
+            71308837,
+            601563760,
+            324056104
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            517542784,
+            2592448833,
+            29,
+            1
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            1649869104,
+            3218949121,
+            29,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            1880293376,
+            71308837,
+            0,
+            0
+          ]
+        }
+      ],
+      "index": 29,
+      "exponent": -2,
+      "invert": false,
+      "negative_reduction": false,
+      "numerator": "0x440162570130000",
+      "denominator": "0x1350b42823db2270",
+      "h": "0x3855417be668b536",
+      "h_error": 2.4923254393149206,
+      "q": "0x1b72e65095f538802a",
+      "midpoint_distance_Q70": 42,
+      "q_error_Q70": 1.7234962850354503,
+      "true_midpoint_distance_Q70": 40.27650371496455,
+      "source_radius": 64,
+      "c3": 47987621341285,
+      "c5": 567303644,
+      "c7": 6707
+    },
+    {
+      "x": "3FD3000000000003",
+      "output": "3FD278372057EF48",
+      "instructions": 2672,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            3,
+            1070792704,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            3,
+            1070792704,
+            3,
+            4390912
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            12288,
+            0,
+            57,
+            292093952
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            456,
+            2336751616,
+            29,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            3,
+            1070792704,
+            19,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            12288,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "index": 19,
+      "exponent": -2,
+      "invert": false,
+      "negative_reduction": false,
+      "numerator": "0x3000",
+      "denominator": "0x1169000000000039",
+      "h": "0x2c1d0",
+      "h_error": 4.498092887600761,
+      "q": "0x1278372057ef487ff1",
+      "midpoint_distance_Q70": 15,
+      "q_error_Q70": 4.714122528357077,
+      "true_midpoint_distance_Q70": 19.714122528357077,
+      "source_radius": 64,
+      "c3": 0,
+      "c5": 0,
+      "c7": 0
+    },
+    {
+      "x": "BFDB600000000000",
+      "output": "BFD9DE2845677160",
+      "instructions": 21027,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            0,
+            3218825216,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            0,
+            3218825216,
+            0,
+            4939776
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            0,
+            100663296,
+            0,
+            316874752
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            0,
+            2534998016,
+            29,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            0,
+            3218825216,
+            27,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            0,
+            100663296,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            0,
+            3218825216,
+            14,
+            0
+          ]
+        }
+      ],
+      "index": 27,
+      "exponent": -2,
+      "invert": false,
+      "negative_reduction": false,
+      "numerator": "0x600000000000000",
+      "denominator": "0x12e3200000000000",
+      "h": "0x51532bdf4e504781",
+      "h_error": 6.900157700162871,
+      "q": "0x19de284567715f8014",
+      "midpoint_distance_Q70": 20,
+      "q_error_Q70": 5.013044984789367,
+      "true_midpoint_distance_Q70": 14.986955015210633,
+      "source_radius": 64,
+      "c3": 144381085666397,
+      "c5": 3557274458,
+      "c7": 87644
+    },
+    {
+      "x": "3F9BDA3A23F63D6A",
+      "output": "3F9BD87832E3A786",
+      "instructions": 2951,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            603340138,
+            1067178554,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            603340138,
+            1067178554,
+            603340138,
+            776762
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            1309978624,
+            556674784,
+            603340138,
+            2149308986
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            603340138,
+            2149308986,
+            32,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            603340138,
+            1067178554,
+            2,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            1309978624,
+            556674784,
+            0,
+            0
+          ]
+        }
+      ],
+      "index": 2,
+      "exponent": -6,
+      "invert": false,
+      "negative_reduction": true,
+      "numerator": "0x212e2ee04e14b000",
+      "denominator": "0x801bda3a23f63d6a",
+      "h": "0x424df04512701c5e",
+      "h_error": 3.9801211038624977,
+      "q": "0x1bd87832e3a7867db",
+      "midpoint_distance_Q70": 37,
+      "q_error_Q70": -2.532574800899575,
+      "true_midpoint_distance_Q70": 34.467425199100425,
+      "source_radius": 64,
+      "c3": 78247029563615,
+      "c5": 1281484334,
+      "c7": 20987
+    },
+    {
+      "x": "3FE5D1004FC925B6",
+      "output": "3FE325F02778DC00",
+      "instructions": 21085,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            1338582454,
+            1072025856,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            1338582454,
+            1072025856,
+            1338582454,
+            5624064
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            1839505408,
+            49281795,
+            3063053128,
+            197127181
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            1764209792,
+            3154034907,
+            28,
+            11
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            1338582454,
+            1072025856,
+            44,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            1839505408,
+            49281795,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            1338582454,
+            1072025856,
+            12,
+            0
+          ]
+        }
+      ],
+      "index": 44,
+      "exponent": -1,
+      "invert": false,
+      "negative_reduction": true,
+      "numerator": "0x2effb036da4a000",
+      "denominator": "0xbbfec0db6927b48",
+      "h": "0x40000000000019b8",
+      "h_error": 4.084880636604749,
+      "q": "0x264be04ef1b7ff0006",
+      "midpoint_distance_Q70": 6,
+      "q_error_Q70": -3.800323904713213,
+      "true_midpoint_distance_Q70": 9.800323904713213,
+      "source_radius": 64,
+      "c3": 70368744177664,
+      "c5": 1073741824,
+      "c7": 16384
+    },
+    {
+      "x": "3FECB99548F4FA32",
+      "output": "3FE76897850FE9CD",
+      "instructions": 20874,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            1224014386,
+            1072478613,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            1224014386,
+            1072478613,
+            1224014386,
+            6076821
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            1336090624,
+            60380303,
+            1049343266,
+            241521213
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            3904590368,
+            3864339411,
+            28,
+            3
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            1224014386,
+            1072478613,
+            57,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            1336090624,
+            60380303,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            1224014386,
+            1072478613,
+            13,
+            0
+          ]
+        }
+      ],
+      "index": 57,
+      "exponent": -1,
+      "invert": false,
+      "negative_reduction": false,
+      "numerator": "0x399548f4fa32000",
+      "denominator": "0xe65523d3e8bb522",
+      "h": "0x40000000000385ea",
+      "h_error": 4.65813478560877,
+      "q": "0x2ed12f0a1fd3990012",
+      "midpoint_distance_Q70": 18,
+      "q_error_Q70": 3.9337069974369663,
+      "true_midpoint_distance_Q70": 14.066293002563034,
+      "source_radius": 64,
+      "c3": 70368744177675,
+      "c5": 1073741824,
+      "c7": 16384
+    }
+  ],
+  "MPFR_version": "4.2.2",
+  "hardware_accessed": false,
+  "canonical_or_frozen_changed": false
+}

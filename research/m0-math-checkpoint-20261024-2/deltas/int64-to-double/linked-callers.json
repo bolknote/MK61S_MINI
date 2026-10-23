@@ -1,0 +1,48 @@
+{
+  "status": "READ_ONLY_RESIDENT_DIRECT_BL_AUDIT",
+  "ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "operation": "__aeabi_l2d",
+  "callers": [
+    {
+      "function": "_ZN9core_atanL15as_atan_refine2Edd",
+      "address": "0x100e80ae",
+      "target": "0x100f725c"
+    },
+    {
+      "function": "_ZN9core_asinL14as_asin_refineEdd",
+      "address": "0x100eaee4",
+      "target": "0x100f725c"
+    },
+    {
+      "function": "_ZN9core_atan7cr_atanEd",
+      "address": "0x100eb8a2",
+      "target": "0x100f725c"
+    },
+    {
+      "function": "_ZN8core_pow6cr_powEdd",
+      "address": "0x100f477a",
+      "target": "0x100f725c"
+    },
+    {
+      "function": "_ZN8core_powL12pow_accurateEddddi",
+      "address": "0x100f5604",
+      "target": "0x100f725c"
+    },
+    {
+      "function": "_ZN8core_powL12pow_accurateEddddi",
+      "address": "0x100f5868",
+      "target": "0x100f725c"
+    },
+    {
+      "function": "_ZN8core_powL12pow_accurateEddddi",
+      "address": "0x100f598c",
+      "target": "0x100f725c"
+    },
+    {
+      "function": "_ZN8core_powL8is_exactEdd",
+      "address": "0x100f6ee0",
+      "target": "0x100f725c"
+    }
+  ],
+  "hardware_accessed": false
+}

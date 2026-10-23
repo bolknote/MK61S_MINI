@@ -1,0 +1,46 @@
+{
+  "status": "BUILT_PRIVATE_RP2040_L2D_ENTRY_NOT_FIRMWARE",
+  "input_sources": {
+    "native_eabi_m0.S": "1a9d2183fcf3ee72ef5eb523150329f884cd6a1b9f67ca266a2a44229b5d8b44",
+    "native_eabi_m0_convert.inc": "d4b15b0be7f54c9a67d4d7d4b1e8b60874ff054587b6c09d0ec0cd97338a4cc3"
+  },
+  "source_files": {
+    "native_eabi_m0.S": "1a9d2183fcf3ee72ef5eb523150329f884cd6a1b9f67ca266a2a44229b5d8b44",
+    "native_eabi_m0_convert.inc": "cdb5955b2acc0fe6a0f2f157da60d8af0e1cc895bbda0faa7ce9b657e55f3dc2",
+    "signed64-entry-only.patch": "9ac0bd1efde21b992cf887cd96bff57df841c14f139233d26fc8689015bfff11"
+  },
+  "candidate_ELF_sha256": "a905d4bc8a1e1ac48e9164bbf8bdbb8086dec72eeea409291651d3adff0d8f90",
+  "candidate_bytes": 884,
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/candidate.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/candidate.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/candidate.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/candidate.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-objcopy",
+      "-O",
+      "binary",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/candidate.elf",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/candidate.bin"
+    ]
+  ],
+  "canonical_or_frozen_changed": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

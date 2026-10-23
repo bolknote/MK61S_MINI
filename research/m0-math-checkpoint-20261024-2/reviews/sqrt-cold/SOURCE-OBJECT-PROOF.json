@@ -1,0 +1,147 @@
+{
+  "status": "PASS_SOURCE_OBJECT_EXECUTED_ELF",
+  "pins": {
+    "author_files": 35,
+    "baseline_pins": 12,
+    "all_match": true
+  },
+  "changed_sections": [
+    [
+      ".m0_sqrt64_fixed.mk61_m0_sqrt",
+      8544,
+      8544
+    ],
+    [
+      ".m0_sqrt_special",
+      164,
+      156
+    ]
+  ],
+  "normal_code_literals_shift": 8,
+  "only_normal_encoding_change": "ADR R4 old+0x56/new+0x5e both address table+0x160",
+  "coefficient_table_bytes": 8192,
+  "table_address_and_bytes_exact": true,
+  "subnormal_source_suffix_exact": true,
+  "own_public_objects_exact": true,
+  "own_relink_all_allocated_bytes_and_all_symbols_exact": true,
+  "own_relink_ELF_sha256": "2662c539807c1cdbe9c728154ea0d83262c99e974729a9dbfb9ff847c1ee36d1",
+  "candidate_ELF_sha256": "2662c539807c1cdbe9c728154ea0d83262c99e974729a9dbfb9ff847c1ee36d1",
+  "standalone_undefined": [],
+  "standalone_relocations": [],
+  "new_RAM": false,
+  "new_external_dependencies": false,
+  "preserved_combined_external_symbols": [
+    "factor_rsqrt_seeds",
+    "mk61_m0_cr_pow",
+    "mk61_m0_d2f_slow",
+    "mk61_m0_d2iz_slow",
+    "mk61_m0_d2lz_slow",
+    "mk61_m0_d2ulz_slow",
+    "mk61_m0_dadd_slow",
+    "mk61_m0_ddiv_slow",
+    "mk61_m0_divmod64",
+    "mk61_m0_dmul_slow",
+    "mk61_m0_f2d_slow",
+    "mk61_m0_log_ratio70_slow",
+    "mk61_m0_pow_dispatch",
+    "mk61_m0_pow_log_ordinary",
+    "mk61_m0_pow_small_y",
+    "mk61_m0_sdiv32",
+    "mk61_m0_sdivmod64",
+    "mk61_m0_udiv32",
+    "pow_fast_log",
+    "pow_rsqrt"
+  ],
+  "contexts": [
+    {
+      "context": "generic_M0",
+      "allocated_bytes": 14468,
+      "exact": true
+    },
+    {
+      "context": "M4_soft",
+      "allocated_bytes": 0,
+      "exact": true
+    },
+    {
+      "context": "M4_hard",
+      "allocated_bytes": 0,
+      "exact": true
+    }
+  ],
+  "flags_proof": "Thumb LSLS R2,R1,#1 gives C=input bit63; ORRS updates N/Z, preserves C; BNE preserves flags; BCS uses original input sign.",
+  "own_disassembly_sha256": "171ce124785ae4522f6874d9f99bcf1caf44c2a086fdd6ca0623edda3f3d5811",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-20261024/native_eabi_m0.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-independent-20261024/main.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-independent-20261024/control-main.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-20261024/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-independent-20261024/rp.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-independent-20261024/control-rp.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-20261024/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-independent-20261024/main.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-independent-20261024/rp.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-independent-20261024/relinked.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-objdump",
+      "-dr",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-independent-20261024/relinked.elf"
+    ]
+  ],
+  "hardware_access": false
+}

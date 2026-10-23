@@ -1,0 +1,78 @@
+--- atan-parent/code/native_eabi_m0_atan_fast.inc
++++ candidate/code/native_eabi_m0_atan_fast.inc
+@@ -34,15 +34,45 @@
+ }
+ 
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++// top/den has at most six quotient bits. den<2^26 makes den<<5
++// safe; binary compare/subtract needs no SIO divider or general division.
++__attribute__((always_inline)) inline uint32_t atan_tail_divide(uint32_t top,uint32_t den) {
++#if defined(__arm__) || defined(__thumb__)
++  uint32_t q;
++  asm volatile(".syntax unified\nlsls %[d],%[d],#5\nmovs %[q],#0\ncmp %[n],%[d]\nblo 1f\nsubs %[n],%[n],%[d]\n1:\nadcs %[q],%[q]\nlsrs %[d],%[d],#1\ncmp %[n],%[d]\nblo 1f\nsubs %[n],%[n],%[d]\n1:\nadcs %[q],%[q]\nlsrs %[d],%[d],#1\ncmp %[n],%[d]\nblo 1f\nsubs %[n],%[n],%[d]\n1:\nadcs %[q],%[q]\nlsrs %[d],%[d],#1\ncmp %[n],%[d]\nblo 1f\nsubs %[n],%[n],%[d]\n1:\nadcs %[q],%[q]\nlsrs %[d],%[d],#1\ncmp %[n],%[d]\nblo 1f\nsubs %[n],%[n],%[d]\n1:\nadcs %[q],%[q]\nlsrs %[d],%[d],#1\ncmp %[n],%[d]\nblo 1f\nsubs %[n],%[n],%[d]\n1:\nadcs %[q],%[q]\n.syntax divided\n" : [n]"+&l"(top),[d]"+&l"(den),[q]"=&l"(q) : : "cc");
++  return q;
++#else
++  uint32_t q=0;
++  for(unsigned bit=32;bit;bit>>=1) if(top>=den*bit) {top-=den*bit;q|=bit;}
++  return q;
++#endif
++}
++
++// Internal domain: non-inverted exponent -5..-1 and quotient error <33.
++// Reuse the parent's exact dyadic numerator and denominator.
++__attribute__((optimize("Os"),noinline,cold)) static int32_t atan_fast_tail_repair(U n,U d,U h) {
++  const Product p=multiply(h,d);
++  U low=U(0)-p.low,high=n-p.high-U(p.low!=0);
++  const bool negative=bool(high>>63);
++  if(negative) {low=U(0)-low;high=~high+U(!low);}
++  // abs(residual)<33*d, so high<=32 and this top word fits uint32.
++  // d>=2^59, hence the truncated divisor is never zero.
++  const uint32_t top=(uint32_t(high)<<26)|uint32_t(low>>38);
++  const uint32_t delta=atan_tail_divide(top,uint32_t(d>>38));
++  return negative?-int32_t(delta):int32_t(delta);
++}
++
+ // Pack the bounded atan domain without the general96-bit CLZ path.
+ // Non-inverted inputs have output exponent e or e-1. Inverted inputs
+ // have output exponent0 or-1 and use base e=0. Enclosures remain in
+ // Q73 units, including the fractional121/8 Q70 directional bound.
+-__attribute__((always_inline)) inline bool atan_fast_pack(Refine96 q,int source_e,bool invert,bool negative,U h,uint32_t numerator_high,U sign,U &result) {
++__attribute__((always_inline)) inline bool atan_fast_pack(Refine96 q,int source_e,bool invert,bool negative,U h,U numerator,U denominator,U sign,U &result) {
+   const int e=invert?0:source_e;
++  const uint32_t numerator_high=uint32_t(numerator>>32);
+   const unsigned lower=unsigned(q.high<(1U<<unsigned(e+6)));
+   const unsigned shift=unsigned(e+18)-lower;
+-  const uint32_t half=1U<<(shift-1),tail=uint32_t(q.low)&((half<<1)-1);
++  const uint32_t half=1U<<(shift-1);
++  uint32_t tail=uint32_t(q.low)&((half<<1)-1);
+   const uint32_t distance=tail>half?tail-half:half-tail;
+   const uint32_t distance73=distance<<3;
+   const bool small=h<=(U(1)<<62);
+@@ -61,7 +91,17 @@
+       }
+       // True errors are strictly below the radius, so equality of the
+       // midpoint distance with the radius remains safe.
+-      if(distance73<radius73) return false;
++      if(distance73<radius73) {
++        if(normalization>=5 || h>(U(1)<<62)+(U(1)<<40)) return false;
++        int32_t delta=atan_fast_tail_repair(numerator,denominator,h);
++        if(negative!=invert) delta=-delta;
++        // This path starts within54 units of a midpoint. abs(delta)<=33,
++        // half>=1024: the quantum index, binade and retained bits cannot
++        // change. Reuse them, update only the tail and rounding increment.
++        tail=uint32_t(int32_t(tail)+delta);
++        const uint32_t repaired_distance=tail>half?tail-half:half-tail;
++        if(repaired_distance<6) return false;
++      }
+     }
+   }
+   const uint32_t lo=uint32_t(q.low),hi=uint32_t(q.low>>32);
+@@ -114,7 +154,7 @@
+   if(invert) q=r96_sub({(U(refine_atan_half_pi[1])<<32)|refine_atan_half_pi[0],refine_atan_half_pi[2]},q);
+   U result;
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+-  if(atan_fast_pack(q,e,invert,negative,h,uint32_t(numerator>>32),sign,result)) return real(result);
++  if(atan_fast_pack(q,e,invert,negative,h,numerator,denominator,sign,result)) return real(result);
+ #else
+   if(r96_pack(q,24,sign,64,result)) return real(result);
+ #endif

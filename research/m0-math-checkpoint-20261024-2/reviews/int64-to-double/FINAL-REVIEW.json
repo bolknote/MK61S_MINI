@@ -1,0 +1,161 @@
+{
+  "status": "TECHNICAL_GO_RP2040_SIGNED64_L2D_ENTRY_DELTA_ONLY",
+  "reviewer": "/root/v138_hardware",
+  "created_utc": "2026-10-23T21:32:00.139063+00:00",
+  "blockers": [],
+  "reviewed_result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/result.json",
+    "sha256": "5c431f4ea3d6ca26545089209d8ce8c5b4b195dfc5b5ab59577817f725d4fed7"
+  },
+  "handoff": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/HANDOFF.md",
+    "sha256": "30369e6412a7bf9b2be881cce40fbef476f48905b04d96d92a3c90df91b0e9a7"
+  },
+  "source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/native_eabi_m0_convert.inc",
+    "sha256": "cdb5955b2acc0fe6a0f2f157da60d8af0e1cc895bbda0faa7ce9b657e55f3dc2"
+  },
+  "public_full_object": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/candidate-full.o",
+    "sha256": "7aafbf8734c90100f495962249202a2563c322b9b70bdc02572d7eb1b7d136f6"
+  },
+  "executed_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/candidate.elf",
+    "sha256": "a905d4bc8a1e1ac48e9164bbf8bdbb8086dec72eeea409291651d3adff0d8f90"
+  },
+  "source_object_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-independent-20261024/SOURCE-OBJECT-PROOF.json",
+    "sha256": "a880b44161f52b9449bd78de27c121eaa79459b7e528107994e0c81573f99f7e"
+  },
+  "selected_ARM_integer_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-independent-20261024/SELECTED-ARM-INTEGER.json",
+    "sha256": "e4ba376dd5e6adf6f91c7087c9915380b6278826c9f8903c96bc507ad02e9795"
+  },
+  "review_script": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-independent-20261024/review.py",
+    "sha256": "a39ef1c123bd0067b871278c7ef3256d87285d73571e0a8e809fa35dfdea38cb"
+  },
+  "target_artifact_hashes_unchanged_before_after": 29,
+  "actual_independent_cases": 266,
+  "actual_ARM_calls": 798,
+  "author30222_or90666_replayed": false,
+  "old16": {
+    "all_bit_correct_Qfplib": true,
+    "strictly_faster": 12,
+    "equal": 4,
+    "instruction_candidate_parent_Qfplib_count_pairs": {
+      "41/46/41": 4,
+      "23/28/26": 4,
+      "28/33/31": 5,
+      "43/48/46": 3
+    }
+  },
+  "selected_all_Qfplib_bit_correct": true,
+  "selected_candidate_slower_than_correct_Qfplib": 0,
+  "signed64_absolute_bitlengths_including_zero": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64
+  ],
+  "INT64_MIN_MAX_complement_low_borrow_word_boundary_RNE_parity_and_carry_checked": true,
+  "source_to_execution": "Own full reassembly matches sealed object. Entire884-byte public conversion section equals executed bare ELF/BIN without exclusions; all four entry offsets match. No standalone undefined symbols/relocations/BL/traps; unrelated allocated sections and full dependencies equal.",
+  "entry_argument": [
+    "Nonnegative H produces R2=0 through ASR/LSL and reaches old magnitude code in the same3 instructions. Its first CMP overwrites the changed entry carry before consumption.",
+    "Negative H with ~H!=0: RSBS low creates carry iff L=0; Thumb MOVS immediate preserves carry into ADC high. Magnitude high is1..80000000 and safely enters high normalizer, saving1 instruction.",
+    "H=FFFFFFFF and L!=0: nonzero -L is the exact32-bit magnitude, R1 receives the sign and enters unchanged narrow normalizer directly, saving5 instructions.",
+    "H=FFFFFFFF and L=0: -2^32 gets explicit high1/low0 and old high normalizer, saving1 instruction. INT64_MIN remains exact magnitude2^63 with negative sign."
+  ],
+  "positive_l2d_and_ul2d_i2d_ui2d_results_instruction_counts_unchanged": true,
+  "RNE_normalizers_and_generic_signed_entry_source_unchanged": true,
+  "bare_candidate_no_firmware_ROM_and_no_memory_writes": true,
+  "candidate_stack_bytes_written": 0,
+  "candidate_PC_data_reads_confined_to884_bytes": true,
+  "R4_R11_SP_and_READY_DIRTY_context_preserved": true,
+  "32bit_R1_argument_register_poison_checked": true,
+  "M4_generic_controls": "Generic M0 all14468 allocated bytes exact; M4_soft/hard contributions each0 allocated bytes exact. This is object isolation, not full M4 rebuild.",
+  "resources": {
+    "old_section_bytes": 876,
+    "new_section_bytes": 884,
+    "delta_bytes": 8,
+    "new_tables_literals_RAM_dependencies": false
+  },
+  "earlier_u32_delta_composite_merged_or_qualified": false,
+  "limits": [
+    "Private RP2040 signed64 entry delta over pinned V164 only",
+    "No all2^64 universal speed theorem; selected Qfplib comparison uses actual correct result bits",
+    "No merged u32/image, full firmware/library/pow totality, physical cycles/platform/IRQ/hardware acceptance",
+    "Eight linked-caller addresses in producer packet are provenance, not qualification of those full functions"
+  ],
+  "actions": {
+    "USB": false,
+    "Flash": false,
+    "lease": false,
+    "Git": false,
+    "canonical_changed": false,
+    "source_targets_changed": false,
+    "RTC_packet_changed": false
+  },
+  "production_or_hardware_GO": false
+}

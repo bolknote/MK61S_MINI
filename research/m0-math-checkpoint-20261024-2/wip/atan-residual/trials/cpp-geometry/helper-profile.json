@@ -1,0 +1,42 @@
+[
+  {
+    "x": "3FE5D1004FC925B6",
+    "SIO": "READY",
+    "helper_instructions": 315,
+    "divider_instructions": 15,
+    "top": 12581890,
+    "denominator": 3080112,
+    "quotient": 4,
+    "delta": -4
+  },
+  {
+    "x": "3FE5D1004FC925B6",
+    "SIO": "DIRTY",
+    "helper_instructions": 404,
+    "divider_instructions": 104,
+    "top": 12581890,
+    "denominator": 3080112,
+    "quotient": 4,
+    "delta": -4
+  },
+  {
+    "x": "3FECB99548F4FA32",
+    "SIO": "READY",
+    "helper_instructions": 318,
+    "divider_instructions": 15,
+    "top": 17578724,
+    "denominator": 3773768,
+    "quotient": 4,
+    "delta": -4
+  },
+  {
+    "x": "3FECB99548F4FA32",
+    "SIO": "DIRTY",
+    "helper_instructions": 414,
+    "divider_instructions": 111,
+    "top": 17578724,
+    "denominator": 3773768,
+    "quotient": 4,
+    "delta": -4
+  }
+]

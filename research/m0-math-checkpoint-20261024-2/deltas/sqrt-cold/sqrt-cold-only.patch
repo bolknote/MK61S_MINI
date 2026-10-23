@@ -1,0 +1,76 @@
+--- V164/code/native_eabi_m0.S
++++ candidate/code/native_eabi_m0.S
+@@ -824,18 +824,27 @@
+  lsrs r3,r1,#20
+  adds r2,r3,#1
+  lsrs r2,#11
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++ bne .Lsqrt64_nonpositive_or_nonfinite
++ cmp r3,#0
++ bne .Lsqrt64_normal
++ // Positive E0 is already known; retain the zero return and skip the
++ // cold helper's repeated class test for a nonzero subnormal.
++ lsls r2,r1,#1
++ orrs r2,r0
++ bne mk61_m0_sqrt_subnormal
++ bx lr
++.Lsqrt64_nonpositive_or_nonfinite:
++ // Thumb ORRS and BNE preserve the carry from LSLS: C is input sign.
++ lsls r2,r1,#1
++ orrs r2,r0
++ bne mk61_m0_sqrt_special
++ bx lr
++#else
+  bne .Lsqrt64_slow
+  cmp r3,#0
+  bne .Lsqrt64_normal
+ .Lsqrt64_slow:
+-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+- // Handle signed zero in the same8-byte slow slot. R3 remains the
+- // original sign:exponent; the nearby leaf receives only nonzero inputs.
+- lsls r2,r1,#1
+- orrs r2,r0
+- bne mk61_m0_sqrt_special
+- bx lr
+-#else
+  push {r4,lr}
+  bl mk61_m0_sqrt_slow
+  pop {r4,pc}
+--- V164/code/native_eabi_m0_sqrt_special.S.inc
++++ candidate/code/native_eabi_m0_sqrt_special.S.inc
+@@ -1,16 +1,16 @@
+ /* Internal cold-entry contract: R0:R1 are the original binary64 bits,
+- * R3=R1>>20 from the unchanged public guard, and the input is nonzero and outside
+- * the positive-normal domain. A direct B preserves the caller LR/SP.
++ * R3=R1>>20 and C=input sign from the public cold guard. This entry receives
++ * negative nonzero inputs or positive exponent2047. The subnormal alias
++ * receives positive E0 nonzero inputs. Direct B preserves caller LR/SP.
+  * The positive subnormal scaling/root path below is byte-for-byte source
+  * from V161; normal roots and their coefficient table stay in place. */
+ .section .m0_sqrt_special,"ax",%progbits
+ .p2align 2
+ .hidden mk61_m0_sqrt_special
+ regular_func mk61_m0_sqrt_special
+- cmp r3,#0
+- beq .Lsqrt_special_subnormal
+- cmp r1,#0
+- bmi .Lsqrt_special_negative
++ // Public nonzero entry supplies C=input sign. Positive inputs reaching
++ // this entry have exponent2047; positive E0 enters the subnormal alias.
++ bcs .Lsqrt_special_negative
+  // The only positive nonzero inputs admitted here are Inf and NaN.
+  lsls r2,r1,#12
+  orrs r2,r0
+@@ -27,6 +27,12 @@
+  movs r0,#0
+  ldr r1,=0x7ff80000
+  bx lr
++// Internal public-guard target; same stack/scaling/root code as the parent.
++.global mk61_m0_sqrt_subnormal
++.hidden mk61_m0_sqrt_subnormal
++.type mk61_m0_sqrt_subnormal,%function
++.thumb_func
++mk61_m0_sqrt_subnormal:
+ .Lsqrt_special_subnormal:
+  push {r4,lr}
+  lsrs r2,r1,#19

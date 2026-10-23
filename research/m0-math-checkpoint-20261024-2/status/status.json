@@ -1,0 +1,90 @@
+{
+  "status": "ORIGINAL_MATH_PROGRESS_NOT_PRODUCTION",
+  "historical_slow_cases_faster_in_separate_candidates": 287,
+  "dadd_independent_review": "MIXED_SIGN_DELTA_TECHNICAL_GO_NOT_PRODUCTION",
+  "u32_review": "D2UIZ_DELTA_TECHNICAL_GO_NOT_PRODUCTION",
+  "files": {
+    ".build/m0-mixed-sign-original-goal-20261023/HANDOFF.md": "67b94bd5e403cd3a0ab82f708da2f5eeaf85e79934fd1232b1c343ac4ff91e5c",
+    ".build/m0-mixed-sign-original-goal-20261023/result.json": "5b1fa3434b9bd887115a2e00926ae48ec8d924d382c6926d9f06a15fdf8a83d5",
+    ".build/m0-mixed-sign-original-goal-independent-review-20261023/receipt.json": "772e806942517f65977d91dbeb50c493306be6e99ea388a94dd058b66ecf2bd9",
+    ".build/m0-u32-original-goal-20261023/HANDOFF.md": "aa6f45d43388c94298dbd2ed5be220daa98842e1d3b50cdddfc2128d2ca7cd51",
+    ".build/m0-u32-original-goal-20261023/result.json": "1d4e45dbd257d8fbf33bf9516a966fb74bbbdf33145d3448be1a95175d3f1c8c",
+    ".build/m0-u32-original-goal-independent-review-20261023/receipt.json": "a0ebd2d0b56f33db311c11cbdc01cc3a4092b648ec9617f196a28f85f1ba19c3",
+    ".build/m0-mixed-sign-top-normal-20261023/HANDOFF.md": "d938a6627f79d76593e4f00ba02f9a0f750d553eb9abc138c5fb128bf5da50d3",
+    ".build/m0-mixed-sign-top-normal-20261023/result.json": "6e4e5b7eafeea3a11eebb499860f53d1d51fe892ce47b325ae4e48ae90f7d11d",
+    ".build/m0-mixed-sign-top-normal-independent-20261023/FINAL-REVIEW.json": "1fa5ec2420e2ddf1a8d8a1ca881976f4c0033f308d601dd7d99b12afad58b86f",
+    ".build/m0-add-cold-normal-20261023/HANDOFF.md": "b4a976a59d040184a709dc48216210be0c7be129be62b74a1017661a5f08dd1b",
+    ".build/m0-add-cold-normal-20261023/result.json": "70014f74e93ddf39ff37a1001a56601c85e16dcd89a22b3e0dbbce1f3f5a5bdb",
+    ".build/m0-add-cold-normal-independent-20261023/FINAL-REVIEW.json": "1266ecde350f8eb7662cc335da11ad7aece6e2cb18d36ed9d723bbac3c9edd2d",
+    ".build/m0-add-subnormal-input-20261023/HANDOFF.md": "7b503ade4ce2c72bff8292ac526f6d8866de4003262f60f35e59ee74cf5fc149",
+    ".build/m0-add-subnormal-input-20261023/result.json": "4cbf5c03c4846ca4f653700d293801d6234fe79ec5459994d7aabe0a671136fe",
+    ".build/m0-add-subnormal-input-independent-20261023/FINAL-REVIEW.json": "d7c8509fc3d9e8f375fd612840c7e4935abd9117cba183edf6b091e958a69446",
+    ".build/m0-l2d-original-goal-20261024/HANDOFF.md": "30369e6412a7bf9b2be881cce40fbef476f48905b04d96d92a3c90df91b0e9a7",
+    ".build/m0-l2d-original-goal-20261024/result.json": "5c431f4ea3d6ca26545089209d8ce8c5b4b195dfc5b5ab59577817f725d4fed7",
+    ".build/m0-sqrt-cold-original-goal-20261024/HANDOFF.md": "c0fbc3e470566d0f0838c68b22b0c9c6320e146fe67eddb2b034cc9e6e46c867",
+    ".build/m0-sqrt-cold-original-goal-20261024/result.json": "4862bfacc499bec396e5eb21814de35da1759a62087c38d60bcc4e7bda688992",
+    ".build/m0-l2d-original-goal-independent-20261024/FINAL-REVIEW.json": "fa009ccbe011ae9ec0976eca503aa35abddbc8395feb376fd8e26accb429dae2",
+    ".build/m0-sqrt-cold-original-goal-independent-20261024/FINAL-REVIEW.json": "7aff3bf10d98b3d184d0708d7ae212be45225e1ced8a13ccdc23d4e233d74300",
+    ".build/m0-atan-original-goal-20261024/HANDOFF.md": "d912b45003f48351a951fb19e22138dfccfd95d18bd5f08fedf66ca8acf803bf",
+    ".build/m0-atan-original-goal-20261024/result.json": "82dbe45fe869c8984cc94b38be5003d633e8232c16bbf5834e0cb2760e5fe3a9",
+    ".build/m0-atan-original-goal-independent-20261024/FINAL-REVIEW.json": "320ba7d86efaae128e9e98f0e8dd1c35297ad393b4dfdc2d7513e505d3006f29"
+  },
+  "dadd_review_target_immutable": true,
+  "uint32_target_held_immutable_for_review": true,
+  "goal_complete": false,
+  "hardware_accessed": false,
+  "top_normal_review": "TECHNICAL_GO_TOP_NORMAL_DADD_DSUB_DELTA_ONLY",
+  "top_normal_targeted_cases": 11018,
+  "top_normal_instruction_regressions_vs_parent": 0,
+  "top_normal_target_held_for_review": true,
+  "low_normal_review": "TECHNICAL_GO_LOW_NORMAL_AND_NONFINITE_DADD_DSUB_DELTA_ONLY",
+  "low_normal_target_held_for_review": true,
+  "low_normal_old762_deficits_resolved": 762,
+  "low_normal_remaining_profiled_subnormal_input_deficits": 18,
+  "subnormal_input_review": "TECHNICAL_GO_E0_SUBNORMAL_INPUT_ZERO_DADD_DSUB_DELTA_ONLY",
+  "subnormal_input_old18_deficits_resolved": 18,
+  "subnormal_input_targeted_cases": 70261,
+  "subnormal_input_instruction_regressions_vs_parent": 0,
+  "l2d_review": "TECHNICAL_GO_RP2040_SIGNED64_L2D_ENTRY_DELTA_ONLY",
+  "l2d_old16_deficits_resolved": 16,
+  "sqrt_cold_review": "TECHNICAL_GO_PRIVATE_SQRT_COLD_DISPATCH_DELTA",
+  "sqrt_positive_infinity_no_slower_Qfplib": true,
+  "historical_slow_cases_no_slower_in_separate_candidates": 292,
+  "historical_slow_cases_strict_faster_in_separate_candidates": 287,
+  "historical_slow_cases_equal_in_separate_candidates": 5,
+  "remaining_historical_speed_deficits_by_operation": {
+    "pow": 153,
+    "exp": 16,
+    "ln": 10,
+    "sin": 22,
+    "cos": 14
+  },
+  "historical_507_matrix_not_rewritten_or_merged": true,
+  "atan_review": "TECHNICAL_GO_PRIVATE_ATAN_PACKING_ENCLOSURE_DELTA_WITH_FOUR_SPEED_INPUTS_OPEN",
+  "atan_historical2_deficits_resolved": 2,
+  "atan_remaining_expanded_speed_inputs": 4,
+  "atan_residual_prototype": {
+    "status": "WIP_ATAN_RESIDUAL_NOT_QUALIFIED_OR_INDEPENDENTLY_REVIEWED",
+    "DIRTY_probe_four_instructions": {
+      "3FE5D1004FC925B6": {
+        "candidate": 1800,
+        "Qfplib": 1784
+      },
+      "BFE5D1004FC925B6": {
+        "candidate": 1800,
+        "Qfplib": 1791
+      },
+      "3FECB99548F4FA32": {
+        "candidate": 1775,
+        "Qfplib": 1783
+      },
+      "BFECB99548F4FA32": {
+        "candidate": 1775,
+        "Qfplib": 1790
+      }
+    },
+    "remaining_probe_slower_correct_Qfplib": 2,
+    "full_qualification": false,
+    "independent_review": false
+  }
+}

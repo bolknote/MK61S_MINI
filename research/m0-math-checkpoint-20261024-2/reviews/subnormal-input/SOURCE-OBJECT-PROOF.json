@@ -1,0 +1,74 @@
+{
+  "status": "PASS_FINAL_SOURCE_PUBLIC_BODY_EXECUTED_WITHOUT_EXCLUSIONS",
+  "artifact_count": 29,
+  "body_bytes": 1472,
+  "parent_body_bytes": 1204,
+  "extra_bytes": 268,
+  "own_full_assembly_exact": true,
+  "full1472_bytes_equal": true,
+  "entry_offsets_equal": true,
+  "standalone_undefined": [],
+  "standalone_relocations": [],
+  "standalone_BL_BLX": false,
+  "removed_dependencies": [
+    "mk61_m0_dadd_slow"
+  ],
+  "added_dependencies": [],
+  "no_new_tables_literal_words_or_global_RAM": true,
+  "prior_normal_low_top_NF_source_unchanged": true,
+  "following_kernels_and_other_allocated_sections_equal": true,
+  "M4_generic_controls": [
+    {
+      "label": "M4_soft",
+      "equal": true,
+      "allocated_bytes": 0
+    },
+    {
+      "label": "M4_hard",
+      "equal": true,
+      "allocated_bytes": 0
+    },
+    {
+      "label": "generic_M0",
+      "equal": true,
+      "allocated_bytes": 0
+    }
+  ],
+  "M4_full_firmware_rebuilt": false,
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-20261023/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-independent-20261023/public.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-independent-20261023/parent.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-objdump",
+      "-dr",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-20261023/candidate.elf"
+    ]
+  ],
+  "hardware_access": false
+}
