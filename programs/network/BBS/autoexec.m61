@@ -1,0 +1,13 @@
+open start.tbi
+:dispatch
+if re==0 open start.tbi
+if re==1 open menu.tbi
+if re==2 open list.tbi
+if re==3 open read.tbi
+if re==4 open post.tbi
+if re==5 open help.tbi
+if re==99 run :disconnect
+run :dispatch
+:disconnect
+open close.tbi
+run :dispatch

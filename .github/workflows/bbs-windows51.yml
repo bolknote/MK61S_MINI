@@ -1,0 +1,36 @@
+name: BBS Windows PowerShell 5.1
+
+on:
+  push:
+    branches:
+      - feature/bbs-windows51-check
+
+permissions:
+  contents: read
+
+jobs:
+  windows-51:
+    name: Actual Windows PowerShell 5.1
+    if: github.repository == 'bolknote/MK61S_MINI' && github.ref == 'refs/heads/feature/bbs-windows51-check'
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout qualification sources
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Protocol, package and common launcher under Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          try {
+            & ./tests/run_bbs_powershell_tests.ps1 -RequireWindowsPowerShell51 *> $null
+            if ($LASTEXITCODE -ne 0) { throw 'Native BBS CLI failed' }
+          } catch {
+            Write-Output 'BBS Windows PowerShell 5.1: FAIL'
+            exit 1
+          }
+          Write-Output ('BBS Windows PowerShell 5.1: PASS; version=' +
+            $PSVersionTable.PSVersion.ToString() + '; edition=' + $PSVersionTable.PSEdition)

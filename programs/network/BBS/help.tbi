@@ -1,0 +1,6 @@
+10 .RE=99
+20 PRINT TO C,"L lists message files. R reads a listed file."+LF$+"P writes a subject and four lines. Y confirms saving."+LF$+"Q disconnects. Input expires after 60 seconds." TIMEOUT 5000 STATUS S
+30 IF S<>0 END
+40 PRINT TO C,"UTF-8 text; Latin and Cyrillic supported."+LF$+"No accounts or private mail. The operator controls the Flash files." TIMEOUT 5000 STATUS S
+50 IF S=0 .RE=1
+60 END

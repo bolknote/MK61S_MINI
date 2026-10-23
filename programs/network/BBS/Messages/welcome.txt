@@ -1,0 +1,6 @@
+From: Sysop
+Subject: Welcome to MK61 BBS
+
+This BBS runs on the calculator in BASIC.
+M61 joins its modules. USB carries framed text to a host bridge.
+Use P to leave a message, L to list messages and R to read one.
