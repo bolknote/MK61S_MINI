@@ -1,0 +1,36 @@
+{
+  "status": "PASS_UNDEFINED_DEPENDENCIES_IDENTICAL",
+  "control": [
+    "         U __aeabi_ul2d",
+    "         U factor_rsqrt_seeds",
+    "         U mk61_m0_cr_pow",
+    "         U mk61_m0_dadd_slow",
+    "         U mk61_m0_ddiv_slow",
+    "         U mk61_m0_dmul_slow",
+    "         U mk61_m0_math_udiv32",
+    "         U mk61_m0_pow_argument",
+    "         U mk61_m0_pow_exp_product",
+    "         U mk61_m0_pow_log_ordinary",
+    "         U mk61_m0_pow_small_y",
+    "         U mk61_m0_sqrt",
+    "         U pow_fast_log",
+    "         U pow_sqrt64_coefficients"
+  ],
+  "candidate": [
+    "         U __aeabi_ul2d",
+    "         U factor_rsqrt_seeds",
+    "         U mk61_m0_cr_pow",
+    "         U mk61_m0_dadd_slow",
+    "         U mk61_m0_ddiv_slow",
+    "         U mk61_m0_dmul_slow",
+    "         U mk61_m0_math_udiv32",
+    "         U mk61_m0_pow_argument",
+    "         U mk61_m0_pow_exp_product",
+    "         U mk61_m0_pow_log_ordinary",
+    "         U mk61_m0_pow_small_y",
+    "         U mk61_m0_sqrt",
+    "         U pow_fast_log",
+    "         U pow_sqrt64_coefficients"
+  ],
+  "new_libgcc_dependency": false
+}

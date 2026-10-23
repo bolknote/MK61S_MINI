@@ -1,0 +1,7366 @@
+{
+  "rows": [
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BFD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FE8000000000000",
+      "outputs": {
+        "candidate": "3FE8000000000000",
+        "baseline": "3FE8000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BFD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FE8000000000000",
+      "outputs": {
+        "candidate": "3FE8000000000000",
+        "baseline": "3FE8000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3FD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FE8000000000000",
+      "outputs": {
+        "candidate": "3FE8000000000000",
+        "baseline": "3FE8000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3FD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FE8000000000000",
+      "outputs": {
+        "candidate": "3FE8000000000000",
+        "baseline": "3FE8000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFD0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FE8000000000000",
+      "outputs": {
+        "candidate": "3FE8000000000000",
+        "baseline": "3FE8000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFD0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FE8000000000000",
+      "outputs": {
+        "candidate": "3FE8000000000000",
+        "baseline": "3FE8000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFD0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FE8000000000000",
+      "outputs": {
+        "candidate": "3FE8000000000000",
+        "baseline": "3FE8000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFD0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FE8000000000000",
+      "outputs": {
+        "candidate": "3FE8000000000000",
+        "baseline": "3FE8000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3FD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFE8000000000000",
+      "outputs": {
+        "candidate": "BFE8000000000000",
+        "baseline": "BFE8000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3FD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFE8000000000000",
+      "outputs": {
+        "candidate": "BFE8000000000000",
+        "baseline": "BFE8000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BFD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFE8000000000000",
+      "outputs": {
+        "candidate": "BFE8000000000000",
+        "baseline": "BFE8000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BFD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFE8000000000000",
+      "outputs": {
+        "candidate": "BFE8000000000000",
+        "baseline": "BFE8000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FD0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFE8000000000000",
+      "outputs": {
+        "candidate": "BFE8000000000000",
+        "baseline": "BFE8000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FD0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFE8000000000000",
+      "outputs": {
+        "candidate": "BFE8000000000000",
+        "baseline": "BFE8000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FD0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFE8000000000000",
+      "outputs": {
+        "candidate": "BFE8000000000000",
+        "baseline": "BFE8000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FD0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFE8000000000000",
+      "outputs": {
+        "candidate": "BFE8000000000000",
+        "baseline": "BFE8000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BFDFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FE0000000000002",
+      "outputs": {
+        "candidate": "3FE0000000000002",
+        "baseline": "3FE0000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BFDFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FE0000000000002",
+      "outputs": {
+        "candidate": "3FE0000000000002",
+        "baseline": "3FE0000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3FDFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FE0000000000002",
+      "outputs": {
+        "candidate": "3FE0000000000002",
+        "baseline": "3FE0000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3FDFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FE0000000000002",
+      "outputs": {
+        "candidate": "3FE0000000000002",
+        "baseline": "3FE0000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFDFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FE0000000000002",
+      "outputs": {
+        "candidate": "3FE0000000000002",
+        "baseline": "3FE0000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFDFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FE0000000000002",
+      "outputs": {
+        "candidate": "3FE0000000000002",
+        "baseline": "3FE0000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFDFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FE0000000000002",
+      "outputs": {
+        "candidate": "3FE0000000000002",
+        "baseline": "3FE0000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFDFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FE0000000000002",
+      "outputs": {
+        "candidate": "3FE0000000000002",
+        "baseline": "3FE0000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3FDFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFE0000000000002",
+      "outputs": {
+        "candidate": "BFE0000000000002",
+        "baseline": "BFE0000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3FDFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFE0000000000002",
+      "outputs": {
+        "candidate": "BFE0000000000002",
+        "baseline": "BFE0000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BFDFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFE0000000000002",
+      "outputs": {
+        "candidate": "BFE0000000000002",
+        "baseline": "BFE0000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BFDFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFE0000000000002",
+      "outputs": {
+        "candidate": "BFE0000000000002",
+        "baseline": "BFE0000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FDFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFE0000000000002",
+      "outputs": {
+        "candidate": "BFE0000000000002",
+        "baseline": "BFE0000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FDFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFE0000000000002",
+      "outputs": {
+        "candidate": "BFE0000000000002",
+        "baseline": "BFE0000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FDFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFE0000000000002",
+      "outputs": {
+        "candidate": "BFE0000000000002",
+        "baseline": "BFE0000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FDFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFE0000000000002",
+      "outputs": {
+        "candidate": "BFE0000000000002",
+        "baseline": "BFE0000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BFD0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFBFFFFFFFFFFFF",
+        "baseline": "3FFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BFD0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFBFFFFFFFFFFFF",
+        "baseline": "3FFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3FD0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFBFFFFFFFFFFFF",
+        "baseline": "3FFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3FD0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFBFFFFFFFFFFFF",
+        "baseline": "3FFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFD0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFBFFFFFFFFFFFF",
+        "baseline": "3FFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFD0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFBFFFFFFFFFFFF",
+        "baseline": "3FFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFD0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFBFFFFFFFFFFFF",
+        "baseline": "3FFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFD0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFBFFFFFFFFFFFF",
+        "baseline": "3FFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3FD0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFBFFFFFFFFFFFF",
+        "baseline": "BFFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3FD0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFBFFFFFFFFFFFF",
+        "baseline": "BFFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BFD0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFBFFFFFFFFFFFF",
+        "baseline": "BFFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BFD0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFBFFFFFFFFFFFF",
+        "baseline": "BFFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FD0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFBFFFFFFFFFFFF",
+        "baseline": "BFFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FD0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFBFFFFFFFFFFFF",
+        "baseline": "BFFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FD0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFBFFFFFFFFFFFF",
+        "baseline": "BFFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FD0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFBFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFBFFFFFFFFFFFF",
+        "baseline": "BFFBFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BFC0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEC000000000000",
+      "outputs": {
+        "candidate": "3FEC000000000000",
+        "baseline": "3FEC000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BFC0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEC000000000000",
+      "outputs": {
+        "candidate": "3FEC000000000000",
+        "baseline": "3FEC000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3FC0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEC000000000000",
+      "outputs": {
+        "candidate": "3FEC000000000000",
+        "baseline": "3FEC000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3FC0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEC000000000000",
+      "outputs": {
+        "candidate": "3FEC000000000000",
+        "baseline": "3FEC000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFC0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEC000000000000",
+      "outputs": {
+        "candidate": "3FEC000000000000",
+        "baseline": "3FEC000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFC0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEC000000000000",
+      "outputs": {
+        "candidate": "3FEC000000000000",
+        "baseline": "3FEC000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFC0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEC000000000000",
+      "outputs": {
+        "candidate": "3FEC000000000000",
+        "baseline": "3FEC000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFC0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEC000000000000",
+      "outputs": {
+        "candidate": "3FEC000000000000",
+        "baseline": "3FEC000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3FC0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEC000000000000",
+      "outputs": {
+        "candidate": "BFEC000000000000",
+        "baseline": "BFEC000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3FC0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEC000000000000",
+      "outputs": {
+        "candidate": "BFEC000000000000",
+        "baseline": "BFEC000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BFC0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEC000000000000",
+      "outputs": {
+        "candidate": "BFEC000000000000",
+        "baseline": "BFEC000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BFC0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEC000000000000",
+      "outputs": {
+        "candidate": "BFEC000000000000",
+        "baseline": "BFEC000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FC0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEC000000000000",
+      "outputs": {
+        "candidate": "BFEC000000000000",
+        "baseline": "BFEC000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FC0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEC000000000000",
+      "outputs": {
+        "candidate": "BFEC000000000000",
+        "baseline": "BFEC000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FC0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEC000000000000",
+      "outputs": {
+        "candidate": "BFEC000000000000",
+        "baseline": "BFEC000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FC0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEC000000000000",
+      "outputs": {
+        "candidate": "BFEC000000000000",
+        "baseline": "BFEC000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BFCFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FE8000000000002",
+      "outputs": {
+        "candidate": "3FE8000000000002",
+        "baseline": "3FE8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BFCFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FE8000000000002",
+      "outputs": {
+        "candidate": "3FE8000000000002",
+        "baseline": "3FE8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3FCFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FE8000000000002",
+      "outputs": {
+        "candidate": "3FE8000000000002",
+        "baseline": "3FE8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3FCFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FE8000000000002",
+      "outputs": {
+        "candidate": "3FE8000000000002",
+        "baseline": "3FE8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFCFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FE8000000000002",
+      "outputs": {
+        "candidate": "3FE8000000000002",
+        "baseline": "3FE8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFCFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FE8000000000002",
+      "outputs": {
+        "candidate": "3FE8000000000002",
+        "baseline": "3FE8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFCFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FE8000000000002",
+      "outputs": {
+        "candidate": "3FE8000000000002",
+        "baseline": "3FE8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFCFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FE8000000000002",
+      "outputs": {
+        "candidate": "3FE8000000000002",
+        "baseline": "3FE8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3FCFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFE8000000000002",
+      "outputs": {
+        "candidate": "BFE8000000000002",
+        "baseline": "BFE8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3FCFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFE8000000000002",
+      "outputs": {
+        "candidate": "BFE8000000000002",
+        "baseline": "BFE8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BFCFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFE8000000000002",
+      "outputs": {
+        "candidate": "BFE8000000000002",
+        "baseline": "BFE8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BFCFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFE8000000000002",
+      "outputs": {
+        "candidate": "BFE8000000000002",
+        "baseline": "BFE8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FCFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFE8000000000002",
+      "outputs": {
+        "candidate": "BFE8000000000002",
+        "baseline": "BFE8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FCFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFE8000000000002",
+      "outputs": {
+        "candidate": "BFE8000000000002",
+        "baseline": "BFE8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FCFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFE8000000000002",
+      "outputs": {
+        "candidate": "BFE8000000000002",
+        "baseline": "BFE8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FCFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFE8000000000002",
+      "outputs": {
+        "candidate": "BFE8000000000002",
+        "baseline": "BFE8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BFC0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFDFFFFFFFFFFFF",
+        "baseline": "3FFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BFC0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFDFFFFFFFFFFFF",
+        "baseline": "3FFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3FC0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFDFFFFFFFFFFFF",
+        "baseline": "3FFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3FC0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFDFFFFFFFFFFFF",
+        "baseline": "3FFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFC0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFDFFFFFFFFFFFF",
+        "baseline": "3FFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFC0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFDFFFFFFFFFFFF",
+        "baseline": "3FFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFC0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFDFFFFFFFFFFFF",
+        "baseline": "3FFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFC0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFDFFFFFFFFFFFF",
+        "baseline": "3FFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3FC0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFDFFFFFFFFFFFF",
+        "baseline": "BFFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3FC0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFDFFFFFFFFFFFF",
+        "baseline": "BFFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BFC0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFDFFFFFFFFFFFF",
+        "baseline": "BFFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BFC0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFDFFFFFFFFFFFF",
+        "baseline": "BFFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FC0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFDFFFFFFFFFFFF",
+        "baseline": "BFFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FC0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFDFFFFFFFFFFFF",
+        "baseline": "BFFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FC0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFDFFFFFFFFFFFF",
+        "baseline": "BFFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FC0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFDFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFDFFFFFFFFFFFF",
+        "baseline": "BFFDFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BE00000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00000",
+        "baseline": "3FEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BE00000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00000",
+        "baseline": "3FEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3E00000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00000",
+        "baseline": "3FEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3E00000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00000",
+        "baseline": "3FEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BE00000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00000",
+        "baseline": "3FEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BE00000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00000",
+        "baseline": "3FEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BE00000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00000",
+        "baseline": "3FEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BE00000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00000",
+        "baseline": "3FEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3E00000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00000",
+        "baseline": "BFEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3E00000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00000",
+        "baseline": "BFEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BE00000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00000",
+        "baseline": "BFEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BE00000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00000",
+        "baseline": "BFEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3E00000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00000",
+        "baseline": "BFEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3E00000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00000",
+        "baseline": "BFEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3E00000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00000",
+        "baseline": "BFEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3E00000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFC00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00000",
+        "baseline": "BFEFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BE0FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFF800002",
+      "outputs": {
+        "candidate": "3FEFFFFFFF800002",
+        "baseline": "3FEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BE0FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFF800002",
+      "outputs": {
+        "candidate": "3FEFFFFFFF800002",
+        "baseline": "3FEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3E0FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFF800002",
+      "outputs": {
+        "candidate": "3FEFFFFFFF800002",
+        "baseline": "3FEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3E0FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFF800002",
+      "outputs": {
+        "candidate": "3FEFFFFFFF800002",
+        "baseline": "3FEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BE0FFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFF800002",
+      "outputs": {
+        "candidate": "3FEFFFFFFF800002",
+        "baseline": "3FEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BE0FFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFF800002",
+      "outputs": {
+        "candidate": "3FEFFFFFFF800002",
+        "baseline": "3FEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BE0FFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFF800002",
+      "outputs": {
+        "candidate": "3FEFFFFFFF800002",
+        "baseline": "3FEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BE0FFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFF800002",
+      "outputs": {
+        "candidate": "3FEFFFFFFF800002",
+        "baseline": "3FEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3E0FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFF800002",
+      "outputs": {
+        "candidate": "BFEFFFFFFF800002",
+        "baseline": "BFEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3E0FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFF800002",
+      "outputs": {
+        "candidate": "BFEFFFFFFF800002",
+        "baseline": "BFEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BE0FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFF800002",
+      "outputs": {
+        "candidate": "BFEFFFFFFF800002",
+        "baseline": "BFEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BE0FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFF800002",
+      "outputs": {
+        "candidate": "BFEFFFFFFF800002",
+        "baseline": "BFEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3E0FFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFF800002",
+      "outputs": {
+        "candidate": "BFEFFFFFFF800002",
+        "baseline": "BFEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3E0FFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFF800002",
+      "outputs": {
+        "candidate": "BFEFFFFFFF800002",
+        "baseline": "BFEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3E0FFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFF800002",
+      "outputs": {
+        "candidate": "BFEFFFFFFF800002",
+        "baseline": "BFEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3E0FFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFF800002",
+      "outputs": {
+        "candidate": "BFEFFFFFFF800002",
+        "baseline": "BFEFFFFFFF800002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BE00000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFDFFFFF",
+        "baseline": "3FFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BE00000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFDFFFFF",
+        "baseline": "3FFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3E00000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFDFFFFF",
+        "baseline": "3FFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3E00000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFDFFFFF",
+        "baseline": "3FFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BE00000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFDFFFFF",
+        "baseline": "3FFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BE00000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFDFFFFF",
+        "baseline": "3FFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BE00000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFDFFFFF",
+        "baseline": "3FFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BE00000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFDFFFFF",
+        "baseline": "3FFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3E00000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFDFFFFF",
+        "baseline": "BFFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3E00000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFDFFFFF",
+        "baseline": "BFFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BE00000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFDFFFFF",
+        "baseline": "BFFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BE00000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFDFFFFF",
+        "baseline": "BFFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3E00000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFDFFFFF",
+        "baseline": "BFFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3E00000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFDFFFFF",
+        "baseline": "BFFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3E00000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFDFFFFF",
+        "baseline": "BFFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3E00000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFDFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFDFFFFF",
+        "baseline": "BFFFFFFFFFDFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BDF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00000",
+        "baseline": "3FEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BDF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00000",
+        "baseline": "3FEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3DF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00000",
+        "baseline": "3FEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3DF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00000",
+        "baseline": "3FEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDF0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00000",
+        "baseline": "3FEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDF0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00000",
+        "baseline": "3FEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDF0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00000",
+        "baseline": "3FEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDF0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00000",
+        "baseline": "3FEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3DF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00000",
+        "baseline": "BFEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3DF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00000",
+        "baseline": "BFEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BDF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00000",
+        "baseline": "BFEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BDF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00000",
+        "baseline": "BFEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DF0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00000",
+        "baseline": "BFEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DF0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00000",
+        "baseline": "BFEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DF0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00000",
+        "baseline": "BFEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DF0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFE00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00000",
+        "baseline": "BFEFFFFFFFE00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BDFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00002",
+        "baseline": "3FEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BDFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00002",
+        "baseline": "3FEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3DFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00002",
+        "baseline": "3FEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3DFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00002",
+        "baseline": "3FEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDFFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00002",
+        "baseline": "3FEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDFFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00002",
+        "baseline": "3FEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDFFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00002",
+        "baseline": "3FEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDFFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFC00002",
+        "baseline": "3FEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3DFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00002",
+        "baseline": "BFEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3DFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00002",
+        "baseline": "BFEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BDFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00002",
+        "baseline": "BFEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BDFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00002",
+        "baseline": "BFEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DFFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00002",
+        "baseline": "BFEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DFFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00002",
+        "baseline": "BFEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DFFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00002",
+        "baseline": "BFEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DFFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFC00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFC00002",
+        "baseline": "BFEFFFFFFFC00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BDF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFEFFFFF",
+        "baseline": "3FFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BDF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFEFFFFF",
+        "baseline": "3FFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3DF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFEFFFFF",
+        "baseline": "3FFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3DF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFEFFFFF",
+        "baseline": "3FFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDF0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFEFFFFF",
+        "baseline": "3FFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDF0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFEFFFFF",
+        "baseline": "3FFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDF0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFEFFFFF",
+        "baseline": "3FFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDF0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFEFFFFF",
+        "baseline": "3FFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3DF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFEFFFFF",
+        "baseline": "BFFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3DF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFEFFFFF",
+        "baseline": "BFFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BDF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFEFFFFF",
+        "baseline": "BFFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BDF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFEFFFFF",
+        "baseline": "BFFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DF0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFEFFFFF",
+        "baseline": "BFFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DF0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFEFFFFF",
+        "baseline": "BFFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DF0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFEFFFFF",
+        "baseline": "BFFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DF0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFEFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFEFFFFF",
+        "baseline": "BFFFFFFFFFEFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BDE0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFF00000",
+        "baseline": "3FEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BDE0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFF00000",
+        "baseline": "3FEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3DE0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFF00000",
+        "baseline": "3FEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3DE0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFF00000",
+        "baseline": "3FEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDE0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFF00000",
+        "baseline": "3FEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDE0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFF00000",
+        "baseline": "3FEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDE0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFF00000",
+        "baseline": "3FEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDE0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "3FEFFFFFFFF00000",
+        "baseline": "3FEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3DE0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFF00000",
+        "baseline": "BFEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3DE0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFF00000",
+        "baseline": "BFEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BDE0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFF00000",
+        "baseline": "BFEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BDE0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFF00000",
+        "baseline": "BFEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DE0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFF00000",
+        "baseline": "BFEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DE0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFF00000",
+        "baseline": "BFEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DE0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFF00000",
+        "baseline": "BFEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DE0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFF00000",
+      "outputs": {
+        "candidate": "BFEFFFFFFFF00000",
+        "baseline": "BFEFFFFFFFF00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BDEFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00002",
+        "baseline": "3FEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BDEFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00002",
+        "baseline": "3FEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3DEFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00002",
+        "baseline": "3FEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3DEFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00002",
+        "baseline": "3FEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDEFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00002",
+        "baseline": "3FEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDEFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00002",
+        "baseline": "3FEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDEFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00002",
+        "baseline": "3FEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDEFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "3FEFFFFFFFE00002",
+        "baseline": "3FEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3DEFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00002",
+        "baseline": "BFEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3DEFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00002",
+        "baseline": "BFEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BDEFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00002",
+        "baseline": "BFEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BDEFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00002",
+        "baseline": "BFEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DEFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00002",
+        "baseline": "BFEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DEFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00002",
+        "baseline": "BFEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DEFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00002",
+        "baseline": "BFEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DEFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFE00002",
+      "outputs": {
+        "candidate": "BFEFFFFFFFE00002",
+        "baseline": "BFEFFFFFFFE00002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BDE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFF7FFFF",
+        "baseline": "3FFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BDE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFF7FFFF",
+        "baseline": "3FFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3DE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFF7FFFF",
+        "baseline": "3FFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3DE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFF7FFFF",
+        "baseline": "3FFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDE0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFF7FFFF",
+        "baseline": "3FFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BDE0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFF7FFFF",
+        "baseline": "3FFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDE0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFF7FFFF",
+        "baseline": "3FFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BDE0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFF7FFFF",
+        "baseline": "3FFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3DE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFF7FFFF",
+        "baseline": "BFFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3DE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFF7FFFF",
+        "baseline": "BFFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BDE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFF7FFFF",
+        "baseline": "BFFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BDE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFF7FFFF",
+        "baseline": "BFFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DE0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFF7FFFF",
+        "baseline": "BFFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3DE0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFF7FFFF",
+        "baseline": "BFFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DE0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFF7FFFF",
+        "baseline": "BFFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3DE0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFF7FFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFF7FFFF",
+        "baseline": "BFFFFFFFFFF7FFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BCB0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BCB0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3CB0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3CB0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCB0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCB0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCB0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCB0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3CB0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3CB0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BCB0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BCB0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CB0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CB0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CB0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CB0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BCBFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BCBFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3CBFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3CBFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCBFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCBFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCBFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCBFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFE",
+        "baseline": "3FEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3CBFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3CBFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BCBFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BCBFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CBFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CBFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CBFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CBFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFE",
+        "baseline": "BFEFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BCB0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BCB0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3CB0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3CB0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCB0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCB0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCB0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCB0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3CB0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3CB0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BCB0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BCB0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CB0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CB0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CB0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CB0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BCA0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFF",
+        "baseline": "3FEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BCA0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFF",
+        "baseline": "3FEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3CA0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFF",
+        "baseline": "3FEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3CA0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFF",
+        "baseline": "3FEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCA0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFF",
+        "baseline": "3FEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCA0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFF",
+        "baseline": "3FEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCA0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFF",
+        "baseline": "3FEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCA0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FEFFFFFFFFFFFFF",
+        "baseline": "3FEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3CA0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFF",
+        "baseline": "BFEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3CA0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFF",
+        "baseline": "BFEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BCA0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFF",
+        "baseline": "BFEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BCA0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFF",
+        "baseline": "BFEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CA0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFF",
+        "baseline": "BFEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CA0000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFF",
+        "baseline": "BFEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CA0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFF",
+        "baseline": "BFEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CA0000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFEFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFEFFFFFFFFFFFFF",
+        "baseline": "BFEFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BCAFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BCAFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3CAFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3CAFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCAFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCAFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCAFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCAFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3CAFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3CAFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BCAFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BCAFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CAFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CAFFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CAFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CAFFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BCA0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BCA0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3CA0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3CA0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCA0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCA0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCA0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BCA0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFE",
+        "baseline": "3FFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3CA0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3CA0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BCA0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BCA0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CA0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3CA0000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CA0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3CA0000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFE",
+        "baseline": "BFFFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BC90000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BC90000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3C90000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000",
+        "Qfplib": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3C90000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000",
+        "Qfplib": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC90000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC90000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BC90000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BC90000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3C90000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3C90000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BC90000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BC90000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3C90000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3C90000000000000",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3C90000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3C90000000000000",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BC9FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000001",
+      "outputs": {
+        "candidate": "3FF0000000000001",
+        "baseline": "3FF0000000000001"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BC9FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000001",
+      "outputs": {
+        "candidate": "3FF0000000000001",
+        "baseline": "3FF0000000000001"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3C9FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000001",
+      "outputs": {
+        "candidate": "3FF0000000000001",
+        "baseline": "3FF0000000000001"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3C9FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000001",
+      "outputs": {
+        "candidate": "3FF0000000000001",
+        "baseline": "3FF0000000000001"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC9FFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000001",
+      "outputs": {
+        "candidate": "3FF0000000000001",
+        "baseline": "3FF0000000000001"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC9FFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000001",
+      "outputs": {
+        "candidate": "3FF0000000000001",
+        "baseline": "3FF0000000000001"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BC9FFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000001",
+      "outputs": {
+        "candidate": "3FF0000000000001",
+        "baseline": "3FF0000000000001"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BC9FFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000001",
+      "outputs": {
+        "candidate": "3FF0000000000001",
+        "baseline": "3FF0000000000001"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3C9FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000001",
+      "outputs": {
+        "candidate": "BFF0000000000001",
+        "baseline": "BFF0000000000001"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3C9FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000001",
+      "outputs": {
+        "candidate": "BFF0000000000001",
+        "baseline": "BFF0000000000001"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BC9FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000001",
+      "outputs": {
+        "candidate": "BFF0000000000001",
+        "baseline": "BFF0000000000001"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BC9FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000001",
+      "outputs": {
+        "candidate": "BFF0000000000001",
+        "baseline": "BFF0000000000001"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3C9FFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000001",
+      "outputs": {
+        "candidate": "BFF0000000000001",
+        "baseline": "BFF0000000000001"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3C9FFFFFFFFFFFFF",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000001",
+      "outputs": {
+        "candidate": "BFF0000000000001",
+        "baseline": "BFF0000000000001"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3C9FFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000001",
+      "outputs": {
+        "candidate": "BFF0000000000001",
+        "baseline": "BFF0000000000001"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3C9FFFFFFFFFFFFF",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000001",
+      "outputs": {
+        "candidate": "BFF0000000000001",
+        "baseline": "BFF0000000000001"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BC90000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFF",
+        "baseline": "3FFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "BC90000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFF",
+        "baseline": "3FFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3C90000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFF",
+        "baseline": "3FFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "3C90000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFF",
+        "baseline": "3FFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC90000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFF",
+        "baseline": "3FFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC90000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFF",
+        "baseline": "3FFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BC90000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "3FFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFF",
+        "baseline": "3FFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BC90000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "3FFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "3FFFFFFFFFFFFFFF",
+        "baseline": "3FFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3C90000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFF",
+        "baseline": "BFFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "3C90000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFF",
+        "baseline": "BFFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BC90000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFF",
+        "baseline": "BFFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "BC90000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFF",
+        "baseline": "BFFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3C90000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFF",
+        "baseline": "BFFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3C90000000000001",
+      "y": "BFFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFF",
+        "baseline": "BFFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3C90000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "BFFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFF",
+        "baseline": "BFFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3C90000000000001",
+      "y": "3FFFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "BFFFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "BFFFFFFFFFFFFFFF",
+        "baseline": "BFFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0370000000000000",
+      "y": "835FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "0360000000000000",
+      "outputs": {
+        "candidate": "0360000000000000",
+        "baseline": "0360000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0370000000000000",
+      "y": "835FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "0360000000000000",
+      "outputs": {
+        "candidate": "0360000000000000",
+        "baseline": "0360000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0370000000000000",
+      "y": "035FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "0360000000000000",
+      "outputs": {
+        "candidate": "0360000000000000",
+        "baseline": "0360000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0370000000000000",
+      "y": "035FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "0360000000000000",
+      "outputs": {
+        "candidate": "0360000000000000",
+        "baseline": "0360000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "835FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 1,
+      "expected": "0360000000000000",
+      "outputs": {
+        "candidate": "0360000000000000",
+        "baseline": "0360000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "835FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 3,
+      "expected": "0360000000000000",
+      "outputs": {
+        "candidate": "0360000000000000",
+        "baseline": "0360000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "835FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 1,
+      "expected": "0360000000000000",
+      "outputs": {
+        "candidate": "0360000000000000",
+        "baseline": "0360000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "835FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 3,
+      "expected": "0360000000000000",
+      "outputs": {
+        "candidate": "0360000000000000",
+        "baseline": "0360000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8370000000000000",
+      "y": "035FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "8360000000000000",
+      "outputs": {
+        "candidate": "8360000000000000",
+        "baseline": "8360000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8370000000000000",
+      "y": "035FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "8360000000000000",
+      "outputs": {
+        "candidate": "8360000000000000",
+        "baseline": "8360000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8370000000000000",
+      "y": "835FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "8360000000000000",
+      "outputs": {
+        "candidate": "8360000000000000",
+        "baseline": "8360000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8370000000000000",
+      "y": "835FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "8360000000000000",
+      "outputs": {
+        "candidate": "8360000000000000",
+        "baseline": "8360000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "035FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 1,
+      "expected": "8360000000000000",
+      "outputs": {
+        "candidate": "8360000000000000",
+        "baseline": "8360000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "035FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 3,
+      "expected": "8360000000000000",
+      "outputs": {
+        "candidate": "8360000000000000",
+        "baseline": "8360000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "035FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 1,
+      "expected": "8360000000000000",
+      "outputs": {
+        "candidate": "8360000000000000",
+        "baseline": "8360000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "035FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 3,
+      "expected": "8360000000000000",
+      "outputs": {
+        "candidate": "8360000000000000",
+        "baseline": "8360000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0370000000000000",
+      "y": "817FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "036FFFFFFFC00000",
+      "outputs": {
+        "candidate": "036FFFFFFFC00000",
+        "baseline": "036FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0370000000000000",
+      "y": "817FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "036FFFFFFFC00000",
+      "outputs": {
+        "candidate": "036FFFFFFFC00000",
+        "baseline": "036FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0370000000000000",
+      "y": "017FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "036FFFFFFFC00000",
+      "outputs": {
+        "candidate": "036FFFFFFFC00000",
+        "baseline": "036FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0370000000000000",
+      "y": "017FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "036FFFFFFFC00000",
+      "outputs": {
+        "candidate": "036FFFFFFFC00000",
+        "baseline": "036FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "817FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 1,
+      "expected": "036FFFFFFFC00000",
+      "outputs": {
+        "candidate": "036FFFFFFFC00000",
+        "baseline": "036FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "817FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 3,
+      "expected": "036FFFFFFFC00000",
+      "outputs": {
+        "candidate": "036FFFFFFFC00000",
+        "baseline": "036FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "817FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 1,
+      "expected": "036FFFFFFFC00000",
+      "outputs": {
+        "candidate": "036FFFFFFFC00000",
+        "baseline": "036FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "817FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 3,
+      "expected": "036FFFFFFFC00000",
+      "outputs": {
+        "candidate": "036FFFFFFFC00000",
+        "baseline": "036FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8370000000000000",
+      "y": "017FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "836FFFFFFFC00000",
+      "outputs": {
+        "candidate": "836FFFFFFFC00000",
+        "baseline": "836FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8370000000000000",
+      "y": "017FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "836FFFFFFFC00000",
+      "outputs": {
+        "candidate": "836FFFFFFFC00000",
+        "baseline": "836FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8370000000000000",
+      "y": "817FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "836FFFFFFFC00000",
+      "outputs": {
+        "candidate": "836FFFFFFFC00000",
+        "baseline": "836FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8370000000000000",
+      "y": "817FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "836FFFFFFFC00000",
+      "outputs": {
+        "candidate": "836FFFFFFFC00000",
+        "baseline": "836FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "017FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 1,
+      "expected": "836FFFFFFFC00000",
+      "outputs": {
+        "candidate": "836FFFFFFFC00000",
+        "baseline": "836FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "017FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 3,
+      "expected": "836FFFFFFFC00000",
+      "outputs": {
+        "candidate": "836FFFFFFFC00000",
+        "baseline": "836FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "017FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 1,
+      "expected": "836FFFFFFFC00000",
+      "outputs": {
+        "candidate": "836FFFFFFFC00000",
+        "baseline": "836FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "017FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 3,
+      "expected": "836FFFFFFFC00000",
+      "outputs": {
+        "candidate": "836FFFFFFFC00000",
+        "baseline": "836FFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0370000000000000",
+      "y": "801FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "036FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "036FFFFFFFFFFFFF",
+        "baseline": "036FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0370000000000000",
+      "y": "801FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "036FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "036FFFFFFFFFFFFF",
+        "baseline": "036FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0370000000000000",
+      "y": "001FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "036FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "036FFFFFFFFFFFFF",
+        "baseline": "036FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0370000000000000",
+      "y": "001FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "036FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "036FFFFFFFFFFFFF",
+        "baseline": "036FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "801FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 1,
+      "expected": "036FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "036FFFFFFFFFFFFF",
+        "baseline": "036FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "801FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 3,
+      "expected": "036FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "036FFFFFFFFFFFFF",
+        "baseline": "036FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "801FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 1,
+      "expected": "036FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "036FFFFFFFFFFFFF",
+        "baseline": "036FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "801FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 3,
+      "expected": "036FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "036FFFFFFFFFFFFF",
+        "baseline": "036FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8370000000000000",
+      "y": "001FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "836FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "836FFFFFFFFFFFFF",
+        "baseline": "836FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8370000000000000",
+      "y": "001FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "836FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "836FFFFFFFFFFFFF",
+        "baseline": "836FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8370000000000000",
+      "y": "801FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "836FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "836FFFFFFFFFFFFF",
+        "baseline": "836FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8370000000000000",
+      "y": "801FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "836FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "836FFFFFFFFFFFFF",
+        "baseline": "836FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "001FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 1,
+      "expected": "836FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "836FFFFFFFFFFFFF",
+        "baseline": "836FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "001FFFFFFFFFFFFF",
+      "y": "8370000000000000",
+      "SIO_CSR": 3,
+      "expected": "836FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "836FFFFFFFFFFFFF",
+        "baseline": "836FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "001FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 1,
+      "expected": "836FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "836FFFFFFFFFFFFF",
+        "baseline": "836FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "001FFFFFFFFFFFFF",
+      "y": "0370000000000000",
+      "SIO_CSR": 3,
+      "expected": "836FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "836FFFFFFFFFFFFF",
+        "baseline": "836FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FD0000000000000",
+      "y": "FFBFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "7FC0000000000000",
+      "outputs": {
+        "candidate": "7FC0000000000000",
+        "baseline": "7FC0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FD0000000000000",
+      "y": "FFBFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "7FC0000000000000",
+      "outputs": {
+        "candidate": "7FC0000000000000",
+        "baseline": "7FC0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FD0000000000000",
+      "y": "7FBFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "7FC0000000000000",
+      "outputs": {
+        "candidate": "7FC0000000000000",
+        "baseline": "7FC0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FD0000000000000",
+      "y": "7FBFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "7FC0000000000000",
+      "outputs": {
+        "candidate": "7FC0000000000000",
+        "baseline": "7FC0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFBFFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "7FC0000000000000",
+      "outputs": {
+        "candidate": "7FC0000000000000",
+        "baseline": "7FC0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFBFFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "7FC0000000000000",
+      "outputs": {
+        "candidate": "7FC0000000000000",
+        "baseline": "7FC0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFBFFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "7FC0000000000000",
+      "outputs": {
+        "candidate": "7FC0000000000000",
+        "baseline": "7FC0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFBFFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "7FC0000000000000",
+      "outputs": {
+        "candidate": "7FC0000000000000",
+        "baseline": "7FC0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFD0000000000000",
+      "y": "7FBFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "FFC0000000000000",
+      "outputs": {
+        "candidate": "FFC0000000000000",
+        "baseline": "FFC0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFD0000000000000",
+      "y": "7FBFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "FFC0000000000000",
+      "outputs": {
+        "candidate": "FFC0000000000000",
+        "baseline": "FFC0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFD0000000000000",
+      "y": "FFBFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "FFC0000000000000",
+      "outputs": {
+        "candidate": "FFC0000000000000",
+        "baseline": "FFC0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFD0000000000000",
+      "y": "FFBFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "FFC0000000000000",
+      "outputs": {
+        "candidate": "FFC0000000000000",
+        "baseline": "FFC0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FBFFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "FFC0000000000000",
+      "outputs": {
+        "candidate": "FFC0000000000000",
+        "baseline": "FFC0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FBFFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "FFC0000000000000",
+      "outputs": {
+        "candidate": "FFC0000000000000",
+        "baseline": "FFC0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FBFFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "FFC0000000000000",
+      "outputs": {
+        "candidate": "FFC0000000000000",
+        "baseline": "FFC0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FBFFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "FFC0000000000000",
+      "outputs": {
+        "candidate": "FFC0000000000000",
+        "baseline": "FFC0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FD0000000000000",
+      "y": "FDDFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "7FCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "7FCFFFFFFFC00000",
+        "baseline": "7FCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FD0000000000000",
+      "y": "FDDFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "7FCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "7FCFFFFFFFC00000",
+        "baseline": "7FCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FD0000000000000",
+      "y": "7DDFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "7FCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "7FCFFFFFFFC00000",
+        "baseline": "7FCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FD0000000000000",
+      "y": "7DDFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "7FCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "7FCFFFFFFFC00000",
+        "baseline": "7FCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FDDFFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "7FCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "7FCFFFFFFFC00000",
+        "baseline": "7FCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FDDFFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "7FCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "7FCFFFFFFFC00000",
+        "baseline": "7FCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FDDFFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "7FCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "7FCFFFFFFFC00000",
+        "baseline": "7FCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FDDFFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "7FCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "7FCFFFFFFFC00000",
+        "baseline": "7FCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFD0000000000000",
+      "y": "7DDFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "FFCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "FFCFFFFFFFC00000",
+        "baseline": "FFCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFD0000000000000",
+      "y": "7DDFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "FFCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "FFCFFFFFFFC00000",
+        "baseline": "FFCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFD0000000000000",
+      "y": "FDDFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "FFCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "FFCFFFFFFFC00000",
+        "baseline": "FFCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFD0000000000000",
+      "y": "FDDFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "FFCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "FFCFFFFFFFC00000",
+        "baseline": "FFCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7DDFFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "FFCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "FFCFFFFFFFC00000",
+        "baseline": "FFCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7DDFFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "FFCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "FFCFFFFFFFC00000",
+        "baseline": "FFCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7DDFFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "FFCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "FFCFFFFFFFC00000",
+        "baseline": "FFCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7DDFFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "FFCFFFFFFFC00000",
+      "outputs": {
+        "candidate": "FFCFFFFFFFC00000",
+        "baseline": "FFCFFFFFFFC00000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FD0000000000000",
+      "y": "FC7FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "7FCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "7FCFFFFFFFFFFFFF",
+        "baseline": "7FCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FD0000000000000",
+      "y": "FC7FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "7FCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "7FCFFFFFFFFFFFFF",
+        "baseline": "7FCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FD0000000000000",
+      "y": "7C7FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "7FCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "7FCFFFFFFFFFFFFF",
+        "baseline": "7FCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FD0000000000000",
+      "y": "7C7FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "7FCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "7FCFFFFFFFFFFFFF",
+        "baseline": "7FCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FC7FFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "7FCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "7FCFFFFFFFFFFFFF",
+        "baseline": "7FCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FC7FFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "7FCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "7FCFFFFFFFFFFFFF",
+        "baseline": "7FCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FC7FFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "7FCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "7FCFFFFFFFFFFFFF",
+        "baseline": "7FCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FC7FFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "7FCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "7FCFFFFFFFFFFFFF",
+        "baseline": "7FCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFD0000000000000",
+      "y": "7C7FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "FFCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "FFCFFFFFFFFFFFFF",
+        "baseline": "FFCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFD0000000000000",
+      "y": "7C7FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "FFCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "FFCFFFFFFFFFFFFF",
+        "baseline": "FFCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFD0000000000000",
+      "y": "FC7FFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "FFCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "FFCFFFFFFFFFFFFF",
+        "baseline": "FFCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFD0000000000000",
+      "y": "FC7FFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "FFCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "FFCFFFFFFFFFFFFF",
+        "baseline": "FFCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7C7FFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "FFCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "FFCFFFFFFFFFFFFF",
+        "baseline": "FFCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7C7FFFFFFFFFFFFF",
+      "y": "FFD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "FFCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "FFCFFFFFFFFFFFFF",
+        "baseline": "FFCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7C7FFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 1,
+      "expected": "FFCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "FFCFFFFFFFFFFFFF",
+        "baseline": "FFCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7C7FFFFFFFFFFFFF",
+      "y": "7FD0000000000000",
+      "SIO_CSR": 3,
+      "expected": "FFCFFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "FFCFFFFFFFFFFFFF",
+        "baseline": "FFCFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BCB0000000000000",
+      "outputs": {
+        "candidate": "BCB0000000000000",
+        "baseline": "BCB0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BCB0000000000000",
+      "outputs": {
+        "candidate": "BCB0000000000000",
+        "baseline": "BCB0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BCB0000000000000",
+      "outputs": {
+        "candidate": "BCB0000000000000",
+        "baseline": "BCB0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BCB0000000000000",
+      "outputs": {
+        "candidate": "BCB0000000000000",
+        "baseline": "BCB0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BCB0000000000000",
+      "outputs": {
+        "candidate": "BCB0000000000000",
+        "baseline": "BCB0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BCB0000000000000",
+      "outputs": {
+        "candidate": "BCB0000000000000",
+        "baseline": "BCB0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BCB0000000000000",
+      "outputs": {
+        "candidate": "BCB0000000000000",
+        "baseline": "BCB0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BCB0000000000000",
+      "outputs": {
+        "candidate": "BCB0000000000000",
+        "baseline": "BCB0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3CB0000000000000",
+      "outputs": {
+        "candidate": "3CB0000000000000",
+        "baseline": "3CB0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3FF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3CB0000000000000",
+      "outputs": {
+        "candidate": "3CB0000000000000",
+        "baseline": "3CB0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3CB0000000000000",
+      "outputs": {
+        "candidate": "3CB0000000000000",
+        "baseline": "3CB0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BFF0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3CB0000000000000",
+      "outputs": {
+        "candidate": "3CB0000000000000",
+        "baseline": "3CB0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3CB0000000000000",
+      "outputs": {
+        "candidate": "3CB0000000000000",
+        "baseline": "3CB0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3CB0000000000000",
+      "outputs": {
+        "candidate": "3CB0000000000000",
+        "baseline": "3CB0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3CB0000000000000",
+      "outputs": {
+        "candidate": "3CB0000000000000",
+        "baseline": "3CB0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3CB0000000000000",
+      "outputs": {
+        "candidate": "3CB0000000000000",
+        "baseline": "3CB0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BFE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FDFFFFFFFFFFFFE",
+        "baseline": "3FDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BFE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FDFFFFFFFFFFFFE",
+        "baseline": "3FDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3FE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FDFFFFFFFFFFFFE",
+        "baseline": "3FDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3FE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FDFFFFFFFFFFFFE",
+        "baseline": "3FDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFE0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FDFFFFFFFFFFFFE",
+        "baseline": "3FDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFE0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FDFFFFFFFFFFFFE",
+        "baseline": "3FDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFE0000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FDFFFFFFFFFFFFE",
+        "baseline": "3FDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFE0000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "3FDFFFFFFFFFFFFE",
+        "baseline": "3FDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3FE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFDFFFFFFFFFFFFE",
+        "baseline": "BFDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3FE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFDFFFFFFFFFFFFE",
+        "baseline": "BFDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BFE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFDFFFFFFFFFFFFE",
+        "baseline": "BFDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BFE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFDFFFFFFFFFFFFE",
+        "baseline": "BFDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FE0000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFDFFFFFFFFFFFFE",
+        "baseline": "BFDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FE0000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFDFFFFFFFFFFFFE",
+        "baseline": "BFDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FE0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFDFFFFFFFFFFFFE",
+        "baseline": "BFDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FE0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFDFFFFFFFFFFFFE",
+      "outputs": {
+        "candidate": "BFDFFFFFFFFFFFFE",
+        "baseline": "BFDFFFFFFFFFFFFE"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BC80000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BC80000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3C80000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3C80000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC80000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC80000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BC80000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BC80000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3C80000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3C80000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BC80000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BC80000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3C80000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3C80000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3C80000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3C80000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BC70000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF0000000000000",
+      "y": "BC70000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3C70000000000001",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3C70000000000001",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC70000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC70000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BC70000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BC70000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3C70000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BFF0000000000000",
+      "y": "3C70000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BC70000000000001",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "BFF0000000000000",
+      "y": "BC70000000000001",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3C70000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3C70000000000001",
+      "y": "BFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3C70000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3C70000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "BFF0000000000000",
+      "outputs": {
+        "candidate": "BFF0000000000000",
+        "baseline": "BFF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0360000000000001",
+      "y": "8340000000000001",
+      "SIO_CSR": 1,
+      "expected": "0358000000000002",
+      "outputs": {
+        "candidate": "0358000000000002",
+        "baseline": "0358000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0360000000000001",
+      "y": "8340000000000001",
+      "SIO_CSR": 3,
+      "expected": "0358000000000002",
+      "outputs": {
+        "candidate": "0358000000000002",
+        "baseline": "0358000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0360000000000001",
+      "y": "0340000000000001",
+      "SIO_CSR": 1,
+      "expected": "0358000000000002",
+      "outputs": {
+        "candidate": "0358000000000002",
+        "baseline": "0358000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0360000000000001",
+      "y": "0340000000000001",
+      "SIO_CSR": 3,
+      "expected": "0358000000000002",
+      "outputs": {
+        "candidate": "0358000000000002",
+        "baseline": "0358000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8340000000000001",
+      "y": "0360000000000001",
+      "SIO_CSR": 1,
+      "expected": "0358000000000002",
+      "outputs": {
+        "candidate": "0358000000000002",
+        "baseline": "0358000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8340000000000001",
+      "y": "0360000000000001",
+      "SIO_CSR": 3,
+      "expected": "0358000000000002",
+      "outputs": {
+        "candidate": "0358000000000002",
+        "baseline": "0358000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8340000000000001",
+      "y": "8360000000000001",
+      "SIO_CSR": 1,
+      "expected": "0358000000000002",
+      "outputs": {
+        "candidate": "0358000000000002",
+        "baseline": "0358000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8340000000000001",
+      "y": "8360000000000001",
+      "SIO_CSR": 3,
+      "expected": "0358000000000002",
+      "outputs": {
+        "candidate": "0358000000000002",
+        "baseline": "0358000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8360000000000001",
+      "y": "0340000000000001",
+      "SIO_CSR": 1,
+      "expected": "8358000000000002",
+      "outputs": {
+        "candidate": "8358000000000002",
+        "baseline": "8358000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8360000000000001",
+      "y": "0340000000000001",
+      "SIO_CSR": 3,
+      "expected": "8358000000000002",
+      "outputs": {
+        "candidate": "8358000000000002",
+        "baseline": "8358000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8360000000000001",
+      "y": "8340000000000001",
+      "SIO_CSR": 1,
+      "expected": "8358000000000002",
+      "outputs": {
+        "candidate": "8358000000000002",
+        "baseline": "8358000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8360000000000001",
+      "y": "8340000000000001",
+      "SIO_CSR": 3,
+      "expected": "8358000000000002",
+      "outputs": {
+        "candidate": "8358000000000002",
+        "baseline": "8358000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0340000000000001",
+      "y": "8360000000000001",
+      "SIO_CSR": 1,
+      "expected": "8358000000000002",
+      "outputs": {
+        "candidate": "8358000000000002",
+        "baseline": "8358000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0340000000000001",
+      "y": "8360000000000001",
+      "SIO_CSR": 3,
+      "expected": "8358000000000002",
+      "outputs": {
+        "candidate": "8358000000000002",
+        "baseline": "8358000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0340000000000001",
+      "y": "0360000000000001",
+      "SIO_CSR": 1,
+      "expected": "8358000000000002",
+      "outputs": {
+        "candidate": "8358000000000002",
+        "baseline": "8358000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0340000000000001",
+      "y": "0360000000000001",
+      "SIO_CSR": 3,
+      "expected": "8358000000000002",
+      "outputs": {
+        "candidate": "8358000000000002",
+        "baseline": "8358000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FE0000000000001",
+      "y": "FFC0000000000001",
+      "SIO_CSR": 1,
+      "expected": "7FD8000000000002",
+      "outputs": {
+        "candidate": "7FD8000000000002",
+        "baseline": "7FD8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FE0000000000001",
+      "y": "FFC0000000000001",
+      "SIO_CSR": 3,
+      "expected": "7FD8000000000002",
+      "outputs": {
+        "candidate": "7FD8000000000002",
+        "baseline": "7FD8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FE0000000000001",
+      "y": "7FC0000000000001",
+      "SIO_CSR": 1,
+      "expected": "7FD8000000000002",
+      "outputs": {
+        "candidate": "7FD8000000000002",
+        "baseline": "7FD8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FE0000000000001",
+      "y": "7FC0000000000001",
+      "SIO_CSR": 3,
+      "expected": "7FD8000000000002",
+      "outputs": {
+        "candidate": "7FD8000000000002",
+        "baseline": "7FD8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFC0000000000001",
+      "y": "7FE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "7FD8000000000002",
+      "outputs": {
+        "candidate": "7FD8000000000002",
+        "baseline": "7FD8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFC0000000000001",
+      "y": "7FE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "7FD8000000000002",
+      "outputs": {
+        "candidate": "7FD8000000000002",
+        "baseline": "7FD8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFC0000000000001",
+      "y": "FFE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "7FD8000000000002",
+      "outputs": {
+        "candidate": "7FD8000000000002",
+        "baseline": "7FD8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFC0000000000001",
+      "y": "FFE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "7FD8000000000002",
+      "outputs": {
+        "candidate": "7FD8000000000002",
+        "baseline": "7FD8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFE0000000000001",
+      "y": "7FC0000000000001",
+      "SIO_CSR": 1,
+      "expected": "FFD8000000000002",
+      "outputs": {
+        "candidate": "FFD8000000000002",
+        "baseline": "FFD8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "FFE0000000000001",
+      "y": "7FC0000000000001",
+      "SIO_CSR": 3,
+      "expected": "FFD8000000000002",
+      "outputs": {
+        "candidate": "FFD8000000000002",
+        "baseline": "FFD8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFE0000000000001",
+      "y": "FFC0000000000001",
+      "SIO_CSR": 1,
+      "expected": "FFD8000000000002",
+      "outputs": {
+        "candidate": "FFD8000000000002",
+        "baseline": "FFD8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "FFE0000000000001",
+      "y": "FFC0000000000001",
+      "SIO_CSR": 3,
+      "expected": "FFD8000000000002",
+      "outputs": {
+        "candidate": "FFD8000000000002",
+        "baseline": "FFD8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FC0000000000001",
+      "y": "FFE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "FFD8000000000002",
+      "outputs": {
+        "candidate": "FFD8000000000002",
+        "baseline": "FFD8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FC0000000000001",
+      "y": "FFE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "FFD8000000000002",
+      "outputs": {
+        "candidate": "FFD8000000000002",
+        "baseline": "FFD8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FC0000000000001",
+      "y": "7FE0000000000001",
+      "SIO_CSR": 1,
+      "expected": "FFD8000000000002",
+      "outputs": {
+        "candidate": "FFD8000000000002",
+        "baseline": "FFD8000000000002"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FC0000000000001",
+      "y": "7FE0000000000001",
+      "SIO_CSR": 3,
+      "expected": "FFD8000000000002",
+      "outputs": {
+        "candidate": "FFD8000000000002",
+        "baseline": "FFD8000000000002"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0000000000000000",
+      "y": "8000000000000000",
+      "SIO_CSR": 1,
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "baseline": "0000000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0000000000000000",
+      "y": "8000000000000000",
+      "SIO_CSR": 3,
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "baseline": "0000000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0000000000000000",
+      "y": "8000000000000000",
+      "SIO_CSR": 1,
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "baseline": "0000000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0000000000000000",
+      "y": "8000000000000000",
+      "SIO_CSR": 3,
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "baseline": "0000000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8000000000000000",
+      "y": "8000000000000000",
+      "SIO_CSR": 1,
+      "expected": "8000000000000000",
+      "outputs": {
+        "candidate": "8000000000000000",
+        "baseline": "8000000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "8000000000000000",
+      "y": "8000000000000000",
+      "SIO_CSR": 3,
+      "expected": "8000000000000000",
+      "outputs": {
+        "candidate": "8000000000000000",
+        "baseline": "8000000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8000000000000000",
+      "y": "8000000000000000",
+      "SIO_CSR": 1,
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "baseline": "0000000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "8000000000000000",
+      "y": "8000000000000000",
+      "SIO_CSR": 3,
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "baseline": "0000000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0000000000000001",
+      "y": "0010000000000000",
+      "SIO_CSR": 1,
+      "expected": "0010000000000001",
+      "outputs": {
+        "candidate": "0010000000000001",
+        "baseline": "0010000000000001"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "0000000000000001",
+      "y": "0010000000000000",
+      "SIO_CSR": 3,
+      "expected": "0010000000000001",
+      "outputs": {
+        "candidate": "0010000000000001",
+        "baseline": "0010000000000001"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0000000000000001",
+      "y": "0010000000000000",
+      "SIO_CSR": 1,
+      "expected": "800FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "800FFFFFFFFFFFFF",
+        "baseline": "800FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "0000000000000001",
+      "y": "0010000000000000",
+      "SIO_CSR": 3,
+      "expected": "800FFFFFFFFFFFFF",
+      "outputs": {
+        "candidate": "800FFFFFFFFFFFFF",
+        "baseline": "800FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FF0000000000000",
+      "y": "FFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "baseline": "7FF8000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FF0000000000000",
+      "y": "FFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "baseline": "7FF8000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FF0000000000000",
+      "y": "FFF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "7FF0000000000000",
+      "outputs": {
+        "candidate": "7FF0000000000000",
+        "baseline": "7FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FF0000000000000",
+      "y": "FFF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "7FF0000000000000",
+      "outputs": {
+        "candidate": "7FF0000000000000",
+        "baseline": "7FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FF0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "candidate": "7FF8000000000001",
+        "baseline": "7FF8000000000001"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FF0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "candidate": "7FF8000000000001",
+        "baseline": "7FF8000000000001"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FF0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 1,
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "candidate": "7FF8000000000001",
+        "baseline": "7FF8000000000001"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FF0000000000001",
+      "y": "3FF0000000000000",
+      "SIO_CSR": 3,
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "candidate": "7FF8000000000001",
+        "baseline": "7FF8000000000001"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FEFFFFFFFFFFFFF",
+      "y": "7FEFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "7FF0000000000000",
+      "outputs": {
+        "candidate": "7FF0000000000000",
+        "baseline": "7FF0000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "7FEFFFFFFFFFFFFF",
+      "y": "7FEFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "7FF0000000000000",
+      "outputs": {
+        "candidate": "7FF0000000000000",
+        "baseline": "7FF0000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FEFFFFFFFFFFFFF",
+      "y": "7FEFFFFFFFFFFFFF",
+      "SIO_CSR": 1,
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "baseline": "0000000000000000"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "7FEFFFFFFFFFFFFF",
+      "y": "7FEFFFFFFFFFFFFF",
+      "SIO_CSR": 3,
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "baseline": "0000000000000000"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3F86BFC5EE249072",
+      "y": "BC872287B9DE4E94",
+      "SIO_CSR": 1,
+      "expected": "3F86BFC5EE24905B",
+      "outputs": {
+        "candidate": "3F86BFC5EE24905B",
+        "baseline": "3F86BFC5EE24905B",
+        "Qfplib": "3F86BFC5EE24905B"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3F86BFC5EE249072",
+      "y": "BC872287B9DE4E94",
+      "SIO_CSR": 3,
+      "expected": "3F86BFC5EE24905B",
+      "outputs": {
+        "candidate": "3F86BFC5EE24905B",
+        "baseline": "3F86BFC5EE24905B",
+        "Qfplib": "3F86BFC5EE24905B"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD85CF8BE6BB2DB9",
+      "y": "3F8202F6E288ED78",
+      "SIO_CSR": 1,
+      "expected": "3F8202F6E2731DEC",
+      "outputs": {
+        "candidate": "3F8202F6E2731DEC",
+        "baseline": "3F8202F6E2731DEC",
+        "Qfplib": "3F8202F6E2731DEC"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD85CF8BE6BB2DB9",
+      "y": "3F8202F6E288ED78",
+      "SIO_CSR": 3,
+      "expected": "3F8202F6E2731DEC",
+      "outputs": {
+        "candidate": "3F8202F6E2731DEC",
+        "baseline": "3F8202F6E2731DEC",
+        "Qfplib": "3F8202F6E2731DEC"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "67ED799ECF646DE1",
+      "y": "E975FD2D6871CCB5",
+      "SIO_CSR": 1,
+      "expected": "E975FD2D59B4FD4D",
+      "outputs": {
+        "candidate": "E975FD2D59B4FD4D",
+        "baseline": "E975FD2D59B4FD4D",
+        "Qfplib": "E975FD2D59B4FD4D"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "67ED799ECF646DE1",
+      "y": "E975FD2D6871CCB5",
+      "SIO_CSR": 3,
+      "expected": "E975FD2D59B4FD4D",
+      "outputs": {
+        "candidate": "E975FD2D59B4FD4D",
+        "baseline": "E975FD2D59B4FD4D",
+        "Qfplib": "E975FD2D59B4FD4D"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD2013721D1833BD",
+      "y": "3FD4C2C71646F101",
+      "SIO_CSR": 1,
+      "expected": "3FD4C2C71646EEFF",
+      "outputs": {
+        "candidate": "3FD4C2C71646EEFF",
+        "baseline": "3FD4C2C71646EEFF",
+        "Qfplib": "3FD4C2C71646EEFF"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD2013721D1833BD",
+      "y": "3FD4C2C71646F101",
+      "SIO_CSR": 3,
+      "expected": "3FD4C2C71646EEFF",
+      "outputs": {
+        "candidate": "3FD4C2C71646EEFF",
+        "baseline": "3FD4C2C71646EEFF",
+        "Qfplib": "3FD4C2C71646EEFF"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "42F123456789ABCD",
+      "y": "439FEDCBA9876543",
+      "SIO_CSR": 1,
+      "expected": "C39FE982D82D82D8",
+      "outputs": {
+        "candidate": "C39FE982D82D82D8",
+        "baseline": "C39FE982D82D82D8",
+        "Qfplib": "C39FE982D82D82D8"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "42F123456789ABCD",
+      "y": "439FEDCBA9876543",
+      "SIO_CSR": 3,
+      "expected": "C39FE982D82D82D8",
+      "outputs": {
+        "candidate": "C39FE982D82D82D8",
+        "baseline": "C39FE982D82D82D8",
+        "Qfplib": "C39FE982D82D82D8"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "350FEDCBA9876543",
+      "y": "347123456789ABCD",
+      "SIO_CSR": 1,
+      "expected": "350FE53A06D3A06D",
+      "outputs": {
+        "candidate": "350FE53A06D3A06D",
+        "baseline": "350FE53A06D3A06D",
+        "Qfplib": "350FE53A06D3A06D"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "350FEDCBA9876543",
+      "y": "347123456789ABCD",
+      "SIO_CSR": 3,
+      "expected": "350FE53A06D3A06D",
+      "outputs": {
+        "candidate": "350FE53A06D3A06D",
+        "baseline": "350FE53A06D3A06D",
+        "Qfplib": "350FE53A06D3A06D"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF919126D52CDEF",
+      "y": "BD69C498A2CB06F5",
+      "SIO_CSR": 1,
+      "expected": "3FF919126D52C10D",
+      "outputs": {
+        "candidate": "3FF919126D52C10D",
+        "baseline": "3FF919126D52C10D",
+        "Qfplib": "3FF919126D52C10D"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF919126D52CDEF",
+      "y": "BD69C498A2CB06F5",
+      "SIO_CSR": 3,
+      "expected": "3FF919126D52C10D",
+      "outputs": {
+        "candidate": "3FF919126D52C10D",
+        "baseline": "3FF919126D52C10D",
+        "Qfplib": "3FF919126D52C10D"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "40494A5BD8768D02",
+      "y": "BE2FF4C97F40F242",
+      "SIO_CSR": 1,
+      "expected": "40494A5BD86E8FD0",
+      "outputs": {
+        "candidate": "40494A5BD86E8FD0",
+        "baseline": "40494A5BD86E8FD0",
+        "Qfplib": "40494A5BD86E8FD0"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "40494A5BD8768D02",
+      "y": "BE2FF4C97F40F242",
+      "SIO_CSR": 3,
+      "expected": "40494A5BD86E8FD0",
+      "outputs": {
+        "candidate": "40494A5BD86E8FD0",
+        "baseline": "40494A5BD86E8FD0",
+        "Qfplib": "40494A5BD86E8FD0"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "404ACEFC54B5BB36",
+      "y": "BDA2513FA12EC655",
+      "SIO_CSR": 1,
+      "expected": "404ACEFC54B5B6A2",
+      "outputs": {
+        "candidate": "404ACEFC54B5B6A2",
+        "baseline": "404ACEFC54B5B6A2",
+        "Qfplib": "404ACEFC54B5B6A2"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "404ACEFC54B5BB36",
+      "y": "BDA2513FA12EC655",
+      "SIO_CSR": 3,
+      "expected": "404ACEFC54B5B6A2",
+      "outputs": {
+        "candidate": "404ACEFC54B5B6A2",
+        "baseline": "404ACEFC54B5B6A2",
+        "Qfplib": "404ACEFC54B5B6A2"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD2BC5A420B3616B",
+      "y": "3F7DAE7E502209AF",
+      "SIO_CSR": 1,
+      "expected": "3F7DAE7E50212B82",
+      "outputs": {
+        "candidate": "3F7DAE7E50212B82",
+        "baseline": "3F7DAE7E50212B82",
+        "Qfplib": "3F7DAE7E50212B82"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD2BC5A420B3616B",
+      "y": "3F7DAE7E502209AF",
+      "SIO_CSR": 3,
+      "expected": "3F7DAE7E50212B82",
+      "outputs": {
+        "candidate": "3F7DAE7E50212B82",
+        "baseline": "3F7DAE7E50212B82",
+        "Qfplib": "3F7DAE7E50212B82"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCAE7BDEEDDEB6EC",
+      "y": "3F8CEA4C3FB1BC06",
+      "SIO_CSR": 1,
+      "expected": "3F8CEA4C3FB1BB8C",
+      "outputs": {
+        "candidate": "3F8CEA4C3FB1BB8C",
+        "baseline": "3F8CEA4C3FB1BB8C",
+        "Qfplib": "3F8CEA4C3FB1BB8C"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCAE7BDEEDDEB6EC",
+      "y": "3F8CEA4C3FB1BC06",
+      "SIO_CSR": 3,
+      "expected": "3F8CEA4C3FB1BB8C",
+      "outputs": {
+        "candidate": "3F8CEA4C3FB1BB8C",
+        "baseline": "3F8CEA4C3FB1BB8C",
+        "Qfplib": "3F8CEA4C3FB1BB8C"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD9C92EFDBF142E7",
+      "y": "3F9684B68B2E17E6",
+      "SIO_CSR": 1,
+      "expected": "3F9684B68B1184F6",
+      "outputs": {
+        "candidate": "3F9684B68B1184F6",
+        "baseline": "3F9684B68B1184F6",
+        "Qfplib": "3F9684B68B1184F6"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD9C92EFDBF142E7",
+      "y": "3F9684B68B2E17E6",
+      "SIO_CSR": 3,
+      "expected": "3F9684B68B1184F6",
+      "outputs": {
+        "candidate": "3F9684B68B1184F6",
+        "baseline": "3F9684B68B1184F6",
+        "Qfplib": "3F9684B68B1184F6"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD58899641535BFB",
+      "y": "3F7CEFFD0385318C",
+      "SIO_CSR": 1,
+      "expected": "3F7CEFFD037F0F26",
+      "outputs": {
+        "candidate": "3F7CEFFD037F0F26",
+        "baseline": "3F7CEFFD037F0F26",
+        "Qfplib": "3F7CEFFD037F0F26"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD58899641535BFB",
+      "y": "3F7CEFFD0385318C",
+      "SIO_CSR": 3,
+      "expected": "3F7CEFFD037F0F26",
+      "outputs": {
+        "candidate": "3F7CEFFD037F0F26",
+        "baseline": "3F7CEFFD037F0F26",
+        "Qfplib": "3F7CEFFD037F0F26"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FC999999999999A",
+      "y": "4024000000000000",
+      "SIO_CSR": 1,
+      "expected": "C02399999999999A",
+      "outputs": {
+        "candidate": "C02399999999999A",
+        "baseline": "C02399999999999A",
+        "Qfplib": "C02399999999999A"
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FC999999999999A",
+      "y": "4024000000000000",
+      "SIO_CSR": 3,
+      "expected": "C02399999999999A",
+      "outputs": {
+        "candidate": "C02399999999999A",
+        "baseline": "C02399999999999A",
+        "Qfplib": "C02399999999999A"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "54AD46E403BE1BA4",
+      "y": "D6EF42D0659D2A0A",
+      "SIO_CSR": 1,
+      "expected": "D6EF42D0659B559C",
+      "outputs": {
+        "candidate": "D6EF42D0659B559C",
+        "baseline": "D6EF42D0659B559C",
+        "Qfplib": "D6EF42D0659B559C"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "54AD46E403BE1BA4",
+      "y": "D6EF42D0659D2A0A",
+      "SIO_CSR": 3,
+      "expected": "D6EF42D0659B559C",
+      "outputs": {
+        "candidate": "D6EF42D0659B559C",
+        "baseline": "D6EF42D0659B559C",
+        "Qfplib": "D6EF42D0659B559C"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC962D238155A9EA",
+      "y": "3FE168337C68B070",
+      "SIO_CSR": 1,
+      "expected": "3FE168337C68B06F",
+      "outputs": {
+        "candidate": "3FE168337C68B06F",
+        "baseline": "3FE168337C68B06F",
+        "Qfplib": "3FE168337C68B06F"
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC962D238155A9EA",
+      "y": "3FE168337C68B070",
+      "SIO_CSR": 3,
+      "expected": "3FE168337C68B06F",
+      "outputs": {
+        "candidate": "3FE168337C68B06F",
+        "baseline": "3FE168337C68B06F",
+        "Qfplib": "3FE168337C68B06F"
+      }
+    }
+  ],
+  "known17_instruction_comparisons": [
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3C90000000000000",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 80,
+        "baseline": 108,
+        "Qfplib": 94
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3C90000000000000",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 80,
+        "baseline": 108,
+        "Qfplib": 94
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3F86BFC5EE249072",
+      "y": "BC872287B9DE4E94",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3F86BFC5EE249072",
+      "y": "BC872287B9DE4E94",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD85CF8BE6BB2DB9",
+      "y": "3F8202F6E288ED78",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 67,
+        "baseline": 84,
+        "Qfplib": 75
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD85CF8BE6BB2DB9",
+      "y": "3F8202F6E288ED78",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 67,
+        "baseline": 84,
+        "Qfplib": 75
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "67ED799ECF646DE1",
+      "y": "E975FD2D6871CCB5",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 62,
+        "baseline": 79,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "67ED799ECF646DE1",
+      "y": "E975FD2D6871CCB5",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 62,
+        "baseline": 79,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD2013721D1833BD",
+      "y": "3FD4C2C71646F101",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 72,
+        "baseline": 89,
+        "Qfplib": 80
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD2013721D1833BD",
+      "y": "3FD4C2C71646F101",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 72,
+        "baseline": 89,
+        "Qfplib": 80
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "42F123456789ABCD",
+      "y": "439FEDCBA9876543",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 66,
+        "baseline": 83,
+        "Qfplib": 74
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "42F123456789ABCD",
+      "y": "439FEDCBA9876543",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 66,
+        "baseline": 83,
+        "Qfplib": 74
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "350FEDCBA9876543",
+      "y": "347123456789ABCD",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 62,
+        "baseline": 75,
+        "Qfplib": 67
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "350FEDCBA9876543",
+      "y": "347123456789ABCD",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 62,
+        "baseline": 75,
+        "Qfplib": 67
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF919126D52CDEF",
+      "y": "BD69C498A2CB06F5",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF919126D52CDEF",
+      "y": "BD69C498A2CB06F5",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "40494A5BD8768D02",
+      "y": "BE2FF4C97F40F242",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "40494A5BD8768D02",
+      "y": "BE2FF4C97F40F242",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "404ACEFC54B5BB36",
+      "y": "BDA2513FA12EC655",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "404ACEFC54B5BB36",
+      "y": "BDA2513FA12EC655",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD2BC5A420B3616B",
+      "y": "3F7DAE7E502209AF",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 72,
+        "baseline": 89,
+        "Qfplib": 80
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD2BC5A420B3616B",
+      "y": "3F7DAE7E502209AF",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 72,
+        "baseline": 89,
+        "Qfplib": 80
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCAE7BDEEDDEB6EC",
+      "y": "3F8CEA4C3FB1BC06",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 85,
+        "Qfplib": 76
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCAE7BDEEDDEB6EC",
+      "y": "3F8CEA4C3FB1BC06",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 85,
+        "Qfplib": 76
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD9C92EFDBF142E7",
+      "y": "3F9684B68B2E17E6",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 67,
+        "baseline": 84,
+        "Qfplib": 75
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD9C92EFDBF142E7",
+      "y": "3F9684B68B2E17E6",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 67,
+        "baseline": 84,
+        "Qfplib": 75
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD58899641535BFB",
+      "y": "3F7CEFFD0385318C",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 85,
+        "Qfplib": 76
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD58899641535BFB",
+      "y": "3F7CEFFD0385318C",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 85,
+        "Qfplib": 76
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FC999999999999A",
+      "y": "4024000000000000",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 70,
+        "baseline": 88,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FC999999999999A",
+      "y": "4024000000000000",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 70,
+        "baseline": 88,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "54AD46E403BE1BA4",
+      "y": "D6EF42D0659D2A0A",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 72,
+        "baseline": 95,
+        "Qfplib": 86
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "54AD46E403BE1BA4",
+      "y": "D6EF42D0659D2A0A",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 72,
+        "baseline": 95,
+        "Qfplib": 86
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC962D238155A9EA",
+      "y": "3FE168337C68B070",
+      "SIO_CSR": 1,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 85,
+        "Qfplib": 76
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC962D238155A9EA",
+      "y": "3FE168337C68B070",
+      "SIO_CSR": 3,
+      "instruction_counts": {
+        "candidate": 68,
+        "baseline": 85,
+        "Qfplib": 76
+      }
+    }
+  ]
+}

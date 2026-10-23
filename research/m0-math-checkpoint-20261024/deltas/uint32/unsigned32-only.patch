@@ -1,0 +1,72 @@
+--- V164/code/native_eabi_m0_convert.inc
++++ candidate/code/native_eabi_m0_convert.inc
+@@ -388,6 +388,57 @@
+ .ltorg
+ end __aeabi_dcmpun
+ 
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++function __aeabi_d2uiz
++ // Project-owned binary64 -> uint32, truncate toward zero and retain
++ // the existing runtime policy: negative/NaN ->0, positive overflow ->max.
++ cmp r1,#0
++ bmi .Ld2u_zero
++ lsrs r2,r1,#20
++ ldr r3,=1023
++ subs r2,r3
++ bmi .Ld2u_zero
++ cmp r2,#31
++ bhi .Ld2u_large
++ lsls r1,#12
++ lsrs r1,#12
++ movs r3,#1
++ lsls r3,#20
++ orrs r1,r3
++ cmp r2,#20
++ bhi .Ld2u_wide
++ movs r3,#20
++ subs r3,r2
++ lsrs r1,r3
++ movs r0,r1
++ bx lr
++.Ld2u_wide:
++ movs r3,#52
++ subs r3,r2
++ lsrs r0,r3
++ subs r2,#20
++ lsls r1,r2
++ orrs r0,r1
++ bx lr
++.Ld2u_large:
++ // Here e is32..1024. Only e=1024 denotes the all-ones exponent.
++ lsrs r2,#10
++ beq .Ld2u_saturate
++ lsls r1,#12
++ orrs r0,r1
++ bne .Ld2u_zero
++.Ld2u_saturate:
++ movs r0,#0
++ mvns r0,r0
++ bx lr
++.Ld2u_zero:
++ movs r0,#0
++ bx lr
++
++.ltorg
++end __aeabi_d2uiz
++#endif
++
+ function __aeabi_d2iz
+  lsls r2,r1,#1
+  lsrs r2,#21
+--- V164/code/native_eabi_m0.cpp
++++ candidate/code/native_eabi_m0.cpp
+@@ -341,7 +341,9 @@
+ #else
+ MK61_SOFT_PCS int32_t __aeabi_d2iz(double x) {return D::signed32(bits(x));}
+ #endif
++#if !((defined(__arm__) || defined(__thumb__)) && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI)
+ MK61_SOFT_PCS uint32_t __aeabi_d2uiz(double x) {return D::unsigned32(bits(x));}
++#endif
+ MK61_SOFT_PCS int32_t __aeabi_f2iz(float x) {return S::signed32(bits(x));}
+ MK61_SOFT_PCS uint32_t __aeabi_f2uiz(float x) {return S::unsigned32(bits(x));}
+ #if defined(__arm__) || defined(__thumb__)

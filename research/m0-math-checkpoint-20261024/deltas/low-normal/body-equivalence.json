@@ -1,0 +1,49 @@
+{
+  "status": "PASS_PUBLIC_BODY_BINDING_AND_UNCHANGED_DEPENDENCIES",
+  "body_bytes": 1204,
+  "excluded_BL_span": [
+    90,
+    94
+  ],
+  "relocation": "0000005a R_ARM_THM_CALL    mk61_m0_dadd_slow",
+  "linked_BL_target": "0x100e6e44",
+  "public_entry_offsets_match": true,
+  "all_other_body_bytes_identical": true,
+  "candidate_full_object_sha256": "ca0c943e2673c629f26e86c21a8cd6a1b05fcc5a0c4cad244ebfc5018033a88c",
+  "diagnostic_ELF_sha256": "a3479749d5f9764b1987eac1ba1dda9cbcb4df19005978eed5d97d027c0d850a",
+  "source_sha256": "cff70bd3559412879c421a06f7ec16dd75726aa2a964ed3062f9936a58737de2",
+  "undefined_control": [
+    "         U __aeabi_ul2d",
+    "         U factor_rsqrt_seeds",
+    "         U mk61_m0_cr_pow",
+    "         U mk61_m0_dadd_slow",
+    "         U mk61_m0_ddiv_slow",
+    "         U mk61_m0_dmul_slow",
+    "         U mk61_m0_math_udiv32",
+    "         U mk61_m0_pow_argument",
+    "         U mk61_m0_pow_exp_product",
+    "         U mk61_m0_pow_log_ordinary",
+    "         U mk61_m0_pow_small_y",
+    "         U mk61_m0_sqrt",
+    "         U pow_fast_log",
+    "         U pow_sqrt64_coefficients"
+  ],
+  "undefined_candidate": [
+    "         U __aeabi_ul2d",
+    "         U factor_rsqrt_seeds",
+    "         U mk61_m0_cr_pow",
+    "         U mk61_m0_dadd_slow",
+    "         U mk61_m0_ddiv_slow",
+    "         U mk61_m0_dmul_slow",
+    "         U mk61_m0_math_udiv32",
+    "         U mk61_m0_pow_argument",
+    "         U mk61_m0_pow_exp_product",
+    "         U mk61_m0_pow_log_ordinary",
+    "         U mk61_m0_pow_small_y",
+    "         U mk61_m0_sqrt",
+    "         U pow_fast_log",
+    "         U pow_sqrt64_coefficients"
+  ],
+  "new_libgcc_dependency": false,
+  "full_firmware_linked": false
+}

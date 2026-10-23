@@ -1,0 +1,315 @@
+{
+  "status": "PASS_TARGETED_PRIVATE_ARM_CANDIDATE_NOT_FIRMWARE_ACCEPTANCE",
+  "elapsed_seconds": 0.01188770800945349,
+  "cases": 17,
+  "ARM_calls": 51,
+  "groups": {
+    "known_slower": {
+      "candidate_wrong": 0,
+      "baseline_wrong": 0,
+      "Qfplib_wrong": 0,
+      "cases": 17
+    }
+  },
+  "rows": [
+    {
+      "operation": "dsub",
+      "x": "3FF0000000000000",
+      "y": "3C90000000000000",
+      "group": "known_slower",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "candidate": "3FF0000000000000",
+        "baseline": "3FF0000000000000",
+        "Qfplib": "3FF0000000000000"
+      },
+      "instructions": {
+        "candidate": 80,
+        "baseline": 108,
+        "Qfplib": 94
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "54AD46E403BE1BA4",
+      "y": "D6EF42D0659D2A0A",
+      "group": "known_slower",
+      "expected": "D6EF42D0659B559C",
+      "outputs": {
+        "candidate": "D6EF42D0659B559C",
+        "baseline": "D6EF42D0659B559C",
+        "Qfplib": "D6EF42D0659B559C"
+      },
+      "instructions": {
+        "candidate": 72,
+        "baseline": 95,
+        "Qfplib": 86
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "67ED799ECF646DE1",
+      "y": "E975FD2D6871CCB5",
+      "group": "known_slower",
+      "expected": "E975FD2D59B4FD4D",
+      "outputs": {
+        "candidate": "E975FD2D59B4FD4D",
+        "baseline": "E975FD2D59B4FD4D",
+        "Qfplib": "E975FD2D59B4FD4D"
+      },
+      "instructions": {
+        "candidate": 62,
+        "baseline": 79,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BC962D238155A9EA",
+      "y": "3FE168337C68B070",
+      "group": "known_slower",
+      "expected": "3FE168337C68B06F",
+      "outputs": {
+        "candidate": "3FE168337C68B06F",
+        "baseline": "3FE168337C68B06F",
+        "Qfplib": "3FE168337C68B06F"
+      },
+      "instructions": {
+        "candidate": 68,
+        "baseline": 85,
+        "Qfplib": 76
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BCAE7BDEEDDEB6EC",
+      "y": "3F8CEA4C3FB1BC06",
+      "group": "known_slower",
+      "expected": "3F8CEA4C3FB1BB8C",
+      "outputs": {
+        "candidate": "3F8CEA4C3FB1BB8C",
+        "baseline": "3F8CEA4C3FB1BB8C",
+        "Qfplib": "3F8CEA4C3FB1BB8C"
+      },
+      "instructions": {
+        "candidate": 68,
+        "baseline": 85,
+        "Qfplib": 76
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD2013721D1833BD",
+      "y": "3FD4C2C71646F101",
+      "group": "known_slower",
+      "expected": "3FD4C2C71646EEFF",
+      "outputs": {
+        "candidate": "3FD4C2C71646EEFF",
+        "baseline": "3FD4C2C71646EEFF",
+        "Qfplib": "3FD4C2C71646EEFF"
+      },
+      "instructions": {
+        "candidate": 72,
+        "baseline": 89,
+        "Qfplib": 80
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD2BC5A420B3616B",
+      "y": "3F7DAE7E502209AF",
+      "group": "known_slower",
+      "expected": "3F7DAE7E50212B82",
+      "outputs": {
+        "candidate": "3F7DAE7E50212B82",
+        "baseline": "3F7DAE7E50212B82",
+        "Qfplib": "3F7DAE7E50212B82"
+      },
+      "instructions": {
+        "candidate": 72,
+        "baseline": 89,
+        "Qfplib": 80
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD58899641535BFB",
+      "y": "3F7CEFFD0385318C",
+      "group": "known_slower",
+      "expected": "3F7CEFFD037F0F26",
+      "outputs": {
+        "candidate": "3F7CEFFD037F0F26",
+        "baseline": "3F7CEFFD037F0F26",
+        "Qfplib": "3F7CEFFD037F0F26"
+      },
+      "instructions": {
+        "candidate": 68,
+        "baseline": 85,
+        "Qfplib": 76
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD85CF8BE6BB2DB9",
+      "y": "3F8202F6E288ED78",
+      "group": "known_slower",
+      "expected": "3F8202F6E2731DEC",
+      "outputs": {
+        "candidate": "3F8202F6E2731DEC",
+        "baseline": "3F8202F6E2731DEC",
+        "Qfplib": "3F8202F6E2731DEC"
+      },
+      "instructions": {
+        "candidate": 67,
+        "baseline": 84,
+        "Qfplib": 75
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "BD9C92EFDBF142E7",
+      "y": "3F9684B68B2E17E6",
+      "group": "known_slower",
+      "expected": "3F9684B68B1184F6",
+      "outputs": {
+        "candidate": "3F9684B68B1184F6",
+        "baseline": "3F9684B68B1184F6",
+        "Qfplib": "3F9684B68B1184F6"
+      },
+      "instructions": {
+        "candidate": 67,
+        "baseline": 84,
+        "Qfplib": 75
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "3FC999999999999A",
+      "y": "4024000000000000",
+      "group": "known_slower",
+      "expected": "C02399999999999A",
+      "outputs": {
+        "candidate": "C02399999999999A",
+        "baseline": "C02399999999999A",
+        "Qfplib": "C02399999999999A"
+      },
+      "instructions": {
+        "candidate": 70,
+        "baseline": 88,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "42F123456789ABCD",
+      "y": "439FEDCBA9876543",
+      "group": "known_slower",
+      "expected": "C39FE982D82D82D8",
+      "outputs": {
+        "candidate": "C39FE982D82D82D8",
+        "baseline": "C39FE982D82D82D8",
+        "Qfplib": "C39FE982D82D82D8"
+      },
+      "instructions": {
+        "candidate": 66,
+        "baseline": 83,
+        "Qfplib": 74
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3F86BFC5EE249072",
+      "y": "BC872287B9DE4E94",
+      "group": "known_slower",
+      "expected": "3F86BFC5EE24905B",
+      "outputs": {
+        "candidate": "3F86BFC5EE24905B",
+        "baseline": "3F86BFC5EE24905B",
+        "Qfplib": "3F86BFC5EE24905B"
+      },
+      "instructions": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "3FF919126D52CDEF",
+      "y": "BD69C498A2CB06F5",
+      "group": "known_slower",
+      "expected": "3FF919126D52C10D",
+      "outputs": {
+        "candidate": "3FF919126D52C10D",
+        "baseline": "3FF919126D52C10D",
+        "Qfplib": "3FF919126D52C10D"
+      },
+      "instructions": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "40494A5BD8768D02",
+      "y": "BE2FF4C97F40F242",
+      "group": "known_slower",
+      "expected": "40494A5BD86E8FD0",
+      "outputs": {
+        "candidate": "40494A5BD86E8FD0",
+        "baseline": "40494A5BD86E8FD0",
+        "Qfplib": "40494A5BD86E8FD0"
+      },
+      "instructions": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dadd",
+      "x": "404ACEFC54B5BB36",
+      "y": "BDA2513FA12EC655",
+      "group": "known_slower",
+      "expected": "404ACEFC54B5B6A2",
+      "outputs": {
+        "candidate": "404ACEFC54B5B6A2",
+        "baseline": "404ACEFC54B5B6A2",
+        "Qfplib": "404ACEFC54B5B6A2"
+      },
+      "instructions": {
+        "candidate": 68,
+        "baseline": 87,
+        "Qfplib": 79
+      }
+    },
+    {
+      "operation": "dsub",
+      "x": "350FEDCBA9876543",
+      "y": "347123456789ABCD",
+      "group": "known_slower",
+      "expected": "350FE53A06D3A06D",
+      "outputs": {
+        "candidate": "350FE53A06D3A06D",
+        "baseline": "350FE53A06D3A06D",
+        "Qfplib": "350FE53A06D3A06D"
+      },
+      "instructions": {
+        "candidate": 62,
+        "baseline": 75,
+        "Qfplib": 67
+      }
+    }
+  ],
+  "MPFR_version": "4.2.2",
+  "input_ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "candidate_ELF_sha256": "08ed9eece80732b4b7b20347c14b91372d2311ec99e11b9f2f47714877810038",
+  "ROM_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "PCS_SP_and_bounded_stack_writes_checked_every_call": true,
+  "READY_DIRTY_SIO_preserved_every_call": true,
+  "scope": "Finite targeted branch validation, not an all-input speed proof. Instruction counts only on retained known slower inputs; counts are ARM instructions, not hardware cycles.",
+  "canonical_or_frozen_files_changed": false,
+  "USB_accessed": false,
+  "goal_complete": false
+}

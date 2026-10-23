@@ -1,0 +1,34 @@
+{
+  "status": "INTEGRATION_REQUIRED_ON_ACCEPTED_REPAIRED_PICO_BASE",
+  "candidate": "V164/0B3BE556",
+  "current_firmware_role": "Offline mathematical qualification image based on the historical private Pico source. Not an accepted hardware/release image.",
+  "prerequisite": "Coordinator must supply the accepted repaired Pico source/commit hash after RAM, preservation, USB and M0-memory checks.",
+  "permitted_delta": "Review patch V163-to-V164-math-only.patch changes one asin interval. Cumulative math adoption additionally requires the pinned component manifest and the V163/V161 lineage; this patch alone is not a complete math migration onto an older base.",
+  "preserve": [
+    "Accepted hardware,io_worker,power,SD,storage,memory and lifecycle fixes.",
+    "Accepted memory primitive/allocator/ROM-binding implementations and their ABI. Do not restore old copies from this frozen source.",
+    "M4 and non-RP2040 M0 math code/data."
+  ],
+  "steps": [
+    "Create an isolated copy of the accepted repaired base and record its full source/build identity.",
+    "Reconcile cumulative math source delta by function/file; merge the endpoint-bound patch only once the V163 math baseline is present.",
+    "Adapt only required build selections and math linker sections to the accepted RAM/stack/DMA layout; do not copy the complete old ports/picocalc tree or its memory map.",
+    "Build and audit undefined symbols/libgcc members, literal/veneer targets, both core stacks, heap/scratch/DMA disjointness, and preserved repaired memory/runtime bodies.",
+    "Requalify math accuracy and instruction deltas affected by integration; repeat M4/generic-M0 isolation against the accepted base. Old image timing/layout does not prove integrated-image timing.",
+    "Independent review, then a separate hardware packet/permission/window with preservation and full restoration; release only after those gates."
+  ],
+  "current_layout_reference": {
+    "static_RAM": 198856,
+    "heap": 30520,
+    "scratch_occupancy": 4080,
+    "scratch_reserved": 4096,
+    "image_extent": 1560704,
+    "meaning": "Historical offline image measurements; these are constraints to reconcile, not addresses to enforce on the repaired base."
+  },
+  "old_RAM_fault_closed_by_this_candidate": false,
+  "accepted_base_integrated": false,
+  "hardware_authorized": false,
+  "canonical_changes": false,
+  "commit_push": false,
+  "goal_complete": false
+}

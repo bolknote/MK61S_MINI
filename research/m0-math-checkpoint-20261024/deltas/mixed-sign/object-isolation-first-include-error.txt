@@ -1,0 +1,5 @@
+Initial full-object compilation of the private source copy failed before assembly:
+native_eabi_m0_pow_kernels.inc: No such file or directory.
+The copied .S file needs -I pointing at the immutable V164 source/code folder.
+object-isolation.py adds that include path for both control and candidate.
+No candidate-full object or isolation PASS report was produced by that failed command.

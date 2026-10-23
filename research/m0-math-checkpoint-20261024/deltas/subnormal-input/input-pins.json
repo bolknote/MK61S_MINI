@@ -1,0 +1,16 @@
+{
+  "status": "PINNED_READ_ONLY_INPUTS",
+  "files": {
+    ".build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+    ".build/m0-v138-execution-20261023/reference/reference.elf": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+    "research/rp2040-memset-2026-10-21/capture/bootrom.bin": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    ".build/m0-add-cold-normal-20261023/result.json": "70014f74e93ddf39ff37a1001a56601c85e16dcd89a22b3e0dbbce1f3f5a5bdb",
+    ".build/m0-add-cold-normal-20261023/native_eabi_m0_rp2040.S": "cff70bd3559412879c421a06f7ec16dd75726aa2a964ed3062f9936a58737de2",
+    ".build/m0-add-cold-normal-20261023/candidate.elf": "a3479749d5f9764b1987eac1ba1dda9cbcb4df19005978eed5d97d027c0d850a",
+    ".build/m0-float-fma-qualification-20261023/oracles.py": "bb653a4fb333c521c7d3b7e4f4c53e7a18c07a60ec5f9e00b422b883b8e24bc9",
+    ".build/m0-float-fma-qualification-20261023/support/check_stm32_vectors.py": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708",
+    ".build/m0-float-fma-qualification-20261023/support/m0_mpfr_oracle.py": "fb880de9b8fe7d4b0fc9225121b90d7c41d976fec01b67bf4f7d6e2a89c7000a",
+    ".build/m0-float-fma-qualification-20261023/support/native_eabi_m0_arm_self_test.py": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3"
+  },
+  "new_candidate_maps_firmware_or_ROM": false
+}

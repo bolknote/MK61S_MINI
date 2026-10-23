@@ -1,0 +1,49 @@
+{
+  "status": "BUILT_PRIVATE_DIAGNOSTIC_OBJECT_NOT_NEW_FIRMWARE",
+  "input_ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "input_asm_sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+  "candidate_bytes": 648,
+  "fallback_address": "0x100e6e45",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/candidate.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/candidate.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/candidate.ld",
+      "--defsym",
+      "mk61_m0_dadd_slow=269381189",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/candidate.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/candidate.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-objcopy",
+      "-O",
+      "binary",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/candidate.elf",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/candidate.bin"
+    ]
+  ],
+  "outputs": {
+    "candidate.S": "b2e866258628d89a3ff6a37cca5ea9a712b8abbb1fe33a57a61c8ac2c369363e",
+    "candidate.ld": "d2865f3e58e0534fbb5e175f9042cf216fd6515ea25b814ccb85ae5d7eff3c59",
+    "candidate.o": "9df626ed584ece5ca28188876f62680d3fd7d53bdfd5755d4e04e8925e795533",
+    "candidate.elf": "08ed9eece80732b4b7b20347c14b91372d2311ec99e11b9f2f47714877810038",
+    "candidate.bin": "057df000a1318c91765b153a87ec5f1ca85aa0172cf5c7ce519567665674bd2f",
+    "candidate.dis": "6067f90971461085a9bb0dd1dbb069b511c15770b5edf7d2c7768d1341123a8a"
+  },
+  "canonical_or_frozen_files_changed": false,
+  "USB_accessed": false,
+  "goal_complete": false
+}

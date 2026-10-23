@@ -1,0 +1,84 @@
+{
+  "status": "OBSERVED_V164_TERMINAL_HISTORY_WITH_VERIFIED_RESUME",
+  "before_pause": [
+    {
+      "name": "prepare",
+      "chunk_id": "537fc8",
+      "exit_code": 0
+    },
+    {
+      "name": "build",
+      "chunk_id": "2c0b5b",
+      "exit_code": 0
+    },
+    {
+      "name": "certificate",
+      "chunk_id": "d0a7d2",
+      "exit_code": 0
+    },
+    {
+      "name": "M4",
+      "chunk_id": "d65c72",
+      "exit_code": 0
+    },
+    {
+      "name": "generic",
+      "chunk_id": "765f61",
+      "exit_code": 0
+    },
+    {
+      "name": "domain",
+      "chunk_id": "4fae37",
+      "exit_code": 0
+    },
+    {
+      "name": "random-asin-acos",
+      "chunk_id": "ea44ab",
+      "exit_code": 0
+    },
+    {
+      "name": "matrix-subsets",
+      "chunk_id": "f8fdeb",
+      "exit_code": 0
+    },
+    {
+      "name": "endpoint-completion",
+      "chunk_id": "5bfb4b",
+      "exit_code": 0
+    }
+  ],
+  "resumed": [
+    {
+      "name": "V163-transitive-verifier",
+      "chunk_id": "29cffb",
+      "exit_code": 0
+    },
+    {
+      "name": "linked-body-validator",
+      "chunk_id": "6786c5",
+      "exit_code": 0
+    },
+    {
+      "name": "edge-and-changed-case-batch",
+      "chunk_id": "87a165",
+      "exit_code": 0
+    },
+    {
+      "name": "all174-merge",
+      "chunk_id": "ce2883",
+      "exit_code": 0
+    }
+  ],
+  "resumed_edge_batch_evidence": "No asin-edges.json or case-comparison.json existed before the resumed batch. The completed reports bind current producer/ELF hashes; each producer writes PASS only after every assertion and the batch ended0.",
+  "recoveries": [
+    "certificate-first-inline-extractor-error.log",
+    "asin-edges-first-import-error.log",
+    "asin-edges-approval-timeout.json"
+  ],
+  "approval_timeout": "A process-not-started review deadline was retried once as allowed; the resumed edge/case batch then executed and completed. No safety rejection was bypassed.",
+  "pause_history_preserved": ".build/m0-math-paused-20261023/checkpoint.json",
+  "resume_checkpoint": ".build/m0-math-resumed-20261023/checkpoint.json",
+  "new_build_after_resume": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

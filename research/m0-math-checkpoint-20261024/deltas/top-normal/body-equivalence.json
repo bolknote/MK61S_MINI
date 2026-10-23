@@ -1,0 +1,19 @@
+{
+  "status": "PASS_FULL_PUBLIC_OBJECT_BOUND_TO_EXECUTED_DIAGNOSTIC",
+  "body_bytes": 880,
+  "excluded_span": [
+    14,
+    18
+  ],
+  "excluded_relocation": "0000000e R_ARM_THM_CALL    mk61_m0_dadd_slow",
+  "decoded_diagnostic_BL_target": "0x100e6e44",
+  "public_entry_offsets_match": true,
+  "all_other_body_bytes_identical": true,
+  "candidate_full_object_sha256": "223478946b2377453ba598fd57c0e15c1878cec221164374ff3d833abdd71938",
+  "candidate_ELF_sha256": "5f1a8bec6d7c499d19ec3b9defe6a9f5fc6b10c8b4795e297b984c6158508343",
+  "qualification_ELF_sha256_matches_current": true,
+  "final_source_sha256": "754ea1ee3695fb4291ad6d7baf4632dfcf0f8e592029d08adc177341988471f0",
+  "qualification_source_sha256": "74e3b90a7b20262c23f7000173e57b22133d52f67f29e17b218f11e3fb6677d2",
+  "source_difference": "One .align 2 directive at the end of the new block, before mk61_m0_dadd_end. Diagnostic ELF is bit-identical; source has no other changes. This restores exact byte identity of subsequent kernels in the full object. No numeric replay was needed after that alignment-only fix.",
+  "production_image_created": false
+}

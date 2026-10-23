@@ -1,0 +1,49 @@
+{
+  "status": "BUILT_PRIVATE_RP2040_UINT32_LEAF_NOT_FIRMWARE",
+  "bytes": 80,
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-20261023/candidate.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-20261023/candidate.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-20261023/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-20261023/candidate.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-20261023/candidate.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-objcopy",
+      "-O",
+      "binary",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-20261023/candidate.elf",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-20261023/candidate.bin"
+    ]
+  ],
+  "input_sources": {
+    "native_eabi_m0.cpp": "5b8ce151ae11323b35a6c6e51ab04e4895315109a715b7fd6007fac3c021b9bc",
+    "native_eabi_m0_convert.inc": "d4b15b0be7f54c9a67d4d7d4b1e8b60874ff054587b6c09d0ec0cd97338a4cc3",
+    "native_eabi_m0.S": "1a9d2183fcf3ee72ef5eb523150329f884cd6a1b9f67ca266a2a44229b5d8b44"
+  },
+  "files": {
+    "candidate.S": "974a82c45b693523734ac2765e284d520369b1ae7707a54da9d93a7ee90d62f8",
+    "candidate.elf": "89874ddb75087d9e330c44bc1a75ecb58ed5d29b4201f41b0833dc15a535cfd4",
+    "candidate.o": "b8e9afc1aea4b167909f9a707b464726a74187fbe445c4fb98e68628fde69abb",
+    "candidate.bin": "533a45eba58e876e8257bd613486eeb66a4c94ed1f2eb3107affaadc592466e6",
+    "native_eabi_m0.cpp": "62f1b8fa919cd0bdb04cd3b43c68807e38258d3c3dbd2cc760179c2052c26f34",
+    "native_eabi_m0_convert.inc": "9eada23fcf7e22139c351a7046ae825583fa7118da4a6586223d601a5af9caf2",
+    "unsigned32-only.patch": "81d2987ea952820a2c0c01fd8ad81b6040ca6ce8d3b002631061142efcd185b8"
+  },
+  "source_mutated": false,
+  "canonical_mutated": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

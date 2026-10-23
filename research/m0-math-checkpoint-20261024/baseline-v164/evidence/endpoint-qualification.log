@@ -1,0 +1,5 @@
+checked 16384 endpoints; 65536 public calls; 16384 radius2
+checked 32768 endpoints; 131072 public calls; 32768 radius2
+checked 49152 endpoints; 196608 public calls; 49152 radius2
+checked 65536 endpoints; 262144 public calls; 65536 radius2
+PASS: 72011 endpoint inputs; 144022 actual enclosures; 288044 public RNE calls; 125 dirty SIO checks.

@@ -1,0 +1,42 @@
+.Lda_nonfinite_start:
+ // At least one exponent is2047. Preserve the existing first-NaN policy.
+ lsls r6,r4,#21
+ asrs r6,#21
+ adds r6,#1
+ bne .Lda_nonfinite_b
+ lsls r6,r1,#12
+ orrs r6,r0
+ bne .Lda_nonfinite_quiet_a
+ // A is infinity. A finite B returns A; a NaN B takes precedence.
+ lsls r6,r5,#21
+ asrs r6,#21
+ adds r6,#1
+ bne .Lda_nonfinite_return_a
+ lsls r6,r3,#12
+ orrs r6,r2
+ bne .Lda_nonfinite_quiet_b
+ movs r6,r1
+ eors r6,r3
+ bmi .Lda_nonfinite_invalid
+.Lda_nonfinite_return_a:
+ pop {r4-r7,pc}
+.Lda_nonfinite_invalid:
+ // Both inputs are infinities, so R0 is already zero.
+ ldr r1,=0x7ff80000
+ pop {r4-r7,pc}
+.Lda_nonfinite_quiet_a:
+ ldr r6,=0x00080000
+ orrs r1,r6
+ pop {r4-r7,pc}
+.Lda_nonfinite_b:
+ lsls r6,r3,#12
+ orrs r6,r2
+ beq .Lda_nonfinite_return_b
+.Lda_nonfinite_quiet_b:
+ ldr r6,=0x00080000
+ orrs r3,r6
+.Lda_nonfinite_return_b:
+ movs r0,r2
+ movs r1,r3
+ pop {r4-r7,pc}
+.ltorg

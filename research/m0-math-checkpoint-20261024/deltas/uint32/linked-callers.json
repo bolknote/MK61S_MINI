@@ -1,0 +1,83 @@
+{
+  "status": "OBSERVED19_LINKED_DIRECT_CALLS",
+  "ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "rows": [
+    {
+      "caller": "100268e8 <_ZN8picocalc8Services5eventEN11language_vm5EventEPKctRd>:",
+      "call": "1002748a:\tf0bf fea7 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "100268e8 <_ZN8picocalc8Services5eventEN11language_vm5EventEPKctRd>:",
+      "call": "10027800:\tf0bf fcec \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1003f374 <_ZN8picocalc10NativeHost4callEmmmmPv>:",
+      "call": "10041248:\tf0a5 ffc8 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "100563ec <_ZN11language_vm12_GLOBAL__N_18CompilerILNS_8LanguageE1ELb0EE8constantEdNS_6source6CursorES5_>:",
+      "call": "10056594:\tf090 fe22 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "10057fa8 <_ZN10focal_next8CompilerILb0ELb0EE8constantEd>:",
+      "call": "1005811a:\tf08f f85f \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "10058560 <_ZN10focal_next8CompilerILb1ELb0EE8constantEd>:",
+      "call": "100586d2:\tf08e fd83 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1005a438 <_ZN11language_vm12_GLOBAL__N_18CompilerILNS_8LanguageE1ELb0EE8commandsEh>:",
+      "call": "1005b1e8:\tf08b fff8 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "100644e0 <_ZN11language_vm12_GLOBAL__N_111array_indexENS_5ValueEtRt>:",
+      "call": "10064568:\tf082 fe38 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1006b3a0 <_ZN14basic_graphics7Session5applyERNS_7RequestE>:",
+      "call": "1006b8a6:\tf07b fc99 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1006b3a0 <_ZN14basic_graphics7Session5applyERNS_7RequestE>:",
+      "call": "1006b8b2:\tf07b fc93 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1006b3a0 <_ZN14basic_graphics7Session5applyERNS_7RequestE>:",
+      "call": "1006babe:\tf07b fb8d \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1006b3a0 <_ZN14basic_graphics7Session5applyERNS_7RequestE>:",
+      "call": "1006bad0:\tf07b fb84 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1006b3a0 <_ZN14basic_graphics7Session5applyERNS_7RequestE>:",
+      "call": "1006bcf8:\tf07b fa70 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1006b3a0 <_ZN14basic_graphics7Session5applyERNS_7RequestE>:",
+      "call": "1006c386:\tf07a ff29 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1006d654 <_ZN14basic_graphics12_GLOBAL__N_15flushERNS_13NativeRequestE>:",
+      "call": "1006d760:\tf079 fd3c \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1006d7f4 <_ZN14basic_graphics14process_nativeERNS_13NativeRequestE>:",
+      "call": "1006dbca:\tf079 fb07 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1006d7f4 <_ZN14basic_graphics14process_nativeERNS_13NativeRequestE>:",
+      "call": "1006dbf6:\tf079 faf1 \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1006d7f4 <_ZN14basic_graphics14process_nativeERNS_13NativeRequestE>:",
+      "call": "1006e544:\tf078 fe4a \tbl\t100e71dc <__aeabi_d2uiz>"
+    },
+    {
+      "caller": "1008440c <_ftoa>:",
+      "call": "100844ee:\tf062 fe75 \tbl\t100e71dc <__aeabi_d2uiz>"
+    }
+  ],
+  "scope": "Static direct callers, not dynamic invocation frequency."
+}

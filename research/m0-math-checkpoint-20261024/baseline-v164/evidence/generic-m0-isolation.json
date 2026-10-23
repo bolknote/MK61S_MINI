@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "scope": "Non-RP2040 generic ARMv6-M: every allocated code/data section remains byte-identical to V60. The generic spelling has an extra expression macro; normalized preprocessing identity is not claimed.",
+  "results": [
+    {
+      "source": "native_eabi_m0.cpp",
+      "allocated_bytes": 247584,
+      "sha256": "d2b13c6198b02d3215dcd11e552f8f4784edb30abdebfead313a73923a9864f3"
+    },
+    {
+      "source": "native_eabi_m0.S",
+      "allocated_bytes": 14468,
+      "sha256": "23c0ecbd9b47d6b197d7738936cc51f1579322d4716dd1c92b2e003f3191b146"
+    },
+    {
+      "source": "native_eabi_m0_rp2040.S",
+      "allocated_bytes": 0,
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "source": "compact_math.cpp",
+      "allocated_bytes": 94,
+      "sha256": "05b6f5aafe2d0f194cff66c0096dfee52e94ba9e3c2d06c2681ee161de690127"
+    },
+    {
+      "source": "native_eabi_m0_cr.cpp",
+      "allocated_bytes": 191042,
+      "sha256": "569c8a18a36b6437238439c115a8550744be13597f3b55b7e14bd998e72328b5"
+    }
+  ]
+}

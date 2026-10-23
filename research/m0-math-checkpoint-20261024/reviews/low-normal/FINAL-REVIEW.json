@@ -1,0 +1,80 @@
+{
+  "status": "TECHNICAL_GO_LOW_NORMAL_AND_NONFINITE_DADD_DSUB_DELTA_ONLY",
+  "reviewer": "/root/v138_hardware",
+  "created_utc": "2026-10-23T20:34:40.611107+00:00",
+  "blockers": [],
+  "reviewed_result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/result.json",
+    "sha256": "70014f74e93ddf39ff37a1001a56601c85e16dcd89a22b3e0dbbce1f3f5a5bdb"
+  },
+  "handoff": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/HANDOFF.md",
+    "sha256": "b4a976a59d040184a709dc48216210be0c7be129be62b74a1017661a5f08dd1b"
+  },
+  "source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/native_eabi_m0_rp2040.S",
+    "sha256": "cff70bd3559412879c421a06f7ec16dd75726aa2a964ed3062f9936a58737de2"
+  },
+  "executed_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/candidate.elf",
+    "sha256": "a3479749d5f9764b1987eac1ba1dda9cbcb4df19005978eed5d97d027c0d850a"
+  },
+  "source_object_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-independent-20261023/SOURCE-OBJECT-PROOF.json",
+    "sha256": "795bc6ae951cc20dba419b6f9c38dc7052334af8da5eb54a1aaff4d7ef0fbb49"
+  },
+  "selected_ARM_integer_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-independent-20261023/SELECTED-ARM-INTEGER.json",
+    "sha256": "2e844eff2b9ce9dc3fd8db953fd4775285406b25cf7d9f810345c53e32ed0fe8"
+  },
+  "review_script": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-independent-20261023/review.py",
+    "sha256": "dcdc17bddc4dea1db0f55f8bcc5ec73e5b5602a1841c6ea9aa4d7cc48a1e79c5"
+  },
+  "actual_independent_cases": 207,
+  "actual_ARM_calls": 621,
+  "author44455_replayed": false,
+  "author2416_controls_replayed": false,
+  "artifact_hashes_before_after_equal": 29,
+  "body_bytes": 1204,
+  "growth_bytes": 324,
+  "additional_literal_words": 2,
+  "new_tables_global_RAM_helpers_MMIO": false,
+  "source_to_object_to_executed": "Own assembly equals sealed public object. All1204 bytes match executed diagnostic body except sole old BL90..94, independently decoded to100e6e44. API offsets, following multiply/divide bytes, other allocated sections and undefined dependencies equal.",
+  "source_ordinary_same_mixed_top_kernels_unchanged": true,
+  "guard_partition_all_nonzero_exponents": {
+    "low": 54,
+    "ordinary": 1991,
+    "top": 1,
+    "nonfinite": 1
+  },
+  "guard_reason": "BHS and BNE preserve CMP1991 flags. Equality2046 retains top; negative residual is exactly normal E1..54, positive1 is nonfinite2047. Either exponent0 still exits before this dispatch.",
+  "normalization_reason": "R7 budget is masked Ebase-1;16/8/4 shifts require both significand room and remaining budget. Short branch shifts exactly budget without losing significant bits; E1 pack emits the exact subnormal coefficient. No signed exponent borrow and the budget decreases to termination. Gap2..53 low inputs use unchanged unsigned core and remain normal.",
+  "NaN_reason": "Explicit independent raw first-NaN policy quiets A before considering B; otherwise quiets effective B, preserving payload/sign including dsub sign flip. Opposite infinities yield the old positive canonical quiet NaN. New nonfinite path applies only when both exponent fields are nonzero.",
+  "independent_new_selected_cases": 156,
+  "new_selected_correct_Qfplib_cases": 74,
+  "new_selected_raw_Qfplib_differences_retained": 82,
+  "candidate_slower_than_correct_Qfplib_selected": 0,
+  "old17_and_selected_ordinary_top_E0_results_and_counts_equal": true,
+  "callee_saved_SP_bounded_writes_and_READY_DIRTY_equal": true,
+  "actual_fast_frame20_E0_call_frame24_checked": true,
+  "ROM": "Actual captured16KiB ROM and actual lookup initializer instructions; abstract ROM callbacks empty",
+  "M4_generic_controls": "Sealed M4_soft/M4_hard/generic_M0 object contributions rechecked equal, each0 allocated bytes; no full M4 rebuild claim",
+  "limits": [
+    "Private low-normal/nonfinite dadd/dsub delta atop accepted880-byte parent only",
+    "Subnormal INPUTS/E0 remain old fallback;18 author-profiled Qfplib slow cases are not closed by this delta",
+    "No all-input speed/library/pow totality/fullfirmware/hardware/IRQ acceptance",
+    "Instruction counts are not physical cycles; raw Qfplib differences are selected-case evidence, not application frequency"
+  ],
+  "approval_note": "First host-only JIT approval review timed out without starting the process; exactly one tool-permitted retry was accepted and completed successfully.",
+  "actions": {
+    "USB": false,
+    "Flash": false,
+    "lease": false,
+    "Git": false,
+    "canonical": false,
+    "RTC_packet_changed": false,
+    "producer_inputs_changed": false
+  },
+  "production_or_hardware_GO": false
+}

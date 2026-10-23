@@ -1,0 +1,8 @@
+The first object audit after splitting the top path failed its unchanged-tail
+byte comparison. The new block ended at byte878, unlike its four-byte-aligned
+parent boundary648. This shifted subsequent multiply code by two modulo4,
+changed its PC-relative literal displacement and added later pool padding.
+An explicit .align 2 at the end of the new arithmetic block makes the boundary
+880. This restores the parent's following-kernel alignment and permits an
+exact suffix comparison. The preceding diagnostic ARM qualification was a
+standalone dadd/dsub object; no full firmware was created from this trial.

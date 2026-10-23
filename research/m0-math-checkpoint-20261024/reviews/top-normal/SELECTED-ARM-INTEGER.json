@@ -1,0 +1,4460 @@
+{
+  "status": "PASS_SELECTED_ACTUAL_ARM_AND_INDEPENDENT_INTEGER_RNE",
+  "cases": 245,
+  "ARM_calls": 735,
+  "groups": {
+    "overflow-midpoint-and-neighbours": 72,
+    "top-alignment-and-sticky": 64,
+    "top-opposite-sign": 40,
+    "guard-IEEE-and-normalization-controls": 52,
+    "old17": 17
+  },
+  "rows": [
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "7c8fffffffffffff",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 254,
+        "Qfplib": 72
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "fc8fffffffffffff",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 258,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "ffefffffffffffff",
+      "y": "fc8fffffffffffff",
+      "integer_expected": "ffefffffffffffff",
+      "outputs": {
+        "candidate": "ffefffffffffffff",
+        "parent": "ffefffffffffffff",
+        "Qfplib": "ffefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 254,
+        "Qfplib": 84
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "ffefffffffffffff",
+      "y": "7c8fffffffffffff",
+      "integer_expected": "ffefffffffffffff",
+      "outputs": {
+        "candidate": "ffefffffffffffff",
+        "parent": "ffefffffffffffff",
+        "Qfplib": "ffefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 258,
+        "Qfplib": 88
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7c8fffffffffffff",
+      "y": "7fefffffffffffff",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 248,
+        "Qfplib": 73
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7c8fffffffffffff",
+      "y": "ffefffffffffffff",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 49,
+        "parent": 252,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "fc8fffffffffffff",
+      "y": "ffefffffffffffff",
+      "integer_expected": "ffefffffffffffff",
+      "outputs": {
+        "candidate": "ffefffffffffffff",
+        "parent": "ffefffffffffffff",
+        "Qfplib": "ffefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 248,
+        "Qfplib": 85
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "fc8fffffffffffff",
+      "y": "7fefffffffffffff",
+      "integer_expected": "ffefffffffffffff",
+      "outputs": {
+        "candidate": "ffefffffffffffff",
+        "parent": "ffefffffffffffff",
+        "Qfplib": "ffefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 49,
+        "parent": 252,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "7c90000000000000",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 246,
+        "Qfplib": 78
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "fc90000000000000",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 250,
+        "Qfplib": 82
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "ffefffffffffffff",
+      "y": "fc90000000000000",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 246,
+        "Qfplib": 91
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "ffefffffffffffff",
+      "y": "7c90000000000000",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 250,
+        "Qfplib": 95
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7c90000000000000",
+      "y": "7fefffffffffffff",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 240,
+        "Qfplib": 79
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7c90000000000000",
+      "y": "ffefffffffffffff",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 244,
+        "Qfplib": 83
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "fc90000000000000",
+      "y": "ffefffffffffffff",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 240,
+        "Qfplib": 92
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "fc90000000000000",
+      "y": "7fefffffffffffff",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 244,
+        "Qfplib": 96
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "7c90000000000001",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 239,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "fc90000000000001",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 243,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "ffefffffffffffff",
+      "y": "fc90000000000001",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 239,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "ffefffffffffffff",
+      "y": "7c90000000000001",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 243,
+        "Qfplib": 93
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7c90000000000001",
+      "y": "7fefffffffffffff",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 233,
+        "Qfplib": 78
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7c90000000000001",
+      "y": "ffefffffffffffff",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 237,
+        "Qfplib": 82
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "fc90000000000001",
+      "y": "ffefffffffffffff",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 233,
+        "Qfplib": 90
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "fc90000000000001",
+      "y": "7fefffffffffffff",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 237,
+        "Qfplib": 94
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7feffffffffffffe",
+      "y": "7c8fffffffffffff",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 254,
+        "Qfplib": 72
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7feffffffffffffe",
+      "y": "fc8fffffffffffff",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 258,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "ffeffffffffffffe",
+      "y": "fc8fffffffffffff",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 254,
+        "Qfplib": 84
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "ffeffffffffffffe",
+      "y": "7c8fffffffffffff",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 258,
+        "Qfplib": 88
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7c8fffffffffffff",
+      "y": "7feffffffffffffe",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 248,
+        "Qfplib": 73
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7c8fffffffffffff",
+      "y": "ffeffffffffffffe",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 49,
+        "parent": 252,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "fc8fffffffffffff",
+      "y": "ffeffffffffffffe",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 248,
+        "Qfplib": 85
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "fc8fffffffffffff",
+      "y": "7feffffffffffffe",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 49,
+        "parent": 252,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7feffffffffffffe",
+      "y": "7c90000000000000",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 256,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7feffffffffffffe",
+      "y": "fc90000000000000",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 260,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "ffeffffffffffffe",
+      "y": "fc90000000000000",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 256,
+        "Qfplib": 90
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "ffeffffffffffffe",
+      "y": "7c90000000000000",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 260,
+        "Qfplib": 94
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7c90000000000000",
+      "y": "7feffffffffffffe",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 250,
+        "Qfplib": 78
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7c90000000000000",
+      "y": "ffeffffffffffffe",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 254,
+        "Qfplib": 82
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "fc90000000000000",
+      "y": "ffeffffffffffffe",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 250,
+        "Qfplib": 91
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "fc90000000000000",
+      "y": "7feffffffffffffe",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 254,
+        "Qfplib": 95
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7feffffffffffffe",
+      "y": "7c90000000000001",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 249,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7feffffffffffffe",
+      "y": "fc90000000000001",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 253,
+        "Qfplib": 80
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "ffeffffffffffffe",
+      "y": "fc90000000000001",
+      "integer_expected": "ffefffffffffffff",
+      "outputs": {
+        "candidate": "ffefffffffffffff",
+        "parent": "ffefffffffffffff",
+        "Qfplib": "ffefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 249,
+        "Qfplib": 88
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "ffeffffffffffffe",
+      "y": "7c90000000000001",
+      "integer_expected": "ffefffffffffffff",
+      "outputs": {
+        "candidate": "ffefffffffffffff",
+        "parent": "ffefffffffffffff",
+        "Qfplib": "ffefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 253,
+        "Qfplib": 92
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7c90000000000001",
+      "y": "7feffffffffffffe",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 243,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7c90000000000001",
+      "y": "ffeffffffffffffe",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 247,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "fc90000000000001",
+      "y": "ffeffffffffffffe",
+      "integer_expected": "ffefffffffffffff",
+      "outputs": {
+        "candidate": "ffefffffffffffff",
+        "parent": "ffefffffffffffff",
+        "Qfplib": "ffefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 243,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "fc90000000000001",
+      "y": "7feffffffffffffe",
+      "integer_expected": "ffefffffffffffff",
+      "outputs": {
+        "candidate": "ffefffffffffffff",
+        "parent": "ffefffffffffffff",
+        "Qfplib": "ffefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 247,
+        "Qfplib": 93
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7feffffffffffffd",
+      "y": "7c8fffffffffffff",
+      "integer_expected": "7feffffffffffffd",
+      "outputs": {
+        "candidate": "7feffffffffffffd",
+        "parent": "7feffffffffffffd",
+        "Qfplib": "7feffffffffffffd"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 254,
+        "Qfplib": 72
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7feffffffffffffd",
+      "y": "fc8fffffffffffff",
+      "integer_expected": "7feffffffffffffd",
+      "outputs": {
+        "candidate": "7feffffffffffffd",
+        "parent": "7feffffffffffffd",
+        "Qfplib": "7feffffffffffffd"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 258,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "ffeffffffffffffd",
+      "y": "fc8fffffffffffff",
+      "integer_expected": "ffeffffffffffffd",
+      "outputs": {
+        "candidate": "ffeffffffffffffd",
+        "parent": "ffeffffffffffffd",
+        "Qfplib": "ffeffffffffffffd"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 254,
+        "Qfplib": 84
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "ffeffffffffffffd",
+      "y": "7c8fffffffffffff",
+      "integer_expected": "ffeffffffffffffd",
+      "outputs": {
+        "candidate": "ffeffffffffffffd",
+        "parent": "ffeffffffffffffd",
+        "Qfplib": "ffeffffffffffffd"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 258,
+        "Qfplib": 88
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7c8fffffffffffff",
+      "y": "7feffffffffffffd",
+      "integer_expected": "7feffffffffffffd",
+      "outputs": {
+        "candidate": "7feffffffffffffd",
+        "parent": "7feffffffffffffd",
+        "Qfplib": "7feffffffffffffd"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 248,
+        "Qfplib": 73
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7c8fffffffffffff",
+      "y": "ffeffffffffffffd",
+      "integer_expected": "7feffffffffffffd",
+      "outputs": {
+        "candidate": "7feffffffffffffd",
+        "parent": "7feffffffffffffd",
+        "Qfplib": "7feffffffffffffd"
+      },
+      "instructions": {
+        "candidate": 49,
+        "parent": 252,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "fc8fffffffffffff",
+      "y": "ffeffffffffffffd",
+      "integer_expected": "ffeffffffffffffd",
+      "outputs": {
+        "candidate": "ffeffffffffffffd",
+        "parent": "ffeffffffffffffd",
+        "Qfplib": "ffeffffffffffffd"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 248,
+        "Qfplib": 85
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "fc8fffffffffffff",
+      "y": "7feffffffffffffd",
+      "integer_expected": "ffeffffffffffffd",
+      "outputs": {
+        "candidate": "ffeffffffffffffd",
+        "parent": "ffeffffffffffffd",
+        "Qfplib": "ffeffffffffffffd"
+      },
+      "instructions": {
+        "candidate": 49,
+        "parent": 252,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7feffffffffffffd",
+      "y": "7c90000000000000",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 256,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7feffffffffffffd",
+      "y": "fc90000000000000",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 260,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "ffeffffffffffffd",
+      "y": "fc90000000000000",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 256,
+        "Qfplib": 90
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "ffeffffffffffffd",
+      "y": "7c90000000000000",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 260,
+        "Qfplib": 94
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7c90000000000000",
+      "y": "7feffffffffffffd",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 250,
+        "Qfplib": 78
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7c90000000000000",
+      "y": "ffeffffffffffffd",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 254,
+        "Qfplib": 82
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "fc90000000000000",
+      "y": "ffeffffffffffffd",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 250,
+        "Qfplib": 91
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "fc90000000000000",
+      "y": "7feffffffffffffd",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 254,
+        "Qfplib": 95
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7feffffffffffffd",
+      "y": "7c90000000000001",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 249,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7feffffffffffffd",
+      "y": "fc90000000000001",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 253,
+        "Qfplib": 80
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "ffeffffffffffffd",
+      "y": "fc90000000000001",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 249,
+        "Qfplib": 88
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "ffeffffffffffffd",
+      "y": "7c90000000000001",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 253,
+        "Qfplib": 92
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "7c90000000000001",
+      "y": "7feffffffffffffd",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 243,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "7c90000000000001",
+      "y": "ffeffffffffffffd",
+      "integer_expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 247,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dadd",
+      "x": "fc90000000000001",
+      "y": "ffeffffffffffffd",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 243,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "overflow-midpoint-and-neighbours",
+      "op": "dsub",
+      "x": "fc90000000000001",
+      "y": "7feffffffffffffd",
+      "integer_expected": "ffeffffffffffffe",
+      "outputs": {
+        "candidate": "ffeffffffffffffe",
+        "parent": "ffeffffffffffffe",
+        "Qfplib": "ffeffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 247,
+        "Qfplib": 93
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "7fe876543210abcd",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 206,
+        "Qfplib": 65
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "ffe876543210abcd",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 210,
+        "Qfplib": 69
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "ffe876543210abcd",
+      "integer_expected": "ffc907f4c842af38",
+      "outputs": {
+        "candidate": "ffc907f4c842af38",
+        "parent": "ffc907f4c842af38",
+        "Qfplib": "ffc907f4c842af38"
+      },
+      "instructions": {
+        "candidate": 64,
+        "parent": 265,
+        "Qfplib": 83
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "7fe876543210abcd",
+      "integer_expected": "ffc907f4c842af38",
+      "outputs": {
+        "candidate": "ffc907f4c842af38",
+        "parent": "ffc907f4c842af38",
+        "Qfplib": "ffc907f4c842af38"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 269,
+        "Qfplib": 87
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "ffe876543210abcd",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 206,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "7fe876543210abcd",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 210,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "7fe876543210abcd",
+      "integer_expected": "7fc907f4c842af38",
+      "outputs": {
+        "candidate": "7fc907f4c842af38",
+        "parent": "7fc907f4c842af38",
+        "Qfplib": "7fc907f4c842af38"
+      },
+      "instructions": {
+        "candidate": 64,
+        "parent": 265,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "ffe876543210abcd",
+      "integer_expected": "7fc907f4c842af38",
+      "outputs": {
+        "candidate": "7fc907f4c842af38",
+        "parent": "7fc907f4c842af38",
+        "Qfplib": "7fc907f4c842af38"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 269,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7fe876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 213,
+        "Qfplib": 65
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7fe876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 217,
+        "Qfplib": 69
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "7fe876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fc907f4c842af38",
+      "outputs": {
+        "candidate": "7fc907f4c842af38",
+        "parent": "7fc907f4c842af38",
+        "Qfplib": "7fc907f4c842af38"
+      },
+      "instructions": {
+        "candidate": 60,
+        "parent": 272,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "7fe876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fc907f4c842af38",
+      "outputs": {
+        "candidate": "7fc907f4c842af38",
+        "parent": "7fc907f4c842af38",
+        "Qfplib": "7fc907f4c842af38"
+      },
+      "instructions": {
+        "candidate": 64,
+        "parent": 276,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "ffe876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 213,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "ffe876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 217,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "ffe876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffc907f4c842af38",
+      "outputs": {
+        "candidate": "ffc907f4c842af38",
+        "parent": "ffc907f4c842af38",
+        "Qfplib": "ffc907f4c842af38"
+      },
+      "instructions": {
+        "candidate": 60,
+        "parent": 272,
+        "Qfplib": 83
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "ffe876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffc907f4c842af38",
+      "outputs": {
+        "candidate": "ffc907f4c842af38",
+        "parent": "ffc907f4c842af38",
+        "Qfplib": "ffc907f4c842af38"
+      },
+      "instructions": {
+        "candidate": 64,
+        "parent": 276,
+        "Qfplib": 87
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "7fd876543210abcd",
+      "integer_expected": "7fee6f81190855e6",
+      "outputs": {
+        "candidate": "7fee6f81190855e6",
+        "parent": "7fee6f81190855e6",
+        "Qfplib": "7fee6f81190855e6"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 254,
+        "Qfplib": 66
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "ffd876543210abcd",
+      "integer_expected": "7fee6f81190855e6",
+      "outputs": {
+        "candidate": "7fee6f81190855e6",
+        "parent": "7fee6f81190855e6",
+        "Qfplib": "7fee6f81190855e6"
+      },
+      "instructions": {
+        "candidate": 63,
+        "parent": 258,
+        "Qfplib": 70
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "ffd876543210abcd",
+      "integer_expected": "7fc7e4b39bdea862",
+      "outputs": {
+        "candidate": "7fc7e4b39bdea862",
+        "parent": "7fc7e4b39bdea862",
+        "Qfplib": "7fc7e4b39bdea862"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 316,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "7fd876543210abcd",
+      "integer_expected": "7fc7e4b39bdea862",
+      "outputs": {
+        "candidate": "7fc7e4b39bdea862",
+        "parent": "7fc7e4b39bdea862",
+        "Qfplib": "7fc7e4b39bdea862"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 320,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "ffd876543210abcd",
+      "integer_expected": "ffee6f81190855e6",
+      "outputs": {
+        "candidate": "ffee6f81190855e6",
+        "parent": "ffee6f81190855e6",
+        "Qfplib": "ffee6f81190855e6"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 254,
+        "Qfplib": 78
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "7fd876543210abcd",
+      "integer_expected": "ffee6f81190855e6",
+      "outputs": {
+        "candidate": "ffee6f81190855e6",
+        "parent": "ffee6f81190855e6",
+        "Qfplib": "ffee6f81190855e6"
+      },
+      "instructions": {
+        "candidate": 63,
+        "parent": 258,
+        "Qfplib": 82
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "7fd876543210abcd",
+      "integer_expected": "ffc7e4b39bdea862",
+      "outputs": {
+        "candidate": "ffc7e4b39bdea862",
+        "parent": "ffc7e4b39bdea862",
+        "Qfplib": "ffc7e4b39bdea862"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 316,
+        "Qfplib": 83
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "ffd876543210abcd",
+      "integer_expected": "ffc7e4b39bdea862",
+      "outputs": {
+        "candidate": "ffc7e4b39bdea862",
+        "parent": "ffc7e4b39bdea862",
+        "Qfplib": "ffc7e4b39bdea862"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 320,
+        "Qfplib": 87
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7fd876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fee6f81190855e6",
+      "outputs": {
+        "candidate": "7fee6f81190855e6",
+        "parent": "7fee6f81190855e6",
+        "Qfplib": "7fee6f81190855e6"
+      },
+      "instructions": {
+        "candidate": 62,
+        "parent": 248,
+        "Qfplib": 67
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7fd876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fee6f81190855e6",
+      "outputs": {
+        "candidate": "7fee6f81190855e6",
+        "parent": "7fee6f81190855e6",
+        "Qfplib": "7fee6f81190855e6"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 252,
+        "Qfplib": 71
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "7fd876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffc7e4b39bdea862",
+      "outputs": {
+        "candidate": "ffc7e4b39bdea862",
+        "parent": "ffc7e4b39bdea862",
+        "Qfplib": "ffc7e4b39bdea862"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 310,
+        "Qfplib": 84
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "7fd876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffc7e4b39bdea862",
+      "outputs": {
+        "candidate": "ffc7e4b39bdea862",
+        "parent": "ffc7e4b39bdea862",
+        "Qfplib": "ffc7e4b39bdea862"
+      },
+      "instructions": {
+        "candidate": 63,
+        "parent": 314,
+        "Qfplib": 88
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "ffd876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffee6f81190855e6",
+      "outputs": {
+        "candidate": "ffee6f81190855e6",
+        "parent": "ffee6f81190855e6",
+        "Qfplib": "ffee6f81190855e6"
+      },
+      "instructions": {
+        "candidate": 62,
+        "parent": 248,
+        "Qfplib": 79
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "ffd876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffee6f81190855e6",
+      "outputs": {
+        "candidate": "ffee6f81190855e6",
+        "parent": "ffee6f81190855e6",
+        "Qfplib": "ffee6f81190855e6"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 252,
+        "Qfplib": 83
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "ffd876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fc7e4b39bdea862",
+      "outputs": {
+        "candidate": "7fc7e4b39bdea862",
+        "parent": "7fc7e4b39bdea862",
+        "Qfplib": "7fc7e4b39bdea862"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 310,
+        "Qfplib": 78
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "ffd876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fc7e4b39bdea862",
+      "outputs": {
+        "candidate": "7fc7e4b39bdea862",
+        "parent": "7fc7e4b39bdea862",
+        "Qfplib": "7fc7e4b39bdea862"
+      },
+      "instructions": {
+        "candidate": 63,
+        "parent": 314,
+        "Qfplib": 82
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "7df876543210abcd",
+      "integer_expected": "7fe234570030eca7",
+      "outputs": {
+        "candidate": "7fe234570030eca7",
+        "parent": "7fe234570030eca7",
+        "Qfplib": "7fe234570030eca7"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 254,
+        "Qfplib": 60
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "fdf876543210abcd",
+      "integer_expected": "7fe234570030eca7",
+      "outputs": {
+        "candidate": "7fe234570030eca7",
+        "parent": "7fe234570030eca7",
+        "Qfplib": "7fe234570030eca7"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 258,
+        "Qfplib": 64
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "fdf876543210abcd",
+      "integer_expected": "ffe234570030eca7",
+      "outputs": {
+        "candidate": "ffe234570030eca7",
+        "parent": "ffe234570030eca7",
+        "Qfplib": "ffe234570030eca7"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 254,
+        "Qfplib": 72
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "7df876543210abcd",
+      "integer_expected": "ffe234570030eca7",
+      "outputs": {
+        "candidate": "ffe234570030eca7",
+        "parent": "ffe234570030eca7",
+        "Qfplib": "ffe234570030eca7"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 258,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7df876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fe234570030eca7",
+      "outputs": {
+        "candidate": "7fe234570030eca7",
+        "parent": "7fe234570030eca7",
+        "Qfplib": "7fe234570030eca7"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 248,
+        "Qfplib": 61
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7df876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fe234570030eca7",
+      "outputs": {
+        "candidate": "7fe234570030eca7",
+        "parent": "7fe234570030eca7",
+        "Qfplib": "7fe234570030eca7"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 252,
+        "Qfplib": 65
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "fdf876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffe234570030eca7",
+      "outputs": {
+        "candidate": "ffe234570030eca7",
+        "parent": "ffe234570030eca7",
+        "Qfplib": "ffe234570030eca7"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 248,
+        "Qfplib": 73
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "fdf876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffe234570030eca7",
+      "outputs": {
+        "candidate": "ffe234570030eca7",
+        "parent": "ffe234570030eca7",
+        "Qfplib": "ffe234570030eca7"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 252,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "7de876543210abcd",
+      "integer_expected": "7fe2345700187653",
+      "outputs": {
+        "candidate": "7fe2345700187653",
+        "parent": "7fe2345700187653",
+        "Qfplib": "7fe2345700187653"
+      },
+      "instructions": {
+        "candidate": 60,
+        "parent": 251,
+        "Qfplib": 71
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "fde876543210abcd",
+      "integer_expected": "7fe2345700187653",
+      "outputs": {
+        "candidate": "7fe2345700187653",
+        "parent": "7fe2345700187653",
+        "Qfplib": "7fe2345700187653"
+      },
+      "instructions": {
+        "candidate": 64,
+        "parent": 255,
+        "Qfplib": 75
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "fde876543210abcd",
+      "integer_expected": "7fe23456ffe789ab",
+      "outputs": {
+        "candidate": "7fe23456ffe789ab",
+        "parent": "7fe23456ffe789ab",
+        "Qfplib": "7fe23456ffe789ab"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 306,
+        "Qfplib": 78
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "7de876543210abcd",
+      "integer_expected": "7fe23456ffe789ab",
+      "outputs": {
+        "candidate": "7fe23456ffe789ab",
+        "parent": "7fe23456ffe789ab",
+        "Qfplib": "7fe23456ffe789ab"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 310,
+        "Qfplib": 82
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "fde876543210abcd",
+      "integer_expected": "ffe2345700187653",
+      "outputs": {
+        "candidate": "ffe2345700187653",
+        "parent": "ffe2345700187653",
+        "Qfplib": "ffe2345700187653"
+      },
+      "instructions": {
+        "candidate": 60,
+        "parent": 251,
+        "Qfplib": 83
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "7de876543210abcd",
+      "integer_expected": "ffe2345700187653",
+      "outputs": {
+        "candidate": "ffe2345700187653",
+        "parent": "ffe2345700187653",
+        "Qfplib": "ffe2345700187653"
+      },
+      "instructions": {
+        "candidate": 64,
+        "parent": 255,
+        "Qfplib": 87
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "7de876543210abcd",
+      "integer_expected": "ffe23456ffe789ab",
+      "outputs": {
+        "candidate": "ffe23456ffe789ab",
+        "parent": "ffe23456ffe789ab",
+        "Qfplib": "ffe23456ffe789ab"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 306,
+        "Qfplib": 84
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "fde876543210abcd",
+      "integer_expected": "ffe23456ffe789ab",
+      "outputs": {
+        "candidate": "ffe23456ffe789ab",
+        "parent": "ffe23456ffe789ab",
+        "Qfplib": "ffe23456ffe789ab"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 310,
+        "Qfplib": 88
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7de876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fe2345700187653",
+      "outputs": {
+        "candidate": "7fe2345700187653",
+        "parent": "7fe2345700187653",
+        "Qfplib": "7fe2345700187653"
+      },
+      "instructions": {
+        "candidate": 61,
+        "parent": 245,
+        "Qfplib": 72
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7de876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fe2345700187653",
+      "outputs": {
+        "candidate": "7fe2345700187653",
+        "parent": "7fe2345700187653",
+        "Qfplib": "7fe2345700187653"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 249,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "7de876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffe23456ffe789ab",
+      "outputs": {
+        "candidate": "ffe23456ffe789ab",
+        "parent": "ffe23456ffe789ab",
+        "Qfplib": "ffe23456ffe789ab"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 300,
+        "Qfplib": 85
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "7de876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffe23456ffe789ab",
+      "outputs": {
+        "candidate": "ffe23456ffe789ab",
+        "parent": "ffe23456ffe789ab",
+        "Qfplib": "ffe23456ffe789ab"
+      },
+      "instructions": {
+        "candidate": 77,
+        "parent": 304,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "fde876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffe2345700187653",
+      "outputs": {
+        "candidate": "ffe2345700187653",
+        "parent": "ffe2345700187653",
+        "Qfplib": "ffe2345700187653"
+      },
+      "instructions": {
+        "candidate": 61,
+        "parent": 245,
+        "Qfplib": 84
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "fde876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffe2345700187653",
+      "outputs": {
+        "candidate": "ffe2345700187653",
+        "parent": "ffe2345700187653",
+        "Qfplib": "ffe2345700187653"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 249,
+        "Qfplib": 88
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "fde876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fe23456ffe789ab",
+      "outputs": {
+        "candidate": "7fe23456ffe789ab",
+        "parent": "7fe23456ffe789ab",
+        "Qfplib": "7fe23456ffe789ab"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 300,
+        "Qfplib": 79
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "fde876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fe23456ffe789ab",
+      "outputs": {
+        "candidate": "7fe23456ffe789ab",
+        "parent": "7fe23456ffe789ab",
+        "Qfplib": "7fe23456ffe789ab"
+      },
+      "instructions": {
+        "candidate": 77,
+        "parent": 304,
+        "Qfplib": 83
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "7dd876543210abcd",
+      "integer_expected": "7fe23457000c3b29",
+      "outputs": {
+        "candidate": "7fe23457000c3b29",
+        "parent": "7fe23457000c3b29",
+        "Qfplib": "7fe23457000c3b29"
+      },
+      "instructions": {
+        "candidate": 61,
+        "parent": 254,
+        "Qfplib": 72
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "fdd876543210abcd",
+      "integer_expected": "7fe23457000c3b29",
+      "outputs": {
+        "candidate": "7fe23457000c3b29",
+        "parent": "7fe23457000c3b29",
+        "Qfplib": "7fe23457000c3b29"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 258,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "fdd876543210abcd",
+      "integer_expected": "ffe23457000c3b29",
+      "outputs": {
+        "candidate": "ffe23457000c3b29",
+        "parent": "ffe23457000c3b29",
+        "Qfplib": "ffe23457000c3b29"
+      },
+      "instructions": {
+        "candidate": 61,
+        "parent": 254,
+        "Qfplib": 84
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "7dd876543210abcd",
+      "integer_expected": "ffe23457000c3b29",
+      "outputs": {
+        "candidate": "ffe23457000c3b29",
+        "parent": "ffe23457000c3b29",
+        "Qfplib": "ffe23457000c3b29"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 258,
+        "Qfplib": 88
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7dd876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fe23457000c3b29",
+      "outputs": {
+        "candidate": "7fe23457000c3b29",
+        "parent": "7fe23457000c3b29",
+        "Qfplib": "7fe23457000c3b29"
+      },
+      "instructions": {
+        "candidate": 62,
+        "parent": 248,
+        "Qfplib": 73
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7dd876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fe23457000c3b29",
+      "outputs": {
+        "candidate": "7fe23457000c3b29",
+        "parent": "7fe23457000c3b29",
+        "Qfplib": "7fe23457000c3b29"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 252,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "fdd876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffe23457000c3b29",
+      "outputs": {
+        "candidate": "ffe23457000c3b29",
+        "parent": "ffe23457000c3b29",
+        "Qfplib": "ffe23457000c3b29"
+      },
+      "instructions": {
+        "candidate": 62,
+        "parent": 248,
+        "Qfplib": 85
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "fdd876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffe23457000c3b29",
+      "outputs": {
+        "candidate": "ffe23457000c3b29",
+        "parent": "ffe23457000c3b29",
+        "Qfplib": "ffe23457000c3b29"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 252,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "7ca876543210abcd",
+      "integer_expected": "7fe2345700000001",
+      "outputs": {
+        "candidate": "7fe2345700000001",
+        "parent": "7fe2345700000001",
+        "Qfplib": "7fe2345700000001"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 249,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "fca876543210abcd",
+      "integer_expected": "7fe2345700000001",
+      "outputs": {
+        "candidate": "7fe2345700000001",
+        "parent": "7fe2345700000001",
+        "Qfplib": "7fe2345700000001"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 253,
+        "Qfplib": 80
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "fca876543210abcd",
+      "integer_expected": "ffe2345700000001",
+      "outputs": {
+        "candidate": "ffe2345700000001",
+        "parent": "ffe2345700000001",
+        "Qfplib": "ffe2345700000001"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 249,
+        "Qfplib": 88
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "7ca876543210abcd",
+      "integer_expected": "ffe2345700000001",
+      "outputs": {
+        "candidate": "ffe2345700000001",
+        "parent": "ffe2345700000001",
+        "Qfplib": "ffe2345700000001"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 253,
+        "Qfplib": 92
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7ca876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fe2345700000001",
+      "outputs": {
+        "candidate": "7fe2345700000001",
+        "parent": "7fe2345700000001",
+        "Qfplib": "7fe2345700000001"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 243,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7ca876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fe2345700000001",
+      "outputs": {
+        "candidate": "7fe2345700000001",
+        "parent": "7fe2345700000001",
+        "Qfplib": "7fe2345700000001"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 247,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "fca876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffe2345700000001",
+      "outputs": {
+        "candidate": "ffe2345700000001",
+        "parent": "ffe2345700000001",
+        "Qfplib": "ffe2345700000001"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 243,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "fca876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffe2345700000001",
+      "outputs": {
+        "candidate": "ffe2345700000001",
+        "parent": "ffe2345700000001",
+        "Qfplib": "ffe2345700000001"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 247,
+        "Qfplib": 93
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "7c9876543210abcd",
+      "integer_expected": "7fe2345700000000",
+      "outputs": {
+        "candidate": "7fe2345700000000",
+        "parent": "7fe2345700000000",
+        "Qfplib": "7fe2345700000000"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 249,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "fc9876543210abcd",
+      "integer_expected": "7fe2345700000000",
+      "outputs": {
+        "candidate": "7fe2345700000000",
+        "parent": "7fe2345700000000",
+        "Qfplib": "7fe2345700000000"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 253,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "fc9876543210abcd",
+      "integer_expected": "7fe23456fffffffe",
+      "outputs": {
+        "candidate": "7fe23456fffffffe",
+        "parent": "7fe23456fffffffe",
+        "Qfplib": "7fe23456fffffffe"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 314,
+        "Qfplib": 75
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "7c9876543210abcd",
+      "integer_expected": "7fe23456fffffffe",
+      "outputs": {
+        "candidate": "7fe23456fffffffe",
+        "parent": "7fe23456fffffffe",
+        "Qfplib": "7fe23456fffffffe"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 318,
+        "Qfplib": 79
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "fc9876543210abcd",
+      "integer_expected": "ffe2345700000000",
+      "outputs": {
+        "candidate": "ffe2345700000000",
+        "parent": "ffe2345700000000",
+        "Qfplib": "ffe2345700000000"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 249,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "7c9876543210abcd",
+      "integer_expected": "ffe2345700000000",
+      "outputs": {
+        "candidate": "ffe2345700000000",
+        "parent": "ffe2345700000000",
+        "Qfplib": "ffe2345700000000"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 253,
+        "Qfplib": 93
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "7c9876543210abcd",
+      "integer_expected": "ffe23456fffffffe",
+      "outputs": {
+        "candidate": "ffe23456fffffffe",
+        "parent": "ffe23456fffffffe",
+        "Qfplib": "ffe23456fffffffe"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 314,
+        "Qfplib": 81
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "fc9876543210abcd",
+      "integer_expected": "ffe23456fffffffe",
+      "outputs": {
+        "candidate": "ffe23456fffffffe",
+        "parent": "ffe23456fffffffe",
+        "Qfplib": "ffe23456fffffffe"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 318,
+        "Qfplib": 85
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7c9876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fe2345700000000",
+      "outputs": {
+        "candidate": "7fe2345700000000",
+        "parent": "7fe2345700000000",
+        "Qfplib": "7fe2345700000000"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 243,
+        "Qfplib": 78
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7c9876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fe2345700000000",
+      "outputs": {
+        "candidate": "7fe2345700000000",
+        "parent": "7fe2345700000000",
+        "Qfplib": "7fe2345700000000"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 247,
+        "Qfplib": 82
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "7c9876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffe23456fffffffe",
+      "outputs": {
+        "candidate": "ffe23456fffffffe",
+        "parent": "ffe23456fffffffe",
+        "Qfplib": "ffe23456fffffffe"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 308,
+        "Qfplib": 82
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "7c9876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffe23456fffffffe",
+      "outputs": {
+        "candidate": "ffe23456fffffffe",
+        "parent": "ffe23456fffffffe",
+        "Qfplib": "ffe23456fffffffe"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 312,
+        "Qfplib": 86
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "fc9876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffe2345700000000",
+      "outputs": {
+        "candidate": "ffe2345700000000",
+        "parent": "ffe2345700000000",
+        "Qfplib": "ffe2345700000000"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 243,
+        "Qfplib": 90
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "fc9876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffe2345700000000",
+      "outputs": {
+        "candidate": "ffe2345700000000",
+        "parent": "ffe2345700000000",
+        "Qfplib": "ffe2345700000000"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 247,
+        "Qfplib": 94
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "fc9876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fe23456fffffffe",
+      "outputs": {
+        "candidate": "7fe23456fffffffe",
+        "parent": "7fe23456fffffffe",
+        "Qfplib": "7fe23456fffffffe"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 308,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "fc9876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fe23456fffffffe",
+      "outputs": {
+        "candidate": "7fe23456fffffffe",
+        "parent": "7fe23456fffffffe",
+        "Qfplib": "7fe23456fffffffe"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 312,
+        "Qfplib": 80
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "7c8876543210abcd",
+      "integer_expected": "7fe23456ffffffff",
+      "outputs": {
+        "candidate": "7fe23456ffffffff",
+        "parent": "7fe23456ffffffff",
+        "Qfplib": "7fe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 254,
+        "Qfplib": 72
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "fc8876543210abcd",
+      "integer_expected": "7fe23456ffffffff",
+      "outputs": {
+        "candidate": "7fe23456ffffffff",
+        "parent": "7fe23456ffffffff",
+        "Qfplib": "7fe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 258,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "7fe23456ffffffff",
+      "y": "fc8876543210abcd",
+      "integer_expected": "7fe23456ffffffff",
+      "outputs": {
+        "candidate": "7fe23456ffffffff",
+        "parent": "7fe23456ffffffff",
+        "Qfplib": "7fe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 309,
+        "Qfplib": 79
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "7fe23456ffffffff",
+      "y": "7c8876543210abcd",
+      "integer_expected": "7fe23456ffffffff",
+      "outputs": {
+        "candidate": "7fe23456ffffffff",
+        "parent": "7fe23456ffffffff",
+        "Qfplib": "7fe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 313,
+        "Qfplib": 83
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "fc8876543210abcd",
+      "integer_expected": "ffe23456ffffffff",
+      "outputs": {
+        "candidate": "ffe23456ffffffff",
+        "parent": "ffe23456ffffffff",
+        "Qfplib": "ffe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 254,
+        "Qfplib": 84
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "7c8876543210abcd",
+      "integer_expected": "ffe23456ffffffff",
+      "outputs": {
+        "candidate": "ffe23456ffffffff",
+        "parent": "ffe23456ffffffff",
+        "Qfplib": "ffe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 258,
+        "Qfplib": 88
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "ffe23456ffffffff",
+      "y": "7c8876543210abcd",
+      "integer_expected": "ffe23456ffffffff",
+      "outputs": {
+        "candidate": "ffe23456ffffffff",
+        "parent": "ffe23456ffffffff",
+        "Qfplib": "ffe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 309,
+        "Qfplib": 85
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "ffe23456ffffffff",
+      "y": "fc8876543210abcd",
+      "integer_expected": "ffe23456ffffffff",
+      "outputs": {
+        "candidate": "ffe23456ffffffff",
+        "parent": "ffe23456ffffffff",
+        "Qfplib": "ffe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 313,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "7c8876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fe23456ffffffff",
+      "outputs": {
+        "candidate": "7fe23456ffffffff",
+        "parent": "7fe23456ffffffff",
+        "Qfplib": "7fe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 248,
+        "Qfplib": 73
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "7c8876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fe23456ffffffff",
+      "outputs": {
+        "candidate": "7fe23456ffffffff",
+        "parent": "7fe23456ffffffff",
+        "Qfplib": "7fe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 49,
+        "parent": 252,
+        "Qfplib": 77
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "7c8876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffe23456ffffffff",
+      "outputs": {
+        "candidate": "ffe23456ffffffff",
+        "parent": "ffe23456ffffffff",
+        "Qfplib": "ffe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 303,
+        "Qfplib": 86
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "7c8876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffe23456ffffffff",
+      "outputs": {
+        "candidate": "ffe23456ffffffff",
+        "parent": "ffe23456ffffffff",
+        "Qfplib": "ffe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 78,
+        "parent": 307,
+        "Qfplib": 90
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dadd",
+      "x": "fc8876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "ffe23456ffffffff",
+      "outputs": {
+        "candidate": "ffe23456ffffffff",
+        "parent": "ffe23456ffffffff",
+        "Qfplib": "ffe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 248,
+        "Qfplib": 85
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-alignment-and-sticky",
+      "op": "dsub",
+      "x": "fc8876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "ffe23456ffffffff",
+      "outputs": {
+        "candidate": "ffe23456ffffffff",
+        "parent": "ffe23456ffffffff",
+        "Qfplib": "ffe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 49,
+        "parent": 252,
+        "Qfplib": 89
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dadd",
+      "x": "fc8876543210abcd",
+      "y": "7fe23456ffffffff",
+      "integer_expected": "7fe23456ffffffff",
+      "outputs": {
+        "candidate": "7fe23456ffffffff",
+        "parent": "7fe23456ffffffff",
+        "Qfplib": "7fe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 303,
+        "Qfplib": 80
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "top-opposite-sign",
+      "op": "dsub",
+      "x": "fc8876543210abcd",
+      "y": "ffe23456ffffffff",
+      "integer_expected": "7fe23456ffffffff",
+      "outputs": {
+        "candidate": "7fe23456ffffffff",
+        "parent": "7fe23456ffffffff",
+        "Qfplib": "7fe23456ffffffff"
+      },
+      "instructions": {
+        "candidate": 78,
+        "parent": 307,
+        "Qfplib": 84
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "7fefffffffffffff",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 215,
+        "Qfplib": 65
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "ffefffffffffffff",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 219,
+        "Qfplib": 69
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "ffefffffffffffff",
+      "integer_expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 42,
+        "parent": 149,
+        "Qfplib": 58
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "7fefffffffffffff",
+      "integer_expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 46,
+        "parent": 153,
+        "Qfplib": 62
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fe0000000000000",
+      "y": "7fe0000000000000",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 219,
+        "Qfplib": 65
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fe0000000000000",
+      "y": "ffe0000000000000",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 223,
+        "Qfplib": 69
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fe0000000000000",
+      "y": "ffe0000000000000",
+      "integer_expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 42,
+        "parent": 153,
+        "Qfplib": 59
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fe0000000000000",
+      "y": "7fe0000000000000",
+      "integer_expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 46,
+        "parent": 157,
+        "Qfplib": 63
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fe0000000000001",
+      "y": "7fe0000000000000",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 217,
+        "Qfplib": 72
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fe0000000000001",
+      "y": "ffe0000000000000",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 221,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fe0000000000001",
+      "y": "ffe0000000000000",
+      "integer_expected": "7ca0000000000000",
+      "outputs": {
+        "candidate": "7ca0000000000000",
+        "parent": "7ca0000000000000",
+        "Qfplib": "7ca0000000000000"
+      },
+      "instructions": {
+        "candidate": 100,
+        "parent": 276,
+        "Qfplib": 378
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fe0000000000001",
+      "y": "7fe0000000000000",
+      "integer_expected": "7ca0000000000000",
+      "outputs": {
+        "candidate": "7ca0000000000000",
+        "parent": "7ca0000000000000",
+        "Qfplib": "7ca0000000000000"
+      },
+      "instructions": {
+        "candidate": 104,
+        "parent": 280,
+        "Qfplib": 382
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "0010000000000000",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 218,
+        "Qfplib": 54
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "8010000000000000",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 222,
+        "Qfplib": 58
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "8010000000000000",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 32,
+        "parent": 273,
+        "Qfplib": 58
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "0010000000000000",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 36,
+        "parent": 277,
+        "Qfplib": 62
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "0000000000000001",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 265,
+        "parent": 266,
+        "Qfplib": 58
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "8000000000000001",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 269,
+        "parent": 270,
+        "Qfplib": 62
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "8000000000000001",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 320,
+        "parent": 321,
+        "Qfplib": 61
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "0000000000000001",
+      "integer_expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 324,
+        "parent": 325,
+        "Qfplib": 65
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "0360000000000001",
+      "y": "0360000000000000",
+      "integer_expected": "0370000000000000",
+      "outputs": {
+        "candidate": "0370000000000000",
+        "parent": "0370000000000000",
+        "Qfplib": "0370000000000000"
+      },
+      "instructions": {
+        "candidate": 228,
+        "parent": 228,
+        "Qfplib": 71
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "0360000000000001",
+      "y": "8360000000000000",
+      "integer_expected": "0370000000000000",
+      "outputs": {
+        "candidate": "0370000000000000",
+        "parent": "0370000000000000",
+        "Qfplib": "0370000000000000"
+      },
+      "instructions": {
+        "candidate": 232,
+        "parent": 232,
+        "Qfplib": 75
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "0360000000000001",
+      "y": "8360000000000000",
+      "integer_expected": "0020000000000000",
+      "outputs": {
+        "candidate": "0020000000000000",
+        "parent": "0020000000000000",
+        "Qfplib": "0020000000000000"
+      },
+      "instructions": {
+        "candidate": 276,
+        "parent": 276,
+        "Qfplib": 378
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "0360000000000001",
+      "y": "0360000000000000",
+      "integer_expected": "0020000000000000",
+      "outputs": {
+        "candidate": "0020000000000000",
+        "parent": "0020000000000000",
+        "Qfplib": "0020000000000000"
+      },
+      "instructions": {
+        "candidate": 280,
+        "parent": 280,
+        "Qfplib": 382
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "0370000000000001",
+      "y": "0370000000000000",
+      "integer_expected": "0380000000000000",
+      "outputs": {
+        "candidate": "0380000000000000",
+        "parent": "0380000000000000",
+        "Qfplib": "0380000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 53,
+        "Qfplib": 71
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "0370000000000001",
+      "y": "8370000000000000",
+      "integer_expected": "0380000000000000",
+      "outputs": {
+        "candidate": "0380000000000000",
+        "parent": "0380000000000000",
+        "Qfplib": "0380000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 57,
+        "Qfplib": 75
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "0370000000000001",
+      "y": "8370000000000000",
+      "integer_expected": "0030000000000000",
+      "outputs": {
+        "candidate": "0030000000000000",
+        "parent": "0030000000000000",
+        "Qfplib": "0030000000000000"
+      },
+      "instructions": {
+        "candidate": 98,
+        "parent": 98,
+        "Qfplib": 378
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "0370000000000001",
+      "y": "0370000000000000",
+      "integer_expected": "0030000000000000",
+      "outputs": {
+        "candidate": "0030000000000000",
+        "parent": "0030000000000000",
+        "Qfplib": "0030000000000000"
+      },
+      "instructions": {
+        "candidate": 102,
+        "parent": 102,
+        "Qfplib": 382
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fdfffffffffffff",
+      "y": "7fd0000000000000",
+      "integer_expected": "7fe8000000000000",
+      "outputs": {
+        "candidate": "7fe8000000000000",
+        "parent": "7fe8000000000000",
+        "Qfplib": "7fe8000000000000"
+      },
+      "instructions": {
+        "candidate": 54,
+        "parent": 54,
+        "Qfplib": 72
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fdfffffffffffff",
+      "y": "ffd0000000000000",
+      "integer_expected": "7fe8000000000000",
+      "outputs": {
+        "candidate": "7fe8000000000000",
+        "parent": "7fe8000000000000",
+        "Qfplib": "7fe8000000000000"
+      },
+      "instructions": {
+        "candidate": 58,
+        "parent": 58,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7fdfffffffffffff",
+      "y": "ffd0000000000000",
+      "integer_expected": "7fcffffffffffffe",
+      "outputs": {
+        "candidate": "7fcffffffffffffe",
+        "parent": "7fcffffffffffffe",
+        "Qfplib": "7fcffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 53,
+        "Qfplib": 72
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7fdfffffffffffff",
+      "y": "7fd0000000000000",
+      "integer_expected": "7fcffffffffffffe",
+      "outputs": {
+        "candidate": "7fcffffffffffffe",
+        "parent": "7fcffffffffffffe",
+        "Qfplib": "7fcffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 57,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "integer_expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 56,
+        "Qfplib": 67
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "0000000000000000",
+      "y": "8000000000000000",
+      "integer_expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 60,
+        "Qfplib": 71
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "0000000000000000",
+      "y": "8000000000000000",
+      "integer_expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 56,
+        "Qfplib": 67
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "integer_expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 60,
+        "Qfplib": 71
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "8000000000000000",
+      "y": "8000000000000000",
+      "integer_expected": "8000000000000000",
+      "outputs": {
+        "candidate": "8000000000000000",
+        "parent": "8000000000000000",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 56,
+        "Qfplib": 81
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "8000000000000000",
+      "y": "0000000000000000",
+      "integer_expected": "8000000000000000",
+      "outputs": {
+        "candidate": "8000000000000000",
+        "parent": "8000000000000000",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 60,
+        "Qfplib": 85
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "8000000000000000",
+      "y": "0000000000000000",
+      "integer_expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 56,
+        "Qfplib": 67
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "8000000000000000",
+      "y": "8000000000000000",
+      "integer_expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 60,
+        "Qfplib": 71
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7ff0000000000000",
+      "y": "7ff0000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 58,
+        "parent": 58,
+        "Qfplib": 81
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7ff0000000000000",
+      "y": "fff0000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 62,
+        "parent": 62,
+        "Qfplib": 85
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7ff0000000000000",
+      "y": "fff0000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 61,
+        "parent": 61,
+        "Qfplib": 75
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7ff0000000000000",
+      "y": "7ff0000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 65,
+        "Qfplib": 79
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7ff0000000000001",
+      "y": "0010000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff8000000000001",
+        "parent": "7ff8000000000001",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 43,
+        "Qfplib": 63
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7ff0000000000001",
+      "y": "8010000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff8000000000001",
+        "parent": "7ff8000000000001",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 47,
+        "parent": 47,
+        "Qfplib": 67
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7ff0000000000001",
+      "y": "8010000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff8000000000001",
+        "parent": "7ff8000000000001",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 43,
+        "Qfplib": 67
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7ff0000000000001",
+      "y": "0010000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff8000000000001",
+        "parent": "7ff8000000000001",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 47,
+        "parent": 47,
+        "Qfplib": 71
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7ff800000000007b",
+      "y": "0010000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff800000000007b",
+        "parent": "7ff800000000007b",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 40,
+        "Qfplib": 63
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7ff800000000007b",
+      "y": "8010000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff800000000007b",
+        "parent": "7ff800000000007b",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 44,
+        "Qfplib": 67
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dadd",
+      "x": "7ff800000000007b",
+      "y": "8010000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff800000000007b",
+        "parent": "7ff800000000007b",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 40,
+        "Qfplib": 67
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "guard-IEEE-and-normalization-controls",
+      "op": "dsub",
+      "x": "7ff800000000007b",
+      "y": "0010000000000000",
+      "integer_expected": null,
+      "outputs": {
+        "candidate": "7ff800000000007b",
+        "parent": "7ff800000000007b",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 44,
+        "Qfplib": 71
+      },
+      "candidate_fallback": true
+    },
+    {
+      "group": "old17",
+      "op": "dsub",
+      "x": "3ff0000000000000",
+      "y": "3c90000000000000",
+      "integer_expected": "3ff0000000000000",
+      "outputs": {
+        "candidate": "3ff0000000000000",
+        "parent": "3ff0000000000000",
+        "Qfplib": "3ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 80,
+        "parent": 80,
+        "Qfplib": 94
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "54ad46e403be1ba4",
+      "y": "d6ef42d0659d2a0a",
+      "integer_expected": "d6ef42d0659b559c",
+      "outputs": {
+        "candidate": "d6ef42d0659b559c",
+        "parent": "d6ef42d0659b559c",
+        "Qfplib": "d6ef42d0659b559c"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 72,
+        "Qfplib": 86
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "67ed799ecf646de1",
+      "y": "e975fd2d6871ccb5",
+      "integer_expected": "e975fd2d59b4fd4d",
+      "outputs": {
+        "candidate": "e975fd2d59b4fd4d",
+        "parent": "e975fd2d59b4fd4d",
+        "Qfplib": "e975fd2d59b4fd4d"
+      },
+      "instructions": {
+        "candidate": 62,
+        "parent": 62,
+        "Qfplib": 70
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "bc962d238155a9ea",
+      "y": "3fe168337c68b070",
+      "integer_expected": "3fe168337c68b06f",
+      "outputs": {
+        "candidate": "3fe168337c68b06f",
+        "parent": "3fe168337c68b06f",
+        "Qfplib": "3fe168337c68b06f"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "bcae7bdeeddeb6ec",
+      "y": "3f8cea4c3fb1bc06",
+      "integer_expected": "3f8cea4c3fb1bb8c",
+      "outputs": {
+        "candidate": "3f8cea4c3fb1bb8c",
+        "parent": "3f8cea4c3fb1bb8c",
+        "Qfplib": "3f8cea4c3fb1bb8c"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "bd2013721d1833bd",
+      "y": "3fd4c2c71646f101",
+      "integer_expected": "3fd4c2c71646eeff",
+      "outputs": {
+        "candidate": "3fd4c2c71646eeff",
+        "parent": "3fd4c2c71646eeff",
+        "Qfplib": "3fd4c2c71646eeff"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 72,
+        "Qfplib": 80
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "bd2bc5a420b3616b",
+      "y": "3f7dae7e502209af",
+      "integer_expected": "3f7dae7e50212b82",
+      "outputs": {
+        "candidate": "3f7dae7e50212b82",
+        "parent": "3f7dae7e50212b82",
+        "Qfplib": "3f7dae7e50212b82"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 72,
+        "Qfplib": 80
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "bd58899641535bfb",
+      "y": "3f7ceffd0385318c",
+      "integer_expected": "3f7ceffd037f0f26",
+      "outputs": {
+        "candidate": "3f7ceffd037f0f26",
+        "parent": "3f7ceffd037f0f26",
+        "Qfplib": "3f7ceffd037f0f26"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 76
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "bd85cf8be6bb2db9",
+      "y": "3f8202f6e288ed78",
+      "integer_expected": "3f8202f6e2731dec",
+      "outputs": {
+        "candidate": "3f8202f6e2731dec",
+        "parent": "3f8202f6e2731dec",
+        "Qfplib": "3f8202f6e2731dec"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 67,
+        "Qfplib": 75
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "bd9c92efdbf142e7",
+      "y": "3f9684b68b2e17e6",
+      "integer_expected": "3f9684b68b1184f6",
+      "outputs": {
+        "candidate": "3f9684b68b1184f6",
+        "parent": "3f9684b68b1184f6",
+        "Qfplib": "3f9684b68b1184f6"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 67,
+        "Qfplib": 75
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dsub",
+      "x": "3fc999999999999a",
+      "y": "4024000000000000",
+      "integer_expected": "c02399999999999a",
+      "outputs": {
+        "candidate": "c02399999999999a",
+        "parent": "c02399999999999a",
+        "Qfplib": "c02399999999999a"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 70,
+        "Qfplib": 79
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dsub",
+      "x": "42f123456789abcd",
+      "y": "439fedcba9876543",
+      "integer_expected": "c39fe982d82d82d8",
+      "outputs": {
+        "candidate": "c39fe982d82d82d8",
+        "parent": "c39fe982d82d82d8",
+        "Qfplib": "c39fe982d82d82d8"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 66,
+        "Qfplib": 74
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "3f86bfc5ee249072",
+      "y": "bc872287b9de4e94",
+      "integer_expected": "3f86bfc5ee24905b",
+      "outputs": {
+        "candidate": "3f86bfc5ee24905b",
+        "parent": "3f86bfc5ee24905b",
+        "Qfplib": "3f86bfc5ee24905b"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 79
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "3ff919126d52cdef",
+      "y": "bd69c498a2cb06f5",
+      "integer_expected": "3ff919126d52c10d",
+      "outputs": {
+        "candidate": "3ff919126d52c10d",
+        "parent": "3ff919126d52c10d",
+        "Qfplib": "3ff919126d52c10d"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 79
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "40494a5bd8768d02",
+      "y": "be2ff4c97f40f242",
+      "integer_expected": "40494a5bd86e8fd0",
+      "outputs": {
+        "candidate": "40494a5bd86e8fd0",
+        "parent": "40494a5bd86e8fd0",
+        "Qfplib": "40494a5bd86e8fd0"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 79
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dadd",
+      "x": "404acefc54b5bb36",
+      "y": "bda2513fa12ec655",
+      "integer_expected": "404acefc54b5b6a2",
+      "outputs": {
+        "candidate": "404acefc54b5b6a2",
+        "parent": "404acefc54b5b6a2",
+        "Qfplib": "404acefc54b5b6a2"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 79
+      },
+      "candidate_fallback": false
+    },
+    {
+      "group": "old17",
+      "op": "dsub",
+      "x": "350fedcba9876543",
+      "y": "347123456789abcd",
+      "integer_expected": "350fe53a06d3a06d",
+      "outputs": {
+        "candidate": "350fe53a06d3a06d",
+        "parent": "350fe53a06d3a06d",
+        "Qfplib": "350fe53a06d3a06d"
+      },
+      "instructions": {
+        "candidate": 62,
+        "parent": 62,
+        "Qfplib": 67
+      },
+      "candidate_fallback": false
+    }
+  ],
+  "old17_results_and_counts_unchanged": true,
+  "own_integer_oracle": "Exact signed integer sum on a common binary lattice, one round-to-even step at binary64 normal/subnormal precision; no host float/MPFR/author oracle",
+  "callee_saved_SP_bounded_stack_checked_by_actual_Machine": true,
+  "exact_slow_frame_checked": true,
+  "SIO_READY_DIRTY_preserved_every_call": true,
+  "machine_source_sha256": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3",
+  "ELF_parser_sha256": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708",
+  "candidate_ELF_sha256": "5f1a8bec6d7c499d19ec3b9defe6a9f5fc6b10c8b4795e297b984c6158508343",
+  "firmware_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "ROM_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "reference_ELF_sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+  "bootrom_models": [],
+  "bootrom_initializers": [
+    {
+      "name": "__aeabi_bits_init",
+      "table": "aeabi_bits_funcs",
+      "pointers": [
+        "0x309",
+        "0x357",
+        "0x38f",
+        "0x32d"
+      ]
+    },
+    {
+      "name": "__aeabi_mem_init",
+      "table": "aeabi_mem_funcs",
+      "pointers": [
+        "0x26b9",
+        "0x261d",
+        "0x26ad",
+        "0x2605"
+      ]
+    }
+  ],
+  "hardware_access": false,
+  "physical_cycles_measured": false
+}

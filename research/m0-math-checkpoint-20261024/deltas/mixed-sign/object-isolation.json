@@ -1,0 +1,143 @@
+{
+  "status": "PASS_ONLY_DADD_BLOCK_CHANGED_IN_PRIVATE_ASSEMBLY_OBJECT",
+  "changed_allocated_sections": [
+    ".text.mk61_rp2040_arithmetic"
+  ],
+  "control_dadd_block_bytes": 764,
+  "candidate_dadd_block_bytes": 648,
+  "block_bytes_delta": -116,
+  "all_other_allocated_sections_identical": true,
+  "remaining_multiply_divide_kernel_bytes_identical": true,
+  "contexts": [
+    {
+      "context": "M4_soft",
+      "allocated_code_and_data_identical": true,
+      "allocated_bytes": 0
+    },
+    {
+      "context": "M4_hard",
+      "allocated_code_and_data_identical": true,
+      "allocated_bytes": 0
+    },
+    {
+      "context": "generic_M0",
+      "allocated_code_and_data_identical": true,
+      "allocated_bytes": 0
+    }
+  ],
+  "scope": "Compile-object isolation only, not a new linked production image or global M4 rebuild. Canonical and frozen sources remain unchanged.",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/control-full.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/candidate-full.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/M4_soft-control.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/M4_soft-candidate.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-mfloat-abi=hard",
+      "-DMK61_USE_M0_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-mfpu=fpv4-sp-d16",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/M4_hard-control.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-mfloat-abi=hard",
+      "-DMK61_USE_M0_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-mfpu=fpv4-sp-d16",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/M4_hard-candidate.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/generic_M0-control.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/generic_M0-candidate.o"
+    ]
+  ],
+  "source_sha256": "7f757aaeabd4aa4f172b28bf62e5f6e141d4584743617ac9d932d19346251c4f",
+  "producer_sha256": "dad9c82c8b18c088c989e7165183cf0d147481c88bc21f4421342158ad11af6d",
+  "canonical_changed": false,
+  "hardware_accessed": false
+}

@@ -1,0 +1,155 @@
+{
+  "status": "D2UIZ_DELTA_TECHNICAL_GO_NOT_PRODUCTION",
+  "recorded_at": "2026-10-23T19:25:47.992694+00:00",
+  "HANDOFF_sha256": "aa6f45d43388c94298dbd2ed5be220daa98842e1d3b50cdddfc2128d2ca7cd51",
+  "producer_result_sha256": "1d4e45dbd257d8fbf33bf9516a966fb74bbbdf33145d3448be1a95175d3f1c8c",
+  "patch_sha256": "81d2987ea952820a2c0c01fd8ad81b6040ca6ce8d3b002631061142efcd185b8",
+  "candidate_body_sha256": "533a45eba58e876e8257bd613486eeb66a4c94ed1f2eb3107affaadc592466e6",
+  "candidate_ELF_sha256": "89874ddb75087d9e330c44bc1a75ecb58ed5d29b4201f41b0833dc15a535cfd4",
+  "source_rebuilds": [
+    {
+      "tag": "assembly",
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-mfloat-abi=soft",
+        "-Os",
+        "-I",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+        "-DMK61_USE_M0_EABI=1",
+        "-DMK61_M0_RP2040_EABI=1",
+        "-c",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-20261023/native_eabi_m0.S",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-independent-review-20261023/rebuilt-assembly.o"
+      ],
+      "rebuilt_sha256": "a608a231ff2ef3d180efe785d08ec4df5692cbd81ab4b96d861bcd8b04c45140",
+      "producer_object_sha256": "a608a231ff2ef3d180efe785d08ec4df5692cbd81ab4b96d861bcd8b04c45140",
+      "allocated_and_symbol_identity": true
+    },
+    {
+      "tag": "cpp",
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-mfloat-abi=soft",
+        "-Os",
+        "-I",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+        "-std=gnu++17",
+        "-fno-exceptions",
+        "-fno-rtti",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-fno-builtin",
+        "-DMK61_USE_M0_EABI=1",
+        "-DMK61_M0_RP2040_EABI=1",
+        "-c",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-20261023/native_eabi_m0.cpp",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-independent-review-20261023/rebuilt-cpp.o"
+      ],
+      "rebuilt_sha256": "ee340dbf29fb33099f6b10dea74b95a82cf4b8c83682316e2b709f188e4c289d",
+      "producer_object_sha256": "ee340dbf29fb33099f6b10dea74b95a82cf4b8c83682316e2b709f188e4c289d",
+      "allocated_and_symbol_identity": true
+    }
+  ],
+  "object_isolation": "Exactly80B assembly section added,26B C++ wrapper removed; all other allocated sections and BSS sizes unchanged; +54B unlinked object sections, not full firmware Flash estimate",
+  "public_diagnostic_body": "All80 bytes including literal identical, no helper relocation",
+  "mathematical_review": [
+    "sign=1 returns0 for all classes including negativeNaN/Inf/zero; nonnegative E<1023 returns0.",
+    "For0<=e<=20 use H>>(20-e); for21<=e<=31 concatenate disjoint H<<(e-20) and L>>(52-e), exact floor/truncation. All shifts0..31 and outputs fit uint32.",
+    "For e32..1023 saturateUINT_MAX; e1024 is all-ones exponent and (high<<12)|low distinguishes Inf from every52-bit NaN payload.",
+    "Policy equals old D::unsigned32/magnitude_integer; out-of-C-range behavior is project policy, not a new language guarantee."
+  ],
+  "old256": {
+    "rows": 256,
+    "source_set_matches_V164": true,
+    "all_raw_outputs_correct_under_independent_oracle": true,
+    "candidate_faster_correct_Qfplib": 256,
+    "instruction_groups": [
+      {
+        "candidate": 20,
+        "baseline": 47,
+        "Qfplib": 43,
+        "cases": 162
+      },
+      {
+        "candidate": 22,
+        "baseline": 50,
+        "Qfplib": 43,
+        "cases": 94
+      }
+    ],
+    "two_path_representatives_replayed": [
+      {
+        "x": "3FF4CC0B3087B26A",
+        "CSR": 1,
+        "instruction_counts": {
+          "candidate": 20,
+          "baseline": 47,
+          "Qfplib": 43
+        }
+      },
+      {
+        "x": "3FF4CC0B3087B26A",
+        "CSR": 3,
+        "instruction_counts": {
+          "candidate": 20,
+          "baseline": 47,
+          "Qfplib": 43
+        }
+      },
+      {
+        "x": "4142C5114B6A0F18",
+        "CSR": 1,
+        "instruction_counts": {
+          "candidate": 22,
+          "baseline": 50,
+          "Qfplib": 43
+        }
+      },
+      {
+        "x": "4142C5114B6A0F18",
+        "CSR": 3,
+        "instruction_counts": {
+          "candidate": 22,
+          "baseline": 50,
+          "Qfplib": 43
+        }
+      }
+    ]
+  },
+  "independent_replay": {
+    "inputs": 120,
+    "ARM_calls": 720,
+    "wrong": 0,
+    "SIO_states": [
+      "READY",
+      "READY|DIRTY"
+    ],
+    "zero_candidate_memory_writes": true,
+    "ABI_SP_R4_R11": "PASS via unchanged pinned Machine",
+    "oracle": "Host int(exact binary64) truncation plus explicit NaN/negative/overflow project policy, independent of producer integer-bit/MPFR implementation",
+    "samples_sha256": "026c5bebf2eaff3554252ab12d3a334d3f4d367c931c9a7203b1505ebb3b58aa"
+  },
+  "M4_soft_hard_generic_M0_allocated_controls": "Assembly+C++ identical",
+  "linked_direct_BL_calls_verified": 19,
+  "blockers": [],
+  "limitations": [
+    "This80B delta only; no47966-case rerun or unrelated math/framework expansion.",
+    "Instruction counts are not physical cycles; production integration/full firmware size/cache/IRQ/platform acceptance remain open.",
+    "The56 wrong Qfplib results in the wider author corpus are retained; no all-input speed theorem or complete library goal claim.",
+    "No hardware/Flash/Git/canonical/source or new numeric version changed."
+  ],
+  "helpers": {
+    "native_eabi_m0_arm_self_test.py": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3",
+    "check_stm32_vectors.py": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708"
+  },
+  "baseline_ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "ROM_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "reference_ELF_sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+  "device_accessed": false
+}

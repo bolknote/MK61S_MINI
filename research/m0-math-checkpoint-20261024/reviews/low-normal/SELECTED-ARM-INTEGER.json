@@ -1,0 +1,3594 @@
+{
+  "status": "PASS_SELECTED_ARM_EXACT_INTEGER_AND_RAW_NAN_POLICY",
+  "cases": 207,
+  "ARM_calls": 621,
+  "groups": {
+    "capped-budget-boundaries": 48,
+    "capped-negative-and-normal-transition": 6,
+    "normalization-chunk-widths": 24,
+    "adjacent-binade-subnormal-carry-and-tie": 22,
+    "same-sign-alignment-and-carry": 32,
+    "first-NaN-payload-sign-and-Inf-policy": 24,
+    "unchanged-E0-input-fallback": 10,
+    "old17": 17,
+    "unchanged-ordinary-top-overflow-controls": 24
+  },
+  "rows": [
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0010000000000001",
+      "y": "8010000000000000",
+      "expected": "0000000000000001",
+      "outputs": {
+        "candidate": "0000000000000001",
+        "parent": "0000000000000001",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 326,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0010000000000001",
+      "y": "0010000000000000",
+      "expected": "0000000000000001",
+      "outputs": {
+        "candidate": "0000000000000001",
+        "parent": "0000000000000001",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 330,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8010000000000000",
+      "y": "0010000000000001",
+      "expected": "0000000000000001",
+      "outputs": {
+        "candidate": "0000000000000001",
+        "parent": "0000000000000001",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 320,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8010000000000000",
+      "y": "8010000000000001",
+      "expected": "0000000000000001",
+      "outputs": {
+        "candidate": "0000000000000001",
+        "parent": "0000000000000001",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 61,
+        "parent": 324,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-negative-and-normal-transition",
+      "operation": "dadd",
+      "x": "8010000000000001",
+      "y": "0010000000000000",
+      "expected": "8000000000000001",
+      "outputs": {
+        "candidate": "8000000000000001",
+        "parent": "8000000000000001",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 326,
+        "Qfplib": 378
+      }
+    },
+    {
+      "group": "capped-negative-and-normal-transition",
+      "operation": "dsub",
+      "x": "8010000000000001",
+      "y": "8010000000000000",
+      "expected": "8000000000000001",
+      "outputs": {
+        "candidate": "8000000000000001",
+        "parent": "8000000000000001",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 330,
+        "Qfplib": 382
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0020000000000001",
+      "y": "8020000000000000",
+      "expected": "0000000000000002",
+      "outputs": {
+        "candidate": "0000000000000002",
+        "parent": "0000000000000002",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 326,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0020000000000001",
+      "y": "0020000000000000",
+      "expected": "0000000000000002",
+      "outputs": {
+        "candidate": "0000000000000002",
+        "parent": "0000000000000002",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 330,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8020000000000000",
+      "y": "0020000000000001",
+      "expected": "0000000000000002",
+      "outputs": {
+        "candidate": "0000000000000002",
+        "parent": "0000000000000002",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 320,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8020000000000000",
+      "y": "8020000000000001",
+      "expected": "0000000000000002",
+      "outputs": {
+        "candidate": "0000000000000002",
+        "parent": "0000000000000002",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 79,
+        "parent": 324,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0040000000000001",
+      "y": "8040000000000000",
+      "expected": "0000000000000008",
+      "outputs": {
+        "candidate": "0000000000000008",
+        "parent": "0000000000000008",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 326,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0040000000000001",
+      "y": "0040000000000000",
+      "expected": "0000000000000008",
+      "outputs": {
+        "candidate": "0000000000000008",
+        "parent": "0000000000000008",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 330,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8040000000000000",
+      "y": "0040000000000001",
+      "expected": "0000000000000008",
+      "outputs": {
+        "candidate": "0000000000000008",
+        "parent": "0000000000000008",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 320,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8040000000000000",
+      "y": "8040000000000001",
+      "expected": "0000000000000008",
+      "outputs": {
+        "candidate": "0000000000000008",
+        "parent": "0000000000000008",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 79,
+        "parent": 324,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0050000000000001",
+      "y": "8050000000000000",
+      "expected": "0000000000000010",
+      "outputs": {
+        "candidate": "0000000000000010",
+        "parent": "0000000000000010",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 326,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0050000000000001",
+      "y": "0050000000000000",
+      "expected": "0000000000000010",
+      "outputs": {
+        "candidate": "0000000000000010",
+        "parent": "0000000000000010",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 330,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8050000000000000",
+      "y": "0050000000000001",
+      "expected": "0000000000000010",
+      "outputs": {
+        "candidate": "0000000000000010",
+        "parent": "0000000000000010",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 320,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8050000000000000",
+      "y": "8050000000000001",
+      "expected": "0000000000000010",
+      "outputs": {
+        "candidate": "0000000000000010",
+        "parent": "0000000000000010",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 79,
+        "parent": 324,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0080000000000001",
+      "y": "8080000000000000",
+      "expected": "0000000000000080",
+      "outputs": {
+        "candidate": "0000000000000080",
+        "parent": "0000000000000080",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 326,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0080000000000001",
+      "y": "0080000000000000",
+      "expected": "0000000000000080",
+      "outputs": {
+        "candidate": "0000000000000080",
+        "parent": "0000000000000080",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 330,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8080000000000000",
+      "y": "0080000000000001",
+      "expected": "0000000000000080",
+      "outputs": {
+        "candidate": "0000000000000080",
+        "parent": "0000000000000080",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 320,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8080000000000000",
+      "y": "8080000000000001",
+      "expected": "0000000000000080",
+      "outputs": {
+        "candidate": "0000000000000080",
+        "parent": "0000000000000080",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 79,
+        "parent": 324,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0090000000000001",
+      "y": "8090000000000000",
+      "expected": "0000000000000100",
+      "outputs": {
+        "candidate": "0000000000000100",
+        "parent": "0000000000000100",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 326,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0090000000000001",
+      "y": "0090000000000000",
+      "expected": "0000000000000100",
+      "outputs": {
+        "candidate": "0000000000000100",
+        "parent": "0000000000000100",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 330,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8090000000000000",
+      "y": "0090000000000001",
+      "expected": "0000000000000100",
+      "outputs": {
+        "candidate": "0000000000000100",
+        "parent": "0000000000000100",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 320,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8090000000000000",
+      "y": "8090000000000001",
+      "expected": "0000000000000100",
+      "outputs": {
+        "candidate": "0000000000000100",
+        "parent": "0000000000000100",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 79,
+        "parent": 324,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0100000000000001",
+      "y": "8100000000000000",
+      "expected": "0000000000008000",
+      "outputs": {
+        "candidate": "0000000000008000",
+        "parent": "0000000000008000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 326,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0100000000000001",
+      "y": "0100000000000000",
+      "expected": "0000000000008000",
+      "outputs": {
+        "candidate": "0000000000008000",
+        "parent": "0000000000008000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 330,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8100000000000000",
+      "y": "0100000000000001",
+      "expected": "0000000000008000",
+      "outputs": {
+        "candidate": "0000000000008000",
+        "parent": "0000000000008000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 320,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8100000000000000",
+      "y": "8100000000000001",
+      "expected": "0000000000008000",
+      "outputs": {
+        "candidate": "0000000000008000",
+        "parent": "0000000000008000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 79,
+        "parent": 324,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0110000000000001",
+      "y": "8110000000000000",
+      "expected": "0000000000010000",
+      "outputs": {
+        "candidate": "0000000000010000",
+        "parent": "0000000000010000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 326,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0110000000000001",
+      "y": "0110000000000000",
+      "expected": "0000000000010000",
+      "outputs": {
+        "candidate": "0000000000010000",
+        "parent": "0000000000010000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 77,
+        "parent": 330,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8110000000000000",
+      "y": "0110000000000001",
+      "expected": "0000000000010000",
+      "outputs": {
+        "candidate": "0000000000010000",
+        "parent": "0000000000010000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 77,
+        "parent": 320,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8110000000000000",
+      "y": "8110000000000001",
+      "expected": "0000000000010000",
+      "outputs": {
+        "candidate": "0000000000010000",
+        "parent": "0000000000010000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 81,
+        "parent": 324,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0200000000000001",
+      "y": "8200000000000000",
+      "expected": "0000000080000000",
+      "outputs": {
+        "candidate": "0000000080000000",
+        "parent": "0000000080000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 82,
+        "parent": 326,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0200000000000001",
+      "y": "0200000000000000",
+      "expected": "0000000080000000",
+      "outputs": {
+        "candidate": "0000000080000000",
+        "parent": "0000000080000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 86,
+        "parent": 330,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8200000000000000",
+      "y": "0200000000000001",
+      "expected": "0000000080000000",
+      "outputs": {
+        "candidate": "0000000080000000",
+        "parent": "0000000080000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 86,
+        "parent": 320,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8200000000000000",
+      "y": "8200000000000001",
+      "expected": "0000000080000000",
+      "outputs": {
+        "candidate": "0000000080000000",
+        "parent": "0000000080000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 90,
+        "parent": 324,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0210000000000001",
+      "y": "8210000000000000",
+      "expected": "0000000100000000",
+      "outputs": {
+        "candidate": "0000000100000000",
+        "parent": "0000000100000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 84,
+        "parent": 326,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0210000000000001",
+      "y": "0210000000000000",
+      "expected": "0000000100000000",
+      "outputs": {
+        "candidate": "0000000100000000",
+        "parent": "0000000100000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 88,
+        "parent": 330,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8210000000000000",
+      "y": "0210000000000001",
+      "expected": "0000000100000000",
+      "outputs": {
+        "candidate": "0000000100000000",
+        "parent": "0000000100000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 88,
+        "parent": 320,
+        "Qfplib": 373
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8210000000000000",
+      "y": "8210000000000001",
+      "expected": "0000000100000000",
+      "outputs": {
+        "candidate": "0000000100000000",
+        "parent": "0000000100000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 92,
+        "parent": 324,
+        "Qfplib": 377
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0350000000000001",
+      "y": "8350000000000000",
+      "expected": "0010000000000000",
+      "outputs": {
+        "candidate": "0010000000000000",
+        "parent": "0010000000000000",
+        "Qfplib": "0010000000000000"
+      },
+      "instructions": {
+        "candidate": 128,
+        "parent": 276,
+        "Qfplib": 378
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0350000000000001",
+      "y": "0350000000000000",
+      "expected": "0010000000000000",
+      "outputs": {
+        "candidate": "0010000000000000",
+        "parent": "0010000000000000",
+        "Qfplib": "0010000000000000"
+      },
+      "instructions": {
+        "candidate": 132,
+        "parent": 280,
+        "Qfplib": 382
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8350000000000000",
+      "y": "0350000000000001",
+      "expected": "0010000000000000",
+      "outputs": {
+        "candidate": "0010000000000000",
+        "parent": "0010000000000000",
+        "Qfplib": "0010000000000000"
+      },
+      "instructions": {
+        "candidate": 132,
+        "parent": 270,
+        "Qfplib": 378
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8350000000000000",
+      "y": "8350000000000001",
+      "expected": "0010000000000000",
+      "outputs": {
+        "candidate": "0010000000000000",
+        "parent": "0010000000000000",
+        "Qfplib": "0010000000000000"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 274,
+        "Qfplib": 382
+      }
+    },
+    {
+      "group": "capped-negative-and-normal-transition",
+      "operation": "dadd",
+      "x": "8350000000000001",
+      "y": "0350000000000000",
+      "expected": "8010000000000000",
+      "outputs": {
+        "candidate": "8010000000000000",
+        "parent": "8010000000000000",
+        "Qfplib": "8010000000000000"
+      },
+      "instructions": {
+        "candidate": 128,
+        "parent": 276,
+        "Qfplib": 383
+      }
+    },
+    {
+      "group": "capped-negative-and-normal-transition",
+      "operation": "dsub",
+      "x": "8350000000000001",
+      "y": "8350000000000000",
+      "expected": "8010000000000000",
+      "outputs": {
+        "candidate": "8010000000000000",
+        "parent": "8010000000000000",
+        "Qfplib": "8010000000000000"
+      },
+      "instructions": {
+        "candidate": 132,
+        "parent": 280,
+        "Qfplib": 387
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "0360000000000001",
+      "y": "8360000000000000",
+      "expected": "0020000000000000",
+      "outputs": {
+        "candidate": "0020000000000000",
+        "parent": "0020000000000000",
+        "Qfplib": "0020000000000000"
+      },
+      "instructions": {
+        "candidate": 128,
+        "parent": 276,
+        "Qfplib": 378
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "0360000000000001",
+      "y": "0360000000000000",
+      "expected": "0020000000000000",
+      "outputs": {
+        "candidate": "0020000000000000",
+        "parent": "0020000000000000",
+        "Qfplib": "0020000000000000"
+      },
+      "instructions": {
+        "candidate": 132,
+        "parent": 280,
+        "Qfplib": 382
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dadd",
+      "x": "8360000000000000",
+      "y": "0360000000000001",
+      "expected": "0020000000000000",
+      "outputs": {
+        "candidate": "0020000000000000",
+        "parent": "0020000000000000",
+        "Qfplib": "0020000000000000"
+      },
+      "instructions": {
+        "candidate": 132,
+        "parent": 270,
+        "Qfplib": 378
+      }
+    },
+    {
+      "group": "capped-budget-boundaries",
+      "operation": "dsub",
+      "x": "8360000000000000",
+      "y": "8360000000000001",
+      "expected": "0020000000000000",
+      "outputs": {
+        "candidate": "0020000000000000",
+        "parent": "0020000000000000",
+        "Qfplib": "0020000000000000"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 274,
+        "Qfplib": 382
+      }
+    },
+    {
+      "group": "capped-negative-and-normal-transition",
+      "operation": "dadd",
+      "x": "8360000000000001",
+      "y": "0360000000000000",
+      "expected": "8020000000000000",
+      "outputs": {
+        "candidate": "8020000000000000",
+        "parent": "8020000000000000",
+        "Qfplib": "8020000000000000"
+      },
+      "instructions": {
+        "candidate": 128,
+        "parent": 276,
+        "Qfplib": 383
+      }
+    },
+    {
+      "group": "capped-negative-and-normal-transition",
+      "operation": "dsub",
+      "x": "8360000000000001",
+      "y": "8360000000000000",
+      "expected": "8020000000000000",
+      "outputs": {
+        "candidate": "8020000000000000",
+        "parent": "8020000000000000",
+        "Qfplib": "8020000000000000"
+      },
+      "instructions": {
+        "candidate": 132,
+        "parent": 280,
+        "Qfplib": 387
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "001000000000ffff",
+      "y": "8010000000000000",
+      "expected": "000000000000ffff",
+      "outputs": {
+        "candidate": "000000000000ffff",
+        "parent": "000000000000ffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 324,
+        "Qfplib": 283
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "001000000000ffff",
+      "y": "0010000000000000",
+      "expected": "000000000000ffff",
+      "outputs": {
+        "candidate": "000000000000ffff",
+        "parent": "000000000000ffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 328,
+        "Qfplib": 287
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "00100000ffffffff",
+      "y": "8010000000000000",
+      "expected": "00000000ffffffff",
+      "outputs": {
+        "candidate": "00000000ffffffff",
+        "parent": "00000000ffffffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 328,
+        "Qfplib": 187
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "00100000ffffffff",
+      "y": "0010000000000000",
+      "expected": "00000000ffffffff",
+      "outputs": {
+        "candidate": "00000000ffffffff",
+        "parent": "00000000ffffffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 332,
+        "Qfplib": 191
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "0010ffffffffffff",
+      "y": "8010000000000000",
+      "expected": "0000ffffffffffff",
+      "outputs": {
+        "candidate": "0000ffffffffffff",
+        "parent": "0000ffffffffffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 324,
+        "Qfplib": 91
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "0010ffffffffffff",
+      "y": "0010000000000000",
+      "expected": "0000ffffffffffff",
+      "outputs": {
+        "candidate": "0000ffffffffffff",
+        "parent": "0000ffffffffffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 328,
+        "Qfplib": 95
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "001fffffffffffff",
+      "y": "8010000000000000",
+      "expected": "000fffffffffffff",
+      "outputs": {
+        "candidate": "000fffffffffffff",
+        "parent": "000fffffffffffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 322,
+        "Qfplib": 67
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "001fffffffffffff",
+      "y": "0010000000000000",
+      "expected": "000fffffffffffff",
+      "outputs": {
+        "candidate": "000fffffffffffff",
+        "parent": "000fffffffffffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 326,
+        "Qfplib": 71
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "011000000000ffff",
+      "y": "8110000000000000",
+      "expected": "00000000ffff0000",
+      "outputs": {
+        "candidate": "00000000ffff0000",
+        "parent": "00000000ffff0000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 324,
+        "Qfplib": 283
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "011000000000ffff",
+      "y": "0110000000000000",
+      "expected": "00000000ffff0000",
+      "outputs": {
+        "candidate": "00000000ffff0000",
+        "parent": "00000000ffff0000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 77,
+        "parent": 328,
+        "Qfplib": 287
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "01100000ffffffff",
+      "y": "8110000000000000",
+      "expected": "0000ffffffff0000",
+      "outputs": {
+        "candidate": "0000ffffffff0000",
+        "parent": "0000ffffffff0000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 77,
+        "parent": 328,
+        "Qfplib": 187
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "01100000ffffffff",
+      "y": "0110000000000000",
+      "expected": "0000ffffffff0000",
+      "outputs": {
+        "candidate": "0000ffffffff0000",
+        "parent": "0000ffffffff0000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 81,
+        "parent": 332,
+        "Qfplib": 191
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "0110ffffffffffff",
+      "y": "8110000000000000",
+      "expected": "00cfffffffffffe0",
+      "outputs": {
+        "candidate": "00cfffffffffffe0",
+        "parent": "00cfffffffffffe0",
+        "Qfplib": "00cfffffffffffe0"
+      },
+      "instructions": {
+        "candidate": 79,
+        "parent": 274,
+        "Qfplib": 96
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "0110ffffffffffff",
+      "y": "0110000000000000",
+      "expected": "00cfffffffffffe0",
+      "outputs": {
+        "candidate": "00cfffffffffffe0",
+        "parent": "00cfffffffffffe0",
+        "Qfplib": "00cfffffffffffe0"
+      },
+      "instructions": {
+        "candidate": 83,
+        "parent": 278,
+        "Qfplib": 100
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "011fffffffffffff",
+      "y": "8110000000000000",
+      "expected": "010ffffffffffffe",
+      "outputs": {
+        "candidate": "010ffffffffffffe",
+        "parent": "010ffffffffffffe",
+        "Qfplib": "010ffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 272,
+        "Qfplib": 72
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "011fffffffffffff",
+      "y": "0110000000000000",
+      "expected": "010ffffffffffffe",
+      "outputs": {
+        "candidate": "010ffffffffffffe",
+        "parent": "010ffffffffffffe",
+        "Qfplib": "010ffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 276,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "021000000000ffff",
+      "y": "8210000000000000",
+      "expected": "0000ffff00000000",
+      "outputs": {
+        "candidate": "0000ffff00000000",
+        "parent": "0000ffff00000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 88,
+        "parent": 324,
+        "Qfplib": 283
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "021000000000ffff",
+      "y": "0210000000000000",
+      "expected": "0000ffff00000000",
+      "outputs": {
+        "candidate": "0000ffff00000000",
+        "parent": "0000ffff00000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 92,
+        "parent": 328,
+        "Qfplib": 287
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "02100000ffffffff",
+      "y": "8210000000000000",
+      "expected": "00cfffffffe00000",
+      "outputs": {
+        "candidate": "00cfffffffe00000",
+        "parent": "00cfffffffe00000",
+        "Qfplib": "00cfffffffe00000"
+      },
+      "instructions": {
+        "candidate": 90,
+        "parent": 278,
+        "Qfplib": 192
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "02100000ffffffff",
+      "y": "0210000000000000",
+      "expected": "00cfffffffe00000",
+      "outputs": {
+        "candidate": "00cfffffffe00000",
+        "parent": "00cfffffffe00000",
+        "Qfplib": "00cfffffffe00000"
+      },
+      "instructions": {
+        "candidate": 94,
+        "parent": 282,
+        "Qfplib": 196
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "0210ffffffffffff",
+      "y": "8210000000000000",
+      "expected": "01cfffffffffffe0",
+      "outputs": {
+        "candidate": "01cfffffffffffe0",
+        "parent": "01cfffffffffffe0",
+        "Qfplib": "01cfffffffffffe0"
+      },
+      "instructions": {
+        "candidate": 79,
+        "parent": 274,
+        "Qfplib": 96
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "0210ffffffffffff",
+      "y": "0210000000000000",
+      "expected": "01cfffffffffffe0",
+      "outputs": {
+        "candidate": "01cfffffffffffe0",
+        "parent": "01cfffffffffffe0",
+        "Qfplib": "01cfffffffffffe0"
+      },
+      "instructions": {
+        "candidate": 83,
+        "parent": 278,
+        "Qfplib": 100
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dadd",
+      "x": "021fffffffffffff",
+      "y": "8210000000000000",
+      "expected": "020ffffffffffffe",
+      "outputs": {
+        "candidate": "020ffffffffffffe",
+        "parent": "020ffffffffffffe",
+        "Qfplib": "020ffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 65,
+        "parent": 272,
+        "Qfplib": 72
+      }
+    },
+    {
+      "group": "normalization-chunk-widths",
+      "operation": "dsub",
+      "x": "021fffffffffffff",
+      "y": "0210000000000000",
+      "expected": "020ffffffffffffe",
+      "outputs": {
+        "candidate": "020ffffffffffffe",
+        "parent": "020ffffffffffffe",
+        "Qfplib": "020ffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 276,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dadd",
+      "x": "0020000000000000",
+      "y": "801fffffffffffff",
+      "expected": "0000000000000001",
+      "outputs": {
+        "candidate": "0000000000000001",
+        "parent": "0000000000000001",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 368,
+        "Qfplib": 382
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dsub",
+      "x": "0020000000000000",
+      "y": "001fffffffffffff",
+      "expected": "0000000000000001",
+      "outputs": {
+        "candidate": "0000000000000001",
+        "parent": "0000000000000001",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 372,
+        "Qfplib": 386
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dadd",
+      "x": "001fffffffffffff",
+      "y": "8020000000000000",
+      "expected": "8000000000000001",
+      "outputs": {
+        "candidate": "8000000000000001",
+        "parent": "8000000000000001",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 362,
+        "Qfplib": 390
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dsub",
+      "x": "001fffffffffffff",
+      "y": "0020000000000000",
+      "expected": "8000000000000001",
+      "outputs": {
+        "candidate": "8000000000000001",
+        "parent": "8000000000000001",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 61,
+        "parent": 366,
+        "Qfplib": 394
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dadd",
+      "x": "0020000000000000",
+      "y": "8010000000000000",
+      "expected": "0010000000000000",
+      "outputs": {
+        "candidate": "0010000000000000",
+        "parent": "0010000000000000",
+        "Qfplib": "0010000000000000"
+      },
+      "instructions": {
+        "candidate": 49,
+        "parent": 318,
+        "Qfplib": 74
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dsub",
+      "x": "0020000000000000",
+      "y": "0010000000000000",
+      "expected": "0010000000000000",
+      "outputs": {
+        "candidate": "0010000000000000",
+        "parent": "0010000000000000",
+        "Qfplib": "0010000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 322,
+        "Qfplib": 78
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dadd",
+      "x": "0010000000000000",
+      "y": "8020000000000000",
+      "expected": "8010000000000000",
+      "outputs": {
+        "candidate": "8010000000000000",
+        "parent": "8010000000000000",
+        "Qfplib": "8010000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 312,
+        "Qfplib": 81
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dsub",
+      "x": "0010000000000000",
+      "y": "0020000000000000",
+      "expected": "8010000000000000",
+      "outputs": {
+        "candidate": "8010000000000000",
+        "parent": "8010000000000000",
+        "Qfplib": "8010000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 316,
+        "Qfplib": 85
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dadd",
+      "x": "0020000000000001",
+      "y": "801fffffffffffff",
+      "expected": "0000000000000003",
+      "outputs": {
+        "candidate": "0000000000000003",
+        "parent": "0000000000000003",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 366,
+        "Qfplib": 372
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dsub",
+      "x": "0020000000000001",
+      "y": "001fffffffffffff",
+      "expected": "0000000000000003",
+      "outputs": {
+        "candidate": "0000000000000003",
+        "parent": "0000000000000003",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 370,
+        "Qfplib": 376
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dadd",
+      "x": "001fffffffffffff",
+      "y": "8020000000000001",
+      "expected": "8000000000000003",
+      "outputs": {
+        "candidate": "8000000000000003",
+        "parent": "8000000000000003",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 360,
+        "Qfplib": 379
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dsub",
+      "x": "001fffffffffffff",
+      "y": "0020000000000001",
+      "expected": "8000000000000003",
+      "outputs": {
+        "candidate": "8000000000000003",
+        "parent": "8000000000000003",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 61,
+        "parent": 364,
+        "Qfplib": 383
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dadd",
+      "x": "036fffffffffffff",
+      "y": "8350000000000001",
+      "expected": "0367fffffffffffe",
+      "outputs": {
+        "candidate": "0367fffffffffffe",
+        "parent": "0367fffffffffffe",
+        "Qfplib": "0367fffffffffffe"
+      },
+      "instructions": {
+        "candidate": 56,
+        "parent": 314,
+        "Qfplib": 69
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dsub",
+      "x": "036fffffffffffff",
+      "y": "0350000000000001",
+      "expected": "0367fffffffffffe",
+      "outputs": {
+        "candidate": "0367fffffffffffe",
+        "parent": "0367fffffffffffe",
+        "Qfplib": "0367fffffffffffe"
+      },
+      "instructions": {
+        "candidate": 60,
+        "parent": 318,
+        "Qfplib": 73
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dadd",
+      "x": "0350000000000001",
+      "y": "836fffffffffffff",
+      "expected": "8367fffffffffffe",
+      "outputs": {
+        "candidate": "8367fffffffffffe",
+        "parent": "8367fffffffffffe",
+        "Qfplib": "8367fffffffffffe"
+      },
+      "instructions": {
+        "candidate": 60,
+        "parent": 308,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dsub",
+      "x": "0350000000000001",
+      "y": "036fffffffffffff",
+      "expected": "8367fffffffffffe",
+      "outputs": {
+        "candidate": "8367fffffffffffe",
+        "parent": "8367fffffffffffe",
+        "Qfplib": "8367fffffffffffe"
+      },
+      "instructions": {
+        "candidate": 64,
+        "parent": 312,
+        "Qfplib": 80
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dadd",
+      "x": "036fffffffffffff",
+      "y": "8350000000000003",
+      "expected": "0367fffffffffffe",
+      "outputs": {
+        "candidate": "0367fffffffffffe",
+        "parent": "0367fffffffffffe",
+        "Qfplib": "0367fffffffffffe"
+      },
+      "instructions": {
+        "candidate": 58,
+        "parent": 314,
+        "Qfplib": 69
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dsub",
+      "x": "036fffffffffffff",
+      "y": "0350000000000003",
+      "expected": "0367fffffffffffe",
+      "outputs": {
+        "candidate": "0367fffffffffffe",
+        "parent": "0367fffffffffffe",
+        "Qfplib": "0367fffffffffffe"
+      },
+      "instructions": {
+        "candidate": 62,
+        "parent": 318,
+        "Qfplib": 73
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dadd",
+      "x": "0350000000000003",
+      "y": "836fffffffffffff",
+      "expected": "8367fffffffffffe",
+      "outputs": {
+        "candidate": "8367fffffffffffe",
+        "parent": "8367fffffffffffe",
+        "Qfplib": "8367fffffffffffe"
+      },
+      "instructions": {
+        "candidate": 62,
+        "parent": 308,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dsub",
+      "x": "0350000000000003",
+      "y": "036fffffffffffff",
+      "expected": "8367fffffffffffe",
+      "outputs": {
+        "candidate": "8367fffffffffffe",
+        "parent": "8367fffffffffffe",
+        "Qfplib": "8367fffffffffffe"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 312,
+        "Qfplib": 80
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dadd",
+      "x": "0010000000000000",
+      "y": "8010000000000000",
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 153,
+        "Qfplib": 59
+      }
+    },
+    {
+      "group": "adjacent-binade-subnormal-carry-and-tie",
+      "operation": "dsub",
+      "x": "0010000000000000",
+      "y": "0010000000000000",
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 47,
+        "parent": 157,
+        "Qfplib": 63
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "036fffffffffffff",
+      "y": "0360000000000001",
+      "expected": "0378000000000000",
+      "outputs": {
+        "candidate": "0378000000000000",
+        "parent": "0378000000000000",
+        "Qfplib": "0378000000000000"
+      },
+      "instructions": {
+        "candidate": 50,
+        "parent": 224,
+        "Qfplib": 64
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "036fffffffffffff",
+      "y": "8360000000000001",
+      "expected": "0378000000000000",
+      "outputs": {
+        "candidate": "0378000000000000",
+        "parent": "0378000000000000",
+        "Qfplib": "0378000000000000"
+      },
+      "instructions": {
+        "candidate": 54,
+        "parent": 228,
+        "Qfplib": 68
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "8360000000000001",
+      "y": "836fffffffffffff",
+      "expected": "8378000000000000",
+      "outputs": {
+        "candidate": "8378000000000000",
+        "parent": "8378000000000000",
+        "Qfplib": "8378000000000000"
+      },
+      "instructions": {
+        "candidate": 50,
+        "parent": 217,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "8360000000000001",
+      "y": "036fffffffffffff",
+      "expected": "8378000000000000",
+      "outputs": {
+        "candidate": "8378000000000000",
+        "parent": "8378000000000000",
+        "Qfplib": "8378000000000000"
+      },
+      "instructions": {
+        "candidate": 54,
+        "parent": 221,
+        "Qfplib": 80
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "036fffffffffffff",
+      "y": "0350000000000001",
+      "expected": "0374000000000000",
+      "outputs": {
+        "candidate": "0374000000000000",
+        "parent": "0374000000000000",
+        "Qfplib": "0374000000000000"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 263,
+        "Qfplib": 70
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "036fffffffffffff",
+      "y": "8350000000000001",
+      "expected": "0374000000000000",
+      "outputs": {
+        "candidate": "0374000000000000",
+        "parent": "0374000000000000",
+        "Qfplib": "0374000000000000"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 267,
+        "Qfplib": 74
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "8350000000000001",
+      "y": "836fffffffffffff",
+      "expected": "8374000000000000",
+      "outputs": {
+        "candidate": "8374000000000000",
+        "parent": "8374000000000000",
+        "Qfplib": "8374000000000000"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 257,
+        "Qfplib": 83
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "8350000000000001",
+      "y": "036fffffffffffff",
+      "expected": "8374000000000000",
+      "outputs": {
+        "candidate": "8374000000000000",
+        "parent": "8374000000000000",
+        "Qfplib": "8374000000000000"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 261,
+        "Qfplib": 87
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "036fffffffffffff",
+      "y": "0340000000000001",
+      "expected": "0372000000000000",
+      "outputs": {
+        "candidate": "0372000000000000",
+        "parent": "0372000000000000",
+        "Qfplib": "0372000000000000"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 263,
+        "Qfplib": 70
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "036fffffffffffff",
+      "y": "8340000000000001",
+      "expected": "0372000000000000",
+      "outputs": {
+        "candidate": "0372000000000000",
+        "parent": "0372000000000000",
+        "Qfplib": "0372000000000000"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 267,
+        "Qfplib": 74
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "8340000000000001",
+      "y": "836fffffffffffff",
+      "expected": "8372000000000000",
+      "outputs": {
+        "candidate": "8372000000000000",
+        "parent": "8372000000000000",
+        "Qfplib": "8372000000000000"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 257,
+        "Qfplib": 83
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "8340000000000001",
+      "y": "036fffffffffffff",
+      "expected": "8372000000000000",
+      "outputs": {
+        "candidate": "8372000000000000",
+        "parent": "8372000000000000",
+        "Qfplib": "8372000000000000"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 261,
+        "Qfplib": 87
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "036fffffffffffff",
+      "y": "0170000000000001",
+      "expected": "0370000000100000",
+      "outputs": {
+        "candidate": "0370000000100000",
+        "parent": "0370000000100000",
+        "Qfplib": "0370000000100000"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 263,
+        "Qfplib": 69
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "036fffffffffffff",
+      "y": "8170000000000001",
+      "expected": "0370000000100000",
+      "outputs": {
+        "candidate": "0370000000100000",
+        "parent": "0370000000100000",
+        "Qfplib": "0370000000100000"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 267,
+        "Qfplib": 73
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "8170000000000001",
+      "y": "836fffffffffffff",
+      "expected": "8370000000100000",
+      "outputs": {
+        "candidate": "8370000000100000",
+        "parent": "8370000000100000",
+        "Qfplib": "8370000000100000"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 257,
+        "Qfplib": 82
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "8170000000000001",
+      "y": "036fffffffffffff",
+      "expected": "8370000000100000",
+      "outputs": {
+        "candidate": "8370000000100000",
+        "parent": "8370000000100000",
+        "Qfplib": "8370000000100000"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 261,
+        "Qfplib": 86
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "036fffffffffffff",
+      "y": "0160000000000001",
+      "expected": "0370000000080000",
+      "outputs": {
+        "candidate": "0370000000080000",
+        "parent": "0370000000080000",
+        "Qfplib": "0370000000080000"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 260,
+        "Qfplib": 80
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "036fffffffffffff",
+      "y": "8160000000000001",
+      "expected": "0370000000080000",
+      "outputs": {
+        "candidate": "0370000000080000",
+        "parent": "0370000000080000",
+        "Qfplib": "0370000000080000"
+      },
+      "instructions": {
+        "candidate": 77,
+        "parent": 264,
+        "Qfplib": 84
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "8160000000000001",
+      "y": "836fffffffffffff",
+      "expected": "8370000000080000",
+      "outputs": {
+        "candidate": "8370000000080000",
+        "parent": "8370000000080000",
+        "Qfplib": "8370000000080000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 254,
+        "Qfplib": 93
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "8160000000000001",
+      "y": "036fffffffffffff",
+      "expected": "8370000000080000",
+      "outputs": {
+        "candidate": "8370000000080000",
+        "parent": "8370000000080000",
+        "Qfplib": "8370000000080000"
+      },
+      "instructions": {
+        "candidate": 79,
+        "parent": 258,
+        "Qfplib": 97
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "036fffffffffffff",
+      "y": "0150000000000001",
+      "expected": "0370000000040000",
+      "outputs": {
+        "candidate": "0370000000040000",
+        "parent": "0370000000040000",
+        "Qfplib": "0370000000040000"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 263,
+        "Qfplib": 81
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "036fffffffffffff",
+      "y": "8150000000000001",
+      "expected": "0370000000040000",
+      "outputs": {
+        "candidate": "0370000000040000",
+        "parent": "0370000000040000",
+        "Qfplib": "0370000000040000"
+      },
+      "instructions": {
+        "candidate": 78,
+        "parent": 267,
+        "Qfplib": 85
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "8150000000000001",
+      "y": "836fffffffffffff",
+      "expected": "8370000000040000",
+      "outputs": {
+        "candidate": "8370000000040000",
+        "parent": "8370000000040000",
+        "Qfplib": "8370000000040000"
+      },
+      "instructions": {
+        "candidate": 76,
+        "parent": 257,
+        "Qfplib": 94
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "8150000000000001",
+      "y": "036fffffffffffff",
+      "expected": "8370000000040000",
+      "outputs": {
+        "candidate": "8370000000040000",
+        "parent": "8370000000040000",
+        "Qfplib": "8370000000040000"
+      },
+      "instructions": {
+        "candidate": 80,
+        "parent": 261,
+        "Qfplib": 98
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "036fffffffffffff",
+      "y": "0020000000000001",
+      "expected": "0370000000000000",
+      "outputs": {
+        "candidate": "0370000000000000",
+        "parent": "0370000000000000",
+        "Qfplib": "0370000000000000"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 268,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "036fffffffffffff",
+      "y": "8020000000000001",
+      "expected": "0370000000000000",
+      "outputs": {
+        "candidate": "0370000000000000",
+        "parent": "0370000000000000",
+        "Qfplib": "0370000000000000"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 272,
+        "Qfplib": 80
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "8020000000000001",
+      "y": "836fffffffffffff",
+      "expected": "8370000000000000",
+      "outputs": {
+        "candidate": "8370000000000000",
+        "parent": "8370000000000000",
+        "Qfplib": "8370000000000000"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 262,
+        "Qfplib": 89
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "8020000000000001",
+      "y": "036fffffffffffff",
+      "expected": "8370000000000000",
+      "outputs": {
+        "candidate": "8370000000000000",
+        "parent": "8370000000000000",
+        "Qfplib": "8370000000000000"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 266,
+        "Qfplib": 93
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "036fffffffffffff",
+      "y": "0010000000000001",
+      "expected": "0370000000000000",
+      "outputs": {
+        "candidate": "0370000000000000",
+        "parent": "0370000000000000",
+        "Qfplib": "0370000000000000"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 252,
+        "Qfplib": 77
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "036fffffffffffff",
+      "y": "8010000000000001",
+      "expected": "0370000000000000",
+      "outputs": {
+        "candidate": "0370000000000000",
+        "parent": "0370000000000000",
+        "Qfplib": "0370000000000000"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 256,
+        "Qfplib": 81
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dadd",
+      "x": "8010000000000001",
+      "y": "836fffffffffffff",
+      "expected": "8370000000000000",
+      "outputs": {
+        "candidate": "8370000000000000",
+        "parent": "8370000000000000",
+        "Qfplib": "8370000000000000"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 246,
+        "Qfplib": 90
+      }
+    },
+    {
+      "group": "same-sign-alignment-and-carry",
+      "operation": "dsub",
+      "x": "8010000000000001",
+      "y": "036fffffffffffff",
+      "expected": "8370000000000000",
+      "outputs": {
+        "candidate": "8370000000000000",
+        "parent": "8370000000000000",
+        "Qfplib": "8370000000000000"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 250,
+        "Qfplib": 94
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "7ff0000000000001",
+      "y": "7ff800000000004d",
+      "expected": "7ff8000000000001",
+      "outputs": {
+        "candidate": "7ff8000000000001",
+        "parent": "7ff8000000000001",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 26,
+        "parent": 43,
+        "Qfplib": 81
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "7ff0000000000001",
+      "y": "7ff800000000004d",
+      "expected": "7ff8000000000001",
+      "outputs": {
+        "candidate": "7ff8000000000001",
+        "parent": "7ff8000000000001",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 47,
+        "Qfplib": 78
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "7ff800000000004d",
+      "y": "7ff0000000000001",
+      "expected": "7ff800000000004d",
+      "outputs": {
+        "candidate": "7ff800000000004d",
+        "parent": "7ff800000000004d",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 26,
+        "parent": 40,
+        "Qfplib": 81
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "7ff800000000004d",
+      "y": "7ff0000000000001",
+      "expected": "7ff800000000004d",
+      "outputs": {
+        "candidate": "7ff800000000004d",
+        "parent": "7ff800000000004d",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 44,
+        "Qfplib": 78
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "fff0000080000000",
+      "y": "7ff8000000000013",
+      "expected": "fff8000080000000",
+      "outputs": {
+        "candidate": "fff8000080000000",
+        "parent": "fff8000080000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 26,
+        "parent": 43,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "fff0000080000000",
+      "y": "7ff8000000000013",
+      "expected": "fff8000080000000",
+      "outputs": {
+        "candidate": "fff8000080000000",
+        "parent": "fff8000080000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 47,
+        "Qfplib": 97
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "7ff8000000000013",
+      "y": "fff0000080000000",
+      "expected": "7ff8000000000013",
+      "outputs": {
+        "candidate": "7ff8000000000013",
+        "parent": "7ff8000000000013",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 26,
+        "parent": 40,
+        "Qfplib": 74
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "7ff8000000000013",
+      "y": "fff0000080000000",
+      "expected": "7ff8000000000013",
+      "outputs": {
+        "candidate": "7ff8000000000013",
+        "parent": "7ff8000000000013",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 44,
+        "Qfplib": 85
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "0010000000000000",
+      "y": "fff0000000000001",
+      "expected": "fff8000000000001",
+      "outputs": {
+        "candidate": "fff8000000000001",
+        "parent": "fff8000000000001",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 52,
+        "Qfplib": 74
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "0010000000000000",
+      "y": "fff0000000000001",
+      "expected": "7ff8000000000001",
+      "outputs": {
+        "candidate": "7ff8000000000001",
+        "parent": "7ff8000000000001",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 33,
+        "parent": 56,
+        "Qfplib": 69
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "fff0000000000001",
+      "y": "0010000000000000",
+      "expected": "fff8000000000001",
+      "outputs": {
+        "candidate": "fff8000000000001",
+        "parent": "fff8000000000001",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 26,
+        "parent": 43,
+        "Qfplib": 72
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "fff0000000000001",
+      "y": "0010000000000000",
+      "expected": "fff8000000000001",
+      "outputs": {
+        "candidate": "fff8000000000001",
+        "parent": "fff8000000000001",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 47,
+        "Qfplib": 80
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "7ff0000000000000",
+      "y": "fff4000000000000",
+      "expected": "fffc000000000000",
+      "outputs": {
+        "candidate": "fffc000000000000",
+        "parent": "fffc000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 35,
+        "parent": 50,
+        "Qfplib": 75
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "7ff0000000000000",
+      "y": "fff4000000000000",
+      "expected": "7ffc000000000000",
+      "outputs": {
+        "candidate": "7ffc000000000000",
+        "parent": "7ffc000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 39,
+        "parent": 54,
+        "Qfplib": 85
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "7ff8000000000009",
+      "y": "7ff0000000000000",
+      "expected": "7ff8000000000009",
+      "outputs": {
+        "candidate": "7ff8000000000009",
+        "parent": "7ff8000000000009",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 26,
+        "parent": 40,
+        "Qfplib": 81
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "7ff8000000000009",
+      "y": "7ff0000000000000",
+      "expected": "7ff8000000000009",
+      "outputs": {
+        "candidate": "7ff8000000000009",
+        "parent": "7ff8000000000009",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 44,
+        "Qfplib": 79
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "7ff0000000000000",
+      "y": "7ff0000000000000",
+      "expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 34,
+        "parent": 58,
+        "Qfplib": 81
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "7ff0000000000000",
+      "y": "7ff0000000000000",
+      "expected": "7ff8000000000000",
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 39,
+        "parent": 65,
+        "Qfplib": 79
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "7ff0000000000000",
+      "y": "fff0000000000000",
+      "expected": "7ff8000000000000",
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 35,
+        "parent": 61,
+        "Qfplib": 75
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "7ff0000000000000",
+      "y": "fff0000000000000",
+      "expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 38,
+        "parent": 62,
+        "Qfplib": 85
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "0010000000000000",
+      "y": "7ff0000000000000",
+      "expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 58,
+        "Qfplib": 65
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "0010000000000000",
+      "y": "7ff0000000000000",
+      "expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 62,
+        "Qfplib": 79
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dadd",
+      "x": "fff0000000000000",
+      "y": "0010000000000000",
+      "expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 54,
+        "Qfplib": 73
+      }
+    },
+    {
+      "group": "first-NaN-payload-sign-and-Inf-policy",
+      "operation": "dsub",
+      "x": "fff0000000000000",
+      "y": "0010000000000000",
+      "expected": "fff0000000000000",
+      "outputs": {
+        "candidate": "fff0000000000000",
+        "parent": "fff0000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 32,
+        "parent": 58,
+        "Qfplib": 81
+      }
+    },
+    {
+      "group": "unchanged-E0-input-fallback",
+      "operation": "dadd",
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 55,
+        "Qfplib": 67
+      }
+    },
+    {
+      "group": "unchanged-E0-input-fallback",
+      "operation": "dsub",
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 59,
+        "Qfplib": 71
+      }
+    },
+    {
+      "group": "unchanged-E0-input-fallback",
+      "operation": "dadd",
+      "x": "8000000000000000",
+      "y": "8000000000000000",
+      "expected": "8000000000000000",
+      "outputs": {
+        "candidate": "8000000000000000",
+        "parent": "8000000000000000",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 55,
+        "Qfplib": 81
+      }
+    },
+    {
+      "group": "unchanged-E0-input-fallback",
+      "operation": "dsub",
+      "x": "8000000000000000",
+      "y": "8000000000000000",
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 59,
+        "parent": 59,
+        "Qfplib": 71
+      }
+    },
+    {
+      "group": "unchanged-E0-input-fallback",
+      "operation": "dadd",
+      "x": "0000000000000001",
+      "y": "0010000000000000",
+      "expected": "0010000000000001",
+      "outputs": {
+        "candidate": "0010000000000001",
+        "parent": "0010000000000001",
+        "Qfplib": "0010000000000000"
+      },
+      "instructions": {
+        "candidate": 296,
+        "parent": 296,
+        "Qfplib": 60
+      }
+    },
+    {
+      "group": "unchanged-E0-input-fallback",
+      "operation": "dsub",
+      "x": "0000000000000001",
+      "y": "0010000000000000",
+      "expected": "800fffffffffffff",
+      "outputs": {
+        "candidate": "800fffffffffffff",
+        "parent": "800fffffffffffff",
+        "Qfplib": "8010000000000000"
+      },
+      "instructions": {
+        "candidate": 410,
+        "parent": 410,
+        "Qfplib": 74
+      }
+    },
+    {
+      "group": "unchanged-E0-input-fallback",
+      "operation": "dadd",
+      "x": "000fffffffffffff",
+      "y": "0010000000000000",
+      "expected": "001fffffffffffff",
+      "outputs": {
+        "candidate": "001fffffffffffff",
+        "parent": "001fffffffffffff",
+        "Qfplib": "0010000000000000"
+      },
+      "instructions": {
+        "candidate": 294,
+        "parent": 294,
+        "Qfplib": 60
+      }
+    },
+    {
+      "group": "unchanged-E0-input-fallback",
+      "operation": "dsub",
+      "x": "000fffffffffffff",
+      "y": "0010000000000000",
+      "expected": "8000000000000001",
+      "outputs": {
+        "candidate": "8000000000000001",
+        "parent": "8000000000000001",
+        "Qfplib": "8010000000000000"
+      },
+      "instructions": {
+        "candidate": 410,
+        "parent": 410,
+        "Qfplib": 74
+      }
+    },
+    {
+      "group": "unchanged-E0-input-fallback",
+      "operation": "dadd",
+      "x": "0000000000000000",
+      "y": "fff0000000000001",
+      "expected": "fff8000000000001",
+      "outputs": {
+        "candidate": "fff8000000000001",
+        "parent": "fff8000000000001",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 78
+      }
+    },
+    {
+      "group": "unchanged-E0-input-fallback",
+      "operation": "dsub",
+      "x": "0000000000000000",
+      "y": "fff0000000000001",
+      "expected": "7ff8000000000001",
+      "outputs": {
+        "candidate": "7ff8000000000001",
+        "parent": "7ff8000000000001",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 45,
+        "Qfplib": 73
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dsub",
+      "x": "3ff0000000000000",
+      "y": "3c90000000000000",
+      "expected": "3ff0000000000000",
+      "outputs": {
+        "candidate": "3ff0000000000000",
+        "parent": "3ff0000000000000",
+        "Qfplib": "3ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 80,
+        "parent": 80,
+        "Qfplib": 94
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "54ad46e403be1ba4",
+      "y": "d6ef42d0659d2a0a",
+      "expected": "d6ef42d0659b559c",
+      "outputs": {
+        "candidate": "d6ef42d0659b559c",
+        "parent": "d6ef42d0659b559c",
+        "Qfplib": "d6ef42d0659b559c"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 72,
+        "Qfplib": 86
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "67ed799ecf646de1",
+      "y": "e975fd2d6871ccb5",
+      "expected": "e975fd2d59b4fd4d",
+      "outputs": {
+        "candidate": "e975fd2d59b4fd4d",
+        "parent": "e975fd2d59b4fd4d",
+        "Qfplib": "e975fd2d59b4fd4d"
+      },
+      "instructions": {
+        "candidate": 62,
+        "parent": 62,
+        "Qfplib": 70
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "bc962d238155a9ea",
+      "y": "3fe168337c68b070",
+      "expected": "3fe168337c68b06f",
+      "outputs": {
+        "candidate": "3fe168337c68b06f",
+        "parent": "3fe168337c68b06f",
+        "Qfplib": "3fe168337c68b06f"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "bcae7bdeeddeb6ec",
+      "y": "3f8cea4c3fb1bc06",
+      "expected": "3f8cea4c3fb1bb8c",
+      "outputs": {
+        "candidate": "3f8cea4c3fb1bb8c",
+        "parent": "3f8cea4c3fb1bb8c",
+        "Qfplib": "3f8cea4c3fb1bb8c"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "bd2013721d1833bd",
+      "y": "3fd4c2c71646f101",
+      "expected": "3fd4c2c71646eeff",
+      "outputs": {
+        "candidate": "3fd4c2c71646eeff",
+        "parent": "3fd4c2c71646eeff",
+        "Qfplib": "3fd4c2c71646eeff"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 72,
+        "Qfplib": 80
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "bd2bc5a420b3616b",
+      "y": "3f7dae7e502209af",
+      "expected": "3f7dae7e50212b82",
+      "outputs": {
+        "candidate": "3f7dae7e50212b82",
+        "parent": "3f7dae7e50212b82",
+        "Qfplib": "3f7dae7e50212b82"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 72,
+        "Qfplib": 80
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "bd58899641535bfb",
+      "y": "3f7ceffd0385318c",
+      "expected": "3f7ceffd037f0f26",
+      "outputs": {
+        "candidate": "3f7ceffd037f0f26",
+        "parent": "3f7ceffd037f0f26",
+        "Qfplib": "3f7ceffd037f0f26"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "bd85cf8be6bb2db9",
+      "y": "3f8202f6e288ed78",
+      "expected": "3f8202f6e2731dec",
+      "outputs": {
+        "candidate": "3f8202f6e2731dec",
+        "parent": "3f8202f6e2731dec",
+        "Qfplib": "3f8202f6e2731dec"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 67,
+        "Qfplib": 75
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "bd9c92efdbf142e7",
+      "y": "3f9684b68b2e17e6",
+      "expected": "3f9684b68b1184f6",
+      "outputs": {
+        "candidate": "3f9684b68b1184f6",
+        "parent": "3f9684b68b1184f6",
+        "Qfplib": "3f9684b68b1184f6"
+      },
+      "instructions": {
+        "candidate": 67,
+        "parent": 67,
+        "Qfplib": 75
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dsub",
+      "x": "3fc999999999999a",
+      "y": "4024000000000000",
+      "expected": "c02399999999999a",
+      "outputs": {
+        "candidate": "c02399999999999a",
+        "parent": "c02399999999999a",
+        "Qfplib": "c02399999999999a"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 70,
+        "Qfplib": 79
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dsub",
+      "x": "42f123456789abcd",
+      "y": "439fedcba9876543",
+      "expected": "c39fe982d82d82d8",
+      "outputs": {
+        "candidate": "c39fe982d82d82d8",
+        "parent": "c39fe982d82d82d8",
+        "Qfplib": "c39fe982d82d82d8"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 66,
+        "Qfplib": 74
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "3f86bfc5ee249072",
+      "y": "bc872287b9de4e94",
+      "expected": "3f86bfc5ee24905b",
+      "outputs": {
+        "candidate": "3f86bfc5ee24905b",
+        "parent": "3f86bfc5ee24905b",
+        "Qfplib": "3f86bfc5ee24905b"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 79
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "3ff919126d52cdef",
+      "y": "bd69c498a2cb06f5",
+      "expected": "3ff919126d52c10d",
+      "outputs": {
+        "candidate": "3ff919126d52c10d",
+        "parent": "3ff919126d52c10d",
+        "Qfplib": "3ff919126d52c10d"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 79
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "40494a5bd8768d02",
+      "y": "be2ff4c97f40f242",
+      "expected": "40494a5bd86e8fd0",
+      "outputs": {
+        "candidate": "40494a5bd86e8fd0",
+        "parent": "40494a5bd86e8fd0",
+        "Qfplib": "40494a5bd86e8fd0"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 79
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dadd",
+      "x": "404acefc54b5bb36",
+      "y": "bda2513fa12ec655",
+      "expected": "404acefc54b5b6a2",
+      "outputs": {
+        "candidate": "404acefc54b5b6a2",
+        "parent": "404acefc54b5b6a2",
+        "Qfplib": "404acefc54b5b6a2"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 79
+      }
+    },
+    {
+      "group": "old17",
+      "operation": "dsub",
+      "x": "350fedcba9876543",
+      "y": "347123456789abcd",
+      "expected": "350fe53a06d3a06d",
+      "outputs": {
+        "candidate": "350fe53a06d3a06d",
+        "parent": "350fe53a06d3a06d",
+        "Qfplib": "350fe53a06d3a06d"
+      },
+      "instructions": {
+        "candidate": 62,
+        "parent": 62,
+        "Qfplib": 67
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "0370000000000001",
+      "y": "0370000000000000",
+      "expected": "0380000000000000",
+      "outputs": {
+        "candidate": "0380000000000000",
+        "parent": "0380000000000000",
+        "Qfplib": "0380000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 53,
+        "Qfplib": 71
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "0370000000000001",
+      "y": "8370000000000000",
+      "expected": "0380000000000000",
+      "outputs": {
+        "candidate": "0380000000000000",
+        "parent": "0380000000000000",
+        "Qfplib": "0380000000000000"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 57,
+        "Qfplib": 75
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "0370000000000001",
+      "y": "8370000000000000",
+      "expected": "0030000000000000",
+      "outputs": {
+        "candidate": "0030000000000000",
+        "parent": "0030000000000000",
+        "Qfplib": "0030000000000000"
+      },
+      "instructions": {
+        "candidate": 98,
+        "parent": 98,
+        "Qfplib": 378
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "0370000000000001",
+      "y": "0370000000000000",
+      "expected": "0030000000000000",
+      "outputs": {
+        "candidate": "0030000000000000",
+        "parent": "0030000000000000",
+        "Qfplib": "0030000000000000"
+      },
+      "instructions": {
+        "candidate": 102,
+        "parent": 102,
+        "Qfplib": 382
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "7fdfffffffffffff",
+      "y": "7fd0000000000000",
+      "expected": "7fe8000000000000",
+      "outputs": {
+        "candidate": "7fe8000000000000",
+        "parent": "7fe8000000000000",
+        "Qfplib": "7fe8000000000000"
+      },
+      "instructions": {
+        "candidate": 54,
+        "parent": 54,
+        "Qfplib": 72
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "7fdfffffffffffff",
+      "y": "ffd0000000000000",
+      "expected": "7fe8000000000000",
+      "outputs": {
+        "candidate": "7fe8000000000000",
+        "parent": "7fe8000000000000",
+        "Qfplib": "7fe8000000000000"
+      },
+      "instructions": {
+        "candidate": 58,
+        "parent": 58,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "7fdfffffffffffff",
+      "y": "ffd0000000000000",
+      "expected": "7fcffffffffffffe",
+      "outputs": {
+        "candidate": "7fcffffffffffffe",
+        "parent": "7fcffffffffffffe",
+        "Qfplib": "7fcffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 53,
+        "Qfplib": 72
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "7fdfffffffffffff",
+      "y": "7fd0000000000000",
+      "expected": "7fcffffffffffffe",
+      "outputs": {
+        "candidate": "7fcffffffffffffe",
+        "parent": "7fcffffffffffffe",
+        "Qfplib": "7fcffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 57,
+        "parent": 57,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "7c8fffffffffffff",
+      "expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 40,
+        "Qfplib": 72
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "fc8fffffffffffff",
+      "expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 44,
+        "Qfplib": 76
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "fc8fffffffffffff",
+      "expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 70,
+        "Qfplib": 79
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "7c8fffffffffffff",
+      "expected": "7fefffffffffffff",
+      "outputs": {
+        "candidate": "7fefffffffffffff",
+        "parent": "7fefffffffffffff",
+        "Qfplib": "7fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 74,
+        "parent": 74,
+        "Qfplib": 83
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "7c90000000000000",
+      "expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 69,
+        "parent": 69,
+        "Qfplib": 78
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "fc90000000000000",
+      "expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 73,
+        "parent": 73,
+        "Qfplib": 82
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "fc90000000000000",
+      "expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 71,
+        "parent": 71,
+        "Qfplib": 81
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "7c90000000000000",
+      "expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 75,
+        "parent": 75,
+        "Qfplib": 85
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "7c90000000000001",
+      "expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 68,
+        "parent": 68,
+        "Qfplib": 77
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "fc90000000000001",
+      "expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 72,
+        "parent": 72,
+        "Qfplib": 81
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "7fefffffffffffff",
+      "y": "fc90000000000001",
+      "expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 66,
+        "parent": 66,
+        "Qfplib": 75
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "7fefffffffffffff",
+      "y": "7c90000000000001",
+      "expected": "7feffffffffffffe",
+      "outputs": {
+        "candidate": "7feffffffffffffe",
+        "parent": "7feffffffffffffe",
+        "Qfplib": "7feffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 70,
+        "parent": 70,
+        "Qfplib": 79
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "7fe0000000000000",
+      "y": "7fe0000000000000",
+      "expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 40,
+        "Qfplib": 65
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "7fe0000000000000",
+      "y": "ffe0000000000000",
+      "expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 44,
+        "Qfplib": 69
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dadd",
+      "x": "7fe0000000000000",
+      "y": "ffe0000000000000",
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 42,
+        "parent": 42,
+        "Qfplib": 59
+      }
+    },
+    {
+      "group": "unchanged-ordinary-top-overflow-controls",
+      "operation": "dsub",
+      "x": "7fe0000000000000",
+      "y": "7fe0000000000000",
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 46,
+        "parent": 46,
+        "Qfplib": 63
+      }
+    }
+  ],
+  "oracle": "Reused previous independent exact binary-lattice RNE oracle for finite values; explicit first-NaN quiet/sign/payload and infinity policy independent of author oracle/MPFR",
+  "reused_integer_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-independent-20261023/review.py",
+    "sha256": "bb8ea5722a966ef586bc4c688a58ed3d497708cdd93a5ff6c91e41c474fddf8d"
+  },
+  "old17_and_selected_ordinary_top_E0_costs_equal": true,
+  "callee_saved_SP_bounded_stack_and_READY_DIRTY_checked_every_call": true,
+  "fast_frame20_and_E0_frame24_checked": true,
+  "candidate_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/candidate.elf",
+    "sha256": "a3479749d5f9764b1987eac1ba1dda9cbcb4df19005978eed5d97d027c0d850a"
+  },
+  "firmware": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf",
+    "sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1"
+  },
+  "ROM": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/research/rp2040-memset-2026-10-21/capture/bootrom.bin",
+    "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe"
+  },
+  "reference_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/reference.elf",
+    "sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26"
+  },
+  "Machine_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/support/native_eabi_m0_arm_self_test.py",
+    "sha256": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3"
+  },
+  "ELF_parser": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/support/check_stm32_vectors.py",
+    "sha256": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708"
+  },
+  "abstract_ROM_callbacks": [],
+  "bootrom_initializers": [
+    {
+      "name": "__aeabi_bits_init",
+      "table": "aeabi_bits_funcs",
+      "pointers": [
+        "0x309",
+        "0x357",
+        "0x38f",
+        "0x32d"
+      ]
+    },
+    {
+      "name": "__aeabi_mem_init",
+      "table": "aeabi_mem_funcs",
+      "pointers": [
+        "0x26b9",
+        "0x261d",
+        "0x26ad",
+        "0x2605"
+      ]
+    }
+  ],
+  "hardware_access": false,
+  "physical_cycles_measured": false
+}

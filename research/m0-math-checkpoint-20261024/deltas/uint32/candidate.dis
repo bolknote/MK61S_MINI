@@ -1,0 +1,46 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-u32-original-goal-20261023/candidate.elf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+10181000 <candidate_d2uiz>:
+10181000:	2900      	cmp	r1, #0
+10181002:	d420      	bmi.n	10181046 <candidate_d2uiz+0x46>
+10181004:	0d0a      	lsrs	r2, r1, #20
+10181006:	4b11      	ldr	r3, [pc, #68]	@ (1018104c <candidate_d2uiz+0x4c>)
+10181008:	1ad2      	subs	r2, r2, r3
+1018100a:	d41c      	bmi.n	10181046 <candidate_d2uiz+0x46>
+1018100c:	2a1f      	cmp	r2, #31
+1018100e:	d812      	bhi.n	10181036 <candidate_d2uiz+0x36>
+10181010:	0309      	lsls	r1, r1, #12
+10181012:	0b09      	lsrs	r1, r1, #12
+10181014:	2301      	movs	r3, #1
+10181016:	051b      	lsls	r3, r3, #20
+10181018:	4319      	orrs	r1, r3
+1018101a:	2a14      	cmp	r2, #20
+1018101c:	d804      	bhi.n	10181028 <candidate_d2uiz+0x28>
+1018101e:	2314      	movs	r3, #20
+10181020:	1a9b      	subs	r3, r3, r2
+10181022:	40d9      	lsrs	r1, r3
+10181024:	0008      	movs	r0, r1
+10181026:	4770      	bx	lr
+10181028:	2334      	movs	r3, #52	@ 0x34
+1018102a:	1a9b      	subs	r3, r3, r2
+1018102c:	40d8      	lsrs	r0, r3
+1018102e:	3a14      	subs	r2, #20
+10181030:	4091      	lsls	r1, r2
+10181032:	4308      	orrs	r0, r1
+10181034:	4770      	bx	lr
+10181036:	0a92      	lsrs	r2, r2, #10
+10181038:	d002      	beq.n	10181040 <candidate_d2uiz+0x40>
+1018103a:	0309      	lsls	r1, r1, #12
+1018103c:	4308      	orrs	r0, r1
+1018103e:	d102      	bne.n	10181046 <candidate_d2uiz+0x46>
+10181040:	2000      	movs	r0, #0
+10181042:	43c0      	mvns	r0, r0
+10181044:	4770      	bx	lr
+10181046:	2000      	movs	r0, #0
+10181048:	4770      	bx	lr
+1018104a:	0000      	.short	0x0000
+1018104c:	000003ff 	.word	0x000003ff

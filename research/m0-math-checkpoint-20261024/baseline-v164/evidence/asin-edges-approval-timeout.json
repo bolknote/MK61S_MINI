@@ -1,0 +1,8 @@
+{
+  "status": "PROCESS_NOT_STARTED_APPROVAL_REVIEW_TIMEOUT",
+  "exec_cell": "940",
+  "reported_error": "The automatic permission approval review did not finish before its deadline. Do not assume the action is unsafe based on the timeout alone. You may retry once, or ask the user for guidance or explicit approval.",
+  "numerical_result": null,
+  "retry_limit": 1,
+  "hardware_accessed": false
+}

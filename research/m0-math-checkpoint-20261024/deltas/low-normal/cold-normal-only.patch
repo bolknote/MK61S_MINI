@@ -1,0 +1,245 @@
+--- top-parent/code/native_eabi_m0_rp2040.S
++++ candidate/code/native_eabi_m0_rp2040.S
+@@ -82,15 +82,62 @@
+ .endm
+ 
+ .Lda_top_guard:
+- // BHS retained the preceding CMP flags. Equality means exponent2046;
+- // every larger unsigned value remains a fallback input.
+- bne .Lda_slow
++ // Equality means exponent2046; the remaining cases retain CMP's N flag.
++ bne .Lda_cold_other
+  mov r6,r1
+  eors r6,r3
+  bmi 1f
+  b .Lda_top_same_start
+ 1:
+  b .Lda_mixed_sign
++.Lda_cold_other:
++ // Negative residual means normal max exponent1..54. The only positive
++ // residual here is exponent2047; zero was handled by the top path.
++ bpl .Lda_nonfinite_start
++ b .Lda_low_start
++.Lda_nonfinite_start:
++ // At least one exponent is2047. Preserve the existing first-NaN policy.
++ lsls r6,r4,#21
++ asrs r6,#21
++ adds r6,#1
++ bne .Lda_nonfinite_b
++ lsls r6,r1,#12
++ orrs r6,r0
++ bne .Lda_nonfinite_quiet_a
++ // A is infinity. A finite B returns A; a NaN B takes precedence.
++ lsls r6,r5,#21
++ asrs r6,#21
++ adds r6,#1
++ bne .Lda_nonfinite_return_a
++ lsls r6,r3,#12
++ orrs r6,r2
++ bne .Lda_nonfinite_quiet_b
++ movs r6,r1
++ eors r6,r3
++ bmi .Lda_nonfinite_invalid
++.Lda_nonfinite_return_a:
++ pop {r4-r7,pc}
++.Lda_nonfinite_invalid:
++ // Both inputs are infinities, so R0 is already zero.
++ ldr r1,=0x7ff80000
++ pop {r4-r7,pc}
++.Lda_nonfinite_quiet_a:
++ ldr r6,=0x00080000
++ orrs r1,r6
++ pop {r4-r7,pc}
++.Lda_nonfinite_b:
++ lsls r6,r3,#12
++ orrs r6,r2
++ beq .Lda_nonfinite_return_b
++.Lda_nonfinite_quiet_b:
++ ldr r6,=0x00080000
++ orrs r3,r6
++.Lda_nonfinite_return_b:
++ movs r0,r2
++ movs r1,r3
++ pop {r4-r7,pc}
++.ltorg
++
+ .Lda_slow:
+  // Save the volatile R3 in the previously reserved alignment word.
+  // A six-register pop restores the identical24-byte frame in one step.
+@@ -132,6 +179,7 @@
+  mov r6,r1
+  eors r6,r3
+  bmi .Lda_mixed_sign
++.Lda_same_sign_start:
+  // With equal signs there is no cancellation or signed normalization.
+  // Keep the larger operand's packed exponent/sign as the final addend;
+  // only the fraction and implicit leading bit enter the unsigned sum.
+@@ -376,6 +424,7 @@
+  adds r7,#53
+  cmp r7,#108
+  bhi .Lda_far_return
++.Lda_mixed_unsigned_core:
+  // Unpack unsigned magnitudes, retaining each packed sign:exponent-1.
+  subs r7,r4,#1
+  lsls r7,#20
+@@ -602,6 +651,160 @@
+  lsrs r0,r6
+  movs r1,#0
+  da_top_same_y_finish
++
++
++.Lda_low_start:
++ mov r6,r1
++ eors r6,r3
++ bmi .Lda_low_mixed_sign
++ b .Lda_same_sign_start
++.Lda_low_mixed_sign:
++ // Align the encoded signs before subtracting exponents. For gaps 0/1,
++ // the exact magnitude difference needs at most 54 bits, not a sticky limb.
++ movs r6,#1
++ lsls r6,#11
++ eors r6,r5
++ subs r6,r4,r6
++ adds r7,r6,#1
++ cmp r7,#2
++ bls .Lda_low_near_input
++ b .Lda_mixed_unsigned_core
++.Lda_low_near_input:
++ subs r7,r4,#1
++ lsls r7,#20
++ subs r1,r7
++ subs r7,r5,#1
++ lsls r7,#20
++ subs r3,r7
++ cmp r6,#0
++ bmi .Lda_low_near_y
++ bne .Lda_low_near_x
++ // Equal exponents: the difference is exact. Only its magnitude and sign
++ // are needed; a zero difference returns +0 before an exponent is packed.
++ subs r0,r0,r2
++ sbcs r1,r3
++ bcs 1f
++ movs r4,r5
++ mvns r1,r1
++ negs r0,r0
++ bcc 1f
++ adds r1,#1
++1:
++ movs r6,r0
++ orrs r6,r1
++ beq .Lda_low_near_return
++ b .Lda_low_near_normalize
++.Lda_low_near_y:
++ adds r2,r2
++ adcs r3,r3
++ subs r2,r2,r0
++ sbcs r3,r1
++ movs r0,r2
++ movs r1,r3
++ movs r4,r5
++ b 1f
++.Lda_low_near_x:
++ adds r0,r0
++ adcs r1,r1
++ subs r0,r0,r2
++ sbcs r1,r3
++1:
++ // Use the smaller exponent with an exact integer difference. A result
++ // with 54 significant bits needs one nearest-even rounding step; every
++ // smaller result can be normalized and packed without losing any bit.
++ subs r4,#1
++ lsrs r5,r1,#21
++ bne .Lda_low_near_round
++.Lda_low_near_normalize:
++ lsrs r5,r1,#20
++ bne .Lda_low_near_pack
++ // R7 is the number of exact left shifts available before exponent1.
++ lsls r7,r4,#21
++ lsrs r7,#21
++ cmp r7,#1
++ beq .Lda_low_near_pack
++ subs r7,#1
++ lsrs r5,r1,#16
++ bne .Lda_low_norm_one
++.Lda_low_norm_sixteen:
++ cmp r1,#16
++ bhs .Lda_low_norm_eight
++ cmp r7,#16
++ blo .Lda_low_norm_short
++ lsls r1,#16
++ lsrs r5,r0,#16
++ orrs r1,r5
++ lsls r0,#16
++ subs r4,#16
++ subs r7,#16
++ b .Lda_low_norm_sixteen
++.Lda_low_norm_eight:
++ lsrs r5,r1,#12
++ bne .Lda_low_norm_four
++ cmp r7,#8
++ blo .Lda_low_norm_short
++ lsls r1,#8
++ lsrs r5,r0,#24
++ orrs r1,r5
++ lsls r0,#8
++ subs r4,#8
++ subs r7,#8
++.Lda_low_norm_four:
++ lsrs r5,r1,#16
++ bne .Lda_low_norm_one
++ cmp r7,#4
++ blo .Lda_low_norm_short
++ lsls r1,#4
++ lsrs r5,r0,#28
++ orrs r1,r5
++ lsls r0,#4
++ subs r4,#4
++ subs r7,#4
++.Lda_low_norm_one:
++ cmp r7,#0
++ beq .Lda_low_near_pack
++ adds r0,r0
++ adcs r1,r1
++ subs r4,#1
++ subs r7,#1
++ lsrs r5,r1,#20
++ beq .Lda_low_norm_one
++ b .Lda_low_near_pack
++.Lda_low_norm_short:
++ // Needed normalization exceeds the remaining budget. Shift exactly to
++ // exponent1 and pack the raw subnormal coefficient without discarding bits.
++ cmp r7,#0
++ beq .Lda_low_near_pack
++ movs r5,#32
++ subs r5,r5,r7
++ movs r6,r0
++ lsrs r6,r5
++ lsls r1,r7
++ orrs r1,r6
++ lsls r0,r7
++ subs r4,r4,r7
++ b .Lda_low_near_pack
++
++.Lda_low_near_pack:
++ subs r4,#1
++ lsls r4,#20
++ adds r1,r4
++.Lda_low_near_return:
++ pop {r4-r7,pc}
++.Lda_low_near_round:
++ movs r5,#3
++ ands r5,r0
++ lsrs r0,#1
++ lsls r6,r1,#31
++ orrs r0,r6
++ lsrs r1,#1
++ adds r4,#1
++ cmp r5,#3                    @ exact half ULP with an odd retained LSB
++ bne .Lda_low_near_pack
++ adds r0,#1
++ bcc .Lda_low_near_pack
++ adds r1,#1
++ b .Lda_low_near_pack
+ 
+ 
+ .align 2

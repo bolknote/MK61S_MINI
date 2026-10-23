@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "elf_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "mpfr": "4.2.2",
+  "operations": {
+    "asin": {
+      "status": "PASS",
+      "cases": 89250,
+      "wrong_rounding": 0,
+      "core_fallback_calls": 126,
+      "corpus_sha256": "e511091036a5c18677400070be973f86174972105831cfbb5ac79c6e21287e1f"
+    },
+    "acos": {
+      "status": "PASS",
+      "cases": 84076,
+      "wrong_rounding": 0,
+      "core_fallback_calls": 197,
+      "corpus_sha256": "efff4a660617c7cfac35be1697ecf605dad947c5c704716b4ef8bf1284038bf0"
+    }
+  },
+  "maximum_stack_bytes": 632,
+  "pending_divider_state_checks": 10,
+  "producer_sha256": "e7230f39003a26bea9e8609c1755295869e06e1b4341180cd8d07016123c7332",
+  "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "oracle": "Directed MPFR bounds; inverse output midpoints bracketed by directed MPFR sin/cos. Reduction/normalization/endpoint neighborhoods included.",
+  "scope": "Finite ARM input corpus. Complete rounding intervals are certified separately."
+}

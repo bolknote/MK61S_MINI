@@ -1,0 +1,73 @@
+{
+  "status": "TECHNICAL_GO_TOP_NORMAL_DADD_DSUB_DELTA_ONLY",
+  "reviewer": "/root/v138_hardware",
+  "blockers": [],
+  "reviewed_result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-20261023/result.json",
+    "sha256": "6e4e5b7eafeea3a11eebb499860f53d1d51fe892ce47b325ae4e48ae90f7d11d"
+  },
+  "reviewed_handoff": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-20261023/HANDOFF.md",
+    "sha256": "d938a6627f79d76593e4f00ba02f9a0f750d553eb9abc138c5fb128bf5da50d3"
+  },
+  "final_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-20261023/native_eabi_m0_rp2040.S",
+    "sha256": "754ea1ee3695fb4291ad6d7baf4632dfcf0f8e592029d08adc177341988471f0"
+  },
+  "public_object": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-20261023/candidate-full.o",
+    "sha256": "223478946b2377453ba598fd57c0e15c1878cec221164374ff3d833abdd71938"
+  },
+  "executed_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-20261023/candidate.elf",
+    "sha256": "5f1a8bec6d7c499d19ec3b9defe6a9f5fc6b10c8b4795e297b984c6158508343"
+  },
+  "source_object_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-independent-20261023/SOURCE-OBJECT-PROOF.json",
+    "sha256": "773cde9271d5d61356e60335631b1f12f2c64463598ee60be343bb9b3f2dc66c"
+  },
+  "selected_ARM_integer_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-independent-20261023/SELECTED-ARM-INTEGER.json",
+    "sha256": "4391b01fad4e6877485a1129bfbf121e5fe7f1ada5ee475570f2359bc9006366"
+  },
+  "review_script": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-independent-20261023/review.py",
+    "sha256": "bb8ea5722a966ef586bc4c688a58ed3d497708cdd93a5ff6c91e41c474fddf8d"
+  },
+  "actual_independent_cases": 245,
+  "actual_ARM_calls": 735,
+  "author11018_replayed": false,
+  "source_ordinary_same_sign_kernel_exact": true,
+  "source_mixed_sign_kernel_exact": true,
+  "guard_partition_pure_check_all2048_exponents_changed_only_at": [
+    2046
+  ],
+  "guard_flags_review": "BHS preserves the exact CMP1991 Z flag into BNE. Ordinary same-sign SUBS and mixed-sign LSL/SUBS overwrite the changed old/new carry before it is consumed.",
+  "source_to_executed_body": "Own reassembly equals sealed full object; all880 body bytes equal executed ELF except the sole R_ARM_THM_CALL at14..18, decoded target old slow100e6e44; entry offsets match.",
+  "alignment_only_history": "Qualification source hash reproduced by removing only final .align2 and one blank separator. Executed ELF remains5f1a8bec. Failed first alignment audit retained in producer packet.",
+  "AAPCS": "Fast frame20; fallback stores volatile R3 in former alignment slot; exact24-byte frame and SP8 alignment checked on every selected actual slow call; R4-R11/SP/bounded writes checked on all calls.",
+  "selected_top_cases": 176,
+  "selected_top_correct_Qfplib_cases": 176,
+  "selected_top_slower_than_correct_Qfplib": 0,
+  "old17_results_and_instruction_counts_equal": true,
+  "SIO_READY_DIRTY_context_preserved_all_calls": true,
+  "object_code_growth_bytes": 232,
+  "new_tables_or_global_RAM": false,
+  "M4_generic_controls": "Sealed M4_soft/M4_hard/generic_M0 object contributions rechecked equal; each contribution has0 allocated bytes. This is not a full M4 rebuild or runtime qualification.",
+  "limitations": [
+    "GO covers this private exponent2046 dadd/dsub delta only, atop the previously accepted mixed-sign parent",
+    "No all-input/library/pow totality or full firmware integration claim",
+    "Instruction counts are not physical cycles; no hardware/IRQ acceptance",
+    "Special IEEE fallback raw equivalence checked against unchanged parent; independent integer oracle used for finite selected cases"
+  ],
+  "actions": {
+    "USB": false,
+    "Flash": false,
+    "lease": false,
+    "Git": false,
+    "canonical_changed": false,
+    "RTC_packet_changed": false,
+    "producer_inputs_changed": false
+  },
+  "production_or_hardware_GO": false
+}

@@ -1,0 +1,18 @@
+{
+  "status": "PASS_PUBLIC_BODY_EXACT_WITHOUT_FALLBACK_OR_RELOCATIONS",
+  "public_body_bytes": 1472,
+  "all_public_body_bytes_equal_executed": true,
+  "exclusions": [],
+  "public_entry_offsets_match": true,
+  "standalone_object_undefined": [],
+  "standalone_nonempty_relocation_sections": [],
+  "full_object_removed_dependency": [
+    "         U mk61_m0_dadd_slow"
+  ],
+  "full_object_added_dependencies": [],
+  "new_libgcc_dependency": false,
+  "candidate_full_object_sha256": "0964ad58abf6cd4666ed305faf1b38e101db2b6a815961019602f545e70bac01",
+  "candidate_ELF_sha256": "7fdb42ab072e1e70f0a6db32187228935b63a498e95eddc35b4df02d1065790a",
+  "source_sha256": "9501eb31af70a512308d2ebb4cac2c37e425f6c7c5477ad8d884b28a12707e89",
+  "production_image_created": false
+}

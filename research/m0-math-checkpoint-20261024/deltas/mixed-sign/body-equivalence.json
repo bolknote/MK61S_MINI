@@ -1,0 +1,17 @@
+{
+  "status": "PASS_FULL_SOURCE_PUBLIC_BODY_MATCHES_EXECUTED_DIAGNOSTIC_BODY",
+  "block_bytes": 648,
+  "excluded_span": [
+    2,
+    6
+  ],
+  "exclusion": "One BL relocation to the same original mk61_m0_dadd_slow; the diagnostic linked target is pinned in build.json. All remaining instructions, branch/literal offsets and literal data are identical.",
+  "public_entry_offsets_match": true,
+  "candidate_full_object_sha256": "c0c4858ea1eceb875f10f9b275028d10f4a2f1a70778731db4704d8836ec5233",
+  "executed_diagnostic_ELF_sha256": "08ed9eece80732b4b7b20347c14b91372d2311ec99e11b9f2f47714877810038",
+  "normalized_body_sha256": "4d69dbc86ca3c25a295bd8d27e3a8c3106795d804f1fcc9e7ef34c51fc17ec2d",
+  "production_ELF_created": false,
+  "excluded_relocation": "00000002 R_ARM_THM_CALL    mk61_m0_dadd_slow",
+  "decoded_diagnostic_BL_target": "0x100e6e44",
+  "BL_target_matches_pinned_original_fallback": true
+}

@@ -1,0 +1,55 @@
+.syntax unified
+.cpu cortex-m0plus
+.thumb
+.section .text.uint32_trial,"ax",%progbits
+.global candidate_d2uiz
+.type candidate_d2uiz,%function
+.thumb_func
+candidate_d2uiz:
+ // Project-owned binary64 -> uint32, truncate toward zero and retain
+ // the existing runtime policy: negative/NaN ->0, positive overflow ->max.
+ cmp r1,#0
+ bmi .Ld2u_zero
+ lsrs r2,r1,#20
+ ldr r3,=1023
+ subs r2,r3
+ bmi .Ld2u_zero
+ cmp r2,#31
+ bhi .Ld2u_large
+ lsls r1,#12
+ lsrs r1,#12
+ movs r3,#1
+ lsls r3,#20
+ orrs r1,r3
+ cmp r2,#20
+ bhi .Ld2u_wide
+ movs r3,#20
+ subs r3,r2
+ lsrs r1,r3
+ movs r0,r1
+ bx lr
+.Ld2u_wide:
+ movs r3,#52
+ subs r3,r2
+ lsrs r0,r3
+ subs r2,#20
+ lsls r1,r2
+ orrs r0,r1
+ bx lr
+.Ld2u_large:
+ // Here e is32..1024. Only e=1024 denotes the all-ones exponent.
+ lsrs r2,#10
+ beq .Ld2u_saturate
+ lsls r1,#12
+ orrs r0,r1
+ bne .Ld2u_zero
+.Ld2u_saturate:
+ movs r0,#0
+ mvns r0,r0
+ bx lr
+.Ld2u_zero:
+ movs r0,#0
+ bx lr
+
+.ltorg
+.size candidate_d2uiz,.-candidate_d2uiz

@@ -1,0 +1,148 @@
+{
+  "status": "DIRECT_ORIGINAL_GOAL_LOW_NORMAL_NONFINITE_DELTA_READY_FOR_REVIEW_NOT_PRODUCTION",
+  "parent_result_sha256": "6e4e5b7eafeea3a11eebb499860f53d1d51fe892ce47b325ae4e48ae90f7d11d",
+  "targeted_cases": 44455,
+  "targeted_ARM_calls": 133365,
+  "profiled_cases": 9527,
+  "candidate_wrong": 0,
+  "vs_parent_profiled": {
+    "faster": 9286,
+    "equal": 241,
+    "slower": 0
+  },
+  "old762_slower_cases_now_not_slower_correct_Qfplib": 762,
+  "resolved_correct_Qfplib_slower_cases_in_targeted_profile": 6738,
+  "new_slower_correct_Qfplib": 0,
+  "remaining_correct_Qfplib_slower_profiled": 18,
+  "ordinary_top_controls": 2416,
+  "ordinary_top_control_ARM_calls": 7248,
+  "ordinary_top_all_costs_equal": true,
+  "IEEE_NaN_raw_policy_preserved": true,
+  "block_bytes_delta": 324,
+  "additional_IEEE_literal_bytes": 8,
+  "new_tables_global_RAM_or_dependencies": false,
+  "new_fast_frame_bytes": 20,
+  "unchanged_E0_fallback_frame_bytes": 24,
+  "production_or_hardware_GO": false,
+  "canonical_frozen_Git_USB_mutated": false,
+  "general_pow_totality": false,
+  "goal_complete": false,
+  "artifacts": {
+    "HANDOFF.md": {
+      "bytes": 5556,
+      "sha256": "b4a976a59d040184a709dc48216210be0c7be129be62b74a1017661a5f08dd1b"
+    },
+    "M4_hard-candidate.o": {
+      "bytes": 620,
+      "sha256": "43e2ef436152dc5d121cef52bc8c23b3c5d47f9ad3ac2cf2af8d756b10a1f05d"
+    },
+    "M4_hard-control.o": {
+      "bytes": 620,
+      "sha256": "43e2ef436152dc5d121cef52bc8c23b3c5d47f9ad3ac2cf2af8d756b10a1f05d"
+    },
+    "M4_soft-candidate.o": {
+      "bytes": 616,
+      "sha256": "2294654d4c4ceb027fa76143fcbf8ede25f66133061c065f045221fd5e862b5d"
+    },
+    "M4_soft-control.o": {
+      "bytes": 616,
+      "sha256": "2294654d4c4ceb027fa76143fcbf8ede25f66133061c065f045221fd5e862b5d"
+    },
+    "PROOF.md": {
+      "bytes": 4290,
+      "sha256": "31d08f147b358f6d821d5290c7da62fcdbf5a0fb80d32b0a4a4b2e696c2e2ed2"
+    },
+    "body-equivalence.json": {
+      "bytes": 1753,
+      "sha256": "fafc7536a5ae541f18ac1c766ec377c67609d3a22dfe048f92940ac70e3c0b2d"
+    },
+    "build.json": {
+      "bytes": 1893,
+      "sha256": "b28f2b4b1d46edb2bf527112084e39f76363439dc28f3c6de0fa0efd33f4a835"
+    },
+    "build.py": {
+      "bytes": 4385,
+      "sha256": "d9cfb3d14d1fa206ecc3f94342bffc1ad250180717e5292dba94d7585e6c73e6"
+    },
+    "candidate-full.o": {
+      "bytes": 17452,
+      "sha256": "ca0c943e2673c629f26e86c21a8cd6a1b05fcc5a0c4cad244ebfc5018033a88c"
+    },
+    "candidate.S": {
+      "bytes": 15479,
+      "sha256": "d9718b93ac883532547afe18e733f58ebdf768ba408386009377090d7bd35d5a"
+    },
+    "candidate.bin": {
+      "bytes": 1204,
+      "sha256": "1e095953c02f3b06993d2fc77ba471612dcd4214d6350ddb91ebb8bccd60dae7"
+    },
+    "candidate.dis": {
+      "bytes": 23620,
+      "sha256": "c393d2f8110dc1c6c36dc6fba7431094e08dc424834a876195167134af60741e"
+    },
+    "candidate.elf": {
+      "bytes": 5984,
+      "sha256": "a3479749d5f9764b1987eac1ba1dda9cbcb4df19005978eed5d97d027c0d850a"
+    },
+    "candidate.ld": {
+      "bytes": 99,
+      "sha256": "f7ae21317e3c44129c7ce2048a9afa571b5f57edb97445d87111cc54d9920a96"
+    },
+    "candidate.o": {
+      "bytes": 2268,
+      "sha256": "3c966c0df2a56faec8cc04c67a9678e4b360723e7ec80a6a9382dccec0a94f3e"
+    },
+    "capped-normalize.S.txt": {
+      "bytes": 1290,
+      "sha256": "a938827698d69f8d6e867b74cb3ef360d1040e845526a630ddcb0ba1aa6ae734"
+    },
+    "cold-normal-only.patch": {
+      "bytes": 5477,
+      "sha256": "bc5caa251514a63d2614beff339e63ce6a225ad5ea8ad6b13083105b48469542"
+    },
+    "control-full.o": {
+      "bytes": 17080,
+      "sha256": "223478946b2377453ba598fd57c0e15c1878cec221164374ff3d833abdd71938"
+    },
+    "controls.json": {
+      "bytes": 1419674,
+      "sha256": "4024c27217f07fa05f6f50ff607fc666549ace7573413528c990b55ef171b902"
+    },
+    "generic_M0-candidate.o": {
+      "bytes": 616,
+      "sha256": "178cb1e699c72dfbee438d4d2cbc007a8a92f1660a6ce60a20adcb21c93a6ee3"
+    },
+    "generic_M0-control.o": {
+      "bytes": 616,
+      "sha256": "178cb1e699c72dfbee438d4d2cbc007a8a92f1660a6ce60a20adcb21c93a6ee3"
+    },
+    "initial-smoke-before-gap-shortcut.json": {
+      "bytes": 630134,
+      "sha256": "d2ad4a6a32524336acaa895101beecba7d97656973b20b838de898dbd3e0d5aa"
+    },
+    "native_eabi_m0_rp2040.S": {
+      "bytes": 35960,
+      "sha256": "cff70bd3559412879c421a06f7ec16dd75726aa2a964ed3062f9936a58737de2"
+    },
+    "nonfinite.S.txt": {
+      "bytes": 891,
+      "sha256": "d8fd33d2249cc109c28f91bf5a7c3f225b3a0e3ade22c079e28442b59491f7bf"
+    },
+    "object-isolation.json": {
+      "bytes": 5810,
+      "sha256": "ffb355f8f2fdc10c88ce6ede548878dcfb03475fba9a9f20054113f9774b1a96"
+    },
+    "object-isolation.py": {
+      "bytes": 2747,
+      "sha256": "f7953f33606e8992185746c118894a12b6d3ebe1e832a15ce00fbb384a77c58f"
+    },
+    "qualification.json": {
+      "bytes": 26190613,
+      "sha256": "d43940d0b1b54da681d52ea09310deaf3da97ac6bb0ff89c17bfae3cb66dfef8"
+    },
+    "qualify.py": {
+      "bytes": 8103,
+      "sha256": "b4d7a451552e25ea08c47dfbb77fb7b3344dd9b82795b2a2342fccff87a4e02d"
+    }
+  }
+}

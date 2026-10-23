@@ -1,0 +1,112 @@
+{
+  "status": "MIXED_SIGN_DELTA_TECHNICAL_GO_NOT_PRODUCTION",
+  "recorded_at": "2026-10-23T18:42:13.910820+00:00",
+  "source_patch_sha256": "6f5631add5b8427d6efa8bf79b5d0adf73ecf08c0e736d5608c2354638f1cb60",
+  "HANDOFF_sha256": "67b94bd5e403cd3a0ab82f708da2f5eeaf85e79934fd1232b1c343ac4ff91e5c",
+  "producer_result_sha256": "5b1fa3434b9bd887115a2e00926ae48ec8d924d382c6926d9f06a15fdf8a83d5",
+  "candidate_source_sha256": "7f757aaeabd4aa4f172b28bf62e5f6e141d4584743617ac9d932d19346251c4f",
+  "candidate_ELF_sha256": "08ed9eece80732b4b7b20347c14b91372d2311ec99e11b9f2f47714877810038",
+  "candidate_bin_sha256": "057df000a1318c91765b153a87ec5f1ca85aa0172cf5c7ce519567665674bd2f",
+  "baseline_ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "helpers": {
+    "native_eabi_m0_arm_self_test.py": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3",
+    "check_stm32_vectors.py": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708"
+  },
+  "ROM_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "reference_ELF_sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+  "allocated_object_isolation": {
+    "old_block": 764,
+    "new_block": 648,
+    "only_section_changed": [
+      ".text.mk61_rp2040_arithmetic"
+    ],
+    "remaining_multiply_divide_bytes_identical": true,
+    "no_new_BSS_or_rodata": true,
+    "unchanged_zero_allocated_contexts": [
+      "M4_soft",
+      "M4_hard",
+      "generic_M0"
+    ]
+  },
+  "body_binding": {
+    "full_source_public_prefix_matches_648_executed_bytes_except_single_BL": true,
+    "public_entry_offsets_match": true,
+    "relocation_offset": 2,
+    "relocation_symbol": "mk61_m0_dadd_slow",
+    "linked_original_fallback": "0x100e6e44"
+  },
+  "mathematical_review": [
+    "Entry guards retain normal operands/max_exponent55..2045; mixed near cancellation handles gaps0/1; changed branch sees2..54.",
+    "For2<=d<=54,2^51<M-N/2^d<2^53; at most one normalization shift and larger exponent fixes sign.",
+    "Far jam preserves the side of all even-integer midpoint boundaries (2^30/2^31) and normalization boundary; exact remainder retains tie information.",
+    "NEG carry gives correct fractional borrow, SBC propagates through64 retained bits; one shift carries the fractional limb. Guard/sticky increment plus clearLSB on exact tie implements RNE, including binade carry."
+  ],
+  "independent_replay": {
+    "unique_inputs": 316,
+    "ARM_calls": 1298,
+    "wrong": 0,
+    "SIO_states": [
+      "READY",
+      "READY|DIRTY"
+    ],
+    "R4_R11_SP_and_stack_write_guard": "PASS via unchanged pinned Machine",
+    "oracle": "Own exact Fraction sum and independent CPython rational-to-double RNE; quiet NaN class policy for IEEE controls",
+    "actual_ROM_initializers": [
+      {
+        "name": "__aeabi_bits_init",
+        "table": "aeabi_bits_funcs",
+        "pointers": [
+          "0x309",
+          "0x357",
+          "0x38f",
+          "0x32d"
+        ]
+      },
+      {
+        "name": "__aeabi_mem_init",
+        "table": "aeabi_mem_funcs",
+        "pointers": [
+          "0x26b9",
+          "0x261d",
+          "0x26ad",
+          "0x2605"
+        ]
+      }
+    ],
+    "samples_file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-independent-review-20261023/ARM-samples.json",
+    "samples_sha256": "34abaf793e8fcbce55e1ca819b680d07c51308102aca4b4bef4d8bf1e5d200b4",
+    "known_17_inputs_all_faster_correct_Qfplib_in_both_SIO_states": true
+  },
+  "blockers": [],
+  "limitations": [
+    "Finite delta validation; no all-input correctness/speed proof or general goal completion.",
+    "No physical cycles/cache/IRQ/whole-platform acceptance; no firmware or production integration GO.",
+    "1766 inherited targeted slow-correct-Qfplib cases and all other cold/fallback deficits remain as producer reports; general pow trap unchanged.",
+    "Unchanged V164 certificates reused, no10807/fullmatrix replay; fullsource/SIO/ABI scope is this648B arithmetic block and its unchanged fallback binding."
+  ],
+  "mutations": {
+    "own_review_files_only": true,
+    "frozen_canonical_Git_USB_lease_or_firmware_changed": false
+  },
+  "independent_full_source_object_rebuild": {
+    "command": [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-independent-review-20261023/source-rebuilt.o"
+    ],
+    "status": "PASS",
+    "rebuilt_object_sha256": "c0c4858ea1eceb875f10f9b275028d10f4a2f1a70778731db4704d8836ec5233",
+    "allocated_sections_and_all_symbol_values_equal_producer_object": true,
+    "producer_object_sha256": "c0c4858ea1eceb875f10f9b275028d10f4a2f1a70778731db4704d8836ec5233"
+  },
+  "review_script_sha256": "f670114285d615c7d9213e6eeb93480bf8c75a97eb57d9c8ace90e6db06f4019"
+}

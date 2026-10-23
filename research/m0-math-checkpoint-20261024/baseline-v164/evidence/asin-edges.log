@@ -1,0 +1,2 @@
+asin {'status': 'PASS', 'cases': 89250, 'wrong_rounding': 0, 'core_fallback_calls': 126, 'corpus_sha256': 'e511091036a5c18677400070be973f86174972105831cfbb5ac79c6e21287e1f'}
+acos {'status': 'PASS', 'cases': 84076, 'wrong_rounding': 0, 'core_fallback_calls': 197, 'corpus_sha256': 'efff4a660617c7cfac35be1697ecf605dad947c5c704716b4ef8bf1284038bf0'}

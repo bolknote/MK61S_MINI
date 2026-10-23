@@ -1,0 +1,42 @@
+{
+  "status": "BUILT_PRIVATE_LOW_NORMAL_NONFINITE_DADD_NOT_FIRMWARE",
+  "parent_source_sha256": "754ea1ee3695fb4291ad6d7baf4632dfcf0f8e592029d08adc177341988471f0",
+  "parent_ELF_sha256": "5f1a8bec6d7c499d19ec3b9defe6a9f5fc6b10c8b4795e297b984c6158508343",
+  "source_sha256": "cff70bd3559412879c421a06f7ec16dd75726aa2a964ed3062f9936a58737de2",
+  "candidate_bytes": 1204,
+  "candidate_ELF_sha256": "a3479749d5f9764b1987eac1ba1dda9cbcb4df19005978eed5d97d027c0d850a",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/candidate.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/candidate.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/candidate.ld",
+      "--defsym",
+      "mk61_m0_dadd_slow=269381189",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/candidate.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/candidate.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-objcopy",
+      "-O",
+      "binary",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/candidate.elf",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-cold-normal-20261023/candidate.bin"
+    ]
+  ],
+  "canonical_or_frozen_changed": false,
+  "USB_accessed": false,
+  "goal_complete": false
+}

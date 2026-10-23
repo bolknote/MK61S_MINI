@@ -1,0 +1,76 @@
+{
+  "status": "PASS_FINAL_SOURCE_OBJECT_EXECUTED_BODY",
+  "artifact_count": 28,
+  "body_bytes": 880,
+  "own_reassembly_byte_exact": true,
+  "only_body_relocation": [
+    [
+      14,
+      10,
+      "mk61_m0_dadd_slow"
+    ]
+  ],
+  "decoded_BL_target": "100e6e44",
+  "all_other_body_bytes_equal": true,
+  "all_other_sections_and_following_kernels_equal": true,
+  "contexts": [
+    {
+      "label": "M4_soft",
+      "allocated_bytes": 0,
+      "byte_equal": true,
+      "scope": "Revalidated sealed object contribution, not full M4 firmware"
+    },
+    {
+      "label": "M4_hard",
+      "allocated_bytes": 0,
+      "byte_equal": true,
+      "scope": "Revalidated sealed object contribution, not full M4 firmware"
+    },
+    {
+      "label": "generic_M0",
+      "allocated_bytes": 0,
+      "byte_equal": true,
+      "scope": "Revalidated sealed object contribution, not full M4 firmware"
+    }
+  ],
+  "undefined_dependencies_equal": true,
+  "qualification_source_reconstructed_by_alignment_and_blank_only": true,
+  "guard": "CMP1991/BHS preserves Z into BNE; maxE2046 uniquely added, ordinary sign XOR/next arithmetic overwrite changed CMP flags",
+  "fallback_AAPCS": "20-byte entry PUSH +4-byte R3 alignment slot; call SP8-aligned; POP R3-R7/PC restores all saved registers, R3 is volatile",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-20261023/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-independent-20261023/public.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-original-goal-20261023/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-independent-20261023/parent.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-objdump",
+      "-dr",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-independent-20261023/public.o"
+    ]
+  ],
+  "hardware_access": false
+}

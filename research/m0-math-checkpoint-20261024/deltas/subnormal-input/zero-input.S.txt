@@ -1,0 +1,142 @@
+.macro da_zero_cell sublo,subhi,otherlo,otherhi,ret,virtual
+ // R6=other exponent+1. The usual half-ULP is2^(E-2) minimum subnormals.
+ // Opposite signs at an exact power of two use the smaller lower cell.
+ subs r6,#3
+ movs r7,r1
+ eors r7,r3
+ bpl 1f
+ lsls r4,\otherhi,#12
+ orrs r4,\otherlo
+ bne 1f
+ subs r6,#1
+ bmi \virtual
+1:
+ cmp r6,#32
+ blo 3f
+ subs r6,#31
+ movs r4,#1
+ lsls r4,r6
+ lsls r7,\subhi,#1
+ cmp r7,r4
+ blo \ret
+ bhi \virtual
+ cmp \sublo,#0
+ bne \virtual
+ b 4f
+3:
+ lsls r7,\subhi,#1
+ bne \virtual
+ movs r4,#1
+ lsls r4,r6
+ cmp \sublo,r4
+ blo \ret
+ bhi \virtual
+4:
+ // Equality is a midpoint: retain the normal value only when its LSB is even.
+ lsls r7,\otherlo,#31
+ bmi \virtual
+ b \ret
+.endm
+
+.Lda_zero_small:
+ // Exponents0/1 encode integer coefficients at the minimum-subnormal
+ // quantum directly after clearing the sign. At least one field is0.
+ mov r6,r1
+ eors r6,r3
+ bmi .Lda_zero_small_opposite
+ orrs r4,r5
+ lsls r1,#1
+ lsrs r1,#1
+ lsls r3,#1
+ lsrs r3,#1
+ adds r0,r2
+ adcs r1,r3
+ lsrs r5,r1,#21
+ beq .Lda_zero_small_sign
+ // A54-bit sum implies that the larger input had field1. The existing
+ // one-bit exact tie-even round therefore packs the result at field2.
+ b .Lda_low_near_round
+.Lda_zero_small_opposite:
+ lsls r1,#1
+ lsrs r1,#1
+ lsls r3,#1
+ lsrs r3,#1
+ subs r0,r0,r2
+ sbcs r1,r3
+ bcs 1f
+ movs r4,r5
+ mvns r1,r1
+ negs r0,r0
+ bcc 1f
+ adds r1,#1
+1:
+ movs r6,r0
+ orrs r6,r1
+ beq .Lda_zero_small_return
+.Lda_zero_small_sign:
+ lsrs r4,#11
+ lsls r4,#31
+ orrs r1,r4
+.Lda_zero_small_return:
+ pop {r4-r7,pc}
+
+.Lda_zero_a:
+ // A has field0; R4/R5 still contain the original sign:exponents.
+ lsls r6,r5,#21
+ lsrs r6,#21
+ cmp r6,#1
+ bls .Lda_zero_small
+ adds r6,#1
+ lsrs r7,r6,#11
+ beq 1f
+ b .Lda_nonfinite_start
+1:
+ // At exponent>=55 every subnormal is strictly inside the rounding cell.
+ cmp r6,#56
+ bhs .Lda_zero_return_b
+ lsls r7,r1,#1
+ orrs r7,r0
+ beq .Lda_zero_return_b
+ da_zero_cell r0,r1,r2,r3,.Lda_zero_return_b,.Lda_zero_virtual_a
+.Lda_zero_b:
+ lsls r6,r4,#21
+ lsrs r6,#21
+ cmp r6,#1
+ bls .Lda_zero_small
+ adds r6,#1
+ lsrs r7,r6,#11
+ beq 1f
+ b .Lda_nonfinite_start
+1:
+ cmp r6,#56
+ bhs .Lda_zero_return_a
+ lsls r7,r3,#1
+ orrs r7,r2
+ beq .Lda_zero_return_a
+ da_zero_cell r2,r3,r0,r1,.Lda_zero_return_a,.Lda_zero_virtual_b
+.Lda_zero_virtual_a:
+ // Cell comparison used the metadata as scratch; restore the real fields.
+ lsrs r4,r1,#20
+ lsrs r5,r3,#20
+ // A's exact coefficient has no implicit bit. Virtual field1 makes the
+ // common unpack remove only its sign, preserving that coefficient.
+ adds r4,#1
+ b .Lda_zero_virtual
+.Lda_zero_virtual_b:
+ lsrs r4,r1,#20
+ lsrs r5,r3,#20
+ adds r5,#1
+.Lda_zero_virtual:
+ // The other normal has exponent2..54, so every nonzero difference stays
+ // normal. For gap1 its exact coefficient is already at least2^52+1.
+ mov r6,r1
+ eors r6,r3
+ bpl 1f
+ b .Lda_mixed_sign
+1:
+ b .Lda_same_sign_start
+.Lda_zero_return_b:
+ movs r0,r2
+ movs r1,r3
+.Lda_zero_return_a:
+ pop {r4-r7,pc}

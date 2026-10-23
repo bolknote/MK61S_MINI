@@ -1,0 +1,188 @@
+--- accepted-mixed/code/native_eabi_m0_rp2040.S
++++ candidate/code/native_eabi_m0_rp2040.S
+@@ -71,11 +71,32 @@
+ .endm
+ .section .text.mk61_rp2040_arithmetic,"ax",%progbits
+ 
++.macro da_top_same_y_finish
++ adds r0,r2
++ adcs r1,r3
++ lsrs r5,r1,#21
++ bne .Lda_top_same_shift
++ lsls r4,#1
++ bcc .Lda_top_same_pack
++ b .Lda_top_same_increment
++.endm
++
++.Lda_top_guard:
++ // BHS retained the preceding CMP flags. Equality means exponent2046;
++ // every larger unsigned value remains a fallback input.
++ bne .Lda_slow
++ mov r6,r1
++ eors r6,r3
++ bmi 1f
++ b .Lda_top_same_start
++1:
++ b .Lda_mixed_sign
+ .Lda_slow:
+- sub sp, #4
++ // Save the volatile R3 in the previously reserved alignment word.
++ // A six-register pop restores the identical24-byte frame in one step.
++ push {r3}
+  bl mk61_m0_dadd_slow
+- add sp, #4
+- pop {r4-r7,pc}
++ pop {r3-r7,pc}
+ 
+ regular_func __aeabi_dsub
+  push {r4-r7,r14}
+@@ -93,7 +114,8 @@
+  lsrs r5, r3, #20
+  // Normal inputs and max exponent 55..2045 guarantee that every nonzero
+  // result is normal, including cancellation across a power-of-two boundary.
+- // This also rejects Inf/NaN before the significands change.
++ // The top guard separately accepts exponent2046 with normal inputs.
++ // Inf/NaN are rejected before the significands change.
+  lsls r6, r4, #21
+  beq .Lda_slow
+  lsls r7, r5, #21
+@@ -104,9 +126,9 @@
+ 89:
+  lsrs r6, #21
+  subs r6, #55
+- ldr r7, =1990
++ ldr r7, =1991
+  cmp r6, r7
+- bhi .Lda_slow
++ bhs .Lda_top_guard
+  mov r6,r1
+  eors r6,r3
+  bmi .Lda_mixed_sign
+@@ -462,6 +484,127 @@
+ .Lda_unsigned_pack:
+  adds r1,r2
+  pop {r4-r7,pc}
++
++.ltorg
++.Lda_top_same_start:
++ // With equal signs there is no cancellation or signed normalization.
++ // Keep the larger operand's packed exponent/sign as the final addend;
++ // only the fraction and implicit leading bit enter the unsigned sum.
++ subs r6,r4,r5
++ subs r4,#1
++ lsls r4,#20
++ subs r1,r4
++ subs r5,#1
++ lsls r5,#20
++ subs r3,r5
++ mov r12,r4
++ movs r4,#0
++ cmp r6,#0
++ bmi .Lda_top_same_y
++ beq .Lda_top_same_add
++ cmp r6,#32
++ bhs .Lda_top_same_x_far
++ movs r7,#32
++ subs r7,r7,r6
++ movs r4,r2
++ lsls r4,r7
++ movs r5,r3
++ lsls r5,r7
++ lsrs r2,r6
++ lsrs r3,r6
++ orrs r2,r5
++.Lda_top_same_add:
++ adds r0,r2
++ adcs r1,r3
++ lsrs r5,r1,#21
++ bne .Lda_top_same_shift
++ lsls r4,#1
++ bcc .Lda_top_same_pack
++.Lda_top_same_increment:
++ adds r0,#1
++ bcc 1f
++ adds r1,#1
++1:
++ cmp r4,#0
++ bne .Lda_top_same_pack
++ lsrs r0,#1                    @ an exact midpoint rounds to even
++ lsls r0,#1
++.Lda_top_same_pack:
++ // This also detects a carry caused only by the final RNE increment.
++ lsrs r5,r1,#21
++ bne .Lda_top_same_shift
++ mov r2,r12
++ adds r1,r2
++ pop {r4-r7,pc}
++.Lda_top_same_shift:
++ // R5=1 from the leading-bit test. R12 is sign:(2045):0.
++ lsls r5,#21
++ mov r1,r12
++ orrs r1,r5
++ movs r0,#0
++ pop {r4-r7,pc}
++
++.Lda_top_same_y:
++ mov r12,r5
++ negs r6,r6
++ cmp r6,#32
++ bhs .Lda_top_same_y_far
++ movs r7,#32
++ subs r7,r7,r6
++ movs r4,r0
++ lsls r4,r7
++ movs r5,r1
++ lsls r5,r7
++ lsrs r0,r6
++ lsrs r1,r6
++ orrs r0,r5
++ da_top_same_y_finish
++
++.Lda_top_same_x_far:
++ cmp r6,#54
++ bhs .Lda_top_same_pack            @ less than half an ULP: larger input is exact
++ movs r7,#64
++ subs r7,r7,r6
++ movs r4,r2
++ lsls r4,r7
++ beq 1f
++ movs r4,#1
++1:
++ subs r6,#32
++ lsrs r2,r6
++ orrs r4,r2
++ movs r2,r3
++ lsls r3,r7
++ orrs r4,r3
++ lsrs r2,r6
++ movs r3,#0
++ b .Lda_top_same_add
++.Lda_top_same_y_far:
++ cmp r6,#54
++ blo 1f
++ movs r0,r2
++ movs r1,r3
++ b .Lda_top_same_pack
++1:
++ movs r7,#64
++ subs r7,r7,r6
++ movs r4,r0
++ lsls r4,r7
++ beq 2f
++ movs r4,#1
++2:
++ subs r6,#32
++ lsrs r0,r6
++ orrs r4,r0
++ movs r0,r1
++ lsls r1,r7
++ orrs r4,r1
++ lsrs r0,r6
++ movs r1,#0
++ da_top_same_y_finish
++
++
++.align 2
+ 
+ .ltorg
+ mk61_m0_dadd_end:
