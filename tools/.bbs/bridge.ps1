@@ -305,7 +305,10 @@ function Receive-BbsFrame($Bridge, [int]$Kind, [uint32]$Session, [int]$Sequence,
             Send-BbsAck $Bridge $Sequence; return
         }
         $Bridge.Pending = $null; $Bridge.Answer = $null
-        $done = { $Bridge.LastCancel = $Sequence; Send-BbsAck $Bridge $Sequence }.GetNewClosure()
+        # A closure has its own module scope. Retain the helper's script scope when
+        # the bridge was dot-sourced by a script invoked with the call operator (&).
+        $sendAck = ${function:Send-BbsAck}
+        $done = { $Bridge.LastCancel = $Sequence; & $sendAck $Bridge $Sequence }.GetNewClosure()
         Cancel-BbsVisitor $Bridge.Visitor $done
         return
     }

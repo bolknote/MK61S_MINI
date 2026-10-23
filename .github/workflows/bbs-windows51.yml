@@ -26,7 +26,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           try {
-            & ./tests/run_bbs_powershell_tests.ps1 -RequireWindowsPowerShell51 *> $null
+            & ./tests/run_bbs_powershell_tests.ps1 -RequireWindowsPowerShell51 -CiDiagnostics *> $null
             if ($LASTEXITCODE -ne 0) { throw 'Native BBS CLI failed' }
           } catch {
             Write-Output 'BBS Windows PowerShell 5.1: FAIL'
