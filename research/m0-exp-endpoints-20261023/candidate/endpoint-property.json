@@ -1,0 +1,12 @@
+{
+  "status": "PASS_ACTUAL_ARM_EXP_ENDPOINT_EXACT_INTEGER_INTERVALS",
+  "cases": 176440,
+  "accepted": 68075,
+  "declined": 108365,
+  "result_sha256": "5c1ba7f658700ad3ec3eaed6d43f1b4877d2d6de312d988391d7898deba63824",
+  "elf_sha256": "209ac74c551923630300a4def7d017e90f2a69799bd4b800a8627955c16b5cf6",
+  "producer_sha256": "e0364c6234932f062653b9d338c47be6cf8bc8bb428f76ab587fa0701a83f9d7",
+  "scope": "Every returned endpoint equals exact integer RNE at both ends of the closed Q62 interval; rejected cells retain the old fallback. Both radii5/10, all subnormal shifts and zero/overflow endpoints.",
+  "hardware_accessed": false,
+  "goal_complete": false
+}

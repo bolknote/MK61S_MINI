@@ -1,0 +1,2671 @@
+{
+  "status": "PASS_EXPANDED_COVERAGE_NOT_A_SPEED_PASS",
+  "owned_elf_sha256": "209ac74c551923630300a4def7d017e90f2a69799bd4b800a8627955c16b5cf6",
+  "groups": [
+    {
+      "operation": "sin",
+      "stream": "legacy",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 860.03125,
+        "qfplib": 1352.78125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 10,
+      "origin": "original117"
+    },
+    {
+      "operation": "cos",
+      "stream": "legacy",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 854.90625,
+        "qfplib": 1350.1875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 6,
+      "origin": "original117"
+    },
+    {
+      "operation": "tan",
+      "stream": "legacy",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 954.84375,
+        "qfplib": 1591.875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 19,
+      "origin": "original117"
+    },
+    {
+      "operation": "i2d",
+      "stream": "legacy",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 25.4375,
+        "qfplib": 45.625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "sin",
+      "stream": "reduced",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 831.109375,
+        "qfplib": 1342.2421875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 5,
+      "origin": "original117"
+    },
+    {
+      "operation": "cos",
+      "stream": "reduced",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 749.359375,
+        "qfplib": 1337.984375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "tan",
+      "stream": "reduced",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 907.46875,
+        "qfplib": 1577.9453125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 45,
+      "origin": "original117"
+    },
+    {
+      "operation": "sin",
+      "stream": "ordinary",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1036.796875,
+        "qfplib": 1345.4375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 2,
+      "origin": "original117"
+    },
+    {
+      "operation": "cos",
+      "stream": "ordinary",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 979.84375,
+        "qfplib": 1345.6796875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "tan",
+      "stream": "ordinary",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1213.828125,
+        "qfplib": 1584.0390625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 35,
+      "origin": "original117"
+    },
+    {
+      "operation": "sin",
+      "stream": "qfplib_range",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 997.34375,
+        "qfplib": 1346.375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 30,
+      "origin": "original117"
+    },
+    {
+      "operation": "cos",
+      "stream": "qfplib_range",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1007.796875,
+        "qfplib": 1346.7734375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 32,
+      "origin": "original117"
+    },
+    {
+      "operation": "tan",
+      "stream": "qfplib_range",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1245.9140625,
+        "qfplib": 1588.4609375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 73,
+      "origin": "original117"
+    },
+    {
+      "operation": "sin",
+      "stream": "small_reduced",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 834.75,
+        "qfplib": 1349.390625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 66,
+      "origin": "original117"
+    },
+    {
+      "operation": "cos",
+      "stream": "small_reduced",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 677.890625,
+        "qfplib": 1328.5703125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "tan",
+      "stream": "small_reduced",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 877.4765625,
+        "qfplib": 1586.734375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 79,
+      "origin": "original117"
+    },
+    {
+      "operation": "sin",
+      "stream": "small_medium_remainder",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 836.2421875,
+        "qfplib": 1353.5234375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 57,
+      "origin": "original117"
+    },
+    {
+      "operation": "cos",
+      "stream": "small_medium_remainder",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 866.78125,
+        "qfplib": 1355.1640625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 71,
+      "origin": "original117"
+    },
+    {
+      "operation": "tan",
+      "stream": "small_medium_remainder",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1201.9609375,
+        "qfplib": 1599.8046875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "origin": "original117"
+    },
+    {
+      "operation": "sin",
+      "stream": "previous_slow_cases",
+      "cases": 3,
+      "mean_instructions": {
+        "own": 1050.3333333333333,
+        "qfplib": 1363.3333333333333
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 2,
+      "origin": "original117"
+    },
+    {
+      "operation": "cos",
+      "stream": "previous_slow_cases",
+      "cases": 3,
+      "mean_instructions": {
+        "own": 877.0,
+        "qfplib": 1340.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "tan",
+      "stream": "previous_slow_cases",
+      "cases": 3,
+      "mean_instructions": {
+        "own": 1056.0,
+        "qfplib": 1594.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 2,
+      "origin": "original117"
+    },
+    {
+      "operation": "i2d",
+      "stream": "random",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 25.181640625,
+        "qfplib": 45.669921875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "i2d",
+      "stream": "small",
+      "cases": 257,
+      "mean_instructions": {
+        "own": 31.93774319066148,
+        "qfplib": 103.3112840466926
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "sqrt",
+      "stream": "legacy",
+      "cases": 12,
+      "mean_instructions": {
+        "own": 136.16666666666666,
+        "qfplib": 155.83333333333334
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "exp",
+      "stream": "legacy",
+      "cases": 19,
+      "mean_instructions": {
+        "own": 552.0526315789474,
+        "qfplib": 648.4736842105264
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "sqrt",
+      "stream": "normal_exponents",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 134.59765625,
+        "qfplib": 152.375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "sqrt",
+      "stream": "normalized",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 134.66015625,
+        "qfplib": 153.5859375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "exp",
+      "stream": "small_range",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 578.7265625,
+        "qfplib": 634.5625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "exp",
+      "stream": "normal_exponents",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 552.765625,
+        "qfplib": 638.19921875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 7,
+      "origin": "original117"
+    },
+    {
+      "operation": "sqrt",
+      "stream": "segment_edges",
+      "cases": 1536,
+      "mean_instructions": {
+        "own": 134.58333333333334,
+        "qfplib": 152.46875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "i2d",
+      "stream": "random",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 25.373046875,
+        "qfplib": 46.03125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ui2d",
+      "stream": "random",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 21.228515625,
+        "qfplib": 38.953125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "l2d",
+      "stream": "random",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 29.4765625,
+        "qfplib": 41.818359375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ul2d",
+      "stream": "random",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 23.58203125,
+        "qfplib": 35.189453125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "l2d",
+      "stream": "small_magnitudes",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 30.623046875,
+        "qfplib": 43.4765625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "l2d",
+      "stream": "all_bit_lengths",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 36.21484375,
+        "qfplib": 67.435546875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ul2d",
+      "stream": "small_magnitudes",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 24.2109375,
+        "qfplib": 36.0546875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ul2d",
+      "stream": "all_bit_lengths",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 31.328125,
+        "qfplib": 64.23828125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "d2iz",
+      "stream": "nonnegative_valid",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 15.693359375,
+        "qfplib": 47.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "d2iz",
+      "stream": "signed_integral",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 26.5078125,
+        "qfplib": 48.5390625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "d2uiz",
+      "stream": "nonnegative_valid",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 36.55078125,
+        "qfplib": 43.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "d2lz",
+      "stream": "nonnegative_valid",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 23.984375,
+        "qfplib": 41.8203125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "d2lz",
+      "stream": "signed_integral",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 30.90625,
+        "qfplib": 43.4296875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "d2ulz",
+      "stream": "nonnegative_valid",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 20.31640625,
+        "qfplib": 37.810546875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "f2d",
+      "stream": "normal",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 13.0,
+        "qfplib": 13.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "d2f",
+      "stream": "normal",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 19.552734375,
+        "qfplib": 21.03515625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dcmpeq",
+      "stream": "normal",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 7.5,
+        "qfplib": 30.955078125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dcmplt",
+      "stream": "normal",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 21.890625,
+        "qfplib": 30.955078125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dcmple",
+      "stream": "normal",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 21.890625,
+        "qfplib": 30.955078125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dcmpge",
+      "stream": "normal",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 21.890625,
+        "qfplib": 30.955078125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dcmpgt",
+      "stream": "normal",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 21.890625,
+        "qfplib": 30.955078125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ln",
+      "stream": "normal_exponents",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 587.115234375,
+        "qfplib": 796.75
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ln",
+      "stream": "normalized",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 540.65234375,
+        "qfplib": 776.125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 9,
+      "origin": "original117"
+    },
+    {
+      "operation": "ln",
+      "stream": "near_one",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 408.642578125,
+        "qfplib": 702.26171875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 510,
+      "origin": "original117"
+    },
+    {
+      "operation": "ln",
+      "stream": "near_one_interval",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 577.5546875,
+        "qfplib": 791.400390625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 124,
+      "origin": "original117"
+    },
+    {
+      "operation": "atan",
+      "stream": "ordinary",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 1442.087890625,
+        "qfplib": 1808.001953125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 9,
+      "origin": "original117"
+    },
+    {
+      "operation": "atan",
+      "stream": "reduced",
+      "cases": 512,
+      "mean_instructions": {
+        "own": 1409.939453125,
+        "qfplib": 1790.6953125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 23,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_full_streams:full_random",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 124.25,
+        "qfplib": 124.78125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_full_streams:mantissa_product_below_two",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 128.5,
+        "qfplib": 128.5
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_full_streams:mantissa_product_above_two",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 122.9375,
+        "qfplib": 123.9375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_full_streams:low_word_boundaries",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 124.78125,
+        "qfplib": 125.375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_full_streams:normal_exponent_range",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 124.28125,
+        "qfplib": 124.84375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_full_streams:near_rounding_midpoints",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 122.84375,
+        "qfplib": 123.5625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_full_streams:full_random",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 163.5,
+        "qfplib": 167.5
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_full_streams:mantissa_ratio_below_one",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 162.9375,
+        "qfplib": 166.9375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_full_streams:mantissa_ratio_above_one",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 158.625,
+        "qfplib": 162.625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_full_streams:low_word_boundaries",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 158.96875,
+        "qfplib": 162.96875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_full_streams:normal_exponent_range",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 162.0,
+        "qfplib": 166.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_full_streams:near_rounding_midpoints",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 177.09375,
+        "qfplib": 181.09375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_streams:full_precision",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 123.125,
+        "qfplib": 123.84375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_streams:short_operand",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 100.8125,
+        "qfplib": 125.875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_streams:both_short",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 85.40625,
+        "qfplib": 121.125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_streams:powers_of_two",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 28.5,
+        "qfplib": 124.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_streams:rounding_ties",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 107.5,
+        "qfplib": 132.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul_streams:normal_exponent_range",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 123.96875,
+        "qfplib": 124.5
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_streams:full_precision",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 162.40625,
+        "qfplib": 166.40625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_streams:short_operand",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 161.0,
+        "qfplib": 163.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_streams:both_short",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 163.78125,
+        "qfplib": 165.78125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_streams:dyadic_seeds",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 126.25,
+        "qfplib": 160.375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_streams:near_rounding_midpoints",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 177.09375,
+        "qfplib": 181.09375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv_streams:normal_exponent_range",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 162.5625,
+        "qfplib": 166.5625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_streams:same_sign_positive",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 54.59375,
+        "qfplib": 64.96875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_streams:same_sign_negative",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 54.28125,
+        "qfplib": 76.40625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_streams:mixed_sign_close",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 57.65625,
+        "qfplib": 80.90625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_streams:wide_gap",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 61.53125,
+        "qfplib": 73.25
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_streams:same_exponent",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 49.28125,
+        "qfplib": 74.78125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_streams:full_exponent_range",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 39.09375,
+        "qfplib": 63.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_mixed_streams:equal_exponents",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 62.375,
+        "qfplib": 85.8125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_mixed_streams:adjacent_exponents",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 51.21875,
+        "qfplib": 74.4375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_mixed_streams:one_ulp_apart",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 100.0,
+        "qfplib": 380.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_mixed_streams:binade_boundary",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 91.875,
+        "qfplib": 368.8125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_mixed_streams:exact_cancellation",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 40.0,
+        "qfplib": 58.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd_mixed_streams:rounding_ties",
+      "cases": 32,
+      "mean_instructions": {
+        "own": 55.75,
+        "qfplib": 70.125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dadd",
+      "stream": "dadd:fixed_cases",
+      "cases": 12,
+      "mean_instructions": {
+        "own": 51.333333333333336,
+        "qfplib": 68.08333333333333
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dsub",
+      "stream": "dsub:fixed_cases",
+      "cases": 12,
+      "mean_instructions": {
+        "own": 74.75,
+        "qfplib": 129.41666666666666
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "dmul",
+      "stream": "dmul:fixed_cases",
+      "cases": 12,
+      "mean_instructions": {
+        "own": 85.5,
+        "qfplib": 123.08333333333333
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "ddiv",
+      "stream": "ddiv:fixed_cases",
+      "cases": 12,
+      "mean_instructions": {
+        "own": 115.41666666666667,
+        "qfplib": 159.08333333333334
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "asin",
+      "stream": "composed_ordinary",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 1895.5625,
+        "qfplib": 2247.20703125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 67,
+      "origin": "original117"
+    },
+    {
+      "operation": "asin",
+      "stream": "composed_boundaries",
+      "cases": 40,
+      "mean_instructions": {
+        "own": 1697.35,
+        "qfplib": 2303.6
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 3,
+      "origin": "original117"
+    },
+    {
+      "operation": "asin",
+      "stream": "composed_tiny_normal",
+      "cases": 16,
+      "mean_instructions": {
+        "own": 261.0,
+        "qfplib": 2258.0625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 15,
+      "origin": "original117"
+    },
+    {
+      "operation": "acos",
+      "stream": "composed_ordinary",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 1910.42578125,
+        "qfplib": 2247.27734375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 23,
+      "origin": "original117"
+    },
+    {
+      "operation": "acos",
+      "stream": "composed_boundaries",
+      "cases": 40,
+      "mean_instructions": {
+        "own": 1697.45,
+        "qfplib": 2312.175
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 6,
+      "origin": "original117"
+    },
+    {
+      "operation": "acos",
+      "stream": "composed_tiny_normal",
+      "cases": 16,
+      "mean_instructions": {
+        "own": 435.1875,
+        "qfplib": 2241.5625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "original117"
+    },
+    {
+      "operation": "log10",
+      "stream": "composed_normal_exponents",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 762.15625,
+        "qfplib": 931.0546875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 83,
+      "origin": "original117"
+    },
+    {
+      "operation": "log10",
+      "stream": "composed_near_one",
+      "cases": 257,
+      "mean_instructions": {
+        "own": 599.7859922178989,
+        "qfplib": 836.9260700389106
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 256,
+      "origin": "original117"
+    },
+    {
+      "operation": "log10",
+      "stream": "composed_powers_of_ten",
+      "cases": 121,
+      "mean_instructions": {
+        "own": 758.5867768595041,
+        "qfplib": 929.9752066115702
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 20,
+      "origin": "original117"
+    },
+    {
+      "operation": "pow",
+      "stream": "composed_ordinary",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 1262.83203125,
+        "qfplib": 1556.21484375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 194,
+      "origin": "original117"
+    },
+    {
+      "operation": "pow",
+      "stream": "composed_wide_exponents",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 1279.66796875,
+        "qfplib": 1571.6015625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 251,
+      "origin": "original117"
+    },
+    {
+      "operation": "pow",
+      "stream": "composed_near_one",
+      "cases": 48,
+      "mean_instructions": {
+        "own": 586.625,
+        "qfplib": 1390.125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 12,
+      "origin": "original117"
+    },
+    {
+      "operation": "pow",
+      "stream": "composed_negative_integer",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 853.39453125,
+        "qfplib": 1282.609375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 174,
+      "origin": "original117"
+    },
+    {
+      "operation": "pow",
+      "stream": "composed_negative_wide",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 861.72265625,
+        "qfplib": 1548.71875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 22,
+      "origin": "original117"
+    },
+    {
+      "operation": "pow",
+      "stream": "composed_negative_near_one",
+      "cases": 64,
+      "mean_instructions": {
+        "own": 963.625,
+        "qfplib": 1497.296875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 39,
+      "origin": "original117"
+    },
+    {
+      "operation": "pow",
+      "stream": "composed_exact_exponents",
+      "cases": 256,
+      "mean_instructions": {
+        "own": 151.8671875,
+        "qfplib": 155.98828125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 10,
+      "origin": "original117"
+    },
+    {
+      "operation": "pow",
+      "stream": "hard_pow_regular_exponents",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1424.4453125,
+        "qfplib": 1501.546875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 63,
+      "origin": "original117"
+    },
+    {
+      "operation": "pow",
+      "stream": "hard_pow_near_one_large_exponents",
+      "cases": 5,
+      "mean_instructions": {
+        "own": 1507.6,
+        "qfplib": 1573.8
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 5,
+      "origin": "original117"
+    },
+    {
+      "operation": "pow",
+      "stream": "hard_pow_moderate",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1532.3359375,
+        "qfplib": 1535.453125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 71,
+      "origin": "original117"
+    },
+    {
+      "operation": "sin",
+      "stream": "independent_moderate",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1034.1953125,
+        "qfplib": 1345.5625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 9,
+      "both_correct_cases": 119,
+      "both_correct_mean_instructions": {
+        "own": 989.9495798319327,
+        "qfplib": 1345.1512605042017
+      },
+      "both_correct_own_slower": 3,
+      "origin": "independent53"
+    },
+    {
+      "operation": "sin",
+      "stream": "tiny_exponent_range",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 37.765625,
+        "qfplib": 1304.03125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 127,
+      "both_correct_cases": 1,
+      "both_correct_mean_instructions": {
+        "own": 825.0,
+        "qfplib": 1347.0
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "sin",
+      "stream": "argument_exponents_20_60",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 14934.1953125,
+        "qfplib": 1359.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "sin",
+      "stream": "argument_exponents_60_500",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 15846.421875,
+        "qfplib": 1359.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "sin",
+      "stream": "argument_exponents_500_1023",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 15676.90625,
+        "qfplib": 1359.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "sin",
+      "stream": "quadrant_seed_neighbours",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 964.3359375,
+        "qfplib": 1349.3828125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 64,
+      "both_correct_cases": 64,
+      "both_correct_mean_instructions": {
+        "own": 956.875,
+        "qfplib": 1337.5
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "cos",
+      "stream": "independent_moderate",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1003.140625,
+        "qfplib": 1346.9921875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 8,
+      "both_correct_cases": 120,
+      "both_correct_mean_instructions": {
+        "own": 981.65,
+        "qfplib": 1346.4583333333333
+      },
+      "both_correct_own_slower": 3,
+      "origin": "independent53"
+    },
+    {
+      "operation": "cos",
+      "stream": "tiny_exponent_range",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 33.4453125,
+        "qfplib": 1321.7734375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 33.4453125,
+        "qfplib": 1321.7734375
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "cos",
+      "stream": "argument_exponents_20_60",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 15098.546875,
+        "qfplib": 1350.59375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "cos",
+      "stream": "argument_exponents_60_500",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 15609.78125,
+        "qfplib": 1350.59375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "cos",
+      "stream": "argument_exponents_500_1023",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 15597.6484375,
+        "qfplib": 1350.6171875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "cos",
+      "stream": "quadrant_seed_neighbours",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 966.5703125,
+        "qfplib": 1350.3359375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 64,
+      "both_correct_cases": 64,
+      "both_correct_mean_instructions": {
+        "own": 961.984375,
+        "qfplib": 1338.0
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "tan",
+      "stream": "independent_moderate",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1252.234375,
+        "qfplib": 1589.421875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 46,
+      "both_correct_cases": 82,
+      "both_correct_mean_instructions": {
+        "own": 1260.939024390244,
+        "qfplib": 1587.8170731707316
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "tan",
+      "stream": "tiny_exponent_range",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 39.1484375,
+        "qfplib": 1520.2109375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "tan",
+      "stream": "argument_exponents_20_60",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 20271.703125,
+        "qfplib": 1617.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "tan",
+      "stream": "argument_exponents_60_500",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 21118.046875,
+        "qfplib": 1617.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "tan",
+      "stream": "argument_exponents_500_1023",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 21142.6875,
+        "qfplib": 1617.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "tan",
+      "stream": "quadrant_seed_neighbours",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1127.9765625,
+        "qfplib": 1586.546875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "ln",
+      "stream": "positive_normal_full_exponents",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 586.4140625,
+        "qfplib": 798.1875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 2,
+      "both_correct_cases": 126,
+      "both_correct_mean_instructions": {
+        "own": 586.3888888888889,
+        "qfplib": 798.0
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "ln",
+      "stream": "subnormal_mantissas",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 6063.9921875,
+        "qfplib": 8.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "ln",
+      "stream": "near_one_ulp_offsets",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 411.7109375,
+        "qfplib": 711.875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 127,
+      "both_correct_cases": 1,
+      "both_correct_mean_instructions": {
+        "own": 406.0,
+        "qfplib": 720.0
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "log10",
+      "stream": "positive_normal_full_exponents",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 762.0078125,
+        "qfplib": 933.6171875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 39,
+      "both_correct_cases": 89,
+      "both_correct_mean_instructions": {
+        "own": 762.3370786516854,
+        "qfplib": 934.5955056179776
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "log10",
+      "stream": "subnormal_mantissas",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 8055.5078125,
+        "qfplib": 144.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "log10",
+      "stream": "near_one_ulp_offsets",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 606.3984375,
+        "qfplib": 841.953125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "sqrt",
+      "stream": "positive_normal_full_exponents",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 134.4140625,
+        "qfplib": 151.7578125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 134.4140625,
+        "qfplib": 151.7578125
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "sqrt",
+      "stream": "subnormal_mantissas",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 254.90625,
+        "qfplib": 12.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "sqrt",
+      "stream": "near_one_ulp_offsets",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 136.546875,
+        "qfplib": 151.5
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 136.546875,
+        "qfplib": 151.5
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "asin",
+      "stream": "independent_unit_range",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1948.9921875,
+        "qfplib": 2247.7890625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 30,
+      "both_correct_cases": 98,
+      "both_correct_mean_instructions": {
+        "own": 1909.8061224489795,
+        "qfplib": 2244.6938775510203
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "asin",
+      "stream": "tiny_normal_inputs",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 39.0,
+        "qfplib": 2211.3359375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "asin",
+      "stream": "near_positive_one",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 2261.65625,
+        "qfplib": 2527.703125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 2261.65625,
+        "qfplib": 2527.703125
+      },
+      "both_correct_own_slower": 1,
+      "origin": "independent53"
+    },
+    {
+      "operation": "acos",
+      "stream": "independent_unit_range",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1880.9921875,
+        "qfplib": 2250.1875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 12,
+      "both_correct_cases": 116,
+      "both_correct_mean_instructions": {
+        "own": 1875.3275862068965,
+        "qfplib": 2248.137931034483
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "acos",
+      "stream": "tiny_normal_inputs",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 57.1875,
+        "qfplib": 2201.984375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 57.1875,
+        "qfplib": 2201.984375
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "acos",
+      "stream": "near_positive_one",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 2179.1015625,
+        "qfplib": 2564.1953125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 126,
+      "both_correct_cases": 2,
+      "both_correct_mean_instructions": {
+        "own": 2087.5,
+        "qfplib": 2610.5
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "atan",
+      "stream": "independent_unit_range",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1411.1171875,
+        "qfplib": 1790.859375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 1,
+      "both_correct_cases": 127,
+      "both_correct_mean_instructions": {
+        "own": 1411.0787401574803,
+        "qfplib": 1790.8976377952756
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "atan",
+      "stream": "tiny_normal_inputs",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 19.0,
+        "qfplib": 1803.5546875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "atan",
+      "stream": "near_positive_one",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1424.5,
+        "qfplib": 1788.390625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 1424.5,
+        "qfplib": 1788.390625
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "atan",
+      "stream": "large_normal_magnitudes",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 43.0,
+        "qfplib": 1806.9765625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 43.0,
+        "qfplib": 1806.9765625
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "exp",
+      "stream": "negative_extreme",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 593.5703125,
+        "qfplib": 640.515625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 105,
+      "both_correct_cases": 23,
+      "both_correct_mean_instructions": {
+        "own": 555.3913043478261,
+        "qfplib": 642.2173913043479
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "exp",
+      "stream": "unit",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 579.40625,
+        "qfplib": 632.875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 579.40625,
+        "qfplib": 632.875
+      },
+      "both_correct_own_slower": 3,
+      "origin": "independent53"
+    },
+    {
+      "operation": "exp",
+      "stream": "moderate",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 579.3515625,
+        "qfplib": 633.53125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 579.3515625,
+        "qfplib": 633.53125
+      },
+      "both_correct_own_slower": 2,
+      "origin": "independent53"
+    },
+    {
+      "operation": "exp",
+      "stream": "positive_extreme",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 590.75,
+        "qfplib": 635.40625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 6,
+      "both_correct_cases": 122,
+      "both_correct_mean_instructions": {
+        "own": 578.8032786885246,
+        "qfplib": 635.7213114754098
+      },
+      "both_correct_own_slower": 2,
+      "origin": "independent53"
+    },
+    {
+      "operation": "exp",
+      "stream": "tiny_signed_normal",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 41.8046875,
+        "qfplib": 465.1484375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 41.8046875,
+        "qfplib": 465.1484375
+      },
+      "both_correct_own_slower": 5,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "independent_full_fractional",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1350.4921875,
+        "qfplib": 1551.7890625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 112,
+      "both_correct_cases": 16,
+      "both_correct_mean_instructions": {
+        "own": 1732.1875,
+        "qfplib": 1555.375
+      },
+      "both_correct_own_slower": 2,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "wide_base_fractional_exponent",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 957.2734375,
+        "qfplib": 1564.6953125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 49,
+      "both_correct_cases": 79,
+      "both_correct_mean_instructions": {
+        "own": 763.3544303797469,
+        "qfplib": 1559.4177215189873
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "cutoff_adjacent_y_2p-64",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 232.0,
+        "qfplib": 1434.765625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 232.0,
+        "qfplib": 1434.765625
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "cutoff_adjacent_y_2p-63",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1010.0234375,
+        "qfplib": 1430.765625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 1010.0234375,
+        "qfplib": 1430.765625
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "cutoff_adjacent_y_2p-62",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1009.046875,
+        "qfplib": 1432.03125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 1009.046875,
+        "qfplib": 1432.03125
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "cutoff_adjacent_y_2p-60",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1009.5703125,
+        "qfplib": 1439.5234375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 1009.5703125,
+        "qfplib": 1439.5234375
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "cutoff_adjacent_y_2p-50",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1009.3671875,
+        "qfplib": 1433.28125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 1009.3671875,
+        "qfplib": 1433.28125
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "huge_finite_exponents",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 163.65625,
+        "qfplib": 1564.078125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "both_correct_cases": 128,
+      "both_correct_mean_instructions": {
+        "own": 163.65625,
+        "qfplib": 1564.078125
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "near_one_variable_exponent",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 935.5078125,
+        "qfplib": 1372.5703125
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 13,
+      "both_correct_cases": 115,
+      "both_correct_mean_instructions": {
+        "own": 925.295652173913,
+        "qfplib": 1362.7304347826087
+      },
+      "both_correct_own_slower": 16,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "medium_integer_exponents",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 2190.6953125,
+        "qfplib": 1543.84375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 113,
+      "both_correct_cases": 15,
+      "both_correct_mean_instructions": {
+        "own": 1315.6666666666667,
+        "qfplib": 1546.3333333333333
+      },
+      "both_correct_own_slower": 1,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "power_of_two_bases_wide_exponents",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 882.2890625,
+        "qfplib": 1500.546875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 2,
+      "both_correct_cases": 126,
+      "both_correct_mean_instructions": {
+        "own": 876.1111111111111,
+        "qfplib": 1500.7301587301588
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "tiny_exponents_normal_bases",
+      "cases": 168,
+      "mean_instructions": {
+        "own": 201.77380952380952,
+        "qfplib": 1345.797619047619
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 0,
+      "origin": "tiny168"
+    }
+  ],
+  "group_count": 171,
+  "cases": 30304,
+  "instruction_groups_faster": 156,
+  "instruction_groups_equal": 2,
+  "instruction_groups_slower": 13,
+  "owned_wrong_rounding": 0,
+  "original117_groups": {
+    "faster": 115,
+    "equal": 2,
+    "slower": 0
+  },
+  "changed_original_chunks": [
+    25,
+    28,
+    29
+  ],
+  "unchanged_original_chunk_records": 116,
+  "original_changes_are_exp_only_and_faster": true,
+  "independent_changes_are_exp_only_and_every_case_no_slower": true,
+  "changed_independent_groups": [
+    "negative_extreme",
+    "unit",
+    "moderate",
+    "positive_extreme",
+    "tiny_signed_normal"
+  ],
+  "unchanged_independent_group_records": 48,
+  "tiny196_case_records_identical": true,
+  "raw_deficits": [
+    {
+      "operation": "sin",
+      "stream": "argument_exponents_20_60",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 14934.1953125,
+        "qfplib": 1359.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "sin",
+      "stream": "argument_exponents_60_500",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 15846.421875,
+        "qfplib": 1359.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "sin",
+      "stream": "argument_exponents_500_1023",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 15676.90625,
+        "qfplib": 1359.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "cos",
+      "stream": "argument_exponents_20_60",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 15098.546875,
+        "qfplib": 1350.59375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "cos",
+      "stream": "argument_exponents_60_500",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 15609.78125,
+        "qfplib": 1350.59375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "cos",
+      "stream": "argument_exponents_500_1023",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 15597.6484375,
+        "qfplib": 1350.6171875
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "tan",
+      "stream": "argument_exponents_20_60",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 20271.703125,
+        "qfplib": 1617.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "tan",
+      "stream": "argument_exponents_60_500",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 21118.046875,
+        "qfplib": 1617.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "tan",
+      "stream": "argument_exponents_500_1023",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 21142.6875,
+        "qfplib": 1617.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "ln",
+      "stream": "subnormal_mantissas",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 6063.9921875,
+        "qfplib": 8.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "log10",
+      "stream": "subnormal_mantissas",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 8055.5078125,
+        "qfplib": 144.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "sqrt",
+      "stream": "subnormal_mantissas",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 254.90625,
+        "qfplib": 12.0
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 128,
+      "both_correct_cases": 0,
+      "both_correct_mean_instructions": {
+        "own": null,
+        "qfplib": null
+      },
+      "both_correct_own_slower": 0,
+      "origin": "independent53"
+    },
+    {
+      "operation": "pow",
+      "stream": "medium_integer_exponents",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 2190.6953125,
+        "qfplib": 1543.84375
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 113,
+      "both_correct_cases": 15,
+      "both_correct_mean_instructions": {
+        "own": 1315.6666666666667,
+        "qfplib": 1546.3333333333333
+      },
+      "both_correct_own_slower": 1,
+      "origin": "independent53"
+    }
+  ],
+  "both_correct_subset_mean_deficits": [
+    {
+      "operation": "pow",
+      "stream": "independent_full_fractional",
+      "cases": 128,
+      "mean_instructions": {
+        "own": 1350.4921875,
+        "qfplib": 1551.7890625
+      },
+      "owned_wrong_rounding": 0,
+      "qfplib_wrong_results": 112,
+      "both_correct_cases": 16,
+      "both_correct_mean_instructions": {
+        "own": 1732.1875,
+        "qfplib": 1555.375
+      },
+      "both_correct_own_slower": 2,
+      "origin": "independent53"
+    }
+  ],
+  "source_reports": {
+    "instruction-matrix.json": "04b91a14de4ee14cb1d5181fd1bb065b3860e7f959071290d291bcd224d919c8",
+    "result.json": "d82e2c6b2bf5d68d5f994489d9cdcb6ae8dd94930593da362aa5b45f20f869ac",
+    "tiny-profile.json": "016e02d07ffe7478ed0ce8f2c7fd01554c22b68ae5a05952a46fd83af4874a26"
+  },
+  "producer_sha256": "c95ca963064ae91442c782a458f06a63b0942cc7be600e45707d92991268898b",
+  "scope": "All171 previously selected groups are retained. Other116 original chunk records, all48 non-exp independent group records and196 tiny rows are exact V144 copies. Every changed independent exp vector has identical RNE output and no added instructions. Counts are executed ARM instructions with modeled SIO, not physical cycles or an all-input speed guarantee.",
+  "approved_hardware_package_changed": false,
+  "hardware_accessed": false,
+  "general_pow_totality_proved": false,
+  "goal_complete": false
+}

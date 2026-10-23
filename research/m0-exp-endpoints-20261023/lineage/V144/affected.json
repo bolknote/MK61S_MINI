@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "cases": 75229,
+  "complete_corpus": true,
+  "wrong_rounding": 0,
+  "mpfr": "4.2.2",
+  "elf_sha256": "ea22f818cac9f01690474d1ff27f752d26646b9a2e8fbbe5e6c4d0dea405ddde",
+  "corpus_sha256": "15c7578c15e3a9811d4e67247822013b71380d3ec2754b5ec3b7a205e748e689",
+  "checked_this_run": 75229,
+  "start_case": 0,
+  "signaling_nan_cases": 4,
+  "runner_sha256": "96f0f8537bf4b75895efc32120094852ba5156b96d5827b85614a3ed875dfabb",
+  "machine_sha256": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3",
+  "allowed_stack_bytes": 16384,
+  "instruction_budget_per_call": 200000000,
+  "maximum_observed_stack_bytes": 2268,
+  "sdk_rom_intrinsic_models": [],
+  "actual_bootrom": {
+    "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "initializers": [
+      {
+        "name": "__aeabi_bits_init",
+        "table": "aeabi_bits_funcs",
+        "pointers": [
+          "0x309",
+          "0x357",
+          "0x38f",
+          "0x32d"
+        ]
+      },
+      {
+        "name": "__aeabi_mem_init",
+        "table": "aeabi_mem_funcs",
+        "pointers": [
+          "0x26b9",
+          "0x261d",
+          "0x26ad",
+          "0x2605"
+        ]
+      }
+    ]
+  },
+  "prefix_report": null,
+  "new_cases_result_sha256": "1820a64d727083e9b8ffa91d56ee1a1056030f5fbb113460d38c2c3d1116d26c",
+  "oracle": "Directed MPFR bounds must round to the same binary64; signaling NaNs separately require a quiet NaN result.",
+  "abi": "Every ARM call verifies R4-R11, SP and bounded stack writes.",
+  "scope": "Saved worst-case corpus; not a totality proof over all binary64 pairs.",
+  "known_limitations": [
+    "The owned 512/1024-bit fallback preserves a final undecided-interval trap; totality is unproved."
+  ]
+}

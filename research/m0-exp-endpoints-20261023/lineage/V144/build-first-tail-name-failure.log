@@ -1,0 +1,481 @@
+PICO_SDK_PATH is /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk
+Target board (PICO_BOARD) is 'mk61_picocalc_pico_h'.
+Using board configuration from /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/boards/mk61_picocalc_pico_h.h
+Defaulting platform (PICO_PLATFORM) to 'rp2040' based on PICO_BOARD setting.
+Defaulting compiler (PICO_COMPILER) to 'pico_arm_cortex_m0plus_gcc' since not specified.
+Configuring toolchain based on PICO_COMPILER 'pico_arm_cortex_m0plus_gcc'
+Defaulting PICO_GCC_TRIPLE to 'arm-none-eabi'
+-- The C compiler identification is GNU 14.2.1
+-- The CXX compiler identification is GNU 14.2.1
+-- The ASM compiler identification is GNU
+-- Found assembler: /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+Build type is Release
+-- Found Python3: /Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python (found version "3.13.16") found components: Interpreter
+TinyUSB available at /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/lib/tinyusb/hw/bsp/rp2040; enabling build support for USB.
+-- Configuring done (0.6s)
+-- Generating done (0.1s)
+-- Build files have been written to: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/build
+[1/178] Creating directories for 'pioasmBuild'
+[2/178] Building ASM object pico-sdk/src/rp2040/boot_stage2/CMakeFiles/bs2_default.dir/compile_time_choice.S.o
+[3/178] No download step for 'pioasmBuild'
+[4/178] No update step for 'pioasmBuild'
+[5/178] Linking ASM executable pico-sdk/src/rp2040/boot_stage2/bs2_default.elf
+[6/178] No patch step for 'pioasmBuild'
+[7/178] Generating bs2_default.bin
+[8/178] Generating bs2_default_padded_checksummed.S
+[9/178] Building ASM object pico-sdk/src/rp2040/boot_stage2/CMakeFiles/bs2_default_library.dir/bs2_default_padded_checksummed.S.o
+[10/178] Performing configure step for 'pioasmBuild'
+The --no-warn-unused-cli option is deprecated.  Use -Wno-unused-cli instead.
+loading initial cache file /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/build/pico-sdk/src/rp2_common/pico_status_led/pioasm/tmp/pioasmBuild-cache-Release.cmake
+-- The CXX compiler identification is AppleClang 21.0.0.21000334
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/build/pioasm
+[11/178] Performing build step for 'pioasmBuild'
+[1/12] Building CXX object CMakeFiles/pioasm.dir/hex_output.cpp.o
+[2/12] Building CXX object CMakeFiles/pioasm.dir/json_output.cpp.o
+[3/12] Building CXX object CMakeFiles/pioasm.dir/go_output.cpp.o
+[4/12] Building CXX object CMakeFiles/pioasm.dir/pio_disassembler.cpp.o
+[5/12] Building CXX object CMakeFiles/pioasm.dir/ada_output.cpp.o
+[6/12] Building CXX object CMakeFiles/pioasm.dir/c_sdk_output.cpp.o
+[7/12] Building CXX object CMakeFiles/pioasm.dir/main.cpp.o
+[8/12] Building CXX object CMakeFiles/pioasm.dir/python_output.cpp.o
+[9/12] Building CXX object CMakeFiles/pioasm.dir/gen/lexer.cpp.o
+[10/12] Building CXX object CMakeFiles/pioasm.dir/gen/parser.cpp.o
+[11/12] Building CXX object CMakeFiles/pioasm.dir/pio_assembler.cpp.o
+[12/12] Linking CXX executable pioasm
+[12/178] Performing install step for 'pioasmBuild'
+[0/1] Install the project...
+-- Install configuration: "Release"
+[13/178] Completed 'pioasmBuild'
+[14/178] Generating psram_spi.pio.h
+[15/178] Generating psram_qpi.pio.h
+[16/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/calculator.cpp.o
+[17/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/io_worker.cpp.o
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:6:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In member function 'bool picocalc::I2cTransfer::begin(Bus&, bool, const uint8_t*, unsigned int, uint64_t)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:16:51: warning: enumerated and non-enumerated type in conditional expression [-Wextra]
+   16 |         for(unsigned i=0;i<size;++i) bus.put((read?READ:bytes[i])|(i+1==size?END:0));
+      |                                               ~~~~^~~~~~~~~~~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:16:77: warning: enumerated and non-enumerated type in conditional expression [-Wextra]
+   16 |         for(unsigned i=0;i<size;++i) bus.put((read?READ:bytes[i])|(i+1==size?END:0));
+      |                                                                    ~~~~~~~~~^~~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp: In member function 'unsigned int picocalc::io_worker::{anonymous}::I2cBus::flags()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:60:59: warning: enumerated and non-enumerated type in conditional expression [-Wextra]
+   60 |         return ((flags&I2C_IC_RAW_INTR_STAT_STOP_DET_BITS)?I2cTransfer::STOP:0)|
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:61:55: warning: enumerated and non-enumerated type in conditional expression [-Wextra]
+   61 |             ((flags&I2C_IC_RAW_INTR_STAT_TX_ABRT_BITS)?I2cTransfer::ABORT:0)|
+      |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:62:55: warning: enumerated and non-enumerated type in conditional expression [-Wextra]
+   62 |             ((flags&I2C_IC_RAW_INTR_STAT_RX_OVER_BITS)?I2cTransfer::RX_OVERFLOW:0);
+      |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In instantiation of 'bool picocalc::I2cTransfer::begin(Bus&, bool, const uint8_t*, unsigned int, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus; uint8_t = unsigned char; uint64_t = long long unsigned int]':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:290:27:   required from here
+  290 |         i2c_transfer.begin(i2c_bus,i2c.read,i2c.bytes,i2c.length,time_us_64());
+      |         ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:16:51: warning: enumerated and non-enumerated type in conditional expression [-Wextra]
+   16 |         for(unsigned i=0;i<size;++i) bus.put((read?READ:bytes[i])|(i+1==size?END:0));
+      |                                              ~~~~~^~~~~~~~~~~~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:16:77: warning: enumerated and non-enumerated type in conditional expression [-Wextra]
+   16 |         for(unsigned i=0;i<size;++i) bus.put((read?READ:bytes[i])|(i+1==size?END:0));
+      |                                                                   ~~~~~~~~~~^~~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 2 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 3 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 4 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 5 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 6 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 7 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 8 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 9 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 10 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 11 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 12 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 13 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 14 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::finish_i2c()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 15 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 2 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 3 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 4 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 5 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 6 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 7 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 8 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 9 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 10 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 11 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 12 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 13 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 14 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+In member function 'bool picocalc::I2cTransfer::step(Bus&, uint64_t) [with Bus = picocalc::io_worker::{anonymous}::I2cBus]',
+    inlined from 'void picocalc::io_worker::{anonymous}::finish_i2c()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:80:26,
+    inlined from 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/io_worker.cpp:92:40:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:26:33: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+   26 |             else bytes_[used_++]=byte;
+      |                  ~~~~~~~~~~~~~~~^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp: In function 'void picocalc::io_worker::{anonymous}::i2c_timeout(unsigned int)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/i2c_transfer.hpp:47:13: note: at offset 15 into destination object 'picocalc::I2cTransfer::bytes_' of size 2
+   47 |     uint8_t bytes_[CAPACITY]{};
+      |             ^~~~~~
+[18/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/hardware.cpp.o
+[19/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/math_probe.cpp.o
+[20/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/main.cpp.o
+[21/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/ui.cpp.o
+[22/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/screen.cpp.o
+[23/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/terminal.cpp.o
+[24/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/diagnostics.cpp.o
+[25/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/fonts.cpp.o
+[26/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/firmware.cpp.o
+[27/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/canvas.cpp.o
+[28/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/markdown.cpp.o
+[29/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/settings.cpp.o
+[30/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/device_settings.cpp.o
+[31/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/block_transfer.cpp.o
+[32/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/native_display.cpp.o
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp: In member function 'u32 picocalc::NativeDisplay::clear()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp:88:5: warning: this 'else' clause does not guard... [-Wmisleading-indentation]
+   88 |     else surface_.clear();flush();return 1;
+      |     ^~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp:88:27: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'else'
+   88 |     else surface_.clear();flush();return 1;
+      |                           ^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp: In member function 'void picocalc::NativeDisplay::native_layout()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp:200:5: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
+  200 |     if(!npitch_) npitch_=1;if(!ncell_) ncell_=1;
+      |     ^~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp:200:28: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
+  200 |     if(!npitch_) npitch_=1;if(!ncell_) ncell_=1;
+      |                            ^~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp: In member function 'u32 picocalc::NativeDisplay::native_call(u32, u32, u32, void*)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp:290:9: warning: this 'for' clause does not guard... [-Wmisleading-indentation]
+  290 |         for(unsigned i=0;i<n;++i) native_put(mk8::codepoint(((const u8*)payload)[i]));break;
+      |         ^~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp:290:87: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'for'
+  290 |         for(unsigned i=0;i<n;++i) native_put(mk8::codepoint(((const u8*)payload)[i]));break;
+      |                                                                                       ^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp:308:9: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
+  308 |         if(!payload) return 0;const auto& r=*(const mk61_service_text_flow*)payload;
+      |         ^~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp:308:31: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
+  308 |         if(!payload) return 0;const auto& r=*(const mk61_service_text_flow*)payload;
+      |                               ^~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp: In lambda function:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp:317:17: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
+  317 |                 if(r.text[end]==' ' || r.text[end]=='\t') space=end;width+=advance;++end;
+      |                 ^~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/native_display.cpp:317:69: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
+  317 |                 if(r.text[end]==' ' || r.text[end]=='\t') space=end;width+=advance;++end;
+      |                                                                     ^~~~~
+[33/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/sd_card.cpp.o
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/sd_card.cpp: In function 'bool picocalc::sd::read(u32, u8*)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/sd_card.cpp:178:5: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
+  178 |     if(ok && cached) external_cache::store_sector(sector,out);return ok;
+      |     ^~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/sd_card.cpp:178:63: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
+  178 |     if(ok && cached) external_cache::store_sector(sector,out);return ok;
+      |                                                               ^~~~~~
+[34/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/usb_device.cpp.o
+[35/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/storage.cpp.o
+[36/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/storage_journal.cpp.o
+[37/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/dma_support.cpp.o
+[38/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/psram.cpp.o
+[39/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/external_cache.cpp.o
+[40/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/services.cpp.o
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/services.cpp: In member function 'void picocalc::Services::accept_prompt()':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/services.cpp:93:44: warning: '%s' directive output may be truncated writing up to 255 bytes into a region of size 64 [-Wformat-truncation=]
+   93 |     std::snprintf(filter_,sizeof(filter_),"%s",utf8?utf8:"");
+      |                                            ^~
+In member function 'void picocalc::Services::filter_directory(const char*)',
+    inlined from 'void picocalc::Services::accept_prompt()' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/services.cpp:169:52:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/services.cpp:93:18: note: 'snprintf' output between 1 and 256 bytes into a destination of size 64
+   93 |     std::snprintf(filter_,sizeof(filter_),"%s",utf8?utf8:"");
+      |     ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/services.cpp: In member function 'bool picocalc::Services::input(u8)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/services.cpp:164:56: warning: '%s' directive output may be truncated writing up to 383 bytes into a region of size 256 [-Wformat-truncation=]
+  164 |     std::snprintf(prompt_text_, sizeof(prompt_text_), "%s", initial);
+      |                                                        ^~
+In member function 'void picocalc::Services::prompt(Prompt, picocalc::ServicePage, const char*)',
+    inlined from 'bool picocalc::Services::input(u8)' at /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/services.cpp:351:44:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/services.cpp:164:18: note: 'snprintf' output between 1 and 384 bytes into a destination of size 256
+  164 |     std::snprintf(prompt_text_, sizeof(prompt_text_), "%s", initial);
+      |     ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[41/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/buffers.cpp.o
+[42/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/script_files.cpp.o
+[43/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/service_runtime.cpp.o
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/service_runtime.cpp: In member function 'u8 picocalc::Services::view_image(const char*)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/service_runtime.cpp:612:106: warning: '%.100s' directive output may be truncated writing up to 100 bytes into a region of size 84 [-Wformat-truncation=]
+  612 |     if(!files::read(path,bytes,info_file.size,used)) {std::snprintf(status_,sizeof(status_),"Image read: %.100s",files::error());std::free(bytes);return 2;}
+      |                                                                                                          ^~~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/service_runtime.cpp:612:68: note: 'snprintf' output between 13 and 113 bytes into a destination of size 96
+  612 |     if(!files::read(path,bytes,info_file.size,used)) {std::snprintf(status_,sizeof(status_),"Image read: %.100s",files::error());std::free(bytes);return 2;}
+      |                                                       ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[44/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/input.cpp.o
+[45/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/power.cpp.o
+[46/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/script_runtime.cpp.o
+[47/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/language_cache.cpp.o
+[48/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/chip8_runtime.cpp.o
+[49/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/clock.cpp.o
+[50/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/native_runtime.cpp.o
+[51/178] Building C object CMakeFiles/mk61s-picocalc-pico-h.dir/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/third_party/fatfs/ffunicode.c.o
+[52/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/usb_screen.cpp.o
+[53/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/compact_math.cpp.o
+[54/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/native_eabi_m0.cpp.o
+FAILED: [code=1] CMakeFiles/mk61s-picocalc-pico-h.dir/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/native_eabi_m0.cpp.o 
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++ -DCFG_TUSB_DEBUG=0 -DCFG_TUSB_MCU=OPT_MCU_RP2040 -DCFG_TUSB_OS=OPT_OS_PICO -DLIB_BOOT_STAGE2_HEADERS=1 -DLIB_PICO_ATOMIC=1 -DLIB_PICO_BIT_OPS=1 -DLIB_PICO_BIT_OPS_PICO=1 -DLIB_PICO_CLIB_INTERFACE=1 -DLIB_PICO_CRT0=1 -DLIB_PICO_CXX_OPTIONS=1 -DLIB_PICO_DIVIDER=1 -DLIB_PICO_DIVIDER_HARDWARE=1 -DLIB_PICO_DOUBLE=1 -DLIB_PICO_DOUBLE_COMPILER=1 -DLIB_PICO_FIX_RP2040_USB_DEVICE_ENUMERATION=1 -DLIB_PICO_FLASH=1 -DLIB_PICO_FLOAT=1 -DLIB_PICO_FLOAT_COMPILER=1 -DLIB_PICO_INT64_OPS=1 -DLIB_PICO_INT64_OPS_PICO=1 -DLIB_PICO_MALLOC=1 -DLIB_PICO_MEM_OPS=1 -DLIB_PICO_MEM_OPS_MK61=1 -DLIB_PICO_MULTICORE=1 -DLIB_PICO_NEWLIB_INTERFACE=1 -DLIB_PICO_PLATFORM=1 -DLIB_PICO_PLATFORM_COMMON=1 -DLIB_PICO_PLATFORM_COMPILER=1 -DLIB_PICO_PLATFORM_PANIC=1 -DLIB_PICO_PLATFORM_SECTIONS=1 -DLIB_PICO_PRINTF=1 -DLIB_PICO_PRINTF_PICO=1 -DLIB_PICO_RAND=1 -DLIB_PICO_RUNTIME=1 -DLIB_PICO_RUNTIME_INIT=1 -DLIB_PICO_STANDARD_BINARY_INFO=1 -DLIB_PICO_STANDARD_LINK=1 -DLIB_PICO_STDIO=1 -DLIB_PICO_STDIO_UART=1 -DLIB_PICO_STDIO_USB=1 -DLIB_PICO_STDLIB=1 -DLIB_PICO_SYNC=1 -DLIB_PICO_SYNC_CRITICAL_SECTION=1 -DLIB_PICO_SYNC_MUTEX=1 -DLIB_PICO_SYNC_SEM=1 -DLIB_PICO_TIME=1 -DLIB_PICO_TIME_ADAPTER=1 -DLIB_PICO_UNIQUE_ID=1 -DLIB_PICO_UTIL=1 -DLIB_TINYUSB_BOARD=1 -DLIB_TINYUSB_DEVICE=1 -DMK61_CORE_STANDALONE=1 -DMK61_ENABLE_RTC_ALARM_TERMINAL=1 -DMK61_ENABLE_USB_SCREEN=1 -DMK61_M0_RP2040_EABI=1 -DMK61_M61_READ_CACHE_BYTES=2048 -DMK61_MATH_BACKEND=0 -DMK61_PICOCALC_BUILD_ID=0x792b175dU -DMK61_PICOCALC_PSRAM_QPI=1 -DMK61_PICOCALC_SAMPLE_PROFILE=0 -DMK61_USE_COMPACT_LIBM=1 -DMK61_USE_M0_EABI=1 -DMK61_USE_NATIVE_EABI=0 -DPICO_32BIT=1 -DPICO_BOARD=\"mk61_picocalc_pico_h\" -DPICO_BUILD=1 -DPICO_CMAKE_BUILD_TYPE=\"Release\" -DPICO_COPY_TO_RAM=0 -DPICO_CORE1_STACK_SIZE=2048 -DPICO_CXX_ENABLE_EXCEPTIONS=0 -DPICO_MALLOC_PANIC=0 -DPICO_NO_FLASH=0 -DPICO_NO_HARDWARE=0 -DPICO_ON_DEVICE=1 -DPICO_PROGRAM_NAME="\"MK61S PicoCalc Pico H\"" -DPICO_PROGRAM_VERSION_STRING=\"0.8.16\" -DPICO_RP2040=1 -DPICO_RP2040_USB_DEVICE_UFRAME_FIX=1 -DPICO_STACK_SIZE=32768 -DPICO_STDIO_DEFAULT_CRLF=1 -DPICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=0 -DPICO_STDIO_USB_ENABLE_IRQ_BACKGROUND_TASK=0 -DPICO_STDIO_USB_ENABLE_RESET_VIA_BAUD_RATE=1 -DPICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=0 -DPICO_STDIO_USB_RESET_INTERFACE_SUPPORT_MS_OS_20_DESCRIPTOR=0 -DPICO_STDIO_USB_USE_DEFAULT_DESCRIPTORS=0 -DPICO_TARGET_NAME=\"mk61s-picocalc-pico-h\" -DPICO_USE_BLOCKED_RAM=0 -I/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc -I/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/../../code -I/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/ports/picocalc/../../third_party/fatfs -I/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/build -I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_atomic/include -I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/lib/tinyusb/src -I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/tinyusb/include -I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/lib/tinyusb/hw -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_stdlib_headers/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_gpio/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_base_headers/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/build/generated/pico_base -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/boards/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/pico_platform/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/hardware_regs/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_base/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_common/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_compiler/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_panic/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_sections/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/hardware_structs/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/hardware_claim/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_sync/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_sync_spin_lock/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_irq/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_uart/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_resets/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_clocks/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_pll/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_vreg/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_watchdog/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_ticks/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_bootrom/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/boot_picoboot_headers/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/boot_bootrom_headers/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_boot_lock/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_flash/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_time/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_timer/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_sync/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_util/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_time_adapter/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_xosc/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_divider/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_runtime/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_runtime_init/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_bit_ops_headers/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_divider_headers/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_double/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_float/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_malloc/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_binary_info/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_printf/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_stdio/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_stdio_uart/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_stdio_usb/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_unique_id/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_flash/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_xip_cache/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_usb_reset_interface_headers/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_multicore/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/boot_picobin_headers/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_int64_ops/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/boot_stage2/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_fix/rp2040_usb_device_enumeration/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_rtc/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_spi/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_i2c/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_pwm/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_dma/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_pio/include -isystem /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_rand/include -mcpu=cortex-m0plus -mthumb -g -O3 -DNDEBUG -std=gnu++17 -fstack-usage -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -fno-exceptions -fno-unwind-tables -fno-rtti -fno-use-cxa-atexit -ffunction-sections -fdata-sections -Os -fno-lto -MD -MT CMakeFiles/mk61s-picocalc-pico-h.dir/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/native_eabi_m0.cpp.o -MF CMakeFiles/mk61s-picocalc-pico-h.dir/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/native_eabi_m0.cpp.o.d -o CMakeFiles/mk61s-picocalc-pico-h.dir/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/native_eabi_m0.cpp.o -c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/native_eabi_m0.cpp
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/native_eabi_m0.cpp:686:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/native_eabi_m0_pow_fast.inc: In function 'bool pow_small_exp_normal(const m0_eabi::Product&, unsigned int, bool, m0_eabi::U&)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/native_eabi_m0_pow_fast.inc:768:18: error: conflicting declaration 'const uint32_t tail'
+  768 |   const uint32_t tail=uint32_t(q)&1023U;
+      |                  ^~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/native_eabi_m0_pow_fast.inc:738:17: note: previous declaration as 'const int32_t tail'
+  738 |   const int32_t tail=(negative?-int32_t(linear):int32_t(linear))+int32_t(quadratic)+
+      |                 ^~~~
+[55/178] Building C object CMakeFiles/mk61s-picocalc-pico-h.dir/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/third_party/fatfs/ff.c.o
+[56/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/source/code/mk61emu_core.cpp.o
+[57/178] Building CXX object CMakeFiles/mk61s-picocalc-pico-h.dir/native_app.cpp.o
+ninja: build stopped: subcommand failed.
+PicoCalc build failed: Command '['/opt/homebrew/bin/cmake', '--build', '/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/build', '--parallel', '4']' returned non-zero exit status 1.

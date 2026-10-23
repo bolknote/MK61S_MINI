@@ -1,0 +1,16 @@
+{
+  "status": "PASS_TINY_Y_AUDIT_FINITE_INSTRUCTION_COUNTS",
+  "cases": 196,
+  "normal_base_cases": 168,
+  "own_mean_instructions": 201.77380952380952,
+  "qfplib_mean_instructions": 1345.797619047619,
+  "own_slower_normal_cases": 0,
+  "qfplib_wrong": 28,
+  "elf_sha256": "209ac74c551923630300a4def7d017e90f2a69799bd4b800a8627955c16b5cf6",
+  "reference_elf_sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+  "producer_sha256": "27a5ef321ab1868011a9172a1e9914876a82a76d74896f984fab275e65dd371d",
+  "mpfr": "4.2.2",
+  "scope": "New finite domain audit, outside the frozen117-group HIL matrix. Actual ARM instructions with captured ROM; not physical cycles or a universal speed claim. Reference is Qfplib exp(mul(y,ln(x))).",
+  "candidate_changed": false,
+  "hardware_accessed": false
+}

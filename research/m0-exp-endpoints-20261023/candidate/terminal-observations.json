@@ -1,0 +1,69 @@
+{
+  "status": "PASS_SELECTED_PROCESSES_OBSERVED_TERMINAL_ZERO",
+  "processes": [
+    {
+      "name": "prepare",
+      "exit_code": 0,
+      "chunk_id": "5b97a7"
+    },
+    {
+      "name": "firmware-build",
+      "session_id": 80568,
+      "exit_code": 0,
+      "chunk_id": "151df4"
+    },
+    {
+      "name": "domain-audit",
+      "session_id": 67879,
+      "exit_code": 0,
+      "chunk_id": "3061ea"
+    },
+    {
+      "name": "linked-validation",
+      "session_id": 78170,
+      "exit_code": 0,
+      "chunk_id": "6e1fa9"
+    },
+    {
+      "name": "certificate",
+      "exit_code": 0,
+      "chunk_id": "af8969"
+    },
+    {
+      "name": "tiny-profile",
+      "exit_code": 0,
+      "chunk_id": "e87b2d"
+    },
+    {
+      "name": "expanded-and-canary",
+      "exit_code": 0,
+      "chunk_id": "e95a10"
+    },
+    {
+      "name": "endpoint",
+      "exit_code": 0,
+      "chunk_id": "599835"
+    },
+    {
+      "name": "matrix",
+      "exit_code": 0,
+      "chunk_id": "fe73b1"
+    },
+    {
+      "name": "exp-random",
+      "exit_code": 0,
+      "chunk_id": "0d0511"
+    },
+    {
+      "name": "M4",
+      "exit_code": 0,
+      "chunk_id": "bd69dd"
+    },
+    {
+      "name": "generic",
+      "exit_code": 0,
+      "chunk_id": "0726e1"
+    }
+  ],
+  "scope": "Observed terminal results from these exact local offline processes, not inferred from report-file existence. No USB or hardware process was started here."
+}

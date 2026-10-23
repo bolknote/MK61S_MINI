@@ -1,0 +1,24 @@
+{
+  "status": "PASS_SMALL_Y_MAGNITUDE_AND_MIDPOINT_MPFR",
+  "cases": 39022,
+  "groups": {
+    "every_normal_base_exponent": 8184,
+    "random_small_y": 20000,
+    "near_one_large_argument_shifts": 3000,
+    "dispatch_threshold_neighbours": 1638,
+    "huge_finite_y": 3000,
+    "negative_base_even_huge_y": 300,
+    "RNE_midpoint_and_linear_cutoff_seeds": 2754,
+    "IEEE_domain_classes": 146
+  },
+  "wrong_rounding": 0,
+  "mpfr": "4.2.2",
+  "result_sha256": "9a4ca1373fe4fe574893283ecdf824c0cd86661b64f9d2dfe690a17571871cd8",
+  "elf_sha256": "ea22f818cac9f01690474d1ff27f752d26646b9a2e8fbbe5e6c4d0dea405ddde",
+  "producer_sha256": "7b779acae9b2a579cf703bb76d36fa95687c5ce334f8352fd2f9dc09dfcaebe3",
+  "maximum_observed_stack_bytes": 2404,
+  "scope": "Finite public-pow coverage of every normal-base exponent, full small-y significands, huge finite exponents, exact dispatch boundaries and targeted RNE midpoint neighbours. Directed MPFR; all ARM calls check ABI and bounded writes. Not general-pow totality or physical cycles.",
+  "hardware_accessed": false,
+  "production_promoted": false,
+  "goal_complete": false
+}

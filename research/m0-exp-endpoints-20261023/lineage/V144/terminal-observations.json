@@ -1,0 +1,94 @@
+{
+  "status": "PASS_ALL_SELECTED_PROCESSES_OBSERVED_TERMINAL_ZERO",
+  "processes": [
+    {
+      "name": "domain-audit",
+      "session_id": 22200,
+      "exit_code": 0,
+      "chunk_id": "78be66",
+      "observation": "Observed terminal tool result; no running session remains."
+    },
+    {
+      "name": "small-qualification",
+      "session_id": 73606,
+      "exit_code": 0,
+      "chunk_id": "b138f5",
+      "observation": "Observed terminal tool result; no running session remains."
+    },
+    {
+      "name": "tiny-profile",
+      "exit_code": 0,
+      "chunk_id": "37eac9"
+    },
+    {
+      "name": "matrix",
+      "exit_code": 0,
+      "chunk_id": "17e363"
+    },
+    {
+      "name": "affected",
+      "exit_code": 0,
+      "chunk_id": "cc5fda"
+    },
+    {
+      "name": "pow-random",
+      "exit_code": 0,
+      "chunk_id": "1c8454"
+    },
+    {
+      "name": "certificate",
+      "exit_code": 0,
+      "chunk_id": "026530"
+    },
+    {
+      "name": "extended",
+      "exit_code": 0,
+      "chunk_id": "45c7c7"
+    },
+    {
+      "name": "M4-final",
+      "exit_code": 0,
+      "chunk_id": "47c55f"
+    },
+    {
+      "name": "generic-final",
+      "exit_code": 0,
+      "chunk_id": "fbb900"
+    },
+    {
+      "name": "argument-property",
+      "session_id": 14974,
+      "exit_code": 0,
+      "observation": "Terminal exit0 was observed in the preceding compacted context; retained successful argument-property.json/log. First failed ABI-mask harness run is separately preserved."
+    },
+    {
+      "name": "linked-validation",
+      "session_id": 47737,
+      "exit_code": 0,
+      "observation": "Terminal exit0 was observed in the preceding compacted context; retained validation.json."
+    },
+    {
+      "name": "firmware-build",
+      "session_id": 80599,
+      "exit_code": 0,
+      "observation": "Final build exit0 was observed in the preceding compacted context after fixing the duplicate rounding_tail local; retained build.log and exact ELF. Initial build failure is separately preserved."
+    }
+  ],
+  "prior_failed_attempts": [
+    {
+      "name": "firmware-build",
+      "session_id": 23900,
+      "exit_code": 1,
+      "reason": "Duplicate local tail; fixed rounding_tail inside the RP2040-only new helper.",
+      "log": "build-first-tail-name-failure.log"
+    },
+    {
+      "name": "argument-property-harness",
+      "session_id": 42202,
+      "exit_code": 1,
+      "reason": "32-bit ARM result was compared without masking caller-clobbered r1. Harness fixed; runtime source unchanged.",
+      "log": "argument-first-ABI-mask-failure.log"
+    }
+  ],
+  "scope": "Observations of local offline processes; no USB/hardware process was started here."
+}

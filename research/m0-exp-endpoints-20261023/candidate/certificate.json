@@ -1,0 +1,41 @@
+{
+  "status": "PASS_EXACT_EXP_ENDPOINT_ROUNDING_BOUNDS",
+  "source_sha256": "e399e0cf55c06b1d0235d216e43c3095c641ff5ebf5340b0f64a05024478c407",
+  "producer_sha256": "cbcd44c8c397ece222fe7b5488b7720e12e7431569b5a20bbd6da11ed441f53a",
+  "upstream": {
+    "status": "PASS",
+    "coefficient_error": "27844083144382133672769159820525805063036089/11150372599265311570767859136324180752990208",
+    "coefficient_error_float": 2.4971437408483332,
+    "scaled_error": "34668214370154372027613190496324720899883946526059618249184904661311409139477078633487288453355757359/7465385227872689645120498553008384672084787860628440025398200883145354558376061850967595295755468800",
+    "scaled_error_float": 4.64386140995343,
+    "returned_interval_q62": 5,
+    "high64_error": 2,
+    "square_high64_error": 1,
+    "split_reduction_error": "8193/8192",
+    "maximum_segment_index": 756388,
+    "segment_rounding_high_word_shift_range": [
+      11,
+      31
+    ],
+    "scope": "Exact rational bounds for Q96 split reduction, Q44 polynomial quantization, Taylor tail, compensated high products and table rounding."
+  },
+  "upstream_checker_sha256": "943f78862e8ca27892499c66bc85ebdbbf39a8ca974a6d870ef527639a6f50e1",
+  "exp_table_sha256": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+  "unchanged_exp_prefix": true,
+  "raw_q_interval_bounds": [
+    "6451748739779915669297/1400",
+    "12895251398014060340995/1399"
+  ],
+  "normalized_point": "2^62<=q<2^63; the existing normalization selects error5 or10.",
+  "uniform_subnormal_grid": "RNE(exp(x)/2^-1074)=RNE(q/2^(-k-1012)), with the complete closed interval[q-error,q+error].",
+  "midpoint_test": "Strict distance from q mod2^shift to2^(shift-1)>error. Every accepted interval lies wholly inside one RNE cell; a tie declines.",
+  "minimum_normal_transition": "Rounding to integer2^52 is already the binary64 encoding of the minimum normal. The same uniform grid covers this boundary.",
+  "zero_endpoint": "k<-1076 gives q+error<2^64 below the first half-min-subnormal boundary; k==-1076 requires q+error<2^63, otherwise declines.",
+  "overflow_endpoint": "At k==1024 the overflow midpoint is Q62(2^62-256). The existing q>=2^62 with error<=10 is strictly above it; larger k also overflows.",
+  "implementation": "Variable shifts use uint32 only, in0..31. The positive-finite exponential cannot be NaN; quiet-NaN bits safely signal decline to unchanged cr_exp.",
+  "scope": "New endpoint packing proof assumes the unchanged, rerun exact-rational Q62 exp enclosure contract. Actual compiled integer interval checks and independently directed MPFR public-function tests are separate evidence.",
+  "hardware_accessed": false,
+  "production_promoted": false,
+  "general_pow_totality_proved": false,
+  "goal_complete": false
+}

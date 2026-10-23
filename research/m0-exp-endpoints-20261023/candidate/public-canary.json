@@ -1,0 +1,14 @@
+{
+  "status": "PASS_FROZEN_PUBLIC_POW_CANARY_ON_V145",
+  "cases": 30,
+  "wrong_rounding": 0,
+  "result_sha256": "997f6cc87ebbba8864b47325b2550b8c055fdba3c6d811b8f3b830d8b01346f8",
+  "elf_sha256": "209ac74c551923630300a4def7d017e90f2a69799bd4b800a8627955c16b5cf6",
+  "input_sha256": "45a793a41e7c207dae4a8c0a0be699ad5b4946206309903ae9eafec37dcd680f",
+  "producer_sha256": "c95ca963064ae91442c782a458f06a63b0942cc7be600e45707d92991268898b",
+  "maximum_observed_stack_bytes": 716,
+  "scope": "Actual public pow calls on the30 frozen negative-factor vectors. Original independent directed-MPFR expected bits. Emulator, not a hardware receipt.",
+  "hardware_accessed": false,
+  "production_promoted": false,
+  "goal_complete": false
+}

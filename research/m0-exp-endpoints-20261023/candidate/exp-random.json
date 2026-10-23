@@ -1,0 +1,46 @@
+{
+  "status": "PASS",
+  "elf_sha256": "209ac74c551923630300a4def7d017e90f2a69799bd4b800a8627955c16b5cf6",
+  "mpfr": "4.2.2",
+  "oracle": "Directed MPFR bounds; both endpoints round to the same binary64 (RNE).",
+  "operations": {
+    "exp": {
+      "status": "PASS",
+      "cases": 40196,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "27785ff042c0635482f443c4cba5ff08d2452b485887914e2cbb7547f15bfd75"
+    }
+  },
+  "abi": "Every call verifies R4-R11, SP, bounded stack writes.",
+  "semantics": "RNE return values; errno and floating exception flags are not implemented.",
+  "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+  "known_limitations": [],
+  "scope": "Finite corpus, not an exhaustive proof over every binary64 input.",
+  "actual_bootrom": {
+    "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "initializers": [
+      {
+        "name": "__aeabi_bits_init",
+        "table": "aeabi_bits_funcs",
+        "pointers": [
+          "0x309",
+          "0x357",
+          "0x38f",
+          "0x32d"
+        ]
+      },
+      {
+        "name": "__aeabi_mem_init",
+        "table": "aeabi_mem_funcs",
+        "pointers": [
+          "0x26b9",
+          "0x261d",
+          "0x26ad",
+          "0x2605"
+        ]
+      }
+    ],
+    "intrinsic_models": []
+  }
+}

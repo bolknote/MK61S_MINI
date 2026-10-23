@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/argument-property.py", line 55, in <module>
+    assert ok == int(exact < 1 << 64), (qlo, qhi, sy, shift, ok, exact)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (0, 0, 4503599627370496, 64, 2306960319185944577, 0)

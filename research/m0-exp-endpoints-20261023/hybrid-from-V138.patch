@@ -1,0 +1,403 @@
+--- a/code/native_eabi_m0.cpp
++++ b/code/native_eabi_m0.cpp
+@@ -616,6 +616,9 @@
+   const U tail=p.low&((U(1)<<62)-1),half=U(1)<<61;
+   return q+(tail>half || (tail==half && (q&1)));
+ }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++extern "C" MK61_SOFT_PCS U mk61_m0_exp_endpoint(U,int,unsigned);
++#endif
+ // On ARMv6-M, -O3 expands wide products into substantially more spills than
+ // -Os. Keep this kernel's measured register allocation in release builds.
+ MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_exp(double x) {
+@@ -681,8 +684,47 @@
+     const U rounded=(q+511+((q>>10)&1))>>10;
+     return real((U(k+1022)<<52)+rounded);
+   }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  const U endpoint=mk61_m0_exp_endpoint(q,k,error);
++  if(endpoint!=(D::Infinity|D::Quiet)) return real(endpoint);
++#endif
+   return mk61_m0_cr_exp(x);
+ }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++// The existing Q62 interval already encloses exp(x), including gradual
++// underflow. Round its entire interval to the uniform subnormal grid.
++extern "C" __attribute__((optimize("Os"),noinline,noipa,cold,section(".m0_exp_endpoints")))
++MK61_SOFT_PCS U mk61_m0_exp_endpoint(U q,int k,unsigned error) {
++  const U decline=D::Infinity|D::Quiet;
++  if(k>1023) {
++    // At binade1024 the overflow midpoint is Q62(2^62-256).
++    if(k>1024 || q-(U(1)<<62)+256>error) return D::Infinity;
++    return decline;
++  }
++  if(k>=-1022) return decline;
++  if(k<-1075) {
++    if(k<-1076 || ((U(1)<<63)-q>error && q<(U(1)<<63))) return 0;
++    return decline;
++  }
++  const unsigned shift=unsigned(-k-1012); //11..63
++  const uint32_t lo=uint32_t(q),hi=uint32_t(q>>32);
++  U retained,tail,half;
++  if(shift<32) {
++    const uint32_t mask=(1U<<shift)-1;
++    tail=lo&mask;half=1U<<(shift-1);
++    retained=(U(hi>>shift)<<32)|(lo>>shift)|(hi<<(32-shift));
++  } else {
++    const unsigned s=shift-32;
++    const uint32_t mask=s?(1U<<s)-1:0;
++    tail=(U(hi&mask)<<32)|lo;
++    half=s?U(1U<<(s-1))<<32:U(1U<<31);
++    retained=s?hi>>s:hi;
++  }
++  const U distance=tail>half?tail-half:half-tail;
++  if(distance<=error) return decline;
++  return retained+U(tail>half);
++}
++#endif
+ #include "native_eabi_m0_pow_fast.inc"
+ MK61_SOFT_PCS double mk61_m0_sqrt_slow(double x) {
+   const U a=bits(x),m=a&D::Magnitude;
+--- a/code/native_eabi_m0_pow_fast.inc
++++ b/code/native_eabi_m0_pow_fast.inc
+@@ -345,11 +345,19 @@
+ }
+ #endif
+ 
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++// An opaque call with the same ABI preserves the existing refinement body.
++// The helper only shortcuts the proved tiny-y cell; other inputs use cr_pow.
++extern "C" MK61_SOFT_PCS double mk61_m0_pow_tiny_or_cr(double,double);
++#define M0_POW_COLD_FALLBACK mk61_m0_pow_tiny_or_cr
++#else
++#define M0_POW_COLD_FALLBACK mk61_m0_cr_pow
++#endif
+ __attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension"))) static double pow_refine_checked(double x,double y) {
+   const U xb=bits(x),yb=bits(y),ym=yb&D::Magnitude;
+   const int ey=int(ym>>52)-1023;
+   if(xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity || ey < -12 || ey>64 || xb==UINT64_C(0x3FF0000000000000))
+-    return mk61_m0_cr_pow(x,y);
++    return M0_POW_COLD_FALLBACK(x,y);
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+   if(!uint32_t(yb)) {
+     const U result=pow_integer128(xb,yb);
+@@ -369,12 +377,12 @@
+ #endif
+   const PowRefinedLog logarithm=pow_refined_log(xb);
+   const int shift=int(logarithm.scale)-44-ey;
+-  if(shift<0) return mk61_m0_cr_pow(x,y);
++  if(shift<0) return M0_POW_COLD_FALLBACK(x,y);
+ #if !defined(MK61_M0_RP2040_EABI) || !MK61_M0_RP2040_EABI
+   Product argument;unsigned input_error;
+ #endif
+   if(!pow_scaled_argument(logarithm.q,(ym&D::Fraction)|D::Hidden,unsigned(shift),argument) ||
+-     !pow_argument_error(logarithm.error,unsigned(shift),input_error)) return mk61_m0_cr_pow(x,y);
++     !pow_argument_error(logarithm.error,unsigned(shift),input_error)) return M0_POW_COLD_FALLBACK(x,y);
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+   negative_argument=logarithm.negative^bool(yb&D::Sign);
+   }
+@@ -383,7 +391,7 @@
+   const bool negative_argument=logarithm.negative^bool(yb&D::Sign);
+ #endif
+   if((argument.high>>32)>=(negative_argument?746U:710U)) return real(negative_argument?0:D::Infinity);
+-  if((argument.high>>32)>=700) return mk61_m0_cr_pow(x,y);
++  if((argument.high>>32)>=700) return M0_POW_COLD_FALLBACK(x,y);
+   const U p0=wide32(uint32_t(argument.high),0xB8AA3B29U);
+   const U p1=wide32(uint32_t(argument.high>>32),0xB8AA3B29U)+(p0>>32);
+   const uint32_t n=uint32_t((p1+(1U<<21))>>22);
+@@ -396,7 +404,7 @@
+   U low=argument.low-rl,high=argument.high-rh-U(argument.low<rl);
+   bool negative=bool(high>>63);
+   if(negative) {low=U(0)-low;high=~high+U(!low);}
+-  if(high>3006477) return mk61_m0_cr_pow(x,y);
++  if(high>3006477) return M0_POW_COLD_FALLBACK(x,y);
+   negative^=negative_argument;
+   const Refine96 r={(low>>2)|(high<<62),uint32_t(high>>2)};
+   const U h=(high<<32)|(low>>32);
+@@ -438,9 +446,11 @@
+   // approximation. Enter its independent integer refinement directly.
+   return mk61_m0_cr_pow_refined(x,y);
+ #else
+-  return mk61_m0_cr_pow(x,y);
+-#endif
+-}
++  return M0_POW_COLD_FALLBACK(x,y);
++#endif
++}
++
++#undef M0_POW_COLD_FALLBACK
+ 
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ // The ambiguous normal Q62 enclosure certifies that RNE is cell or
+@@ -665,4 +675,146 @@
+   return pow_positive_checked(x,y);
+ }
+ 
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++// Complete scaled product, using variable32-bit shifts only. q.high is
++// uint32_t, sy<2^53 and64<=shift<128. The caller requires a Q64 magnitude<1.
++__attribute__((always_inline)) inline bool pow_small_argument(const PowFastLog &q,U sy,unsigned shift,Product &out) {
++  const Product low=multiply(q.low,sy);
++  const U p0=wide32(q.high,uint32_t(sy));
++  const U cross=wide32(q.high,uint32_t(sy>>32))+(p0>>32);
++  const U high_low=(cross<<32)|uint32_t(p0);
++  const U middle=low.high+high_low;
++  const uint32_t upper=uint32_t(cross>>32)+uint32_t(middle<low.high);
++  const uint32_t ml=uint32_t(middle),mh=uint32_t(middle>>32);
++  uint32_t lo,hi;
++  if(shift<96) {
++    const unsigned s=shift-64;
++    if(!s) {if(upper) return false;lo=ml;hi=mh;}
++    else {
++      if(upper>>s) return false;
++      lo=(ml>>s)|(mh<<(32-s));hi=(mh>>s)|(upper<<(32-s));
++    }
++  } else {
++    const unsigned s=shift-96;
++    lo=s?(mh>>s)|(upper<<(32-s)):mh;
++    hi=upper>>s;
++  }
++  out={0,(U(hi)<<32)|lo};return true;
++}
++extern "C" MK61_SOFT_PCS U mk61_m0_pow_exp_product_flash(U,U);
++__attribute__((always_inline)) inline bool pow_small_exp_normal(const Product &argument,unsigned input_error,bool negative_argument,U &out) {
++  if(argument.high || argument.low>(U(1)<<62)) return false;
++#define M0_POW_EXP_REJECT() return false
++#define M0_POW_EXP_RESULT(value) do {out=(value);return true;} while(0)
++#define mk61_m0_pow_exp_product mk61_m0_pow_exp_product_flash
++// Shared checked Q62 exp argument stage; no coefficient or error-bound changes.
++  // The same certified residual polynomial covers finite results up
++  // through overflow and gradual underflow. Far endpoints remain exact.
++  if(argument.high>=(negative_argument?746U:710U)) M0_POW_EXP_RESULT(negative_argument?0:D::Infinity);
++  const U p0=wide32(uint32_t(argument.low>>32),0xB8AA3B29U);
++  const U p1=wide32(uint32_t(argument.high),0xB8AA3B29U)+(p0>>32);
++  const uint32_t n=uint32_t((p1+(1U<<21))>>22);
++  if(n>=512) return false;
++  const U reduction=wide32(uint32_t(exp_step_high),n)+(U(uint32_t(exp_step_high>>32)*n)<<32);
++  U r=argument.low-reduction-uint32_t(wide32(n,exp_step_low)>>32);
++  int k=int(n);
++  if(negative_argument) {r=U(0)-r;k=-k;}
++  const bool negative=(r>>63)!=0;
++  const U magnitude=negative?U(0)-r:r;
++  // Protect the polynomial's certified domain independently of the segment
++  // estimate. Opposing truncations keep split reduction error below
++  // 1.001 Q64 units; certify_m0_exp_fast.py checks the complete interval.
++  if(magnitude>UINT64_C(12912720851596686)) M0_POW_EXP_REJECT(); // 0.0007
++  const U z=exp_high_square(magnitude)&((U(1)<<44)-1);
++  const uint32_t t=uint32_t((magnitude+(1U<<21))>>22); // |r| in Q42
++  // Evaluate r/6+r*r/24+r*r*r/120 in Q44; it still fits int32.
++  // The combined coefficient error is <3 Q44 units. Including the fifth
++  // term costs fewer wide products than the old Q40 fourth-degree path.
++  const uint32_t linear=pow_exp_linear32(t);
++  const uint32_t square=uint32_t((z+(1U<<22))>>23);
++  const uint32_t quadratic=uint32_t(wide32(square+1,0xAAAAAAABU)>>33);
++  const uint32_t cubic=(uint32_t(z>>32)*(t>>16)+(1U<<16))>>17;
++  const uint32_t fifth=((cubic+7)*2185U)>>15;
++  const int32_t tail=(negative?-int32_t(linear):int32_t(linear))+int32_t(quadratic)+
++    (negative?-int32_t(fifth):int32_t(fifth));
++  const uint32_t tail_magnitude=tail<0?uint32_t(-tail):uint32_t(tail);
++  const U p=wide32(uint32_t(z),tail_magnitude);
++  const U c=(wide32(uint32_t(z>>32),tail_magnitude)+(p>>32))>>12;
++  const U delta=r+(z>>1)+(tail<0?U(0)-c:c);
++  const unsigned index=unsigned(k)&511U;
++  k=(k-int(index))/512;
++  U q=exp_table[index];
++  const bool below=(delta>>63)!=0;
++  const U d=below?U(0)-delta:delta;
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  // The rounded13-product specialization has error<=1/2+2^-15.
++  const U correction=mk61_m0_pow_exp_product(q,d);
++#else
++  const U cross=wide32(uint32_t(q),uint32_t(d>>32))+
++    wide32(uint32_t(q>>32),uint32_t(d));
++  const U correction=wide32(uint32_t(q>>32),uint32_t(d>>32))+(cross>>32)+1;
++#endif
++  q=below?q-correction:q+correction;
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  unsigned error=(input_error<=129?3U:4U)+(input_error+1)/2;
++#else
++  unsigned error=4+(input_error+1)/2;
++#endif
++  if(error>=256) M0_POW_EXP_REJECT();
++  if(q<(U(1)<<62)) {q<<=1;--k;error*=2;}
++  // The checked argument magnitude is<=1/4, so exp stays in(1/2,2).
++  // Keep a defensive normal-range test; no variable64-bit shift is needed.
++  if(k<-2 || k>1) return false;
++  const uint32_t rounding_tail=uint32_t(q)&1023U;
++  if(uint32_t(rounding_tail-(512U-error))<=2*error) return false;
++  const U rounded=(q+511+((q>>10)&1))>>10;
++  out=(U(k+1022)<<52)+rounded;return true;
++#undef mk61_m0_pow_exp_product
++#undef M0_POW_EXP_RESULT
++#undef M0_POW_EXP_REJECT
++}
++// Reuse the certified logarithm, but retain the complete product before a
++// large shift. The short hot product assumes a smaller shift. Each floor
++// contributes at most one Q64 unit; ambiguous rounding still uses cr_pow.
++extern "C" __attribute__((optimize("Os"),noinline,noipa,cold,section(".m0_pow_small_y_cold")))
++MK61_SOFT_PCS double mk61_m0_pow_small_y(double x,double y) {
++  const U xb=bits(x),yb=bits(y),ym=yb&D::Magnitude;
++  const int ey=int(ym>>52)-1023;
++  if(xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity || ey < -64 || ey>=-12)
++    return mk61_m0_cr_pow(x,y);
++  const PowFastLog logarithm=pow_fast_log(ey,xb);
++  const int shift=int(logarithm.scale)-12-ey;
++  if(shift>=128) {
++    // (q+error)<2^65, sy<2^53: after this shift |y*ln(x)|<2^-74.
++    if(!logarithm.high && logarithm.error<=32) return 1.0;
++    return mk61_m0_cr_pow(x,y);
++  }
++  if(shift<64) return mk61_m0_cr_pow(x,y);
++  Product argument;unsigned input_error;
++  if(!pow_small_argument(logarithm,(ym&D::Fraction)|D::Hidden,unsigned(shift),argument) ||
++     !pow_argument_error(logarithm.error,unsigned(shift),input_error))
++    return mk61_m0_cr_pow(x,y);
++  ++input_error;
++  const bool negative=logarithm.negative^bool(yb&D::Sign);
++  if(!argument.high && !uint32_t(argument.low>>32) && input_error<128 &&
++     uint32_t(argument.low)<=0xFFFFFFFFU-input_error) {
++    // The entire Q64 magnitude enclosure is<2^32, so |z|<2^-32
++    // and |exp(z)-1-z|*2^64<1. Below1 the Q64 grid
++    // spacing is2048; above1 it is4096. Certify the full enclosure.
++    const uint32_t magnitude=uint32_t(argument.low);
++    const unsigned drop=negative?11U:12U;
++    const uint32_t half=1U<<(drop-1),tail=magnitude&((half<<1)-1);
++    const uint32_t distance=tail<half?half-tail:tail-half;
++    if(distance>input_error+1) {
++      const uint32_t rounded=(magnitude>>drop)+uint32_t(tail>half);
++      const U one=UINT64_C(0x3FF0000000000000);
++      return real(negative?one-U(rounded):one+U(rounded));
++    }
++    return mk61_m0_cr_pow(x,y);
++  }
++  U result;
++  return pow_small_exp_normal(argument,input_error,negative,result)?real(result):mk61_m0_cr_pow(x,y);
++}
++#endif
++
+ #undef MK61_M0_POW_HOT_SECTION
+--- a/code/native_eabi_m0_rp2040.S
++++ b/code/native_eabi_m0_rp2040.S
+@@ -1138,5 +1138,88 @@
+ #include "native_eabi_m0_pow_kernels.inc"
+ #include "native_eabi_m0_pow_root64.inc"
+ #include "native_eabi_m0_pow_root_prefix.inc"
++
++/* Exact endpoints and a checked interval route for small finite y.
++ * Only this cold helper changes; old instructions/addresses are retained. */
++.section .m0_pow_tiny_cold,"ax",%progbits
++.p2align 2
++.hidden mk61_m0_pow_tiny_or_cr
++regular_func mk61_m0_pow_tiny_or_cr
++ push {r4,r5,r6,lr}
++ lsls r4,r3,#1
++ lsrs r4,r4,#1
++ movs r5,r0
++ orrs r5,r1
++ beq .Lpow_magnitude_fallback
++ ldr r5,=0x7ff00000
++ cmp r1,r5
++ bhs .Lpow_magnitude_fallback
++ ldr r5,=0x3bf00000
++ cmp r4,r5
++ blo .Lpow_magnitude_one
++ bhi .Lpow_magnitude_large
++ cmp r2,#0
++ beq .Lpow_magnitude_one
++.Lpow_magnitude_large:
++ ldr r5,=0x43e00000
++ cmp r4,r5
++ blo .Lpow_magnitude_small_y
++ ldr r5,=0x7ff00000
++ cmp r4,r5
++ bhs .Lpow_magnitude_fallback
++ ldr r5,=0x3ff00000
++ cmp r1,r5
++ blo .Lpow_magnitude_below_one
++ bhi .Lpow_magnitude_above_one
++ cmp r0,#0
++ beq .Lpow_magnitude_one
++.Lpow_magnitude_above_one:
++ cmp r3,#0
++ bmi .Lpow_magnitude_zero
++ b .Lpow_magnitude_infinity
++.Lpow_magnitude_below_one:
++ cmp r3,#0
++ bmi .Lpow_magnitude_infinity
++.Lpow_magnitude_zero:
++ movs r0,#0
++ movs r1,#0
++ pop {r4,r5,r6,pc}
++.Lpow_magnitude_infinity:
++ movs r0,#0
++ ldr r1,=0x7ff00000
++ pop {r4,r5,r6,pc}
++.Lpow_magnitude_one:
++ movs r0,#0
++ ldr r1,=0x3ff00000
++ pop {r4,r5,r6,pc}
++.Lpow_magnitude_small_y:
++ ldr r5,=0x3f300000
++ cmp r4,r5
++ bhs .Lpow_magnitude_fallback
++ ldr r5,=0x00100000
++ cmp r1,r5
++ blo .Lpow_magnitude_fallback
++ bl mk61_m0_pow_small_y
++ pop {r4,r5,r6,pc}
++.Lpow_magnitude_fallback:
++ bl mk61_m0_cr_pow
++ pop {r4,r5,r6,pc}
++ .ltorg
++.size mk61_m0_pow_tiny_or_cr,.-mk61_m0_pow_tiny_or_cr
++
++/* A private Flash thunk avoids adding an automatic ld veneer request.
++ * The original SRAM kernel and every existing veneer remain unchanged. */
++.section .m0_pow_small_y_cold,"ax",%progbits
++.p2align 2
++.hidden mk61_m0_pow_exp_product_flash
++regular_func mk61_m0_pow_exp_product_flash
++ push {r0}
++ ldr r0,=mk61_m0_pow_exp_product
++ mov ip,r0
++ pop {r0}
++ bx ip
++ nop
++ .ltorg
++.size mk61_m0_pow_exp_product_flash,.-mk61_m0_pow_exp_product_flash
+ #endif
+ .section .note.GNU-stack,"",%progbits
+--- a/ports/picocalc/m0_math_extension.ld
++++ b/ports/picocalc/m0_math_extension.ld
+@@ -721,6 +721,23 @@
+         *(.m0_pow_refine_extension)
+         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+     } > FLASH
++    .m0_pow_small_y_cold 0x1016ad00 : {
++        *(.m0_pow_small_y_cold)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    ASSERT(ADDR(.m0_pow_refine_extension) + SIZEOF(.m0_pow_refine_extension) <= ADDR(.m0_pow_small_y_cold),
++           "Pow refinement overlaps small-y interval path")
++    ASSERT(ADDR(.m0_pow_small_y_cold) + SIZEOF(.m0_pow_small_y_cold) <= 0x1016b900,
++           "Small-y interval path overlaps magnitude helper")
++    /* Existing free gap; no old function, table or RAM allocation moves. */
++    .m0_pow_tiny_cold 0x1016b900 : {
++        *(.m0_pow_tiny_cold)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    ASSERT(ADDR(.m0_pow_refine_extension) + SIZEOF(.m0_pow_refine_extension) <= ADDR(.m0_pow_tiny_cold),
++           "Pow refinement overlaps tiny-exponent cold edge")
++    ASSERT(ADDR(.m0_pow_tiny_cold) + SIZEOF(.m0_pow_tiny_cold) <= 0x1016b99c,
++           "Tiny-exponent cold edge overlaps stable conversion")
+     .m0_conversion_fixed 0x1016b99c : {
+         *(.m0_conversion_fixed.*)
+         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+@@ -778,6 +795,7 @@
+      * No new arithmetic, constants or RAM are introduced. */
+     .m0_exp_core_extension 0x10176000 : {
+         *(.m0_exp_core)
++        *(.m0_exp_endpoints)
+         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+     } > FLASH
+     ASSERT(ADDR(.m0_trig_small_refine_extension) + SIZEOF(.m0_trig_small_refine_extension) <= ADDR(.m0_exp_core_extension),

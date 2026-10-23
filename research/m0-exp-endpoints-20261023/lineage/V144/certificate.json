@@ -1,0 +1,58 @@
+{
+  "status": "PASS_EXACT_MAGNITUDE_AND_SMALL_Y_ENCLOSURE_BOUNDS",
+  "candidate": "V144",
+  "producer_sha256": "17a06d0935369ef273939f699b0a5eb4c2f6454d030d051f4cd334424590d7b8",
+  "source_sha256": "5ef845a6321416a181b26243f62b6b50dc11b34d1d569820705f82db982d4c3f",
+  "assembly_sha256": "b590738a3495ba6d34dd58dcd1ece9e0e073b47678c2871447424014931a77bc",
+  "ln2_enclosure": [
+    "4885160137407771253400601118182930934216597868939146496/7047796304186638645984520552020312648059671845278255225",
+    "19540640549631085013602404472731818469789797150617764779/28191185216746554583938082208081250592238687381113020900"
+  ],
+  "tiny_domain": "Positive finite x, finite |y|<=2^-64: exact binary64 RNE1.",
+  "tiny_argument_upper": "745/18446744073709551616",
+  "tiny_exp_error_upper": "745/18446744073709550871",
+  "huge_domain": "Positive finite x!=1, finite |y|>=2^63: exact RNE0 or+infinity from sign(y ln x); x==1 returns1.",
+  "huge_argument_strict_lower": "1024",
+  "scaled_argument": "floor(q*sy/2^(S-12-ey)); radius=ceil(E*2^53/2^shift)+1, with existing wider conservative bound when shift>=85.",
+  "shift128_argument_upper": "1/18889465931478580854784",
+  "linear_remainder_q64_upper": "2147483648/4294967295",
+  "linear_RNE_test": "Grid2048 below1 /4096 above1; strict midpoint distance>input_error+1, otherwise unchanged cr_pow.",
+  "small_exp_absolute_argument_upper": "2305843009213693953/9223372036854775808",
+  "small_exp_contract": "Exact prefix of existing Q62 exp body, same coefficients/table/product kernel/error radius; added n<512 and normal-only k guards; same strict RNE-cell test.",
+  "table_sha256": {
+    "native_eabi_m0_exp_table.inc": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+    "native_eabi_m0_log70_table.inc": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb",
+    "native_eabi_m0_refine_table.inc": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+    "native_eabi_m0_rsqrt_table.inc": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+    "native_eabi_m0_log10_constants.inc": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8",
+    "native_eabi_m0_log10_table.inc": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99"
+  },
+  "reused_log_code_unchanged": true,
+  "reused_exp_prefix_unchanged": true,
+  "upstream_certificate": {
+    "path": ".build/m0-pow-small-y-stable-v144-20261023/upstream-pow-certificate.json",
+    "sha256": "ceb52410b1dd9b82c945827684c2fbef1f57eb322b07f0bbf664043126f96a9a"
+  },
+  "upstream_command": [
+    "/opt/homebrew/opt/python@3.15/bin/python3.15",
+    "/Users/bolk/Projects/MK61S_MINI/tools/certify_m0_pow_fast.py",
+    "--json",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-small-y-stable-v144-20261023/upstream-pow-certificate.json"
+  ],
+  "upstream_terminal_exit_code": 0,
+  "dependency_sha256": {
+    "certify_m0_pow_fast.py": "2fd28cd8c7bec82fe38b0a26081f872fa4478e96f5ee010173ba37e38ab33c5a",
+    "certify_m0_exp_fast.py": "943f78862e8ca27892499c66bc85ebdbbf39a8ca974a6d870ef527639a6f50e1",
+    "certify_m0_ln_refine.py": "9e98ef730948ea3f7984d3c576a9b4f5aff5860714b9867ac7b19f87899f04ea",
+    "certify_m0_log10_fast.py": "1fb4ada20d0c6454ec586eb70e86888fd884b9dd46e7b2db64212a9a278d6fb1",
+    "generate_m0_log70_table.py": "cf5dab34212c1662b57614a65717586a280463a1c4cedd79fe0a1a169cecee65",
+    "generate_m0_log_table.py": "c2ab1ec80540d0b90df1beafe7d175b9eb2475a952a7b8e6c2ae49144b263b8c",
+    "generate_m0_rsqrt_table.py": "75f190e5cd0677c4f5b0231421f59e2ddb93a73f3a0ae627c8d88d519ad18a2b",
+    "generate_m0_log10_constants.py": "16a1de09675e930e7c7b5ef040c2f9ea55e116714fbabfff052fe716673de6a5",
+    "generate_m0_log10_table.py": "add3597e2477b6190df6b223dc3498c1732ba9f04d40c893b79d9fa44a81c7b8"
+  },
+  "conditional_contract": "This proof reuses the pre-existing log enclosure and exp polynomial/product certificates; it binds unchanged source/table content and runs their exact-rational checker. Actual ARM bigint property checks, MPFR/ABI tests and linked-code checks are separate reports.",
+  "general_pow_totality_proved": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

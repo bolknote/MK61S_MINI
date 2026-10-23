@@ -1,0 +1,10 @@
+{
+  "status": "PASS_SOURCE_REPRODUCTION",
+  "candidate": "V144",
+  "source_files": 646,
+  "source_sha256": "a0bb69978f4a071c5cf60b90d7732d9b85f57edf8e51818920a9bde1c46fed26",
+  "patch_sha256": "d691d4a6c1a7312c53b5cd58354ca51b1a00f8e618ae3370577cfc0ee1a7854c",
+  "complete_file_hashes_equal": true,
+  "hardware_accessed": false,
+  "canonical_sources_changed": false
+}

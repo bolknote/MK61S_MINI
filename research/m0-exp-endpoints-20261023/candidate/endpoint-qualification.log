@@ -1,0 +1,6 @@
+PASS endpoint property: 176440 ARM calls; 68075 accepted; 108365 declined.
+PASS subnormal_RNE_midpoint_neighbours 36487
+PASS zero_normal_overflow_dispatch_neighbours 1799
+PASS random_underflow_range 20000
+PASS IEEE_classes 16
+PASS public exp: 58302 directed MPFR cases; no errors.

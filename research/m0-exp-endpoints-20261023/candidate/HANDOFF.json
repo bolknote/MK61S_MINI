@@ -1,0 +1,248 @@
+{
+  "status": "FROZEN_PRIVATE_V145_QUALIFIED_NOT_HARDWARE_ACCEPTED",
+  "recorded_at": "2026-10-23T07:27:20.897174+00:00",
+  "candidate": "V145",
+  "build": "8498B317",
+  "parent": "V144/4CA2268A",
+  "parent_handoff": {
+    "path": ".build/m0-pow-small-y-stable-v144-20261023/HANDOFF.json",
+    "sha256": "58656c2f71974bb55f1d11f56027e165d2262a13f7f2bbe008ca485f33c5b472"
+  },
+  "parent_seal": {
+    "path": ".build/m0-pow-small-y-stable-v144-20261023/FROZEN.json",
+    "sha256": "08ca5b11cd94d0f5628e1b5ad42851575eeca931e27ce4732aa4481e34459772"
+  },
+  "source_sha256": "707a7c880b92b3f03daf66fd7079cc214a63975bed7c2846ede0a68a0c2c976f",
+  "source_file_count": 646,
+  "preparation": {
+    "path": ".build/m0-exp-endpoints-v145-20261023/preparation.json",
+    "sha256": "34d59c216864c0dd11d2d1066aa855474e9e2e0a799a9b25c16b0326ed1efff1"
+  },
+  "modified_vs_V144": [
+    "code/native_eabi_m0.cpp",
+    "ports/picocalc/m0_math_extension.ld"
+  ],
+  "elf": {
+    "path": ".build/m0-exp-endpoints-v145-20261023/firmware/mk61s-picocalc-pico-h.elf",
+    "sha256": "209ac74c551923630300a4def7d017e90f2a69799bd4b800a8627955c16b5cf6"
+  },
+  "bin": {
+    "path": ".build/m0-exp-endpoints-v145-20261023/firmware/mk61s-picocalc-pico-h.bin",
+    "sha256": "2e074c5d2eb316c0f153911c7056ef6ba60dd5047932f75a1477523bf8c9bd4d"
+  },
+  "uf2": {
+    "path": ".build/m0-exp-endpoints-v145-20261023/firmware/mk61s-picocalc-pico-h.uf2",
+    "sha256": "ac4ae3b9ed8659edcdc8d7d66bec1394c6230fe4a3efda25b849afe7ef243c54"
+  },
+  "firmware_manifest": {
+    "path": ".build/m0-exp-endpoints-v145-20261023/firmware/manifest.json",
+    "sha256": "704c7205df03d54ac3475378ea4ecd064412f0acd7286e06fad9295140a18dba"
+  },
+  "reports": {
+    "validation": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/validation.json",
+      "sha256": "d02a3f47e7ba945571a021d351c12c69742c996bdfe32f37530560644e62b8d6"
+    },
+    "certificate": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/certificate.json",
+      "sha256": "96b8b0ce89123fd6440b3d9a1f6f000e500658f7d0280c8a2c11d8b99fdc3f81"
+    },
+    "property": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/endpoint-property.json",
+      "sha256": "917640802f6d79efedfc57e607b477eee61b1bd6e3cee06c689fd2fefbd187bf"
+    },
+    "qualification": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/endpoint-qualification.json",
+      "sha256": "2caed33e563edba4782c6b5e22392b20aa375da5197c45c7d28a09fa421fca59"
+    },
+    "random": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/exp-random.json",
+      "sha256": "f9995fd959b050cec9388a95e9e89c8fe0b712e31b10af65da6ead1eb04f8306"
+    },
+    "matrix": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/instruction-matrix.json",
+      "sha256": "04b91a14de4ee14cb1d5181fd1bb065b3860e7f959071290d291bcd224d919c8"
+    },
+    "independent": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/result.json",
+      "sha256": "d82e2c6b2bf5d68d5f994489d9cdcb6ae8dd94930593da362aa5b45f20f869ac"
+    },
+    "tiny": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/tiny-profile.json",
+      "sha256": "016e02d07ffe7478ed0ce8f2c7fd01554c22b68ae5a05952a46fd83af4874a26"
+    },
+    "expanded": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/extended-instruction-matrix.json",
+      "sha256": "2a14c4bc5f9433b195e5eea73999a1a06d9dde761e361eb79fcdeac45bcdb0aa"
+    },
+    "canary": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/public-canary.json",
+      "sha256": "9d8a95ab83ff8cf482408f409c4d620faa8e11e5a3c8233edba9086469531255"
+    },
+    "M4": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/m4-check/m4-isolation.json",
+      "sha256": "0af0e7e55d8f35fb2aeee79c0def263ab830e3b1a8c268f21d2e808bee023b3e"
+    },
+    "generic_M0": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/generic-m0-isolation.json",
+      "sha256": "32ba1451bd7ea6b0ba6a13db3452f53cf6560f24b22eff7954b6bbecbce710af"
+    }
+  },
+  "producers": {
+    "prepare.py": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/prepare.py",
+      "sha256": "44b1a3b281bb3d7247b2f24a8bf7f87e359da912ca48e8fd450ebc06f45ba3f6"
+    },
+    "validate.py": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/validate.py",
+      "sha256": "21cc46868dbd168e7da2e3aef35c682db7a7bed0d01d75af8e8feae92cdf9b6b"
+    },
+    "certify.py": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/certify.py",
+      "sha256": "cbcd44c8c397ece222fe7b5488b7720e12e7431569b5a20bbd6da11ed441f53a"
+    },
+    "qualify-endpoints.py": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/qualify-endpoints.py",
+      "sha256": "e0364c6234932f062653b9d338c47be6cf8bc8bb428f76ab587fa0701a83f9d7"
+    },
+    "domain-audit.py": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/domain-audit.py",
+      "sha256": "8a2dfcfd0b462118300d77f9d901ccdce8d3afb2171357e98c33ccbeb824ea0a"
+    },
+    "tiny-profile.py": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/tiny-profile.py",
+      "sha256": "27a5ef321ab1868011a9172a1e9914876a82a76d74896f984fab275e65dd371d"
+    },
+    "extend-matrix.py": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/extend-matrix.py",
+      "sha256": "c95ca963064ae91442c782a458f06a63b0942cc7be600e45707d92991268898b"
+    },
+    "M4-isolation.py": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/M4-isolation.py",
+      "sha256": "79459f66c023e9b54d8762157d59db7208f6de79391f75368bad8b319d5e80f1"
+    },
+    "generic-isolation.py": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/generic-isolation.py",
+      "sha256": "414994008e4c3ac20ddf5baf099250da06764dbe7421813849b72937c339cadf"
+    },
+    "freeze.py": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/freeze.py",
+      "sha256": "d4933547a1bd835203bae76f729622ac15467cf69157f853530d00871c84e96c"
+    },
+    "verify.py": {
+      "path": ".build/m0-exp-endpoints-v145-20261023/verify.py",
+      "sha256": "6850b807493f4c5f6beb147ea728bd1928376d447f17048387cc94ae1bf4ad98"
+    }
+  },
+  "terminal": {
+    "path": ".build/m0-exp-endpoints-v145-20261023/terminal-observations.json",
+    "sha256": "5adf04928c3c92799a66d90f399e81d0372a8611352ebb64383b41cb44c667cb"
+  },
+  "retained_future_timing_vectors": {
+    "path": ".build/m0-pow-small-y-stable-v144-20261023/future-timing-corpus.json",
+    "sha256": "4455376b96d0cdc486e862d83ba7815dc4634fbe092c84259dcca782a4b7778d"
+  },
+  "fresh_directed_MPFR_calls": 105478,
+  "fresh_directed_MPFR_exp_calls": 99138,
+  "actual_ARM_integer_interval_cases": 176440,
+  "accepted_integer_interval_cases": 68075,
+  "declined_integer_interval_cases": 108365,
+  "additional_original_matrix_cases": 23352,
+  "additional_retained_oracle_canary_cases": 30,
+  "own_wrong_rounding": 0,
+  "negative_extreme_exp_128": {
+    "V144_instructions": 3373.015625,
+    "V145_instructions": 593.5703125,
+    "Qfplib_instructions": 640.515625,
+    "Qfplib_wrong_cases": 105
+  },
+  "expanded171_groups": {
+    "faster": 156,
+    "equal": 2,
+    "slower": 13,
+    "cases": 30304
+  },
+  "original117_groups": {
+    "faster": 115,
+    "equal": 2,
+    "slower": 0,
+    "exp_groups_improve": 3,
+    "other_chunk_records_exact": 116
+  },
+  "independent53_groups": {
+    "faster": 40,
+    "equal": 0,
+    "slower": 13,
+    "exp_groups_improve": 5,
+    "other_group_records_exact": 48
+  },
+  "all640_independent_exp_vectors_no_added_instructions": true,
+  "tiny196_case_records_identical": true,
+  "new_allocated_Flash_bytes_vs_V144": 392,
+  "total_new_allocated_Flash_vs_V138": 2260,
+  "exp_entry_delta_bytes": 32,
+  "new_endpoint_helper_bytes": 360,
+  "main_static_RAM_bytes": 198856,
+  "heap_bytes": 30520,
+  "scratch_bytes": 4072,
+  "image_extent_bytes": 1537400,
+  "new_tables": 0,
+  "new_global_RAM": 0,
+  "libgcc_archive_members": 0,
+  "maximum_fresh_observed_exp_stack_bytes": 488,
+  "retained_parent_pow_stack_observation_bytes": 2404,
+  "exp_entry_address_unchanged": true,
+  "old_other_exact_numerical_bodies": 248,
+  "other_numerical_bodies_with_only_verified_equivalent_old_BL_relocations": 70,
+  "other_numerical_object_instruction_and_data_payloads_identical": true,
+  "numerical_calls_to_public_exp_outside_entry": [],
+  "complete_scratch_code_byte_identical": false,
+  "scratch_veneer_target_multiset_identical": true,
+  "M4_soft_and_hard_preprocessing_code_and_data_identical": true,
+  "generic_M0_allocated_code_and_data_identical": true,
+  "approved_V138_package_hashes_unchanged": {
+    ".build/m0-pow-horner-final-v138-20261023/HANDOFF.json": "5492a7943e4d5bc00fd001e6f19853df05de547e66e74a82665ed13f854dae21",
+    ".build/m0-pow-horner-final-v138-20261023/firmware/mk61s-picocalc-pico-h.elf": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+    ".build/m0-v138-execution-20261023/execution-manifest.json": "fd584f3e2b9a1387ff236eabdac66b888c452b16cb73c21449c6cb0b8262b18c",
+    ".build/picocalc-v138-hil-20261023/EXECUTION-PACKAGE.json": "c53edcff67d5a31a587203c01b1e1aae4be5c3c235e0e224fe1b4d9f80489ff6",
+    ".build/picocalc-v138-hil-20261023/plan.json": "bdeb5f59f594b93e68d5f3f997632d679da42996197b45c7619d66f7a41359b1",
+    ".build/picocalc-v138-hil-20261023/pins.json": "bb584fa19cb54df06d7fce493df092e646ccaa2a305d78d5ebd2fb7aa38afc6c"
+  },
+  "canonical_sources_changed": false,
+  "hardware_accessed": false,
+  "production_promoted": false,
+  "commit_created": false,
+  "pushed": false,
+  "physical_cycle_measurements_available": false,
+  "hardware_authorization": "Only V138/83CF4AC4 and pinned Qfplib are currently approved. V145 is not installed or substituted. /root/v138_hardware is the coordinated sole operator.",
+  "git_HEAD_at_freeze": "efdcd52b9db236ad4535704f890ccdfb6b197a8a",
+  "build_reproduction_argv": [
+    ".build/picocalc-apps-arm-venv/bin/python",
+    ".build/m0-exp-endpoints-v145-20261023/source/tools/build_picocalc.py",
+    "--profile",
+    "picocalc-pico-h",
+    "--sdk",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk",
+    "--toolchain",
+    "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin",
+    "--build-path",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-endpoints-v145-20261023/build",
+    "--output-dir",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-endpoints-v145-20261023/firmware",
+    "--jobs",
+    "4"
+  ],
+  "reproduction_notice": "Copy frozen artifacts and adjust output paths before rerunning writing producers. No command here requests USB/hardware execution.",
+  "previous_goal_turn": "progress: V144 eliminated7 independent pow deficits and froze complete171-group evidence with14 raw deficits retained.",
+  "current_goal_turn": "progress: V145 uses the existing exp enclosure to round gradual-underflow/overflow endpoints; eliminates the negative-extreme raw deficit, all640 new exp vectors no slower; all171 groups retained.",
+  "general_pow_undecided_1024_trap_retained": true,
+  "general_pow_totality_proved": false,
+  "remaining": [
+    "13 raw instruction-mean deficits and individual slow cases remain.",
+    "Full-fractional pow loses on its16-vector correct-reference subset despite winning the raw mean.",
+    "Physical cycles/cache performance, platform/cold/full-restoration acceptance are not established by offline evidence.",
+    "General-pow termination beyond an undecided1024-bit interval remains unproved.",
+    "V145 requires its own review and appropriate authorization before installation or promotion."
+  ],
+  "goal_complete": false
+}

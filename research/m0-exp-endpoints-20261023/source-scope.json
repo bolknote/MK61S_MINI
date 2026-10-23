@@ -1,0 +1,32 @@
+{
+  "status": "PASS_EXACT_SOURCE_SCOPE_FROM_V138",
+  "bases": {
+    "V144": {
+      "modified": [
+        "code/native_eabi_m0_pow_fast.inc",
+        "code/native_eabi_m0_rp2040.S",
+        "ports/picocalc/m0_math_extension.ld"
+      ],
+      "added": [],
+      "removed": [],
+      "unchanged": 643,
+      "patch": "lineage/V144/from-V138.patch",
+      "patch_sha256": "d691d4a6c1a7312c53b5cd58354ca51b1a00f8e618ae3370577cfc0ee1a7854c"
+    },
+    "V145": {
+      "modified": [
+        "code/native_eabi_m0.cpp",
+        "code/native_eabi_m0_pow_fast.inc",
+        "code/native_eabi_m0_rp2040.S",
+        "ports/picocalc/m0_math_extension.ld"
+      ],
+      "added": [],
+      "removed": [],
+      "unchanged": 642,
+      "patch": "hybrid-from-V138.patch",
+      "patch_sha256": "d58a4611d20b293098c2c72b9cdbce2ce47c3691666e59fea533d39693a7d767"
+    }
+  },
+  "canonical_sources_changed": false,
+  "hardware_accessed": false
+}

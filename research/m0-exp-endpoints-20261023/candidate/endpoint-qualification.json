@@ -1,0 +1,36 @@
+{
+  "status": "PASS_EXP_ENDPOINT_PUBLIC_DIRECTED_MPFR",
+  "cases": 58302,
+  "groups": [
+    {
+      "group": "subnormal_RNE_midpoint_neighbours",
+      "cases": 36487,
+      "wrong_rounding": 0
+    },
+    {
+      "group": "zero_normal_overflow_dispatch_neighbours",
+      "cases": 1799,
+      "wrong_rounding": 0
+    },
+    {
+      "group": "random_underflow_range",
+      "cases": 20000,
+      "wrong_rounding": 0
+    },
+    {
+      "group": "IEEE_classes",
+      "cases": 16,
+      "wrong_rounding": 0
+    }
+  ],
+  "wrong_rounding": 0,
+  "mpfr": "4.2.2",
+  "result_sha256": "87f7a242a502ef7e7094cc8a24d5c01f4b2f1a3bbfb2bc1b8a93513ff67f0412",
+  "elf_sha256": "209ac74c551923630300a4def7d017e90f2a69799bd4b800a8627955c16b5cf6",
+  "producer_sha256": "e0364c6234932f062653b9d338c47be6cf8bc8bb428f76ab587fa0701a83f9d7",
+  "maximum_observed_stack_bytes": 488,
+  "scope": "Public production exp on MPFR log-of-exact-midpoint input neighbours, exact dispatch boundaries, random underflow values and IEEE classes. All ARM calls check ABI, SP and bounded writes. Finite corpus, not physical cycles or an exhaustive domain proof.",
+  "hardware_accessed": false,
+  "production_promoted": false,
+  "goal_complete": false
+}
