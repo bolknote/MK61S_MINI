@@ -7,6 +7,7 @@
 #include "text_screen.hpp"
 #include "app_flow.h"
 #include "loadable_app_services.h"
+#include "source_document.hpp"
 
 namespace picocalc {
 class MarkdownView;
@@ -20,6 +21,7 @@ class Services {
 public:
     struct NativeBufferStatistics { u32 count,bytes,external_bytes,windows; };
     NativeBufferStatistics native_buffer_statistics() const;
+    SourceDocument::Statistics source_memory_statistics() const { return source_.statistics(); }
     static constexpr unsigned COLS = 38, ROWS = 14, SOURCE_CAPACITY = 65535;
     using Pump = bool (*)(void*, u8&);
     Services();
@@ -95,6 +97,7 @@ private:
     void normalize_view();
     void run_document(const language_vm::View* prepared=nullptr);
     void bind_cache();
+    void release_cache();
     void restore_script_editor();
     bool service();
     bool wait_key(u8& code);
@@ -153,14 +156,14 @@ private:
     char (*front_console_)[text_screen::MAX_COLS+1]=nullptr;
     mutable u32 shown_console_revision_=0,shown_frame_revision_=0;
     mutable unsigned shown_first_=0;
-    static constexpr unsigned CACHE_SOURCE_OFFSET=(SOURCE_CAPACITY-32768U)&~7U;
-    alignas(8) char source_[SOURCE_CAPACITY] = {};
+    SourceDocument source_;
+    shared_memory::Buffer source_cache_;
     char path_[files::PATH_SIZE] = {}, directory_[files::PATH_SIZE] = "/";
     char selected_file_[files::PATH_SIZE] = {}, prompt_text_[256] = {};
     char filter_[64] = {};
     char status_[96] = {}, console_[ROWS][text_screen::MAX_COLS + 1] = {};
     files::Entry entries_[7] = {};
-    alignas(8) u8 image_[language_vm::MAX_MODULE] = {};
+    shared_memory::Buffer image_;
     language_vm::State state_{};
     language_vm::Value variables_[26]{}, array_[385]{}, stack_[language_vm::MAX_STACK]{};
     language_vm::Value focal_variables_[26]{}, focal_array_[385]{};
@@ -176,5 +179,6 @@ private:
     u16 graph_width_=320,graph_height_=320;
     basic_graphics::Session graph_;
 };
+static_assert(sizeof(Services)<=16U*1024,"Pico source and compiler image must be allocated by their active owners");
 } // namespace picocalc
 #endif

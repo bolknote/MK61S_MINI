@@ -81,12 +81,15 @@ Services::Services() : graph_({this,
         return width==320 && height==320?script::graphic_text(out,x,y,text,length):0;
     }}) {
     graphics_owner = this;
-    bind_cache();
 }
-Services::~Services() { language_cache::detach(this); }
+Services::~Services() { if(!language_cache::detach(this)) __builtin_trap(); }
 void Services::bind_cache() {
-    language_cache::bind(this,source_+CACHE_SOURCE_OFFSET,
-        length_<CACHE_SOURCE_OFFSET?SOURCE_CAPACITY-CACHE_SOURCE_OFFSET:0);
+    if(!buffers::init()) return;
+    if(!source_cache_.ok()) (void)source_cache_.acquire(shared_memory::Owner::LOADABLE_MODULE,32768);
+    language_cache::bind(this,source_cache_.data(),source_cache_.size());
+}
+void Services::release_cache() {
+    if(language_cache::detach(this)) (void)source_cache_.reset();
 }
 basic_graphics::Result Services::graph_request(basic_graphics::Request& request) {
     const auto result=graph_.apply(request);
@@ -267,8 +270,7 @@ bool Services::event(language_vm::Event event, const char* text, u16 length, dou
     const auto read_resource=[](void* raw,u16 offset,u8* output,u16 count) {
         const auto& self=*(Services*)raw;
         if(offset>self.length_ || count>self.length_-offset || (count && !output)) return false;
-        if(count) std::memcpy(output,self.source_+offset,count);
-        return true;
+        return self.source_.read(offset,output,count);
     };
     auto add = [&](const char* bytes, unsigned count) {
         for(unsigned i = 0; i < count; ++i) {
@@ -338,11 +340,20 @@ bool Services::event(language_vm::Event event, const char* text, u16 length, dou
     }
 }
 void Services::run_document(const language_vm::View* prepared) {
-    bind_cache();
+    if(prepared || document_==Document::BASIC || document_==Document::FOCAL) bind_cache();
+    else release_cache();
     diagnostics::Scope measure(diagnostics::Point::LANGUAGE);
     diagnostics::context(diagnostics::State::LANGUAGE);
     if(calculator_ && (!calculator_->idle() || core_61::is_RUN())) { message("Stop MK61 before running source", ServicePage::EDITOR); return; }
     if(!prepared && document_ == Document::TEXT) { message("Text file: use .bas, .foc or .m61 to run", ServicePage::EDITOR); return; }
+    const bool own_image=!image_.ok() && (prepared || document_==Document::BASIC || document_==Document::FOCAL);
+    if(own_image && !image_.acquire(shared_memory::Owner::LANGUAGE_VM,language_vm::MAX_MODULE)) {
+        last_error_=language_vm::Error::FULL;message("Not enough RAM for language workspace",ServicePage::EDITOR);return;
+    }
+    struct ImageLifetime {
+        shared_memory::Buffer& buffer;bool own;
+        ~ImageLifetime() { if(own && !buffer.reset()) __builtin_trap(); }
+    } image_lifetime{image_,own_image};
     // A console transaction exists only during this synchronous VM invocation.
     // Borrow the reserved main stack instead of reducing the APP/viewer heap.
     char front_console[ROWS][text_screen::MAX_COLS+1];
@@ -369,7 +380,7 @@ void Services::run_document(const language_vm::View* prepared) {
         publish_console();
         page_ = ServicePage::CLOSED; running_ = serial_output_ = false;
         calculator_requested_ = true;
-        const bool ok = script::start_source(name, source_, length_,&script_editor_.id);
+        const bool ok = script::start_source(name, source_.input(),&script_editor_.id);
         script_editor_.valid=keep_editor && script_editor_.id!=program_store::INVALID_ID;
         last_error_ = ok ? language_vm::Error::NONE : language_vm::Error::SYNTAX;
         if(!ok && !active()) message("Cannot start M61 scenario", ServicePage::EDITOR);
@@ -391,18 +402,17 @@ void Services::run_document(const language_vm::View* prepared) {
                 auto& self = *(Services*)raw;
                 if(!self.service() || offset > self.length_ || count > self.length_ - offset) return false;
                 if(count && !out) return false;
-                if(count) std::memcpy(out,self.source_+offset,count);
-                return true;
+                return self.source_.read(offset,out,count);
             },length_},source_window,sizeof(source_window));
         language_vm::ResourceSource resources{0,0,language_vm::ResourceMode::EMBEDDED};
-        if(!dirty_ && *path_) disk_loaded=language_cache::load(path_,language_,core_61::expanded_program_is_on(),source_,length_,image_,view);
+        if(!dirty_ && *path_) disk_loaded=language_cache::load(path_,language_,core_61::expanded_program_is_on(),source_.input(),image_.data(),view);
         if(!disk_loaded) {
             language_cache::compilation();
-            compiled=language_vm::compile_source(language_, source, image_, sizeof(image_), core_61::expanded_program_is_on(), &resources);
+            compiled=language_vm::compile_source(language_, source, image_.data(),(u16)image_.size(), core_61::expanded_program_is_on(), &resources);
             if(!stopped_ && compiled.error==language_vm::Error::FULL) {
                 resources.mode=language_vm::ResourceMode::SOURCE;
                 language_cache::compilation();
-                compiled=language_vm::compile_source(language_,source,image_,sizeof(image_),core_61::expanded_program_is_on(),&resources);
+                compiled=language_vm::compile_source(language_,source,image_.data(),(u16)image_.size(),core_61::expanded_program_is_on(),&resources);
             }
         }
     }
@@ -410,9 +420,9 @@ void Services::run_document(const language_vm::View* prepared) {
     last_error_ = compiled.error;
     if(stopped_) last_error_ = language_vm::Error::STOPPED;
     if(last_error_ == language_vm::Error::NONE) {
-        if(!prepared && !disk_loaded) last_error_ = language_vm::inspect(image_, compiled.size, view);
+        if(!prepared && !disk_loaded) last_error_ = language_vm::inspect(image_.data(), compiled.size, view);
         if(last_error_ == language_vm::Error::NONE) {
-            if(!prepared && !dirty_ && *path_) language_cache::remember(path_,core_61::expanded_program_is_on(),revision,source_,length_,view,!disk_loaded);
+            if(!prepared && !dirty_ && *path_) language_cache::remember(path_,core_61::expanded_program_is_on(),revision,source_.input(),view,!disk_loaded);
             state_ = {};
             state_.variables = active_variables(); state_.array = active_array(); state_.array_count = 385;
             state_.stack = stack_; state_.stack_capacity = language_vm::MAX_STACK;
@@ -434,11 +444,14 @@ void Services::run_document(const language_vm::View* prepared) {
 }
 void Services::restore_script_editor() {
     if(!script_editor_.valid || m61_text::active()) return;
-    program_store::Entry entry;u16 used=0;
+    program_store::Entry entry;
     if(!program_store::entry_by_id(script_editor_.id,entry) || entry.data_len>=SOURCE_CAPACITY) return;
-    if(entry.data_len>=CACHE_SOURCE_OFFSET) language_cache::revoke(this);
-    if(!program_store::read_range_id(script_editor_.id,0,(u8*)source_,entry.data_len,&used) || used!=entry.data_len) return;
-    source_[used]=0;length_=used;document_=Document::MK61;dirty_=true;
+    release_cache();
+    if(!source_.load(language_vm::source::Input{&script_editor_.id,
+        [](void* raw,u16 offset,u8* out,u16 count) {
+            u16 used=0;return program_store::read_range_id(*(u16*)raw,offset,out,count,&used) && used==count;
+        },entry.data_len})) return;
+    length_=(u16)source_.size();document_=Document::MK61;dirty_=true;
     graph_.reset();graph_visible_=false;
     std::snprintf(path_,sizeof(path_),"%s",script_editor_.path);
     cursor_=script_editor_.cursor;top_=script_editor_.top;horizontal_=script_editor_.horizontal;return_=script_editor_.parent;
@@ -482,7 +495,6 @@ bool Services::enter_directory(const char* path) {
     return true;
 }
 u8 Services::run_external(const char* path) {
-    bind_cache();
     using Type = program_store::ProgramType;
     switch(script::file_type(path)) {
     case Type::APP: return run_native(path);
@@ -498,9 +510,17 @@ u8 Services::run_external(const char* path) {
     default: break;
     }
     const auto type=script::file_type(path);
+    const bool own_image=!image_.ok() && (type==Type::TINYBASIC || type==Type::FOCAL);
+    if(own_image && (!buffers::init() || !image_.acquire(shared_memory::Owner::LANGUAGE_VM,language_vm::MAX_MODULE))) return 2;
+    struct ImageLifetime {
+        shared_memory::Buffer& buffer;bool own;
+        ~ImageLifetime() { if(own && !buffer.reset()) __builtin_trap(); }
+    } image_lifetime{image_,own_image};
     language_cache::Prepared prepared;
-    if(type==Type::TINYBASIC || type==Type::FOCAL)
-        prepared=language_cache::find(path,type==Type::FOCAL?language_vm::Language::FOCAL:language_vm::Language::BASIC,core_61::expanded_program_is_on(),image_,sizeof(image_));
+    if(type==Type::TINYBASIC || type==Type::FOCAL) {
+        bind_cache();
+        prepared=language_cache::find(path,type==Type::FOCAL?language_vm::Language::FOCAL:language_vm::Language::BASIC,core_61::expanded_program_is_on(),image_.data(),(unsigned)image_.size());
+    }
     struct ReleasePrepared {
         language_cache::Prepared& image;
         ~ReleasePrepared() { language_cache::release(image); }
@@ -515,10 +535,10 @@ u8 Services::run_external(const char* path) {
             if(!pump_(pump_context_,key)) continue;
             if(key==0x1B || key==0xB1 || key=='\n' || key=='\r') break;
             if(key==0xB6 || key==0xD6) {
-                while(top_<length_ && source_[top_++]!='\n') {}
+                while(top_<length_ && source_.byte(top_++)!='\n') {}
             } else if(key==0xB5 || key==0xD5) {
                 if(top_) --top_;
-                while(top_ && source_[top_-1]!='\n') --top_;
+                while(top_ && source_.byte(top_-1)!='\n') --top_;
             }
         }
         viewing_ = waiting_ = false; page_ = ServicePage::CLOSED; return 0;
@@ -543,7 +563,8 @@ bool Services::selected_text(unsigned row,unsigned column) const {
 }
 u8 Services::view_markdown(const char* path) {
     if(markdown_ || !pump_) return 2;
-    language_cache::discard();
+    release_cache();
+    (void)source_.park();
     std::unique_ptr<MarkdownView> document(new(std::nothrow) MarkdownView);
     if(!document) { message("Not enough memory for Markdown",ServicePage::BROWSER);return 2; }
     if(!document->open(path)) { message("Cannot open Markdown",ServicePage::BROWSER);return 2; }
@@ -600,7 +621,8 @@ const u8* Services::graphics() const {
     present_console(0);return script::frame();
 }
 u8 Services::view_image(const char* path) {
-    language_cache::discard();
+    release_cache();
+    (void)source_.park();
     char native[files::PATH_SIZE];files::Entry info_file{};
     if(native_assets::image(path,native,info_file)) path=native;
     else if(!files::stat(path,info_file)) return 2;

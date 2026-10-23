@@ -4,6 +4,7 @@
 #include "program_store.hpp"
 #include "text_screen.hpp"
 #include "audio.hpp"
+#include "language_source.hpp"
 namespace picocalc {
 class Services;
 namespace script {
@@ -12,7 +13,11 @@ void memory_mode(u8 mode);
 bool start(const char *path);
 bool start_source(const char *path, const char *source, u16 length,
                   u16 *snapshot_id = nullptr);
+bool start_source(const char *path, language_vm::source::Input source,
+                  u16 *snapshot_id = nullptr);
 bool register_source(const char *path, const char *source, u16 length,
+                     program_store::Entry &out);
+bool register_source(const char *path,language_vm::source::Input source,
                      program_store::Entry &out);
 void reset_files();
 void prepare_files();

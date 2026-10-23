@@ -246,13 +246,22 @@ bool read_buffer(const char* path, shared_memory::Buffer& out, unsigned& used) {
     const auto closed=f_close(&file);return fail(result==FR_OK?closed:result);
 }
 bool read_text(const char* path, char* out, unsigned capacity, unsigned& used) {
+    if(!out || !capacity) { used=0;return false; }
+    struct Output { char* bytes;unsigned at=0; } output{out};
+    const bool ok=read_text_stream(path,[](void* raw,const u8* bytes,unsigned n) {
+        auto& out=*(Output*)raw;std::memcpy(out.bytes+out.at,bytes,n);out.at+=n;return true;
+    },&output,capacity,used);
+    out[used]=0;return ok;
+}
+bool read_text_stream(const char* path,bool (*write)(void*,const u8*,unsigned),
+                      void* context,unsigned capacity,unsigned& used) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     used = 0;
-    if(!available() || capacity == 0) return false;
+    if(!available() || !write || capacity == 0) return false;
     FIL file;
     FRESULT result = f_open(&file, path, FA_READ);
     if(result != FR_OK) return fail(result);
-    u8 chunk[512];
+    u8 chunk[512],decoded[512];unsigned buffered=0;
     UINT count;
     u32 codepoint = 0, minimum = 0;
     unsigned remaining = 0;
@@ -277,11 +286,15 @@ bool read_text(const char* path, char* out, unsigned capacity, unsigned& used) {
             if(cr) codepoint = '\n';
             u8 m8 = 0;
             if(codepoint == 0 || !mk8::from_codepoint(codepoint, m8) || used + 1 >= capacity) { valid = false; break; }
-            out[used++] = (char)m8;
+            decoded[buffered++]=m8;++used;
+            if(buffered==sizeof(decoded)) {
+                const bool accepted=write(context,decoded,buffered);buffered=0;
+                if(!accepted) { valid=false;break; }
+            }
         }
     } while(count && valid);
     const FRESULT closed = f_close(&file);
-    out[used] = 0;
+    if(buffered && !write(context,decoded,buffered)) valid=false;
     if(result != FR_OK) return fail(result);
     if(!valid || remaining) { std::snprintf(problem, sizeof(problem), "Invalid UTF-8/M8 character or source too large"); return false; }
     return fail(closed);

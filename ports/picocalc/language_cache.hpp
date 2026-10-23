@@ -1,6 +1,7 @@
 #ifndef MK61_PICOCALC_LANGUAGE_CACHE_HPP
 #define MK61_PICOCALC_LANGUAGE_CACHE_HPP
 #include "language_bytecode.hpp"
+#include "language_source.hpp"
 #include "rust_types.h"
 
 namespace picocalc::language_cache {
@@ -21,15 +22,19 @@ Prepared find(const char* path,language_vm::Language,bool rf_available,
               u8* scratch=nullptr,unsigned scratch_size=0);
 void bind(void* owner,void* bytes,unsigned capacity);
 void revoke(void* owner);
-void detach(void* owner);
+bool detach(void* owner);
 void release(Prepared&);
 bool load(const char* path,language_vm::Language,bool rf_available,
           const char* source,u16 length,u8* image,language_vm::View&);
+bool load(const char* path,language_vm::Language,bool rf_available,
+          language_vm::source::Input source,u8* image,language_vm::View&);
 void remember(const char* path,bool rf_available,u32 revision,
               const char* source,u16 length,const language_vm::View&,bool persist=true);
+void remember(const char* path,bool rf_available,u32 revision,
+              language_vm::source::Input source,const language_vm::View&,bool persist=true);
 void compilation();
-// The owner lends unused source-buffer space. A running image stays pinned
-// until its VM call (including INPUT) has returned.
+// The owner lends a lazily allocated SRAM cache. A running image stays pinned
+// until its VM call (including INPUT) has returned; APPs can reclaim it afterward.
 void discard();
 Statistics statistics();
 }
