@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
 """Offline checks for per-stage cache restoration; never opens a serial port."""
 import hashlib
+import struct
+import zlib
 from pathlib import Path
 import tempfile
 from unittest.mock import patch
 import hil_vm_compiled_blocks as h
+
+def legacy(payload):
+ header=bytearray(64);header[:8]=b'MK61APP\0'
+ struct.pack_into('<HHHBB',header,8,1,64,6,10,0)
+ struct.pack_into('<IIII',header,24,len(payload),len(payload),len(payload),0)
+ struct.pack_into('<I',header,48,zlib.crc32(payload))
+ struct.pack_into('<I',header,60,zlib.crc32(header[:60]))
+ return bytes(header)+payload
 
 OLD='/System/VMCache/VMC-000f.app'
 NEW='/System/VMCache/VMC-0018.app'
@@ -23,23 +33,25 @@ def exercise(files,snapshot,backup):
  with patch.object(h.storage_hil,'fingerprint',lambda port:fingerprint(port.files)),patch.object(h,'write_file',write),patch.object(h,'read_file',lambda port,path:port.files[path]):
   return p,h.restore_cache(p,snapshot,backup)
 def main():
- original={OLD:b'original cache',OTHER:b'original source'};snapshot=fingerprint(original)
+ original={OLD:legacy(b'original cache'),OTHER:b'original source'};snapshot=fingerprint(original)
  with tempfile.TemporaryDirectory() as directory:
   backup=Path(directory);path=backup/OLD.lstrip('/');path.parent.mkdir(parents=True);path.write_bytes(original[OLD])
-  p,result=exercise({**original,OLD:b'new wire version',NEW:b'created'},snapshot,backup)
+  p,result=exercise({**original,OLD:legacy(b'new wire version'),NEW:legacy(b'created')},snapshot,backup)
   assert result==([NEW],[OLD]) and p.files==original and p.operations==[('remove',NEW),('write',OLD)]
   p,result=exercise(dict(original),snapshot,backup);assert result==([],[]) and not p.operations
   p,result=exercise({OTHER:original[OTHER]},snapshot,backup);assert result==([],[OLD]) and p.files==original
-  p,result=exercise({**original,OTHER:b'foreign change'},snapshot,backup);assert result==([],[]) and p.files[OTHER]==b'foreign change'
+  try:exercise({**original,OTHER:b'foreign change'},snapshot,backup)
+  except AssertionError:pass
+  else:raise AssertionError('foreign change not refused')
   for added in ('/user.txt','/System/VMCache/VMC-user.app','/System/VMCache/VMC-0018.app.extra'):
-   files={**original,NEW:b'created',added:b'foreign'};p=Port(files)
+   files={**original,NEW:legacy(b'created'),added:b'foreign'};p=Port(files)
    with patch.object(h.storage_hil,'fingerprint',lambda port:fingerprint(port.files)):
     try:h.restore_cache(p,snapshot,backup)
     except AssertionError:pass
     else:raise AssertionError(added)
-   assert not p.operations and files[NEW]==b'created'
+   assert not p.operations and files[NEW]==legacy(b'created')
   path.write_bytes(b'bad backup')
-  try:exercise({**original,OLD:b'new'},snapshot,backup)
+  try:exercise({**original,OLD:legacy(b'new')},snapshot,backup)
   except AssertionError:pass
   else:raise AssertionError('bad backup accepted')
  a,b,c = 'raw24.bin','mixed24.bin','raw32.bin'

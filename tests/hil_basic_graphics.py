@@ -2,10 +2,11 @@
 """Capture the BASIC or FOCAL Graphics example on a matched Classic USB Screen.
 
 Firmware/System installation is separate. Reserves one unused temporary file,
-then removes it and verifies all files and calculator state. A warm reset after
+then removes it and verifies all files and calculator state. Requires an empty
+calculator because its cleanup performs a warm reset. A warm reset after
 leaving the foreground releases the USB Screen workspace before cleanup.
-When installed, VMCache/VMSTORE.APP must match the language APPs. Derived
-VMCache/VMC-xxxx.app entries are removed or restored from their saved bytes.
+When installed, VMCache/VMSTORE.APP must match the language APPs. Legacy and paged
+VM caches are byte-snapshotted and restored; unknown paths stop cleanup.
 """
 import argparse
 from dataclasses import asdict
@@ -19,6 +20,8 @@ from hil_c5_stack import read_file
 from hil_c6_system_bootstrap import write_file
 from hil_language_vm import health, require_foreground
 from hil_multi_device_identity import parse_identity
+from hil_system_memory import require_empty
+from hil_vm_cache_snapshot import CacheSnapshot, require_empty_calculator
 from hil_packbits_firmware import fingerprint
 from hil_portable_apps import PROMPT, ScreenPort
 from hil_portable_system_apps import png
@@ -27,26 +30,10 @@ from hil_rtc_alarm import canonical_state_reply
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def cache_entry(path):
-    file = Path(path)
-    return file.parent.as_posix().casefold() == '/system/vmcache' and re.fullmatch(r'VMC-[0-9a-f]{4}\.app', file.name, re.IGNORECASE)
-
-
-def restore_cache(port, saved):
-    current = fingerprint(port)['files']
-    expected = {path.casefold() for path in saved}
-    removed = restored = 0
-    for path in current:
-        if cache_entry(path) and path.casefold() not in expected:
-            assert 'Removed 1 entry.' in port.command('rm "'+path+'"')
-            removed += 1
-    found = {path.casefold(): info for path, info in current.items()}
-    for path, data in saved.items():
-        if found.get(path.casefold(), {}).get('sha256') != hashlib.sha256(data).hexdigest():
-            write_file(port, path, data)
-            assert read_file(port, path) == data
-            restored += 1
-    return {'removed': removed, 'restored': restored}
+def restore_cache(port, saved, current):
+    return saved.restore(current, lambda path: read_file(port, path),
+                         lambda path, data: write_file(port, path, data),
+                         lambda command: port.command(command, timeout=30))
 
 
 def pixel(frame, x, y):
@@ -75,7 +62,7 @@ def main():
     parser.add_argument('--reopen', action='store_true',
                         help='run a second uncached source without detaching USB after the first END')
     args = parser.parse_args()
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    args.output_dir.mkdir(parents=True)  # Preserve every earlier PASS/FAIL report.
     result = {'status': 'RUNNING', 'pages': []}
     extension = 'foc' if args.language == 'focal' else 'tbi'
     remote = '/GFXDEMO.' + extension
@@ -86,7 +73,7 @@ def main():
     written = []
     screen_started = False
     before = saved = None
-    cache_saved = {}
+    cache_saved = None
 
     def connect():
         p = ScreenPort(args.port)
@@ -109,13 +96,17 @@ def main():
         result['before'] = health(port)
         before = fingerprint(port)
         assert not {p.casefold() for p in remotes} & {n.casefold() for n in before['files']}, remotes
-        cache_saved = {path: read_file(port, path) for path in before['files'] if cache_entry(path)}
-        saved = {c: port.command(c) for c in ('reg', 'stk', 'dump', 'pwd')}
+        result['file_snapshot_before'] = before
         result['alarms'] = [line for line in port.command('alarm').splitlines()
                             if line.startswith('RTC ALARM ')]
+        saved = {c: port.command(c) for c in ('reg', 'stk', 'dump', 'pwd')}
+        require_empty(saved)
+        require_empty_calculator(saved)
+        cache_saved = CacheSnapshot(before, lambda path: read_file(port, path))
+        result['reserved_source_paths'] = remotes
         for path in remotes:
+            written.append(path)  # Own absent path before upload/lost-ACK failure.
             write_file(port, path, source)
-            written.append(path)
             assert read_file(port, path) == source
         port.attach()
         screen_started = True
@@ -179,11 +170,19 @@ def main():
                             if time.monotonic() >= deadline:
                                 raise
                             time.sleep(.2)
+                source_files = fingerprint(port)['files'] if written and 'error' in result else None
                 for path in written:
+                    if source_files is not None and path not in source_files:
+                        continue  # Failed atomic upload created no logical file.
                     assert read_file(port, path) == source
                     assert 'Removed 1 entry.' in port.command('rm "'+path+'"')
-                if before is not None:
-                    result['vm_cache_cleanup'] = restore_cache(port, cache_saved)
+                if cache_saved is not None:
+                    current = fingerprint(port)
+                    result['file_snapshot_before_cache_restore'] = current
+                    try:
+                        result['vm_cache_cleanup'] = restore_cache(port, cache_saved, current)
+                    finally:
+                        result['vm_cache_delta'] = cache_saved.delta
                 if saved is not None:
                     cwd = saved['pwd'].splitlines()[1].strip()
                     port.command('cd "'+cwd+'"')
@@ -193,7 +192,8 @@ def main():
                             if line.startswith('RTC ALARM ')] == result['alarms']
                     result['calculator_state_preserved'] = True
                 if before is not None:
-                    assert fingerprint(port) == before, 'file fingerprints changed'
+                    result['file_snapshot_after'] = fingerprint(port)
+                    assert result['file_snapshot_after'] == before, 'file fingerprints changed'
                     result['files_preserved'] = len(before['files'])
                 result['after'] = health(port)
         except BaseException as error:

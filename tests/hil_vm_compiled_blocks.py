@@ -22,6 +22,7 @@ from hil_c5_stack import read_file
 from hil_c6_system_bootstrap import write_file
 from hil_multi_device_identity import parse_identity
 from hil_rtc_alarm import canonical_state_reply, warm_reset
+from hil_vm_cache_snapshot import CacheSnapshot, cache_file, cache_state, require_empty_calculator
 
 PORT = '/dev/cu.usbmodem2068336B47311'
 PUBLIC = 'AEB505B6E0067623'
@@ -117,26 +118,27 @@ def capture_image(source, destination):
 
 
 def is_vm_cache(path):
-    return re.fullmatch(r'/System/VMCache/VMC-[0-9a-f]{4}\.app',path,re.IGNORECASE) is not None
+    # This identifies a namespace only. CacheSnapshot validates ownership and
+    # the complete plan before any cache entry is removed or replaced.
+    return cache_file(path)
 
 
-def restore_cache(port, snapshot, saved_directory):
-    """Restore only VMC to the original snapshot; preserve all other files."""
-    current=storage_hil.fingerprint(port)
-    removed=sorted(set(current['files'])-set(snapshot['files']))
-    assert all(is_vm_cache(path) for path in removed),removed
-    for remote in removed:
-        assert 'Removed 1 entry.' in port.command('rm "'+remote+'"',30)
-    replaced=[]
-    for remote, detail in snapshot['files'].items():
-        if not is_vm_cache(remote) or current['files'].get(remote)==detail:
-            continue
-        payload=(saved_directory/remote.lstrip('/')).read_bytes()
-        assert hashlib.sha256(payload).hexdigest()==detail['sha256']
-        write_file(port,remote,payload)
-        assert read_file(port,remote)==payload
-        replaced.append(remote)
-    return removed,replaced
+def restore_cache(port, snapshot, saved_directory, *, allowed_files=(), allowed_directories=()):
+    """Restore all saved cache bytes/directories; refuse unknown changes."""
+    current = storage_hil.fingerprint(port)
+    restore_cache.last_result = dict(status='PREFLIGHT', before=snapshot, current_before=current)
+    saved = CacheSnapshot(snapshot, lambda path: (saved_directory/path.lstrip('/')).read_bytes())
+    try:
+        result = saved.restore(current, lambda path: read_file(port, path),
+                               lambda path, data: write_file(port, path, data),
+                               lambda command: port.command(command, 30),
+                               allowed_files=allowed_files, allowed_directories=allowed_directories)
+        after = storage_hil.fingerprint(port)
+        assert cache_state(after) == cache_state(snapshot), 'cache fingerprints changed'
+        restore_cache.last_result.update(status='PASS', after=after, **result)
+        return result['removed_files'], result['restored_files']
+    finally:
+        restore_cache.last_result['delta'] = saved.delta
 
 
 def stage_plan(baseline, candidate, baseline_system, candidate_system, *, raw32=None, single=False):
@@ -220,10 +222,12 @@ def main():
     with connect(PORT, original['build'], wait=0) as port:
         before = memory_hil.health(port, original['build'])
         memory_hil.require_empty(before)
+        require_empty_calculator(before)
         alarms = alarms_off(port)
         files = snapshot_files(port, output / 'original-files')
         save(output / 'snapshot.json', dict(identity=asdict(parse_identity(port.command('identity'))),
              health=before, files=files, alarms=alarms, firmware=original))
+    CacheSnapshot(files, lambda path: (output/'original-files'/path.lstrip('/')).read_bytes())
     print('Snapshot complete:', len(files['files']), 'files,', len(files['directories']), 'directories', flush=True)
     scenario = 'Ordinary combined-main qualification; not matched A/B/A' if options.single_candidate else 'A/B/A, per-stage System APP and original VMC snapshot'
     if options.raw32:
@@ -248,7 +252,7 @@ def main():
                 # A previous wire version cannot claim ownership of a future cache.
                 # Start every stage with the exact original cache contents:
                 # remove only added VMC, and restore original bytes in place.
-                removed,replaced=restore_cache(port,files,output/'original-files')
+                removed,replaced=restore_cache(port,files,output/'original-files', allowed_files=changed)
                 app_images=bundles[directory]
                 for app, data in app_images.items():
                     remote = next(p for p in files['files'] if p.casefold() == ('/System/' + app).casefold())
@@ -259,7 +263,7 @@ def main():
             chess = memory_hil.chess_measure(args, target, output / ('chess-' + name))
             graphics = graphics_measure(target, output / ('graphics-' + name)) if options.with_graphics else None
             result['stages'].append(dict(name=name, firmware=target, chess=chess, graphics=graphics,
-                original_cache_restored=replaced,test_cache_removed=removed,
+                original_cache_restored=replaced,test_cache_removed=removed, cache_cleanup=restore_cache.last_result,
                 system_apps={app:dict(bytes=len(data),sha256=hashlib.sha256(data).hexdigest())
                              for app,data in app_images.items()}))
             save(output / 'report.json', result)
@@ -280,23 +284,31 @@ def main():
                 # the large readback. On transport loss flash() itself still
                 # requires the exact Classic ROM UID; never broad erase.
                 try:
+                    with connect(PORT) as port:
+                        result['pre_cleanup_health'] = memory_hil.health(port, target['build'])
+                except BaseException as diagnostic:
+                    result['pre_cleanup_health_error'] = repr(diagnostic)
+                    passed = False
+                try:
                     reset()
                 except (OSError, TimeoutError) as error:
                     result['reset_transport_error'] = repr(error)
                 memory_hil.flash(args, original, output / 'restore-flash.json')
                 with connect(PORT, original['build']) as port:
                     after = storage_hil.fingerprint(port)
-                    added = set(after['files']) - set(files['files'])
-                    for remote in added:
-                        assert is_vm_cache(remote), remote
-                        assert 'Removed 1 entry.' in port.command('rm "' + remote + '"', 30)
+                    replacements = {}
                     for remote, detail in files['files'].items():
-                        if after['files'].get(remote) == detail:
+                        if is_vm_cache(remote) or after['files'].get(remote) == detail:
                             continue
-                        assert remote in changed or is_vm_cache(remote), remote
-                        data = (output / 'original-files' / remote.lstrip('/')).read_bytes()
+                        assert remote in changed, remote
+                        data = (output/'original-files'/remote.lstrip('/')).read_bytes()
                         assert hashlib.sha256(data).hexdigest() == detail['sha256']
+                        replacements[remote] = data
+                    added, _ = restore_cache(port, files, output/'original-files', allowed_files=changed)
+                    result['final_cache_cleanup'] = restore_cache.last_result
+                    for remote, data in replacements.items():
                         write_file(port, remote, data)
+                        assert read_file(port, remote) == data
                     assert storage_hil.fingerprint(port) == files
                 with connect(PORT, original['build']) as port:
                     final = memory_hil.health(port, original['build'])

@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
 """Offline ownership/hash gates for the same-firmware package A/B/A fixture."""
 import hashlib
+import struct
+import zlib
 from pathlib import Path
 import tempfile
 from unittest.mock import patch
 import hil_turochamp_merge as h
+
+def legacy(payload):
+ header=bytearray(64);header[:8]=b'MK61APP\0'
+ struct.pack_into('<HHHBB',header,8,1,64,6,10,0)
+ struct.pack_into('<IIII',header,24,len(payload),len(payload),len(payload),0)
+ struct.pack_into('<I',header,48,zlib.crc32(payload))
+ struct.pack_into('<I',header,60,zlib.crc32(header[:60]))
+ return bytes(header)+payload
 
 OLD = '/System/VMCache/VMC-000f.app'
 NEW = '/System/VMCache/VMC-0030.app'
@@ -32,7 +42,7 @@ class Port:
 
 
 def main():
-    original = {OLD: b'original cache', USER: b'original APP', STORE:b'original VMSTORE'}
+    original = {OLD: legacy(b'original cache'), USER: b'original APP', STORE:b'original VMSTORE'}
     snapshot = fingerprint(original)
     with tempfile.TemporaryDirectory(prefix='mk61-chess-merge-self-') as directory:
         backup = Path(directory)
@@ -53,20 +63,20 @@ def main():
                  patch.object(h, 'read_file', lambda port, remote: port.files[remote]):
                 try:
                     removed = h.restore_vm_cache(port, snapshot, backup, replace_basic,
-                        replace_vmstore, targets)
+                        replace_vmstore, targets, owned_files={GAME})
                 except AssertionError:
                     assert fail and not port.operations
                     return port
                 assert not fail
                 return port, removed
 
-        port, removed = exercise({**original, OLD: b'changed', NEW: b'new cache', GAME: b'game'})
+        port, removed = exercise({**original, OLD: legacy(b'changed'), NEW: legacy(b'new cache'), GAME: b'game'})
         assert removed == [NEW] and port.files == {**original, GAME: b'game'}
         port, removed = exercise({USER: original[USER], STORE:original[STORE], GAME: b'game'})
         assert removed == [] and port.files == {**original, GAME: b'game'}
-        for remote in ('/user.txt', '/TCMERGE-other/file.tbi', '/System/VMCache/VMC-user.app'):
-            exercise({**original, NEW: b'new', remote: b'foreign'}, fail=True)
-        exercise({**original, NEW: b'new', USER: b'foreign change'}, fail=True)
+        for remote in ('/user.txt', '/TCMERGE-other/file.tbi', '/TCMERGE/unregistered.tbi', '/System/VMCache/VMC-user.app'):
+            exercise({**original, NEW: legacy(b'new'), remote: b'foreign'}, fail=True)
+        exercise({**original, NEW: legacy(b'new'), USER: b'foreign change'}, fail=True)
         port, _ = exercise({**original, USER:b'candidate'}, replace_basic=True)
         assert port.files == original and port.operations == [('write',USER)]
         exercise({**original, STORE:b'candidate'}, fail=True)
@@ -90,9 +100,9 @@ def main():
         exercise(dict(original), fail=True, replace_basic=True, targets={STORE:b'not allowed'})
         exercise(dict(original), fail=True, replace_basic=True, targets={'/user.txt':b'not allowed'})
         app.write_bytes(b'corrupt APP backup')
-        exercise({**original, NEW:b'new', USER:b'candidate'}, fail=True, replace_basic=True)
+        exercise({**original, NEW:legacy(b'new'), USER:b'candidate'}, fail=True, replace_basic=True)
         old.write_bytes(b'corrupt backup')
-        exercise({**original, OLD: b'changed', NEW: b'new'}, fail=True)
+        exercise({**original, OLD: legacy(b'changed'), NEW: legacy(b'new')}, fail=True)
     print('Turochamp merge HIL: owned paths, original hashes and pre-mutation rejection PASS')
 
 
