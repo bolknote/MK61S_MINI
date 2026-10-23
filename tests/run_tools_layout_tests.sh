@@ -81,6 +81,7 @@ expected="$(
     mkc.cmd \
     model_vm_cache_packing.py \
     package_picocalc.py \
+    picocalc_cold_evidence.py \
     profile_qfplib_ln_checked.py \
     program_pack.py \
     qualify_vm_cache_trace.py \
