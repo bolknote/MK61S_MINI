@@ -30,6 +30,8 @@ bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsign
 bool read(const char* path, u8* out, unsigned capacity, unsigned& used);
 bool read_buffer(const char* path, shared_memory::Buffer& out, unsigned& used);
 bool read_text(const char* path, char* out, unsigned capacity, unsigned& used);
+bool read_text_stream(const char* path,bool (*write)(void*,const u8*,unsigned),
+                      void* context,unsigned capacity,unsigned& used);
 bool text_size(const char* path,unsigned& size);
 bool read_text_range(const char* path,u32 offset,u8* out,unsigned count,unsigned& used);
 struct WriteSession;

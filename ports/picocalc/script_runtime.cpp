@@ -300,6 +300,12 @@ bool start(const char *path) {
 }
 bool start_source(const char *path, const char *source, u16 length,
                   u16 *snapshot_id) {
+  if(!source) return false;
+  return start_source(path,language_vm::source::Input{const_cast<char*>(source),
+      [](void* raw,u16 at,u8* out,u16 n) { std::memcpy(out,(char*)raw+at,n);return true; },length},snapshot_id);
+}
+bool start_source(const char *path,language_vm::source::Input source,
+                  u16 *snapshot_id) {
   if (snapshot_id)
     *snapshot_id = program_store::INVALID_ID;
   if (!calculator)
@@ -307,7 +313,7 @@ bool start_source(const char *path, const char *source, u16 length,
   if (!m61_text::active())
     prepare_files();
   program_store::Entry entry;
-  if (!register_source(path, source, length, entry))
+  if (!register_source(path, source, entry))
     return false;
   if (snapshot_id)
     *snapshot_id = entry.id;

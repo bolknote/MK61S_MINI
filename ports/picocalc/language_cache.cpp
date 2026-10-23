@@ -22,7 +22,7 @@ namespace {
 namespace vm=language_vm;
 namespace disk=language_vm::file_cache;
 using Cache=vm::ImageCache<32768,32,vm::CachePolicy::REUSE_DENSITY,true>;
-static_assert(sizeof(Cache)<=32768,"Pico VM cache must fit the borrowed source tail");
+static_assert(sizeof(Cache)<=32768,"Pico VM cache must fit its lazy SRAM lease");
 Cache* memory=nullptr;
 void* storage_owner=nullptr;
 void* storage=nullptr;
@@ -52,10 +52,20 @@ bool identity(const char* path,char normalized[files::PATH_SIZE],u16& id) {
        entry.kind!=program_store::NodeKind::FILE) return false;
     id=entry.id;return true;
 }
-disk::Key key(const char* path,vm::Language language,bool rf,const char* source,u16 length) {
+disk::Key key(const char* path,vm::Language language,bool rf,u32 source_crc,u16 length) {
     const auto hash=mk61_crc32::calculate((const u8*)path,std::strlen(path));
     return {MK61_PICOCALC_BUILD_ID^(rf?0x80000000U:0),
-        mk61_crc32::calculate((const u8*)source,length),(u16)(hash%65535),length,language};
+        source_crc,(u16)(hash%65535),length,language};
+}
+bool source_crc(vm::source::Input source,u32& result) {
+    u8 bytes[512];auto state=mk61_crc32::INITIAL_STATE;
+    if(!source.read) return false;
+    for(unsigned at=0;at<source.size;) {
+        const unsigned n=source.size-at<sizeof(bytes)?source.size-at:sizeof(bytes);
+        if(!source.read(source.context,(u16)at,bytes,(u16)n)) return false;
+        state=mk61_crc32::extend(state,bytes,n);at+=n;
+    }
+    result=mk61_crc32::finish(state);return true;
 }
 void filename(const char* path,vm::Language language,bool rf,char out[files::PATH_SIZE]) {
     std::snprintf(out,files::PATH_SIZE,"%s/%08lX-%u-%u.cache",DIRECTORY,
@@ -124,7 +134,7 @@ bool room(const char* target,unsigned size,u8* scratch) {
     }
     return false;
 }
-void store(const char* path,bool rf,const char* source,u16 length,const vm::View& v) {
+void store(const char* path,bool rf,u32 source_crc,u16 length,const vm::View& v) {
     if(!files::ready() || !cacheable(v)) return;
     // Cache writes use private FatFs transactions. They change no source
     // file and therefore do not invalidate the source/media revision. All
@@ -144,7 +154,7 @@ void store(const char* path,bool rf,const char* source,u16 length,const vm::View
     } else if(exists!=FR_NO_FILE) return;
     const unsigned n=(unsigned)std::strlen(path),offset=PREFIX+n+1;
     u16 written=0;
-    if(!disk::pack(key(path,v.language,rf,source,length),v.bytes,(u16)v.size,
+    if(!disk::pack(key(path,v.language,rf,source_crc,length),v.bytes,(u16)v.size,
                    output.get()+offset,(u16)(MAX_FILE-offset),written)) return;
     std::memcpy(output.get(),"PCC1",4);word(output.get()+4,(u16)n);word(output.get()+6,written);
     std::memcpy(output.get()+PREFIX,path,n+1);
@@ -197,9 +207,11 @@ void bind(void* owner,void* bytes,unsigned capacity) {
 void revoke(void* owner) {
     if(owner==storage_owner) { discard();storage_capacity=0; }
 }
-void detach(void* owner) {
-    if(owner!=storage_owner) return;
+bool detach(void* owner) {
+    if(owner!=storage_owner) return true;
+    if(pins) { discard_pending=true;return false; }
     discard();storage_owner=storage=nullptr;storage_capacity=0;
+    return true;
 }
 Prepared find(const char* path,vm::Language language,bool rf,u8* scratch,unsigned scratch_size) {
     Prepared result;
@@ -234,7 +246,7 @@ void release(Prepared& prepared) {
     if(memory) (void)memory->release({prepared.generation,prepared.slot});
     prepared={};if(pins) --pins;if(!pins && discard_pending) discard();
 }
-bool load(const char* path,vm::Language language,bool rf,const char* source,u16 length,u8* image,vm::View& v) {
+static bool load_crc(const char* path,vm::Language language,bool rf,u32 source_crc,u16 length,u8* image,vm::View& v) {
     ++counts.disk_misses;
     if(!files::ready()) return false;
     char normalized[files::PATH_SIZE];u16 id;
@@ -245,7 +257,7 @@ bool load(const char* path,vm::Language language,bool rf,const char* source,u16 
     const char* cached_path;const u8* file;u16 n,size;
     const u8* payload=nullptr;u16 image_size=0;
     if(!envelope(bytes.get(),used,cached_path,n,file,size) || std::strcmp(cached_path,normalized) ||
-       !disk::view(key(normalized,language,rf,source,length),file,size,payload,image_size)) {
+       !disk::view(key(normalized,language,rf,source_crc,length),file,size,payload,image_size)) {
         ++counts.rejected;return false;
     }
     std::memcpy(image,payload,image_size);
@@ -253,7 +265,13 @@ bool load(const char* path,vm::Language language,bool rf,const char* source,u16 
        !cacheable(v) || ((v.bytes[7]&2) && !rf)) { ++counts.rejected;return false; }
     --counts.disk_misses;++counts.disk_hits;return true;
 }
-void remember(const char* path,bool rf,u32 revision,const char* source,u16 length,const vm::View& v,bool persist) {
+bool load(const char* path,vm::Language language,bool rf,const char* source,u16 length,u8* image,vm::View& v) {
+    return load_crc(path,language,rf,mk61_crc32::calculate((const u8*)source,length),length,image,v);
+}
+bool load(const char* path,vm::Language language,bool rf,vm::source::Input source,u8* image,vm::View& v) {
+    u32 crc=0;return source_crc(source,crc) && load_crc(path,language,rf,crc,source.size,image,v);
+}
+static void remember_crc(const char* path,bool rf,u32 revision,u32 source_crc,u16 length,const vm::View& v,bool persist) {
     if(!cacheable(v) || revision!=files::revision() || !files::ready()) return;
     char normalized[files::PATH_SIZE];u16 id;
     if(!identity(path,normalized,id) || revision!=files::revision()) return;
@@ -267,7 +285,14 @@ void remember(const char* path,bool rf,u32 revision,const char* source,u16 lengt
             (void)memory->publish(h,certificate(v));(void)memory->release(h);
         }
     }
-    if(persist) store(normalized,rf,source,length,v);
+    if(persist) store(normalized,rf,source_crc,length,v);
+}
+void remember(const char* path,bool rf,u32 revision,const char* source,u16 length,const vm::View& v,bool persist) {
+    remember_crc(path,rf,revision,mk61_crc32::calculate((const u8*)source,length),length,v,persist);
+}
+void remember(const char* path,bool rf,u32 revision,vm::source::Input source,const vm::View& v,bool persist) {
+    u32 crc=0;if(persist && !source_crc(source,crc)) return;
+    remember_crc(path,rf,revision,crc,source.size,v,persist);
 }
 void compilation() { ++counts.compiles; }
 void discard() {

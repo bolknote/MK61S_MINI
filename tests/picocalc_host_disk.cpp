@@ -7,6 +7,8 @@ extern "C" {
 #include "ff.h"
 #include "diskio.h"
 }
+// The weak embedded USB transport hook has no host implementation.
+void storage_io_process() {}
 namespace {
 std::vector<u8> disk(16 * 1024 * 1024);
 bool initialized = false;

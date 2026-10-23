@@ -234,6 +234,52 @@ void picocalc_language_cache_test() {
     std::vector<u8> external_memory(psram::CAPACITY);
     psram::test_memory(external_memory.data(),external_memory.size());
     assert(psram::init() && external_cache::init());
+    {
+        // A maximum-sized source, cross-window edits and an unsaved M61
+        // snapshot use PSRAM; none may silently consume a 64-KiB SRAM block.
+        SourceDocument document;
+        std::string expected(65500,'A');
+        for(unsigned i=60;i<expected.size();i+=61) expected[i]='\n';
+        const auto read=[](void* raw,u16 at,u8* out,u16 n) {
+            std::memcpy(out,((std::string*)raw)->data()+at,n);return true;
+        };
+        const auto internal=shared_memory::buffer_statistics().internal_used;
+        assert(document.load({&expected,read,(u16)expected.size()}));
+        assert(document.statistics().external_bytes==expected.size());
+        assert(shared_memory::buffer_statistics().internal_used==internal);
+        for(unsigned at:{0U,510U,511U,512U,1023U,4095U,64000U}) {
+            u16 cursor=(u16)at;
+            assert(document.replace(cursor,cursor,"XYZ\n",cursor) && cursor==at+4);
+            expected.insert(at,"XYZ\n");
+            assert(document.replace((u16)(at+1),(u16)(at+3),"",cursor) && cursor==at+1);
+            expected.erase(at+1,2);
+        }
+        std::vector<u8> actual(expected.size());
+        assert(document.read(0,actual.data(),(u16)actual.size()));
+        assert(!std::memcmp(actual.data(),expected.data(),actual.size()));
+        assert(document.statistics().window_bytes==1024 && document.statistics().sram_bytes<4096);
+        assert(shared_memory::buffer_statistics().internal_used==internal);
+        // A partial replacement must keep all previous pending edits readable.
+        assert(!document.load({nullptr,[](void*,u16 at,u8* out,u16 n) {
+            if(at>=512) return false;std::memset(out,'!',n);return true;
+        },1024}));
+        assert(document.read(0,actual.data(),(u16)actual.size()) && !std::memcmp(actual.data(),expected.data(),actual.size()));
+        assert(document.park() && !document.statistics().window_bytes && document.statistics().sram_bytes<1024);
+        program_store::Entry snapshot{};
+        assert(script::register_source("/Cache Tests/unsaved-window.m61",document.input(),snapshot));
+        u16 got=0;
+        assert(program_store::read_range_id(snapshot.id,510,actual.data(),1025,&got) && got==1025);
+        assert(!std::memcmp(actual.data(),expected.data()+510,1025));
+        assert(shared_memory::buffer_statistics().internal_used==internal);
+        assert(document.save("/Cache Tests/window-psram.txt"));
+        std::vector<char> saved(65535);unsigned n=0;
+        assert(files::read_text("/Cache Tests/window-psram.txt",saved.data(),saved.size(),n));
+        assert(n==expected.size() && !std::memcmp(saved.data(),expected.data(),n));
+        script::prepare_files();
+        assert(files::remove("/Cache Tests/window-psram.txt"));
+    }
+    assert(external_cache::init());
+    std::puts("PicoCalc shared source: 65-KiB PSRAM, 1-KiB STM32 window, page-boundary edits, atomic failed load and M61 snapshot PASS");
     assert(files::mkdir("/Cache Tests/External"));
     for(unsigned i=0;i<48;++i)
         source(("/Cache Tests/External/"+std::to_string(i)+".bas").c_str(),"10 .R3=.R3+1\n20 END\n");
@@ -248,6 +294,7 @@ void picocalc_language_cache_test() {
     // Source mutation changes the media revision before any external lookup.
     source("/Cache Tests/External/0.bas","10 .R3=733\n20 END\n");
     assert(services.run_external("/Cache Tests/External/0.bas")==0 && reg(3)==733);
+    services.new_document(Document::TEXT);
     cache::discard();script::reset_files();external_cache::invalidate_modules();
     psram::test_memory(nullptr,0);
     assert(!psram::init());

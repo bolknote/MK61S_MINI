@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
+bash "$root/tests/run_picocalc_source_tests.sh"
 build_dir="$(mktemp -d "${TMPDIR:-/tmp}/mk61-picocalc.XXXXXX")"
 trap 'rm -rf "$build_dir"' EXIT
 flags=()

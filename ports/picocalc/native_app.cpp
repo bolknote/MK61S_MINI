@@ -1188,6 +1188,8 @@ u8 Services::run_handled(const char *path, u16 magic) {
 u8 Services::run_native(const char *path, u16 file) {
   if (NativeHost::current || running_ || files::usb_active())
     return 3;
+  release_cache();
+  (void)source_.park();
   if(!path || !*path) return 4;
   shown_frame_revision_=0; // A native APP may draw directly into the shared canvas.
   language_cache::discard();

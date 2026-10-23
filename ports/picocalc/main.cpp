@@ -215,6 +215,9 @@ void report(unsigned math_failures) {
     std::printf("Keys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\n");
     std::printf("SERVICE=%s SOURCE=%u DIRTY=%u PATH=[%s] RESULT=[%s]\n", services.page_name(), services.source_size(),
         services.dirty(), services.path(), services.status());
+    const auto source_memory=services.source_memory_statistics();
+    std::printf("SOURCE_STORAGE=shared BYTES=%u SRAM_BYTES=%u PSRAM_BYTES=%u WINDOW_BYTES=%u\n",
+        source_memory.bytes,source_memory.sram_bytes,source_memory.external_bytes,source_memory.window_bytes);
     std::printf("STACK_USED=%lu STACK_BYTES=%lu\n", (unsigned long)used_stack(), (unsigned long)((__StackTop - __StackBottom) * 4));
     const auto& usb = picocalc::usb::counters();
     std::printf("MSC_READ=%lu WRITE=%lu READ_ERROR=%lu WRITE_ERROR=%lu LBA=%lu SCSI=%02X\n", (unsigned long)usb.reads,

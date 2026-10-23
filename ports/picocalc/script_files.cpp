@@ -5,16 +5,20 @@
 #include "language_cache.hpp"
 #include "storage_path.hpp"
 #include "terminal_core.hpp"
+#include "shared_memory_buffer.hpp"
+#include "buffers.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
+#include <new>
 
 namespace picocalc {
 namespace script {
 namespace {
 struct Node {
   char *path;
-  char *source;
+  shared_memory::Buffer *source;
   u32 revision;
   u16 length, parent;
   program_store::ProgramType type;
@@ -224,7 +228,7 @@ void reset_files() {
   language_cache::discard();
   for (u16 i = 0; i < node_count; ++i) {
     std::free(nodes[i].path);
-    std::free(nodes[i].source);
+    delete nodes[i].source;
     nodes[i] = {};
   }
   std::free(nodes);
@@ -240,7 +244,7 @@ void prepare_files() {
   for(u16 i=0;i<node_count;++i) names+=(unsigned)std::strlen(nodes[i].path)+1;
   if(node_count>64 || names>8192) { reset_files();return; }
   for(u16 i=0;i<node_count;++i) if(nodes[i].virtual_source) {
-    std::free(nodes[i].source);nodes[i].source=nullptr;
+    delete nodes[i].source;nodes[i].source=nullptr;
     nodes[i].virtual_source=false;nodes[i].revision=files::revision()-1;
     nodes[i].length=0;nodes[i].type=type_of(nodes[i].path);
   }
@@ -261,8 +265,16 @@ bool register_file(const char *path, program_store::Entry &out) {
 }
 bool register_source(const char *path, const char *source, u16 length,
                      program_store::Entry &out) {
+  if(!source) return false;
+  return register_source(path,language_vm::source::Input{const_cast<char*>(source),
+      [](void* raw,u16 at,u8* bytes,u16 n) { std::memcpy(bytes,(char*)raw+at,n);return true; },length},out);
+}
+bool register_source(const char *path,language_vm::source::Input source,
+                     program_store::Entry &out) {
+  if(!buffers::init()) return false;
+  const u16 length=source.size;
   char normalized[files::PATH_SIZE], parent[files::PATH_SIZE];
-  if (!source || length > 65534 || !normalize("/", path, normalized))
+  if (!source.read || length > 65534 || !normalize("/", path, normalized))
     return false;
   std::snprintf(parent, sizeof(parent), "%s", normalized);
   char *slash = std::strrchr(parent, '/');
@@ -280,15 +292,18 @@ bool register_source(const char *path, const char *source, u16 length,
     ++id;
   if (id == node_count && !reserve_node())
     return false;
-  auto *copy = (char *)std::malloc((unsigned)length + 1);
-  if (!copy)
-    return false;
-  std::memcpy(copy, source, length);
-  copy[length] = 0;
+  auto copy=std::unique_ptr<shared_memory::Buffer>(new(std::nothrow) shared_memory::Buffer);
+  if(!copy || !copy->acquire(shared_memory::Owner::M61_RUNTIME,length?length:1,
+                            shared_memory::BufferAccess::BLOCK)) return false;
+  u8 bytes[512];
+  for(unsigned at=0;at<length;) {
+    const unsigned n=length-at<sizeof(bytes)?length-at:sizeof(bytes);
+    if(!source.read(source.context,(u16)at,bytes,(u16)n) || !copy->write(at,bytes,n)) return false;
+    at+=n;
+  }
   if (id == node_count) {
     auto *name = (char *)std::malloc(std::strlen(normalized) + 1);
     if (!name) {
-      std::free(copy);
       return false;
     }
     std::strcpy(name, normalized);
@@ -296,8 +311,8 @@ bool register_source(const char *path, const char *source, u16 length,
     ++node_count;
   }
   auto &node = nodes[id];
-  std::free(node.source);
-  node.source = copy;
+  delete node.source;
+  node.source = copy.release();
   node.length = length;
   node.parent = directory.id;
   node.type = Type::MK61;
@@ -327,8 +342,7 @@ bool read_id(u16 id, u16 offset, u8 *out, u16 count, u16 *used) {
         offset < node.length
             ? (node.length - offset < count ? node.length - offset : count)
             : 0;
-    if (n)
-      std::memcpy(out, node.source + offset, n);
+    if(n && (!node.source || !node.source->read(offset,out,n))) return false;
     if (used)
       *used = (u16)n;
     return true;

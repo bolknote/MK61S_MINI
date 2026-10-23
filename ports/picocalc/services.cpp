@@ -105,10 +105,10 @@ void Services::parent_directory() {
     skip_ = selection_ = 0; refresh();
 }
 void Services::new_document(Document kind) {
-    language_cache::revoke(this);
+    release_cache();
     graph_.reset();graph_visible_=false;
     viewing_=image_viewing_=runtime_graphics_=false;
-    document_ = kind; source_[0] = path_[0] = 0;
+    document_ = kind; source_.clear();path_[0] = 0;
     length_ = cursor_ = top_ = horizontal_ = 0; dirty_ = false;
     page_ = ServicePage::EDITOR; status_[0] = 0;
 }
@@ -123,37 +123,24 @@ bool Services::load_document(const char* path,bool edit) {
         else if(page_ == ServicePage::CLOSED) { page_ = ServicePage::BROWSER; refresh(); }
         return false;
     }
-    // Preserve the smaller side of the replacement. Two maximum-size source
-    // buffers do not fit in the RP2040 heap: the live editor buffer is static.
-    // Back up the current document when it is smaller, so a large UTF-8 file
-    // can be decoded directly into that buffer without losing it on failure.
-    files::Entry info;
-    if(!files::stat(path,info)) { message(files::error(),ServicePage::BROWSER); return false; }
-    if(info.size>=CACHE_SOURCE_OFFSET) language_cache::revoke(this);
-    const unsigned capacity=info.size>=SOURCE_CAPACITY-1?SOURCE_CAPACITY:info.size+1;
-    const unsigned previous_size=length_+1;
-    const bool backup=previous_size<capacity;
-    auto* temporary = new(std::nothrow) char[backup?previous_size:capacity];
-    if(!temporary) { message("Not enough memory to open source", ServicePage::BROWSER); return false; }
-    if(backup) std::memcpy(temporary,source_,previous_size);
-    unsigned used = 0;
-    const bool ok = files::read_text(path, backup?source_:temporary, capacity, used);
+    if(edit || (type!=Type::TINYBASIC && type!=Type::FOCAL)) release_cache();
+    // Publish a new PSRAM document only after the complete UTF-8/M8 stream
+    // is valid. A failed replacement leaves the previous editor intact.
+    const bool ok=source_.load(path);
     if(ok) {
         graph_.reset();graph_visible_=false;
         viewing_=image_viewing_=runtime_graphics_=false;
-        if(!backup) std::memcpy(source_, temporary, used + 1);
-        length_ = (u16)used;
+        length_ = (u16)source_.size();
         std::snprintf(path_, sizeof(path_), "%s", path);
         document_ = extension(path, ".bas") || extension(path, ".tbi") ? Document::BASIC : extension(path, ".foc") || extension(path, ".fcl")
             ? Document::FOCAL : extension(path, ".m61") ? Document::MK61 : Document::TEXT;
         cursor_ = top_ = horizontal_ = 0; dirty_ = false; page_ = ServicePage::EDITOR; status_[0] = 0;
-    } else if(backup) std::memcpy(source_,temporary,previous_size);
-    delete[] temporary;
-    if(!ok) message(files::error(), ServicePage::BROWSER);
+    }
+    if(!ok) message(*files::error()?files::error():source_.error(), ServicePage::BROWSER);
     return ok;
 }
 bool Services::save_document(const char* path) {
-    if(!files::write_text(path, source_, length_)) { message(files::error(), ServicePage::EDITOR); return false; }
+    if(!source_.save(path)) { message(files::error(), ServicePage::EDITOR); return false; }
     if(path != path_) std::snprintf(path_, sizeof(path_), "%s", path);
     dirty_ = false;
     std::snprintf(status_, sizeof(status_), "Saved %u bytes", length_);
@@ -222,25 +209,28 @@ void Services::accept_prompt() {
 }
 void Services::leave_editor() {
     if(dirty_) { confirm_ = Confirm::DISCARD; confirm_parent_ = ServicePage::EDITOR; page_ = ServicePage::CONFIRM; }
-    else { page_ = return_; selection_ = 0; if(page_ == ServicePage::BROWSER) refresh(); }
+    else { (void)source_.park();page_ = return_; selection_ = 0; if(page_ == ServicePage::BROWSER) refresh(); }
 }
 void Services::normalize_view() {
-    const u16 active = text_editor::line_start_for_cursor(source_, cursor_);
+    const u16 active = source_.line_start(cursor_);
     if(top_ > active) top_ = active;
     unsigned at = top_, row = 0;
-    while(at < active && row < ROWS) { at = text_editor::next_line_start(source_, (u16)at, length_); ++row; }
+    while(at < active && row < ROWS) { at = source_.next_line((u16)at); ++row; }
     if(row >= ROWS) {
         top_ = active;
-        for(unsigned i = 1; i < ROWS && top_; ++i) top_ = text_editor::previous_line_start(source_, top_);
+        for(unsigned i = 1; i < ROWS && top_; ++i) top_ = source_.previous_line(top_);
     }
     const unsigned column = cursor_ - active;
     if(column < horizontal_) horizontal_ = (u16)column;
     if(column >= horizontal_ + COLS) horizontal_ = (u16)(column - COLS + 1);
     Settings font{};font.ui_font_family=1;font.ui_font_size=16;
-    horizontal_+=(u16)fonts::text_start(font,source_+active+horizontal_,column-horizontal_,304);
+    char text[COLS+1]{};
+    const unsigned n=column-horizontal_;
+    if(n<=COLS && source_.read((u16)(active+horizontal_),(u8*)text,(u16)n))
+        horizontal_+=(u16)fonts::text_start(font,text,n,304);
 }
 bool Services::input(u8 code) {
-    if(page_==ServicePage::EDITOR) language_cache::revoke(this);
+    if(page_==ServicePage::EDITOR) release_cache();
     if(!active()) return false;
     const bool cancel = back(code), accept = enter(code);
     if(page_ == ServicePage::USB_DISK) {
@@ -298,20 +288,20 @@ bool Services::input(u8 code) {
         bool changed = false;
         if(code == 0xB4) { if(cursor_) --cursor_; }
         else if(code == 0xB7) { if(cursor_ < length_) ++cursor_; }
-        else if(code == 0xB5 || code == 0xB6) text_editor::move_cursor_line(source_, length_, cursor_, code == 0xB5 ? -1 : 1);
-        else if(code == 0xD2) cursor_ = text_editor::line_start_for_cursor(source_, cursor_);
-        else if(code == 0xD5) cursor_ = text_editor::line_end_for_start(source_, text_editor::line_start_for_cursor(source_, cursor_), length_);
+        else if(code == 0xB5 || code == 0xB6) source_.move_line(cursor_,code == 0xB5 ? -1 : 1);
+        else if(code == 0xD2) cursor_ = source_.line_start(cursor_);
+        else if(code == 0xD5) cursor_ = source_.line_end(source_.line_start(cursor_));
         else if(code == 0xD6 || code == 0xD7) {
-            for(unsigned i = 0; i < ROWS; ++i) text_editor::move_cursor_line(source_, length_, cursor_, code == 0xD6 ? -1 : 1);
-        } else if(code == 8) changed = text_editor::backspace(source_, length_, cursor_);
+            for(unsigned i = 0; i < ROWS; ++i) source_.move_line(cursor_,code == 0xD6 ? -1 : 1);
+        } else if(code == 8) { if(cursor_) changed=source_.replace((u16)(cursor_-1),cursor_,"",cursor_); }
         else if(code == 0x7F || code == 0xD4) {
-            if(cursor_ < length_) changed = text_editor::replace_range(source_, length_, cursor_, SOURCE_CAPACITY, cursor_, cursor_ + 1, "");
+            if(cursor_ < length_) changed = source_.replace(cursor_,(u16)(cursor_+1),"",cursor_);
         } else if(accept || code == '\t' || (code >= 32 && code < 127)) {
             char text[] = {(char)(accept ? '\n' : text_input::mapped(code,input_russian_)), 0};
-            changed = text_editor::insert_text(source_, length_, cursor_, SOURCE_CAPACITY, code == '\t' ? "  " : text);
-            if(!changed) std::snprintf(status_, sizeof(status_), "Source limit: 65534 bytes");
+            changed = source_.replace(cursor_,cursor_,code == '\t' ? "  " : text,cursor_);
+            if(!changed) std::snprintf(status_, sizeof(status_), "%s",source_.error());
         }
-        if(changed) { dirty_ = true; status_[0] = 0; }
+        if(changed) { length_=(u16)source_.size();dirty_ = true; status_[0] = 0; }
         normalize_view(); return true;
     }
     if(page_ == ServicePage::BROWSER) {
@@ -433,11 +423,11 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
     if(markdown_) { markdown_->row(index,out);return; }
     if(page_ == ServicePage::EDITOR) {
         u16 at = top_;
-        for(unsigned i = 0; i < index && at < length_; ++i) at = text_editor::next_line_start(source_, at, length_);
-        if(index && at == length_ && (index > cursor_row() || !length_ || source_[length_ - 1] != '\n')) return;
-        const u16 end = text_editor::line_end_for_start(source_, at, length_);
+        for(unsigned i = 0; i < index && at < length_; ++i) at = source_.next_line(at);
+        if(index && at == length_ && (index > cursor_row() || !length_ || source_.byte(length_ - 1) != '\n')) return;
+        const u16 end = source_.line_end(at);
         at = (u16)(at + (horizontal_ < end - at ? horizontal_ : end - at));
-        unsigned n = 0; while(at < end && n < COLS) out[n++] = source_[at++]; out[n] = 0;
+        unsigned n = 0; while(at < end && n < COLS) out[n++] = source_.byte(at++); out[n] = 0;
     } else if(page_ == ServicePage::CONSOLE) std::snprintf(out, COLS + 1, "%s",
         (console_frame_open_?front_console_:console_)[index % ROWS]);
     else if(page_ == ServicePage::BROWSER) {
@@ -494,13 +484,13 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
 }
 unsigned Services::cursor_row() const {
     if(page_ == ServicePage::PROMPT) return 2;
-    unsigned row = 0; for(u16 at = top_; at < cursor_ && at < length_; ++at) if(source_[at] == '\n') ++row;
+    unsigned row = 0; for(u16 at = top_; at < cursor_ && at < length_; ++at) if(source_.byte(at) == '\n') ++row;
     return row < ROWS ? row : ROWS - 1;
 }
 unsigned Services::cursor_column() const {
     if(page_ == ServicePage::PROMPT) {
         char text[COLS+1];row(2,text);return (unsigned)std::strlen(text);
     }
-    return cursor_ - text_editor::line_start_for_cursor(source_, cursor_) - horizontal_;
+    return cursor_ - source_.line_start(cursor_) - horizontal_;
 }
 } // namespace picocalc

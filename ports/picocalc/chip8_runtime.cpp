@@ -14,6 +14,8 @@ namespace picocalc {
 u8 Services::run_chip8(const char *path) {
   if (!pump_ || running_ || files::usb_active())
     return 2;
+  release_cache();
+  (void)source_.park();
   auto *vm = new (std::nothrow) chip8::State;
   if (!vm) {
     message("CHIP-8: not enough RAM", ServicePage::BROWSER);
