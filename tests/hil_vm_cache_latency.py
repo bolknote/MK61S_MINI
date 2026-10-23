@@ -22,6 +22,7 @@ from types import SimpleNamespace
 from types import MethodType
 
 import hil_vm_compiled_blocks as base
+from hil_vm_cache_snapshot import CacheSnapshot, require_empty_calculator
 from hil_portable_apps import ScreenPort,cobs_encode
 from hil_rtc_alarm import PROMPT,canonical_state_reply as state_without_prompt_padding
 from hil_multi_device_identity import parse_identity
@@ -358,24 +359,33 @@ def graphics(port,out):
 
 def cleanup_files(port,original,created,out):
     current=base.storage_hil.fingerprint(port)
-    for remote in set(current['files'])-set(original['files']):
-        assert remote in created or base.is_vm_cache(remote),remote
-        assert 'Removed 1 entry.' in port.command('rm "'+remote+'"',30),remote
+    replacements={}
     for remote,detail in original['files'].items():
-        if current['files'].get(remote)==detail:continue
-        assert remote.casefold().startswith('/system/') and (remote in out['changed_apps'] or base.is_vm_cache(remote)),remote
+        if base.is_vm_cache(remote) or current['files'].get(remote)==detail:continue
+        assert remote in out['changed_apps'],remote
         payload=(out['original_files']/remote.lstrip('/')).read_bytes()
         assert hashlib.sha256(payload).hexdigest()==detail['sha256']
+        replacements[remote]=payload
+    base.restore_cache(port,original,out['original_files'],
+        allowed_files=set(created)|set(out['changed_apps']),allowed_directories={'/VMLAT'})
+    cache_cleanup=base.restore_cache.last_result
+    for remote,payload in replacements.items():
         base.write_file(port,remote,payload)
-    added_dirs=set(current['directories'])-set(original['directories'])
-    for remote in added_dirs:
+        assert base.read_file(port,remote)==payload
+    current=cache_cleanup['after']
+    for remote in sorted(set(current['files'])-set(original['files'])):
+        assert remote in created,remote
+        assert 'Removed 1 entry.' in port.command('rm "'+remote+'"',30),remote
+    for remote in sorted(set(current['directories'])-set(original['directories']),key=lambda p:-p.count('/')):
         assert remote.casefold()=='/vmlat',remote
-        port.command('rmdir "'+remote+'"',30)
+        assert 'rmdir:' not in port.command('rmdir "'+remote+'"',30)
     assert base.storage_hil.fingerprint(port)==original
+    return cache_cleanup
 
 
 def load_workload(directory):
     sources={p.name:p.read_bytes() for p in (directory/'sources').iterdir() if p.is_file()}
+    assert all(name not in ('', '.', '..') and not any(c in name for c in '/\"\r\n') for name in sources), 'unsafe owned source path'
     capacities={'.m61':1536,'.foc':1536,'.tbi':3584}
     for filename,data in sources.items():
         assert 0<len(data)<=capacities[Path(filename).suffix.lower()],(filename,len(data))
@@ -511,12 +521,13 @@ def main():
     font_path=base.ROOT/'programs/games/Turochamp/Turochamp.FMK'
     font=Font(font_path.read_bytes())
     with base.connect(base.PORT,images['original']['build'],wait=0) as port:
-        before=base.memory_hil.health(port,images['original']['build']);base.memory_hil.require_empty(before);base.alarms_off(port)
+        before=base.memory_hil.health(port,images['original']['build']);base.memory_hil.require_empty(before);require_empty_calculator(before);base.alarms_off(port)
         files=base.snapshot_files(port,out/'original-files')
         installed_font=next(p for p in files['files'] if p.casefold()=='/games/turochamp/turochamp.fmk')
         assert files['files'][installed_font]['sha256']==hashlib.sha256(font_path.read_bytes()).hexdigest()
         assert all(p.casefold()!='/vmlat' for p in files['directories'])
         save(out/'snapshot.json',dict(health=before,files=files,identity=asdict(parse_identity(port.command('identity')))))
+    CacheSnapshot(files,lambda path:(out/'original-files'/path.lstrip('/')).read_bytes())
     args=SimpleNamespace(port=base.PORT,dfu_util=Path('/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util'))
     revision=subprocess.check_output(['git','-C',str(base.ROOT),'rev-parse','HEAD'],text=True).strip()
     result=dict(status='RUNNING',stages=[],restored=False,original=images['original'],base_sha=revision,
@@ -545,10 +556,10 @@ def main():
                     response=port.command('mkdir /VMLAT')
                     assert 'mkdir:' not in response and 'Usage:' not in response,response
                     assert '0 entries.' in port.command('ls /VMLAT')
-                else:base.restore_cache(port,with_sources,out/'original-files')
+                else:base.restore_cache(port,with_sources,out/'original-files',allowed_files=changed|created,allowed_directories={'/VMLAT'})
                 install_sources(port,workload['sources'],created)
                 if with_sources is None:with_sources=base.storage_hil.fingerprint(port)
-            stage= dict(name=name,firmware=target,status='RUNNING')
+            stage= dict(name=name,firmware=target,status='RUNNING',cache_cleanup=getattr(base.restore_cache,'last_result',None))
             result['stages'].append(stage)
             stage.update(run_workload(target,workload,out/name,font,a.orphan_probe and stage_index==0))
             save(out/'report.json',result)
@@ -563,7 +574,8 @@ def main():
                 save(out/'report.json',result)
                 with base.connect(base.PORT,target['build']) as port:
                     fast_control(port)
-                    base.restore_cache(port,with_sources,out/'original-files')
+                    base.restore_cache(port,with_sources,out/'original-files',allowed_files=changed|created,allowed_directories={'/VMLAT'})
+                    stage['resource_cache_cleanup']=base.restore_cache.last_result
                     install_sources(port,pressure['sources'],created)
                 stage['resource']=run_workload(target,pressure,out/(name+'-resource'),font)
             stage['status']='PASS'
@@ -580,12 +592,17 @@ def main():
         try:
             if touched:
                 print('Restoring exact original firmware/files/state',flush=True)
+                try:
+                    with base.connect(base.PORT) as port:
+                        result['pre_cleanup_health']=base.memory_hil.health(port,target['build'])
+                except BaseException as diagnostic:
+                    result['pre_cleanup_health_error']=repr(diagnostic);passed=False
                 try:base.reset()
                 except (OSError,TimeoutError) as e:result['reset_transport_error']=repr(e)
                 base.memory_hil.flash(args,images['original'],out/'restore-flash.json')
                 with base.connect(base.PORT,images['original']['build']) as port:
                     fast_control(port)
-                    cleanup_files(port,files,created,dict(changed_apps=changed,original_files=out/'original-files'))
+                    result['final_cache_cleanup']=cleanup_files(port,files,created,dict(changed_apps=changed,original_files=out/'original-files'))
                     final=base.memory_hil.health(port,images['original']['build']);base.memory_hil.require_empty(final);base.alarms_off(port)
                     for key in ('reg','stk','dump','pwd'):
                         assert state_without_prompt_padding(final[key])==state_without_prompt_padding(before[key]),(key,before[key],final[key])

@@ -19,6 +19,7 @@ from hil_multi_device_identity import parse_identity
 import hil_packbits_firmware as storage_hil
 import hil_system_memory as memory_hil
 from hil_rtc_alarm import canonical_state_reply, warm_reset
+from hil_vm_cache_snapshot import CacheSnapshot, cache_state, require_empty_calculator
 from hil_turochamp_performance import Font, TimedScreenPort, search, stop_game
 from hil_vm_compiled_blocks import (PORT, PUBLIC, alarms_off, connect, is_vm_cache,
                                     read_file, snapshot_files)
@@ -45,35 +46,41 @@ def package(directory):
 
 
 def restore_vm_cache(port, original, backup, replace_basic=False, replace_vmstore=False,
-                     app_targets=None, app_writes=None):
-    # Unlike the firmware-variant helper, this fixture also owns /TCMERGE.
+                     app_targets=None, app_writes=None, owned_files=()):
+    # APP/source ownership is explicit and separate from generated caches.
     current = storage_hil.fingerprint(port)
-    added = sorted(set(current['files'])-set(original['files']))
-    assert all(is_vm_cache(remote) or remote.startswith(REMOTE+'/') for remote in added), added
+    restore_vm_cache.last_result = dict(status='PREFLIGHT',before=original,current_before=current)
     allowed = ({BASIC} if replace_basic else set()) | ({VMSTORE} if replace_vmstore else set())
+    owned_files = set(owned_files)
+    assert all(p.startswith(REMOTE+'/') and p not in original['files'] for p in owned_files)
     app_targets = app_targets or {}
     assert set(app_targets) <= allowed & set(original['files']), 'Unapproved APP target'
     replacements = {}
     for remote, detail in original['files'].items():
+        if is_vm_cache(remote):continue
         target = app_targets.get(remote)
         if target is not None:
             detail = dict(bytes=len(target), sha256=hashlib.sha256(target).hexdigest())
         if current['files'].get(remote) == detail:
             continue
-        assert is_vm_cache(remote) or remote in allowed, ('Unexpected original file change', remote)
+        assert remote in allowed, ('Unexpected original file change', remote)
         data = target if target is not None else (backup/remote.lstrip('/')).read_bytes()
         assert hashlib.sha256(data).hexdigest() == detail['sha256']
         replacements[remote] = data
-    removed = []
-    for remote in added:
-        if is_vm_cache(remote):
-            assert 'Removed 1 entry.' in port.command(f'rm "{remote}"', 30)
-            removed.append(remote)
+    saved = CacheSnapshot(original, lambda path:(backup/path.lstrip('/')).read_bytes())
+    try:
+        cleanup = saved.restore(current, lambda path:read_file(port,path),
+            lambda path,data:write_file(port,path,data), lambda command:port.command(command,30),
+            allowed_files=allowed|owned_files, allowed_directories={REMOTE})
+        assert cache_state(storage_hil.fingerprint(port)) == cache_state(original), 'cache fingerprints changed'
+        restore_vm_cache.last_result.update(status='PASS',**cleanup)
+    finally:
+        restore_vm_cache.last_result['delta'] = saved.delta
     for remote, data in replacements.items():
         write_file(port, remote, data)
         assert read_file(port, remote) == data
-        if remote in allowed and app_writes is not None: app_writes.append(remote)
-    return removed
+        if app_writes is not None: app_writes.append(remote)
+    return cleanup['removed_files']
 
 
 def main():
@@ -127,12 +134,14 @@ def main():
         identity = parse_identity(port.command('identity'))
         before = memory_hil.health(port, build)
         memory_hil.require_empty(before)
+        require_empty_calculator(before)
         alarms_off(port)
         original = snapshot_files(port, backup)
         if basic is not None or common is not None: assert BASIC in original['files']
         if stores: assert VMSTORE in original['files']
-        assert REMOTE not in original['directories']
-        assert not any(path.startswith(REMOTE+'/') for path in original['files'])
+        assert not any(path.casefold()==REMOTE.casefold() for path in original['directories'])
+        assert not any(path.casefold().startswith(REMOTE.casefold()+'/') for path in original['files'])
+    CacheSnapshot(original, lambda path:(backup/path.lstrip('/')).read_bytes())
     save(output/'snapshot.json', dict(identity=identity.__dict__, health=before, files=original))
     result = dict(status='RUNNING', build=build, public=PUBLIC, stages=[], restored=False,
                   firmware_writes=0, System_APP_writes=0, limits_weakened=False,
@@ -152,6 +161,7 @@ def main():
     result['app_variants'] = {remote: {stage:dict(bytes=len(data), sha256=hashlib.sha256(data).hexdigest())
         for stage, data in zip(('baseline','candidate'), pair)} for remote, pair in variants.items()}
     app_writes = []
+    created = set()
     save(output/'report.json', result)
     touched = False
     passed = False
@@ -163,14 +173,16 @@ def main():
             with connect(PORT, build) as port:
                 if not touched:
                     touched = True
-                    port.command(f'mkdir "{REMOTE}"', 15)
+                    reply = port.command(f'mkdir "{REMOTE}"', 15)
+                    assert 'mkdir:' not in reply and 'Usage:' not in reply, reply
                 targets = {remote: pair[stage == 'candidate'] for remote, pair in variants.items()}
                 removed = restore_vm_cache(port, original, backup, BASIC in variants,
-                    VMSTORE in variants, targets, app_writes)
+                    VMSTORE in variants, targets, app_writes, owned_files=created)
                 result['System_APP_writes'] = len(app_writes)
                 for name, data in files.items():
                     remote = REMOTE+'/'+name
                     if installed.get(name) != data:
+                        created.add(remote)  # Reserve before upload, including lost-ACK failures.
                         write_file(port, remote, data)
                         assert read_file(port, remote) == data
                         installed[name] = data
@@ -213,7 +225,7 @@ def main():
             assert len({row['board_frame_sha256'] for row in rows}) == 1
             result['stages'].append(dict(name=stage, runs=rows, steady_indices=[args.runs-2, args.runs-1],
                 steady_seconds=statistics.median(row['seconds'] for row in rows[-2:]),
-                frames_crc_checked=frames, removed_prior_test_cache=removed, health=health))
+                frames_crc_checked=frames, removed_prior_test_cache=removed, cache_cleanup=restore_vm_cache.last_result, health=health))
             save(output/'report.json', result)
         assert len({row['board_frame_sha256'] for stage in result['stages'] for row in stage['runs']}) == 1
         a, b, control = (stage['steady_seconds'] for stage in result['stages'])
@@ -234,16 +246,22 @@ def main():
         try:
             if touched:
                 with connect(PORT, build) as port:
+                    try:
+                        result['pre_cleanup_health'] = memory_hil.health(port, build)
+                    except BaseException as diagnostic:
+                        result['pre_cleanup_health_error'] = repr(diagnostic); passed = False
                     port.command('fsput cancel')
                     port.command('reinit')
                     restore_vm_cache(port, original, backup, BASIC in variants,
-                        VMSTORE in variants, app_writes=app_writes)
+                        VMSTORE in variants, app_writes=app_writes, owned_files=created)
                     result['System_APP_writes'] = len(app_writes)
+                    result['final_cache_cleanup'] = restore_vm_cache.last_result
                     current = storage_hil.fingerprint(port)
                     for remote in sorted(set(current['files'])-set(original['files'])):
-                        assert remote.startswith(REMOTE+'/'), remote
+                        assert remote in created, remote
                         assert 'Removed 1 entry.' in port.command(f'rm "{remote}"', 30)
-                    assert 'rmdir:' not in port.command(f'rmdir "{REMOTE}"', 30)
+                    if REMOTE in current['directories']:
+                        assert 'rmdir:' not in port.command(f'rmdir "{REMOTE}"', 30)
                     # DETACH leaves the device offering a new USB Screen
                     # session. Reset also releases its buffers and VM images.
                     fresh, path, _ = warm_reset(port, PORT, PUBLIC)
