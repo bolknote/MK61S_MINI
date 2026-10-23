@@ -158,6 +158,23 @@ def test_assembler_continuations():
     # Do not reserve a bridge inside a protected block ending in RET at 111.
     assert info['labels']['helper']==91 and banks[0][111]==0x52
     assert info['labels']['next']==112 and info['occupied_bytes']==113
+    a=Assembler();a.inline_helpers=('helper',)
+    a.module(0,'caller').n(3).st(0).call('helper').op('stop')
+    a.module(1,'helper').label('helper').ld(0).n(2).op('+','ret')
+    linked=a.link()
+    assert 1 not in linked[0] and a.link()==linked
+    for conflict in ('two callers','inner pointer','recursive call'):
+        a=Assembler();a.inline_helpers=('helper',)
+        m=a.module(0,'caller').call('helper')
+        if conflict=='two callers':m.call('helper')
+        if conflict=='inner pointer':m.ptr('F','inner')
+        m.op('stop')
+        m=a.module(1,'helper').label('helper').ld(0)
+        if conflict=='recursive call':m.call('helper')
+        m.label('inner').op('ret')
+        try:a.link()
+        except ValueError as error:assert 'inline helper' in str(error),error
+        else:raise AssertionError('unsafe inlining accepted: '+conflict)
     print('ELITE: control flow, operand 52, labelled returns and whole blocks OK',flush=True)
 
 def test_worlds_and_display():

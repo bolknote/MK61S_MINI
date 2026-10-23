@@ -7,6 +7,12 @@ def dynamic_get(m,bank,index):
 def dynamic_put(m,bank,index):
     m.st('C').ld(index).st('B').far(0x53,bank*112+WRITE)
 
+def sum_hold(m):
+    """Emit the two short cargo sums directly, without CALL/RET."""
+    m.ld(0)
+    for i in range(1,6):m.ld(i).op('+')
+    m.st('C')
+
 def add_economy(a):
     m=a.module(1,'initialization')
     m.page(24,'init_pilot',inline=False)
@@ -21,13 +27,11 @@ def add_economy(a):
     # Return X=3 as well as preserving RC. The fixed starting economy is
     # also 3; finish_new_game reuses it without entering another literal.
     m.set(6,a.data[25][6]).set(7,3).op('ret')
-    m.end_page().label('sum_hold').ld(0)
-    for i in range(1,6):m.ld(i).op('+')
-    m.st('C').op('ret')
+    m.end_page()
     # Purchase callback: money and market stock were checked by the caller.
     # RB good -> RC old free capacity. Only a positive capacity commits the
     # item here; this avoids opening HOLD a second time after paying.
-    m.page(25,'trade_hold').raw(0xDB).st('D').call('sum_hold')
+    m.page(25,'trade_hold').raw(0xDB).st('D');sum_hold(m)
     m.ld(6).n(100).op('/','frac').n(100).op('*').ld('C').op('-').st('C').jneg('buy_done').jz('buy_done')
     m.ld('D').n(1).op('+').raw(0xBB)
     m.label('buy_done').op('ret')
@@ -141,9 +145,9 @@ def add_economy(a):
 
     m=a.module(10,'flight')
     m.label('jump').call('distance').jz('bad_action')
-    m.get(25,6).n(100).op('/','int').n(100).op('/','frac').n(100).op('*').ld(2).op('-').jneg('bad_action')
+    m.page_bytes(25,0x66,0x4C).n(100).op('/','int').n(100).op('/','frac').n(100).op('*').ld(2).op('-').jneg('bad_action')
     m.ld(2).st('C').visit(24,'jump_tick').ld('D').jneg('bad_action').ld('C').jz('alien_contact')
-    m.st(3).ld('E').n(65536).op('/','int').call('mod16').n(4).op('/','int').n(2).op('+')
+    m.st(3).ld('E').n(65536).op('/','int').n(16).op('/','frac').n(16).op('*').n(4).op('/','int').n(2).op('+')
     m.ld(3).op('swap','-').jneg('pirate_contact').jump('arrive')
     m.label('alien_contact').n(4).jump('start_contact')
     m.label('pirate_contact').n(2).jump('start_contact')
@@ -156,7 +160,7 @@ def add_economy(a):
     # Encounters observe only the old 16-bit generator's low four bits.
     # (253*s+13849) mod 16 == (13*(s mod 16)+9) mod 16. Store only that
     # projected state; 13*r+9 is at most 204, so mod16 stays exact.
-    m.ld(8).n(13).op('*').n(9).op('+').call('mod16').st(8).st('C').ld(2).st('E')
+    m.ld(8).n(13).op('*').n(9).op('+').n(16).op('/','frac').n(16).op('*').st(8).st('C').ld(2).st('E')
     m.label('jump_tick_done').op('ret')
 
     # Enter the already-open market initialization after its economy decode.
@@ -167,7 +171,7 @@ def add_economy(a):
     m=a.module(11,'contacts')
     # Equipment cannot change in flight. Decode the laser once per contact;
     # COMBAT R8 holds its base damage throughout the battle.
-    m.label('start_contact').st(1).get(25,6).n(1).op('swap','roll').raw(0x0C).n(12).op('*').n(20).op('+').st('D')
+    m.label('start_contact').st(1).page_bytes(25,0x66,0x4C).n(1).op('swap','roll').raw(0x0C).n(12).op('*').n(20).op('+').st('D')
     m.ld(1).st('C').visit(27,'init_enemy').visit(28,'init_drones').ld('D').st(6).ld('E').st(8)
     m.set(5,0).set(7,GLYPHS['H']+65).ptr(9,'combat_input_entry',negate=True,lift=False).set('A',0).op('ret')
     m.page(27,'init_enemy').ld('D').st(8).ld('C').st(0).n(2).op('*').n(10).op('+').st(7)

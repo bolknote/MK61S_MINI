@@ -88,13 +88,18 @@ class Module:
     def op(self, *names):
         return self.raw(*(OP[n] for n in names))
 
-    def n(self, n):
-        # Push a literal; callers with a dead X can explicitly clear it.
+    def n(self, n, *, lift=None):
+        # A direct recall already enables automatic lift for the first digit.
+        # Require adjacency: a label may admit another numeric-entry state.
+        # Callers can still force ENTER when they need that exact instruction.
+        if lift is None:
+            lift=not (self.items and self.items[-1].kind=='bytes' and
+                      len(self.items[-1].value)==1 and 0x60<=self.items[-1].value[0]<=0x6F)
         digits=str(abs(int(n)))
         zeros=len(digits)-len(digits.rstrip('0')) if n else 0
         raw=[int(c) for c in digits]
         if zeros>2:raw=[*(int(c) for c in digits[:-zeros]),0x0C,*(int(c) for c in str(zeros))]
-        return self.raw(0x0E,*raw,*([0x0B] if n<0 else []))
+        return self.raw(*([0x0E] if lift else []),*raw,*([0x0B] if n<0 else []))
 
     def ld(self, r): return self.raw(0x60 + reg(r))
     def st(self, r): return self.raw(0x40 + reg(r))
@@ -151,6 +156,8 @@ class Assembler:
         # None retains the original READ/WRITE pair; an explicit set selects
         # the pages that need WRITE without removing their READ entry.
         self.data_write_helpers = None
+        self.inline_helpers = ()
+        self.far_conditions = set()
 
     def data_has_write(self, bank):
         return bank in self.data_helpers and (self.data_write_helpers is None or bank in self.data_write_helpers)
@@ -163,8 +170,8 @@ class Assembler:
 
         The source keeps each operation in its gameplay module. Expansion
         replaces the old RF callback setup with direct Ms/bank exchanges.
-        Unmarked helpers (such as sum_hold, also called inside a page) stay
-        ordinary subroutines and are wrapped at the visit site.
+        Unmarked helpers stay ordinary subroutines and are wrapped at the
+        visit site. Explicit single-use helpers can be inlined afterwards.
         """
         pages = {}
         for module in self.modules:
@@ -206,6 +213,51 @@ class Assembler:
 
     def module(self, bank, name):
         m=Module(bank,name); self.modules.append(m); return m
+
+    def inline_single_use_helpers(self):
+        """Inline explicitly selected internal helpers with one direct caller.
+
+        A branch into an inner label would give it a second entry. A jump
+        outside the body could return through another procedure's frame.
+        Reject both before removing the helper's CALL/RET boundary.
+        """
+        for name in self.inline_helpers:
+            entries=[(m,k) for m in self.modules for k,i in enumerate(m.items)
+                     if i.kind=='label' and i.value==name]
+            if len(entries)!=1:raise ValueError('inline helper entry: '+name)
+            host,start=entries[0]
+            end=next((k for k in range(start,len(host.items))
+                      if host.items[k].kind=='bytes' and host.items[k].value[-1]==OP['ret']
+                      and host.items[k].value[0]!=0x1F and self.ends_flow(host.items[k])),None)
+            if end is None:raise ValueError('inline helper has no RET: '+name)
+            body=host.items[start:end]
+            if len(host.items[end].value)>1:
+                body.append(Item('bytes',host.items[end].value[:-1]))
+            labels={i.value for i in body if i.kind=='label'}
+            inside={id(i) for i in body}
+            callers=[]
+            for m in self.modules:
+                for i in m.items:
+                    if i.kind not in ('branch','ptr'):continue
+                    if id(i) in inside:
+                        if i.kind=='branch' and i.value==0x53 and i.target in labels:
+                            raise ValueError('inline helper calls its own body: '+name)
+                        if i.kind=='branch' and i.value!=0x53 and i.target not in labels:
+                            raise ValueError('inline helper has an external jump: '+name)
+                    elif i.target in labels:
+                        if i.kind!='branch' or i.value!=0x53 or i.target!=name:
+                            raise ValueError('inline helper has another entry: '+name)
+                        callers.append(i)
+            if len(callers)!=1:raise ValueError('inline helper must have one caller: '+name)
+            del host.items[start:end+1]
+            for m in self.modules:
+                items=[]
+                for i in m.items:
+                    items.extend(body if i is callers[0] else [i])
+                m.items=items
+        # A second link sees the already expanded program.
+        self.inline_helpers=()
+        self.modules=[m for m in self.modules if m.items]
 
     def fold_tail_calls(self):
         """A final call can reuse its caller's return address.
@@ -388,6 +440,10 @@ class Assembler:
 
     def link(self):
         self.lower_pages()
+        self.inline_single_use_helpers()
+        for m in self.modules:
+            for i in m.items:
+                if i.kind=='branch' and i.value in self.far_conditions:i.force_far=True
         self.fold_tail_calls()
         self.fold_fallthrough_jumps()
         for m in self.modules:

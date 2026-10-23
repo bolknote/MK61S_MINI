@@ -1,7 +1,7 @@
 """ELITE module sources. All operations emit ordinary MK61/MK61s bytecode."""
 from assembler import Assembler, ALPHABET, GLYPHS, screen
 from ui import add_ui, show_text, show_number, show_name, FRAME_SUFFIX_WORD
-from economy import add_economy, dynamic_get
+from economy import add_economy, dynamic_get, sum_hold
 from combat import add_combat
 
 def create_game():
@@ -14,9 +14,12 @@ def create_game():
         28:[0]*9,
         29:[0]*7+[1048576,FRAME_SUFFIX_WORD],
     }
-    a.data_helpers={24,25,27}
+    a.data_helpers={24,25}
     # All game writes happen inside page operations; only READ is called.
     a.data_write_helpers=set()
+    a.inline_helpers=('enemy_tick','world')
+    # Existing 1F conditions avoid a ROM step; spend spare code space on them.
+    a.far_conditions={0x57,0x59,0x5C,0x5E,0x5A}
     m=a.module(0,'kernel')
     m.label('start').raw(0x2F,0x50,0x2F,0x2A).set(9,0).set('A',0)
     show_text(m,'title');m.op('cx','stop')
@@ -87,10 +90,11 @@ def create_game():
     m.n(3).op('+').st('B')
     m.label('stat_get').far(0x53,24*112+63)
     m.set('E',20).ld('A').n(3).op('-').jnz('draw_gauge').set('E',12).jump('draw_gauge')
-    m.label('show_missiles').get(25,7).set('D',GLYPHS['r']).jump('draw_number')
-    m.label('read_credits').get(24,0)
+    m.label('show_missiles').page_bytes(25,0x67,0x4C).set('D',GLYPHS['r']).jump('draw_number')
+    m.label('read_credits').page_bytes(24,0x60,0x4C)
     m.label('show_credits').set('D',GLYPHS['C']).jump('draw_number')
-    m.label('show_hold').visit(25,'sum_hold').set('E',4).jump('draw_gauge')
+    m.label('show_hold').open_page(25);sum_hold(m)
+    m.close_page(25).set('E',4).jump('draw_gauge')
     m.label('show_world',keep_block=True).page_bytes(24,0x61,0x4C).jump('draw_name')
     m.label('show_destination').page_bytes(24,0x62,0x4C)
     m.label('draw_name');show_name(m);m.op('ret')

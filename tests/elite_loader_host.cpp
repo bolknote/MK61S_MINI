@@ -78,6 +78,20 @@ bool read_range_id(u16 id, u16 offset, u8* data, u16 length, u16* got) {
 bool OpenStoredFile(const char* name) {
   return m61_text::open_program(name);
 }
+bool m61_text_host_resolve_file(u16 parent, const char* name,
+                                program_store::Entry& out) {
+  if(parent!=program_store::ROOT_ID || !name) return false;
+  for(size_t i=0;i<files.size();++i)
+    if(files[i].name==name) return program_store::entry_by_id(i,out);
+  return false;
+}
+u8 m61_text_host_open_entry(const program_store::Entry& entry) {
+  if(entry.type==program_store::ProgramType::MARKDOWN)
+    return std::filesystem::is_regular_file(directory/entry.name) ? 0 : 2;
+  if(entry.type==program_store::ProgramType::MK61)
+    return m61_text::open_program(entry.id) ? 0 : 2;
+  return 2;
+}
 u8 m61_text_host_open_file(const char* name, u16) {
   if(std::filesystem::path(name).extension()==".md")
     return std::filesystem::is_regular_file(directory/name) ? 0 : 2;
@@ -133,10 +147,12 @@ bool load_binary_program(u16, const char* args) {
 unsigned elite_load_game(const char* path) {
   directory=path;
   for(const auto& p:std::filesystem::directory_iterator(directory)) {
-    if(p.path().extension()!=".m61" && p.path().extension()!=".bin") continue;
+    const auto extension=p.path().extension();
+    if(extension!=".m61" && extension!=".bin" && extension!=".md") continue;
     std::ifstream f(p.path(),std::ios::binary);
     files.push_back({p.path().filename().string(),{std::istreambuf_iterator<char>(f),{}},
-      p.path().extension()==".bin" ? program_store::ProgramType::MK61_BINARY : program_store::ProgramType::MK61});
+      extension==".bin" ? program_store::ProgramType::MK61_BINARY :
+      extension==".md" ? program_store::ProgramType::MARKDOWN : program_store::ProgramType::MK61});
   }
   core_61::set_expanded_program_mode(true); core_61::enable();
   // A previous program must be discarded by the new root loader.

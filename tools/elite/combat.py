@@ -65,7 +65,7 @@ def add_combat(a):
     # -> outgoing shot RC, launch RE, player hull RF. Shield precedes the hit.
     # Each arm first sets RD; after applying incoming RE, export the results.
     # Shield saturation uses a clipped delta; reward reuses 99999999 in X1.
-    m.page(24,'weapon',inline=False).ld(7).raw(1,0).op('-').max0().st(7)
+    m.page(24,'weapon').ld(7).raw(1,0).op('-').max0().st(7)
     m.ld('C').raw(1).op('-').jz('laser')
     # X1 retains the subtracted unit across both conditional branches.
     m.raw(0x0F).op('-').jz('missile')
@@ -132,12 +132,12 @@ def add_combat(a):
     m.raw(7).op('-').jz('target_view')
     m.raw(1).op('-').jz('drones_view')
     m.raw(1).op('-').jz('charge_view').jump('target_number')
-    m.label('range_view').get(27,2).jump('draw_range')
+    m.label('range_view').page_bytes(27,0x62,0x4C).jump('draw_range')
     m.label('target_view').ld(8).st('C').ld(7).st('D').ld(6).st('B').visit(29,'battle_frame').op('ret')
     m.label('drones_view').ld(6).st('C').set('D',GLYPHS['d']).jump('draw_number')
-    m.label('charge_view').get(27,6).set('D',GLYPHS['P']).jump('draw_number')
+    m.label('charge_view').page_bytes(27,0x66,0x4C).set('D',GLYPHS['P']).jump('draw_number')
     m.label('target_number').ld(5).st('C').set('D',GLYPHS['t']).jump('draw_number')
-    m.label('contact_name').get(27,0).raw(4).op('-').jz('alien_name')
+    m.label('contact_name').page_bytes(27,0x60,0x4C).raw(4).op('-').jz('alien_name')
     show_text(m,'pirate');m.op('ret')
     m.label('alien_name');show_text(m,'thargoid');m.op('ret')
     m.label('show_result').ld('A').st('F').jump('show_message')

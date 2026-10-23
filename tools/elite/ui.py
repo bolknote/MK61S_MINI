@@ -37,13 +37,6 @@ def add_ui(a):
                                   for byte in [*(int(d) for d in f'{value:07d}'),0x52]))
     m.label('range_pattern').n(8).op('*').st('E').raw(0x8E)
 
-    m=a.module(4,'arithmetic')
-    # mod10 has no callers; the two mod100 expressions are shorter in place
-    # once their shared procedure and its bank continuation are removed.
-    # Coordinates now come from cached world IDs; mod256 has no callers.
-    # Fraction extraction is exact over mod16's 0..65535 domain.
-    m.label('mod16').n(16).op('/','frac').n(16).op('*').op('ret')
-
     m=a.module(18,'messages')
     for label,text in [('title','三 ELItE 三 СП'),('victory','YES. CLEAr СП'),
                        ('defeat','dEAd      СП'),('escape','SAFE      СП'),
