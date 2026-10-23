@@ -15,10 +15,10 @@ OUT=ROOT/'programs/games/ELITE'
 def outputs():
     banks,info=create_game().link()
     check_layout(info)
-    # A new layout may leave an entire bank free. Keep the complete image,
-    # including zero-filled holes, rather than requiring every bank as a key.
+    # Keep zero-filled holes at their linked addresses. After autoexec's
+    # reinit, the unwritten end of the last allocated bank is already zero.
     image=b''.join(banks.get(bank,bytes(BANK_SIZE)) for bank in range(32))
-    files={OUT/'elite.bin':program_binary(image)}
+    files={OUT/'elite.bin':program_binary(image.rstrip(b'\0'))}
     files[OUT/'autoexec.m61']=(b'open? manual.md\nreinit\nbind OK run :help\n'
                              b'load 0000 elite.bin\nrun\nret\n\n'
                              b':help\nopen? manual.md\nret\n')

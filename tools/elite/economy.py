@@ -42,7 +42,8 @@ def add_economy(a):
     # For i in 0..255 the packed world is (64257*i+3160320) mod 2**24.
     # Subtract the modulus in the constant term; one add repairs negatives.
     # All intermediates fit eight digits. Keep the same names and economies.
-    m.label('world').n(64257).op('*').n(13616896).op('-').jge('world_ready').n(16777216).op('+')
+    # 4096 squared is the exact modulus, with three fewer literal bytes.
+    m.label('world').n(64257).op('*').n(13616896).op('-').jge('world_ready').n(4096).op('square','+')
     m.label('world_ready').op('ret')
     # Keep the selected ID, already present before packing its name. The
     # two MARKET coordinate caches avoid unpacking both names for each trip.
@@ -51,7 +52,7 @@ def add_economy(a):
     m.label('select_world').ld(0).n(70).op('-').st('E').call('world').page_bytes(24,0x42).page_bytes(26,0x6E,0x41).set('A',8).op('ret')
     # An arrival makes the selected ID current. The new-game entry resets
     # both caches to zero before reaching this shared market initialization.
-    m.page(26,'init_market').ld(1).st(0).ld('C').n(1048576).op('/','int').st(2)
+    m.page(26,'init_market').ld(1).st(0).ld('C').n(1024).op('square','/','int').st(2)
     m.label('market_stock').n(30)
     for i in range(3,9):m.st(i)
     m.op('ret')
@@ -141,13 +142,13 @@ def add_economy(a):
     m.n(16).op('*','-','abs').ld('C').op('abs','+').st('C')
     # Ms exchanges preserve X, already equal to RC.
     m.close_page(26).st(2).op('ret')
-    m.label('distance_view').call('distance').set('D',GLYPHS['r']).jump('draw_number')
+    m.label('distance_view').call('distance').n(GLYPHS['r'],lift=False).jump('draw_number')
 
     m=a.module(10,'flight')
     m.label('jump').call('distance').jz('bad_action')
     m.page_bytes(25,0x66,0x4C).n(100).op('/','int').n(100).op('/','frac').n(100).op('*').ld(2).op('-').jneg('bad_action')
     m.ld(2).st('C').visit(24,'jump_tick').ld('D').jneg('bad_action').ld('C').jz('alien_contact')
-    m.st(3).ld('E').n(65536).op('/','int').n(16).op('/','frac').n(16).op('*').n(4).op('/','int').n(2).op('+')
+    m.st(3).ld('E').n(256).op('square','/','int').n(16).op('/','frac').n(16).op('*').n(4).op('/','int').n(2).op('+')
     m.ld(3).op('swap','-').jneg('pirate_contact').jump('arrive')
     m.label('alien_contact').n(4).jump('start_contact')
     m.label('pirate_contact').n(2).jump('start_contact')

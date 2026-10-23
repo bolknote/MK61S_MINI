@@ -57,7 +57,8 @@ def add_ui(a):
     # The numeric formatter preserves SP. Only good_prefix's wrapped prefix
     # needs to restore the suffix before entering number_common.
     m=a.module(8,'format')
-    m.page(29,'number_frame').ld('D').st(0)
+    # X carries the prefix through the page exchange; RC carries the value.
+    m.page(29,'number_frame').st(0)
     m.label('number_common')
     m.raw(0x2F,0x02,0x2F,0x6C,0x2F,0x53).op('ret')
     m.end_page().page(29,'name_frame')
@@ -111,7 +112,7 @@ def show_text(m, label):
 
 def show_number(m, prefix):
     # X/RC from a page GET. Preserve it while setting the prefix.
-    m.st('C').set('D',GLYPHS[prefix]).visit(29,'number_frame')
+    m.st('C').n(GLYPHS[prefix],lift=False).visit(29,'number_frame')
 
 def show_name(m):
     # The world READ already returns the packed name in both X and RC.

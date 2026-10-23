@@ -918,7 +918,8 @@ def main():
         for field in ('pc','x','regs','frame','pages','auto_display','segmented','revision'):
             assert before[field]==after[field],('OK changed game state',field,before,after)
     # Every scenario executes the real binary decoder and checks the CRC of
-    # the actual destination. The header describes the complete linked image.
+    # the actual destination. Only the trailing zeros supplied by reinit and
+    # bank allocation are omitted; internal holes keep their linked addresses.
     banks,info=create_game().link()
     check_layout(info)
     relink=create_game()
@@ -926,7 +927,7 @@ def main():
     assert set(info['banks'])=={str(bank) for bank in banks}
     image=b''.join(banks.get(bank,bytes(112)) for bank in range(32))
     binary=(directory/'elite.bin').read_bytes()
-    assert int.from_bytes(binary[:4],'little')==zlib.crc32(image)
+    assert int.from_bytes(binary[:4],'little')==zlib.crc32(image.rstrip(b'\0'))
     assert len(binary)<2300
     for path in directory.glob('*.m61'):
         assert path.stat().st_size<=1536
