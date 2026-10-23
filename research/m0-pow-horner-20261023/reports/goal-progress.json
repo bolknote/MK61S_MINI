@@ -1,0 +1,49 @@
+{
+  "previous_goal_turn_classification": "progress: research checkpoint committed as5d682046f; source reproduction verified",
+  "current_goal_turn_classification": "progress: new numerical algorithm and finite software speed gate achieved",
+  "candidate": "V138",
+  "build": "83CF4AC4",
+  "objective_complete": false,
+  "completion_audit": [
+    {
+      "requirement": "At least Qfplib performance on every required operation",
+      "state": "partially verified",
+      "evidence": "Fresh117-group ARM instruction matrix:115 faster,2 equal,0 slower on23352 inputs. Real cycles and general-input speed are not proved."
+    },
+    {
+      "requirement": "Correct RNE for every function",
+      "state": "incomplete",
+      "evidence": "Changed fast paths have analytical source-bound certificates and fresh MPFR/endpoint runs. General pow still has a final undecided1024-bit trap; totality is unproved."
+    },
+    {
+      "requirement": "Keep M4 performance unchanged",
+      "state": "verified for changed source scope",
+      "evidence": "Fresh M4 O3 soft/hard preprocessing and allocated code/data identity; existing M4 runtime sources identical."
+    },
+    {
+      "requirement": "Avoid large tables and preserve resources",
+      "state": "verified",
+      "evidence": "No coefficient additions or global RAM additions; existing8192/2048-byte tables identical. RAM198856,heap30520,scratch4072/4096,image extent1537008."
+    },
+    {
+      "requirement": "No dependency on libgcc or a new firmware compiler",
+      "state": "verified for this image",
+      "evidence": "No linked libgcc archive members; exact GNU assembly/reference equivalence and successful full GCC/GNU-as build."
+    },
+    {
+      "requirement": "Hardware acceptance and production delivery",
+      "state": "pending",
+      "evidence": "No USB ownership transfer, physical measurements, hardware acceptance or production promotion in this turn."
+    }
+  ],
+  "next_actions": [
+    "Wait for an explicit current USB handoff from the authorized coordinator before any device access. Confirm current accepted firmware and backups on handoff.",
+    "Measure real cycles against Qfplib; the four XIP models still show extra misses in two hard streams.",
+    "Investigate the final general-pow fallback using primary CORE-MATH sources; preserve strict rounding and never replace an undecided enclosure with a guess."
+  ],
+  "git_head": "5d682046fa30046771a744ef5dd63e96d8cf1637",
+  "new_commits_authorized": false,
+  "root_promoted": false,
+  "hardware_accessed": false,
+  "all_jobs_observed_terminal": true
+}

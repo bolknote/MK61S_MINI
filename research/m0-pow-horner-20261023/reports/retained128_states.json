@@ -1,0 +1,14 @@
+{
+  "status": "PASS_BIT_IDENTICAL_RETAINED128_ARM_STATES",
+  "counts": {
+    "squares": 6000,
+    "products": 6000,
+    "base_products": 6000,
+    "aliases": 353
+  },
+  "result_sha256": "180b1f1366decaa3a7f5f9106740427fb854a464be2a312066c208a0b0093947",
+  "parent_elf_sha256": "d586157825ba3a60e81419c3a20743e28ae40445ed132dad5758dc81695524dd",
+  "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+  "producer_sha256": "f6c9dca2dafe5259d9e2358a56fbce62657c73bd911a351cb3b1308447e0ae1c",
+  "scope": "Complete24-byte outputs match qualified V122 kernels, including zero-low squares and multiplier aliases; new exact-base specialization matches the generic parent multiply. Every ARM call checks ABI/bounded writes. Finite state test; algebra and public MPFR runs are separate."
+}

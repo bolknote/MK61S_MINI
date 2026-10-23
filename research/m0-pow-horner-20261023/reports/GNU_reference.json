@@ -1,0 +1,23 @@
+{
+  "status": "PASS_EXACT_GNU_KERNEL_ALLOCATIONS_AND_NAMED_RELOCATIONS",
+  "cpp_sha256": "7a3591fa5a69e3e07f5a2f27e5be6debee4f36f1739d6b876c3c8b369c242dae",
+  "reference_object_sha256": "4075da1cb04f870bd5e1d99c5aaf13262194f7e3e00c684d816472275d554f5d",
+  "gnu_object_sha256": "1a4ac09a1c600bbae5606d240e35bdceb62f31631326c942202e1d4fe23eb7b3",
+  "assembly_sha256": "5d379a953a2d820adf089c11110037fa16e29f1044761357eb2e186fb1938658",
+  "forced_imm3_encodings": 99,
+  "allocated_sections": [
+    ".m0_pow_root_prefix",
+    ".ARM.exidx.m0_pow_root_prefix",
+    ".m0_pow_boundary_exact",
+    ".ARM.exidx.m0_pow_boundary_exact",
+    ".m0_pow_near_one_refine",
+    ".ARM.exidx.m0_pow_near_one_refine",
+    ".m0_pow_square_fixed",
+    ".ARM.exidx.m0_pow_square_fixed",
+    ".m0_pow_tail_extra",
+    ".ARM.exidx.m0_pow_tail_extra"
+  ],
+  "whole_image_byte_identity_claimed": false,
+  "new_compiler_dependency": false,
+  "producer_sha256": "180d047e81f44d33ab18f5e6e3ad23e2586a94813a82fc7afb3817de542a59ad"
+}

@@ -1,0 +1,205 @@
+{
+  "status": "RESEARCH_CHECKPOINT_NOT_HARDWARE_ACCEPTANCE",
+  "candidate": "V138",
+  "build": "83CF4AC4",
+  "archived_originals": {
+    "HANDOFF.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/HANDOFF.json",
+      "sha256": "5492a7943e4d5bc00fd001e6f19853df05de547e66e74a82665ed13f854dae21"
+    },
+    "firmware-manifest.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/firmware/manifest.json",
+      "sha256": "584c48a4c7a2def0bdc8427948ec8e80440aa9e17bcd44570686faadbff4c172"
+    },
+    "hybrid-from-V122.patch": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/hybrid-from-V122.patch",
+      "sha256": "157dd330feb0adcb783f32661f83a4d6f3056809b19a9f9358b63412ab7db7b9"
+    },
+    "reports/all12.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/all12.json",
+      "sha256": "ecb7f499310a3c011755ab2657ac83a57c4ac4c0880108c1fdce39ca5a70d514"
+    },
+    "reports/affected_pow.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/affected.json",
+      "sha256": "fdea2ac4cf88e4736fbfc3723c78c7375da1e4bae64dec9f0dbbdbfac96a3507"
+    },
+    "reports/extra_endpoints.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/endpoints.json",
+      "sha256": "5798eb7acf9bd47991db1466e6d872dd53371a4d82ec15297c80dda2cc7ec3f8"
+    },
+    "reports/raw_endpoints.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/raw-endpoints.json",
+      "sha256": "49a125cde59cd20f9074624505651df2de0b892457f90350efc62aa8c92d5c5b"
+    },
+    "reports/retained128_states.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/cores.json",
+      "sha256": "17380aa9143d3fa83a1b0cdcb13c5a104b646ab01c0da3319b9b7924a2bb0669"
+    },
+    "reports/certificate.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/certificate.json",
+      "sha256": "54c263217f36d533536d2a9219457fa6de8642cbd5f6def70219a4c7cb2fa1b2"
+    },
+    "reports/GNU_reference.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/gnu-equivalence.json",
+      "sha256": "186278773ec181cdad2645486ea8ad07724f0e3841a59ec51c7d127cd99f17e9"
+    },
+    "reports/source_kernel_resources.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/validation.json",
+      "sha256": "119fafabd8b84693b4e16a2d293b5e76f8942df61647aa3f94bf0fdea5ee4827"
+    },
+    "reports/source_scope.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/source-scope.json",
+      "sha256": "b08f5a9d46ffa5fed90a1d65116d801069db4850955fb46a1b4f633993e99a8c"
+    },
+    "reports/M4_isolation.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/m4-check/m4-isolation.json",
+      "sha256": "66c635846efa7ecdd6b18db6ded64abd2e20acafcf8bbaafff90d7587ff57dce"
+    },
+    "reports/generic_M0_isolation.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/generic-m0-isolation.json",
+      "sha256": "32ba1451bd7ea6b0ba6a13db3452f53cf6560f24b22eff7954b6bbecbce710af"
+    },
+    "reports/matrix.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/instruction-matrix.json",
+      "sha256": "7cc7706bc691e7b291e9cb0c113418bc8ec7e6deed704a329c4971cb79828332"
+    },
+    "reports/profile.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/profile.json",
+      "sha256": "b25d773f7969223a220ed6464a0cd906af7cb96321763ead33cbb55506ba5bfc"
+    },
+    "reports/cache.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/cache-probe.json",
+      "sha256": "99e594a4f1219e4b9149e363eda24d4c8c2259c754db5b3dbb9dfe5891a219c5"
+    },
+    "reports/runtime.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/runtime-memory.json",
+      "sha256": "353b75c6008c24734bae5e42640f7cafdd40b3b6da041ebca7666ecb1040f8fb"
+    },
+    "reports/preparation.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/preparation.json",
+      "sha256": "4dd6f9ca0c19f1b187708676ddffec7160326b0996330a5d949977ed6b457bbb"
+    },
+    "reports/qualification-jobs.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/qualification-jobs.json",
+      "sha256": "d16edf6d30863e3b5f7c35fefc8d1914f846d7dc6d939ad3271582374d50a928"
+    },
+    "reports/qualification-terminal.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/qualification-terminal.json",
+      "sha256": "b9ed8e37605eea53e71b23fa769d6cecebf8e0adc94c8b036e4c690e1fd7060d"
+    },
+    "reports/handoff-audit.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/handoff-audit.json",
+      "sha256": "8148fa9751770b3c34af11b00df0740ba51901091e8ba25f66ba6aa3af89e923"
+    },
+    "reports/goal-progress.json": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/goal-progress.json",
+      "sha256": "a34c6da3973e7d07145aeb9d76f289011cb9d798b3b2524c0ceff9fe4971ca50"
+    },
+    "producers/prepare.py": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/prepare.py",
+      "sha256": "180d047e81f44d33ab18f5e6e3ad23e2586a94813a82fc7afb3817de542a59ad"
+    },
+    "producers/certify.py": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/certify.py",
+      "sha256": "b72a95d6ac30fe76ae2a57c2457f218111be24c7c4c14ae868782eb13dac438a"
+    },
+    "producers/validate.py": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/validate.py",
+      "sha256": "2c33b0529db3012b5df0b4950cf560933102e0591037e85e7d0d9f0b6f952b74"
+    },
+    "producers/endpoints.py": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/endpoints.py",
+      "sha256": "d54e4017203a34bf1e80214b75f292ef53db9909c1920d5a4099acecbe25ee68"
+    },
+    "producers/compare-cores.py": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/compare-cores.py",
+      "sha256": "f6c9dca2dafe5259d9e2358a56fbce62657c73bd911a351cb3b1308447e0ae1c"
+    },
+    "producers/preserve-scope.py": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/preserve-scope.py",
+      "sha256": "fd5381bb2173d3666ec35889fe35f558d0135b4b06acb01c55c29aca1f2be43e"
+    },
+    "producers/cache-probe.py": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/cache-probe.py",
+      "sha256": "be088e6109d46364efc7d692a1b0b49a2e65afb9a540216583a609a880dbf0ab"
+    },
+    "producers/M4-isolation.py": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/M4-isolation.py",
+      "sha256": "79459f66c023e9b54d8762157d59db7208f6de79391f75368bad8b319d5e80f1"
+    },
+    "producers/generic-isolation.py": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/generic-isolation.py",
+      "sha256": "414994008e4c3ac20ddf5baf099250da06764dbe7421813849b72937c339cadf"
+    },
+    "producers/preserve-handoff.py": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/preserve-handoff.py",
+      "sha256": "d6a007e8255f978b276e71eb527fe8a7a2c78434b26693ad4b4692b395c43641"
+    },
+    "kernels.cpp": {
+      "path": ".build/m0-pow-horner-inline-v137-20261023/kernels.cpp",
+      "sha256": "7a3591fa5a69e3e07f5a2f27e5be6debee4f36f1739d6b876c3c8b369c242dae"
+    },
+    "kernels-gnu.S": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/kernels-gnu.S",
+      "sha256": "5d379a953a2d820adf089c11110037fa16e29f1044761357eb2e186fb1938658"
+    },
+    "source/code/native_eabi_m0_pow_fast.inc": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/source/code/native_eabi_m0_pow_fast.inc",
+      "sha256": "bd5056f7d50e31d1968978db836112fd13e867e4c9c2238979a3f68514351920"
+    },
+    "source/code/native_eabi_m0_pow_kernels.inc": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/source/code/native_eabi_m0_pow_kernels.inc",
+      "sha256": "8196b4a475d6d144fd6b2403a9ccdbccea10ea37f32a900049ef2f075af0adfa"
+    },
+    "source/code/native_eabi_m0_pow_root64.inc": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/source/code/native_eabi_m0_pow_root64.inc",
+      "sha256": "9d0c5d40421caba060765e524753d24d1600dde8ac4a05f8ba207109a7029ef7"
+    },
+    "source/code/native_eabi_m0_pow_root_prefix.inc": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/source/code/native_eabi_m0_pow_root_prefix.inc",
+      "sha256": "7b235b2468e22b44575e9c6d38a339493245be5b6f3df3002ef04da6b83664a4"
+    },
+    "source/ports/picocalc/m0_math_extension.ld": {
+      "path": ".build/m0-pow-horner-final-v138-20261023/source/ports/picocalc/m0_math_extension.ld",
+      "sha256": "072b22a1f1bf92f85b555c03bdfbf74f1da955e9eb997a3a862fb01d926b394c"
+    }
+  },
+  "external_producers": {
+    "tests/qualify_m0_rounding.py": {
+      "path": "tests/qualify_m0_rounding.py",
+      "sha256": "b7513feae2bd8a1de6060d19abef546094447af721aa0267e709804f8fd4d0bd"
+    },
+    "tests/qualify_m0_pow_worst.py": {
+      "path": "tests/qualify_m0_pow_worst.py",
+      "sha256": "96f0f8537bf4b75895efc32120094852ba5156b96d5827b85614a3ed875dfabb"
+    },
+    "tests/profile_m0_math_matrix.py": {
+      "path": "tests/profile_m0_math_matrix.py",
+      "sha256": "f417cee095a2932bb5b67c3115d21c318c92441a26f712a9bbd9e84b7ab3ce3c"
+    },
+    "tests/native_eabi_m0_arm_self_test.py": {
+      "path": "tests/native_eabi_m0_arm_self_test.py",
+      "sha256": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3"
+    },
+    "tests/m0_mpfr_oracle.py": {
+      "path": "tests/m0_mpfr_oracle.py",
+      "sha256": "fb880de9b8fe7d4b0fc9225121b90d7c41d976fec01b67bf4f7d6e2a89c7000a"
+    },
+    "tests/picocalc_memory_arm_self_test.py": {
+      "path": "tests/picocalc_memory_arm_self_test.py",
+      "sha256": "327971954b9c1f28df24ad1fa3dd89c8f7645f1091e88b5a6710198d886e69c9"
+    },
+    "research/m0-pow-root-prefix-20261023/raw-arm.py": {
+      "path": "research/m0-pow-root-prefix-20261023/raw-arm.py",
+      "sha256": "313b1c7d5e8a3bbdf412352283268bfdac70913aaf5eb160eeb1f07abdd53970"
+    },
+    "research/m0-pow-integer64-20261023/profile-hard.py": {
+      "path": "research/m0-pow-integer64-20261023/profile-hard.py",
+      "sha256": "308e154a143c651442fb16d00e08b315a816f0738df99d9daf26ed79dece15d6"
+    }
+  },
+  "authorization": "Human explicitly requested this intermediate commit. Original HANDOFF and reports retain their pre-checkpoint historical fields unchanged.",
+  "hardware_accessed": false,
+  "root_promoted": false,
+  "pushed": false
+}

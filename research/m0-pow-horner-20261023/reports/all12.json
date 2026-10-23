@@ -1,0 +1,125 @@
+{
+  "status": "PASS",
+  "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+  "mpfr": "4.2.2",
+  "oracle": "Directed MPFR bounds; both endpoints round to the same binary64 (RNE).",
+  "operations": {
+    "sqrt": {
+      "status": "PASS",
+      "cases": 20018,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "d1a31ae386a9116f3c857f3b092e59445e194dafa0b43fc0a6a76b333f015b66"
+    },
+    "sin": {
+      "status": "PASS",
+      "cases": 46304,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "e4f7d7a430cdf81c023ed5d178b89ad7ebb34bb0bb4e086b84ab728768a6a810"
+    },
+    "cos": {
+      "status": "PASS",
+      "cases": 46304,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "31c7713ef263e0846c3a657141ea90ef6efaccc6503ee63d0a6bc814e46303ae"
+    },
+    "tan": {
+      "status": "PASS",
+      "cases": 46304,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "0b91b2ccf970be9ac49609677395b57a8da7e0d8f72ea1c03a403fea30adec09"
+    },
+    "atan": {
+      "status": "PASS",
+      "cases": 40401,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "51854bf0521cf4965ceb52926af2810f44f7b6dacbc4dc65260d5c94836349d0"
+    },
+    "asin": {
+      "status": "PASS",
+      "cases": 40070,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "21070166dbb46560bf8d71449ee35c0b614a8172b3698cfea51331332ef0b736"
+    },
+    "acos": {
+      "status": "PASS",
+      "cases": 40070,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "03e9eaaa377c361a2ffe38572b569172297323146460a88ad6b4e51ed9cd2f34"
+    },
+    "ln": {
+      "status": "PASS",
+      "cases": 45397,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "65f779defabf28160eaf5fbe5f2e465fdef151d00f814b8be5d18002fdacc905"
+    },
+    "log10": {
+      "status": "PASS",
+      "cases": 45397,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "1dc415a81aadeed6e72a4cf71e3cf7437065d1bba70801eb0810204568805f83"
+    },
+    "exp": {
+      "status": "PASS",
+      "cases": 40196,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "27785ff042c0635482f443c4cba5ff08d2452b485887914e2cbb7547f15bfd75"
+    },
+    "pow": {
+      "status": "PASS",
+      "cases": 40395,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "0427494149a0cda2d3e41dc396ddc51af1744ecc7c7b1170290fb016fc4dc377"
+    },
+    "fma": {
+      "status": "PASS",
+      "cases": 43350,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "dae9863de1d6db36aad1866a47d5cf8e0e94eafb98c6be733b5674924c13671a"
+    }
+  },
+  "abi": "Every call verifies R4-R11, SP, bounded stack writes.",
+  "semantics": "RNE return values; errno and floating exception flags are not implemented.",
+  "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+  "known_limitations": [
+    "An undecided owned 1024-bit pow refinement still traps; all-input totality is unproved."
+  ],
+  "scope": "Finite corpus, not an exhaustive proof over every binary64 input.",
+  "actual_bootrom": {
+    "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "initializers": [
+      {
+        "name": "__aeabi_bits_init",
+        "table": "aeabi_bits_funcs",
+        "pointers": [
+          "0x309",
+          "0x357",
+          "0x38f",
+          "0x32d"
+        ]
+      },
+      {
+        "name": "__aeabi_mem_init",
+        "table": "aeabi_mem_funcs",
+        "pointers": [
+          "0x26b9",
+          "0x261d",
+          "0x26ad",
+          "0x2605"
+        ]
+      }
+    ],
+    "intrinsic_models": []
+  }
+}

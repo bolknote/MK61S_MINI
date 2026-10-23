@@ -1,0 +1,1032 @@
+{
+  "status": "PASS_MODELED_NOT_HARDWARE",
+  "groups": [
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 18,
+      "operation": "tan",
+      "stream": "small_medium_remainder",
+      "cases": 128,
+      "mean_instructions": 1201.9609375,
+      "flash_data_reads_per_call": 24.875,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-018.zlib",
+        "sha256": "c528a3cab1d9a99f8e452ca7baa3a6a18549f93b64e9304abfd3541baa2cdeab"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 153334,
+          "hits": 152977,
+          "misses": 357,
+          "misses_per_call": 2.7890625
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 153334,
+          "hits": 152644,
+          "misses": 690,
+          "misses_per_call": 5.390625
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 153334,
+          "hits": 152932,
+          "misses": 402,
+          "misses_per_call": 3.140625
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 153334,
+          "hits": 152554,
+          "misses": 780,
+          "misses_per_call": 6.09375
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 24,
+      "operation": "sqrt",
+      "stream": "legacy",
+      "cases": 12,
+      "mean_instructions": 136.16666666666666,
+      "flash_data_reads_per_call": 5.0,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-024.zlib",
+        "sha256": "7f2b5b5f072b838c6760f79e5128340dda35594d8aa164bb9b1e70f1594c68c8"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 1694,
+          "hits": 1694,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 1694,
+          "hits": 1694,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 1694,
+          "hits": 1694,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 1694,
+          "hits": 1694,
+          "misses_per_call": 0.0
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 26,
+      "operation": "sqrt",
+      "stream": "normal_exponents",
+      "cases": 256,
+      "mean_instructions": 134.59765625,
+      "flash_data_reads_per_call": 5.0,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-026.zlib",
+        "sha256": "5292de6b59cc8b243d94c8905ccfdf246d44e8f38d8fcd8e1ad350ec4c180505"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 35737,
+          "hits": 35737,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 35737,
+          "hits": 35737,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 35737,
+          "hits": 35737,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 35737,
+          "hits": 35737,
+          "misses_per_call": 0.0
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 27,
+      "operation": "sqrt",
+      "stream": "normalized",
+      "cases": 256,
+      "mean_instructions": 134.66015625,
+      "flash_data_reads_per_call": 5.0,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-027.zlib",
+        "sha256": "89084ca276597012b68476d45981910b5111f2f33a11ac259a5cafaae135487a"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 35753,
+          "hits": 35753,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 35753,
+          "hits": 35753,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 35753,
+          "hits": 35753,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 35753,
+          "hits": 35753,
+          "misses_per_call": 0.0
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 30,
+      "operation": "sqrt",
+      "stream": "segment_edges",
+      "cases": 512,
+      "mean_instructions": 134.123046875,
+      "flash_data_reads_per_call": 5.0,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-030.zlib",
+        "sha256": "0ccc901b3de8af7440f8bdc0d2b18c94182182167f339836977fb7ade0eaa915"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 71231,
+          "hits": 71231,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 71231,
+          "hits": 71231,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 71231,
+          "hits": 71231,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 71231,
+          "hits": 71231,
+          "misses_per_call": 0.0
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 31,
+      "operation": "sqrt",
+      "stream": "segment_edges",
+      "cases": 512,
+      "mean_instructions": 134.5546875,
+      "flash_data_reads_per_call": 5.0,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-031.zlib",
+        "sha256": "97e3bf4d314a8feb39904d94ba572f72f742861bc40998e439502934ff8bc944"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 71452,
+          "hits": 71452,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 71452,
+          "hits": 71452,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 71452,
+          "hits": 71452,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 71452,
+          "hits": 71452,
+          "misses_per_call": 0.0
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 32,
+      "operation": "sqrt",
+      "stream": "segment_edges",
+      "cases": 512,
+      "mean_instructions": 135.072265625,
+      "flash_data_reads_per_call": 5.0,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-032.zlib",
+        "sha256": "1b4c9004de8d1df2943a33a672d0ccc28f34ce9f16b4d063610f28e084358a09"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 71717,
+          "hits": 71717,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 71717,
+          "hits": 71717,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 71717,
+          "hits": 71717,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 71717,
+          "hits": 71717,
+          "misses_per_call": 0.0
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 47,
+      "operation": "f2d",
+      "stream": "normal",
+      "cases": 512,
+      "mean_instructions": 13.0,
+      "flash_data_reads_per_call": 0.0,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-047.zlib",
+        "sha256": "ec857d7d4ce408e6b00eaf6eb7c36611b3a60f0033d661e75be049d384a9944a"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 6656,
+          "hits": 6656,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 6656,
+          "hits": 6656,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 6656,
+          "hits": 6656,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 6656,
+          "hits": 6656,
+          "misses_per_call": 0.0
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 54,
+      "operation": "ln",
+      "stream": "normal_exponents",
+      "cases": 512,
+      "mean_instructions": 587.115234375,
+      "flash_data_reads_per_call": 22.5078125,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-054.zlib",
+        "sha256": "e29eaf37ab79b7253fa02d59e5a1f8a8b3e276f1f536a61d5a524fff02a8b067"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 312639,
+          "hits": 312631,
+          "misses": 8,
+          "misses_per_call": 0.015625
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 312639,
+          "hits": 312625,
+          "misses": 14,
+          "misses_per_call": 0.02734375
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 312639,
+          "hits": 312627,
+          "misses": 12,
+          "misses_per_call": 0.0234375
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 312639,
+          "hits": 312617,
+          "misses": 22,
+          "misses_per_call": 0.04296875
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 55,
+      "operation": "ln",
+      "stream": "normalized",
+      "cases": 512,
+      "mean_instructions": 540.65234375,
+      "flash_data_reads_per_call": 19.708984375,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-055.zlib",
+        "sha256": "6e9131b9a7e5516e2452e5f72e5e833b1099b066ac23d9e8071009679536cfef"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 287754,
+          "hits": 287557,
+          "misses": 197,
+          "misses_per_call": 0.384765625
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 287754,
+          "hits": 287381,
+          "misses": 373,
+          "misses_per_call": 0.728515625
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 287754,
+          "hits": 287485,
+          "misses": 269,
+          "misses_per_call": 0.525390625
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 287754,
+          "hits": 287242,
+          "misses": 512,
+          "misses_per_call": 1.0
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 56,
+      "operation": "ln",
+      "stream": "near_one",
+      "cases": 512,
+      "mean_instructions": 408.642578125,
+      "flash_data_reads_per_call": 11.18359375,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-056.zlib",
+        "sha256": "88c7294a28dc6eb4685fc859b465fe864e933e096c722d5b8b9dee32cb34da92"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 208237,
+          "hits": 208237,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 208237,
+          "hits": 208237,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 208237,
+          "hits": 208237,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 208237,
+          "hits": 208237,
+          "misses_per_call": 0.0
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 57,
+      "operation": "ln",
+      "stream": "near_one_interval",
+      "cases": 512,
+      "mean_instructions": 577.5546875,
+      "flash_data_reads_per_call": 14.625,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-057.zlib",
+        "sha256": "27032167821d867afcae868467a7c34b0056f7487f0381e4af48c7d216c2d510"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 303300,
+          "hits": 303048,
+          "misses": 252,
+          "misses_per_call": 0.4921875
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 303300,
+          "hits": 302814,
+          "misses": 486,
+          "misses_per_call": 0.94921875
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 303300,
+          "hits": 302947,
+          "misses": 353,
+          "misses_per_call": 0.689453125
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 303300,
+          "hits": 302622,
+          "misses": 678,
+          "misses_per_call": 1.32421875
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 106,
+      "operation": "log10",
+      "stream": "composed_normal_exponents",
+      "cases": 256,
+      "mean_instructions": 762.15625,
+      "flash_data_reads_per_call": 27.5078125,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-106.zlib",
+        "sha256": "ac966c0ca451885edb96656717deb1ef057d8a742cccb68b3633d4400e49b551"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 202666,
+          "hits": 202658,
+          "misses": 8,
+          "misses_per_call": 0.03125
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 202666,
+          "hits": 202650,
+          "misses": 16,
+          "misses_per_call": 0.0625
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 202666,
+          "hits": 202654,
+          "misses": 12,
+          "misses_per_call": 0.046875
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 202666,
+          "hits": 202642,
+          "misses": 24,
+          "misses_per_call": 0.09375
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 107,
+      "operation": "log10",
+      "stream": "composed_near_one",
+      "cases": 257,
+      "mean_instructions": 599.7859922178989,
+      "flash_data_reads_per_call": 17.770428015564203,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-107.zlib",
+        "sha256": "7e06fc35757c02990577654b27c93cce53d1984fd3487567df67c8b47c856549"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 153257,
+          "hits": 153257,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 153257,
+          "hits": 153257,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 153257,
+          "hits": 153257,
+          "misses_per_call": 0.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 153257,
+          "hits": 153257,
+          "misses_per_call": 0.0
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 108,
+      "operation": "log10",
+      "stream": "composed_powers_of_ten",
+      "cases": 121,
+      "mean_instructions": 758.5867768595041,
+      "flash_data_reads_per_call": 27.31404958677686,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-108.zlib",
+        "sha256": "cf1fb8e7706ad253526b8b9ee0724a3129912d543da02492fac58eb22e6713fd"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 95335,
+          "hits": 95319,
+          "misses": 16,
+          "misses_per_call": 0.1322314049586777
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 95335,
+          "hits": 95304,
+          "misses": 31,
+          "misses_per_call": 0.256198347107438
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 95335,
+          "hits": 95314,
+          "misses": 21,
+          "misses_per_call": 0.17355371900826447
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 95335,
+          "hits": 95295,
+          "misses": 40,
+          "misses_per_call": 0.3305785123966942
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 115,
+      "operation": "pow",
+      "stream": "composed_exact_exponents",
+      "cases": 256,
+      "mean_instructions": 151.8671875,
+      "flash_data_reads_per_call": 7.54296875,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-115.zlib",
+        "sha256": "71804c85f3446a3b34bb148a9c2f06f721b6025b5a7080f8b3710f9f54a570c9"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 40473,
+          "hits": 40467,
+          "misses": 6,
+          "misses_per_call": 0.0234375
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 40473,
+          "hits": 40463,
+          "misses": 10,
+          "misses_per_call": 0.0390625
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 40473,
+          "hits": 40464,
+          "misses": 9,
+          "misses_per_call": 0.03515625
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 40473,
+          "hits": 40457,
+          "misses": 16,
+          "misses_per_call": 0.0625
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 116,
+      "operation": "pow",
+      "stream": "hard_pow_regular_exponents",
+      "cases": 128,
+      "mean_instructions": 1424.4453125,
+      "flash_data_reads_per_call": 30.515625,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-116.zlib",
+        "sha256": "790ab70d77b47513a65dafae191f20d0ae18631aed70f0a555c4215c8506e5da"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 173590,
+          "hits": 172453,
+          "misses": 1137,
+          "misses_per_call": 8.8828125
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 173590,
+          "hits": 171458,
+          "misses": 2132,
+          "misses_per_call": 16.65625
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 173590,
+          "hits": 172495,
+          "misses": 1095,
+          "misses_per_call": 8.5546875
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 173590,
+          "hits": 171524,
+          "misses": 2066,
+          "misses_per_call": 16.140625
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 117,
+      "operation": "pow",
+      "stream": "hard_pow_near_one_large_exponents",
+      "cases": 5,
+      "mean_instructions": 1507.6,
+      "flash_data_reads_per_call": 42.4,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-117.zlib",
+        "sha256": "a1f56803a6ed08a09a34d1079ab550de58d72b70cc5c29c31f2966006a846ed7"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 5721,
+          "hits": 5706,
+          "misses": 15,
+          "misses_per_call": 3.0
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 5721,
+          "hits": 5700,
+          "misses": 21,
+          "misses_per_call": 4.2
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 5721,
+          "hits": 5706,
+          "misses": 15,
+          "misses_per_call": 3.0
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 5721,
+          "hits": 5700,
+          "misses": 21,
+          "misses_per_call": 4.2
+        }
+      ]
+    },
+    {
+      "image": "V138",
+      "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+      "index": 118,
+      "operation": "pow",
+      "stream": "hard_pow_moderate",
+      "cases": 128,
+      "mean_instructions": 1532.3359375,
+      "flash_data_reads_per_call": 41.6640625,
+      "trace": {
+        "path": ".build/m0-pow-horner-final-v138-20261023/cache-final-trace-v138-118.zlib",
+        "sha256": "bd90803c65d106f4a18c4bd8d4186673157eed542b944308797c1c9586222a89"
+      },
+      "models": [
+        {
+          "policy": "LRU",
+          "fill": "whole_8byte_line",
+          "accesses": 201102,
+          "hits": 200604,
+          "misses": 498,
+          "misses_per_call": 3.890625
+        },
+        {
+          "policy": "LRU",
+          "fill": "requested_4byte_word",
+          "accesses": 201102,
+          "hits": 200186,
+          "misses": 916,
+          "misses_per_call": 7.15625
+        },
+        {
+          "policy": "FIFO",
+          "fill": "whole_8byte_line",
+          "accesses": 201102,
+          "hits": 200569,
+          "misses": 533,
+          "misses_per_call": 4.1640625
+        },
+        {
+          "policy": "FIFO",
+          "fill": "requested_4byte_word",
+          "accesses": 201102,
+          "hits": 200122,
+          "misses": 980,
+          "misses_per_call": 7.65625
+        }
+      ]
+    }
+  ],
+  "differences_vs_actual_ROM_V110": [
+    {
+      "image": "V138",
+      "index": 115,
+      "before": [
+        0.0078125,
+        0.01171875,
+        0.01171875,
+        0.01953125
+      ],
+      "after": [
+        0.0234375,
+        0.0390625,
+        0.03515625,
+        0.0625
+      ]
+    },
+    {
+      "image": "V138",
+      "index": 116,
+      "before": [
+        4.34375,
+        7.9921875,
+        4.5390625,
+        8.3515625
+      ],
+      "after": [
+        8.8828125,
+        16.65625,
+        8.5546875,
+        16.140625
+      ]
+    },
+    {
+      "image": "V138",
+      "index": 117,
+      "before": [
+        3.6,
+        6.0,
+        3.6,
+        6.0
+      ],
+      "after": [
+        3.0,
+        4.2,
+        3.0,
+        4.2
+      ]
+    },
+    {
+      "image": "V138",
+      "index": 118,
+      "before": [
+        1.046875,
+        1.6953125,
+        1.359375,
+        2.25
+      ],
+      "after": [
+        3.890625,
+        7.15625,
+        4.1640625,
+        7.65625
+      ]
+    }
+  ],
+  "baseline_report": {
+    "path": ".build/m0-pow-final-parent-v110-20261023/cache-probe.json",
+    "sha256": "fbd629c1bd7463d20f892bb6b3a6a0ef82028e725dd4641a648c125de1c94a9c"
+  },
+  "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "sdk_rom_intrinsic_models": [],
+  "benchmark_sha256": "521d9da4fa695e9a0c1abe6298c11e36f38c20fa181cea2ac4a353e9c23b495c",
+  "model_source_sha256": "76a6c65285420281806425870abacd155f9aaa67acf25d8287c5df20e3a5f05f",
+  "producer_sha256": "be088e6109d46364efc7d692a1b0b49a2e65afb9a540216583a609a880dbf0ab",
+  "assumptions": "Same previously checked 16 KiB / two-way / 8-byte-line cache geometry; LRU/FIFO replacement and whole-line/per-word fills are explicit model assumptions. These are not claims about undocumented prefetch or replacement.",
+  "scope": "Exact ARM instruction/data traces and exact results on the recorded finite groups per image, including every ln/log10 stream and the three difficult pow streams, with actual ROM and linked memory code. Two warm passes then a measured third pass. Only XIP accesses enter the cache model. Excludes caller prefetch, IRQs, other-core traffic and Qfplib batches. Not measured XIP counters or physical speed evidence.",
+  "physical_timing_available": false,
+  "goal_complete": false,
+  "differences_vs_V122": [
+    {
+      "index": 116,
+      "stream": "hard_pow_regular_exponents",
+      "before": [
+        6.8359375,
+        12.3984375,
+        7.0859375,
+        12.984375
+      ],
+      "after": [
+        8.8828125,
+        16.65625,
+        8.5546875,
+        16.140625
+      ]
+    },
+    {
+      "index": 118,
+      "stream": "hard_pow_moderate",
+      "before": [
+        1.796875,
+        3.4921875,
+        2.3359375,
+        4.484375
+      ],
+      "after": [
+        3.890625,
+        7.15625,
+        4.1640625,
+        7.65625
+      ]
+    }
+  ],
+  "V122_baseline_report": {
+    "path": ".build/m0-pow-root-prefix-v122-20261023/cache-probe.json",
+    "sha256": "ec774c5c896cf5f63b42d2d03c3a9eaf92fa7e743425e7d0a84a24f3d7f890d5"
+  },
+  "differences_vs_V134": [
+    {
+      "index": 116,
+      "stream": "hard_pow_regular_exponents",
+      "before": [
+        10.4375,
+        19.1796875,
+        9.4765625,
+        17.5
+      ],
+      "after": [
+        8.8828125,
+        16.65625,
+        8.5546875,
+        16.140625
+      ]
+    },
+    {
+      "index": 118,
+      "stream": "hard_pow_moderate",
+      "before": [
+        2.0859375,
+        3.9609375,
+        2.890625,
+        5.4453125
+      ],
+      "after": [
+        3.890625,
+        7.15625,
+        4.1640625,
+        7.65625
+      ]
+    }
+  ]
+}

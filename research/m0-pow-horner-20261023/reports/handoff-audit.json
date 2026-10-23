@@ -1,0 +1,12 @@
+{
+  "status": "PASS_V138_HANDOFF_AUDIT",
+  "handoff_sha256": "5492a7943e4d5bc00fd001e6f19853df05de547e66e74a82665ed13f854dae21",
+  "verified_path_hash_references": 39,
+  "unrelated_tracked_hashes_preserved": 37,
+  "git_status_identical_to_pre_checkpoint": true,
+  "index_empty": true,
+  "commit_created": false,
+  "pushed": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

@@ -1,0 +1,92 @@
+{
+  "status": "PASS",
+  "baseline": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-native-complete-20261020/source",
+  "current": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-horner-final-v138-20261023/source",
+  "scope": "Cortex-M4 O3 release, both soft and hard float ABIs: normalized preprocessing and every allocated code/data section identical; existing M4 runtime sources byte-identical",
+  "results": [
+    {
+      "source": "native_eabi_m0.cpp",
+      "abi": "soft",
+      "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+      "allocated_bytes": 0,
+      "new_translation_unit": false
+    },
+    {
+      "source": "native_eabi_m0.hpp",
+      "abi": "soft",
+      "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+      "allocated_bytes": 0,
+      "new_translation_unit": false
+    },
+    {
+      "source": "native_eabi_m0.S",
+      "abi": "soft",
+      "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "allocated_bytes": 0,
+      "new_translation_unit": false
+    },
+    {
+      "source": "native_eabi_m0_rp2040.S",
+      "abi": "soft",
+      "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+      "allocated_bytes": 0,
+      "new_translation_unit": false
+    },
+    {
+      "source": "compact_math.cpp",
+      "abi": "soft",
+      "preprocessed_sha256": "67bb5906336b8543d7175aecd3a09a003d272debee54bb0e7966eef1cc091a16",
+      "allocated_bytes": 19852,
+      "new_translation_unit": false
+    },
+    {
+      "source": "native_eabi_m0_cr.cpp",
+      "abi": "soft",
+      "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "allocated_bytes": 0,
+      "new_translation_unit": true
+    },
+    {
+      "source": "native_eabi_m0.cpp",
+      "abi": "hard",
+      "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+      "allocated_bytes": 0,
+      "new_translation_unit": false
+    },
+    {
+      "source": "native_eabi_m0.hpp",
+      "abi": "hard",
+      "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+      "allocated_bytes": 0,
+      "new_translation_unit": false
+    },
+    {
+      "source": "native_eabi_m0.S",
+      "abi": "hard",
+      "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "allocated_bytes": 0,
+      "new_translation_unit": false
+    },
+    {
+      "source": "native_eabi_m0_rp2040.S",
+      "abi": "hard",
+      "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+      "allocated_bytes": 0,
+      "new_translation_unit": false
+    },
+    {
+      "source": "compact_math.cpp",
+      "abi": "hard",
+      "preprocessed_sha256": "e164a204e3ba86594e27e773fa68a55c1b1cb4cbfe9abd7591eaeabc55521d9b",
+      "allocated_bytes": 20524,
+      "new_translation_unit": false
+    },
+    {
+      "source": "native_eabi_m0_cr.cpp",
+      "abi": "hard",
+      "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "allocated_bytes": 0,
+      "new_translation_unit": true
+    }
+  ]
+}

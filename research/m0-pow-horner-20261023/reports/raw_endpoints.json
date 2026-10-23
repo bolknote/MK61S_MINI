@@ -1,0 +1,14 @@
+{
+  "status": "PASS_RAW_FIXED_ROOT_EXACT_ENDPOINTS",
+  "cases": 26144,
+  "radius": 3,
+  "maximum_observed_distance_from_exact_floor": 1,
+  "counted_cases": 844,
+  "mean_instructions": 129.03791469194312,
+  "minimum_instructions": 128,
+  "maximum_instructions": 130,
+  "result_sha256": "5b7b80ab012fce722c51f67613948ca1b504f5a1d562fd3e0d6543233d577f52",
+  "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+  "producer_sha256": "313b1c7d5e8a3bbdf412352283268bfdac70913aaf5eb160eeb1f07abdd53970",
+  "scope": "Exact integer squares enclose the full64-bit input root; all512 coefficient cells include coordinate boundaries and low-bit extrema. Every ARM call checks ABI and bounded writes. Finite diagnostic test; no complete pow qualification or device timing."
+}

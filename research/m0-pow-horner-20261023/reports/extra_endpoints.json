@@ -1,0 +1,19 @@
+{
+  "status": "PASS_LAZY_FACTOR_FRACTION_AND_MPFR_ENDPOINTS",
+  "core_cases": {
+    "square": 0,
+    "base": 6000,
+    "multiply": 6000,
+    "aliases": 353,
+    "inverse": 9072
+  },
+  "direct_power_cases": 12397,
+  "accepted": 8925,
+  "declined": 3472,
+  "new_trusted_calls": 533,
+  "public_mpfr_calls": 400,
+  "result_sha256": "8225c0584a42e3a7df8833a6a9cc2e5488847b68324140dff1eb3aebeaf134dd",
+  "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+  "producer_sha256": "d54e4017203a34bf1e80214b75f292ef53db9909c1920d5a4099acecbe25ee68",
+  "scope": "Exact Fraction square, multiply and reciprocal-square-root enclosures; directed MPFR for every accepted prefix and selected public powers. Actual trusted pairs checked. ABI and bounded writes on every ARM call. Finite software tests, not all-input correctness, totality, resource/isolation, cache or physical timing qualification."
+}

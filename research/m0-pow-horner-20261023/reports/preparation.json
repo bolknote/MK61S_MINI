@@ -1,0 +1,23 @@
+{
+  "status": "PREPARED_GNU_ONLY_HORNER_SOURCE",
+  "parent": "V134",
+  "arithmetic_instruction_changes": true,
+  "modified_files": [
+    "code/native_eabi_m0_pow_fast.inc",
+    "code/native_eabi_m0_pow_kernels.inc",
+    "code/native_eabi_m0_pow_root64.inc",
+    "code/native_eabi_m0_pow_root_prefix.inc",
+    "ports/picocalc/m0_math_extension.ld"
+  ],
+  "added_files": [],
+  "regular_source_files": 646,
+  "root_address": "0x1014de60",
+  "tail_address": "0x10150280",
+  "root_promoted": false,
+  "hardware_accessed": false,
+  "new_tables": 0,
+  "additional_global_RAM": 0,
+  "new_compiler_dependency": false,
+  "additional_identity_literal_bytes": 0,
+  "original_cpp_sha256": "7a3591fa5a69e3e07f5a2f27e5be6debee4f36f1739d6b876c3c8b369c242dae"
+}

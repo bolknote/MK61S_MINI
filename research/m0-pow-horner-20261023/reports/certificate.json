@@ -1,0 +1,98 @@
+{
+  "status": "PASS_HYBRID_POW_BOUND_CERTIFICATE",
+  "build": "83cf4ac4",
+  "source_sha256": "5b14b179d7401b6b322807f7d5da58e9285ca4eebdd45372cfc3626e7059199a",
+  "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+  "raw_root_total_point_error_bound": "307342410315716915985677985601607357983781269501/182687704666362864775460604089535377456991567872",
+  "raw_root_omitted_tail_bound": "508217033130974528374182543840422027101105/2787593149816327892691964784081045188247552",
+  "raw_radius": 3,
+  "raw_tail_product_fits32": true,
+  "left_normalization_cases": [
+    {
+      "offset": 0,
+      "center": "0x8000000000000000"
+    },
+    {
+      "offset": 1,
+      "center": "0x8000000000000000"
+    },
+    {
+      "offset": 2,
+      "center": "0x8000000000000000"
+    },
+    {
+      "offset": 3,
+      "center": "0x8000000000000000"
+    },
+    {
+      "offset": 4,
+      "center": "0x8000000000000001"
+    },
+    {
+      "offset": 5,
+      "center": "0x8000000000000001"
+    },
+    {
+      "offset": 6,
+      "center": "0x8000000000000002"
+    },
+    {
+      "offset": 7,
+      "center": "0x8000000000000002"
+    }
+  ],
+  "unchanged_Q52_Newton": true,
+  "retained128_center_and_radius_algebra_equivalent": true,
+  "inline_midpoint_square_body_identical": true,
+  "complete_small_numerator_significand_patterns": 16,
+  "exact_decoder_cases": 208,
+  "bit_scan_domain": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32
+  ],
+  "maximum_loose_factor_radius": 1936,
+  "positive_horner_radius_maximum": 100,
+  "negative_factor_radius_maximum": 1936,
+  "exact_positive_horner_exponent_cases": 64,
+  "exact_negative_factor_exponent_cases": 63,
+  "factor_root_domain_radius_limit": 1048576,
+  "direct_inverse_root_error_q63": "114698356352961807705667969240980671851012950037/5675539992808978991676561071427538860078268416",
+  "direct_inverse_root_radius": 24,
+  "cached_radius_limit": 511,
+  "reference_cpp_sha256": "7a3591fa5a69e3e07f5a2f27e5be6debee4f36f1739d6b876c3c8b369c242dae",
+  "raw_assembly_sha256": "9d0c5d40421caba060765e524753d24d1600dde8ac4a05f8ba207109a7029ef7",
+  "producer_sha256": "b72a95d6ac30fe76ae2a57c2457f218111be24c7c4c14ae868782eb13dac438a",
+  "hardware_accessed": false,
+  "root_promoted": false,
+  "scope": "Source-bound analytical error/domain/overflow and guarded midpoint certificates for the changed fast paths, combined with unchanged retained128 arithmetic bounds. Finite ARM/MPFR, object/resource/isolation/cache checks are separate. General fallback termination and all-input physical speed remain unproved."
+}

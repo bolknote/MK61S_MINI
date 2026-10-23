@@ -1,0 +1,122 @@
+[
+  {
+    "job": "matrix",
+    "command": ".build/picocalc-apps-arm-venv/bin/python tests/profile_m0_math_matrix.py --benchmark .build/m0-balanced-timing-v87-20261022 --owned-elf .build/m0-pow-horner-final-v138-20261023/firmware/mk61s-picocalc-pico-h.elf --bootrom research/rp2040-memset-2026-10-21/capture/bootrom.bin --baseline .build/m0-pow-root-prefix-v122-20261023/instruction-matrix.json --json .build/m0-pow-horner-final-v138-20261023/instruction-matrix.json",
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "ac60f2",
+      "wall_time_seconds": 1.00119975,
+      "session_id": 87293,
+      "original_token_count": 0,
+      "output": ""
+    }
+  },
+  {
+    "job": "all12",
+    "command": ".build/picocalc-apps-arm-venv/bin/python tests/qualify_m0_rounding.py --elf .build/m0-pow-horner-final-v138-20261023/firmware/mk61s-picocalc-pico-h.elf --bootrom research/rp2040-memset-2026-10-21/capture/bootrom.bin --samples 20000 --json .build/m0-pow-horner-final-v138-20261023/all12.json",
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "e41fae",
+      "wall_time_seconds": 1.003147792,
+      "session_id": 46527,
+      "original_token_count": 0,
+      "output": ""
+    }
+  },
+  {
+    "job": "affected",
+    "command": ".build/picocalc-apps-arm-venv/bin/python tests/qualify_m0_pow_worst.py --elf .build/m0-pow-horner-final-v138-20261023/firmware/mk61s-picocalc-pico-h.elf --corpus .build/m0-pow-square-kernel-v98-20261022/affected.wc --bootrom research/rp2040-memset-2026-10-21/capture/bootrom.bin --json .build/m0-pow-horner-final-v138-20261023/affected.json",
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "61c649",
+      "wall_time_seconds": 1.002946542,
+      "session_id": 6275,
+      "original_token_count": 0,
+      "output": ""
+    }
+  },
+  {
+    "job": "endpoints",
+    "command": ".build/picocalc-apps-arm-venv/bin/python .build/m0-pow-horner-final-v138-20261023/endpoints.py --elf .build/m0-pow-horner-final-v138-20261023/firmware/mk61s-picocalc-pico-h.elf --json .build/m0-pow-horner-final-v138-20261023/endpoints.json",
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "74dae8",
+      "wall_time_seconds": 1.0032505,
+      "session_id": 41836,
+      "original_token_count": 0,
+      "output": ""
+    }
+  },
+  {
+    "job": "raw",
+    "command": ".build/picocalc-apps-arm-venv/bin/python research/m0-pow-root-prefix-20261023/raw-arm.py --elf .build/m0-pow-horner-final-v138-20261023/firmware/mk61s-picocalc-pico-h.elf --json .build/m0-pow-horner-final-v138-20261023/raw-endpoints.json",
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "2ee1ea",
+      "wall_time_seconds": 1.002370833,
+      "session_id": 10461,
+      "original_token_count": 0,
+      "output": ""
+    }
+  },
+  {
+    "job": "cores",
+    "command": ".build/picocalc-apps-arm-venv/bin/python .build/m0-pow-horner-final-v138-20261023/compare-cores.py",
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "ae2c85",
+      "wall_time_seconds": 1.003534,
+      "session_id": 88388,
+      "original_token_count": 0,
+      "output": ""
+    }
+  },
+  {
+    "job": "M4",
+    "command": ".build/picocalc-apps-arm-venv/bin/python .build/m0-pow-horner-final-v138-20261023/M4-isolation.py",
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "85beba",
+      "wall_time_seconds": 1.002804958,
+      "session_id": 69982,
+      "original_token_count": 0,
+      "output": ""
+    }
+  },
+  {
+    "job": "generic",
+    "command": ".build/picocalc-apps-arm-venv/bin/python .build/m0-pow-horner-final-v138-20261023/generic-isolation.py",
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "e489c5",
+      "wall_time_seconds": 1.00109175,
+      "session_id": 23792,
+      "original_token_count": 0,
+      "output": ""
+    }
+  },
+  {
+    "job": "runtime",
+    "command": ".build/picocalc-apps-arm-venv/bin/python tests/picocalc_memory_arm_self_test.py .build/m0-pow-horner-final-v138-20261023/firmware/mk61s-picocalc-pico-h.elf --bootrom research/rp2040-memset-2026-10-21/capture/bootrom.bin --memory-placement flash --output .build/m0-pow-horner-final-v138-20261023/runtime-memory.json",
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "5f68e1",
+      "wall_time_seconds": 0.463429,
+      "exit_code": 0,
+      "original_token_count": 0,
+      "output": ""
+    }
+  },
+  {
+    "job": "profile",
+    "command": ".build/picocalc-apps-arm-venv/bin/python research/m0-pow-integer64-20261023/profile-hard.py --elf .build/m0-pow-horner-final-v138-20261023/firmware/mk61s-picocalc-pico-h.elf --json .build/m0-pow-horner-final-v138-20261023/profile.json",
+    "status": "fulfilled",
+    "value": {
+      "chunk_id": "86cf13",
+      "wall_time_seconds": 0.671708167,
+      "exit_code": 0,
+      "original_token_count": 0,
+      "output": ""
+    }
+  }
+]
