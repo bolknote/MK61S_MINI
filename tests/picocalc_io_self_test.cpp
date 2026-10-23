@@ -152,6 +152,10 @@ void console_route_test() {
     std::puts("Pico console routing: exact streams, partial-line ownership, USB packets, UART deferred and no byte loss PASS");
 }
 void battery_test() {
+    picocalc::BatteryStatus lost;
+    assert(lost.decode(0x0B,0x80|75) && lost.charging);
+    lost.clear_reading();
+    assert(lost.available && lost.percent==-1 && !lost.charging);
     picocalc::BatteryStatus status;
     assert(!status.available);
     for(unsigned raw=0;raw<256;++raw) {

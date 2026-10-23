@@ -5,8 +5,9 @@ namespace picocalc {
 struct BatteryStatus {
     int16_t percent=-1;
     bool charging=false,available=false;
+    void clear_reading() { percent=-1;charging=false; }
     bool decode(uint8_t reg,uint8_t value) {
-        if(reg!=0x0B || (value&0x7F)>100) { percent=-1;charging=false;return false; }
+        if(reg!=0x0B || (value&0x7F)>100) { clear_reading();return false; }
         percent=value&0x7F;charging=(value&0x80)!=0;available=true;return true;
     }
 };

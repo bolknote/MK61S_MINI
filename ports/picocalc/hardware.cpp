@@ -89,12 +89,12 @@ bool Keyboard::poll(KeyEvent& event) {
         }
         if(phase==3) {
             if(count==1) { pending_=true;io_phase_=4;due_=now+16000; }
-            else { ++battery_errors_;battery_.percent=-1; }
+            else { ++battery_errors_;battery_.clear_reading(); }
             return false;
         }
         if(phase==4) {
             pending_=false;
-            if(count!=2 || !battery_.decode(response[0],response[1])) { ++battery_errors_;battery_.percent=-1; }
+            if(count!=2 || !battery_.decode(response[0],response[1])) { ++battery_errors_;battery_.clear_reading(); }
             battery_due_=now+20000000;return false;
         }
         pending_=false;online_=count==2;
