@@ -1,0 +1,31 @@
+{
+  "status": "FROZEN_OFFLINE_RESEARCH_BEFORE_AUTHORIZED_HIL",
+  "recorded_at": "2026-10-23T04:13:57.088612+00:00",
+  "files": {
+    ".build/m0-pow-totality-review-20261023/assessment.json": "0900663821a5f85f26679b3a9f5966636c3acf724fad39b5cf41f405979de3b4",
+    ".build/m0-pow-totality-review-20261023/boundary-gap.json": "67166bef959b610f43c43c21bbc8f633fdf297510399a2d7085742c6bfd391a3",
+    ".build/m0-pow-totality-review-20261023/boundary-gap.py": "cb6899d51c3e7b2b5bdea93a18b4fc3f0af97d4b547f2d9e8a38c50454fefc2a",
+    ".build/m0-pow-totality-review-20261023/exact-boundary.json": "fee58d8bae8b1f8f0b963c74ea5824ca8ddafd8656bfc54cf2f70a63726c9311",
+    ".build/m0-pow-totality-review-20261023/exact-boundary.py": "0b2ca8ff75f8ec20831373eedcc50b4fc5293dd03ec902b8bddfa8b70bffee7e",
+    ".build/m0-pow-totality-review-20261023/witness-arm.json": "9d4cfceecc714ebbac6f2f994d174cb05bbe6c15bfa1402df9d78e70eb5d45cb",
+    ".build/m0-pow-totality-review-20261023/witness-arm.py": "ce38781eb23b4e86bc0667d654aea0cc415d16b33cfcea1ff6eb07f9c9806bba",
+    ".build/m0-pow-exact-space-20261023/active-bounds.json": "8fd78fb620359d33710eb39a6872a85893447d62e2a4e4d01742b100ac95a76c",
+    ".build/m0-pow-exact-space-20261023/active-bounds.py": "d9803ec7d413ccac12f05f7c7904aa0f5ec82e27632734516e9ef969fc27cea2",
+    ".build/m0-pow-exact-space-20261023/digit-circuit.json": "1d2d731431429e1845f5d67f95c92d838e54b30124f7ed5b59334236737f423d",
+    ".build/m0-pow-exact-space-20261023/digit-circuit.py": "903b799ac7b2e9ee9727e5c64529a6305e23a56c9ce995a66efbaafff0178453",
+    ".build/m0-pow-exact-space-20261023/tiny-profile.json": "ee94c0700720903e419c1bbb007072674cde0bf33b79ae040c065b4a07bf54f6",
+    ".build/m0-pow-exact-space-20261023/tiny-profile.py": "765d2ed1dfbc907d744775a4c188f5b3430868b82c234440c0e090edee91b4e8"
+  },
+  "findings": [
+    "ExactV138 dyadic-boundary recognition:20098 ARM calls/10049 cases passed; general non-dyadic totality remains unproved.",
+    "Integer comparison active-domain bounds: after tiny/huge-y rules,p<2^63,q<=2^117;128-bit indices and160-bit column accumulators suffice in principle, not a compiled memory/performance guarantee.",
+    "Bounded-cache digit circuit is correct on4109 digit/160 power comparisons but recomputation is expensive; the real midpoint sample needs64658 limb products+129343 requests with512-cache versus8128 products with retained limbs. Do not integrate as a fast fallback.",
+    "New tiny-y performance deficit outside117-group HIL matrix:168 normal-base cases all slower in V138, own mean40624.2143 vsQfp1345.7976 instructions; exact RNE is1. A cold-only edge guard is the next software experiment after hardware window."
+  ],
+  "software_variants_created": false,
+  "candidate": "V138/83CF4AC4 unchanged",
+  "hardware_accessed": false,
+  "commit_created": false,
+  "pending_hardware": "Wait for explicit ownership handoff; human consent reported by coordinator; approved package/plan/pins immutable.",
+  "goal_complete": false
+}

@@ -1,0 +1,89 @@
+{
+  "status": "PASS_PUBLIC_POW_HIL_CORPUS_PATH_ATTRIBUTION",
+  "cases": 1683,
+  "paths": {
+    "_ZL14factor_inversey": 48,
+    "_ZL15root128_compareRK13PowInteger128S1_": 62,
+    "factor64_multiply": 66,
+    "pow_integer128_base": 185,
+    "pow_integer128_multiply": 46,
+    "pow_integer128_square": 386,
+    "pow_root128": 237,
+    "pow_root128_decide": 101,
+    "pow_sqrt64_raw": 522,
+    "root64_boundary": 20,
+    "root64_distance": 42
+  },
+  "examples": {
+    "pow_integer128_square": {
+      "chunk": 112,
+      "a": "C02724B3280BD6F2",
+      "b": "4014000000000000",
+      "expected": "C10953D5D8B7DAC6"
+    },
+    "pow_integer128_multiply": {
+      "chunk": 112,
+      "a": "C02724B3280BD6F2",
+      "b": "4014000000000000",
+      "expected": "C10953D5D8B7DAC6"
+    },
+    "pow_root128": {
+      "chunk": 116,
+      "a": "3FEB5346814B93CF",
+      "b": "4020800000000000",
+      "expected": "3FD1646266D83E24"
+    },
+    "pow_integer128_base": {
+      "chunk": 116,
+      "a": "3FE6600C38EFDABB",
+      "b": "4021000000000000",
+      "expected": "3FA8768ED208EE11"
+    },
+    "pow_sqrt64_raw": {
+      "chunk": 116,
+      "a": "3FE6600C38EFDABB",
+      "b": "4021000000000000",
+      "expected": "3FA8768ED208EE11"
+    },
+    "pow_root128_decide": {
+      "chunk": 116,
+      "a": "3FE6600C38EFDABB",
+      "b": "4021000000000000",
+      "expected": "3FA8768ED208EE11"
+    },
+    "_ZL15root128_compareRK13PowInteger128S1_": {
+      "chunk": 116,
+      "a": "3FE6600C38EFDABB",
+      "b": "4021000000000000",
+      "expected": "3FA8768ED208EE11"
+    },
+    "root64_boundary": {
+      "chunk": 116,
+      "a": "4000000000000000",
+      "b": "C022000000000000",
+      "expected": "3F60000000000000"
+    },
+    "root64_distance": {
+      "chunk": 116,
+      "a": "3FF60E08AA312590",
+      "b": "C008000000000000",
+      "expected": "3FD86F9B00869381"
+    },
+    "_ZL14factor_inversey": {
+      "chunk": 116,
+      "a": "3FEADC414D8160F9",
+      "b": "BFD0000000000000",
+      "expected": "3FF0B7447D3CC645"
+    },
+    "factor64_multiply": {
+      "chunk": 119,
+      "a": "3FF0000A7C5AC472",
+      "b": "BFE8000000000000",
+      "expected": "3FEFFFF04580DE49"
+    }
+  },
+  "all_required_paths_observed": true,
+  "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+  "producer_sha256": "1478e2b66e39980618e0b1a1e2f15fd7b9c86ea2cada6ef7c2e164ac2b85466a",
+  "scope": "Exact V138 public pow on frozen HIL inputs, with hooks only to attribute reached changed integer/root/midpoint paths. This is finite offline path coverage, not a new full numerical qualification or physical timing."
+}

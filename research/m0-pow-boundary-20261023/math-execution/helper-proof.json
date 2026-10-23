@@ -1,0 +1,116 @@
+{
+  "status": "PASS_FROZEN_PROJECT_METHOD_AST_EXTRACTION_STDLIB_ONLY",
+  "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/frozen_helpers.py",
+  "sha256": "6ade1dcaaeff4ba9dcccde84fe70d32424159225685faf814e0d25853acc3528",
+  "methods": [
+    {
+      "path": "tests/hil_portable_apps.py",
+      "name": "cobs_encode",
+      "source_sha256": "6080cf383f26af9e52d2dcb72bd164ae47c57a08657c3d0e41c5133b97466684",
+      "ast_sha256": "7740d773fad233f81c8839357431b5c2d90cec01b2bda6314bf9e0ecb7f92742"
+    },
+    {
+      "path": "tests/hil_portable_apps.py",
+      "name": "cobs_decode",
+      "source_sha256": "6080cf383f26af9e52d2dcb72bd164ae47c57a08657c3d0e41c5133b97466684",
+      "ast_sha256": "fb4c36873771ee09ad7e51a12cf0fd692af73b6858cf1828854a81267db710a9"
+    },
+    {
+      "path": "tests/hil_portable_apps.py",
+      "name": "packbits",
+      "source_sha256": "6080cf383f26af9e52d2dcb72bd164ae47c57a08657c3d0e41c5133b97466684",
+      "ast_sha256": "51c1e024469e3857a8facda9ebe364a4b1af7ff36b9fb8a1985ced87e47b9c89"
+    },
+    {
+      "path": "tests/hil_rtc_alarm.py",
+      "name": "Port",
+      "source_sha256": "242bc861a5327c687125d0fa27d10cc0a528b0cb06cb8db80b429b1cbbbc42a3",
+      "ast_sha256": "5130eed68db6325fcc98ab0d9b12b41d51333eb42c4b84a01feba88412037993"
+    },
+    {
+      "path": "tests/hil_portable_apps.py",
+      "name": "ScreenPort.__init__",
+      "source_sha256": "6080cf383f26af9e52d2dcb72bd164ae47c57a08657c3d0e41c5133b97466684",
+      "ast_sha256": "53a364552960d0a6bfdd27d9384e3be31f820909b0ae71dd7d0a6663386ae8d9"
+    },
+    {
+      "path": "tests/hil_portable_apps.py",
+      "name": "ScreenPort.send",
+      "source_sha256": "6080cf383f26af9e52d2dcb72bd164ae47c57a08657c3d0e41c5133b97466684",
+      "ast_sha256": "bdd71a7118ec7b9542bd585abed4a67d3ee713d943f4740b322dad3eaac1e73c"
+    },
+    {
+      "path": "tests/hil_portable_apps.py",
+      "name": "ScreenPort.receive_packet",
+      "source_sha256": "6080cf383f26af9e52d2dcb72bd164ae47c57a08657c3d0e41c5133b97466684",
+      "ast_sha256": "504203178e7c7ccd71d84b5f79a299897ea800fd5a9ec0350a55c712cf089053"
+    },
+    {
+      "path": "tests/hil_portable_apps.py",
+      "name": "ScreenPort.pump",
+      "source_sha256": "6080cf383f26af9e52d2dcb72bd164ae47c57a08657c3d0e41c5133b97466684",
+      "ast_sha256": "b5ce9cca7c68c06c14f878e633f27810db34d4a07525d9e6762a1410c18ae7b5"
+    },
+    {
+      "path": "tests/hil_m0_math_compare.py",
+      "name": "MathPort.command",
+      "source_sha256": "d6d1e49f9b6389f64fadb5cb92d138a69c105f6a486be7c5f5ede7e002ef61e7",
+      "ast_sha256": "2931831807678dc9aa243e3c69431e48dd333d1739d627be8d5971a9272409f1"
+    },
+    {
+      "path": "tests/hil_picocalc_apps.py",
+      "name": "AppsPort.status",
+      "source_sha256": "cf2266f9b4a67a0549eaeabe9f3ba866f6c0fb8718c68bb8fd9250b0c9978bf6",
+      "ast_sha256": "655c53fcc88915dd9bfc0b1686318db7fd8fb519a1029c50811a09cf74bdc053"
+    },
+    {
+      "path": "tests/hil_usb_disk_transaction.py",
+      "name": "posix_cksum",
+      "source_sha256": "5d1a0e8aca9eceea1039e9b2fd773454b1d895bd5bd837ee1cbe1f5cc340dc45",
+      "ast_sha256": "2cf9c9e0666eb030c1f926d0c76eab463ab0c3581b11e7bf5126c3e7a62e819e"
+    },
+    {
+      "path": "tests/hil_usb_disk_transaction.py",
+      "name": "require_file_contents",
+      "source_sha256": "5d1a0e8aca9eceea1039e9b2fd773454b1d895bd5bd837ee1cbe1f5cc340dc45",
+      "ast_sha256": "fc3cc11e0b70b58115e5b2792f1b14c2f9340ce865ef958c0e35cf0106c98cd2"
+    },
+    {
+      "path": "tests/hil_c5_stack.py",
+      "name": "read_file",
+      "source_sha256": "6adc0587399afbaf2e62b8b73310a730fad352148cfa36255165c2b8231b54d7",
+      "ast_sha256": "b02623b5a65fec2770ef1c2780f4b1ded452572bde8785181bb3414db44054e0"
+    },
+    {
+      "path": "tests/hil_c5_stack.py",
+      "name": "write_file",
+      "source_sha256": "6adc0587399afbaf2e62b8b73310a730fad352148cfa36255165c2b8231b54d7",
+      "ast_sha256": "4c86c63d6dc308be2d9ebbc8c8ef5578c2d6e6c6ef2cfa5c84c8c139daf324ae"
+    },
+    {
+      "path": "tests/hil_rtc_alarm.py",
+      "name": "canonical_state_reply",
+      "source_sha256": "242bc861a5327c687125d0fa27d10cc0a528b0cb06cb8db80b429b1cbbbc42a3",
+      "ast_sha256": "c56d28bbc8b07d6d38f28a727c56eb43555766958e9870cfabd2f68c9e149394"
+    },
+    {
+      "path": "tests/hil_m0_math_compare.py",
+      "name": "ordered",
+      "source_sha256": "d6d1e49f9b6389f64fadb5cb92d138a69c105f6a486be7c5f5ede7e002ef61e7",
+      "ast_sha256": "0c98f99087d47225321cb1db44394216f774e2248bdfb0dcd882c3093f5a9a3d"
+    },
+    {
+      "path": "tests/hil_m0_math_compare.py",
+      "name": "order_balanced",
+      "source_sha256": "d6d1e49f9b6389f64fadb5cb92d138a69c105f6a486be7c5f5ede7e002ef61e7",
+      "ast_sha256": "87b8f5749db9b1821d6bfa2b4f148eff05424aa0cf59e79434d971683102de68"
+    },
+    {
+      "path": "tests/hil_m0_math_compare.py",
+      "name": "decode",
+      "source_sha256": "d6d1e49f9b6389f64fadb5cb92d138a69c105f6a486be7c5f5ede7e002ef61e7",
+      "ast_sha256": "98050fe64cfc3e8398eb2c8565e0b606ba93acef26cb3870524cc974b31cc03f"
+    }
+  ],
+  "source_changes": "Only class composition/bases: established Port+four ScreenPort methods+MathPort.command+AppsPort.status. Every extracted method/function body AST is unchanged. Keyboard/UI command methods and their project imports are excluded."
+}

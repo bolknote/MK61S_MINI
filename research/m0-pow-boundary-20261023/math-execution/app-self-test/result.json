@@ -1,0 +1,287 @@
+{
+  "packed_APP_elf_sha256": "3b444095d1ca6cb9336a95ecbf67a2914c95fd1346806961c77fecf79fdc0ce0",
+  "packed_APP_abi_kinds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "negative_guard_rejections": [
+    "runtime_pointer",
+    "runtime_slot",
+    "reference",
+    "footer",
+    "clock"
+  ],
+  "exact_V138_elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+  "reference_sha256": "8a71ababc3538394b49590350fb0b4602b1253736543dd80391514c84bf235f3",
+  "guards_verified": true,
+  "clock_guard_mocked": true,
+  "status": "PASS",
+  "cases": [
+    {
+      "kind": 0,
+      "operation": "dmul",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 0,
+      "operation": "dmul",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 1,
+      "operation": "sin",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 1,
+      "operation": "sin",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 2,
+      "operation": "i2d",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 2,
+      "operation": "i2d",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 3,
+      "operation": "ui2d",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 3,
+      "operation": "ui2d",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 4,
+      "operation": "l2d",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 4,
+      "operation": "l2d",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 5,
+      "operation": "ul2d",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 5,
+      "operation": "ul2d",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 6,
+      "operation": "d2iz",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 6,
+      "operation": "d2iz",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 7,
+      "operation": "d2uiz",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 7,
+      "operation": "d2uiz",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 8,
+      "operation": "d2lz",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 8,
+      "operation": "d2lz",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 9,
+      "operation": "d2ulz",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 9,
+      "operation": "d2ulz",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 10,
+      "operation": "f2d",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 10,
+      "operation": "f2d",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 11,
+      "operation": "d2f",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 11,
+      "operation": "d2f",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 12,
+      "operation": "dcmpeq",
+      "negative": false,
+      "calls": [
+        44,
+        44
+      ]
+    },
+    {
+      "kind": 12,
+      "operation": "dcmpeq",
+      "negative": true,
+      "calls": [
+        44,
+        44
+      ]
+    }
+  ],
+  "cache_counters": true,
+  "warmup_tested": true,
+  "rounds": 12,
+  "wire_version": 4,
+  "tested_kinds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "all_abi_kinds_tested": true,
+  "scope": "Real ARM math and timing APP source. Timer/storage/UI/XIP counters mocked; this is a protocol and ABI test, not a cycle benchmark."
+}

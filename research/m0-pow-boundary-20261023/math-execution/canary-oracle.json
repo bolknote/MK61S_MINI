@@ -1,0 +1,8 @@
+{
+  "status": "PASS_MPFR_DIRECTED_BOUNDS",
+  "cases": 30,
+  "mpfr": "4.2.2",
+  "description": "Negative proper fractions with multiple selected bits to exercise factor64_multiply through public pow; supplementary correctness/path checks, outside117 performance groups.",
+  "input_sha256": "45a793a41e7c207dae4a8c0a0be699ad5b4946206309903ae9eafec37dcd680f",
+  "producer_sha256": "fdbfb48f52d11bcbf0c080be733ad10db4d15184849c3b555d23af7e0a324ca3"
+}

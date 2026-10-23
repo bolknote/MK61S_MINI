@@ -1,0 +1,18 @@
+{
+  "status": "PASS_OFFLINE_ORCHESTRATION",
+  "checks": [
+    "complete_matrix",
+    "complete_canary",
+    "cooperative_stop_and_hash_checked_resume",
+    "failure_saves_evidence_without_cleanup_retry_or_reset",
+    "structured_FAT_collision_root_dot_dotdot_and_mutation_path_guards",
+    "tampered_project_helper_rejected_before_import",
+    "independent_CWD_no_canonical_project_imports"
+  ],
+  "runner_sha256": "d70be1e88a2202618581a55c243c70d10be16a58ae6356bf50f7c644a7d8dd09",
+  "helper_sha256": "6ade1dcaaeff4ba9dcccde84fe70d32424159225685faf814e0d25853acc3528",
+  "tested_manifest_sha256": "cd1ec64f9fe59e53b86e681ad2368b41e32575022dc2e5cf729b500ea279943a",
+  "mock_APP_launches": 240,
+  "physical_device_accessed": false,
+  "scope": "Mock transport/results exercise sequencing, cancellation/resume, failure evidence, explicit canary execution, FAT guards and pre-import helper authentication. Actual ARM numerical/APP evidence is separate."
+}

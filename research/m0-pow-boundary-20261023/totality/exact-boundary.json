@@ -1,0 +1,80 @@
+{
+  "status": "PASS_EXACT_DYADIC_BOUNDARY_CLASSIFICATION_AND_FINITE_ARM_CHECKS",
+  "theorem_obligation": "Positive finite nonzero x and finite y: evaluate handles x==1/y==0 first. Direct exact_boundary is then used for x!=1 and y!=0; dyadic results have odd coefficient B<2^54. This includes every binary64 RNE midpoint, zero/subnormal and overflow thresholds.",
+  "algebraic_classification": [
+    "Write x=A*2^e with A odd,1<=A<2^53; write y=s*p/q reduced with q a power of2.",
+    "For A>1 and s<0, x^y has a nontrivial odd denominator or is irrational, so it cannot be dyadic.",
+    "For A>1 and s>0, dyadic equality forces q|e and A=C^q, by the2-adic and odd-prime valuations. The exact odd result coefficient is C^p.",
+    "C>=3 and C^p<2^54 imply p<=34; C^q<2^53 and power-of-two q imply q<=32.",
+    "Repeated exact square roots, e divisibility, and the54-bit capped integer product therefore recognize every such shape. No approximate logarithm is used.",
+    "For A=1, x^y is dyadic iff e*y is an integer. Its product fits64 bits before the checked shift; large exponents clamp safely outside all rounding thresholds.",
+    "Every RNE midpoint has a normalized odd coefficient of at most54 bits, including B*2^-1075 subnormal midpoints and (2^54-1)*2^970 at overflow."
+  ],
+  "implementation_scope": "Source-bound mathematical argument plus finite execution of both exact V138512/1024 recognizer bodies. Not a mechanized full compiler proof or a non-dyadic separation bound.",
+  "cases": 10049,
+  "ARM_calls": 20098,
+  "outcomes": {
+    "early_evaluate": 16,
+    "power_of_two_fractional": 240,
+    "power_of_two_boundary": 53,
+    "power_of_two_large_exponent": 56,
+    "odd_positive_dyadic": 4814,
+    "odd_negative_not_boundary": 4814,
+    "not_boundary": 56
+  },
+  "examples": {
+    "early_evaluate": {
+      "x": "0000000000000001",
+      "y": "0000000000000000",
+      "accepted": true,
+      "rounded": "3FF0000000000000"
+    },
+    "power_of_two_fractional": {
+      "x": "0000000000000001",
+      "y": "0000000000000001",
+      "accepted": false,
+      "rounded": null
+    },
+    "power_of_two_boundary": {
+      "x": "0000000000000001",
+      "y": "3FE0000000000000",
+      "accepted": true,
+      "rounded": "1E60000000000000"
+    },
+    "power_of_two_large_exponent": {
+      "x": "0000000000000001",
+      "y": "43B0000000000000",
+      "accepted": true,
+      "rounded": "0000000000000000"
+    },
+    "odd_positive_dyadic": {
+      "x": "0000000000000003",
+      "y": "3FF0000000000000",
+      "accepted": true,
+      "rounded": "0000000000000003"
+    },
+    "odd_negative_not_boundary": {
+      "x": "0000000000000003",
+      "y": "BFF0000000000000",
+      "accepted": false,
+      "rounded": null
+    },
+    "not_boundary": {
+      "x": "0018000000000000",
+      "y": "3F90000000000000",
+      "accepted": false,
+      "rounded": null
+    }
+  },
+  "result_sha256": "f2f2d4a8840dab4207c37f44d71fa9d8b0f325900c8396e5a00fa658305bc0f6",
+  "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+  "source_sha256": "bf7b776af71fd3c50708c8955651487fee468351e1e63b835a42bdf3572c56e6",
+  "producer_sha256": "0b2ca8ff75f8ec20831373eedcc50b4fc5293dd03ec902b8bddfa8b70bffee7e",
+  "lowest_checked_write_offset_bytes": 15000,
+  "result_slot_offset_bytes": 15000,
+  "stack_scope": "The write low-water includes the intentional result slot atSP-15000; it is not a callee stack-use measurement.",
+  "conclusion": "An exact dyadic rounding tie is handled before the interval refinement in both Fixed stages. The remaining general totality obligation is separation/termination for non-dyadic values, not a missing exact-tie branch.",
+  "candidate_changed": false,
+  "hardware_accessed": false,
+  "general_pow_totality_proved": false
+}

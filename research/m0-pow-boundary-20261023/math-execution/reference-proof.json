@@ -1,0 +1,16 @@
+{
+  "status": "PASS_SEPARATE_REFERENCE_NO_V138_MODIFICATIONS",
+  "address": 270008320,
+  "bytes": 6364,
+  "sector_bytes": 8192,
+  "reference_sha256": "8a71ababc3538394b49590350fb0b4602b1253736543dd80391514c84bf235f3",
+  "padded_sector_sha256": "918191a2ea0cf3881ead684d56ffa5e09ac14151d181760e5ff5e11ad05a2d60",
+  "uf2_sha256": "a0500691364758a3e2ad690fba23b7fe5902dd4f8d98a12195d61354d97cc07f",
+  "source_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654",
+  "undefined_symbols": [],
+  "reference_ram_bytes": 0,
+  "firmware_image_ends_at": 269972464,
+  "settings_begin": 270524416,
+  "existing_candidate_bytes_changed": 0,
+  "scope": "Diagnostic reference-only Flash addon, outside the firmware CRC extent. Installer must verify this layer separately and restore fresh full Flash afterward."
+}

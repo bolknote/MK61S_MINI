@@ -1,0 +1,27 @@
+{
+  "status": "PASS_EXACT_ACTIVE_DOMAIN_INDEX_AND_CARRY_BOUNDS",
+  "ln2_interval": [
+    "4885160137407771253400601118182930934216597868939146496/7047796304186638645984520552020312648059671845278255225",
+    "19540640549631085013602404472731818469789797150617764779/28191185216746554583938082208081250592238687381113020900"
+  ],
+  "tiny_y_rule": "For positive finite x and |y|<2^-65, |y*ln(x)|<745*2^-65 and |exp(y*ln(x))-1|<2^-54. The positive magnitude rounds to1 in binary64 RNE.",
+  "huge_y_rule": "For x!=1 and |y|>=2^63, nearest binary64 neighbours of1 imply |y*ln(x)|>=1024, beyond both zero and overflow RNE thresholds. Sign of log-result selects0 or infinity.",
+  "active_domain": "2^-65<=|y|<2^63 after special/near-one/magnitude rules.",
+  "reduced_exponent": "y=s*p/q, q power-of-two. If q>1,p<2^53,q<=2^117; if q=1,p<2^63.",
+  "input_x": "x=A*2^e with odd A<2^53 and -1074<=e<=1023.",
+  "midpoint": "midpoint=M*2^g with odd M<2^54 and -1075<=g<=970, including zero/subnormal/overflow boundaries.",
+  "positive_relation": "x^(p/q) ? M*2^g iff A^p*2^(e*p) ? M^q*2^(g*q).",
+  "inverse_relation": "x^(-p/q) ? M*2^g iff A^p*M^q*2^(e*p+g*q) has the reversed relation to1.",
+  "coefficient_bit_bound": "8972288971548182630939415610195443712",
+  "scale_magnitude_bound": "178615011933598080327350641307200520192",
+  "lifted_bit_position_bound": "strictly less than2^128",
+  "radix16_limb_count_bound": "strictly less than2^119",
+  "carry_column_accumulator_bound": "strictly less than2^151;160-bit unsigned arithmetic is enough",
+  "maximum_product_circuit_depth": 125,
+  "termination": "A recursive column evaluator has strictly decreasing exponent/circuit depth and finite index loops, so a correctly implemented unlimited-work version terminates mathematically. This does not establish acceptable wall time or a compiled M0 memory/stack bound.",
+  "firmware_status": "No implementation/promotion. Cost feasibility and exact fixed-width code remain required.",
+  "producer_sha256": "d9803ec7d413ccac12f05f7c7904aa0f5ec82e27632734516e9ef969fc27cea2",
+  "hardware_accessed": false,
+  "candidate_changed": false,
+  "goal_complete": false
+}

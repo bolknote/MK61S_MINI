@@ -1,0 +1,132 @@
+{
+  "status": "PASS_ACTUAL_V138_FLASH_ALLOCATION_AND_SEMANTIC_WRITE_SCOPE",
+  "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+  "source_sha256": "5b14b179d7401b6b322807f7d5da58e9285ca4eebdd45372cfc3626e7059199a",
+  "original_flash_load_ranges": [
+    {
+      "base": 268435456,
+      "end": 269068492,
+      "bytes": 633036
+    },
+    {
+      "base": 269068492,
+      "end": 269113144,
+      "bytes": 44652
+    },
+    {
+      "base": 269113144,
+      "end": 269117216,
+      "bytes": 4072
+    },
+    {
+      "base": 269359040,
+      "end": 269679712,
+      "bytes": 320672
+    },
+    {
+      "base": 269746176,
+      "end": 269775416,
+      "bytes": 29240
+    },
+    {
+      "base": 269785636,
+      "end": 269822240,
+      "bytes": 36604
+    },
+    {
+      "base": 269836288,
+      "end": 269840624,
+      "bytes": 4336
+    },
+    {
+      "base": 269854456,
+      "end": 269854922,
+      "bytes": 466
+    },
+    {
+      "base": 269866630,
+      "end": 269867368,
+      "bytes": 738
+    },
+    {
+      "base": 269877248,
+      "end": 269884800,
+      "bytes": 7552
+    },
+    {
+      "base": 269910016,
+      "end": 269933664,
+      "bytes": 23648
+    },
+    {
+      "base": 269942784,
+      "end": 269960960,
+      "bytes": 18176
+    },
+    {
+      "base": 269967360,
+      "end": 269972464,
+      "bytes": 5104
+    }
+  ],
+  "firmware_extent": [
+    268435456,
+    269972464
+  ],
+  "firmware_sector_erase_extent": [
+    268435456,
+    269975552
+  ],
+  "reference_range": [
+    270008320,
+    270014684
+  ],
+  "addon_erase_range": [
+    270008320,
+    270016512
+  ],
+  "sector_size": 4096,
+  "page_size": 256,
+  "addon_sectors": 2,
+  "persistent_settings_range": [
+    270524416,
+    270532608
+  ],
+  "application_persistence": "SD files; the only explicit Pico firmware flash writers are settings append/rollover.",
+  "explicit_flash_api_call_sites": [
+    {
+      "path": "ports/picocalc/device_settings.cpp",
+      "line": 39,
+      "text": "if(operation.erase) flash_range_erase(offset, FLASH_SECTOR_SIZE);"
+    },
+    {
+      "path": "ports/picocalc/device_settings.cpp",
+      "line": 40,
+      "text": "flash_range_program(offset, operation.data, FLASH_PAGE_SIZE);"
+    }
+  ],
+  "linked_flash_api_call_sites": [
+    {
+      "caller": "_ZN8picocalc12_GLOBAL__N_15writeEPv",
+      "instruction": "10019c7c:\tf072 fb64 \tbl\t1008c348 <__flash_range_program_veneer>"
+    },
+    {
+      "caller": "_ZN8picocalc12_GLOBAL__N_15writeEPv",
+      "instruction": "10019c88:\tf072 fb6e \tbl\t1008c368 <__flash_range_erase_veneer>"
+    }
+  ],
+  "device_settings_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-horner-final-v138-20261023/source/ports/picocalc/device_settings.cpp",
+    "sha256": "96902473677654f7f40766d3ee5574acc36c3a1b67d595fe510324fc70393784"
+  },
+  "sdk_flash_header": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_flash/include/hardware/flash.h",
+    "sha256": "1a2fae794519d7d8fd870469cf22ef324ec3295932b102a0471a892a1b87267b"
+  },
+  "addon_sha256": "918191a2ea0cf3881ead684d56ffa5e09ac14151d181760e5ff5e11ad05a2d60",
+  "uf2_sha256": "a0500691364758a3e2ad690fba23b7fe5902dd4f8d98a12195d61354d97cc07f",
+  "undefined_reference_imports": [],
+  "reference_ram_bytes": 0,
+  "candidate_modified": false,
+  "limitation": "Semantically unallocated by this firmware does not mean erased in the live device. The transaction must preserve a fresh full-Flash backup, verify addon separately (outside firmware CRC), preserve all other sectors and finally restore the exact fresh full Flash."
+}

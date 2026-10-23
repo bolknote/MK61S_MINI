@@ -1,0 +1,14 @@
+{
+  "status": "PASS_PUBLIC_POW_ON_DIRECTED_GAP_WITNESSES",
+  "cases": 19,
+  "wrong_rounding": 0,
+  "final_rescue_entries": 0,
+  "elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+  "input_report_sha256": "67166bef959b610f43c43c21bbc8f633fdf297510399a2d7085742c6bfd391a3",
+  "producer_sha256": "ce38781eb23b4e86bc0667d654aea0cc415d16b33cfcea1ff6eb07f9c9806bba",
+  "result_sha256": "77ae6c7a0f03d0509ad52d95529924636b277f5ae339fbdc8cabf19d0d999684",
+  "scope": "Nineteen targeted public API calls on exact V138, with actual captured BootROM and ABI/bounded-write checks. No new full firmware qualification, physical timing or all-input proof.",
+  "interpretation": "These difficult points remain correct in V138. A zero rescue count means this run does not test the final1024-bit undecided branch.",
+  "candidate_changed": false,
+  "hardware_accessed": false
+}

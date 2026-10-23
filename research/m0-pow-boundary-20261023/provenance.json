@@ -1,0 +1,671 @@
+{
+  "status": "INTERMEDIATE_OFFLINE_RESEARCH_CHECKPOINT",
+  "parent_checkpoint_commit": "e640d20cd1baa8eb190a30fc5b18d026ae7cb647",
+  "candidate": "V138/83CF4AC4 unchanged",
+  "candidate_source_sha256": "5b14b179d7401b6b322807f7d5da58e9285ca4eebdd45372cfc3626e7059199a",
+  "candidate_elf_sha256": "f4010ce9153d8b9776b236751fcfe67da5e528c2bff5725f87478fec74a42895",
+  "offline_checkpoint_sha256": "84d31c111d7b45cb9fd93295799efbc250b95da25770f2210a2d47b2ae8fc088",
+  "math_execution_manifest_sha256": "fd584f3e2b9a1387ff236eabdac66b888c452b16cb73c21449c6cb0b8262b18c",
+  "archived_originals": {
+    "totality/assessment.json": {
+      "path": ".build/m0-pow-totality-review-20261023/assessment.json",
+      "sha256": "0900663821a5f85f26679b3a9f5966636c3acf724fad39b5cf41f405979de3b4"
+    },
+    "totality/boundary-gap.json": {
+      "path": ".build/m0-pow-totality-review-20261023/boundary-gap.json",
+      "sha256": "67166bef959b610f43c43c21bbc8f633fdf297510399a2d7085742c6bfd391a3"
+    },
+    "totality/boundary-gap.py": {
+      "path": ".build/m0-pow-totality-review-20261023/boundary-gap.py",
+      "sha256": "cb6899d51c3e7b2b5bdea93a18b4fc3f0af97d4b547f2d9e8a38c50454fefc2a"
+    },
+    "totality/exact-boundary.json": {
+      "path": ".build/m0-pow-totality-review-20261023/exact-boundary.json",
+      "sha256": "fee58d8bae8b1f8f0b963c74ea5824ca8ddafd8656bfc54cf2f70a63726c9311"
+    },
+    "totality/exact-boundary.py": {
+      "path": ".build/m0-pow-totality-review-20261023/exact-boundary.py",
+      "sha256": "0b2ca8ff75f8ec20831373eedcc50b4fc5293dd03ec902b8bddfa8b70bffee7e"
+    },
+    "totality/witness-arm.json": {
+      "path": ".build/m0-pow-totality-review-20261023/witness-arm.json",
+      "sha256": "9d4cfceecc714ebbac6f2f994d174cb05bbe6c15bfa1402df9d78e70eb5d45cb"
+    },
+    "totality/witness-arm.py": {
+      "path": ".build/m0-pow-totality-review-20261023/witness-arm.py",
+      "sha256": "ce38781eb23b4e86bc0667d654aea0cc415d16b33cfcea1ff6eb07f9c9806bba"
+    },
+    "exact-space/active-bounds.json": {
+      "path": ".build/m0-pow-exact-space-20261023/active-bounds.json",
+      "sha256": "8fd78fb620359d33710eb39a6872a85893447d62e2a4e4d01742b100ac95a76c"
+    },
+    "exact-space/active-bounds.py": {
+      "path": ".build/m0-pow-exact-space-20261023/active-bounds.py",
+      "sha256": "d9803ec7d413ccac12f05f7c7904aa0f5ec82e27632734516e9ef969fc27cea2"
+    },
+    "exact-space/digit-circuit.json": {
+      "path": ".build/m0-pow-exact-space-20261023/digit-circuit.json",
+      "sha256": "1d2d731431429e1845f5d67f95c92d838e54b30124f7ed5b59334236737f423d"
+    },
+    "exact-space/digit-circuit.py": {
+      "path": ".build/m0-pow-exact-space-20261023/digit-circuit.py",
+      "sha256": "903b799ac7b2e9ee9727e5c64529a6305e23a56c9ce995a66efbaafff0178453"
+    },
+    "exact-space/tiny-profile.json": {
+      "path": ".build/m0-pow-exact-space-20261023/tiny-profile.json",
+      "sha256": "ee94c0700720903e419c1bbb007072674cde0bf33b79ae040c065b4a07bf54f6"
+    },
+    "exact-space/tiny-profile.py": {
+      "path": ".build/m0-pow-exact-space-20261023/tiny-profile.py",
+      "sha256": "765d2ed1dfbc907d744775a4c188f5b3430868b82c234440c0e090edee91b4e8"
+    },
+    "offline-checkpoint.json": {
+      "path": ".build/m0-pow-offline-checkpoint-20261023.json",
+      "sha256": "84d31c111d7b45cb9fd93295799efbc250b95da25770f2210a2d47b2ae8fc088"
+    },
+    "math-execution/README.md": {
+      "path": ".build/m0-v138-execution-20261023/README.md",
+      "sha256": "bc1db068a6ae612210b2c4394607ae70fc8e4a892e82afb560c5dd685483ba3d"
+    },
+    "math-execution/TIMING-fixture.c": {
+      "path": ".build/m0-v138-execution-20261023/TIMING-fixture.c",
+      "sha256": "953bdce03cee2c472cdbcd765b34922221b121a27f02ff0bb8773c6393423955"
+    },
+    "math-execution/TIMING.c": {
+      "path": ".build/m0-v138-execution-20261023/TIMING.c",
+      "sha256": "46c9094a2fdd51383b3c8f6d2743f1ba391b42a91b2bc32008be6b2dd5378233"
+    },
+    "math-execution/app/TIMING.json": {
+      "path": ".build/m0-v138-execution-20261023/app/TIMING.json",
+      "sha256": "4488227899b6f6b112c2d95e223a687eba19b184f7b5325776fb917fb9c7aee2"
+    },
+    "math-execution/app-self-test/result.json": {
+      "path": ".build/m0-v138-execution-20261023/app-self-test/result.json",
+      "sha256": "c610a5d5faa3b94ab78a16634867e841b847f51166689510d70ea6bb5c37973c"
+    },
+    "math-execution/app-self-test.py": {
+      "path": ".build/m0-v138-execution-20261023/app-self-test.py",
+      "sha256": "dafa0646aa4a916c027d5996fda05961de93a0aebd195d792e311c69be4e21f7"
+    },
+    "math-execution/benchmark.json": {
+      "path": ".build/m0-v138-execution-20261023/benchmark.json",
+      "sha256": "9ed0f0cc1f74f7a4d4cdb94aa50476816043891860cfc9ba0ba9618d9eda8d16"
+    },
+    "math-execution/canary-oracle.json": {
+      "path": ".build/m0-v138-execution-20261023/canary-oracle.json",
+      "sha256": "c8b5c608307956103997e1e0b5003c9de48f72ad7cb361204eadacd6f81ded98"
+    },
+    "math-execution/coverage.py": {
+      "path": ".build/m0-v138-execution-20261023/coverage.py",
+      "sha256": "1478e2b66e39980618e0b1a1e2f15fd7b9c86ea2cada6ef7c2e164ac2b85466a"
+    },
+    "math-execution/execution-manifest.json": {
+      "path": ".build/m0-v138-execution-20261023/execution-manifest.json",
+      "sha256": "fd584f3e2b9a1387ff236eabdac66b888c452b16cb73c21449c6cb0b8262b18c"
+    },
+    "math-execution/execution-manifest.sha256": {
+      "path": ".build/m0-v138-execution-20261023/execution-manifest.sha256",
+      "sha256": "26cf4197cffb14afa45d5bc83d8d81a45df49d0d8003832c63d2877e61e7d23b"
+    },
+    "math-execution/freeze-helpers.py": {
+      "path": ".build/m0-v138-execution-20261023/freeze-helpers.py",
+      "sha256": "f004bac7f923313f499dbe490d82d50df74d5ce151cd734e67bea946a6d772f9"
+    },
+    "math-execution/freeze.py": {
+      "path": ".build/m0-v138-execution-20261023/freeze.py",
+      "sha256": "0f537d5741d409dfd2f97f40f929199249f34d4668850a8251acd1e5a50b630c"
+    },
+    "math-execution/frozen_helpers.py": {
+      "path": ".build/m0-v138-execution-20261023/frozen_helpers.py",
+      "sha256": "6ade1dcaaeff4ba9dcccde84fe70d32424159225685faf814e0d25853acc3528"
+    },
+    "math-execution/helper-proof.json": {
+      "path": ".build/m0-v138-execution-20261023/helper-proof.json",
+      "sha256": "febe6b54afc8ec3f16044addaddd791b97d045d457a658bba11efb4c8953608f"
+    },
+    "math-execution/inputs/000.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/000.bin",
+      "sha256": "fe592776b18aa222e730c695396e7ca62c56b58ae34562bf9dbabbe50ad779e9"
+    },
+    "math-execution/inputs/001.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/001.bin",
+      "sha256": "ad66b6a2cc7e38e81792e13518589024cfe09944a638bd51a17a135f968d47b1"
+    },
+    "math-execution/inputs/002.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/002.bin",
+      "sha256": "b50070139e1def3624b5c1db5cdcdbddc4847ee748524343a4e62976cc8c1be5"
+    },
+    "math-execution/inputs/003.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/003.bin",
+      "sha256": "862120f27c1c2ec2f086d558fbd74d39f8186df50f7fa45a078ff24b30cca01f"
+    },
+    "math-execution/inputs/004.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/004.bin",
+      "sha256": "c5d70a5d831e58cb18011b3c09537acfe34203212af89a403cfd02c6f25ab2f0"
+    },
+    "math-execution/inputs/005.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/005.bin",
+      "sha256": "7840051f3940351909a535374b689616619d8a21fc60e57ccbd1868b892c753c"
+    },
+    "math-execution/inputs/006.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/006.bin",
+      "sha256": "15517a4915e04e305cda91428e20aab2f3461ef0cf55ac003d9aed40d1840e35"
+    },
+    "math-execution/inputs/007.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/007.bin",
+      "sha256": "b9f1c0f9a8f9e9bc5dc21e27378d642e3fbf1906e61c868ab09d5eae406470ab"
+    },
+    "math-execution/inputs/008.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/008.bin",
+      "sha256": "124b49c2f1e578ec02e1eb16adef984cb1da53f719522cc804ad938705842a8b"
+    },
+    "math-execution/inputs/009.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/009.bin",
+      "sha256": "3a87407795325ea5f3ed8eabd6b5208560775d122c5ffb408d3fab7f46d0c7da"
+    },
+    "math-execution/inputs/010.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/010.bin",
+      "sha256": "af6e358bafa1e0329836ee8cd249a97206fd7af267f38e2162ef0792449768dd"
+    },
+    "math-execution/inputs/011.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/011.bin",
+      "sha256": "a9ec6aeac6051251d98308137730d27f88a6c0a2f7db73d58bdd2eeeeccdd45c"
+    },
+    "math-execution/inputs/012.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/012.bin",
+      "sha256": "54e67626ac0b4e6e5f89c3970778497d2314acb87327dd4a45105d8934aae7ec"
+    },
+    "math-execution/inputs/013.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/013.bin",
+      "sha256": "d7d43047514ba861bb02a39f0b274169090caf06e540ea307b3b5272650b7716"
+    },
+    "math-execution/inputs/014.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/014.bin",
+      "sha256": "5b058d4eaf1ada726a0ed6e55810f1b77fc8ed01f623f5102d250c37391bb8ab"
+    },
+    "math-execution/inputs/015.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/015.bin",
+      "sha256": "9e53c4601d4263ab835bb12df985dabd48e72e6fce9e70101593f70b1cc5656c"
+    },
+    "math-execution/inputs/016.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/016.bin",
+      "sha256": "e0c28594b444013e0d077b36b5ff44f39ba6c4d3de961b2b0a28c88f3f47592a"
+    },
+    "math-execution/inputs/017.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/017.bin",
+      "sha256": "2cff152ee8407d61f6cdff47dc55129dd47181e7f34874db9258ea36668bc965"
+    },
+    "math-execution/inputs/018.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/018.bin",
+      "sha256": "82beb711d470b3b6acc4fdfd3305fa4dd3cc8b13a223f462f5f3f10b61aeab80"
+    },
+    "math-execution/inputs/019.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/019.bin",
+      "sha256": "cd20070afd5971d25d9bfa8cf7e07ded7f6b1432bd69421d7b6e4c2363d51def"
+    },
+    "math-execution/inputs/020.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/020.bin",
+      "sha256": "6c59ac083c995ea56de575905cc69caeafcc04a8b450273d2f115c38fbd26256"
+    },
+    "math-execution/inputs/021.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/021.bin",
+      "sha256": "3cb42ed2a264e8456947f6fbf57d58813f85689c47dbffeb139fb6cacb85e479"
+    },
+    "math-execution/inputs/022.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/022.bin",
+      "sha256": "a24a25bdee4036ba7ea60d3f83685d2f604132ce0af2dc55abc4a321294fcab8"
+    },
+    "math-execution/inputs/023.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/023.bin",
+      "sha256": "ad7097056f036bc21f45fc4b676225496f576a2e228879320f85ddf59ea51037"
+    },
+    "math-execution/inputs/024.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/024.bin",
+      "sha256": "7eec3838aa36fc1ace0a65617026b30dd489f32d1401a39ad86d4ca923f23de0"
+    },
+    "math-execution/inputs/025.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/025.bin",
+      "sha256": "37b615e73cc25e8de1ea1d2dcc4a07e81bf4705abf49b069eff793bfb79facb8"
+    },
+    "math-execution/inputs/026.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/026.bin",
+      "sha256": "c167be469912739b875036f529600b95926354263c14378baf61e27ae9b829a5"
+    },
+    "math-execution/inputs/027.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/027.bin",
+      "sha256": "1ecb8f68fd94316688229869cee0277a35ef25bee0b603a0c19de6994e87431f"
+    },
+    "math-execution/inputs/028.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/028.bin",
+      "sha256": "3906c8c83a3384f9589bd0dd2b124d6b68d1b9311a9486e2fb5b325e84cfcf6c"
+    },
+    "math-execution/inputs/029.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/029.bin",
+      "sha256": "2cde93ff4d810df24cfdd565f36928693c2ec5c01e8f8fc6f0efc8811fd88209"
+    },
+    "math-execution/inputs/030.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/030.bin",
+      "sha256": "15f175672b37d303bd86f9ce97d154446dcc822e185b91872425e04daeb6a5c9"
+    },
+    "math-execution/inputs/031.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/031.bin",
+      "sha256": "5ff5520cd07b1a8a9de1dfc292312a486444e6ea046ccf08743cb5a9bca3da0f"
+    },
+    "math-execution/inputs/032.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/032.bin",
+      "sha256": "c11e6cda85d72d943d2b2a9a92143830ea99393188355057bb3051cfa910730f"
+    },
+    "math-execution/inputs/033.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/033.bin",
+      "sha256": "51ccf9c1660e52c2860d3a447a03e866fd7176522abcf42a6d10e877d81f668f"
+    },
+    "math-execution/inputs/034.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/034.bin",
+      "sha256": "c8ac145d6531d8530dbf0602a1ad850d657775824d4826c35a9b8d6136219454"
+    },
+    "math-execution/inputs/035.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/035.bin",
+      "sha256": "904bc3cd73c5f6f2a6b55e683f917af06ef9a9b8a919b8f9bf6226e679f30a4c"
+    },
+    "math-execution/inputs/036.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/036.bin",
+      "sha256": "431369b51ed54cf437ea6b1352624d899d8ffecb7c14a0e801d59b7fdecf9cd0"
+    },
+    "math-execution/inputs/037.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/037.bin",
+      "sha256": "5caa2c9ef44f3f953cbc673465cd294642cc7a277a562250c2af92ce0373d731"
+    },
+    "math-execution/inputs/038.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/038.bin",
+      "sha256": "32e66f4df1c8a0517e82b6b0cec682ac1112e520f1ba97f0f291127d6f207809"
+    },
+    "math-execution/inputs/039.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/039.bin",
+      "sha256": "9beb5befb367a11749a562c98f1a78853f0e6231216f71a2599421f977760d95"
+    },
+    "math-execution/inputs/040.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/040.bin",
+      "sha256": "337c6b086ebcc7b8d7add74835d5d05285bc5cc8ee75a13b4337533cdef6d2eb"
+    },
+    "math-execution/inputs/041.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/041.bin",
+      "sha256": "d2f4bae692f9929126fac8d2ae9a9d596e8c7fcc55b9d30932bade3c8c6ce5a6"
+    },
+    "math-execution/inputs/042.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/042.bin",
+      "sha256": "8a8c2b657bec5df5b4ecf945283849bed5e0db2ea9fa02bee11cbe37eed3167c"
+    },
+    "math-execution/inputs/043.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/043.bin",
+      "sha256": "462d4ffa23d8a024da453a71973dd33f42cd1072076647a9950e7c133040cb95"
+    },
+    "math-execution/inputs/044.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/044.bin",
+      "sha256": "043c8f2782c303603c21f0352fced44784ff3d7bac045d8c4231f25d230bfa92"
+    },
+    "math-execution/inputs/045.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/045.bin",
+      "sha256": "bc896e1212af6008a2bb4d060685ac850750bd9eb7d42970cff459523808bb1a"
+    },
+    "math-execution/inputs/046.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/046.bin",
+      "sha256": "d78cfca2b0da963c629dd390c6090a67a91768f41ee44a512567ca56eca367ea"
+    },
+    "math-execution/inputs/047.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/047.bin",
+      "sha256": "4f56cbfd6ecaff57a42f742ae62bd0df92a5074a02f5f91e855394e521415192"
+    },
+    "math-execution/inputs/048.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/048.bin",
+      "sha256": "3bafedbf8db0cc7315f94edabda68eb4e8f41b3df7541b4ca40b99719b189bf7"
+    },
+    "math-execution/inputs/049.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/049.bin",
+      "sha256": "31dc8e36dff76401770888fe46f43dc418d15462c70c85c364ffc81970c2a2f3"
+    },
+    "math-execution/inputs/050.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/050.bin",
+      "sha256": "3e7045257b1d1976283981b9f79491052a90e03e026ed7b485dbc40466ba3def"
+    },
+    "math-execution/inputs/051.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/051.bin",
+      "sha256": "eade40eedeb7d8bc4595dfc53537e6d74d161ece0a592d18a149cb0e145edf05"
+    },
+    "math-execution/inputs/052.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/052.bin",
+      "sha256": "4e545a595e4d34a0340bd91a53a8a0ff71571419c76e1cb311a0c0cdb748bd59"
+    },
+    "math-execution/inputs/053.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/053.bin",
+      "sha256": "f75fcd340bafa7aee8136bb20c512d4e106a1e5198a3dbb9f353f45e6ec67f15"
+    },
+    "math-execution/inputs/054.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/054.bin",
+      "sha256": "329c2ff5a8ef8ac34ad371a1cac5ca1945d976a8a275e4b562944dbe1408c990"
+    },
+    "math-execution/inputs/055.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/055.bin",
+      "sha256": "a4a1cc81696fdcd1b22b7baa6281a478dede17404566592d7000b6e1e2f78994"
+    },
+    "math-execution/inputs/056.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/056.bin",
+      "sha256": "d5dbd9a1204a33788f997bcd0841a3cae6b8ef875ce92f856860ccb32a5cf8c9"
+    },
+    "math-execution/inputs/057.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/057.bin",
+      "sha256": "d80d48ebd817b1af45a0feaa4e1d171ce323b634f0ed1f12fdeff8dd5522d89e"
+    },
+    "math-execution/inputs/058.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/058.bin",
+      "sha256": "fd3d449143ba040d5d4d509ac91c210f2ea4dd5fc07682fe53986dc2c8afe360"
+    },
+    "math-execution/inputs/059.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/059.bin",
+      "sha256": "eabe66aee9fb3cdfc20a62eab8c3778b4e445e7550a7b262e893fb2b3ec39f18"
+    },
+    "math-execution/inputs/060.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/060.bin",
+      "sha256": "31eecbc695aabe56d5a991707dc90222d670063b16be9f8cd06fd5f154c5785a"
+    },
+    "math-execution/inputs/061.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/061.bin",
+      "sha256": "80a4a87f37f5e0c49ff98bc1237aa8a0dba5be62c6c2ad868fc2a50a5650f8cf"
+    },
+    "math-execution/inputs/062.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/062.bin",
+      "sha256": "263fcec9910593155ec1c307011a061c6d17672ceafdbbf72263e12e1afb0444"
+    },
+    "math-execution/inputs/063.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/063.bin",
+      "sha256": "16eeb3dcc87092c084688bcd9158a909ff66b5817b61075934a843e616f88410"
+    },
+    "math-execution/inputs/064.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/064.bin",
+      "sha256": "46f878568e445a99ffbcf0c674886cff94bb698e75e2b66f7bb3499debc8e076"
+    },
+    "math-execution/inputs/065.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/065.bin",
+      "sha256": "16aeacbfcd37d27e35aaa24b8b7d2623351ff7fe85173522a6c6b7667462b251"
+    },
+    "math-execution/inputs/066.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/066.bin",
+      "sha256": "b6a37a300684e9ec19ff30153fb39a6e3b7ec9cfe1cf22b82fc9ae16d6480bd0"
+    },
+    "math-execution/inputs/067.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/067.bin",
+      "sha256": "fd72f8f2570a141e98b2e9fe26a7708f0310c86b0f74737b986018ad62843baa"
+    },
+    "math-execution/inputs/068.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/068.bin",
+      "sha256": "f2005ef2bd1debf50c969d6bd06aff3723922b7d13bca6d913b3a88537a2e565"
+    },
+    "math-execution/inputs/069.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/069.bin",
+      "sha256": "109c762b7334eff6935e6a7f7594c63063ae9cb0ab02f85b8fc2dce51f2095d5"
+    },
+    "math-execution/inputs/070.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/070.bin",
+      "sha256": "e1da381c6ee47b8bc81dd22dc2a659d1b3fe72728b8eb8e422b0448ac0ddafac"
+    },
+    "math-execution/inputs/071.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/071.bin",
+      "sha256": "87996a06b520477622f7124e82be5050c48227c8a201c2f5e3bd9928e27a4a2d"
+    },
+    "math-execution/inputs/072.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/072.bin",
+      "sha256": "c338fa317d3efb984b249fc0b880b4404f7270e09ad8d67a903e75f82fadb496"
+    },
+    "math-execution/inputs/073.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/073.bin",
+      "sha256": "543c0f1dfc28e459a327fa0b98adee70698aa3268483725c8723a28c0fa68cd0"
+    },
+    "math-execution/inputs/074.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/074.bin",
+      "sha256": "657d4390e718fcf00d35674983306e44cdf8386aaa6ccaf80833d9620aed9af0"
+    },
+    "math-execution/inputs/075.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/075.bin",
+      "sha256": "6c75f08cca81d216d67e37db236149d3b66fd8dfdb90b6a62fb362757317bbe0"
+    },
+    "math-execution/inputs/076.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/076.bin",
+      "sha256": "02391001ed7839efc783da052ff0d68ed4708ee308e6d4432c948d61cf7dcc57"
+    },
+    "math-execution/inputs/077.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/077.bin",
+      "sha256": "ee4b1b5538fb174e410dc3c1ad7282788ef5890c399bdfad1656b4c74058dcff"
+    },
+    "math-execution/inputs/078.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/078.bin",
+      "sha256": "07b971224029c5f7346f23b9acf285c1dffc1ccc11886d084b7a616c6f098f7b"
+    },
+    "math-execution/inputs/079.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/079.bin",
+      "sha256": "06a09e3542507778385829b664c405afa5bee5a2b4e844b8f8cbe1b5890b3f61"
+    },
+    "math-execution/inputs/080.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/080.bin",
+      "sha256": "b88127f177cc94c80915cd80ccde402f0d84cfca703cfcaf1b9e294ad7a97d2c"
+    },
+    "math-execution/inputs/081.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/081.bin",
+      "sha256": "9fbd73c1ebd0d97202ad84541e7d514b506ed6047e0dffd79e358622b4c04f4b"
+    },
+    "math-execution/inputs/082.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/082.bin",
+      "sha256": "2b367906456372e517469fd704beba42b801f04c2cdf803ecd8787846278a801"
+    },
+    "math-execution/inputs/083.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/083.bin",
+      "sha256": "0d09bf866dfb11c7e61aaf7d01a762cb6276ae101bbb80ac3341e9cbce8a9afc"
+    },
+    "math-execution/inputs/084.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/084.bin",
+      "sha256": "075893c12d48600b3b719337af138ce17ae87d82ec227c4c3c563e614ee6b860"
+    },
+    "math-execution/inputs/085.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/085.bin",
+      "sha256": "71983fdcecf5f3af0b450371290c78756641128d5849bce6d26c952e9e3c9219"
+    },
+    "math-execution/inputs/086.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/086.bin",
+      "sha256": "6c752dd208fcb9767fadbdbd35a9b482f9540b26a524bbe26da34e850fa96052"
+    },
+    "math-execution/inputs/087.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/087.bin",
+      "sha256": "338144a211859c77bce439c980f289eccef1783732452e0fd1467daf0159b9b3"
+    },
+    "math-execution/inputs/088.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/088.bin",
+      "sha256": "3fd0fa62142ecb78088de54334bd32a280c4c938a2e462c86e5cf53abc3baab6"
+    },
+    "math-execution/inputs/089.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/089.bin",
+      "sha256": "b5e83d33bd708174dd10d2b0f715208774c47e3768e2ce594780617bc3cbf83c"
+    },
+    "math-execution/inputs/090.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/090.bin",
+      "sha256": "48fe350420eee78cfd1db4daed82a029c61c2c3004492a5a2a0dc6a48e61e536"
+    },
+    "math-execution/inputs/091.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/091.bin",
+      "sha256": "2816a9188731aa8ed6a625a2c03d277a75ecacd3de078216c56bb681f7c663c5"
+    },
+    "math-execution/inputs/092.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/092.bin",
+      "sha256": "365362b88ece48198ae25914f21a490577e8883e91d0ac84a9d4d242c872b229"
+    },
+    "math-execution/inputs/093.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/093.bin",
+      "sha256": "29c3d4d7e0a7816bd263f058e66c1cbcdf2ca065505d07436ed295589099357f"
+    },
+    "math-execution/inputs/094.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/094.bin",
+      "sha256": "3cc19eae07485cb8d80f87b2a5c85d257784ce35a1a69b6f4af9f793cca68e63"
+    },
+    "math-execution/inputs/095.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/095.bin",
+      "sha256": "0dcb6f1d5c40edf97bfab519e139f8871262bc6c35989581118be310c31b294b"
+    },
+    "math-execution/inputs/096.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/096.bin",
+      "sha256": "6111803d9844f40440df6e4cb85d0263900550c000323d0c135b74ea4143ce45"
+    },
+    "math-execution/inputs/097.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/097.bin",
+      "sha256": "45ad57716ebf0c4a97a7c091772720ea72e0520933586d52b088880af4bee7a6"
+    },
+    "math-execution/inputs/098.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/098.bin",
+      "sha256": "783eb972e8c852f9859b1cd2c6324256b81b29c2fe043b1c367e8be689b1966e"
+    },
+    "math-execution/inputs/099.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/099.bin",
+      "sha256": "8112f322262130208e96f4253a79108cee7f305e5a30c59e24fd633e02d19a92"
+    },
+    "math-execution/inputs/100.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/100.bin",
+      "sha256": "b2a992331f38efb3936b62f528e424d9263880f54fc5eb8e3aee247cea14cfb1"
+    },
+    "math-execution/inputs/101.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/101.bin",
+      "sha256": "e28940579f385b788057cc4c1074e2650bd8507df723e2106b0f6e915ef6dc91"
+    },
+    "math-execution/inputs/102.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/102.bin",
+      "sha256": "8f1c4f7be857905cee5141a19440fd2afca334ed44b0e8b5ac3b58e00e4b1401"
+    },
+    "math-execution/inputs/103.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/103.bin",
+      "sha256": "d0cdf28c05b68610f818c6fd53e89a276a847e27e56693e91fd797d6ebc8b4a6"
+    },
+    "math-execution/inputs/104.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/104.bin",
+      "sha256": "80a37d8dbef89f40677cff8a84fab8bb36a8339c464f045cc1581e1dcb79e141"
+    },
+    "math-execution/inputs/105.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/105.bin",
+      "sha256": "398a7f79361823421a502325a804eb3c96f0c1d68348bb0e615a18b1763325b9"
+    },
+    "math-execution/inputs/106.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/106.bin",
+      "sha256": "1c34ce9ae46e2c644fac69c356886ee9a56b33c7367183f06725cb3466d70cf1"
+    },
+    "math-execution/inputs/107.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/107.bin",
+      "sha256": "75ad955ad08cce2e0b1830b26bb336ddba5af1a93379ebef05b469e72e9030d0"
+    },
+    "math-execution/inputs/108.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/108.bin",
+      "sha256": "55e1ae7a533651a9c29dd8d0b1e0db4094723d9f1c4c08a127b45fd265c7b130"
+    },
+    "math-execution/inputs/109.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/109.bin",
+      "sha256": "f1abfab485abee200f2697e30d911e130072171e346d895b0d7bb2df689731b1"
+    },
+    "math-execution/inputs/110.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/110.bin",
+      "sha256": "6bcd1e464a3eb19f7cea776b15c71bc54563f3bc475685b8a8364677203166a9"
+    },
+    "math-execution/inputs/111.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/111.bin",
+      "sha256": "50bf7f6f55bc56dff3696a73b942516280a42bd5eb324d742cfd5a64abf3e695"
+    },
+    "math-execution/inputs/112.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/112.bin",
+      "sha256": "8e74bd80d884e671d0536bc22416e2d6f680b9981f0ecb1ab5f14361e5622313"
+    },
+    "math-execution/inputs/113.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/113.bin",
+      "sha256": "aa74067c08cc4e45378f4b47007ed09af981c690aa1a05399fda485839e4eead"
+    },
+    "math-execution/inputs/114.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/114.bin",
+      "sha256": "0c23408f6b16e2e0c5e3bb9d3d2d3f705205cd488b4e182d2d3173884aeec0c7"
+    },
+    "math-execution/inputs/115.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/115.bin",
+      "sha256": "c8854aa4af82ad639b6d8889bfe0a38f2ba33eca2bea826fcad8c973b6a8221c"
+    },
+    "math-execution/inputs/116.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/116.bin",
+      "sha256": "ea26c7e8304df11cf054e45e605516e868fd80bf0f4fd531b912ea3080758e3b"
+    },
+    "math-execution/inputs/117.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/117.bin",
+      "sha256": "0358e0895b29510b5d19959ccf70a404ca4659e653657d98a1537f1f50d28689"
+    },
+    "math-execution/inputs/118.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/118.bin",
+      "sha256": "7659a006a95a5e7f9ea3fa049b0988c7f4da7e348c2d7a2b4fa3065efb94b4db"
+    },
+    "math-execution/inputs/119.bin": {
+      "path": ".build/m0-v138-execution-20261023/inputs/119.bin",
+      "sha256": "45a793a41e7c207dae4a8c0a0be699ad5b4946206309903ae9eafec37dcd680f"
+    },
+    "math-execution/layout-proof.json": {
+      "path": ".build/m0-v138-execution-20261023/layout-proof.json",
+      "sha256": "e12d9e471389510f8255901d28f34f1652b8ea6c788cb768659603debc2f2196"
+    },
+    "math-execution/layout-proof.py": {
+      "path": ".build/m0-v138-execution-20261023/layout-proof.py",
+      "sha256": "193d5305ceed57d5d313ceebc1e10165804949f1491d2c41a14c65718241837b"
+    },
+    "math-execution/make-canaries.py": {
+      "path": ".build/m0-v138-execution-20261023/make-canaries.py",
+      "sha256": "fdbfb48f52d11bcbf0c080be733ad10db4d15184849c3b555d23af7e0a324ca3"
+    },
+    "math-execution/oracle.json": {
+      "path": ".build/m0-v138-execution-20261023/oracle.json",
+      "sha256": "9e60e52fd85b84f6c9665988663b9ed2077a4033c36b099e3ce1f745d15caf41"
+    },
+    "math-execution/path-coverage.json": {
+      "path": ".build/m0-v138-execution-20261023/path-coverage.json",
+      "sha256": "8ccb82a6b4e91cfa8d3f20bd083ffa097c2558a23754cdfc49d3879ce59a75f0"
+    },
+    "math-execution/prepare.py": {
+      "path": ".build/m0-v138-execution-20261023/prepare.py",
+      "sha256": "18c3e34a5f9bc605d758acf51cb6e5b25f8fa3ee67c3cd83af7d0011e5e59125"
+    },
+    "math-execution/reference/reference.ld": {
+      "path": ".build/m0-v138-execution-20261023/reference/reference.ld",
+      "sha256": "876afe5361591610b30071716399ab1ac967f05c76a163fd6072a9dcab88476b"
+    },
+    "math-execution/reference-proof.json": {
+      "path": ".build/m0-v138-execution-20261023/reference-proof.json",
+      "sha256": "d93116d6f3ef3b5f20be72a6b1e4ffb6afe0472594b243d0cf66a16adceb1089"
+    },
+    "math-execution/run-math.py": {
+      "path": ".build/m0-v138-execution-20261023/run-math.py",
+      "sha256": "d70be1e88a2202618581a55c243c70d10be16a58ae6356bf50f7c644a7d8dd09"
+    },
+    "math-execution/runner-self-test/result.json": {
+      "path": ".build/m0-v138-execution-20261023/runner-self-test/result.json",
+      "sha256": "a64e916df73980aec7226e77260af136f126a33f08c70c6026ac3804fe7ed433"
+    },
+    "math-execution/runner-self-test.py": {
+      "path": ".build/m0-v138-execution-20261023/runner-self-test.py",
+      "sha256": "27916825021f2e3417e6361ffac1756d440bb0fbe2110f1e722bf33c5b0cd0d1"
+    },
+    "math-execution/sources/TIMING-original.c": {
+      "path": ".build/m0-v138-execution-20261023/sources/TIMING-original.c",
+      "sha256": "0a91ef03943abcc1556f320a49ad8bcc17656cfc1ef13b4d8b30535fd45d38bb"
+    },
+    "math-execution/sources/adapters.S": {
+      "path": ".build/m0-v138-execution-20261023/sources/adapters.S",
+      "sha256": "b2ea3b139878afb28e7498495d91d8fda87608e27f8676e94c390165f0d35e86"
+    },
+    "math-execution/sources/compositions.c": {
+      "path": ".build/m0-v138-execution-20261023/sources/compositions.c",
+      "sha256": "4a3e9cf82350831eb668744866751cc11ed7ad29a6c3d87b702438c29eec6abb"
+    }
+  },
+  "archive_scope": "Exact 13 analysis/prototype files, offline freeze record, math harness producers and reports, 120 complete oracle input chunks. Compiled firmware/APP/reference binaries and copied dependency trees are omitted; their original identities remain pinned in execution-manifest.json.",
+  "historical_fields": "Source reports and producer paths are preserved verbatim. Their commit/approval/execution status fields describe their original recording time. This archive is not a hardware permission or an executable transaction package.",
+  "hardware_scope": "This checkpoint includes no live device state, authorization, Flash backup, SD snapshot or transaction execution receipts. Hardware operator is coordinated separately.",
+  "goal_complete": false,
+  "production_promoted": false,
+  "M4_changed": false,
+  "new_software_variant_created": false,
+  "original_workspace": "/Users/bolk/Projects/MK61S_MINI"
+}
