@@ -1,0 +1,2399 @@
+--- a/code/native_eabi_m0.S
++++ b/code/native_eabi_m0.S
+@@ -964,6 +964,11 @@
+ .ltorg
+ .align 5
+ .Lsqrt64_coefficients:
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++.global pow_sqrt64_coefficients
++.hidden pow_sqrt64_coefficients
++pow_sqrt64_coefficients:
++#endif
+ #include "native_eabi_m0_sqrt64_table.inc"
+ end mk61_m0_sqrt
+ // Thin exact-power dispatch keeps trivial results out of the large frame.
+--- a/code/native_eabi_m0_pow_fast.inc
++++ b/code/native_eabi_m0_pow_fast.inc
+@@ -225,6 +225,7 @@
+ #endif
+
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++extern "C" U pow_root128(U,U);
+ #include "native_eabi_m0_pow_integer128.inc"
+ #include "native_eabi_m0_pow_dyadic128.inc"
+ #endif
+@@ -639,10 +640,22 @@
+   if(xb==UINT64_C(0x3FF0000000000000)) return real(ym>D::Infinity && !(yb&D::Quiet)?yb|D::Quiet:xb);
+   if(xb&D::Sign) return pow_negative_integer(x,y);
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+-  if(uint32_t(yb) && xb-UINT64_C(0x3FF0000000000000)+64<=96) {
+-    U result;
+-    if(pow_near_one_binomial(xb,yb,result)) return real(result);
+-  }
++  const uint32_t xh=uint32_t(xb>>32);
++  if(xh-0x3FEFFFFFU<=1U) {
++    if(uint32_t(yb) && xb-UINT64_C(0x3FF0000000000000)+64<=96) {
++      U result;
++      if(pow_near_one_binomial(xb,yb,result)) return real(result);
++    }
++  } else if(!uint32_t(yb)) {
++    const uint32_t yh=uint32_t(yb>>32);
++    const bool small=yh-0x40080000U<=0x00180000U &&
++      !(yh&(yh<0x40100000U?0x7FFFFU:0x3FFFFU));
++    if(!small) {
++      const U result=pow_root128(xb,yb);
++      if(result!=(D::Infinity|D::Quiet)) return real(result);
++    }
++  }
++
+ #endif
+   return pow_positive_checked(x,y);
+ }
+--- /dev/null
++++ b/code/native_eabi_m0_pow_root64.inc
+@@ -0,0 +1,179 @@
++.syntax unified
++.cpu cortex-m0plus
++.thumb
++.macro sqrt64_polynomial
++ asrs r4,r2,#4
++ muls r3,r4
++ asrs r3,#16
++ adds r1,r3
++ lsls r3,r1,#20
++ lsrs r3,#20
++ muls r3,r2
++ asrs r3,#20
++ asrs r1,#12
++ muls r1,r2
++ asrs r1,#8
++ adds r1,r3
++ adds r0,r1
++.endm
++
++// Exact 32-bit square: R0 is retained, R4:R3 is the result.
++.macro sqrt64_square32 scratch
++ uxth r2,r0
++ lsrs r3,r0,#16
++ mov r4,r2
++ muls r4,r2
++ muls r2,r3
++ muls r3,r3
++ lsls \scratch,r2,#17
++ lsrs r2,#15
++ adds r4,\scratch
++ adcs r3,r2
++.endm
++
++
++.section .m0_sqrt64_fixed.root64,"ax",%progbits
++.align 2
++.global pow_sqrt64_raw
++.type pow_sqrt64_raw,%function
++.thumb_func
++// A in R1:R0 is normalized Q63; parity in R2 is 0 or1.
++// Return sqrt(A/2^63 * 2^parity)*2^63 modulo2^64, error<3.
++// Input/return overflow is handled by the interval wrapper.
++pow_sqrt64_raw:
++ push {r4-r7,lr}
++ lsrs r7,r1,#23
++ cmp r2,#0
++ beq .Lroot64_even
++ movs r3,#1
++ lsls r3,#8
++ eors r7,r3
++ mov r4,r0
++ mov r5,r1
++ b .Lroot64_coordinate
++.Lroot64_even:
++ lsrs r4,r0,#1
++ lsls r5,r1,#31
++ orrs r4,r5
++ lsrs r5,r1,#1
++.Lroot64_coordinate:
++ mov lr,r4
++ lsrs r2,r0,#23
++ lsls r3,r1,#9
++ orrs r2,r3
++ movs r3,#1
++ lsls r3,#31
++ eors r2,r3
++ asrs r2,#11
++ adds r2,#1
++ asrs r2,#1
++ lsls r7,#4
++ ldr r4,=pow_sqrt64_coefficients
++ adds r7,r4
++ ldmia r7!,{r0,r1}
++ asrs r3,r1,#21
++ lsls r3,#3
++ lsls r1,#11
++ lsrs r1,#9
++ sqrt64_polynomial
++ // A certified one-unit bias in the last cell keeps R within a word.
++ mov r12,r0                   // R ~= sqrt(m)*2^31
++ ldmia r7!,{r0,r1}
++ lsrs r3,r1,#21
++ lsls r3,#3
++ lsls r1,#11
++ asrs r1,#9
++ sqrt64_polynomial
++ mov r7,r0                    // V ~= 2^31/sqrt(m)
++ mov r6,r0                    // Retain inverse seed through the Q52 step.
++ mov r0,r12
++ sqrt64_square32 r1
++ mov r0,lr
++ mov r2,r5
++ subs r0,r4
++ sbcs r2,r3
++ // The signed residual fits 37 bits. Dropping six low bits contributes
++ // less than 63*(2^31+13)/2^42 to the Q52 root error.
++ lsrs r0,#6
++ lsls r2,#26
++ orrs r0,r2
++ // The three partial products undershoot the real high product by <3.
++ // Adding nine and shifting four places bounds the error below 5/8.
++ asrs r4,r0,#16
++ uxth r5,r0
++ lsrs r3,r7,#16
++ uxth r7,r7
++ muls r5,r3
++ lsrs r5,#16
++ muls r7,r4
++ asrs r7,#16
++ muls r4,r3
++ adds r4,r5
++ adds r4,r7
++ adds r4,#9
++ asrs r2,r4,#4
++ mov r0,r12
++ lsrs r1,r0,#11
++ lsls r0,#21
++ asrs r3,r2,#31
++ adds r0,r2
++ adcs r1,r3
++ // Certified polynomial errors (<11 root / <13 inverse Q31 units)
++ // bound q's error below one unit. A single exact correction suffices.
++ // Its signed 106-bit residual fits 64 bits; only the low square is needed.
++ sqrt64_square32 r7
++ mov r5,r0
++ muls r5,r1
++ lsls r5,#1
++ adds r3,r5
++ mov r7,lr
++ lsls r7,#10
++ movs r5,#0
++ subs r5,r4
++ sbcs r7,r3                   // R7:R5 = radicand-q*q
++
++ // R7:R5 is exact signed residual; R1:R0 is the unrounded Q52 root.
++ // Preserve the inverse and extend the center by eleven fraction bits.
++ mov r12,r6
++ lsls r1,#11
++ lsrs r2,r0,#21
++ orrs r1,r2
++ lsls r0,#11
++ asrs r6,r7,#31
++ beq .Lroot64_absolute
++ movs r2,#0
++ subs r5,r2,r5
++ movs r3,#0
++ sbcs r3,r7
++ mov r7,r3
++.Lroot64_absolute:
++ // floor(abs(residual)/2^22) fits one word.
++ lsrs r5,#22
++ lsls r7,#10
++ orrs r5,r7
++ mov r7,r12
++ uxth r2,r5
++ lsrs r5,#16
++ uxth r3,r7
++ lsrs r7,#16
++ muls r2,r7
++ muls r3,r5
++ muls r5,r7
++ lsrs r2,#16
++ lsrs r3,#16
++ adds r5,r2
++ adds r5,r3
++ lsrs r5,#19
++ cmp r6,#0
++ bne .Lroot64_subtract
++ movs r2,#0
++ adds r0,r5
++ adcs r1,r2
++ pop {r4-r7,pc}
++.Lroot64_subtract:
++ movs r2,#0
++ subs r0,r5
++ sbcs r1,r2
++ pop {r4-r7,pc}
++.ltorg
++.size pow_sqrt64_raw,.-pow_sqrt64_raw
+--- /dev/null
++++ b/code/native_eabi_m0_pow_root_prefix.inc
+@@ -0,0 +1,2132 @@
++/* Project-owned pow prefix; frozen GNU Thumb schedule from the pinned C++ reference.
++ * Full128-bit numerator, bounded fixed roots, strict midpoint certification.
++ * No new coefficients or global RAM. Ambiguity retains the existing fallback. */
++	.syntax	unified
++	.eabi_attribute	67, "2.09"	@ Tag_conformance
++	.cpu	cortex-m0plus
++	.eabi_attribute	6, 12	@ Tag_CPU_arch
++	.eabi_attribute	7, 77	@ Tag_CPU_arch_profile
++	.eabi_attribute	8, 0	@ Tag_ARM_ISA_use
++	.eabi_attribute	9, 1	@ Tag_THUMB_ISA_use
++	.eabi_attribute	34, 0	@ Tag_CPU_unaligned_access
++	.eabi_attribute	17, 1	@ Tag_ABI_PCS_GOT_use
++	.eabi_attribute	20, 1	@ Tag_ABI_FP_denormal
++	.eabi_attribute	21, 0	@ Tag_ABI_FP_exceptions
++	.eabi_attribute	23, 3	@ Tag_ABI_FP_number_model
++	.eabi_attribute	24, 1	@ Tag_ABI_align_needed
++	.eabi_attribute	25, 1	@ Tag_ABI_align_preserved
++	.eabi_attribute	38, 1	@ Tag_ABI_FP_16bit_format
++	.eabi_attribute	18, 4	@ Tag_ABI_PCS_wchar_t
++	.eabi_attribute	14, 0	@ Tag_ABI_PCS_R9_use
++	.file	"kernels.cpp"
++	.section	.m0_pow_root_prefix,"ax",%progbits
++	.globl	pow_integer128_base             @ -- Begin function pow_integer128_base
++	.p2align	1
++	.type	pow_integer128_base,%function
++	.code	16
++	.thumb_func
++pow_integer128_base:                    @ @pow_integer128_base
++	.fnstart
++@ %bb.0:
++	.save	{r4, r5, r6, r7, lr}
++	push	{r4, r5, r6, r7, lr}
++	.pad	#52
++	sub	sp, #52
++	str	r1, [sp, #44]                   @ 4-byte Spill
++	str	r0, [sp, #48]                   @ 4-byte Spill
++	ldr	r4, [r0]
++	lsrs	r5, r4, #16
++	ldr	r2, [r1]
++	uxth	r1, r2
++	mov	r3, r5
++	str	r5, [sp, #32]                   @ 4-byte Spill
++	muls	r3, r1, r3
++	uxth	r4, r4
++	mov	r0, r4
++	str	r4, [sp, #28]                   @ 4-byte Spill
++	muls	r0, r1, r0
++	str	r0, [sp, #40]                   @ 4-byte Spill
++	lsrs	r0, r0, #16
++	adds	r3, r0, r3
++	lsrs	r7, r3, #16
++	str	r2, [sp, #8]                    @ 4-byte Spill
++	lsrs	r0, r2, #16
++	muls	r5, r0, r5
++	adds	r6, r7, r5
++	uxth	r3, r3
++	muls	r4, r0, r4
++	adds	r2, r3, r4
++	str	r2, [sp, #36]                   @ 4-byte Spill
++	lsrs	r3, r2, #16
++	adds	r6, r6, r3
++	str	r6, [sp, #16]                   @ 4-byte Spill
++	ldr	r2, [sp, #48]                   @ 4-byte Reload
++	ldr	r3, [r2, #4]
++	lsrs	r2, r3, #16
++	mov	r4, r2
++	muls	r4, r1, r4
++	uxth	r5, r3
++	muls	r1, r5, r1
++	lsrs	r3, r1, #16
++	adds	r3, r3, r4
++	lsrs	r4, r3, #16
++	mov	r7, r2
++	muls	r7, r0, r7
++	adds	r4, r4, r7
++	uxth	r3, r3
++	muls	r0, r5, r0
++	adds	r0, r3, r0
++	lsrs	r7, r0, #16
++	lsls	r0, r0, #16
++	uxth	r1, r1
++	adds	r0, r0, r1
++	str	r0, [sp, #20]                   @ 4-byte Spill
++	adds	r0, r6, r0
++	mov	r0, r4
++	adcs	r0, r7
++	str	r0, [sp, #24]                   @ 4-byte Spill
++	adds	r0, r4, r7
++	str	r0, [sp, #12]                   @ 4-byte Spill
++	ldr	r0, [sp, #44]                   @ 4-byte Reload
++	ldr	r6, [r0, #4]
++	uxth	r4, r6
++	mov	r0, r2
++	muls	r0, r4, r0
++	mov	r7, r5
++	muls	r7, r4, r7
++	lsrs	r3, r7, #16
++	adds	r3, r3, r0
++	lsrs	r1, r3, #16
++	str	r6, [sp, #4]                    @ 4-byte Spill
++	lsrs	r6, r6, #16
++	muls	r2, r6, r2
++	adds	r1, r1, r2
++	uxth	r2, r3
++	muls	r5, r6, r5
++	adds	r2, r2, r5
++	lsrs	r5, r2, #16
++	lsls	r2, r2, #16
++	uxth	r3, r7
++	adds	r7, r2, r3
++	ldr	r0, [sp, #20]                   @ 4-byte Reload
++	ldr	r2, [sp, #16]                   @ 4-byte Reload
++	adds	r0, r2, r0
++	str	r0, [sp, #20]                   @ 4-byte Spill
++	ldr	r0, [sp, #12]                   @ 4-byte Reload
++	adcs	r0, r7
++	adcs	r5, r1
++	mov	r3, r5
++	ldr	r1, [sp, #32]                   @ 4-byte Reload
++	mov	r5, r1
++	muls	r5, r4, r5
++	ldr	r0, [sp, #28]                   @ 4-byte Reload
++	muls	r4, r0, r4
++	lsrs	r2, r4, #16
++	adds	r5, r2, r5
++	lsrs	r2, r5, #16
++	muls	r1, r6, r1
++	adds	r2, r2, r1
++	uxth	r1, r5
++	mov	r5, r3
++	muls	r0, r6, r0
++	adds	r0, r1, r0
++	lsrs	r1, r0, #16
++	lsls	r0, r0, #16
++	uxth	r4, r4
++	adds	r0, r0, r4
++	ldr	r3, [sp, #20]                   @ 4-byte Reload
++	adds	r0, r0, r3
++	str	r0, [sp, #32]                   @ 4-byte Spill
++	adcs	r1, r2
++	ldr	r0, [sp, #24]                   @ 4-byte Reload
++	adds	r0, r7, r0
++	movs	r2, #0
++	adds	r3, r0, r1
++	str	r2, [sp, #28]                   @ 4-byte Spill
++	adcs	r5, r2
++	ldr	r0, [sp, #36]                   @ 4-byte Reload
++	lsls	r0, r0, #16
++	ldr	r1, [sp, #40]                   @ 4-byte Reload
++	uxth	r1, r1
++	adds	r7, r0, r1
++	ldr	r2, [sp, #48]                   @ 4-byte Reload
++	ldr	r0, [r2, #16]
++	ldr	r1, [sp, #44]                   @ 4-byte Reload
++	ldr	r1, [r1, #16]
++	adds	r4, r1, r0
++	ldr	r1, [r2, #12]
++	ldr	r0, [r2, #8]
++	mov	r6, r0
++	orrs	r6, r1
++	beq	.Lpow_root_prefix_BB0_2
++@ %bb.1:
++	ldr	r2, [sp, #8]                    @ 4-byte Reload
++	str	r4, [sp, #36]                   @ 4-byte Spill
++	mov	r4, r3
++	ldr	r3, [sp, #4]                    @ 4-byte Reload
++	bl	_ZL28pow_integer128_approx_high64yy
++	adds	r7, r0, r7
++	str	r7, [sp, #40]                   @ 4-byte Spill
++	ldr	r0, [sp, #32]                   @ 4-byte Reload
++	adcs	r1, r0
++	ldr	r0, [sp, #28]                   @ 4-byte Reload
++	adcs	r4, r0
++	str	r4, [sp, #44]                   @ 4-byte Spill
++	ldr	r4, [sp, #36]                   @ 4-byte Reload
++	adcs	r5, r0
++	b	.Lpow_root_prefix_BB0_3
++.Lpow_root_prefix_BB0_2:
++	str	r7, [sp, #40]                   @ 4-byte Spill
++	str	r3, [sp, #44]                   @ 4-byte Spill
++	ldr	r1, [sp, #32]                   @ 4-byte Reload
++.Lpow_root_prefix_BB0_3:
++	ldr	r7, [sp, #48]                   @ 4-byte Reload
++	str	r4, [r7, #16]
++	ldr	r0, [r7, #20]
++	.inst.n	0x1e43 @ subs	r3, r0, #1
++	mov	r2, r0
++	sbcs	r2, r3
++	cmp	r6, #0
++	beq	.Lpow_root_prefix_BB0_5
++@ %bb.4:
++	movs	r2, #8
++.Lpow_root_prefix_BB0_5:
++	adds	r0, r2, r0
++	cmp	r5, #0
++	ldr	r6, [sp, #40]                   @ 4-byte Reload
++	bmi	.Lpow_root_prefix_BB0_7
++@ %bb.6:
++	lsrs	r2, r6, #31
++	lsls	r3, r1, #1
++	adds	r2, r3, r2
++	ldr	r4, [sp, #44]                   @ 4-byte Reload
++	lsrs	r3, r4, #31
++	lsls	r5, r5, #1
++	adds	r5, r5, r3
++	lsls	r3, r4, #1
++	lsrs	r1, r1, #31
++	adds	r3, r3, r1
++	lsls	r6, r6, #1
++	lsls	r0, r0, #1
++	mov	r1, r2
++	b	.Lpow_root_prefix_BB0_8
++.Lpow_root_prefix_BB0_7:
++	.inst.n	0x1c62 @ adds	r2, r4, #1
++	str	r2, [r7, #16]
++	ldr	r3, [sp, #44]                   @ 4-byte Reload
++.Lpow_root_prefix_BB0_8:
++	str	r6, [r7, #8]
++	str	r3, [r7]
++	str	r0, [r7, #20]
++	str	r1, [r7, #12]
++	str	r5, [r7, #4]
++	add	sp, #52
++	pop	{r4, r5, r6, r7, pc}
++.Lpow_root_prefix_func_end0:
++	.size	pow_integer128_base, .Lpow_root_prefix_func_end0-pow_integer128_base
++	.cantunwind
++	.fnend
++                                        @ -- End function
++	.p2align	1                               @ -- Begin function _ZL28pow_integer128_approx_high64yy
++	.type	_ZL28pow_integer128_approx_high64yy,%function
++	.code	16
++	.thumb_func
++_ZL28pow_integer128_approx_high64yy:    @ @_ZL28pow_integer128_approx_high64yy
++	.fnstart
++@ %bb.0:
++	.save	{r4, r5, r6, r7, lr}
++	push	{r4, r5, r6, r7, lr}
++	lsrs	r5, r2, #16
++	lsrs	r4, r1, #16
++	mov	r6, r5
++	muls	r6, r4, r6
++	uxth	r1, r1
++	muls	r5, r1, r5
++	lsrs	r5, r5, #16
++	adds	r5, r5, r6
++	uxth	r2, r2
++	muls	r2, r4, r2
++	lsrs	r2, r2, #16
++	adds	r5, r5, r2
++	lsrs	r6, r0, #16
++	lsrs	r2, r3, #16
++	mov	r7, r6
++	muls	r7, r2, r7
++	uxth	r0, r0
++	muls	r0, r2, r0
++	lsrs	r0, r0, #16
++	adds	r7, r0, r7
++	uxth	r0, r3
++	muls	r6, r0, r6
++	lsrs	r3, r6, #16
++	adds	r6, r7, r3
++	movs	r3, #0
++	adds	r5, r6, r5
++	adcs	r3, r3
++	mov	r6, r4
++	muls	r6, r0, r6
++	muls	r0, r1, r0
++	lsrs	r7, r0, #16
++	adds	r6, r7, r6
++	lsrs	r7, r6, #16
++	muls	r4, r2, r4
++	adds	r4, r7, r4
++	uxth	r6, r6
++	muls	r1, r2, r1
++	adds	r2, r6, r1
++	lsrs	r1, r2, #16
++	adds	r1, r4, r1
++	lsls	r2, r2, #16
++	uxth	r0, r0
++	adds	r0, r2, r0
++	adds	r0, r5, r0
++	adcs	r1, r3
++	pop	{r4, r5, r6, r7, pc}
++.Lpow_root_prefix_func_end1:
++	.size	_ZL28pow_integer128_approx_high64yy, .Lpow_root_prefix_func_end1-_ZL28pow_integer128_approx_high64yy
++	.cantunwind
++	.fnend
++                                        @ -- End function
++	.globl	root64_boundary                 @ -- Begin function root64_boundary
++	.p2align	2
++	.type	root64_boundary,%function
++	.code	16
++	.thumb_func
++root64_boundary:                        @ @root64_boundary
++	.fnstart
++@ %bb.0:
++	.save	{r4, r5, r6, r7, lr}
++	push	{r4, r5, r6, r7, lr}
++	.pad	#28
++	sub	sp, #28
++	mov	r1, r0
++	ldr	r0, .Lpow_root_prefix_CPI2_0
++	.inst.n	0x1c54 @ adds	r4, r2, #1
++	mov	r5, r3
++	sbcs	r5, r0
++	movs	r0, #0
++	ldr	r6, .Lpow_root_prefix_CPI2_1
++	.inst.n	0x1e64 @ subs	r4, r4, #1
++	adcs	r6, r5
++	blo	.Lpow_root_prefix_BB2_5
++@ %bb.1:
++	ldr	r5, [r1, #12]
++	movs	r6, #1
++	lsls	r4, r6, #20
++	cmp	r5, r4
++	bhi	.Lpow_root_prefix_BB2_5
++@ %bb.2:
++	ldr	r0, [r1, #8]
++	lsrs	r4, r3, #20
++	adds	r4, r0, r4
++	ldr	r7, .Lpow_root_prefix_CPI2_3
++	.inst.n	0x1cb8 @ adds	r0, r7, #2
++	cmp	r4, r0
++	mov	r0, r6
++	bgt	.Lpow_root_prefix_BB2_5
++@ %bb.3:
++	str	r5, [sp, #24]                   @ 4-byte Spill
++	movs	r5, #0
++	cmp	r4, r7
++	bge	.Lpow_root_prefix_BB2_6
++@ %bb.4:
++	mvns	r0, r5
++.Lpow_root_prefix_BB2_5:
++	add	sp, #28
++	pop	{r4, r5, r6, r7, pc}
++.Lpow_root_prefix_BB2_6:
++	ldr	r0, .Lpow_root_prefix_CPI2_2
++	adds	r0, r4, r0
++	str	r0, [sp, #8]                    @ 4-byte Spill
++	lsrs	r0, r2, #21
++	lsls	r3, r3, #11
++	adds	r0, r3, r0
++	str	r5, [sp, #12]                   @ 4-byte Spill
++	uxth	r6, r0
++	ldr	r0, [r1, #4]
++	lsrs	r5, r0, #16
++	str	r5, [sp, #20]                   @ 4-byte Spill
++	mov	r4, r6
++	muls	r4, r5, r4
++	uxth	r0, r0
++	str	r0, [sp, #16]                   @ 4-byte Spill
++	mov	r5, r6
++	muls	r5, r0, r5
++	str	r5, [sp]                        @ 4-byte Spill
++	lsrs	r0, r5, #16
++	adds	r7, r0, r4
++	lsrs	r0, r7, #16
++	str	r0, [sp, #4]                    @ 4-byte Spill
++	movs	r0, #1
++	lsls	r4, r0, #15
++	lsrs	r5, r3, #16
++	orrs	r5, r4
++	mov	r3, r5
++	ldr	r4, [sp, #20]                   @ 4-byte Reload
++	muls	r3, r4, r3
++	ldr	r4, [sp, #4]                    @ 4-byte Reload
++	adds	r3, r4, r3
++	str	r3, [sp, #4]                    @ 4-byte Spill
++	uxth	r7, r7
++	mov	r4, r5
++	ldr	r3, [sp, #16]                   @ 4-byte Reload
++	muls	r4, r3, r4
++	adds	r7, r7, r4
++	lsrs	r4, r7, #16
++	ldr	r3, [sp, #4]                    @ 4-byte Reload
++	adds	r3, r3, r4
++	str	r3, [sp, #4]                    @ 4-byte Spill
++	ldr	r1, [r1]
++	lsrs	r3, r1, #16
++	mov	r4, r6
++	muls	r4, r3, r4
++	uxth	r1, r1
++	muls	r6, r1, r6
++	lsrs	r6, r6, #16
++	adds	r4, r6, r4
++	lsrs	r6, r4, #16
++	muls	r3, r5, r3
++	adds	r3, r6, r3
++	uxth	r4, r4
++	muls	r5, r1, r5
++	adds	r1, r4, r5
++	lsrs	r1, r1, #16
++	adds	r1, r3, r1
++	lsls	r3, r7, #16
++	ldr	r4, [sp]                        @ 4-byte Reload
++	uxth	r4, r4
++	adds	r3, r3, r4
++	adds	r3, r3, r1
++	ldr	r1, [sp, #12]                   @ 4-byte Reload
++	adcs	r1, r1
++	lsls	r4, r0, #10
++	lsls	r2, r2, #11
++	adds	r4, r2, r4
++	uxth	r4, r4
++	mov	r5, r4
++	ldr	r7, [sp, #20]                   @ 4-byte Reload
++	muls	r5, r7, r5
++	ldr	r6, [sp, #16]                   @ 4-byte Reload
++	muls	r4, r6, r4
++	lsrs	r4, r4, #16
++	adds	r4, r4, r5
++	lsrs	r5, r4, #16
++	lsrs	r2, r2, #16
++	muls	r7, r2, r7
++	adds	r5, r5, r7
++	uxth	r4, r4
++	muls	r2, r6, r2
++	adds	r2, r4, r2
++	lsrs	r2, r2, #16
++	adds	r2, r5, r2
++	ldr	r5, [sp, #8]                    @ 4-byte Reload
++	adds	r2, r3, r2
++	ldr	r3, [sp, #4]                    @ 4-byte Reload
++	adcs	r1, r3
++	ldr	r3, [sp, #24]                   @ 4-byte Reload
++	.inst.n	0x1cdb @ adds	r3, r3, #3
++	.inst.n	0x1cac @ adds	r4, r5, #2
++	bne	.Lpow_root_prefix_BB2_9
++@ %bb.7:
++	movs	r4, #0
++	rsbs	r0, r3, #0
++	mov	r3, r4
++	sbcs	r3, r4
++	subs	r0, r2, r0
++	sbcs	r1, r3
++	blo	.Lpow_root_prefix_BB2_11
++@ %bb.8:
++	mov	r0, r4
++	b	.Lpow_root_prefix_BB2_12
++.Lpow_root_prefix_BB2_9:
++	cmp	r5, #0
++	beq	.Lpow_root_prefix_BB2_14
++@ %bb.10:
++	lsls	r4, r0, #31
++	b	.Lpow_root_prefix_BB2_15
++.Lpow_root_prefix_BB2_11:
++	movs	r0, #1
++.Lpow_root_prefix_BB2_12:
++	cmp	r0, #0
++	beq	.Lpow_root_prefix_BB2_5
++@ %bb.13:
++	mvns	r0, r4
++	b	.Lpow_root_prefix_BB2_5
++.Lpow_root_prefix_BB2_14:
++	lsls	r4, r0, #30
++.Lpow_root_prefix_BB2_15:
++	cmp	r1, r4
++	bhs	.Lpow_root_prefix_BB2_18
++@ %bb.16:
++	rsbs	r0, r2, #0
++	sbcs	r4, r1
++	movs	r1, #0
++	subs	r0, r3, r0
++	mov	r0, r1
++	sbcs	r0, r4
++	blo	.Lpow_root_prefix_BB2_20
++@ %bb.17:
++	mov	r0, r1
++	b	.Lpow_root_prefix_BB2_21
++.Lpow_root_prefix_BB2_18:
++	subs	r1, r1, r4
++	subs	r2, r3, r2
++	ldr	r3, [sp, #12]                   @ 4-byte Reload
++	mov	r2, r3
++	sbcs	r2, r1
++	bhs	.Lpow_root_prefix_BB2_19
++	b	.Lpow_root_prefix_BB2_5
++.Lpow_root_prefix_BB2_19:
++	mov	r0, r3
++	b	.Lpow_root_prefix_BB2_5
++.Lpow_root_prefix_BB2_20:
++	movs	r0, #1
++.Lpow_root_prefix_BB2_21:
++	cmp	r0, #0
++	bne	.Lpow_root_prefix_BB2_22
++	b	.Lpow_root_prefix_BB2_5
++.Lpow_root_prefix_BB2_22:
++	mvns	r0, r1
++	b	.Lpow_root_prefix_BB2_5
++	.p2align	2
++@ %bb.23:
++.Lpow_root_prefix_CPI2_0:
++	.long	2146435071                      @ 0x7fefffff
++.Lpow_root_prefix_CPI2_1:
++	.long	2145386495                      @ 0x7fdfffff
++.Lpow_root_prefix_CPI2_2:
++	.long	4294966273                      @ 0xfffffc01
++.Lpow_root_prefix_CPI2_3:
++	.long	1021                            @ 0x3fd
++.Lpow_root_prefix_func_end2:
++	.size	root64_boundary, .Lpow_root_prefix_func_end2-root64_boundary
++	.cantunwind
++	.fnend
++                                        @ -- End function
++	.globl	pow_root128_decide              @ -- Begin function pow_root128_decide
++	.p2align	2
++	.type	pow_root128_decide,%function
++	.code	16
++	.thumb_func
++pow_root128_decide:                     @ @pow_root128_decide
++	.fnstart
++@ %bb.0:
++	.save	{r4, r5, r6, r7, lr}
++	push	{r4, r5, r6, r7, lr}
++	.pad	#28
++	sub	sp, #28
++	mov	r5, r2
++	ldr	r6, [sp, #52]
++	str	r6, [sp, #4]
++	ldr	r4, [sp, #48]
++	str	r4, [sp]
++	str	r0, [sp, #20]                   @ 4-byte Spill
++	str	r1, [sp, #24]                   @ 4-byte Spill
++	bl	_ZL16root128_boundaryRK13PowInteger128jby
++	ldr	r7, .Lpow_root_prefix_CPI3_0
++	movs	r2, #0
++	cmp	r0, #0
++	beq	.Lpow_root_prefix_BB3_5
++@ %bb.1:
++	ldr	r1, [sp, #56]
++	cmp	r1, #0
++	beq	.Lpow_root_prefix_BB3_6
++@ %bb.2:
++	movs	r7, #0
++	.inst.n	0x1c65 @ adds	r5, r4, #1
++	adcs	r7, r6
++	cmp	r0, #0
++	bgt	.Lpow_root_prefix_BB3_4
++@ %bb.3:
++	mov	r5, r4
++.Lpow_root_prefix_BB3_4:
++	ble	.Lpow_root_prefix_BB3_12
++	b	.Lpow_root_prefix_BB3_13
++.Lpow_root_prefix_BB3_5:
++	mov	r5, r2
++	b	.Lpow_root_prefix_BB3_13
++.Lpow_root_prefix_BB3_6:
++	cmp	r0, #1
++	blt	.Lpow_root_prefix_BB3_10
++@ %bb.7:
++	movs	r0, #0
++	.inst.n	0x1c64 @ adds	r4, r4, #1
++	str	r4, [sp]
++	adcs	r6, r0
++	str	r6, [sp, #4]
++	ldr	r0, [sp, #20]                   @ 4-byte Reload
++	ldr	r1, [sp, #24]                   @ 4-byte Reload
++	mov	r2, r5
++	bl	_ZL16root128_boundaryRK13PowInteger128jby
++	cmp	r0, #0
++	bmi	.Lpow_root_prefix_BB3_9
++@ %bb.8:
++	mov	r6, r7
++.Lpow_root_prefix_BB3_9:
++	asrs	r5, r0, #31
++	ands	r5, r4
++	b	.Lpow_root_prefix_BB3_12
++.Lpow_root_prefix_BB3_10:
++	str	r2, [sp, #8]                    @ 4-byte Spill
++	movs	r0, #0
++	mov	r2, r5
++	.inst.n	0x1e65 @ subs	r5, r4, #1
++	str	r5, [sp]
++	mov	r7, r6
++	str	r0, [sp, #16]                   @ 4-byte Spill
++	sbcs	r7, r0
++	str	r7, [sp, #4]
++	ldr	r0, [sp, #20]                   @ 4-byte Reload
++	ldr	r1, [sp, #24]                   @ 4-byte Reload
++	str	r2, [sp, #12]                   @ 4-byte Spill
++	bl	_ZL16root128_boundaryRK13PowInteger128jby
++	cmp	r0, #0
++	ble	.Lpow_root_prefix_BB3_14
++@ %bb.11:
++	mov	r5, r4
++.Lpow_root_prefix_BB3_12:
++	mov	r7, r6
++.Lpow_root_prefix_BB3_13:
++	mov	r0, r5
++	mov	r1, r7
++	add	sp, #28
++	pop	{r4, r5, r6, r7, pc}
++.Lpow_root_prefix_BB3_14:
++	ldr	r1, [sp, #16]                   @ 4-byte Reload
++	ldr	r2, [sp, #12]                   @ 4-byte Reload
++	bmi	.Lpow_root_prefix_BB3_16
++.Lpow_root_prefix_BB3_15:
++	ldr	r5, [sp, #8]                    @ 4-byte Reload
++	ldr	r7, .Lpow_root_prefix_CPI3_0
++	b	.Lpow_root_prefix_BB3_13
++.Lpow_root_prefix_BB3_16:
++	.inst.n	0x1ea0 @ subs	r0, r4, #2
++	str	r0, [sp]
++	sbcs	r6, r1
++	str	r6, [sp, #4]
++	ldr	r0, [sp, #20]                   @ 4-byte Reload
++	ldr	r1, [sp, #24]                   @ 4-byte Reload
++	bl	_ZL16root128_boundaryRK13PowInteger128jby
++	cmp	r0, #0
++	bgt	.Lpow_root_prefix_BB3_13
++	b	.Lpow_root_prefix_BB3_15
++	.p2align	2
++@ %bb.17:
++.Lpow_root_prefix_CPI3_0:
++	.long	2146959360                      @ 0x7ff80000
++.Lpow_root_prefix_func_end3:
++	.size	pow_root128_decide, .Lpow_root_prefix_func_end3-pow_root128_decide
++	.cantunwind
++	.fnend
++                                        @ -- End function
++	.p2align	2                               @ -- Begin function _ZL16root128_boundaryRK13PowInteger128jby
++	.type	_ZL16root128_boundaryRK13PowInteger128jby,%function
++	.code	16
++	.thumb_func
++_ZL16root128_boundaryRK13PowInteger128jby: @ @_ZL16root128_boundaryRK13PowInteger128jby
++	.fnstart
++@ %bb.0:
++	.save	{r4, r5, r6, r7, lr}
++	push	{r4, r5, r6, r7, lr}
++	.pad	#36
++	sub	sp, #36
++	mov	r6, r1
++	ldr	r7, .Lpow_root_prefix_CPI4_0
++	ldr	r5, [sp, #60]
++	ldr	r1, [sp, #56]
++	.inst.n	0x1c4b @ adds	r3, r1, #1
++	mov	r4, r5
++	sbcs	r4, r7
++	ldr	r7, .Lpow_root_prefix_CPI4_1
++	.inst.n	0x1e5b @ subs	r3, r3, #1
++	adcs	r7, r4
++	bhs	.Lpow_root_prefix_BB4_2
++@ %bb.1:
++	movs	r0, #0
++	b	.Lpow_root_prefix_BB4_9
++.Lpow_root_prefix_BB4_2:
++	str	r2, [sp]                        @ 4-byte Spill
++	str	r0, [sp, #4]                    @ 4-byte Spill
++	movs	r7, #0
++	str	r7, [sp, #20]
++	str	r7, [sp, #16]
++	str	r7, [sp, #28]
++	movs	r4, #1
++	lsls	r2, r4, #10
++	lsls	r3, r1, #11
++	adds	r2, r3, r2
++	str	r2, [sp, #8]
++	lsrs	r2, r5, #20
++	ldr	r3, .Lpow_root_prefix_CPI4_2
++	adds	r2, r2, r3
++	str	r2, [sp, #24]
++	lsrs	r1, r1, #21
++	lsls	r0, r5, #11
++	adds	r0, r0, r1
++	lsls	r1, r4, #31
++	orrs	r1, r0
++	str	r1, [sp, #12]
++	cmp	r6, #2
++	blo	.Lpow_root_prefix_BB4_4
++.Lpow_root_prefix_BB4_3:                                @ =>This Inner Loop Header: Depth=1
++	add	r0, sp, #8
++	bl	pow_integer128_square
++	lsrs	r0, r6, #1
++	cmp	r6, #3
++	mov	r6, r0
++	bhi	.Lpow_root_prefix_BB4_3
++.Lpow_root_prefix_BB4_4:
++	ldr	r0, [sp]                        @ 4-byte Reload
++	cmp	r0, #0
++	beq	.Lpow_root_prefix_BB4_8
++@ %bb.5:
++	add	r0, sp, #8
++	ldr	r1, [sp, #4]                    @ 4-byte Reload
++	bl	pow_integer128_multiply
++	mvns	r0, r7
++	ldr	r1, [sp, #24]
++	cmp	r1, #0
++	bgt	.Lpow_root_prefix_BB4_9
++@ %bb.6:
++	mvns	r2, r7
++	cmp	r1, r2
++	bge	.Lpow_root_prefix_BB4_10
++@ %bb.7:
++	mov	r0, r4
++	b	.Lpow_root_prefix_BB4_9
++.Lpow_root_prefix_BB4_8:
++	add	r1, sp, #8
++	ldr	r0, [sp, #4]                    @ 4-byte Reload
++	bl	_ZL15root128_compareRK13PowInteger128S1_
++.Lpow_root_prefix_BB4_9:
++	add	sp, #36
++	pop	{r4, r5, r6, r7, pc}
++.Lpow_root_prefix_BB4_10:
++	ldr	r2, [sp, #12]
++	ldr	r3, [sp, #8]
++	cmp	r1, #0
++	beq	.Lpow_root_prefix_BB4_14
++@ %bb.11:
++	ands	r3, r2
++	.inst.n	0x1c58 @ adds	r0, r3, #1
++	mov	r0, r4
++	bne	.Lpow_root_prefix_BB4_9
++@ %bb.12:
++	ldr	r0, [sp, #28]
++	rsbs	r0, r0, #0
++	mov	r1, r7
++	sbcs	r1, r7
++	ldr	r2, [sp, #20]
++	ldr	r3, [sp, #16]
++	subs	r0, r3, r0
++	sbcs	r2, r1
++	blo	.Lpow_root_prefix_BB4_19
++@ %bb.13:
++	mov	r0, r7
++	b	.Lpow_root_prefix_BB4_9
++.Lpow_root_prefix_BB4_14:
++	movs	r1, #1
++	lsls	r4, r1, #31
++	rsbs	r3, r3, #0
++	sbcs	r4, r2
++	blo	.Lpow_root_prefix_BB4_9
++@ %bb.15:
++	ldr	r2, [sp, #20]
++	movs	r0, #0
++	ldr	r3, [sp, #16]
++	ldr	r4, [sp, #28]
++	subs	r3, r4, r3
++	mov	r3, r0
++	sbcs	r3, r2
++	blo	.Lpow_root_prefix_BB4_17
++@ %bb.16:
++	mov	r1, r0
++.Lpow_root_prefix_BB4_17:
++	cmp	r1, #0
++	bne	.Lpow_root_prefix_BB4_20
++@ %bb.18:
++	mov	r0, r1
++	b	.Lpow_root_prefix_BB4_9
++.Lpow_root_prefix_BB4_19:
++	movs	r0, #1
++	b	.Lpow_root_prefix_BB4_9
++.Lpow_root_prefix_BB4_20:
++	mvns	r0, r0
++	b	.Lpow_root_prefix_BB4_9
++	.p2align	2
++@ %bb.21:
++.Lpow_root_prefix_CPI4_0:
++	.long	2146435071                      @ 0x7fefffff
++.Lpow_root_prefix_CPI4_1:
++	.long	2145386495                      @ 0x7fdfffff
++.Lpow_root_prefix_CPI4_2:
++	.long	4294966273                      @ 0xfffffc01
++.Lpow_root_prefix_func_end4:
++	.size	_ZL16root128_boundaryRK13PowInteger128jby, .Lpow_root_prefix_func_end4-_ZL16root128_boundaryRK13PowInteger128jby
++	.cantunwind
++	.fnend
++                                        @ -- End function
++	.globl	root64_distance                 @ -- Begin function root64_distance
++	.p2align	2
++	.type	root64_distance,%function
++	.code	16
++	.thumb_func
++root64_distance:                        @ @root64_distance
++	.fnstart
++@ %bb.0:
++	.save	{r4, r5, r6, r7, lr}
++	push	{r4, r5, r6, r7, lr}
++	.pad	#44
++	sub	sp, #44
++	mov	r4, r0
++	ldr	r0, .Lpow_root_prefix_CPI5_0
++	.inst.n	0x1c55 @ adds	r5, r2, #1
++	mov	r6, r3
++	sbcs	r6, r0
++	movs	r0, #0
++	str	r0, [sp, #40]                   @ 4-byte Spill
++	mvns	r1, r0
++	mov	r0, r1
++	ldr	r7, .Lpow_root_prefix_CPI5_1
++	.inst.n	0x1e6d @ subs	r5, r5, #1
++	adcs	r7, r6
++	bhs	.Lpow_root_prefix_BB5_1
++	b	.Lpow_root_prefix_BB5_13
++.Lpow_root_prefix_BB5_1:
++	ldr	r7, [r4, #12]
++	ldr	r5, .Lpow_root_prefix_CPI5_2
++	cmp	r7, r5
++	bls	.Lpow_root_prefix_BB5_2
++	b	.Lpow_root_prefix_BB5_13
++.Lpow_root_prefix_BB5_2:
++	ldr	r5, [r4, #8]
++	lsrs	r6, r3, #20
++	adds	r5, r5, r6
++	ldr	r6, .Lpow_root_prefix_CPI5_3
++	adds	r5, r5, r6
++	movs	r6, #2
++	mvns	r6, r6
++	cmp	r5, r6
++	bhs	.Lpow_root_prefix_BB5_3
++	b	.Lpow_root_prefix_BB5_13
++.Lpow_root_prefix_BB5_3:
++	str	r7, [sp, #20]                   @ 4-byte Spill
++	str	r0, [sp, #24]                   @ 4-byte Spill
++	str	r1, [sp, #28]                   @ 4-byte Spill
++	.inst.n	0x1c68 @ adds	r0, r5, #1
++	str	r0, [sp, #16]                   @ 4-byte Spill
++	lsrs	r5, r2, #21
++	lsls	r0, r3, #11
++	str	r0, [sp, #12]                   @ 4-byte Spill
++	adds	r3, r0, r5
++	uxth	r3, r3
++	ldr	r0, [r4, #4]
++	lsrs	r5, r0, #16
++	mov	r7, r3
++	muls	r7, r5, r7
++	str	r0, [sp]                        @ 4-byte Spill
++	uxth	r0, r0
++	str	r0, [sp, #32]                   @ 4-byte Spill
++	mov	r1, r3
++	muls	r1, r0, r1
++	str	r1, [sp, #8]                    @ 4-byte Spill
++	lsrs	r6, r1, #16
++	adds	r7, r6, r7
++	lsrs	r0, r7, #16
++	str	r0, [sp, #4]                    @ 4-byte Spill
++	movs	r0, #1
++	str	r0, [sp, #36]                   @ 4-byte Spill
++	lsls	r6, r0, #15
++	ldr	r0, [sp, #12]                   @ 4-byte Reload
++	lsrs	r1, r0, #16
++	orrs	r1, r6
++	mov	r6, r1
++	muls	r6, r5, r6
++	ldr	r0, [sp, #4]                    @ 4-byte Reload
++	adds	r0, r0, r6
++	str	r0, [sp, #12]                   @ 4-byte Spill
++	uxth	r7, r7
++	mov	r0, r1
++	ldr	r6, [sp, #32]                   @ 4-byte Reload
++	muls	r0, r6, r0
++	adds	r7, r7, r0
++	lsrs	r0, r7, #16
++	ldr	r6, [sp, #12]                   @ 4-byte Reload
++	adds	r0, r6, r0
++	str	r0, [sp, #12]                   @ 4-byte Spill
++	ldr	r0, [r4]
++	lsrs	r4, r0, #16
++	mov	r6, r3
++	muls	r6, r4, r6
++	uxth	r0, r0
++	muls	r3, r0, r3
++	lsrs	r3, r3, #16
++	adds	r3, r3, r6
++	lsrs	r6, r3, #16
++	muls	r4, r1, r4
++	adds	r4, r6, r4
++	uxth	r3, r3
++	muls	r1, r0, r1
++	adds	r0, r3, r1
++	lsrs	r0, r0, #16
++	adds	r0, r4, r0
++	lsls	r1, r7, #16
++	ldr	r3, [sp, #8]                    @ 4-byte Reload
++	uxth	r3, r3
++	adds	r1, r1, r3
++	adds	r4, r1, r0
++	ldr	r7, [sp, #40]                   @ 4-byte Reload
++	mov	r3, r7
++	adcs	r3, r7
++	ldr	r0, [sp, #36]                   @ 4-byte Reload
++	lsls	r0, r0, #10
++	lsls	r1, r2, #11
++	adds	r0, r1, r0
++	uxth	r0, r0
++	mov	r2, r0
++	muls	r2, r5, r2
++	ldr	r6, [sp, #32]                   @ 4-byte Reload
++	muls	r0, r6, r0
++	lsrs	r0, r0, #16
++	adds	r0, r0, r2
++	lsrs	r2, r0, #16
++	lsrs	r1, r1, #16
++	muls	r5, r1, r5
++	adds	r2, r2, r5
++	ldr	r5, [sp, #12]                   @ 4-byte Reload
++	uxth	r0, r0
++	muls	r1, r6, r1
++	adds	r0, r0, r1
++	lsrs	r0, r0, #16
++	adds	r0, r2, r0
++	adds	r1, r4, r0
++	ldr	r1, [sp, #16]                   @ 4-byte Reload
++	adcs	r5, r3
++	adds	r2, r4, r0
++	adcs	r3, r7
++	.inst.n	0x1c88 @ adds	r0, r1, #2
++	bne	.Lpow_root_prefix_BB5_5
++@ %bb.4:
++	.inst.n	0x1e50 @ subs	r0, r2, #1
++	sbcs	r5, r7
++	ldr	r1, [sp, #36]                   @ 4-byte Reload
++	lsls	r1, r1, #30
++	adds	r0, r0, r1
++	adcs	r5, r7
++	ldr	r1, [sp, #28]                   @ 4-byte Reload
++	ldr	r0, [sp, #24]                   @ 4-byte Reload
++	ldr	r6, [sp, #20]                   @ 4-byte Reload
++	bhs	.Lpow_root_prefix_BB5_12
++	b	.Lpow_root_prefix_BB5_13
++.Lpow_root_prefix_BB5_5:
++	ldr	r0, [sp, #36]                   @ 4-byte Reload
++	cmp	r1, #0
++	ldr	r6, [sp, #20]                   @ 4-byte Reload
++	beq	.Lpow_root_prefix_BB5_7
++@ %bb.6:
++	lsls	r4, r0, #31
++	b	.Lpow_root_prefix_BB5_8
++.Lpow_root_prefix_BB5_7:
++	lsls	r4, r0, #30
++.Lpow_root_prefix_BB5_8:
++	ldr	r1, [sp, #28]                   @ 4-byte Reload
++	subs	r3, r5, r4
++	adcs	r7, r7
++	eors	r7, r0
++	rsbs	r0, r7, #0
++	eors	r3, r0
++	eors	r2, r0
++	mov	r7, r5
++	subs	r5, r2, r0
++	sbcs	r3, r0
++	cmp	r7, r4
++	blo	.Lpow_root_prefix_BB5_10
++@ %bb.9:
++	mov	r2, r5
++	b	.Lpow_root_prefix_BB5_11
++.Lpow_root_prefix_BB5_10:
++	rsbs	r2, r5, #0
++.Lpow_root_prefix_BB5_11:
++	lsrs	r0, r5, #30
++	orrs	r3, r0
++	ldr	r0, [sp, #24]                   @ 4-byte Reload
++	bne	.Lpow_root_prefix_BB5_13
++.Lpow_root_prefix_BB5_12:
++	lsls	r0, r6, #11
++	ldr	r1, [sp]                        @ 4-byte Reload
++	lsrs	r1, r1, #21
++	adds	r0, r0, r1
++	movs	r1, #3
++	lsls	r1, r1, #11
++	adds	r1, r0, r1
++	mov	r0, r2
++.Lpow_root_prefix_BB5_13:
++	add	sp, #44
++	pop	{r4, r5, r6, r7, pc}
++	.p2align	2
++@ %bb.14:
++.Lpow_root_prefix_CPI5_0:
++	.long	2146435071                      @ 0x7fefffff
++.Lpow_root_prefix_CPI5_1:
++	.long	2145386495                      @ 0x7fdfffff
++.Lpow_root_prefix_CPI5_2:
++	.long	65532                           @ 0xfffc
++.Lpow_root_prefix_CPI5_3:
++	.long	4294966272                      @ 0xfffffc00
++.Lpow_root_prefix_func_end5:
++	.size	root64_distance, .Lpow_root_prefix_func_end5-root64_distance
++	.cantunwind
++	.fnend
++                                        @ -- End function
++	.globl	pow_root128                     @ -- Begin function pow_root128
++	.p2align	2
++	.type	pow_root128,%function
++	.code	16
++	.thumb_func
++pow_root128:                            @ @pow_root128
++	.fnstart
++@ %bb.0:
++	.save	{r4, r5, r6, r7, lr}
++	push	{r4, r5, r6, r7, lr}
++	.pad	#100
++	sub	sp, #100
++	mov	r4, r1
++	mov	r6, r0
++	ldr	r1, .Lpow_root_prefix_CPI6_16
++	movs	r0, #0
++	cmp	r2, #0
++	beq	.Lpow_root_prefix_BB6_1
++	b	.Lpow_root_prefix_BB6_132
++.Lpow_root_prefix_BB6_1:
++	lsrs	r7, r4, #20
++	ldr	r5, .Lpow_root_prefix_CPI6_17
++	adds	r2, r7, r5
++	.inst.n	0x1e52 @ subs	r2, r2, #1
++	cmp	r2, r5
++	bhs	.Lpow_root_prefix_BB6_2
++	b	.Lpow_root_prefix_BB6_132
++.Lpow_root_prefix_BB6_2:
++	str	r7, [sp, #44]                   @ 4-byte Spill
++	str	r6, [sp, #40]                   @ 4-byte Spill
++	lsls	r2, r3, #1
++	lsrs	r5, r2, #21
++	ldr	r2, .Lpow_root_prefix_CPI6_13
++	mov	r7, r3
++	adds	r3, r5, r2
++	movs	r2, #12
++	mvns	r6, r2
++	cmp	r3, r6
++	bhs	.Lpow_root_prefix_BB6_3
++	b	.Lpow_root_prefix_BB6_132
++.Lpow_root_prefix_BB6_3:
++	str	r0, [sp, #36]                   @ 4-byte Spill
++	str	r1, [sp, #28]                   @ 4-byte Spill
++	ldr	r1, .Lpow_root_prefix_CPI6_14
++	str	r7, [sp, #24]                   @ 4-byte Spill
++	ands	r7, r1
++	adds	r1, r7, r1
++	.inst.n	0x1c4f @ adds	r7, r1, #1
++	mov	r0, r7
++	bics	r0, r1
++	bl	_ZN7m0_eabi5clz32Em
++	movs	r1, #31
++	subs	r1, r1, r0
++	lsrs	r7, r1
++	str	r7, [sp, #32]                   @ 4-byte Spill
++	cmp	r7, #32
++	bhi	.Lpow_root_prefix_BB6_8
++@ %bb.4:
++	subs	r0, r5, r0
++	ldr	r7, .Lpow_root_prefix_CPI6_13
++	adds	r3, r7, r0
++	mov	r2, r3
++	adds	r2, #11
++	cmp	r2, r6
++	ldr	r1, .Lpow_root_prefix_CPI6_11
++	bhs	.Lpow_root_prefix_BB6_5
++	b	.Lpow_root_prefix_BB6_131
++.Lpow_root_prefix_BB6_5:
++	adds	r3, #17
++	bmi	.Lpow_root_prefix_BB6_9
++@ %bb.6:
++	ldr	r6, [sp, #32]                   @ 4-byte Reload
++	lsls	r6, r3
++	cmp	r6, #32
++	bls	.Lpow_root_prefix_BB6_7
++	b	.Lpow_root_prefix_BB6_131
++.Lpow_root_prefix_BB6_7:
++	movs	r5, #1
++	b	.Lpow_root_prefix_BB6_10
++.Lpow_root_prefix_BB6_8:
++	ldr	r1, .Lpow_root_prefix_CPI6_11
++	b	.Lpow_root_prefix_BB6_131
++.Lpow_root_prefix_BB6_9:
++	ldr	r2, .Lpow_root_prefix_CPI6_15
++	subs	r0, r2, r0
++	subs	r0, #10
++	movs	r5, #1
++	lsls	r5, r0
++	ldr	r6, [sp, #32]                   @ 4-byte Reload
++.Lpow_root_prefix_BB6_10:
++	ldr	r0, [sp, #44]                   @ 4-byte Reload
++	adds	r0, r7, r0
++	.inst.n	0x1d80 @ adds	r0, r0, #6
++	mov	r3, r0
++	muls	r3, r6, r3
++	mov	r2, r7
++	adds	r2, #8
++	muls	r2, r5, r2
++	cmp	r3, r2
++	bge	.Lpow_root_prefix_BB6_11
++	b	.Lpow_root_prefix_BB6_131
++.Lpow_root_prefix_BB6_11:
++	ldr	r2, .Lpow_root_prefix_CPI6_15
++	muls	r2, r5, r2
++	adds	r3, r3, r6
++	cmp	r3, r2
++	ble	.Lpow_root_prefix_BB6_12
++	b	.Lpow_root_prefix_BB6_131
++.Lpow_root_prefix_BB6_12:
++	movs	r1, #0
++	str	r1, [sp, #84]
++	str	r1, [sp, #80]
++	str	r1, [sp, #44]                   @ 4-byte Spill
++	str	r1, [sp, #92]
++	str	r0, [sp, #88]
++	ldr	r1, [sp, #40]                   @ 4-byte Reload
++	lsls	r0, r1, #11
++	str	r0, [sp, #72]
++	lsrs	r0, r1, #21
++	lsls	r1, r4, #11
++	adds	r0, r1, r0
++	mov	r7, r6
++	movs	r6, #1
++	lsls	r1, r6, #31
++	orrs	r1, r0
++	str	r1, [sp, #76]
++	cmp	r7, #1
++	beq	.Lpow_root_prefix_BB6_19
++@ %bb.13:
++	str	r6, [sp, #40]                   @ 4-byte Spill
++	add	r0, sp, #72
++	add	r1, sp, #48
++	ldm	r0!, {r2, r3, r4}
++	stm	r1!, {r2, r3, r4}
++	ldm	r0!, {r2, r3, r4}
++	stm	r1!, {r2, r3, r4}
++	mov	r6, r7
++	mov	r0, r7
++	bl	_ZN7m0_eabi5clz32Em
++	cmp	r0, #31
++	beq	.Lpow_root_prefix_BB6_18
++@ %bb.14:
++	movs	r1, #30
++	subs	r4, r1, r0
++.Lpow_root_prefix_BB6_15:                               @ =>This Inner Loop Header: Depth=1
++	add	r0, sp, #72
++	bl	pow_integer128_square
++	mov	r0, r6
++	lsrs	r0, r4
++	lsls	r0, r0, #31
++	beq	.Lpow_root_prefix_BB6_17
++@ %bb.16:                               @   in Loop: Header=BB6_15 Depth=1
++	add	r0, sp, #72
++	add	r1, sp, #48
++	bl	pow_integer128_base
++.Lpow_root_prefix_BB6_17:                               @   in Loop: Header=BB6_15 Depth=1
++	.inst.n	0x1e64 @ subs	r4, r4, #1
++	.inst.n	0x1c60 @ adds	r0, r4, #1
++	blo	.Lpow_root_prefix_BB6_15
++.Lpow_root_prefix_BB6_18:
++	ldr	r6, [sp, #40]                   @ 4-byte Reload
++.Lpow_root_prefix_BB6_19:
++	ldr	r0, [sp, #24]                   @ 4-byte Reload
++	cmp	r0, #0
++	bmi	.Lpow_root_prefix_BB6_26
++@ %bb.20:
++	cmp	r5, #1
++	bne	.Lpow_root_prefix_BB6_26
++@ %bb.21:
++	ldr	r4, [sp, #88]
++	ldr	r0, .Lpow_root_prefix_CPI6_13
++	adds	r0, r0, r4
++	.inst.n	0x1d40 @ adds	r0, r0, #5
++	ldr	r1, .Lpow_root_prefix_CPI6_12
++	cmp	r0, r1
++	ldr	r7, .Lpow_root_prefix_CPI6_15
++	bhs	.Lpow_root_prefix_BB6_22
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_22:
++	ldr	r1, [sp, #76]
++	ldr	r0, [sp, #72]
++	lsls	r2, r6, #11
++	str	r2, [sp, #20]                   @ 4-byte Spill
++	.inst.n	0x1e53 @ subs	r3, r2, #1
++	ldr	r5, [sp, #44]                   @ 4-byte Reload
++	sbcs	r5, r5
++	ands	r3, r0
++	ands	r5, r1
++	str	r1, [sp, #40]                   @ 4-byte Spill
++	lsrs	r1, r1, #11
++	str	r1, [sp, #32]                   @ 4-byte Spill
++	lsls	r1, r6, #10
++	ldr	r2, [sp, #92]
++	cmp	r2, #0
++	beq	.Lpow_root_prefix_BB6_46
++@ %bb.23:
++	str	r1, [sp, #16]                   @ 4-byte Spill
++	mov	r7, r0
++	ldr	r0, .Lpow_root_prefix_CPI6_18
++	str	r7, [sp, #24]                   @ 4-byte Spill
++	ands	r0, r7
++	ldr	r7, .Lpow_root_prefix_CPI6_19
++	cmp	r0, r7
++	beq	.Lpow_root_prefix_BB6_47
++@ %bb.24:
++	ldr	r1, [sp, #16]                   @ 4-byte Reload
++	cmp	r0, r1
++	ldr	r7, .Lpow_root_prefix_CPI6_15
++	ldr	r0, [sp, #24]                   @ 4-byte Reload
++	bne	.Lpow_root_prefix_BB6_46
++@ %bb.25:
++	ldr	r6, [sp, #84]
++	ldr	r7, [sp, #80]
++	subs	r2, r2, r7
++	ldr	r2, [sp, #44]                   @ 4-byte Reload
++	sbcs	r2, r6
++	blo	.Lpow_root_prefix_BB6_48
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_26:
++	str	r5, [sp, #44]                   @ 4-byte Spill
++	ldr	r0, [sp, #76]
++	str	r0, [sp, #52]
++	ldr	r0, [sp, #72]
++	str	r0, [sp, #48]
++	ldr	r0, [sp, #88]
++	str	r0, [sp, #56]
++	ldr	r1, [sp, #84]
++	ldr	r5, [sp, #80]
++	orrs	r5, r1
++	.inst.n	0x1e69 @ subs	r1, r5, #1
++	sbcs	r5, r1
++	ldr	r1, [sp, #92]
++	cmp	r1, #0
++	ldr	r6, .Lpow_root_prefix_CPI6_5
++	beq	.Lpow_root_prefix_BB6_28
++@ %bb.27:
++	movs	r5, #2
++.Lpow_root_prefix_BB6_28:
++	str	r5, [sp, #60]
++	ldr	r1, [sp, #44]                   @ 4-byte Reload
++	cmp	r1, #2
++	blo	.Lpow_root_prefix_BB6_32
++@ %bb.29:
++	ldr	r4, [sp, #44]                   @ 4-byte Reload
++.Lpow_root_prefix_BB6_30:                               @ =>This Inner Loop Header: Depth=1
++	add	r0, sp, #48
++	bl	_ZL11root64_sqrtR6Root64
++	lsrs	r0, r4, #1
++	cmp	r4, #3
++	mov	r4, r0
++	bhi	.Lpow_root_prefix_BB6_30
++@ %bb.31:
++	ldr	r5, [sp, #60]
++	ldr	r0, [sp, #56]
++.Lpow_root_prefix_BB6_32:
++	.inst.n	0x1c71 @ adds	r1, r6, #1
++	movs	r6, #1
++	movs	r2, #0
++	cmp	r5, r1
++	mov	r1, r6
++	bhi	.Lpow_root_prefix_BB6_34
++@ %bb.33:
++	mov	r1, r2
++.Lpow_root_prefix_BB6_34:
++	ldr	r3, .Lpow_root_prefix_CPI6_2
++	adds	r3, r3, r0
++	.inst.n	0x1d9b @ adds	r3, r3, #6
++	ldr	r4, .Lpow_root_prefix_CPI6_1
++	.inst.n	0x1ca4 @ adds	r4, r4, #2
++	cmp	r3, r4
++	mov	r3, r6
++	blo	.Lpow_root_prefix_BB6_36
++@ %bb.35:
++	mov	r3, r2
++.Lpow_root_prefix_BB6_36:
++	orrs	r3, r1
++	beq	.Lpow_root_prefix_BB6_37
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_37:
++	str	r6, [sp, #40]                   @ 4-byte Spill
++	ldr	r2, .Lpow_root_prefix_CPI6_7
++	ldr	r1, [sp, #48]
++	ands	r2, r1
++	movs	r4, #1
++	lsls	r6, r4, #31
++	ldr	r3, [sp, #52]
++	mov	r7, r3
++	bics	r7, r6
++	orrs	r7, r2
++	mov	r2, r1
++	ldr	r6, .Lpow_root_prefix_CPI6_3
++	ands	r2, r6
++	movs	r6, #255
++	adds	r6, #254
++	str	r6, [sp, #32]                   @ 4-byte Spill
++	adds	r6, r2, r6
++	.inst.n	0x1cf6 @ adds	r6, r6, #3
++	cmp	r6, r5
++	bhi	.Lpow_root_prefix_BB6_39
++@ %bb.38:
++	movs	r4, #0
++.Lpow_root_prefix_BB6_39:
++	cmp	r7, #0
++	ldr	r7, [sp, #40]                   @ 4-byte Reload
++	bne	.Lpow_root_prefix_BB6_41
++@ %bb.40:
++	mov	r7, r4
++.Lpow_root_prefix_BB6_41:
++	cmp	r7, #1
++	beq	.Lpow_root_prefix_BB6_42
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_42:
++	lsls	r6, r3, #21
++	lsrs	r4, r1, #11
++	adds	r1, r4, r6
++	ldr	r7, .Lpow_root_prefix_CPI6_5
++	adds	r0, r0, r7
++	lsls	r0, r0, #20
++	lsrs	r3, r3, #11
++	adds	r3, r3, r0
++	ldr	r0, [sp, #24]                   @ 4-byte Reload
++	cmp	r0, #0
++	bmi	.Lpow_root_prefix_BB6_54
++@ %bb.43:
++	cmp	r5, #0
++	ldr	r6, [sp, #40]                   @ 4-byte Reload
++	bne	.Lpow_root_prefix_BB6_44
++	b	.Lpow_root_prefix_BB6_67
++.Lpow_root_prefix_BB6_44:
++	adds	r0, r2, r5
++	.inst.n	0x1cbc @ adds	r4, r7, #2
++	cmp	r0, r4
++	blo	.Lpow_root_prefix_BB6_45
++	b	.Lpow_root_prefix_BB6_70
++.Lpow_root_prefix_BB6_45:
++	str	r1, [sp, #36]                   @ 4-byte Spill
++	b	.Lpow_root_prefix_BB6_73
++.Lpow_root_prefix_BB6_46:
++	adds	r2, r4, r7
++	lsls	r2, r2, #20
++	ldr	r4, [sp, #32]                   @ 4-byte Reload
++	adds	r2, r4, r2
++	str	r2, [sp, #28]                   @ 4-byte Spill
++	movs	r2, #0
++	subs	r4, r1, r3
++	sbcs	r2, r5
++	bhs	.Lpow_root_prefix_BB6_49
++	b	.Lpow_root_prefix_BB6_52
++.Lpow_root_prefix_BB6_47:
++	rsbs	r0, r2, #0
++	ldr	r6, [sp, #44]                   @ 4-byte Reload
++	sbcs	r6, r6
++	ldr	r7, [sp, #84]
++	ldr	r2, [sp, #80]
++	subs	r2, r2, r0
++	sbcs	r7, r6
++	ldr	r0, [sp, #24]                   @ 4-byte Reload
++	blo	.Lpow_root_prefix_BB6_48
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_48:
++	ldr	r2, .Lpow_root_prefix_CPI6_5
++	adds	r2, r4, r2
++	lsls	r2, r2, #20
++	ldr	r1, [sp, #32]                   @ 4-byte Reload
++	adds	r2, r1, r2
++	str	r2, [sp, #28]                   @ 4-byte Spill
++	ldr	r1, [sp, #16]                   @ 4-byte Reload
++.Lpow_root_prefix_BB6_49:
++	eors	r3, r1
++	orrs	r3, r5
++	bne	.Lpow_root_prefix_BB6_51
++@ %bb.50:
++	ldr	r3, [sp, #20]                   @ 4-byte Reload
++	ands	r3, r0
++	ldr	r2, [sp, #80]
++	orrs	r2, r3
++	ldr	r6, [sp, #84]
++	orrs	r6, r2
++	.inst.n	0x1e72 @ subs	r2, r6, #1
++	sbcs	r6, r2
++	b	.Lpow_root_prefix_BB6_52
++.Lpow_root_prefix_BB6_51:
++	ldr	r6, [sp, #44]                   @ 4-byte Reload
++.Lpow_root_prefix_BB6_52:
++	ldr	r1, [sp, #40]                   @ 4-byte Reload
++	lsls	r1, r1, #21
++	lsrs	r0, r0, #11
++	adds	r0, r0, r1
++	adds	r0, r0, r6
++	str	r0, [sp, #36]                   @ 4-byte Spill
++	ldr	r0, [sp, #28]                   @ 4-byte Reload
++	ldr	r1, [sp, #44]                   @ 4-byte Reload
++	adcs	r0, r1
++.Lpow_root_prefix_BB6_53:
++	str	r0, [sp, #28]                   @ 4-byte Spill
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_54:
++	.inst.n	0x1cb8 @ adds	r0, r7, #2
++	cmp	r2, r0
++	ldr	r0, [sp, #40]                   @ 4-byte Reload
++	bhi	.Lpow_root_prefix_BB6_56
++@ %bb.55:
++	subs	r0, r2, r7
++	.inst.n	0x1e80 @ subs	r0, r0, #2
++	rsbs	r2, r0, #0
++	adcs	r2, r0
++	ands	r4, r2
++	mov	r0, r4
++.Lpow_root_prefix_BB6_56:
++	movs	r7, #0
++	adds	r2, r1, r0
++	adcs	r3, r7
++	ldr	r1, .Lpow_root_prefix_CPI6_8
++	mov	r0, r7
++	bl	__aeabi_ddiv
++	mov	r6, r0
++	ldr	r0, .Lpow_root_prefix_CPI6_9
++	.inst.n	0x1cb3 @ adds	r3, r6, #2
++	mov	r2, r1
++	sbcs	r2, r0
++	ldr	r0, .Lpow_root_prefix_CPI6_10
++	.inst.n	0x1f1b @ subs	r3, r3, #4
++	adcs	r0, r2
++	bhs	.Lpow_root_prefix_BB6_57
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_57:
++	.inst.n	0x1c70 @ adds	r0, r6, #1
++	mov	r3, r1
++	adcs	r3, r7
++	ldr	r2, .Lpow_root_prefix_CPI6_4
++	ands	r3, r2
++	mvns	r2, r7
++	str	r2, [sp, #24]                   @ 4-byte Spill
++	movs	r2, #2
++	subs	r0, r2, r0
++	mov	r0, r7
++	sbcs	r0, r3
++	mov	r4, r1
++	blo	.Lpow_root_prefix_BB6_79
++@ %bb.58:
++	add	r0, sp, #48
++	mov	r7, r6
++	mov	r2, r6
++	mov	r3, r4
++	bl	root64_boundary
++	cmp	r0, #0
++	beq	.Lpow_root_prefix_BB6_75
++@ %bb.59:
++	mov	r6, r4
++	bpl	.Lpow_root_prefix_BB6_60
++	b	.Lpow_root_prefix_BB6_96
++.Lpow_root_prefix_BB6_60:
++	movs	r0, #0
++	.inst.n	0x1e7a @ subs	r2, r7, #1
++	mov	r3, r6
++	str	r0, [sp, #20]                   @ 4-byte Spill
++	sbcs	r3, r0
++	add	r0, sp, #48
++	str	r2, [sp, #36]                   @ 4-byte Spill
++	str	r3, [sp, #28]                   @ 4-byte Spill
++	bl	root64_boundary
++	cmp	r0, #0
++	bpl	.Lpow_root_prefix_BB6_61
++	b	.Lpow_root_prefix_BB6_101
++.Lpow_root_prefix_BB6_61:
++	bne	.Lpow_root_prefix_BB6_62
++	b	.Lpow_root_prefix_BB6_105
++.Lpow_root_prefix_BB6_62:
++	.inst.n	0x1eba @ subs	r2, r7, #2
++	mov	r4, r6
++	ldr	r0, [sp, #20]                   @ 4-byte Reload
++	sbcs	r4, r0
++	add	r0, sp, #48
++	str	r2, [sp, #16]                   @ 4-byte Spill
++	mov	r3, r4
++	bl	root64_boundary
++	cmp	r0, #0
++	bpl	.Lpow_root_prefix_BB6_63
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_63:
++	beq	.Lpow_root_prefix_BB6_64
++	b	.Lpow_root_prefix_BB6_98
++.Lpow_root_prefix_BB6_64:
++	ldr	r0, [sp, #16]                   @ 4-byte Reload
++	str	r0, [sp]
++	str	r4, [sp, #4]
++	ldr	r2, [sp, #24]                   @ 4-byte Reload
++	ands	r2, r0
++	ldr	r1, .Lpow_root_prefix_CPI6_4
++	ands	r1, r4
++	orrs	r1, r2
++	.inst.n	0x1e48 @ subs	r0, r1, #1
++	sbcs	r1, r0
++	mov	r0, r1
++	ldr	r1, [sp, #32]                   @ 4-byte Reload
++	cmp	r5, r1
++	bhs	.Lpow_root_prefix_BB6_66
++@ %bb.65:
++	movs	r1, #1
++	str	r1, [sp, #20]                   @ 4-byte Spill
++.Lpow_root_prefix_BB6_66:
++	ldr	r1, [sp, #20]                   @ 4-byte Reload
++	b	.Lpow_root_prefix_BB6_100
++.Lpow_root_prefix_BB6_67:
++	.inst.n	0x1cb8 @ adds	r0, r7, #2
++	cmp	r2, r0
++	bhi	.Lpow_root_prefix_BB6_69
++@ %bb.68:
++	subs	r0, r2, r7
++	.inst.n	0x1e80 @ subs	r0, r0, #2
++	rsbs	r2, r0, #0
++	adcs	r2, r0
++	ands	r4, r2
++	mov	r6, r4
++.Lpow_root_prefix_BB6_69:
++	movs	r0, #0
++	adds	r1, r1, r6
++	b	.Lpow_root_prefix_BB6_72
++.Lpow_root_prefix_BB6_70:
++	adds	r0, r7, r5
++	.inst.n	0x1c80 @ adds	r0, r0, #2
++	cmp	r2, r0
++	bls	.Lpow_root_prefix_BB6_74
++@ %bb.71:
++	movs	r0, #0
++	.inst.n	0x1c49 @ adds	r1, r1, #1
++.Lpow_root_prefix_BB6_72:
++	str	r1, [sp, #36]                   @ 4-byte Spill
++	adcs	r3, r0
++.Lpow_root_prefix_BB6_73:
++	str	r3, [sp, #28]                   @ 4-byte Spill
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_74:
++	add	r0, sp, #0
++	stm	r0!, {r1, r3, r6}
++	add	r0, sp, #72
++	movs	r2, #0
++	ldr	r1, [sp, #44]                   @ 4-byte Reload
++	b	.Lpow_root_prefix_BB6_129
++.Lpow_root_prefix_BB6_75:
++	mov	r0, r4
++	ldr	r1, .Lpow_root_prefix_CPI6_4
++	ands	r0, r1
++	str	r7, [sp]
++	str	r4, [sp, #4]
++	orrs	r0, r7
++	.inst.n	0x1e41 @ subs	r1, r0, #1
++	sbcs	r0, r1
++	ldr	r1, [sp, #32]                   @ 4-byte Reload
++	cmp	r5, r1
++	blo	.Lpow_root_prefix_BB6_99
++@ %bb.76:
++	movs	r1, #0
++	b	.Lpow_root_prefix_BB6_100
++	.p2align	2
++@ %bb.77:
++.Lpow_root_prefix_CPI6_16:
++	.long	2146959360                      @ 0x7ff80000
++	.p2align	2
++@ %bb.78:
++.Lpow_root_prefix_CPI6_17:
++	.long	4294965250                      @ 0xfffff802
++	.p2align	1
++.Lpow_root_prefix_BB6_79:
++	add	r0, sp, #48
++	mov	r5, r6
++	mov	r2, r6
++	str	r4, [sp, #20]                   @ 4-byte Spill
++	mov	r3, r4
++	bl	root64_distance
++	mov	r2, r0
++	ands	r2, r1
++	.inst.n	0x1c52 @ adds	r2, r2, #1
++	bne	.Lpow_root_prefix_BB6_80
++	b	.Lpow_root_prefix_BB6_127
++.Lpow_root_prefix_BB6_80:
++	lsrs	r2, r1, #11
++	rsbs	r3, r2, #0
++	cmp	r0, r3
++	bge	.Lpow_root_prefix_BB6_82
++@ %bb.81:
++	movs	r7, #1
++.Lpow_root_prefix_BB6_82:
++	cmp	r0, r2
++	ble	.Lpow_root_prefix_BB6_84
++@ %bb.83:
++	ldr	r7, [sp, #40]                   @ 4-byte Reload
++.Lpow_root_prefix_BB6_84:
++	cmp	r7, #1
++	bne	.Lpow_root_prefix_BB6_102
++@ %bb.85:
++	ldr	r4, .Lpow_root_prefix_CPI6_3
++	ands	r1, r4
++	cmp	r0, r2
++	bgt	.Lpow_root_prefix_BB6_109
++@ %bb.86:
++	cmp	r0, r3
++	bge	.Lpow_root_prefix_BB6_109
++@ %bb.87:
++	movs	r3, #0
++	.inst.n	0x1c6c @ adds	r4, r5, #1
++	str	r4, [sp, #36]                   @ 4-byte Spill
++	ldr	r4, [sp, #20]                   @ 4-byte Reload
++	adcs	r3, r4
++	str	r3, [sp, #28]                   @ 4-byte Spill
++	adds	r1, r1, r0
++	.inst.n	0x1c50 @ adds	r0, r2, #1
++	cmp	r1, r0
++	ble	.Lpow_root_prefix_BB6_88
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_88:
++	mvns	r2, r2
++	cmp	r1, r2
++	bge	.Lpow_root_prefix_BB6_103
++	b	.Lpow_root_prefix_BB6_127
++	.p2align	2
++@ %bb.89:
++.Lpow_root_prefix_CPI6_11:
++	.long	2146959360                      @ 0x7ff80000
++	.p2align	2
++@ %bb.90:
++.Lpow_root_prefix_CPI6_12:
++	.long	4294965250                      @ 0xfffff802
++	.p2align	2
++@ %bb.91:
++.Lpow_root_prefix_CPI6_13:
++	.long	4294966267                      @ 0xfffffbfb
++	.p2align	2
++@ %bb.92:
++.Lpow_root_prefix_CPI6_14:
++	.long	1048575                         @ 0xfffff
++	.p2align	2
++@ %bb.93:
++.Lpow_root_prefix_CPI6_15:
++	.long	1022                            @ 0x3fe
++	.p2align	2
++@ %bb.94:
++.Lpow_root_prefix_CPI6_18:
++	.long	2047                            @ 0x7ff
++	.p2align	2
++@ %bb.95:
++.Lpow_root_prefix_CPI6_19:
++	.long	1023                            @ 0x3ff
++	.p2align	1
++.Lpow_root_prefix_BB6_96:
++	movs	r4, #0
++	.inst.n	0x1c7a @ adds	r2, r7, #1
++	mov	r3, r6
++	adcs	r3, r4
++	add	r0, sp, #48
++	str	r2, [sp, #36]                   @ 4-byte Spill
++	str	r3, [sp, #28]                   @ 4-byte Spill
++	bl	root64_boundary
++	cmp	r0, #0
++	ble	.Lpow_root_prefix_BB6_97
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_97:
++	beq	.Lpow_root_prefix_BB6_115
++.Lpow_root_prefix_BB6_98:
++	movs	r0, #0
++	str	r0, [sp, #8]
++	str	r7, [sp]
++	str	r6, [sp, #4]
++	b	.Lpow_root_prefix_BB6_128
++.Lpow_root_prefix_BB6_99:
++	movs	r1, #1
++.Lpow_root_prefix_BB6_100:
++	ands	r1, r0
++	str	r1, [sp, #8]
++	b	.Lpow_root_prefix_BB6_128
++.Lpow_root_prefix_BB6_101:
++	str	r7, [sp, #36]                   @ 4-byte Spill
++	str	r6, [sp, #28]                   @ 4-byte Spill
++	b	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_102:
++	str	r5, [sp, #36]                   @ 4-byte Spill
++	ldr	r0, [sp, #20]                   @ 4-byte Reload
++	str	r0, [sp, #28]                   @ 4-byte Spill
++	mov	r0, r2
++.Lpow_root_prefix_BB6_103:
++	ldr	r2, [sp, #36]                   @ 4-byte Reload
++	str	r2, [sp]
++	ldr	r1, [sp, #28]                   @ 4-byte Reload
++	str	r1, [sp, #4]
++	ldr	r3, [sp, #24]                   @ 4-byte Reload
++	ands	r3, r2
++	ldr	r2, .Lpow_root_prefix_CPI6_4
++	ands	r2, r1
++	orrs	r2, r3
++	.inst.n	0x1e51 @ subs	r1, r2, #1
++	sbcs	r2, r1
++	ldr	r1, [sp, #32]                   @ 4-byte Reload
++	.inst.n	0x1cc9 @ adds	r1, r1, #3
++	cmp	r0, r1
++	blo	.Lpow_root_prefix_BB6_107
++@ %bb.104:
++	movs	r0, #0
++	b	.Lpow_root_prefix_BB6_108
++.Lpow_root_prefix_BB6_105:
++	ldr	r1, [sp, #36]                   @ 4-byte Reload
++	str	r1, [sp]
++	ldr	r0, [sp, #28]                   @ 4-byte Reload
++	str	r0, [sp, #4]
++	ldr	r6, [sp, #24]                   @ 4-byte Reload
++	ands	r6, r1
++	ldr	r1, .Lpow_root_prefix_CPI6_4
++	ands	r1, r0
++	orrs	r1, r6
++	.inst.n	0x1e48 @ subs	r0, r1, #1
++	sbcs	r1, r0
++	ldr	r0, [sp, #32]                   @ 4-byte Reload
++	cmp	r5, r0
++	blo	.Lpow_root_prefix_BB6_112
++@ %bb.106:
++	movs	r0, #0
++	b	.Lpow_root_prefix_BB6_113
++.Lpow_root_prefix_BB6_107:
++	movs	r0, #1
++.Lpow_root_prefix_BB6_108:
++	ands	r0, r2
++	b	.Lpow_root_prefix_BB6_114
++.Lpow_root_prefix_BB6_109:
++	subs	r7, r0, r1
++	mvns	r4, r2
++	.inst.n	0x1c50 @ adds	r0, r2, #1
++	cmp	r7, r0
++	bgt	.Lpow_root_prefix_BB6_118
++@ %bb.110:
++	cmp	r7, r4
++	bge	.Lpow_root_prefix_BB6_118
++@ %bb.111:
++	str	r5, [sp, #36]                   @ 4-byte Spill
++	ldr	r0, [sp, #20]                   @ 4-byte Reload
++	b	.Lpow_root_prefix_BB6_53
++.Lpow_root_prefix_BB6_112:
++	movs	r0, #1
++.Lpow_root_prefix_BB6_113:
++	ands	r0, r1
++.Lpow_root_prefix_BB6_114:
++	str	r0, [sp, #8]
++	b	.Lpow_root_prefix_BB6_128
++.Lpow_root_prefix_BB6_115:
++	ldr	r1, [sp, #36]                   @ 4-byte Reload
++	str	r1, [sp]
++	ldr	r0, [sp, #28]                   @ 4-byte Reload
++	str	r0, [sp, #4]
++	ldr	r6, [sp, #24]                   @ 4-byte Reload
++	ands	r6, r1
++	ldr	r1, .Lpow_root_prefix_CPI6_4
++	ands	r1, r0
++	orrs	r1, r6
++	.inst.n	0x1e48 @ subs	r0, r1, #1
++	sbcs	r1, r0
++	mov	r0, r1
++	ldr	r1, [sp, #32]                   @ 4-byte Reload
++	cmp	r5, r1
++	bhs	.Lpow_root_prefix_BB6_117
++@ %bb.116:
++	movs	r4, #1
++.Lpow_root_prefix_BB6_117:
++	ands	r4, r0
++	str	r4, [sp, #8]
++	b	.Lpow_root_prefix_BB6_128
++.Lpow_root_prefix_BB6_118:
++	movs	r3, #0
++	.inst.n	0x1e6e @ subs	r6, r5, #1
++	str	r6, [sp, #36]                   @ 4-byte Spill
++	ldr	r6, [sp, #20]                   @ 4-byte Reload
++	sbcs	r6, r3
++	str	r6, [sp, #28]                   @ 4-byte Spill
++	cmp	r7, r0
++	bgt	.Lpow_root_prefix_BB6_120
++@ %bb.119:
++	cmp	r7, r4
++	bge	.Lpow_root_prefix_BB6_103
++.Lpow_root_prefix_BB6_120:
++	movs	r4, #1
++	mvns	r0, r4
++	subs	r6, r0, r2
++	subs	r1, r7, r1
++	.inst.n	0x1c90 @ adds	r0, r2, #2
++	cmp	r1, r0
++	ldr	r7, [sp, #20]                   @ 4-byte Reload
++	mov	r2, r5
++	bgt	.Lpow_root_prefix_BB6_122
++@ %bb.121:
++	cmp	r1, r6
++	blt	.Lpow_root_prefix_BB6_130
++.Lpow_root_prefix_BB6_122:
++	.inst.n	0x1e92 @ subs	r2, r2, #2
++	str	r2, [sp, #36]                   @ 4-byte Spill
++	mov	r2, r7
++	sbcs	r2, r3
++	str	r2, [sp, #28]                   @ 4-byte Spill
++	cmp	r1, r6
++	blt	.Lpow_root_prefix_BB6_124
++@ %bb.123:
++	mov	r4, r3
++.Lpow_root_prefix_BB6_124:
++	cmp	r1, r0
++	ble	.Lpow_root_prefix_BB6_126
++@ %bb.125:
++	ldr	r4, [sp, #40]                   @ 4-byte Reload
++.Lpow_root_prefix_BB6_126:
++	cmp	r4, #1
++	bne	.Lpow_root_prefix_BB6_103
++.Lpow_root_prefix_BB6_127:
++	movs	r0, #0
++	str	r0, [sp, #8]
++	str	r5, [sp]
++	ldr	r0, [sp, #20]                   @ 4-byte Reload
++	str	r0, [sp, #4]
++.Lpow_root_prefix_BB6_128:
++	add	r0, sp, #72
++	ldr	r1, [sp, #44]                   @ 4-byte Reload
++	ldr	r2, [sp, #40]                   @ 4-byte Reload
++.Lpow_root_prefix_BB6_129:
++	bl	pow_root128_decide
++	str	r0, [sp, #36]                   @ 4-byte Spill
++	str	r1, [sp, #28]                   @ 4-byte Spill
++.Lpow_root_prefix_BB6_130:
++	ldr	r1, [sp, #28]                   @ 4-byte Reload
++.Lpow_root_prefix_BB6_131:
++	ldr	r0, [sp, #36]                   @ 4-byte Reload
++.Lpow_root_prefix_BB6_132:
++	add	sp, #100
++	pop	{r4, r5, r6, r7, pc}
++	.p2align	2
++@ %bb.133:
++.Lpow_root_prefix_CPI6_1:
++	.long	4294965250                      @ 0xfffff802
++.Lpow_root_prefix_CPI6_2:
++	.long	4294966267                      @ 0xfffffbfb
++.Lpow_root_prefix_CPI6_3:
++	.long	2047                            @ 0x7ff
++.Lpow_root_prefix_CPI6_4:
++	.long	1048575                         @ 0xfffff
++.Lpow_root_prefix_CPI6_5:
++	.long	1022                            @ 0x3fe
++.Lpow_root_prefix_CPI6_7:
++	.long	4294965248                      @ 0xfffff800
++.Lpow_root_prefix_CPI6_8:
++	.long	1072693248                      @ 0x3ff00000
++.Lpow_root_prefix_CPI6_9:
++	.long	2146435071                      @ 0x7fefffff
++.Lpow_root_prefix_CPI6_10:
++	.long	2145386495                      @ 0x7fdfffff
++.Lpow_root_prefix_func_end6:
++	.size	pow_root128, .Lpow_root_prefix_func_end6-pow_root128
++	.cantunwind
++	.fnend
++                                        @ -- End function
++	.p2align	1                               @ -- Begin function _ZL11root64_sqrtR6Root64
++	.type	_ZL11root64_sqrtR6Root64,%function
++	.code	16
++	.thumb_func
++_ZL11root64_sqrtR6Root64:               @ @_ZL11root64_sqrtR6Root64
++	.fnstart
++@ %bb.0:
++	.save	{r4, r5, r6, lr}
++	push	{r4, r5, r6, lr}
++	mov	r4, r0
++	ldr	r2, [r0, #8]
++	movs	r6, #1
++	mov	r5, r2
++	ands	r5, r6
++	ldr	r1, [r0, #4]
++	ldr	r0, [r0]
++	ldr	r3, [r4, #12]
++	cmp	r3, #0
++	beq	.Lpow_root_prefix_BB7_4
++.Lpow_root_prefix_BB7_1:
++	mov	r2, r5
++	bl	pow_sqrt64_raw
++	ldr	r2, [r4, #8]
++	subs	r2, r2, r5
++	lsrs	r3, r2, #31
++	adds	r2, r2, r3
++	asrs	r2, r2, #1
++	str	r2, [r4, #8]
++	ldr	r3, [r4, #12]
++	movs	r5, #3
++	muls	r5, r3, r5
++	.inst.n	0x1ceb @ adds	r3, r5, #3
++	lsrs	r3, r3, #2
++	.inst.n	0x1cdb @ adds	r3, r3, #3
++	str	r3, [r4, #12]
++	cmp	r1, #0
++	bmi	.Lpow_root_prefix_BB7_3
++@ %bb.2:
++	.inst.n	0x1c52 @ adds	r2, r2, #1
++	str	r2, [r4, #8]
++	lsls	r2, r6, #31
++	lsrs	r3, r1, #1
++	adds	r2, r3, r2
++	lsrs	r0, r0, #1
++	lsls	r1, r1, #31
++	adds	r0, r0, r1
++	mov	r1, r2
++.Lpow_root_prefix_BB7_3:
++	str	r0, [r4]
++	str	r1, [r4, #4]
++	pop	{r4, r5, r6, pc}
++.Lpow_root_prefix_BB7_4:
++	lsls	r3, r6, #31
++	eors	r3, r1
++	orrs	r3, r0
++	bne	.Lpow_root_prefix_BB7_1
++@ %bb.5:
++	cmp	r5, #0
++	bne	.Lpow_root_prefix_BB7_1
++@ %bb.6:
++	asrs	r0, r2, #1
++	str	r0, [r4, #8]
++	pop	{r4, r5, r6, pc}
++.Lpow_root_prefix_func_end7:
++	.size	_ZL11root64_sqrtR6Root64, .Lpow_root_prefix_func_end7-_ZL11root64_sqrtR6Root64
++	.cantunwind
++	.fnend
++                                        @ -- End function
++	.p2align	1                               @ -- Begin function _ZL15root128_compareRK13PowInteger128S1_
++	.type	_ZL15root128_compareRK13PowInteger128S1_,%function
++	.code	16
++	.thumb_func
++_ZL15root128_compareRK13PowInteger128S1_: @ @_ZL15root128_compareRK13PowInteger128S1_
++	.fnstart
++@ %bb.0:
++	.save	{r4, r5, r6, r7, lr}
++	push	{r4, r5, r6, r7, lr}
++	.pad	#40
++	sub	sp, #40
++	ldr	r2, [r1, #16]
++	ldr	r3, [r0, #16]
++	subs	r7, r3, r2
++	cmp	r7, #1
++	ble	.Lpow_root_prefix_BB8_2
++.Lpow_root_prefix_BB8_1:
++	movs	r0, #1
++	b	.Lpow_root_prefix_BB8_29
++.Lpow_root_prefix_BB8_2:
++	movs	r3, #0
++	mvns	r2, r3
++	cmp	r7, r2
++	bge	.Lpow_root_prefix_BB8_4
++@ %bb.3:
++	mov	r0, r2
++	b	.Lpow_root_prefix_BB8_29
++.Lpow_root_prefix_BB8_4:
++	str	r3, [sp]                        @ 4-byte Spill
++	str	r2, [sp, #8]                    @ 4-byte Spill
++	ldr	r2, [r1, #12]
++	str	r2, [sp, #32]                   @ 4-byte Spill
++	ldr	r2, [r1, #8]
++	str	r2, [sp, #28]                   @ 4-byte Spill
++	ldr	r4, [r1, #4]
++	ldr	r2, [r1]
++	str	r2, [sp, #36]                   @ 4-byte Spill
++	ldr	r2, [r0, #12]
++	ldr	r5, [r0, #8]
++	ldr	r3, [r0, #4]
++	ldr	r6, [r0]
++	ldr	r1, [r1, #20]
++	str	r1, [sp, #12]                   @ 4-byte Spill
++	ldr	r0, [r0, #20]
++	cmp	r7, #0
++	str	r0, [sp, #16]                   @ 4-byte Spill
++	bmi	.Lpow_root_prefix_BB8_7
++@ %bb.5:
++	str	r3, [sp, #4]                    @ 4-byte Spill
++	str	r5, [sp, #24]                   @ 4-byte Spill
++	cmp	r7, #1
++	bne	.Lpow_root_prefix_BB8_8
++@ %bb.6:
++	ldr	r3, [sp, #36]                   @ 4-byte Reload
++	lsrs	r0, r3, #1
++	lsls	r1, r4, #31
++	adds	r0, r0, r1
++	str	r0, [sp, #20]                   @ 4-byte Spill
++	lsls	r1, r3, #31
++	ldr	r3, [sp, #32]                   @ 4-byte Reload
++	lsrs	r7, r3, #1
++	adds	r1, r1, r7
++	ldr	r0, [sp, #28]                   @ 4-byte Reload
++	lsrs	r7, r0, #1
++	lsls	r0, r3, #31
++	adds	r5, r0, r7
++	lsrs	r4, r4, #1
++	ldr	r0, [sp, #12]                   @ 4-byte Reload
++	lsrs	r0, r0, #1
++	.inst.n	0x1c40 @ adds	r0, r0, #1
++	str	r0, [sp, #12]                   @ 4-byte Spill
++	str	r1, [sp, #32]                   @ 4-byte Spill
++	ldr	r0, [sp, #20]                   @ 4-byte Reload
++	str	r2, [sp, #20]                   @ 4-byte Spill
++	mov	r7, r6
++	b	.Lpow_root_prefix_BB8_9
++.Lpow_root_prefix_BB8_7:
++	lsrs	r0, r6, #1
++	lsls	r1, r3, #31
++	adds	r7, r0, r1
++	lsls	r0, r6, #31
++	lsrs	r1, r2, #1
++	adds	r0, r0, r1
++	str	r0, [sp, #20]                   @ 4-byte Spill
++	lsrs	r0, r5, #1
++	lsls	r2, r2, #31
++	adds	r0, r2, r0
++	str	r0, [sp, #24]                   @ 4-byte Spill
++	lsrs	r3, r3, #1
++	ldr	r0, [sp, #16]                   @ 4-byte Reload
++	lsrs	r0, r0, #1
++	.inst.n	0x1c40 @ adds	r0, r0, #1
++	str	r0, [sp, #16]                   @ 4-byte Spill
++	ldr	r5, [sp, #28]                   @ 4-byte Reload
++	ldr	r0, [sp, #36]                   @ 4-byte Reload
++	b	.Lpow_root_prefix_BB8_10
++.Lpow_root_prefix_BB8_8:
++	str	r2, [sp, #20]                   @ 4-byte Spill
++	mov	r7, r6
++	ldr	r5, [sp, #28]                   @ 4-byte Reload
++	ldr	r0, [sp, #36]                   @ 4-byte Reload
++.Lpow_root_prefix_BB8_9:
++	ldr	r3, [sp, #4]                    @ 4-byte Reload
++.Lpow_root_prefix_BB8_10:
++	mov	r2, r7
++	str	r0, [sp, #36]                   @ 4-byte Spill
++	eors	r2, r0
++	mov	r0, r3
++	eors	r0, r4
++	orrs	r0, r2
++	bne	.Lpow_root_prefix_BB8_16
++@ %bb.11:
++	ldr	r2, [sp, #32]                   @ 4-byte Reload
++	ldr	r6, [sp, #20]                   @ 4-byte Reload
++	cmp	r6, r2
++	bne	.Lpow_root_prefix_BB8_15
++@ %bb.12:
++	ldr	r0, [sp, #12]                   @ 4-byte Reload
++	ldr	r1, [sp, #16]                   @ 4-byte Reload
++	adds	r1, r1, r0
++	ldr	r0, [sp, #24]                   @ 4-byte Reload
++	cmp	r0, r5
++	bhs	.Lpow_root_prefix_BB8_27
++@ %bb.13:
++	subs	r2, r5, r0
++	movs	r0, #0
++	cmp	r2, r1
++	bls	.Lpow_root_prefix_BB8_29
++@ %bb.14:
++	mvns	r0, r0
++	b	.Lpow_root_prefix_BB8_29
++.Lpow_root_prefix_BB8_15:
++	str	r3, [sp, #4]                    @ 4-byte Spill
++	mov	r3, r2
++	ldr	r2, [sp, #24]                   @ 4-byte Reload
++	eors	r2, r5
++	eors	r6, r3
++	ldr	r3, [sp, #4]                    @ 4-byte Reload
++	orrs	r6, r2
++	beq	.Lpow_root_prefix_BB8_28
++.Lpow_root_prefix_BB8_16:
++	mov	r2, r3
++	rsbs	r6, r0, #0
++	adcs	r6, r0
++	movs	r1, #1
++	ldr	r0, [sp, #24]                   @ 4-byte Reload
++	str	r5, [sp, #28]                   @ 4-byte Spill
++	subs	r0, r0, r5
++	ldr	r0, [sp, #20]                   @ 4-byte Reload
++	ldr	r3, [sp, #32]                   @ 4-byte Reload
++	sbcs	r0, r3
++	str	r1, [sp, #4]                    @ 4-byte Spill
++	mov	r0, r1
++	blo	.Lpow_root_prefix_BB8_18
++@ %bb.17:
++	ldr	r0, [sp]                        @ 4-byte Reload
++.Lpow_root_prefix_BB8_18:
++	ldr	r1, [sp, #36]                   @ 4-byte Reload
++	subs	r5, r7, r1
++	mov	r5, r2
++	sbcs	r5, r4
++	blo	.Lpow_root_prefix_BB8_21
++@ %bb.19:
++	ands	r6, r0
++	bne	.Lpow_root_prefix_BB8_21
++@ %bb.20:
++	ldr	r6, [sp, #36]                   @ 4-byte Reload
++	str	r4, [sp]                        @ 4-byte Spill
++	mov	r0, r7
++	mov	r3, r2
++	ldr	r2, [sp, #4]                    @ 4-byte Reload
++	str	r2, [sp, #8]                    @ 4-byte Spill
++	ldr	r7, [sp, #20]                   @ 4-byte Reload
++	add	r5, sp, #24
++	ldm	r5, {r1, r4, r5}                @ 12-byte Folded Reload
++	b	.Lpow_root_prefix_BB8_22
++.Lpow_root_prefix_BB8_21:
++	mov	r6, r7
++	str	r2, [sp]                        @ 4-byte Spill
++	ldr	r1, [sp, #28]                   @ 4-byte Reload
++	ldr	r7, [sp, #32]                   @ 4-byte Reload
++	mov	r3, r4
++	ldr	r4, [sp, #24]                   @ 4-byte Reload
++	ldr	r0, [sp, #36]                   @ 4-byte Reload
++	ldr	r5, [sp, #20]                   @ 4-byte Reload
++	ldr	r2, [sp, #4]                    @ 4-byte Reload
++.Lpow_root_prefix_BB8_22:
++	subs	r6, r0, r6
++	ldr	r0, [sp]                        @ 4-byte Reload
++	sbcs	r3, r0
++	subs	r0, r1, r4
++	mov	r0, r7
++	sbcs	r0, r5
++	blo	.Lpow_root_prefix_BB8_24
++@ %bb.23:
++	movs	r2, #0
++.Lpow_root_prefix_BB8_24:
++	eors	r6, r2
++	orrs	r6, r3
++	bne	.Lpow_root_prefix_BB8_26
++@ %bb.25:
++	subs	r2, r1, r4
++	sbcs	r7, r5
++	ldr	r0, [sp, #12]                   @ 4-byte Reload
++	ldr	r1, [sp, #16]                   @ 4-byte Reload
++	adds	r1, r1, r0
++	movs	r0, #0
++	subs	r1, r1, r2
++	mov	r1, r0
++	sbcs	r1, r7
++	bhs	.Lpow_root_prefix_BB8_29
++.Lpow_root_prefix_BB8_26:
++	ldr	r0, [sp, #8]                    @ 4-byte Reload
++	b	.Lpow_root_prefix_BB8_29
++.Lpow_root_prefix_BB8_27:
++	subs	r0, r0, r5
++	cmp	r0, r1
++	bls	.Lpow_root_prefix_BB8_28
++	b	.Lpow_root_prefix_BB8_1
++.Lpow_root_prefix_BB8_28:
++	movs	r0, #0
++.Lpow_root_prefix_BB8_29:
++	add	sp, #40
++	pop	{r4, r5, r6, r7, pc}
++.Lpow_root_prefix_func_end8:
++	.size	_ZL15root128_compareRK13PowInteger128S1_, .Lpow_root_prefix_func_end8-_ZL15root128_compareRK13PowInteger128S1_
++	.cantunwind
++	.fnend
++                                        @ -- End function
++	.ident	"Apple clang version 21.0.0 (clang-2100.3.34.2)"
++	.section	".note.GNU-stack","",%progbits
++	.eabi_attribute	30, 3	@ Tag_ABI_optimization_goals
+--- a/code/native_eabi_m0_rp2040.S
++++ b/code/native_eabi_m0_rp2040.S
+@@ -1136,5 +1136,7 @@
+
+ .ltorg
+ #include "native_eabi_m0_pow_kernels.inc"
++#include "native_eabi_m0_pow_root64.inc"
++#include "native_eabi_m0_pow_root_prefix.inc"
+ #endif
+ .section .note.GNU-stack,"",%progbits
+--- a/ports/picocalc/m0_math_extension.ld
++++ b/ports/picocalc/m0_math_extension.ld
+@@ -652,8 +652,18 @@
+            "M0 tables overlap relocated log product helpers")
+     ASSERT(SIZEOF(.m0_log_product_extension) <= 0x200,
+            "M0 log product helper group exceeds512bytes")
++    /* Existing gap: keep the same root code at cache index0x1a60. */
++    .m0_pow_root64_fixed 0x1014da60 : {
++        *(.m0_sqrt64_fixed.root64)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    ASSERT(ADDR(.m0_log_product_extension) + SIZEOF(.m0_log_product_extension) <= ADDR(.m0_pow_root64_fixed),
++           "Log products overlap the fixed root helper")
++    ASSERT(ADDR(.m0_pow_root64_fixed) + SIZEOF(.m0_pow_root64_fixed) <= 0x1014e000,
++           "Fixed root helper overlaps exact pow")
+     .m0_pow_exact_extension 0x1014e000 : {
+         *(.m0_pow_exact_extension)
++        *(.m0_pow_root_prefix)
+         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+     } > FLASH
+     ASSERT(SIZEOF(.m0_pow_exact_extension) <= 0x2000,

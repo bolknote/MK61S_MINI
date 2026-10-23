@@ -1,0 +1,24 @@
+{
+  "status": "QUALIFIED_SOFTWARE_CANDIDATE_NOT_PROMOTED",
+  "files": {
+    "README.md": "bad51434929fc1a40fad3f54c96000c08ce0ebb5b88dc69d7684bcb0211dec21",
+    "cache-probe.py": "ae9ad82134b002b9bbc0f6cb25c4067fbe0529683a43c200bba4ed2a5aac5b2e",
+    "certify-prefix.py": "d190cd9ce3dfbee397c5a8035b25484883965290bca63940cccb967ceaa049c6",
+    "certify-root.py": "a6453795bac5b834a1ba7e3a47dbbcd6990022b72051f8c47b7a872b5f036532",
+    "endpoint-arm.py": "95963d34cbc1b58a7cb45f63f6a7ae1f6ddd6c423d7de94ba9cec187059556af",
+    "equivalence.py": "31cd50b5df02f008a22575b842f532f1ca46f04d92b14a3fc90bf6eb0e3d87a7",
+    "evidence.json": "e55921ffe4d694d057f8fde7caf6c429e4f2195534ed563c71c91ec427077203",
+    "freeze-gnu.py": "3aa32d3ffe873ea68461a7f363d26f3a6fa51a66177108dd965e65a601d71426",
+    "kernels.cpp": "f3233cfe58cd869711827838bd8a7b31ef2bfce6aa668b43df28bd27c8cd5d82",
+    "raw-arm.py": "313b1c7d5e8a3bbdf412352283268bfdac70913aaf5eb160eeb1f07abdd53970",
+    "reproduce.py": "131880a0ec21d775054759f4232690bc4bb3fe94428bac3c7fefc620c9250847",
+    "root-prefix-from-V110.patch": "115100d9b757c5a230768d70fea31b9afc5ac172680776c0ddd9134e0c0bf955",
+    "root64.S": "b2cc89c5eb30c67245f2d1d0c52e3c10c7788f9d05691d8197fc3c804c522acf",
+    "source-files.json": "322170b87e23cc9ccdc5f505845666bbc30902ab0cdbef9e17440d8f8c0daea1",
+    "source-scope.json": "add66209d491c0336f1bdd901f990f98be2f29ef3ef94496814e40242e7800db",
+    "validate-source.py": "73b950d013521b24d86644dabfcec24078163948271dfa6780dad2a8add1740a",
+    "verify-checkpoint.py": "0aa6c4a2e3d4f3faffd82d3099fe60f1bb76385a5ad01a6f6536e3842344e3ac"
+  },
+  "hardware_accessed": false,
+  "root_promoted": false
+}
