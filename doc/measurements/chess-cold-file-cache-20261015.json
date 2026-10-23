@@ -1,0 +1,165 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "date": "2026-10-15",
+  "source_at_measurement": "3900ffcdd59c9178af90b07020da92a07ea57bea",
+  "compiled_source": "7e7d2f2c01998db137c0bc767c2d0a7e2ba06bbe",
+  "firmware_inputs_unchanged": true,
+  "firmware": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/chess-cold-file-cache-20261015.HuexsB/images/candidate.bin",
+    "bytes": 374976,
+    "footer": 373264,
+    "build": "EFC5FDBB",
+    "sha256": "0f8cb5e541cd5ec5c4c3f10af0857881062412d309dbad6de78e2e8c9a81b562",
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/chess-latest-20261015.QxHUZK/build/resident.bin"
+  },
+  "configuration": {
+    "device": "AEB505B6E0067623",
+    "usb_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "math_backend": "LIBM",
+    "VM_cache_bytes": 32768,
+    "mixed": false,
+    "density": true,
+    "file_cache": true,
+    "extra_instrumentation": false,
+    "USB_screen": true
+  },
+  "workload": {
+    "game": "Unchanged installed Turochamp",
+    "opening_book": false,
+    "level": 2,
+    "maximum_depth": 8,
+    "verified_game_files": 30,
+    "reset": "rst now, MCU restart; not a physical power cycle",
+    "timing": "First search following reset and the normal side/book menus; reset/enumeration, menu and host verification time excluded exactly as in preceding HIL"
+  },
+  "prepared_cache": {
+    "files": 17,
+    "wire_versions": [
+      10
+    ],
+    "compiler_crcs": [
+      "367DF5CC"
+    ],
+    "source_crcs_and_APP_crcs_checked": true,
+    "entire_filesystem_unchanged_across_both_measured_stages": true,
+    "VMC_bytes_saved_in": "/Users/bolk/Projects/MK61S_MINI/.build/chess-cold-file-cache-20261015.HuexsB/prepared-vmc"
+  },
+  "preparation_with_original_stale_cache": {
+    "seconds": 52.4181747919647,
+    "nodes": 420,
+    "move": "e2e3",
+    "first_progress_seconds": 15.48726683401037,
+    "thinking_screen_seconds": 3.789788083988242,
+    "zx0_decode_calls": 258,
+    "zx0_decode_seconds": 7.90666225,
+    "NOR_read_calls": 143113,
+    "NOR_read_seconds": 8.02636996875,
+    "NOR_write_calls": 627,
+    "NOR_erase_calls": 15,
+    "idle_total_seconds": 4.910089322916667,
+    "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+  },
+  "first_search_after_reset_with_valid_file_cache": [
+    {
+      "seconds": 38.49037400004454,
+      "nodes": 420,
+      "move": "e2e3",
+      "first_progress_seconds": 4.379252625047229,
+      "thinking_screen_seconds": 0.8548995000310242,
+      "zx0_decode_calls": 45,
+      "zx0_decode_seconds": 1.3165036354166666,
+      "NOR_read_calls": 83763,
+      "NOR_read_seconds": 3.6352078541666666,
+      "NOR_write_calls": 0,
+      "NOR_erase_calls": 0,
+      "idle_total_seconds": 4.740489875,
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+    },
+    {
+      "seconds": 38.49211499997182,
+      "nodes": 420,
+      "move": "e2e3",
+      "first_progress_seconds": 4.378878208983224,
+      "thinking_screen_seconds": 0.8748733749962412,
+      "zx0_decode_calls": 45,
+      "zx0_decode_seconds": 1.3167910520833332,
+      "NOR_read_calls": 83763,
+      "NOR_read_seconds": 3.6352067083333335,
+      "NOR_write_calls": 0,
+      "NOR_erase_calls": 0,
+      "idle_total_seconds": 4.750820427083333,
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+    }
+  ],
+  "warm_repeats": [
+    {
+      "seconds": 36.244081792014185,
+      "nodes": 420,
+      "move": "e2e3",
+      "first_progress_seconds": 2.3645118750282563,
+      "thinking_screen_seconds": 0.11278787499759346,
+      "zx0_decode_calls": 3,
+      "zx0_decode_seconds": 0.08956748958333334,
+      "NOR_read_calls": 73123,
+      "NOR_read_seconds": 2.8471312291666666,
+      "NOR_write_calls": 0,
+      "NOR_erase_calls": 0,
+      "idle_total_seconds": 4.659835041666667,
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+    },
+    {
+      "seconds": 36.32794179202756,
+      "nodes": 420,
+      "move": "e2e3",
+      "first_progress_seconds": 2.3701716670184396,
+      "thinking_screen_seconds": 0.11308891698718071,
+      "zx0_decode_calls": 3,
+      "zx0_decode_seconds": 0.08962435416666667,
+      "NOR_read_calls": 73123,
+      "NOR_read_seconds": 2.84709446875,
+      "NOR_write_calls": 0,
+      "NOR_erase_calls": 0,
+      "idle_total_seconds": 4.673665854166667,
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+    }
+  ],
+  "cold_median_seconds": 38.49124450000818,
+  "warm_median_seconds": 36.28601179202087,
+  "cold_RAM_overhead_seconds": 2.2052327079873066,
+  "cold_RAM_overhead_percent": 6.0773631465120825,
+  "measured_searches_NOR_writes_and_erases": 0,
+  "frames_crc_verified": 1228,
+  "all_five_complete_boards_identical": true,
+  "limits_weakened": false,
+  "recovery": {
+    "status": "PASS",
+    "firmware": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/chess-cold-file-cache-20261015.HuexsB/images/original.bin",
+      "bytes": 360564,
+      "footer": 358852,
+      "build": "122A5FF9",
+      "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-candidate/classic.bin"
+    },
+    "files_preserved": 116,
+    "directories_preserved": 24,
+    "System_and_VMC_bytes_restored": true,
+    "added_test_VMC_removed": 10,
+    "calculator_state_cleared_with_explicit_permission": true,
+    "calculator_final_empty": true,
+    "mini_touched": false,
+    "serial_closed": true,
+    "CRC": "valid",
+    "MPU": "layout=ok",
+    "crash": "none",
+    "read_retries": []
+  },
+  "artifacts": "/Users/bolk/Projects/MK61S_MINI/.build/chess-cold-file-cache-20261015.HuexsB",
+  "raw_report": "/Users/bolk/Projects/MK61S_MINI/.build/chess-cold-file-cache-20261015.HuexsB/report.json",
+  "raw_report_sha256": "cd9bee04562108487360a0f1f7e571f6b8dd53703e82b7fc3b9029d99a505e59",
+  "hardware_driver_sha256": "3bd6e5bd4d6b6edae787fd863b68d0c5438d74d942996e268498b0d3ae13d4ac",
+  "profile_counters_note": "Nested total times are not additive. The measured cold/warm difference is not an exclusive compiler-time attribution."
+}

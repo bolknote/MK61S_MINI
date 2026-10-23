@@ -145,6 +145,22 @@ int main() {
     Value::floating_bits(UINT64_C(0x8000000000000000)),Value(std::numeric_limits<double>::infinity()),
     Value(-std::numeric_limits<double>::infinity()),Value(std::numeric_limits<double>::quiet_NaN())};
   unsigned marked=0;
+  // Every power-of-two magnitude, its neighbours and both divisor signs.
+  // Compare the full Value bank with the scalar oracle: negative quotients
+  // round down, MOD follows the divisor, and zero/overflow still fall back.
+  for(unsigned bit=0;bit<32;++bit)for(int sign:{-1,1})for(int delta:{-1,0,1}) {
+    const int64_t candidate=int64_t(sign)*(INT64_C(1)<<bit)+delta;
+    if(candidate<INT32_MIN || candidate>INT32_MAX)continue;
+    const Value y=Value(int32_t(candidate));
+    for(int32_t x:{INT32_MIN,INT32_MIN+1,-65537,-257,-129,-3,-1,0,1,3,127,255,65537,INT32_MAX})
+      for(const char* source:{"10 A=I MOD J;B=INT(I/J);C=A+B\n",
+                             "1.10 S A=INT(I/J);S B=INT((I-1)/J);S C=A+B\n"})
+        for(unsigned limit:{0U,2U,5U,31U,32U,33U}) {
+          const auto language=source[1]=='.'?Language::FOCAL:Language::BASIC;
+          Fixture fast(source,language,Value(x),y),reference(source,language,Value(x),y);
+          equal(fast,reference,limit);
+        }
+  }
   for(const char* source:basic)for(Value x:values)for(Value y:{Value(-1),Value(0),Value(3),Value(.5),Value(INT32_MAX)})
     for(unsigned limit:{0U,1U,2U,3U,4U,5U,7U,15U,30U,31U,32U,33U,34U,65U})for(unsigned stop:{0U,1U,2U}) {
       Fixture fast(source,Language::BASIC,x,y),reference(source,Language::BASIC,x,y);

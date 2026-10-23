@@ -1,0 +1,176 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "date": "2026-10-15",
+  "compiled_source_commit": "7e7d2f2c01998db137c0bc767c2d0a7e2ba06bbe",
+  "source_snapshot": "Clean tracked tree exported with git archive before building",
+  "main_at_completion": "c55ecd6f304145b717caf6b07c764c093145839e",
+  "firmware_inputs_unchanged_between_compiled_and_current_main": true,
+  "intervening_changes": "PowerShell/.NET APP packer and host tests, not used by this GCC/Python build",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "usb_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "mcu": "F411",
+    "clock_hz": 96000000
+  },
+  "configuration": {
+    "math_backend": "LIBM",
+    "math_backend_value": 0,
+    "vm_image_cache_bytes": 32768,
+    "mixed": false,
+    "density": true,
+    "file_cache": true,
+    "extra_runtime_detail_probes": false,
+    "extra_service_gap_probes": false,
+    "opcode_probes": false,
+    "ordinary_production_build": true
+  },
+  "firmware": {
+    "build": "EFC5FDBB",
+    "sha256": "0f8cb5e541cd5ec5c4c3f10af0857881062412d309dbad6de78e2e8c9a81b562",
+    "sealed_flash_bytes": 374976,
+    "globals_bytes": 24976,
+    "native_max_frame_bytes": 1928,
+    "foreground_main_frame_bytes": 80,
+    "foreground_terminal_frame_bytes": 520,
+    "APP_effective_pool_bytes": 34880
+  },
+  "workload": {
+    "game": "Installed unchanged Turochamp",
+    "game_tree": "3fde55bac115ff28ee652ff62fa32b63e05a122e",
+    "opening_book": false,
+    "level": 2,
+    "maximum_depth": 8,
+    "verified_game_files": 30,
+    "cold_definition": "First timed search after MCU reset and normal game/menu setup; original VMC files retained, not an empty filesystem-cache run",
+    "initial_vmc_files": 7
+  },
+  "seconds": [
+    51.559743124991655,
+    37.39358816703316,
+    36.302411290991586,
+    36.22515175002627
+  ],
+  "cold_seconds": 51.559743124991655,
+  "warm_median_seconds": 36.302411290991586,
+  "warm_nodes_per_second": 11.569479410978484,
+  "last_two_repeat_median_seconds": 36.26378152050893,
+  "runs": [
+    {
+      "repeat": 0,
+      "temperature": "cold",
+      "seconds": 51.559743124991655,
+      "nodes": 420,
+      "nodes_per_second": 8.145890079045424,
+      "move": "e2e3",
+      "zx0_decode_calls": 258,
+      "nor_write_calls": 627,
+      "nor_erase_calls": 15,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "final_raw_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+    },
+    {
+      "repeat": 1,
+      "temperature": "repeat",
+      "seconds": 37.39358816703316,
+      "nodes": 420,
+      "nodes_per_second": 11.23187210930133,
+      "move": "e2e3",
+      "zx0_decode_calls": 27,
+      "nor_write_calls": 0,
+      "nor_erase_calls": 0,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "final_raw_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+    },
+    {
+      "repeat": 2,
+      "temperature": "repeat",
+      "seconds": 36.302411290991586,
+      "nodes": 420,
+      "nodes_per_second": 11.569479410978484,
+      "move": "e2e3",
+      "zx0_decode_calls": 3,
+      "nor_write_calls": 0,
+      "nor_erase_calls": 0,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "final_raw_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+    },
+    {
+      "repeat": 3,
+      "temperature": "repeat",
+      "seconds": 36.22515175002627,
+      "nodes": 420,
+      "nodes_per_second": 11.594154329517623,
+      "move": "e2e3",
+      "zx0_decode_calls": 3,
+      "nor_write_calls": 0,
+      "nor_erase_calls": 0,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "final_raw_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+    }
+  ],
+  "frames_crc_verified": 980,
+  "complete_eight_rank_boards_identical": true,
+  "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "observed_stack_remaining_bytes": 9740,
+  "system_apps": {
+    "LANGVM.APP": {
+      "bytes": 12965,
+      "sha256": "71798daef4b2e8d990fe5cb30218435ca95b80c63da4a2059a45dbe7f4de525a"
+    },
+    "LANGIN.APP": {
+      "bytes": 11873,
+      "sha256": "f6898695bf1bc227fc790f4b27ae8d195a64102e5dbbd3a00a95585b747d094f"
+    },
+    "BASIC.APP": {
+      "bytes": 14094,
+      "sha256": "0b20cabc43226df6a5b68be2de717fc10c8f2c26a6545946abbe57f0d47e4e58"
+    },
+    "FOCAL.APP": {
+      "bytes": 13832,
+      "sha256": "1eb03e8e777f03f1a3079d81015d988a94547c7d99c50b09f98081f6c4a48b21"
+    },
+    "VMCache/VMSTORE.APP": {
+      "bytes": 7331,
+      "sha256": "64720b8b22be3f00126ae0534b91f022a9f33ec3495342e8a00d47d1557d9aed"
+    }
+  },
+  "limits": {
+    "weakened": false,
+    "global_RAM_cap_bytes": 49152,
+    "minimum_Flash_headroom_bytes": 131072,
+    "native_frame_cap_bytes": 5120,
+    "stack_reserve_bytes": 16384,
+    "guard_bytes": 256,
+    "APP_ceiling_bytes": 20480,
+    "ordinary_resident_and_APP_build_gates": "PASS",
+    "source_allowlist": "PASS",
+    "no_standard_runtime_archives": "PASS",
+    "actual_compiler_context_and_ELF_raw32_no_extra_probes": "PASS"
+  },
+  "recovery": {
+    "status": "PASS",
+    "firmware": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/chess-latest-20261015.QxHUZK/hardware/attempt-1/images/original.bin",
+      "bytes": 360564,
+      "footer": 358852,
+      "build": "122A5FF9",
+      "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-candidate/classic.bin"
+    },
+    "files_preserved": 44,
+    "directories_preserved": 4,
+    "calculator_preserved": true,
+    "System_APP_and_VMC_bytes_restored": true,
+    "alarms": "off",
+    "serial_closed": true,
+    "mini_touched": false,
+    "read_retries": []
+  },
+  "artifacts": "/Users/bolk/Projects/MK61S_MINI/.build/chess-latest-20261015.QxHUZK",
+  "raw_report": "/Users/bolk/Projects/MK61S_MINI/.build/chess-latest-20261015.QxHUZK/hardware/attempt-1/report.json",
+  "raw_report_sha256": "dfd5b2ea17033704317d344e66991a48b5c266e61e22691d461fd749b34ea9cf",
+  "screenshot": "/Users/bolk/Projects/MK61S_MINI/.build/chess-latest-20261015.QxHUZK/hardware/attempt-1/chess-qualification/run-3/move-e2-e3.png",
+  "comparison_kind": "Fresh single-build measurement, not a matched A/B/A optimization attribution"
+}

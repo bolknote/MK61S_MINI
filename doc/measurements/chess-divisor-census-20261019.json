@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-19",
+  "status": "PASS",
+  "source_base": "cdd344071d695efd6fc16040f7e83ac4ef35799e",
+  "executor": "K baseline, host-only commit hooks in integer_span and scalar MOD/FLOOR_DIV; not LANGUAGE_VM_TRACE",
+  "scope": "Unchanged Turochamp BASIC status+search from initial position, level 2, book off. Menu, rendering and post-search move application excluded. These are executed instruction counts, not ARM timings or static source counts.",
+  "counter_free_shipping_APP": true,
+  "repeated_searches_per_backend": 2,
+  "backend_CORE": "Linked real mk_math_core.cpp and mk61emu_core.cpp, initialized core; no LIBM stand-ins",
+  "golden_result_both_backends": {"move":"e2e3","evaluation":54,"nodes":420},
+  "logical_instructions_per_search": 6457385,
+  "VM_runs_per_search": 7662,
+  "MOD_total_per_search": 118591,
+  "FLOOR_DIV_total_per_search": 92895,
+  "LIBM": {
+    "MOD_scalar": {"all":4089,"integers":4089,"pow2":4089,"positive_pow2":4089,"negative_x":0,"zero_divisor":0,"overflow":0,"divisors":[[2,667],[4,39],[8,1394],[16,589],[128,1315],[256,34],[131072,51]]},
+    "MOD_span": {"all":114502,"integers":114502,"pow2":112814,"positive_pow2":112814,"negative_x":0,"zero_divisor":0,"overflow":0,"divisors":[[2,20101],[4,2561],[8,17538],[10,1688],[16,25517],[128,37179],[256,7778],[131072,2140]]},
+    "FLOOR_DIV_scalar": {"all":3248,"integers":3248,"pow2":3163,"positive_pow2":3163,"negative_x":0,"zero_divisor":0,"overflow":0,"divisors":[[1,140],[2,7],[4,20],[10,85],[16,30],[128,1250],[256,72],[2048,839],[16384,179],[131072,6],[524288,1],[1048576,2],[2097152,94],[134217728,31],[268435456,423],[536870912,69]]},
+    "FLOOR_DIV_span": {"all":89647,"integers":89647,"pow2":86368,"positive_pow2":86368,"negative_x":0,"zero_divisor":0,"overflow":0,"divisors":[[1,2126],[2,2219],[4,2251],[8,2251],[10,3279],[16,2161],[32,480],[128,26753],[256,5549],[2048,20284],[16384,7583],[131072,2185],[524288,2190],[1048576,2189],[2097152,2097],[134217728,2160],[268435456,1768],[536870912,2122]]},
+    "new_span_fast_path_eligible": 199182
+  },
+  "CORE": {
+    "MOD_scalar": {"all":4089,"integers":4089,"pow2":4089,"positive_pow2":4089,"negative_x":0,"zero_divisor":0,"overflow":0,"divisors":[[2,667],[4,39],[8,1394],[16,589],[128,1315],[256,34],[131072,51]]},
+    "MOD_span": {"all":114502,"integers":114502,"pow2":112814,"positive_pow2":112814,"negative_x":0,"zero_divisor":0,"overflow":0,"divisors":[[2,20101],[4,2561],[8,17538],[10,1688],[16,25517],[128,37179],[256,7778],[131072,2140]]},
+    "FLOOR_DIV_scalar": {"all":7610,"integers":3228,"pow2":3143,"positive_pow2":3143,"negative_x":0,"zero_divisor":0,"overflow":0,"divisors":[[1,140],[2,7],[10,85],[16,30],[128,1250],[256,72],[2048,839],[16384,179],[131072,6],[524288,1],[1048576,2],[2097152,94],[134217728,31],[268435456,423],[536870912,69]]},
+    "FLOOR_DIV_span": {"all":85285,"integers":85285,"pow2":82006,"positive_pow2":82006,"negative_x":0,"zero_divisor":0,"overflow":0,"divisors":[[1,2126],[2,2219],[4,80],[8,60],[10,3279],[16,2161],[32,480],[128,26753],[256,5549],[2048,20284],[16384,7583],[131072,2185],[524288,2190],[1048576,2189],[2097152,2097],[134217728,2160],[268435456,1768],[536870912,2122]]},
+    "new_span_fast_path_eligible": 194820
+  },
+  "interpretation": "Logical totals and search results match between LIBM/CORE, but operand tags and scalar/span split need not. CORE has 4382 non-integer scalar FLOOR_DIV operands in this search. Preserve exact fallback; do not coerce them to int32. Within each backend both repeats have identical complete histograms.",
+  "artifacts": {
+    "root": "/private/tmp/mk61-pow2-span.1cdmlN",
+    "census_runner": "/private/tmp/mk61-pow2-span.1cdmlN/run_census.py",
+    "counter_implementation": "/private/tmp/mk61-pow2-span.1cdmlN/census/divisor_census.cpp",
+    "read_only_validation": "/private/tmp/mk61-pow2-span.1cdmlN/census-validated.json",
+    "read_only_validation_sha256": "a87f64ba8d1ae0457b05e1bd5f9ae61b35dcf91f915b8e7c5d698edbc9e7d44f",
+    "raw_outputs": ["census-0.stdout","census-0.stderr","census-1.stdout","census-1.stderr"]
+  }
+}

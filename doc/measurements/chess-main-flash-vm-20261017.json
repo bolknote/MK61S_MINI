@@ -1,0 +1,226 @@
+{
+  "status": "TIMEOUT",
+  "date": "2026-10-17",
+  "source_commit": "36ff01c60d3edf4b8fd350fb0c84a827907755de",
+  "source_scope": "Clean git archive of current main at task start; later parallel changes excluded. No production source edits.",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3E8F4D7B",
+    "profile": "classic-v3-uc1609"
+  },
+  "measured_firmware": {
+    "path": "/private/tmp/mk61-chess-current-20261017.YOEYVY/hardware-long-menu/images/current.bin",
+    "bytes": 368660,
+    "footer": 367012,
+    "build": "3DF44CE4",
+    "sha256": "5832dc06f5f25786e747b4f67ceb389dba858c7ee4ff27776321a42501de8804",
+    "source": "/private/tmp/mk61-chess-current-20261017.YOEYVY/bundle/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.bin"
+  },
+  "configuration": {
+    "mcu": "STM32F411CE",
+    "clock_hz": 96000000,
+    "profile": "classic-v3-uc1609",
+    "math_backend": "LIBM/compact owned math, native EABI/libc; no external runtime archives",
+    "usb_screen": true,
+    "shared_screen_grid": true,
+    "screen_buffer_loan": false,
+    "overlay_language_vm": true,
+    "flash_language_vm": true,
+    "ram_full_image_cache_bytes": 0,
+    "legacy_vmstore_enabled": false,
+    "flash_page_bytes": 1024,
+    "source_window_bytes": 1488,
+    "app_placement": "BASIC/FOCAL/LANGVM/LANGIN/SRCEDIT split APP; menus/viewer/CHIP8 resident defaults; USBDISK external"
+  },
+  "system_apps": {
+    "BASIC.APP": {
+      "packed_bytes": 14140,
+      "memory_bytes": 20060,
+      "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+    },
+    "FOCAL.APP": {
+      "packed_bytes": 12674,
+      "memory_bytes": 17528,
+      "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+    },
+    "LANGIN.APP": {
+      "packed_bytes": 14082,
+      "memory_bytes": 19196,
+      "sha256": "e8900d762a92edb143a39f2b96758e021adc20a1f1e0905d41af275028f3169d"
+    },
+    "LANGVM.APP": {
+      "packed_bytes": 13750,
+      "memory_bytes": 20460,
+      "sha256": "2e24abc1844a465c9d93aa4be30b881639f8fac4b853ab8d6768d2f3572fd917"
+    },
+    "SRCEDIT.APP": {
+      "packed_bytes": 13483,
+      "memory_bytes": 18180,
+      "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+    }
+  },
+  "scenario": {
+    "opening_book": false,
+    "level": 2,
+    "maximum_depth": 8,
+    "expected_nodes": 420,
+    "game_files": 29,
+    "game_m8_bytes": 35741,
+    "game_package_sha256": {
+      "node.tbi": "cf83cd025e8cdf4f0d3cf12ee05320dfc96e8ed251a37b6cc129b25f38547801",
+      "history.tbi": "4a0627bbe3fa208037bdc42ee2363c21f2559d3c51baf34d8fe5b783b41d5a44",
+      "ep.tbi": "a7ba7bb9113af1829ee80e1b6663f430b67c838aad8ff6d24c02425d784677c1",
+      "menu.tbi": "d6cbe15388ee127dcaace02b5a85856a2ec6ef7b85c77d92203113176f64cc74",
+      "status.tbi": "d3b989f349ffad62a8f8d1954e15378c589f9e9c48559ec91c8b4d6eae5531b9",
+      "help.tbi": "3eddc5b1ea1f62584154f5db8dec220eacae57f50ea57b416dabba1f5ea78333",
+      "Turochamp.FMK": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916",
+      "board.tbi": "1e4113607202e63ed95f82909d58c922ed8a048989c118b805f54616268ba8c6",
+      "claims.tbi": "21c87ee4b2f6de0ffbc10df7bf26321a0ffe758852da46b8d9713837a47753dc",
+      "turn.tbi": "d83a558adad6accc6c570e6a8e4f7145a1a305af19e662dd31220552f1f39740",
+      "legal.tbi": "5f30aaf9cb07f80e4b673f9144643df00c3c6c4ac3e0ee51527ab16ffe91f7f6",
+      "unmake.tbi": "7bdb65e4c7524948702c01f3024a17eec81cbeb727c4c733587742cd34e6b362",
+      "autoexec.m61": "1e1a6f2339c3e189ff8626716c28a1147d8357a5d879d65420c7ea5f0b3dd767",
+      "threat.tbi": "8fe97c01d107c265a971896c1c7106a3becbe6c95fee14a0f6a0f5dbde7eff2f",
+      "mobility.tbi": "58e782d4359fcec10c88a9bd3c0f8c4eb31f647310d3ffd969755c3c1041240b",
+      "init.tbi": "6e762e5997340d1a0d9048eb30a3bf0efa00c500cea05aaa08909a00f89ee932",
+      "rstep.tbi": "20e61e508f378124e465d5eb068d96aed760fa0240c369b3dd82e4daa61c61a4",
+      "castle.tbi": "7df377af2ce7036a8a6d37068b692b99db0d1f5c511f7626a09f9ebe331a53ac",
+      "algorithm.md": "1f336161764f14824f318c921f5239e2ca74c1e9e574f5b684778fef2b9b3026",
+      "make.tbi": "d9215bfcfedfe6329c18df6bbd147b7d479ffcd441f067a5ac48147605783769",
+      "game.tbi": "1266fa7729cc0281cfcf88a93098937c2e9fd90eed8e332d665f20f9d58ee74c",
+      "rkey.tbi": "ebf80cb7f6b7a1e61b4637641d0fd0b4c72b97e15dfe7451a85d79a625b7abaa",
+      "eval.tbi": "d2376a0fbcda14d0a30263cb007c3294af82fbdd31acfc31da4ceb86537aa378",
+      "claim.tbi": "19a1eb3eca81422f5d23560e90739f889a73a9ce610cd2e4e81d1c2761fadafe",
+      "rules.md": "af11d32f93808e26391a0c97a012e73a3b90105694e68ed6849ae6deec56e965",
+      "manual.md": "842bdbf12018250117511df7d35eedfa5dd29876990cd2b03176eac597ac8c72",
+      "repeat.tbi": "ea7dce8c659e27efdca41e6b8042343131223f0c3b0ea71c024008ff5ec58850",
+      "promote.tbi": "d5d4c795077669c2bd71a729c8c90aa760a16fd2aec8bfb02a011a91501b8a15",
+      "search.tbi": "2c9767231dfdea5ab42b036fd46221eb1efc10b9c72279454c812a1b24eeea2a"
+    },
+    "menu_wait_seconds": 240,
+    "search_wait_seconds": 600,
+    "timing_start": "OK on Black selection, after book-off menu; initial load/menu excluded",
+    "timing_end": "Complete eight-rank e2-e3 board; not reached",
+    "resident_profiling": false
+  },
+  "results": {
+    "cold_menu_seconds": 16.1635270419647,
+    "complete_search_seconds": null,
+    "complete_search_lower_bound_seconds": 600,
+    "completed_nodes": 210,
+    "last_progress_seconds": 597.0956130420091,
+    "progress": [
+      {
+        "nodes": 0,
+        "seconds": 54.3895268329652
+      },
+      {
+        "nodes": 21,
+        "seconds": 199.3576990829897
+      },
+      {
+        "nodes": 42,
+        "seconds": 243.15609320800286
+      },
+      {
+        "nodes": 63,
+        "seconds": 288.7348444579984
+      },
+      {
+        "nodes": 84,
+        "seconds": 333.3942228750093
+      },
+      {
+        "nodes": 105,
+        "seconds": 375.7911324579618
+      },
+      {
+        "nodes": 126,
+        "seconds": 419.1507742499816
+      },
+      {
+        "nodes": 147,
+        "seconds": 463.5025804580073
+      },
+      {
+        "nodes": 168,
+        "seconds": 507.8425674170139
+      },
+      {
+        "nodes": 189,
+        "seconds": 552.2434362919885
+      },
+      {
+        "nodes": 210,
+        "seconds": 597.0956130420091
+      }
+    ],
+    "full_board_oracle_passed": false,
+    "completed_move": null,
+    "warm_runs_completed": 0,
+    "ready_file_cache_reboot_run_completed": false,
+    "remaining_runs": "Not run after first search timed out; no warm or full-search timing claim.",
+    "seconds_per_21_nodes_median_after_first_21": 44.351806208025664,
+    "nodes_per_second_between_21_and_210": 0.475187286318079,
+    "last_frame_sha256": "624b8d3a6b7c9274f18f38b48ee5bc5b6945809a4c35c2f36c446f2d77438b1d",
+    "last_frame": "Thinking, POZ 210; CRC-checked USB frame; no Open failed message in terminal"
+  },
+  "historical_comparison": {
+    "report": "doc/measurements/chess-source-window-20261017.json",
+    "cold_complete_seconds": 50.76907654199749,
+    "warm_seconds": 25.16137514600996,
+    "matched_ABA": false,
+    "note": "Same source package and workload, but different VM wire/storage architecture, resident/menu placement and shared screen grid. Not isolated attribution to an individual commit."
+  },
+  "analysis": {
+    "observed": "After the first 21 nodes, each following 21-node interval takes about 42–46 seconds. The delay is not confined to the initial menu or first 21 nodes.",
+    "hypothesis_not_proven": "The new Flash-backed VM replaced the full-image RAM cache with bounded paging. Page I/O/cache/validation and repeat compilation require profiling; no claim that one of these has been isolated."
+  },
+  "verification": {
+    "menu_timeout_attempt": "Initial external 10-second menu wait failed; exact restoration completed. Second attempt confirmed the menu at 16.164 seconds, with only the host menu wait extended.",
+    "native_flash": "368660/524288 bytes; 155628 bytes headroom, exceeding 16384 gate",
+    "native_ram": "APP pool gate PASS; effective 67648 bytes, max APP 20480, full stage 2560, MSC 8264, filesystem temporaries 824",
+    "native_stack": "Largest frame 1928 <=3072; foreground main 80 and terminal dispatch 520 PASS; system stack 16384",
+    "app_memory": "BASIC 20060; FOCAL 17528; LANGVM 20460; LANGIN 19196; SRCEDIT 18180, all <=20480",
+    "runtime_libraries": "Resident and language APP archive gates PASS; no external libc/libm/libgcc archives",
+    "screen_oracle_self_tests": "M8, eight ranks, bounded disk mask, CRC/timing and merge restoration self-tests PASS",
+    "runtime_peak_stack": "Not captured for failed search; restored-state watermark is not a search stack measurement.",
+    "limits_weakened": false
+  },
+  "recovery": {
+    "status": "PASS",
+    "original_firmware": {
+      "path": "/private/tmp/mk61-chess-current-20261017.YOEYVY/hardware-long-menu/images/original.bin",
+      "bytes": 324876,
+      "footer": 323228,
+      "build": "3E8F4D7B",
+      "sha256": "1bc494c3320c4efa9c4c74d397317764f66ce533e8613ad7a7b0e1a44e2af877",
+      "source": "/private/tmp/mk61-flash-release-classic/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.bin"
+    },
+    "original_files": 24,
+    "original_directories": 2,
+    "filesystem_byte_exact": true,
+    "calculator_reg_stk_dump_pwd_exact": true,
+    "firmware_writes_total_two_attempts": 4,
+    "temporary_game_entries_removed": 30,
+    "derived_page_entries_removed_second_attempt": 139,
+    "crc": "valid",
+    "mpu": "layout=ok",
+    "crash": "none",
+    "alarms": "off",
+    "cdc_closed": true,
+    "mini_touched": false,
+    "pico_touched": false,
+    "classic_handed_off_to": "Coordinated task Фокал after restoration; no further board access by this task"
+  },
+  "raw_artifacts": "/private/tmp/mk61-chess-current-20261017.YOEYVY",
+  "raw_reports": [
+    "hardware/report.json",
+    "hardware-long-menu/report.json"
+  ],
+  "driver_command": "python3 -u /private/tmp/mk61-chess-current-20261017.YOEYVY/measure_with_wait.py",
+  "failure_screenshot": "/private/tmp/mk61-chess-current-20261017.YOEYVY/hardware-long-menu/first-compile/failure-screen.png"
+}

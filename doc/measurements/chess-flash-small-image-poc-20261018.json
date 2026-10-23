@@ -1,0 +1,105 @@
+{
+  "status": "LOCAL_POC_PASS_HARDWARE_PENDING",
+  "date": "2026-10-18",
+  "goal_achieved": false,
+  "prior_hardware_warm_seconds": 45.780469437508145,
+  "historical_warm_target_seconds_approx": 25,
+  "current_device_changes": 0,
+  "device": {
+    "public": "AEB505B6E0067623",
+    "installed_build": "3AB3DD45",
+    "free": true
+  },
+  "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+  "census": {
+    "raw_and_paged_identical": true,
+    "sha256": "cf59a96f80b92068fcb5e04192692eb0ab75aab2ab7459631d643d919fe434ab",
+    "dispatch_samples": 4045860,
+    "logical": 6464181,
+    "fused_calls": 713585,
+    "fused_logical": 3131906,
+    "source": "host Tiny BASIC adapter; init/status included, not an ARM time profile"
+  },
+  "desktop_model": {
+    "searches": 3,
+    "search_results": [
+      "e2e3 54 420",
+      "e2e3 54 420",
+      "e2e3 54 420"
+    ],
+    "vm_invocations": 22990,
+    "paged_vm_seconds": 0.203179562,
+    "contiguous_vm_seconds": 0.170664093,
+    "elapsed_reduction_percent": 16.003316809985048,
+    "excluded": "compilation, preparation, M61 OPEN, actual C9/NOR/USB services",
+    "cache_model": {
+      "bytes": 32768,
+      "frames": 29,
+      "source_epoch": 1,
+      "loan_hits": 22963,
+      "loan_misses": 27,
+      "backing_reads": 63,
+      "caveat": "Fixed-epoch model, initial compile/media changes excluded; no simultaneous paged-reader traffic"
+    },
+    "active_images_bytes": 25120,
+    "active_images_rounded_pages": 30
+  },
+  "native_candidate": {
+    "installed": false,
+    "build": "90724052",
+    "bin_bytes": 370872,
+    "bin_sha256": "4fcd5fa92fb5f8d386d7797257cc4aa691e72ba510a1f80644d82bbcbb468fce",
+    "resident_increase_over_reader_candidate_bytes": 672,
+    "vm_memory_bytes": 20444,
+    "vm_sha256": "5bf89886d9967bfa5dd22e5198ef5e18c151ba268013d627783e6de520564f47",
+    "cache_budget_bytes": 32768,
+    "cache_payload_bytes": 29696,
+    "small_image_cap_bytes": 8192,
+    "strict_gates": {
+      "flash_headroom_bytes": 153416,
+      "minimum_headroom_bytes": 131072,
+      "global_ram_limit_bytes": 49152,
+      "resident_frame_max_bytes": 1928,
+      "resident_frame_limit_bytes": 3072,
+      "app_frame_max_bytes": 3264,
+      "app_frame_limit_bytes": 5120,
+      "effective_app_pool_bytes": 34880,
+      "lazy_bytes": 52560,
+      "scoped_bytes": 5184,
+      "placement_bytes": 224
+    },
+    "f401_fallback": {
+      "case": "f401-product-ws0010",
+      "flash_bytes": 239604,
+      "flash_free_bytes": 22540,
+      "minimum_headroom_bytes": 8192,
+      "frame_max_bytes": 1336,
+      "frame_limit_bytes": 2048,
+      "installed": false
+    }
+  },
+  "tests": {
+    "sanitizers": "ASan/UBSan PASS",
+    "small_raw_paged_diff_both_arithmetic": "PASS; arrays/CALL/DATA/INPUT/long strings, values/steps",
+    "arm": "BASIC/FOCAL 66225-byte paged and 225-byte contiguous/paged, 3 APP addresses, INPUT eviction/resume PASS",
+    "c9_nor": "200KB paged fallback, snapshots across media writes, I/O recovery/torn writes PASS",
+    "cache": "whole-page tail, hit/eviction, epoch during fill, pinned epoch changes, full-pool pin, failed read/service PASS",
+    "full_existing_main_vm": "both arithmetic/scalar/fused/reset/source suites PASS"
+  },
+  "restoration": "Prior two A/B/A restored 24 files/2 directories and firmware; no new USB/DFU accesses this turn.",
+  "hardware_pending": "User physical Classic USB reconnect requested after macOS dfu-util enumeration stall; read-only IOKit helper unchanged, not used as writer.",
+  "artifacts_root": "/private/tmp/mk61-paged-return25.gtdeAC",
+  "prototype_root": "/private/tmp/mk61-paged-return25.gtdeAC/compact",
+  "logs": [
+    "compact-cache-model.json",
+    "paged-timing.json",
+    "wide-ram-timing.json",
+    "arm-compact.log",
+    "c9-compact-final.log",
+    "compact-small-vm.log",
+    "compact-full-vm.log",
+    "build-compact-bundle.log",
+    "compact-strict-gates.log",
+    "build-compact-f401.log"
+  ]
+}

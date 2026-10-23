@@ -1,0 +1,396 @@
+{
+  "status": "MEASUREMENTS_VALIDATED",
+  "date": "2026-10-16",
+  "compiled_revision": "2e0cbf50b164847098b7066c840fddeca48b39da",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "USB_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "math_backend": "LIBM"
+  },
+  "workload": "Unchanged Turochamp, book off, level 2, max depth 8, e2e3, 420 nodes",
+  "ordinary_steady_medians_seconds": {
+    "baseline": 36.178833541984204,
+    "control": 36.14428468752885
+  },
+  "ordinary_reference_seconds": 36.16155911475653,
+  "ordinary_before_after_drift_percent": -0.09549466102951598,
+  "detailed_profile_seconds": 46.90483866649447,
+  "light_profile_seconds": 39.95287393798935,
+  "detailed_overhead_percent": 29.709116019153914,
+  "light_overhead_percent": 10.48437876033308,
+  "self_time_note": "Exclusive diagnostic times, not a decomposition of ordinary elapsed time. Probe cost remains in containing parents and uncovered time. No naive subtraction or proportional scaling into ordinary times.",
+  "light_exclusive_groups_seconds": {
+    "Background_services_keyboard_USB": 5.987312395833333,
+    "Filesystem_NOR_decode": 2.9550615104166673,
+    "VM_launch_prepare": 1.9385249739583335,
+    "Other_APP_load_entry": 0.03238702604166666,
+    "VM_execution": 20.638115901041665,
+    "M61_dispatch_OPEN": 7.934572083333332
+  },
+  "light_exclusive_points": {
+    "idle.main": {
+      "calls": 231498,
+      "self_seconds": 3.79364109375,
+      "inclusive_seconds": 5.096760260416667
+    },
+    "usb.service": {
+      "calls": 231499,
+      "self_seconds": 1.3031392708333334,
+      "inclusive_seconds": 1.3031392708333334
+    },
+    "flash.read": {
+      "calls": 73123,
+      "self_seconds": 2.8878467708333337,
+      "inclusive_seconds": 2.8878467708333337
+    },
+    "zx0.decode": {
+      "calls": 3,
+      "self_seconds": 0.000008625,
+      "inclusive_seconds": 0.09018138020833333
+    },
+    "app.load.vm": {
+      "calls": 1,
+      "self_seconds": 0.0028114114583333333,
+      "inclusive_seconds": 0.061896796875
+    },
+    "app.load.other": {
+      "calls": 1,
+      "self_seconds": 0.001262578125,
+      "inclusive_seconds": 0.0333155625
+    },
+    "app.entry.vm": {
+      "calls": 22606,
+      "self_seconds": 20.638115901041665,
+      "inclusive_seconds": 25.8326185625
+    },
+    "app.entry.other": {
+      "calls": 7,
+      "self_seconds": 0.031124447916666666,
+      "inclusive_seconds": 0.07424343229166666
+    },
+    "file.source": {
+      "calls": 1,
+      "self_seconds": 0.000044864583333333334,
+      "inclusive_seconds": 0.005503901041666667
+    },
+    "file.other": {
+      "calls": 48,
+      "self_seconds": 0.005988083333333333,
+      "inclusive_seconds": 0.03858697916666667
+    },
+    "zx0.app.vm": {
+      "calls": 1,
+      "self_seconds": 0.036759859374999995,
+      "inclusive_seconds": 0.0554878125
+    },
+    "zx0.app.other": {
+      "calls": 1,
+      "self_seconds": 0.019587203125,
+      "inclusive_seconds": 0.02932065625
+    },
+    "zx0.source": {
+      "calls": 1,
+      "self_seconds": 0.004826104166666666,
+      "inclusive_seconds": 0.005364286458333333
+    },
+    "font.activate": {
+      "calls": 11303,
+      "self_seconds": 0.3467594947916667,
+      "inclusive_seconds": 0.3467594947916667
+    },
+    "vm.cache.lookup": {
+      "calls": 11303,
+      "self_seconds": 0.08340347916666667,
+      "inclusive_seconds": 0.08340347916666667
+    },
+    "vm.prepare": {
+      "calls": 11302,
+      "self_seconds": 0.5177063697916666,
+      "inclusive_seconds": 0.5177063697916666
+    },
+    "m61.runner": {
+      "calls": 19073,
+      "self_seconds": 0.8193589895833333,
+      "inclusive_seconds": 38.69182809895834
+    },
+    "vm.invoke": {
+      "calls": 11302,
+      "self_seconds": 0.9878442187500001,
+      "inclusive_seconds": 27.939625010416666
+    },
+    "m61.operand": {
+      "calls": 293882,
+      "self_seconds": 1.3346972604166667,
+      "inclusive_seconds": 1.3346972604166667
+    },
+    "m61.open": {
+      "calls": 11302,
+      "self_seconds": 1.1440256875,
+      "inclusive_seconds": 31.902357145833335
+    },
+    "terminal.lookup": {
+      "calls": 5653,
+      "self_seconds": 0.11967805729166667,
+      "inclusive_seconds": 0.11967805729166667
+    },
+    "m61.read.line": {
+      "calls": 152593,
+      "self_seconds": 1.120882671875,
+      "inclusive_seconds": 1.120882671875
+    },
+    "m61.command": {
+      "calls": 152592,
+      "self_seconds": 3.3959294166666663,
+      "inclusive_seconds": 36.75259884374999
+    },
+    "key.scan": {
+      "calls": 250670.5,
+      "self_seconds": 0.89053203125,
+      "inclusive_seconds": 0.89053203125
+    }
+  },
+  "light_exclusive_total_seconds": 39.485973890625,
+  "light_uncovered_seconds": 0.466900047364355,
+  "detailed_background_groups_seconds": 12.984040885416668,
+  "detailed_idle_subpoints": {
+    "idle.power": {
+      "calls": 229691,
+      "self_seconds": 0.457060546875,
+      "inclusive_seconds": 0.457060546875
+    },
+    "idle.rtc": {
+      "calls": 229691,
+      "self_seconds": 0.21793441666666666,
+      "inclusive_seconds": 0.21793441666666666
+    },
+    "idle.msc": {
+      "calls": 229691,
+      "self_seconds": 0.22755110416666666,
+      "inclusive_seconds": 0.22755110416666666
+    },
+    "idle.usb.power": {
+      "calls": 229691,
+      "self_seconds": 0.41440020833333335,
+      "inclusive_seconds": 0.41440020833333335
+    },
+    "idle.terminal": {
+      "calls": 229690,
+      "self_seconds": 0.45523659375000003,
+      "inclusive_seconds": 0.45523659375000003
+    },
+    "idle.sound": {
+      "calls": 229691,
+      "self_seconds": 0.42216690104166665,
+      "inclusive_seconds": 0.42216690104166665
+    },
+    "idle.led": {
+      "calls": 229691,
+      "self_seconds": 0.288115484375,
+      "inclusive_seconds": 0.288115484375
+    },
+    "idle.disk": {
+      "calls": 229691,
+      "self_seconds": 0.36766166145833334,
+      "inclusive_seconds": 0.36766166145833334
+    },
+    "idle.flush": {
+      "calls": 229691,
+      "self_seconds": 1.0377770833333333,
+      "inclusive_seconds": 1.0377770833333333
+    },
+    "idle.signal": {
+      "calls": 229691,
+      "self_seconds": 0.19934875520833334,
+      "inclusive_seconds": 0.19934875520833334
+    },
+    "idle.watchdog": {
+      "calls": 229691,
+      "self_seconds": 0.25916453125,
+      "inclusive_seconds": 0.25916453125
+    },
+    "idle.sleep.conditions": {
+      "calls": 19152,
+      "self_seconds": 0.12586934375,
+      "inclusive_seconds": 0.12586934375
+    },
+    "idle.sleep.attempt": {
+      "calls": 19152,
+      "self_seconds": 0.04720569270833333,
+      "inclusive_seconds": 0.04720569270833333
+    }
+  },
+  "RAM_cache": {
+    "requests": 11303,
+    "hits": 11302,
+    "misses": 1,
+    "miss_modules": [
+      "history"
+    ],
+    "order_signature": {
+      "count": 11303,
+      "fnv64": "2258983549102710787"
+    }
+  },
+  "calls_per_steady_search": {
+    "m61.read.line": 152593,
+    "m61.command": 152592,
+    "m61.operand": 293882,
+    "m61.open": 11302,
+    "vm.prepare": 11302,
+    "vm.invoke": 11302
+  },
+  "warm_NOR_read_calls": 73123,
+  "warm_source_read_calls": 1,
+  "warm_other_file_read_calls": 48,
+  "stages": {
+    "baseline": {
+      "firmware": "091D20DE",
+      "all_run_seconds": [
+        52.367618582968134,
+        37.373815207974985,
+        36.178833541984204
+      ],
+      "decode_counts": [
+        258,
+        27,
+        3
+      ],
+      "steady_run_indices": [
+        2
+      ]
+    },
+    "profile": {
+      "firmware": "3F3A1040",
+      "all_run_seconds": [
+        49.14132133300882,
+        46.86056291597197,
+        46.94911441701697
+      ],
+      "decode_counts": [
+        45,
+        3,
+        3
+      ],
+      "steady_run_indices": [
+        1,
+        2
+      ]
+    },
+    "control": {
+      "firmware": "091D20DE",
+      "all_run_seconds": [
+        38.350126749952324,
+        36.10480925004231,
+        36.1837601250154
+      ],
+      "decode_counts": [
+        45,
+        3,
+        3
+      ],
+      "steady_run_indices": [
+        1,
+        2
+      ]
+    },
+    "light": {
+      "firmware": "3C68E4F4",
+      "all_run_seconds": [
+        56.288731375010684,
+        41.18669399997452,
+        39.992747834010515,
+        39.91300004196819
+      ],
+      "decode_counts": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_run_indices": [
+        2,
+        3
+      ]
+    }
+  },
+  "first_runs_not_comparable": true,
+  "steady_filter": "Non-first run, exactly 3 decodes, zero NOR writes and erases; additional 27-decode compiler-cache warmups are retained in raw data, not timed as steady state.",
+  "validation": {
+    "searches": 13,
+    "all_nodes": 420,
+    "all_move": "e2e3",
+    "all_complete_boards_identical": true,
+    "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "frames_crc_verified": 3118,
+    "keyboard_overflow_counters": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "SPI_DMA_errors_and_timeouts": 0,
+    "minimum_stack_watermark_remaining": 9460
+  },
+  "limits": {
+    "flash_min_headroom": 131072,
+    "global_RAM_limit": 49152,
+    "max_native_frame": 5120,
+    "hardware_stack_budget": 16384,
+    "APP_image_max": 20480,
+    "VM_cache_bytes": 32768
+  },
+  "limits_weakened": false,
+  "production_source_changed": false,
+  "harness_note": {
+    "original_outer_driver_status": "FAIL",
+    "original_error": "AssertionError(Identity(public='AEB505B6E0067623', short='E0067623', usb='2068336B4731', volume='AED647EB', build='091D20DE', profile='classic-v3-uc1609identity'))",
+    "failure_after_all_timed_searches": true,
+    "independent_qualification": "/Users/bolk/Projects/MK61S_MINI/.build/chess-separated-profile-20261016.5rh2Tt/qualification.json",
+    "original_recovery": true,
+    "light_outer_driver_status": "PASS",
+    "diagnostic_harness_fix": "Drain asynchronous CDC reset tail before another identity request; strict UID/USB/profile/build checks unchanged."
+  },
+  "recovery": {
+    "status": "PASS",
+    "firmware": "122A5FF9",
+    "source_sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da",
+    "files": 116,
+    "directories": 24,
+    "all_file_hashes_preserved": true,
+    "calculator_state_preserved": true,
+    "MPU_layout": "ok",
+    "crash": "none",
+    "added_test_VMC_removed": 10,
+    "serial_closed": true,
+    "mini_touched": false
+  },
+  "selected_first_optimization": {
+    "target": "Generic prepared M61 commands and revision-checked OPEN targets",
+    "reason": "152592 command parses, 293882 operand reads and 11302 OPENs per search remain despite 11302 RAM VM-cache hits. Their control work is about 7.93 diagnostic seconds; most NOR reads are outside content reads.",
+    "constraints": [
+      "No chess-specific native engine or hardcoded module dispatch",
+      "Preserve filesystem revision/name/relative-path semantics and errors",
+      "Preserve IF semantics, traps/binds, ESC and USB/keyboard service boundaries",
+      "Retain the same Flash/RAM/stack/APP/source limits",
+      "Implement only after separate user authorization; this task changes no production code"
+    ]
+  },
+  "secondary_priorities": [
+    "Extend integer fast paths for ABS and short array chains after M61 A/B/A",
+    "Do not enlarge bytecode cache or reduce keyboard/USB polling based on this profile"
+  ],
+  "artifacts": "/Users/bolk/Projects/MK61S_MINI/.build/chess-separated-profile-20261016.5rh2Tt",
+  "raw_full_profile": "/Users/bolk/Projects/MK61S_MINI/.build/chess-separated-profile-20261016.5rh2Tt/report.json",
+  "raw_light_profile": "/Users/bolk/Projects/MK61S_MINI/.build/chess-separated-profile-20261016.5rh2Tt/light/report.json"
+}
