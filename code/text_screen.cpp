@@ -44,7 +44,7 @@ FontGeometry fitFontToDisplay(u8 width, u8 height, u8 line_gap) {
 }
 
 #if MK61_PROPORTIONAL_UI_FONTS
-Grid::Grid(void) : cells{0}, custom_cells{0}, dirty_cells{0},
+Grid::Grid(void) : cells{0}, custom_cells{0}, dirty_cells{0}, dirty_rows(0),
     row_count(1), column_count(COLS), cursor_x(0), cursor_y(0) {
   clear();
 }
@@ -81,6 +81,7 @@ void Grid::reshape(u8 rows, u8 cols) {
 }
 
 void Grid::clear(void) {
+  dirty_rows = 0;
   for(usize cell = 0; cell < CELL_CAPACITY; cell++) cells[cell] = ' ';
   for(usize byte = 0; byte < FLAG_BYTES; byte++) {
     custom_cells[byte] = 0;
@@ -145,10 +146,14 @@ bool Grid::cellIsCustom(u8 x, u8 y) const {
 }
 
 void Grid::markCell(u8 x, u8 y) {
-  if(x < column_count && y < row_count) setFlag(dirty_cells, index(x, y), true);
+  if(x < column_count && y < row_count) {
+    setFlag(dirty_cells, index(x, y), true);
+    dirty_rows |= (u16) ((u16) 1U << y);
+  }
 }
 
 void Grid::markAll(void) {
+  dirty_rows = (u16) (((u16) 1U << row_count) - 1U);
   const usize count = (usize) row_count * column_count;
   const usize whole_bytes = count / 8U;
   for(usize byte = 0; byte < whole_bytes; byte++) dirty_cells[byte] = 0xFF;
@@ -187,6 +192,7 @@ u16 Grid::dirtyMask(u8 row) const {
 
 void Grid::clearDirty(u8 row) {
   if(row >= row_count) return;
+  dirty_rows &= (u16) ~((u16) 1U << row);
   if(column_count == COLS) {
     dirty_cells[(usize) row * 2U] = 0;
     dirty_cells[(usize) row * 2U + 1U] = 0;
@@ -200,6 +206,7 @@ void Grid::clearDirty(u8 row) {
 void Grid::clearColumns(u16 mask) {
   if(mask == 0xFFFF) {
     for(usize byte = 0; byte < FLAG_BYTES; byte++) dirty_cells[byte] = 0;
+    dirty_rows = 0;
     return;
   }
   // A partial legacy mask cannot describe the damage of a wider text row.
@@ -208,6 +215,8 @@ void Grid::clearColumns(u16 mask) {
     for(u8 row = 0; row < row_count; row++) {
       dirty_cells[(usize) row * 2U] &= (u8) ~mask;
       dirty_cells[(usize) row * 2U + 1U] &= (u8) ~(mask >> 8);
+      if(!(dirty_cells[(usize) row * 2U] | dirty_cells[(usize) row * 2U + 1U]))
+        dirty_rows &= (u16) ~((u16) 1U << row);
     }
     return;
   }
@@ -217,17 +226,8 @@ void Grid::clearColumns(u16 mask) {
         setFlag(dirty_cells, index(col, row), false);
       }
     }
+    if(dirtyMask(row) == 0) dirty_rows &= (u16) ~((u16) 1U << row);
   }
-}
-
-bool Grid::anyDirty(void) const {
-  // reset/reshape clear the whole bitmap; markCell/markAll can only dirty
-  // visible cells. Do not scan the unused 64x10 capacity on every clean flush.
-  const usize used_bytes = ((usize) row_count * column_count + 7U) / 8U;
-  for(usize byte = 0; byte < used_bytes; byte++) {
-    if(dirty_cells[byte] != 0) return true;
-  }
-  return false;
 }
 
 #else
