@@ -14,16 +14,23 @@ class Machine:
     def __init__(self,path):
         self.elf=ElfImage(path);self.uc=Uc(UC_ARCH_ARM,UC_MODE_MCLASS|UC_MODE_THUMB)
         self.uc.mem_map(0x08000000,0x100000);self.uc.mem_map(0x20000000,0x20000)
-        self.elf.load(self.uc);self.reads=[];self.calls=0
+        self.elf.load(self.uc);self.reads=[];self.calls=0;self.strlen_read_group=None
         self.uc.hook_add(UC_HOOK_MEM_READ,self.read);self.uc.hook_add(UC_HOOK_MEM_WRITE,self.write)
     def read(self,uc,access,address,size,value,user):
         del uc,access,value,user
         ranges=[(0x08000000,STOP),(SP-1024,SP),(D,D+1024),*self.reads]
+        if self.strlen_read_group is not None:ranges.append(self.strlen_read_group)
         assert any(lo<=address and address+size<=hi for lo,hi in ranges),('read outside string',hex(address),size,self.reads)
     def write(self,uc,access,address,size,value,user):
         del uc,access,value,user
         assert (SP-1024<=address and address+size<=SP) or (D<=address and address+size<=D+1024),('write outside destination/stack',hex(address),size)
     def call(self,name,*args):
+        self.strlen_read_group=None
+        if name=='strlen':
+            # Only strlen may read its final aligned eight-byte NUL group.
+            # Other string functions retain their original byte-exact bounds.
+            lo,hi=next(span for span in self.reads if span[0]==args[0])
+            self.strlen_read_group=(lo,(hi+7)&~7)
         saved={reg:(0xA0712491+reg*0x1021)&0xFFFFFFFF for reg in range(UC_ARM_REG_R4,UC_ARM_REG_R11+1)}
         for reg,val in saved.items():self.uc.reg_write(reg,val)
         for reg,val in zip(REGS,(*args,0,0,0,0)):self.uc.reg_write(reg,val&0xFFFFFFFF)

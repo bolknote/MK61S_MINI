@@ -1,0 +1,159 @@
+{
+  "status": "M4_HARDWARE_SELECTION_HOST_INTEGRATION_VERIFIED_FINAL_HIL_AND_M0_PENDING",
+  "hardware": {
+    "cpu": "STM32F411 Cortex-M4",
+    "clock_hz": 96000000,
+    "physical_APP_runs": 424,
+    "raw_duration_values": 370944,
+    "phases": [
+      "01C8C380",
+      "9478F52D"
+    ],
+    "lengths": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      7,
+      8,
+      15,
+      16,
+      31,
+      32,
+      63,
+      64,
+      127,
+      128,
+      255,
+      256,
+      511,
+      512,
+      1023,
+      1024,
+      2047,
+      2048
+    ],
+    "alignments": 8,
+    "data": [
+      "SRAM",
+      "Flash"
+    ],
+    "rounds": 7
+  },
+  "method": "equal-case geometric mean across368 length/alignment/data cases per APP mode, normalized to same-phase native cached",
+  "phases_not_pooled": true,
+  "native": {
+    "name": "dsp32",
+    "code_bank": "flash",
+    "score_complete": true,
+    "geometric_mean_speedup_vs_native": 2.662082751977238,
+    "short_0_to_31_geometric_mean": 1.156957986716332,
+    "wins": 288,
+    "ties": 0,
+    "regressions": 80,
+    "worst_speedup": 0.4824989961183242,
+    "best_speedup": 6.917740268687565,
+    "nonpositive_groups": [],
+    "body_bytes": 132,
+    "body_SHA": "b86ba7f6a064105b6ea7bd4ceccb452676168453d52109472da5c0d958f59362"
+  },
+  "standalone_SDK": {
+    "name": "dsp32",
+    "code_bank": "sram",
+    "score_complete": true,
+    "geometric_mean_speedup_vs_native": 1.92726485792859,
+    "short_0_to_31_geometric_mean": 0.8333632966697402,
+    "wins": 253,
+    "ties": 1,
+    "regressions": 114,
+    "worst_speedup": 0.3406960151892166,
+    "best_speedup": 4.931224011852985,
+    "nonpositive_groups": [],
+    "body_bytes": 132,
+    "body_SHA": "b86ba7f6a064105b6ea7bd4ceccb452676168453d52109472da5c0d958f59362",
+    "geometric_mean_speedup_vs_actual_old_SDK": 2.6316882883103228,
+    "short_speedup_vs_actual_old_SDK": 1.0842909637000986,
+    "worst_vs_actual_old_SDK": {
+      "input": [
+        1,
+        0,
+        0,
+        963,
+        1,
+        0
+      ],
+      "old_SDK_cycles": 18.0,
+      "candidate_cycles": 44.02751817237799,
+      "speedup": 0.40883521822705987
+    }
+  },
+  "SRAM_runner_up": {
+    "name": "dsp8",
+    "code_bank": "sram",
+    "score_complete": true,
+    "geometric_mean_speedup_vs_native": 1.9255492490588153,
+    "short_0_to_31_geometric_mean": 0.8716950132047695,
+    "wins": 266,
+    "ties": 0,
+    "regressions": 102,
+    "worst_speedup": 0.3407080689671439,
+    "best_speedup": 4.624343741365018,
+    "nonpositive_groups": [],
+    "body_bytes": 76,
+    "primary_winner_margin": 0.0008909711712714596,
+    "selection_basis": "DSP32 is numeric primary winner in both A and B. SRAM lead over DSP8 is below0.1%; no claim of a large or statistically established lead. All raw seven-round samples retained."
+  },
+  "short_case_regressions_disclosed": true,
+  "correctness": {
+    "read_contract": "No read before input; final aligned eight-byte group containing NUL may be read, at most seven bytes after NUL",
+    "preserves": "AAPCS callee-saved registers/SP and all input bytes",
+    "production_guard_calls": 6720,
+    "existing_production_ISO_string_calls": 13500,
+    "full_original_candidate_proof_reused_by_exact_body": true
+  },
+  "implementation": {
+    "body": "DSP32",
+    "body_bytes": 132,
+    "body_SHA256": "b86ba7f6a064105b6ea7bd4ceccb452676168453d52109472da5c0d958f59362",
+    "native_bank": "Flash",
+    "standalone_bank": "SRAM",
+    "alignment": 16,
+    "public_runtime_slots": 26,
+    "strlen_slot": 20,
+    "ABI_services_bytes": 28,
+    "old_leaf_bytes": 16,
+    "leaf_growth_bytes": 116,
+    "M0": "Native not edited; standalone SDK retains byte-exact old16B body until M0 measurements"
+  },
+  "build_checks": {
+    "F411": {
+      "image": 375124,
+      "free": 149164,
+      "floor": 131072
+    },
+    "F401": {
+      "image": 257920,
+      "free": 4224,
+      "floor": 4096,
+      "physical_measurement": false
+    },
+    "system_APPs": 16,
+    "max_loaded_APP": 20468,
+    "APP_limit": 20480
+  },
+  "remaining": [
+    "Bounded hardware check of integrated native/runtime/standalone calls",
+    "M0 SRAM/Flash/runtime/standalone hardware matrix and implementation selection"
+  ],
+  "artifacts": {
+    "Root_CLOSED_SHA": "cfc41a7ea2273032731cd96bd019234fc85bbf842594c9dc82180a3ceb745038",
+    "producer_EXIT": 1,
+    "producer_HOLD": "Final byte-exact unrelated SMB warning GUID changed; independent complete original-return and fresh noholder accepted. Frozen producer HOLD remains.",
+    "phaseA_analysis_SHA": "7424f80f26575c74bedfd275e0f4c801347c241da58922032a70a064729e56ab",
+    "phaseB_analysis_SHA": "130cc9763b35e1eb2905d069c972b8cfc58b6a766717e8c85670eae6daf89a72",
+    "selection_proposal_SHA": "4df84135f573abef6c84d90b3cef4b0e5de9c6d7ace5916cf27f475ae1ae51dd"
+  },
+  "no_universal_speedup_claim": true,
+  "optimized_runtime_full_matrix_not_claimed": true
+}

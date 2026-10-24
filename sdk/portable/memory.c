@@ -42,14 +42,16 @@ int memcmp(const void* left, const void* right, size_t size) {
 }
 #endif
 
-/* Newlib's Cortex-M string routines are optimized for throughput and pull
- * substantially more code into the 20-KiB system APPs. Keep the few string
- * operations they use here with standard bytewise semantics. */
+/* Standalone M4 APPs use the measured SRAM body. Other targets retain their
+ * byte loop until their own physical strlen selection is complete. */
+#include "memory_length_arm.h"
+#ifndef MK61_ARM_STRLEN
 size_t strlen(const char* text) {
   const char* end = text;
   while(*end != 0) ++end;
   return (size_t) (end - text);
 }
+#endif
 #endif
 
 /* The 26-slot runtime has no memchr. Keep the measured target body local to both

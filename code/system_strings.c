@@ -8,9 +8,20 @@
 #define MK61_MEMCHR_M4_FLASH 1
 #include "memory_search_arm.h"
 #include "memory_string_compare_arm.h"
+/* The 256-KiB F401 graphics profiles keep measured DSP8 (76 bytes)
+ * within their Flash reserve. LCD/OLED mini, F411 and APPs use DSP32. */
+#if defined(STM32F401xC) && \
+    (defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3) || \
+     defined(MK61_BOARD_40TH) || defined(MK61_DISPLAY_UC1609) || \
+     defined(DISPLAY_UC1609))
+#define MK61_STRLEN_M4_COMPACT 1
+#endif
+#include "memory_length_arm.h"
+#ifndef MK61_ARM_STRLEN
 size_t strlen(const char* s) {
   const char* p=s;while(*p)++p;return (size_t)(p-s);
 }
+#endif
 size_t strnlen(const char* s,size_t n) {
   size_t i=0;while(i<n && s[i])++i;return i;
 }
