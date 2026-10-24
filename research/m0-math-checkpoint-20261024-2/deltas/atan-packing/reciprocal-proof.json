@@ -1,0 +1,20 @@
+{
+  "status": "PASS_ACTUAL_ARM_ONE_SIDED_RECIPROCAL_AND_RATIO",
+  "normalized_denominators": 69632,
+  "seed_bucket_endpoints": 65536,
+  "ARM_calls": 147456,
+  "ratio_calls": 8192,
+  "READY_and_DIRTY": true,
+  "DIRTY_preserved_every_call": true,
+  "PCS_SP_checked_every_call": true,
+  "observed_reciprocal_error_min": "-3946687802739188378/1189251764838547589",
+  "observed_reciprocal_error_max": "6157227643122031409/2337004909414880167",
+  "strict_lower_error_bound": "-249230325401261187232401061025710081/20769187434139310514121985316880384",
+  "strict_upper_error_bound": 3,
+  "transcript_sha256": "ea69ea83461a68d362324f3039ceb164246aed3897aad6a848581a800b28bb83",
+  "ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "code_unchanged": true,
+  "elapsed_seconds": 8.971193332981784,
+  "scope": "Finite actual ARM support for the analytic one-sided bound, not an exhaustive2^64 test.",
+  "hardware_accessed": false
+}

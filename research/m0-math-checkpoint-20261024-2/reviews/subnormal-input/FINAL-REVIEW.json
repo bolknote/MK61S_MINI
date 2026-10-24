@@ -1,0 +1,98 @@
+{
+  "status": "TECHNICAL_GO_E0_SUBNORMAL_INPUT_ZERO_DADD_DSUB_DELTA_ONLY",
+  "reviewer": "/root/v138_hardware",
+  "created_utc": "2026-10-23T21:14:52.319231+00:00",
+  "blockers": [],
+  "reviewed_result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-20261023/result.json",
+    "sha256": "4cbf5c03c4846ca4f653700d293801d6234fe79ec5459994d7aabe0a671136fe"
+  },
+  "handoff": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-20261023/HANDOFF.md",
+    "sha256": "7b503ade4ce2c72bff8292ac526f6d8866de4003262f60f35e59ee74cf5fc149"
+  },
+  "final_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-20261023/native_eabi_m0_rp2040.S",
+    "sha256": "9501eb31af70a512308d2ebb4cac2c37e425f6c7c5477ad8d884b28a12707e89"
+  },
+  "full_object": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-20261023/candidate-full.o",
+    "sha256": "0964ad58abf6cd4666ed305faf1b38e101db2b6a815961019602f545e70bac01"
+  },
+  "executed_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-20261023/candidate.elf",
+    "sha256": "7fdb42ab072e1e70f0a6db32187228935b63a498e95eddc35b4df02d1065790a"
+  },
+  "source_object_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-independent-20261023/SOURCE-OBJECT-PROOF.json",
+    "sha256": "9c30edf0bce80c4218353f61aa2f820ebc3e4a422de3ddeca2cdb62a57df2304"
+  },
+  "selected_ARM_integer_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-independent-20261023/SELECTED-ARM-INTEGER.json",
+    "sha256": "7cfa9363d607e93e8ecfd51db9bce17d8b3d565c77ef988fc9a198ebaf2d9103"
+  },
+  "review_script": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-add-subnormal-input-independent-20261023/review.py",
+    "sha256": "167596f663ae13896f59d1aa8b0e9e3c80f4cf496057174a06653433ff429a6d"
+  },
+  "producer_artifacts_hashes_unchanged_before_after": 29,
+  "actual_independent_cases": 263,
+  "actual_ARM_calls": 789,
+  "author70261_replayed": false,
+  "author1768_controls_replayed": false,
+  "source_to_execution": "Own reassembly equals sealed full object. Public1472-byte body equals executed bare ELF text and loaded BIN with no exclusions. Entries match. Standalone undefined/relocations/BL/BLX are empty; full object drops only mk61_m0_dadd_slow and adds no dependency.",
+  "unaffected_source": "After inverse replacement of only two E0 entry branches/new stubs/new appended macro-body, all nonempty source lines equal parent. Old normal/low/top/nonfinite arithmetic and remaining whole source are unchanged.",
+  "old_normal_low_top_NF_and_old17_selected_results_and_instruction_counts_equal": true,
+  "bare_execution": "Candidate receives no firmware or ROM. Extra code/read/write hooks admit only its1472-byte body and32-byte stack; no MMIO/global/helper/ROM access. Actual saved-register/SP checks and SIO READY/DIRTY/context preservation pass every call; observed stack writes20 bytes.",
+  "subnormal_argument": "E0/E1 raw unsigned words are exact q=2^-1074 coefficients. Same-sign sums below2^53 pack directly; larger54-bit sums take one inherited RNE step. Opposite-sign differences pack exactly, cancellation gives+0, same-sign negative zeros keep-0.",
+  "rounding_cell_argument": "Normal E>=55 cells strictly contain every subnormal. E2..54 uses ordinary half-cell2^(E-2)q, except opposite-sign exact powers use2^(E-3)q. Integer high/low comparison and even-parity equality determine shortcut; negative k cannot contain positive integer N. Virtual exponent1 retains the real subnormal coefficient without a hidden bit. Remaining adjacent/gap arithmetic stays normal and reuses parent kernels.",
+  "selected_rounding_edges": [
+    "signed zeros and both operand roles",
+    "smallest subnormal/normal transitions",
+    "raw2^53 sum and tie-even neighbours",
+    "cell k31/k32 high-low word boundary",
+    "power-of-two smaller lower cell including E2 negative k",
+    "even/odd normal midpoint parity",
+    "virtual-unpack E2/E3 and far/large exponent returns",
+    "E0 Inf/NaN raw first-NaN policy"
+  ],
+  "old18_all_correct_Qfplib_and_strictly_faster": true,
+  "selected_changed_cases": 214,
+  "selected_finite_or_infinite_cases": 206,
+  "selected_bit_correct_Qfplib_cases": 90,
+  "selected_candidate_slower_than_correct_Qfplib": 0,
+  "Qfplib_speed_criterion": "Finite and infinity result bits must equal independent expected. NaN payload cases are checked against project raw policy separately and excluded from this speed count.",
+  "selected_raw_Qfplib_differences_retained": 124,
+  "resources": {
+    "public_bytes": 1472,
+    "delta_bytes": 268,
+    "new_lookup_tables": false,
+    "new_literal_words": false,
+    "allocated_NOBITS_parent": {
+      ".bss": 0
+    },
+    "allocated_NOBITS_candidate": {
+      ".bss": 0
+    },
+    "new_global_RAM": false,
+    "new_dependencies": false
+  },
+  "M4_generic": "Sealed object contributions rechecked byte equal (0 allocated bytes in each context); no full M4 rebuild claim. Unrelated allocated sections and multiply/divide suffix exact.",
+  "limits": [
+    "Independent GO applies to this private E0 add/sub delta composed with its previously accepted parent",
+    "Source argument and selected actual executions do not prove universal speed on all2^128 pairs",
+    "No full firmware integration, whole-library/pow totality, platform/IRQ or hardware GO",
+    "Instruction counts are not physical cycles; raw Qfplib differences are selected-vector evidence, not application frequency"
+  ],
+  "checkpoint": "Native research checkpoint is independent of production integration and is not blocked by this review.",
+  "actions": {
+    "USB": false,
+    "Flash": false,
+    "lease": false,
+    "Git": false,
+    "canonical_changes": false,
+    "RTC_packet_changed": false,
+    "producer_target_changed": false
+  },
+  "production_or_hardware_GO": false
+}

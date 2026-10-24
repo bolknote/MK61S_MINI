@@ -1,0 +1,55 @@
+{
+  "status": "TECHNICAL_GO_PRIVATE_SQRT_COLD_DISPATCH_DELTA",
+  "blockers": [],
+  "reviewed_at_UTC": "2026-10-23T21:45:57.099508+00:00",
+  "scope": "RP2040 V164 sqrt entry guard partition, preserved sign-carry cold classifier, and direct positive-subnormal alias only. Private isolated source/ELF delta.",
+  "source_handoff_sha256": "c0fbc3e470566d0f0838c68b22b0c9c6320e146fe67eddb2b034cc9e6e46c867",
+  "source_result_sha256": "4862bfacc499bec396e5eb21814de35da1759a62087c38d60bcc4e7bda688992",
+  "candidate_ELF_sha256": "2662c539807c1cdbe9c728154ea0d83262c99e974729a9dbfb9ff847c1ee36d1",
+  "author_artifacts_35_and_baseline_pins_12_match_before_after": true,
+  "independent_source_object_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-independent-20261024/SOURCE-OBJECT-PROOF.json",
+    "sha256": "e1494320e00848de907270fbcb3940e021f1aea7ec6e6766cfa46ed8bf4254a1"
+  },
+  "independent_selected_ARM_integer_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-independent-20261024/SELECTED-ARM-INTEGER.json",
+    "sha256": "6a70fa0fa226c068848379902d52f7688a5172c059c6fcc98973d957293a55b3"
+  },
+  "findings": [
+    "Own reassembly public and control objects exact. Own full relink ELF hash equals executed ELF without any byte or symbol exclusions.",
+    "Only main sqrt 8544->8544 and cold helper164->156 change. Eight old alignment NOP bytes absorb guard growth; table at+0x160, its8192 bytes and all other normal instructions/literals remain exact except decoded ADR relocation by8.",
+    "Positive E0/nonzero alias enters unchanged source suffix. For the other cold entry, actual XPSR C equals original sign after LSLS/ORRS/BNE; original bits, R3 and entry SP checked.",
+    "162 selected inputs/486 actual ARM calls pass independent exact integer-isqrt RNE plus explicit inherited signedzero/NaN raw policy. +Inf12 vs parent15 and correct Qfplib12.",
+    "Selected signedzero/positive-normal counts exact; subnormal saves2, other nonzero cold saves3.106 bit-correct Qfplib comparisons have zero slower candidate;56 raw Qfplib mismatches retained.",
+    "Every call checks R4-R11/SP and READY/DIRTY SIO contents. Candidate memory hooks permit only allocated read/stack32; maximum written stack28. No candidate firmware,ROM,MMIO or abstract callbacks.",
+    "Unrelated allocated sections, NOBITS and combined external dependencies exact. Sealed genericM0/M4 object contributions exact; standalone has no undefined symbols/relocations, global RAM or new table."
+  ],
+  "actual_selected_inputs": 162,
+  "actual_ARM_calls": 486,
+  "Unicorn_version": "2.1.4",
+  "own_integer_oracle": "Exact binary64 decode M*2^p; integer isqrt of M<<scale; compare 4A against (2floor(sqrt(A))+1)^2 then one RNE step. No float/MPFR/author oracle. Signedzero and prior raw NaN quiet/sign policy explicit.",
+  "author_corpus_rerun": false,
+  "whole_library_GO": false,
+  "full_firmware_integration_GO": false,
+  "mixed_image_qualification": false,
+  "production_GO": false,
+  "hardware_GO": false,
+  "limitations": [
+    "A compact independent boundary replay and source partition proof; not an exhaustive all-input proof or repetition of authored15136 inputs.",
+    "Instruction counts only. Normal code moved8 bytes, so physical cache/cycle equivalence requires hardware evidence.",
+    "Standalone ELF retains V164 conversion include. Separately reviewed conversion/add changes are not merged or qualified by this receipt.",
+    "Generic/M4 claim is unchanged sealed object contribution, not a new whole-platform build."
+  ],
+  "USB_Flash_Git_lease_or_canonical_access": false,
+  "review_artifacts": {
+    "SELECTED-ARM-INTEGER.json": "6a70fa0fa226c068848379902d52f7688a5172c059c6fcc98973d957293a55b3",
+    "SOURCE-OBJECT-PROOF.json": "e1494320e00848de907270fbcb3940e021f1aea7ec6e6766cfa46ed8bf4254a1",
+    "control-main.o": "b5cb213dab4f5854c467c84df883587e32700f3a2da1cdfa1dd01d6aa5ff4652",
+    "control-rp.o": "6108f0c0a28ec3311f906fdcf3616748d4e7d4d322e68d287220b4a3d555554c",
+    "main.o": "e6603b012a40caf08d47bdd07ce2c102b80490a5cdf9f082139782fe038086c9",
+    "relinked.dis": "171ce124785ae4522f6874d9f99bcf1caf44c2a086fdd6ca0623edda3f3d5811",
+    "relinked.elf": "2662c539807c1cdbe9c728154ea0d83262c99e974729a9dbfb9ff847c1ee36d1",
+    "review.py": "ca888b2365dd3a4f6eadeda97b24fb8627dc05aaf4e8c023af0075043391c700",
+    "rp.o": "718b2bc9b225f94b27379f183804affa56ecbb2816cf0ef2bd6f45a9e7385fd7"
+  }
+}

@@ -1,0 +1,45 @@
+--- V164/code/native_eabi_m0_convert.inc
++++ candidate/code/native_eabi_m0_convert.inc
+@@ -2,6 +2,34 @@
+ // Keep both integer widths in one section: small int64 magnitudes enter
+ // the existing exact int32 normalizer without an extra call or stack frame.
+ .section .text.__aeabi_i2d,"ax",%progbits
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++.global __aeabi_l2d
++.type __aeabi_l2d,%function
++.thumb_func
++__aeabi_l2d:
++ // The high word determines the sign. Preserve positive-entry cost and
++ // form the negative sign in two instructions instead of four.
++ asrs r2,r1,#31
++ lsls r2,#31
++ bpl .Ll2d_magnitude
++ // A complemented high word of zero covers -2^32..-1. Except -2^32,
++ // its magnitude fits R0 and is known nonzero: skip high-word ADC and
++ // the narrow path's redundant zero test.
++ mvns r1,r1
++ beq .Ll2d_small_negative
++ rsbs r0,r0,#0
++ movs r3,#0
++ adcs r1,r3
++ b .Ll2d_high
++.Ll2d_small_negative:
++ rsbs r0,r0,#0
++ beq .Ll2d_negative_u32_boundary
++ mov r1,r2
++ b .Li2d_normalize
++.Ll2d_negative_u32_boundary:
++ movs r1,#1
++ b .Ll2d_high
++#else
+ .global __aeabi_l2d
+ .type __aeabi_l2d,%function
+ .thumb_func
+@@ -17,6 +45,7 @@
+  adcs r1,r3
+  bne .Ll2d_high
+  b .Ll2d_narrow
++#endif
+ .global __aeabi_ul2d
+ .type __aeabi_ul2d,%function
+ .thumb_func

@@ -1,0 +1,99 @@
+{
+  "status": "WIP_ATAN_RESIDUAL_NOT_QUALIFIED_OR_INDEPENDENTLY_REVIEWED",
+  "candidate_ELF_sha256": "53350cac33f77cf085cd2091e82de0f46c49b880b852ace58a12e11c597451f0",
+  "source_sha256": "5cd69c3ee3b85359b7d658d8e8ac07070a439b2f4213199c82d6a19fc8f239dd",
+  "public_probe_SIO": "DIRTY",
+  "public_probe_rows": 27,
+  "public_probe_unique_inputs": 27,
+  "public_probe_candidate_wrong": 0,
+  "remaining_four_probe": [
+    {
+      "x": "3FE5D1004FC925B6",
+      "expected": "3FE325F02778DC00",
+      "outputs": {
+        "resident": "3FE325F02778DC00",
+        "Qfplib": "3FE325F02778DC00",
+        "parent": "3FE325F02778DC00",
+        "candidate": "3FE325F02778DC00"
+      },
+      "instructions": {
+        "resident": 22468,
+        "Qfplib": 1784,
+        "parent": 22464,
+        "candidate": 1800
+      }
+    },
+    {
+      "x": "BFE5D1004FC925B6",
+      "expected": "BFE325F02778DC00",
+      "outputs": {
+        "resident": "BFE325F02778DC00",
+        "Qfplib": "BFE325F02778DC00",
+        "parent": "BFE325F02778DC00",
+        "candidate": "BFE325F02778DC00"
+      },
+      "instructions": {
+        "resident": 22490,
+        "Qfplib": 1791,
+        "parent": 22486,
+        "candidate": 1800
+      }
+    },
+    {
+      "x": "3FECB99548F4FA32",
+      "expected": "3FE76897850FE9CD",
+      "outputs": {
+        "resident": "3FE76897850FE9CD",
+        "Qfplib": "3FE76897850FE9CD",
+        "parent": "3FE76897850FE9CD",
+        "candidate": "3FE76897850FE9CD"
+      },
+      "instructions": {
+        "resident": 22301,
+        "Qfplib": 1783,
+        "parent": 22288,
+        "candidate": 1775
+      }
+    },
+    {
+      "x": "BFECB99548F4FA32",
+      "expected": "BFE76897850FE9CD",
+      "outputs": {
+        "resident": "BFE76897850FE9CD",
+        "Qfplib": "BFE76897850FE9CD",
+        "parent": "BFE76897850FE9CD",
+        "candidate": "BFE76897850FE9CD"
+      },
+      "instructions": {
+        "resident": 22328,
+        "Qfplib": 1790,
+        "parent": 22315,
+        "candidate": 1775
+      }
+    }
+  ],
+  "remaining_probe_slower_correct_Qfplib": 2,
+  "fresh_helper_ARM_calls": 30408,
+  "helper_quotients_0_to_33_covered": true,
+  "exact_fraction_error_radius_Q70": 6,
+  "new_tables": 0,
+  "new_global_RAM": 0,
+  "full_public_qualification": false,
+  "current_object_M0_M4_isolation_proof": false,
+  "independent_review": false,
+  "production_integration": false,
+  "physical_cycles_measured": false,
+  "goal_complete": false,
+  "files": {
+    "probe.json": "d2388c7ba43790385a383d1ea50d6b5f8e7e0d61e333b5a2ac03e52348a1081c",
+    "helper-proof.json": "de6c91e48f0b6273013b4d3a6ad1354ad69af0c410b2f7c8789ddbc4dbf8aa4c",
+    "certificate.json": "dce14bc78fdf094fde931543abb69029cd8337afa3979297cf379dc8ba1cdc8d",
+    "candidate-build.json": "305064f8426a3b90bba548efd2022907d9039a06e225f3259c944e0970f9d085",
+    "residual-only.patch": "1b264b9676ed7a97edaee0f9fc55b380256558f1d089e6cacb1a5163caff8b08",
+    "prepare.py": "2f9a44b92834ce24c9035ad19c720bdc776506bfcad32d5ff394eb2a2ca5e0c9",
+    "build.py": "5987c8d6e76ac74359317490b22fbdd7ae5f4cc46c234ea954c13d47339c2cad",
+    "probe.py": "198a5f1235078824a897696b80f1dfa8a7211cbb8b7745647e42163a9fe78ada",
+    "certify.py": "9448773913e04bf5589168d715058cf4bc1f4fd7a6de2de4917af406c4df5233",
+    "verify-helper.py": "5b632b305f37779253df6d026140986b6641a929adcd3c7befbdb7fe212a4b7e"
+  }
+}

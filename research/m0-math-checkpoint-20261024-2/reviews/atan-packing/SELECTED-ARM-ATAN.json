@@ -1,0 +1,5755 @@
+{
+  "status": "PASS_SELECTED_ACTUAL_ARM_AND_OWN_RATIONAL_ATAN_INTERVALS",
+  "unique_inputs": 108,
+  "state_cases": 216,
+  "ARM_calls": 864,
+  "groups": {
+    "historical2": 4,
+    "remaining4-preexistingCORE": 8,
+    "old-or-remaining-neighbours": 24,
+    "IEEE-and-unchanged-paths": 24,
+    "dispatch-binade-neighbours": 108,
+    "selected-table-geometry": 30,
+    "directional-region-neighbours": 18
+  },
+  "max_candidate_stack_bytes": 872,
+  "max_parent_stack_bytes": 880,
+  "old2": [
+    {
+      "input": "3fb97996f4e5f9f0",
+      "group": "historical2",
+      "SIO": "READY",
+      "expected": "3fb964309c79b7a8",
+      "outputs": {
+        "parent": "3fb964309c79b7a8",
+        "control": "3fb964309c79b7a8",
+        "candidate": "3fb964309c79b7a8",
+        "Qfplib": "3fb964309c79b7a8"
+      },
+      "instructions": {
+        "parent": 3066,
+        "control": 3066,
+        "candidate": 1362,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fb97996f4e5f9f0",
+      "group": "historical2",
+      "SIO": "DIRTY",
+      "expected": "3fb964309c79b7a8",
+      "outputs": {
+        "parent": "3fb964309c79b7a8",
+        "control": "3fb964309c79b7a8",
+        "candidate": "3fb964309c79b7a8",
+        "Qfplib": "3fb964309c79b7a8"
+      },
+      "instructions": {
+        "parent": 3942,
+        "control": 3942,
+        "candidate": 1548,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdd440162570130",
+      "group": "historical2",
+      "SIO": "READY",
+      "expected": "bfdb72e65095f539",
+      "outputs": {
+        "parent": "bfdb72e65095f539",
+        "control": "bfdb72e65095f539",
+        "candidate": "bfdb72e65095f539",
+        "Qfplib": "bfdb72e65095f539"
+      },
+      "instructions": {
+        "parent": 3041,
+        "control": 3041,
+        "candidate": 1304,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdd440162570130",
+      "group": "historical2",
+      "SIO": "DIRTY",
+      "expected": "bfdb72e65095f539",
+      "outputs": {
+        "parent": "bfdb72e65095f539",
+        "control": "bfdb72e65095f539",
+        "candidate": "bfdb72e65095f539",
+        "Qfplib": "bfdb72e65095f539"
+      },
+      "instructions": {
+        "parent": 3914,
+        "control": 3914,
+        "candidate": 1470,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    }
+  ],
+  "remaining4": [
+    {
+      "input": "3fe5d1004fc925b6",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "READY",
+      "expected": "3fe325f02778dc00",
+      "outputs": {
+        "parent": "3fe325f02778dc00",
+        "control": "3fe325f02778dc00",
+        "candidate": "3fe325f02778dc00",
+        "Qfplib": "3fe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 21085,
+        "control": 21085,
+        "candidate": 21081,
+        "Qfplib": 1784
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "3fe5d1004fc925b6",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "DIRTY",
+      "expected": "3fe325f02778dc00",
+      "outputs": {
+        "parent": "3fe325f02778dc00",
+        "control": "3fe325f02778dc00",
+        "candidate": "3fe325f02778dc00",
+        "Qfplib": "3fe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 22468,
+        "control": 22468,
+        "candidate": 22464,
+        "Qfplib": 1784
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "bfe5d1004fc925b6",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "READY",
+      "expected": "bfe325f02778dc00",
+      "outputs": {
+        "parent": "bfe325f02778dc00",
+        "control": "bfe325f02778dc00",
+        "candidate": "bfe325f02778dc00",
+        "Qfplib": "bfe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 21107,
+        "control": 21107,
+        "candidate": 21103,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "bfe5d1004fc925b6",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "DIRTY",
+      "expected": "bfe325f02778dc00",
+      "outputs": {
+        "parent": "bfe325f02778dc00",
+        "control": "bfe325f02778dc00",
+        "candidate": "bfe325f02778dc00",
+        "Qfplib": "bfe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 22490,
+        "control": 22490,
+        "candidate": 22486,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "3fecb99548f4fa32",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "READY",
+      "expected": "3fe76897850fe9cd",
+      "outputs": {
+        "parent": "3fe76897850fe9cd",
+        "control": "3fe76897850fe9cd",
+        "candidate": "3fe76897850fe9cd",
+        "Qfplib": "3fe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 20874,
+        "control": 20874,
+        "candidate": 20861,
+        "Qfplib": 1783
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "3fecb99548f4fa32",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "DIRTY",
+      "expected": "3fe76897850fe9cd",
+      "outputs": {
+        "parent": "3fe76897850fe9cd",
+        "control": "3fe76897850fe9cd",
+        "candidate": "3fe76897850fe9cd",
+        "Qfplib": "3fe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 22301,
+        "control": 22301,
+        "candidate": 22288,
+        "Qfplib": 1783
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "bfecb99548f4fa32",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "READY",
+      "expected": "bfe76897850fe9cd",
+      "outputs": {
+        "parent": "bfe76897850fe9cd",
+        "control": "bfe76897850fe9cd",
+        "candidate": "bfe76897850fe9cd",
+        "Qfplib": "bfe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 20901,
+        "control": 20901,
+        "candidate": 20888,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "bfecb99548f4fa32",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "DIRTY",
+      "expected": "bfe76897850fe9cd",
+      "outputs": {
+        "parent": "bfe76897850fe9cd",
+        "control": "bfe76897850fe9cd",
+        "candidate": "bfe76897850fe9cd",
+        "Qfplib": "bfe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 22328,
+        "control": 22328,
+        "candidate": 22315,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    }
+  ],
+  "raw_NaN_policy_parent_exact": true,
+  "all_rebuilt_control_results_counts_parent_exact": true,
+  "DIRTY_preserved_every_call": true,
+  "READY_idle_divider_use_allowed_and_left_clean": true,
+  "PCS_R4_R11_SP_bounded_stack_by_Machine": true,
+  "actual_component_uses_pinned_resident_and_captured_ROM": true,
+  "abstract_ROM_callbacks": [],
+  "candidate_observed_resident_entries": {
+    "__aeabi_llsr": 316,
+    "__aeabi_llsl": 886,
+    "mk61_m0_math_udiv32": 176,
+    "mk61_m0_product62": 416,
+    "__aeabi_uidiv": 88,
+    "mk61_m0_cr_atan": 8,
+    "__aeabi_dmul": 336,
+    "__aeabi_dadd": 472,
+    "__aeabi_dsub": 264,
+    "__aeabi_ddiv": 24
+  },
+  "candidate_execution_within_pinned_code_ROM_ranges": true,
+  "candidate_MMIO_restricted_to_existing_SIO_divider": true,
+  "reference": "Every actual audit_atan observed qfp_datan2(originalraw,1.0); no public atan reference claim",
+  "Qfplib_raw_wrong_answers_retained": 56,
+  "own_oracle": "Exact binary64 Fraction decode; outward-rounded fixed-point alternating Taylor intervals, rational reciprocal/pi/4 reduction and Machin pi; both exact interval endpoints encode same binary64 RNE. No author oracle, MPFR or hostfloatingatan.",
+  "machine_sha256": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3",
+  "candidate_ELF_sha256": "93830c121ef76ccc3278233bd54b4ed2a5f2a4313a466d8854115c097f02f946",
+  "firmware_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "reference_sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+  "ROM_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "author_full_sweeps_repeated": false,
+  "hardware_access": false,
+  "physical_cycles_measured": false,
+  "rows": [
+    {
+      "input": "3fb97996f4e5f9f0",
+      "group": "historical2",
+      "SIO": "READY",
+      "expected": "3fb964309c79b7a8",
+      "outputs": {
+        "parent": "3fb964309c79b7a8",
+        "control": "3fb964309c79b7a8",
+        "candidate": "3fb964309c79b7a8",
+        "Qfplib": "3fb964309c79b7a8"
+      },
+      "instructions": {
+        "parent": 3066,
+        "control": 3066,
+        "candidate": 1362,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fb97996f4e5f9f0",
+      "group": "historical2",
+      "SIO": "DIRTY",
+      "expected": "3fb964309c79b7a8",
+      "outputs": {
+        "parent": "3fb964309c79b7a8",
+        "control": "3fb964309c79b7a8",
+        "candidate": "3fb964309c79b7a8",
+        "Qfplib": "3fb964309c79b7a8"
+      },
+      "instructions": {
+        "parent": 3942,
+        "control": 3942,
+        "candidate": 1548,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdd440162570130",
+      "group": "historical2",
+      "SIO": "READY",
+      "expected": "bfdb72e65095f539",
+      "outputs": {
+        "parent": "bfdb72e65095f539",
+        "control": "bfdb72e65095f539",
+        "candidate": "bfdb72e65095f539",
+        "Qfplib": "bfdb72e65095f539"
+      },
+      "instructions": {
+        "parent": 3041,
+        "control": 3041,
+        "candidate": 1304,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdd440162570130",
+      "group": "historical2",
+      "SIO": "DIRTY",
+      "expected": "bfdb72e65095f539",
+      "outputs": {
+        "parent": "bfdb72e65095f539",
+        "control": "bfdb72e65095f539",
+        "candidate": "bfdb72e65095f539",
+        "Qfplib": "bfdb72e65095f539"
+      },
+      "instructions": {
+        "parent": 3914,
+        "control": 3914,
+        "candidate": 1470,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 528,
+        "control": 528,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe5d1004fc925b6",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "READY",
+      "expected": "3fe325f02778dc00",
+      "outputs": {
+        "parent": "3fe325f02778dc00",
+        "control": "3fe325f02778dc00",
+        "candidate": "3fe325f02778dc00",
+        "Qfplib": "3fe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 21085,
+        "control": 21085,
+        "candidate": 21081,
+        "Qfplib": 1784
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "3fe5d1004fc925b6",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "DIRTY",
+      "expected": "3fe325f02778dc00",
+      "outputs": {
+        "parent": "3fe325f02778dc00",
+        "control": "3fe325f02778dc00",
+        "candidate": "3fe325f02778dc00",
+        "Qfplib": "3fe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 22468,
+        "control": 22468,
+        "candidate": 22464,
+        "Qfplib": 1784
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "bfe5d1004fc925b6",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "READY",
+      "expected": "bfe325f02778dc00",
+      "outputs": {
+        "parent": "bfe325f02778dc00",
+        "control": "bfe325f02778dc00",
+        "candidate": "bfe325f02778dc00",
+        "Qfplib": "bfe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 21107,
+        "control": 21107,
+        "candidate": 21103,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "bfe5d1004fc925b6",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "DIRTY",
+      "expected": "bfe325f02778dc00",
+      "outputs": {
+        "parent": "bfe325f02778dc00",
+        "control": "bfe325f02778dc00",
+        "candidate": "bfe325f02778dc00",
+        "Qfplib": "bfe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 22490,
+        "control": 22490,
+        "candidate": 22486,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "3fecb99548f4fa32",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "READY",
+      "expected": "3fe76897850fe9cd",
+      "outputs": {
+        "parent": "3fe76897850fe9cd",
+        "control": "3fe76897850fe9cd",
+        "candidate": "3fe76897850fe9cd",
+        "Qfplib": "3fe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 20874,
+        "control": 20874,
+        "candidate": 20861,
+        "Qfplib": 1783
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "3fecb99548f4fa32",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "DIRTY",
+      "expected": "3fe76897850fe9cd",
+      "outputs": {
+        "parent": "3fe76897850fe9cd",
+        "control": "3fe76897850fe9cd",
+        "candidate": "3fe76897850fe9cd",
+        "Qfplib": "3fe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 22301,
+        "control": 22301,
+        "candidate": 22288,
+        "Qfplib": 1783
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "bfecb99548f4fa32",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "READY",
+      "expected": "bfe76897850fe9cd",
+      "outputs": {
+        "parent": "bfe76897850fe9cd",
+        "control": "bfe76897850fe9cd",
+        "candidate": "bfe76897850fe9cd",
+        "Qfplib": "bfe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 20901,
+        "control": 20901,
+        "candidate": 20888,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "bfecb99548f4fa32",
+      "group": "remaining4-preexistingCORE",
+      "SIO": "DIRTY",
+      "expected": "bfe76897850fe9cd",
+      "outputs": {
+        "parent": "bfe76897850fe9cd",
+        "control": "bfe76897850fe9cd",
+        "candidate": "bfe76897850fe9cd",
+        "Qfplib": "bfe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 22328,
+        "control": 22328,
+        "candidate": 22315,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 880,
+        "control": 880,
+        "candidate": 872,
+        "Qfplib": 76
+      },
+      "CORE_entries": 1
+    },
+    {
+      "input": "3fb97996f4e5f9ef",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "3fb964309c79b7a8",
+      "outputs": {
+        "parent": "3fb964309c79b7a8",
+        "control": "3fb964309c79b7a8",
+        "candidate": "3fb964309c79b7a8",
+        "Qfplib": "3fb964309c79b7a7"
+      },
+      "instructions": {
+        "parent": 1407,
+        "control": 1407,
+        "candidate": 1297,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fb97996f4e5f9ef",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fb964309c79b7a8",
+      "outputs": {
+        "parent": "3fb964309c79b7a8",
+        "control": "3fb964309c79b7a8",
+        "candidate": "3fb964309c79b7a8",
+        "Qfplib": "3fb964309c79b7a7"
+      },
+      "instructions": {
+        "parent": 1593,
+        "control": 1593,
+        "candidate": 1483,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fb97996f4e5f9f1",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "3fb964309c79b7a9",
+      "outputs": {
+        "parent": "3fb964309c79b7a9",
+        "control": "3fb964309c79b7a9",
+        "candidate": "3fb964309c79b7a9",
+        "Qfplib": "3fb964309c79b7a9"
+      },
+      "instructions": {
+        "parent": 1428,
+        "control": 1428,
+        "candidate": 1308,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fb97996f4e5f9f1",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fb964309c79b7a9",
+      "outputs": {
+        "parent": "3fb964309c79b7a9",
+        "control": "3fb964309c79b7a9",
+        "candidate": "3fb964309c79b7a9",
+        "Qfplib": "3fb964309c79b7a9"
+      },
+      "instructions": {
+        "parent": 1614,
+        "control": 1614,
+        "candidate": 1494,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdd44016257012f",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "bfdb72e65095f538",
+      "outputs": {
+        "parent": "bfdb72e65095f538",
+        "control": "bfdb72e65095f538",
+        "candidate": "bfdb72e65095f538",
+        "Qfplib": "bfdb72e65095f538"
+      },
+      "instructions": {
+        "parent": 1415,
+        "control": 1415,
+        "candidate": 1304,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdd44016257012f",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfdb72e65095f538",
+      "outputs": {
+        "parent": "bfdb72e65095f538",
+        "control": "bfdb72e65095f538",
+        "candidate": "bfdb72e65095f538",
+        "Qfplib": "bfdb72e65095f538"
+      },
+      "instructions": {
+        "parent": 1581,
+        "control": 1581,
+        "candidate": 1470,
+        "Qfplib": 1796
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdd440162570131",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "bfdb72e65095f539",
+      "outputs": {
+        "parent": "bfdb72e65095f539",
+        "control": "bfdb72e65095f539",
+        "candidate": "bfdb72e65095f539",
+        "Qfplib": "bfdb72e65095f539"
+      },
+      "instructions": {
+        "parent": 1418,
+        "control": 1418,
+        "candidate": 1297,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdd440162570131",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfdb72e65095f539",
+      "outputs": {
+        "parent": "bfdb72e65095f539",
+        "control": "bfdb72e65095f539",
+        "candidate": "bfdb72e65095f539",
+        "Qfplib": "bfdb72e65095f539"
+      },
+      "instructions": {
+        "parent": 1584,
+        "control": 1584,
+        "candidate": 1463,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe5d1004fc925b5",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "3fe325f02778dbff",
+      "outputs": {
+        "parent": "3fe325f02778dbff",
+        "control": "3fe325f02778dbff",
+        "candidate": "3fe325f02778dbff",
+        "Qfplib": "3fe325f02778dbff"
+      },
+      "instructions": {
+        "parent": 1405,
+        "control": 1405,
+        "candidate": 1299,
+        "Qfplib": 1783
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe5d1004fc925b5",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fe325f02778dbff",
+      "outputs": {
+        "parent": "3fe325f02778dbff",
+        "control": "3fe325f02778dbff",
+        "candidate": "3fe325f02778dbff",
+        "Qfplib": "3fe325f02778dbff"
+      },
+      "instructions": {
+        "parent": 1587,
+        "control": 1587,
+        "candidate": 1481,
+        "Qfplib": 1783
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe5d1004fc925b7",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "3fe325f02778dc00",
+      "outputs": {
+        "parent": "3fe325f02778dc00",
+        "control": "3fe325f02778dc00",
+        "candidate": "3fe325f02778dc00",
+        "Qfplib": "3fe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 1420,
+        "control": 1420,
+        "candidate": 1299,
+        "Qfplib": 1783
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe5d1004fc925b7",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fe325f02778dc00",
+      "outputs": {
+        "parent": "3fe325f02778dc00",
+        "control": "3fe325f02778dc00",
+        "candidate": "3fe325f02778dc00",
+        "Qfplib": "3fe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 1602,
+        "control": 1602,
+        "candidate": 1481,
+        "Qfplib": 1783
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfe5d1004fc925b5",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "bfe325f02778dbff",
+      "outputs": {
+        "parent": "bfe325f02778dbff",
+        "control": "bfe325f02778dbff",
+        "candidate": "bfe325f02778dbff",
+        "Qfplib": "bfe325f02778dbff"
+      },
+      "instructions": {
+        "parent": 1405,
+        "control": 1405,
+        "candidate": 1299,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfe5d1004fc925b5",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfe325f02778dbff",
+      "outputs": {
+        "parent": "bfe325f02778dbff",
+        "control": "bfe325f02778dbff",
+        "candidate": "bfe325f02778dbff",
+        "Qfplib": "bfe325f02778dbff"
+      },
+      "instructions": {
+        "parent": 1587,
+        "control": 1587,
+        "candidate": 1481,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfe5d1004fc925b7",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "bfe325f02778dc00",
+      "outputs": {
+        "parent": "bfe325f02778dc00",
+        "control": "bfe325f02778dc00",
+        "candidate": "bfe325f02778dc00",
+        "Qfplib": "bfe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 1420,
+        "control": 1420,
+        "candidate": 1299,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfe5d1004fc925b7",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfe325f02778dc00",
+      "outputs": {
+        "parent": "bfe325f02778dc00",
+        "control": "bfe325f02778dc00",
+        "candidate": "bfe325f02778dc00",
+        "Qfplib": "bfe325f02778dc00"
+      },
+      "instructions": {
+        "parent": 1602,
+        "control": 1602,
+        "candidate": 1481,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fecb99548f4fa31",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "3fe76897850fe9cc",
+      "outputs": {
+        "parent": "3fe76897850fe9cc",
+        "control": "3fe76897850fe9cc",
+        "candidate": "3fe76897850fe9cc",
+        "Qfplib": "3fe76897850fe9cc"
+      },
+      "instructions": {
+        "parent": 1415,
+        "control": 1415,
+        "candidate": 1309,
+        "Qfplib": 1783
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fecb99548f4fa31",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fe76897850fe9cc",
+      "outputs": {
+        "parent": "3fe76897850fe9cc",
+        "control": "3fe76897850fe9cc",
+        "candidate": "3fe76897850fe9cc",
+        "Qfplib": "3fe76897850fe9cc"
+      },
+      "instructions": {
+        "parent": 1585,
+        "control": 1585,
+        "candidate": 1479,
+        "Qfplib": 1783
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fecb99548f4fa33",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "3fe76897850fe9cd",
+      "outputs": {
+        "parent": "3fe76897850fe9cd",
+        "control": "3fe76897850fe9cd",
+        "candidate": "3fe76897850fe9cd",
+        "Qfplib": "3fe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 1419,
+        "control": 1419,
+        "candidate": 1303,
+        "Qfplib": 1784
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fecb99548f4fa33",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fe76897850fe9cd",
+      "outputs": {
+        "parent": "3fe76897850fe9cd",
+        "control": "3fe76897850fe9cd",
+        "candidate": "3fe76897850fe9cd",
+        "Qfplib": "3fe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 1589,
+        "control": 1589,
+        "candidate": 1473,
+        "Qfplib": 1784
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfecb99548f4fa31",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "bfe76897850fe9cc",
+      "outputs": {
+        "parent": "bfe76897850fe9cc",
+        "control": "bfe76897850fe9cc",
+        "candidate": "bfe76897850fe9cc",
+        "Qfplib": "bfe76897850fe9cc"
+      },
+      "instructions": {
+        "parent": 1415,
+        "control": 1415,
+        "candidate": 1309,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfecb99548f4fa31",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfe76897850fe9cc",
+      "outputs": {
+        "parent": "bfe76897850fe9cc",
+        "control": "bfe76897850fe9cc",
+        "candidate": "bfe76897850fe9cc",
+        "Qfplib": "bfe76897850fe9cc"
+      },
+      "instructions": {
+        "parent": 1585,
+        "control": 1585,
+        "candidate": 1479,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfecb99548f4fa33",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "READY",
+      "expected": "bfe76897850fe9cd",
+      "outputs": {
+        "parent": "bfe76897850fe9cd",
+        "control": "bfe76897850fe9cd",
+        "candidate": "bfe76897850fe9cd",
+        "Qfplib": "bfe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 1419,
+        "control": 1419,
+        "candidate": 1303,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfecb99548f4fa33",
+      "group": "old-or-remaining-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfe76897850fe9cd",
+      "outputs": {
+        "parent": "bfe76897850fe9cd",
+        "control": "bfe76897850fe9cd",
+        "candidate": "bfe76897850fe9cd",
+        "Qfplib": "bfe76897850fe9cd"
+      },
+      "instructions": {
+        "parent": 1589,
+        "control": 1589,
+        "candidate": 1473,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "0000000000000000",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "0000000000000000",
+      "outputs": {
+        "parent": "0000000000000000",
+        "control": "0000000000000000",
+        "candidate": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1763
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "0000000000000000",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "0000000000000000",
+      "outputs": {
+        "parent": "0000000000000000",
+        "control": "0000000000000000",
+        "candidate": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1763
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "8000000000000000",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "8000000000000000",
+      "outputs": {
+        "parent": "8000000000000000",
+        "control": "8000000000000000",
+        "candidate": "8000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1767
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "8000000000000000",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "8000000000000000",
+      "outputs": {
+        "parent": "8000000000000000",
+        "control": "8000000000000000",
+        "candidate": "8000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1767
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "0000000000000001",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "0000000000000001",
+      "outputs": {
+        "parent": "0000000000000001",
+        "control": "0000000000000001",
+        "candidate": "0000000000000001",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1763
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "0000000000000001",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "0000000000000001",
+      "outputs": {
+        "parent": "0000000000000001",
+        "control": "0000000000000001",
+        "candidate": "0000000000000001",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1763
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "8000000000000001",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "8000000000000001",
+      "outputs": {
+        "parent": "8000000000000001",
+        "control": "8000000000000001",
+        "candidate": "8000000000000001",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1767
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "8000000000000001",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "8000000000000001",
+      "outputs": {
+        "parent": "8000000000000001",
+        "control": "8000000000000001",
+        "candidate": "8000000000000001",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1767
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "000fffffffffffff",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "000fffffffffffff",
+      "outputs": {
+        "parent": "000fffffffffffff",
+        "control": "000fffffffffffff",
+        "candidate": "000fffffffffffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1763
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "000fffffffffffff",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "000fffffffffffff",
+      "outputs": {
+        "parent": "000fffffffffffff",
+        "control": "000fffffffffffff",
+        "candidate": "000fffffffffffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1763
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "800fffffffffffff",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "800fffffffffffff",
+      "outputs": {
+        "parent": "800fffffffffffff",
+        "control": "800fffffffffffff",
+        "candidate": "800fffffffffffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1767
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "800fffffffffffff",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "800fffffffffffff",
+      "outputs": {
+        "parent": "800fffffffffffff",
+        "control": "800fffffffffffff",
+        "candidate": "800fffffffffffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1767
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "7ff0000000000000",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "3ff921fb54442d18",
+      "outputs": {
+        "parent": "3ff921fb54442d18",
+        "control": "3ff921fb54442d18",
+        "candidate": "3ff921fb54442d18",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 45,
+        "control": 45,
+        "candidate": 45,
+        "Qfplib": 121
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "7ff0000000000000",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "3ff921fb54442d18",
+      "outputs": {
+        "parent": "3ff921fb54442d18",
+        "control": "3ff921fb54442d18",
+        "candidate": "3ff921fb54442d18",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 45,
+        "control": 45,
+        "candidate": 45,
+        "Qfplib": 121
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "fff0000000000000",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "bff921fb54442d18",
+      "outputs": {
+        "parent": "bff921fb54442d18",
+        "control": "bff921fb54442d18",
+        "candidate": "bff921fb54442d18",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 45,
+        "control": 45,
+        "candidate": 45,
+        "Qfplib": 122
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "fff0000000000000",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "bff921fb54442d18",
+      "outputs": {
+        "parent": "bff921fb54442d18",
+        "control": "bff921fb54442d18",
+        "candidate": "bff921fb54442d18",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 45,
+        "control": 45,
+        "candidate": 45,
+        "Qfplib": 122
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "7ff0000000000001",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "7ff8000000000001",
+      "outputs": {
+        "parent": "7ff8000000000001",
+        "control": "7ff8000000000001",
+        "candidate": "7ff8000000000001",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 30,
+        "control": 30,
+        "candidate": 30,
+        "Qfplib": 121
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "7ff0000000000001",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "7ff8000000000001",
+      "outputs": {
+        "parent": "7ff8000000000001",
+        "control": "7ff8000000000001",
+        "candidate": "7ff8000000000001",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 30,
+        "control": 30,
+        "candidate": 30,
+        "Qfplib": 121
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "7ff8000000000123",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "7ff8000000000123",
+      "outputs": {
+        "parent": "7ff8000000000123",
+        "control": "7ff8000000000123",
+        "candidate": "7ff8000000000123",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 27,
+        "control": 27,
+        "candidate": 27,
+        "Qfplib": 121
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "7ff8000000000123",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "7ff8000000000123",
+      "outputs": {
+        "parent": "7ff8000000000123",
+        "control": "7ff8000000000123",
+        "candidate": "7ff8000000000123",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 27,
+        "control": 27,
+        "candidate": 27,
+        "Qfplib": 121
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "fff0000080000000",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "fff8000080000000",
+      "outputs": {
+        "parent": "fff8000080000000",
+        "control": "fff8000080000000",
+        "candidate": "fff8000080000000",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 30,
+        "control": 30,
+        "candidate": 30,
+        "Qfplib": 122
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "fff0000080000000",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "fff8000080000000",
+      "outputs": {
+        "parent": "fff8000080000000",
+        "control": "fff8000080000000",
+        "candidate": "fff8000080000000",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 30,
+        "control": 30,
+        "candidate": 30,
+        "Qfplib": 122
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "ffffffffffffffff",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "READY",
+      "expected": "ffffffffffffffff",
+      "outputs": {
+        "parent": "ffffffffffffffff",
+        "control": "ffffffffffffffff",
+        "candidate": "ffffffffffffffff",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 27,
+        "control": 27,
+        "candidate": 27,
+        "Qfplib": 122
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "ffffffffffffffff",
+      "group": "IEEE-and-unchanged-paths",
+      "SIO": "DIRTY",
+      "expected": "ffffffffffffffff",
+      "outputs": {
+        "parent": "ffffffffffffffff",
+        "control": "ffffffffffffffff",
+        "candidate": "ffffffffffffffff",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 27,
+        "control": 27,
+        "candidate": 27,
+        "Qfplib": 122
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 56
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e2fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3e2fffffffffffff",
+      "outputs": {
+        "parent": "3e2fffffffffffff",
+        "control": "3e2fffffffffffff",
+        "candidate": "3e2fffffffffffff",
+        "Qfplib": "3e30000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1857
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e2fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3e2fffffffffffff",
+      "outputs": {
+        "parent": "3e2fffffffffffff",
+        "control": "3e2fffffffffffff",
+        "candidate": "3e2fffffffffffff",
+        "Qfplib": "3e30000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1857
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be2fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "be2fffffffffffff",
+      "outputs": {
+        "parent": "be2fffffffffffff",
+        "control": "be2fffffffffffff",
+        "candidate": "be2fffffffffffff",
+        "Qfplib": "be30000000180000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1858
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be2fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "be2fffffffffffff",
+      "outputs": {
+        "parent": "be2fffffffffffff",
+        "control": "be2fffffffffffff",
+        "candidate": "be2fffffffffffff",
+        "Qfplib": "be30000000180000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1858
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e30000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3e30000000000000",
+      "outputs": {
+        "parent": "3e30000000000000",
+        "control": "3e30000000000000",
+        "candidate": "3e30000000000000",
+        "Qfplib": "3e30000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1857
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e30000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3e30000000000000",
+      "outputs": {
+        "parent": "3e30000000000000",
+        "control": "3e30000000000000",
+        "candidate": "3e30000000000000",
+        "Qfplib": "3e30000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1857
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be30000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "be30000000000000",
+      "outputs": {
+        "parent": "be30000000000000",
+        "control": "be30000000000000",
+        "candidate": "be30000000000000",
+        "Qfplib": "be30000000180000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1859
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be30000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "be30000000000000",
+      "outputs": {
+        "parent": "be30000000000000",
+        "control": "be30000000000000",
+        "candidate": "be30000000000000",
+        "Qfplib": "be30000000180000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1859
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e30000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3e30000000000001",
+      "outputs": {
+        "parent": "3e30000000000001",
+        "control": "3e30000000000001",
+        "candidate": "3e30000000000001",
+        "Qfplib": "3e30000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1857
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e30000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3e30000000000001",
+      "outputs": {
+        "parent": "3e30000000000001",
+        "control": "3e30000000000001",
+        "candidate": "3e30000000000001",
+        "Qfplib": "3e30000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1857
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be30000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "be30000000000001",
+      "outputs": {
+        "parent": "be30000000000001",
+        "control": "be30000000000001",
+        "candidate": "be30000000000001",
+        "Qfplib": "be30000000400000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1859
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be30000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "be30000000000001",
+      "outputs": {
+        "parent": "be30000000000001",
+        "control": "be30000000000001",
+        "candidate": "be30000000000001",
+        "Qfplib": "be30000000400000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1859
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e3fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3e3fffffffffffff",
+      "outputs": {
+        "parent": "3e3fffffffffffff",
+        "control": "3e3fffffffffffff",
+        "candidate": "3e3fffffffffffff",
+        "Qfplib": "3e40000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1853
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e3fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3e3fffffffffffff",
+      "outputs": {
+        "parent": "3e3fffffffffffff",
+        "control": "3e3fffffffffffff",
+        "candidate": "3e3fffffffffffff",
+        "Qfplib": "3e40000000000000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1853
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be3fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "be3fffffffffffff",
+      "outputs": {
+        "parent": "be3fffffffffffff",
+        "control": "be3fffffffffffff",
+        "candidate": "be3fffffffffffff",
+        "Qfplib": "be40000000080000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1853
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be3fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "be3fffffffffffff",
+      "outputs": {
+        "parent": "be3fffffffffffff",
+        "control": "be3fffffffffffff",
+        "candidate": "be3fffffffffffff",
+        "Qfplib": "be40000000080000"
+      },
+      "instructions": {
+        "parent": 19,
+        "control": 19,
+        "candidate": 19,
+        "Qfplib": 1853
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e40000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3e40000000000000",
+      "outputs": {
+        "parent": "3e40000000000000",
+        "control": "3e40000000000000",
+        "candidate": "3e40000000000000",
+        "Qfplib": "3e40000000040000"
+      },
+      "instructions": {
+        "parent": 798,
+        "control": 798,
+        "candidate": 798,
+        "Qfplib": 1854
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e40000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3e40000000000000",
+      "outputs": {
+        "parent": "3e40000000000000",
+        "control": "3e40000000000000",
+        "candidate": "3e40000000000000",
+        "Qfplib": "3e40000000040000"
+      },
+      "instructions": {
+        "parent": 798,
+        "control": 798,
+        "candidate": 798,
+        "Qfplib": 1854
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be40000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "be40000000000000",
+      "outputs": {
+        "parent": "be40000000000000",
+        "control": "be40000000000000",
+        "candidate": "be40000000000000",
+        "Qfplib": "be40000000080000"
+      },
+      "instructions": {
+        "parent": 798,
+        "control": 798,
+        "candidate": 798,
+        "Qfplib": 1854
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be40000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "be40000000000000",
+      "outputs": {
+        "parent": "be40000000000000",
+        "control": "be40000000000000",
+        "candidate": "be40000000000000",
+        "Qfplib": "be40000000080000"
+      },
+      "instructions": {
+        "parent": 798,
+        "control": 798,
+        "candidate": 798,
+        "Qfplib": 1854
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e40000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3e40000000000001",
+      "outputs": {
+        "parent": "3e40000000000001",
+        "control": "3e40000000000001",
+        "candidate": "3e40000000000001",
+        "Qfplib": "3e40000000040000"
+      },
+      "instructions": {
+        "parent": 790,
+        "control": 790,
+        "candidate": 790,
+        "Qfplib": 1854
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3e40000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3e40000000000001",
+      "outputs": {
+        "parent": "3e40000000000001",
+        "control": "3e40000000000001",
+        "candidate": "3e40000000000001",
+        "Qfplib": "3e40000000040000"
+      },
+      "instructions": {
+        "parent": 790,
+        "control": 790,
+        "candidate": 790,
+        "Qfplib": 1854
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be40000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "be40000000000001",
+      "outputs": {
+        "parent": "be40000000000001",
+        "control": "be40000000000001",
+        "candidate": "be40000000000001",
+        "Qfplib": "be40000000180000"
+      },
+      "instructions": {
+        "parent": 790,
+        "control": 790,
+        "candidate": 790,
+        "Qfplib": 1853
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "be40000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "be40000000000001",
+      "outputs": {
+        "parent": "be40000000000001",
+        "control": "be40000000000001",
+        "candidate": "be40000000000001",
+        "Qfplib": "be40000000180000"
+      },
+      "instructions": {
+        "parent": 790,
+        "control": 790,
+        "candidate": 790,
+        "Qfplib": 1853
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f8fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3f8fff555bbb729a",
+      "outputs": {
+        "parent": "3f8fff555bbb729a",
+        "control": "3f8fff555bbb729a",
+        "candidate": "3f8fff555bbb729a",
+        "Qfplib": "3f8fff555bbb729a"
+      },
+      "instructions": {
+        "parent": 792,
+        "control": 792,
+        "candidate": 792,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f8fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3f8fff555bbb729a",
+      "outputs": {
+        "parent": "3f8fff555bbb729a",
+        "control": "3f8fff555bbb729a",
+        "candidate": "3f8fff555bbb729a",
+        "Qfplib": "3f8fff555bbb729a"
+      },
+      "instructions": {
+        "parent": 792,
+        "control": 792,
+        "candidate": 792,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bf8fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bf8fff555bbb729a",
+      "outputs": {
+        "parent": "bf8fff555bbb729a",
+        "control": "bf8fff555bbb729a",
+        "candidate": "bf8fff555bbb729a",
+        "Qfplib": "bf8fff555bbb7298"
+      },
+      "instructions": {
+        "parent": 792,
+        "control": 792,
+        "candidate": 792,
+        "Qfplib": 1813
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bf8fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bf8fff555bbb729a",
+      "outputs": {
+        "parent": "bf8fff555bbb729a",
+        "control": "bf8fff555bbb729a",
+        "candidate": "bf8fff555bbb729a",
+        "Qfplib": "bf8fff555bbb7298"
+      },
+      "instructions": {
+        "parent": 792,
+        "control": 792,
+        "candidate": 792,
+        "Qfplib": 1813
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f90000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3f8fff555bbb729b",
+      "outputs": {
+        "parent": "3f8fff555bbb729b",
+        "control": "3f8fff555bbb729b",
+        "candidate": "3f8fff555bbb729b",
+        "Qfplib": "3f8fff555bbb729a"
+      },
+      "instructions": {
+        "parent": 912,
+        "control": 912,
+        "candidate": 833,
+        "Qfplib": 1813
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f90000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3f8fff555bbb729b",
+      "outputs": {
+        "parent": "3f8fff555bbb729b",
+        "control": "3f8fff555bbb729b",
+        "candidate": "3f8fff555bbb729b",
+        "Qfplib": "3f8fff555bbb729a"
+      },
+      "instructions": {
+        "parent": 912,
+        "control": 912,
+        "candidate": 833,
+        "Qfplib": 1813
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bf90000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bf8fff555bbb729b",
+      "outputs": {
+        "parent": "bf8fff555bbb729b",
+        "control": "bf8fff555bbb729b",
+        "candidate": "bf8fff555bbb729b",
+        "Qfplib": "bf8fff555bbb7299"
+      },
+      "instructions": {
+        "parent": 912,
+        "control": 912,
+        "candidate": 833,
+        "Qfplib": 1814
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bf90000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bf8fff555bbb729b",
+      "outputs": {
+        "parent": "bf8fff555bbb729b",
+        "control": "bf8fff555bbb729b",
+        "candidate": "bf8fff555bbb729b",
+        "Qfplib": "bf8fff555bbb7299"
+      },
+      "instructions": {
+        "parent": 912,
+        "control": 912,
+        "candidate": 833,
+        "Qfplib": 1814
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f90000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3f8fff555bbb729d",
+      "outputs": {
+        "parent": "3f8fff555bbb729d",
+        "control": "3f8fff555bbb729d",
+        "candidate": "3f8fff555bbb729d",
+        "Qfplib": "3f8fff555bbb729d"
+      },
+      "instructions": {
+        "parent": 1388,
+        "control": 1388,
+        "candidate": 1306,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f90000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3f8fff555bbb729d",
+      "outputs": {
+        "parent": "3f8fff555bbb729d",
+        "control": "3f8fff555bbb729d",
+        "candidate": "3f8fff555bbb729d",
+        "Qfplib": "3f8fff555bbb729d"
+      },
+      "instructions": {
+        "parent": 1582,
+        "control": 1582,
+        "candidate": 1500,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bf90000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bf8fff555bbb729d",
+      "outputs": {
+        "parent": "bf8fff555bbb729d",
+        "control": "bf8fff555bbb729d",
+        "candidate": "bf8fff555bbb729d",
+        "Qfplib": "bf8fff555bbb729c"
+      },
+      "instructions": {
+        "parent": 1388,
+        "control": 1388,
+        "candidate": 1306,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bf90000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bf8fff555bbb729d",
+      "outputs": {
+        "parent": "bf8fff555bbb729d",
+        "control": "bf8fff555bbb729d",
+        "candidate": "bf8fff555bbb729d",
+        "Qfplib": "bf8fff555bbb729c"
+      },
+      "instructions": {
+        "parent": 1582,
+        "control": 1582,
+        "candidate": 1500,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f9fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3f9ffd55bba97624",
+      "outputs": {
+        "parent": "3f9ffd55bba97624",
+        "control": "3f9ffd55bba97624",
+        "candidate": "3f9ffd55bba97624",
+        "Qfplib": "3f9ffd55bba97624"
+      },
+      "instructions": {
+        "parent": 1404,
+        "control": 1404,
+        "candidate": 1289,
+        "Qfplib": 1806
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f9fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3f9ffd55bba97624",
+      "outputs": {
+        "parent": "3f9ffd55bba97624",
+        "control": "3f9ffd55bba97624",
+        "candidate": "3f9ffd55bba97624",
+        "Qfplib": "3f9ffd55bba97624"
+      },
+      "instructions": {
+        "parent": 1594,
+        "control": 1594,
+        "candidate": 1479,
+        "Qfplib": 1806
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bf9fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bf9ffd55bba97624",
+      "outputs": {
+        "parent": "bf9ffd55bba97624",
+        "control": "bf9ffd55bba97624",
+        "candidate": "bf9ffd55bba97624",
+        "Qfplib": "bf9ffd55bba97624"
+      },
+      "instructions": {
+        "parent": 1404,
+        "control": 1404,
+        "candidate": 1289,
+        "Qfplib": 1807
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bf9fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bf9ffd55bba97624",
+      "outputs": {
+        "parent": "bf9ffd55bba97624",
+        "control": "bf9ffd55bba97624",
+        "candidate": "bf9ffd55bba97624",
+        "Qfplib": "bf9ffd55bba97624"
+      },
+      "instructions": {
+        "parent": 1594,
+        "control": 1594,
+        "candidate": 1479,
+        "Qfplib": 1807
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fa0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3f9ffd55bba97625",
+      "outputs": {
+        "parent": "3f9ffd55bba97625",
+        "control": "3f9ffd55bba97625",
+        "candidate": "3f9ffd55bba97625",
+        "Qfplib": "3f9ffd55bba97625"
+      },
+      "instructions": {
+        "parent": 955,
+        "control": 955,
+        "candidate": 846,
+        "Qfplib": 1806
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fa0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3f9ffd55bba97625",
+      "outputs": {
+        "parent": "3f9ffd55bba97625",
+        "control": "3f9ffd55bba97625",
+        "candidate": "3f9ffd55bba97625",
+        "Qfplib": "3f9ffd55bba97625"
+      },
+      "instructions": {
+        "parent": 955,
+        "control": 955,
+        "candidate": 846,
+        "Qfplib": 1806
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfa0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bf9ffd55bba97625",
+      "outputs": {
+        "parent": "bf9ffd55bba97625",
+        "control": "bf9ffd55bba97625",
+        "candidate": "bf9ffd55bba97625",
+        "Qfplib": "bf9ffd55bba97625"
+      },
+      "instructions": {
+        "parent": 955,
+        "control": 955,
+        "candidate": 846,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfa0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bf9ffd55bba97625",
+      "outputs": {
+        "parent": "bf9ffd55bba97625",
+        "control": "bf9ffd55bba97625",
+        "candidate": "bf9ffd55bba97625",
+        "Qfplib": "bf9ffd55bba97625"
+      },
+      "instructions": {
+        "parent": 955,
+        "control": 955,
+        "candidate": 846,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fa0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3f9ffd55bba97627",
+      "outputs": {
+        "parent": "3f9ffd55bba97627",
+        "control": "3f9ffd55bba97627",
+        "candidate": "3f9ffd55bba97627",
+        "Qfplib": "3f9ffd55bba97627"
+      },
+      "instructions": {
+        "parent": 1430,
+        "control": 1430,
+        "candidate": 1318,
+        "Qfplib": 1806
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fa0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3f9ffd55bba97627",
+      "outputs": {
+        "parent": "3f9ffd55bba97627",
+        "control": "3f9ffd55bba97627",
+        "candidate": "3f9ffd55bba97627",
+        "Qfplib": "3f9ffd55bba97627"
+      },
+      "instructions": {
+        "parent": 1616,
+        "control": 1616,
+        "candidate": 1504,
+        "Qfplib": 1806
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfa0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bf9ffd55bba97627",
+      "outputs": {
+        "parent": "bf9ffd55bba97627",
+        "control": "bf9ffd55bba97627",
+        "candidate": "bf9ffd55bba97627",
+        "Qfplib": "bf9ffd55bba97627"
+      },
+      "instructions": {
+        "parent": 1430,
+        "control": 1430,
+        "candidate": 1318,
+        "Qfplib": 1807
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfa0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bf9ffd55bba97627",
+      "outputs": {
+        "parent": "bf9ffd55bba97627",
+        "control": "bf9ffd55bba97627",
+        "candidate": "bf9ffd55bba97627",
+        "Qfplib": "bf9ffd55bba97627"
+      },
+      "instructions": {
+        "parent": 1616,
+        "control": 1616,
+        "candidate": 1504,
+        "Qfplib": 1807
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdfffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3fddac670561bb4f",
+      "outputs": {
+        "parent": "3fddac670561bb4f",
+        "control": "3fddac670561bb4f",
+        "candidate": "3fddac670561bb4f",
+        "Qfplib": "3fddac670561bb4f"
+      },
+      "instructions": {
+        "parent": 1415,
+        "control": 1415,
+        "candidate": 1304,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdfffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fddac670561bb4f",
+      "outputs": {
+        "parent": "3fddac670561bb4f",
+        "control": "3fddac670561bb4f",
+        "candidate": "3fddac670561bb4f",
+        "Qfplib": "3fddac670561bb4f"
+      },
+      "instructions": {
+        "parent": 1597,
+        "control": 1597,
+        "candidate": 1486,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdfffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bfddac670561bb4f",
+      "outputs": {
+        "parent": "bfddac670561bb4f",
+        "control": "bfddac670561bb4f",
+        "candidate": "bfddac670561bb4f",
+        "Qfplib": "bfddac670561bb4f"
+      },
+      "instructions": {
+        "parent": 1415,
+        "control": 1415,
+        "candidate": 1304,
+        "Qfplib": 1789
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfdfffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfddac670561bb4f",
+      "outputs": {
+        "parent": "bfddac670561bb4f",
+        "control": "bfddac670561bb4f",
+        "candidate": "bfddac670561bb4f",
+        "Qfplib": "bfddac670561bb4f"
+      },
+      "instructions": {
+        "parent": 1597,
+        "control": 1597,
+        "candidate": 1486,
+        "Qfplib": 1789
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3fddac670561bb4f",
+      "outputs": {
+        "parent": "3fddac670561bb4f",
+        "control": "3fddac670561bb4f",
+        "candidate": "3fddac670561bb4f",
+        "Qfplib": "3fddac670561bb4f"
+      },
+      "instructions": {
+        "parent": 962,
+        "control": 962,
+        "candidate": 845,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fddac670561bb4f",
+      "outputs": {
+        "parent": "3fddac670561bb4f",
+        "control": "3fddac670561bb4f",
+        "candidate": "3fddac670561bb4f",
+        "Qfplib": "3fddac670561bb4f"
+      },
+      "instructions": {
+        "parent": 962,
+        "control": 962,
+        "candidate": 845,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfe0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bfddac670561bb4f",
+      "outputs": {
+        "parent": "bfddac670561bb4f",
+        "control": "bfddac670561bb4f",
+        "candidate": "bfddac670561bb4f",
+        "Qfplib": "bfddac670561bb4f"
+      },
+      "instructions": {
+        "parent": 962,
+        "control": 962,
+        "candidate": 845,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfe0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfddac670561bb4f",
+      "outputs": {
+        "parent": "bfddac670561bb4f",
+        "control": "bfddac670561bb4f",
+        "candidate": "bfddac670561bb4f",
+        "Qfplib": "bfddac670561bb4f"
+      },
+      "instructions": {
+        "parent": 962,
+        "control": 962,
+        "candidate": 845,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3fddac670561bb51",
+      "outputs": {
+        "parent": "3fddac670561bb51",
+        "control": "3fddac670561bb51",
+        "candidate": "3fddac670561bb51",
+        "Qfplib": "3fddac670561bb51"
+      },
+      "instructions": {
+        "parent": 1439,
+        "control": 1439,
+        "candidate": 1319,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fddac670561bb51",
+      "outputs": {
+        "parent": "3fddac670561bb51",
+        "control": "3fddac670561bb51",
+        "candidate": "3fddac670561bb51",
+        "Qfplib": "3fddac670561bb51"
+      },
+      "instructions": {
+        "parent": 1617,
+        "control": 1617,
+        "candidate": 1497,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfe0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bfddac670561bb51",
+      "outputs": {
+        "parent": "bfddac670561bb51",
+        "control": "bfddac670561bb51",
+        "candidate": "bfddac670561bb51",
+        "Qfplib": "bfddac670561bb51"
+      },
+      "instructions": {
+        "parent": 1439,
+        "control": 1439,
+        "candidate": 1319,
+        "Qfplib": 1794
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfe0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfddac670561bb51",
+      "outputs": {
+        "parent": "bfddac670561bb51",
+        "control": "bfddac670561bb51",
+        "candidate": "bfddac670561bb51",
+        "Qfplib": "bfddac670561bb51"
+      },
+      "instructions": {
+        "parent": 1617,
+        "control": 1617,
+        "candidate": 1497,
+        "Qfplib": 1794
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fefffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3fe921fb54442d18",
+      "outputs": {
+        "parent": "3fe921fb54442d18",
+        "control": "3fe921fb54442d18",
+        "candidate": "3fe921fb54442d18",
+        "Qfplib": "3fe921fb54442d18"
+      },
+      "instructions": {
+        "parent": 1420,
+        "control": 1420,
+        "candidate": 1309,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fefffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fe921fb54442d18",
+      "outputs": {
+        "parent": "3fe921fb54442d18",
+        "control": "3fe921fb54442d18",
+        "candidate": "3fe921fb54442d18",
+        "Qfplib": "3fe921fb54442d18"
+      },
+      "instructions": {
+        "parent": 1570,
+        "control": 1570,
+        "candidate": 1459,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfefffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bfe921fb54442d18",
+      "outputs": {
+        "parent": "bfe921fb54442d18",
+        "control": "bfe921fb54442d18",
+        "candidate": "bfe921fb54442d18",
+        "Qfplib": "bfe921fb54442d18"
+      },
+      "instructions": {
+        "parent": 1420,
+        "control": 1420,
+        "candidate": 1309,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfefffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfe921fb54442d18",
+      "outputs": {
+        "parent": "bfe921fb54442d18",
+        "control": "bfe921fb54442d18",
+        "candidate": "bfe921fb54442d18",
+        "Qfplib": "bfe921fb54442d18"
+      },
+      "instructions": {
+        "parent": 1570,
+        "control": 1570,
+        "candidate": 1459,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3ff0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3fe921fb54442d18",
+      "outputs": {
+        "parent": "3fe921fb54442d18",
+        "control": "3fe921fb54442d18",
+        "candidate": "3fe921fb54442d18",
+        "Qfplib": "3fe921fb54442d18"
+      },
+      "instructions": {
+        "parent": 968,
+        "control": 968,
+        "candidate": 851,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3ff0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fe921fb54442d18",
+      "outputs": {
+        "parent": "3fe921fb54442d18",
+        "control": "3fe921fb54442d18",
+        "candidate": "3fe921fb54442d18",
+        "Qfplib": "3fe921fb54442d18"
+      },
+      "instructions": {
+        "parent": 968,
+        "control": 968,
+        "candidate": 851,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bff0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bfe921fb54442d18",
+      "outputs": {
+        "parent": "bfe921fb54442d18",
+        "control": "bfe921fb54442d18",
+        "candidate": "bfe921fb54442d18",
+        "Qfplib": "bfe921fb54442d18"
+      },
+      "instructions": {
+        "parent": 968,
+        "control": 968,
+        "candidate": 851,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bff0000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfe921fb54442d18",
+      "outputs": {
+        "parent": "bfe921fb54442d18",
+        "control": "bfe921fb54442d18",
+        "candidate": "bfe921fb54442d18",
+        "Qfplib": "bfe921fb54442d18"
+      },
+      "instructions": {
+        "parent": 968,
+        "control": 968,
+        "candidate": 851,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3ff0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3fe921fb54442d19",
+      "outputs": {
+        "parent": "3fe921fb54442d19",
+        "control": "3fe921fb54442d19",
+        "candidate": "3fe921fb54442d19",
+        "Qfplib": "3fe921fb54442d19"
+      },
+      "instructions": {
+        "parent": 1482,
+        "control": 1482,
+        "candidate": 1365,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3ff0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fe921fb54442d19",
+      "outputs": {
+        "parent": "3fe921fb54442d19",
+        "control": "3fe921fb54442d19",
+        "candidate": "3fe921fb54442d19",
+        "Qfplib": "3fe921fb54442d19"
+      },
+      "instructions": {
+        "parent": 1782,
+        "control": 1782,
+        "candidate": 1665,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bff0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bfe921fb54442d19",
+      "outputs": {
+        "parent": "bfe921fb54442d19",
+        "control": "bfe921fb54442d19",
+        "candidate": "bfe921fb54442d19",
+        "Qfplib": "bfe921fb54442d19"
+      },
+      "instructions": {
+        "parent": 1482,
+        "control": 1482,
+        "candidate": 1365,
+        "Qfplib": 1785
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bff0000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bfe921fb54442d19",
+      "outputs": {
+        "parent": "bfe921fb54442d19",
+        "control": "bfe921fb54442d19",
+        "candidate": "bfe921fb54442d19",
+        "Qfplib": "bfe921fb54442d19"
+      },
+      "instructions": {
+        "parent": 1782,
+        "control": 1782,
+        "candidate": 1665,
+        "Qfplib": 1785
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fffffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3ff1b6e192ebbe44",
+      "outputs": {
+        "parent": "3ff1b6e192ebbe44",
+        "control": "3ff1b6e192ebbe44",
+        "candidate": "3ff1b6e192ebbe44",
+        "Qfplib": "3ff1b6e192ebbe44"
+      },
+      "instructions": {
+        "parent": 1451,
+        "control": 1451,
+        "candidate": 1337,
+        "Qfplib": 1829
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fffffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3ff1b6e192ebbe44",
+      "outputs": {
+        "parent": "3ff1b6e192ebbe44",
+        "control": "3ff1b6e192ebbe44",
+        "candidate": "3ff1b6e192ebbe44",
+        "Qfplib": "3ff1b6e192ebbe44"
+      },
+      "instructions": {
+        "parent": 1783,
+        "control": 1783,
+        "candidate": 1669,
+        "Qfplib": 1829
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfffffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bff1b6e192ebbe44",
+      "outputs": {
+        "parent": "bff1b6e192ebbe44",
+        "control": "bff1b6e192ebbe44",
+        "candidate": "bff1b6e192ebbe44",
+        "Qfplib": "bff1b6e192ebbe44"
+      },
+      "instructions": {
+        "parent": 1451,
+        "control": 1451,
+        "candidate": 1337,
+        "Qfplib": 1824
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfffffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bff1b6e192ebbe44",
+      "outputs": {
+        "parent": "bff1b6e192ebbe44",
+        "control": "bff1b6e192ebbe44",
+        "candidate": "bff1b6e192ebbe44",
+        "Qfplib": "bff1b6e192ebbe44"
+      },
+      "instructions": {
+        "parent": 1783,
+        "control": 1783,
+        "candidate": 1669,
+        "Qfplib": 1824
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4000000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3ff1b6e192ebbe44",
+      "outputs": {
+        "parent": "3ff1b6e192ebbe44",
+        "control": "3ff1b6e192ebbe44",
+        "candidate": "3ff1b6e192ebbe44",
+        "Qfplib": "3ff1b6e192ebbe44"
+      },
+      "instructions": {
+        "parent": 986,
+        "control": 986,
+        "candidate": 875,
+        "Qfplib": 1798
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4000000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3ff1b6e192ebbe44",
+      "outputs": {
+        "parent": "3ff1b6e192ebbe44",
+        "control": "3ff1b6e192ebbe44",
+        "candidate": "3ff1b6e192ebbe44",
+        "Qfplib": "3ff1b6e192ebbe44"
+      },
+      "instructions": {
+        "parent": 1136,
+        "control": 1136,
+        "candidate": 1025,
+        "Qfplib": 1798
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c000000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bff1b6e192ebbe44",
+      "outputs": {
+        "parent": "bff1b6e192ebbe44",
+        "control": "bff1b6e192ebbe44",
+        "candidate": "bff1b6e192ebbe44",
+        "Qfplib": "bff1b6e192ebbe44"
+      },
+      "instructions": {
+        "parent": 986,
+        "control": 986,
+        "candidate": 875,
+        "Qfplib": 1802
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c000000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bff1b6e192ebbe44",
+      "outputs": {
+        "parent": "bff1b6e192ebbe44",
+        "control": "bff1b6e192ebbe44",
+        "candidate": "bff1b6e192ebbe44",
+        "Qfplib": "bff1b6e192ebbe44"
+      },
+      "instructions": {
+        "parent": 1136,
+        "control": 1136,
+        "candidate": 1025,
+        "Qfplib": 1802
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4000000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3ff1b6e192ebbe45",
+      "outputs": {
+        "parent": "3ff1b6e192ebbe45",
+        "control": "3ff1b6e192ebbe45",
+        "candidate": "3ff1b6e192ebbe45",
+        "Qfplib": "3ff1b6e192ebbe45"
+      },
+      "instructions": {
+        "parent": 1452,
+        "control": 1452,
+        "candidate": 1347,
+        "Qfplib": 1789
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4000000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3ff1b6e192ebbe45",
+      "outputs": {
+        "parent": "3ff1b6e192ebbe45",
+        "control": "3ff1b6e192ebbe45",
+        "candidate": "3ff1b6e192ebbe45",
+        "Qfplib": "3ff1b6e192ebbe45"
+      },
+      "instructions": {
+        "parent": 1780,
+        "control": 1780,
+        "candidate": 1675,
+        "Qfplib": 1789
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c000000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bff1b6e192ebbe45",
+      "outputs": {
+        "parent": "bff1b6e192ebbe45",
+        "control": "bff1b6e192ebbe45",
+        "candidate": "bff1b6e192ebbe45",
+        "Qfplib": "bff1b6e192ebbe45"
+      },
+      "instructions": {
+        "parent": 1452,
+        "control": 1452,
+        "candidate": 1347,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c000000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bff1b6e192ebbe45",
+      "outputs": {
+        "parent": "bff1b6e192ebbe45",
+        "control": "bff1b6e192ebbe45",
+        "candidate": "bff1b6e192ebbe45",
+        "Qfplib": "bff1b6e192ebbe45"
+      },
+      "instructions": {
+        "parent": 1780,
+        "control": 1780,
+        "candidate": 1675,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "404fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3ff8e1fca98cb633",
+      "outputs": {
+        "parent": "3ff8e1fca98cb633",
+        "control": "3ff8e1fca98cb633",
+        "candidate": "3ff8e1fca98cb633",
+        "Qfplib": "3ff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 1451,
+        "control": 1451,
+        "candidate": 1337,
+        "Qfplib": 1827
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "404fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3ff8e1fca98cb633",
+      "outputs": {
+        "parent": "3ff8e1fca98cb633",
+        "control": "3ff8e1fca98cb633",
+        "candidate": "3ff8e1fca98cb633",
+        "Qfplib": "3ff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 1799,
+        "control": 1799,
+        "candidate": 1685,
+        "Qfplib": 1827
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c04fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bff8e1fca98cb633",
+      "outputs": {
+        "parent": "bff8e1fca98cb633",
+        "control": "bff8e1fca98cb633",
+        "candidate": "bff8e1fca98cb633",
+        "Qfplib": "bff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 1451,
+        "control": 1451,
+        "candidate": 1337,
+        "Qfplib": 1825
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c04fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bff8e1fca98cb633",
+      "outputs": {
+        "parent": "bff8e1fca98cb633",
+        "control": "bff8e1fca98cb633",
+        "candidate": "bff8e1fca98cb633",
+        "Qfplib": "bff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 1799,
+        "control": 1799,
+        "candidate": 1685,
+        "Qfplib": 1825
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4050000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3ff8e1fca98cb633",
+      "outputs": {
+        "parent": "3ff8e1fca98cb633",
+        "control": "3ff8e1fca98cb633",
+        "candidate": "3ff8e1fca98cb633",
+        "Qfplib": "3ff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 988,
+        "control": 988,
+        "candidate": 877,
+        "Qfplib": 1802
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4050000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3ff8e1fca98cb633",
+      "outputs": {
+        "parent": "3ff8e1fca98cb633",
+        "control": "3ff8e1fca98cb633",
+        "candidate": "3ff8e1fca98cb633",
+        "Qfplib": "3ff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 1138,
+        "control": 1138,
+        "candidate": 1027,
+        "Qfplib": 1802
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c050000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bff8e1fca98cb633",
+      "outputs": {
+        "parent": "bff8e1fca98cb633",
+        "control": "bff8e1fca98cb633",
+        "candidate": "bff8e1fca98cb633",
+        "Qfplib": "bff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 988,
+        "control": 988,
+        "candidate": 877,
+        "Qfplib": 1799
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c050000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bff8e1fca98cb633",
+      "outputs": {
+        "parent": "bff8e1fca98cb633",
+        "control": "bff8e1fca98cb633",
+        "candidate": "bff8e1fca98cb633",
+        "Qfplib": "bff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 1138,
+        "control": 1138,
+        "candidate": 1027,
+        "Qfplib": 1799
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4050000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3ff8e1fca98cb633",
+      "outputs": {
+        "parent": "3ff8e1fca98cb633",
+        "control": "3ff8e1fca98cb633",
+        "candidate": "3ff8e1fca98cb633",
+        "Qfplib": "3ff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 1055,
+        "control": 1055,
+        "candidate": 1055,
+        "Qfplib": 1792
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4050000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3ff8e1fca98cb633",
+      "outputs": {
+        "parent": "3ff8e1fca98cb633",
+        "control": "3ff8e1fca98cb633",
+        "candidate": "3ff8e1fca98cb633",
+        "Qfplib": "3ff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 1509,
+        "control": 1509,
+        "candidate": 1509,
+        "Qfplib": 1792
+      },
+      "stack_bytes": {
+        "parent": 280,
+        "control": 280,
+        "candidate": 280,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c050000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bff8e1fca98cb633",
+      "outputs": {
+        "parent": "bff8e1fca98cb633",
+        "control": "bff8e1fca98cb633",
+        "candidate": "bff8e1fca98cb633",
+        "Qfplib": "bff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 1055,
+        "control": 1055,
+        "candidate": 1055,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 256,
+        "control": 256,
+        "candidate": 256,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c050000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bff8e1fca98cb633",
+      "outputs": {
+        "parent": "bff8e1fca98cb633",
+        "control": "bff8e1fca98cb633",
+        "candidate": "bff8e1fca98cb633",
+        "Qfplib": "bff8e1fca98cb633"
+      },
+      "instructions": {
+        "parent": 1509,
+        "control": 1509,
+        "candidate": 1509,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 280,
+        "control": 280,
+        "candidate": 280,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "435fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3ff921fb54442d18",
+      "outputs": {
+        "parent": "3ff921fb54442d18",
+        "control": "3ff921fb54442d18",
+        "candidate": "3ff921fb54442d18",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 441,
+        "control": 441,
+        "candidate": 441,
+        "Qfplib": 1825
+      },
+      "stack_bytes": {
+        "parent": 192,
+        "control": 192,
+        "candidate": 192,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "435fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3ff921fb54442d18",
+      "outputs": {
+        "parent": "3ff921fb54442d18",
+        "control": "3ff921fb54442d18",
+        "candidate": "3ff921fb54442d18",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 848,
+        "control": 848,
+        "candidate": 848,
+        "Qfplib": 1825
+      },
+      "stack_bytes": {
+        "parent": 280,
+        "control": 280,
+        "candidate": 280,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c35fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bff921fb54442d18",
+      "outputs": {
+        "parent": "bff921fb54442d18",
+        "control": "bff921fb54442d18",
+        "candidate": "bff921fb54442d18",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 441,
+        "control": 441,
+        "candidate": 441,
+        "Qfplib": 1828
+      },
+      "stack_bytes": {
+        "parent": 192,
+        "control": 192,
+        "candidate": 192,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c35fffffffffffff",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bff921fb54442d18",
+      "outputs": {
+        "parent": "bff921fb54442d18",
+        "control": "bff921fb54442d18",
+        "candidate": "bff921fb54442d18",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 848,
+        "control": 848,
+        "candidate": 848,
+        "Qfplib": 1828
+      },
+      "stack_bytes": {
+        "parent": 280,
+        "control": 280,
+        "candidate": 280,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4360000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3ff921fb54442d18",
+      "outputs": {
+        "parent": "3ff921fb54442d18",
+        "control": "3ff921fb54442d18",
+        "candidate": "3ff921fb54442d18",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 43,
+        "control": 43,
+        "candidate": 43,
+        "Qfplib": 1798
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4360000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3ff921fb54442d18",
+      "outputs": {
+        "parent": "3ff921fb54442d18",
+        "control": "3ff921fb54442d18",
+        "candidate": "3ff921fb54442d18",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 43,
+        "control": 43,
+        "candidate": 43,
+        "Qfplib": 1798
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c360000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bff921fb54442d18",
+      "outputs": {
+        "parent": "bff921fb54442d18",
+        "control": "bff921fb54442d18",
+        "candidate": "bff921fb54442d18",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 43,
+        "control": 43,
+        "candidate": 43,
+        "Qfplib": 1801
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c360000000000000",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bff921fb54442d18",
+      "outputs": {
+        "parent": "bff921fb54442d18",
+        "control": "bff921fb54442d18",
+        "candidate": "bff921fb54442d18",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 43,
+        "control": 43,
+        "candidate": 43,
+        "Qfplib": 1801
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4360000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "3ff921fb54442d18",
+      "outputs": {
+        "parent": "3ff921fb54442d18",
+        "control": "3ff921fb54442d18",
+        "candidate": "3ff921fb54442d18",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 43,
+        "control": 43,
+        "candidate": 43,
+        "Qfplib": 1789
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "4360000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3ff921fb54442d18",
+      "outputs": {
+        "parent": "3ff921fb54442d18",
+        "control": "3ff921fb54442d18",
+        "candidate": "3ff921fb54442d18",
+        "Qfplib": "3ff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 43,
+        "control": 43,
+        "candidate": 43,
+        "Qfplib": 1789
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c360000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "READY",
+      "expected": "bff921fb54442d18",
+      "outputs": {
+        "parent": "bff921fb54442d18",
+        "control": "bff921fb54442d18",
+        "candidate": "bff921fb54442d18",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 43,
+        "control": 43,
+        "candidate": 43,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "c360000000000001",
+      "group": "dispatch-binade-neighbours",
+      "SIO": "DIRTY",
+      "expected": "bff921fb54442d18",
+      "outputs": {
+        "parent": "bff921fb54442d18",
+        "control": "bff921fb54442d18",
+        "candidate": "bff921fb54442d18",
+        "Qfplib": "bff921fb54442d18"
+      },
+      "instructions": {
+        "parent": 43,
+        "control": 43,
+        "candidate": 43,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 80,
+        "control": 80,
+        "candidate": 80,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdeffffffffffff",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fdcde53432c1350",
+      "outputs": {
+        "parent": "3fdcde53432c1350",
+        "control": "3fdcde53432c1350",
+        "candidate": "3fdcde53432c1350",
+        "Qfplib": "3fdcde53432c1350"
+      },
+      "instructions": {
+        "parent": 1415,
+        "control": 1415,
+        "candidate": 1304,
+        "Qfplib": 1794
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdeffffffffffff",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fdcde53432c1350",
+      "outputs": {
+        "parent": "3fdcde53432c1350",
+        "control": "3fdcde53432c1350",
+        "candidate": "3fdcde53432c1350",
+        "Qfplib": "3fdcde53432c1350"
+      },
+      "instructions": {
+        "parent": 1601,
+        "control": 1601,
+        "candidate": 1490,
+        "Qfplib": 1794
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdf000000000000",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fdcde53432c1351",
+      "outputs": {
+        "parent": "3fdcde53432c1351",
+        "control": "3fdcde53432c1351",
+        "candidate": "3fdcde53432c1351",
+        "Qfplib": "3fdcde53432c1351"
+      },
+      "instructions": {
+        "parent": 953,
+        "control": 953,
+        "candidate": 846,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdf000000000000",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fdcde53432c1351",
+      "outputs": {
+        "parent": "3fdcde53432c1351",
+        "control": "3fdcde53432c1351",
+        "candidate": "3fdcde53432c1351",
+        "Qfplib": "3fdcde53432c1351"
+      },
+      "instructions": {
+        "parent": 953,
+        "control": 953,
+        "candidate": 846,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdf000000000001",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fdcde53432c1351",
+      "outputs": {
+        "parent": "3fdcde53432c1351",
+        "control": "3fdcde53432c1351",
+        "candidate": "3fdcde53432c1351",
+        "Qfplib": "3fdcde53432c1351"
+      },
+      "instructions": {
+        "parent": 1439,
+        "control": 1439,
+        "candidate": 1319,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdf000000000001",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fdcde53432c1351",
+      "outputs": {
+        "parent": "3fdcde53432c1351",
+        "control": "3fdcde53432c1351",
+        "candidate": "3fdcde53432c1351",
+        "Qfplib": "3fdcde53432c1351"
+      },
+      "instructions": {
+        "parent": 1621,
+        "control": 1621,
+        "candidate": 1501,
+        "Qfplib": 1793
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fef7fffffffffff",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fe8e17aa99cc05d",
+      "outputs": {
+        "parent": "3fe8e17aa99cc05d",
+        "control": "3fe8e17aa99cc05d",
+        "candidate": "3fe8e17aa99cc05d",
+        "Qfplib": "3fe8e17aa99cc05d"
+      },
+      "instructions": {
+        "parent": 1424,
+        "control": 1424,
+        "candidate": 1303,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fef7fffffffffff",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fe8e17aa99cc05d",
+      "outputs": {
+        "parent": "3fe8e17aa99cc05d",
+        "control": "3fe8e17aa99cc05d",
+        "candidate": "3fe8e17aa99cc05d",
+        "Qfplib": "3fe8e17aa99cc05d"
+      },
+      "instructions": {
+        "parent": 1582,
+        "control": 1582,
+        "candidate": 1461,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fef800000000000",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fe8e17aa99cc05e",
+      "outputs": {
+        "parent": "3fe8e17aa99cc05e",
+        "control": "3fe8e17aa99cc05e",
+        "candidate": "3fe8e17aa99cc05e",
+        "Qfplib": "3fe8e17aa99cc05e"
+      },
+      "instructions": {
+        "parent": 953,
+        "control": 953,
+        "candidate": 846,
+        "Qfplib": 1787
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fef800000000000",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fe8e17aa99cc05e",
+      "outputs": {
+        "parent": "3fe8e17aa99cc05e",
+        "control": "3fe8e17aa99cc05e",
+        "candidate": "3fe8e17aa99cc05e",
+        "Qfplib": "3fe8e17aa99cc05e"
+      },
+      "instructions": {
+        "parent": 953,
+        "control": 953,
+        "candidate": 846,
+        "Qfplib": 1787
+      },
+      "stack_bytes": {
+        "parent": 276,
+        "control": 276,
+        "candidate": 268,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fef800000000001",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fe8e17aa99cc05e",
+      "outputs": {
+        "parent": "3fe8e17aa99cc05e",
+        "control": "3fe8e17aa99cc05e",
+        "candidate": "3fe8e17aa99cc05e",
+        "Qfplib": "3fe8e17aa99cc05e"
+      },
+      "instructions": {
+        "parent": 1440,
+        "control": 1440,
+        "candidate": 1320,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fef800000000001",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fe8e17aa99cc05e",
+      "outputs": {
+        "parent": "3fe8e17aa99cc05e",
+        "control": "3fe8e17aa99cc05e",
+        "candidate": "3fe8e17aa99cc05e",
+        "Qfplib": "3fe8e17aa99cc05e"
+      },
+      "instructions": {
+        "parent": 1598,
+        "control": 1598,
+        "candidate": 1478,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f97ffffffffffff",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3f97fee0184a5c35",
+      "outputs": {
+        "parent": "3f97fee0184a5c35",
+        "control": "3f97fee0184a5c35",
+        "candidate": "3f97fee0184a5c35",
+        "Qfplib": "3f97fee0184a5c34"
+      },
+      "instructions": {
+        "parent": 1404,
+        "control": 1404,
+        "candidate": 1290,
+        "Qfplib": 1807
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f97ffffffffffff",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3f97fee0184a5c35",
+      "outputs": {
+        "parent": "3f97fee0184a5c35",
+        "control": "3f97fee0184a5c35",
+        "candidate": "3f97fee0184a5c35",
+        "Qfplib": "3f97fee0184a5c34"
+      },
+      "instructions": {
+        "parent": 1602,
+        "control": 1602,
+        "candidate": 1488,
+        "Qfplib": 1807
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f98000000000000",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3f97fee0184a5c36",
+      "outputs": {
+        "parent": "3f97fee0184a5c36",
+        "control": "3f97fee0184a5c36",
+        "candidate": "3f97fee0184a5c36",
+        "Qfplib": "3f97fee0184a5c35"
+      },
+      "instructions": {
+        "parent": 1401,
+        "control": 1401,
+        "candidate": 1287,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f98000000000000",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3f97fee0184a5c36",
+      "outputs": {
+        "parent": "3f97fee0184a5c36",
+        "control": "3f97fee0184a5c36",
+        "candidate": "3f97fee0184a5c36",
+        "Qfplib": "3f97fee0184a5c35"
+      },
+      "instructions": {
+        "parent": 1591,
+        "control": 1591,
+        "candidate": 1477,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f98000000000001",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3f97fee0184a5c37",
+      "outputs": {
+        "parent": "3f97fee0184a5c37",
+        "control": "3f97fee0184a5c37",
+        "candidate": "3f97fee0184a5c37",
+        "Qfplib": "3f97fee0184a5c36"
+      },
+      "instructions": {
+        "parent": 1400,
+        "control": 1400,
+        "candidate": 1286,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3f98000000000001",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3f97fee0184a5c37",
+      "outputs": {
+        "parent": "3f97fee0184a5c37",
+        "control": "3f97fee0184a5c37",
+        "candidate": "3f97fee0184a5c37",
+        "Qfplib": "3f97fee0184a5c36"
+      },
+      "instructions": {
+        "parent": 1590,
+        "control": 1590,
+        "candidate": 1476,
+        "Qfplib": 1809
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdf7fffffffffff",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fdd45aec9ec862a",
+      "outputs": {
+        "parent": "3fdd45aec9ec862a",
+        "control": "3fdd45aec9ec862a",
+        "candidate": "3fdd45aec9ec862a",
+        "Qfplib": "3fdd45aec9ec862a"
+      },
+      "instructions": {
+        "parent": 1411,
+        "control": 1411,
+        "candidate": 1291,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdf7fffffffffff",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fdd45aec9ec862a",
+      "outputs": {
+        "parent": "3fdd45aec9ec862a",
+        "control": "3fdd45aec9ec862a",
+        "candidate": "3fdd45aec9ec862a",
+        "Qfplib": "3fdd45aec9ec862a"
+      },
+      "instructions": {
+        "parent": 1593,
+        "control": 1593,
+        "candidate": 1473,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdf800000000000",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fdd45aec9ec862b",
+      "outputs": {
+        "parent": "3fdd45aec9ec862b",
+        "control": "3fdd45aec9ec862b",
+        "candidate": "3fdd45aec9ec862b",
+        "Qfplib": "3fdd45aec9ec862b"
+      },
+      "instructions": {
+        "parent": 1420,
+        "control": 1420,
+        "candidate": 1300,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdf800000000000",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fdd45aec9ec862b",
+      "outputs": {
+        "parent": "3fdd45aec9ec862b",
+        "control": "3fdd45aec9ec862b",
+        "candidate": "3fdd45aec9ec862b",
+        "Qfplib": "3fdd45aec9ec862b"
+      },
+      "instructions": {
+        "parent": 1598,
+        "control": 1598,
+        "candidate": 1478,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdf800000000001",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fdd45aec9ec862c",
+      "outputs": {
+        "parent": "3fdd45aec9ec862c",
+        "control": "3fdd45aec9ec862c",
+        "candidate": "3fdd45aec9ec862c",
+        "Qfplib": "3fdd45aec9ec862c"
+      },
+      "instructions": {
+        "parent": 1411,
+        "control": 1411,
+        "candidate": 1301,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fdf800000000001",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fdd45aec9ec862c",
+      "outputs": {
+        "parent": "3fdd45aec9ec862c",
+        "control": "3fdd45aec9ec862c",
+        "candidate": "3fdd45aec9ec862c",
+        "Qfplib": "3fdd45aec9ec862c"
+      },
+      "instructions": {
+        "parent": 1589,
+        "control": 1589,
+        "candidate": 1479,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fefbfffffffffff",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fe901db3eeef187",
+      "outputs": {
+        "parent": "3fe901db3eeef187",
+        "control": "3fe901db3eeef187",
+        "candidate": "3fe901db3eeef187",
+        "Qfplib": "3fe901db3eeef187"
+      },
+      "instructions": {
+        "parent": 1408,
+        "control": 1408,
+        "candidate": 1298,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fefbfffffffffff",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fe901db3eeef187",
+      "outputs": {
+        "parent": "3fe901db3eeef187",
+        "control": "3fe901db3eeef187",
+        "candidate": "3fe901db3eeef187",
+        "Qfplib": "3fe901db3eeef187"
+      },
+      "instructions": {
+        "parent": 1570,
+        "control": 1570,
+        "candidate": 1460,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fefc00000000000",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fe901db3eeef187",
+      "outputs": {
+        "parent": "3fe901db3eeef187",
+        "control": "3fe901db3eeef187",
+        "candidate": "3fe901db3eeef187",
+        "Qfplib": "3fe901db3eeef187"
+      },
+      "instructions": {
+        "parent": 1427,
+        "control": 1427,
+        "candidate": 1307,
+        "Qfplib": 1787
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fefc00000000000",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fe901db3eeef187",
+      "outputs": {
+        "parent": "3fe901db3eeef187",
+        "control": "3fe901db3eeef187",
+        "candidate": "3fe901db3eeef187",
+        "Qfplib": "3fe901db3eeef187"
+      },
+      "instructions": {
+        "parent": 1581,
+        "control": 1581,
+        "candidate": 1461,
+        "Qfplib": 1787
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fefc00000000001",
+      "group": "selected-table-geometry",
+      "SIO": "READY",
+      "expected": "3fe901db3eeef188",
+      "outputs": {
+        "parent": "3fe901db3eeef188",
+        "control": "3fe901db3eeef188",
+        "candidate": "3fe901db3eeef188",
+        "Qfplib": "3fe901db3eeef188"
+      },
+      "instructions": {
+        "parent": 1412,
+        "control": 1412,
+        "candidate": 1302,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fefc00000000001",
+      "group": "selected-table-geometry",
+      "SIO": "DIRTY",
+      "expected": "3fe901db3eeef188",
+      "outputs": {
+        "parent": "3fe901db3eeef188",
+        "control": "3fe901db3eeef188",
+        "candidate": "3fe901db3eeef188",
+        "Qfplib": "3fe901db3eeef188"
+      },
+      "instructions": {
+        "parent": 1566,
+        "control": 1566,
+        "candidate": 1456,
+        "Qfplib": 1786
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fc0c736215c62ae",
+      "group": "directional-region-neighbours",
+      "SIO": "READY",
+      "expected": "3fc0aedcb42699e2",
+      "outputs": {
+        "parent": "3fc0aedcb42699e2",
+        "control": "3fc0aedcb42699e2",
+        "candidate": "3fc0aedcb42699e2",
+        "Qfplib": "3fc0aedcb42699e2"
+      },
+      "instructions": {
+        "parent": 1410,
+        "control": 1410,
+        "candidate": 1290,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fc0c736215c62ae",
+      "group": "directional-region-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fc0aedcb42699e2",
+      "outputs": {
+        "parent": "3fc0aedcb42699e2",
+        "control": "3fc0aedcb42699e2",
+        "candidate": "3fc0aedcb42699e2",
+        "Qfplib": "3fc0aedcb42699e2"
+      },
+      "instructions": {
+        "parent": 1596,
+        "control": 1596,
+        "candidate": 1476,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fc0c736215c62af",
+      "group": "directional-region-neighbours",
+      "SIO": "READY",
+      "expected": "3fc0aedcb42699e3",
+      "outputs": {
+        "parent": "3fc0aedcb42699e3",
+        "control": "3fc0aedcb42699e3",
+        "candidate": "3fc0aedcb42699e3",
+        "Qfplib": "3fc0aedcb42699e3"
+      },
+      "instructions": {
+        "parent": 1416,
+        "control": 1416,
+        "candidate": 1296,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fc0c736215c62af",
+      "group": "directional-region-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fc0aedcb42699e3",
+      "outputs": {
+        "parent": "3fc0aedcb42699e3",
+        "control": "3fc0aedcb42699e3",
+        "candidate": "3fc0aedcb42699e3",
+        "Qfplib": "3fc0aedcb42699e3"
+      },
+      "instructions": {
+        "parent": 1602,
+        "control": 1602,
+        "candidate": 1482,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fc0c736215c62b0",
+      "group": "directional-region-neighbours",
+      "SIO": "READY",
+      "expected": "3fc0aedcb42699e4",
+      "outputs": {
+        "parent": "3fc0aedcb42699e4",
+        "control": "3fc0aedcb42699e4",
+        "candidate": "3fc0aedcb42699e4",
+        "Qfplib": "3fc0aedcb42699e4"
+      },
+      "instructions": {
+        "parent": 1416,
+        "control": 1416,
+        "candidate": 1296,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fc0c736215c62b0",
+      "group": "directional-region-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fc0aedcb42699e4",
+      "outputs": {
+        "parent": "3fc0aedcb42699e4",
+        "control": "3fc0aedcb42699e4",
+        "candidate": "3fc0aedcb42699e4",
+        "Qfplib": "3fc0aedcb42699e4"
+      },
+      "instructions": {
+        "parent": 1602,
+        "control": 1602,
+        "candidate": 1482,
+        "Qfplib": 1795
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fd011011011010f",
+      "group": "directional-region-neighbours",
+      "SIO": "READY",
+      "expected": "3fcf7b75f881d637",
+      "outputs": {
+        "parent": "3fcf7b75f881d637",
+        "control": "3fcf7b75f881d637",
+        "candidate": "3fcf7b75f881d637",
+        "Qfplib": "3fcf7b75f881d637"
+      },
+      "instructions": {
+        "parent": 1413,
+        "control": 1413,
+        "candidate": 1292,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fd011011011010f",
+      "group": "directional-region-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fcf7b75f881d637",
+      "outputs": {
+        "parent": "3fcf7b75f881d637",
+        "control": "3fcf7b75f881d637",
+        "candidate": "3fcf7b75f881d637",
+        "Qfplib": "3fcf7b75f881d637"
+      },
+      "instructions": {
+        "parent": 1591,
+        "control": 1591,
+        "candidate": 1470,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fd0110110110110",
+      "group": "directional-region-neighbours",
+      "SIO": "READY",
+      "expected": "3fcf7b75f881d639",
+      "outputs": {
+        "parent": "3fcf7b75f881d639",
+        "control": "3fcf7b75f881d639",
+        "candidate": "3fcf7b75f881d639",
+        "Qfplib": "3fcf7b75f881d639"
+      },
+      "instructions": {
+        "parent": 1404,
+        "control": 1404,
+        "candidate": 1293,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fd0110110110110",
+      "group": "directional-region-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fcf7b75f881d639",
+      "outputs": {
+        "parent": "3fcf7b75f881d639",
+        "control": "3fcf7b75f881d639",
+        "candidate": "3fcf7b75f881d639",
+        "Qfplib": "3fcf7b75f881d639"
+      },
+      "instructions": {
+        "parent": 1582,
+        "control": 1582,
+        "candidate": 1471,
+        "Qfplib": 1791
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fd0110110110111",
+      "group": "directional-region-neighbours",
+      "SIO": "READY",
+      "expected": "3fcf7b75f881d63b",
+      "outputs": {
+        "parent": "3fcf7b75f881d63b",
+        "control": "3fcf7b75f881d63b",
+        "candidate": "3fcf7b75f881d63b",
+        "Qfplib": "3fcf7b75f881d63b"
+      },
+      "instructions": {
+        "parent": 1416,
+        "control": 1416,
+        "candidate": 1305,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fd0110110110111",
+      "group": "directional-region-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fcf7b75f881d63b",
+      "outputs": {
+        "parent": "3fcf7b75f881d63b",
+        "control": "3fcf7b75f881d63b",
+        "candidate": "3fcf7b75f881d63b",
+        "Qfplib": "3fcf7b75f881d63b"
+      },
+      "instructions": {
+        "parent": 1594,
+        "control": 1594,
+        "candidate": 1483,
+        "Qfplib": 1790
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe028140a050280",
+      "group": "directional-region-neighbours",
+      "SIO": "READY",
+      "expected": "3fddec66f00c72c5",
+      "outputs": {
+        "parent": "3fddec66f00c72c5",
+        "control": "3fddec66f00c72c5",
+        "candidate": "3fddec66f00c72c5",
+        "Qfplib": "3fddec66f00c72c5"
+      },
+      "instructions": {
+        "parent": 1421,
+        "control": 1421,
+        "candidate": 1310,
+        "Qfplib": 1789
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe028140a050280",
+      "group": "directional-region-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fddec66f00c72c5",
+      "outputs": {
+        "parent": "3fddec66f00c72c5",
+        "control": "3fddec66f00c72c5",
+        "candidate": "3fddec66f00c72c5",
+        "Qfplib": "3fddec66f00c72c5"
+      },
+      "instructions": {
+        "parent": 1599,
+        "control": 1599,
+        "candidate": 1488,
+        "Qfplib": 1789
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe028140a050281",
+      "group": "directional-region-neighbours",
+      "SIO": "READY",
+      "expected": "3fddec66f00c72c6",
+      "outputs": {
+        "parent": "3fddec66f00c72c6",
+        "control": "3fddec66f00c72c6",
+        "candidate": "3fddec66f00c72c6",
+        "Qfplib": "3fddec66f00c72c6"
+      },
+      "instructions": {
+        "parent": 1424,
+        "control": 1424,
+        "candidate": 1303,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe028140a050281",
+      "group": "directional-region-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fddec66f00c72c6",
+      "outputs": {
+        "parent": "3fddec66f00c72c6",
+        "control": "3fddec66f00c72c6",
+        "candidate": "3fddec66f00c72c6",
+        "Qfplib": "3fddec66f00c72c6"
+      },
+      "instructions": {
+        "parent": 1602,
+        "control": 1602,
+        "candidate": 1481,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe028140a050282",
+      "group": "directional-region-neighbours",
+      "SIO": "READY",
+      "expected": "3fddec66f00c72c8",
+      "outputs": {
+        "parent": "3fddec66f00c72c8",
+        "control": "3fddec66f00c72c8",
+        "candidate": "3fddec66f00c72c8",
+        "Qfplib": "3fddec66f00c72c8"
+      },
+      "instructions": {
+        "parent": 1424,
+        "control": 1424,
+        "candidate": 1308,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fe028140a050282",
+      "group": "directional-region-neighbours",
+      "SIO": "DIRTY",
+      "expected": "3fddec66f00c72c8",
+      "outputs": {
+        "parent": "3fddec66f00c72c8",
+        "control": "3fddec66f00c72c8",
+        "candidate": "3fddec66f00c72c8",
+        "Qfplib": "3fddec66f00c72c8"
+      },
+      "instructions": {
+        "parent": 1602,
+        "control": 1602,
+        "candidate": 1486,
+        "Qfplib": 1788
+      },
+      "stack_bytes": {
+        "parent": 352,
+        "control": 352,
+        "candidate": 344,
+        "Qfplib": 76
+      },
+      "CORE_entries": 0
+    }
+  ]
+}

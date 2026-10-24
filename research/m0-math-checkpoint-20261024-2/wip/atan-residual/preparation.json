@@ -1,0 +1,11 @@
+{
+  "status": "PREPARED_PRIVATE_ATAN_RESIDUAL_REPAIR",
+  "parent_result_sha256": "82dbe45fe869c8984cc94b38be5003d633e8232c16bbf5834e0cb2760e5fe3a9",
+  "parent_source_sha256": "502deb2e33c2736eb7d7f672e250a61c716e616362a8574ad1367620bc7ae541",
+  "source_sha256": "5cd69c3ee3b85359b7d658d8e8ac07070a439b2f4213199c82d6a19fc8f239dd",
+  "new_tables": 0,
+  "new_global_RAM": 0,
+  "canonical_or_frozen_changed": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

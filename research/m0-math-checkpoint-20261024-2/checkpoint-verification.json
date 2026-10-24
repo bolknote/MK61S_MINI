@@ -1,0 +1,28 @@
+{
+  "status": "PASS_INTERMEDIATE_RESEARCH_CHECKPOINT",
+  "archive_files": 112,
+  "original_artifacts": 109,
+  "preceding_checkpoint_files": 246,
+  "independent_receipts": 4,
+  "local_originals_checked": true,
+  "prototype_qualified": false,
+  "rebuilt_ELF_hashes": {
+    "int64-to-double": "a905d4bc8a1e1ac48e9164bbf8bdbb8086dec72eeea409291651d3adff0d8f90",
+    "sqrt-cold": "2662c539807c1cdbe9c728154ea0d83262c99e974729a9dbfb9ff847c1ee36d1",
+    "atan-packing": "93830c121ef76ccc3278233bd54b4ed2a5f2a4313a466d8854115c097f02f946",
+    "atan-residual": "53350cac33f77cf085cd2091e82de0f46c49b880b852ace58a12e11c597451f0"
+  },
+  "replay": {
+    "fresh_conversion_calls": 30222,
+    "fresh_sqrt_calls": 15136,
+    "profiled_counts_reproduced": 45358,
+    "fresh_residual_helper_calls": 30408,
+    "residual_transcript_sha256": "be47627f5f6d533d6077084427f4626e0d603df4f14fdff56f30feb950a0bd4e",
+    "fresh_candidate_ARM_calls": 75766,
+    "MPFR_version": "4.2.2",
+    "firmware_or_ROM_mapped": false,
+    "public_atan_or_Qfplib_replayed": false,
+    "whole_library_replayed": false,
+    "hardware_accessed": false
+  }
+}

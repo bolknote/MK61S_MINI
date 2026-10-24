@@ -1,0 +1,50 @@
+{
+  "status": "BUILT_PRIVATE_SQRT_COLD_PARTITION_NO_FIRMWARE",
+  "source_files": {
+    "native_eabi_m0.S": "11671642973ca74fe4d1435a41d846bb96f3c426cea918e17fd489f6909fa33c",
+    "native_eabi_m0_sqrt_special.S.inc": "5a18d6553f4987a5ae173dacd02440165295ec66ebba896aa27a1644ebea4552"
+  },
+  "candidate_ELF_sha256": "2662c539807c1cdbe9c728154ea0d83262c99e974729a9dbfb9ff847c1ee36d1",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-20261024/native_eabi_m0.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-20261024/main.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-20261024/native_eabi_m0_rp2040.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-20261024/rp.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-20261024/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-20261024/main.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-20261024/rp.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-sqrt-cold-original-goal-20261024/candidate.elf"
+    ]
+  ],
+  "canonical_or_frozen_changed": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

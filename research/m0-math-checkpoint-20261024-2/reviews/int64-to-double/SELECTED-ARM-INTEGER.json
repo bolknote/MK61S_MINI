@@ -1,0 +1,4309 @@
+{
+  "status": "PASS_SELECTED_BARE_ARM_SIGNED64_AND_INTEGER_RNE",
+  "cases": 266,
+  "ARM_calls": 798,
+  "groups": {
+    "old16": 16,
+    "INT64-endpoints-and-word-boundary": 13,
+    "complement-borrow-and-high-partition": 24,
+    "selected-every-bit-length": 117,
+    "RNE-parity-midpoint-and-binade-carry": 66,
+    "unsigned64-unchanged": 10,
+    "32bit-unchanged-with-upper-register-poison": 20
+  },
+  "rows": [
+    {
+      "operation": "l2d",
+      "x": "fffffffffffc8d94",
+      "group": "old16",
+      "expected": "c10b936000000000",
+      "outputs": {
+        "candidate": "c10b936000000000",
+        "parent": "c10b936000000000",
+        "Qfplib": "c10b936000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 46,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffcf03f",
+      "group": "old16",
+      "expected": "c1087e0800000000",
+      "outputs": {
+        "candidate": "c1087e0800000000",
+        "parent": "c1087e0800000000",
+        "Qfplib": "c1087e0800000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 46,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffd68ad",
+      "group": "old16",
+      "expected": "c104ba9800000000",
+      "outputs": {
+        "candidate": "c104ba9800000000",
+        "parent": "c104ba9800000000",
+        "Qfplib": "c104ba9800000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 46,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffde8c6",
+      "group": "old16",
+      "expected": "c100b9d000000000",
+      "outputs": {
+        "candidate": "c100b9d000000000",
+        "parent": "c100b9d000000000",
+        "Qfplib": "c100b9d000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 46,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffe07886",
+      "group": "old16",
+      "expected": "c13f877a00000000",
+      "outputs": {
+        "candidate": "c13f877a00000000",
+        "parent": "c13f877a00000000",
+        "Qfplib": "c13f877a00000000"
+      },
+      "instructions": {
+        "candidate": 23,
+        "parent": 28,
+        "Qfplib": 26
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffe3b9e3",
+      "group": "old16",
+      "expected": "c13c461d00000000",
+      "outputs": {
+        "candidate": "c13c461d00000000",
+        "parent": "c13c461d00000000",
+        "Qfplib": "c13c461d00000000"
+      },
+      "instructions": {
+        "candidate": 23,
+        "parent": 28,
+        "Qfplib": 26
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffe58386",
+      "group": "old16",
+      "expected": "c13a7c7a00000000",
+      "outputs": {
+        "candidate": "c13a7c7a00000000",
+        "parent": "c13a7c7a00000000",
+        "Qfplib": "c13a7c7a00000000"
+      },
+      "instructions": {
+        "candidate": 23,
+        "parent": 28,
+        "Qfplib": 26
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffec92ca",
+      "group": "old16",
+      "expected": "c1336d3600000000",
+      "outputs": {
+        "candidate": "c1336d3600000000",
+        "parent": "c1336d3600000000",
+        "Qfplib": "c1336d3600000000"
+      },
+      "instructions": {
+        "candidate": 23,
+        "parent": 28,
+        "Qfplib": 26
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffff37936",
+      "group": "old16",
+      "expected": "c1290d9400000000",
+      "outputs": {
+        "candidate": "c1290d9400000000",
+        "parent": "c1290d9400000000",
+        "Qfplib": "c1290d9400000000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 33,
+        "Qfplib": 31
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffff4c525",
+      "group": "old16",
+      "expected": "c12675b600000000",
+      "outputs": {
+        "candidate": "c12675b600000000",
+        "parent": "c12675b600000000",
+        "Qfplib": "c12675b600000000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 33,
+        "Qfplib": 31
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffff6e69e",
+      "group": "old16",
+      "expected": "c12232c400000000",
+      "outputs": {
+        "candidate": "c12232c400000000",
+        "parent": "c12232c400000000",
+        "Qfplib": "c12232c400000000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 33,
+        "Qfplib": 31
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffff79d4d",
+      "group": "old16",
+      "expected": "c120c56600000000",
+      "outputs": {
+        "candidate": "c120c56600000000",
+        "parent": "c120c56600000000",
+        "Qfplib": "c120c56600000000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 33,
+        "Qfplib": 31
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffff7fb8e",
+      "group": "old16",
+      "expected": "c12008e400000000",
+      "outputs": {
+        "candidate": "c12008e400000000",
+        "parent": "c12008e400000000",
+        "Qfplib": "c12008e400000000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 33,
+        "Qfplib": 31
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffe04f4",
+      "group": "old16",
+      "expected": "c0ffb0c000000000",
+      "outputs": {
+        "candidate": "c0ffb0c000000000",
+        "parent": "c0ffb0c000000000",
+        "Qfplib": "c0ffb0c000000000"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 48,
+        "Qfplib": 46
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffeb927",
+      "group": "old16",
+      "expected": "c0f46d9000000000",
+      "outputs": {
+        "candidate": "c0f46d9000000000",
+        "parent": "c0f46d9000000000",
+        "Qfplib": "c0f46d9000000000"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 48,
+        "Qfplib": 46
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffeca43",
+      "group": "old16",
+      "expected": "c0f35bd000000000",
+      "outputs": {
+        "candidate": "c0f35bd000000000",
+        "parent": "c0f35bd000000000",
+        "Qfplib": "c0f35bd000000000"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 48,
+        "Qfplib": 46
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "8000000000000000",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "c3e0000000000000",
+      "outputs": {
+        "candidate": "c3e0000000000000",
+        "parent": "c3e0000000000000",
+        "Qfplib": "c3e0000000000000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 29,
+        "Qfplib": 31
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "8000000000000001",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "c3e0000000000000",
+      "outputs": {
+        "candidate": "c3e0000000000000",
+        "parent": "c3e0000000000000",
+        "Qfplib": "c3e0000000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "7fffffffffffffff",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "43e0000000000000",
+      "outputs": {
+        "candidate": "43e0000000000000",
+        "parent": "43e0000000000000",
+        "Qfplib": "43e0000000000000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "7ffffffffffffffe",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "43e0000000000000",
+      "outputs": {
+        "candidate": "43e0000000000000",
+        "parent": "43e0000000000000",
+        "Qfplib": "43e0000000000000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000000000000",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 9,
+        "parent": 9,
+        "Qfplib": 14
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffffffff",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "bff0000000000000",
+      "outputs": {
+        "candidate": "bff0000000000000",
+        "parent": "bff0000000000000",
+        "Qfplib": "bff0000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 50,
+        "Qfplib": 126
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000000000001",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "3ff0000000000000",
+      "outputs": {
+        "candidate": "3ff0000000000000",
+        "parent": "3ff0000000000000",
+        "Qfplib": "3ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 44,
+        "Qfplib": 126
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffff00000000",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "c1f0000000000000",
+      "outputs": {
+        "candidate": "c1f0000000000000",
+        "parent": "c1f0000000000000",
+        "Qfplib": "c1f0000000000000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 56,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffff00000001",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "c1efffffffe00000",
+      "outputs": {
+        "candidate": "c1efffffffe00000",
+        "parent": "c1efffffffe00000",
+        "Qfplib": "c1efffffffe00000"
+      },
+      "instructions": {
+        "candidate": 26,
+        "parent": 31,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffeffffffff",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "c1f0000000100000",
+      "outputs": {
+        "candidate": "c1f0000000100000",
+        "parent": "c1f0000000100000",
+        "Qfplib": "c1f0000000100000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 56,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000000ffffffff",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "41efffffffe00000",
+      "outputs": {
+        "candidate": "41efffffffe00000",
+        "parent": "41efffffffe00000",
+        "Qfplib": "41efffffffe00000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000100000000",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "41f0000000000000",
+      "outputs": {
+        "candidate": "41f0000000000000",
+        "parent": "41f0000000000000",
+        "Qfplib": "41f0000000000000"
+      },
+      "instructions": {
+        "candidate": 51,
+        "parent": 51,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000100000001",
+      "group": "INT64-endpoints-and-word-boundary",
+      "expected": "41f0000000100000",
+      "outputs": {
+        "candidate": "41f0000000100000",
+        "parent": "41f0000000100000",
+        "Qfplib": "41f0000000100000"
+      },
+      "instructions": {
+        "candidate": 51,
+        "parent": 51,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000000000002",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "4000000000000000",
+      "outputs": {
+        "candidate": "4000000000000000",
+        "parent": "4000000000000000",
+        "Qfplib": "4000000000000000"
+      },
+      "instructions": {
+        "candidate": 42,
+        "parent": 42,
+        "Qfplib": 121
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000007fffffff",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "41dfffffffc00000",
+      "outputs": {
+        "candidate": "41dfffffffc00000",
+        "parent": "41dfffffffc00000",
+        "Qfplib": "41dfffffffc00000"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 39
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000080000000",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "41e0000000000000",
+      "outputs": {
+        "candidate": "41e0000000000000",
+        "parent": "41e0000000000000",
+        "Qfplib": "41e0000000000000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000100000002",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "41f0000000200000",
+      "outputs": {
+        "candidate": "41f0000000200000",
+        "parent": "41f0000000200000",
+        "Qfplib": "41f0000000200000"
+      },
+      "instructions": {
+        "candidate": 51,
+        "parent": 51,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000017fffffff",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "41f7fffffff00000",
+      "outputs": {
+        "candidate": "41f7fffffff00000",
+        "parent": "41f7fffffff00000",
+        "Qfplib": "41f7fffffff00000"
+      },
+      "instructions": {
+        "candidate": 51,
+        "parent": 51,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000180000000",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "41f8000000000000",
+      "outputs": {
+        "candidate": "41f8000000000000",
+        "parent": "41f8000000000000",
+        "Qfplib": "41f8000000000000"
+      },
+      "instructions": {
+        "candidate": 51,
+        "parent": 51,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000001ffffffff",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "41fffffffff00000",
+      "outputs": {
+        "candidate": "41fffffffff00000",
+        "parent": "41fffffffff00000",
+        "Qfplib": "41fffffffff00000"
+      },
+      "instructions": {
+        "candidate": 51,
+        "parent": 51,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "7fffffff00000000",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "43dfffffffc00000",
+      "outputs": {
+        "candidate": "43dfffffffc00000",
+        "parent": "43dfffffffc00000",
+        "Qfplib": "43dfffffffc00000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "7fffffff00000001",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "43dfffffffc00000",
+      "outputs": {
+        "candidate": "43dfffffffc00000",
+        "parent": "43dfffffffc00000",
+        "Qfplib": "43dfffffffc00000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "7fffffff00000002",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "43dfffffffc00000",
+      "outputs": {
+        "candidate": "43dfffffffc00000",
+        "parent": "43dfffffffc00000",
+        "Qfplib": "43dfffffffc00000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "7fffffff7fffffff",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "43dfffffffe00000",
+      "outputs": {
+        "candidate": "43dfffffffe00000",
+        "parent": "43dfffffffe00000",
+        "Qfplib": "43dfffffffe00000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "7fffffff80000000",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "43dfffffffe00000",
+      "outputs": {
+        "candidate": "43dfffffffe00000",
+        "parent": "43dfffffffe00000",
+        "Qfplib": "43dfffffffe00000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "8000000000000002",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c3e0000000000000",
+      "outputs": {
+        "candidate": "c3e0000000000000",
+        "parent": "c3e0000000000000",
+        "Qfplib": "c3e0000000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "800000007fffffff",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c3dfffffffe00000",
+      "outputs": {
+        "candidate": "c3dfffffffe00000",
+        "parent": "c3dfffffffe00000",
+        "Qfplib": "c3dfffffffe00000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "8000000080000000",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c3dfffffffe00000",
+      "outputs": {
+        "candidate": "c3dfffffffe00000",
+        "parent": "c3dfffffffe00000",
+        "Qfplib": "c3dfffffffe00000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "80000000ffffffff",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c3dfffffffc00000",
+      "outputs": {
+        "candidate": "c3dfffffffc00000",
+        "parent": "c3dfffffffc00000",
+        "Qfplib": "c3dfffffffc00000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffe00000000",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c200000000000000",
+      "outputs": {
+        "candidate": "c200000000000000",
+        "parent": "c200000000000000",
+        "Qfplib": "c200000000000000"
+      },
+      "instructions": {
+        "candidate": 52,
+        "parent": 53,
+        "Qfplib": 117
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffe00000001",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c1fffffffff00000",
+      "outputs": {
+        "candidate": "c1fffffffff00000",
+        "parent": "c1fffffffff00000",
+        "Qfplib": "c1fffffffff00000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 56,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffe00000002",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c1ffffffffe00000",
+      "outputs": {
+        "candidate": "c1ffffffffe00000",
+        "parent": "c1ffffffffe00000",
+        "Qfplib": "c1ffffffffe00000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 56,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffe7fffffff",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c1f8000000100000",
+      "outputs": {
+        "candidate": "c1f8000000100000",
+        "parent": "c1f8000000100000",
+        "Qfplib": "c1f8000000100000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 56,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffe80000000",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c1f8000000000000",
+      "outputs": {
+        "candidate": "c1f8000000000000",
+        "parent": "c1f8000000000000",
+        "Qfplib": "c1f8000000000000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 56,
+        "Qfplib": 122
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffff00000002",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c1efffffffc00000",
+      "outputs": {
+        "candidate": "c1efffffffc00000",
+        "parent": "c1efffffffc00000",
+        "Qfplib": "c1efffffffc00000"
+      },
+      "instructions": {
+        "candidate": 26,
+        "parent": 31,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffff7fffffff",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c1e0000000200000",
+      "outputs": {
+        "candidate": "c1e0000000200000",
+        "parent": "c1e0000000200000",
+        "Qfplib": "c1e0000000200000"
+      },
+      "instructions": {
+        "candidate": 26,
+        "parent": 31,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffff80000000",
+      "group": "complement-borrow-and-high-partition",
+      "expected": "c1e0000000000000",
+      "outputs": {
+        "candidate": "c1e0000000000000",
+        "parent": "c1e0000000000000",
+        "Qfplib": "c1e0000000000000"
+      },
+      "instructions": {
+        "candidate": 26,
+        "parent": 31,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000000000003",
+      "group": "selected-every-bit-length",
+      "expected": "4008000000000000",
+      "outputs": {
+        "candidate": "4008000000000000",
+        "parent": "4008000000000000",
+        "Qfplib": "4008000000000000"
+      },
+      "instructions": {
+        "candidate": 42,
+        "parent": 42,
+        "Qfplib": 121
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffffffd",
+      "group": "selected-every-bit-length",
+      "expected": "c008000000000000",
+      "outputs": {
+        "candidate": "c008000000000000",
+        "parent": "c008000000000000",
+        "Qfplib": "c008000000000000"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 48,
+        "Qfplib": 121
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000000000007",
+      "group": "selected-every-bit-length",
+      "expected": "401c000000000000",
+      "outputs": {
+        "candidate": "401c000000000000",
+        "parent": "401c000000000000",
+        "Qfplib": "401c000000000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 31,
+        "Qfplib": 116
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffffff9",
+      "group": "selected-every-bit-length",
+      "expected": "c01c000000000000",
+      "outputs": {
+        "candidate": "c01c000000000000",
+        "parent": "c01c000000000000",
+        "Qfplib": "c01c000000000000"
+      },
+      "instructions": {
+        "candidate": 32,
+        "parent": 37,
+        "Qfplib": 116
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000000000000f",
+      "group": "selected-every-bit-length",
+      "expected": "402e000000000000",
+      "outputs": {
+        "candidate": "402e000000000000",
+        "parent": "402e000000000000",
+        "Qfplib": "402e000000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 29,
+        "Qfplib": 111
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffffff1",
+      "group": "selected-every-bit-length",
+      "expected": "c02e000000000000",
+      "outputs": {
+        "candidate": "c02e000000000000",
+        "parent": "c02e000000000000",
+        "Qfplib": "c02e000000000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 35,
+        "Qfplib": 111
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000000000001f",
+      "group": "selected-every-bit-length",
+      "expected": "403f000000000000",
+      "outputs": {
+        "candidate": "403f000000000000",
+        "parent": "403f000000000000",
+        "Qfplib": "403f000000000000"
+      },
+      "instructions": {
+        "candidate": 24,
+        "parent": 24,
+        "Qfplib": 106
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffffffe1",
+      "group": "selected-every-bit-length",
+      "expected": "c03f000000000000",
+      "outputs": {
+        "candidate": "c03f000000000000",
+        "parent": "c03f000000000000",
+        "Qfplib": "c03f000000000000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 30,
+        "Qfplib": 106
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000000000003f",
+      "group": "selected-every-bit-length",
+      "expected": "404f800000000000",
+      "outputs": {
+        "candidate": "404f800000000000",
+        "parent": "404f800000000000",
+        "Qfplib": "404f800000000000"
+      },
+      "instructions": {
+        "candidate": 36,
+        "parent": 36,
+        "Qfplib": 101
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffffffc1",
+      "group": "selected-every-bit-length",
+      "expected": "c04f800000000000",
+      "outputs": {
+        "candidate": "c04f800000000000",
+        "parent": "c04f800000000000",
+        "Qfplib": "c04f800000000000"
+      },
+      "instructions": {
+        "candidate": 37,
+        "parent": 42,
+        "Qfplib": 101
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000000000007f",
+      "group": "selected-every-bit-length",
+      "expected": "405fc00000000000",
+      "outputs": {
+        "candidate": "405fc00000000000",
+        "parent": "405fc00000000000",
+        "Qfplib": "405fc00000000000"
+      },
+      "instructions": {
+        "candidate": 36,
+        "parent": 36,
+        "Qfplib": 96
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffffff81",
+      "group": "selected-every-bit-length",
+      "expected": "c05fc00000000000",
+      "outputs": {
+        "candidate": "c05fc00000000000",
+        "parent": "c05fc00000000000",
+        "Qfplib": "c05fc00000000000"
+      },
+      "instructions": {
+        "candidate": 37,
+        "parent": 42,
+        "Qfplib": 96
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000000000000ff",
+      "group": "selected-every-bit-length",
+      "expected": "406fe00000000000",
+      "outputs": {
+        "candidate": "406fe00000000000",
+        "parent": "406fe00000000000",
+        "Qfplib": "406fe00000000000"
+      },
+      "instructions": {
+        "candidate": 34,
+        "parent": 34,
+        "Qfplib": 91
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffffff01",
+      "group": "selected-every-bit-length",
+      "expected": "c06fe00000000000",
+      "outputs": {
+        "candidate": "c06fe00000000000",
+        "parent": "c06fe00000000000",
+        "Qfplib": "c06fe00000000000"
+      },
+      "instructions": {
+        "candidate": 35,
+        "parent": 40,
+        "Qfplib": 91
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000000000001ff",
+      "group": "selected-every-bit-length",
+      "expected": "407ff00000000000",
+      "outputs": {
+        "candidate": "407ff00000000000",
+        "parent": "407ff00000000000",
+        "Qfplib": "407ff00000000000"
+      },
+      "instructions": {
+        "candidate": 33,
+        "parent": 33,
+        "Qfplib": 86
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffffe01",
+      "group": "selected-every-bit-length",
+      "expected": "c07ff00000000000",
+      "outputs": {
+        "candidate": "c07ff00000000000",
+        "parent": "c07ff00000000000",
+        "Qfplib": "c07ff00000000000"
+      },
+      "instructions": {
+        "candidate": 34,
+        "parent": 39,
+        "Qfplib": 86
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000000000003ff",
+      "group": "selected-every-bit-length",
+      "expected": "408ff80000000000",
+      "outputs": {
+        "candidate": "408ff80000000000",
+        "parent": "408ff80000000000",
+        "Qfplib": "408ff80000000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 31,
+        "Qfplib": 81
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffffc01",
+      "group": "selected-every-bit-length",
+      "expected": "c08ff80000000000",
+      "outputs": {
+        "candidate": "c08ff80000000000",
+        "parent": "c08ff80000000000",
+        "Qfplib": "c08ff80000000000"
+      },
+      "instructions": {
+        "candidate": 32,
+        "parent": 37,
+        "Qfplib": 81
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000000000007ff",
+      "group": "selected-every-bit-length",
+      "expected": "409ffc0000000000",
+      "outputs": {
+        "candidate": "409ffc0000000000",
+        "parent": "409ffc0000000000",
+        "Qfplib": "409ffc0000000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 31,
+        "Qfplib": 76
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffff801",
+      "group": "selected-every-bit-length",
+      "expected": "c09ffc0000000000",
+      "outputs": {
+        "candidate": "c09ffc0000000000",
+        "parent": "c09ffc0000000000",
+        "Qfplib": "c09ffc0000000000"
+      },
+      "instructions": {
+        "candidate": 32,
+        "parent": 37,
+        "Qfplib": 76
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000000000fff",
+      "group": "selected-every-bit-length",
+      "expected": "40affe0000000000",
+      "outputs": {
+        "candidate": "40affe0000000000",
+        "parent": "40affe0000000000",
+        "Qfplib": "40affe0000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 29,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffff001",
+      "group": "selected-every-bit-length",
+      "expected": "c0affe0000000000",
+      "outputs": {
+        "candidate": "c0affe0000000000",
+        "parent": "c0affe0000000000",
+        "Qfplib": "c0affe0000000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 35,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000000001fff",
+      "group": "selected-every-bit-length",
+      "expected": "40bfff0000000000",
+      "outputs": {
+        "candidate": "40bfff0000000000",
+        "parent": "40bfff0000000000",
+        "Qfplib": "40bfff0000000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 31,
+        "Qfplib": 66
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffffe001",
+      "group": "selected-every-bit-length",
+      "expected": "c0bfff0000000000",
+      "outputs": {
+        "candidate": "c0bfff0000000000",
+        "parent": "c0bfff0000000000",
+        "Qfplib": "c0bfff0000000000"
+      },
+      "instructions": {
+        "candidate": 32,
+        "parent": 37,
+        "Qfplib": 66
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000000003fff",
+      "group": "selected-every-bit-length",
+      "expected": "40cfff8000000000",
+      "outputs": {
+        "candidate": "40cfff8000000000",
+        "parent": "40cfff8000000000",
+        "Qfplib": "40cfff8000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 29,
+        "Qfplib": 61
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffffc001",
+      "group": "selected-every-bit-length",
+      "expected": "c0cfff8000000000",
+      "outputs": {
+        "candidate": "c0cfff8000000000",
+        "parent": "c0cfff8000000000",
+        "Qfplib": "c0cfff8000000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 35,
+        "Qfplib": 61
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000000007fff",
+      "group": "selected-every-bit-length",
+      "expected": "40dfffc000000000",
+      "outputs": {
+        "candidate": "40dfffc000000000",
+        "parent": "40dfffc000000000",
+        "Qfplib": "40dfffc000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 29,
+        "Qfplib": 56
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffff8001",
+      "group": "selected-every-bit-length",
+      "expected": "c0dfffc000000000",
+      "outputs": {
+        "candidate": "c0dfffc000000000",
+        "parent": "c0dfffc000000000",
+        "Qfplib": "c0dfffc000000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 35,
+        "Qfplib": 56
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000000000ffff",
+      "group": "selected-every-bit-length",
+      "expected": "40efffe000000000",
+      "outputs": {
+        "candidate": "40efffe000000000",
+        "parent": "40efffe000000000",
+        "Qfplib": "40efffe000000000"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 51
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffff0001",
+      "group": "selected-every-bit-length",
+      "expected": "c0efffe000000000",
+      "outputs": {
+        "candidate": "c0efffe000000000",
+        "parent": "c0efffe000000000",
+        "Qfplib": "c0efffe000000000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 33,
+        "Qfplib": 51
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000000001ffff",
+      "group": "selected-every-bit-length",
+      "expected": "40fffff000000000",
+      "outputs": {
+        "candidate": "40fffff000000000",
+        "parent": "40fffff000000000",
+        "Qfplib": "40fffff000000000"
+      },
+      "instructions": {
+        "candidate": 42,
+        "parent": 42,
+        "Qfplib": 46
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffe0001",
+      "group": "selected-every-bit-length",
+      "expected": "c0fffff000000000",
+      "outputs": {
+        "candidate": "c0fffff000000000",
+        "parent": "c0fffff000000000",
+        "Qfplib": "c0fffff000000000"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 48,
+        "Qfplib": 46
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000000003ffff",
+      "group": "selected-every-bit-length",
+      "expected": "410ffff800000000",
+      "outputs": {
+        "candidate": "410ffff800000000",
+        "parent": "410ffff800000000",
+        "Qfplib": "410ffff800000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 40,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffffc0001",
+      "group": "selected-every-bit-length",
+      "expected": "c10ffff800000000",
+      "outputs": {
+        "candidate": "c10ffff800000000",
+        "parent": "c10ffff800000000",
+        "Qfplib": "c10ffff800000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 46,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000000007ffff",
+      "group": "selected-every-bit-length",
+      "expected": "411ffffc00000000",
+      "outputs": {
+        "candidate": "411ffffc00000000",
+        "parent": "411ffffc00000000",
+        "Qfplib": "411ffffc00000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 29,
+        "Qfplib": 36
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffff80001",
+      "group": "selected-every-bit-length",
+      "expected": "c11ffffc00000000",
+      "outputs": {
+        "candidate": "c11ffffc00000000",
+        "parent": "c11ffffc00000000",
+        "Qfplib": "c11ffffc00000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 35,
+        "Qfplib": 36
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000000000fffff",
+      "group": "selected-every-bit-length",
+      "expected": "412ffffe00000000",
+      "outputs": {
+        "candidate": "412ffffe00000000",
+        "parent": "412ffffe00000000",
+        "Qfplib": "412ffffe00000000"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 31
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffff00001",
+      "group": "selected-every-bit-length",
+      "expected": "c12ffffe00000000",
+      "outputs": {
+        "candidate": "c12ffffe00000000",
+        "parent": "c12ffffe00000000",
+        "Qfplib": "c12ffffe00000000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 33,
+        "Qfplib": 31
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000000001fffff",
+      "group": "selected-every-bit-length",
+      "expected": "413fffff00000000",
+      "outputs": {
+        "candidate": "413fffff00000000",
+        "parent": "413fffff00000000",
+        "Qfplib": "413fffff00000000"
+      },
+      "instructions": {
+        "candidate": 22,
+        "parent": 22,
+        "Qfplib": 26
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffe00001",
+      "group": "selected-every-bit-length",
+      "expected": "c13fffff00000000",
+      "outputs": {
+        "candidate": "c13fffff00000000",
+        "parent": "c13fffff00000000",
+        "Qfplib": "c13fffff00000000"
+      },
+      "instructions": {
+        "candidate": 23,
+        "parent": 28,
+        "Qfplib": 26
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000000003fffff",
+      "group": "selected-every-bit-length",
+      "expected": "414fffff80000000",
+      "outputs": {
+        "candidate": "414fffff80000000",
+        "parent": "414fffff80000000",
+        "Qfplib": "414fffff80000000"
+      },
+      "instructions": {
+        "candidate": 34,
+        "parent": 34,
+        "Qfplib": 75
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffffc00001",
+      "group": "selected-every-bit-length",
+      "expected": "c14fffff80000000",
+      "outputs": {
+        "candidate": "c14fffff80000000",
+        "parent": "c14fffff80000000",
+        "Qfplib": "c14fffff80000000"
+      },
+      "instructions": {
+        "candidate": 35,
+        "parent": 40,
+        "Qfplib": 75
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000000007fffff",
+      "group": "selected-every-bit-length",
+      "expected": "415fffffc0000000",
+      "outputs": {
+        "candidate": "415fffffc0000000",
+        "parent": "415fffffc0000000",
+        "Qfplib": "415fffffc0000000"
+      },
+      "instructions": {
+        "candidate": 34,
+        "parent": 34,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffff800001",
+      "group": "selected-every-bit-length",
+      "expected": "c15fffffc0000000",
+      "outputs": {
+        "candidate": "c15fffffc0000000",
+        "parent": "c15fffffc0000000",
+        "Qfplib": "c15fffffc0000000"
+      },
+      "instructions": {
+        "candidate": 35,
+        "parent": 40,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000000ffffff",
+      "group": "selected-every-bit-length",
+      "expected": "416fffffe0000000",
+      "outputs": {
+        "candidate": "416fffffe0000000",
+        "parent": "416fffffe0000000",
+        "Qfplib": "416fffffe0000000"
+      },
+      "instructions": {
+        "candidate": 32,
+        "parent": 32,
+        "Qfplib": 67
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffff000001",
+      "group": "selected-every-bit-length",
+      "expected": "c16fffffe0000000",
+      "outputs": {
+        "candidate": "c16fffffe0000000",
+        "parent": "c16fffffe0000000",
+        "Qfplib": "c16fffffe0000000"
+      },
+      "instructions": {
+        "candidate": 33,
+        "parent": 38,
+        "Qfplib": 67
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000001ffffff",
+      "group": "selected-every-bit-length",
+      "expected": "417ffffff0000000",
+      "outputs": {
+        "candidate": "417ffffff0000000",
+        "parent": "417ffffff0000000",
+        "Qfplib": "417ffffff0000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 31,
+        "Qfplib": 63
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffe000001",
+      "group": "selected-every-bit-length",
+      "expected": "c17ffffff0000000",
+      "outputs": {
+        "candidate": "c17ffffff0000000",
+        "parent": "c17ffffff0000000",
+        "Qfplib": "c17ffffff0000000"
+      },
+      "instructions": {
+        "candidate": 32,
+        "parent": 37,
+        "Qfplib": 63
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000003ffffff",
+      "group": "selected-every-bit-length",
+      "expected": "418ffffff8000000",
+      "outputs": {
+        "candidate": "418ffffff8000000",
+        "parent": "418ffffff8000000",
+        "Qfplib": "418ffffff8000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 29,
+        "Qfplib": 59
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffffc000001",
+      "group": "selected-every-bit-length",
+      "expected": "c18ffffff8000000",
+      "outputs": {
+        "candidate": "c18ffffff8000000",
+        "parent": "c18ffffff8000000",
+        "Qfplib": "c18ffffff8000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 35,
+        "Qfplib": 59
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000007ffffff",
+      "group": "selected-every-bit-length",
+      "expected": "419ffffffc000000",
+      "outputs": {
+        "candidate": "419ffffffc000000",
+        "parent": "419ffffffc000000",
+        "Qfplib": "419ffffffc000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 29,
+        "Qfplib": 55
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffff8000001",
+      "group": "selected-every-bit-length",
+      "expected": "c19ffffffc000000",
+      "outputs": {
+        "candidate": "c19ffffffc000000",
+        "parent": "c19ffffffc000000",
+        "Qfplib": "c19ffffffc000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 35,
+        "Qfplib": 55
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000000fffffff",
+      "group": "selected-every-bit-length",
+      "expected": "41affffffe000000",
+      "outputs": {
+        "candidate": "41affffffe000000",
+        "parent": "41affffffe000000",
+        "Qfplib": "41affffffe000000"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 51
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffff0000001",
+      "group": "selected-every-bit-length",
+      "expected": "c1affffffe000000",
+      "outputs": {
+        "candidate": "c1affffffe000000",
+        "parent": "c1affffffe000000",
+        "Qfplib": "c1affffffe000000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 33,
+        "Qfplib": 51
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000001fffffff",
+      "group": "selected-every-bit-length",
+      "expected": "41bfffffff000000",
+      "outputs": {
+        "candidate": "41bfffffff000000",
+        "parent": "41bfffffff000000",
+        "Qfplib": "41bfffffff000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 29,
+        "Qfplib": 47
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffe0000001",
+      "group": "selected-every-bit-length",
+      "expected": "c1bfffffff000000",
+      "outputs": {
+        "candidate": "c1bfffffff000000",
+        "parent": "c1bfffffff000000",
+        "Qfplib": "c1bfffffff000000"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 35,
+        "Qfplib": 47
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000003fffffff",
+      "group": "selected-every-bit-length",
+      "expected": "41cfffffff800000",
+      "outputs": {
+        "candidate": "41cfffffff800000",
+        "parent": "41cfffffff800000",
+        "Qfplib": "41cfffffff800000"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 43
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffffc0000001",
+      "group": "selected-every-bit-length",
+      "expected": "c1cfffffff800000",
+      "outputs": {
+        "candidate": "c1cfffffff800000",
+        "parent": "c1cfffffff800000",
+        "Qfplib": "c1cfffffff800000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 33,
+        "Qfplib": 43
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffff80000001",
+      "group": "selected-every-bit-length",
+      "expected": "c1dfffffffc00000",
+      "outputs": {
+        "candidate": "c1dfffffffc00000",
+        "parent": "c1dfffffffc00000",
+        "Qfplib": "c1dfffffffc00000"
+      },
+      "instructions": {
+        "candidate": 28,
+        "parent": 33,
+        "Qfplib": 39
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000003ffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "420ffffffff80000",
+      "outputs": {
+        "candidate": "420ffffffff80000",
+        "parent": "420ffffffff80000",
+        "Qfplib": "420ffffffff80000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 48,
+        "Qfplib": 117
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffffc00000001",
+      "group": "selected-every-bit-length",
+      "expected": "c20ffffffff80000",
+      "outputs": {
+        "candidate": "c20ffffffff80000",
+        "parent": "c20ffffffff80000",
+        "Qfplib": "c20ffffffff80000"
+      },
+      "instructions": {
+        "candidate": 52,
+        "parent": 53,
+        "Qfplib": 117
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000007ffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "421ffffffffc0000",
+      "outputs": {
+        "candidate": "421ffffffffc0000",
+        "parent": "421ffffffffc0000",
+        "Qfplib": "421ffffffffc0000"
+      },
+      "instructions": {
+        "candidate": 46,
+        "parent": 46,
+        "Qfplib": 112
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffff800000001",
+      "group": "selected-every-bit-length",
+      "expected": "c21ffffffffc0000",
+      "outputs": {
+        "candidate": "c21ffffffffc0000",
+        "parent": "c21ffffffffc0000",
+        "Qfplib": "c21ffffffffc0000"
+      },
+      "instructions": {
+        "candidate": 50,
+        "parent": 51,
+        "Qfplib": 112
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000000fffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "422ffffffffe0000",
+      "outputs": {
+        "candidate": "422ffffffffe0000",
+        "parent": "422ffffffffe0000",
+        "Qfplib": "422ffffffffe0000"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 43,
+        "Qfplib": 107
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffff000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c22ffffffffe0000",
+      "outputs": {
+        "candidate": "c22ffffffffe0000",
+        "parent": "c22ffffffffe0000",
+        "Qfplib": "c22ffffffffe0000"
+      },
+      "instructions": {
+        "candidate": 47,
+        "parent": 48,
+        "Qfplib": 107
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000001fffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "423fffffffff0000",
+      "outputs": {
+        "candidate": "423fffffffff0000",
+        "parent": "423fffffffff0000",
+        "Qfplib": "423fffffffff0000"
+      },
+      "instructions": {
+        "candidate": 46,
+        "parent": 46,
+        "Qfplib": 102
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffe000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c23fffffffff0000",
+      "outputs": {
+        "candidate": "c23fffffffff0000",
+        "parent": "c23fffffffff0000",
+        "Qfplib": "c23fffffffff0000"
+      },
+      "instructions": {
+        "candidate": 50,
+        "parent": 51,
+        "Qfplib": 102
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000003fffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "424fffffffff8000",
+      "outputs": {
+        "candidate": "424fffffffff8000",
+        "parent": "424fffffffff8000",
+        "Qfplib": "424fffffffff8000"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 43,
+        "Qfplib": 97
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffffc000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c24fffffffff8000",
+      "outputs": {
+        "candidate": "c24fffffffff8000",
+        "parent": "c24fffffffff8000",
+        "Qfplib": "c24fffffffff8000"
+      },
+      "instructions": {
+        "candidate": 47,
+        "parent": 48,
+        "Qfplib": 97
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000007fffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "425fffffffffc000",
+      "outputs": {
+        "candidate": "425fffffffffc000",
+        "parent": "425fffffffffc000",
+        "Qfplib": "425fffffffffc000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 92
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffff8000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c25fffffffffc000",
+      "outputs": {
+        "candidate": "c25fffffffffc000",
+        "parent": "c25fffffffffc000",
+        "Qfplib": "c25fffffffffc000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 92
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000000ffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "426fffffffffe000",
+      "outputs": {
+        "candidate": "426fffffffffe000",
+        "parent": "426fffffffffe000",
+        "Qfplib": "426fffffffffe000"
+      },
+      "instructions": {
+        "candidate": 38,
+        "parent": 38,
+        "Qfplib": 87
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffff0000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c26fffffffffe000",
+      "outputs": {
+        "candidate": "c26fffffffffe000",
+        "parent": "c26fffffffffe000",
+        "Qfplib": "c26fffffffffe000"
+      },
+      "instructions": {
+        "candidate": 42,
+        "parent": 43,
+        "Qfplib": 87
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000001ffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "427ffffffffff000",
+      "outputs": {
+        "candidate": "427ffffffffff000",
+        "parent": "427ffffffffff000",
+        "Qfplib": "427ffffffffff000"
+      },
+      "instructions": {
+        "candidate": 46,
+        "parent": 46,
+        "Qfplib": 82
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffe0000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c27ffffffffff000",
+      "outputs": {
+        "candidate": "c27ffffffffff000",
+        "parent": "c27ffffffffff000",
+        "Qfplib": "c27ffffffffff000"
+      },
+      "instructions": {
+        "candidate": 50,
+        "parent": 51,
+        "Qfplib": 82
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000003ffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "428ffffffffff800",
+      "outputs": {
+        "candidate": "428ffffffffff800",
+        "parent": "428ffffffffff800",
+        "Qfplib": "428ffffffffff800"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 43,
+        "Qfplib": 77
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffffc0000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c28ffffffffff800",
+      "outputs": {
+        "candidate": "c28ffffffffff800",
+        "parent": "c28ffffffffff800",
+        "Qfplib": "c28ffffffffff800"
+      },
+      "instructions": {
+        "candidate": 47,
+        "parent": 48,
+        "Qfplib": 77
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000007ffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "429ffffffffffc00",
+      "outputs": {
+        "candidate": "429ffffffffffc00",
+        "parent": "429ffffffffffc00",
+        "Qfplib": "429ffffffffffc00"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 72
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffff80000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c29ffffffffffc00",
+      "outputs": {
+        "candidate": "c29ffffffffffc00",
+        "parent": "c29ffffffffffc00",
+        "Qfplib": "c29ffffffffffc00"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 72
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00000fffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "42affffffffffe00",
+      "outputs": {
+        "candidate": "42affffffffffe00",
+        "parent": "42affffffffffe00",
+        "Qfplib": "42affffffffffe00"
+      },
+      "instructions": {
+        "candidate": 38,
+        "parent": 38,
+        "Qfplib": 67
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffff00000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c2affffffffffe00",
+      "outputs": {
+        "candidate": "c2affffffffffe00",
+        "parent": "c2affffffffffe00",
+        "Qfplib": "c2affffffffffe00"
+      },
+      "instructions": {
+        "candidate": 42,
+        "parent": 43,
+        "Qfplib": 67
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00001fffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "42bfffffffffff00",
+      "outputs": {
+        "candidate": "42bfffffffffff00",
+        "parent": "42bfffffffffff00",
+        "Qfplib": "42bfffffffffff00"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 62
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffe00000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c2bfffffffffff00",
+      "outputs": {
+        "candidate": "c2bfffffffffff00",
+        "parent": "c2bfffffffffff00",
+        "Qfplib": "c2bfffffffffff00"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 62
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00003fffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "42cfffffffffff80",
+      "outputs": {
+        "candidate": "42cfffffffffff80",
+        "parent": "42cfffffffffff80",
+        "Qfplib": "42cfffffffffff80"
+      },
+      "instructions": {
+        "candidate": 38,
+        "parent": 38,
+        "Qfplib": 57
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffffc00000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c2cfffffffffff80",
+      "outputs": {
+        "candidate": "c2cfffffffffff80",
+        "parent": "c2cfffffffffff80",
+        "Qfplib": "c2cfffffffffff80"
+      },
+      "instructions": {
+        "candidate": 42,
+        "parent": 43,
+        "Qfplib": 57
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00007fffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "42dfffffffffffc0",
+      "outputs": {
+        "candidate": "42dfffffffffffc0",
+        "parent": "42dfffffffffffc0",
+        "Qfplib": "42dfffffffffffc0"
+      },
+      "instructions": {
+        "candidate": 30,
+        "parent": 30,
+        "Qfplib": 52
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffff800000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c2dfffffffffffc0",
+      "outputs": {
+        "candidate": "c2dfffffffffffc0",
+        "parent": "c2dfffffffffffc0",
+        "Qfplib": "c2dfffffffffffc0"
+      },
+      "instructions": {
+        "candidate": 34,
+        "parent": 35,
+        "Qfplib": 52
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0000ffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "42efffffffffffe0",
+      "outputs": {
+        "candidate": "42efffffffffffe0",
+        "parent": "42efffffffffffe0",
+        "Qfplib": "42efffffffffffe0"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 29,
+        "Qfplib": 47
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffff000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c2efffffffffffe0",
+      "outputs": {
+        "candidate": "c2efffffffffffe0",
+        "parent": "c2efffffffffffe0",
+        "Qfplib": "c2efffffffffffe0"
+      },
+      "instructions": {
+        "candidate": 33,
+        "parent": 34,
+        "Qfplib": 47
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0001ffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "42fffffffffffff0",
+      "outputs": {
+        "candidate": "42fffffffffffff0",
+        "parent": "42fffffffffffff0",
+        "Qfplib": "42fffffffffffff0"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffe000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c2fffffffffffff0",
+      "outputs": {
+        "candidate": "c2fffffffffffff0",
+        "parent": "c2fffffffffffff0",
+        "Qfplib": "c2fffffffffffff0"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 32,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0003ffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "430ffffffffffff8",
+      "outputs": {
+        "candidate": "430ffffffffffff8",
+        "parent": "430ffffffffffff8",
+        "Qfplib": "430ffffffffffff8"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 37
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fffc000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c30ffffffffffff8",
+      "outputs": {
+        "candidate": "c30ffffffffffff8",
+        "parent": "c30ffffffffffff8",
+        "Qfplib": "c30ffffffffffff8"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 37
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0007ffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "431ffffffffffffc",
+      "outputs": {
+        "candidate": "431ffffffffffffc",
+        "parent": "431ffffffffffffc",
+        "Qfplib": "431ffffffffffffc"
+      },
+      "instructions": {
+        "candidate": 23,
+        "parent": 23,
+        "Qfplib": 32
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fff8000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c31ffffffffffffc",
+      "outputs": {
+        "candidate": "c31ffffffffffffc",
+        "parent": "c31ffffffffffffc",
+        "Qfplib": "c31ffffffffffffc"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 28,
+        "Qfplib": 32
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "000fffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "432ffffffffffffe",
+      "outputs": {
+        "candidate": "432ffffffffffffe",
+        "parent": "432ffffffffffffe",
+        "Qfplib": "432ffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 19,
+        "parent": 19,
+        "Qfplib": 27
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fff0000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c32ffffffffffffe",
+      "outputs": {
+        "candidate": "c32ffffffffffffe",
+        "parent": "c32ffffffffffffe",
+        "Qfplib": "c32ffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 23,
+        "parent": 24,
+        "Qfplib": 27
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "001fffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "433fffffffffffff",
+      "outputs": {
+        "candidate": "433fffffffffffff",
+        "parent": "433fffffffffffff",
+        "Qfplib": "433fffffffffffff"
+      },
+      "instructions": {
+        "candidate": 15,
+        "parent": 15,
+        "Qfplib": 22
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffe0000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c33fffffffffffff",
+      "outputs": {
+        "candidate": "c33fffffffffffff",
+        "parent": "c33fffffffffffff",
+        "Qfplib": "c33fffffffffffff"
+      },
+      "instructions": {
+        "candidate": 19,
+        "parent": 20,
+        "Qfplib": 22
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "003fffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "4350000000000000",
+      "outputs": {
+        "candidate": "4350000000000000",
+        "parent": "4350000000000000",
+        "Qfplib": "4350000000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 77
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffc0000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c350000000000000",
+      "outputs": {
+        "candidate": "c350000000000000",
+        "parent": "c350000000000000",
+        "Qfplib": "c350000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 77
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "007fffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "4360000000000000",
+      "outputs": {
+        "candidate": "4360000000000000",
+        "parent": "4360000000000000",
+        "Qfplib": "4360000000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ff80000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c360000000000000",
+      "outputs": {
+        "candidate": "c360000000000000",
+        "parent": "c360000000000000",
+        "Qfplib": "c360000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "00ffffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "4370000000000000",
+      "outputs": {
+        "candidate": "4370000000000000",
+        "parent": "4370000000000000",
+        "Qfplib": "4370000000000000"
+      },
+      "instructions": {
+        "candidate": 39,
+        "parent": 39,
+        "Qfplib": 66
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ff00000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c370000000000000",
+      "outputs": {
+        "candidate": "c370000000000000",
+        "parent": "c370000000000000",
+        "Qfplib": "c370000000000000"
+      },
+      "instructions": {
+        "candidate": 43,
+        "parent": 44,
+        "Qfplib": 66
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "01ffffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "4380000000000000",
+      "outputs": {
+        "candidate": "4380000000000000",
+        "parent": "4380000000000000",
+        "Qfplib": "4380000000000000"
+      },
+      "instructions": {
+        "candidate": 37,
+        "parent": 37,
+        "Qfplib": 62
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fe00000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c380000000000000",
+      "outputs": {
+        "candidate": "c380000000000000",
+        "parent": "c380000000000000",
+        "Qfplib": "c380000000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 42,
+        "Qfplib": 62
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "03ffffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "4390000000000000",
+      "outputs": {
+        "candidate": "4390000000000000",
+        "parent": "4390000000000000",
+        "Qfplib": "4390000000000000"
+      },
+      "instructions": {
+        "candidate": 35,
+        "parent": 35,
+        "Qfplib": 58
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "fc00000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c390000000000000",
+      "outputs": {
+        "candidate": "c390000000000000",
+        "parent": "c390000000000000",
+        "Qfplib": "c390000000000000"
+      },
+      "instructions": {
+        "candidate": 39,
+        "parent": 40,
+        "Qfplib": 58
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "07ffffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "43a0000000000000",
+      "outputs": {
+        "candidate": "43a0000000000000",
+        "parent": "43a0000000000000",
+        "Qfplib": "43a0000000000000"
+      },
+      "instructions": {
+        "candidate": 33,
+        "parent": 33,
+        "Qfplib": 54
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "f800000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c3a0000000000000",
+      "outputs": {
+        "candidate": "c3a0000000000000",
+        "parent": "c3a0000000000000",
+        "Qfplib": "c3a0000000000000"
+      },
+      "instructions": {
+        "candidate": 37,
+        "parent": 38,
+        "Qfplib": 54
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0fffffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "43b0000000000000",
+      "outputs": {
+        "candidate": "43b0000000000000",
+        "parent": "43b0000000000000",
+        "Qfplib": "43b0000000000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 31,
+        "Qfplib": 50
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "f000000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c3b0000000000000",
+      "outputs": {
+        "candidate": "c3b0000000000000",
+        "parent": "c3b0000000000000",
+        "Qfplib": "c3b0000000000000"
+      },
+      "instructions": {
+        "candidate": 35,
+        "parent": 36,
+        "Qfplib": 50
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "1fffffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "43c0000000000000",
+      "outputs": {
+        "candidate": "43c0000000000000",
+        "parent": "43c0000000000000",
+        "Qfplib": "43c0000000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 29,
+        "Qfplib": 46
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "e000000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c3c0000000000000",
+      "outputs": {
+        "candidate": "c3c0000000000000",
+        "parent": "c3c0000000000000",
+        "Qfplib": "c3c0000000000000"
+      },
+      "instructions": {
+        "candidate": 33,
+        "parent": 34,
+        "Qfplib": 46
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "3fffffffffffffff",
+      "group": "selected-every-bit-length",
+      "expected": "43d0000000000000",
+      "outputs": {
+        "candidate": "43d0000000000000",
+        "parent": "43d0000000000000",
+        "Qfplib": "43d0000000000000"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "c000000000000001",
+      "group": "selected-every-bit-length",
+      "expected": "c3d0000000000000",
+      "outputs": {
+        "candidate": "c3d0000000000000",
+        "parent": "c3d0000000000000",
+        "Qfplib": "c3d0000000000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 32,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffe0000000000000",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c340000000000000",
+      "outputs": {
+        "candidate": "c340000000000000",
+        "parent": "c340000000000000",
+        "Qfplib": "c340000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0020000000000000",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4340000000000000",
+      "outputs": {
+        "candidate": "4340000000000000",
+        "parent": "4340000000000000",
+        "Qfplib": "4340000000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffdfffffffffffff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c340000000000000",
+      "outputs": {
+        "candidate": "c340000000000000",
+        "parent": "c340000000000000",
+        "Qfplib": "c340000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 77
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0020000000000001",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4340000000000000",
+      "outputs": {
+        "candidate": "4340000000000000",
+        "parent": "4340000000000000",
+        "Qfplib": "4340000000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 77
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffdffffffffffffe",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c340000000000001",
+      "outputs": {
+        "candidate": "c340000000000001",
+        "parent": "c340000000000001",
+        "Qfplib": "c340000000000001"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0020000000000002",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4340000000000001",
+      "outputs": {
+        "candidate": "4340000000000001",
+        "parent": "4340000000000001",
+        "Qfplib": "4340000000000001"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffdffffffffffffd",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c340000000000002",
+      "outputs": {
+        "candidate": "c340000000000002",
+        "parent": "c340000000000002",
+        "Qfplib": "c340000000000002"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 77
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0020000000000003",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4340000000000002",
+      "outputs": {
+        "candidate": "4340000000000002",
+        "parent": "4340000000000002",
+        "Qfplib": "4340000000000002"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 77
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffdffffffffffffc",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c340000000000002",
+      "outputs": {
+        "candidate": "c340000000000002",
+        "parent": "c340000000000002",
+        "Qfplib": "c340000000000002"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0020000000000004",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4340000000000002",
+      "outputs": {
+        "candidate": "4340000000000002",
+        "parent": "4340000000000002",
+        "Qfplib": "4340000000000002"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffc0000000000002",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c34fffffffffffff",
+      "outputs": {
+        "candidate": "c34fffffffffffff",
+        "parent": "c34fffffffffffff",
+        "Qfplib": "c34fffffffffffff"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "003ffffffffffffe",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "434fffffffffffff",
+      "outputs": {
+        "candidate": "434fffffffffffff",
+        "parent": "434fffffffffffff",
+        "Qfplib": "434fffffffffffff"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 71
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffc0000000000000",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c350000000000000",
+      "outputs": {
+        "candidate": "c350000000000000",
+        "parent": "c350000000000000",
+        "Qfplib": "c350000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 67
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0040000000000000",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4350000000000000",
+      "outputs": {
+        "candidate": "4350000000000000",
+        "parent": "4350000000000000",
+        "Qfplib": "4350000000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 67
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffbfffffffffffff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c350000000000000",
+      "outputs": {
+        "candidate": "c350000000000000",
+        "parent": "c350000000000000",
+        "Qfplib": "c350000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0040000000000001",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4350000000000000",
+      "outputs": {
+        "candidate": "4350000000000000",
+        "parent": "4350000000000000",
+        "Qfplib": "4350000000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffbffffffffffffe",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c350000000000000",
+      "outputs": {
+        "candidate": "c350000000000000",
+        "parent": "c350000000000000",
+        "Qfplib": "c350000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 73
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0040000000000002",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4350000000000000",
+      "outputs": {
+        "candidate": "4350000000000000",
+        "parent": "4350000000000000",
+        "Qfplib": "4350000000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 73
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffbffffffffffffd",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c350000000000001",
+      "outputs": {
+        "candidate": "c350000000000001",
+        "parent": "c350000000000001",
+        "Qfplib": "c350000000000001"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0040000000000003",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4350000000000001",
+      "outputs": {
+        "candidate": "4350000000000001",
+        "parent": "4350000000000001",
+        "Qfplib": "4350000000000001"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffbffffffffffffb",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c350000000000001",
+      "outputs": {
+        "candidate": "c350000000000001",
+        "parent": "c350000000000001",
+        "Qfplib": "c350000000000001"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0040000000000005",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4350000000000001",
+      "outputs": {
+        "candidate": "4350000000000001",
+        "parent": "4350000000000001",
+        "Qfplib": "4350000000000001"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffbffffffffffffa",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c350000000000002",
+      "outputs": {
+        "candidate": "c350000000000002",
+        "parent": "c350000000000002",
+        "Qfplib": "c350000000000002"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 73
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0040000000000006",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4350000000000002",
+      "outputs": {
+        "candidate": "4350000000000002",
+        "parent": "4350000000000002",
+        "Qfplib": "4350000000000002"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 73
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ffbffffffffffff9",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c350000000000002",
+      "outputs": {
+        "candidate": "c350000000000002",
+        "parent": "c350000000000002",
+        "Qfplib": "c350000000000002"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "0040000000000007",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4350000000000002",
+      "outputs": {
+        "candidate": "4350000000000002",
+        "parent": "4350000000000002",
+        "Qfplib": "4350000000000002"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ff80000000000003",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c35fffffffffffff",
+      "outputs": {
+        "candidate": "c35fffffffffffff",
+        "parent": "c35fffffffffffff",
+        "Qfplib": "c35fffffffffffff"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "007ffffffffffffd",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "435fffffffffffff",
+      "outputs": {
+        "candidate": "435fffffffffffff",
+        "parent": "435fffffffffffff",
+        "Qfplib": "435fffffffffffff"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 70
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "ff80000000000002",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c360000000000000",
+      "outputs": {
+        "candidate": "c360000000000000",
+        "parent": "c360000000000000",
+        "Qfplib": "c360000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 46,
+        "Qfplib": 73
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "007ffffffffffffe",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "4360000000000000",
+      "outputs": {
+        "candidate": "4360000000000000",
+        "parent": "4360000000000000",
+        "Qfplib": "4360000000000000"
+      },
+      "instructions": {
+        "candidate": 41,
+        "parent": 41,
+        "Qfplib": 73
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "dfffffffffffff01",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3c0000000000000",
+      "outputs": {
+        "candidate": "c3c0000000000000",
+        "parent": "c3c0000000000000",
+        "Qfplib": "c3c0000000000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 32,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "20000000000000ff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43c0000000000000",
+      "outputs": {
+        "candidate": "43c0000000000000",
+        "parent": "43c0000000000000",
+        "Qfplib": "43c0000000000000"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "dfffffffffffff00",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3c0000000000000",
+      "outputs": {
+        "candidate": "c3c0000000000000",
+        "parent": "c3c0000000000000",
+        "Qfplib": "c3c0000000000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 32,
+        "Qfplib": 45
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "2000000000000100",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43c0000000000000",
+      "outputs": {
+        "candidate": "43c0000000000000",
+        "parent": "43c0000000000000",
+        "Qfplib": "43c0000000000000"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 45
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "dffffffffffffeff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3c0000000000001",
+      "outputs": {
+        "candidate": "c3c0000000000001",
+        "parent": "c3c0000000000001",
+        "Qfplib": "c3c0000000000001"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 32,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "2000000000000101",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43c0000000000001",
+      "outputs": {
+        "candidate": "43c0000000000001",
+        "parent": "43c0000000000001",
+        "Qfplib": "43c0000000000001"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "dffffffffffffd01",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3c0000000000001",
+      "outputs": {
+        "candidate": "c3c0000000000001",
+        "parent": "c3c0000000000001",
+        "Qfplib": "c3c0000000000001"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 32,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "20000000000002ff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43c0000000000001",
+      "outputs": {
+        "candidate": "43c0000000000001",
+        "parent": "43c0000000000001",
+        "Qfplib": "43c0000000000001"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "dffffffffffffd00",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3c0000000000002",
+      "outputs": {
+        "candidate": "c3c0000000000002",
+        "parent": "c3c0000000000002",
+        "Qfplib": "c3c0000000000002"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 32,
+        "Qfplib": 45
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "2000000000000300",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43c0000000000002",
+      "outputs": {
+        "candidate": "43c0000000000002",
+        "parent": "43c0000000000002",
+        "Qfplib": "43c0000000000002"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 45
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "dffffffffffffcff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3c0000000000002",
+      "outputs": {
+        "candidate": "c3c0000000000002",
+        "parent": "c3c0000000000002",
+        "Qfplib": "c3c0000000000002"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 32,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "2000000000000301",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43c0000000000002",
+      "outputs": {
+        "candidate": "43c0000000000002",
+        "parent": "43c0000000000002",
+        "Qfplib": "43c0000000000002"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "c000000000000101",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3cfffffffffffff",
+      "outputs": {
+        "candidate": "c3cfffffffffffff",
+        "parent": "c3cfffffffffffff",
+        "Qfplib": "c3cfffffffffffff"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 32,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "3ffffffffffffeff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43cfffffffffffff",
+      "outputs": {
+        "candidate": "43cfffffffffffff",
+        "parent": "43cfffffffffffff",
+        "Qfplib": "43cfffffffffffff"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "c000000000000100",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3d0000000000000",
+      "outputs": {
+        "candidate": "c3d0000000000000",
+        "parent": "c3d0000000000000",
+        "Qfplib": "c3d0000000000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 32,
+        "Qfplib": 45
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "3fffffffffffff00",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43d0000000000000",
+      "outputs": {
+        "candidate": "43d0000000000000",
+        "parent": "43d0000000000000",
+        "Qfplib": "43d0000000000000"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 45
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "c0000000000000ff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3d0000000000000",
+      "outputs": {
+        "candidate": "c3d0000000000000",
+        "parent": "c3d0000000000000",
+        "Qfplib": "c3d0000000000000"
+      },
+      "instructions": {
+        "candidate": 31,
+        "parent": 32,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "3fffffffffffff01",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43d0000000000000",
+      "outputs": {
+        "candidate": "43d0000000000000",
+        "parent": "43d0000000000000",
+        "Qfplib": "43d0000000000000"
+      },
+      "instructions": {
+        "candidate": 27,
+        "parent": 27,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "bffffffffffffe01",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3d0000000000000",
+      "outputs": {
+        "candidate": "c3d0000000000000",
+        "parent": "c3d0000000000000",
+        "Qfplib": "c3d0000000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "40000000000001ff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43d0000000000000",
+      "outputs": {
+        "candidate": "43d0000000000000",
+        "parent": "43d0000000000000",
+        "Qfplib": "43d0000000000000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "bffffffffffffe00",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3d0000000000000",
+      "outputs": {
+        "candidate": "c3d0000000000000",
+        "parent": "c3d0000000000000",
+        "Qfplib": "c3d0000000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "4000000000000200",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43d0000000000000",
+      "outputs": {
+        "candidate": "43d0000000000000",
+        "parent": "43d0000000000000",
+        "Qfplib": "43d0000000000000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "bffffffffffffdff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3d0000000000001",
+      "outputs": {
+        "candidate": "c3d0000000000001",
+        "parent": "c3d0000000000001",
+        "Qfplib": "c3d0000000000001"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "4000000000000201",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43d0000000000001",
+      "outputs": {
+        "candidate": "43d0000000000001",
+        "parent": "43d0000000000001",
+        "Qfplib": "43d0000000000001"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "bffffffffffffa01",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3d0000000000001",
+      "outputs": {
+        "candidate": "c3d0000000000001",
+        "parent": "c3d0000000000001",
+        "Qfplib": "c3d0000000000001"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "40000000000005ff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43d0000000000001",
+      "outputs": {
+        "candidate": "43d0000000000001",
+        "parent": "43d0000000000001",
+        "Qfplib": "43d0000000000001"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "bffffffffffffa00",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3d0000000000002",
+      "outputs": {
+        "candidate": "c3d0000000000002",
+        "parent": "c3d0000000000002",
+        "Qfplib": "c3d0000000000002"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "4000000000000600",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43d0000000000002",
+      "outputs": {
+        "candidate": "43d0000000000002",
+        "parent": "43d0000000000002",
+        "Qfplib": "43d0000000000002"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "bffffffffffff9ff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3d0000000000002",
+      "outputs": {
+        "candidate": "c3d0000000000002",
+        "parent": "c3d0000000000002",
+        "Qfplib": "c3d0000000000002"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "4000000000000601",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43d0000000000002",
+      "outputs": {
+        "candidate": "43d0000000000002",
+        "parent": "43d0000000000002",
+        "Qfplib": "43d0000000000002"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "8000000000000201",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3dfffffffffffff",
+      "outputs": {
+        "candidate": "c3dfffffffffffff",
+        "parent": "c3dfffffffffffff",
+        "Qfplib": "c3dfffffffffffff"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "7ffffffffffffdff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43dfffffffffffff",
+      "outputs": {
+        "candidate": "43dfffffffffffff",
+        "parent": "43dfffffffffffff",
+        "Qfplib": "43dfffffffffffff"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "8000000000000200",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3e0000000000000",
+      "outputs": {
+        "candidate": "c3e0000000000000",
+        "parent": "c3e0000000000000",
+        "Qfplib": "c3e0000000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "7ffffffffffffe00",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43e0000000000000",
+      "outputs": {
+        "candidate": "43e0000000000000",
+        "parent": "43e0000000000000",
+        "Qfplib": "43e0000000000000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 41
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "80000000000001ff",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "c3e0000000000000",
+      "outputs": {
+        "candidate": "c3e0000000000000",
+        "parent": "c3e0000000000000",
+        "Qfplib": "c3e0000000000000"
+      },
+      "instructions": {
+        "candidate": 29,
+        "parent": 30,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "l2d",
+      "x": "7ffffffffffffe01",
+      "group": "RNE-parity-midpoint-and-binade-carry",
+      "expected": "43e0000000000000",
+      "outputs": {
+        "candidate": "43e0000000000000",
+        "parent": "43e0000000000000",
+        "Qfplib": "43e0000000000000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "ul2d",
+      "x": "0000000000000000",
+      "group": "unsigned64-unchanged",
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 7,
+        "parent": 7,
+        "Qfplib": 11
+      }
+    },
+    {
+      "operation": "ul2d",
+      "x": "0000000000000001",
+      "group": "unsigned64-unchanged",
+      "expected": "3ff0000000000000",
+      "outputs": {
+        "candidate": "3ff0000000000000",
+        "parent": "3ff0000000000000",
+        "Qfplib": "3ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 42,
+        "parent": 42,
+        "Qfplib": 123
+      }
+    },
+    {
+      "operation": "ul2d",
+      "x": "00000000ffffffff",
+      "group": "unsigned64-unchanged",
+      "expected": "41efffffffe00000",
+      "outputs": {
+        "candidate": "41efffffffe00000",
+        "parent": "41efffffffe00000",
+        "Qfplib": "41efffffffe00000"
+      },
+      "instructions": {
+        "candidate": 23,
+        "parent": 23,
+        "Qfplib": 32
+      }
+    },
+    {
+      "operation": "ul2d",
+      "x": "0000000100000000",
+      "group": "unsigned64-unchanged",
+      "expected": "41f0000000000000",
+      "outputs": {
+        "candidate": "41f0000000000000",
+        "parent": "41f0000000000000",
+        "Qfplib": "41f0000000000000"
+      },
+      "instructions": {
+        "candidate": 49,
+        "parent": 49,
+        "Qfplib": 119
+      }
+    },
+    {
+      "operation": "ul2d",
+      "x": "000fffffffffffff",
+      "group": "unsigned64-unchanged",
+      "expected": "432ffffffffffffe",
+      "outputs": {
+        "candidate": "432ffffffffffffe",
+        "parent": "432ffffffffffffe",
+        "Qfplib": "432ffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 17,
+        "parent": 17,
+        "Qfplib": 24
+      }
+    },
+    {
+      "operation": "ul2d",
+      "x": "0010000000000000",
+      "group": "unsigned64-unchanged",
+      "expected": "4330000000000000",
+      "outputs": {
+        "candidate": "4330000000000000",
+        "parent": "4330000000000000",
+        "Qfplib": "4330000000000000"
+      },
+      "instructions": {
+        "candidate": 13,
+        "parent": 13,
+        "Qfplib": 19
+      }
+    },
+    {
+      "operation": "ul2d",
+      "x": "0020000000000001",
+      "group": "unsigned64-unchanged",
+      "expected": "4340000000000000",
+      "outputs": {
+        "candidate": "4340000000000000",
+        "parent": "4340000000000000",
+        "Qfplib": "4340000000000000"
+      },
+      "instructions": {
+        "candidate": 39,
+        "parent": 39,
+        "Qfplib": 74
+      }
+    },
+    {
+      "operation": "ul2d",
+      "x": "7fffffffffffffff",
+      "group": "unsigned64-unchanged",
+      "expected": "43e0000000000000",
+      "outputs": {
+        "candidate": "43e0000000000000",
+        "parent": "43e0000000000000",
+        "Qfplib": "43e0000000000000"
+      },
+      "instructions": {
+        "candidate": 23,
+        "parent": 23,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "ul2d",
+      "x": "8000000000000000",
+      "group": "unsigned64-unchanged",
+      "expected": "43e0000000000000",
+      "outputs": {
+        "candidate": "43e0000000000000",
+        "parent": "43e0000000000000",
+        "Qfplib": "43e0000000000000"
+      },
+      "instructions": {
+        "candidate": 22,
+        "parent": 22,
+        "Qfplib": 28
+      }
+    },
+    {
+      "operation": "ul2d",
+      "x": "ffffffffffffffff",
+      "group": "unsigned64-unchanged",
+      "expected": "43f0000000000000",
+      "outputs": {
+        "candidate": "43f0000000000000",
+        "parent": "43f0000000000000",
+        "Qfplib": "43f0000000000000"
+      },
+      "instructions": {
+        "candidate": 17,
+        "parent": 17,
+        "Qfplib": 31
+      }
+    },
+    {
+      "operation": "i2d",
+      "x": "0000000000000000",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 4,
+        "parent": 4,
+        "Qfplib": 17
+      }
+    },
+    {
+      "operation": "i2d",
+      "x": "0000000000000001",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "3ff0000000000000",
+      "outputs": {
+        "candidate": "3ff0000000000000",
+        "parent": "3ff0000000000000",
+        "Qfplib": "3ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 40,
+        "parent": 40,
+        "Qfplib": 129
+      }
+    },
+    {
+      "operation": "i2d",
+      "x": "0000000000000002",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "4000000000000000",
+      "outputs": {
+        "candidate": "4000000000000000",
+        "parent": "4000000000000000",
+        "Qfplib": "4000000000000000"
+      },
+      "instructions": {
+        "candidate": 38,
+        "parent": 38,
+        "Qfplib": 124
+      }
+    },
+    {
+      "operation": "i2d",
+      "x": "000000000007ffff",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "411ffffc00000000",
+      "outputs": {
+        "candidate": "411ffffc00000000",
+        "parent": "411ffffc00000000",
+        "Qfplib": "411ffffc00000000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 39
+      }
+    },
+    {
+      "operation": "i2d",
+      "x": "0000000000080000",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "4120000000000000",
+      "outputs": {
+        "candidate": "4120000000000000",
+        "parent": "4120000000000000",
+        "Qfplib": "4120000000000000"
+      },
+      "instructions": {
+        "candidate": 23,
+        "parent": 23,
+        "Qfplib": 34
+      }
+    },
+    {
+      "operation": "i2d",
+      "x": "0000000000100000",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "4130000000000000",
+      "outputs": {
+        "candidate": "4130000000000000",
+        "parent": "4130000000000000",
+        "Qfplib": "4130000000000000"
+      },
+      "instructions": {
+        "candidate": 18,
+        "parent": 18,
+        "Qfplib": 29
+      }
+    },
+    {
+      "operation": "i2d",
+      "x": "00000000001fffff",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "413fffff00000000",
+      "outputs": {
+        "candidate": "413fffff00000000",
+        "parent": "413fffff00000000",
+        "Qfplib": "413fffff00000000"
+      },
+      "instructions": {
+        "candidate": 18,
+        "parent": 18,
+        "Qfplib": 29
+      }
+    },
+    {
+      "operation": "i2d",
+      "x": "00000000ffffffff",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "bff0000000000000",
+      "outputs": {
+        "candidate": "bff0000000000000",
+        "parent": "bff0000000000000",
+        "Qfplib": "bff0000000000000"
+      },
+      "instructions": {
+        "candidate": 44,
+        "parent": 44,
+        "Qfplib": 129
+      }
+    },
+    {
+      "operation": "i2d",
+      "x": "0000000080000000",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "c1e0000000000000",
+      "outputs": {
+        "candidate": "c1e0000000000000",
+        "parent": "c1e0000000000000",
+        "Qfplib": "c1e0000000000000"
+      },
+      "instructions": {
+        "candidate": 25,
+        "parent": 25,
+        "Qfplib": 38
+      }
+    },
+    {
+      "operation": "i2d",
+      "x": "000000007fffffff",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "41dfffffffc00000",
+      "outputs": {
+        "candidate": "41dfffffffc00000",
+        "parent": "41dfffffffc00000",
+        "Qfplib": "41dfffffffc00000"
+      },
+      "instructions": {
+        "candidate": 23,
+        "parent": 23,
+        "Qfplib": 42
+      }
+    },
+    {
+      "operation": "ui2d",
+      "x": "0000000000000000",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 4,
+        "parent": 4,
+        "Qfplib": 14
+      }
+    },
+    {
+      "operation": "ui2d",
+      "x": "0000000000000001",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "3ff0000000000000",
+      "outputs": {
+        "candidate": "3ff0000000000000",
+        "parent": "3ff0000000000000",
+        "Qfplib": "3ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 39,
+        "parent": 39,
+        "Qfplib": 126
+      }
+    },
+    {
+      "operation": "ui2d",
+      "x": "0000000000000002",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "4000000000000000",
+      "outputs": {
+        "candidate": "4000000000000000",
+        "parent": "4000000000000000",
+        "Qfplib": "4000000000000000"
+      },
+      "instructions": {
+        "candidate": 37,
+        "parent": 37,
+        "Qfplib": 121
+      }
+    },
+    {
+      "operation": "ui2d",
+      "x": "000000000007ffff",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "411ffffc00000000",
+      "outputs": {
+        "candidate": "411ffffc00000000",
+        "parent": "411ffffc00000000",
+        "Qfplib": "411ffffc00000000"
+      },
+      "instructions": {
+        "candidate": 24,
+        "parent": 24,
+        "Qfplib": 36
+      }
+    },
+    {
+      "operation": "ui2d",
+      "x": "0000000000080000",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "4120000000000000",
+      "outputs": {
+        "candidate": "4120000000000000",
+        "parent": "4120000000000000",
+        "Qfplib": "4120000000000000"
+      },
+      "instructions": {
+        "candidate": 22,
+        "parent": 22,
+        "Qfplib": 31
+      }
+    },
+    {
+      "operation": "ui2d",
+      "x": "0000000000100000",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "4130000000000000",
+      "outputs": {
+        "candidate": "4130000000000000",
+        "parent": "4130000000000000",
+        "Qfplib": "4130000000000000"
+      },
+      "instructions": {
+        "candidate": 17,
+        "parent": 17,
+        "Qfplib": 26
+      }
+    },
+    {
+      "operation": "ui2d",
+      "x": "00000000001fffff",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "413fffff00000000",
+      "outputs": {
+        "candidate": "413fffff00000000",
+        "parent": "413fffff00000000",
+        "Qfplib": "413fffff00000000"
+      },
+      "instructions": {
+        "candidate": 17,
+        "parent": 17,
+        "Qfplib": 26
+      }
+    },
+    {
+      "operation": "ui2d",
+      "x": "0000000080000000",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "41e0000000000000",
+      "outputs": {
+        "candidate": "41e0000000000000",
+        "parent": "41e0000000000000",
+        "Qfplib": "41e0000000000000"
+      },
+      "instructions": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "ui2d",
+      "x": "00000000ffffffff",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "41efffffffe00000",
+      "outputs": {
+        "candidate": "41efffffffe00000",
+        "parent": "41efffffffe00000",
+        "Qfplib": "41efffffffe00000"
+      },
+      "instructions": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 35
+      }
+    },
+    {
+      "operation": "ui2d",
+      "x": "000000007fffffff",
+      "group": "32bit-unchanged-with-upper-register-poison",
+      "expected": "41dfffffffc00000",
+      "outputs": {
+        "candidate": "41dfffffffc00000",
+        "parent": "41dfffffffc00000",
+        "Qfplib": "41dfffffffc00000"
+      },
+      "instructions": {
+        "candidate": 22,
+        "parent": 22,
+        "Qfplib": 39
+      }
+    }
+  ],
+  "old16": {
+    "cases": 16,
+    "strict_faster": 12,
+    "equal": 4
+  },
+  "all_Qfplib_results_bit_correct": true,
+  "oracle": "Own unbounded signed/unsigned integer magnitude, bit length and exact nearest-even quotient; no host float/MPFR/author oracle",
+  "reused_round_even_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-mixed-sign-top-normal-independent-20261023/review.py",
+    "sha256": "bb8ea5722a966ef586bc4c688a58ed3d497708cdd93a5ff6c91e41c474fddf8d"
+  },
+  "candidate_firmware_or_ROM": false,
+  "candidate_stack_bytes_written": 0,
+  "candidate_PC_and_reads_inside884_only": true,
+  "candidate_no_writes_of_any_kind": true,
+  "PCS_SP_and_READY_DIRTY_preserved_all_calls": true,
+  "positive_l2d_ul2d_i2d_ui2d_costs_equal": true,
+  "negative_l2d_source_partition_savings_exact": true,
+  "upper_R1_poison_for32bit_ABI": true,
+  "candidate_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-l2d-original-goal-20261024/candidate.elf",
+    "sha256": "a905d4bc8a1e1ac48e9164bbf8bdbb8086dec72eeea409291651d3adff0d8f90"
+  },
+  "parent_firmware": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf",
+    "sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1"
+  },
+  "parent_ROM": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/research/rp2040-memset-2026-10-21/capture/bootrom.bin",
+    "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe"
+  },
+  "reference_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/reference.elf",
+    "sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26"
+  },
+  "hardware_access": false,
+  "physical_cycles_measured": false
+}

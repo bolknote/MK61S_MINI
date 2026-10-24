@@ -1,0 +1,3680 @@
+{
+  "status": "PASS_SELECTED_REAL_ARM_INTEGER_SQRT_RNE",
+  "cases": 162,
+  "ARM_calls": 486,
+  "groups": {
+    "signed-zero-and-inf": 4,
+    "raw-NaN-sign-payload": 14,
+    "negative-finite-sign-carry": 8,
+    "subnormal-width-and-neighbours": 33,
+    "normal-exponent-and-carry-edges": 30,
+    "normal-coefficient-boundary": 15,
+    "normal-squared-midpoint-neighbours": 58
+  },
+  "positive_infinity_instructions": {
+    "candidate": 12,
+    "parent": 15,
+    "Qfplib": 12
+  },
+  "raw_NaN_policy_parent_exact": true,
+  "positive_normal_and_signed_zero_cost_parent_exact": true,
+  "subnormal_saves": 2,
+  "other_nonzero_cold_saves": 3,
+  "first_cold_C_equals_input_sign_checked_every_entry": true,
+  "callee_saved_R4_R11_SP_checked_every_call": true,
+  "max_candidate_stack_bytes": 28,
+  "candidate_memory_reads_only_allocated_or_stack": true,
+  "candidate_writes_only_stack32": true,
+  "no_candidate_SIO_or_ROM_access": true,
+  "SIO_READY_DIRTY_preserved_every_call": true,
+  "candidate_code_contained_in_standalone_ELF": true,
+  "candidate_abstract_ROM_callbacks": [],
+  "correct_Qfplib_cases": 106,
+  "Qfplib_raw_wrong_answers_retained": 56,
+  "slower_than_bit_correct_Qfplib": 0,
+  "own_oracle": "Exact binary64 decode M*2^p; integer isqrt of M<<scale; compare 4A against (2floor(sqrt(A))+1)^2 then one RNE step. No float/MPFR/author oracle. Signedzero and prior raw NaN quiet/sign policy explicit.",
+  "machine_source_sha256": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3",
+  "ELF_parser_sha256": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708",
+  "candidate_ELF_sha256": "2662c539807c1cdbe9c728154ea0d83262c99e974729a9dbfb9ff847c1ee36d1",
+  "firmware_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "ROM_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "reference_ELF_sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+  "parent_ROM_initializers": [
+    {
+      "name": "__aeabi_bits_init",
+      "table": "aeabi_bits_funcs",
+      "pointers": [
+        "0x309",
+        "0x357",
+        "0x38f",
+        "0x32d"
+      ]
+    },
+    {
+      "name": "__aeabi_mem_init",
+      "table": "aeabi_mem_funcs",
+      "pointers": [
+        "0x26b9",
+        "0x261d",
+        "0x26ad",
+        "0x2605"
+      ]
+    }
+  ],
+  "physical_cycles_measured": false,
+  "hardware_access": false,
+  "rows": [
+    {
+      "group": "signed-zero-and-inf",
+      "input": "0000000000000000",
+      "integer_expected": "0000000000000000",
+      "outputs": {
+        "candidate": "0000000000000000",
+        "parent": "0000000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 10,
+        "parent": 10,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "signed-zero-and-inf",
+      "input": "8000000000000000",
+      "integer_expected": "8000000000000000",
+      "outputs": {
+        "candidate": "8000000000000000",
+        "parent": "8000000000000000",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 8,
+        "parent": 8,
+        "Qfplib": 8
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "signed-zero-and-inf",
+      "input": "7ff0000000000000",
+      "integer_expected": "7ff0000000000000",
+      "outputs": {
+        "candidate": "7ff0000000000000",
+        "parent": "7ff0000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 12,
+        "parent": 15,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        0
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "signed-zero-and-inf",
+      "input": "fff0000000000000",
+      "integer_expected": "fff8000000000000",
+      "outputs": {
+        "candidate": "fff8000000000000",
+        "parent": "fff8000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "7ff0000000000001",
+      "integer_expected": "7ff8000000000001",
+      "outputs": {
+        "candidate": "7ff8000000000001",
+        "parent": "7ff8000000000001",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        0
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "7ff0000080000000",
+      "integer_expected": "7ff8000080000000",
+      "outputs": {
+        "candidate": "7ff8000080000000",
+        "parent": "7ff8000080000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        0
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "7ff0000100000000",
+      "integer_expected": "7ff8000100000000",
+      "outputs": {
+        "candidate": "7ff8000100000000",
+        "parent": "7ff8000100000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        0
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "7ff4000000000000",
+      "integer_expected": "7ffc000000000000",
+      "outputs": {
+        "candidate": "7ffc000000000000",
+        "parent": "7ffc000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        0
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "7ff8000000000000",
+      "integer_expected": "7ff8000000000000",
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        0
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "7ff8000000000001",
+      "integer_expected": "7ff8000000000001",
+      "outputs": {
+        "candidate": "7ff8000000000001",
+        "parent": "7ff8000000000001",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        0
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "7fffffffffffffff",
+      "integer_expected": "7fffffffffffffff",
+      "outputs": {
+        "candidate": "7fffffffffffffff",
+        "parent": "7fffffffffffffff",
+        "Qfplib": "7ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        0
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "fff0000000000001",
+      "integer_expected": "fff8000000000001",
+      "outputs": {
+        "candidate": "fff8000000000001",
+        "parent": "fff8000000000001",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "fff0000080000000",
+      "integer_expected": "fff8000080000000",
+      "outputs": {
+        "candidate": "fff8000080000000",
+        "parent": "fff8000080000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "fff0000100000000",
+      "integer_expected": "fff8000100000000",
+      "outputs": {
+        "candidate": "fff8000100000000",
+        "parent": "fff8000100000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "fff4000000000000",
+      "integer_expected": "fffc000000000000",
+      "outputs": {
+        "candidate": "fffc000000000000",
+        "parent": "fffc000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "fff8000000000000",
+      "integer_expected": "fff8000000000000",
+      "outputs": {
+        "candidate": "fff8000000000000",
+        "parent": "fff8000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "fff8000000000001",
+      "integer_expected": "fff8000000000001",
+      "outputs": {
+        "candidate": "fff8000000000001",
+        "parent": "fff8000000000001",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "raw-NaN-sign-payload",
+      "input": "ffffffffffffffff",
+      "integer_expected": "ffffffffffffffff",
+      "outputs": {
+        "candidate": "ffffffffffffffff",
+        "parent": "ffffffffffffffff",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "negative-finite-sign-carry",
+      "input": "8000000000000001",
+      "integer_expected": "7ff8000000000000",
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 8
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "negative-finite-sign-carry",
+      "input": "8000000000000002",
+      "integer_expected": "7ff8000000000000",
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 8
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "negative-finite-sign-carry",
+      "input": "8000000000000003",
+      "integer_expected": "7ff8000000000000",
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 8
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "negative-finite-sign-carry",
+      "input": "800fffffffffffff",
+      "integer_expected": "7ff8000000000000",
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "8000000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 8
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "negative-finite-sign-carry",
+      "input": "8010000000000000",
+      "integer_expected": "7ff8000000000000",
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "negative-finite-sign-carry",
+      "input": "bff0000000000000",
+      "integer_expected": "7ff8000000000000",
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "negative-finite-sign-carry",
+      "input": "c000000080000000",
+      "integer_expected": "7ff8000000000000",
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "negative-finite-sign-carry",
+      "input": "ffefffffffffffff",
+      "integer_expected": "7ff8000000000000",
+      "outputs": {
+        "candidate": "7ff8000000000000",
+        "parent": "7ff8000000000000",
+        "Qfplib": "fff0000000000000"
+      },
+      "instructions": {
+        "candidate": 14,
+        "parent": 17,
+        "Qfplib": 10
+      },
+      "stack_bytes": {
+        "candidate": 0,
+        "parent": 0,
+        "Qfplib": 0
+      },
+      "cold_carry": [
+        1
+      ],
+      "subnormal_alias": false
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000000000001",
+      "integer_expected": "1e60000000000000",
+      "outputs": {
+        "candidate": "1e60000000000000",
+        "parent": "1e60000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 202,
+        "parent": 204,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000000000002",
+      "integer_expected": "1e66a09e667f3bcd",
+      "outputs": {
+        "candidate": "1e66a09e667f3bcd",
+        "parent": "1e66a09e667f3bcd",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 203,
+        "parent": 205,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000000000003",
+      "integer_expected": "1e6bb67ae8584caa",
+      "outputs": {
+        "candidate": "1e6bb67ae8584caa",
+        "parent": "1e6bb67ae8584caa",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 201,
+        "parent": 203,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000000007fff",
+      "integer_expected": "1ed6a087c5d584f3",
+      "outputs": {
+        "candidate": "1ed6a087c5d584f3",
+        "parent": "1ed6a087c5d584f3",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 189,
+        "parent": 191,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000000008000",
+      "integer_expected": "1ed6a09e667f3bcd",
+      "outputs": {
+        "candidate": "1ed6a09e667f3bcd",
+        "parent": "1ed6a09e667f3bcd",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 188,
+        "parent": 190,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000000008001",
+      "integer_expected": "1ed6a0b507125208",
+      "outputs": {
+        "candidate": "1ed6a0b507125208",
+        "parent": "1ed6a0b507125208",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 188,
+        "parent": 190,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "000000000000ffff",
+      "integer_expected": "1edfffeffffbfffe",
+      "outputs": {
+        "candidate": "1edfffeffffbfffe",
+        "parent": "1edfffeffffbfffe",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 188,
+        "parent": 190,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "000000003fffffff",
+      "integer_expected": "1f4fffffffc00000",
+      "outputs": {
+        "candidate": "1f4fffffffc00000",
+        "parent": "1f4fffffffc00000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 188,
+        "parent": 190,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000040000000",
+      "integer_expected": "1f50000000000000",
+      "outputs": {
+        "candidate": "1f50000000000000",
+        "parent": "1f50000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 185,
+        "parent": 187,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000040000001",
+      "integer_expected": "1f50000000200000",
+      "outputs": {
+        "candidate": "1f50000000200000",
+        "parent": "1f50000000200000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 187,
+        "parent": 189,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "000000007fffffff",
+      "integer_expected": "1f56a09e66689b2e",
+      "outputs": {
+        "candidate": "1f56a09e66689b2e",
+        "parent": "1f56a09e66689b2e",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 185,
+        "parent": 187,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000080000000",
+      "integer_expected": "1f56a09e667f3bcd",
+      "outputs": {
+        "candidate": "1f56a09e667f3bcd",
+        "parent": "1f56a09e667f3bcd",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 186,
+        "parent": 188,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000080000001",
+      "integer_expected": "1f56a09e6695dc6b",
+      "outputs": {
+        "candidate": "1f56a09e6695dc6b",
+        "parent": "1f56a09e6695dc6b",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 186,
+        "parent": 188,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "00000000ffffffff",
+      "integer_expected": "1f5ffffffff00000",
+      "outputs": {
+        "candidate": "1f5ffffffff00000",
+        "parent": "1f5ffffffff00000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 186,
+        "parent": 188,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000100000000",
+      "integer_expected": "1f60000000000000",
+      "outputs": {
+        "candidate": "1f60000000000000",
+        "parent": "1f60000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 209,
+        "parent": 211,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000000100000001",
+      "integer_expected": "1f60000000080000",
+      "outputs": {
+        "candidate": "1f60000000080000",
+        "parent": "1f60000000080000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 211,
+        "parent": 213,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "00000001ffffffff",
+      "integer_expected": "1f66a09e667993a5",
+      "outputs": {
+        "candidate": "1f66a09e667993a5",
+        "parent": "1f66a09e667993a5",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 211,
+        "parent": 213,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "00007fffffffffff",
+      "integer_expected": "1fd6a09e667f3bb6",
+      "outputs": {
+        "candidate": "1fd6a09e667f3bb6",
+        "parent": "1fd6a09e667f3bb6",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 190,
+        "parent": 192,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000800000000000",
+      "integer_expected": "1fd6a09e667f3bcd",
+      "outputs": {
+        "candidate": "1fd6a09e667f3bcd",
+        "parent": "1fd6a09e667f3bcd",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 190,
+        "parent": 192,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000800000000001",
+      "integer_expected": "1fd6a09e667f3be3",
+      "outputs": {
+        "candidate": "1fd6a09e667f3be3",
+        "parent": "1fd6a09e667f3be3",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 188,
+        "parent": 190,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0000ffffffffffff",
+      "integer_expected": "1fdffffffffffff0",
+      "outputs": {
+        "candidate": "1fdffffffffffff0",
+        "parent": "1fdffffffffffff0",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 190,
+        "parent": 192,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0001000000000000",
+      "integer_expected": "1fe0000000000000",
+      "outputs": {
+        "candidate": "1fe0000000000000",
+        "parent": "1fe0000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 162,
+        "parent": 164,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0001000000000001",
+      "integer_expected": "1fe0000000000008",
+      "outputs": {
+        "candidate": "1fe0000000000008",
+        "parent": "1fe0000000000008",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 164,
+        "parent": 166,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0001ffffffffffff",
+      "integer_expected": "1fe6a09e667f3bc7",
+      "outputs": {
+        "candidate": "1fe6a09e667f3bc7",
+        "parent": "1fe6a09e667f3bc7",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 164,
+        "parent": 166,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0002000000000000",
+      "integer_expected": "1fe6a09e667f3bcd",
+      "outputs": {
+        "candidate": "1fe6a09e667f3bcd",
+        "parent": "1fe6a09e667f3bcd",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 163,
+        "parent": 165,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0002000000000001",
+      "integer_expected": "1fe6a09e667f3bd2",
+      "outputs": {
+        "candidate": "1fe6a09e667f3bd2",
+        "parent": "1fe6a09e667f3bd2",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 161,
+        "parent": 163,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0003ffffffffffff",
+      "integer_expected": "1feffffffffffffc",
+      "outputs": {
+        "candidate": "1feffffffffffffc",
+        "parent": "1feffffffffffffc",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 163,
+        "parent": 165,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0004000000000000",
+      "integer_expected": "1ff0000000000000",
+      "outputs": {
+        "candidate": "1ff0000000000000",
+        "parent": "1ff0000000000000",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 158,
+        "parent": 160,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0004000000000001",
+      "integer_expected": "1ff0000000000002",
+      "outputs": {
+        "candidate": "1ff0000000000002",
+        "parent": "1ff0000000000002",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 160,
+        "parent": 162,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0007ffffffffffff",
+      "integer_expected": "1ff6a09e667f3bcb",
+      "outputs": {
+        "candidate": "1ff6a09e667f3bcb",
+        "parent": "1ff6a09e667f3bcb",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 158,
+        "parent": 160,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0008000000000000",
+      "integer_expected": "1ff6a09e667f3bcd",
+      "outputs": {
+        "candidate": "1ff6a09e667f3bcd",
+        "parent": "1ff6a09e667f3bcd",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 157,
+        "parent": 159,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "0008000000000001",
+      "integer_expected": "1ff6a09e667f3bce",
+      "outputs": {
+        "candidate": "1ff6a09e667f3bce",
+        "parent": "1ff6a09e667f3bce",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 157,
+        "parent": 159,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "subnormal-width-and-neighbours",
+      "input": "000fffffffffffff",
+      "integer_expected": "1fffffffffffffff",
+      "outputs": {
+        "candidate": "1fffffffffffffff",
+        "parent": "1fffffffffffffff",
+        "Qfplib": "0000000000000000"
+      },
+      "instructions": {
+        "candidate": 157,
+        "parent": 159,
+        "Qfplib": 12
+      },
+      "stack_bytes": {
+        "candidate": 28,
+        "parent": 28,
+        "Qfplib": 0
+      },
+      "cold_carry": [],
+      "subnormal_alias": true
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "0010000000000000",
+      "integer_expected": "2000000000000000",
+      "outputs": {
+        "candidate": "2000000000000000",
+        "parent": "2000000000000000",
+        "Qfplib": "2000000000000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "0010000000000001",
+      "integer_expected": "2000000000000000",
+      "outputs": {
+        "candidate": "2000000000000000",
+        "parent": "2000000000000000",
+        "Qfplib": "2000000000000000"
+      },
+      "instructions": {
+        "candidate": 140,
+        "parent": 140,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "001fffffffffffff",
+      "integer_expected": "2006a09e667f3bcc",
+      "outputs": {
+        "candidate": "2006a09e667f3bcc",
+        "parent": "2006a09e667f3bcc",
+        "Qfplib": "2006a09e667f3bcc"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "0020000000000000",
+      "integer_expected": "2006a09e667f3bcd",
+      "outputs": {
+        "candidate": "2006a09e667f3bcd",
+        "parent": "2006a09e667f3bcd",
+        "Qfplib": "2006a09e667f3bcd"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 136,
+        "Qfplib": 167
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "0020000000000001",
+      "integer_expected": "2006a09e667f3bcd",
+      "outputs": {
+        "candidate": "2006a09e667f3bcd",
+        "parent": "2006a09e667f3bcd",
+        "Qfplib": "2006a09e667f3bcd"
+      },
+      "instructions": {
+        "candidate": 134,
+        "parent": 134,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "002fffffffffffff",
+      "integer_expected": "200fffffffffffff",
+      "outputs": {
+        "candidate": "200fffffffffffff",
+        "parent": "200fffffffffffff",
+        "Qfplib": "200fffffffffffff"
+      },
+      "instructions": {
+        "candidate": 141,
+        "parent": 141,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "0030000000000000",
+      "integer_expected": "2010000000000000",
+      "outputs": {
+        "candidate": "2010000000000000",
+        "parent": "2010000000000000",
+        "Qfplib": "2010000000000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "0030000000000001",
+      "integer_expected": "2010000000000000",
+      "outputs": {
+        "candidate": "2010000000000000",
+        "parent": "2010000000000000",
+        "Qfplib": "2010000000000000"
+      },
+      "instructions": {
+        "candidate": 140,
+        "parent": 140,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "003fffffffffffff",
+      "integer_expected": "2016a09e667f3bcc",
+      "outputs": {
+        "candidate": "2016a09e667f3bcc",
+        "parent": "2016a09e667f3bcc",
+        "Qfplib": "2016a09e667f3bcc"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "0360000000000000",
+      "integer_expected": "21a6a09e667f3bcd",
+      "outputs": {
+        "candidate": "21a6a09e667f3bcd",
+        "parent": "21a6a09e667f3bcd",
+        "Qfplib": "21a6a09e667f3bcd"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 136,
+        "Qfplib": 167
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "0360000000000001",
+      "integer_expected": "21a6a09e667f3bcd",
+      "outputs": {
+        "candidate": "21a6a09e667f3bcd",
+        "parent": "21a6a09e667f3bcd",
+        "Qfplib": "21a6a09e667f3bcd"
+      },
+      "instructions": {
+        "candidate": 134,
+        "parent": 134,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "036fffffffffffff",
+      "integer_expected": "21afffffffffffff",
+      "outputs": {
+        "candidate": "21afffffffffffff",
+        "parent": "21afffffffffffff",
+        "Qfplib": "21afffffffffffff"
+      },
+      "instructions": {
+        "candidate": 141,
+        "parent": 141,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "0370000000000000",
+      "integer_expected": "21b0000000000000",
+      "outputs": {
+        "candidate": "21b0000000000000",
+        "parent": "21b0000000000000",
+        "Qfplib": "21b0000000000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "0370000000000001",
+      "integer_expected": "21b0000000000000",
+      "outputs": {
+        "candidate": "21b0000000000000",
+        "parent": "21b0000000000000",
+        "Qfplib": "21b0000000000000"
+      },
+      "instructions": {
+        "candidate": 140,
+        "parent": 140,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "037fffffffffffff",
+      "integer_expected": "21b6a09e667f3bcc",
+      "outputs": {
+        "candidate": "21b6a09e667f3bcc",
+        "parent": "21b6a09e667f3bcc",
+        "Qfplib": "21b6a09e667f3bcc"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "3fe0000000000000",
+      "integer_expected": "3fe6a09e667f3bcd",
+      "outputs": {
+        "candidate": "3fe6a09e667f3bcd",
+        "parent": "3fe6a09e667f3bcd",
+        "Qfplib": "3fe6a09e667f3bcd"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 136,
+        "Qfplib": 167
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "3fe0000000000001",
+      "integer_expected": "3fe6a09e667f3bcd",
+      "outputs": {
+        "candidate": "3fe6a09e667f3bcd",
+        "parent": "3fe6a09e667f3bcd",
+        "Qfplib": "3fe6a09e667f3bcd"
+      },
+      "instructions": {
+        "candidate": 134,
+        "parent": 134,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "3fefffffffffffff",
+      "integer_expected": "3fefffffffffffff",
+      "outputs": {
+        "candidate": "3fefffffffffffff",
+        "parent": "3fefffffffffffff",
+        "Qfplib": "3fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 141,
+        "parent": 141,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "3ff0000000000000",
+      "integer_expected": "3ff0000000000000",
+      "outputs": {
+        "candidate": "3ff0000000000000",
+        "parent": "3ff0000000000000",
+        "Qfplib": "3ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "3ff0000000000001",
+      "integer_expected": "3ff0000000000000",
+      "outputs": {
+        "candidate": "3ff0000000000000",
+        "parent": "3ff0000000000000",
+        "Qfplib": "3ff0000000000000"
+      },
+      "instructions": {
+        "candidate": 140,
+        "parent": 140,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "3fffffffffffffff",
+      "integer_expected": "3ff6a09e667f3bcc",
+      "outputs": {
+        "candidate": "3ff6a09e667f3bcc",
+        "parent": "3ff6a09e667f3bcc",
+        "Qfplib": "3ff6a09e667f3bcc"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "4000000000000000",
+      "integer_expected": "3ff6a09e667f3bcd",
+      "outputs": {
+        "candidate": "3ff6a09e667f3bcd",
+        "parent": "3ff6a09e667f3bcd",
+        "Qfplib": "3ff6a09e667f3bcd"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 136,
+        "Qfplib": 167
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "4000000000000001",
+      "integer_expected": "3ff6a09e667f3bcd",
+      "outputs": {
+        "candidate": "3ff6a09e667f3bcd",
+        "parent": "3ff6a09e667f3bcd",
+        "Qfplib": "3ff6a09e667f3bcd"
+      },
+      "instructions": {
+        "candidate": 134,
+        "parent": 134,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "400fffffffffffff",
+      "integer_expected": "3fffffffffffffff",
+      "outputs": {
+        "candidate": "3fffffffffffffff",
+        "parent": "3fffffffffffffff",
+        "Qfplib": "3fffffffffffffff"
+      },
+      "instructions": {
+        "candidate": 141,
+        "parent": 141,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "7fd0000000000000",
+      "integer_expected": "5fe0000000000000",
+      "outputs": {
+        "candidate": "5fe0000000000000",
+        "parent": "5fe0000000000000",
+        "Qfplib": "5fe0000000000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "7fd0000000000001",
+      "integer_expected": "5fe0000000000000",
+      "outputs": {
+        "candidate": "5fe0000000000000",
+        "parent": "5fe0000000000000",
+        "Qfplib": "5fe0000000000000"
+      },
+      "instructions": {
+        "candidate": 140,
+        "parent": 140,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "7fdfffffffffffff",
+      "integer_expected": "5fe6a09e667f3bcc",
+      "outputs": {
+        "candidate": "5fe6a09e667f3bcc",
+        "parent": "5fe6a09e667f3bcc",
+        "Qfplib": "5fe6a09e667f3bcc"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "7fe0000000000000",
+      "integer_expected": "5fe6a09e667f3bcd",
+      "outputs": {
+        "candidate": "5fe6a09e667f3bcd",
+        "parent": "5fe6a09e667f3bcd",
+        "Qfplib": "5fe6a09e667f3bcd"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 136,
+        "Qfplib": 167
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "7fe0000000000001",
+      "integer_expected": "5fe6a09e667f3bcd",
+      "outputs": {
+        "candidate": "5fe6a09e667f3bcd",
+        "parent": "5fe6a09e667f3bcd",
+        "Qfplib": "5fe6a09e667f3bcd"
+      },
+      "instructions": {
+        "candidate": 134,
+        "parent": 134,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-exponent-and-carry-edges",
+      "input": "7fefffffffffffff",
+      "integer_expected": "5fefffffffffffff",
+      "outputs": {
+        "candidate": "5fefffffffffffff",
+        "parent": "5fefffffffffffff",
+        "Qfplib": "5fefffffffffffff"
+      },
+      "instructions": {
+        "candidate": 141,
+        "parent": 141,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3ff00fffffffffff",
+      "integer_expected": "3ff007fe00ff606f",
+      "outputs": {
+        "candidate": "3ff007fe00ff606f",
+        "parent": "3ff007fe00ff606f",
+        "Qfplib": "3ff007fe00ff606f"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 142
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3ff0100000000000",
+      "integer_expected": "3ff007fe00ff6070",
+      "outputs": {
+        "candidate": "3ff007fe00ff6070",
+        "parent": "3ff007fe00ff6070",
+        "Qfplib": "3ff007fe00ff6070"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 165
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3ff0100000000001",
+      "integer_expected": "3ff007fe00ff6070",
+      "outputs": {
+        "candidate": "3ff007fe00ff6070",
+        "parent": "3ff007fe00ff6070",
+        "Qfplib": "3ff007fe00ff6070"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3ff7efffffffffff",
+      "integer_expected": "3ff39204cd9d81d6",
+      "outputs": {
+        "candidate": "3ff39204cd9d81d6",
+        "parent": "3ff39204cd9d81d6",
+        "Qfplib": "3ff39204cd9d81d6"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3ff7f00000000000",
+      "integer_expected": "3ff39204cd9d81d6",
+      "outputs": {
+        "candidate": "3ff39204cd9d81d6",
+        "parent": "3ff39204cd9d81d6",
+        "Qfplib": "3ff39204cd9d81d6"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3ff7f00000000001",
+      "integer_expected": "3ff39204cd9d81d7",
+      "outputs": {
+        "candidate": "3ff39204cd9d81d7",
+        "parent": "3ff39204cd9d81d7",
+        "Qfplib": "3ff39204cd9d81d7"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3ff7ffffffffffff",
+      "integer_expected": "3ff3988e1409212e",
+      "outputs": {
+        "candidate": "3ff3988e1409212e",
+        "parent": "3ff3988e1409212e",
+        "Qfplib": "3ff3988e1409212e"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3ff8000000000000",
+      "integer_expected": "3ff3988e1409212e",
+      "outputs": {
+        "candidate": "3ff3988e1409212e",
+        "parent": "3ff3988e1409212e",
+        "Qfplib": "3ff3988e1409212e"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3ff8000000000001",
+      "integer_expected": "3ff3988e1409212f",
+      "outputs": {
+        "candidate": "3ff3988e1409212f",
+        "parent": "3ff3988e1409212f",
+        "Qfplib": "3ff3988e1409212f"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3fffdfffffffffff",
+      "integer_expected": "3ff6954b41cd4293",
+      "outputs": {
+        "candidate": "3ff6954b41cd4293",
+        "parent": "3ff6954b41cd4293",
+        "Qfplib": "3ff6954b41cd4293"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3fffe00000000000",
+      "integer_expected": "3ff6954b41cd4293",
+      "outputs": {
+        "candidate": "3ff6954b41cd4293",
+        "parent": "3ff6954b41cd4293",
+        "Qfplib": "3ff6954b41cd4293"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3fffe00000000001",
+      "integer_expected": "3ff6954b41cd4294",
+      "outputs": {
+        "candidate": "3ff6954b41cd4294",
+        "parent": "3ff6954b41cd4294",
+        "Qfplib": "3ff6954b41cd4294"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 165
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3fffefffffffffff",
+      "integer_expected": "3ff69af589b35963",
+      "outputs": {
+        "candidate": "3ff69af589b35963",
+        "parent": "3ff69af589b35963",
+        "Qfplib": "3ff69af589b35963"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3ffff00000000000",
+      "integer_expected": "3ff69af589b35963",
+      "outputs": {
+        "candidate": "3ff69af589b35963",
+        "parent": "3ff69af589b35963",
+        "Qfplib": "3ff69af589b35963"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-coefficient-boundary",
+      "input": "3ffff00000000001",
+      "integer_expected": "3ff69af589b35964",
+      "outputs": {
+        "candidate": "3ff69af589b35964",
+        "parent": "3ff69af589b35964",
+        "Qfplib": "3ff69af589b35964"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000000000000",
+      "integer_expected": "20b0000000000000",
+      "outputs": {
+        "candidate": "20b0000000000000",
+        "parent": "20b0000000000000",
+        "Qfplib": "20b0000000000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000000000001",
+      "integer_expected": "20b0000000000000",
+      "outputs": {
+        "candidate": "20b0000000000000",
+        "parent": "20b0000000000000",
+        "Qfplib": "20b0000000000000"
+      },
+      "instructions": {
+        "candidate": 140,
+        "parent": 140,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000000000002",
+      "integer_expected": "20b0000000000001",
+      "outputs": {
+        "candidate": "20b0000000000001",
+        "parent": "20b0000000000001",
+        "Qfplib": "20b0000000000001"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000000000003",
+      "integer_expected": "20b0000000000001",
+      "outputs": {
+        "candidate": "20b0000000000001",
+        "parent": "20b0000000000001",
+        "Qfplib": "20b0000000000001"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000000000004",
+      "integer_expected": "20b0000000000002",
+      "outputs": {
+        "candidate": "20b0000000000002",
+        "parent": "20b0000000000002",
+        "Qfplib": "20b0000000000002"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000000000005",
+      "integer_expected": "20b0000000000002",
+      "outputs": {
+        "candidate": "20b0000000000002",
+        "parent": "20b0000000000002",
+        "Qfplib": "20b0000000000002"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000000000006",
+      "integer_expected": "20b0000000000003",
+      "outputs": {
+        "candidate": "20b0000000000003",
+        "parent": "20b0000000000003",
+        "Qfplib": "20b0000000000003"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000000000007",
+      "integer_expected": "20b0000000000003",
+      "outputs": {
+        "candidate": "20b0000000000003",
+        "parent": "20b0000000000003",
+        "Qfplib": "20b0000000000003"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000000000008",
+      "integer_expected": "20b0000000000004",
+      "outputs": {
+        "candidate": "20b0000000000004",
+        "parent": "20b0000000000004",
+        "Qfplib": "20b0000000000004"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "01700001000003fe",
+      "integer_expected": "20b000007fffffff",
+      "outputs": {
+        "candidate": "20b000007fffffff",
+        "parent": "20b000007fffffff",
+        "Qfplib": "20b000007fffffff"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "01700001000003ff",
+      "integer_expected": "20b0000080000000",
+      "outputs": {
+        "candidate": "20b0000080000000",
+        "parent": "20b0000080000000",
+        "Qfplib": "20b0000080000000"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 165
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000100000400",
+      "integer_expected": "20b0000080000000",
+      "outputs": {
+        "candidate": "20b0000080000000",
+        "parent": "20b0000080000000",
+        "Qfplib": "20b0000080000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000100000401",
+      "integer_expected": "20b0000080000000",
+      "outputs": {
+        "candidate": "20b0000080000000",
+        "parent": "20b0000080000000",
+        "Qfplib": "20b0000080000000"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000100000402",
+      "integer_expected": "20b0000080000001",
+      "outputs": {
+        "candidate": "20b0000080000001",
+        "parent": "20b0000080000001",
+        "Qfplib": "20b0000080000001"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000200000ffe",
+      "integer_expected": "20b00000ffffffff",
+      "outputs": {
+        "candidate": "20b00000ffffffff",
+        "parent": "20b00000ffffffff",
+        "Qfplib": "20b00000ffffffff"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000200000fff",
+      "integer_expected": "20b0000100000000",
+      "outputs": {
+        "candidate": "20b0000100000000",
+        "parent": "20b0000100000000",
+        "Qfplib": "20b0000100000000"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 165
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "0170000200001000",
+      "integer_expected": "20b0000100000000",
+      "outputs": {
+        "candidate": "20b0000100000000",
+        "parent": "20b0000100000000",
+        "Qfplib": "20b0000100000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "018ffffffffffffc",
+      "integer_expected": "20bffffffffffffe",
+      "outputs": {
+        "candidate": "20bffffffffffffe",
+        "parent": "20bffffffffffffe",
+        "Qfplib": "20bffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 136,
+        "Qfplib": 141
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "018ffffffffffffd",
+      "integer_expected": "20bffffffffffffe",
+      "outputs": {
+        "candidate": "20bffffffffffffe",
+        "parent": "20bffffffffffffe",
+        "Qfplib": "20bffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 138,
+        "parent": 138,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "018ffffffffffffe",
+      "integer_expected": "20bfffffffffffff",
+      "outputs": {
+        "candidate": "20bfffffffffffff",
+        "parent": "20bfffffffffffff",
+        "Qfplib": "20bfffffffffffff"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 136,
+        "Qfplib": 141
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000000000002",
+      "integer_expected": "3ff0000000000001",
+      "outputs": {
+        "candidate": "3ff0000000000001",
+        "parent": "3ff0000000000001",
+        "Qfplib": "3ff0000000000001"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000000000003",
+      "integer_expected": "3ff0000000000001",
+      "outputs": {
+        "candidate": "3ff0000000000001",
+        "parent": "3ff0000000000001",
+        "Qfplib": "3ff0000000000001"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000000000004",
+      "integer_expected": "3ff0000000000002",
+      "outputs": {
+        "candidate": "3ff0000000000002",
+        "parent": "3ff0000000000002",
+        "Qfplib": "3ff0000000000002"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000000000005",
+      "integer_expected": "3ff0000000000002",
+      "outputs": {
+        "candidate": "3ff0000000000002",
+        "parent": "3ff0000000000002",
+        "Qfplib": "3ff0000000000002"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000000000006",
+      "integer_expected": "3ff0000000000003",
+      "outputs": {
+        "candidate": "3ff0000000000003",
+        "parent": "3ff0000000000003",
+        "Qfplib": "3ff0000000000003"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000000000007",
+      "integer_expected": "3ff0000000000003",
+      "outputs": {
+        "candidate": "3ff0000000000003",
+        "parent": "3ff0000000000003",
+        "Qfplib": "3ff0000000000003"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000000000008",
+      "integer_expected": "3ff0000000000004",
+      "outputs": {
+        "candidate": "3ff0000000000004",
+        "parent": "3ff0000000000004",
+        "Qfplib": "3ff0000000000004"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff00001000003fe",
+      "integer_expected": "3ff000007fffffff",
+      "outputs": {
+        "candidate": "3ff000007fffffff",
+        "parent": "3ff000007fffffff",
+        "Qfplib": "3ff000007fffffff"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff00001000003ff",
+      "integer_expected": "3ff0000080000000",
+      "outputs": {
+        "candidate": "3ff0000080000000",
+        "parent": "3ff0000080000000",
+        "Qfplib": "3ff0000080000000"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 165
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000100000400",
+      "integer_expected": "3ff0000080000000",
+      "outputs": {
+        "candidate": "3ff0000080000000",
+        "parent": "3ff0000080000000",
+        "Qfplib": "3ff0000080000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000100000401",
+      "integer_expected": "3ff0000080000000",
+      "outputs": {
+        "candidate": "3ff0000080000000",
+        "parent": "3ff0000080000000",
+        "Qfplib": "3ff0000080000000"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000100000402",
+      "integer_expected": "3ff0000080000001",
+      "outputs": {
+        "candidate": "3ff0000080000001",
+        "parent": "3ff0000080000001",
+        "Qfplib": "3ff0000080000001"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000200000ffe",
+      "integer_expected": "3ff00000ffffffff",
+      "outputs": {
+        "candidate": "3ff00000ffffffff",
+        "parent": "3ff00000ffffffff",
+        "Qfplib": "3ff00000ffffffff"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000200000fff",
+      "integer_expected": "3ff0000100000000",
+      "outputs": {
+        "candidate": "3ff0000100000000",
+        "parent": "3ff0000100000000",
+        "Qfplib": "3ff0000100000000"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 165
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "3ff0000200001000",
+      "integer_expected": "3ff0000100000000",
+      "outputs": {
+        "candidate": "3ff0000100000000",
+        "parent": "3ff0000100000000",
+        "Qfplib": "3ff0000100000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "400ffffffffffffc",
+      "integer_expected": "3ffffffffffffffe",
+      "outputs": {
+        "candidate": "3ffffffffffffffe",
+        "parent": "3ffffffffffffffe",
+        "Qfplib": "3ffffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 136,
+        "Qfplib": 141
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "400ffffffffffffd",
+      "integer_expected": "3ffffffffffffffe",
+      "outputs": {
+        "candidate": "3ffffffffffffffe",
+        "parent": "3ffffffffffffffe",
+        "Qfplib": "3ffffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 138,
+        "parent": 138,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "400ffffffffffffe",
+      "integer_expected": "3fffffffffffffff",
+      "outputs": {
+        "candidate": "3fffffffffffffff",
+        "parent": "3fffffffffffffff",
+        "Qfplib": "3fffffffffffffff"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 136,
+        "Qfplib": 141
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000000000000",
+      "integer_expected": "5f30000000000000",
+      "outputs": {
+        "candidate": "5f30000000000000",
+        "parent": "5f30000000000000",
+        "Qfplib": "5f30000000000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000000000001",
+      "integer_expected": "5f30000000000000",
+      "outputs": {
+        "candidate": "5f30000000000000",
+        "parent": "5f30000000000000",
+        "Qfplib": "5f30000000000000"
+      },
+      "instructions": {
+        "candidate": 140,
+        "parent": 140,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000000000002",
+      "integer_expected": "5f30000000000001",
+      "outputs": {
+        "candidate": "5f30000000000001",
+        "parent": "5f30000000000001",
+        "Qfplib": "5f30000000000001"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000000000003",
+      "integer_expected": "5f30000000000001",
+      "outputs": {
+        "candidate": "5f30000000000001",
+        "parent": "5f30000000000001",
+        "Qfplib": "5f30000000000001"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000000000004",
+      "integer_expected": "5f30000000000002",
+      "outputs": {
+        "candidate": "5f30000000000002",
+        "parent": "5f30000000000002",
+        "Qfplib": "5f30000000000002"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000000000005",
+      "integer_expected": "5f30000000000002",
+      "outputs": {
+        "candidate": "5f30000000000002",
+        "parent": "5f30000000000002",
+        "Qfplib": "5f30000000000002"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000000000006",
+      "integer_expected": "5f30000000000003",
+      "outputs": {
+        "candidate": "5f30000000000003",
+        "parent": "5f30000000000003",
+        "Qfplib": "5f30000000000003"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000000000007",
+      "integer_expected": "5f30000000000003",
+      "outputs": {
+        "candidate": "5f30000000000003",
+        "parent": "5f30000000000003",
+        "Qfplib": "5f30000000000003"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000000000008",
+      "integer_expected": "5f30000000000004",
+      "outputs": {
+        "candidate": "5f30000000000004",
+        "parent": "5f30000000000004",
+        "Qfplib": "5f30000000000004"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e700001000003fe",
+      "integer_expected": "5f3000007fffffff",
+      "outputs": {
+        "candidate": "5f3000007fffffff",
+        "parent": "5f3000007fffffff",
+        "Qfplib": "5f3000007fffffff"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e700001000003ff",
+      "integer_expected": "5f30000080000000",
+      "outputs": {
+        "candidate": "5f30000080000000",
+        "parent": "5f30000080000000",
+        "Qfplib": "5f30000080000000"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 165
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000100000400",
+      "integer_expected": "5f30000080000000",
+      "outputs": {
+        "candidate": "5f30000080000000",
+        "parent": "5f30000080000000",
+        "Qfplib": "5f30000080000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000100000401",
+      "integer_expected": "5f30000080000000",
+      "outputs": {
+        "candidate": "5f30000080000000",
+        "parent": "5f30000080000000",
+        "Qfplib": "5f30000080000000"
+      },
+      "instructions": {
+        "candidate": 137,
+        "parent": 137,
+        "Qfplib": 162
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000100000402",
+      "integer_expected": "5f30000080000001",
+      "outputs": {
+        "candidate": "5f30000080000001",
+        "parent": "5f30000080000001",
+        "Qfplib": "5f30000080000001"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000200000ffe",
+      "integer_expected": "5f300000ffffffff",
+      "outputs": {
+        "candidate": "5f300000ffffffff",
+        "parent": "5f300000ffffffff",
+        "Qfplib": "5f300000ffffffff"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000200000fff",
+      "integer_expected": "5f30000100000000",
+      "outputs": {
+        "candidate": "5f30000100000000",
+        "parent": "5f30000100000000",
+        "Qfplib": "5f30000100000000"
+      },
+      "instructions": {
+        "candidate": 135,
+        "parent": 135,
+        "Qfplib": 165
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e70000200001000",
+      "integer_expected": "5f30000100000000",
+      "outputs": {
+        "candidate": "5f30000100000000",
+        "parent": "5f30000100000000",
+        "Qfplib": "5f30000100000000"
+      },
+      "instructions": {
+        "candidate": 133,
+        "parent": 133,
+        "Qfplib": 139
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e8ffffffffffffc",
+      "integer_expected": "5f3ffffffffffffe",
+      "outputs": {
+        "candidate": "5f3ffffffffffffe",
+        "parent": "5f3ffffffffffffe",
+        "Qfplib": "5f3ffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 136,
+        "Qfplib": 141
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e8ffffffffffffd",
+      "integer_expected": "5f3ffffffffffffe",
+      "outputs": {
+        "candidate": "5f3ffffffffffffe",
+        "parent": "5f3ffffffffffffe",
+        "Qfplib": "5f3ffffffffffffe"
+      },
+      "instructions": {
+        "candidate": 138,
+        "parent": 138,
+        "Qfplib": 164
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    },
+    {
+      "group": "normal-squared-midpoint-neighbours",
+      "input": "7e8ffffffffffffe",
+      "integer_expected": "5f3fffffffffffff",
+      "outputs": {
+        "candidate": "5f3fffffffffffff",
+        "parent": "5f3fffffffffffff",
+        "Qfplib": "5f3fffffffffffff"
+      },
+      "instructions": {
+        "candidate": 136,
+        "parent": 136,
+        "Qfplib": 141
+      },
+      "stack_bytes": {
+        "candidate": 20,
+        "parent": 20,
+        "Qfplib": 20
+      },
+      "cold_carry": [],
+      "subnormal_alias": false
+    }
+  ]
+}

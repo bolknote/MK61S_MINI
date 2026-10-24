@@ -1,0 +1,22 @@
+{
+  "status": "PASS_EXACT_RATIONAL_SIX_Q70_RESIDUAL_REPAIR",
+  "parent_pure_error_function_sha256": "d8299d0763ef66f0fb687e9d4a00bbfdbe017005002b95ffa893a6c96a394644",
+  "parent_table_proof_sha256": "1ba0eaa826b9564942207ae3766a32d794595630d481c1380acf78fc835d42ba",
+  "domain": "Non-inverted e=-5..-1; h<=2^62+2^40; quotient error<33 Q70.",
+  "h_real_cap": "4194305/1073741824",
+  "polynomial_and_table_error": "798306259083268804829075714206589080555675749331329722218277483026366014282451020316428509/179033633228090837585222528838246173064072002537845401199726863101058628279115127623516160",
+  "polynomial_and_table_error_float": 4.458973683822959,
+  "residual_quotient_error": "524305/524288",
+  "derivative_error": "701832716434233945742073948591609646177/1393796574908163946345982392040522594123776",
+  "derivative_error_float": 0.0005035402791691299,
+  "total_error": "977435848109460584797165562731548360324947181097719316121583511132315902396729148651358429/179033633228090837585222528838246173064072002537845401199726863101058628279115127623516160",
+  "total_error_float": 5.459509649028886,
+  "strict_radius_Q70": 6,
+  "truncated_quotient_reason": "D0=floor(d/2^38)>=2^20,R0=floor(abs(R)/2^38),q0=floor(R0/D0)<=33. Then -33/2^20<abs(R)/d-q0<1+1/2^20.",
+  "tail_reuse_reason": "Repair entered only within54 Q70 of a midpoint. abs(delta)<=33,half>=1024, so the quantum index and retained significand stay unchanged.",
+  "original_fallback_kept": true,
+  "new_tables_or_global_RAM": false,
+  "canonical_or_frozen_changed": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}
