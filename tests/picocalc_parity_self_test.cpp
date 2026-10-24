@@ -104,6 +104,25 @@ void picocalc_parity_test() {
                  },
                  nullptr, nullptr});
   assert(!terminal.raw());
+  {
+    std::string routed_output;
+    Terminal routed(calculator,services,ui);
+    routed.init({&routed_output,[](void* raw,const char* text,unsigned n) {
+      ((std::string*)raw)->append(text,n);
+    },nullptr,nullptr});
+    // A fragmented UART escape sequence cannot consume USB command text.
+    routed.input_source(false);routed.receive(0x1B);routed.receive('[');
+    routed.input_source(true);
+    for(char c:std::string("pwd\r")) routed.receive((u8)c);
+    assert(routed.pending());routed.tick();
+    assert(routed_output.find("pwd\r\n/\r\n")!=std::string::npos);
+    assert(routed_output.find("ERROR")==std::string::npos);
+    routed.input_source(false);routed.receive('A');routed.receive(3);
+    // CR/LF pairing belongs to its source even across a channel switch.
+    routed.input_source(true);routed.receive('\r');routed.tick();
+    routed.input_source(false);routed.receive('\n');assert(routed.pending());routed.tick();
+    routed.input_source(true);routed.receive('\n');assert(!routed.pending());
+  }
   auto settle=[&] {
     for(unsigned i=0;i<1024 && !calculator.parked();++i) calculator.tick(false,true);
     assert(calculator.parked());

@@ -1,0 +1,355 @@
+{
+  "status": "PASS_POLL_ONLY_ABA_AND_LATENCY_ORIGINAL_EXACTLY_RESTORED",
+  "date": "2026-10-24",
+  "timezone": "Europe/Moscow",
+  "tested_base": "2870d70cb39572673e0ec4f156d383506a629daf",
+  "branch": "feature/vm-block-poll",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "usb": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000
+  },
+  "scope": {
+    "poll_optimization_complete": true,
+    "generic_compute_block_task_complete": false,
+    "program_specific": false,
+    "programs_changed": false,
+    "bytecode_or_APP_ABI_changed": false,
+    "VM_or_compiler_changed": false,
+    "five_System_APPs_byte_identical_between_variants": true
+  },
+  "implementation": [
+    "Proportional Grid maintains an exact u16 dirty-row summary alongside the existing bitmap; anyDirty is an O(1) summary read.",
+    "Every existing mark/reset/reshape/clear path maintains the summary. dirtyMask still independently scans the bitmap.",
+    "No keyboard/USB/power/RTC/watchdog service is skipped, reordered or sampled less often. Existing logical VM service cadence is unchanged.",
+    "The character-only Grid layout and anyDirty implementation remain unchanged."
+  ],
+  "performance": {
+    "method": "MCU accepted OK to next blocking key wait, profiler stopped, six searches per stage: cold, warmup, USB, detached, detached, USB. First two excluded from warm comparison. A/B/A uses identical game and APPs; only resident differs.",
+    "comparison": {
+      "stages": [
+        {
+          "name": "A",
+          "samples": {
+            "continuous": [
+              25.487809,
+              25.370037
+            ],
+            "headless": [
+              24.391276,
+              24.344694
+            ]
+          },
+          "continuous_seconds": 25.428922999999998,
+          "headless_seconds": 24.367985,
+          "saved_seconds": 1.0609379999999966,
+          "elapsed_reduction_percent": 4.172170406115894
+        },
+        {
+          "name": "B",
+          "samples": {
+            "continuous": [
+              24.825136,
+              24.720593
+            ],
+            "headless": [
+              23.773168,
+              23.729217
+            ]
+          },
+          "continuous_seconds": 24.7728645,
+          "headless_seconds": 23.7511925,
+          "saved_seconds": 1.0216720000000024,
+          "elapsed_reduction_percent": 4.1241577048952145
+        },
+        {
+          "name": "A-control",
+          "samples": {
+            "continuous": [
+              25.484523,
+              25.356016
+            ],
+            "headless": [
+              24.392801,
+              24.346218
+            ]
+          },
+          "continuous_seconds": 25.4202695,
+          "headless_seconds": 24.3695095,
+          "saved_seconds": 1.0507600000000004,
+          "elapsed_reduction_percent": 4.1335517705664016
+        }
+      ],
+      "modes": {
+        "continuous": {
+          "reference_seconds": 25.42459625,
+          "candidate_seconds": 24.7728645,
+          "saved_seconds": 0.6517317499999997,
+          "elapsed_reduction_percent": 2.563390755910233,
+          "speedup": 1.0263082918812234,
+          "control_drift_percent": -0.034030147482055906
+        },
+        "headless": {
+          "reference_seconds": 24.36874725,
+          "candidate_seconds": 23.7511925,
+          "saved_seconds": 0.61755475,
+          "elapsed_reduction_percent": 2.5342080315597704,
+          "speedup": 1.0260009997392763,
+          "control_drift_percent": 0.006256159464967936
+        }
+      }
+    },
+    "runs": [
+      {
+        "name": "A",
+        "seconds": [
+          43.759798,
+          25.414623,
+          25.487809,
+          24.391276,
+          24.344694,
+          25.370037
+        ]
+      },
+      {
+        "name": "B",
+        "seconds": [
+          43.326185,
+          24.786947,
+          24.825136,
+          23.773168,
+          23.729217,
+          24.720593
+        ]
+      },
+      {
+        "name": "A-control",
+        "seconds": [
+          43.739869,
+          25.424515,
+          25.484523,
+          24.392801,
+          24.346218,
+          25.356016
+        ]
+      }
+    ],
+    "cold": {
+      "samples_seconds": [
+        43.759798,
+        43.326185,
+        43.739869
+      ],
+      "reference_seconds": 43.7498335,
+      "candidate_seconds": 43.326185,
+      "saved_seconds": 0.42364849999999876,
+      "elapsed_reduction_percent": 0.9683431138086451
+    },
+    "all_18_searches_nodes": 420,
+    "expected_move": "e2e3",
+    "full_eight_rank_board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "run_order": [
+      "cold_USB",
+      "warmup_USB",
+      "measured_USB",
+      "measured_detached",
+      "measured_detached",
+      "measured_USB"
+    ]
+  },
+  "resources": {
+    "shipping_case": "f411-classic-v3-usb-screen",
+    "arithmetic": "owned BINARY64",
+    "candidate_bytes": 380428,
+    "control_bytes": 380444,
+    "control_globals_bytes": 21768,
+    "candidate_globals_bytes": 21768,
+    "control_max_static_frame_bytes": 1928,
+    "candidate_max_static_frame_bytes": 1928,
+    "delta": {
+      "flash_bytes": -16,
+      "global_RAM_bytes": 0,
+      "maximum_static_frame_bytes": 0,
+      "proportional_Grid_object_bytes": 2,
+      "character_Grid_object_bytes": 0
+    },
+    "gates": {
+      "f411_headroom": 131072,
+      "f411_globals": 49152,
+      "f411_max_frame": 3072,
+      "f401_headroom": 8192,
+      "f401_globals": 52428,
+      "f401_max_frame": 2048,
+      "stack_bytes": 16384,
+      "stack_guard_bytes": 256
+    },
+    "APP_limit_bytes": 20480,
+    "LANGVM_loaded_bytes": 20372,
+    "Flash_page_cache_bytes": 32768,
+    "qualification": "The proportional Grid object itself grows 1444 to1446 bytes; whole-image static RAM is unchanged due to layout padding. Character Grid stays364 bytes. No claim that every object allocation is unchanged.",
+    "normal_profile_distinction": "These matched images have USB_SCREEN=1 and SETUP_AS_APP=1. The coordinator normal image has both0; no byte equivalence or direct normal-profile performance transfer is claimed."
+  },
+  "latency": {
+    "not_shipping_performance_samples": true,
+    "method": "Separate diagnostic A/B/A; cold and warm chess, existing BASIC/FOCAL working-set corpus, INPUT/ESC for both languages, two Graphics pages per stage.",
+    "stages": [
+      {
+        "name": "A",
+        "cold_row_max_us": 23117.729166666668,
+        "warm_row_max_us": 13623.864583333334,
+        "cold_usb_max_us": 6541.020833333333,
+        "warm_usb_max_us": 5872.96875,
+        "cold_ping_max_seconds": 0.006253250001464039,
+        "warm_ping_max_seconds": 0.002716916991630569,
+        "generic_row_max_us": 89261.92708333333,
+        "generic_usb_max_us": 62746.78125,
+        "all_11_gates_passed": true
+      },
+      {
+        "name": "B",
+        "cold_row_max_us": 23092.208333333332,
+        "warm_row_max_us": 13039.645833333334,
+        "cold_usb_max_us": 6879.395833333333,
+        "warm_usb_max_us": 5851.802083333333,
+        "cold_ping_max_seconds": 0.005838959012180567,
+        "warm_ping_max_seconds": 0.002531791978981346,
+        "generic_row_max_us": 89255.19791666667,
+        "generic_usb_max_us": 62809.895833333336,
+        "all_11_gates_passed": true
+      },
+      {
+        "name": "A-control",
+        "cold_row_max_us": 23118.5625,
+        "warm_row_max_us": 13711.40625,
+        "cold_usb_max_us": 7814.96875,
+        "warm_usb_max_us": 5871.989583333333,
+        "cold_ping_max_seconds": 0.005672750005032867,
+        "warm_ping_max_seconds": 0.0033558750001247972,
+        "generic_row_max_us": 89255.48958333333,
+        "generic_usb_max_us": 62747,
+        "all_11_gates_passed": true
+      }
+    ],
+    "warm_chess_gap_limit_us": 30000,
+    "cold_and_generic_gap_limit_us": 100000,
+    "nonce_PONG_deadline_seconds": 1,
+    "CRC_and_nonce_and_unique_nonzero_service_samples_required": true,
+    "all_existing_gates_passed": true,
+    "keyboard_overflows": 0,
+    "caveat": "Not every individual tail decreased: the first B STRESS row peak was49219.572916666664us, versus a maximum44597.635416666664us across four control STRESS windows. B's second STRESS peak was41670.041666666664us. Keyboard.poll and USB-service peaks stayed about14.9ms. Causality of the isolated row-tail increase is not established; no blanket claim that all latency tails improved."
+  },
+  "profile": {
+    "diagnostic_only": true,
+    "arithmetic_or_VM_core_speedup_claimed": false,
+    "A": {
+      "idle_flush_calls": 223421,
+      "idle_flush_average_cycles": 434,
+      "idle_flush_total_cycles": 97155529,
+      "VM_entries": 15441,
+      "VM_invocations": 7720
+    },
+    "B": {
+      "idle_flush_calls": 223178,
+      "idle_flush_average_cycles": 173,
+      "idle_flush_total_cycles": 38735346,
+      "VM_entries": 15441,
+      "VM_invocations": 7720
+    },
+    "flush_total_cycle_difference_seconds": 0.6085435729166667,
+    "Flash_cache_counters_identical": {
+      "lookups": 2677,
+      "hits": 914,
+      "misses": 1763,
+      "invalidations": 177,
+      "loan_hits": 14969,
+      "loan_misses": 462
+    },
+    "interpretation": "The hot empty-screen check accounts for the observed saving; application, VM and cache workload are unchanged. Instrumented self-time must not be treated as shipping absolute time."
+  },
+  "validation": {
+    "host_VM_suite_both_arithmetics": "PASS",
+    "nontrace_scalar_reference_cases_per_backend": 190598,
+    "backends": [
+      "owned BINARY64",
+      "MK61 CORE"
+    ],
+    "UI_grid_and_idle_epoch_ASan_UBSan": "PASS",
+    "F401_release_case": "PASS",
+    "F411_CORE_release_case": "PASS",
+    "ARM_actual_ELF_USB_first_independent_stage_buffers": "PASS",
+    "ARM_Flash_cache_USB_allocation": "PASS",
+    "stale_nonaccepting_test": "The older RAM-cache-only cold-buffers fixture cannot locate image_cache in the Flash-VM ELF; it did not pass and was not weakened. The existing Flash-cache-specific ARM test passed.",
+    "related_existing_tests": [
+      "tests/text_screen_shared_self_test.cpp",
+      "tests/usb_screen_surface_self_test.cpp",
+      "tests/ui_display_self_test.cpp",
+      "tests/idle_service_epoch_self_test.py"
+    ]
+  },
+  "generic_compute_block_research": {
+    "status": "NO_GO_PRIVATE_NOT_IN_CANDIDATE",
+    "task_still_open": true,
+    "description": "Compiler-marked generic int32 accumulator/right-operand chain, guarded fallback and original logical boundaries; no game whitelist.",
+    "actual_chess_coverage_percent": 1.084017215869965,
+    "logical_instructions": 6460783,
+    "matched_logical_instructions": 70036,
+    "baseline_LANGVM_loaded_bytes": 20372,
+    "prototype_LANGVM_loaded_bytes": 21396,
+    "APP_limit_bytes": 20480,
+    "excess_bytes": 916,
+    "host_reference_cases_per_backend": 190592,
+    "ARM_instruction_count_basic_integer_change_percent": 0.7315645247782498,
+    "ARM_instruction_count_basic_expressions_change_percent": 0.4460161776503657,
+    "instruction_counts_are_not_cycles": true,
+    "hardware_deployed": false,
+    "limits_weakened": false,
+    "code_reverted": true
+  },
+  "restoration": {
+    "both_phases": true,
+    "fresh_double_full512_before_each_phase": true,
+    "each_original_internal_Flash_readback_bytes": 524288,
+    "original_full_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+    "original_build": "3AB3DD45",
+    "files": 24,
+    "directories": 2,
+    "typed_reg_stk_dump_hout_pwd_equal": true,
+    "monotonic_RTC_calendar_and_unset_flag_preserved": true,
+    "alarms_A_B_idle": true,
+    "CRC_valid_MPU_layout_ok_CRASH_none": true,
+    "operator_pid": 1104,
+    "operator_exit": 0,
+    "serial_noholder": true,
+    "advisory_lock_acquire_release": true,
+    "exact_Classic_port_admissions": 164,
+    "foreign_ports_opened": 0,
+    "coordinator_CLOSED_pending": false,
+    "coordinator_CLOSED_sha256": "1333e889efc49f732681e0b4ad57c01fae80c1a807173756cd1aa3f0cecd16c9"
+  },
+  "harness_incidents": {
+    "validation": "Initial technical caller faults were retained privately, corrected and independently reviewed before the final successful V4 window.",
+    "raw_private_backups_userdata_transcripts_not_in_commit": true
+  },
+  "evidence": {
+    "lab_relative_path": "tmp/vm-block-poll-20261024.guhazK",
+    "packet_v4_sha256": "32598ff9efe47239380582d9bf5038b3e3208c8df0b8d6c83f8f63973716b5d7",
+    "result_sha256": "80cd4c8b18e4d49e44439fb302de6fc91bd29d134ea5ad9f9586ab4cc13eff42",
+    "performance_report_sha256": "0e4d3ce6cca42c37d744e964f5d15939a5256c7e24a2d839a2b2dabed24fd436",
+    "latency_report_sha256": "2250bf4b39aa89dfee46c2bfe6504e08928da4f2f5e6a6d2b25aadd7c1be05cc",
+    "closure_proposal_sha256": "47f973ee825a715873e23129ffea4271316c9db6c8342c7b9e330d83601b7997"
+  },
+  "committed": "Contained in a poll-only local feature-branch commit; no main merge or push.",
+  "merged": false,
+  "pushed": false,
+  "source_hashes": {
+    "code/text_screen.cpp": {
+      "before": "db231a99cb87d6adfa031604508f0cb2b3ed4484e633427fd576bec7a45b733d",
+      "after": "15d1a67e613cb411f509e15008cbf9db0d56b43e7f75f72cd6976710b4236635"
+    },
+    "code/text_screen.hpp": {
+      "before": "93aded6b1adb822b2f605fa261c4e64117054a2976f8fe8500c6088283d20503",
+      "after": "95612363aa03be3346546054814bcc0d5dd2e321239052cc07a7460e4c2b94d1"
+    }
+  }
+}

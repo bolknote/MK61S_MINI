@@ -20,9 +20,11 @@ public:
   // commands; GS toggles. Framed USB Screen traffic is decoded before this.
   int receive(u8 byte);
   void tick();
+  void input_source(bool usb) { input_source_=usb?0:1; }
   bool pending() const { return pending_; }
   bool raw() const { return raw_; }
   bool reading_keys() const { return executing_; }
+  bool input_active() const { return length_ || pending_ || executing_ || upload_ || confirmation_; }
   bool execute(const char *m8_line);
   const char *directory() const { return directory_; }
 
@@ -43,14 +45,16 @@ private:
   Services &services_;
   Ui &ui_;
   Backend backend_{};
-  terminal_line_editor::EscapeDecoder escape_;
+  terminal_line_editor::EscapeDecoder escape_[2];
+  unsigned input_source_=0;
+  bool cr_[2]{};
   u8 line_[terminal_core::INPUT_CAPACITY]{};
   usize length_ = 0, cursor_ = 0;
   char history_[8][terminal_core::INPUT_CAPACITY]{},
       saved_[terminal_core::INPUT_CAPACITY]{};
   unsigned history_count_ = 0;
   int navigation_ = -1;
-  bool raw_ = false, pending_ = false, executing_ = false, cr_ = false,
+  bool raw_ = false, pending_ = false, executing_ = false,
        overflow_ = false;
   u8 confirmation_ = 0;
   char directory_[files::PATH_SIZE] = "/";

@@ -76,6 +76,9 @@ uint16_t put(Language language,const char* name,const std::string& text,uint16_t
 void run_file(Language language,uint16_t id,uint32_t expected) {
   uint32_t result;
   const auto status=invoke_resident(language,language==Language::BASIC?Command::TINYBASIC_RUN_ID_STATUS:Command::FOCAL_RUN_ID,id,1,result);
+  if(status!=RuntimeStatus::OK || result!=expected)
+    fprintf(stderr,"cached call failed: language=%u id=%u status=%u result=%u expected=%u compiled=%u normal=%u INPUT=%u\n",
+        unsigned(language),unsigned(id),unsigned(status),unsigned(result),unsigned(expected),compiled,normal_calls,input_calls);
   assert(status==RuntimeStatus::OK && result==expected);
   assert(shared_memory::validate_invariants() && !shared_memory::workspace_partitioned());
 }
@@ -113,14 +116,10 @@ int main() {
   const auto cold_compiled=compiled;const auto begin_fast=prepared_calls;
   SPIFlash::resetOperationCounts();
   for(unsigned i=0;i<20;++i){run_file(Language::BASIC,basic,1);run_file(Language::FOCAL,focal,0);}
-  fprintf(stderr,"warm C9: fast=%u compiled=%u/%u reads=%u writes=%u prepared=%u\n",unsigned(MK61_VM_REPEAT_CALLS),compiled,cold_compiled,SPIFlash::readOperations(),SPIFlash::mutationOperations(),prepared_calls-begin_fast);
+  fprintf(stderr,"warm C9: compiled=%u/%u reads=%u writes=%u separate_calls=%u\n",compiled,cold_compiled,SPIFlash::readOperations(),SPIFlash::mutationOperations(),prepared_calls-begin_fast);
   assert(compiled==cold_compiled && SPIFlash::readOperations()==0 && SPIFlash::mutationOperations()==0);
-#if MK61_VM_REPEAT_CALLS
-  assert(prepared_calls-begin_fast>=39);
-#else
   (void)begin_fast;
   assert(prepared_calls==0);
-#endif
   assert(refs[14]==22 && refs[15]==44);
   put(Language::BASIC,"BASICRUN","10 A=A+10;.RA=A;END\n",basic);run_file(Language::BASIC,basic,1);assert(refs[14]==32);
   run_file(Language::BASIC,basic,1);assert(refs[14]==42);
@@ -180,14 +179,10 @@ int main() {
   shared_memory::reset_statistics();run_file(Language::BASIC,basic,1);
   assert(refs[14]==before_poison+10);
   const auto cleared=shared_memory::snapshot(shared_memory::Arena::WORKSPACE).cleared_bytes;
-#if MK61_VM_REPEAT_CALLS
   assert(cleared==0);
-#else
-  assert(cleared==COMPILER_WORKSPACE_SIZE);
-#endif
   {
     shared_memory::Lease hold(shared_memory::Arena::WORKSPACE,shared_memory::Owner::LANGUAGE_VM,8192);
     assert(hold.ok());for(unsigned i=0;i<COMPILER_WORKSPACE_SIZE;++i)assert(hold.data()[i]==0);
   }
-  printf("Real C9 resident repeat=%u: compiled=%u normal=%u fast=%u INPUT=%u finish=%u; warm NOR reads/writes=0, BASIC/FOCAL/epochs/resume/ABI/failures PASS\n",unsigned(MK61_VM_REPEAT_CALLS),compiled,normal_calls,prepared_calls,input_calls,finished);
+  printf("Real C9 cached calls: compiled=%u normal=%u separate=%u INPUT=%u finish=%u; warm NOR reads/writes=0, BASIC/FOCAL/epochs/resume/ABI/failures PASS\n",compiled,normal_calls,prepared_calls,input_calls,finished);
 }

@@ -8,7 +8,7 @@ build="$(mktemp -d "${TMPDIR:-/tmp}/mk61-pico-hardware.XXXXXX")"
 trap 'rm -rf "$build"' EXIT
 flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then flags=(-fsanitize=address,undefined -fno-omit-frame-pointer); fi
-clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror -DMK61_CORE_STANDALONE=1 "${flags[@]}" \
     -I"$root/ports/picocalc" -I"$root/code" \
     "$root/tests/picocalc_hardware_self_test.cpp" "$root/ports/picocalc/psram.cpp" \
     "$root/ports/picocalc/external_cache.cpp" "$root/ports/picocalc/dma_support.cpp" \

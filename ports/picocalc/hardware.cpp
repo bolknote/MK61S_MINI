@@ -67,13 +67,18 @@ void Keyboard::init() {
     gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
     gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
     online_ = pending_ = false;io_phase_=0;
-    due_ = 0;
+    due_ = battery_due_ = 0;battery_={};battery_errors_=0;
     io_worker::start();
 }
 
 bool Keyboard::poll(KeyEvent& event) {
     const u64 now = time_us_64();
     if(io_phase_) {
+        if(io_phase_==4 && pending_ && now>=due_) {
+            if(io_worker::request_i2c(true,nullptr,2)) pending_=false;
+            return false;
+        }
+        if(io_phase_==4 && pending_) return false;
         int count;u8 response[2]{};
         if(!io_worker::take_i2c(count,response)) return false;
         const u8 phase=io_phase_;io_phase_=0;
@@ -82,11 +87,26 @@ bool Keyboard::poll(KeyEvent& event) {
             else { online_=false;++errors_;due_=now+100000; }
             return false;
         }
+        if(phase==3) {
+            if(count==1) { pending_=true;io_phase_=4;due_=now+16000; }
+            else { ++battery_errors_;battery_.clear_reading(); }
+            return false;
+        }
+        if(phase==4) {
+            pending_=false;
+            if(count!=2 || !battery_.decode(response[0],response[1])) { ++battery_errors_;battery_.clear_reading(); }
+            battery_due_=now+20000000;return false;
+        }
         pending_=false;online_=count==2;
         if(!online_) { ++errors_;due_=now+100000;return false; }
         event={response[0],response[1]};
         if(idle_ && !event.state) due_=now+64000;
         return event.state!=0;
+    }
+    if(!idle_ && online_ && !pending_ && now>=battery_due_) {
+        const u8 reg=0x0B;
+        if(io_worker::request_i2c(false,&reg,1)) { io_phase_=3;battery_due_=now+20000000; }
+        return false;
     }
     if(now < due_) return false;
     diagnostics::Scope measure(diagnostics::Point::KEYBOARD);
@@ -144,7 +164,7 @@ void Panel::init() {
     sleep_ms(120);
     command(0x29);
     sleep_ms(120);
-    valid_ = false;
+    valid_ = false;scroll_={};scroll_configured_=false;pending_scroll_rows_=0;
     frames_ = 0;
     full_frames_=0;
 }
@@ -161,8 +181,16 @@ void Panel::flush(const Screen& screen) {
     // dirty tiles at every UI poll while a chess search is computing.
     if(valid_ && std::memcmp(previous_,screen.data(),Screen::BYTES)==0) return;
     diagnostics::Scope measure(diagnostics::Point::LCD);
-    update_.plan(previous_,screen.data(),!valid_);
-    if(!update_.count) return;
+    const auto region=screen.scroll_region();
+    bool force=!valid_;
+    if(force || scroll_.region!=region) {
+        force|=scroll_.offset!=0;scroll_={region,0};
+    }
+    const int delta=force?0:lcd::Scroll::find(previous_,screen.data(),region);
+    pending_scroll_rows_=delta<0?-delta:delta;
+    if(delta) scroll_.rotate(previous_,delta);
+    update_.plan(previous_,screen.data(),force);
+    if(!update_.count && !delta) return;
     std::memcpy(previous_,screen.data(),Screen::BYTES);
     valid_=io_worker::submit_frame(this,[](void* context) { ((Panel*)context)->transfer(); });
 }
@@ -289,12 +317,26 @@ bool Panel::finish_scanline() {
 void Panel::transfer() {
     const u64 start=time_us_64();
     u64 next_i2c=start+2000;
-    u32 strips=0,pauses=0;
+    u32 strips=0,pauses=0,windows=0;
+    const bool manage_scroll=scroll_configured_ || pending_scroll_rows_;
+    const lcd::Region physical=scroll_.region.valid()?scroll_.region:lcd::Region{0,lcd::HEIGHT};
+    const unsigned start_row=physical.top+(scroll_.region.valid()?scroll_.offset:0);
+    const bool redefine=manage_scroll && (!scroll_configured_ || configured_region_!=physical);
+    if(redefine) {
+        const unsigned bottom=lcd::HEIGHT-physical.top-physical.height;
+        const u8 definition[]={(u8)(physical.top>>8),(u8)physical.top,(u8)(physical.height>>8),(u8)physical.height,(u8)(bottom>>8),(u8)bottom};
+        command(0x33,definition,sizeof(definition));
+    }
     for(unsigned index=0;index<update_.count;++index) {
-        const auto& rect=update_.rectangles[index];
-        const unsigned right=rect.x+rect.width-1,bottom=rect.y+rect.height-1;
+      const auto& area=update_.rectangles[index];
+      for(unsigned first=0;first<area.height;) {
+        const unsigned count=scroll_.run(area.y+first,area.height-first);
+        const lcd::Rect rect{area.x,(u16)(area.y+first),area.width,(u16)count};
+        const unsigned physical_y=scroll_.map(rect.y);
+        const unsigned right=rect.x+rect.width-1,bottom=physical_y+rect.height-1;
+        ++windows;first+=count;
         const u8 columns[]={(u8)(rect.x>>8),(u8)rect.x,(u8)(right>>8),(u8)right};
-        const u8 rows[]={(u8)(rect.y>>8),(u8)rect.y,(u8)(bottom>>8),(u8)bottom};
+        const u8 rows[]={(u8)(physical_y>>8),(u8)physical_y,(u8)(bottom>>8),(u8)bottom};
         command(0x2A,columns,sizeof(columns));
         command(0x2B,rows,sizeof(rows));
         // Keep RAMWR and all of its pixels in one CS transaction. Window
@@ -329,11 +371,18 @@ void Panel::transfer() {
         busy_wait_us(1);gpio_put(CS,1);busy_wait_us(1);
         spi_set_format(spi1,8,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
     }
+      }
+    // Publish the new scan origin after writing its exposed rows (VSCSAD).
+    if(manage_scroll && (redefine || configured_start_!=start_row)) {
+        const u8 origin[]={(u8)(start_row>>8),(u8)start_row};command(0x37,origin,sizeof(origin));
+        configured_region_=physical;configured_start_=start_row;scroll_configured_=true;
+    }
+    if(pending_scroll_rows_) { scrolls_.fetch_add(1);scrolled_rows_.fetch_add(pending_scroll_rows_); }
     last_us_.store((u32)(time_us_64()-start),std::memory_order_relaxed);
     last_strips_.store(strips,std::memory_order_relaxed);
     last_pauses_.store(pauses,std::memory_order_relaxed);
     last_bytes_.store(update_.bytes,std::memory_order_relaxed);
-    last_rectangles_.store(update_.count,std::memory_order_relaxed);
+    last_rectangles_.store(windows,std::memory_order_relaxed);
     if(update_.bytes==Screen::WIDTH*Screen::HEIGHT*2) full_frames_.fetch_add(1,std::memory_order_relaxed);
     frame_crc_.store(dma_support::crc32(previous_,sizeof(previous_)),std::memory_order_relaxed);
     frames_.fetch_add(1,std::memory_order_relaxed);

@@ -52,15 +52,9 @@ size_t strlen(const char* text) {
 }
 #endif
 
-/* Source-page NUL checks also need memchr. Keep it freestanding even when
- * the other memory functions use the resident runtime table. */
-void* memchr(const void* data, int value, size_t size) {
-  const unsigned char* bytes = (const unsigned char*) data;
-  const unsigned char wanted = (unsigned char) value;
-  for(size_t i = 0; i < size; ++i)
-    if(bytes[i] == wanted) return (void*) (bytes + i);
-  return NULL;
-}
+/* The 26-slot runtime has no memchr. Keep the measured target body local to both
+ * standalone and shared APPs; the optional public extension is separate. */
+#include "memory_search_arm.h"
 
 int strcmp(const char* left, const char* right) {
   const unsigned char* a = (const unsigned char*) left;

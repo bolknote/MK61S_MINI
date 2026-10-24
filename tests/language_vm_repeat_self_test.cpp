@@ -1,4 +1,4 @@
-#include "language_vm_repeat.hpp"
+#include "language_vm_repeat_fixture.hpp"
 #include "language_flash_program.hpp"
 #include "language_flash_fixture.hpp"
 #include "app_flow.hpp"
@@ -143,6 +143,31 @@ void ordinary_calls() {
   }
   assert(finishes==21);
 }
+void certificate_rejections() {
+  Fixture f(Language::BASIC,"10 END\n");f.warm();
+  RepeatImage image(f.cache,1,42,123,Language::BASIC);assert(image);
+  CompilerContext c{};ExecutionState state;auto lookup=image.io();
+  assert(prepare_repeat_call(c,image,f.values,state,C::TINYBASIC_RUN_ID_STATUS,1,lookup));
+  for(unsigned fault=0;fault<10;++fault) {
+    auto bad=f.validated;
+    switch(fault) {
+      case 0:bad.magic=0;break;
+      case 1:--bad.size;break;
+      case 2:++bad.code;break;
+      case 3:bad.end=bad.size+1;break;
+      case 4:bad.source_size=0;break;
+      case 5:bad.stack=0;break;
+      case 6:bad.flags=16;break;
+      case 7:bad.lines=0;break;
+      case 8:bad.language=Language::FOCAL;break;
+      case 9:bad.wide=false;break;
+    }
+    c.prepared=false;
+    assert(!prepare_cached_execution(c,bad,state,C::TINYBASIC_RUN_ID_STATUS));
+    assert(!c.prepared);
+  }
+  assert(prepare_cached_execution(c,f.validated,state,C::TINYBASIC_RUN_ID_STATUS));
+}
 void input_and_failures() {
   for(auto language:{Language::BASIC,Language::FOCAL}) {
     reset();Fixture f(language,language==Language::BASIC?"10 A=10;INPUT B;A=A+B;END\n":"1.1 S A=10;A B;S A=A+B;E\n");f.warm();
@@ -174,6 +199,6 @@ void control_and_errors() {
 }
 }
 int main() {
-  no_fill_on_miss();ordinary_calls();input_and_failures();control_and_errors();
+  no_fill_on_miss();ordinary_calls();certificate_rejections();input_and_failures();control_and_errors();
   printf("Prepared repeat calls: BASIC/FOCAL, numeric banks, fresh state, INPUT/resume/cancel, failures, immutable epoch loans PASS; starts=%u executions=%u inputs=%u polls=%u\n",starts,executions,inputs,polls);
 }

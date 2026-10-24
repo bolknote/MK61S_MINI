@@ -4,8 +4,8 @@
 namespace picocalc::external_cache {
 // Optional shared buffers, each up to 4 MiB. Required application buffers
 // may evict them; lazy cache rebuilding uses the remaining external memory.
-constexpr unsigned MODULE_SLOTS=256,SECTOR_SLOTS=4096;
-struct Statistics { bool ready;u32 module_hits,module_misses,sector_hits,sector_misses,rejected,stores,evictions,module_bytes,sector_bytes; };
+constexpr unsigned MODULE_SLOTS=256,SECTOR_SLOTS=(4U*1024*1024)/(24+512);
+struct Statistics { bool ready;u32 module_hits,module_misses,sector_hits,sector_misses,rejected,stores,evictions,module_bytes,sector_bytes,module_entries,module_payload,module_used,sector_slots; };
 bool init();
 void suspend();
 void invalidate_modules();

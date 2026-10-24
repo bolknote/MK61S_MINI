@@ -5,12 +5,8 @@
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC optimize ("no-tree-loop-distribute-patterns")
 #endif
-void* memchr(const void* memory,int c,size_t n) {
-  const unsigned char* p=(const unsigned char*)memory;
-  const unsigned char target=(unsigned char)c;
-  for(size_t i=0;i<n;++i)if(p[i]==target)return (void*)(p+i);
-  return NULL;
-}
+#define MK61_MEMCHR_M4_FLASH 1
+#include "memory_search_arm.h"
 size_t strlen(const char* s) {
   const char* p=s;while(*p)++p;return (size_t)(p-s);
 }
