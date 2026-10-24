@@ -1,6 +1,6 @@
-/* M4 backend measured on ClassicF411; naturally aligned paired loads stop
- * safely at protection boundaries. Other targets retain the byte fallback
- * until their hardware selection is complete. */
+/* Hardware-selected paired search: M4 balanced prefix, M0+ original alignment.
+ * Eight-byte alignment keeps paired loads within protection boundaries.
+ * Other targets retain the byte fallback. */
 #ifndef MK61_MEMORY_SEARCH_ARM_H
 #define MK61_MEMORY_SEARCH_ARM_H
 #include <stddef.h>
@@ -17,7 +17,7 @@
 #define MK61_MEMCHR_WORDS 16
 #endif
 #endif
-#if defined(__GNUC__) && !defined(__clang__) && defined(__ARM_ARCH_7EM__)
+#if defined(__GNUC__) && !defined(__clang__) && (defined(__ARM_ARCH_7EM__) || defined(__ARM_ARCH_6M__))
 #define MK61_MEMCHR_STRINGIFY_(value) #value
 #define MK61_MEMCHR_STRINGIFY(value) MK61_MEMCHR_STRINGIFY_(value)
 __attribute__((naked, noipa, aligned(4))) MK61_MEMCHR_ATTRIBUTES
