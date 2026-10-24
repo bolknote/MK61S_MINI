@@ -52,7 +52,7 @@ size_t strlen(const char* text) {
 }
 #endif
 
-/* The 26-slot runtime has no memchr. Keep the measured M4 body local to both
+/* The 26-slot runtime has no memchr. Keep the measured target body local to both
  * standalone and shared APPs; the optional public extension is separate. */
 #include "memory_search_arm.h"
 

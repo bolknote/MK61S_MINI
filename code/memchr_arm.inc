@@ -1,4 +1,4 @@
-/* Generated from the measured balanced candidate; exact spans only. */
+/* Measured M4 balanced / M0+ pair candidates; exact spans only. */
 ".syntax unified\n"
 ".macro mk61_search_pair name,bulk=0\n"
 " ldmia r0!,{r3,r6}\n"
@@ -43,7 +43,7 @@
 " ldrb r3,[r0]\n"
 " cmp r3,r1\n"
 " beq .Lreturn\\name\n"
-#if 1
+#if !defined(__ARM_ARCH_6M__)
 " /* Keep the original pointer/alignment for long spans, but exhaust n==1\n"
 "  * before the length dispatch. Restore n only on the long path. */\n"
 " subs r2,#1\n"
@@ -77,7 +77,7 @@
 ".Lreturn\\name:\n"
 " bx lr\n"
 ".LalignCheck\\name:\n"
-#if 1
+#if !defined(__ARM_ARCH_6M__)
 " adds r2,#1\n"
 #endif
 " lsls r3,r0,#29\n"
