@@ -60,19 +60,19 @@ void Screen::logical_frame(const Ui& ui,const Services& services,u8 out[1536]) c
 void Screen::set_pixel(unsigned x, unsigned y) {
     if(x < WIDTH && y < HEIGHT) pixels_[y * STRIDE + x / 8] |= (u8)(0x80U >> (x % 8));
 }
-void Screen::text(unsigned x, unsigned y, const char* value, unsigned height) {
+void Screen::text(unsigned x, unsigned y, const char* value, unsigned height, unsigned right) {
     auto choice=font_settings_?*font_settings_:Settings{};
     if(choice.ui_font_family==1) choice.ui_font_size=(u8)height;
     const auto info=fonts::info(choice);
     const unsigned baseline = y + info.ascent;
-    for(; *value && x < WIDTH - 8; ++value) {
+    for(; *value && x < right; ++value) {
         mk61_service_ui_glyph glyph{};
         if(!fonts::glyph(choice,mk8::codepoint((u8)*value),glyph)) continue;
         for(u8 gy = 0; gy < glyph.height; ++gy) for(u8 gx = 0; gx < glyph.width; ++gx) {
             const int px = (int)x + glyph.bearing_x + gx;
             const int py = (int)baseline - glyph.bearing_y + gy;
             const unsigned offset=gy*((glyph.width+7U)/8U)+gx/8U;
-            if(px >= 0 && py >= 0 && (glyph.pixels[offset] & (0x80U>>(gx%8U)))) set_pixel(px, py);
+            if(px >= 0 && (unsigned)px<right && py >= 0 && (glyph.pixels[offset] & (0x80U>>(gx%8U)))) set_pixel(px, py);
         }
         x += glyph.advance;
     }
@@ -192,7 +192,7 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
         char time[6];std::snprintf(time,sizeof(time),"%02u:%02u",now.hour,now.minute);
         Settings clock_font{};clock_font.ui_font_family=1;clock_font.ui_font_size=16;
         const auto* saved=font_settings_;font_settings_=&clock_font;
-        text(WIDTH-10-fonts::text_width(clock_font,time,5),9,time,16);
+        text(WIDTH-(battery_.available?44:10)-fonts::text_width(clock_font,time,5),9,time,16);
         font_settings_=saved;
     }
     const unsigned font_size = ui.settings().ui_font_size;
@@ -244,27 +244,30 @@ void Screen::native_bitmap(const u8* frame) {
     bitmap(frame,WIDTH,HEIGHT);
     native_revision_=revision;native_valid_=published;
 }
-void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, const Services* services) {
+void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, const Services* services, BatteryStatus battery) {
     // CLS begins a BASIC/FOCAL frame. Keep the previous complete picture while
     // the VM builds its replacement; input, WAIT and module completion publish it.
     if(services && services->display_deferred()) return;
     diagnostics::Scope measure(diagnostics::Point::DISPLAY);
     static const Ui default_ui;
     if(!ui) ui = &default_ui;
-    font_settings_=&ui->settings();
+    font_settings_=&ui->settings();battery_=battery;scroll_region_={};
     const bool service_active=services && services->active();
     const u8* graphics=service_active?services->graphics():nullptr;
     const u8* native=graphics?services->native_graphics():nullptr;
-    if(native && !services->graphical_document()) { native_bitmap(native);return; }
+    if(native && !services->graphical_document()) { scroll_region_={0,HEIGHT};native_bitmap(native);return; }
     if(!service_active && ui->page()==Page::CALCULATOR && m61_text::display_owned()) {
-        if(const auto frame=script::native_frame()) { native_bitmap(frame);return; }
+        if(const auto frame=script::native_frame()) { scroll_region_={0,HEIGHT};native_bitmap(frame);return; }
     }
     native_valid_=false;
     std::memset(pixels_, 0, sizeof(pixels_));
     char heading[64];
     if(services && services->active()) services->heading(heading);
     else std::snprintf(heading, sizeof(heading), "%s", ui->title());
-    text(10, 9, heading, 16);
+    const bool clock_visible=!service_active && ui->page()==Page::CALCULATOR && model.idle && !model.running && !model.programming && clock::configured();
+    const unsigned title_right=clock_visible?(battery_.available?220:254):(battery_.available?278:WIDTH-8);
+    text(10,9,heading,16,title_right);
+    battery_icon(battery_,[this](unsigned x,unsigned y){set_pixel(x,y);});
     if(!keyboard_online) text(190, 10, "KBD?", 12);
     line(32);
     if(services && services->active()) {
@@ -272,7 +275,7 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
         if(graphics) {
             if(native) {
                 if(services->graphical_document()) {
-                    bitmap(native,320,240,0,40);
+                    scroll_region_={40,240};bitmap(native,320,240,0,40);
                     line(282);text(8,297,services->footer(),12);
                 } else {
                     std::memset(pixels_,0,sizeof(pixels_));
@@ -284,6 +287,7 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
             bitmap(graphics,192,64,64,96);
             line(282);text(8,297,services->footer(),12);return;
         }
+        if(services->fixed_text()) scroll_region_={42,238};
         for(unsigned row = 0; row < rows; ++row) {
             char value[Services::COLS + 1]; services->row(first + row, value);
             if(!services->fixed_text()) { text(10, top + row * 17, value, ui->settings().ui_font_size); continue; }
