@@ -1,0 +1,105 @@
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-candidate-cpp.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+{
+  "status": "REAL_WHOLE_SOURCE_POW_LINKED_NOT_NUMERICALLY_QUALIFIED",
+  "images": {
+    "control": {
+      "ELF_sha256": "25544ce13ab15996ff7fbefc5df9ae4527dfa1497a13aa20589c395791c66ab9",
+      "sections": {
+        ".pow_entry": [
+          269882572,
+          220
+        ],
+        ".pow_square": [
+          269884928,
+          328
+        ],
+        ".pow_rsqrt": [
+          269887488,
+          776
+        ],
+        ".pow_refine": [
+          269910016,
+          11328
+        ],
+        ".pow_small_y": [
+          269921536,
+          1720
+        ],
+        ".pow_flash": [
+          270204928,
+          58256
+        ],
+        ".scratch_y": [
+          537100288,
+          4080
+        ]
+      },
+      "symbols": {
+        "____aeabi_llsl_veneer": 269921329,
+        "__mk61_m0_pow_positive_checked_dispatch_veneer": 270219105,
+        "__mk61_m0_pow_argument_veneer": 270219121,
+        "____aeabi_llsr_veneer": 269921297,
+        "__pow_first_cell_veneer": 537104289,
+        "____aeabi_lmul_veneer": 537104305,
+        "__pow_small_integer_veneer": 537104321,
+        "__pow_refine_checked_veneer": 537104337,
+        "__mk61_m0_pow_log_select_veneer": 537104353,
+        "__mk61_m0_pow_exp_product_veneer": 269921313
+      }
+    },
+    "candidate": {
+      "ELF_sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98",
+      "sections": {
+        ".pow_entry": [
+          269882572,
+          220
+        ],
+        ".pow_square": [
+          269884928,
+          328
+        ],
+        ".pow_rsqrt": [
+          269887488,
+          776
+        ],
+        ".pow_refine": [
+          269910016,
+          11328
+        ],
+        ".pow_small_y": [
+          269921536,
+          1720
+        ],
+        ".pow_flash": [
+          270204928,
+          58272
+        ],
+        ".scratch_y": [
+          537100288,
+          4080
+        ]
+      },
+      "symbols": {
+        "____aeabi_llsr_veneer": 269921329,
+        "____aeabi_llsl_veneer": 269921297,
+        "__mk61_m0_pow_positive_checked_dispatch_veneer": 270219137,
+        "__mk61_m0_pow_argument_veneer": 270219153,
+        "__pow_refine_checked_veneer": 537104289,
+        "____aeabi_lmul_veneer": 537104305,
+        "__pow_first_cell_veneer": 537104321,
+        "__pow_small_integer_veneer": 537104337,
+        "__mk61_m0_pow_log_select_veneer": 537104353,
+        "__mk61_m0_pow_exp_table_product_veneer": 269921313,
+        "mk61_m0_pow_exp_table_product": 537104255,
+        "mk61_m0_pow_exp_table_product_flash": 270204929
+      }
+    }
+  },
+  "original_public_entry_and_4080byte_RAM_extent_preserved": true,
+  "only_existing_pow_code_and_tables_relocated_to_free_diagnostic_Flash": true,
+  "no_manual_branch_patches_or_arithmetic_mocks": true,
+  "hardware_accessed": false
+}

@@ -1,0 +1,32 @@
+{
+  "status": "PASS_ACTUAL_TABLE_PRODUCT_INTEGER_EQUIVALENCE_AND_PCS",
+  "candidate_ELF_sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98",
+  "table_certificate": {
+    "address": 270259104,
+    "bytes_sha256": "9185ad8a13121c810de407f5eac695df9f3b394ee836d4829d0aa37f2fa5719e",
+    "roots": 512,
+    "only_low32zero_index": 0,
+    "identity": 4611686018427387904
+  },
+  "distinct_pairs": 15659,
+  "test_pairs_with_flag_variants": 16139,
+  "all16_incoming_NZCV_variants": true,
+  "arbitrary_initial_R12": true,
+  "actual_ARM_calls": 32390,
+  "valid63x54_integer_error_bound_checks": 11914,
+  "dyadic_full64_exact_shift_checks": 4513,
+  "gate_instruction_histogram": {
+    "10": 4513,
+    "79": 11626
+  },
+  "generic77body_byte_identical_parent": true,
+  "generic_extra_R12_fraction_identical": true,
+  "dyadic_R12_not_part_of_scalar_ABI": true,
+  "wrapper_cost_instructions": 5,
+  "SP_PC_callee_saved_and_bounded_stack_writes_every_call": true,
+  "observed_stack_written_bytes": 36,
+  "bare_firmware_and_ROM_not_mapped": true,
+  "sampled_execution_PC_count": 81020,
+  "numeric_oracle": "exact host integers, not MPFR",
+  "hardware_accessed": false
+}

@@ -1,0 +1,15 @@
+{
+  "status": "ALL_OLD_111912_PAIRS_BOUND_NO_REFERENCE_FILTER",
+  "unique_pairs": 111912,
+  "state_jobs": 223824,
+  "reference_state_variants": 223976,
+  "known_fresh_C77_state_costs": 10081,
+  "corpus_sha256": "0e5b15c1480692bf7adc26229f6559a1df476ad9b3c7438ee40aec4c12ca6a00",
+  "sources": {
+    ".build/m0-pow-rsqrt-asm-20261024/qualification.json": "8cdd5e61aa53ced266f7fe5279885c508fc1c420b483a300c9fb1e60515191b4",
+    ".build/m0-pow-rsqrt-asm-20261024/targeted.json": "c60a61d54f728ad16dc76187709789ff9475bce641eee618a41f248e2a50460f",
+    ".build/m0-pow-rsqrt-asm-20261024/probe.json": "340318b19b6d4bae44d5317019af900ef06c00e88f1a6e23fb64691a589fc6a2",
+    ".build/m0-exp-directed-product-20261024/pow-loss-replay.json": "92433b438b3ae6f13a497d1da3354d8aaf09ac8a8b0edf636e7baf5fa72662eb"
+  },
+  "fresh_ARM_or_MPFR_calls": 0
+}

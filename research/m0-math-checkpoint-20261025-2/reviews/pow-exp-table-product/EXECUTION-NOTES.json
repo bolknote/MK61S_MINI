@@ -1,0 +1,42 @@
+{
+  "status": "COMPLETED_PRIVATE_CPU_ONLY_EXECUTION_EVIDENCE",
+  "binding": {
+    "start": "4b74ad",
+    "completion": "c46e34",
+    "exit0": true,
+    "whole_byteexact_rebuilds": 4
+  },
+  "linked_source_proof": {
+    "tool": "ad1e3e",
+    "exit0": true
+  },
+  "own_ARM": {
+    "bare": "4bb994",
+    "public_start": "98d4f2",
+    "public_completion": "1a8150",
+    "all_exit0": true,
+    "qualified_calls": 1966,
+    "Unicorn": "existing runtime, scoped require_escalated CPU-only JIT approved; no installations or rejected/default runs",
+    "MPFR_inputs": 51,
+    "sNaN_shortcuts": 2,
+    "captured_ROM_initializers_excluded": true
+  },
+  "saved_recount_policy_correction": {
+    "initial_tool": "707eda",
+    "initial_exit": 1,
+    "record_index": 618,
+    "cause": "Reviewer initially treated every NaN output as equivalent. Saved sNaN reference output must count as wrong unless quiet, matching the accepted policy.",
+    "corrected_recount_start": "64749e",
+    "corrected_completion": "b6143d",
+    "corrected_exit0": true,
+    "strict_saved_public_postcheck": "27d3e0",
+    "corrected_public_reference_flags": 0,
+    "ARM_or_MPFR_reexecution": 0,
+    "original_executed_harness_and_raw_outputs_retained": true
+  },
+  "device_IO": 0,
+  "Git_operations": 0,
+  "canonical_access": 0,
+  "network_operations": 0,
+  "product_source_edits": 0
+}

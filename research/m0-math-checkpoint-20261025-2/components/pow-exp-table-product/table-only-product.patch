@@ -1,0 +1,117 @@
+--- a/code/native_eabi_m0.S
++++ b/code/native_eabi_m0.S
+@@ -1189,3 +1189,4 @@
+ #include "native_eabi_m0_pow_argument.inc"
+ 
+ #include "native_eabi_m0_pow_exp_product.inc"
++#include "native_eabi_m0_pow_exp_table_transition.inc"
+--- a/code/native_eabi_m0_pow_exp_body.inc
++++ b/code/native_eabi_m0_pow_exp_body.inc
+@@ -38,7 +38,7 @@
+   const U d=below?U(0)-delta:delta;
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+   // The rounded13-product specialization has error<=1/2+2^-15.
+-  const U correction=mk61_m0_pow_exp_product(q,d);
++  const U correction=mk61_m0_pow_exp_table_product(q,d);
+ #else
+   const U cross=wide32(uint32_t(q),uint32_t(d>>32))+
+     wide32(uint32_t(q>>32),uint32_t(d));
+--- a/code/native_eabi_m0_pow_exp_product.inc
++++ b/code/native_eabi_m0_pow_exp_product.inc
+@@ -97,7 +97,26 @@
+  add sp,#16
+  pop {r4-r7,pc}
+ .size mk61_m0_pow_exp_product,.-mk61_m0_pow_exp_product
+- // Preserve the established168-byte RAM slot and all following symbols.
+- // These fourteen padding bytes are outside the function and never executed.
+- .hword 0xbf00,0xbf00,0xbf00,0xbf00,0xbf00,0xbf00,0xbf00
++ // Only callers whose A is a literal exp_table[] root may use this entry.
++ // The certified table has low32==0 only at index0, A==2^62.
++ // The exact old rounded product is then (B>>2)+bool(B&2).
++ .global mk61_m0_pow_exp_table_product
++ .hidden mk61_m0_pow_exp_table_product
++ .type mk61_m0_pow_exp_table_product,%function
++ .thumb_func
++mk61_m0_pow_exp_table_product:
++ cmp r0,#0
++ bne mk61_m0_pow_exp_product
++ lsls r0,r3,#30
++ lsrs r1,r3,#2
++ lsrs r3,r2,#2
++ orrs r0,r3
++ movs r2,#0
++ adcs r0,r2
++ adcs r1,r2
++ bx lr
++ .size mk61_m0_pow_exp_table_product,.-mk61_m0_pow_exp_table_product
++ // Reuse the original resident182-byte slot before its fixed RAM veneers.
++ // The old generic154-byte body is unchanged; no extra scratch bank is used.
++ .hword 0xbf00,0xbf00,0xbf00,0xbf00
+ #endif
+--- /dev/null
++++ b/code/native_eabi_m0_pow_exp_table_transition.inc
+@@ -0,0 +1,20 @@
++#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++.syntax unified
++.cpu cortex-m0plus
++.thumb
++.section .m0_pow_exp_table_transition,"ax",%progbits
++.align 2
++.global mk61_m0_pow_exp_table_product_flash
++.hidden mk61_m0_pow_exp_table_product_flash
++.type mk61_m0_pow_exp_table_product_flash,%function
++.thumb_func
++mk61_m0_pow_exp_table_product_flash:
++ push {r0}
++ ldr r0,1f
++ mov r12,r0
++ pop {r0}
++ bx r12
++ nop
++1: .word mk61_m0_pow_exp_table_product
++.size mk61_m0_pow_exp_table_product_flash,.-mk61_m0_pow_exp_table_product_flash
++#endif
+--- a/code/native_eabi_m0_pow_fast.inc
++++ b/code/native_eabi_m0_pow_fast.inc
+@@ -12,6 +12,7 @@
+ MK61_SOFT_PCS Product mk61_m0_pow_argument(U low,uint32_t high,U sy,unsigned shift);
+ MK61_SOFT_PCS __attribute__((long_call)) Product mk61_m0_pow_argument_select(U low,uint32_t high,U sy,unsigned shift);
+ MK61_SOFT_PCS U mk61_m0_pow_exp_product(U q,U magnitude);
++MK61_SOFT_PCS U mk61_m0_pow_exp_table_product(U q,U magnitude);
+ #endif
+ __attribute__((always_inline)) inline Product pow_general_argument(U low,uint32_t high,U sy,unsigned shift) {
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+@@ -716,11 +717,14 @@
+   out={0,(U(hi)<<32)|lo};return true;
+ }
+ extern "C" MK61_SOFT_PCS U mk61_m0_pow_exp_product_flash(U,U);
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++extern "C" MK61_SOFT_PCS U mk61_m0_pow_exp_table_product_flash(U,U);
++#endif
+ __attribute__((always_inline)) inline bool pow_small_exp_normal(const Product &argument,unsigned input_error,bool negative_argument,U &out) {
+   if(argument.high || argument.low>(U(1)<<62)) return false;
+ #define M0_POW_EXP_REJECT() return false
+ #define M0_POW_EXP_RESULT(value) do {out=(value);return true;} while(0)
+-#define mk61_m0_pow_exp_product mk61_m0_pow_exp_product_flash
++#define mk61_m0_pow_exp_table_product mk61_m0_pow_exp_table_product_flash
+ // Shared checked Q62 exp argument stage; no coefficient or error-bound changes.
+   // The same certified residual polynomial covers finite results up
+   // through overflow and gradual underflow. Far endpoints remain exact.
+@@ -762,7 +766,7 @@
+   const U d=below?U(0)-delta:delta;
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+   // The rounded13-product specialization has error<=1/2+2^-15.
+-  const U correction=mk61_m0_pow_exp_product(q,d);
++  const U correction=mk61_m0_pow_exp_table_product(q,d);
+ #else
+   const U cross=wide32(uint32_t(q),uint32_t(d>>32))+
+     wide32(uint32_t(q>>32),uint32_t(d));
+@@ -783,7 +787,7 @@
+   if(uint32_t(rounding_tail-(512U-error))<=2*error) return false;
+   const U rounded=(q+511+((q>>10)&1))>>10;
+   out=(U(k+1022)<<52)+rounded;return true;
+-#undef mk61_m0_pow_exp_product
++#undef mk61_m0_pow_exp_table_product
+ #undef M0_POW_EXP_RESULT
+ #undef M0_POW_EXP_REJECT
+ }

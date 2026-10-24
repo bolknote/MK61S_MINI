@@ -1,0 +1,741 @@
+
+Discarded input sections
+
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_asin_extension
+                0x00000000     0x1c1c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_cos70
+                0x00000000      0x340 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_tiny_sin
+                0x00000000       0x44 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_sin70
+                0x00000000      0x368 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.unlikely.checked_trig_tan_sixth
+                0x00000000       0x8a /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_exp_tiny   0x00000000      0x1d8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_inverse
+                0x00000000      0x14a /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.unlikely.checked_trig_backend
+                0x00000000       0x1c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.unlikely.atan_inverse_correction.constprop.0
+                0x00000000      0x374 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_large
+                0x00000000      0xae4 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_table
+                0x00000000      0x794 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_cache_ratio
+                0x00000000      0x3e6 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_argument
+                0x00000000      0x630 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_asin_refine_extension
+                0x00000000     0x10cc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi11jam_productENS_7ProductEj
+                0x00000000       0x4e /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.atan_fast_reciprocal
+                0x00000000      0x20c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.atan_fast_ratio
+                0x00000000       0x40 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_cache_atan_ratio
+                0x00000000      0x2bc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_refine_values_fixed
+                0x00000000     0x1ee0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_refine_fixed
+                0x00000000      0x83c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.unlikely.ln_refine
+                0x00000000     0x194c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.ln_near_one
+                0x00000000      0x4e4 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.ln_near_interval
+                0x00000000      0x390 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_math_extension
+                0x00000000     0x3214 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.unlikely.atan_refine
+                0x00000000      0xb04 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.atan_fast
+                0x00000000      0x6d0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_exp_core   0x00000000     0x1458 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.unlikely.checked_trig_tan_midpoint.isra.0
+                0x00000000      0x220 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_tan_table
+                0x00000000      0x5e4 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi19divide_significandsEyyRy
+                0x00000000      0x2b0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi17integer_magnitudeEx
+                0x00000000       0x18 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_drsub
+                0x00000000       0x14 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.math62_sincos_small
+                0x00000000      0xa68 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_sincos_small
+                0x00000000      0x170 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.math62_tan_small
+                0x00000000      0x558 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.trig_small_relative.isra.0
+                0x00000000       0xb0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.trig_small_result
+                0x00000000       0xe8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_tan_small
+                0x00000000      0x148 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_atan_reduced
+                0x00000000      0x4f0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_ln_approx
+                0x00000000     0x119c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_log_subnormal
+                0x00000000      0x9a0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_ln
+                0x00000000      0x4f8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_atan
+                0x00000000      0x36c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_reduce_pio2
+                0x00000000      0x64c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.trig_fixed
+                0x00000000      0x118 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_cache_mulq62
+                0x00000000      0x1d2 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.trig_sincos_fixed
+                0x00000000      0x454 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_sincos_reduced
+                0x00000000       0x7c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_trig_medium
+                0x00000000      0x6d0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_fast_table
+                0x00000000      0x3c4 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_tan_small
+                0x00000000      0x56c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_small
+                0x00000000      0xa38 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_trig_dispatch
+                0x00000000      0x248 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_exp_endpoints
+                0x00000000      0x168 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_pow_dispatch_extension
+                0x00000000      0x5dc /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_pow_log6   0x00000000      0x300 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_pow_dispatch_ordinary
+                0x00000000      0x110 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__clzsi2
+                0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__clzdi2
+                0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_divmod64
+                0x00000000       0xba /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_udiv32
+                0x00000000       0x46 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_sdiv32
+                0x00000000       0x44 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_sdivmod64
+                0x00000000       0x98 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE9normalizeEyRi
+                0x00000000       0x40 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_sqrt_slow
+                0x00000000       0x80 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi5fusedEyyy
+                0x00000000      0x524 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_fma
+                0x00000000       0x12 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE9normalizeEyRi
+                0x00000000       0x3c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6extendEy
+                0x00000000       0x54 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_f2d_slow
+                0x00000000        0xa /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE4packEyiy
+                0x00000000       0x9a /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6narrowEy
+                0x00000000       0x74 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_d2f_slow
+                0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE3addEyy
+                0x00000000      0x170 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_dadd_slow
+                0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE3mulEyy
+                0x00000000      0x1e0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_dmul_slow
+                0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE3divEyy
+                0x00000000      0x148 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_ddiv_slow
+                0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE3addEyy
+                0x00000000      0x140 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_fadd
+                0x00000000        0xe /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_fsub
+                0x00000000       0x12 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_frsub
+                0x00000000        0xe /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE3mulEyy
+                0x00000000      0x174 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_fmul
+                0x00000000        0xe /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE3divEyy
+                0x00000000      0x120 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_fdiv
+                0x00000000        0xe /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE7compareEyy
+                0x00000000       0x64 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_fcmpeq
+                0x00000000       0x12 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_fcmplt
+                0x00000000       0x14 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_fcmple
+                0x00000000       0x14 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_fcmpge
+                0x00000000       0x18 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_fcmpgt
+                0x00000000       0x14 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_fcmpun
+                0x00000000       0x14 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE12from_integerEyy
+                0x00000000       0x52 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_i2f
+                0x00000000       0x1e /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_ui2f
+                0x00000000        0xe /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE17magnitude_integerEy
+                0x00000000       0x58 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_d2uiz
+                0x00000000       0x1a /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_d2ulz_slow
+                0x00000000       0x18 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_d2lz_slow
+                0x00000000       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.mk61_m0_d2iz_slow
+                0x00000000       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE17magnitude_integerEy
+                0x00000000       0x50 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_f2iz
+                0x00000000       0x34 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .text.__aeabi_f2uiz
+                0x00000000       0x1c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_pow_extension_data
+                0x00000000      0x800 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_math_extension_data
+                0x00000000     0x4000 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .rodata._ZN7m0_eabiL19trig94_coefficientsE
+                0x00000000       0x60 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .rodata._ZN7m0_eabiL14trig_tan_tableE
+                0x00000000     0x64c0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .rodata._ZN7m0_eabiL12trig94_tableE
+                0x00000000     0x4b90 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .rodata._ZN7m0_eabiL17refine_atan_tableE
+                0x00000000      0x30c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .rodata._ZN7m0_eabiL14log_near_tableE
+                0x00000000     0x1000 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .rodata._ZN7m0_eabiL9log_tableE
+                0x00000000     0x1000 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .rodata._ZN7m0_eabiL10trig_tableE
+                0x00000000     0x3260 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .rodata._ZN7m0_eabiL8trig_pi2E
+                0x00000000       0x18 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .rodata._ZN7m0_eabiL16reciprocal_seedsE
+                0x00000000      0x100 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .comment       0x00000000       0x39 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .ARM.attributes
+                0x00000000       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .ARM.attributes
+                0x00000000       0x22 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RAM-control.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x100f79a5                        __aeabi_dadd = 0x100f79a5
+                0x100f7e89                        __aeabi_ddiv = 0x100f7e89
+                0x100f7cb7                        __aeabi_dmul = 0x100f7cb7
+                0x100f799b                        __aeabi_dsub = 0x100f799b
+                0x100f7961                        __aeabi_uidiv = 0x100f7961
+                0x100f7273                        __aeabi_ul2d = 0x100f7273
+                0x100835c1                        memcpy = 0x100835c1
+                0x100840bf                        memset = 0x100840bf
+                0x100ec175                        mk61_m0_cr_acos = 0x100ec175
+                0x100ebcfd                        mk61_m0_cr_asin = 0x100ebcfd
+                0x100eb945                        mk61_m0_cr_atan = 0x100eb945
+                0x100ef041                        mk61_m0_cr_cos = 0x100ef041
+                0x100ec4d1                        mk61_m0_cr_exp = 0x100ec4d1
+                0x100f114d                        mk61_m0_cr_ln = 0x100f114d
+                0x100f1c01                        mk61_m0_cr_log10 = 0x100f1c01
+                0x100f71c9                        mk61_m0_cr_pow = 0x100f71c9
+                0x100f8401                        mk61_m0_cr_pow_refined = 0x100f8401
+                0x100f06e1                        mk61_m0_cr_sin = 0x100f06e1
+                0x100effcd                        mk61_m0_cr_tan = 0x100effcd
+                0x1014d971                        mk61_m0_log_cube70 = 0x1014d971
+                0x1014d801                        mk61_m0_log_product46 = 0x1014d801
+                0x1014d8b9                        mk61_m0_log_product54 = 0x1014d8b9
+                0x10160e61                        mk61_m0_log_ratio70 = 0x10160e61
+                0x100f7969                        mk61_m0_math_udiv32 = 0x100f7969
+                0x1017d001                        mk61_m0_pow_argument_select = 0x1017d001
+                0x1016b3b9                        mk61_m0_pow_exp_product_flash = 0x1016b3b9
+                0x10160001                        mk61_m0_pow_log_select = 0x10160001
+                0x1016b901                        mk61_m0_pow_tiny_or_cr = 0x1016b901
+                0x100f7895                        mk61_m0_product62 = 0x100f7895
+                0x1016bb01                        mk61_m0_sqrt = 0x1016bb01
+                0x10178ae5                        mk61_m0_trig_inverse_table = 0x10178ae5
+                0x10178ce5                        mk61_m0_trig_pi2_product = 0x10178ce5
+                0x10178aed                        mk61_m0_trig_product = 0x10178aed
+                0x100f9269                        pow_integer128_multiply = 0x100f9269
+                0x100f9c9d                        pow_integer128_square = 0x100f9c9d
+                0x1014ed69                        pow_root128_ranged = 0x1014ed69
+
+.text.unlikely.checked_trig_tan_sixth
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.unlikely.checked_trig_tan_sixth)
+
+.text.unlikely.checked_trig_backend
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.unlikely.checked_trig_backend)
+
+.text.unlikely.atan_inverse_correction.constprop.0
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.unlikely.atan_inverse_correction.constprop.0)
+
+.text._ZN7m0_eabi3jamEyj
+                0x100e1c00       0x60
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi3jamEyj)
+ .text._ZN7m0_eabi3jamEyj
+                0x100e1c00       0x3e /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                0x100e1c00                m0_eabi::jam(unsigned long long, unsigned int)
+ *fill*         0x100e1c3e        0x2 
+ .text._ZN7m0_eabi3jamEyj.__stub
+                0x100e1c40       0x20 linker stubs
+
+.text.atan_fast_reciprocal
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.atan_fast_reciprocal)
+
+.text.atan_fast_ratio
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.atan_fast_ratio)
+
+.text.unlikely.ln_refine
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.unlikely.ln_refine)
+
+.text.ln_near_one
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.ln_near_one)
+
+.text.ln_near_interval
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.ln_near_interval)
+
+.text.unlikely.atan_refine
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.unlikely.atan_refine)
+
+.text.atan_fast
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.atan_fast)
+
+.text.unlikely.checked_trig_tan_midpoint.isra.0
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.unlikely.checked_trig_tan_midpoint.isra.0)
+
+.text._ZN7m0_eabi19divide_significandsEyyRy
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi19divide_significandsEyyRy)
+
+.text.mk61_m0_atan_reduced
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_atan_reduced)
+
+.text.mk61_m0_ln
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_ln)
+
+.text.mk61_m0_atan
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_atan)
+
+.text.__aeabi_lmul
+                0x100e6444        0x8
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.__aeabi_lmul)
+ .text.__aeabi_lmul
+                0x100e6444        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                0x100e6444                __aeabi_lmul
+
+.text.mk61_m0_udiv32
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_udiv32)
+
+.text._ZN7m0_eabi6BinaryILj52ELj11EE9normalizeEyRi
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi6BinaryILj52ELj11EE9normalizeEyRi)
+
+.text._ZN7m0_eabi6BinaryILj52ELj11EE4packEyiy
+                0x100e6554       0x98
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi6BinaryILj52ELj11EE4packEyiy)
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE4packEyiy
+                0x100e6554       0x98 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                0x100e6554                m0_eabi::Binary<52u, 11u>::pack(unsigned long long, int, unsigned long long)
+
+.text._ZN7m0_eabi5fusedEyyy
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi5fusedEyyy)
+
+.text.mk61_m0_fma
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_fma)
+
+.text._ZN7m0_eabi6BinaryILj23ELj8EE9normalizeEyRi
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi6BinaryILj23ELj8EE9normalizeEyRi)
+
+.text._ZN7m0_eabi6extendEy
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi6extendEy)
+
+.text.mk61_m0_f2d_slow
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_f2d_slow)
+
+.text._ZN7m0_eabi6BinaryILj23ELj8EE4packEyiy
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi6BinaryILj23ELj8EE4packEyiy)
+
+.text._ZN7m0_eabi6narrowEy
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi6narrowEy)
+
+.text.mk61_m0_d2f_slow
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_d2f_slow)
+
+.text._ZN7m0_eabi6BinaryILj52ELj11EE3addEyy
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi6BinaryILj52ELj11EE3addEyy)
+
+.text.mk61_m0_dadd_slow
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_dadd_slow)
+
+.text._ZN7m0_eabi6BinaryILj52ELj11EE3mulEyy
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi6BinaryILj52ELj11EE3mulEyy)
+
+.text.mk61_m0_dmul_slow
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_dmul_slow)
+
+.text._ZN7m0_eabi6BinaryILj52ELj11EE3divEyy
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi6BinaryILj52ELj11EE3divEyy)
+
+.text.mk61_m0_ddiv_slow
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_ddiv_slow)
+
+.text._ZN7m0_eabi6BinaryILj52ELj11EE17magnitude_integerEy
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text._ZN7m0_eabi6BinaryILj52ELj11EE17magnitude_integerEy)
+
+.text.__aeabi_d2uiz
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.__aeabi_d2uiz)
+
+.text.mk61_m0_d2ulz_slow
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_d2ulz_slow)
+
+.text.mk61_m0_d2lz_slow
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_d2lz_slow)
+
+.text.mk61_m0_d2iz_slow
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.text.mk61_m0_d2iz_slow)
+
+.m0_pow_near_one_refine
+                0x100f8434      0xe54
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_near_one_refine)
+ .m0_pow_near_one_refine
+                0x100f8434      0xe34 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                0x100f8434                mk61_m0_pow_near_one_binomial_dispatch
+ .m0_pow_near_one_refine.__stub
+                0x100f9268       0x20 linker stubs
+
+.m0_pow_integer_fixed
+                0x100f9650      0x250
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_integer_fixed)
+ .m0_pow_integer_fixed
+                0x100f9650      0x230 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_pow_integer_fixed.__stub
+                0x100f9880       0x20 linker stubs
+
+.m0_pow_near_argument_fixed
+                0x100f9880      0x440
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_near_argument_fixed)
+ .m0_pow_near_argument_fixed
+                0x100f9880      0x41c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ *fill*         0x100f9c9c        0x4 
+ .m0_pow_near_argument_fixed.__stub
+                0x100f9ca0       0x20 linker stubs
+
+.rodata._ZN7m0_eabiL19trig94_coefficientsE
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL19trig94_coefficientsE)
+
+.rodata._ZN7m0_eabiL14trig_tan_tableE
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL14trig_tan_tableE)
+
+.rodata._ZN7m0_eabiL12trig94_tableE
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL12trig94_tableE)
+
+.rodata._ZN7m0_eabiL10log70_highE
+                0x10105120      0x400
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL10log70_highE)
+ .rodata._ZN7m0_eabiL10log70_highE
+                0x10105120      0x400 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.rodata._ZN7m0_eabiL9log70_lowE
+                0x10105520     0x2000
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL9log70_lowE)
+ .rodata._ZN7m0_eabiL9log70_lowE
+                0x10105520     0x2000 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.rodata._ZN7m0_eabiL17refine_atan_tableE
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL17refine_atan_tableE)
+
+.rodata._ZN7m0_eabiL16refine_log_tableE
+                0x1010782c     0x6000
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL16refine_log_tableE)
+ .rodata._ZN7m0_eabiL16refine_log_tableE
+                0x1010782c     0x6000 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.rodata._ZN7m0_eabiL16refine_exp_tableE
+                0x1010d82c     0x1800
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL16refine_exp_tableE)
+ .rodata._ZN7m0_eabiL16refine_exp_tableE
+                0x1010d82c     0x1800 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.rodata._ZN7m0_eabiL14log_near_tableE
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL14log_near_tableE)
+
+.rodata._ZN7m0_eabiL8trig_pi2E
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL8trig_pi2E)
+
+.rodata._ZN7m0_eabiL9exp_tableE
+                0x10110048     0x1000
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL9exp_tableE)
+ .rodata._ZN7m0_eabiL9exp_tableE
+                0x10110048     0x1000 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.rodata._ZN7m0_eabiL16reciprocal_seedsE
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.rodata._ZN7m0_eabiL16reciprocal_seedsE)
+
+.m0_math_extension
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_math_extension)
+
+.m0_math_extension_data
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_math_extension_data)
+
+.m0_trig_refine_values_fixed
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_refine_values_fixed)
+
+.m0_trig_refine_fixed
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_refine_fixed)
+
+.m0_trig_cache_ratio
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_cache_ratio)
+
+.m0_trig_cache_clz32
+                0x1014d436       0x42
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_cache_clz32)
+ .m0_trig_cache_clz32
+                0x1014d436       0x42 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                0x1014d436                m0_eabi::clz32(unsigned long)
+
+.m0_trig_cache_clz64
+                0x1014d478       0x16
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_cache_clz64)
+ .m0_trig_cache_clz64
+                0x1014d478       0x16 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                0x1014d478                m0_eabi::clz64(unsigned long long)
+
+.m0_trig_cache_low_product
+                0x1014d4cc       0x4e
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_cache_low_product)
+ .m0_trig_cache_low_product
+                0x1014d4cc       0x4e /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                0x1014d4cc                m0_eabi::low_product(unsigned long long, unsigned long long)
+
+.m0_pow_exact_extension
+                0x1014e000      0x128
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_exact_extension)
+ .m0_pow_exact_extension
+                0x1014e000      0x108 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_pow_exact_extension.__stub
+                0x1014e108       0x20 linker stubs
+
+.m0_asin_extension
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_asin_extension)
+
+.m0_asin_refine_extension
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_asin_refine_extension)
+
+.m0_trig_cache_mulq62
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_cache_mulq62)
+
+.m0_trig_cache_atan_ratio
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_cache_atan_ratio)
+
+.m0_pow_extension
+                0x10160024      0xe5c
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_extension)
+ .m0_pow_extension
+                0x10160024      0xe3c /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                0x10160024                mk61_m0_pow_rsqrt_boundary
+                0x10160374                mk61_m0_log_ratio70_slow
+                0x101603c0                pow_fast_log
+ .m0_pow_extension.__stub
+                0x10160e60       0x20 linker stubs
+
+.m0_pow_dispatch_extension
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_dispatch_extension)
+
+.m0_pow_extension_data
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_extension_data)
+
+.m0_pow_dispatch_ordinary
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_dispatch_ordinary)
+
+.m0_pow_refine_extension
+                0x10168000     0x2c40
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_refine_extension)
+ .m0_pow_refine_extension
+                0x10168000     0x2c10 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+ .m0_pow_refine_extension.__stub
+                0x1016ac10       0x30 linker stubs
+
+.m0_pow_small_y_cold
+                0x1016ad00      0x6b8
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_small_y_cold)
+ .m0_pow_small_y_cold
+                0x1016ad00      0x6b8 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                0x1016ad00                mk61_m0_pow_small_y
+
+.m0_trig_argument
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_argument)
+
+.m0_trig_dispatch
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_dispatch)
+
+.m0_trig_small
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_small)
+
+.m0_trig_fast_table
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_fast_table)
+
+.m0_trig_table
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_table)
+
+.m0_trig_inverse
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_inverse)
+
+.m0_trig_tan_small
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_tan_small)
+
+.m0_trig_tan_table
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_tan_table)
+
+.m0_trig_tiny_sin
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_tiny_sin)
+
+.m0_trig_sin70
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_sin70)
+
+.m0_trig_cos70
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_cos70)
+
+.m0_exp_core
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_exp_core)
+
+.m0_exp_endpoints
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_exp_endpoints)
+
+.m0_trig_large
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_trig_large)
+
+.m0_log_subnormal
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_log_subnormal)
+
+.m0_pow_middle  0x1017b000      0x920
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_middle)
+ .m0_pow_middle
+                0x1017b000      0x8f0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                0x1017b000                mk61_m0_pow_middle_interval
+                0x1017b8b0                mk61_m0_pow_midpoint
+ .m0_pow_middle.__stub
+                0x1017b8f0       0x30 linker stubs
+
+.m0_pow_log6
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.m0_pow_log6)
+
+.scratch_y      0x20038000      0xff0
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o(.scratch_y.m0_pow_hot)
+ .scratch_y.m0_pow_hot
+                0x20038000      0xd34 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                0x200383c0                mk61_m0_pow_positive_checked_dispatch
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RAM-control.o(.scratch_y.m0_shift_hot)
+ .scratch_y.m0_shift_hot
+                0x20038d34       0x60 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RAM-control.o
+                0x20038d34                __aeabi_llsl
+                0x20038d54                __aeabi_llsr
+                0x20038d74                __aeabi_lasr
+ /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RAM-control.o(.scratch_y.m0_pow_hot)
+ .scratch_y.m0_pow_hot
+                0x20038d94      0x208 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RAM-control.o
+                0x20038d94                mk61_m0_pow_argument
+                0x20038ee4                mk61_m0_pow_exp_product
+ *fill*         0x20038f9c        0x4 
+ .scratch_y.m0_pow_hot.__stub
+                0x20038fa0       0x50 linker stubs
+
+.glue_7         0x20038ff0        0x0
+ .glue_7        0x20038ff0        0x0 linker stubs
+
+.glue_7t        0x20038ff0        0x0
+ .glue_7t       0x20038ff0        0x0 linker stubs
+
+.vfp11_veneer   0x20038ff0        0x0
+ .vfp11_veneer  0x20038ff0        0x0 linker stubs
+
+.v4_bx          0x20038ff0        0x0
+ .v4_bx         0x20038ff0        0x0 linker stubs
+
+.iplt           0x20038ff0        0x0
+ .iplt          0x20038ff0        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.igot.plt       0x20038ff0        0x0
+ .igot.plt      0x20038ff0        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.rel.dyn        0x20038ff0        0x0
+ .rel.iplt      0x20038ff0        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.table_transition
+ *(.m0_pow_exp_table_transition)
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.comment)
+ *(.note*)
+ *(.ARM.attributes)
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RAM-control.o
+OUTPUT(/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/control.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000    0x61c8e
+ .debug_info    0x00000000    0x61c8e /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.debug_abbrev   0x00000000      0x8cf
+ .debug_abbrev  0x00000000      0x8cf /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.debug_loclists
+                0x00000000    0x6b496
+ .debug_loclists
+                0x00000000    0x6b496 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.debug_aranges  0x00000000      0x4d0
+ .debug_aranges
+                0x00000000      0x4d0 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.debug_rnglists
+                0x00000000     0x8972
+ .debug_rnglists
+                0x00000000     0x8972 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.debug_line     0x00000000    0x329d3
+ .debug_line    0x00000000    0x329d3 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+
+.debug_str      0x00000000     0x24fb
+ .debug_str     0x00000000     0x24fb /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o
+                               0x2776 (size before relaxing)
+
+.debug_frame    0x00000000     0x1244
+ .debug_frame   0x00000000     0x1244 /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o

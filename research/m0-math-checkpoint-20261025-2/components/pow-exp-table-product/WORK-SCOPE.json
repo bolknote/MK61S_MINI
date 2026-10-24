@@ -1,0 +1,10 @@
+{
+  "status": "QUALIFIED_PRIVATE_CANDIDATE_FROZEN_PENDING_INDEPENDENT_REVIEW",
+  "accepted_CPP_and_shared77_parent": ".build/m0-exp-directed-product-20261024",
+  "parent_FROZEN_sha256": "e6ce76786eeb9443af86b04596cac95fc56aba312ba6bdd1b0d2226da8b69b10",
+  "changes": "RP-only additional pow-table product entry, same old77 generic entry unchanged; exact table rowzero is shift. Source-bound call-site selection and full controls/qualification required.",
+  "no_canonical_Git_USB_device_Flash_EA9_or_release_changes": true,
+  "goal_complete": false,
+  "source_ASM_allocation_delta": 32,
+  "new_math_qualified_ARM_calls": 314546
+}

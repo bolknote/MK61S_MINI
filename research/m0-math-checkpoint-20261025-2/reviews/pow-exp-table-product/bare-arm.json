@@ -1,0 +1,19 @@
+{
+  "status": "PASS_BOUNDED_ACTUAL_TABLE_KERNEL_AND_WRAPPER_ARM",
+  "qualified_calls": 1330,
+  "all512_roots_actual": true,
+  "all16NZCV_on4roots2Bvalues": true,
+  "dyadic_full64_edges": true,
+  "gate_instruction_histogram": {
+    "10": 46,
+    "79": 607
+  },
+  "wrapper5instructions": true,
+  "generic_extra_R12_matches_original": true,
+  "dyadic_R12_not_part_of_ABI": true,
+  "observed_frame36": true,
+  "PCS_SP_PC_boundedwrites_checked": true,
+  "active_PC_ranges_restricted": true,
+  "device_IO": 0,
+  "MPFR_inputs": 0
+}
