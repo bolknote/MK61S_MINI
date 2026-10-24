@@ -70,13 +70,20 @@ class Grid {
     u16 dirtyMask(u8 row) const;
     void clearDirty(u8 row);
     void clearColumns(u16 mask);
+#if MK61_PROPORTIONAL_UI_FONTS
+    bool anyDirty(void) const { return dirty_rows != 0; }
+#else
     bool anyDirty(void) const;
+#endif
 
   private:
 #if MK61_PROPORTIONAL_UI_FONTS
     u16 cells[CELL_CAPACITY];
     u8 custom_cells[FLAG_BYTES];
     u8 dirty_cells[FLAG_BYTES];
+    // Exact summary of the bitmap. Empty foreground/USB flushes do not
+    // rescan every visible cell; the character-only layout stays unchanged.
+    u16 dirty_rows;
 #else
     u16 cells[MAX_ROWS][COLS];
     u16 custom_cols[MAX_ROWS];
