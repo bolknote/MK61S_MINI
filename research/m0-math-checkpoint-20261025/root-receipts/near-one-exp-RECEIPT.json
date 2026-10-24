@@ -1,0 +1,289 @@
+{
+  "schema": "root-private-math-component-acceptance-v1",
+  "created_utc": "2026-10-24T21:37:17.213868+00:00",
+  "status": "ACCEPTED_PRIVATE_NEAR_ONE_EXP_COMPONENT_ONLY",
+  "independent_review_sha256": "6c504f888e1ce0489379d1769b2d1e331b64bda0354eed746fbe98359748634b",
+  "clarification_sha256": "03ceff8e6e0f9e8ca790567f2045f1791c301f1544d2c0f8aaa234a19496c179",
+  "middle_product_error_interval": "(-3,0]",
+  "root_checks": "Independent review, clarification, both manifests and their directly declared file tuples hash/size validated. New independent ARM/MPFR results are reviewer evidence; ROOT did not rerun them or the large corpus.",
+  "private_component_GO": true,
+  "integration_GO": false,
+  "whole_math_or_507_GO": false,
+  "main_release_or_hardware_GO": false,
+  "reviewed_507": {
+    "no_slower": 422,
+    "strict": 413,
+    "equal": 9
+  },
+  "mandatory_future_integration": "Fresh producer/16Bveneer/2postcall/88liveconsumer R12 guard on actual integrated linked ELF, compiler and flags; scalarCABI/privateELF cannot substitute.",
+  "remaining_limits": {
+    "expanded_exp_slower_inputs": 214,
+    "correct_Qfplib_slower_state_rows": 428,
+    "parent_cost_increase_rows_retained": 5712,
+    "private_code_increase_bytes": 1136,
+    "observed_stack_peak_parent_candidate": [
+      744,
+      808
+    ],
+    "universal_totality_or_physical_cycles_claim": false
+  },
+  "no_device_IO_or_canonical_or_git_mutations": true,
+  "validated_unique_pins": 51,
+  "pins": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/FINAL-REVIEW.json",
+      "bytes": 11301,
+      "sha256": "6c504f888e1ce0489379d1769b2d1e331b64bda0354eed746fbe98359748634b"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/FROZEN.json",
+      "bytes": 25478,
+      "sha256": "1e5a757a3116d4803330b0e554ad1dffbe0aea838c7a75126460f79dcf4d5de0"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/result.json",
+      "bytes": 7013,
+      "sha256": "fe222980e2687df8ff95d21b73123c5c03b6b2b83624080f0eb44d89f4b9b701"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/HANDOFF.md",
+      "bytes": 3048,
+      "sha256": "a2c8a2753933c885e194e2884caa511e05c14978d5ccca50ee4fc5b84aeb6089"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/candidate.elf",
+      "bytes": 1153444,
+      "sha256": "e6f2f7e0c55b7d7f2547badb00eacef444a1575eb59bdae7d530eec0ea340fcc"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/FINAL-REVIEW.json",
+      "bytes": 16279,
+      "sha256": "0d6073f3534d2abb71ad3348096bca930d2513e3813b06dbcfb8911ca485839b"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-root-acceptance-20261024-001/RECEIPT.json",
+      "bytes": 93063,
+      "sha256": "7ec53f3c616b08413d0e88dae6ce65a7d7b4b8d5adb41737ae802e10475bc573"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/candidate/native_eabi_m0.cpp",
+      "bytes": 49386,
+      "sha256": "b3c16d4f64405c2cbcc8869dc992ba7a95603151a9092bedabd17e0f172f9ede"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/FROZEN.json",
+      "bytes": 46510,
+      "sha256": "e6ce76786eeb9443af86b04596cac95fc56aba312ba6bdd1b0d2226da8b69b10"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/binding.json",
+      "bytes": 379036,
+      "sha256": "082f716b273bd7131610cd1c6d46d14ec5167e5fc71ac58b815b01c7c0cc179f"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/NUMERIC-REVIEW.md",
+      "bytes": 4148,
+      "sha256": "1bb59cfabf1bd277b09d96fc0df990fb57d59b955a634dd15538bd1608fba647"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/proof.json",
+      "bytes": 6227,
+      "sha256": "3679320e08c010723aa52e1a66b7696844daa804849762daa83a2197fdb7a48c"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/private-guard-controls.json",
+      "bytes": 1369,
+      "sha256": "628ca8f47ad2587801dfe0363a55e0bfda11100d3ed145c047b830e4a8d2dbf4"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/literal-unit-binding.json",
+      "bytes": 14585,
+      "sha256": "f59d1c8d617f8f05ee5b0193f31f67a082a2ad450d388abbb34cf637bdff1870"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/bare-arm.json",
+      "bytes": 1015,
+      "sha256": "b19941c57e4e74e4b06224683205ba3b58dea2652a7fe320a1b46fe77a25c8ca"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/pack-arm.json",
+      "bytes": 44945,
+      "sha256": "e361f3389f8fce8088f05cd3205c3c1e49e11ea8d9f705c2587deae242524279"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/public-arm-mpfr.json",
+      "bytes": 225181,
+      "sha256": "dbba5e4aec030d002614923bb0b842ecb97c35905af49996bca3378e060e4a8a"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/accounting.json",
+      "bytes": 2208,
+      "sha256": "37a9ba440626290175e6773fb2c987ecde6491c5584bfb18a039b2bfef94f11d"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/resources.json",
+      "bytes": 878,
+      "sha256": "1070aa6e23f6e6919d709651cd2a95a79d6b665392eab69bcf39d72f1cecfdf9"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/EXECUTION-NOTES.json",
+      "bytes": 2003,
+      "sha256": "ee9f616ad873a288613a9a174bb7eaa26838db780562595fa195158a472b51ca"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/MANIFEST.json",
+      "bytes": 10322,
+      "sha256": "33b6ec2106211d2f6a0d8b31127e786e1f715a57e26096539c7af588ca2aba1e"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/accounting.py",
+      "bytes": 5219,
+      "sha256": "0a21905285a49f7baf46ea7cfb6e53475195463e249b24fc3297abc385c07b94"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/arm.py",
+      "bytes": 12110,
+      "sha256": "2e02bba9263cc662adacf32395c47ede8b31317289c4a85430d95a9a64fec613"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/binding.py",
+      "bytes": 7634,
+      "sha256": "e9f02ab63e9f36603fbadf7aaf15831d107f7268e736145864e8f259b9cd0aa9"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/candidate.actual.dis",
+      "bytes": 145162,
+      "sha256": "9076c253c07c68420bc821ea59ba733f0b83574f6372530a2b7c623ae11f56c6"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/final-seal-recheck.json",
+      "bytes": 956,
+      "sha256": "bac4eb746b5c9877064c317603eb6aa08be3e35cc1888b01aeebd1fbdea31e49"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/guard_and_unit.py",
+      "bytes": 5429,
+      "sha256": "181c8d6584607ac6aeb3d848b1efab579ff8817547153010202ab582390d8a5a"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/literal-rebuild/pack-unit.elf",
+      "bytes": 10688,
+      "sha256": "2358077699ecf2c34e514cdce881073e3e6853def5d7da5a9cb1f39b5fa2ac2a"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/literal-rebuild/pack-unit.elf.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/literal-rebuild/pack-unit.elf.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/literal-rebuild/pack-unit.o",
+      "bytes": 8392,
+      "sha256": "a3c273cdcd767e54a3342c6ed0d3bedebaaa5faa825ed17e3c151e4727d42929"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/literal-rebuild/pack-unit.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/literal-rebuild/pack-unit.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/literal-rebuild/pack-unit.su",
+      "bytes": 125,
+      "sha256": "06c96f291fe00aa2007dd337d1550881a3280d32f8dc61924961506d91dbde76"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/literal_binding.py",
+      "bytes": 2374,
+      "sha256": "1756c1e2d70ee81e57ab5c8c69e20c615d792fcdbba2cd84c5e527a9fdd3d281"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/private-guard.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/private-guard.stdout",
+      "bytes": 1586,
+      "sha256": "2efdbcb91b4ffe95f6bd05f9eb15900385d9d3c80717ec354d966b85a8dd1060"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/proof.py",
+      "bytes": 4590,
+      "sha256": "26ce89ddbb9e5e1c1939a776bbb82d2ccee2e5da4ce1a7d492170c782182266e"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/rebuild/RP-candidate.o",
+      "bytes": 1831968,
+      "sha256": "ebcbb7488bcddbb69631ab64fc225b2cc2be7cd57a0829b803f49d9f064f0bd8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/rebuild/RP-candidate.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/rebuild/RP-candidate.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/rebuild/RP-candidate.su",
+      "bytes": 28505,
+      "sha256": "652dbc92f758903ad61d8acbe81791e3dafdc178c34622256d985286691df1b8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/rebuild/candidate.elf",
+      "bytes": 1153444,
+      "sha256": "e6f2f7e0c55b7d7f2547badb00eacef444a1575eb59bdae7d530eec0ea340fcc"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/rebuild/candidate.elf.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/rebuild/candidate.elf.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/rebuild/product.o",
+      "bytes": 884,
+      "sha256": "4e22f119095fc271cbbacf92884f4dbad5fc2d563c7e606ebf77cd2b28ee80c7"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/rebuild/product.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/rebuild/product.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/seal.py",
+      "bytes": 11907,
+      "sha256": "93ca665e95059dcf70adede45564a9b5245192cf09f78f02134a8b21875846e5"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/INTERVAL-CLARIFICATION.json",
+      "bytes": 1133,
+      "sha256": "03ceff8e6e0f9e8ca790567f2045f1791c301f1544d2c0f8aaa234a19496c179"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/CLARIFICATION-MANIFEST.json",
+      "bytes": 525,
+      "sha256": "7c25189d25e29928df65bd7981354e1369317d84d134548f760ecf2e4356a604"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "status": "PASS_COMPLETED_OWN_DYADIC_REVIEW",
+  "steps": [
+    {
+      "script": "binding.py",
+      "session": 61376,
+      "exit_code": 0,
+      "byte_exact_rebuilds": 23
+    },
+    {
+      "script": "proof.py",
+      "exit_code": 0
+    },
+    {
+      "script": "arm.py",
+      "session": 54617,
+      "exit_code": 0,
+      "qualified_ARM": 13284,
+      "actual_MPFR": 839,
+      "sNaN_shortcuts": 2
+    },
+    {
+      "script": "callers.py",
+      "session": 1853,
+      "exit_code": 0,
+      "qualified_ARM": 1134,
+      "actual_MPFR": 189
+    },
+    {
+      "script": "evidence.py",
+      "session": 78617,
+      "exit_code": 0,
+      "new_ARM_MPFR": 0
+    }
+  ],
+  "qualified_own_ARM": 14418,
+  "qualified_own_actual_MPFR": 1028,
+  "sNaN_shortcuts": 2,
+  "excluded_failed_own_numerical_runs": 0,
+  "hardware": false,
+  "producer_primary_source_Git_or_canonical_changes": false
+}

@@ -1,0 +1,75 @@
+{
+  "status": "PASS_SAVED_RAW_ACCOUNTING_NO_REEXECUTION",
+  "raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/qualification-records.jsonl.gz",
+    "bytes": 8405236,
+    "sha256": "fabc9212f29dfe42d5da0bc6fea6329f9a1af5daaf6a9d81d82817d73cb5351f"
+  },
+  "parent_raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/qualification-records.jsonl.gz",
+    "bytes": 7965193,
+    "sha256": "2a38d5a4e6a7025974549899d5121412f34477767af42d75263036ce44538839"
+  },
+  "input_words": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/qualification-inputs.bin",
+    "bytes": 3920248,
+    "sha256": "b25144e12c2624f107c754656684bf8e37089ec22b3d8da5ccec10e11d01d402"
+  },
+  "parent_input_words": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/qualification-inputs.bin",
+    "bytes": 3738928,
+    "sha256": "f4944d9f628561bd34773154f266d2ded91084a9665a46eda3969ff49675926a"
+  },
+  "all980062_rows_exactly_one_per_input_and_SIO": true,
+  "old934732_results_reference_costs_and_raw_bits_bound": true,
+  "same467366_loss_counts": [
+    1896,
+    196
+  ],
+  "same_inputs_fixed": 1700,
+  "union490031_losses": 214,
+  "old_remaining": 196,
+  "new_preexisting_remaining": 18,
+  "all428_remaining_states_parent_bound": true,
+  "new_loss_states": 0,
+  "correct_Qfplib_comparison": {
+    "faster": 571806,
+    "slower": 428,
+    "equal": 8
+  },
+  "wrong_Qfplib_state_rows_retained": 407820,
+  "cost_increase_state_rows": 5712,
+  "positive_deltas": {
+    "1": 2474,
+    "44": 186,
+    "38": 16,
+    "41": 4,
+    "40": 170,
+    "31": 8,
+    "36": 38,
+    "6": 970,
+    "3": 724,
+    "7": 196,
+    "39": 376,
+    "32": 24,
+    "34": 360,
+    "5": 8,
+    "2": 4,
+    "10": 154
+  },
+  "cost_increase_scopes": {
+    "still_no_slower_correct_Qfplib": 5662,
+    "wrong_Qfplib": 34,
+    "already_losing_correct_Qfplib": 16
+  },
+  "original16_rows_strict": 32,
+  "reviewed_whole507_preserved": {
+    "no_slower": 422,
+    "strict": 413,
+    "equal": 9
+  },
+  "author423_separate_union_not_promoted": true,
+  "ARM_calls": 0,
+  "MPFR_evaluations": 0,
+  "other_operation_qualifications_added": false
+}

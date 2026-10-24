@@ -1,0 +1,83 @@
+{
+  "status": "PASS_INDEPENDENT_FOCUSED_EXP_PRODUCT_ARM_MPFR",
+  "MPFR": "4.2.2",
+  "public_exp_unique": 307,
+  "public_exp_ARM_calls": 1842,
+  "public_exp_MPFR_calls": 307,
+  "author_baseline_rows_checked_for_exact_inheritance": 97526,
+  "independent_source_model_product_checks": 532,
+  "historical_exp16_fixed": 14,
+  "historical_exp16_remaining": 2,
+  "all61_old_tight_new_losses_selected": true,
+  "retained_regressions": 5800,
+  "retained_regression_histogram": {
+    "1": 4634,
+    "2": 8,
+    "3": 46,
+    "8": 98,
+    "10": 166,
+    "12": 74,
+    "27": 4,
+    "29": 10,
+    "31": 10,
+    "37": 346,
+    "39": 404
+  },
+  "all_cost_types_freshly_replayed": [
+    1,
+    2,
+    3,
+    8,
+    10,
+    12,
+    27,
+    29,
+    31,
+    37,
+    39
+  ],
+  "expanded_raw_losses": {
+    "resident": 6149,
+    "tight_trial": 460,
+    "candidate": 395
+  },
+  "public_trace": {
+    "candidate": {
+      "exp_refine": 28,
+      "mk61_m0_cr_exp": 6,
+      "mk61_m0_exp_endpoint": 96
+    },
+    "control": {
+      "exp_refine": 56,
+      "mk61_m0_cr_exp": 6,
+      "mk61_m0_exp_endpoint": 96
+    }
+  },
+  "own_public_stack_subset": {
+    "candidate": 736,
+    "control": 736,
+    "Qfplib": 32
+  },
+  "author_full_public_stack736_retained_not_reswept": true,
+  "bare_ARM_calls": 4004,
+  "bare_product_pairs": 663,
+  "bare_endpoint_checks": 918,
+  "bare_function_counts": {
+    "audit_product": 1326,
+    "audit_parent_product": 1326,
+    "audit_pack": 462,
+    "audit_tiny": 890
+  },
+  "bare_PC_isolated_no_ROM_or_firmware": true,
+  "bare_SIO_accesses": 0,
+  "bare_stack_bytes": 40,
+  "caller_ARM_calls": 54,
+  "caller_MPFR_calls": 9,
+  "all4_new_pow_fixes_freshly_replayed": true,
+  "total_own_ARM_calls": 5900,
+  "total_own_MPFR_calls": 316,
+  "counts_are_instructions_not_physical_cycles": true,
+  "hardware": false,
+  "canonical": false,
+  "whole_math_GO": false
+}

@@ -1,0 +1,35 @@
+{
+  "status": "BUILT_EXACT_INLINE_MAIN_LN_PACK_UNIT",
+  "source_sha256": "8294798875f17de019d15a57208f04daf2d74c431873036ecc87111df583e42f",
+  "exact_fragment_sha256": "fcbae2691b8d697f8b4cce048bca851b071dd114987fd661b973164c473e170c",
+  "unit_ELF_sha256": "c49aa90232643b3f52cbd6eb8b6723ac5d7f3a31b753f3564f40b57f26858c06",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/pack-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/pack-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/pack-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/pack-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/pack-unit.elf"
+    ]
+  ],
+  "decline_bits": "7FF800000000019A",
+  "hardware_accessed": false
+}

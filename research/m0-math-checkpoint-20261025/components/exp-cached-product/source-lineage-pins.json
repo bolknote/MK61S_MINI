@@ -1,0 +1,277 @@
+{
+  "status": "PINNED_UNCHANGED_FROZEN_MATH_SOURCE_AND_REFERENCE_LINEAGE",
+  "files": {
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0.S": {
+      "sha256": "1a9d2183fcf3ee72ef5eb523150329f884cd6a1b9f67ca266a2a44229b5d8b44",
+      "bytes": 20768
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0.cpp": {
+      "sha256": "5b8ce151ae11323b35a6c6e51ab04e4895315109a715b7fd6007fac3c021b9bc",
+      "bytes": 36224
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0.hpp": {
+      "sha256": "bf47da16fb5264994cf1bf4f471f846efe5dc66ec776f0631704755e84d7818a",
+      "bytes": 3113
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_asin.inc": {
+      "sha256": "13423ab94f8ded5e52e80c93d2b44bf59aeea3c62ea0afad22d896be09eefad3",
+      "bytes": 16037
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_atan.inc": {
+      "sha256": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+      "bytes": 3057
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_atan_fast.inc": {
+      "sha256": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+      "bytes": 3693
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_atan_refine.inc": {
+      "sha256": "35b099f5ebfc6219245329b285bb46696e8ca2186ebbeb97e5135e0efc66dbe1",
+      "bytes": 3830
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_convert.inc": {
+      "sha256": "d4b15b0be7f54c9a67d4d7d4b1e8b60874ff054587b6c09d0ec0cd97338a4cc3",
+      "bytes": 8782
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_cr.cpp": {
+      "sha256": "c89cc8c956a2f1bb89060cc21ef0fff28d66c08dba820100d35a60370ab1caa5",
+      "bytes": 4922
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_cr_shim.inc": {
+      "sha256": "6b9cc79cecdc4fb2df5ee203228b114b1da25401ed7072d24dd0db84647a7c79",
+      "bytes": 1557
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_cr_types.hpp": {
+      "sha256": "55056af4c32208c1208ac54070c9853088d66a2450c081ceac141c237ac90df9",
+      "bytes": 657
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_exp_table.inc": {
+      "sha256": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+      "bytes": 17117
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_fma.inc": {
+      "sha256": "2404eee35c3d2ed60b95464519eabf627bc58eafec4a4f5e366d38408c129c5c",
+      "bytes": 2259
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_kernels.inc": {
+      "sha256": "dc9e0f57cf747675e2a71df049300307f8368e0f2e869f50bf1d69cd52b5d8ed",
+      "bytes": 12001
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log10.inc": {
+      "sha256": "9e0422538bbb2a96d745c410d0677b80403b277609a369ae54a034183f67c793",
+      "bytes": 10650
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log10_constants.inc": {
+      "sha256": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8",
+      "bytes": 331
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log10_table.inc": {
+      "sha256": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99",
+      "bytes": 53832
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log70.inc": {
+      "sha256": "6106cadc4b44ff4cce019dcd0eb4e9d66eed15285ebd70aee6af6e482cdba91b",
+      "bytes": 5597
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log70_center.inc": {
+      "sha256": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064",
+      "bytes": 1518
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log70_ratio.inc": {
+      "sha256": "5451f32a046b9f69006dede642b190b3bd9403a8e7a7e54989a7d81c972153fa",
+      "bytes": 1180
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log70_table.inc": {
+      "sha256": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb",
+      "bytes": 92104
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log_subnormal.inc": {
+      "sha256": "b20c26b4f6c2981a9dce5d0acd562d798f2763f14405a38d2aefbf8cedfa9339",
+      "bytes": 5884
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log_table.inc": {
+      "sha256": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+      "bytes": 33582
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_argument.inc": {
+      "sha256": "33d26fae891145e4ac9a638a9f18ca8ebcb8491816806c78c49fcf2020f8eee3",
+      "bytes": 3096
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_argument_select.inc": {
+      "sha256": "d6ecddcb8b3d6aec0f7085edb3ce02b5604e32af974bce50ff801ed6446129fd",
+      "bytes": 1416
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_dyadic128.inc": {
+      "sha256": "edd8f8acb0857ebf03d3f81833d4c4427b383401131d543c10c9af4da9982909",
+      "bytes": 5004
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_exact.inc": {
+      "sha256": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8",
+      "bytes": 5677
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_exp_body.inc": {
+      "sha256": "b2b4061770a7abb82cc3126f5dfa30e099ed9305321d20e13555d28118a04eca",
+      "bytes": 4098
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_exp_product.inc": {
+      "sha256": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc",
+      "bytes": 2100
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_fast.inc": {
+      "sha256": "fd3a37cb0377913aceb48a7b8a922bddf6597926d304c86bef13db157997da1d",
+      "bytes": 40370
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_integer.inc": {
+      "sha256": "0f8d00040ccbd2ac1e208d45db3262ba56fb1fb0eff5526f542f67e7953478f7",
+      "bytes": 4261
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_integer128.inc": {
+      "sha256": "e82445b187965999e09a314b9e39e9f5036e587862e8e8571b0930f0d5a4ebd2",
+      "bytes": 3748
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_interval.inc": {
+      "sha256": "bf7b776af71fd3c50708c8955651487fee468351e1e63b835a42bdf3572c56e6",
+      "bytes": 12546
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_interval_table.inc": {
+      "sha256": "e78e02c26ee64c2b9fdd883c26b31315e0cded2ca02ea4177c2f7576b239a414",
+      "bytes": 586
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_kernels.inc": {
+      "sha256": "8196b4a475d6d144fd6b2403a9ccdbccea10ea37f32a900049ef2f075af0adfa",
+      "bytes": 163
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_ln2.inc": {
+      "sha256": "3aba7e9d4efb1ff819af04ef6578de2eb0b42e0ba1bfe245ad8cf22dd1f4bdb8",
+      "bytes": 703
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_log6.inc": {
+      "sha256": "dc8bd84a6b4c6beda0e3a3e136c96a643364d3cb28011d227001b6a1a8b2534b",
+      "bytes": 2422
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_log_select.inc": {
+      "sha256": "10d64ca3239c00f87da4fcbc97f17ccd7eafa1075e327f1bb8e53aebc5309877",
+      "bytes": 679
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_middle.inc": {
+      "sha256": "3b93e0e022bd00615b25d14e40909986b51d343573fbf591b9d7ac605f052322",
+      "bytes": 4600
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_root64.inc": {
+      "sha256": "9d0c5d40421caba060765e524753d24d1600dde8ac4a05f8ba207109a7029ef7",
+      "bytes": 3089
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_root_prefix.inc": {
+      "sha256": "cde302109df7f9c4707041948c57c60a8d51510c2b2568db69645158635e2e5f",
+      "bytes": 101650
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_tail.inc": {
+      "sha256": "c4b406ce7f01d96c3f62cb97e60d69565f4d01fe1203109571b8343660953048",
+      "bytes": 657
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_third.inc": {
+      "sha256": "92e6b5ed3c21a37098a32836fc31aefb4d9ef790e0ca045b2e13c58ab1d4dd50",
+      "bytes": 985
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_product.inc": {
+      "sha256": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b",
+      "bytes": 4740
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_refine.inc": {
+      "sha256": "1800428641ddf489fdce847ee0d7df4acef844902b9604fb3d2156a32eced0ce",
+      "bytes": 9692
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_refine_table.inc": {
+      "sha256": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+      "bytes": 99755
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_rp2040.S": {
+      "sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "bytes": 31792
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_rsqrt_table.inc": {
+      "sha256": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+      "bytes": 7876
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_sqrt64_table.inc": {
+      "sha256": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+      "bytes": 26047
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_sqrt_special.S.inc": {
+      "sha256": "8b536f18e86cb3f7f3024d4e4ba88df65417168197fdecc69c97ab760f9520be",
+      "bytes": 1848
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_sqrt_table.inc": {
+      "sha256": "e72b7cbe8d959a2cedb7320d0a3cb76ad81d7419fb8ea6aebf734d8c9eade921",
+      "bytes": 3884
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_checked.inc": {
+      "sha256": "f397b794740a4d2f8c191a184c80798849e7807a411dd4cc6aa96e17462aa45f",
+      "bytes": 15604
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_checked_table.inc": {
+      "sha256": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad",
+      "bytes": 155696
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_cos70.inc": {
+      "sha256": "54771228e6d411181859c37c5dc43e411e68385f5802418bc4732ed13b65cdc5",
+      "bytes": 1370
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_large.S.inc": {
+      "sha256": "84d505152b894178b9ab90f7bfa348b24260875d4b501f5e0accd33f8b871503",
+      "bytes": 5845
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_large.inc": {
+      "sha256": "d4ed18ca6cdc55898a8bd00f45efbbec62eb27288975afb7bdf1981f1bd98199",
+      "bytes": 8138
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_refine.inc": {
+      "sha256": "559094ec98ac8c01693fd65bec7b1212b22115026806bfdf3b96770f2b543e5f",
+      "bytes": 7240
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_small_refine.inc": {
+      "sha256": "cf50c17c713e7a0f5d6b15c6644540455be1cf15b501c5c621af7ad61d75355b",
+      "bytes": 1798
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_table.inc": {
+      "sha256": "d7b383e977fdfd366febc9e9b6b14eb091f046087f68677901d6d8015801e551",
+      "bytes": 52415
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_tan.inc": {
+      "sha256": "4c5f7e6113a4f3577c6feeca84e707f64c58bb20d90a030ae194ee81c9ff3217",
+      "bytes": 6670
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_uint128.hpp": {
+      "sha256": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7",
+      "bytes": 5325
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf": {
+      "sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+      "bytes": 9015184
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/slower-inputs.json": {
+      "sha256": "5dcc6280f81c729634a58fd41f9a6e40c842dec286ad03fbb705a9d5b171a192",
+      "bytes": 139956
+    },
+    ".build/m0-asin-scaled-bound-v164-20261023/build/compile_commands.json": {
+      "sha256": "74464b896e58b118dc331ae4b64e141012e19c93abdfae4654585e4ee4f06db7",
+      "bytes": 1805962
+    },
+    "tools/certify_m0_exp_fast.py": {
+      "sha256": "943f78862e8ca27892499c66bc85ebdbbf39a8ca974a6d870ef527639a6f50e1",
+      "bytes": 3863
+    },
+    ".build/m0-exp-tight-firstpass-20261024/qualification.json": {
+      "sha256": "15751936fb96f00293c8704ae53db59dbf722db6c86793972cdf1c44bcd2368e",
+      "bytes": 111297686
+    },
+    ".build/m0-v138-execution-20261023/reference/reference.elf": {
+      "sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+      "bytes": 17268
+    },
+    "research/rp2040-memset-2026-10-21/capture/bootrom.bin": {
+      "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "bytes": 16384
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "status": "PASS_ENDPOINT_ONLY_ENTIRE_SOURCE_OBJECT_ELF",
+  "input_pins": {
+    "artifacts": 49,
+    "inputs": 565,
+    "parent_review_sha256": "00d4c9ec7d311fdae72ea3b33523da148aaef6279fbb27fe771ce4dcc0b64ae9"
+  },
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-fno-use-cxa-atexit",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-fno-lto",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-20261024/native_eabi_m0.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-independent-20261024/candidate-full.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-20261024/ratio.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-independent-20261024/candidate-ratio.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_ln",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-20261024/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-independent-20261024/candidate-full.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-independent-20261024/candidate-ratio.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-independent-20261024/candidate.elf"
+    ]
+  ],
+  "entire_CPP_ASM_ELF_byteexact_no_exclusions": true,
+  "source_only_one_predicate": true,
+  "changed_object_section": ".m0_pow_extension",
+  "shared_section_bytes": 3800,
+  "helper_offset": 848,
+  "helper_bytes": 232,
+  "linked_helper_address": "0x101a2be0",
+  "linked_changed_span_bytes": 232,
+  "actually_different_bytes": 113,
+  "every_other_allocated_byte_checked": 100352,
+  "all_symbol_addresses_sizes_equal": true,
+  "all_literals_padding_and_other_function_bytes_equal": true,
+  "allocated_code_data_delta": 0,
+  "new_BSS_tables_or_undefined_dependencies": false,
+  "ratio_ASM_exact": true,
+  "controls": {
+    "generic_M0": {
+      "entire_object_equal": true,
+      "sha256": "2955bf9236af6cef44cb10c749be350efe6469093c47b9012eda7257a60973b5"
+    },
+    "M4_soft": {
+      "entire_object_equal": true,
+      "sha256": "27eba77c911504ceae3d1d42fe7a0f9fbfed02f7b07d5d9ac6f376ec58283c8b"
+    },
+    "M4_hard": {
+      "entire_object_equal": true,
+      "sha256": "faf93cd522aa92bd3704b7adef38f3b87c287d85430952ae26cb6ecb58a18957"
+    }
+  },
+  "retained_seed_capsule": {
+    "bytes": 184,
+    "address": "0x1014d800",
+    "sha256": "75729579767fb4b3269141b6c62b1ae4fad49ed8817158b0e7d4bedcc717ecc8",
+    "resident_ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1"
+  },
+  "parent_near_proof_reused": true,
+  "hardware_access": false,
+  "canonical_or_source_modified": false
+}

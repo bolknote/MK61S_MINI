@@ -1,0 +1,67 @@
+--- parent/native_eabi_m0_log70.inc
++++ candidate/native_eabi_m0_log70.inc
+@@ -27,6 +27,30 @@
+   const U q=retained+U(tail>half || (tail==half && (retained&1)));
+   return real(sign+(U(bias-8)<<52)+q);
+ }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++// The polynomial division remainders give an exact integer bias. The
++// known h residual removes its symmetric quotient error from the gate.
++__attribute__((always_inline)) inline double ln_near_round_pack(U low,uint32_t high,U sign,
++    int32_t bias12,int32_t residue,uint32_t den,bool add,bool exact_center,double x) {
++  unsigned width,shift;int bias;
++  if(high) {width=32-clz32(high);shift=width+11;bias=int(width)+1023;}
++  else {width=64-clz64(low);shift=width-53;bias=int(width)+959;}
++  const uint32_t tail=uint32_t(low)&((1U<<shift)-1),half=1U<<(shift-1);
++  const uint32_t distance=tail>half?tail-half:half-tail;
++  bool safe=distance>=4;
++  if(!safe && distance) {
++    if(exact_center) safe=true;
++    else if(bool(tail>half)==add)
++      safe=int32_t(den)*(int32_t(12*distance)-bias12)+12*residue>=18*int32_t(den);
++    else safe=int32_t(den)*(int32_t(12*distance)+bias12)-12*residue>=21*int32_t(den);
++  }
++  if(!safe) return ln_refine(x);
++  const uint32_t lo=uint32_t(low),hi=uint32_t(low>>32);
++  const U retained=(U((hi>>shift)|(high<<(32-shift)))<<32)|uint32_t((lo>>shift)|(hi<<(32-shift)));
++  const U q=retained+U(tail>half || (tail==half && (retained&1)));
++  return real(sign+(U(bias-8)<<52)+q);
++}
++#endif
+ __attribute__((always_inline)) inline double ln_pack_relative(U q,int e,U sign,unsigned error,double x) {
+   if(q<(U(1)<<62)) {q<<=1;--e;error*=2;}
+   const unsigned high=unsigned(q>>63),shift=10+high;
+@@ -69,6 +93,10 @@
+   const bool small=a<center,subtract=negative^small;
+   const U delta=small?center-a:a-center;
+   U low=log_near_table[index-1][1];uint32_t high=0;
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  int32_t bias12=0,residue=0;
++  const uint32_t den=8064U+index;
++#endif
+   if(delta) {
+     const U h=mk61_m0_log_product54(delta,log_near_table[index-1][0]);
+     const uint32_t t=uint32_t(h>>26);
+@@ -80,10 +108,22 @@
+     const U fourth=(wide32(zr,zr)+(U(1)<<43))>>44;
+     const U even=((z+1)>>1)+((fourth+2)>>2),odd=h+third;
+     const U correction=subtract?odd+even:odd-even;
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++    const int32_t r2=-int32_t(z&1U);
++    const int32_t r3=int32_t(cube)-3*int32_t(third);
++    const int32_t r4=int32_t((fourth+2)&3U)-2;
++    const int32_t even_bias=6*r2+3*r4;
++    bias12=-4*r3+(subtract?-even_bias:even_bias);
++    residue=int32_t((uint32_t(delta)<<21)-uint32_t(h)*den);
++#endif
+     if(subtract==negative) {const U before=low;low+=correction;high=low<before;}
+     else low-=correction;
+   }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  return ln_near_round_pack(low,high,negative?D::Sign:0,bias12,residue,den,subtract==negative,!delta,x);
++#else
+   return ln_pack70(low,high,negative?D::Sign:0,ln_near_radius,x);
++#endif
+ }
+ __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_ln(double x) {
+   const U b=bits(x);

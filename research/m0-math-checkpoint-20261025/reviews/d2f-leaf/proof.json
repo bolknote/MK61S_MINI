@@ -1,0 +1,196 @@
+{
+  "status": "PASS_INDEPENDENT_ALL_INPUT_ALGEBRA_AND_SEALED_EVIDENCE_RECONCILIATION",
+  "checks": {
+    "lower_range_interval_certificates": 2048,
+    "upper_range_interval_certificates": 1024,
+    "normal_bias_carry_parity_certificates": 18288,
+    "subnormal_shift_guard_sticky_parity_certificates": 864,
+    "NaN_payload_bit_algebra_controls": 312,
+    "independent_raw64_integer_model_checks": 32768
+  },
+  "raw64_partition_cardinalities": {
+    "zero": 7863284949388886018,
+    "subnormal_to_normal": 1073741824,
+    "wrong_subnormal": 216172781040041982,
+    "overflow": 8070450532247928832,
+    "infinity": 2,
+    "NaN": 9007199254740990,
+    "normal_low_truncate": 571957152676052992,
+    "normal_low_up": 571957150545346560,
+    "normal_low_tie_even": 1065353216,
+    "normal_low_tie_odd": 1065353216,
+    "normal_high_truncate": 571957152676052992,
+    "normal_high_up": 571957150545346560,
+    "normal_high_tie_even": 1065353216,
+    "normal_high_tie_odd": 1065353216
+  },
+  "partition_sum_2pow64": 18446744073709551616,
+  "all_correct_reference_paths_candidate_no_slower": true,
+  "no_claim_for_wrong_reference_rows": true,
+  "source_model_matches_all_author_states463968": true,
+  "author_unique231984": true,
+  "author_qualified_ARM1391904": true,
+  "author_MPFR_oracle_evaluations": 231984,
+  "author_actual_directed_MPFR_input_conversions": 229580,
+  "author_NaN_category_shortcuts_no_MPFR": 2404,
+  "author_MPFR_count_label_requires_this_precision": true,
+  "smoke11004_not_added": true,
+  "author_observed_state_classes": {
+    "zero": 92526,
+    "subnormal_full_down": 4008,
+    "normal_low_up": 44896,
+    "normal_low_truncate": 65886,
+    "normal_high_truncate": 65860,
+    "normal_high_up": 44936,
+    "overflow": 94126,
+    "normal_low_tie_even": 10160,
+    "normal_low_tie_odd": 10160,
+    "normal_high_tie_odd": 10160,
+    "normal_high_tie_even": 10160,
+    "subnormal_full_up": 3686,
+    "subnormal_full_tie": 2576,
+    "subnormal_to_normal": 16,
+    "infinity": 4,
+    "NaN": 4808
+  },
+  "author_observed_cost_pairs": {
+    "zero": [
+      [
+        9,
+        9
+      ]
+    ],
+    "subnormal_full_down": [
+      [
+        32,
+        9
+      ],
+      [
+        32,
+        13
+      ],
+      [
+        35,
+        16
+      ]
+    ],
+    "normal_low_up": [
+      [
+        22,
+        22
+      ]
+    ],
+    "normal_low_truncate": [
+      [
+        19,
+        20
+      ]
+    ],
+    "normal_high_truncate": [
+      [
+        14,
+        20
+      ]
+    ],
+    "normal_high_up": [
+      [
+        17,
+        22
+      ]
+    ],
+    "overflow": [
+      [
+        13,
+        13
+      ]
+    ],
+    "normal_low_tie_even": [
+      [
+        22,
+        23
+      ]
+    ],
+    "normal_low_tie_odd": [
+      [
+        22,
+        24
+      ]
+    ],
+    "normal_high_tie_odd": [
+      [
+        17,
+        24
+      ]
+    ],
+    "normal_high_tie_even": [
+      [
+        17,
+        23
+      ]
+    ],
+    "subnormal_full_up": [
+      [
+        39,
+        9
+      ],
+      [
+        39,
+        13
+      ],
+      [
+        42,
+        16
+      ]
+    ],
+    "subnormal_full_tie": [
+      [
+        39,
+        9
+      ],
+      [
+        39,
+        13
+      ],
+      [
+        42,
+        16
+      ]
+    ],
+    "subnormal_to_normal": [
+      [
+        19,
+        20
+      ]
+    ],
+    "infinity": [
+      [
+        13,
+        13
+      ]
+    ],
+    "NaN": [
+      [
+        19,
+        13
+      ]
+    ]
+  },
+  "author_correct_reference_rows": 448890,
+  "author_reference_wrong_rows": 15078,
+  "author_vs_correct_reference": {
+    "faster": 217338,
+    "equal": 231552,
+    "slower": 0
+  },
+  "author_parent_regression_states110782": true,
+  "parent_regression_delta1": true,
+  "author_old512_reconciliation": {
+    "rows": 512,
+    "correct": 510,
+    "old_slower": 426,
+    "new_slower": 0
+  },
+  "author_qualification_sha256": "09afe08141a05f043b29403d49e31073381ac1e4a72ab594065c1858cdcd47ce",
+  "own_fresh_ARM_or_MPFR_in_this_file": 0,
+  "original507_unchanged418": true
+}

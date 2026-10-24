@@ -1,0 +1,76 @@
+{
+  "status": "PASS_SOURCE_BINDING_ISOLATION_AND_SAVED_PERFORMANCE_ACCOUNTING",
+  "source_SHA256": "af83817a78b261621a638c5cc3436bfd63ef57371d999766dfad2a50733dcef7",
+  "ELF_SHA256": "c0000b4a468cdb80228fab332978f276a21cf5e229fa1abe7622a287ef396297",
+  "rebuild_hashes": {
+    "candidate-full.o": "bd694a4bc008a9a3de0555f190f1b9aa451c6dffceba7dfa06bb11b8eb68f019",
+    "candidate-ratio.o": "c80865dd3f89454cd4790770059a806133b87f39f1ac5090c12f10e308584fea",
+    "candidate.elf": "c0000b4a468cdb80228fab332978f276a21cf5e229fa1abe7622a287ef396297"
+  },
+  "only_object_allocated_section_changed": [
+    ".m0_pow_extension"
+  ],
+  "object_code_growth": 212,
+  "allocated_linked_sizes": [
+    100584,
+    100800
+  ],
+  "linked_growth": 216,
+  "no_global_RAM_or_new_table": true,
+  "contexts": {
+    "generic_M0": "allocated code/data/BSS size identical (not whole-platform firmware)",
+    "M4_soft": "allocated code/data/BSS size identical (not whole-platform firmware)",
+    "M4_hard": "allocated code/data/BSS size identical (not whole-platform firmware)"
+  },
+  "parent_source_reconstructed_exactly": true,
+  "all_other_local_sources_and_ratio_ASM_byteexact": true,
+  "near_function_entry_addresses": [
+    {
+      "symbol": "ln_near_one",
+      "parent": "0x101a198d",
+      "candidate": "0x101a198d",
+      "bytes": 1252
+    },
+    {
+      "symbol": "ln_near_interval",
+      "parent": "0x101a1e71",
+      "candidate": "0x101a1e71",
+      "bytes": 1160
+    }
+  ],
+  "near_table_addresses_relocated": [
+    {
+      "symbol": "_ZN7m0_eabiL14log_near_tableE",
+      "parent": "0x101b68e8",
+      "candidate": "0x101b69c0",
+      "bytes": 4096
+    }
+  ],
+  "old_linked_byte_identity_not_claimed": true,
+  "retained_parent_state_rows": 66172,
+  "all_saved_parent_counts_outputs_equal": true,
+  "numeric_Qfp_eligibility_recomputed": true,
+  "raw_NaN_candidate_parent_bits_equal": true,
+  "expanded_parent_raw_losses": 223,
+  "expanded_child_raw_losses": 68,
+  "raw_losses_fixed": 155,
+  "new_correct_Qfp_raw_losses": 0,
+  "saved_regression_histogram": {
+    "3": 2682,
+    "4": 4097
+  },
+  "groups": {
+    "READY": {
+      "equal": 34438
+    },
+    "DIRTY": {
+      "slower": 6779,
+      "equal": 22863,
+      "faster": 4796
+    }
+  },
+  "physical_cycles": false,
+  "whole_ln_speed_GO": false,
+  "hardware_accessed": false,
+  "numerical_or_large_corpus_replay": false
+}

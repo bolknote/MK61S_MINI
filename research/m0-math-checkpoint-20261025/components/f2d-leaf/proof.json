@@ -1,0 +1,194 @@
+{
+  "status": "AUTHOR_ALL_DOMAIN_EXACT_WIDENING_AND_CORRECT_REFERENCE_PATH_AUDIT",
+  "normal_packing_checks": 32512,
+  "subnormal_normalization_packing_checks": 2334,
+  "NaN_payload_bit_checks": 138,
+  "subnormal_widths": [
+    {
+      "fraction_width": 1,
+      "normalizing_shift": 22,
+      "double_exponent": 874
+    },
+    {
+      "fraction_width": 2,
+      "normalizing_shift": 21,
+      "double_exponent": 875
+    },
+    {
+      "fraction_width": 3,
+      "normalizing_shift": 20,
+      "double_exponent": 876
+    },
+    {
+      "fraction_width": 4,
+      "normalizing_shift": 19,
+      "double_exponent": 877
+    },
+    {
+      "fraction_width": 5,
+      "normalizing_shift": 18,
+      "double_exponent": 878
+    },
+    {
+      "fraction_width": 6,
+      "normalizing_shift": 17,
+      "double_exponent": 879
+    },
+    {
+      "fraction_width": 7,
+      "normalizing_shift": 16,
+      "double_exponent": 880
+    },
+    {
+      "fraction_width": 8,
+      "normalizing_shift": 15,
+      "double_exponent": 881
+    },
+    {
+      "fraction_width": 9,
+      "normalizing_shift": 14,
+      "double_exponent": 882
+    },
+    {
+      "fraction_width": 10,
+      "normalizing_shift": 13,
+      "double_exponent": 883
+    },
+    {
+      "fraction_width": 11,
+      "normalizing_shift": 12,
+      "double_exponent": 884
+    },
+    {
+      "fraction_width": 12,
+      "normalizing_shift": 11,
+      "double_exponent": 885
+    },
+    {
+      "fraction_width": 13,
+      "normalizing_shift": 10,
+      "double_exponent": 886
+    },
+    {
+      "fraction_width": 14,
+      "normalizing_shift": 9,
+      "double_exponent": 887
+    },
+    {
+      "fraction_width": 15,
+      "normalizing_shift": 8,
+      "double_exponent": 888
+    },
+    {
+      "fraction_width": 16,
+      "normalizing_shift": 7,
+      "double_exponent": 889
+    },
+    {
+      "fraction_width": 17,
+      "normalizing_shift": 6,
+      "double_exponent": 890
+    },
+    {
+      "fraction_width": 18,
+      "normalizing_shift": 5,
+      "double_exponent": 891
+    },
+    {
+      "fraction_width": 19,
+      "normalizing_shift": 4,
+      "double_exponent": 892
+    },
+    {
+      "fraction_width": 20,
+      "normalizing_shift": 3,
+      "double_exponent": 893
+    },
+    {
+      "fraction_width": 21,
+      "normalizing_shift": 2,
+      "double_exponent": 894
+    },
+    {
+      "fraction_width": 22,
+      "normalizing_shift": 1,
+      "double_exponent": 895
+    },
+    {
+      "fraction_width": 23,
+      "normalizing_shift": 0,
+      "double_exponent": 896
+    }
+  ],
+  "reference_correct_classes": {
+    "zero": {
+      "candidate": 5,
+      "Qfplib": 8,
+      "state_rows": 4
+    },
+    "normal": {
+      "candidate": 12,
+      "Qfplib": 13,
+      "state_rows": 205226
+    },
+    "infinity": {
+      "candidate": 12,
+      "Qfplib": 12,
+      "state_rows": 4
+    }
+  },
+  "all_fresh_reference_correctness_flags_match_source_partition": true,
+  "all_fresh_correct_reference_costs_match_complete_source_path_counts": true,
+  "wrong_reference_state_rows_retained": 60684,
+  "wrong_reference_observed_costs": {
+    "NaN": [
+      [
+        19,
+        12
+      ]
+    ],
+    "subnormal": [
+      [
+        30,
+        8
+      ],
+      [
+        32,
+        8
+      ],
+      [
+        34,
+        8
+      ],
+      [
+        36,
+        8
+      ],
+      [
+        38,
+        8
+      ]
+    ]
+  },
+  "observed_parent_cost_increase_rows": 0,
+  "all_candidate_state_rows_strictly_faster_parent": true,
+  "parent_delta_counts": {
+    "-130": 19424,
+    "-128": 17726,
+    "-126": 2800,
+    "-124": 3562,
+    "-25": 4,
+    "-23": 4,
+    "-18": 17172,
+    "-1": 205226
+  },
+  "old_sample_comparable": 249,
+  "old_sample_deficits": [
+    1,
+    0
+  ],
+  "candidate_ELF_sha256": "5ef1aa821b2e4c1b5fa5aaa471d6b8e2f3bb29fda80993085df782e1502130df",
+  "source_proof": "NUMERIC-PROOF.md",
+  "independent_review_pending": true,
+  "whole_goal_or_physical_cycle_GO": false
+}

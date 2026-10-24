@@ -1,0 +1,25 @@
+{
+  "status": "PASS_INHERITED_ACTUAL_SQUARE_MODULE_BYTE_BINDING",
+  "square_source_sha256": "1f8bf735a0478b3e47caa5f1872d7437bd7d94a4b52f331cdcfb6bd719fa24e1",
+  "module_sha256": "776eec5cec3fa39bff045d8be18e4fd1e33dba22ae0ce195db790a218a78c0ba",
+  "module_bytes": 328,
+  "unit_proof": {
+    "path": ".build/m0-pow-square-exact-20261024/unit-proof.json",
+    "sha256": "b68032c231e0178eb6c14671d15244d5c2cc219fa0b0499f9b3269ca156cdb26",
+    "ARM_calls": 462184,
+    "unique_inputs": 231092
+  },
+  "midpoint_proof": {
+    "path": ".build/m0-pow-square-exact-20261024/midpoint-proof.json",
+    "sha256": "76fb7ac78969273c6e247af0bdda8cd3e6a11c7664d258c52f0726be5a194f50",
+    "ARM_calls": 110592,
+    "unique_inputs": 55296,
+    "actual_exact_midpoint_inputs": 18432
+  },
+  "trial_seal_sha256": "57844a445d0cd3b9ea7e1c99e8c01e78a24863e7c917c027db4b9ebe7fba1210",
+  "inherited_ARM_calls_not_added": 572776,
+  "main_unit_had_zero_actual_half_cells": true,
+  "supplemental_midpoint_proof_covers_actual_half_cells": true,
+  "unit_private_trial_current_public_and_whole_source_modules_identical": true,
+  "hardware_accessed": false
+}

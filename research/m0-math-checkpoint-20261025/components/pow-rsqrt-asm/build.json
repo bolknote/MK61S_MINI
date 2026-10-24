@@ -1,0 +1,109 @@
+{
+  "status": "BUILT_UNQUALIFIED_PRIVATE_RSQRT_OVERLAY",
+  "parent_ELF_sha256": "6e1cf7ded4ee258b49ddffcd1e893f4ec170700b181265048ad06ce0b9c1b8ae",
+  "rsqrt_source_sha256": "cb9b292db896eb46711205a767c1484cf67d831548259f0e490c2bf11742a11c",
+  "images": {
+    "control": {
+      "ELF_sha256": "13c34f4f8d517f92e21f8f243c687152b167bce41c2b3b0ab5cfb4f92e2c3310",
+      "sections": {
+        ".pow": 196
+      },
+      "symbols": {
+        "mk61_m0_pow_fast": 269882573
+      }
+    },
+    "candidate": {
+      "ELF_sha256": "e55be65b73b9b7bbbb72896904f61f8a1a5b5c5fb7bb052a78a5c580f351867c",
+      "sections": {
+        ".pow": 196,
+        ".rsqrt": 776
+      },
+      "symbols": {
+        "mk61_m0_pow_fast": 269882573,
+        "mk61_m0_pow_rsqrt_fast": 269887489,
+        "mk61_m0_pow_rsqrt_point": 269888104
+      }
+    }
+  },
+  "unit_ELF_sha256": "acb17d6cf751e8054a771715c32016fa9509c5e605f0c7bfa77b9c3d29168f5d",
+  "bindings": {
+    "mk61_m0_pow_dispatch": 269882101,
+    "__aeabi_ddiv": 269450889,
+    "mk61_m0_sqrt": 269925121,
+    "pow_rsqrt": 269881073,
+    "factor_rsqrt_seeds": 269882824,
+    "mk61_m0_pow_rsqrt_boundary": 269877285,
+    "mk61_m0_pow_square_exact": 269884929,
+    "mk61_m0_pow_dispatch_ordinary": 269885953
+  },
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/control.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/control.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/candidate.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/candidate.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/rsqrt.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/rsqrt.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_pow_fast",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/entry.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/control.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/control.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_pow_fast",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/entry.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/candidate.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/rsqrt.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/candidate.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_pow_center_quotient",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/rsqrt.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/unit.elf"
+    ]
+  ],
+  "canonical_or_Git_or_hardware_changed": false
+}

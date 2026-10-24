@@ -1,0 +1,1132 @@
+{
+  "status": "TARGETED_OLD_SMALL_MARGIN_PERFORMANCE_PROBE",
+  "candidate_ELF_sha256": "c1d7a59ffe62a886b3fdfaaf3d215a24e1c52c902c3b1a31b75286960261eb6c",
+  "fresh_ARM_calls": 336,
+  "actual_directed_MPFR_inputs": 56,
+  "wrong": 0,
+  "new_raw_losses": 0,
+  "rows": [
+    {
+      "x": "3FB1B32892630B90",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 543,
+        "candidate": 543,
+        "Qfplib": 544
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FB1B32892630B90",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 543,
+        "candidate": 543,
+        "Qfplib": 544
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08622AAE97C4790",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08622AAE97C4790",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08622AAE97C4791",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08622AAE97C4791",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08622AAE97C4792",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08622AAE97C4792",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08621BC782C128E",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08621BC782C128E",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08621BC782C128F",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08621BC782C128F",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08621BC782C1290",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C08621BC782C1290",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762D4116FD4F6B",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762D4116FD4F6B",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762D4116FD4F6C",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762D4116FD4F6C",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762D4116FD4F6D",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762D4116FD4F6D",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762B64345CE567",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762B64345CE567",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762B64345CE568",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762B64345CE568",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762B64345CE569",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0762B64345CE569",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE42A73052534AD",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE42A73052534AD",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE42A73052534AE",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE42A73052534AE",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE42A73052534AF",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE42A73052534AF",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE070ADC4512CF2",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE070ADC4512CF2",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE070ADC4512CF3",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE070ADC4512CF3",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE070ADC4512CF4",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFE070ADC4512CF4",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFCD06181AF643D8",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFCD06181AF643D8",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFCD06181AF643D9",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFCD06181AF643D9",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFCD06181AF643DA",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFCD06181AF643DA",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC8DD6B8B2758FB",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC8DD6B8B2758FB",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC8DD6B8B2758FC",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC8DD6B8B2758FC",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC8DD6B8B2758FD",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC8DD6B8B2758FD",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC5BEEA1F4C28D6",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC5BEEA1F4C28D6",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC5BEEA1F4C28D7",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC5BEEA1F4C28D7",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC5BEEA1F4C28D8",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "BFC5BEEA1F4C28D8",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FA205966F2B4F11",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 551,
+        "candidate": 551,
+        "Qfplib": 554
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FA205966F2B4F11",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 551,
+        "candidate": 551,
+        "Qfplib": 554
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FA205966F2B4F12",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 551,
+        "candidate": 551,
+        "Qfplib": 554
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FA205966F2B4F12",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 551,
+        "candidate": 551,
+        "Qfplib": 554
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FB7E9E03AE5C676",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 543,
+        "candidate": 543,
+        "Qfplib": 544
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FB7E9E03AE5C676",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 543,
+        "candidate": 543,
+        "Qfplib": 544
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FB7E9E03AE5C677",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 543,
+        "candidate": 543,
+        "Qfplib": 544
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FB7E9E03AE5C677",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 543,
+        "candidate": 543,
+        "Qfplib": 544
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FCCC3FEE2AC8321",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 551,
+        "candidate": 551,
+        "Qfplib": 554
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FCCC3FEE2AC8321",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 551,
+        "candidate": 551,
+        "Qfplib": 554
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FCCC3FEE2AC8322",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 551,
+        "candidate": 551,
+        "Qfplib": 554
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FCCC3FEE2AC8322",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 551,
+        "candidate": 551,
+        "Qfplib": 554
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FE83212F8CF3F2F",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FE83212F8CF3F2F",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FE83212F8CF3F30",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FE83212F8CF3F30",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FE83212F8CF3F31",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FE83212F8CF3F31",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FEBEBD839A346EA",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FEBEBD839A346EA",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FEBEBD839A346EB",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FEBEBD839A346EB",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FEBEBD839A346EC",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "3FEBEBD839A346EC",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076242DC577A754",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076242DC577A754",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076242DC577A755",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076242DC577A755",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076242DC577A756",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076242DC577A756",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076260AA8181158",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076260AA8181158",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076260AA8181159",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076260AA8181159",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076260AA818115A",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4076260AA818115A",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "408629386238F0A1",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "408629386238F0A1",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "408629386238F0A2",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "408629386238F0A2",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "408629386238F0A3",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "408629386238F0A3",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "40862A26D38925A3",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "40862A26D38925A3",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "40862A26D38925A4",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "40862A26D38925A4",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "40862A26D38925A5",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "40862A26D38925A5",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "407042960245C7C6",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "407042960245C7C6",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4085880DCCEF7F4C",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "4085880DCCEF7F4C",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0653854F1964DF8",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "C0653854F1964DF8",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 560,
+        "candidate": 560,
+        "Qfplib": 562
+      },
+      "new_loss": false
+    },
+    {
+      "x": "40861E1EFFBB4B16",
+      "SIO": "READY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    },
+    {
+      "x": "40861E1EFFBB4B16",
+      "SIO": "DIRTY",
+      "instructions": {
+        "parent": 556,
+        "candidate": 556,
+        "Qfplib": 559
+      },
+      "new_loss": false
+    }
+  ],
+  "new": [],
+  "hardware_accessed": false
+}

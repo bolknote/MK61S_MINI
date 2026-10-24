@@ -1,0 +1,522 @@
+{
+  "status": "GO_PRIVATE_RP_ADAPTIVE_EXP_ENCLOSURE_AND_SHARED_PRODUCT_COMPONENT_ONLY",
+  "utc": "2026-10-24T17:07:15.919643+00:00",
+  "blockers": [],
+  "accepted_parent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-log-midpoint-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 21790,
+    "sha256": "bdaba8cf9bbe58c8e36dafe9b8f904eb8428fdd42db0abb070b5f4a42e472554"
+  },
+  "target": {
+    "frozen": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/FROZEN.json",
+      "bytes": 21046,
+      "sha256": "de974c59adb91f98123723c014d0e41e44fa4fb966bc76ff87cf11bec994f5f8"
+    },
+    "result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/result.json",
+      "bytes": 6237,
+      "sha256": "f1b729a9ed7bbf468643ce41fe9193f1d1ee1ace98c139589ba82482bab7a5a7"
+    },
+    "handoff": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/HANDOFF.md",
+      "bytes": 4842,
+      "sha256": "043a91b67fa57e004046a77d9bc6e1cae57b98ec8de939c91943e652fd462722"
+    },
+    "CPP": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/candidate/native_eabi_m0.cpp",
+      "bytes": 41373,
+      "sha256": "421e6b5e38b97b1e97b3dd428383f8d4d04f2144b7720cc4b6c8eb0aac24a0e8"
+    },
+    "ASM": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/candidate/native_eabi_m0.S",
+      "bytes": 22804,
+      "sha256": "f048a1c3fa398cf1d4d22d85ffbff41b062907a3a3d3f813105b5f359803b659"
+    },
+    "product_include": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/candidate/native_eabi_m0_pow_exp_product.inc",
+      "bytes": 2328,
+      "sha256": "2f7781d2d73abd28cfe752205fe0a9cb20192d99fe841364049da53cf4e38e1b"
+    },
+    "public_exp_function_overlay": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/candidate.elf",
+      "bytes": 1126920,
+      "sha256": "c1d7a59ffe62a886b3fdfaaf3d215a24e1c52c902c3b1a31b75286960261eb6c"
+    },
+    "control_function_overlay": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/control.elf",
+      "bytes": 1126616,
+      "sha256": "486dd1dd4a4960c9f39ab4e857147ed3c68347a077ed5d92a9c5205ef14500fc"
+    },
+    "patch": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/qualified-log-midpoint-to-adaptive-exp.patch",
+      "bytes": 2042,
+      "sha256": "6690fd9246384e647f0a7706ac046f77188321227508c742a140674b3dd94439"
+    },
+    "qualified_exp_records": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/qualification-records.jsonl.gz",
+      "bytes": 7139877,
+      "sha256": "b338a0be1e02a58752f993e6528219aecb29feed6c76ae7a24a5f48479d1afaf"
+    },
+    "remaining_exp_parent_audit": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/remaining-parent-audit.json",
+      "bytes": 1140852,
+      "sha256": "ad4d777c63da31ca89f6044642f2c255427376838c6b8827325d07e2f408a6bb"
+    },
+    "same_old_corpus_fixed29": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/same-corpus-fixed29.json",
+      "bytes": 27079,
+      "sha256": "d6f15e6010c346f2028abad8f4f1ee1c1eee514de588711e900c0c1e0735e02c"
+    },
+    "pow_loss_replay": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/pow-loss-replay.json",
+      "bytes": 13042000,
+      "sha256": "6ce4d76be694ef88cfcde6934a51cc2ad0d3de4ed9c53d88e8de26076e25e141"
+    },
+    "author_unit_proof": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/unit-proof.json",
+      "bytes": 1202,
+      "sha256": "a7986fdeea40eb11eacc85fda4317960e8353a6d0171421a68fbb57c7722c743"
+    },
+    "author_other_callers": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/caller-proof.json",
+      "bytes": 238064,
+      "sha256": "c1537cbb7652661655b61f55a90a88035322f1c58271c658e2bee8e58aed9e0f"
+    },
+    "author_validation_exclusions": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/logs/VALIDATION-NOTES.json",
+      "bytes": 653,
+      "sha256": "5b3b1eccef28ee085c087133b4398baa297354d6a0b06bfe8f508f19c5484647"
+    }
+  },
+  "lineage": {
+    "frozen_artifacts": 143,
+    "lineage_pins": 741,
+    "parent_referenced_files48_plus_receipt49": true,
+    "end_reread_all_exact": true,
+    "postseal": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-postseal-20261024.json",
+      "bytes": 799,
+      "sha256": "41785dc9275aec416bb67a156ae9acb4fda6f429ae2c992ccbb6458c8b2c25b1"
+    },
+    "not_one_integrated_math_or_platform_binary": true
+  },
+  "source_binding": {
+    "exact_two_file_patch_to_accepted_parent": true,
+    "CPP_changed_sections": {
+      ".m0_exp_core": [
+        5012,
+        5064
+      ]
+    },
+    "preexisting_refine3736_prefix_bytes_and_13_semantic_relocations_equal": true,
+    "tiny472_exact": true,
+    "all_other_CPP_allocated_bytes_semantic_relocations_exact": true,
+    "only_ASM_product168byte_RAM_slot_changed": true,
+    "all_other_RP_ASM_allocated_bytes_semantic_relocations_symbol_addresses_exact": true,
+    "accepted_d2f256_f2d172_preserved": true,
+    "generic_M0_M4_soft_hard_CPP_and_ASM_fresh_equal": true,
+    "whole_M4_not_built": true,
+    "own_complete_byte_exact_rebuilds": 23,
+    "source_literal_gate_full_object_unit_ELF_closure": true,
+    "public_alias_direct_no_interposition": true,
+    "public_exp_function_bytes1328": true,
+    "unchanged_existing_RAM_address_and_wrapper": true,
+    "CPP_undefined_external_dependencies_equal": true,
+    "no_new_ROM_libgcc_table_or_global_RAM": true,
+    "load_segments": [
+      {
+        "address": 270139392,
+        "bytes": 16336,
+        "file_offset": 4096
+      },
+      {
+        "address": 537104100,
+        "bytes": 168,
+        "file_offset": 24292
+      }
+    ]
+  },
+  "mathematical_proof": {
+    "scope": "Returned-value RNE of new adaptive normal error4 acceptance throughout its qualifying source domain",
+    "independent_reduction_polynomial_rational_recalculation": "16002083185666403208005253442412405258030774305560488006981254418822166648269455792397475483696979759/3732692613936344822560249276504192336042393930314220012699100441572677279188030925483797647877734400",
+    "delta_strict275over64": true,
+    "independent_ln2_160term_split_inverse_and_segment_certificates": true,
+    "all512_actual_ELF_Q62_Q94_table_RNE_roots_recertified": true,
+    "signed_Q94_low_word_bias_and_error_strict2pow_minus33": true,
+    "max_abs_D_strict2pow54": true,
+    "max_correction_strict23times2pow48": true,
+    "actual_unnormalized_q_strict_below2pow63": true,
+    "input_sensitive_A_bound_from_q_head": true,
+    "recomputed_product_table_bias_cross_residual": "751665119407/1502164811776",
+    "residual_strict129over256": true,
+    "all16417_head_bins_bound_with_no_overflow": true,
+    "signed_bias_margin_strictly_beyond_full_interval": true,
+    "tie_sign_binade_normal_rounding_bound": true,
+    "old_distance3_predicate_verbatim_and_margin85over32_recertified": true,
+    "error6_endpoints_distances0and1_cannot_new_accept": true,
+    "accepted_unchanged_fixed_point_primitive_and_fallback_proofs_inherited": true,
+    "not_a_full_compiler_CPU_model_or_all_math_proof": true
+  },
+  "shared_product": {
+    "all_raw64_argument_pairs_value_and_PCS_equivalent_by_source_machine_suffix": true,
+    "unchanged_arithmetic_suffix_bytes148": true,
+    "prologue_argument_mapping_and_saved_register_slots_proved": true,
+    "first_carry_dependency_overwritten_by_common_ADDS": true,
+    "incoming_NZCV16_variants_fresh_checked": true,
+    "instructions_before84_after81_for_every_raw_pair": true,
+    "active_body_bytes_before168_after162": true,
+    "RAM_slot168_and_following_addresses_preserved": true,
+    "padding6_outside_function_never_executes": true,
+    "frame40_unchanged_touched_old40_new36": true,
+    "numeric_error63x54_bound_inherited": true,
+    "no_calls_SIO_ROM_or_external_memory": true,
+    "all_other_unmodified_pow_states_cannot_regress_in_ISA_cost_by_minus3_per_actual_call": true
+  },
+  "own_fresh_checks": {
+    "total_qualified_ARM_calls": 20414,
+    "actual_directed_MPFR_validation_inputs": 1181,
+    "sNaN_shortcuts_without_MPFR": 2,
+    "oracle_evaluations": 1183,
+    "MPFR_version": "4.2.2",
+    "separate_MPFR_log_generation_inputs128_not_validation": true,
+    "literal_gate_distinct_inputs": 4154,
+    "literal_gate_ARM_calls": 8308,
+    "literal_gate_paths4_and_all_signed_admission_edges": true,
+    "raw_product_pairs": 627,
+    "valid_product_exact_integer_oracles": 338,
+    "product_ARM_calls": 3020,
+    "initial_NZCV16_variant_product_calls512_included": true,
+    "public_exp_inputs": 994,
+    "public_exp_ARM_calls": 7952,
+    "public_exp_machine_calls": {
+      "candidate": 1988,
+      "rebuilt_control": 1988,
+      "accepted_parent": 1988,
+      "Qfplib": 1988
+    },
+    "all29_fixed56_old_margin100_cost_increase_original16_exp_controls": true,
+    "actual_public_new_gate_events132_admit58": true,
+    "actual_q_bias_bound_margin_and_strict_interval_source_bound": true,
+    "other_original_pow_sin_cos_inputs": 189,
+    "other_caller_ARM_calls": 1134,
+    "other_caller_MPFR_inputs": 189,
+    "all_product_argument_traces_raw_bits_and_minus3_per_call_exact": true,
+    "all_public_raw_parent_bits_and_control_costs_exact": true,
+    "all_DIRTY28bytes_preserved_READY_not_DIRTY": true,
+    "isolated_units_no_firmware_ROM_mock_SIO_or_outside_PC_memory": true,
+    "real_ROM_initializers_excluded": true,
+    "excluded_initial_reviewer_run_ARM19280_MPFR992_shortcuts2": true,
+    "excluded_initial_run_reason": "All numerical/ABI loops passed; reviewer wrongly required strict improvement for all29 fixes. One expanded case equalsQfplib; corrected no-slower assertion and completed clean repeat."
+  },
+  "inherited_and_author_evidence": {
+    "streamed_exp_unique_inputs": 440007,
+    "streamed_exp_state_rows": 880014,
+    "all_old428231_raw_bits_exact": true,
+    "inherited856462_parent_Qfplib_state_measurements_not_fresh": true,
+    "author_fresh_exp_candidate_ARM": 880014,
+    "author_fresh_new_Qfplib_ARM": 23552,
+    "author_fresh_exp_parent_remaining_audit_ARM": 2762,
+    "author_fresh_gate_product_ARM": 736324,
+    "author_fresh_other_callers_ARM": 1134,
+    "author_fresh_expanded_pow_losing_state_ARM": 10081,
+    "author_total_qualified_fresh_ARM": 1653867,
+    "author_actual_directed_MPFR_exp_inputs": 440005,
+    "author_actual_directed_MPFR_other_inputs": 189,
+    "author_total_actual_directed_MPFR_validation": 440194,
+    "author_sNaN_shortcuts_without_MPFR": 2,
+    "separate_author_log_generations1536_not_validation": true,
+    "author_excluded_probe32208_margin336_stack640_failed_unit736324_and_rejected_trials": true,
+    "author_literal_gate595004_zero_unsafe_is_producer_evidence_not_own_run": true,
+    "author_raw_product_pairs70660_valid_integer36781": true,
+    "expanded_pow_ref_variants10085_distinct_fresh_states10081": true,
+    "expanded_pow_expected_MPFR_Qfplib_and_old_costs_inherited": true,
+    "no_fresh_full111912_pair_pow_run_claim": true,
+    "same_old428231_exp_losses_before671_after642_fixed29": {
+      "strict28": true,
+      "equal1": "C0861FF4680382C9"
+    },
+    "same_older48763_exp_losses_before154_after126": true,
+    "expanded440007_exp_losses2023_partition": {
+      "old642": true,
+      "new_preexisting1381": {
+        "small_actual_output_midpoint_log_preimages": 1353,
+        "new_normal_uniform": 15,
+        "normal_and_endpoint_actual_midpoint_log_preimages": 13
+      }
+    },
+    "all2023_exp_losses_parent_bound_no_new_measured_raw_loss": true,
+    "correct_Qfplib_comparison": {
+      "faster": 485398,
+      "slower": 4046,
+      "equal": 2
+    },
+    "wrong_Qfplib_state_outputs_and_costs390568_retained": true,
+    "known_exp_parent_cost_increase_states": 200,
+    "known_increase_deltas": {
+      "2": 126,
+      "29": 74
+    },
+    "known_increase_Qfplib_partition": {
+      "no_slower_correct_Qfplib": 86,
+      "wrong_Qfplib": 70,
+      "already_slower_correct_Qfplib": 44
+    },
+    "all_prior_tiny_costs_exact_parent": true,
+    "expanded_pow_losses7904_unchanged": true,
+    "performance_claims_not_universal_all_binary64_speed_proof": true
+  },
+  "size_and_stack": {
+    "selected_CPP_delta_bytes": 52,
+    "selected_ASM_slot_delta_bytes": 0,
+    "private_Flash_overlay_load_delta_bytes": 48,
+    "alignment_included": true,
+    "global_RAM_delta_bytes": 0,
+    "new_tables": 0,
+    "whole_firmware_and_GC_size_unmeasured": true,
+    "static_exp_core_stack96_unchanged": true,
+    "product_frame40_unchanged": true,
+    "standalone_gate_frame16": true,
+    "focused_same_input_parent_and_child_observed_peak744": true,
+    "old_smaller_corpus_peak376_not_comparator": true,
+    "observed_peaks_not_universal_stack_bounds": true
+  },
+  "original507_separate_component_union": {
+    "no_slower": 419,
+    "strictly_faster": 413,
+    "equal": 6,
+    "remaining": 88,
+    "remaining_by_operation": {
+      "pow": 51,
+      "exp": 1,
+      "sin": 22,
+      "cos": 14
+    },
+    "new_strict_exp_fix": {
+      "x": "C041265824E2113C",
+      "parent": 2248,
+      "candidate": 599,
+      "Qfplib": 622
+    },
+    "remaining_exp": {
+      "x": "4085F424184F6DC5",
+      "parent": 2268,
+      "candidate": 2264,
+      "Qfplib": 649
+    },
+    "ledger": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/original507-component-delta.json",
+      "bytes": 1772,
+      "sha256": "aa5c8dbcfb71182d9d019bd1760d01e3281f50ad2cbf61f6b3c2b02eabb07a90"
+    },
+    "not_one_integrated_binary": true
+  },
+  "nonblocking_limits": [
+    "Global source proof certifies the new early accept; broad performance deltas remain measured-corpus claims.",
+    "Some exp states cost+2 or+29 versus parent; all200 known increases and wrong-reference rows are retained.",
+    "Raw product equivalence covers all raw pairs, while numerical error correctness retains the63x54 domain.",
+    "Old fixed-point/fallback/conversion and untouched components retain their accepted evidence; this is not a full math requalification.",
+    "Whole firmware/linker-GC size, physical cycles and universal full-math stack bound are unmeasured."
+  ],
+  "retained_open_items": [
+    "Original507 residual88:pow51/exp1/sin22/cos14",
+    "Expanded exp2023 and pow7904 speed losses",
+    "ln5, conversions/FMA and general pow/exp totality obligations",
+    "Whole combined math regression and repaired platform integration",
+    "Physical cycles, hardware qualification, canonical/main promotion and release"
+  ],
+  "grants": {
+    "private_RP_adaptive_exp_and_shared_product_component": true,
+    "whole_math_goal": false,
+    "integrated_firmware": false,
+    "hardware": false,
+    "physical_cycles": false,
+    "canonical_promotion": false,
+    "release": false
+  },
+  "producer_primary_Git_or_device_source_state_modified": false,
+  "runtime_refs": {
+    "resident_firmware": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf",
+      "bytes": 9015184,
+      "sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1"
+    },
+    "captured_boot_ROM": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/research/rp2040-memset-2026-10-21/capture/bootrom.bin",
+      "bytes": 16384,
+      "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe"
+    },
+    "reference_Qfplib_ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/reference.elf",
+      "bytes": 17268,
+      "sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26"
+    },
+    "reference_Qfplib_source": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/sources/qfplib-linked.S",
+      "bytes": 87161,
+      "sha256": "c445325c849eb73adbef75176a5a0836cb945ad366ceca6bf9517030e2054f48"
+    },
+    "ARM_Machine_support": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/support/native_eabi_m0_arm_self_test.py",
+      "bytes": 25185,
+      "sha256": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3"
+    },
+    "directed_MPFR_oracle": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/support/m0_mpfr_oracle.py",
+      "bytes": 5027,
+      "sha256": "fb880de9b8fe7d4b0fc9225121b90d7c41d976fec01b67bf4f7d6e2a89c7000a"
+    },
+    "ELF_parser": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tests/check_stm32_vectors.py",
+      "bytes": 3952,
+      "sha256": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708"
+    },
+    "compile_database": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/build/compile_commands.json",
+      "bytes": 1805962,
+      "sha256": "74464b896e58b118dc331ae4b64e141012e19c93abdfae4654585e4ee4f06db7"
+    },
+    "source_exp_table": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_exp_table.inc",
+      "bytes": 17117,
+      "sha256": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337"
+    }
+  },
+  "refs": {
+    "binding.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/binding.py",
+      "bytes": 9127,
+      "sha256": "618b568a73e23b84ba245246ad9bb407e8f1ea77ede6de022b9f702b8292e95a"
+    },
+    "binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/binding.json",
+      "bytes": 456688,
+      "sha256": "a66c765eacc42e3603a02f99a76245a8e7f0511511552a438487ae5e94cd12f5"
+    },
+    "proof.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/proof.py",
+      "bytes": 6879,
+      "sha256": "91d0df093f12b2ba7805c547fac59993052f5031623f6f4e22785dff07e3e8cd"
+    },
+    "proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/proof.json",
+      "bytes": 1552,
+      "sha256": "2eef4c719ee1c100f476ef0b94d05952adada0abbf824fcf84b9bbf4dc5d12ea"
+    },
+    "arm.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/arm.py",
+      "bytes": 13842,
+      "sha256": "156921835717c316e8c14e2867dba1b9e8f7190fb14f7e7467a08ee3ac743aab"
+    },
+    "arm-result.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/arm-result.json",
+      "bytes": 1762,
+      "sha256": "7c3be672c6d57b2180f39e7baea80b2f16bb7d825fe5f109db909f3225552b7c"
+    },
+    "callers.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/callers.py",
+      "bytes": 5082,
+      "sha256": "801fc8ac8b2966c3ee4c2863b19e5af2b27bfaf3655667bf25cff8e1d72dd29f"
+    },
+    "callers.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/callers.json",
+      "bytes": 1001,
+      "sha256": "bbee4f0e8dee51287d5fe6232c5d6fbb128bfb8345ba0f14a1be91d4f2441704"
+    },
+    "caller-results.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/caller-results.json",
+      "bytes": 192165,
+      "sha256": "5b9e86f1e77a06a78507aefb964af009235e8981686f464d7e0f4f2b2acbdb34"
+    },
+    "evidence.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/evidence.py",
+      "bytes": 11918,
+      "sha256": "3d21952d29ad6cd27e9aa87707db0c03d1132464cfe2390e44ff8228399f2433"
+    },
+    "evidence.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/evidence.json",
+      "bytes": 2405,
+      "sha256": "32469e55250891678802f5871ee122d9e5cfce8314ed9b127e3e52b757d5dada"
+    },
+    "INDEPENDENT-PROOF.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/INDEPENDENT-PROOF.md",
+      "bytes": 14145,
+      "sha256": "ab57f0281a67b68098335d905afac79bc0a71bf66f35e271b897dfbddb1930e3"
+    },
+    "table-rows.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/table-rows.json",
+      "bytes": 42391,
+      "sha256": "04c53aff9d626030a95313da8022b41b22adf5450a8c235f04d907838ad8e7de"
+    },
+    "own-gate-inputs.bin": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/own-gate-inputs.bin",
+      "bytes": 66464,
+      "sha256": "57ba0cd8a21628c4606eeaffdd3dea3759a145b51d3be59d26ff9a4833288e25"
+    },
+    "public-results.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/public-results.json",
+      "bytes": 1242635,
+      "sha256": "dbea19bdd746415abf4b598df034c64ff1820664294734801d1385fc898ac769"
+    },
+    "actual-public-gate-events.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/actual-public-gate-events.json",
+      "bytes": 31243,
+      "sha256": "b2663e63de8e898ef253d79434e2f0a3b656dfd397990988980bd468bf68c72b"
+    },
+    "product-results.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/product-results.json",
+      "bytes": 79294,
+      "sha256": "92a307388102326655b6d9b25f22bfebcb007cc9f2f5190d91fcb6b84ae6ab66"
+    },
+    "candidate.dis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/candidate.dis",
+      "bytes": 120712,
+      "sha256": "7851413bd6aa3f30ccb20bdba64674100f425c39fe0030ba48b5c53dd798dc8c"
+    },
+    "control.dis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/control.dis",
+      "bytes": 119762,
+      "sha256": "f2146b57c1cd90ae633876c6d8683dd46de8c6b7b9d634c5f832c157d395086c"
+    },
+    "unit.dis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/unit.dis",
+      "bytes": 1627,
+      "sha256": "44dddcd18cd56bf2c6acfab20939f30739f6c8dffd9338ead71382683330b23d"
+    },
+    "product-old.dis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/product-old.dis",
+      "bytes": 3269,
+      "sha256": "2f2fd114c334cc06672cd7bc924134dc6cb0a9eeea6fcc4ff17224ed87986a54"
+    },
+    "product-new.dis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/product-new.dis",
+      "bytes": 3236,
+      "sha256": "d13afdf31349dbfcc686a5674f00e1c46d46c6b9a692e2e083a3b3337adb189d"
+    },
+    "postread.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/postread.json",
+      "bytes": 212396,
+      "sha256": "dbe5343641c60093d922c2471b8b292cc4a6755de64324ce3b2ee8f5023a3acc"
+    },
+    "execution.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/execution.json",
+      "bytes": 1408,
+      "sha256": "0c570b4737cca0e3176e4edafa6e35b2b532ba9baa5dd029e021782f58bf2184"
+    },
+    "original507-component-delta.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/original507-component-delta.json",
+      "bytes": 1772,
+      "sha256": "aa5c8dbcfb71182d9d019bd1760d01e3281f50ad2cbf61f6b3c2b02eabb07a90"
+    },
+    "expanded-component-ledger.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/expanded-component-ledger.json",
+      "bytes": 1632,
+      "sha256": "6835a5855fda419ce3ff8b8b622ba00d846c2180ed91eee5f5e49aa3ece545f4"
+    },
+    "finalize.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/finalize.py",
+      "bytes": 16552,
+      "sha256": "eec705c3903780b9b779c67582e8ca946e7a831111caef76f954ef323f5e525b"
+    }
+  }
+}

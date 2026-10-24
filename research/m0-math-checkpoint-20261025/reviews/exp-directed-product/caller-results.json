@@ -1,0 +1,182 @@
+[
+  {
+    "operation": "sin",
+    "x": "C07E002F91B7B3F8",
+    "y": "0000000000000000",
+    "SIO": "READY",
+    "expected": "BFE36B2069883368",
+    "outputs": {
+      "parent": "BFE36B2069883368",
+      "candidate": "BFE36B2069883368",
+      "Qfplib": "BFE36B2069883368"
+    },
+    "instructions": {
+      "parent": 1852,
+      "candidate": 1852,
+      "Qfplib": 1347
+    },
+    "product_calls": 0
+  },
+  {
+    "operation": "sin",
+    "x": "C07E002F91B7B3F8",
+    "y": "0000000000000000",
+    "SIO": "DIRTY",
+    "expected": "BFE36B2069883368",
+    "outputs": {
+      "parent": "BFE36B2069883368",
+      "candidate": "BFE36B2069883368",
+      "Qfplib": "BFE36B2069883368"
+    },
+    "instructions": {
+      "parent": 1852,
+      "candidate": 1852,
+      "Qfplib": 1347
+    },
+    "product_calls": 0
+  },
+  {
+    "operation": "cos",
+    "x": "408008F7B790061C",
+    "y": "0000000000000000",
+    "SIO": "READY",
+    "expected": "BFE02964BC1A35A6",
+    "outputs": {
+      "parent": "BFE02964BC1A35A6",
+      "candidate": "BFE02964BC1A35A6",
+      "Qfplib": "BFE02964BC1A35A6"
+    },
+    "instructions": {
+      "parent": 1842,
+      "candidate": 1842,
+      "Qfplib": 1344
+    },
+    "product_calls": 0
+  },
+  {
+    "operation": "cos",
+    "x": "408008F7B790061C",
+    "y": "0000000000000000",
+    "SIO": "DIRTY",
+    "expected": "BFE02964BC1A35A6",
+    "outputs": {
+      "parent": "BFE02964BC1A35A6",
+      "candidate": "BFE02964BC1A35A6",
+      "Qfplib": "BFE02964BC1A35A6"
+    },
+    "instructions": {
+      "parent": 1842,
+      "candidate": 1842,
+      "Qfplib": 1344
+    },
+    "product_calls": 0
+  },
+  {
+    "operation": "pow",
+    "x": "3FEFFFFFFFFFFF2B",
+    "y": "40BA76B89D3E311A",
+    "SIO": "READY",
+    "expected": "3FEFFFFFFFE9FB38",
+    "outputs": {
+      "parent": "3FEFFFFFFFE9FB38",
+      "candidate": "3FEFFFFFFFE9FB38",
+      "Qfplib": "3FEFFFFFFFE9FB38"
+    },
+    "instructions": {
+      "parent": 1344,
+      "candidate": 1342,
+      "Qfplib": 1344
+    },
+    "product_calls": 1
+  },
+  {
+    "operation": "pow",
+    "x": "3FEFFFFFFFFFFF2B",
+    "y": "40BA76B89D3E311A",
+    "SIO": "DIRTY",
+    "expected": "3FEFFFFFFFE9FB38",
+    "outputs": {
+      "parent": "3FEFFFFFFFE9FB38",
+      "candidate": "3FEFFFFFFFE9FB38",
+      "Qfplib": "3FEFFFFFFFE9FB38"
+    },
+    "instructions": {
+      "parent": 1344,
+      "candidate": 1342,
+      "Qfplib": 1344
+    },
+    "product_calls": 1
+  },
+  {
+    "operation": "pow",
+    "x": "3FF000000000004F",
+    "y": "40EAAD0A6A243E3E",
+    "SIO": "READY",
+    "expected": "3FF000000041DB32",
+    "outputs": {
+      "parent": "3FF000000041DB32",
+      "candidate": "3FF000000041DB32",
+      "Qfplib": "3FF000000041DB32"
+    },
+    "instructions": {
+      "parent": 1320,
+      "candidate": 1318,
+      "Qfplib": 1320
+    },
+    "product_calls": 1
+  },
+  {
+    "operation": "pow",
+    "x": "3FF000000000004F",
+    "y": "40EAAD0A6A243E3E",
+    "SIO": "DIRTY",
+    "expected": "3FF000000041DB32",
+    "outputs": {
+      "parent": "3FF000000041DB32",
+      "candidate": "3FF000000041DB32",
+      "Qfplib": "3FF000000041DB32"
+    },
+    "instructions": {
+      "parent": 1320,
+      "candidate": 1318,
+      "Qfplib": 1320
+    },
+    "product_calls": 1
+  },
+  {
+    "operation": "pow",
+    "x": "3FF000000000017C",
+    "y": "4055D6591BBBC2B4",
+    "SIO": "READY",
+    "expected": "3FF00000000081A9",
+    "outputs": {
+      "parent": "3FF00000000081A9",
+      "candidate": "3FF00000000081A9",
+      "Qfplib": "3FF00000000081A9"
+    },
+    "instructions": {
+      "parent": 1311,
+      "candidate": 1309,
+      "Qfplib": 1311
+    },
+    "product_calls": 1
+  },
+  {
+    "operation": "pow",
+    "x": "3FF000000000017C",
+    "y": "4055D6591BBBC2B4",
+    "SIO": "DIRTY",
+    "expected": "3FF00000000081A9",
+    "outputs": {
+      "parent": "3FF00000000081A9",
+      "candidate": "3FF00000000081A9",
+      "Qfplib": "3FF00000000081A9"
+    },
+    "instructions": {
+      "parent": 1311,
+      "candidate": 1309,
+      "Qfplib": 1311
+    },
+    "product_calls": 1
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "status": "PRIVATE_CHECKER_PC_RANGE_OMITTED_LEGITIMATE_HELPER",
+  "product_failure": false,
+  "detail": "Bare unit exact symbol _ZL5clz32m at10000001,66B is present in sealed unit and source. Guard originally admitted only304B audit_near_pack77 wrapper. Fixed to the two exact code extents; no source/artifact change.",
+  "initial_partial_run_not_added_to_qualified_counts": true,
+  "log_sha256": "a18d830038c0c0690a7d63f2e64547c7f8f2fca075b5af2df1d2cb00da84351a"
+}

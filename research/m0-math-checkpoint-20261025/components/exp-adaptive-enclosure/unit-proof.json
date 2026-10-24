@@ -1,0 +1,49 @@
+{
+  "status": "PASS_LITERAL_ADAPTIVE_GATE_AND_BIT_IDENTICAL_81_INSTRUCTION_PRODUCT_UNITS",
+  "gate": {
+    "source_literal_cases": 595004,
+    "actual_ARM_calls": 595004,
+    "accepted": 337604,
+    "rejected": 257400,
+    "unsafe_admissions": 0,
+    "instruction_counts": {
+      "30": 168769,
+      "31": 128733,
+      "33": 128667,
+      "32": 168835
+    },
+    "stack_bytes": 16,
+    "SIO_accesses": 0,
+    "standalone_no_ROM_firmware_external_calls_or_mocks": true
+  },
+  "product": {
+    "raw64_pairs": 70660,
+    "valid63x54_exact_integer_references": 36781,
+    "actual_ARM_calls": 141320,
+    "wrong": 0,
+    "raw_returns_bit_identical": true,
+    "instruction_counts": {
+      "old": {
+        "84": 70660
+      },
+      "new": {
+        "81": 70660
+      }
+    },
+    "stack_bytes": {
+      "old": 40,
+      "new": 40
+    },
+    "stack_bytes_touched": {
+      "old": 40,
+      "new": 36
+    },
+    "old_new_same_entry_address": "0x20038ee5",
+    "source_body_unchanged_after_prologue": true,
+    "standalone_no_ROM_firmware_or_mocks": true
+  },
+  "total_actual_ARM_calls": 736324,
+  "new_MPFR_calls": 0,
+  "all_ABI_SP_bounded_writes_checked_every_call": true,
+  "hardware_accessed": false
+}

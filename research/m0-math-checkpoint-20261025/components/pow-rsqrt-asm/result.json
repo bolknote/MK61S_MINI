@@ -1,0 +1,125 @@
+{
+  "status": "FROZEN_AUTHOR_QUALIFIED_RP_POW_RSQRT_EXACT_COORDINATE_AND_ASYMMETRIC_BOUND",
+  "parent": ".build/m0-pow-square-ordinary-20261024",
+  "parent_independent_review": {
+    "path": ".build/m0-pow-square-ordinary-independent-20261024/FINAL-REVIEW.json",
+    "sha256": "4fb68e5ea8dbc4539befb483277ac2ce8e301bc23f1447c8b72de312fbbcdde1"
+  },
+  "CPP_sha256": "2279f6fc4518b41c2ac268f2a2ff6b068f3e2dc751050e304c0367f7754c5f76",
+  "ASM_sha256": "f048a1c3fa398cf1d4d22d85ffbff41b062907a3a3d3f813105b5f359803b659",
+  "include_sha256": "2f2870d0dda86a0e3c430574423d13167c9d45b22e23738e673a77f7089519cb",
+  "candidate_ELF_sha256": "e55be65b73b9b7bbbb72896904f61f8a1a5b5c5fb7bb052a78a5c580f351867c",
+  "whole_source_ELF_sha256": "72c5badf5dcbfc16a254f1fd6b4ca1d9ae8c703b4973fe66e982a5e35295d48e",
+  "certificate_sha256": "f55fd15a2ae67b30a87e9be52cfd655978ebf50c03573e06799a0ab2276e1e73",
+  "public_unique_pair_union": 111912,
+  "public_distinct_states": 223824,
+  "fresh_final_public_ARM_calls": 443784,
+  "fresh_MPFR_references": 116373,
+  "MPFR_version": "4.2.2",
+  "qualified_bare_quotient_ARM_calls": 149484,
+  "bare_quotient_calls_bound_by_identical_actual_module_not_repeated": true,
+  "total_qualified_ARM_calls_including_bound_unit": 593268,
+  "inherited_prior_public_baseline_rows_not_added": 127590,
+  "trials_smokes_failed_launchers_and_prior_component_calls_excluded": true,
+  "wrong": 0,
+  "new_Qfplib_raw_losses": 0,
+  "observed_parent_instruction_regressions": 0,
+  "original_pow_remaining_before": 82,
+  "original_pow_remaining_after": 51,
+  "new_original_strict_fixes": 31,
+  "original507_author_separate_component_union": {
+    "no_slower": 418,
+    "strictly_faster": 412,
+    "equal": 6,
+    "remaining": 89,
+    "by_operation": {
+      "pow": 51,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    },
+    "not_one_integrated_binary": true
+  },
+  "original507_reviewed_prior_union": {
+    "no_slower": 387,
+    "strictly_faster": 381,
+    "equal": 6,
+    "remaining": 120
+  },
+  "old63795_corpus_remaining": [
+    8078,
+    5912
+  ],
+  "expanded_union_unique_pairs": 111912,
+  "expanded_union_remaining_before": 42790,
+  "expanded_union_remaining_after": 7904,
+  "new_targeted1992_losses_retained_outside_old5912": true,
+  "normal_original_fast_counts_READY": [
+    298,
+    309
+  ],
+  "normal_original_parent_READY": [
+    385,
+    386
+  ],
+  "normal_original_parent_DIRTY": [
+    552,
+    642
+  ],
+  "normal_original_Qfplib": [
+    307,
+    368
+  ],
+  "old_hard_case_READY": {
+    "x": "5B27CF4AC334ECB8",
+    "parent": 822,
+    "candidate": 304,
+    "Qfplib": 341
+  },
+  "old_hard_case_DIRTY": {
+    "parent": 1067,
+    "candidate": 304,
+    "Qfplib": 341
+  },
+  "new_tables_RAM_libgcc": false,
+  "code_bytes_delta": 776,
+  "full_pow_public_stack_bytes": [
+    2236,
+    2236
+  ],
+  "targeted_rsqrt_stack_bytes": [
+    196,
+    172
+  ],
+  "new_helper_static_frame": 64,
+  "targeted_candidate_SIO_reads_or_writes": 0,
+  "all512_cells_and_target_tails_covered": [
+    0,
+    1,
+    496,
+    497,
+    511,
+    512,
+    513,
+    514,
+    515,
+    527,
+    528,
+    1023
+  ],
+  "all2046_normal_exponents": true,
+  "full_source_binding_and_ten_rebuilds_byte_exact": true,
+  "generic_M0_M4_selected_CPP_ASM_bytes_relocations_identical": true,
+  "whole_M4_firmware_not_built": true,
+  "source_proof_scope": "Positive normal reciprocal-root path only; exact old boundary retained for18 integer tails. Does not prove general pow totality or all-input speed.",
+  "still_open": [
+    "7904 observed expanded pow speed inputs, including1992 newly sampled exact-boundary paths",
+    "general pow undecided1024-bit totality",
+    "independent acceptance of this new component",
+    "combined repaired-platform integration and regression",
+    "physical cycle and device acceptance",
+    "exp395 expanded, ln5 expanded, sin22/cos14 original, conversions and FMA work"
+  ],
+  "canonical_Git_device_or_publication_changed": false,
+  "goal_complete": false
+}

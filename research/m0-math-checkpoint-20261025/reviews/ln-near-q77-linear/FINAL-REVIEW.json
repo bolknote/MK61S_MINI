@@ -1,0 +1,571 @@
+{
+  "status": "CONDITIONAL_LOCAL_Q77_NEAR_DELTA_PASS_PUBLIC_PARENT_CHAIN_HOLD",
+  "local_delta_findings": [],
+  "public_component_GO": false,
+  "production_GO": false,
+  "canonical_promotion": false,
+  "hardware_GO": false,
+  "scope": "Only new Q77 near-center correction/polynomial/linear threshold/packer and source-to-whole-ELF binding. Parent main-raw-split and IEEE cold-entry are private and unreviewed.",
+  "identity": {
+    "HANDOFF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/HANDOFF.md",
+      "sha256": "9eca0b99b5ac212d605a22e054dc15afe784fac61ea6e9e52783ffbb35566b19"
+    },
+    "result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/result.json",
+      "sha256": "87b5b9e32fd6465aefabcd81db263745aa2f789ba72857c3777d060f3e11f191"
+    },
+    "source": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/native_eabi_m0_log70.inc",
+      "sha256": "84213d8eb6c7841b48a834cd2304eb8c0ccd6bedc150ee84fd01cf39a8a7e06b"
+    },
+    "ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/candidate.elf",
+      "sha256": "1164948d280c23bc66601af789dbd2a4af44c0982fb8c813b35fa2b7a396052e"
+    },
+    "object": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/candidate-full.o",
+      "sha256": "8b866d1d4bfa402aa80330a7615d436ea79cc7683bd3df6e206c8a91a58fea0d"
+    },
+    "input_pins": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/input-pins.json",
+      "sha256": "d3cf4f2c760ecc839595fa899efa1695394b023777a244e185cdce50550bd9ca"
+    }
+  },
+  "independent_math": {
+    "table_rows_exact_Fraction": 256,
+    "corrected_argument_bound": "9030828227/17179869184",
+    "remaining_symmetric_base": "2664208190109730510997254426793835367344678308873/1901357058098572705738664492138496000000000000000",
+    "full_absolute_error_bound": "6959367548926793078665407153143249767344678308873/1901357058098572705738664492138496000000000000000",
+    "linear_remaining_base": "66902235595596033547255950351574840625697929/89202980793960233289313349430306741944320000",
+    "cold_radius": "3/2",
+    "fast_radius": 4,
+    "all_denominator_affine_reciprocal_bounds_verified": true,
+    "source_modular_residue_and_integer_overflow_conditions_verified": true,
+    "source_div3_div5_and_coefficient_bias_derivation": true,
+    "packing_width_domain": [
+      63,
+      72
+    ],
+    "midpoint_and_lower_binade_gaps_preserved": true,
+    "packing_affine_residual_extreme_checks": 622080,
+    "proof_notes": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/math-notes.md",
+      "sha256": "cc0bd50a67135a3f535428450203fd3a130b82b8abc34748939e9c07e3fe3802"
+    }
+  },
+  "independent_execution": {
+    "MPFR_version": "4.2.2",
+    "unique_public_inputs": 124,
+    "public_state_rows": 248,
+    "public_ARM_calls": 744,
+    "bare_pack_configurations": 32,
+    "bare_pack_ARM_calls": 64,
+    "bare_core_pairs": 30,
+    "bare_core_ARM_calls": 120,
+    "total_qualified_own_ARM_calls": 928,
+    "public_candidate_MPFR_errors": 0,
+    "raw_NaN_policy_unchanged_from_private_parent": true,
+    "PCS_SP_and_bounded_writes_checked_every_call": true,
+    "DIRTY_SIO_full28bytes_restored": true,
+    "READY_SIO_not_dirty": true,
+    "bare_units_SIO_accesses": 0,
+    "bare_capsule_entry_SP8_checked": true,
+    "own_stack_subset": {
+      "candidate": 504,
+      "parent": 528,
+      "Qfplib": 32
+    },
+    "author_full_public_stack640_not_independently_reswept": true,
+    "new_near_entries": {
+      "ln_near_interval77": 206,
+      "ln_refine": 8,
+      "ln_near_one": 6
+    },
+    "all28_rejected_trial_new_loss_raw_inputs_sampled_bothstates": true,
+    "historical_ln10_correct_and_no_slower_in_own_sample": true,
+    "four_remaining_general_raws_still_slower_in_all8states": true,
+    "discarded_PC_range_attempt_not_counted": true
+  },
+  "source_binding": {
+    "sealed_artifacts": 74,
+    "input_pins": 606,
+    "only_near_source_delta_against_private_parent": true,
+    "changed_allocated_sections": {
+      ".text.ln_near_interval": [
+        1160,
+        0
+      ],
+      ".text.ln_near_interval77": [
+        0,
+        1356
+      ],
+      ".rodata._ZL17ln_near_q77_delta": [
+        0,
+        256
+      ]
+    },
+    "whole_CPP_ASM_and_entire_ELF_own_rebuild_byteexact_without_exclusions": true,
+    "old_tables_and_generic_M0_M4_allocated_controls_exact": true,
+    "M4_controls_not_whole_platform_builds": true,
+    "new_readonly_bytes": 256,
+    "new_RAM_or_libgcc": false,
+    "linked_bytes_delta": 448
+  },
+  "performance_limits": {
+    "author_new59022raw_corpus_not_reexecuted": true,
+    "author_claim": "Expanded58 correct-Qfplib raw losses ->4;54fixed0new. Finite corpus only; not a no-slower guarantee for all binary64 or all507.",
+    "author_parent_regressions_retained": 47110,
+    "author_parent_cost_tradeoff": "11428 faster /59506 equal /47110 slower; regressions5..132 instructions are retained.",
+    "own_sample_parent_regression_state_rows": 66,
+    "own_regression_examples": [
+      {
+        "x": "3FEF9AE55188C8D0",
+        "group": "historical_ln10",
+        "SIO": "READY",
+        "expected": "BF896EEE92A8E92F",
+        "outputs": {
+          "candidate": "BF896EEE92A8E92F",
+          "parent": "BF896EEE92A8E92F",
+          "Qfplib": "BF896EEE92A8E92F"
+        },
+        "instructions": {
+          "candidate": 673,
+          "parent": 583,
+          "Qfplib": 783
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "3FEF9AE55188C8D0",
+        "group": "historical_ln10",
+        "SIO": "DIRTY",
+        "expected": "BF896EEE92A8E92F",
+        "outputs": {
+          "candidate": "BF896EEE92A8E92F",
+          "parent": "BF896EEE92A8E92F",
+          "Qfplib": "BF896EEE92A8E92F"
+        },
+        "instructions": {
+          "candidate": 673,
+          "parent": 583,
+          "Qfplib": 783
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "3FEFE39CE50E5DA4",
+        "group": "historical_ln10",
+        "SIO": "READY",
+        "expected": "BF6C6FB9B9E8C418",
+        "outputs": {
+          "candidate": "BF6C6FB9B9E8C418",
+          "parent": "BF6C6FB9B9E8C418",
+          "Qfplib": "BF6C6FB9B9E8C418"
+        },
+        "instructions": {
+          "candidate": 675,
+          "parent": 585,
+          "Qfplib": 794
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "3FEFE39CE50E5DA4",
+        "group": "historical_ln10",
+        "SIO": "DIRTY",
+        "expected": "BF6C6FB9B9E8C418",
+        "outputs": {
+          "candidate": "BF6C6FB9B9E8C418",
+          "parent": "BF6C6FB9B9E8C418",
+          "Qfplib": "BF6C6FB9B9E8C418"
+        },
+        "instructions": {
+          "candidate": 675,
+          "parent": 585,
+          "Qfplib": 794
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "3FEFE66DEC8E7338",
+        "group": "historical_ln10",
+        "SIO": "READY",
+        "expected": "BF699C5052B5F2B4",
+        "outputs": {
+          "candidate": "BF699C5052B5F2B4",
+          "parent": "BF699C5052B5F2B4",
+          "Qfplib": "BF699C5052B5F2B4"
+        },
+        "instructions": {
+          "candidate": 665,
+          "parent": 570,
+          "Qfplib": 794
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "3FEFE66DEC8E7338",
+        "group": "historical_ln10",
+        "SIO": "DIRTY",
+        "expected": "BF699C5052B5F2B4",
+        "outputs": {
+          "candidate": "BF699C5052B5F2B4",
+          "parent": "BF699C5052B5F2B4",
+          "Qfplib": "BF699C5052B5F2B4"
+        },
+        "instructions": {
+          "candidate": 665,
+          "parent": 570,
+          "Qfplib": 794
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      }
+    ],
+    "remaining_general8states": [
+      {
+        "x": "3FF06FFEFFFFFFC1",
+        "group": "remaining_general4",
+        "SIO": "READY",
+        "expected": "3F9B9F81DBC114E1",
+        "outputs": {
+          "candidate": "3F9B9F81DBC114E1",
+          "parent": "3F9B9F81DBC114E1",
+          "Qfplib": "3F9B9F81DBC114E1"
+        },
+        "instructions": {
+          "candidate": 2028,
+          "parent": 2028,
+          "Qfplib": 815
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "3FF06FFEFFFFFFC1",
+        "group": "remaining_general4",
+        "SIO": "DIRTY",
+        "expected": "3F9B9F81DBC114E1",
+        "outputs": {
+          "candidate": "3F9B9F81DBC114E1",
+          "parent": "3F9B9F81DBC114E1",
+          "Qfplib": "3F9B9F81DBC114E1"
+        },
+        "instructions": {
+          "candidate": 2113,
+          "parent": 2113,
+          "Qfplib": 815
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "3FF1146855697319",
+        "group": "remaining_general4",
+        "SIO": "READY",
+        "expected": "3FB0B7B0CFC3DF6F",
+        "outputs": {
+          "candidate": "3FB0B7B0CFC3DF6F",
+          "parent": "3FB0B7B0CFC3DF6F",
+          "Qfplib": "3FB0B7B0CFC3DF6F"
+        },
+        "instructions": {
+          "candidate": 2046,
+          "parent": 2046,
+          "Qfplib": 807
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "3FF1146855697319",
+        "group": "remaining_general4",
+        "SIO": "DIRTY",
+        "expected": "3FB0B7B0CFC3DF6F",
+        "outputs": {
+          "candidate": "3FB0B7B0CFC3DF6F",
+          "parent": "3FB0B7B0CFC3DF6F",
+          "Qfplib": "3FB0B7B0CFC3DF6F"
+        },
+        "instructions": {
+          "candidate": 2140,
+          "parent": 2140,
+          "Qfplib": 807
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "5FFA5B2647E9E2C7",
+        "group": "remaining_general4",
+        "SIO": "READY",
+        "expected": "4076363F58F1CE38",
+        "outputs": {
+          "candidate": "4076363F58F1CE38",
+          "parent": "4076363F58F1CE38",
+          "Qfplib": "4076363F58F1CE38"
+        },
+        "instructions": {
+          "candidate": 2238,
+          "parent": 2238,
+          "Qfplib": 776
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "5FFA5B2647E9E2C7",
+        "group": "remaining_general4",
+        "SIO": "DIRTY",
+        "expected": "4076363F58F1CE38",
+        "outputs": {
+          "candidate": "4076363F58F1CE38",
+          "parent": "4076363F58F1CE38",
+          "Qfplib": "4076363F58F1CE38"
+        },
+        "instructions": {
+          "candidate": 2333,
+          "parent": 2333,
+          "Qfplib": 776
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "3FEC7001FFFFFFC1",
+        "group": "remaining_general4",
+        "SIO": "READY",
+        "expected": "BFBE36F5ED10DAC5",
+        "outputs": {
+          "candidate": "BFBE36F5ED10DAC5",
+          "parent": "BFBE36F5ED10DAC5",
+          "Qfplib": "BFBE36F5ED10DAC5"
+        },
+        "instructions": {
+          "candidate": 2260,
+          "parent": 2260,
+          "Qfplib": 783
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      },
+      {
+        "x": "3FEC7001FFFFFFC1",
+        "group": "remaining_general4",
+        "SIO": "DIRTY",
+        "expected": "BFBE36F5ED10DAC5",
+        "outputs": {
+          "candidate": "BFBE36F5ED10DAC5",
+          "parent": "BFBE36F5ED10DAC5",
+          "Qfplib": "BFBE36F5ED10DAC5"
+        },
+        "instructions": {
+          "candidate": 2341,
+          "parent": 2341,
+          "Qfplib": 783
+        },
+        "correct": {
+          "candidate": true,
+          "parent": true,
+          "Qfplib": true
+        }
+      }
+    ],
+    "hardpoint_samples": {
+      "3FF01E2A43FC46C8": [
+        {
+          "x": "3FF01E2A43FC46C8",
+          "group": "historical_ln10",
+          "SIO": "READY",
+          "expected": "3F7E0DF8102610A7",
+          "outputs": {
+            "candidate": "3F7E0DF8102610A7",
+            "parent": "3F7E0DF8102610A7",
+            "Qfplib": "3F7E0DF8102610A7"
+          },
+          "instructions": {
+            "candidate": 662,
+            "parent": 2083,
+            "Qfplib": 805
+          },
+          "correct": {
+            "candidate": true,
+            "parent": true,
+            "Qfplib": true
+          }
+        },
+        {
+          "x": "3FF01E2A43FC46C8",
+          "group": "historical_ln10",
+          "SIO": "DIRTY",
+          "expected": "3F7E0DF8102610A7",
+          "outputs": {
+            "candidate": "3F7E0DF8102610A7",
+            "parent": "3F7E0DF8102610A7",
+            "Qfplib": "3F7E0DF8102610A7"
+          },
+          "instructions": {
+            "candidate": 662,
+            "parent": 2083,
+            "Qfplib": 805
+          },
+          "correct": {
+            "candidate": true,
+            "parent": true,
+            "Qfplib": true
+          }
+        }
+      ],
+      "3FEFF7FFFFFFFFFC": [
+        {
+          "x": "3FEFF7FFFFFFFFFC",
+          "group": "all28_rejected_trial_new_losses",
+          "SIO": "READY",
+          "expected": "BF5002005565608B",
+          "outputs": {
+            "candidate": "BF5002005565608B",
+            "parent": "BF5002005565608B",
+            "Qfplib": "BF5002005565608B"
+          },
+          "instructions": {
+            "candidate": 398,
+            "parent": 601,
+            "Qfplib": 673
+          },
+          "correct": {
+            "candidate": true,
+            "parent": true,
+            "Qfplib": true
+          }
+        },
+        {
+          "x": "3FEFF7FFFFFFFFFC",
+          "group": "all28_rejected_trial_new_losses",
+          "SIO": "DIRTY",
+          "expected": "BF5002005565608B",
+          "outputs": {
+            "candidate": "BF5002005565608B",
+            "parent": "BF5002005565608B",
+            "Qfplib": "BF5002005565608B"
+          },
+          "instructions": {
+            "candidate": 398,
+            "parent": 601,
+            "Qfplib": 673
+          },
+          "correct": {
+            "candidate": true,
+            "parent": true,
+            "Qfplib": true
+          }
+        }
+      ]
+    },
+    "physical_cycles": false
+  },
+  "required_unreviewed_premises": [
+    {
+      "component": "private main-raw-split parent",
+      "status": "NOT_INDEPENDENTLY_ACCEPTED",
+      "limit": "Unchanged byQ77, but source identity and producer selftests are not independent correctness/performance acceptance."
+    },
+    {
+      "component": "private IEEE/cold-entry parent",
+      "status": "NOT_INDEPENDENTLY_ACCEPTED",
+      "limit": "Own selected IEEE/entry calls pass; this is not full parent entry/fallback/totality qualification."
+    }
+  ],
+  "verdict_limits": [
+    "The declared local near input contract, exact table/seed semantics and gates are checked; no local counterexample found.",
+    "Do not use this result as public-ln/canonical/shipping integration GO while the private parent chain remains open.",
+    "Do not add producer historical302/507 to reviewed coverage. Independently reviewed count stays298/507.",
+    "The four general inputs and47110 parent cost regressions remain open/visible; generalpow/otheroperations/fullgoal remain outside scope."
+  ],
+  "reviewed507_count_unchanged": 298,
+  "goal_complete": false,
+  "own_records": {
+    "math-binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/math-binding.json",
+      "sha256": "044c76f79ca654df419280a0c6de3e8b775ba3bc9b77eda5764974525521bd51"
+    },
+    "focused-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/focused-arm.json",
+      "sha256": "08c10a7966c29026f2b9cbe385ff155bf141122f5673089cb5cec8cde73aba6c"
+    },
+    "focused-arm.log": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/focused-arm.log",
+      "sha256": "4360d2ceaa59edac28946255a4aedfa47e3f0967869e83a6731951f181d49e7e"
+    },
+    "public-interim.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/public-interim.json",
+      "sha256": "8fee5cd2014e403a11f6bbf5a9b660d1e9bdf8e39c2156fa42742506ffef43c5"
+    },
+    "check_math.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/check_math.py",
+      "sha256": "d8c77fb1945773db233d25d3fb7763ab6f123f2936949f0bb5b1ef7aa3d05e27"
+    },
+    "check_arm.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/check_arm.py",
+      "sha256": "f118c7de90a58da08c4f2d338d9a9ded873cf310a54316921850a862cbc6af30"
+    },
+    "math-notes.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/math-notes.md",
+      "sha256": "cc0bd50a67135a3f535428450203fd3a130b82b8abc34748939e9c07e3fe3802"
+    },
+    "attempt001.log": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/attempt001.log",
+      "sha256": "a18d830038c0c0690a7d63f2e64547c7f8f2fca075b5af2df1d2cb00da84351a"
+    },
+    "attempt001-diagnostic.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/attempt001-diagnostic.json",
+      "sha256": "a47aca9538f20115f0d44e7d42aa0dc693fdf06d35c93f81e5fb63a7b7658bc3"
+    }
+  },
+  "canonical_Git_source_or_native_chat_modified": false,
+  "hardware_or_lease_accessed": false
+}

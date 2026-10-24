@@ -1,0 +1,56 @@
+{
+  "status": "PASS_INDEPENDENT_RSQRT_ARM_MPFR_METADATA_AND_EXACT_BOUNDARY",
+  "own_public_pairs": 322,
+  "own_public_ARM_calls": 2576,
+  "own_MPFR_references": 322,
+  "own_quotient_ARM_calls": 5120,
+  "own_total_ARM_calls": 7696,
+  "MPFR": "4.2.2",
+  "all153_original_pairs_bothstates": true,
+  "original31_new_strict_fixes": true,
+  "parent_pow_remaining": 82,
+  "candidate_pow_remaining": 51,
+  "all18_unsafe_tails_and_outer_guard_edges_both_parities": true,
+  "all_factor_high_deltas_freshly_executed": [
+    -2,
+    -1,
+    0,
+    1
+  ],
+  "live_point_seed_factor_and_inline_quotient_match_independent_model": true,
+  "live_exact_boundary_arguments_and_return_sign_match_161bit_integer_oracle": true,
+  "boundary_call_counts": {
+    "0": 158,
+    "1": 74
+  },
+  "independent_exact_rational_RNE_cell_checks": 232,
+  "targeted_normal_state_calls": 232,
+  "normal_candidate_SIO_accesses": 0,
+  "normal_full28byte_SIO_preserved": true,
+  "own_public_stack": {
+    "parent": 968,
+    "control": 968,
+    "candidate": 968
+  },
+  "own_quotient_stack": 20,
+  "all512_seed_quotient_and_corrections012_tested": true,
+  "zero_candidate_errors": true,
+  "metadata_full127590_baseline_rows_inherited_not_fresh": true,
+  "legacy_control_label_in_full_corpus": "Preserved older pre-square control; own fresh control is the current accepted parent replica. Parent/candidate/Qfplib counts checked against current rows; legacy control provenance checked against prior rows, never relabeled as current fresh control.",
+  "expanded_dedup_union": {
+    "pairs": 111912,
+    "states": 223824,
+    "reference_variants": 223976,
+    "parent_deficits": 42790,
+    "candidate_deficits": 7904,
+    "old_corpus_remaining5912": true,
+    "new_targeted_remaining1992_disjoint": true,
+    "no_new_losses": true,
+    "no_parent_cost_increases": true
+  },
+  "inherited_unit_calls149484_not_added": true,
+  "all_author_or_inherited_calls_excluded_from_own_totals": true,
+  "counts_are_instructions_not_device_cycles": true,
+  "hardware": false,
+  "canonical": false
+}

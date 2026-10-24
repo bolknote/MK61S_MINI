@@ -1,0 +1,91 @@
+{
+  "status": "ACCEPTED_PRIVATE_EXP_TINY_COMPONENT_AND_SCOPED_EXPANDED_LEDGER",
+  "domain": "2^-54 < abs(x) < 2^-38",
+  "candidate_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate.elf",
+    "bytes": 1119004,
+    "sha256": "ceb2b842be27fb9f92ccbdf0dc0fd7f2ebdb18bab9fbef1ef03104ba6e2607aa"
+  },
+  "source_CPP": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp",
+    "bytes": 39590,
+    "sha256": "d31f2f4d0b90c21618b5e58c49e6699a813f32cbef60b456155dc8de7145ffe9"
+  },
+  "accepted_source_parent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-f2d-leaf-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 13092,
+    "sha256": "7561feddf77fd13a7760b930414e68f997898526abaed866c909d39a7efcaeb2"
+  },
+  "same_old_corpus": {
+    "unique_inputs": 48763,
+    "before_slower": 395,
+    "after_slower": 154,
+    "fixed": 241
+  },
+  "expanded_corpus": {
+    "unique_inputs": 163675,
+    "slower": 669,
+    "old154": true,
+    "new_boundary_preexisting514": true,
+    "new_ordinary_preexisting1": "C08357D5691B8C00",
+    "new_raw_losses": 0
+  },
+  "known_parent_cost_increases": {
+    "state_rows": 13234,
+    "instruction_deltas": [
+      1,
+      2,
+      5,
+      7,
+      8,
+      9,
+      16,
+      19
+    ],
+    "all_still_faster_Qfplib": true
+  },
+  "original_exp16_remaining2": {
+    "4085F424184F6DC5": [
+      {
+        "SIO": "READY",
+        "candidate_instructions": 2268,
+        "Qfplib_instructions": 649,
+        "parent_instructions": 2268
+      },
+      {
+        "SIO": "DIRTY",
+        "candidate_instructions": 2268,
+        "Qfplib_instructions": 649,
+        "parent_instructions": 2268
+      }
+    ],
+    "C041265824E2113C": [
+      {
+        "SIO": "READY",
+        "candidate_instructions": 2248,
+        "Qfplib_instructions": 622,
+        "parent_instructions": 2248
+      },
+      {
+        "SIO": "DIRTY",
+        "candidate_instructions": 2248,
+        "Qfplib_instructions": 622,
+        "parent_instructions": 2248
+      }
+    ]
+  },
+  "original507_unchanged": {
+    "no_slower": 418,
+    "strictly_faster": 412,
+    "equal": 6,
+    "remaining": 89,
+    "remaining_by_operation": {
+      "pow": 51,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    }
+  },
+  "not_one_integrated_math_firmware": true,
+  "hardware_integration_release_and_whole_goal_not_complete": true
+}

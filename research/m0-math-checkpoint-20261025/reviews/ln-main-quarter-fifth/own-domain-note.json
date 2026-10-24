@@ -1,0 +1,12 @@
+{
+  "status": "OWN_COARSE_DOMAIN_ASSERTION_CORRECTED_BEFORE_ARM",
+  "retained_log": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-independent-20261024/attempt001-math-binding.log",
+    "bytes": 526,
+    "sha256": "25390ad06f6469c6568924111f12486202ac97ac815c87fdb9c9e5570241082b"
+  },
+  "cause": "First own draft tried strict square<2^48 with closed hmax=1/2048. That coarse bound equals2^48 before rounding.",
+  "resolution": "Use actual seeded h<=1/den+A/2^70<1/2048 for integer operand-domain checks; keep the conservative closed hmax for rational error propagation. Full own private rebuild and all later controls pass.",
+  "candidate_or_frozen_files_changed": false,
+  "firmware_failure": false
+}

@@ -1,0 +1,32 @@
+{
+  "status": "PASS_EXACT_INLINE_MAIN_PACK_ARM_AND_RATIONAL_ENDPOINTS",
+  "source_sha256": "8294798875f17de019d15a57208f04daf2d74c431873036ecc87111df583e42f",
+  "unit_ELF_sha256": "c49aa90232643b3f52cbd6eb8b6723ac5d7f3a31b753f3564f40b57f26858c06",
+  "actual_ARM_calls": 32338,
+  "configurations": 16169,
+  "accepted": 11182,
+  "declined": 4987,
+  "rational_RNE_endpoint_checks": 22364,
+  "all1024_denominators": true,
+  "both_magnitude_orientations": [
+    -1,
+    1
+  ],
+  "pack_widths": [
+    64,
+    80
+  ],
+  "both_SIO_states_preserved": true,
+  "SIO_accesses": 0,
+  "input_memory_unchanged": true,
+  "firmware_or_ROM_mapped": false,
+  "PCS_SP_bounded_writes_every_call": true,
+  "observed_stack_bytes": 56,
+  "profiled_instruction_range": [
+    82,
+    160
+  ],
+  "transcript_sha256": "8ba6d182da097646be6a85315469abcc2fdc442930ccb37da2f648dbc9017ca2",
+  "public_qualification": false,
+  "hardware_accessed": false
+}

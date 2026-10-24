@@ -1,0 +1,38 @@
+{
+  "status": "DIAGNOSTIC_ORIGINAL_TWO_EXP_REFINEMENTS_NOT_QUALIFICATION",
+  "candidate_ELF_sha256": "43bcd8e12044ddd81d8d0d2aa12701e966c4ad3c76f755eb926406cc36bcbf54",
+  "fresh_diagnostic_ARM_calls": 2,
+  "expected_from_pinned_prior_directed_qualification": true,
+  "no_new_MPFR_claim": true,
+  "rows": [
+    {
+      "x": "4085F424184F6DC5",
+      "output": "7F46EC297B4BF167",
+      "instructions": 2268,
+      "first_refine_entry_after_instructions": [
+        546
+      ],
+      "parts": {
+        "total": 2268,
+        "inside_public_body": 445,
+        "other_helpers": 229,
+        "inside_refine_body": 1594
+      }
+    },
+    {
+      "x": "C041265824E2113C",
+      "output": "3CD6E1FB162DABC8",
+      "instructions": 2248,
+      "first_refine_entry_after_instructions": [
+        558
+      ],
+      "parts": {
+        "total": 2248,
+        "inside_public_body": 457,
+        "other_helpers": 229,
+        "inside_refine_body": 1562
+      }
+    }
+  ],
+  "hardware_accessed": false
+}

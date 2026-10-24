@@ -1,0 +1,6 @@
+{
+  "initial_assertion": "Assumed ln_near function entry addresses themselves relocated",
+  "observation": "Both ln_near function entries stay fixed; log_near_table moves216B. Linked literals/pointers therefore cannot be treated as old-address byteidentity.",
+  "candidate_failure": false,
+  "scope": "Corrected own metadata assertion only; no candidate source/artifact or proof gate changed."
+}

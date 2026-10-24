@@ -1,0 +1,17 @@
+{
+  "status": "PASS_EXACT_ENDPOINT_PREDICATE_SOURCE_EQUIVALENCE",
+  "source_sha256": "79067df1532a771c3cef484271292d7a592f73e1a0e0d51af86b5359c3de33a7",
+  "candidate_ELF_sha256": "5187e1bbba29ec6b0d24cfc57aba9feb74598cc0b8df0df06fe6b13a53039e7e",
+  "entire_old_header_reconstructed_by_one_predicate_replacement": true,
+  "domain": "0<=delta<=2^41, all original odd den2049..4095",
+  "exhaustive_high_word_classes": 513,
+  "integer_boundary_random_checks": 20996,
+  "proof": [
+    "high<511: both false for every low word",
+    "high==511: both true iff low==0xffffffff",
+    "high==512: domain forces low==0, both true"
+  ],
+  "all_quotient_seed_rounding_and_remainder_algorithms_unchanged": true,
+  "READY_ratio_ASM_source_unchanged": true,
+  "hardware_accessed": false
+}

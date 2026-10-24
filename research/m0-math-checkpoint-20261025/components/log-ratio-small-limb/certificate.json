@@ -1,0 +1,27 @@
+{
+  "status": "PASS_SOURCE_BOUND_ONE_SIDED_SMALL_LOW_LIMB_SEED",
+  "source_sha256": "af83817a78b261621a638c5cc3436bfd63ef57371d999766dfad2a50733dcef7",
+  "candidate_ELF_sha256": "c0000b4a468cdb80228fab332978f276a21cf5e229fa1abe7622a287ef396297",
+  "existing_reciprocal": "R=floor(2^75/den)&~63; all1024 actual rows checked",
+  "input_domain": "delta=F*2^32+ell, F0..512, ell-64..64, 0<=delta<=2^41",
+  "base": "floor(F*R/2^14), four exact16-bit limb multiplies; shifts forF0/512",
+  "low": "floor(abs(ell)*(R>>32)/2^14), two uint32 multiplies",
+  "seed": "ell>=0:base+low; ell<0:base-low-2",
+  "exact_h": "H=delta*2^29/den",
+  "positive_bound": "0<=H-seed<4+1/256<5",
+  "negative_bound": "0<1-1/256<H-seed<5",
+  "proof": "P=delta*R/2^46;0<=H-P<2. A=base+alpha,L=low+beta,alpha,beta in[0,1); eta=abs(ell)*(Rmod2^32)/2^46 in[0,1/256). Positive:P-seed=alpha+beta+eta; negative:alpha-beta-eta+2.",
+  "exact_floor_correction_range": [
+    0,
+    4
+  ],
+  "reconstructed_uint32_remainder_below": 20475,
+  "endpoint_branch_implies_family_guard": true,
+  "endpoint_32bit_bool_sum_at_most": 2,
+  "entire_parent_reconstructed_by_removing_family_guard_body_grouping_and_signed_return": true,
+  "generic_signed_return_equivalence": "q-c or q+c equals q+U(int64_t(negative?-int32_t(c):int32_t(c))), modulo2^64; c0..7",
+  "host_exhaustive_pairs": 67634176,
+  "host_exhaustion_is_not_ARM_execution": true,
+  "no_new_tables_global_RAM_or_libgcc": true,
+  "hardware_accessed": false
+}

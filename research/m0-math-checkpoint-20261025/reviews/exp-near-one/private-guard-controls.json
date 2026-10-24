@@ -1,0 +1,45 @@
+{
+  "status": "PASS_FRESH_PRIVATE_LINKED_GUARD_AND17_NEGATIVE_AST_CONTROLS",
+  "actual_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/rebuild/candidate.elf",
+    "bytes": 1153444,
+    "sha256": "e6f2f7e0c55b7d7f2547badb00eacef444a1575eb59bdae7d530eec0ea340fcc"
+  },
+  "fresh_disassembly": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/candidate.actual.dis",
+    "bytes": 145162,
+    "sha256": "9076c253c07c68420bc821ea59ba733f0b83574f6372530a2b7c623ae11f56c6"
+  },
+  "source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/verify-private-return.py",
+    "bytes": 8435,
+    "sha256": "0b23e87ed3852cecc2743a58716e23a604210b7c00b85449a497de9711df2d9e"
+  },
+  "two_postcall_instructions": 2,
+  "live_instructions": 88,
+  "postcall_rejections": [
+    "write",
+    "read",
+    "call",
+    "indirect",
+    "return",
+    "tail",
+    "PC",
+    "outside",
+    "cycle",
+    "conditional_escape"
+  ],
+  "live_rejections": [
+    "write",
+    "read",
+    "call",
+    "indirect",
+    "PC",
+    "cycle",
+    "escape"
+  ],
+  "exact_existing_Flash_veneer16": "730645909dd2545f62de07daa2336397ccbc9f8b78b094e3bf62319c44b7fb99",
+  "production_fresh_validator_exit0": true,
+  "required_again_on_changed_actual_integrated_ELF": true,
+  "integration_GO": false
+}

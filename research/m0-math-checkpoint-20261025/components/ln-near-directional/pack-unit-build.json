@@ -1,0 +1,35 @@
+{
+  "status": "BUILT_EXACT_INLINE_NEAR_LN_PACK_UNIT",
+  "source_sha256": "ba084abda5a2c3d71071ae800224c552efce2652d2838735782cd16e764b090e",
+  "exact_fragment_sha256": "ad7b575da57f64b69bc53543a04c5a3cc0c64aeec002720458b2b8433591d5d3",
+  "unit_ELF_sha256": "b3f0b7a9f3a0b24314d9b7d1c6a8008e70a1507d0f74c1ce337daa9c8a554821",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-20261024/pack-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-20261024/pack-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-20261024/pack-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-20261024/pack-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-20261024/pack-unit.elf"
+    ]
+  ],
+  "decline_bits": "7FF800000000019A",
+  "hardware_accessed": false
+}

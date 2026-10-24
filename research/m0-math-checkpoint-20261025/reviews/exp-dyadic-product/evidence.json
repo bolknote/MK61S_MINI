@@ -1,0 +1,54 @@
+{
+  "status": "PASS_INDEPENDENT_DYADIC_SEALED_COUNTS_RESIDUALS_AND_LEDGER",
+  "unique_exp_inputs": 456750,
+  "state_rows": 913500,
+  "old440007_raw_bits_exact": true,
+  "old880014_parent_Qfplib_state_measurements_inherited_not_fresh": true,
+  "author_fresh_candidate_exp_ARM": 913500,
+  "author_fresh_new_Qfplib_ARM": 33486,
+  "author_fresh_parent_remaining_audit_ARM": 130,
+  "author_fresh_product_ARM": 141320,
+  "author_fresh_literal_dyadic_ARM": 70094,
+  "author_fresh_other_callers_ARM": 1134,
+  "author_fresh_pow_loss_states_ARM": 10081,
+  "author_total_qualified_fresh_ARM": 1169745,
+  "author_actual_MPFR_validation_exp456748_other189_total456937": true,
+  "sNaN_shortcuts2": true,
+  "separate8404_log_generations_not_validation": true,
+  "excluded_probe40494_margin336_initial_failed_product141320_not_qualified": true,
+  "same_old440007_exp_losses2023_to1476_fixed547": true,
+  "fixed547_strict542_equal5": true,
+  "same_older48763_exp126_to96": true,
+  "expanded456750_exp_losses1541_partition": {
+    "old1476": true,
+    "new_preexisting65": {
+      "dyadic_cell_interior_controls": 13,
+      "dyadic_power_and_adjacent_output_midpoint_log_preimages": 40,
+      "new_ordinary_uniform": 12
+    }
+  },
+  "all1541_losses_parent_bound_no_new_measured_losses": true,
+  "known_remaining_parent_states2952_fresh130": true,
+  "correct_Qfplib_comparison": {
+    "faster": 517720,
+    "slower": 3082,
+    "equal": 10
+  },
+  "wrong_Qfplib_states392688_retained": true,
+  "known_parent_cost_increase_states13222_delta2": true,
+  "known_increase_Qfplib_partition": {
+    "already_losing_correct_Qfplib": 200,
+    "wrong_Qfplib": 11950,
+    "still_no_slower_correct_Qfplib": 1072
+  },
+  "positive_original_exp2264to2266_Q649_retained": true,
+  "negative_original_exp599to596_Q622": true,
+  "original_other189_author_rows_exact_own_acquisition": true,
+  "expanded_pow_variants10085_fresh_states10081": true,
+  "expanded_pow7904_to7901_fixed3_equal_original_pairs": true,
+  "pow_references_inherited_no_new_MPFR_or_full111912_pair_run": true,
+  "all_prior_tiny_costs_exact_parent": true,
+  "original507_accepted422_strict413_equal9_residual85": true,
+  "parent_pending_at_seal_preserved_lateGO_additive": true,
+  "own_ARM_MPFR_in_this_file": 0
+}

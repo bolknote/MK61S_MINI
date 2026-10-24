@@ -1,0 +1,250 @@
+{
+  "status": "PASS_ADDITIVE_INDEPENDENT_SEPARATE_COMPONENT_ORIGINAL507_UNION",
+  "baseline": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-original507-count-independent-20261024/focused-current-count.json",
+    "bytes": 27624,
+    "sha256": "eb94b00220552e9ede55c2f16c7d0ab285436785e8c4d1890fccb25fe07ee42f"
+  },
+  "immutable_original507": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/slower-inputs.json",
+    "bytes": 139956,
+    "sha256": "5dcc6280f81c729634a58fd41f9a6e40c842dec286ad03fbb705a9d5b171a192"
+  },
+  "accepted_new_fixes": [
+    {
+      "operation": "exp",
+      "x": "3CEDD9971FC633C8",
+      "y": null,
+      "expected": "3FF000000000000F",
+      "instructions": {
+        "candidate": 71,
+        "control": 517,
+        "Qfplib": 469
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "3FB1B32892630B90",
+      "y": null,
+      "expected": "3FF12537955C2A97",
+      "instructions": {
+        "candidate": 543,
+        "control": 545,
+        "Qfplib": 544
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "3FDE9CCC61284050",
+      "y": null,
+      "expected": "3FF9D054B140B601",
+      "instructions": {
+        "candidate": 543,
+        "control": 2221,
+        "Qfplib": 614
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "401016DDC7A3A7B4",
+      "y": null,
+      "expected": "404BEA6045335CEF",
+      "instructions": {
+        "candidate": 543,
+        "control": 2215,
+        "Qfplib": 624
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "40189ED083469DB0",
+      "y": null,
+      "expected": "407D71C3DD334B32",
+      "instructions": {
+        "candidate": 586,
+        "control": 2260,
+        "Qfplib": 654
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "40862A7801F5270E",
+      "y": null,
+      "expected": "7FE3EAFDAC15A34D",
+      "instructions": {
+        "candidate": 556,
+        "control": 2253,
+        "Qfplib": 639
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "BD03570AE78AB458",
+      "y": null,
+      "expected": "3FEFFFFFFFFFFFB3",
+      "instructions": {
+        "candidate": 69,
+        "control": 532,
+        "Qfplib": 527
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "BD18F8D2656720A8",
+      "y": null,
+      "expected": "3FEFFFFFFFFFFF38",
+      "instructions": {
+        "candidate": 69,
+        "control": 532,
+        "Qfplib": 527
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "BD2BDEAE1BF5E4A8",
+      "y": null,
+      "expected": "3FEFFFFFFFFFFE42",
+      "instructions": {
+        "candidate": 69,
+        "control": 532,
+        "Qfplib": 527
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "BD33BEFEF3BF9E3C",
+      "y": null,
+      "expected": "3FEFFFFFFFFFFD88",
+      "instructions": {
+        "candidate": 69,
+        "control": 532,
+        "Qfplib": 527
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "BFECD4CBE8D04CD6",
+      "y": null,
+      "expected": "3FD9FEBCFA252243",
+      "instructions": {
+        "candidate": 547,
+        "control": 2250,
+        "Qfplib": 687
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "C012BD4FB70FFBFE",
+      "y": null,
+      "expected": "3F82E9385061831D",
+      "instructions": {
+        "candidate": 547,
+        "control": 2246,
+        "Qfplib": 642
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "C016793297793474",
+      "y": null,
+      "expected": "3F6DBDEC1E7A4CED",
+      "instructions": {
+        "candidate": 560,
+        "control": 2256,
+        "Qfplib": 677
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "exp",
+      "x": "C01899BF4630D040",
+      "y": null,
+      "expected": "3F617997B3F644ED",
+      "instructions": {
+        "candidate": 547,
+        "control": 2237,
+        "Qfplib": 612
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFEA4",
+      "y": "4019B38C2AB9FD86",
+      "expected": "3FEFFFFFFFFFF744",
+      "instructions": {
+        "parent": 1343,
+        "candidate": 1336,
+        "Qfplib": 1338
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "3FF00000000000AB",
+      "y": "40325FB10EAD6D2C",
+      "expected": "3FF0000000000C46",
+      "instructions": {
+        "parent": 1325,
+        "candidate": 1318,
+        "Qfplib": 1320
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "3FF000000000012C",
+      "y": "3F4A0FFAC02621CE",
+      "expected": "3FF0000000000000",
+      "instructions": {
+        "parent": 1312,
+        "candidate": 1305,
+        "Qfplib": 1309
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFFFC",
+      "y": "3FF8000000000000",
+      "expected": "3FEFFFFFFFFFFFFA",
+      "instructions": {
+        "parent": 1375,
+        "candidate": 1368,
+        "Qfplib": 1373
+      },
+      "independent_READY_and_DIRTY_replayed": true
+    }
+  ],
+  "new_strict_fixes": 18,
+  "new_equal": 0,
+  "current": {
+    "no_slower_than_correct_Qfplib": 320,
+    "strictly_faster": 314,
+    "equal": 6,
+    "remaining": 187,
+    "remaining_by_operation": {
+      "pow": 149,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    }
+  },
+  "definition": "Distinct operation/x/y union of accepted separate components. Newly accepted14 exp points and4 product-only pow points all have fresh independent READY+DIRTY public ARM/MPFR proof. These sources have not been merged with earlier accepted components or run as one507-input binary.",
+  "historical_receipts_unchanged": true,
+  "whole_math_GO": false,
+  "integration_GO": false,
+  "hardware_GO": false
+}

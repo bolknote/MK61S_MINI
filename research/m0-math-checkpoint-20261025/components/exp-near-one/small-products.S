@@ -1,0 +1,176 @@
+.syntax unified
+.cpu cortex-m0plus
+.thumb
+.section .m0_exp_small_products,"ax",%progbits
+.align 2
+.global mk61_m0_exp_small_product64
+.type mk61_m0_exp_small_product64,%function
+.thumb_func
+mk61_m0_exp_small_product64:
+ push {r0-r7,lr}
+ lsrs r7,r3,#16
+ mov r3,sp
+ movs r1,#0
+ movs r4,#0
+ movs r0,#0
+ ldrh r5,[r3,#0]
+ muls r5,r7
+ lsrs r6,r5,#16
+ lsls r5,#16
+ adds r4,r5
+ adcs r0,r6
+ ldrh r5,[r3,#2]
+ ldrh r6,[r3,#12]
+ muls r5,r6
+ lsrs r6,r5,#16
+ lsls r5,#16
+ adds r4,r5
+ adcs r0,r6
+ ldrh r5,[r3,#4]
+ ldrh r6,[r3,#10]
+ muls r5,r6
+ lsrs r6,r5,#16
+ lsls r5,#16
+ adds r4,r5
+ adcs r0,r6
+ lsls r4,#1
+ adcs r0,r1
+ ldrh r5,[r3,#2]
+ muls r5,r7
+ adds r0,r5
+ movs r4,#0
+ ldrh r5,[r3,#4]
+ ldrh r6,[r3,#12]
+ muls r5,r6
+ adds r0,r5
+ adcs r1,r4
+ ldrh r5,[r3,#4]
+ muls r5,r7
+ lsrs r6,r5,#16
+ lsls r5,#16
+ adds r0,r5
+ adcs r1,r6
+ add sp,#16
+ pop {r4-r7,pc}
+.size mk61_m0_exp_small_product64,.-mk61_m0_exp_small_product64
+.global mk61_m0_exp_small_product48
+.type mk61_m0_exp_small_product48,%function
+.thumb_func
+mk61_m0_exp_small_product48:
+ push {r0-r7,lr}
+ lsrs r7,r3,#16
+ mov r3,sp
+ movs r1,#0
+ ldrh r4,[r3,#0]
+ ldrh r6,[r3,#12]
+ muls r4,r6
+ movs r0,#0
+ ldrh r5,[r3,#2]
+ ldrh r6,[r3,#10]
+ muls r5,r6
+ adds r4,r5
+ adcs r0,r1
+ ldrh r5,[r3,#4]
+ ldrh r6,[r3,#8]
+ muls r5,r6
+ adds r4,r5
+ adcs r0,r1
+ ldrh r5,[r3,#0]
+ muls r5,r7
+ lsrs r6,r5,#16
+ lsls r5,#16
+ adds r4,r5
+ adcs r0,r6
+ ldrh r5,[r3,#2]
+ ldrh r6,[r3,#12]
+ muls r5,r6
+ lsrs r6,r5,#16
+ lsls r5,#16
+ adds r4,r5
+ adcs r0,r6
+ ldrh r5,[r3,#4]
+ ldrh r6,[r3,#10]
+ muls r5,r6
+ lsrs r6,r5,#16
+ lsls r5,#16
+ adds r4,r5
+ adcs r0,r6
+ mov r2,r4
+ ldrh r5,[r3,#2]
+ muls r5,r7
+ adds r0,r5
+ movs r4,#0
+ ldrh r5,[r3,#4]
+ ldrh r6,[r3,#12]
+ muls r5,r6
+ adds r0,r5
+ adcs r1,r4
+ ldrh r5,[r3,#4]
+ muls r5,r7
+ lsrs r6,r5,#16
+ lsls r5,#16
+ adds r0,r5
+ adcs r1,r6
+ lsrs r4,r0,#16
+ lsls r1,#16
+ orrs r1,r4
+ lsls r0,#16
+ lsrs r2,#16
+ orrs r0,r2
+ add sp,#16
+ pop {r4-r7,pc}
+.size mk61_m0_exp_small_product48,.-mk61_m0_exp_small_product48
+
+.align 2
+.global mk61_m0_exp_small_square48
+.type mk61_m0_exp_small_square48,%function
+.thumb_func
+mk61_m0_exp_small_square48:
+ push {r0-r7,lr}
+ uxth r2,r1
+ lsrs r1,r0,#16
+ uxth r0,r0
+ movs r3,#0
+ mov r4,r0
+ muls r4,r0
+ mov r6,r0
+ muls r6,r1
+ lsrs r4,#16
+ lsrs r7,r6,#15
+ lsls r6,#17
+ lsrs r6,#16
+ adds r4,r6
+ lsrs r4,#16
+ adds r7,r4
+ mov r4,r1
+ muls r4,r1
+ movs r5,#0
+ adds r4,r7
+ adcs r5,r3
+ mov r6,r0
+ muls r6,r2
+ lsrs r7,r6,#31
+ lsls r6,#1
+ adds r4,r6
+ adcs r5,r7
+ mov r6,r1
+ muls r6,r2
+ lsrs r7,r6,#15
+ lsls r6,#17
+ adds r4,r6
+ adcs r5,r7
+ muls r2,r2
+ adds r5,r2
+ ldr r2,[sp,#8]
+ subs r2,#32
+ mov r0,r4
+ mov r1,r5
+ lsrs r0,r0,r2
+ lsrs r1,r1,r2
+ rsbs r2,#0
+ adds r2,#32
+ lsls r5,r5,r2
+ orrs r0,r5
+ add sp,#16
+ pop {r4-r7,pc}
+.size mk61_m0_exp_small_square48,.-mk61_m0_exp_small_square48

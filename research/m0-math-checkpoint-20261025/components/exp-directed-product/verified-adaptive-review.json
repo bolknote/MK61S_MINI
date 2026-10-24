@@ -1,0 +1,52 @@
+{
+  "status": "GO_PRIVATE_RP_ADAPTIVE_EXP_ENCLOSURE_AND_SHARED_PRODUCT_COMPONENT_ONLY",
+  "path": ".build/m0-exp-adaptive-enclosure-independent-20261024/FINAL-REVIEW.json",
+  "sha256": "83b3d4a9eb32b17d69e9081f33f63ed9d01f9a466f61cfc3b64788312d8e8d16",
+  "unique_direct_refs_verified": 54,
+  "receipt_plus_refs_verified": 55,
+  "own_fresh_checks": {
+    "total_qualified_ARM_calls": 20414,
+    "actual_directed_MPFR_validation_inputs": 1181,
+    "sNaN_shortcuts_without_MPFR": 2,
+    "oracle_evaluations": 1183,
+    "MPFR_version": "4.2.2",
+    "separate_MPFR_log_generation_inputs128_not_validation": true,
+    "literal_gate_distinct_inputs": 4154,
+    "literal_gate_ARM_calls": 8308,
+    "literal_gate_paths4_and_all_signed_admission_edges": true,
+    "raw_product_pairs": 627,
+    "valid_product_exact_integer_oracles": 338,
+    "product_ARM_calls": 3020,
+    "initial_NZCV16_variant_product_calls512_included": true,
+    "public_exp_inputs": 994,
+    "public_exp_ARM_calls": 7952,
+    "public_exp_machine_calls": {
+      "candidate": 1988,
+      "rebuilt_control": 1988,
+      "accepted_parent": 1988,
+      "Qfplib": 1988
+    },
+    "all29_fixed56_old_margin100_cost_increase_original16_exp_controls": true,
+    "actual_public_new_gate_events132_admit58": true,
+    "actual_q_bias_bound_margin_and_strict_interval_source_bound": true,
+    "other_original_pow_sin_cos_inputs": 189,
+    "other_caller_ARM_calls": 1134,
+    "other_caller_MPFR_inputs": 189,
+    "all_product_argument_traces_raw_bits_and_minus3_per_call_exact": true,
+    "all_public_raw_parent_bits_and_control_costs_exact": true,
+    "all_DIRTY28bytes_preserved_READY_not_DIRTY": true,
+    "isolated_units_no_firmware_ROM_mock_SIO_or_outside_PC_memory": true,
+    "real_ROM_initializers_excluded": true,
+    "excluded_initial_reviewer_run_ARM19280_MPFR992_shortcuts2": true,
+    "excluded_initial_run_reason": "All numerical/ABI loops passed; reviewer wrongly required strict improvement for all29 fixes. One expanded case equalsQfplib; corrected no-slower assertion and completed clean repeat."
+  },
+  "grants": {
+    "private_RP_adaptive_exp_and_shared_product_component": true,
+    "whole_math_goal": false,
+    "integrated_firmware": false,
+    "hardware": false,
+    "physical_cycles": false,
+    "canonical_promotion": false,
+    "release": false
+  }
+}

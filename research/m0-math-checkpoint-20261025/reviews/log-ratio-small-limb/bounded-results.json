@@ -1,0 +1,4307 @@
+{
+  "status": "PASS_BOUNDED_PRIVATE_SMALL_LIMB_INTEGER_ARM_MPFR_REVIEW",
+  "source_sha256": "af83817a78b261621a638c5cc3436bfd63ef57371d999766dfad2a50733dcef7",
+  "ELF_sha256": "c0000b4a468cdb80228fab332978f276a21cf5e229fa1abe7622a287ef396297",
+  "whole_private_CPP_ASM_ELF_independent_rebuild_byteexact": true,
+  "host_integer_pairs": 92647,
+  "host_integer_not_ARM": true,
+  "host_floor_correction_histogram": {
+    "0": 12308,
+    "1": 25617,
+    "2": 33505,
+    "3": 18145,
+    "4": 3072
+  },
+  "host_max_residue_case": {
+    "delta": 2194728288233,
+    "correction": 4,
+    "remainder": 17233,
+    "den": 3493
+  },
+  "host_transcript_SHA256": "47557666b3152c03d927400eba399fa202d440fab48db01d0430002e8aab6657",
+  "bare_helper_pairs": 145,
+  "bare_helper_state_cases": 290,
+  "actual_bare_ARM_calls": 580,
+  "bare_stack_observed": 76,
+  "bare_SIO_accesses": 0,
+  "capsule_stack8_entries": 362,
+  "generic_signed_correction_examples": {
+    "negative": 48,
+    "positive_or_zero": 24
+  },
+  "helper_rows": [
+    {
+      "delta": "00000000000",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000000",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000000",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000000",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000000",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000000",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000000",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000000",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000000",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000000",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000000",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000000",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000000000",
+      "actual": "0000000000000000"
+    },
+    {
+      "delta": "00000000001",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "000000000003FF80",
+      "actual": "000000000003FF80"
+    },
+    {
+      "delta": "00000000001",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "000000000003FF80",
+      "actual": "000000000003FF80"
+    },
+    {
+      "delta": "00000000001",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "000000000003FE80",
+      "actual": "000000000003FE80"
+    },
+    {
+      "delta": "00000000001",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "000000000003FE80",
+      "actual": "000000000003FE80"
+    },
+    {
+      "delta": "00000000001",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "000000000002AAE3",
+      "actual": "000000000002AAE3"
+    },
+    {
+      "delta": "00000000001",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "000000000002AAE3",
+      "actual": "000000000002AAE3"
+    },
+    {
+      "delta": "00000000001",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000025863",
+      "actual": "0000000000025863"
+    },
+    {
+      "delta": "00000000001",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000025863",
+      "actual": "0000000000025863"
+    },
+    {
+      "delta": "00000000001",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000020060",
+      "actual": "0000000000020060"
+    },
+    {
+      "delta": "00000000001",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000020060",
+      "actual": "0000000000020060"
+    },
+    {
+      "delta": "00000000001",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000020020",
+      "actual": "0000000000020020"
+    },
+    {
+      "delta": "00000000001",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000020020",
+      "actual": "0000000000020020"
+    },
+    {
+      "delta": "00000000040",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000FFE003",
+      "actual": "0000000000FFE003"
+    },
+    {
+      "delta": "00000000040",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000FFE003",
+      "actual": "0000000000FFE003"
+    },
+    {
+      "delta": "00000000040",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000FFA023",
+      "actual": "0000000000FFA023"
+    },
+    {
+      "delta": "00000000040",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000FFA023",
+      "actual": "0000000000FFA023"
+    },
+    {
+      "delta": "00000000040",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000AAB8E4",
+      "actual": "0000000000AAB8E4"
+    },
+    {
+      "delta": "00000000040",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000AAB8E4",
+      "actual": "0000000000AAB8E4"
+    },
+    {
+      "delta": "00000000040",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "00000000009618C5",
+      "actual": "00000000009618C5"
+    },
+    {
+      "delta": "00000000040",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "00000000009618C5",
+      "actual": "00000000009618C5"
+    },
+    {
+      "delta": "00000000040",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000801804",
+      "actual": "0000000000801804"
+    },
+    {
+      "delta": "00000000040",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000801804",
+      "actual": "0000000000801804"
+    },
+    {
+      "delta": "00000000040",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0000000000800800",
+      "actual": "0000000000800800"
+    },
+    {
+      "delta": "00000000040",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0000000000800800",
+      "actual": "0000000000800800"
+    },
+    {
+      "delta": "00000000041",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "000000000103DF84",
+      "actual": "000000000103DF84"
+    },
+    {
+      "delta": "00000000041",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "000000000103DF84",
+      "actual": "000000000103DF84"
+    },
+    {
+      "delta": "00000000041",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0000000001039EA4",
+      "actual": "0000000001039EA4"
+    },
+    {
+      "delta": "00000000041",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0000000001039EA4",
+      "actual": "0000000001039EA4"
+    },
+    {
+      "delta": "00000000041",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0000000000AD63C8",
+      "actual": "0000000000AD63C8"
+    },
+    {
+      "delta": "00000000041",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0000000000AD63C8",
+      "actual": "0000000000AD63C8"
+    },
+    {
+      "delta": "00000000041",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0000000000987128",
+      "actual": "0000000000987128"
+    },
+    {
+      "delta": "00000000041",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0000000000987128",
+      "actual": "0000000000987128"
+    },
+    {
+      "delta": "00000000041",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0000000000821864",
+      "actual": "0000000000821864"
+    },
+    {
+      "delta": "00000000041",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0000000000821864",
+      "actual": "0000000000821864"
+    },
+    {
+      "delta": "00000000041",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0000000000820820",
+      "actual": "0000000000820820"
+    },
+    {
+      "delta": "00000000041",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0000000000820820",
+      "actual": "0000000000820820"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0003FF800EFA20BB",
+      "actual": "0003FF800EFA20BB"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0003FF800EFA20BB",
+      "actual": "0003FF800EFA20BB"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0003FE808EC67593",
+      "actual": "0003FE808EC67593"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0003FE808EC67593",
+      "actual": "0003FE808EC67593"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0002AAE392498620",
+      "actual": "0002AAE392498620"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0002AAE392498620",
+      "actual": "0002AAE392498620"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0002586315C1FF44",
+      "actual": "0002586315C1FF44"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0002586315C1FF44",
+      "actual": "0002586315C1FF44"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "000200601181483D",
+      "actual": "000200601181483D"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "000200601181483D",
+      "actual": "000200601181483D"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "00020020017E17E1",
+      "actual": "00020020017E17E1"
+    },
+    {
+      "delta": "000FFFFFFBF",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "00020020017E17E1",
+      "actual": "00020020017E17E1"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0003FF800EFE203B",
+      "actual": "0003FF800EFE203B"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0003FF800EFE203B",
+      "actual": "0003FF800EFE203B"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0003FE808ECA7414",
+      "actual": "0003FE808ECA7414"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0003FE808ECA7414",
+      "actual": "0003FE808ECA7414"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002AAE3924C3104",
+      "actual": "0002AAE3924C3104"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002AAE3924C3104",
+      "actual": "0002AAE3924C3104"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002586315C457A7",
+      "actual": "0002586315C457A7"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002586315C457A7",
+      "actual": "0002586315C457A7"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "000200601183489D",
+      "actual": "000200601183489D"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "000200601183489D",
+      "actual": "000200601183489D"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002002001801801",
+      "actual": "0002002001801801"
+    },
+    {
+      "delta": "000FFFFFFC0",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002002001801801",
+      "actual": "0002002001801801"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0003FF800FFA00BF",
+      "actual": "0003FF800FFA00BF"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0003FF800FFA00BF",
+      "actual": "0003FF800FFA00BF"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0003FE808FC615B7",
+      "actual": "0003FE808FC615B7"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0003FE808FC615B7",
+      "actual": "0003FE808FC615B7"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002AAE392F43F05",
+      "actual": "0002AAE392F43F05"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002AAE392F43F05",
+      "actual": "0002AAE392F43F05"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002586316581809",
+      "actual": "0002586316581809"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002586316581809",
+      "actual": "0002586316581809"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002006012016042",
+      "actual": "0002006012016042"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002006012016042",
+      "actual": "0002006012016042"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002002001FE1FE1",
+      "actual": "0002002001FE1FE1"
+    },
+    {
+      "delta": "000FFFFFFFF",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002002001FE1FE1",
+      "actual": "0002002001FE1FE1"
+    },
+    {
+      "delta": "00100000000",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0003FF800FFE003F",
+      "actual": "0003FF800FFE003F"
+    },
+    {
+      "delta": "00100000000",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0003FF800FFE003F",
+      "actual": "0003FF800FFE003F"
+    },
+    {
+      "delta": "00100000000",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0003FE808FCA1438",
+      "actual": "0003FE808FCA1438"
+    },
+    {
+      "delta": "00100000000",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0003FE808FCA1438",
+      "actual": "0003FE808FCA1438"
+    },
+    {
+      "delta": "00100000000",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002AAE392F6E9E8",
+      "actual": "0002AAE392F6E9E8"
+    },
+    {
+      "delta": "00100000000",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002AAE392F6E9E8",
+      "actual": "0002AAE392F6E9E8"
+    },
+    {
+      "delta": "00100000000",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "00025863165A706D",
+      "actual": "00025863165A706D"
+    },
+    {
+      "delta": "00100000000",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "00025863165A706D",
+      "actual": "00025863165A706D"
+    },
+    {
+      "delta": "00100000000",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "00020060120360A2",
+      "actual": "00020060120360A2"
+    },
+    {
+      "delta": "00100000000",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "00020060120360A2",
+      "actual": "00020060120360A2"
+    },
+    {
+      "delta": "00100000000",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002002002002002",
+      "actual": "0002002002002002"
+    },
+    {
+      "delta": "00100000000",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002002002002002",
+      "actual": "0002002002002002"
+    },
+    {
+      "delta": "00100000001",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0003FF801001FFC0",
+      "actual": "0003FF801001FFC0"
+    },
+    {
+      "delta": "00100000001",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0003FF801001FFC0",
+      "actual": "0003FF801001FFC0"
+    },
+    {
+      "delta": "00100000001",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0003FE808FCE12B8",
+      "actual": "0003FE808FCE12B8"
+    },
+    {
+      "delta": "00100000001",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0003FE808FCE12B8",
+      "actual": "0003FE808FCE12B8"
+    },
+    {
+      "delta": "00100000001",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002AAE392F994CC",
+      "actual": "0002AAE392F994CC"
+    },
+    {
+      "delta": "00100000001",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002AAE392F994CC",
+      "actual": "0002AAE392F994CC"
+    },
+    {
+      "delta": "00100000001",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "00025863165CC8D0",
+      "actual": "00025863165CC8D0"
+    },
+    {
+      "delta": "00100000001",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "00025863165CC8D0",
+      "actual": "00025863165CC8D0"
+    },
+    {
+      "delta": "00100000001",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002006012056102",
+      "actual": "0002006012056102"
+    },
+    {
+      "delta": "00100000001",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002006012056102",
+      "actual": "0002006012056102"
+    },
+    {
+      "delta": "00100000001",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002002002022022",
+      "actual": "0002002002022022"
+    },
+    {
+      "delta": "00100000001",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002002002022022",
+      "actual": "0002002002022022"
+    },
+    {
+      "delta": "00100000040",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0003FF8010FDE043",
+      "actual": "0003FF8010FDE043"
+    },
+    {
+      "delta": "00100000040",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0003FF8010FDE043",
+      "actual": "0003FF8010FDE043"
+    },
+    {
+      "delta": "00100000040",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0003FE8090C9B45C",
+      "actual": "0003FE8090C9B45C"
+    },
+    {
+      "delta": "00100000040",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0003FE8090C9B45C",
+      "actual": "0003FE8090C9B45C"
+    },
+    {
+      "delta": "00100000040",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002AAE393A1A2CD",
+      "actual": "0002AAE393A1A2CD"
+    },
+    {
+      "delta": "00100000040",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002AAE393A1A2CD",
+      "actual": "0002AAE393A1A2CD"
+    },
+    {
+      "delta": "00100000040",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002586316F08932",
+      "actual": "0002586316F08932"
+    },
+    {
+      "delta": "00100000040",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002586316F08932",
+      "actual": "0002586316F08932"
+    },
+    {
+      "delta": "00100000040",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "00020060128378A6",
+      "actual": "00020060128378A6"
+    },
+    {
+      "delta": "00100000040",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "00020060128378A6",
+      "actual": "00020060128378A6"
+    },
+    {
+      "delta": "00100000040",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0002002002802802",
+      "actual": "0002002002802802"
+    },
+    {
+      "delta": "00100000040",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0002002002802802",
+      "actual": "0002002002802802"
+    },
+    {
+      "delta": "00100000041",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0003FF801101DFC4",
+      "actual": "0003FF801101DFC4"
+    },
+    {
+      "delta": "00100000041",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0003FF801101DFC4",
+      "actual": "0003FF801101DFC4"
+    },
+    {
+      "delta": "00100000041",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0003FE8090CDB2DC",
+      "actual": "0003FE8090CDB2DC"
+    },
+    {
+      "delta": "00100000041",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0003FE8090CDB2DC",
+      "actual": "0003FE8090CDB2DC"
+    },
+    {
+      "delta": "00100000041",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0002AAE393A44DB1",
+      "actual": "0002AAE393A44DB1"
+    },
+    {
+      "delta": "00100000041",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0002AAE393A44DB1",
+      "actual": "0002AAE393A44DB1"
+    },
+    {
+      "delta": "00100000041",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0002586316F2E195",
+      "actual": "0002586316F2E195"
+    },
+    {
+      "delta": "00100000041",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0002586316F2E195",
+      "actual": "0002586316F2E195"
+    },
+    {
+      "delta": "00100000041",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0002006012857906",
+      "actual": "0002006012857906"
+    },
+    {
+      "delta": "00100000041",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0002006012857906",
+      "actual": "0002006012857906"
+    },
+    {
+      "delta": "00100000041",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0002002002822822",
+      "actual": "0002002002822822"
+    },
+    {
+      "delta": "00100000041",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0002002002822822",
+      "actual": "0002002002822822"
+    },
+    {
+      "delta": "00123456789",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "00048C840DA24BB6",
+      "actual": "00048C840DA24BB6"
+    },
+    {
+      "delta": "00123456789",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "00048C840DA24BB6",
+      "actual": "00048C840DA24BB6"
+    },
+    {
+      "delta": "00123456789",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "00048B6159A2631A",
+      "actual": "00048B6159A2631A"
+    },
+    {
+      "delta": "00123456789",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "00048B6159A2631A",
+      "actual": "00048B6159A2631A"
+    },
+    {
+      "delta": "00123456789",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "000308F9D3944C5B",
+      "actual": "000308F9D3944C5B"
+    },
+    {
+      "delta": "00123456789",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "000308F9D3944C5B",
+      "actual": "000308F9D3944C5B"
+    },
+    {
+      "delta": "00123456789",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0002AB1B67EEFF31",
+      "actual": "0002AB1B67EEFF31"
+    },
+    {
+      "delta": "00123456789",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0002AB1B67EEFF31",
+      "actual": "0002AB1B67EEFF31"
+    },
+    {
+      "delta": "00123456789",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "000246F81D978C6A",
+      "actual": "000246F81D978C6A"
+    },
+    {
+      "delta": "00123456789",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "000246F81D978C6A",
+      "actual": "000246F81D978C6A"
+    },
+    {
+      "delta": "00123456789",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "000246AF3A05A05A",
+      "actual": "000246AF3A05A05A"
+    },
+    {
+      "delta": "00123456789",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "000246AF3A05A05A",
+      "actual": "000246AF3A05A05A"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FB808FED025FB4",
+      "actual": "03FB808FED025FB4"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FB808FED025FB4",
+      "actual": "03FB808FED025FB4"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FA820F394A840E",
+      "actual": "03FA820F394A840E"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FA820F394A840E",
+      "actual": "03FA820F394A840E"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "02A838AF63484605",
+      "actual": "02A838AF63484605"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "02A838AF63484605",
+      "actual": "02A838AF63484605"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "02560AB3437FE3DB",
+      "actual": "02560AB3437FE3DB"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "02560AB3437FE3DB",
+      "actual": "02560AB3437FE3DB"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "01FE5FB1F0DD2977",
+      "actual": "01FE5FB1F0DD2977"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "01FE5FB1F0DD2977",
+      "actual": "01FE5FB1F0DD2977"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "01FE1FE1FD9FD9FD",
+      "actual": "01FE1FE1FD9FD9FD"
+    },
+    {
+      "delta": "0FEFFFFFFC0",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "01FE1FE1FD9FD9FD",
+      "actual": "01FE1FE1FD9FD9FD"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FB808FEF021FBC",
+      "actual": "03FB808FEF021FBC"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FB808FEF021FBC",
+      "actual": "03FB808FEF021FBC"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FA820F3B49C456",
+      "actual": "03FA820F3B49C456"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FA820F3B49C456",
+      "actual": "03FA820F3B49C456"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "02A838AF649DB7CF",
+      "actual": "02A838AF649DB7CF"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "02A838AF649DB7CF",
+      "actual": "02A838AF649DB7CF"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "02560AB344AC1566",
+      "actual": "02560AB344AC1566"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "02560AB344AC1566",
+      "actual": "02560AB344AC1566"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "01FE5FB1F1DD5980",
+      "actual": "01FE5FB1F1DD5980"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "01FE5FB1F1DD5980",
+      "actual": "01FE5FB1F1DD5980"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "01FE1FE1FE9FE9FE",
+      "actual": "01FE1FE1FE9FE9FE"
+    },
+    {
+      "delta": "0FF00000040",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "01FE1FE1FE9FE9FE",
+      "actual": "01FE1FE1FE9FE9FE"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FF800FFD005FF4",
+      "actual": "03FF800FFD005FF4"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FF800FFD005FF4",
+      "actual": "03FF800FFD005FF4"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FE808FC9149846",
+      "actual": "03FE808FC9149846"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FE808FC9149846",
+      "actual": "03FE808FC9149846"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "02AAE392F63F2FEE",
+      "actual": "02AAE392F63F2FEE"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "02AAE392F63F2FEE",
+      "actual": "02AAE392F63F2FEE"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0258631659DA5448",
+      "actual": "0258631659DA5448"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0258631659DA5448",
+      "actual": "0258631659DA5448"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0200601202E08A19",
+      "actual": "0200601202E08A19"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0200601202E08A19",
+      "actual": "0200601202E08A19"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "02002001FF9FF9FF",
+      "actual": "02002001FF9FF9FF"
+    },
+    {
+      "delta": "0FFFFFFFFC0",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "02002001FF9FF9FF",
+      "actual": "02002001FF9FF9FF"
+    },
+    {
+      "delta": "10000000000",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FF800FFE003FF8",
+      "actual": "03FF800FFE003FF8"
+    },
+    {
+      "delta": "10000000000",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FF800FFE003FF8",
+      "actual": "03FF800FFE003FF8"
+    },
+    {
+      "delta": "10000000000",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FE808FCA14386A",
+      "actual": "03FE808FCA14386A"
+    },
+    {
+      "delta": "10000000000",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FE808FCA14386A",
+      "actual": "03FE808FCA14386A"
+    },
+    {
+      "delta": "10000000000",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "02AAE392F6E9E8D3",
+      "actual": "02AAE392F6E9E8D3"
+    },
+    {
+      "delta": "10000000000",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "02AAE392F6E9E8D3",
+      "actual": "02AAE392F6E9E8D3"
+    },
+    {
+      "delta": "10000000000",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "025863165A706D0D",
+      "actual": "025863165A706D0D"
+    },
+    {
+      "delta": "10000000000",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "025863165A706D0D",
+      "actual": "025863165A706D0D"
+    },
+    {
+      "delta": "10000000000",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "020060120360A21E",
+      "actual": "020060120360A21E"
+    },
+    {
+      "delta": "10000000000",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "020060120360A21E",
+      "actual": "020060120360A21E"
+    },
+    {
+      "delta": "10000000000",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0200200200200200",
+      "actual": "0200200200200200"
+    },
+    {
+      "delta": "10000000000",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0200200200200200",
+      "actual": "0200200200200200"
+    },
+    {
+      "delta": "10000000040",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FF800FFF001FFC",
+      "actual": "03FF800FFF001FFC"
+    },
+    {
+      "delta": "10000000040",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FF800FFF001FFC",
+      "actual": "03FF800FFF001FFC"
+    },
+    {
+      "delta": "10000000040",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FE808FCB13D88E",
+      "actual": "03FE808FCB13D88E"
+    },
+    {
+      "delta": "10000000040",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FE808FCB13D88E",
+      "actual": "03FE808FCB13D88E"
+    },
+    {
+      "delta": "10000000040",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "02AAE392F794A1B8",
+      "actual": "02AAE392F794A1B8"
+    },
+    {
+      "delta": "10000000040",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "02AAE392F794A1B8",
+      "actual": "02AAE392F794A1B8"
+    },
+    {
+      "delta": "10000000040",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "025863165B0685D3",
+      "actual": "025863165B0685D3"
+    },
+    {
+      "delta": "10000000040",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "025863165B0685D3",
+      "actual": "025863165B0685D3"
+    },
+    {
+      "delta": "10000000040",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0200601203E0BA22",
+      "actual": "0200601203E0BA22"
+    },
+    {
+      "delta": "10000000040",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0200601203E0BA22",
+      "actual": "0200601203E0BA22"
+    },
+    {
+      "delta": "10000000040",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0200200200A00A00",
+      "actual": "0200200200A00A00"
+    },
+    {
+      "delta": "10000000040",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0200200200A00A00",
+      "actual": "0200200200A00A00"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "07FB009FEB029FAC",
+      "actual": "07FB009FEB029FAC"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "07FB009FEB029FAC",
+      "actual": "07FB009FEB029FAC"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "07F9029F035EBC79",
+      "actual": "07F9029F035EBC79"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "07F9029F035EBC79",
+      "actual": "07F9029F035EBC79"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "05531C425A322ED9",
+      "actual": "05531C425A322ED9"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "05531C425A322ED9",
+      "actual": "05531C425A322ED9"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "04AE6DC99DF050E9",
+      "actual": "04AE6DC99DF050E9"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "04AE6DC99DF050E9",
+      "actual": "04AE6DC99DF050E9"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FEBFC3F43DCB96",
+      "actual": "03FEBFC3F43DCB96"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FEBFC3F43DCB96",
+      "actual": "03FEBFC3F43DCB96"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FE3FE3FDBFDBFD",
+      "actual": "03FE3FE3FDBFDBFD"
+    },
+    {
+      "delta": "1FEFFFFFFC0",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FE3FE3FDBFDBFD",
+      "actual": "03FE3FE3FDBFDBFD"
+    },
+    {
+      "delta": "1FEFFFFFFE9",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "04AE6DC99E5078C7",
+      "actual": "04AE6DC99E5078C7"
+    },
+    {
+      "delta": "1FEFFFFFFE9",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "04AE6DC99E5078C7",
+      "actual": "04AE6DC99E5078C7"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "07FB009FED025FB4",
+      "actual": "07FB009FED025FB4"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "07FB009FED025FB4",
+      "actual": "07FB009FED025FB4"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "07F9029F055DFCC1",
+      "actual": "07F9029F055DFCC1"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "07F9029F055DFCC1",
+      "actual": "07F9029F055DFCC1"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "05531C425B87A0A2",
+      "actual": "05531C425B87A0A2"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "05531C425B87A0A2",
+      "actual": "05531C425B87A0A2"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "04AE6DC99F1C8274",
+      "actual": "04AE6DC99F1C8274"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "04AE6DC99F1C8274",
+      "actual": "04AE6DC99F1C8274"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FEBFC3F53DFB9F",
+      "actual": "03FEBFC3F53DFB9F"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FEBFC3F53DFB9F",
+      "actual": "03FEBFC3F53DFB9F"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "03FE3FE3FEBFEBFE",
+      "actual": "03FE3FE3FEBFEBFE"
+    },
+    {
+      "delta": "1FF00000040",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "03FE3FE3FEBFEBFE",
+      "actual": "03FE3FE3FEBFEBFE"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "07FF001FFAF8A0EB",
+      "actual": "07FF001FFAF8A0EB"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "07FF001FFAF8A0EB",
+      "actual": "07FF001FFAF8A0EB"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "07FD011F9320D3B0",
+      "actual": "07FD011F9320D3B0"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "07FD011F9320D3B0",
+      "actual": "07FD011F9320D3B0"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0555C725ED23C2FA",
+      "actual": "0555C725ED23C2FA"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0555C725ED23C2FA",
+      "actual": "0555C725ED23C2FA"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "04B0C62CB4461090",
+      "actual": "04B0C62CB4461090"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "04B0C62CB4461090",
+      "actual": "04B0C62CB4461090"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0400C024063D2B78",
+      "actual": "0400C024063D2B78"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0400C024063D2B78",
+      "actual": "0400C024063D2B78"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "04004003FFBBFBBF",
+      "actual": "04004003FFBBFBBF"
+    },
+    {
+      "delta": "1FFFFFFFFBE",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "04004003FFBBFBBF",
+      "actual": "04004003FFBBFBBF"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "07FF001FFAFCA06B",
+      "actual": "07FF001FFAFCA06B"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "07FF001FFAFCA06B",
+      "actual": "07FF001FFAFCA06B"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "07FD011F9324D231",
+      "actual": "07FD011F9324D231"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "07FD011F9324D231",
+      "actual": "07FD011F9324D231"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0555C725ED266DDE",
+      "actual": "0555C725ED266DDE"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0555C725ED266DDE",
+      "actual": "0555C725ED266DDE"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "04B0C62CB44868F3",
+      "actual": "04B0C62CB44868F3"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "04B0C62CB44868F3",
+      "actual": "04B0C62CB44868F3"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "0400C024063F2BD8",
+      "actual": "0400C024063F2BD8"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "0400C024063F2BD8",
+      "actual": "0400C024063F2BD8"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": false,
+      "expected": "04004003FFBDFBDF",
+      "actual": "04004003FFBDFBDF"
+    },
+    {
+      "delta": "1FFFFFFFFBF",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": false,
+      "expected": "04004003FFBDFBDF",
+      "actual": "04004003FFBDFBDF"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "07FF001FFB009FEC",
+      "actual": "07FF001FFB009FEC"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "07FF001FFB009FEC",
+      "actual": "07FF001FFB009FEC"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "07FD011F9328D0B1",
+      "actual": "07FD011F9328D0B1"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "07FD011F9328D0B1",
+      "actual": "07FD011F9328D0B1"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0555C725ED2918C2",
+      "actual": "0555C725ED2918C2"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0555C725ED2918C2",
+      "actual": "0555C725ED2918C2"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "04B0C62CB44AC156",
+      "actual": "04B0C62CB44AC156"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "04B0C62CB44AC156",
+      "actual": "04B0C62CB44AC156"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0400C02406412C38",
+      "actual": "0400C02406412C38"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0400C02406412C38",
+      "actual": "0400C02406412C38"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "04004003FFBFFBFF",
+      "actual": "04004003FFBFFBFF"
+    },
+    {
+      "delta": "1FFFFFFFFC0",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "04004003FFBFFBFF",
+      "actual": "04004003FFBFFBFF"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "07FF001FFBFC806F",
+      "actual": "07FF001FFBFC806F"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "07FF001FFBFC806F",
+      "actual": "07FF001FFBFC806F"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "07FD011F94247255",
+      "actual": "07FD011F94247255"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "07FD011F94247255",
+      "actual": "07FD011F94247255"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0555C725EDD126C3",
+      "actual": "0555C725EDD126C3"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0555C725EDD126C3",
+      "actual": "0555C725EDD126C3"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "04B0C62CB4DE81B8",
+      "actual": "04B0C62CB4DE81B8"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "04B0C62CB4DE81B8",
+      "actual": "04B0C62CB4DE81B8"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0400C02406BF43DC",
+      "actual": "0400C02406BF43DC"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0400C02406BF43DC",
+      "actual": "0400C02406BF43DC"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "04004004003E03E0",
+      "actual": "04004004003E03E0"
+    },
+    {
+      "delta": "1FFFFFFFFFF",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "04004004003E03E0",
+      "actual": "04004004003E03E0"
+    },
+    {
+      "delta": "20000000000",
+      "den": 2049,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "07FF001FFC007FF0",
+      "actual": "07FF001FFC007FF0"
+    },
+    {
+      "delta": "20000000000",
+      "den": 2049,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "07FF001FFC007FF0",
+      "actual": "07FF001FFC007FF0"
+    },
+    {
+      "delta": "20000000000",
+      "den": 2051,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "07FD011F942870D5",
+      "actual": "07FD011F942870D5"
+    },
+    {
+      "delta": "20000000000",
+      "den": 2051,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "07FD011F942870D5",
+      "actual": "07FD011F942870D5"
+    },
+    {
+      "delta": "20000000000",
+      "den": 3071,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0555C725EDD3D1A6",
+      "actual": "0555C725EDD3D1A6"
+    },
+    {
+      "delta": "20000000000",
+      "den": 3071,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0555C725EDD3D1A6",
+      "actual": "0555C725EDD3D1A6"
+    },
+    {
+      "delta": "20000000000",
+      "den": 3493,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "04B0C62CB4E0DA1B",
+      "actual": "04B0C62CB4E0DA1B"
+    },
+    {
+      "delta": "20000000000",
+      "den": 3493,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "04B0C62CB4E0DA1B",
+      "actual": "04B0C62CB4E0DA1B"
+    },
+    {
+      "delta": "20000000000",
+      "den": 4093,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0400C02406C1443C",
+      "actual": "0400C02406C1443C"
+    },
+    {
+      "delta": "20000000000",
+      "den": 4093,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0400C02406C1443C",
+      "actual": "0400C02406C1443C"
+    },
+    {
+      "delta": "20000000000",
+      "den": 4095,
+      "SIO": "READY",
+      "small_family": true,
+      "expected": "0400400400400400",
+      "actual": "0400400400400400"
+    },
+    {
+      "delta": "20000000000",
+      "den": 4095,
+      "SIO": "DIRTY",
+      "small_family": true,
+      "expected": "0400400400400400",
+      "actual": "0400400400400400"
+    }
+  ],
+  "public_unique_inputs": 56,
+  "public_state_cases": 112,
+  "actual_public_ARM_calls": 448,
+  "MPFR": "4.2.2",
+  "public_candidate_stack_observed": 344,
+  "public_rows": [
+    {
+      "x": "0000000000000000",
+      "SIO": "READY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "candidate": "FFF0000000000000",
+        "trial": "FFF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 53,
+        "candidate": 53,
+        "trial": 53
+      }
+    },
+    {
+      "x": "0000000000000000",
+      "SIO": "DIRTY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "candidate": "FFF0000000000000",
+        "trial": "FFF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 53,
+        "candidate": 53,
+        "trial": 53
+      }
+    },
+    {
+      "x": "0000000000000001",
+      "SIO": "READY",
+      "expected": "C0874385446D71C3",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "C0874385446D71C3",
+        "candidate": "C0874385446D71C3",
+        "trial": "C0874385446D71C3"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 613,
+        "candidate": 613,
+        "trial": 613
+      }
+    },
+    {
+      "x": "0000000000000001",
+      "SIO": "DIRTY",
+      "expected": "C0874385446D71C3",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "C0874385446D71C3",
+        "candidate": "C0874385446D71C3",
+        "trial": "C0874385446D71C3"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 624,
+        "candidate": 627,
+        "trial": 626
+      }
+    },
+    {
+      "x": "0000000000000002",
+      "SIO": "READY",
+      "expected": "C0873DF9B3ADB335",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "C0873DF9B3ADB335",
+        "candidate": "C0873DF9B3ADB335",
+        "trial": "C0873DF9B3ADB335"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 604,
+        "candidate": 604,
+        "trial": 604
+      }
+    },
+    {
+      "x": "0000000000000002",
+      "SIO": "DIRTY",
+      "expected": "C0873DF9B3ADB335",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "C0873DF9B3ADB335",
+        "candidate": "C0873DF9B3ADB335",
+        "trial": "C0873DF9B3ADB335"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 615,
+        "candidate": 618,
+        "trial": 617
+      }
+    },
+    {
+      "x": "000FFFFFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "C086232BDD7ABCD2",
+        "candidate": "C086232BDD7ABCD2",
+        "trial": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 585,
+        "candidate": 585,
+        "trial": 585
+      }
+    },
+    {
+      "x": "000FFFFFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "C086232BDD7ABCD2",
+        "candidate": "C086232BDD7ABCD2",
+        "trial": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 707,
+        "candidate": 637,
+        "trial": 636
+      }
+    },
+    {
+      "x": "0010000000000000",
+      "SIO": "READY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "Qfplib": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "candidate": "C086232BDD7ABCD2",
+        "trial": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 593,
+        "candidate": 593,
+        "trial": 593
+      }
+    },
+    {
+      "x": "0010000000000000",
+      "SIO": "DIRTY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "Qfplib": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "candidate": "C086232BDD7ABCD2",
+        "trial": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 604,
+        "candidate": 607,
+        "trial": 606
+      }
+    },
+    {
+      "x": "3FEF808000000000",
+      "SIO": "READY",
+      "expected": "BF9010157588DE71",
+      "outputs": {
+        "Qfplib": "BF9010157588DE71",
+        "parent": "BF9010157588DE71",
+        "candidate": "BF9010157588DE71",
+        "trial": "BF9010157588DE71"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 600,
+        "candidate": 600,
+        "trial": 600
+      }
+    },
+    {
+      "x": "3FEF808000000000",
+      "SIO": "DIRTY",
+      "expected": "BF9010157588DE71",
+      "outputs": {
+        "Qfplib": "BF9010157588DE71",
+        "parent": "BF9010157588DE71",
+        "candidate": "BF9010157588DE71",
+        "trial": "BF9010157588DE71"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 722,
+        "candidate": 682,
+        "trial": 683
+      }
+    },
+    {
+      "x": "3FEF808000000001",
+      "SIO": "READY",
+      "expected": "BF9010157588DE51",
+      "outputs": {
+        "Qfplib": "BF9010157588DE51",
+        "parent": "BF9010157588DE51",
+        "candidate": "BF9010157588DE51",
+        "trial": "BF9010157588DE51"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 577,
+        "candidate": 577,
+        "trial": 577
+      }
+    },
+    {
+      "x": "3FEF808000000001",
+      "SIO": "DIRTY",
+      "expected": "BF9010157588DE51",
+      "outputs": {
+        "Qfplib": "BF9010157588DE51",
+        "parent": "BF9010157588DE51",
+        "candidate": "BF9010157588DE51",
+        "trial": "BF9010157588DE51"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 577,
+        "candidate": 577,
+        "trial": 577
+      }
+    },
+    {
+      "x": "3FEF808000000002",
+      "SIO": "READY",
+      "expected": "BF9010157588DE30",
+      "outputs": {
+        "Qfplib": "BF9010157588DE30",
+        "parent": "BF9010157588DE30",
+        "candidate": "BF9010157588DE30",
+        "trial": "BF9010157588DE30"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 582,
+        "candidate": 582,
+        "trial": 582
+      }
+    },
+    {
+      "x": "3FEF808000000002",
+      "SIO": "DIRTY",
+      "expected": "BF9010157588DE30",
+      "outputs": {
+        "Qfplib": "BF9010157588DE30",
+        "parent": "BF9010157588DE30",
+        "candidate": "BF9010157588DE30",
+        "trial": "BF9010157588DE30"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 582,
+        "candidate": 582,
+        "trial": 582
+      }
+    },
+    {
+      "x": "3FEFFFFFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "BCA0000000000000",
+      "outputs": {
+        "Qfplib": "BCA0000000000000",
+        "parent": "BCA0000000000000",
+        "candidate": "BCA0000000000000",
+        "trial": "BCA0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 720,
+        "parent": 405,
+        "candidate": 405,
+        "trial": 405
+      }
+    },
+    {
+      "x": "3FEFFFFFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "BCA0000000000000",
+      "outputs": {
+        "Qfplib": "BCA0000000000000",
+        "parent": "BCA0000000000000",
+        "candidate": "BCA0000000000000",
+        "trial": "BCA0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 720,
+        "parent": 405,
+        "candidate": 405,
+        "trial": 405
+      }
+    },
+    {
+      "x": "3FF0000000000000",
+      "SIO": "READY",
+      "expected": "0000000000000000",
+      "outputs": {
+        "Qfplib": "0000000000000000",
+        "parent": "0000000000000000",
+        "candidate": "0000000000000000",
+        "trial": "0000000000000000"
+      },
+      "instructions": {
+        "Qfplib": 683,
+        "parent": 104,
+        "candidate": 104,
+        "trial": 104
+      }
+    },
+    {
+      "x": "3FF0000000000000",
+      "SIO": "DIRTY",
+      "expected": "0000000000000000",
+      "outputs": {
+        "Qfplib": "0000000000000000",
+        "parent": "0000000000000000",
+        "candidate": "0000000000000000",
+        "trial": "0000000000000000"
+      },
+      "instructions": {
+        "Qfplib": 683,
+        "parent": 104,
+        "candidate": 104,
+        "trial": 104
+      }
+    },
+    {
+      "x": "3FF0000000000001",
+      "SIO": "READY",
+      "expected": "3CAFFFFFFFFFFFFF",
+      "outputs": {
+        "Qfplib": "3CB0000000000000",
+        "parent": "3CAFFFFFFFFFFFFF",
+        "candidate": "3CAFFFFFFFFFFFFF",
+        "trial": "3CAFFFFFFFFFFFFF"
+      },
+      "instructions": {
+        "Qfplib": 745,
+        "parent": 412,
+        "candidate": 412,
+        "trial": 412
+      }
+    },
+    {
+      "x": "3FF0000000000001",
+      "SIO": "DIRTY",
+      "expected": "3CAFFFFFFFFFFFFF",
+      "outputs": {
+        "Qfplib": "3CB0000000000000",
+        "parent": "3CAFFFFFFFFFFFFF",
+        "candidate": "3CAFFFFFFFFFFFFF",
+        "trial": "3CAFFFFFFFFFFFFF"
+      },
+      "instructions": {
+        "Qfplib": 745,
+        "parent": 412,
+        "candidate": 412,
+        "trial": 412
+      }
+    },
+    {
+      "x": "3FF03FFFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "3F8FC0A8B0FC0366",
+      "outputs": {
+        "Qfplib": "3F8FC0A8B0FC0366",
+        "parent": "3F8FC0A8B0FC0366",
+        "candidate": "3F8FC0A8B0FC0366",
+        "trial": "3F8FC0A8B0FC0366"
+      },
+      "instructions": {
+        "Qfplib": 798,
+        "parent": 567,
+        "candidate": 567,
+        "trial": 567
+      }
+    },
+    {
+      "x": "3FF03FFFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "3F8FC0A8B0FC0366",
+      "outputs": {
+        "Qfplib": "3F8FC0A8B0FC0366",
+        "parent": "3F8FC0A8B0FC0366",
+        "candidate": "3F8FC0A8B0FC0366",
+        "trial": "3F8FC0A8B0FC0366"
+      },
+      "instructions": {
+        "Qfplib": 798,
+        "parent": 567,
+        "candidate": 567,
+        "trial": 567
+      }
+    },
+    {
+      "x": "3FF0400000000000",
+      "SIO": "READY",
+      "expected": "3F8FC0A8B0FC03E4",
+      "outputs": {
+        "Qfplib": "3F8FC0A8B0FC03E4",
+        "parent": "3F8FC0A8B0FC03E4",
+        "candidate": "3F8FC0A8B0FC03E4",
+        "trial": "3F8FC0A8B0FC03E4"
+      },
+      "instructions": {
+        "Qfplib": 801,
+        "parent": 217,
+        "candidate": 217,
+        "trial": 217
+      }
+    },
+    {
+      "x": "3FF0400000000000",
+      "SIO": "DIRTY",
+      "expected": "3F8FC0A8B0FC03E4",
+      "outputs": {
+        "Qfplib": "3F8FC0A8B0FC03E4",
+        "parent": "3F8FC0A8B0FC03E4",
+        "candidate": "3F8FC0A8B0FC03E4",
+        "trial": "3F8FC0A8B0FC03E4"
+      },
+      "instructions": {
+        "Qfplib": 801,
+        "parent": 217,
+        "candidate": 217,
+        "trial": 217
+      }
+    },
+    {
+      "x": "3FF0400000000001",
+      "SIO": "READY",
+      "expected": "3F8FC0A8B0FC0462",
+      "outputs": {
+        "Qfplib": "3F8FC0A8B0FC0462",
+        "parent": "3F8FC0A8B0FC0462",
+        "candidate": "3F8FC0A8B0FC0462",
+        "trial": "3F8FC0A8B0FC0462"
+      },
+      "instructions": {
+        "Qfplib": 801,
+        "parent": 513,
+        "candidate": 513,
+        "trial": 513
+      }
+    },
+    {
+      "x": "3FF0400000000001",
+      "SIO": "DIRTY",
+      "expected": "3F8FC0A8B0FC0462",
+      "outputs": {
+        "Qfplib": "3F8FC0A8B0FC0462",
+        "parent": "3F8FC0A8B0FC0462",
+        "candidate": "3F8FC0A8B0FC0462",
+        "trial": "3F8FC0A8B0FC0462"
+      },
+      "instructions": {
+        "Qfplib": 801,
+        "parent": 541,
+        "candidate": 545,
+        "trial": 544
+      }
+    },
+    {
+      "x": "4000000000000000",
+      "SIO": "READY",
+      "expected": "3FE62E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "3FE62E42FEFA39EF",
+        "parent": "3FE62E42FEFA39EF",
+        "candidate": "3FE62E42FEFA39EF",
+        "trial": "3FE62E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 599,
+        "candidate": 599,
+        "trial": 599
+      }
+    },
+    {
+      "x": "4000000000000000",
+      "SIO": "DIRTY",
+      "expected": "3FE62E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "3FE62E42FEFA39EF",
+        "parent": "3FE62E42FEFA39EF",
+        "candidate": "3FE62E42FEFA39EF",
+        "trial": "3FE62E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 610,
+        "candidate": 613,
+        "trial": 612
+      }
+    },
+    {
+      "x": "4000000000000040",
+      "SIO": "READY",
+      "expected": "3FE62E42FEFA3A6F",
+      "outputs": {
+        "Qfplib": "3FE62E42FEFA3A6F",
+        "parent": "3FE62E42FEFA3A6F",
+        "candidate": "3FE62E42FEFA3A6F",
+        "trial": "3FE62E42FEFA3A6F"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 599,
+        "candidate": 599,
+        "trial": 599
+      }
+    },
+    {
+      "x": "4000000000000040",
+      "SIO": "DIRTY",
+      "expected": "3FE62E42FEFA3A6F",
+      "outputs": {
+        "Qfplib": "3FE62E42FEFA3A6F",
+        "parent": "3FE62E42FEFA3A6F",
+        "candidate": "3FE62E42FEFA3A6F",
+        "trial": "3FE62E42FEFA3A6F"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 712,
+        "candidate": 651,
+        "trial": 650
+      }
+    },
+    {
+      "x": "400000FFFFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FE63042EEFAE412",
+      "outputs": {
+        "Qfplib": "3FE63042EEFAE412",
+        "parent": "3FE63042EEFAE412",
+        "candidate": "3FE63042EEFAE412",
+        "trial": "3FE63042EEFAE412"
+      },
+      "instructions": {
+        "Qfplib": 771,
+        "parent": 590,
+        "candidate": 590,
+        "trial": 590
+      }
+    },
+    {
+      "x": "400000FFFFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FE63042EEFAE412",
+      "outputs": {
+        "Qfplib": "3FE63042EEFAE412",
+        "parent": "3FE63042EEFAE412",
+        "candidate": "3FE63042EEFAE412",
+        "trial": "3FE63042EEFAE412"
+      },
+      "instructions": {
+        "Qfplib": 771,
+        "parent": 712,
+        "candidate": 672,
+        "trial": 673
+      }
+    },
+    {
+      "x": "400001FF00000040",
+      "SIO": "READY",
+      "expected": "3FE63240BF3F774A",
+      "outputs": {
+        "Qfplib": "3FE63240BF3F774A",
+        "parent": "3FE63240BF3F774A",
+        "candidate": "3FE63240BF3F774A",
+        "trial": "3FE63240BF3F774A"
+      },
+      "instructions": {
+        "Qfplib": 771,
+        "parent": 590,
+        "candidate": 590,
+        "trial": 590
+      }
+    },
+    {
+      "x": "400001FF00000040",
+      "SIO": "DIRTY",
+      "expected": "3FE63240BF3F774A",
+      "outputs": {
+        "Qfplib": "3FE63240BF3F774A",
+        "parent": "3FE63240BF3F774A",
+        "candidate": "3FE63240BF3F774A",
+        "trial": "3FE63240BF3F774A"
+      },
+      "instructions": {
+        "Qfplib": 771,
+        "parent": 703,
+        "candidate": 675,
+        "trial": 674
+      }
+    },
+    {
+      "x": "400001FF00000041",
+      "SIO": "READY",
+      "expected": "3FE63240BF3F774C",
+      "outputs": {
+        "Qfplib": "3FE63240BF3F774C",
+        "parent": "3FE63240BF3F774C",
+        "candidate": "3FE63240BF3F774C",
+        "trial": "3FE63240BF3F774C"
+      },
+      "instructions": {
+        "Qfplib": 771,
+        "parent": 590,
+        "candidate": 590,
+        "trial": 590
+      }
+    },
+    {
+      "x": "400001FF00000041",
+      "SIO": "DIRTY",
+      "expected": "3FE63240BF3F774C",
+      "outputs": {
+        "Qfplib": "3FE63240BF3F774C",
+        "parent": "3FE63240BF3F774C",
+        "candidate": "3FE63240BF3F774C",
+        "trial": "3FE63240BF3F774C"
+      },
+      "instructions": {
+        "Qfplib": 771,
+        "parent": 703,
+        "candidate": 706,
+        "trial": 706
+      }
+    },
+    {
+      "x": "40000200FFFFFFBF",
+      "SIO": "READY",
+      "expected": "3FE63244BEBF8646",
+      "outputs": {
+        "Qfplib": "3FE63244BEBF8646",
+        "parent": "3FE63244BEBF8646",
+        "candidate": "3FE63244BEBF8646",
+        "trial": "3FE63244BEBF8646"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 587,
+        "candidate": 587,
+        "trial": 587
+      }
+    },
+    {
+      "x": "40000200FFFFFFBF",
+      "SIO": "DIRTY",
+      "expected": "3FE63244BEBF8646",
+      "outputs": {
+        "Qfplib": "3FE63244BEBF8646",
+        "parent": "3FE63244BEBF8646",
+        "candidate": "3FE63244BEBF8646",
+        "trial": "3FE63244BEBF8646"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 700,
+        "candidate": 703,
+        "trial": 703
+      }
+    },
+    {
+      "x": "40000200FFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FE63244BEBF8648",
+      "outputs": {
+        "Qfplib": "3FE63244BEBF8648",
+        "parent": "3FE63244BEBF8648",
+        "candidate": "3FE63244BEBF8648",
+        "trial": "3FE63244BEBF8648"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 587,
+        "candidate": 587,
+        "trial": 587
+      }
+    },
+    {
+      "x": "40000200FFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FE63244BEBF8648",
+      "outputs": {
+        "Qfplib": "3FE63244BEBF8648",
+        "parent": "3FE63244BEBF8648",
+        "candidate": "3FE63244BEBF8648",
+        "trial": "3FE63244BEBF8648"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 700,
+        "candidate": 672,
+        "trial": 671
+      }
+    },
+    {
+      "x": "4000030000000040",
+      "SIO": "READY",
+      "expected": "3FE634426F0C37E7",
+      "outputs": {
+        "Qfplib": "3FE634426F0C37E7",
+        "parent": "3FE634426F0C37E7",
+        "candidate": "3FE634426F0C37E7",
+        "trial": "3FE634426F0C37E7"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 593,
+        "candidate": 593,
+        "trial": 593
+      }
+    },
+    {
+      "x": "4000030000000040",
+      "SIO": "DIRTY",
+      "expected": "3FE634426F0C37E7",
+      "outputs": {
+        "Qfplib": "3FE634426F0C37E7",
+        "parent": "3FE634426F0C37E7",
+        "candidate": "3FE634426F0C37E7",
+        "trial": "3FE634426F0C37E7"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 715,
+        "candidate": 675,
+        "trial": 676
+      }
+    },
+    {
+      "x": "400003FFFFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FE63641FF24DC1C",
+      "outputs": {
+        "Qfplib": "3FE63641FF24DC1C",
+        "parent": "3FE63641FF24DC1C",
+        "candidate": "3FE63641FF24DC1C",
+        "trial": "3FE63641FF24DC1C"
+      },
+      "instructions": {
+        "Qfplib": 741,
+        "parent": 587,
+        "candidate": 587,
+        "trial": 587
+      }
+    },
+    {
+      "x": "400003FFFFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FE63641FF24DC1C",
+      "outputs": {
+        "Qfplib": "3FE63641FF24DC1C",
+        "parent": "3FE63641FF24DC1C",
+        "candidate": "3FE63641FF24DC1C",
+        "trial": "3FE63641FF24DC1C"
+      },
+      "instructions": {
+        "Qfplib": 741,
+        "parent": 700,
+        "candidate": 639,
+        "trial": 638
+      }
+    },
+    {
+      "x": "4005540000000040",
+      "SIO": "READY",
+      "expected": "3FEF60F3F793FD66",
+      "outputs": {
+        "Qfplib": "3FEF60F3F793FD66",
+        "parent": "3FEF60F3F793FD66",
+        "candidate": "3FEF60F3F793FD66",
+        "trial": "3FEF60F3F793FD66"
+      },
+      "instructions": {
+        "Qfplib": 741,
+        "parent": 591,
+        "candidate": 591,
+        "trial": 591
+      }
+    },
+    {
+      "x": "4005540000000040",
+      "SIO": "DIRTY",
+      "expected": "3FEF60F3F793FD66",
+      "outputs": {
+        "Qfplib": "3FEF60F3F793FD66",
+        "parent": "3FEF60F3F793FD66",
+        "candidate": "3FEF60F3F793FD66",
+        "trial": "3FEF60F3F793FD66"
+      },
+      "instructions": {
+        "Qfplib": 741,
+        "parent": 704,
+        "candidate": 644,
+        "trial": 643
+      }
+    },
+    {
+      "x": "400554FFFFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FEF62740694A4AE",
+      "outputs": {
+        "Qfplib": "3FEF62740694A4AE",
+        "parent": "3FEF62740694A4AE",
+        "candidate": "3FEF62740694A4AE",
+        "trial": "3FEF62740694A4AE"
+      },
+      "instructions": {
+        "Qfplib": 699,
+        "parent": 590,
+        "candidate": 590,
+        "trial": 590
+      }
+    },
+    {
+      "x": "400554FFFFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FEF62740694A4AE",
+      "outputs": {
+        "Qfplib": "3FEF62740694A4AE",
+        "parent": "3FEF62740694A4AE",
+        "candidate": "3FEF62740694A4AE",
+        "trial": "3FEF62740694A4AE"
+      },
+      "instructions": {
+        "Qfplib": 699,
+        "parent": 713,
+        "candidate": 672,
+        "trial": 673
+      }
+    },
+    {
+      "x": "400555FF00000040",
+      "SIO": "READY",
+      "expected": "3FEF63F283A0B40E",
+      "outputs": {
+        "Qfplib": "3FEF63F283A0B40E",
+        "parent": "3FEF63F283A0B40E",
+        "candidate": "3FEF63F283A0B40E",
+        "trial": "3FEF63F283A0B40E"
+      },
+      "instructions": {
+        "Qfplib": 777,
+        "parent": 590,
+        "candidate": 590,
+        "trial": 590
+      }
+    },
+    {
+      "x": "400555FF00000040",
+      "SIO": "DIRTY",
+      "expected": "3FEF63F283A0B40E",
+      "outputs": {
+        "Qfplib": "3FEF63F283A0B40E",
+        "parent": "3FEF63F283A0B40E",
+        "candidate": "3FEF63F283A0B40E",
+        "trial": "3FEF63F283A0B40E"
+      },
+      "instructions": {
+        "Qfplib": 777,
+        "parent": 702,
+        "candidate": 675,
+        "trial": 674
+      }
+    },
+    {
+      "x": "400555FF00000041",
+      "SIO": "READY",
+      "expected": "3FEF63F283A0B40F",
+      "outputs": {
+        "Qfplib": "3FEF63F283A0B40F",
+        "parent": "3FEF63F283A0B40F",
+        "candidate": "3FEF63F283A0B40F",
+        "trial": "3FEF63F283A0B40F"
+      },
+      "instructions": {
+        "Qfplib": 777,
+        "parent": 596,
+        "candidate": 596,
+        "trial": 596
+      }
+    },
+    {
+      "x": "400555FF00000041",
+      "SIO": "DIRTY",
+      "expected": "3FEF63F283A0B40F",
+      "outputs": {
+        "Qfplib": "3FEF63F283A0B40F",
+        "parent": "3FEF63F283A0B40F",
+        "candidate": "3FEF63F283A0B40F",
+        "trial": "3FEF63F283A0B40F"
+      },
+      "instructions": {
+        "Qfplib": 777,
+        "parent": 718,
+        "candidate": 717,
+        "trial": 720
+      }
+    },
+    {
+      "x": "40055600FFFFFFBF",
+      "SIO": "READY",
+      "expected": "3FEF63F58388B40C",
+      "outputs": {
+        "Qfplib": "3FEF63F58388B40C",
+        "parent": "3FEF63F58388B40C",
+        "candidate": "3FEF63F58388B40C",
+        "trial": "3FEF63F58388B40C"
+      },
+      "instructions": {
+        "Qfplib": 777,
+        "parent": 593,
+        "candidate": 593,
+        "trial": 593
+      }
+    },
+    {
+      "x": "40055600FFFFFFBF",
+      "SIO": "DIRTY",
+      "expected": "3FEF63F58388B40C",
+      "outputs": {
+        "Qfplib": "3FEF63F58388B40C",
+        "parent": "3FEF63F58388B40C",
+        "candidate": "3FEF63F58388B40C",
+        "trial": "3FEF63F58388B40C"
+      },
+      "instructions": {
+        "Qfplib": 777,
+        "parent": 715,
+        "candidate": 714,
+        "trial": 717
+      }
+    },
+    {
+      "x": "40055600FFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FEF63F58388B40E",
+      "outputs": {
+        "Qfplib": "3FEF63F58388B40E",
+        "parent": "3FEF63F58388B40E",
+        "candidate": "3FEF63F58388B40E",
+        "trial": "3FEF63F58388B40E"
+      },
+      "instructions": {
+        "Qfplib": 777,
+        "parent": 587,
+        "candidate": 587,
+        "trial": 587
+      }
+    },
+    {
+      "x": "40055600FFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FEF63F58388B40E",
+      "outputs": {
+        "Qfplib": "3FEF63F58388B40E",
+        "parent": "3FEF63F58388B40E",
+        "candidate": "3FEF63F58388B40E",
+        "trial": "3FEF63F58388B40E"
+      },
+      "instructions": {
+        "Qfplib": 777,
+        "parent": 699,
+        "candidate": 672,
+        "trial": 671
+      }
+    },
+    {
+      "x": "4005570000000040",
+      "SIO": "READY",
+      "expected": "3FEF6573EE95F55A",
+      "outputs": {
+        "Qfplib": "3FEF6573EE95F55A",
+        "parent": "3FEF6573EE95F55A",
+        "candidate": "3FEF6573EE95F55A",
+        "trial": "3FEF6573EE95F55A"
+      },
+      "instructions": {
+        "Qfplib": 783,
+        "parent": 593,
+        "candidate": 593,
+        "trial": 593
+      }
+    },
+    {
+      "x": "4005570000000040",
+      "SIO": "DIRTY",
+      "expected": "3FEF6573EE95F55A",
+      "outputs": {
+        "Qfplib": "3FEF6573EE95F55A",
+        "parent": "3FEF6573EE95F55A",
+        "candidate": "3FEF6573EE95F55A",
+        "trial": "3FEF6573EE95F55A"
+      },
+      "instructions": {
+        "Qfplib": 783,
+        "parent": 716,
+        "candidate": 675,
+        "trial": 676
+      }
+    },
+    {
+      "x": "400557FFFFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FEF66F3C799FC2E",
+      "outputs": {
+        "Qfplib": "3FEF66F3C799FC2E",
+        "parent": "3FEF66F3C799FC2E",
+        "candidate": "3FEF66F3C799FC2E",
+        "trial": "3FEF66F3C799FC2E"
+      },
+      "instructions": {
+        "Qfplib": 759,
+        "parent": 588,
+        "candidate": 588,
+        "trial": 588
+      }
+    },
+    {
+      "x": "400557FFFFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FEF66F3C799FC2E",
+      "outputs": {
+        "Qfplib": "3FEF66F3C799FC2E",
+        "parent": "3FEF66F3C799FC2E",
+        "candidate": "3FEF66F3C799FC2E",
+        "trial": "3FEF66F3C799FC2E"
+      },
+      "instructions": {
+        "Qfplib": 759,
+        "parent": 701,
+        "candidate": 641,
+        "trial": 640
+      }
+    },
+    {
+      "x": "4007FC0000000040",
+      "SIO": "READY",
+      "expected": "3FF1913F9718775B",
+      "outputs": {
+        "Qfplib": "3FF1913F9718775B",
+        "parent": "3FF1913F9718775B",
+        "candidate": "3FF1913F9718775B",
+        "trial": "3FF1913F9718775B"
+      },
+      "instructions": {
+        "Qfplib": 761,
+        "parent": 592,
+        "candidate": 592,
+        "trial": 592
+      }
+    },
+    {
+      "x": "4007FC0000000040",
+      "SIO": "DIRTY",
+      "expected": "3FF1913F9718775B",
+      "outputs": {
+        "Qfplib": "3FF1913F9718775B",
+        "parent": "3FF1913F9718775B",
+        "candidate": "3FF1913F9718775B",
+        "trial": "3FF1913F9718775B"
+      },
+      "instructions": {
+        "Qfplib": 761,
+        "parent": 704,
+        "candidate": 644,
+        "trial": 643
+      }
+    },
+    {
+      "x": "4007FCFFFFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FF191EA5AAA57F5",
+      "outputs": {
+        "Qfplib": "3FF191EA5AAA57F5",
+        "parent": "3FF191EA5AAA57F5",
+        "candidate": "3FF191EA5AAA57F5",
+        "trial": "3FF191EA5AAA57F5"
+      },
+      "instructions": {
+        "Qfplib": 719,
+        "parent": 593,
+        "candidate": 593,
+        "trial": 593
+      }
+    },
+    {
+      "x": "4007FCFFFFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FF191EA5AAA57F5",
+      "outputs": {
+        "Qfplib": "3FF191EA5AAA57F5",
+        "parent": "3FF191EA5AAA57F5",
+        "candidate": "3FF191EA5AAA57F5",
+        "trial": "3FF191EA5AAA57F5"
+      },
+      "instructions": {
+        "Qfplib": 719,
+        "parent": 715,
+        "candidate": 675,
+        "trial": 676
+      }
+    },
+    {
+      "x": "4007FDFF00000040",
+      "SIO": "READY",
+      "expected": "3FF192946C6517B3",
+      "outputs": {
+        "Qfplib": "3FF192946C6517B3",
+        "parent": "3FF192946C6517B3",
+        "candidate": "3FF192946C6517B3",
+        "trial": "3FF192946C6517B3"
+      },
+      "instructions": {
+        "Qfplib": 767,
+        "parent": 586,
+        "candidate": 586,
+        "trial": 586
+      }
+    },
+    {
+      "x": "4007FDFF00000040",
+      "SIO": "DIRTY",
+      "expected": "3FF192946C6517B3",
+      "outputs": {
+        "Qfplib": "3FF192946C6517B3",
+        "parent": "3FF192946C6517B3",
+        "candidate": "3FF192946C6517B3",
+        "trial": "3FF192946C6517B3"
+      },
+      "instructions": {
+        "Qfplib": 767,
+        "parent": 698,
+        "candidate": 671,
+        "trial": 670
+      }
+    },
+    {
+      "x": "4007FDFF00000041",
+      "SIO": "READY",
+      "expected": "3FF192946C6517B4",
+      "outputs": {
+        "Qfplib": "3FF192946C6517B4",
+        "parent": "3FF192946C6517B4",
+        "candidate": "3FF192946C6517B4",
+        "trial": "3FF192946C6517B4"
+      },
+      "instructions": {
+        "Qfplib": 767,
+        "parent": 586,
+        "candidate": 586,
+        "trial": 586
+      }
+    },
+    {
+      "x": "4007FDFF00000041",
+      "SIO": "DIRTY",
+      "expected": "3FF192946C6517B4",
+      "outputs": {
+        "Qfplib": "3FF192946C6517B4",
+        "parent": "3FF192946C6517B4",
+        "candidate": "3FF192946C6517B4",
+        "trial": "3FF192946C6517B4"
+      },
+      "instructions": {
+        "Qfplib": 767,
+        "parent": 708,
+        "candidate": 707,
+        "trial": 710
+      }
+    },
+    {
+      "x": "4007FE00FFFFFFBF",
+      "SIO": "READY",
+      "expected": "3FF19295C1D6E0D8",
+      "outputs": {
+        "Qfplib": "3FF19295C1D6E0D8",
+        "parent": "3FF19295C1D6E0D8",
+        "candidate": "3FF19295C1D6E0D8",
+        "trial": "3FF19295C1D6E0D8"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 589,
+        "candidate": 589,
+        "trial": 589
+      }
+    },
+    {
+      "x": "4007FE00FFFFFFBF",
+      "SIO": "DIRTY",
+      "expected": "3FF19295C1D6E0D8",
+      "outputs": {
+        "Qfplib": "3FF19295C1D6E0D8",
+        "parent": "3FF19295C1D6E0D8",
+        "candidate": "3FF19295C1D6E0D8",
+        "trial": "3FF19295C1D6E0D8"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 711,
+        "candidate": 710,
+        "trial": 713
+      }
+    },
+    {
+      "x": "4007FE00FFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FF19295C1D6E0D9",
+      "outputs": {
+        "Qfplib": "3FF19295C1D6E0D9",
+        "parent": "3FF19295C1D6E0D9",
+        "candidate": "3FF19295C1D6E0D9",
+        "trial": "3FF19295C1D6E0D9"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 589,
+        "candidate": 589,
+        "trial": 589
+      }
+    },
+    {
+      "x": "4007FE00FFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FF19295C1D6E0D9",
+      "outputs": {
+        "Qfplib": "3FF19295C1D6E0D9",
+        "parent": "3FF19295C1D6E0D9",
+        "candidate": "3FF19295C1D6E0D9",
+        "trial": "3FF19295C1D6E0D9"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 701,
+        "candidate": 674,
+        "trial": 673
+      }
+    },
+    {
+      "x": "4007FF0000000040",
+      "SIO": "READY",
+      "expected": "3FF1933FCC74065E",
+      "outputs": {
+        "Qfplib": "3FF1933FCC74065E",
+        "parent": "3FF1933FCC74065E",
+        "candidate": "3FF1933FCC74065E",
+        "trial": "3FF1933FCC74065E"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 584,
+        "candidate": 584,
+        "trial": 584
+      }
+    },
+    {
+      "x": "4007FF0000000040",
+      "SIO": "DIRTY",
+      "expected": "3FF1933FCC74065E",
+      "outputs": {
+        "Qfplib": "3FF1933FCC74065E",
+        "parent": "3FF1933FCC74065E",
+        "candidate": "3FF1933FCC74065E",
+        "trial": "3FF1933FCC74065E"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 706,
+        "candidate": 666,
+        "trial": 667
+      }
+    },
+    {
+      "x": "4007FFFFFFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FF193EA7AAD02E0",
+      "outputs": {
+        "Qfplib": "3FF193EA7AAD02E0",
+        "parent": "3FF193EA7AAD02E0",
+        "candidate": "3FF193EA7AAD02E0",
+        "trial": "3FF193EA7AAD02E0"
+      },
+      "instructions": {
+        "Qfplib": 707,
+        "parent": 583,
+        "candidate": 583,
+        "trial": 583
+      }
+    },
+    {
+      "x": "4007FFFFFFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FF193EA7AAD02E0",
+      "outputs": {
+        "Qfplib": "3FF193EA7AAD02E0",
+        "parent": "3FF193EA7AAD02E0",
+        "candidate": "3FF193EA7AAD02E0",
+        "trial": "3FF193EA7AAD02E0"
+      },
+      "instructions": {
+        "Qfplib": 707,
+        "parent": 695,
+        "candidate": 635,
+        "trial": 634
+      }
+    },
+    {
+      "x": "400FFC0000000040",
+      "SIO": "READY",
+      "expected": "3FF62C42DEF78F25",
+      "outputs": {
+        "Qfplib": "3FF62C42DEF78F25",
+        "parent": "3FF62C42DEF78F25",
+        "candidate": "3FF62C42DEF78F25",
+        "trial": "3FF62C42DEF78F25"
+      },
+      "instructions": {
+        "Qfplib": 689,
+        "parent": 588,
+        "candidate": 588,
+        "trial": 588
+      }
+    },
+    {
+      "x": "400FFC0000000040",
+      "SIO": "DIRTY",
+      "expected": "3FF62C42DEF78F25",
+      "outputs": {
+        "Qfplib": "3FF62C42DEF78F25",
+        "parent": "3FF62C42DEF78F25",
+        "candidate": "3FF62C42DEF78F25",
+        "trial": "3FF62C42DEF78F25"
+      },
+      "instructions": {
+        "Qfplib": 689,
+        "parent": 710,
+        "candidate": 640,
+        "trial": 639
+      }
+    },
+    {
+      "x": "400FFCFFFFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FF62CC2ECF919BB",
+      "outputs": {
+        "Qfplib": "3FF62CC2ECF919BB",
+        "parent": "3FF62CC2ECF919BB",
+        "candidate": "3FF62CC2ECF919BB",
+        "trial": "3FF62CC2ECF919BB"
+      },
+      "instructions": {
+        "Qfplib": 707,
+        "parent": 588,
+        "candidate": 588,
+        "trial": 588
+      }
+    },
+    {
+      "x": "400FFCFFFFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FF62CC2ECF919BB",
+      "outputs": {
+        "Qfplib": "3FF62CC2ECF919BB",
+        "parent": "3FF62CC2ECF919BB",
+        "candidate": "3FF62CC2ECF919BB",
+        "trial": "3FF62CC2ECF919BB"
+      },
+      "instructions": {
+        "Qfplib": 707,
+        "parent": 711,
+        "candidate": 669,
+        "trial": 670
+      }
+    },
+    {
+      "x": "400FFDFF00000040",
+      "SIO": "READY",
+      "expected": "3FF62D4276F1E236",
+      "outputs": {
+        "Qfplib": "3FF62D4276F1E236",
+        "parent": "3FF62D4276F1E236",
+        "candidate": "3FF62D4276F1E236",
+        "trial": "3FF62D4276F1E236"
+      },
+      "instructions": {
+        "Qfplib": 695,
+        "parent": 588,
+        "candidate": 588,
+        "trial": 588
+      }
+    },
+    {
+      "x": "400FFDFF00000040",
+      "SIO": "DIRTY",
+      "expected": "3FF62D4276F1E236",
+      "outputs": {
+        "Qfplib": "3FF62D4276F1E236",
+        "parent": "3FF62D4276F1E236",
+        "candidate": "3FF62D4276F1E236",
+        "trial": "3FF62D4276F1E236"
+      },
+      "instructions": {
+        "Qfplib": 695,
+        "parent": 710,
+        "candidate": 673,
+        "trial": 672
+      }
+    },
+    {
+      "x": "400FFDFF00000041",
+      "SIO": "READY",
+      "expected": "3FF62D4276F1E236",
+      "outputs": {
+        "Qfplib": "3FF62D4276F1E236",
+        "parent": "3FF62D4276F1E236",
+        "candidate": "3FF62D4276F1E236",
+        "trial": "3FF62D4276F1E236"
+      },
+      "instructions": {
+        "Qfplib": 695,
+        "parent": 594,
+        "candidate": 594,
+        "trial": 594
+      }
+    },
+    {
+      "x": "400FFDFF00000041",
+      "SIO": "DIRTY",
+      "expected": "3FF62D4276F1E236",
+      "outputs": {
+        "Qfplib": "3FF62D4276F1E236",
+        "parent": "3FF62D4276F1E236",
+        "candidate": "3FF62D4276F1E236",
+        "trial": "3FF62D4276F1E236"
+      },
+      "instructions": {
+        "Qfplib": 695,
+        "parent": 716,
+        "candidate": 715,
+        "trial": 718
+      }
+    },
+    {
+      "x": "400FFE00FFFFFFBF",
+      "SIO": "READY",
+      "expected": "3FF62D437701E2F5",
+      "outputs": {
+        "Qfplib": "3FF62D437701E2F5",
+        "parent": "3FF62D437701E2F5",
+        "candidate": "3FF62D437701E2F5",
+        "trial": "3FF62D437701E2F5"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 591,
+        "candidate": 591,
+        "trial": 591
+      }
+    },
+    {
+      "x": "400FFE00FFFFFFBF",
+      "SIO": "DIRTY",
+      "expected": "3FF62D437701E2F5",
+      "outputs": {
+        "Qfplib": "3FF62D437701E2F5",
+        "parent": "3FF62D437701E2F5",
+        "candidate": "3FF62D437701E2F5",
+        "trial": "3FF62D437701E2F5"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 713,
+        "candidate": 712,
+        "trial": 715
+      }
+    },
+    {
+      "x": "400FFE00FFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FF62D437701E2F6",
+      "outputs": {
+        "Qfplib": "3FF62D437701E2F6",
+        "parent": "3FF62D437701E2F6",
+        "candidate": "3FF62D437701E2F6",
+        "trial": "3FF62D437701E2F6"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 585,
+        "candidate": 585,
+        "trial": 585
+      }
+    },
+    {
+      "x": "400FFE00FFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FF62D437701E2F6",
+      "outputs": {
+        "Qfplib": "3FF62D437701E2F6",
+        "parent": "3FF62D437701E2F6",
+        "candidate": "3FF62D437701E2F6",
+        "trial": "3FF62D437701E2F6"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 707,
+        "candidate": 670,
+        "trial": 669
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFBF",
+      "SIO": "READY",
+      "expected": "3FF62D827A741385",
+      "outputs": {
+        "Qfplib": "3FF62D827A741385",
+        "parent": "3FF62D827A741385",
+        "candidate": "3FF62D827A741385",
+        "trial": "3FF62D827A741385"
+      },
+      "instructions": {
+        "Qfplib": 713,
+        "parent": 591,
+        "candidate": 591,
+        "trial": 591
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFBF",
+      "SIO": "DIRTY",
+      "expected": "3FF62D827A741385",
+      "outputs": {
+        "Qfplib": "3FF62D827A741385",
+        "parent": "3FF62D827A741385",
+        "candidate": "3FF62D827A741385",
+        "trial": "3FF62D827A741385"
+      },
+      "instructions": {
+        "Qfplib": 713,
+        "parent": 713,
+        "candidate": 712,
+        "trial": 715
+      }
+    },
+    {
+      "x": "400FFF0000000040",
+      "SIO": "READY",
+      "expected": "3FF62DC2FCFA2F64",
+      "outputs": {
+        "Qfplib": "3FF62DC2FCFA2F64",
+        "parent": "3FF62DC2FCFA2F64",
+        "candidate": "3FF62DC2FCFA2F64",
+        "trial": "3FF62DC2FCFA2F64"
+      },
+      "instructions": {
+        "Qfplib": 719,
+        "parent": 591,
+        "candidate": 591,
+        "trial": 591
+      }
+    },
+    {
+      "x": "400FFF0000000040",
+      "SIO": "DIRTY",
+      "expected": "3FF62DC2FCFA2F64",
+      "outputs": {
+        "Qfplib": "3FF62DC2FCFA2F64",
+        "parent": "3FF62DC2FCFA2F64",
+        "candidate": "3FF62DC2FCFA2F64",
+        "trial": "3FF62DC2FCFA2F64"
+      },
+      "instructions": {
+        "Qfplib": 719,
+        "parent": 714,
+        "candidate": 672,
+        "trial": 673
+      }
+    },
+    {
+      "x": "400FFFFFFFFFFFC0",
+      "SIO": "READY",
+      "expected": "3FF62E42FEFA39CF",
+      "outputs": {
+        "Qfplib": "3FF62E42FEFA39CF",
+        "parent": "3FF62E42FEFA39CF",
+        "candidate": "3FF62E42FEFA39CF",
+        "trial": "3FF62E42FEFA39CF"
+      },
+      "instructions": {
+        "Qfplib": 677,
+        "parent": 591,
+        "candidate": 591,
+        "trial": 591
+      }
+    },
+    {
+      "x": "400FFFFFFFFFFFC0",
+      "SIO": "DIRTY",
+      "expected": "3FF62E42FEFA39CF",
+      "outputs": {
+        "Qfplib": "3FF62E42FEFA39CF",
+        "parent": "3FF62E42FEFA39CF",
+        "candidate": "3FF62E42FEFA39CF",
+        "trial": "3FF62E42FEFA39CF"
+      },
+      "instructions": {
+        "Qfplib": 677,
+        "parent": 713,
+        "candidate": 643,
+        "trial": 642
+      }
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "40862E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "40862E42FEFA39EF",
+        "parent": "40862E42FEFA39EF",
+        "candidate": "40862E42FEFA39EF",
+        "trial": "40862E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 725,
+        "parent": 588,
+        "candidate": 588,
+        "trial": 588
+      }
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "40862E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "40862E42FEFA39EF",
+        "parent": "40862E42FEFA39EF",
+        "candidate": "40862E42FEFA39EF",
+        "trial": "40862E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 725,
+        "parent": 616,
+        "candidate": 620,
+        "trial": 619
+      }
+    },
+    {
+      "x": "7FF0000000000000",
+      "SIO": "READY",
+      "expected": "7FF0000000000000",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF0000000000000",
+        "candidate": "7FF0000000000000",
+        "trial": "7FF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 59,
+        "candidate": 59,
+        "trial": 59
+      }
+    },
+    {
+      "x": "7FF0000000000000",
+      "SIO": "DIRTY",
+      "expected": "7FF0000000000000",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF0000000000000",
+        "candidate": "7FF0000000000000",
+        "trial": "7FF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 59,
+        "candidate": 59,
+        "trial": 59
+      }
+    },
+    {
+      "x": "7FF0000000000001",
+      "SIO": "READY",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF8000000000001",
+        "candidate": "7FF8000000000001",
+        "trial": "7FF8000000000001"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 60,
+        "candidate": 60,
+        "trial": 60
+      }
+    },
+    {
+      "x": "7FF0000000000001",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF8000000000001",
+        "candidate": "7FF8000000000001",
+        "trial": "7FF8000000000001"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 60,
+        "candidate": 60,
+        "trial": 60
+      }
+    },
+    {
+      "x": "7FF8000012345678",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF8000012345678",
+        "candidate": "7FF8000012345678",
+        "trial": "7FF8000012345678"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 57,
+        "candidate": 57,
+        "trial": 57
+      }
+    },
+    {
+      "x": "7FF8000012345678",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF8000012345678",
+        "candidate": "7FF8000012345678",
+        "trial": "7FF8000012345678"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 57,
+        "candidate": 57,
+        "trial": 57
+      }
+    },
+    {
+      "x": "8000000000000000",
+      "SIO": "READY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "candidate": "FFF0000000000000",
+        "trial": "FFF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 53,
+        "candidate": 53,
+        "trial": 53
+      }
+    },
+    {
+      "x": "8000000000000000",
+      "SIO": "DIRTY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "candidate": "FFF0000000000000",
+        "trial": "FFF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 53,
+        "candidate": 53,
+        "trial": 53
+      }
+    },
+    {
+      "x": "FFF0000000000000",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "7FF8000000000000",
+        "candidate": "7FF8000000000000",
+        "trial": "7FF8000000000000"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 62,
+        "candidate": 62,
+        "trial": 62
+      }
+    },
+    {
+      "x": "FFF0000000000000",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "7FF8000000000000",
+        "candidate": "7FF8000000000000",
+        "trial": "7FF8000000000000"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 62,
+        "candidate": 62,
+        "trial": 62
+      }
+    },
+    {
+      "x": "FFF0000000000001",
+      "SIO": "READY",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF8000000000001",
+        "candidate": "FFF8000000000001",
+        "trial": "FFF8000000000001"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 60,
+        "candidate": 60,
+        "trial": 60
+      }
+    },
+    {
+      "x": "FFF0000000000001",
+      "SIO": "DIRTY",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF8000000000001",
+        "candidate": "FFF8000000000001",
+        "trial": "FFF8000000000001"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 60,
+        "candidate": 60,
+        "trial": 60
+      }
+    },
+    {
+      "x": "FFF8000012345678",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF8000012345678",
+        "candidate": "FFF8000012345678",
+        "trial": "FFF8000012345678"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 57,
+        "candidate": 57,
+        "trial": 57
+      }
+    },
+    {
+      "x": "FFF8000012345678",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF8000012345678",
+        "candidate": "FFF8000012345678",
+        "trial": "FFF8000012345678"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 57,
+        "candidate": 57,
+        "trial": 57
+      }
+    }
+  ],
+  "raw_NaN_candidate_equals_parent": true,
+  "ln2_explicit_DIRTY_regression": {
+    "x": "4000000000000000",
+    "SIO": "DIRTY",
+    "expected": "3FE62E42FEFA39EF",
+    "outputs": {
+      "Qfplib": "3FE62E42FEFA39EF",
+      "parent": "3FE62E42FEFA39EF",
+      "candidate": "3FE62E42FEFA39EF",
+      "trial": "3FE62E42FEFA39EF"
+    },
+    "instructions": {
+      "Qfplib": 711,
+      "parent": 610,
+      "candidate": 613,
+      "trial": 612
+    }
+  },
+  "withdrawn_trial_minus65_speed_loss_fixed": {
+    "x": "400FFE7EFFFFFFBF",
+    "SIO": "DIRTY",
+    "expected": "3FF62D827A741385",
+    "outputs": {
+      "Qfplib": "3FF62D827A741385",
+      "parent": "3FF62D827A741385",
+      "candidate": "3FF62D827A741385",
+      "trial": "3FF62D827A741385"
+    },
+    "instructions": {
+      "Qfplib": 713,
+      "parent": 713,
+      "candidate": 712,
+      "trial": 715
+    }
+  },
+  "all_saved_PCS_SP_and_bounded_write_assertions_pass": true,
+  "ROM_SHA256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "reference_ELF_SHA256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+  "product_capsule_SHA256": "75729579767fb4b3269141b6c62b1ae4fad49ed8817158b0e7d4bedcc717ecc8",
+  "physical_cycles": false,
+  "hardware_accessed": false,
+  "canonical_or_Git_or_frozen_changed": false
+}

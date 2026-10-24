@@ -1,0 +1,75 @@
+{
+  "status": "FROZEN_AUTHOR_RP_F2D_LEAF_ZERO_OBSERVED_SPEED_LOSSES_WITH_WHOLE_DOMAIN_SOURCE_PROOF",
+  "qualified_parent": ".build/m0-d2f-leaf-20261024",
+  "parent_review_at_seal": {
+    "independent_review_available_at_seal": false
+  },
+  "source_sha256": "deef395b1aa64fc9164bfa0511cca60ef8014ba66cda0f69a603dbf748ed2ca8",
+  "convert_include_sha256": "00a789655b5de22fc175a2c09015eb86ce81e609dacd3a1d9b0279f2c6dde0d4",
+  "candidate_ELF_sha256": "5ef1aa821b2e4c1b5fa5aaa471d6b8e2f3bb29fda80993085df782e1502130df",
+  "whole_source_ELF_sha256": "1930d166975257fc39169c15616f28715c541b8d32141a10fd90ccbb897c50e3",
+  "unique_inputs": 132959,
+  "profiled_states": 265918,
+  "fresh_qualified_ARM_calls": 797754,
+  "fresh_MPFR_references": 132959,
+  "MPFR_version": "4.2.2",
+  "exact_integer_reference_every_input": true,
+  "smoke_probe_calls41490_not_added": true,
+  "wrong": 0,
+  "raw_return_bits_identical_parent_including_NaNs": true,
+  "parent_raw_speed_losses": 4,
+  "candidate_raw_speed_losses": 0,
+  "new_raw_speed_losses": 0,
+  "correct_reference_state_rows": 205234,
+  "vs_correct_Qfplib": {
+    "faster": 205230,
+    "equal": 4,
+    "slower": 0
+  },
+  "wrong_reference_state_rows_retained": 60684,
+  "no_nominal_domain_filter": true,
+  "old256_sample_comparable": 249,
+  "old_sample_deficits": [
+    1,
+    0
+  ],
+  "all256_exponent_fields_both_signs": true,
+  "all23_nonzero_subnormal_fraction_widths": true,
+  "source_proof": "NUMERIC-PROOF.md/proof.json: whole binary32 exact returned-value widening and complete correct-Qfplib instruction path partition, pending independent review. Not physical cycles.",
+  "instructions": {
+    "normal": [
+      12,
+      13
+    ],
+    "signed_zero": [
+      5,
+      8
+    ],
+    "infinity": [
+      12,
+      12
+    ]
+  },
+  "body_bytes": 172,
+  "old_body_bytes": 34,
+  "selected_ASM_code_delta_bytes": 138,
+  "whole_firmware_size_delta_not_measured": true,
+  "old_C_slow_path_GC_size_effect_not_claimed": true,
+  "stack_bytes": 0,
+  "SIO_accesses": 0,
+  "new_tables_RAM_libgcc_external_calls": false,
+  "all_observed_candidate_states_strictly_faster_parent": true,
+  "parent_cost_increase_rows": 0,
+  "all_R4_R11_SP_boundedwrites_checked": true,
+  "full_source_exact172byte_body_bound": true,
+  "d2f_256byte_leaf_and_all_other_RP_sections_relocations_unchanged": true,
+  "generic_M0_M4_selected_ASM_bytes_relocations_identical": true,
+  "full_native_ASM_and_CPP_source_unchanged": true,
+  "four_complete_object_ELF_rebuilds_byte_exact": true,
+  "private_direct_ABI_entry_no_interposition_veneer": true,
+  "combined_repaired_platform_relink_not_done": true,
+  "independent_review_pending": true,
+  "original507_union_unchanged": 418,
+  "no_canonical_Git_device_or_release_changes": true,
+  "goal_complete": false
+}

@@ -1,0 +1,27 @@
+{
+  "status": "PASS_EXACT_MAIN_LN_LN2_UPPER_GATE_BARE_ARM_AND_RATIONAL_ENDPOINTS",
+  "source_sha256": "661ae2b62f0f2e3b9da08b689de0a7876f83fa2f80f57380113b78cbbd74e79b",
+  "unit_ELF_sha256": "cfdd0e035a53e57fdf756cc391d8e586857995aa0f884e78791e93e140f40d49",
+  "actual_ARM_calls": 12264,
+  "configurations": 6132,
+  "rational_RNE_endpoint_checks": 12264,
+  "all_n_1_through_1023": true,
+  "exact_and_raw_packers": true,
+  "output_widths": [
+    64,
+    80
+  ],
+  "signs_parities_and_binade_carries": true,
+  "scope": "Only new upper shortcut in the original uncertainty band; abstract point error bounds are independently enclosed by polynomial and ln2 intervals. Existing lower/fallback paths inherited.",
+  "SIO_accesses": 0,
+  "both_SIO_states_preserved": true,
+  "PCS_SP_bounded_writes_every_call": true,
+  "observed_stack_bytes": 44,
+  "profiled_instruction_range": [
+    108,
+    115
+  ],
+  "transcript_sha256": "4b9fdca02abc33653e1cd89c66c2558102f6ea60b1ed4168de85e619e60d9cce",
+  "full_firmware_or_ROM_loaded": false,
+  "hardware_accessed": false
+}

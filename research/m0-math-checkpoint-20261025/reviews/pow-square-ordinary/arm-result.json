@@ -1,0 +1,107 @@
+{
+  "status": "PASS_INDEPENDENT_BOUNDED_POW_ARM_MPFR",
+  "public_unique_inputs": 277,
+  "public_ARM_calls": 2216,
+  "public_MPFR_references": 277,
+  "MPFR": "4.2.2",
+  "all153_historical_replayed_bothstates": true,
+  "parent_original_remaining": 149,
+  "candidate_original_remaining": 82,
+  "independent_new_strict_fixes": 67,
+  "zero19_square48": true,
+  "three_old_trial_new_losses_closed": true,
+  "nonzero_low32_counts_equal_parent": true,
+  "public_results_exact_parent_bits": true,
+  "all_127590_metadata_baseline_rows_inherited_not_fresh": true,
+  "expanded_raw_loss_counts": {
+    "parent": 27414,
+    "candidate": 8078
+  },
+  "reference_wrong_state_rows_retained": 24316,
+  "nominal_domain_false_but_numerically_correct_included": 92,
+  "comparison_uses_correct_reference_only_without_domain_filter": true,
+  "retained_parent_regression_states": 63976,
+  "retained_cost_histogram": {
+    "1": 17186,
+    "2": 34384,
+    "7": 4036,
+    "8": 4282,
+    "59": 4088
+  },
+  "all_retained_cost_types_freshly_sampled": [
+    1,
+    2,
+    7,
+    8,
+    59
+  ],
+  "public_stack": {
+    "parent": 968,
+    "control": 968,
+    "candidate": 968
+  },
+  "author_full2236_stack_retained_not_reswept": true,
+  "public_trace": {
+    "parent": {
+      "mk61_m0_pow_dispatch": 240,
+      "pow_rsqrt": 68,
+      "mk61_m0_sqrt": 28
+    },
+    "control": {
+      "mk61_m0_pow_dispatch": 240,
+      "pow_rsqrt": 68,
+      "mk61_m0_sqrt": 28
+    },
+    "candidate": {
+      "mk61_m0_pow_dispatch_ordinary": 74,
+      "mk61_m0_pow_dispatch": 76,
+      "pow_rsqrt": 68,
+      "mk61_m0_pow_square_exact": 182,
+      "mk61_m0_sqrt": 28
+    }
+  },
+  "bare_ARM_calls": 1476,
+  "bare_unique_inputs": 738,
+  "bare_actual_half_cells": 30,
+  "bare_cross_carry_inputs": 60,
+  "bare_shifts": [
+    52,
+    53,
+    54,
+    56,
+    58,
+    60,
+    62,
+    64,
+    66,
+    68,
+    70,
+    72,
+    74,
+    76,
+    78,
+    80,
+    82,
+    84,
+    86,
+    88,
+    90,
+    92,
+    94,
+    96,
+    98,
+    100,
+    102,
+    104,
+    106
+  ],
+  "bare_stack_bytes": 32,
+  "bare_SIO_accesses": 0,
+  "own_total_ARM_calls": 3692,
+  "own_MPFR_calls": 277,
+  "inherited572776_unit_calls_not_added": true,
+  "zero_candidate_errors": true,
+  "counts_are_synthetic_instructions_not_physical_cycles": true,
+  "hardware": false,
+  "canonical": false
+}

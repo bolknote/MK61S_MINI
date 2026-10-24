@@ -1,0 +1,19 @@
+{
+  "status": "PASS_IMMUTABLE_PRIVATE_PARENT_REVIEW_AND_ROOT_RECEIPT_REFERENCES",
+  "receipts": [
+    {
+      "path": ".build/m0-exp-directed-product-independent-20261024/FINAL-REVIEW.json",
+      "sha256": "0d6073f3534d2abb71ad3348096bca930d2513e3813b06dbcfb8911ca485839b",
+      "status": "TECH_GO_PRIVATE_DIRECTED_EXP_AND_SHARED_PRODUCT_COMPONENT_ONLY",
+      "unique_direct_references_verified": 32
+    },
+    {
+      "path": ".build/m0-exp-directed-product-root-acceptance-20261024-001/RECEIPT.json",
+      "sha256": "7ec53f3c616b08413d0e88dae6ce65a7d7b4b8d5adb41737ae802e10475bc573",
+      "status": "ROOT_ACCEPTED_EXACT_PRIVATE_DIRECTED_EXP_COMPONENT_ONLY",
+      "unique_direct_references_verified": 338
+    }
+  ],
+  "reviewed507_count_kept422": true,
+  "integration_hardware_release_scope_added": false
+}

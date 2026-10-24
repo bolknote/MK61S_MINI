@@ -1,0 +1,189 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square-ordinary-independent-20261024/unit.elf:     file format elf32-littlearm
+
+
+Disassembly of section .square:
+
+10000000 <mk61_m0_pow_square_exact>:
+10000000:	004a      	lsls	r2, r1, #1
+10000002:	0d52      	lsrs	r2, r2, #21
+10000004:	4b4a      	ldr	r3, [pc, #296]	@ (10000130 <.Lsquare_infinity+0x8>)
+10000006:	429a      	cmp	r2, r3
+10000008:	d202      	bcs.n	10000010 <.Lsquare_nonzero>
+1000000a:	2000      	movs	r0, #0
+1000000c:	2100      	movs	r1, #0
+1000000e:	4770      	bx	lr
+
+10000010 <.Lsquare_nonzero>:
+10000010:	4b48      	ldr	r3, [pc, #288]	@ (10000134 <.Lsquare_infinity+0xc>)
+10000012:	429a      	cmp	r2, r3
+10000014:	d300      	bcc.n	10000018 <.Lsquare_finite>
+10000016:	e07e      	b.n	10000116 <.Lsquare_large>
+
+10000018 <.Lsquare_finite>:
+10000018:	b5f0      	push	{r4, r5, r6, r7, lr}
+1000001a:	0d0c      	lsrs	r4, r1, #20
+1000001c:	3c01      	subs	r4, #1
+1000001e:	0524      	lsls	r4, r4, #20
+10000020:	1b09      	subs	r1, r1, r4
+10000022:	0053      	lsls	r3, r2, #1
+10000024:	4a44      	ldr	r2, [pc, #272]	@ (10000138 <.Lsquare_infinity+0x10>)
+10000026:	1a9b      	subs	r3, r3, r2
+10000028:	b40b      	push	{r0, r1, r3}
+1000002a:	b282      	uxth	r2, r0
+1000002c:	4352      	muls	r2, r2
+1000002e:	b283      	uxth	r3, r0
+10000030:	0c04      	lsrs	r4, r0, #16
+10000032:	4363      	muls	r3, r4
+10000034:	4364      	muls	r4, r4
+10000036:	045d      	lsls	r5, r3, #17
+10000038:	0bde      	lsrs	r6, r3, #15
+1000003a:	18ad      	adds	r5, r5, r2
+1000003c:	4166      	adcs	r6, r4
+1000003e:	46ac      	mov	ip, r5
+10000040:	4635      	mov	r5, r6
+10000042:	b28a      	uxth	r2, r1
+10000044:	4352      	muls	r2, r2
+10000046:	b28b      	uxth	r3, r1
+10000048:	0c0c      	lsrs	r4, r1, #16
+1000004a:	4363      	muls	r3, r4
+1000004c:	4364      	muls	r4, r4
+1000004e:	045e      	lsls	r6, r3, #17
+10000050:	0bdf      	lsrs	r7, r3, #15
+10000052:	18b6      	adds	r6, r6, r2
+10000054:	4167      	adcs	r7, r4
+10000056:	b282      	uxth	r2, r0
+10000058:	b28b      	uxth	r3, r1
+1000005a:	435a      	muls	r2, r3
+1000005c:	0c04      	lsrs	r4, r0, #16
+1000005e:	4363      	muls	r3, r4
+10000060:	0c09      	lsrs	r1, r1, #16
+10000062:	434c      	muls	r4, r1
+10000064:	b280      	uxth	r0, r0
+10000066:	4348      	muls	r0, r1
+10000068:	181b      	adds	r3, r3, r0
+1000006a:	d302      	bcc.n	10000072 <.Lsquare_cross_fits>
+1000006c:	2001      	movs	r0, #1
+1000006e:	0400      	lsls	r0, r0, #16
+10000070:	1824      	adds	r4, r4, r0
+
+10000072 <.Lsquare_cross_fits>:
+10000072:	0418      	lsls	r0, r3, #16
+10000074:	0c19      	lsrs	r1, r3, #16
+10000076:	1880      	adds	r0, r0, r2
+10000078:	4161      	adcs	r1, r4
+1000007a:	0040      	lsls	r0, r0, #1
+1000007c:	4149      	adcs	r1, r1
+1000007e:	182d      	adds	r5, r5, r0
+10000080:	414e      	adcs	r6, r1
+10000082:	2000      	movs	r0, #0
+10000084:	4147      	adcs	r7, r0
+10000086:	b002      	add	sp, #8
+10000088:	bc08      	pop	{r3}
+1000008a:	0a7a      	lsrs	r2, r7, #9
+1000008c:	189b      	adds	r3, r3, r2
+1000008e:	2b00      	cmp	r3, #0
+10000090:	dd04      	ble.n	1000009c <.Lsquare_subnormal>
+10000092:	2434      	movs	r4, #52	@ 0x34
+10000094:	18a4      	adds	r4, r4, r2
+10000096:	3b01      	subs	r3, #1
+10000098:	051b      	lsls	r3, r3, #20
+1000009a:	e003      	b.n	100000a4 <.Lsquare_choose_word>
+
+1000009c <.Lsquare_subnormal>:
+1000009c:	2435      	movs	r4, #53	@ 0x35
+1000009e:	1ae4      	subs	r4, r4, r3
+100000a0:	18a4      	adds	r4, r4, r2
+100000a2:	2300      	movs	r3, #0
+
+100000a4 <.Lsquare_choose_word>:
+100000a4:	2c40      	cmp	r4, #64	@ 0x40
+100000a6:	d80e      	bhi.n	100000c6 <.Lsquare_shift_above64>
+100000a8:	3c20      	subs	r4, #32
+100000aa:	2220      	movs	r2, #32
+100000ac:	1b12      	subs	r2, r2, r4
+100000ae:	4628      	mov	r0, r5
+100000b0:	40e0      	lsrs	r0, r4
+100000b2:	4631      	mov	r1, r6
+100000b4:	4091      	lsls	r1, r2
+100000b6:	4308      	orrs	r0, r1
+100000b8:	4631      	mov	r1, r6
+100000ba:	40e1      	lsrs	r1, r4
+100000bc:	4097      	lsls	r7, r2
+100000be:	4339      	orrs	r1, r7
+100000c0:	4095      	lsls	r5, r2
+100000c2:	4666      	mov	r6, ip
+100000c4:	e01b      	b.n	100000fe <.Lsquare_round>
+
+100000c6 <.Lsquare_shift_above64>:
+100000c6:	2c60      	cmp	r4, #96	@ 0x60
+100000c8:	d80e      	bhi.n	100000e8 <.Lsquare_shift_above96>
+100000ca:	3c40      	subs	r4, #64	@ 0x40
+100000cc:	2220      	movs	r2, #32
+100000ce:	1b12      	subs	r2, r2, r4
+100000d0:	4630      	mov	r0, r6
+100000d2:	40e0      	lsrs	r0, r4
+100000d4:	4639      	mov	r1, r7
+100000d6:	40e1      	lsrs	r1, r4
+100000d8:	4097      	lsls	r7, r2
+100000da:	4338      	orrs	r0, r7
+100000dc:	4667      	mov	r7, ip
+100000de:	432f      	orrs	r7, r5
+100000e0:	4635      	mov	r5, r6
+100000e2:	4095      	lsls	r5, r2
+100000e4:	463e      	mov	r6, r7
+100000e6:	e00a      	b.n	100000fe <.Lsquare_round>
+
+100000e8 <.Lsquare_shift_above96>:
+100000e8:	3c60      	subs	r4, #96	@ 0x60
+100000ea:	2220      	movs	r2, #32
+100000ec:	1b12      	subs	r2, r2, r4
+100000ee:	4638      	mov	r0, r7
+100000f0:	40e0      	lsrs	r0, r4
+100000f2:	2100      	movs	r1, #0
+100000f4:	432e      	orrs	r6, r5
+100000f6:	4665      	mov	r5, ip
+100000f8:	432e      	orrs	r6, r5
+100000fa:	463d      	mov	r5, r7
+100000fc:	4095      	lsls	r5, r2
+
+100000fe <.Lsquare_round>:
+100000fe:	006d      	lsls	r5, r5, #1
+10000100:	d307      	bcc.n	10000112 <.Lsquare_pack>
+10000102:	4335      	orrs	r5, r6
+10000104:	d102      	bne.n	1000010c <.Lsquare_increment>
+10000106:	2201      	movs	r2, #1
+10000108:	4210      	tst	r0, r2
+1000010a:	d002      	beq.n	10000112 <.Lsquare_pack>
+
+1000010c <.Lsquare_increment>:
+1000010c:	3001      	adds	r0, #1
+1000010e:	2200      	movs	r2, #0
+10000110:	4151      	adcs	r1, r2
+
+10000112 <.Lsquare_pack>:
+10000112:	18c9      	adds	r1, r1, r3
+10000114:	bdf0      	pop	{r4, r5, r6, r7, pc}
+
+10000116 <.Lsquare_large>:
+10000116:	4b09      	ldr	r3, [pc, #36]	@ (1000013c <.Lsquare_infinity+0x14>)
+10000118:	429a      	cmp	r2, r3
+1000011a:	d105      	bne.n	10000128 <.Lsquare_infinity>
+1000011c:	030a      	lsls	r2, r1, #12
+1000011e:	4302      	orrs	r2, r0
+10000120:	d002      	beq.n	10000128 <.Lsquare_infinity>
+10000122:	4a07      	ldr	r2, [pc, #28]	@ (10000140 <.Lsquare_infinity+0x18>)
+10000124:	4311      	orrs	r1, r2
+10000126:	4770      	bx	lr
+
+10000128 <.Lsquare_infinity>:
+10000128:	2000      	movs	r0, #0
+1000012a:	4906      	ldr	r1, [pc, #24]	@ (10000144 <.Lsquare_infinity+0x1c>)
+1000012c:	4770      	bx	lr
+1000012e:	0000      	.short	0x0000
+10000130:	000001e5 	.word	0x000001e5
+10000134:	000005ff 	.word	0x000005ff
+10000138:	000003ff 	.word	0x000003ff
+1000013c:	000007ff 	.word	0x000007ff
+10000140:	00080000 	.word	0x00080000
+10000144:	7ff00000 	.word	0x7ff00000

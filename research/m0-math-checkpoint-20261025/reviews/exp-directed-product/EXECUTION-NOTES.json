@@ -1,0 +1,47 @@
+{
+  "scope": "reviewer execution evidence; no hardware/device/Git/canonical operations",
+  "binding": {
+    "tool_chunk": "346d1d / 616b69",
+    "exit": 0,
+    "whole_exact_rebuilds": 3
+  },
+  "proof": {
+    "tool_chunk": "561071",
+    "exit": 0
+  },
+  "production_guard_controls": {
+    "tool_chunk": "7b6694",
+    "exit": 0
+  },
+  "own_ARM_final": {
+    "launch_chunk": "1a59e0",
+    "session_id": 11288,
+    "completion_chunk": "97416b",
+    "exit": 0,
+    "Unicorn_JIT": "require_escalated HOST-only accepted; no auto-review rejection",
+    "qualified_calls": 2106,
+    "MPFR_inputs": 143,
+    "sNaN_shortcuts": 2
+  },
+  "accounting": {
+    "launch_chunk": "10a796",
+    "session_id": 6945,
+    "completion_chunk": "675d0d",
+    "exit": 0
+  },
+  "kernel_equivalence": {
+    "tool_chunk": "6a97ac",
+    "exit": 0
+  },
+  "unit_object_ELF_binding": {
+    "tool_chunk": "f1619d",
+    "exit": 0
+  },
+  "reviewer_harness_corrections_retained": {
+    "initial_bare_oracle_chunk": "01c4fe",
+    "reason": "sin/cos unchanged fixtures make zero product calls; 3 actual pow users plus 2 unchanged controls selected",
+    "initial_fixture_selection_chunks": "cd5952 / dc4f41",
+    "historical_evidence": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/harness-attempt-001",
+    "counts": "Only final successful run qualified. Earlier attempts, rejected producer layouts, producer probe executions and initial failed pow scope accounting are not pooled."
+  }
+}

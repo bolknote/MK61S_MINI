@@ -1,0 +1,80 @@
+{
+  "status": "PASS_SOURCE_BOUND_Q77_NEAR_LN_TABLE_AND_ERROR_ENCLOSURES",
+  "source_sha256": "84213d8eb6c7841b48a834cd2304eb8c0ccd6bedc150ee84fd01cf39a8a7e06b",
+  "candidate_ELF_sha256": "1164948d280c23bc66601af789dbd2a4af44c0982fb8c813b35fa2b7a396052e",
+  "old_product54_bound": "2228225/4194304",
+  "old_argument_bound": "2260993/4194304",
+  "initial_Q77_argument_bound": "2260993/32768",
+  "corrected_argument_bound": "9030828227/17179869184",
+  "corrected_argument_bound_float": 0.5256633872049861,
+  "internal_argument_RNE_not_required": true,
+  "linear_reciprocal_approximation_error_strictly_below": "3/4",
+  "square_bound": "8193/8192",
+  "cube_bound": "65800193/131072000",
+  "fourth_bound": "79877200859960577535740972003130633/158456325028528675187087900672000000",
+  "fifth_bound": "1346958639943353699667782896684003130633/2535301200456458802993406410752000000000",
+  "remainder_bound": "2199023255552/1464752197265625",
+  "cube_truncated_product_error_below": "1/512",
+  "fifth_truncated_product_error_below": "1/32",
+  "remaining_symmetric_base": "2664208190109730510997254426793835367344678308873/1901357058098572705738664492138496000000000000000",
+  "remaining_symmetric_base_float": 1.401214032241812,
+  "strict_cold_radius": "3/2",
+  "linear_remaining_base": "66902235595596033547255950351574840625697929/89202980793960233289313349430306741944320000",
+  "linear_remaining_base_float": 0.7500000000014109,
+  "linear_h_threshold": 274877906944,
+  "generic_full_bound": "6959367548926793078665407153143249767344678308873/1901357058098572705738664492138496000000000000000",
+  "generic_full_bound_float": 3.6602107527801317,
+  "strict_fast_radius": 4,
+  "exact_error": "(add ? 1:-1)*(bias60/60-residue/den) +/- base",
+  "coefficient_remainder_ranges": {
+    "r2": [
+      -1,
+      0
+    ],
+    "r3": [
+      -1,
+      0,
+      1
+    ],
+    "r4": [
+      -2,
+      -1,
+      0,
+      1
+    ],
+    "r5": [
+      -2,
+      -1,
+      0,
+      1,
+      2
+    ]
+  },
+  "maximum_abs_bias60": 104,
+  "corrected_signed_residue_strictly_below": 8192,
+  "input_delta_domain": [
+    0,
+    281474976710656
+  ],
+  "denominator_domain": [
+    8065,
+    8320
+  ],
+  "cube_hi_word_at_most": 8,
+  "output_width_domain": [
+    63,
+    72
+  ],
+  "smallest_midpoint_half_gap": 512,
+  "lower_binade_half_gap": 256,
+  "original_existing_table_bytes_unchanged": true,
+  "new_center_correction_bytes": 256,
+  "all256_reciprocal_Q70_Q77_rows_exact_rational": true,
+  "correction_initialization_no_carry_or_borrow_verified_all_rows": true,
+  "finite_integer_interval_checks": 1036800,
+  "exact_midpoints_decline": true,
+  "inherited_parent_source_unchanged_except_new_RP_near_function_and_call": true,
+  "source_table_generator_sha256": "c2ab1ec80540d0b90df1beafe7d175b9eb2475a952a7b8e6c2ae49144b263b8c",
+  "bare_source_units_required": true,
+  "hardware_accessed": false
+}

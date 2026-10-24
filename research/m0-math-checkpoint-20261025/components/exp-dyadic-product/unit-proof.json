@@ -1,0 +1,33 @@
+{
+  "status": "PASS_BIT_IDENTICAL_79_INSTRUCTION_PRODUCT_UNITS",
+  "product": {
+    "raw64_pairs": 70660,
+    "valid63x54_exact_integer_references": 36781,
+    "actual_ARM_calls": 141320,
+    "wrong": 0,
+    "raw_returns_bit_identical": true,
+    "instruction_counts": {
+      "old": {
+        "81": 70660
+      },
+      "new": {
+        "79": 70660
+      }
+    },
+    "stack_bytes": {
+      "old": 40,
+      "new": 36
+    },
+    "stack_bytes_touched": {
+      "old": 36,
+      "new": 36
+    },
+    "old_new_same_entry_address": "0x20038ee5",
+    "standalone_no_ROM_firmware_or_mocks": true,
+    "source_arithmetic_unchanged_except_stack_frame_management": true
+  },
+  "total_actual_ARM_calls": 141320,
+  "new_MPFR_calls": 0,
+  "all_ABI_SP_bounded_writes_checked_every_call": true,
+  "hardware_accessed": false
+}

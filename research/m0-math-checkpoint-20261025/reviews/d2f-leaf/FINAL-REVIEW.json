@@ -1,0 +1,288 @@
+{
+  "status": "GO_PRIVATE_RP_D2F_LEAF_COMPONENT_ONLY",
+  "utc": "2026-10-24T13:30:25.792534+00:00",
+  "blockers": [],
+  "accepted_parent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 10819,
+    "sha256": "90181e2ed18e8d312fc301ccfde8e93d1c63eced161883dee49fd9840ca86928"
+  },
+  "target": {
+    "frozen": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-20261024/FROZEN.json",
+      "bytes": 8887,
+      "sha256": "87c989edfe183f894ad87a833aed18f7b47172366c6362cf2276c3023a6375cb"
+    },
+    "result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-20261024/result.json",
+      "bytes": 2940,
+      "sha256": "b7399f8fb66ed5c3f040aae88d0004b12f813d55f2333aac14e012ce52aeaa81"
+    },
+    "ASM_include": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-20261024/candidate/native_eabi_m0_d2f.inc",
+      "bytes": 2674,
+      "sha256": "c55f20f8a4df39b6619180b28c79d813329e94cec5b4491ba248d40b6f574681"
+    },
+    "convert_include": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-20261024/candidate/native_eabi_m0_convert.inc",
+      "bytes": 8885,
+      "sha256": "89cf45720e41798a6d37c6297976274236927a23171e97da7dfe9d2d04806ba0"
+    },
+    "standalone_source": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-20261024/d2f.S",
+      "bytes": 2674,
+      "sha256": "c55f20f8a4df39b6619180b28c79d813329e94cec5b4491ba248d40b6f574681"
+    },
+    "tested_private_leaf_ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-20261024/candidate.elf",
+      "bytes": 4708,
+      "sha256": "2fe6157478c5111a4ef25e035ef1c55134f6ca5128c3c06b391a699647399062"
+    },
+    "intended_source_private_leaf_ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-20261024/whole-source.elf",
+      "bytes": 9932,
+      "sha256": "51eed28f3bff648ec6898be9fe30666e85237d59a755abc05f6b3936d89fc0b4"
+    },
+    "patch": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-20261024/accepted-rsqrt-to-d2f.patch",
+      "bytes": 3261,
+      "sha256": "b958d1df9b725a4b35891077e79ae9230492d41e19c4baa009b495ede0af2f58"
+    }
+  },
+  "source_binding": {
+    "frozen_artifacts60_lineage362_and_parent22refs_verified": true,
+    "accepted_parent_control_RP_object_exact": true,
+    "resident_parent_entry_and_resolved_BL_bound_to_real_narrow": true,
+    "standalone_include_full_object_ELF_exact256": true,
+    "own_byte_exact_rebuilds": 11,
+    "only_RP_changed_section": ".text.__aeabi_d2f",
+    "all_other_RP_allocated_bytes_semantic_relocations_equal": true,
+    "generic_M0_selected_bytes_relocations_equal": true,
+    "M4_selected_ASM_empty_and_equal": true,
+    "whole_M4_firmware_not_built": true,
+    "CPP_not_changed_by_component_patch": true,
+    "direct_public_ABI_entry": "0x10163001",
+    "no_interposition_veneer": true
+  },
+  "mathematical_proof": {
+    "type": "Independent reviewed source proof plus mechanical integer interval/bit identities and actual-code correspondence; no formal SMT theorem claim",
+    "returned_value_RNE_all_raw64": true,
+    "signed_zero_gradual_underflow_normal_overflow_Inf_NaN_covered": true,
+    "exact_parent_NaN_payload_sign_quiet_policy": true,
+    "all24_subnormal_shifts_including_actual_register_LSR32_covered": true,
+    "all_normal_exponents_carry_and_actual_half_cases_covered": true,
+    "complete_raw64_cardinality_sum": "18446744073709551616",
+    "complete_Qfplib_correct_partition_independent": true,
+    "all_correct_reference_path_costs_no_slower": true,
+    "guard_sticky_parity_affine_packing_certificates": {
+      "lower_range_interval_certificates": 2048,
+      "upper_range_interval_certificates": 1024,
+      "normal_bias_carry_parity_certificates": 18288,
+      "subnormal_shift_guard_sticky_parity_certificates": 864,
+      "NaN_payload_bit_algebra_controls": 312,
+      "independent_raw64_integer_model_checks": 32768
+    },
+    "no_IEEE_exception_flags_claim": true
+  },
+  "own_fresh_checks": {
+    "unique_inputs": 3437,
+    "ARM_calls": 27496,
+    "machine_calls": {
+      "candidate": 6874,
+      "intended_source": 6874,
+      "parent": 6874,
+      "Qfplib": 6874
+    },
+    "SIO_states": [
+      "READY",
+      "DIRTY"
+    ],
+    "MPFR_direct_conversions": 3437,
+    "MPFR_version": "4.2.2",
+    "MPFR_NaN_category_only": 440,
+    "exact_integer_RNE_comparisons": 3437,
+    "raw_parent_bits_including_NaNs_exact": true,
+    "leaf_PC_and_SP_checked_every_instruction": true,
+    "leaf_memory_reads_only_six_own_literals": true,
+    "leaf_ROM_firmware_external_or_mock_calls": 0,
+    "leaf_stack_bytes": 0,
+    "leaf_SIO_accesses": 0,
+    "all28_SIO_bytes_preserved": true,
+    "actual_candidate_paths": 17,
+    "actual_Qfplib_paths": 9,
+    "all_predicted_costs_match_actual_ARM": true,
+    "hardware": false
+  },
+  "inherited_and_author_evidence": {
+    "own_ARM_not_pooled_with_author": true,
+    "author_unique_inputs": 231984,
+    "author_fresh_qualified_ARM_calls": 1391904,
+    "author_oracle_evaluations": 231984,
+    "author_actual_directed_MPFR_input_conversions": 229580,
+    "author_NaN_shortcuts_without_MPFR": 2404,
+    "accounting_note": "The author labels all 231984 oracle evaluations as MPFR references; 2404 NaNs short-circuit before MPFR. Accepted accounting is 229580 actual MPFR input conversions plus 2404 NaN category checks. Exact raw NaN policy is separately verified.",
+    "author_smoke11004_excluded": true,
+    "author_existing_rows_all463968_reconciled_with_own_integer_and_source_cost_models": true,
+    "author_observed_correct_reference_states": 448890,
+    "author_correct_reference_comparison": {
+      "faster": 217338,
+      "equal": 231552,
+      "slower": 0
+    },
+    "author_wrong_reference_states15078_retained": true,
+    "wrong_reference_NaN_cost_candidate19_Qfplib13_retained": true,
+    "wrong_reference_subnormal_costs_retained": true,
+    "author_expanded_parent_raw_deficits103496_candidate0": true,
+    "old512_full_reconciliation": {
+      "rows": 512,
+      "correct_reference510": true,
+      "old_deficits426_candidate0": true
+    },
+    "inherited_old_corpora_not_reexecuted_by_reviewer": true
+  },
+  "size_and_stack": {
+    "parent_leaf_bytes": 68,
+    "candidate_leaf_bytes": 256,
+    "selected_ASM_delta_bytes": 188,
+    "global_RAM_delta": 0,
+    "stack_bytes": 0,
+    "new_external_calls_or_tables_or_libgcc": 0,
+    "whole_firmware_size_not_built": true,
+    "old_C_slowpath_GC_savings_not_claimed": true,
+    "parent_cost_increase_state_rows": 110782,
+    "parent_cost_increase_instructions": 1,
+    "physical_cycles_not_measured": true
+  },
+  "original507_separate_component_union": {
+    "no_slower": 418,
+    "strictly_faster": 412,
+    "equal": 6,
+    "remaining": 89,
+    "remaining_by_operation": {
+      "pow": 51,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    },
+    "conversion_not_added_to_original507": true,
+    "not_one_integrated_binary": true,
+    "parent_ledger": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/original507-component-delta.json",
+      "bytes": 12700,
+      "sha256": "409ba1978b5cef6a8f688f3c529ec3184af5fa82c3cf12aa3a65168d7eba4edd"
+    }
+  },
+  "nonblocking_observations": [
+    {
+      "kind": "evidence_accounting",
+      "detail": "231984 MPFR-label corrected to 229580 actual directed MPFR input conversions and 2404 pre-MPFR NaN shortcuts in this receipt; producer frozen packet left immutable"
+    }
+  ],
+  "retained_open_items": [
+    "original507 remaining89 (pow51 exp2 sin22 cos14)",
+    "expanded pow7904 and exp395",
+    "expanded ln5",
+    "conversion FMA and sampled f2d1",
+    "generalpow1024 totality",
+    "full integrated private math image and complete math acceptance",
+    "full firmware relink, section placement/GC size and whole M4 build if integration requested",
+    "physical-cycle and hardware acceptance",
+    "canonical promotion/release"
+  ],
+  "grants": {
+    "private_d2f_component_GO": true,
+    "all_math_GO": false,
+    "hardware_GO": false,
+    "canonical_promotion": false,
+    "integration_or_EA9_changes": false,
+    "release_GO": false
+  },
+  "producer_Git_primary_or_device_state_modified": false,
+  "refs": {
+    "binding.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/binding.py",
+      "bytes": 7895,
+      "sha256": "2662070955b6a9c22757d2a9203949e5b9470da43c85767be61cd4dd45081632"
+    },
+    "binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/binding.json",
+      "bytes": 209568,
+      "sha256": "12df0565eebaee07b134eafb2a3cdef5a0f245fdbd6395de4aadf55b5731fb40"
+    },
+    "model.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/model.py",
+      "bytes": 3200,
+      "sha256": "c62c494191306dc90bb42a530cd281a82d0d723050af8bccfdca153a4efe08fd"
+    },
+    "proof.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/proof.py",
+      "bytes": 7817,
+      "sha256": "f80c68021b42f4e4b62c19923dded3f277bb10cbd305d554b483ac6784d7b4d5"
+    },
+    "proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/proof.json",
+      "bytes": 3990,
+      "sha256": "cf6767fb6b927a40c92139d4f751c5c9edf201f6ab808b9d31d031320773e939"
+    },
+    "INDEPENDENT-PROOF.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/INDEPENDENT-PROOF.md",
+      "bytes": 9102,
+      "sha256": "8ad9020737501d8811194686c07692a3453461fbc8959298688a02da2f1c1cbf"
+    },
+    "arm.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/arm.py",
+      "bytes": 9723,
+      "sha256": "d23c9ad96e459ccb2306a37a6547ae6045742c1894b40c43210171a949b46131"
+    },
+    "arm-result.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/arm-result.json",
+      "bytes": 3522,
+      "sha256": "cad828e0dff8f9090297d382aa9146320b4043c7d47b0e24778454b3e697b718"
+    },
+    "arm-rows.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/arm-rows.json",
+      "bytes": 5338197,
+      "sha256": "5ee44223e4f0f11f9024f162b3b6a292f0768d2742461d06e4423f7c16dc51a8"
+    },
+    "actual-paths.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/actual-paths.json",
+      "bytes": 22408,
+      "sha256": "2c19ee55e1804cec09086a1cbb9b715300a3284f38fc8795584ce17dde4da031"
+    },
+    "own-inputs.bin": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/own-inputs.bin",
+      "bytes": 27496,
+      "sha256": "c736c589aadbaf55d82f3c88d49cb250450b6192e7ebe5e563c0a436a1d381ae"
+    },
+    "candidate.dis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/candidate.dis",
+      "bytes": 4989,
+      "sha256": "39a9d656c2a60fbcc45b5fa17e1e97de4bb6666cca39a8cab15864823eec329c"
+    },
+    "reference.dis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/reference.dis",
+      "bytes": 2005,
+      "sha256": "021ccd375b016d13c3f4ba740836c3417d6983b23c2b47b48c28a7a9613ed742"
+    },
+    "postread.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/postread.json",
+      "bytes": 95739,
+      "sha256": "14a518b35c1810a1826d0c2f9d0e507b9b89e242dccd16090064e103bd71fdd5"
+    },
+    "execution.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/execution.json",
+      "bytes": 647,
+      "sha256": "55d45cdfc95283605f8bded4733f829140d8c554dc587bcd42109db3c5c1c724"
+    },
+    "conversion-component-receipt.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/conversion-component-receipt.json",
+      "bytes": 1257,
+      "sha256": "37e6c98d5cf52d2f8764d927dd4113e9e9d69f7af6d8c70f43b71c323d92d6ed"
+    },
+    "finalize.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/finalize.py",
+      "bytes": 9095,
+      "sha256": "e2e52324d405f4ec00a842bbef730c5467228bfe84243f7f510f6ea4b9c0b241"
+    }
+  }
+}

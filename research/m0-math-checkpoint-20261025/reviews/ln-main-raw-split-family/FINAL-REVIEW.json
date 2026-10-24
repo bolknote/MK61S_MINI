@@ -1,0 +1,354 @@
+{
+  "status": "PRIVATE_MAIN_RAW_SPLIT_COMPONENT_GO_WITH_RETAINED_SPEED_REGRESSIONS",
+  "utc": "2026-10-24T06:35:45.453330+00:00",
+  "blockers": [],
+  "scope": "Only frozen RP2040 DIRTY general-main ln raw split, signed residual-aware enclosure, RNE packing/dispatch, source and complete actual ELF binding against independently accepted exact-small-limb parent.",
+  "shipping_GO": false,
+  "canonical_math_GO": false,
+  "whole_ln_GO": false,
+  "whole_ln_speed_GO": false,
+  "whole_math_GO": false,
+  "hardware_GO": false,
+  "hardware_accessed": false,
+  "reviewed_original_goal_count_unchanged": 298,
+  "target": {
+    "HANDOFF.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/HANDOFF.md",
+      "bytes": 1992,
+      "sha256": "a9222d24f1dd4491667b697ade1f0a378d8bf5750ce293eaaac73efda157dc2b"
+    },
+    "result.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/result.json",
+      "bytes": 7936,
+      "sha256": "406533549b8d7bf94fcd95e7fe396497561f91590df6096d74bec1dde1caad82"
+    },
+    "native_eabi_m0_log70.inc": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/native_eabi_m0_log70.inc",
+      "bytes": 11767,
+      "sha256": "8294798875f17de019d15a57208f04daf2d74c431873036ecc87111df583e42f"
+    },
+    "candidate.elf": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/candidate.elf",
+      "bytes": 111732,
+      "sha256": "b82a9f1f09b5edd41c099abc82208b6254e52d0a817080f78625a0c818ac836a"
+    }
+  },
+  "accepted_parent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 14554,
+    "sha256": "cd842f0284cda419305b6f2610e0a80ab91578406b8ec185435e745512483f63"
+  },
+  "parent_result_sha256": "182efb16d9f7b70888d443d4a27eec8a2cd61fd357d0ae5bdfb451f432be0c89",
+  "parent_control_ELF_exact": true,
+  "seals": {
+    "artifacts_verified_before_after": 59,
+    "input_pins_verified_before_after": 582,
+    "postseal": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-postseal-20261024.json",
+      "bytes": 493,
+      "sha256": "9df9ac4aa2a20bfa26861081f197bbfbdf46456812a972148b2db9b9f0ea552a"
+    }
+  },
+  "independent_proofs": {
+    "check_binding_math.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/check_binding_math.py",
+      "bytes": 11360,
+      "sha256": "efe21ce69dec4e665d7f3d0ba84396681f67ac8d49b32a4faa09975a85a724e2"
+    },
+    "math-binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/math-binding.json",
+      "bytes": 7397,
+      "sha256": "c7e2f70c9ef45f125045d3c66440969b254dea7b14fec845fabcb5516a922ab9"
+    },
+    "math-binding.log": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/math-binding.log",
+      "bytes": 684,
+      "sha256": "188dfb4c251bf80f2b0f7d9f48d13f6e31916cb0f237aa9b9fc8531e105442b6"
+    },
+    "math-notes.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/math-notes.md",
+      "bytes": 5766,
+      "sha256": "1e63ea5ccd44e2e902ee053261029d176a9cf7df3810067b16a2bd3a32f424b1"
+    },
+    "check_arm.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/check_arm.py",
+      "bytes": 10022,
+      "sha256": "4c6c501ffbbef459aa1de93d9a95603a82547a78f28863112c247f52884c5ed0"
+    },
+    "focused-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/focused-arm.json",
+      "bytes": 150004,
+      "sha256": "5af7d23bfc2a0b75f7c495d147ad4a16b5834a0272b302fbe7877f98610e6f33"
+    },
+    "focused-arm.log": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/focused-arm.log",
+      "bytes": 1243,
+      "sha256": "365767981c7cb9ef65a1d0d3b4a3de2f7ce6b782966725b46bdfa72ed7dd302d"
+    },
+    "public-results.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/public-results.json",
+      "bytes": 151444,
+      "sha256": "57a425c5d7311d833bcbe8c6641796b4a514e0d5deb855e717a14b297dd0c360"
+    },
+    "own-intermediate-model-note.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/own-intermediate-model-note.json",
+      "bytes": 542,
+      "sha256": "9dbb96b4b16591144b1a1257f4bda5e6a504e4c9e86e10294b43a38649cfcf96"
+    }
+  },
+  "mathematical_conclusion": {
+    "actual_domain": "Positive normal main domain, index0..1023/den2049..4095; delta0..2^41; low signed limb family invariant under negation.",
+    "actual_ELF_reciprocal_rows": 1024,
+    "argument_error": "106497/16384",
+    "base_error": "6253190396598039312191897/906251642853202851790848",
+    "base_error_float": 6.900059653310828,
+    "generic_total_error": "12143881388354481213264281/906251642853202851790848",
+    "generic_total_error_float": 13.400120688467078,
+    "magnitude_error": "M-T=-v*r/den+epsilon; |epsilon|<B+ceil(abs(k)/2), with v=-1 iff offset and result signs differ; r=(delta<<29)-h*den exactly.",
+    "all_residual_gate_proof": "For accepted nonzero midpoint distance, upper/lower interval separation >=7-B>0 by exact integer predicate substitution. Equality is safe; midpoint0 always declines; distance>=16+extra uses inherited generic bound.",
+    "exact_signed_low32_residual_abs_below": 32768,
+    "cold_integer_expression_abs_below": 4194304,
+    "shift_range": [
+      11,
+      27
+    ],
+    "width_range": [
+      64,
+      80
+    ],
+    "lowest_output_binade_asymmetric_halfcell_safe": true,
+    "extra_exponent_error_range": [
+      0,
+      512
+    ],
+    "fallback": "Unchanged ln_refine(original x) on unproved intervals.",
+    "premises_inherited_only_from_accepted_small_limb_chain": true
+  },
+  "source_artifact_binding": {
+    "source_only_dispatch_and_raw": true,
+    "exact_parent_polynomial_table_operations": true,
+    "all_other_local_sources_and_ASM_byteexact": true,
+    "changed_object_sections": {
+      ".text.ln_main_raw": [
+        0,
+        1356
+      ],
+      ".text.mk61_m0_ln": [
+        1272,
+        1300
+      ]
+    },
+    "object_growth_bytes": 1384,
+    "linked_growth_bytes": 1384,
+    "complete_private_CPP_ASM_ELF_and_pack_rebuild_byteexact": true,
+    "rebuild_hashes": {
+      "candidate-full.o": "591c95cd8c26af0a8be5dd6af5a016ac3bd94b5d854d665835d0703e115c1efa",
+      "candidate-ratio.o": "c80865dd3f89454cd4790770059a806133b87f39f1ac5090c12f10e308584fea",
+      "candidate.elf": "b82a9f1f09b5edd41c099abc82208b6254e52d0a817080f78625a0c818ac836a",
+      "pack-unit.o": "4470820c83787adf42043aba7a5574d78b3c182b3571bf8ff479d2b3f2932fc5",
+      "pack-unit.elf": "c49aa90232643b3f52cbd6eb8b6723ac5d7f3a31b753f3564f40b57f26858c06"
+    },
+    "actual_resident_bindings": 39,
+    "actual_memcpy_memset_wrap_aliases_verified": true,
+    "no_new_tables_global_RAM_dependencies": true,
+    "generic_M0_allocated_control": {
+      "allocated_bytes": 247584,
+      "identical": true,
+      "whole_platform_qualification": false
+    },
+    "M4_soft_and_hard_controls": "Byte-identical zero-allocated excluded translation units. This is no whole-M4 firmware or math qualification.",
+    "whole_release_builds_not_run": true
+  },
+  "own_bounded_execution": {
+    "MPFR": "4.2.2",
+    "public_unique_raw_inputs": 125,
+    "public_state_rows": 250,
+    "public_ARM_calls": 750,
+    "public_all24_fixed_and49_remaining_raw_deficits_checked_both_states": true,
+    "public_historical_IEEE_subnormal_family_and_extreme_cases": true,
+    "actual_dispatch_trace": {
+      "mk61_m0_log_ratio70": 88,
+      "ln_main_raw": 40,
+      "ln_refine": 92
+    },
+    "actual_branch_cases": {
+      "old": 210,
+      "raw": 40,
+      "fallback": 92
+    },
+    "raw_does_not_enter_exact_quotient_helper": true,
+    "raw_NaN_policy_equal_parent": true,
+    "candidate_and_parent_no_MPFR_errors": true,
+    "DIRTY_28bytes_preserved_READY_not_dirty": true,
+    "PCS_SP_bounded_writes_every_call": true,
+    "pack_ARM_calls": 448,
+    "pack_configurations": 224,
+    "pack_accepted": 144,
+    "pack_declined": 80,
+    "pack_exact_Fraction_RNE_endpoint_checks": 288,
+    "pack_signed_equality_midpoints_binade_carry_controls": true,
+    "pack_SIO_accesses": 0,
+    "pack_input_unchanged": true,
+    "pack_PC_limited_to_bare_unit": true,
+    "public_subset_stack_bytes": {
+      "candidate": 528,
+      "parent": 528,
+      "Qfplib": 32
+    },
+    "bare_pack_stack_bytes": 56,
+    "total_own_math_ARM_calls": 1198,
+    "author_full_640B_public_stack_not_reswept": true
+  },
+  "saved_performance_recount": {
+    "retained_parent_rows": 68876,
+    "all_rows": 97536,
+    "groups": {
+      "READY": {
+        "slower": 28431,
+        "equal": 20337
+      },
+      "DIRTY": {
+        "faster": 12096,
+        "equal": 20337,
+        "slower": 16335
+      }
+    },
+    "regression_histogram": {
+      "8": 12096,
+      "4": 32670
+    },
+    "expanded_parent_raw_losses": 73,
+    "expanded_child_raw_losses": 49,
+    "fixed_raw": 24,
+    "new_raw_losses": 0
+  },
+  "own_speed_witnesses": [
+    {
+      "x": "4000000000000000",
+      "group": "known_speed_or_domain_neighbors",
+      "SIO": "READY",
+      "expected": "3FE62E42FEFA39EF",
+      "outputs": {
+        "candidate": "3FE62E42FEFA39EF",
+        "parent": "3FE62E42FEFA39EF",
+        "Qfplib": "3FE62E42FEFA39EF"
+      },
+      "instructions": {
+        "candidate": 603,
+        "parent": 599,
+        "Qfplib": 711
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "ln_main_raw": 0,
+        "ln_refine": 0,
+        "mk61_m0_log_ratio70": 1
+      }
+    },
+    {
+      "x": "4000000000000000",
+      "group": "known_speed_or_domain_neighbors",
+      "SIO": "DIRTY",
+      "expected": "3FE62E42FEFA39EF",
+      "outputs": {
+        "candidate": "3FE62E42FEFA39EF",
+        "parent": "3FE62E42FEFA39EF",
+        "Qfplib": "3FE62E42FEFA39EF"
+      },
+      "instructions": {
+        "candidate": 617,
+        "parent": 613,
+        "Qfplib": 711
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "ln_main_raw": 0,
+        "ln_refine": 0,
+        "mk61_m0_log_ratio70": 1
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFBF",
+      "group": "known_speed_or_domain_neighbors",
+      "SIO": "READY",
+      "expected": "3FF62D827A741385",
+      "outputs": {
+        "candidate": "3FF62D827A741385",
+        "parent": "3FF62D827A741385",
+        "Qfplib": "3FF62D827A741385"
+      },
+      "instructions": {
+        "candidate": 599,
+        "parent": 591,
+        "Qfplib": 713
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "ln_main_raw": 0,
+        "ln_refine": 0,
+        "mk61_m0_log_ratio70": 1
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFBF",
+      "group": "known_speed_or_domain_neighbors",
+      "SIO": "DIRTY",
+      "expected": "3FF62D827A741385",
+      "outputs": {
+        "candidate": "3FF62D827A741385",
+        "parent": "3FF62D827A741385",
+        "Qfplib": "3FF62D827A741385"
+      },
+      "instructions": {
+        "candidate": 659,
+        "parent": 712,
+        "Qfplib": 713
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "ln_main_raw": 1,
+        "ln_refine": 0,
+        "mk61_m0_log_ratio70": 0
+      }
+    }
+  ],
+  "author_large_corpus_inherited_not_reexecuted": {
+    "unique_inputs": 48768,
+    "state_rows": 97536,
+    "public_ARM_calls": 390144,
+    "bare_pack_ARM_calls": 32338,
+    "full_public_stack_bytes": 640,
+    "qualified_author_calls": 422482
+  },
+  "remaining_limits": [
+    "Component-only mathematical/implementation GO; no exhaustive64bit public execution, hardware, physical-cycle, canonical or whole-library promotion.",
+    "49 correct-Qfplib raw speed deficits remain. 32670 states are4 instructions slower than accepted parent and12096 are8 slower. Code growth1384B is retained; this is not a no-regression or whole-ln speed GO.",
+    "ln2 DIRTY617 vs parent613 and Qfp711; guard-edge -65 DIRTY659 vs parent712 and Qfp713. These are instruction counts, not cycles.",
+    "Historical ln goal at this parent stays6fixed/4open. reviewed original goal stays298/507; no counter increment is authorized by this receipt.",
+    "Later IEEE cold-entry parent, Q77 conditional child, new ln2-sign child and any other private source remain separately unreviewed by this receipt. No transitive GO inferred.",
+    "M4 controls establish exclusion/identity of this translation unit only; no entire platform build was performed."
+  ],
+  "actions": {
+    "frozen_producer_files_changed": false,
+    "Git_primary_canonical_or_shipping_modified": false,
+    "leases_or_USB_or_serial_or_Flash_accessed": false,
+    "new_normal_builds_or_CI_or_full_corpus": false,
+    "own_private_rebuild_and_additive_review_outputs_only": true
+  }
+}

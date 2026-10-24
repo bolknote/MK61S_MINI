@@ -1,0 +1,371 @@
+--- a/code/native_eabi_m0.cpp
++++ b/code/native_eabi_m0.cpp
+@@ -790,6 +790,16 @@
+ }
+ #endif
+ #include "native_eabi_m0_pow_fast.inc"
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++asm(".global mk61_m0_pow_negative_integer_dispatch\n.hidden mk61_m0_pow_negative_integer_dispatch\n"
++    ".thumb_set mk61_m0_pow_negative_integer_dispatch,pow_negative_integer\n"
++    ".global mk61_m0_pow_positive_checked_dispatch\n.hidden mk61_m0_pow_positive_checked_dispatch\n"
++    ".thumb_set mk61_m0_pow_positive_checked_dispatch,pow_positive_checked\n"
++    ".global mk61_m0_pow_near_one_binomial_dispatch\n.hidden mk61_m0_pow_near_one_binomial_dispatch\n"
++    ".thumb_set mk61_m0_pow_near_one_binomial_dispatch,pow_near_one_binomial\n");
++#endif
++#include "native_eabi_m0_pow_ordinary.inc"
++
+ MK61_SOFT_PCS double mk61_m0_sqrt_slow(double x) {
+   const U a=bits(x),m=a&D::Magnitude;
+   if(!m) return x;
+--- a/code/native_eabi_m0.S
++++ b/code/native_eabi_m0.S
+@@ -980,6 +980,105 @@
+ #endif
+ #include "native_eabi_m0_sqrt64_table.inc"
+ end mk61_m0_sqrt
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++// Thin exact-power dispatch keeps trivial results out of the large frame.
++.section .m0_pow_dispatch_extension,"ax",%progbits
++.align 2
++ .global mk61_m0_pow_fast
++ .type mk61_m0_pow_fast,%function
++ .thumb_func
++mk61_m0_pow_fast:
++ cmp r2,#0
++ bne .Lpow_dispatch
++ // Handle both signed zero exponents before any algebraic special case.
++ lsls r2,r3,#1
++ beq .Lpow_zero
++ ldr r2,=0x3ff00000
++ cmp r3,r2
++ beq .Lpow_identity
++ ldr r2,=0xbff00000
++ cmp r3,r2
++ beq .Lpow_reciprocal
++ ldr r2,=0x3fe00000
++ cmp r3,r2
++ beq .Lpow_square_root
++ ldr r2,=0x40000000
++ cmp r3,r2
++ beq .Lpow_square
++ ldr r2,=0xbfe00000
++ cmp r3,r2
++ beq .Lpow_inverse_root
++ // Low exponent word is zero and every exact case above has failed.
++ ldr r2,=mk61_m0_pow_dispatch_ordinary
++ mov r12,r2
++ movs r2,#0
++ bx r12
++.Lpow_restore_low:
++ movs r2,#0
++.Lpow_dispatch:
++ b mk61_m0_pow_dispatch
++.Lpow_identity:
++ lsls r3,r1,#1
++ ldr r2,=0xffe00000
++ subs r3,r3,r2
++ blo .Lpow_identity_return
++ orrs r3,r0
++ beq .Lpow_identity_return
++.Lpow_identity_quiet:
++ ldr r2,=0x00080000
++ orrs r1,r2
++.Lpow_identity_return:
++ bx lr
++.Lpow_reciprocal:
++ ldr r2,=__aeabi_ddiv
++ mov r12,r2
++ mov r3,r1
++ mov r2,r0
++ movs r0,#0
++ ldr r1,=0x3ff00000
++ bx r12
++.Lpow_square:
++ ldr r2,=mk61_m0_pow_square_exact
++ bx r2
++.Lpow_square_root:
++ cmp r1,#0
++ bmi .Lpow_restore_low
++ ldr r2,=mk61_m0_sqrt
++ bx r2
++.Lpow_inverse_root:
++ lsrs r2,r1,#20
++ cmp r2,#0
++ beq .Lpow_restore_low
++ ldr r3,=0x7ff
++ cmp r2,r3
++ bhs .Lpow_restore_negative_half
++ ldr r2,=pow_rsqrt
++ bx r2
++.Lpow_restore_negative_half:
++ ldr r3,=0xbfe00000
++ b .Lpow_restore_low
++.Lpow_zero:
++ // pow(x,+/-0)=1 except that signalling NaN x is quieted.
++ lsls r2,r1,#1
++ ldr r3,=0xffe00000
++ subs r2,r2,r3
++ blo .Lpow_zero_one
++ orrs r2,r0
++ beq .Lpow_zero_one
++.Lpow_zero_nan:
++ lsls r2,r1,#12
++ bmi .Lpow_zero_one
++ ldr r2,=0x00080000
++ orrs r1,r2
++ bx lr
++.Lpow_zero_one:
++ movs r0,#0
++ ldr r1,=0x3ff00000
++ bx lr
++.ltorg
++end mk61_m0_pow_fast
++#include "native_eabi_m0_pow_square.inc"
++#else
+ // Thin exact-power dispatch keeps trivial results out of the large frame.
+ .section .m0_pow_dispatch_extension,"ax",%progbits
+ .align 2
+@@ -1075,6 +1174,7 @@
+  b .Lpow_restore_low
+ .ltorg
+ end mk61_m0_pow_fast
++#endif
+ .section .note.GNU-stack,"",%progbits
+ #endif
+ 
+--- /dev/null
++++ b/code/native_eabi_m0_pow_ordinary.inc
+@@ -0,0 +1,41 @@
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++extern "C" __attribute__((pcs("aapcs"))) double mk61_m0_pow_negative_integer_dispatch(double,double);
++extern "C" bool mk61_m0_pow_near_one_binomial_dispatch(U,U,U*);
++extern "C" __attribute__((pcs("aapcs"))) double mk61_m0_pow_positive_checked_dispatch(double,double);
++extern "C" U pow_root128_ranged(U,U);
++#define pow_negative_integer mk61_m0_pow_negative_integer_dispatch
++#define pow_positive_checked mk61_m0_pow_positive_checked_dispatch
++#define pow_near_one_binomial(x,y,out) mk61_m0_pow_near_one_binomial_dispatch((x),(y),&(out))
++// Called only by the assembly after low32(y)==0, y!=+/-0 and every exact
++// exponent shortcut has failed. The unchanged dispatcher handles cold roots.
++extern "C" __attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_dispatch_ordinary"),pcs("aapcs")))
++double mk61_m0_pow_dispatch_ordinary(double x,double y) {
++ const U xb=bits(x),yb=bits(y),ym=yb&D::Magnitude;
++  if(xb==UINT64_C(0x3FF0000000000000)) return real(ym>D::Infinity && !(yb&D::Quiet)?yb|D::Quiet:xb);
++  if(xb&D::Sign) return pow_negative_integer(x,y);
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  const uint32_t xh=uint32_t(xb>>32);
++  if(xh-0x3FEFFFFFU<=1U) {
++    if(uint32_t(yb) && xb-UINT64_C(0x3FF0000000000000)+64<=96) {
++      U result;
++      if(pow_near_one_binomial(xb,yb,result)) return real(result);
++    }
++  } else if(!uint32_t(yb)) {
++    const uint32_t yh=uint32_t(yb>>32);
++    const bool small=yh-0x40080000U<=0x00180000U &&
++      !(yh&(yh<0x40100000U?0x7FFFFU:0x3FFFFU));
++    // The unchanged root prefix itself accepts only ey in[-7,5].
++    // Reject other exponents before allocating/calling its128-byte frame.
++    if(!small && ((yh>>20)&0x7FFU)-1016U<=12U) {
++      const U result=pow_root128_ranged(xb,yb);
++      if(result!=(D::Infinity|D::Quiet)) return real(result);
++    }
++  }
++
++#endif
++  return pow_positive_checked(x,y);
++}
++#undef pow_negative_integer
++#undef pow_positive_checked
++#undef pow_near_one_binomial
++#endif
+--- /dev/null
++++ b/code/native_eabi_m0_pow_square.inc
+@@ -0,0 +1,189 @@
++#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++.syntax unified
++.cpu cortex-m0plus
++.thumb
++// Full106-bit significand square. All discarded bits reach the RNE test.
++// Inputs below exponent485 square to zero; exponents1535..2046 overflow.
++// No new tables or floating arithmetic are used.
++.section .m0_pow_dispatch_extension,"ax",%progbits
++.align 2
++.global mk61_m0_pow_square_exact
++.hidden mk61_m0_pow_square_exact
++.type mk61_m0_pow_square_exact,%function
++.thumb_func
++mk61_m0_pow_square_exact:
++ lsls r2,r1,#1
++ lsrs r2,#21
++ ldr r3,=485
++ cmp r2,r3
++ bhs .Lsquare_nonzero
++ movs r0,#0
++ movs r1,#0
++ bx lr
++.Lsquare_nonzero:
++ ldr r3,=1535
++ cmp r2,r3
++ blo .Lsquare_finite
++ b .Lsquare_large
++.Lsquare_finite:
++ push {r4-r7,lr}
++ // H=(1<<20)|fraction_high; B=2*input_exponent-1023.
++ lsrs r4,r1,#20
++ subs r4,#1
++ lsls r4,#20
++ subs r1,r4
++ lsls r3,r2,#1
++ ldr r2,=1023
++ subs r3,r3,r2
++ push {r0,r1,r3}
++ // L^2 into r12:r5 (low word first), using three16x16 products.
++ uxth r2,r0
++ muls r2,r2
++ uxth r3,r0
++ lsrs r4,r0,#16
++ muls r3,r4
++ muls r4,r4
++ lsls r5,r3,#17
++ lsrs r6,r3,#15
++ adds r5,r2
++ adcs r6,r4
++ mov r12,r5
++ mov r5,r6
++ // H^2 into r6:r7; H<2^21.
++ uxth r2,r1
++ muls r2,r2
++ uxth r3,r1
++ lsrs r4,r1,#16
++ muls r3,r4
++ muls r4,r4
++ lsls r6,r3,#17
++ lsrs r7,r3,#15
++ adds r6,r2
++ adcs r7,r4
++ // L*H into r0:r1. Keep the possible carry of the16-bit cross sum.
++ uxth r2,r0
++ uxth r3,r1
++ muls r2,r3
++ lsrs r4,r0,#16
++ muls r3,r4
++ lsrs r1,#16
++ muls r4,r1
++ uxth r0,r0
++ muls r0,r1
++ adds r3,r0
++ bcc .Lsquare_cross_fits
++ movs r0,#1
++ lsls r0,#16
++ adds r4,r0
++.Lsquare_cross_fits:
++ lsls r0,r3,#16
++ lsrs r1,r3,#16
++ adds r0,r2
++ adcs r1,r4
++ // Add2*(L*H)<<32 to L^2+(H^2<<64).
++ lsls r0,#1
++ adcs r1,r1
++ adds r5,r0
++ adcs r6,r1
++ movs r0,#0
++ adcs r7,r0
++ add sp,#8
++ pop {r3}
++ // Full product is r7:r6:r5:r12. Normalize only the rounding grid.
++ lsrs r2,r7,#9
++ adds r3,r3,r2
++ cmp r3,#0
++ ble .Lsquare_subnormal
++ movs r4,#52
++ adds r4,r4,r2
++ subs r3,#1
++ lsls r3,#20
++ b .Lsquare_choose_word
++.Lsquare_subnormal:
++ movs r4,#53
++ subs r4,r4,r3
++ adds r4,r4,r2
++ movs r3,#0
++.Lsquare_choose_word:
++ cmp r4,#64
++ bhi .Lsquare_shift_above64
++ // Drop s in[52,64]. Remainder word is r5; lower sticky is r12.
++ subs r4,#32
++ movs r2,#32
++ subs r2,r2,r4
++ mov r0,r5
++ lsrs r0,r4
++ mov r1,r6
++ lsls r1,r2
++ orrs r0,r1
++ mov r1,r6
++ lsrs r1,r4
++ lsls r7,r7,r2
++ orrs r1,r7
++ lsls r5,r5,r2
++ mov r6,r12
++ b .Lsquare_round
++.Lsquare_shift_above64:
++ cmp r4,#96
++ bhi .Lsquare_shift_above96
++ // Drop s in[65,96]. Remainder word is r6; lower sticky is r5|r12.
++ subs r4,#64
++ movs r2,#32
++ subs r2,r2,r4
++ mov r0,r6
++ lsrs r0,r4
++ mov r1,r7
++ lsrs r1,r4
++ lsls r7,r7,r2
++ orrs r0,r7
++ mov r7,r12
++ orrs r7,r5
++ mov r5,r6
++ lsls r5,r2
++ mov r6,r7
++ b .Lsquare_round
++.Lsquare_shift_above96:
++ // Drop s in[97,106]. Remainder word is r7; lower96bits are sticky.
++ subs r4,#96
++ movs r2,#32
++ subs r2,r2,r4
++ mov r0,r7
++ lsrs r0,r4
++ movs r1,#0
++ orrs r6,r5
++ mov r5,r12
++ orrs r6,r5
++ mov r5,r7
++ lsls r5,r2
++.Lsquare_round:
++ lsls r5,#1
++ bcc .Lsquare_pack
++ orrs r5,r6
++ bne .Lsquare_increment
++ movs r2,#1
++ tst r0,r2
++ beq .Lsquare_pack
++.Lsquare_increment:
++ adds r0,#1
++ movs r2,#0
++ adcs r1,r2
++.Lsquare_pack:
++ adds r1,r3
++ pop {r4-r7,pc}
++.Lsquare_large:
++ ldr r3,=2047
++ cmp r2,r3
++ bne .Lsquare_infinity
++ lsls r2,r1,#12
++ orrs r2,r0
++ beq .Lsquare_infinity
++ ldr r2,=0x00080000
++ orrs r1,r2
++ bx lr
++.Lsquare_infinity:
++ movs r0,#0
++ ldr r1,=0x7ff00000
++ bx lr
++.ltorg
++.size mk61_m0_pow_square_exact,.-mk61_m0_pow_square_exact
++#endif

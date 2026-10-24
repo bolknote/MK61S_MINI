@@ -1,0 +1,43 @@
+{
+  "status": "ACCEPTED_PRIVATE_RP_F2D_CONVERSION_COMPONENT_ONLY",
+  "operation": "__aeabi_f2d",
+  "candidate_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-f2d-leaf-20261024/candidate.elf",
+    "bytes": 4640,
+    "sha256": "5ef1aa821b2e4c1b5fa5aaa471d6b8e2f3bb29fda80993085df782e1502130df"
+  },
+  "accepted_separate_d2f_parent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 12340,
+    "sha256": "500e2c5b1253e1ad73b94572b13fbddf34f5e4bf09cfce6f8ee97164d37a0aa4"
+  },
+  "exact_widening_all_raw32": true,
+  "NaN_return_policy": "accepted-parent sign, payload preservation, quiet forced",
+  "all_correct_Qfplib_classes_no_slower_in_Thumb_instruction_count": true,
+  "author_observed_correct_reference_states": 205234,
+  "author_observed_wrong_reference_states_retained": 60684,
+  "old256_comparable249_speed_deficits_before1_after0": true,
+  "expanded_four_old_speed_deficits_fixed": [
+    "00000000",
+    "80000000",
+    "7F800000",
+    "FF800000"
+  ],
+  "all_observed_states_strictly_faster_native_parent": true,
+  "parent_cost_increases": 0,
+  "physical_cycles_not_measured": true,
+  "original507_unchanged": {
+    "no_slower": 418,
+    "strictly_faster": 412,
+    "equal": 6,
+    "remaining": 89,
+    "remaining_by_operation": {
+      "pow": 51,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    }
+  },
+  "not_integrated_with_previous_components": true,
+  "whole_conversion_math_or_release_goal_not_complete": true
+}

@@ -1,0 +1,18 @@
+{
+  "status": "QUALIFIED_OWN_RUN_EXIT0",
+  "python": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+  "MPFR": "4.2.2",
+  "actual_exec_session": 97947,
+  "actual_completion_chunk": "45ea68",
+  "returncode": 0,
+  "qualified_own_ARM_calls": 5900,
+  "qualified_own_MPFR_calls": 316,
+  "sandbox_attempts_excluded": 2,
+  "sandbox_failure": "Both exited132/SIGILL in Unicorn mem_map during machine construction before the first public test; faulthandler located native_eabi_m0_arm_self_test.py:49. The authorised host-only JIT run completed EXIT0. No USB, Flash, lease or Git action occurs in the script.",
+  "reproduction": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python /Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/bind_rebuild.py",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python /Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/bounds.py",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python -u -X faulthandler /Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/check_arm.py"
+  ],
+  "hardware": false
+}

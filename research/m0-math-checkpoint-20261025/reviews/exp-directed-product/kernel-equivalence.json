@@ -1,0 +1,20 @@
+{
+  "status": "PASS_ALL_INPUT_ARITHMETIC_BIJECTION_AND_FLAGS",
+  "exact_source_instruction_lists_bound_to_rebuilt_full_ELF": true,
+  "old79_new77": true,
+  "prologue_argument_save_offsets_36byte_frame_and_epilogue_identical": true,
+  "temporary_register_bijection": {
+    "old_r0": "new_r5",
+    "old_r1": "new_r6",
+    "old_r5": "new_r0",
+    "old_r6": "new_r1"
+  },
+  "first_multiply_directly_into_r4_removes_one_nonflag_MOV": true,
+  "final_two_nonflag_ABI_MOVs_removed_accumulators_already_r0_r1": true,
+  "added_nonflag_MOV_R12_R4_before_discarding_exact_fraction": true,
+  "scalar_raw64_output_and_PCS_universal_equivalence_by_instruction_bijection": true,
+  "numerical_exact_retained_product_oracle_requires_a_lt2power63_b_lt2power54": true,
+  "arbitrary_NZCV_inputs_safe": "All relevant arithmetic/flags map identically. Removed and added MOV are nonflag; changed first MUL produces the same flags/value. Dynamic all16 checks cover 8 adversarial pairs.",
+  "extra_R12_is_private_not_scalar_C_ABI": true,
+  "hardware": false
+}

@@ -1,0 +1,49 @@
+{
+  "status": "BUILT_EXACT_Q77_CORE_FRAGMENTS_AND_PRODUCT54_CAPSULE",
+  "source_sha256": "84213d8eb6c7841b48a834cd2304eb8c0ccd6bedc150ee84fd01cf39a8a7e06b",
+  "candidate_ELF_sha256": "1164948d280c23bc66601af789dbd2a4af44c0982fb8c813b35fa2b7a396052e",
+  "unit_ELF_sha256": "19fe194acb5c6beb0ea5e496dd8a7f6b55ee0e1a62622a8ff5c02699cc7c5aca",
+  "exact_fragment_sha256": {
+    "wide32": "e0915ea27ec6b4475377d7be710a56a3bbf9742e0f023f25a69a490d53af71a9",
+    "argument_and_third": "001f00541353416cfdbf12f14942e4dbafc9ce5e273fcc8c9093fccbf4101797",
+    "square": "d583cde70f513ef48ed931121a960cbed9455bd5fab597a86c39b140736a5f59",
+    "cube": "516ad105d7260a5346925831a288ebafe7954f08e6023cd8eb9dbf43bddb8eae",
+    "fourth": "fdfe34cec4f0ea571d388f8586611960c39ef716a819b5ca108cac56a93717b4",
+    "fifth": "2659c702469a4a19cf72d8ce966a4ef04b49754d3afa06a11453c431833a03d9"
+  },
+  "reciprocal_fixture_bytes": 2048,
+  "fixture_not_a_new_runtime_table": true,
+  "product54_capsule_bytes": 184,
+  "product54_capsule_sha256": "81ad2d43fe44b6f9becccf332840205c0ff504dac4e944b7280f7f83afb4aa50",
+  "capsule_runtime_address": "10010000",
+  "capsule_original_address": "1014D8B8",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/core-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/core-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/core-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/core-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/core-unit.elf"
+    ]
+  ],
+  "full_firmware_or_ROM_loaded": false,
+  "hardware_accessed": false
+}

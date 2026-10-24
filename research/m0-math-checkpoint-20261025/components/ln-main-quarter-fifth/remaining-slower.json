@@ -1,0 +1,247 @@
+{
+  "status": "FIVE_EXPANDED_MAIN_LN_RAW_SPEED_INPUTS_OPEN",
+  "raw_inputs": 5,
+  "state_rows": 10,
+  "rows": [
+    {
+      "x": "3FF04001FFFFFFFF",
+      "group": "coefficient_bound_band_edges",
+      "SIO": "READY",
+      "expected": "3F8FC1A4C0AD7C87",
+      "outputs": {
+        "resident": "3F8FC1A4C0AD7C87",
+        "Qfplib": "3F8FC1A4C0AD7C87",
+        "parent": "3F8FC1A4C0AD7C87",
+        "candidate": "3F8FC1A4C0AD7C87"
+      },
+      "instructions": {
+        "resident": 2041,
+        "Qfplib": 795,
+        "parent": 2045,
+        "candidate": 2138
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FF04001FFFFFFFF",
+      "group": "coefficient_bound_band_edges",
+      "SIO": "DIRTY",
+      "expected": "3F8FC1A4C0AD7C87",
+      "outputs": {
+        "resident": "3F8FC1A4C0AD7C87",
+        "Qfplib": "3F8FC1A4C0AD7C87",
+        "parent": "3F8FC1A4C0AD7C87",
+        "candidate": "3F8FC1A4C0AD7C87"
+      },
+      "instructions": {
+        "resident": 2710,
+        "Qfplib": 795,
+        "parent": 2127,
+        "candidate": 2220
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FF0C9049694DE26",
+      "group": "dense_positive_main_low_cells",
+      "SIO": "READY",
+      "expected": "3FA887B5DB68EECD",
+      "outputs": {
+        "resident": "3FA887B5DB68EECD",
+        "Qfplib": "3FA887B5DB68EECD",
+        "parent": "3FA887B5DB68EECD",
+        "candidate": "3FA887B5DB68EECD"
+      },
+      "instructions": {
+        "resident": 2045,
+        "Qfplib": 775,
+        "parent": 2053,
+        "candidate": 2146
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FF0C9049694DE26",
+      "group": "dense_positive_main_low_cells",
+      "SIO": "DIRTY",
+      "expected": "3FA887B5DB68EECD",
+      "outputs": {
+        "resident": "3FA887B5DB68EECD",
+        "Qfplib": "3FA887B5DB68EECD",
+        "parent": "3FA887B5DB68EECD",
+        "candidate": "3FA887B5DB68EECD"
+      },
+      "instructions": {
+        "resident": 2678,
+        "Qfplib": 775,
+        "parent": 2143,
+        "candidate": 2201
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FF0E29E2E0FBA0B",
+      "group": "dense_positive_main_low_cells",
+      "SIO": "READY",
+      "expected": "3FAB924509E52FAB",
+      "outputs": {
+        "resident": "3FAB924509E52FAB",
+        "Qfplib": "3FAB924509E52FAB",
+        "parent": "3FAB924509E52FAB",
+        "candidate": "3FAB924509E52FAB"
+      },
+      "instructions": {
+        "resident": 2025,
+        "Qfplib": 793,
+        "parent": 2033,
+        "candidate": 2129
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FF0E29E2E0FBA0B",
+      "group": "dense_positive_main_low_cells",
+      "SIO": "DIRTY",
+      "expected": "3FAB924509E52FAB",
+      "outputs": {
+        "resident": "3FAB924509E52FAB",
+        "Qfplib": "3FAB924509E52FAB",
+        "parent": "3FAB924509E52FAB",
+        "candidate": "3FAB924509E52FAB"
+      },
+      "instructions": {
+        "resident": 2705,
+        "Qfplib": 793,
+        "parent": 2099,
+        "candidate": 2101
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FF0E23E696625E7",
+      "group": "dense_positive_main_low_cells",
+      "SIO": "READY",
+      "expected": "3FAB86ECFE8628C2",
+      "outputs": {
+        "resident": "3FAB86ECFE8628C2",
+        "Qfplib": "3FAB86ECFE8628C2",
+        "parent": "3FAB86ECFE8628C2",
+        "candidate": "3FAB86ECFE8628C2"
+      },
+      "instructions": {
+        "resident": 2023,
+        "Qfplib": 784,
+        "parent": 2031,
+        "candidate": 2117
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FF0E23E696625E7",
+      "group": "dense_positive_main_low_cells",
+      "SIO": "DIRTY",
+      "expected": "3FAB86ECFE8628C2",
+      "outputs": {
+        "resident": "3FAB86ECFE8628C2",
+        "Qfplib": "3FAB86ECFE8628C2",
+        "parent": "3FAB86ECFE8628C2",
+        "candidate": "3FAB86ECFE8628C2"
+      },
+      "instructions": {
+        "resident": 2679,
+        "Qfplib": 784,
+        "parent": 2115,
+        "candidate": 2172
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FF051D3CC2E965E",
+      "group": "dense_positive_main_low_cells",
+      "SIO": "READY",
+      "expected": "3F94415357217556",
+      "outputs": {
+        "resident": "3F94415357217556",
+        "Qfplib": "3F94415357217556",
+        "parent": "3F94415357217556",
+        "candidate": "3F94415357217556"
+      },
+      "instructions": {
+        "resident": 2038,
+        "Qfplib": 797,
+        "parent": 2046,
+        "candidate": 2139
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FF051D3CC2E965E",
+      "group": "dense_positive_main_low_cells",
+      "SIO": "DIRTY",
+      "expected": "3F94415357217556",
+      "outputs": {
+        "resident": "3F94415357217556",
+        "Qfplib": "3F94415357217556",
+        "parent": "3F94415357217556",
+        "candidate": "3F94415357217556"
+      },
+      "instructions": {
+        "resident": 2678,
+        "Qfplib": 797,
+        "parent": 2136,
+        "candidate": 2194
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    }
+  ]
+}

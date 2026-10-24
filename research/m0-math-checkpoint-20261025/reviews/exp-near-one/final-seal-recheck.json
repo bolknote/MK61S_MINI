@@ -1,0 +1,24 @@
+{
+  "status": "PASS_FINAL_FROZEN_INPUT_RECHECK",
+  "FROZEN": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/FROZEN.json",
+    "bytes": 25478,
+    "sha256": "1e5a757a3116d4803330b0e554ad1dffbe0aea838c7a75126460f79dcf4d5de0"
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/result.json",
+    "bytes": 7013,
+    "sha256": "fe222980e2687df8ff95d21b73123c5c03b6b2b83624080f0eb44d89f4b9b701"
+  },
+  "HANDOFF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/HANDOFF.md",
+    "bytes": 3048,
+    "sha256": "a2c8a2753933c885e194e2884caa511e05c14978d5ccca50ee4fc5b84aeb6089"
+  },
+  "candidate_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/candidate.elf",
+    "bytes": 1153444,
+    "sha256": "e6f2f7e0c55b7d7f2547badb00eacef444a1575eb59bdae7d530eec0ea340fcc"
+  },
+  "inputs_and_completed_outputs_not_modified": true
+}

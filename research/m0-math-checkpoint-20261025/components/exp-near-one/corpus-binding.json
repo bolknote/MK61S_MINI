@@ -1,0 +1,41 @@
+{
+  "status": "PASS_RAW_CORPUS_RECONCILIATION_NO_NEW_EXECUTIONS",
+  "same_subset_remaining": {
+    "48763": 84,
+    "163675": 85,
+    "428231": 86,
+    "440007": 112,
+    "456750": 175,
+    "467366": 196
+  },
+  "known_parent_regression_rows": 5712,
+  "positive_instruction_delta_histogram": {
+    "1": 2474,
+    "2": 4,
+    "3": 724,
+    "5": 8,
+    "6": 970,
+    "7": 196,
+    "10": 154,
+    "31": 8,
+    "32": 24,
+    "34": 360,
+    "36": 38,
+    "38": 16,
+    "39": 376,
+    "40": 170,
+    "41": 4,
+    "44": 186
+  },
+  "regression_scopes": {
+    "still_no_slower_correct_Qfplib": 5662,
+    "wrong_Qfplib": 34,
+    "already_losing_correct_Qfplib": 16
+  },
+  "fixed_state_result_classes": {
+    "equal": 8,
+    "strict": 3418
+  },
+  "fixed_old_inputs": 1700,
+  "all_known_fixed_inputs_including_probe_new": 1713
+}

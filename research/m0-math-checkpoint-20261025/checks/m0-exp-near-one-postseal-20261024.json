@@ -1,0 +1,15 @@
+{
+  "status": "PASS_FROZEN_NEAR_ONE_AUTHOR_PACKET_AND_ALL_EXTERNAL_LINEAGE_PINS",
+  "verified_at_UTC": "2026-10-24T21:01:57.070565+00:00",
+  "packet": ".build/m0-exp-near-one-20261024",
+  "FROZEN_sha256": "1e5a757a3116d4803330b0e554ad1dffbe0aea838c7a75126460f79dcf4d5de0",
+  "result_sha256": "fe222980e2687df8ff95d21b73123c5c03b6b2b83624080f0eb44d89f4b9b701",
+  "HANDOFF_sha256": "a2c8a2753933c885e194e2884caa511e05c14978d5ccca50ee4fc5b84aeb6089",
+  "candidate_ELF_sha256": "e6f2f7e0c55b7d7f2547badb00eacef444a1575eb59bdae7d530eec0ea340fcc",
+  "packet_artifacts_verified": 167,
+  "external_lineage_pins_verified": 1389,
+  "all_hashes_and_sizes_match": true,
+  "independent_review_pending": true,
+  "no_canonical_Git_device_USB_Flash_integration_or_release_changes": true,
+  "goal_complete": false
+}

@@ -1,0 +1,187 @@
+{
+  "status": "FROZEN_AUTHOR_DYADIC_EXP_EXACT_PRODUCT_AND_SHARED_79_INSTRUCTION_LEAF",
+  "qualified_source_parent": ".build/m0-exp-adaptive-enclosure-20261024",
+  "source_parent_FROZEN_sha256": "de974c59adb91f98123723c014d0e41e44fa4fb966bc76ff87cf11bec994f5f8",
+  "source_parent_independent_review_pending": true,
+  "accepted_log_midpoint_ancestor_review": {
+    "status": "GO_PRIVATE_RP_EXP_TINY_LOG_MIDPOINT_COMPONENT_ONLY",
+    "path": ".build/m0-exp-tiny-log-midpoint-independent-20261024/FINAL-REVIEW.json",
+    "sha256": "bdaba8cf9bbe58c8e36dafe9b8f904eb8428fdd42db0abb070b5f4a42e472554",
+    "unique_direct_refs_verified": 48,
+    "receipt_plus_refs_verified": 49,
+    "own_ARM_calls": 13636,
+    "own_direct_MPFR_inputs": 1374,
+    "sNaN_shortcuts": 2
+  },
+  "source_sha256": "bb1ab9e95c03835a9be57b6b62f83f28194aa7b39296b40724e1aac3ae889ec9",
+  "product_include_sha256": "502d952317ac405a92789c68d4044d30654c203e4bbe6fcfd02475786f492590",
+  "candidate_ELF_sha256": "495cb0f305b599d60c457ee7af5513c9140f43f822af54c85aba1bea78858fca",
+  "public_exp_unique_inputs": 456750,
+  "public_exp_state_rows": 913500,
+  "fresh_public_exp_candidate_ARM_calls": 913500,
+  "fresh_new_Qfplib_ARM_calls": 33486,
+  "fresh_exp_parent_audit_ARM_calls": 130,
+  "fresh_bare_product_ARM_calls": 141320,
+  "fresh_literal_dyadic_ARM_calls": 70094,
+  "fresh_other_caller_ARM_calls": 1134,
+  "fresh_expanded_pow_losing_state_ARM_calls": 10081,
+  "total_qualified_fresh_ARM_calls": 1169745,
+  "actual_directed_MPFR_exp_inputs": 456748,
+  "actual_directed_MPFR_other_caller_inputs": 189,
+  "total_actual_directed_MPFR_validation_inputs": 456937,
+  "validation_oracle_evaluations": 456939,
+  "sNaN_shortcuts_without_MPFR": 2,
+  "MPFR_version": "4.2.2",
+  "separate_MPFR_log_preimage_generations8404_not_validation": true,
+  "old880014_exp_parent_Qfplib_rows_inherited_not_fresh": true,
+  "old_full111912_pow_pair_expected_outputs_and_reference_costs_inherited": true,
+  "probe40494_margin336_initial_failed_units141320_excluded_from_qualified_counts": true,
+  "wrong": 0,
+  "all_old440007_public_exp_return_bits_identical": true,
+  "exact_shift_source_proof_all_valid_index0_displacements": true,
+  "all_numeric_admission_gates_error_radii_and_IEEE_policy_unchanged": true,
+  "same_old440007_exp_losses": [
+    2023,
+    1476
+  ],
+  "same_old_inputs_fixed": 547,
+  "same_older48763_exp_losses": [
+    126,
+    96
+  ],
+  "expanded456750_exp_losses": 1541,
+  "expanded_count_scope": "Same440007:2023->1476,547fixed. New456750 union1541=1476old+65new controls (53dyadic,12uniform), all losses preexisting in parent. Different-size corpus counts must not be subtracted.",
+  "all1541remaining_exp_losses_parent_bound": true,
+  "new_raw_speed_losses": 0,
+  "correct_Qfplib_comparison": {
+    "faster": 517720,
+    "slower": 3082,
+    "equal": 10
+  },
+  "wrong_Qfplib_state_rows_retained": 392688,
+  "no_nominal_domain_filter": true,
+  "public_examples": {
+    "3DF0000000000000": {
+      "parent": 520,
+      "candidate": 439,
+      "Qfplib": 471
+    },
+    "BDF0000000000000": {
+      "parent": 542,
+      "candidate": 461,
+      "Qfplib": 520
+    },
+    "C041265824E2113C": {
+      "parent": 599,
+      "candidate": 596,
+      "Qfplib": 622
+    },
+    "4085F424184F6DC5": {
+      "parent": 2264,
+      "candidate": 2266,
+      "Qfplib": 649
+    }
+  },
+  "original_exp16_remaining": 1,
+  "retained_exp_parent_cost_increase_states": 13222,
+  "retained_exp_cost_increase": 2,
+  "increase_scope": {
+    "already_losing_correct_Qfplib": 200,
+    "wrong_Qfplib": 11950,
+    "still_no_slower_correct_Qfplib": 1072
+  },
+  "shared_product_fixed_instructions": [
+    81,
+    79
+  ],
+  "shared_product_active_bytes": [
+    162,
+    158
+  ],
+  "shared_product_RAM_slot_bytes": [
+    168,
+    168
+  ],
+  "outside_function_Nop_bytes": 10,
+  "shared_product_all_raw64_value_ABI_equivalent_source_proof": true,
+  "bare_product_pairs": 70660,
+  "valid63x54_integer_product_oracles": 36781,
+  "shared_product_stack_frame_bytes": [
+    40,
+    36
+  ],
+  "shared_product_stack_written_bytes": [
+    36,
+    36
+  ],
+  "literal_dyadic_independent128bit_integer_product_unit_cases": 70094,
+  "literal_dyadic_instructions": 9,
+  "original_other_callers_summary": {
+    "pow": {
+      "jobs": 153,
+      "parent_slower_raw": 51,
+      "candidate_slower_raw": 48,
+      "new_raw_losses": 0,
+      "state_cases_faster": 46,
+      "product_calls": 66
+    },
+    "sin": {
+      "jobs": 22,
+      "parent_slower_raw": 22,
+      "candidate_slower_raw": 22,
+      "new_raw_losses": 0,
+      "state_cases_faster": 0,
+      "product_calls": 0
+    },
+    "cos": {
+      "jobs": 14,
+      "parent_slower_raw": 14,
+      "candidate_slower_raw": 14,
+      "new_raw_losses": 0,
+      "state_cases_faster": 0,
+      "product_calls": 0
+    }
+  },
+  "original_pow_remaining": [
+    51,
+    48
+  ],
+  "new_original_pow3_equal_to_Qfplib": true,
+  "expanded_pow_remaining": [
+    7904,
+    7901
+  ],
+  "pow_loss_replay_scope": "All10085previous losing reference-state variants,10081distinct fresh candidate calls; every call parent minus2per actual product call. Same111912-pair corpus inherited. No freshMPFR/full111912-pair acquisition. Value/ABI equivalence and fixed cost reduction prove other previous nonloss states cannot regress.",
+  "selected_CPP_code_delta_bytes": 24,
+  "selected_ASM_allocated_delta_bytes": 0,
+  "private_Flash_overlay_load_delta_bytes": 24,
+  "whole_firmware_size_and_GC_delta_not_measured": true,
+  "no_new_tables_global_RAM_libgcc_ROM_math_or_external_calls": true,
+  "static_exp_core_frame96_unchanged": true,
+  "observed_full_public_exp_stack_bytes": 744,
+  "universal_stack_or_physical_cycle_bound_not_claimed": true,
+  "refinement3736bytes_and_tiny472byte_helper_identical": true,
+  "all_other_CPP_allocated_bytes_semantic_relocations_unchanged": true,
+  "all_RP_ASM_outside168byte_slot_bytes_relocations_symbol_addresses_identical": true,
+  "generic_M0_M4_soft_hard_selected_CPP_and_ASM_equal": true,
+  "eleven_complete_object_ELF_rebuilds_byte_exact": true,
+  "direct_public_ABI_original_RAM_address_and_Flash_wrapper_preserved": true,
+  "original507_author_separate_union": {
+    "no_slower": 422,
+    "strictly_faster": 413,
+    "equal": 9,
+    "remaining": 85,
+    "by_operation": {
+      "pow": 48,
+      "exp": 1,
+      "sin": 22,
+      "cos": 14
+    },
+    "not_one_integrated_binary": true
+  },
+  "original507_independently_reviewed_union_unchanged": 418,
+  "independent_review_pending": true,
+  "combined_integration_regression_physical_cycles_totality_and_release_pending": true,
+  "no_canonical_Git_USB_device_Flash_lease_EA9_or_release_changes": true,
+  "goal_complete": false
+}

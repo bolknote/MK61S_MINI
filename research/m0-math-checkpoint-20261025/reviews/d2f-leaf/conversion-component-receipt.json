@@ -1,0 +1,29 @@
+{
+  "status": "ACCEPTED_PRIVATE_RP_D2F_CONVERSION_COMPONENT_ONLY",
+  "operation": "__aeabi_d2f",
+  "candidate_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-20261024/candidate.elf",
+    "bytes": 4708,
+    "sha256": "2fe6157478c5111a4ef25e035ef1c55134f6ca5128c3c06b391a699647399062"
+  },
+  "numeric_return_domain": "all raw binary64 input bit patterns; nearest-even gradual underflow; accepted-parent NaN payload/sign/quiet policy",
+  "instruction_comparison": "all and only source-proven correct Qfplib output classes; all wrong-reference inputs remain recorded",
+  "source_proven_complete_correct_reference_partition": true,
+  "all_correct_Qfplib_classes_no_slower_in_Thumb_instruction_count": true,
+  "observed_author_reference_correct_states": 448890,
+  "observed_author_deficits_before103496_after0": true,
+  "old512_comparable510_deficits_before426_after0": true,
+  "physical_cycles_not_measured": true,
+  "parent_native_cost_increases_retained": {
+    "states": 110782,
+    "delta_instructions": 1
+  },
+  "original507_separate_union_unchanged": {
+    "no_slower": 418,
+    "strictly_faster": 412,
+    "equal": 6,
+    "remaining": 89,
+    "pow51_exp2_sin22_cos14": true
+  },
+  "not_integrated_with_previous_components": true
+}

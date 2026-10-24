@@ -1,0 +1,30 @@
+{
+  "status": "PASS_EXACT_NAKED_LN_IEEE_ENTRY_ALL_BIT_CLASSES_ARM",
+  "source_sha256": "52e3a6f0a32069120fe0ccd3ec6593872cb97bd9579bd1a2e9b8d654bd2efb1a",
+  "unit_ELF_sha256": "bb7094fe39911ddb0c53618bf949aba5ab9594a660ba04b74f0f695adc0053d4",
+  "exact_fragment_sha256": "df3f3df423d10b1db9e7f57d2aece0786575986766845e661d21fa06ff0d638c",
+  "raw_inputs": 65536,
+  "actual_ARM_calls": 131072,
+  "classes": {
+    "zero": 2,
+    "cold_forwarding": 32797,
+    "positive_normal": 32736,
+    "positive_infinity": 1
+  },
+  "all4096_sign_exponent_fields": true,
+  "zero_nonzero_fraction_low_quiet_payload_classes": true,
+  "all_forwarded_input_bits_preserved": true,
+  "early_return_instructions": {
+    "0000000000000000": 6,
+    "7FF0000000000000": 8,
+    "8000000000000000": 6
+  },
+  "SIO_accesses": 0,
+  "both_SIO_states_preserved": true,
+  "PCS_SP_bounded_writes_every_call": true,
+  "observed_stack_bytes": 16,
+  "transcript_sha256": "538f77063402bb5cb1f525c8ed9a72f3c655a6f8881b6d39a539637c4acf432d",
+  "firmware_or_ROM_mapped": false,
+  "scope": "Exact naked entry with tagged leaf targets, not public ln numerical qualification.",
+  "hardware_accessed": false
+}

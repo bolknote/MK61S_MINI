@@ -1,0 +1,11 @@
+--- parent/native_eabi_m0_log70_center.inc
++++ candidate/native_eabi_m0_log70_center.inc
+@@ -9,7 +9,7 @@
+   const U reciprocal=(U(row[1])<<32)|(row[0]&~63U);
+   // At either dyadic half-segment endpoint the product needs only shifts.
+   // R is a multiple of64, and R mod2^46 is nonzero for every odd den.
+-  if(delta>=(U(1)<<41)-1) {
++  if(uint32_t(delta>>32)==512U || (uint32_t(uint32_t(delta)+1U)==0U && uint32_t(delta>>32)==511U)) {
+     U q=reciprocal>>5;
+     if(delta<(U(1)<<41)) q-=(reciprocal>>46)+1;
+     const uint32_t r=(uint32_t(delta)<<29)-uint32_t(q)*den;

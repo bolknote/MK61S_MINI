@@ -1,0 +1,422 @@
+{
+  "status": "PASS_FOCUSED_SHARED_PRODUCT_CALLERS",
+  "all4_new_pow_fixes_freshly_executed": true,
+  "actual_ARM_calls": 54,
+  "actual_MPFR_calls": 9,
+  "rows": [
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFEA4",
+      "y": "4019B38C2AB9FD86",
+      "SIO": "READY",
+      "expected": "3FEFFFFFFFFFF744",
+      "outputs": {
+        "parent": "3FEFFFFFFFFFF744",
+        "candidate": "3FEFFFFFFFFFF744",
+        "Qfplib": "3FEFFFFFFFFFF744"
+      },
+      "instructions": {
+        "parent": 1343,
+        "candidate": 1336,
+        "Qfplib": 1338
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFEA4",
+      "y": "4019B38C2AB9FD86",
+      "SIO": "DIRTY",
+      "expected": "3FEFFFFFFFFFF744",
+      "outputs": {
+        "parent": "3FEFFFFFFFFFF744",
+        "candidate": "3FEFFFFFFFFFF744",
+        "Qfplib": "3FEFFFFFFFFFF744"
+      },
+      "instructions": {
+        "parent": 1343,
+        "candidate": 1336,
+        "Qfplib": 1338
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF00000000000AB",
+      "y": "40325FB10EAD6D2C",
+      "SIO": "READY",
+      "expected": "3FF0000000000C46",
+      "outputs": {
+        "parent": "3FF0000000000C46",
+        "candidate": "3FF0000000000C46",
+        "Qfplib": "3FF0000000000C46"
+      },
+      "instructions": {
+        "parent": 1325,
+        "candidate": 1318,
+        "Qfplib": 1320
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF00000000000AB",
+      "y": "40325FB10EAD6D2C",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000C46",
+      "outputs": {
+        "parent": "3FF0000000000C46",
+        "candidate": "3FF0000000000C46",
+        "Qfplib": "3FF0000000000C46"
+      },
+      "instructions": {
+        "parent": 1325,
+        "candidate": 1318,
+        "Qfplib": 1320
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF000000000012C",
+      "y": "3F4A0FFAC02621CE",
+      "SIO": "READY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "Qfplib": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 1312,
+        "candidate": 1305,
+        "Qfplib": 1309
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF000000000012C",
+      "y": "3F4A0FFAC02621CE",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "Qfplib": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 1312,
+        "candidate": 1305,
+        "Qfplib": 1309
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFFFC",
+      "y": "3FF8000000000000",
+      "SIO": "READY",
+      "expected": "3FEFFFFFFFFFFFFA",
+      "outputs": {
+        "parent": "3FEFFFFFFFFFFFFA",
+        "candidate": "3FEFFFFFFFFFFFFA",
+        "Qfplib": "3FEFFFFFFFFFFFFA"
+      },
+      "instructions": {
+        "parent": 1375,
+        "candidate": 1368,
+        "Qfplib": 1373
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFFFC",
+      "y": "3FF8000000000000",
+      "SIO": "DIRTY",
+      "expected": "3FEFFFFFFFFFFFFA",
+      "outputs": {
+        "parent": "3FEFFFFFFFFFFFFA",
+        "candidate": "3FEFFFFFFFFFFFFA",
+        "Qfplib": "3FEFFFFFFFFFFFFA"
+      },
+      "instructions": {
+        "parent": 1375,
+        "candidate": 1368,
+        "Qfplib": 1373
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "SIO": "READY",
+      "expected": "3FB0E1D596EB463B",
+      "outputs": {
+        "parent": "3FB0E1D596EB463B",
+        "candidate": "3FB0E1D596EB463B",
+        "Qfplib": "3FB0E1D596EB463B"
+      },
+      "instructions": {
+        "parent": 5067,
+        "candidate": 5060,
+        "Qfplib": 1585
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "SIO": "DIRTY",
+      "expected": "3FB0E1D596EB463B",
+      "outputs": {
+        "parent": "3FB0E1D596EB463B",
+        "candidate": "3FB0E1D596EB463B",
+        "Qfplib": "3FB0E1D596EB463B"
+      },
+      "instructions": {
+        "parent": 5713,
+        "candidate": 5706,
+        "Qfplib": 1585
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "sin",
+      "x": "C07E002F91B7B3F8",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "expected": "BFE36B2069883368",
+      "outputs": {
+        "parent": "BFE36B2069883368",
+        "candidate": "BFE36B2069883368",
+        "Qfplib": "BFE36B2069883368"
+      },
+      "instructions": {
+        "parent": 1852,
+        "candidate": 1852,
+        "Qfplib": 1347
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_dsin"
+    },
+    {
+      "operation": "sin",
+      "x": "C07E002F91B7B3F8",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "expected": "BFE36B2069883368",
+      "outputs": {
+        "parent": "BFE36B2069883368",
+        "candidate": "BFE36B2069883368",
+        "Qfplib": "BFE36B2069883368"
+      },
+      "instructions": {
+        "parent": 1852,
+        "candidate": 1852,
+        "Qfplib": 1347
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_dsin"
+    },
+    {
+      "operation": "cos",
+      "x": "408008F7B790061C",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "expected": "BFE02964BC1A35A6",
+      "outputs": {
+        "parent": "BFE02964BC1A35A6",
+        "candidate": "BFE02964BC1A35A6",
+        "Qfplib": "BFE02964BC1A35A6"
+      },
+      "instructions": {
+        "parent": 1842,
+        "candidate": 1842,
+        "Qfplib": 1344
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_dcos"
+    },
+    {
+      "operation": "cos",
+      "x": "408008F7B790061C",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "expected": "BFE02964BC1A35A6",
+      "outputs": {
+        "parent": "BFE02964BC1A35A6",
+        "candidate": "BFE02964BC1A35A6",
+        "Qfplib": "BFE02964BC1A35A6"
+      },
+      "instructions": {
+        "parent": 1842,
+        "candidate": 1842,
+        "Qfplib": 1344
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_dcos"
+    },
+    {
+      "operation": "pow",
+      "x": "5B27CF4AC334ECB8",
+      "y": "BFE0000000000000",
+      "SIO": "READY",
+      "expected": "32528C8368DDDFD3",
+      "outputs": {
+        "parent": "32528C8368DDDFD3",
+        "candidate": "32528C8368DDDFD3",
+        "Qfplib": "32528C8368DDDFD3"
+      },
+      "instructions": {
+        "parent": 820,
+        "candidate": 820,
+        "Qfplib": 341
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow_exact"
+    },
+    {
+      "operation": "pow",
+      "x": "5B27CF4AC334ECB8",
+      "y": "BFE0000000000000",
+      "SIO": "DIRTY",
+      "expected": "32528C8368DDDFD3",
+      "outputs": {
+        "parent": "32528C8368DDDFD3",
+        "candidate": "32528C8368DDDFD3",
+        "Qfplib": "32528C8368DDDFD3"
+      },
+      "instructions": {
+        "parent": 1065,
+        "candidate": 1065,
+        "Qfplib": 341
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow_exact"
+    },
+    {
+      "operation": "pow",
+      "x": "B7B45700D2E0D2B0",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "Qfplib": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 57,
+        "candidate": 57,
+        "Qfplib": 17
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow_integer"
+    },
+    {
+      "operation": "pow",
+      "x": "B7B45700D2E0D2B0",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "Qfplib": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 57,
+        "candidate": 57,
+        "Qfplib": 17
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "reference_symbol": "qfp_composed_pow_integer"
+    }
+  ]
+}

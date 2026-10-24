@@ -1,0 +1,20 @@
+{
+  "status": "PASS_ELEVEN_ACTUAL_RELEASE_OBJECT_AND_ELF_REBUILDS_BYTE_EXACT",
+  "outputs": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/RP-control.o": "8f4d37c5b35bd339b6a474212e48d1bef90990d7f1db0846a90b74e734eb2506",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/RP-candidate.o": "ebcbb7488bcddbb69631ab64fc225b2cc2be7cd57a0829b803f49d9f064f0bd8",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/generic_M0-control.o": "6203f0135d70560cebf7812ae6e366c090bc4c814325e80431d0cc1d2d241f86",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/generic_M0-candidate.o": "ffac6faa495470c61126e283db52b577ce43972f352db04acaf15a2b6feeb5cf",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/M4_soft-control.o": "e4664de872a43ff780eb3be16bf47b0690c990e12bccf37e2b0f9895003408eb",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/M4_soft-candidate.o": "158244d5738e27b6abb916cc8c633ca7a696efaea3714207bd9d771e5f985f44",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/M4_hard-control.o": "53f6d4589f9fd047650a410f47eaae7c22f9ab60391935b7c8efa74e5b5c81bd",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/M4_hard-candidate.o": "601a1dd2729a30569950c3cf9c3e4a5012e75ebaa409ff1f27597755d17ca97b",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/product.o": "4e22f119095fc271cbbacf92884f4dbad5fc2d563c7e606ebf77cd2b28ee80c7",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/control.elf": "2b52a34f28927c0af075c9e8aff3ec0aafcfad17ffe23d843e98d069649b63cc",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/candidate.elf": "e6f2f7e0c55b7d7f2547badb00eacef444a1575eb59bdae7d530eec0ea340fcc"
+  },
+  "candidate_ELF_sha256": "e6f2f7e0c55b7d7f2547badb00eacef444a1575eb59bdae7d530eec0ea340fcc",
+  "source_sha256": "b3c16d4f64405c2cbcc8869dc992ba7a95603151a9092bedabd17e0f172f9ede",
+  "required_fresh_disassembly_R12_definition_and_consumer_guard_passed": true,
+  "no_canonical_device_or_Git_changes": true
+}

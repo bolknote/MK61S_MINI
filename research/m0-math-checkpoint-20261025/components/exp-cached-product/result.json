@@ -1,0 +1,447 @@
+{
+  "status": "FROZEN_AUTHOR_QUALIFIED_RP_EXP_AND_CACHED_PRODUCT_WITH_REMAINING_SPEED_GAPS",
+  "scope": "Private exp entry plus13-MUL shared RAM product. No merged library, physical cycles, independent review, release or all-input speed GO.",
+  "source_sha256": "9b0bf27d5080eabe779b924e57db448b205ce0d0a20febcaa7355267f1aa311e",
+  "product_fixture_source_sha256": "f6fa419ccb24858b04912f16fd522894a70494bd66edbdef1071e3d7ed4c66bf",
+  "product_intended_include_sha256": "2943fc30ab8768375063c1df6441d0148320ec1a44719d8722423c825c286735",
+  "candidate_ELF_sha256": "5ddab388a96bef9c343e0c11e82797741f7ccb724a812d0532d76aa25c2e794e",
+  "candidate_full_object_sha256": "7b34b04937b6c2be57f2bbe070e6d27a67022167775a51a0ca1ab645c3090f31",
+  "unit_ELF_sha256": "5d823e0b4fd752fea6bd953de2405ef8cfba264f0ceb22044283b9f8e7d59c84",
+  "exp_unique_inputs": 48763,
+  "exp_all_profiled_state_cases": 97526,
+  "qualified_fresh_public_exp_ARM_calls": 97526,
+  "qualified_bare_ARM_calls": 411232,
+  "qualified_product_only_caller_ARM_calls": 1134,
+  "total_qualified_fresh_ARM_calls": 509892,
+  "excluded_smoke_calls": 432,
+  "smoke_repeats_not_added": true,
+  "inherited_control_reference_calls_not_added": true,
+  "rejected_reference_selection_trial_not_added": true,
+  "failed_initial_old_trial_unit_calls_not_added": true,
+  "fresh_MPFR_reference_calls": 48952,
+  "MPFR_version": "4.2.2",
+  "candidate_wrong": 0,
+  "source_bound_and_rational_endpoint_checks": true,
+  "historical_exp16_fixed": 14,
+  "historical_exp16_remaining": 2,
+  "remaining_original_exp_state_rows": [
+    {
+      "x": "4085F424184F6DC5",
+      "group": "historical16",
+      "SIO": "READY",
+      "expected": "7F46EC297B4BF167",
+      "outputs": {
+        "resident": "7F46EC297B4BF167",
+        "Qfplib": "7F46EC297B4BF167",
+        "control": "7F46EC297B4BF167",
+        "candidate": "7F46EC297B4BF167",
+        "tight_trial": "7F46EC297B4BF167"
+      },
+      "instructions": {
+        "resident": 2258,
+        "Qfplib": 649,
+        "control": 2258,
+        "candidate": 2268,
+        "tight_trial": 2275
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "control": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "4085F424184F6DC5",
+      "group": "historical16",
+      "SIO": "DIRTY",
+      "expected": "7F46EC297B4BF167",
+      "outputs": {
+        "resident": "7F46EC297B4BF167",
+        "Qfplib": "7F46EC297B4BF167",
+        "control": "7F46EC297B4BF167",
+        "candidate": "7F46EC297B4BF167",
+        "tight_trial": "7F46EC297B4BF167"
+      },
+      "instructions": {
+        "resident": 2258,
+        "Qfplib": 649,
+        "control": 2258,
+        "candidate": 2268,
+        "tight_trial": 2275
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "control": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "C041265824E2113C",
+      "group": "historical16",
+      "SIO": "READY",
+      "expected": "3CD6E1FB162DABC8",
+      "outputs": {
+        "resident": "3CD6E1FB162DABC8",
+        "Qfplib": "3CD6E1FB162DABC8",
+        "control": "3CD6E1FB162DABC8",
+        "candidate": "3CD6E1FB162DABC8",
+        "tight_trial": "3CD6E1FB162DABC8"
+      },
+      "instructions": {
+        "resident": 2219,
+        "Qfplib": 622,
+        "control": 2219,
+        "candidate": 2248,
+        "tight_trial": 2255
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "control": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "C041265824E2113C",
+      "group": "historical16",
+      "SIO": "DIRTY",
+      "expected": "3CD6E1FB162DABC8",
+      "outputs": {
+        "resident": "3CD6E1FB162DABC8",
+        "Qfplib": "3CD6E1FB162DABC8",
+        "control": "3CD6E1FB162DABC8",
+        "candidate": "3CD6E1FB162DABC8",
+        "tight_trial": "3CD6E1FB162DABC8"
+      },
+      "instructions": {
+        "resident": 2219,
+        "Qfplib": 622,
+        "control": 2219,
+        "candidate": 2248,
+        "tight_trial": 2255
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "control": true,
+        "candidate": true
+      }
+    }
+  ],
+  "expanded_exp_resident_raw_losses": 6149,
+  "expanded_exp_unaccepted_tight_trial_raw_losses": 460,
+  "expanded_exp_candidate_raw_losses": 395,
+  "new_exp_Qfplib_raw_losses_vs_resident": 0,
+  "new_exp_Qfplib_raw_losses_vs_tight_trial": 0,
+  "instruction_delta_vs_tight_trial": {
+    "-7": 85012,
+    "0": 12514
+  },
+  "exp_vs_resident": {
+    "faster": 54342,
+    "equal": 37384,
+    "slower": 5800
+  },
+  "retained_exp_state_regressions_vs_resident": 5800,
+  "retained_regression_instruction_histogram": {
+    "1": 4634,
+    "2": 8,
+    "3": 46,
+    "8": 98,
+    "10": 166,
+    "12": 74,
+    "27": 4,
+    "29": 10,
+    "31": 10,
+    "37": 346,
+    "39": 404
+  },
+  "all_remaining_exp_rows_in": "qualification.json:remaining_slower_correct_Qfplib",
+  "all_cost_increase_rows_in": "retained-exp-regressions.json",
+  "product_16bit_instructions": [
+    91,
+    84
+  ],
+  "product_body_bytes": [
+    182,
+    168
+  ],
+  "product_leaf_stack_bytes": [
+    32,
+    40
+  ],
+  "CPP_allocated_bytes_delta": 44,
+  "product_object_section_allocated_bytes_delta": -16,
+  "total_CPP_product_object_allocated_bytes_delta": 28,
+  "linked_whole_firmware_size_delta_not_measured": true,
+  "public_exp_stack_bytes_same_corpus": [
+    736,
+    736
+  ],
+  "product_caller_observed_stack_bytes": [
+    968,
+    968
+  ],
+  "existing_pow_original153_fixed": 4,
+  "existing_pow_original153_remaining": 149,
+  "existing_pow_four_fixed_state_rows": [
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFEA4",
+      "y": "4019B38C2AB9FD86",
+      "stream": "near_one_variable_exponent",
+      "SIO": "READY",
+      "expected": "3FEFFFFFFFFFF744",
+      "outputs": {
+        "parent": "3FEFFFFFFFFFF744",
+        "candidate": "3FEFFFFFFFFFF744",
+        "Qfplib": "3FEFFFFFFFFFF744"
+      },
+      "instructions": {
+        "parent": 1343,
+        "candidate": 1336,
+        "Qfplib": 1338
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "product_calls": 1,
+      "Qfplib_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFEA4",
+      "y": "4019B38C2AB9FD86",
+      "stream": "near_one_variable_exponent",
+      "SIO": "DIRTY",
+      "expected": "3FEFFFFFFFFFF744",
+      "outputs": {
+        "parent": "3FEFFFFFFFFFF744",
+        "candidate": "3FEFFFFFFFFFF744",
+        "Qfplib": "3FEFFFFFFFFFF744"
+      },
+      "instructions": {
+        "parent": 1343,
+        "candidate": 1336,
+        "Qfplib": 1338
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "product_calls": 1,
+      "Qfplib_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF00000000000AB",
+      "y": "40325FB10EAD6D2C",
+      "stream": "near_one_variable_exponent",
+      "SIO": "READY",
+      "expected": "3FF0000000000C46",
+      "outputs": {
+        "parent": "3FF0000000000C46",
+        "candidate": "3FF0000000000C46",
+        "Qfplib": "3FF0000000000C46"
+      },
+      "instructions": {
+        "parent": 1325,
+        "candidate": 1318,
+        "Qfplib": 1320
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "product_calls": 1,
+      "Qfplib_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF00000000000AB",
+      "y": "40325FB10EAD6D2C",
+      "stream": "near_one_variable_exponent",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000C46",
+      "outputs": {
+        "parent": "3FF0000000000C46",
+        "candidate": "3FF0000000000C46",
+        "Qfplib": "3FF0000000000C46"
+      },
+      "instructions": {
+        "parent": 1325,
+        "candidate": 1318,
+        "Qfplib": 1320
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "product_calls": 1,
+      "Qfplib_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF000000000012C",
+      "y": "3F4A0FFAC02621CE",
+      "stream": "near_one_variable_exponent",
+      "SIO": "READY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "Qfplib": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 1312,
+        "candidate": 1305,
+        "Qfplib": 1309
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "product_calls": 1,
+      "Qfplib_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF000000000012C",
+      "y": "3F4A0FFAC02621CE",
+      "stream": "near_one_variable_exponent",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "Qfplib": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 1312,
+        "candidate": 1305,
+        "Qfplib": 1309
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "product_calls": 1,
+      "Qfplib_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFFFC",
+      "y": "3FF8000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "SIO": "READY",
+      "expected": "3FEFFFFFFFFFFFFA",
+      "outputs": {
+        "parent": "3FEFFFFFFFFFFFFA",
+        "candidate": "3FEFFFFFFFFFFFFA",
+        "Qfplib": "3FEFFFFFFFFFFFFA"
+      },
+      "instructions": {
+        "parent": 1375,
+        "candidate": 1368,
+        "Qfplib": 1373
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "product_calls": 1,
+      "Qfplib_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFFFC",
+      "y": "3FF8000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "SIO": "DIRTY",
+      "expected": "3FEFFFFFFFFFFFFA",
+      "outputs": {
+        "parent": "3FEFFFFFFFFFFFFA",
+        "candidate": "3FEFFFFFFFFFFFFA",
+        "Qfplib": "3FEFFFFFFFFFFFFA"
+      },
+      "instructions": {
+        "parent": 1375,
+        "candidate": 1368,
+        "Qfplib": 1373
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "product_calls": 1,
+      "Qfplib_symbol": "qfp_composed_pow"
+    }
+  ],
+  "existing_sin_original22_remaining": 22,
+  "existing_cos_original14_remaining": 14,
+  "caller_check_not_full_operation_qualification": true,
+  "separate_author_observed_original507_union": {
+    "no_slower": 320,
+    "strictly_faster": 314,
+    "equal": 6,
+    "remaining": 187,
+    "definition": "Previously reviewed separate-component302 +14 exp +4 product-only pow cases. Not one merged ELF and no additional independent acceptance.",
+    "remaining_by_operation": {
+      "pow": 149,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    }
+  },
+  "independently_reviewed_original507_union_unchanged": 302,
+  "expanded_ln5_outside_original507_unchanged": true,
+  "original_input_matrix_unchanged": true,
+  "new_tables_global_RAM_or_libgcc": false,
+  "source_table_Q62_Q94_exact_checks": true,
+  "RAM_product_address_and_Flash_wrapper_unchanged": true,
+  "generic_M0_and_M4_allocated_translation_unit_controls_identical": true,
+  "generic_M0_and_M4_product_excluded": true,
+  "whole_M4_firmware_not_built": true,
+  "complete_public_and_unit_rebuilds_byte_exact": true,
+  "PCS_SP_bounded_writes_SIO_preservation_every_call": true,
+  "independent_review_pending": true,
+  "canonical_integration": false,
+  "Git_changes_by_this_work": false,
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "shipping_GO": false,
+  "whole_math_GO": false,
+  "goal_complete": false,
+  "unresolved": [
+    "395 expanded exp speed losses, including2 original exp points.",
+    "149 original pow speed losses; product-only original-input check is not full pow qualification.",
+    "22 original sin and14 cos speed losses.",
+    "Expanded ln5 and conversion/FMA items remain separate and unchanged.",
+    "General pow1024-bit undecided trap/all-domain totality remains open.",
+    "Independent review, integration onto repaired platform base, full combined regression and physical cycles."
+  ],
+  "previous_unit_failure_fixed": "Old trial copied16-byte Flash tailcall wrapper instead of182-byte RAM body. New unit includes actual168-byte candidate and182-byte parent bodies, no firmware/ROM or external calls.",
+  "proof_sha256": {
+    "preparation.json": "a8a4fe44d312c70391a1651ce9f7805e9b89f849c7d61bb8014c12ead18ed3fa",
+    "build.json": "e3af442a6ff49cad542cb35f5f7374b356b5e036f8fe397e68d2f5bc513fa71f",
+    "certificate.json": "7a8447c5c54dbeb7c71a9d02499759cbd0244f8dfa601d9d497a9f988dd45139",
+    "unit-build.json": "9611415db153413c8133a13433c024abb9296b9e705ee05c0007f8bc56316fa6",
+    "unit-proof.json": "536dd368881c521e2a078de607753bb38cabbb4779322f20545905e661efd8b2",
+    "isolation.json": "a3db345ce17bd1c4697d0a58f5fbcdbd7b438aa3f360b21b7b10a7ae9eb2785f",
+    "rebuild-proof.json": "29519e80a796a3f5ec558226b755fcd30d025e40c728afc02d4feb798eeef490",
+    "integration-source-proof.json": "ceee58dd5e86be8959e0580a805398a71769ac5cdb2d9d7d45cb7d54b4353ced",
+    "qualification.json": "f7d201084e4ad383df388d6e7073b870df4aa8d94298d84cbb1d1c91e769a109",
+    "existing-callers.json": "bbdb92c2b812622d1bfc316504f8f723f8a45e820b87a06901f69f0f0e4f5c44"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "status": "PASS_FROZEN_MAIN_LN_LN2_SIGN_ARTIFACTS_INPUTS_LINKED_SIZE",
+  "artifacts": 68,
+  "input_pins": 617,
+  "allocated_linked_bytes": [
+    102648,
+    102664
+  ],
+  "linked_delta": 16,
+  "result_sha256": "12b8ce5010e7804d5259119e7eb5e403eec0021065646d35f84718c1461c0b8f",
+  "HANDOFF_sha256": "f09c4d0b224e7fbc6872ec2763ee9f1c91db9f0c27ccc56f123ee9fcae4423fb",
+  "HEAD": "d0b9cbd6c47648b136104f7a66a714af3db9f7e5",
+  "hardware_accessed": false,
+  "canonical_math_diff_empty": true
+}

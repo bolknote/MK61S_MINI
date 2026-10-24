@@ -1,0 +1,8 @@
+{
+  "status": "PASS_COMPILE_TIME_LN2_ASSERT_DOES_NOT_CHANGE_EXECUTED_OBJECT_OR_ELF",
+  "source_sha256": "661ae2b62f0f2e3b9da08b689de0a7876f83fa2f80f57380113b78cbbd74e79b",
+  "old_probe_source_sha256": "0381b3a908a1d7669fd03a34f0f490ae0d07a4b9d5fd6a395f8c93eb004b34db",
+  "full_object_byte_exact": true,
+  "whole_ELF_byte_exact": true,
+  "hardware_accessed": false
+}

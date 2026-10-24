@@ -1,0 +1,117 @@
+{
+  "status": "FROZEN_AUTHOR_EXACT_LOG_MIDPOINT_EXP_RNE_EXPANDED_TINY_DOMAIN",
+  "qualified_source_parent": ".build/m0-exp-tiny-radius-20261024",
+  "parent_review_at_seal": {
+    "independent_review_available_at_seal": true,
+    "path": ".build/m0-exp-tiny-radius-independent-20261024/FINAL-REVIEW.json",
+    "sha256": "ac32571a4dd0a31d806f94b6c9c85222ed34278d218115c726d4cb0c11ca4a9d",
+    "status": "GO_PRIVATE_RP_EXP_TINY_RADIUS_COMPONENT_ONLY",
+    "receipt_and_direct_refs_verified": 38
+  },
+  "source_sha256": "1cc8f86cf948efbc152b7bf7f1f15046b0be2d0d5f9e07552305b514fc92a899",
+  "candidate_ELF_sha256": "43bcd8e12044ddd81d8d0d2aa12701e966c4ad3c76f755eb926406cc36bcbf54",
+  "qualified_inputs": 428231,
+  "qualified_states": 856462,
+  "fresh_final_candidate_ARM_calls": 856462,
+  "fresh_Qfplib_ARM_calls": 529112,
+  "fresh_parent_remaining_audit_ARM_calls": 1028,
+  "total_qualified_fresh_ARM_calls": 1386602,
+  "inherited327350_parent_Qfplib_rows_not_counted_fresh": true,
+  "oracle_evaluations": 428231,
+  "actual_directed_MPFR_input_conversions": 428229,
+  "NaN_shortcuts_without_MPFR": 2,
+  "MPFR_version": "4.2.2",
+  "final_probe24898_superseded_trial24854_and_diagnostic2_calls_not_added": true,
+  "wrong": 0,
+  "old163675_raw_returned_bits_identical": true,
+  "same_old163675_speed_losses": [
+    669,
+    155
+  ],
+  "same_old_corpus_additional_fixed": 514,
+  "same_older48763_speed_losses_unchanged": 154,
+  "expanded428231_speed_losses": 671,
+  "expanded_count_scope": "Same163675:669->155; new428231 corpus671=155old+514new2^-32endpointcontrols+2newordinarycontrols, all preexisting parent losses. Different-size corpus counts must not be subtracted.",
+  "all671remaining_losses_parent_cost_bound": true,
+  "new_raw_speed_losses": 0,
+  "tiny_domain": "2^-54 < abs(x) < 2^-32",
+  "tiny_range_expanded_factor": 64,
+  "author_whole_tiny_domain_returned_value_RNE_source_proof": true,
+  "exhaustive_integer_log_tail_odd_classes": 3145728,
+  "exact_uint32_divide3_cases": 65536,
+  "cubic_threshold_correction_cells": 154,
+  "all154critical_results_actual_ARM_and_directed_MPFR_bound": true,
+  "complete_integer_odd_class_certificate_not_same_as_complete_ARM_input_exhaustion": true,
+  "observed_tiny_instructions": [
+    83,
+    200
+  ],
+  "observed_tiny_correct_Qfplib_speed_losses": 0,
+  "examples": [
+    {
+      "x": "3D90000000000000",
+      "parent": 520,
+      "candidate": 88,
+      "Qfplib": 466
+    },
+    {
+      "x": "BD90000000000000",
+      "parent": 542,
+      "candidate": 84,
+      "Qfplib": 528
+    }
+  ],
+  "correct_Qfplib_comparison": {
+    "faster": 469786,
+    "slower": 1342
+  },
+  "wrong_Qfplib_state_rows_retained": 385334,
+  "no_nominal_domain_filter": true,
+  "selected_CPP_code_delta_bytes": 276,
+  "private_Flash_overlay_load_delta_bytes": 280,
+  "whole_firmware_size_and_GC_delta_not_measured": true,
+  "helper_bytes": [
+    196,
+    472
+  ],
+  "core_bytes": [
+    5012,
+    5012
+  ],
+  "core_only_change": "adds r6,#38 -> adds r6,#32 at offset3916; all5011otherbytes andsemanticrelocations equal",
+  "static_core_stack_bytes": [
+    96,
+    96
+  ],
+  "static_helper_stack_bytes": [
+    20,
+    56
+  ],
+  "observed_full_corpus_stack_bytes": [
+    376,
+    376
+  ],
+  "known_parent_cost_increase_rows_retained": 239986,
+  "all_these_states_still_faster_Qfplib": true,
+  "no_new_tables_global_RAM_libgcc_ROM_external_helper_calls": true,
+  "all_other_CPP_allocated_bytes_semantic_relocations_unchanged": true,
+  "complete_RP_ASM_allocated_bytes_semantic_relocations_unchanged": true,
+  "generic_M0_M4_selected_CPP_bytes_semantic_relocations_equal_and_ASM_sources_unchanged": true,
+  "six_complete_CPP_ASM_object_ELF_rebuilds_byte_exact": true,
+  "direct_public_exp_ABI_no_artificial_interposition_veneer": true,
+  "original507_union_unchanged": 418,
+  "original507_remaining": 89,
+  "original_exp16_remaining": 2,
+  "hard_exp_diagnostic_first_refine_entry_costs": [
+    546,
+    558
+  ],
+  "hard_exp_total_instructions": [
+    2268,
+    2248
+  ],
+  "independent_review_pending": true,
+  "combined_integration_physical_cycles_and_release_pending": true,
+  "no_canonical_Git_USB_device_Flash_lease_EA9_or_release_changes": true,
+  "goal_complete": false
+}

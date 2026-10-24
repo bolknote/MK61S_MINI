@@ -1,0 +1,383 @@
+{
+  "status": "PRIVATE_IEEE_COLD_ENTRY_COMPONENT_GO_WITH_RETAINED_SPEED_REGRESSIONS",
+  "utc": "2026-10-24T06:46:24.617056+00:00",
+  "blockers": [],
+  "scope": "Frozen52e3a6f0 IEEE\u00b10/+Inf direct-entry, exact positive-normal/cold bit forwarding, naked ABI, numerical-source inheritance, complete actual private ELF/object binding against accepted829479 main-raw parent.",
+  "target": {
+    "HANDOFF.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-20261024/HANDOFF.md",
+      "sha256": "64b6eae621246192a11e3e2d5e9a8dffd330688a39cca4fd04c669248bc7c3c9"
+    },
+    "result.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-20261024/result.json",
+      "sha256": "202be6bb558e24d314ab7dd43da6b2690fdf331bbf271b1ec40a36364710e184"
+    },
+    "native_eabi_m0_log70.inc": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-20261024/native_eabi_m0_log70.inc",
+      "sha256": "52e3a6f0a32069120fe0ccd3ec6593872cb97bd9579bd1a2e9b8d654bd2efb1a"
+    },
+    "candidate.elf": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-20261024/candidate.elf",
+      "sha256": "cc8ac3115c96e3424ac9f4f4ac848d403c9114c4d1fc81270042c53d8c417ef6"
+    }
+  },
+  "accepted_parent_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/FINAL-REVIEW.json",
+    "sha256": "54dc555c2c702619ec174354e6209da4629e1436f5799d4028c2e9d8baaf5150"
+  },
+  "parent_control_ELF_exact": true,
+  "shipping_GO": false,
+  "canonical_math_GO": false,
+  "whole_ln_GO": false,
+  "whole_ln_speed_GO": false,
+  "whole_math_GO": false,
+  "hardware_GO": false,
+  "hardware_accessed": false,
+  "reviewed_original_goal_count_unchanged": 298,
+  "seals": {
+    "artifacts_verified_before_after": 62,
+    "input_pins_verified_before_after": 593
+  },
+  "independent_proofs": {
+    "check_binding.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/check_binding.py",
+      "bytes": 10095,
+      "sha256": "9f709efc354c415ebff72f68ceb21f1141f1daf1b971e85f132981fc9f46fe94"
+    },
+    "binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/binding.json",
+      "bytes": 6833,
+      "sha256": "161453d001662fa8f6fc2f078880ccaf3e107f95871a4bc93a2ff5da1cdcb105"
+    },
+    "binding.log": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/binding.log",
+      "bytes": 3636,
+      "sha256": "2a9e90b3ac9a36a8a476497b48ab7fa4f71a9989d3e359aee1fc66872f5158da"
+    },
+    "check_arm.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/check_arm.py",
+      "bytes": 8633,
+      "sha256": "9de51a488593d6d55920ac66eb206f8e5a17e896ea9473f6f69e5b8c2de6c66b"
+    },
+    "focused-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/focused-arm.json",
+      "bytes": 132858,
+      "sha256": "84ef8d2d52ff9e957a93e5f7678faa666521e759d219280ae2f26ae417e464fe"
+    },
+    "focused-arm.log": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/focused-arm.log",
+      "bytes": 1602,
+      "sha256": "b4bb38b34b9c874cc328996c7bb160052360f2d3ec0f572d47c318edc7c4b01d"
+    },
+    "review-notes.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/review-notes.md",
+      "bytes": 5122,
+      "sha256": "55e153fb4fce730b802ea7adc5d956bb250c7647c951e73ee62427be877d88a0"
+    },
+    "own-parser-note.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/own-parser-note.json",
+      "bytes": 711,
+      "sha256": "8d93ddde29b72d434338f55b993394cbbd89ce2fec90da9c0b9ccde40b6848da"
+    },
+    "attempt001-binding.log": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/attempt001-binding.log",
+      "bytes": 339,
+      "sha256": "7b17da98921a14759e6c681590932716d5511c7aa106483383d597bd7120f1c7"
+    }
+  },
+  "classifier_proof": {
+    "all4096_sign_exponent_field_partition": true,
+    "early_zero": "low==0 && ((high<<1)mod2^32)==0 iff input exactly\u00b10; returnFFF0000000000000.",
+    "early_positive_infinity": "low==0 && high==7ff00000, after zero exclusion, iff input exactly+Inf; return unchanged.",
+    "positive_normals": "((field+1)>>11)==0 && field!=0 iff field1..2046; all fraction/low bits independent.",
+    "all_other_cold_bits": "Original R0/R1 tail-forward to unchanged special body, including negative, subnormal, signed NaN payloads.",
+    "naked_classifier_uses_only_caller_saved_R2_R3_flags": true,
+    "no_classifier_SP_SIO_touch": true,
+    "forwarding_unchanged_LR_and_SP8": true,
+    "numerical_bodies_bounds_and_fallback_exact_accepted_parent": true
+  },
+  "source_object_binding": {
+    "changed_allocated_sections": {
+      ".text.ln_main_raw": [
+        1356,
+        1360
+      ],
+      ".text.mk61_m0_ln": [
+        1300,
+        48
+      ],
+      ".text.mk61_m0_ln_positive": [
+        0,
+        1264
+      ]
+    },
+    "code_growth_bytes": 16,
+    "all_other_allocated_code_data_BSS_deps_identical": true,
+    "raw_equivalent_sign_mask_and_NOP_only": [
+      {
+        "kind": "replace",
+        "parent": [
+          "lsrs r3, r3, #20"
+        ],
+        "candidate": [
+          "lsls r3, r3, #1",
+          "lsrs r3, r3, #21"
+        ]
+      },
+      {
+        "kind": "insert",
+        "parent": [],
+        "candidate": [
+          "nop "
+        ]
+      }
+    ],
+    "independent_internal_CFG_literal_target_mapping_checks": 69,
+    "raw_literal_words_and_relocation_types_target_names_equal": true,
+    "source_naked_fragment_equals_unit": true,
+    "whole_private_CPP_ASM_entire_ELF_and_unit_rebuild_byteexact": true,
+    "rebuild_hashes": {
+      "candidate-full.o": "50484963f2c8869573f1aaa87e0d9191c8549ab5bfd8667f0f0ea85365829c2f",
+      "candidate-ratio.o": "c80865dd3f89454cd4790770059a806133b87f39f1ac5090c12f10e308584fea",
+      "candidate.elf": "cc8ac3115c96e3424ac9f4f4ac848d403c9114c4d1fc81270042c53d8c417ef6",
+      "entry-unit.o": "8892da37ad1581c0c98724909a48cfd3accd8d32213acda4aeb035d3ac795566",
+      "entry-unit.elf": "bb7094fe39911ddb0c53618bf949aba5ab9594a660ba04b74f0f695adc0053d4"
+    },
+    "actual_resident_bindings": 39,
+    "generic_M0_control_allocated247584_equal": true,
+    "M4_controls": "Exact excluded zero-allocated TU controls, not whole-platform qualification.",
+    "new_tables_global_RAM_libgcc": false
+  },
+  "own_bounded_ARM": {
+    "MPFR": "4.2.2",
+    "public_unique_inputs": 56,
+    "public_state_rows": 112,
+    "public_ARM_calls": 336,
+    "public_forwarding_exact_original64bits_SP_LR": true,
+    "candidate_MPFR_errors": 0,
+    "raw_NaN_bits_match_parent": true,
+    "actual_public_forwarding_trace": {
+      "mk61_m0_ln_special": 46,
+      "mk61_m0_ln_positive": 60,
+      "ln_main_raw": 3,
+      "ln_refine": 2
+    },
+    "bare_unique_inputs": 208,
+    "bare_ARM_calls": 416,
+    "bare_exact_source_classifier_and_tagged_targets": true,
+    "bare_SIO_accesses": 0,
+    "bare_entry_exact_bits_SP_LR": true,
+    "bare_PC_limited_to_unit": true,
+    "PCS_SP_bounded_writes_every_call": true,
+    "DIRTY28bytes_preserved_READY_not_dirty": true,
+    "public_stack_subset": {
+      "candidate": 520,
+      "parent": 520,
+      "Qfplib": 32
+    },
+    "bare_tagged_stack_bytes": 16,
+    "bare_stack_in_targets_not_naked_entry": true,
+    "total_own_ARM_calls": 752,
+    "author_full640_public_stack_not_reswept": true,
+    "early_costs": {
+      "0000000000000000": [
+        {
+          "candidate": 6,
+          "parent": 53,
+          "Qfplib": 8
+        },
+        {
+          "candidate": 6,
+          "parent": 53,
+          "Qfplib": 8
+        }
+      ],
+      "8000000000000000": [
+        {
+          "candidate": 6,
+          "parent": 53,
+          "Qfplib": 6
+        },
+        {
+          "candidate": 6,
+          "parent": 53,
+          "Qfplib": 6
+        }
+      ],
+      "7FF0000000000000": [
+        {
+          "candidate": 8,
+          "parent": 59,
+          "Qfplib": 10
+        },
+        {
+          "candidate": 8,
+          "parent": 59,
+          "Qfplib": 10
+        }
+      ]
+    }
+  },
+  "finite_saved_cost_recount": {
+    "rows": 97998,
+    "parent_rows_retained": 97536,
+    "groups": {
+      "READY": {
+        "equal": 18759,
+        "faster": 19979,
+        "slower": 10261
+      },
+      "DIRTY": {
+        "slower": 20693,
+        "faster": 19979,
+        "equal": 8327
+      }
+    },
+    "parent_regression_histogram": {
+      "1": 19562,
+      "4": 1026,
+      "6": 2022,
+      "5": 8344
+    },
+    "old_raw_losses": 49,
+    "new_raw_losses": 46,
+    "exact_IEEE_fixed": [
+      "0000000000000000",
+      "7FF0000000000000",
+      "8000000000000000"
+    ],
+    "new_correct_Qfp_deficits": 0
+  },
+  "own_speed_witnesses": [
+    {
+      "x": "4000000000000000",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "3FE62E42FEFA39EF",
+      "outputs": {
+        "candidate": "3FE62E42FEFA39EF",
+        "parent": "3FE62E42FEFA39EF",
+        "Qfplib": "3FE62E42FEFA39EF"
+      },
+      "instructions": {
+        "candidate": 608,
+        "parent": 603,
+        "Qfplib": 711
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "4000000000000000",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "3FE62E42FEFA39EF",
+      "outputs": {
+        "candidate": "3FE62E42FEFA39EF",
+        "parent": "3FE62E42FEFA39EF",
+        "Qfplib": "3FE62E42FEFA39EF"
+      },
+      "instructions": {
+        "candidate": 622,
+        "parent": 617,
+        "Qfplib": 711
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFBF",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "3FF62D827A741385",
+      "outputs": {
+        "candidate": "3FF62D827A741385",
+        "parent": "3FF62D827A741385",
+        "Qfplib": "3FF62D827A741385"
+      },
+      "instructions": {
+        "candidate": 599,
+        "parent": 599,
+        "Qfplib": 713
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFBF",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "3FF62D827A741385",
+      "outputs": {
+        "candidate": "3FF62D827A741385",
+        "parent": "3FF62D827A741385",
+        "Qfplib": "3FF62D827A741385"
+      },
+      "instructions": {
+        "candidate": 660,
+        "parent": 659,
+        "Qfplib": 713
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 1,
+        "ln_refine": 0
+      }
+    }
+  ],
+  "historical_ln10_own_sample": "9 no-slower/1 open per SIO state; original reviewed count remains298/507.",
+  "author_large_corpus_not_reexecuted": {
+    "raw_inputs": 48999,
+    "state_rows": 97998,
+    "public_ARM_calls": 391992,
+    "bare_ARM_calls": 131072,
+    "author_qualified_total": 523064,
+    "parent_pack_calls32338_inherited_not_added": true
+  },
+  "limits": [
+    "Exact private component only; not entire public-ln totality or all64bit execution, no all-input performance guarantee, whole library or hardware.",
+    "46 raw correct-Qfplib speed deficits remain,30954 parent states regress by1/4/5/6 instructions, and code grows16B. These costs are retained.",
+    "The accepted parent error proof remains unchanged and inherited. This new classifier merely forwards the exact old input bits; no rounding relaxation.",
+    "Later ln2-sign and any other new child are not reviewed or accepted. Reviewed original goal count remains298/507.",
+    "Q77 named parent-premise discharge is recorded separately, preserving the original conditional receipt and all local Q77 limitations."
+  ],
+  "actions": {
+    "frozen_files_changed": false,
+    "canonical_primary_Git_leases_USB_serial_Flash_accessed": false,
+    "normal_builds_full_CI_or_author_corpus_rerun": false,
+    "own_private_rebuild_and_additive_outputs_only": true
+  }
+}

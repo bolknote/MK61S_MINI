@@ -1,0 +1,53 @@
+{
+  "status": "PASS_EXPANDED_COUNTS_LOSSES_AND_REGRESSIONS_RETAINED",
+  "unique_inputs": 32940,
+  "state_rows": 65880,
+  "retained_parent_states": 39318,
+  "groups": [
+    {
+      "SIO": "READY",
+      "vs_parent": {
+        "equal": 13701,
+        "slower": 19087,
+        "faster": 152
+      },
+      "parent_correct_Qfp_losses": 89,
+      "candidate_correct_Qfp_losses": 45,
+      "fixed": 44,
+      "Qfplib_wrong": 6257
+    },
+    {
+      "SIO": "DIRTY",
+      "vs_parent": {
+        "equal": 13701,
+        "slower": 19087,
+        "faster": 152
+      },
+      "parent_correct_Qfp_losses": 95,
+      "candidate_correct_Qfp_losses": 51,
+      "fixed": 44,
+      "Qfplib_wrong": 6257
+    }
+  ],
+  "old34_raw_losses_fixed": 15,
+  "expanded_raw_losses_fixed": 44,
+  "remaining_raw_inputs": 51,
+  "remaining_state_rows": 96,
+  "new_correct_Qfp_deficits": 0,
+  "historical_ln10_fixed": 6,
+  "historical_ln10_open": 4,
+  "versus_parent": {
+    "equal": 27402,
+    "slower": 38174,
+    "faster": 304
+  },
+  "regression_instruction_range": [
+    7,
+    105
+  ],
+  "author_candidate_stack_same_expanded_corpus": 640,
+  "author_parent_stack_same_expanded_corpus": 600,
+  "code_growth_bytes": 248,
+  "not_faster_than_parent_overall": true,
+  "no_physical_cycles_or_exhaustive_claim": true
+}

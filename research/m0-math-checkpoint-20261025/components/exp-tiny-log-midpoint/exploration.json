@@ -1,0 +1,20 @@
+[
+  {
+    "negative": false,
+    "max_odd_exclusive": 1048576,
+    "classes": 524288,
+    "failed": 0,
+    "failed_examples": [],
+    "factor2_margin_exceptions": 0,
+    "seconds": 0.17394770801183768
+  },
+  {
+    "negative": true,
+    "max_odd_exclusive": 2097152,
+    "classes": 1048576,
+    "failed": 0,
+    "failed_examples": [],
+    "factor2_margin_exceptions": 0,
+    "seconds": 0.5256649170187302
+  }
+]

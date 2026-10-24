@@ -1,0 +1,8 @@
+{
+  "status": "EXACT_ENDPOINT_PREDICATE_ONLY_ON_FROZEN_NEAR_COMPONENT",
+  "parent_result_sha256": "607c0e11a53050cb4e24aa9f3616fad32fd80dc5eca91eb8e8a47a82f871293e",
+  "source_sha256": "79067df1532a771c3cef484271292d7a592f73e1a0e0d51af86b5359c3de33a7",
+  "selected_trial": "high-first",
+  "first_low_first_trial_rejected_for_dyadic_regressions": true,
+  "canonical_or_device_changed": false
+}

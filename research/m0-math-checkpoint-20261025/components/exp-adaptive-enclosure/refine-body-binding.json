@@ -1,0 +1,8 @@
+{
+  "status": "PASS_PREEXISTING_EXP_REFINE_BYTES_UNCHANGED_ONLY_PUBLIC_KERNEL_ALTERED",
+  "prefix_bytes": 3736,
+  "sha256": "946899a53f67c3f78c746762e235f1fbd821c6579dd90d08ffcf863e755abbbf",
+  "old_core_bytes": 5012,
+  "new_core_bytes": 5064,
+  "new_tables_or_RAM": false
+}

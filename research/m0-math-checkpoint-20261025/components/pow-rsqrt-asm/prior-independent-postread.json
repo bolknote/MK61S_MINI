@@ -1,0 +1,26 @@
+{
+  "status": "PASS_PRIOR_POW_COMPONENT_INDEPENDENT_RECEIPT_AND_ALL26_DIRECT_REFS",
+  "receipt": ".build/m0-pow-square-ordinary-independent-20261024/FINAL-REVIEW.json",
+  "sha256": "4fb68e5ea8dbc4539befb483277ac2ce8e301bc23f1447c8b72de312fbbcdde1",
+  "verified_direct_refs": 26,
+  "reviewed_original507_union": {
+    "no_slower": 387,
+    "strictly_faster": 381,
+    "equal": 6,
+    "remaining": 120,
+    "new_strict": 67,
+    "remaining_by_operation": {
+      "pow": 82,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    },
+    "receipt": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square-ordinary-independent-20261024/original507-component-delta.json",
+      "bytes": 25921,
+      "sha256": "7ab82cfcaaa1217aec28f35214ade66e0752d692b624198b55bbaeb02624883f"
+    },
+    "not_one_integrated_binary": true
+  },
+  "this_is_not_independent_acceptance_of_new_rsqrt": true
+}

@@ -1,0 +1,12 @@
+{
+  "status": "PASS_POSTSEAL_ALL_FILES_AND_INPUT_PINS",
+  "artifact_files_verified": 56,
+  "input_pins_verified": 573,
+  "result_sha256": "182efb16d9f7b70888d443d4a27eec8a2cd61fd357d0ae5bdfb451f432be0c89",
+  "HANDOFF_sha256": "d29bc02ce1313e96ff7f5a86ec720a202322ed4afb8b75f48d5568dd2b9caf63",
+  "source_sha256": "af83817a78b261621a638c5cc3436bfd63ef57371d999766dfad2a50733dcef7",
+  "ELF_sha256": "c0000b4a468cdb80228fab332978f276a21cf5e229fa1abe7622a287ef396297",
+  "git_HEAD": "d0b9cbd6c47648b136104f7a66a714af3db9f7e5",
+  "canonical_math_diff": [],
+  "hardware_accessed": false
+}

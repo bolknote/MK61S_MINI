@@ -1,0 +1,122 @@
+--- a/code/native_eabi_m0_convert.inc
++++ b/code/native_eabi_m0_convert.inc
+@@ -183,6 +183,9 @@
+ .ltorg
+ 
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++#include "native_eabi_m0_f2d.inc"
++#else
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ function __aeabi_f2d, .m0_conversion_fixed
+ #else
+ function __aeabi_f2d
+@@ -224,6 +227,7 @@
+  pop {r4,pc}
+ .ltorg
+ end __aeabi_f2d
++#endif
+ 
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ #include "native_eabi_m0_d2f.inc"
+--- /dev/null
++++ b/code/native_eabi_m0_f2d.inc
+@@ -0,0 +1,99 @@
++#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++.syntax unified
++.cpu cortex-m0plus
++.thumb
++.section .m0_conversion_fixed.__aeabi_f2d,"ax",%progbits
++.align 2
++.global __aeabi_f2d
++.type __aeabi_f2d,%function
++.thumb_func
++__aeabi_f2d:
++ // One shift classifies both signed zeros and preserves sign in carry.
++ lsls r2,r0,#1
++ beq .Lfd_zero
++ bcs .Lfd_negative
++ lsrs r3,r0,#23
++ subs r3,#1
++ cmp r3,#253
++ bhi .Lfd_special_positive
++ ldr r2,=0x38000000
++ lsrs r1,r0,#3
++ adds r1,r2
++ lsls r0,#29
++ bx lr
++.Lfd_negative:
++ // ASR makes the exponent E-256; adding255 yields the same E-1 test.
++ asrs r3,r0,#23
++ adds r3,#255
++ cmp r3,#253
++ bhi .Lfd_special_negative
++ ldr r2,=0xc8000000
++ asrs r1,r0,#3
++ adds r1,r2
++ lsls r0,#29
++ bx lr
++.Lfd_zero:
++ mov r1,r0
++ movs r0,#0
++ bx lr
++.Lfd_special_positive:
++ lsls r2,r0,#9
++ bne .Lfd_fraction_special
++ ldr r1,=0x7ff00000
++ movs r0,#0
++ bx lr
++.Lfd_special_negative:
++ lsls r2,r0,#9
++ bne .Lfd_fraction_special
++ ldr r1,=0xfff00000
++ movs r0,#0
++ bx lr
++.Lfd_fraction_special:
++ cmp r3,#0
++ bmi .Lfd_subnormal
++ lsrs r1,r0,#31
++ lsls r1,#31
++ ldr r3,=0x7ff80000
++ lsrs r2,#12
++ orrs r1,r2
++ orrs r1,r3
++ lsls r0,#29
++ bx lr
++.Lfd_subnormal:
++ asrs r1,r0,#31
++ lsls r1,#31
++ ldr r3,=895
++ lsrs r0,r2,#16
++ bne .Lfd_at16
++ lsls r2,#16
++ subs r3,#16
++.Lfd_at16:
++ lsrs r0,r2,#24
++ bne .Lfd_at24
++ lsls r2,#8
++ subs r3,#8
++.Lfd_at24:
++ lsrs r0,r2,#28
++ bne .Lfd_at28
++ lsls r2,#4
++ subs r3,#4
++.Lfd_at28:
++ lsrs r0,r2,#30
++ bne .Lfd_at30
++ lsls r2,#2
++ subs r3,#2
++.Lfd_at30:
++ cmp r2,#0
++ bmi .Lfd_normalized
++ lsls r2,#1
++ subs r3,#1
++.Lfd_normalized:
++ lsrs r0,r2,#11
++ adds r1,r0
++ lsls r3,#20
++ adds r1,r3
++ lsls r0,r2,#21
++ bx lr
++.ltorg
++.size __aeabi_f2d,.-__aeabi_f2d
++#endif

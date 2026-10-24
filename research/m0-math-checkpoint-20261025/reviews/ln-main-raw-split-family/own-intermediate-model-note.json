@@ -1,0 +1,8 @@
+{
+  "status": "OWN_INTERMEDIATE_MODEL_ASSERTION_CORRECTED_BEFORE_ARM",
+  "initial_assertion": "A==106497/16384",
+  "cause": "Independent first draft used omitted-product upper bound without subtracting the actual mandatory Q46 +4 centering bias.",
+  "resolution": "Read actual frozen product assembly; bound is max(4.5, omitted/2^46-4+0.5)=4.5+2^-14, plus reciprocal bound2. No candidate/source/proof weakening. Successful entire private rebuild and bounded checks followed.",
+  "firmware_failure": false,
+  "producer_files_changed": false
+}

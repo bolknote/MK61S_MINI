@@ -1,0 +1,25 @@
+{
+  "status": "PASS_POSTSEAL_F2D_ARTIFACTS_LINEAGE_AND_ACCEPTED_D2F_RECEIPT",
+  "FROZEN_sha256": "931cce0b812981236a8fcadaf6cabf074ee473463092c90a8555764e4e288164",
+  "verified": {
+    "FROZEN.json": 61,
+    "source-lineage-pins.json": 424
+  },
+  "d2f_independent_receipt": ".build/m0-d2f-leaf-independent-20261024/FINAL-REVIEW.json",
+  "d2f_receipt_sha256": "500e2c5b1253e1ad73b94572b13fbddf34f5e4bf09cfce6f8ee97164d37a0aa4",
+  "d2f_direct_refs_verified": 26,
+  "f2d_corrected_oracle_accounting": {
+    "oracle_evaluations": 132959,
+    "actual_directed_MPFR_input_conversions": 124373,
+    "NaN_category_shortcuts_without_MPFR": 8586,
+    "exact_integer_and_raw_parent_policy_checked_separately": true,
+    "frozen_producer_not_rewritten": true
+  },
+  "d2f_corrected_oracle_accounting": {
+    "oracle_evaluations": 231984,
+    "actual_directed_MPFR_input_conversions": 229580,
+    "NaN_category_shortcuts_without_MPFR": 2404
+  },
+  "no_canonical_Git_device_or_frozen_packet_changes": true,
+  "goal_complete": false
+}

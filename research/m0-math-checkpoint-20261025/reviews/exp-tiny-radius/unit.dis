@@ -1,0 +1,100 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-independent-20261024/unit.elf:     file format elf32-littlearm
+
+
+Disassembly of section .tiny:
+
+10190000 <exp_tiny_rne>:
+10190000:	2280      	movs	r2, #128	@ 0x80
+10190002:	b5f0      	push	{r4, r5, r6, r7, lr}
+10190004:	4b2a      	ldr	r3, [pc, #168]	@ (101900b0 <exp_tiny_rne+0xb0>)
+10190006:	004c      	lsls	r4, r1, #1
+10190008:	0d64      	lsrs	r4, r4, #21
+1019000a:	1b1b      	subs	r3, r3, r4
+1019000c:	0fce      	lsrs	r6, r1, #31
+1019000e:	030d      	lsls	r5, r1, #12
+10190010:	1b9e      	subs	r6, r3, r6
+10190012:	0b2d      	lsrs	r5, r5, #12
+10190014:	0352      	lsls	r2, r2, #13
+10190016:	432a      	orrs	r2, r5
+10190018:	0037      	movs	r7, r6
+1019001a:	2501      	movs	r5, #1
+1019001c:	3f20      	subs	r7, #32
+1019001e:	426d      	negs	r5, r5
+10190020:	40bd      	lsls	r5, r7
+10190022:	0013      	movs	r3, r2
+10190024:	43ab      	bics	r3, r5
+10190026:	001d      	movs	r5, r3
+10190028:	2301      	movs	r3, #1
+1019002a:	4694      	mov	ip, r2
+1019002c:	001a      	movs	r2, r3
+1019002e:	3e21      	subs	r6, #33	@ 0x21
+10190030:	40b2      	lsls	r2, r6
+10190032:	0016      	movs	r6, r2
+10190034:	4662      	mov	r2, ip
+10190036:	40fa      	lsrs	r2, r7
+10190038:	2900      	cmp	r1, #0
+1019003a:	da1c      	bge.n	10190076 <exp_tiny_rne+0x76>
+1019003c:	0019      	movs	r1, r3
+1019003e:	42b5      	cmp	r5, r6
+10190040:	d812      	bhi.n	10190068 <exp_tiny_rne+0x68>
+10190042:	2100      	movs	r1, #0
+10190044:	42b5      	cmp	r5, r6
+10190046:	d10f      	bne.n	10190068 <exp_tiny_rne+0x68>
+10190048:	4288      	cmp	r0, r1
+1019004a:	d00d      	beq.n	10190068 <exp_tiny_rne+0x68>
+1019004c:	2580      	movs	r5, #128	@ 0x80
+1019004e:	0019      	movs	r1, r3
+10190050:	01ed      	lsls	r5, r5, #7
+10190052:	42a8      	cmp	r0, r5
+10190054:	d808      	bhi.n	10190068 <exp_tiny_rne+0x68>
+10190056:	0053      	lsls	r3, r2, #1
+10190058:	430b      	orrs	r3, r1
+1019005a:	435b      	muls	r3, r3
+1019005c:	4915      	ldr	r1, [pc, #84]	@ (101900b4 <exp_tiny_rne+0xb4>)
+1019005e:	1864      	adds	r4, r4, r1
+10190060:	40e3      	lsrs	r3, r4
+10190062:	4283      	cmp	r3, r0
+10190064:	419b      	sbcs	r3, r3
+10190066:	4259      	negs	r1, r3
+10190068:	2500      	movs	r5, #0
+1019006a:	2000      	movs	r0, #0
+1019006c:	188c      	adds	r4, r1, r2
+1019006e:	4912      	ldr	r1, [pc, #72]	@ (101900b8 <exp_tiny_rne+0xb8>)
+10190070:	1b00      	subs	r0, r0, r4
+10190072:	41a9      	sbcs	r1, r5
+10190074:	bdf0      	pop	{r4, r5, r6, r7, pc}
+10190076:	2100      	movs	r1, #0
+10190078:	000f      	movs	r7, r1
+1019007a:	42b5      	cmp	r5, r6
+1019007c:	414f      	adcs	r7, r1
+1019007e:	3501      	adds	r5, #1
+10190080:	b2ff      	uxtb	r7, r7
+10190082:	42b5      	cmp	r5, r6
+10190084:	d10c      	bne.n	101900a0 <exp_tiny_rne+0xa0>
+10190086:	4d0d      	ldr	r5, [pc, #52]	@ (101900bc <exp_tiny_rne+0xbc>)
+10190088:	42a8      	cmp	r0, r5
+1019008a:	d909      	bls.n	101900a0 <exp_tiny_rne+0xa0>
+1019008c:	0055      	lsls	r5, r2, #1
+1019008e:	432b      	orrs	r3, r5
+10190090:	435b      	muls	r3, r3
+10190092:	4d0b      	ldr	r5, [pc, #44]	@ (101900c0 <exp_tiny_rne+0xc0>)
+10190094:	4240      	negs	r0, r0
+10190096:	1964      	adds	r4, r4, r5
+10190098:	40e3      	lsrs	r3, r4
+1019009a:	4283      	cmp	r3, r0
+1019009c:	4149      	adcs	r1, r1
+1019009e:	b2cf      	uxtb	r7, r1
+101900a0:	2100      	movs	r1, #0
+101900a2:	2300      	movs	r3, #0
+101900a4:	4c04      	ldr	r4, [pc, #16]	@ (101900b8 <exp_tiny_rne+0xb8>)
+101900a6:	18b8      	adds	r0, r7, r2
+101900a8:	18c0      	adds	r0, r0, r3
+101900aa:	4161      	adcs	r1, r4
+101900ac:	e7e2      	b.n	10190074 <exp_tiny_rne+0x74>
+101900ae:	46c0      	nop			@ (mov r8, r8)
+101900b0:	000003ff 	.word	0x000003ff
+101900b4:	fffffc3a 	.word	0xfffffc3a
+101900b8:	3ff00000 	.word	0x3ff00000
+101900bc:	ffffbfff 	.word	0xffffbfff
+101900c0:	fffffc38 	.word	0xfffffc38

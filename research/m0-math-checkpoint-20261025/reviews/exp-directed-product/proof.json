@@ -1,0 +1,33 @@
+{
+  "status": "PASS_OWN_EXACT_RATIONAL_DELTA_OBLIGATIONS",
+  "coefficient": "27844083144382133672769159820525805063036089/11150372599265311570767859136324180752990208",
+  "coefficient_strict5over2": true,
+  "negative_tail_nonpositive_entire_domain": true,
+  "quadratic_over_t_convex_endpoint_bounds": [
+    "50371913159720047622377/302231454903657293676544",
+    "108553770835427546488102459971/930459597118108097586775879319552"
+  ],
+  "signed_square_parity_bound_strict1": true,
+  "Taylor_and_step": "11587969270862535297244209362771657028923154053284073109906950327936621010206682895193876737008239/3732692613936344822560249276504192336042393930314220012699100441572677279188030925483797647877734400",
+  "table_cross": "536871087/1502164811776",
+  "curvature_ratio": "356812263220782048586740459987140809466431153/356562198539727016407944538586284779140808704",
+  "curvature_strict6over5": true,
+  "gmax": 2939,
+  "curvature_q8_max": 396,
+  "unsigned_int_products_adds_and_signed_shifts_bounded": true,
+  "nmax": 756388,
+  "step_low": 3588551130,
+  "all512_actual_table_and_Q94_roots_and_signed_bias_checked": true,
+  "retained13term_product_rounding_upper": "P-A*b/2^64 <= (F>>31)-F/2^32; omitted products are nonnegative",
+  "strict_rounding_argument": "D8/256 bounds E-D strictly; Q8 effect+biasfloor+rhoceil+2 bounds V-q strictly. upper<=256 implies V<q+1; unchanged radius4 excludes q-1023.",
+  "positive_below_requires_Rnegative_npositive_exact_input_scaling": true,
+  "index0_cannot_enter": "Any positive correction from A0=2^62 doubles q and sets error6; zero correction gives tail0.",
+  "rounding_integer_bucket_endpoint_checks": 1280,
+  "normal_error4_tail511_only": true,
+  "tables": {
+    "Q62": "9185ad8a13121c810de407f5eac695df9f3b394ee836d4829d0aa37f2fa5719e",
+    "Q94": "b4769f705c76d7190d0ed816f2fe95c4dc786ea4f48148d2150d085bc3314e52"
+  },
+  "parent_global_radius_inverse_square_and_general_refinement_proofs_reused_by_exact_binding": true,
+  "no_exhaustive_binary64_or_physical_cycle_or_whole_math_claim": true
+}

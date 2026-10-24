@@ -1,0 +1,218 @@
+--- a/code/native_eabi_m0.cpp
++++ b/code/native_eabi_m0.cpp
+@@ -627,6 +627,25 @@
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ extern "C" MK61_SOFT_PCS U mk61_m0_exp_endpoint(U,int,unsigned);
+ #endif
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++extern "C" MK61_SOFT_PCS U mk61_m0_pow_exp_product_flash(U,U);
++// Called only for2^-54<|x|<2^-40. The positive remainder exp(x)-1-x
++// is strictly below4097 input-significand units throughout this domain.
++__attribute__((always_inline)) inline U exp_tiny_rne(U a) {
++  const bool negative=bool(a>>63);
++  const int e=int((a>>52)&0x7FFU)-1023;
++  const unsigned shift=unsigned(-e)-unsigned(negative)-32U;
++  const uint32_t hi=(uint32_t(a>>32)&0xFFFFFU)|0x100000U,lo=uint32_t(a);
++  const uint32_t tail=hi&((1U<<shift)-1U),half=1U<<(shift-1U),retained=hi>>shift;
++  if(negative) {
++    if(tail==half && lo && lo<4097U) return D::Infinity|D::Quiet;
++    const bool up=tail>half || (tail==half && lo);
++    return UINT64_C(0x3FF0000000000000)-U(retained+unsigned(up));
++  }
++  if(tail+1U==half && lo>0U-4097U) return D::Infinity|D::Quiet;
++  return UINT64_C(0x3FF0000000000000)+U(retained+unsigned(tail>=half));
++}
++#endif
+ // On ARMv6-M, -O3 expands wide products into substantially more spills than
+ // -Os. Keep this kernel's measured register allocation in release builds.
+ MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_exp(double x) {
+@@ -647,6 +666,12 @@
+     // word directly, avoiding two variable 64-bit shifts on ARMv6-M.
+     n=((uint32_t(p>>32)>>unsigned(20-e))+1U)>>1;
+   }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  else if(e<-40) {
++    const U tiny=exp_tiny_rne(a);
++    if(tiny!=(D::Infinity|D::Quiet)) return real(tiny);
++  }
++#endif
+   const int shift=e+12;
+   const U scaled=shift<0?significand>>unsigned(-shift):significand<<unsigned(shift);
+   const U reduction=wide32(uint32_t(exp_step_high),n)+
+@@ -680,17 +705,48 @@
+   k=(k-int(index))/512;
+   U q=exp_table[index];
+   const bool below=(delta>>63)!=0;
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  const U correction=mk61_m0_pow_exp_product_flash(q,below?U(0)-delta:delta);
++  unsigned error=4;
++#else
+   const U correction=exp_high_product(q,below?U(0)-delta:delta)+1;
++  unsigned error=5;
++#endif
+   q=below?q-correction:q+correction;
+-  unsigned error=5;
+-  if(q<(U(1)<<62)) {q<<=1;--k;error*=2;}
++  if(q<(U(1)<<62)) {
++    q<<=1;--k;
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++    error=6;
++#else
++    error*=2;
++#endif
++  }
+   if(k>=-1022 && k<=1023) {
+     // The complete interval [q-error,q+error] must lie in one rounding
+     // cell. Ambiguous results are evaluated by the correctly rounded path.
+     const uint32_t tail=uint32_t(q)&1023U;
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++    const unsigned guard=error-1U;
++    if(uint32_t(tail-(512U-guard))<=2U*guard) {
++      const uint32_t distance=tail>512U?tail-512U:512U-tail;
++      bool safe=false;
++      if(error==4U && distance==3U) {
++        const unsigned i=(a&D::Sign?0U-n:n)&511U;
++        const int32_t delta32=int32_t(refine_exp_table[i][0]);
++        safe=tail>512U?delta32>=-0x58000000:delta32<=0x58000000;
++      }
++      if(!safe) return exp_refine(x,n);
++    }
++#else
+     if(uint32_t(tail-(512U-error))<=2*error) return exp_refine(x,n);
++#endif
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++    // Every accepted interval is strictly on one side of its midpoint.
++    return real((U(k+1022)<<52)+(q>>10)+U(tail>512U));
++#else
+     const U rounded=(q+511+((q>>10)&1))>>10;
+     return real((U(k+1022)<<52)+rounded);
++#endif
+   }
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+   const U endpoint=mk61_m0_exp_endpoint(q,k,error);
+--- a/code/native_eabi_m0_pow_exp_product.inc
++++ b/code/native_eabi_m0_pow_exp_product.inc
+@@ -1,6 +1,8 @@
+ #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ // Rounded high64 of a63*b54 after omitting the three lowest16-bit
+ // products. The omitted integer is<2^49; absolute error<=1/2+2^-15.
++// Cache a3/b3 and round column3 before the discarded accumulator is reused.
++// The RAM address and Flash-to-RAM transition are unchanged in this fixture.
+ .syntax unified
+ .cpu cortex-m0plus
+ .thumb
+@@ -10,14 +12,16 @@
+ .type mk61_m0_pow_exp_product,%function
+ .thumb_func
+ mk61_m0_pow_exp_product:
+- push {r4-r6,lr}
+- sub sp,#16
++ push {r4-r7,lr}
++ sub sp,#20
+  str r0,[sp,#0]
+  str r1,[sp,#4]
+  str r2,[sp,#8]
+  str r3,[sp,#12]
++ lsrs r2,r1,#16
++ lsrs r7,r3,#16
+  mov r3,sp
+- movs r2,#0
++ movs r6,#0
+  // Column2 starts at bit32 of the full product.
+  ldrh r0,[r3,#0]
+  ldrh r1,[r3,#12]
+@@ -28,16 +32,15 @@
+  ldrh r1,[r3,#10]
+  muls r0,r1
+  adds r4,r0
+- adcs r5,r2
++ adcs r5,r6
+  ldrh r0,[r3,#4]
+  ldrh r1,[r3,#8]
+  muls r0,r1
+  adds r4,r0
+- adcs r5,r2
++ adcs r5,r6
+  // Column3; its upper accumulator stays below2^18.
+  ldrh r0,[r3,#0]
+- ldrh r1,[r3,#14]
+- muls r0,r1
++ muls r0,r7
+  lsrs r1,r0,#16
+  lsls r0,#16
+  adds r4,r0
+@@ -56,56 +59,48 @@
+  lsls r0,#16
+  adds r4,r0
+  adcs r5,r1
+- ldrh r0,[r3,#6]
+- ldrh r1,[r3,#8]
+- muls r0,r1
++ ldrh r0,[r3,#8]
++ muls r0,r2
+  lsrs r1,r0,#16
+  lsls r0,#16
+  adds r4,r0
+  adcs r5,r1
++ // Bit63 is final after column3. Rounded r5 remains<2^18.
++ lsls r4,#1
++ adcs r5,r6
+  // Column4. First product<2^22, so its sum cannot overflow.
+  ldrh r0,[r3,#2]
+- ldrh r1,[r3,#14]
+- muls r0,r1
++ muls r0,r7
+  adds r5,r0
+- movs r6,#0
++ movs r4,#0
+  ldrh r0,[r3,#4]
+  ldrh r1,[r3,#12]
+  muls r0,r1
+  adds r5,r0
+- adcs r6,r2
+- ldrh r0,[r3,#6]
+- ldrh r1,[r3,#10]
+- muls r0,r1
++ adcs r6,r4
++ ldrh r0,[r3,#10]
++ muls r0,r2
+  adds r5,r0
+- adcs r6,r2
++ adcs r6,r4
+  // Column5; upper accumulator stays below2^16.
+  ldrh r0,[r3,#4]
+- ldrh r1,[r3,#14]
+- muls r0,r1
++ muls r0,r7
+  lsrs r1,r0,#16
+  lsls r0,#16
+  adds r5,r0
+  adcs r6,r1
+- ldrh r0,[r3,#6]
+- ldrh r1,[r3,#12]
+- muls r0,r1
++ ldrh r0,[r3,#12]
++ muls r0,r2
+  lsrs r1,r0,#16
+  lsls r0,#16
+  adds r5,r0
+  adcs r6,r1
+  // Column6; the complete result is<2^53.
+- ldrh r0,[r3,#6]
+- ldrh r1,[r3,#14]
+- muls r0,r1
+- adds r6,r0
+- // Round using bit63 of the truncated full product.
+- lsls r4,#1
+- adcs r5,r2
+- adcs r6,r2
++ muls r2,r7
++ adds r6,r2
+  mov r0,r5
+  mov r1,r6
+- add sp,#16
+- pop {r4-r6,pc}
++ add sp,#20
++ pop {r4-r7,pc}
+ .size mk61_m0_pow_exp_product,.-mk61_m0_pow_exp_product
+ #endif

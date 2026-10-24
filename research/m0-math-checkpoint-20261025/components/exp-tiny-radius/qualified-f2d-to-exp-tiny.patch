@@ -1,0 +1,56 @@
+--- a/code/native_eabi_m0.cpp
++++ b/code/native_eabi_m0.cpp
+@@ -629,21 +629,34 @@
+ #endif
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ extern "C" MK61_SOFT_PCS U mk61_m0_pow_exp_product_flash(U,U);
+-// Called only for2^-54<|x|<2^-40. The positive remainder exp(x)-1-x
+-// is strictly below4097 input-significand units throughout this domain.
+-__attribute__((always_inline)) inline U exp_tiny_rne(U a) {
++// Called only for 2^-54 < |x| < 2^-38. At a nearby linear midpoint
++// M0=(2*retained+1)*2^(s-1), its quadratic correction in input-ulp units
++// is (2*retained+1)^2 / 2^(e+55+2*negative). The odd numerator is never
++// integral on this grid. Input displacement and the cubic remainder
++// together are <2^-22 units, while its distance to an integer is >=2^-18.
++// Consequently its exact integer floor decides every guarded midpoint.
++__attribute__((noinline,noipa,section(".m0_exp_tiny"))) static U exp_tiny_rne(U a) {
+   const bool negative=bool(a>>63);
+   const int e=int((a>>52)&0x7FFU)-1023;
+   const unsigned shift=unsigned(-e)-unsigned(negative)-32U;
+   const uint32_t hi=(uint32_t(a>>32)&0xFFFFFU)|0x100000U,lo=uint32_t(a);
+   const uint32_t tail=hi&((1U<<shift)-1U),half=1U<<(shift-1U),retained=hi>>shift;
+   if(negative) {
+-    if(tail==half && lo && lo<4097U) return D::Infinity|D::Quiet;
+-    const bool up=tail>half || (tail==half && lo);
++    bool up=tail>half || (tail==half && lo);
++    if(tail==half && lo && lo<16385U) {
++      const uint32_t odd=(retained<<1)|1U;
++      const uint32_t quadratic=(odd*odd)>>unsigned(e+57);
++      up=lo>quadratic;
++    }
+     return UINT64_C(0x3FF0000000000000)-U(retained+unsigned(up));
+   }
+-  if(tail+1U==half && lo>0U-4097U) return D::Infinity|D::Quiet;
+-  return UINT64_C(0x3FF0000000000000)+U(retained+unsigned(tail>=half));
++  bool up=tail>=half;
++  if(tail+1U==half && lo>0U-16385U) {
++    const uint32_t odd=(retained<<1)|1U;
++    const uint32_t quadratic=(odd*odd)>>unsigned(e+55);
++    up=(0U-lo)<=quadratic;
++  }
++  return UINT64_C(0x3FF0000000000000)+U(retained+unsigned(up));
+ }
+ #endif
+ // On ARMv6-M, -O3 expands wide products into substantially more spills than
+@@ -667,9 +680,8 @@
+     n=((uint32_t(p>>32)>>unsigned(20-e))+1U)>>1;
+   }
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+-  else if(e<-40) {
+-    const U tiny=exp_tiny_rne(a);
+-    if(tiny!=(D::Infinity|D::Quiet)) return real(tiny);
++  else if(e<-38) {
++    return real(exp_tiny_rne(a));
+   }
+ #endif
+   const int shift=e+12;

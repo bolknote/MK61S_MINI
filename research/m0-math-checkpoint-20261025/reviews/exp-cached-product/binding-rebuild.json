@@ -1,0 +1,1502 @@
+{
+  "status": "PASS_INDEPENDENT_91_ARTIFACT_68_LINEAGE_SOURCE_SCOPE_AND_REBUILDS",
+  "frozen": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/FROZEN.json",
+    "sha256": "765df6f87358d53a2d10d3b4c673fe8e4e85771c56e7d39b79bfe9df2ce5381c",
+    "bytes": 13134
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/result.json",
+    "sha256": "1e7123188b0cb84380acc840486e21993c3ad9b4ca2922443091a3c259a73288",
+    "bytes": 13699
+  },
+  "verified_artifacts": 91,
+  "verified_external_lineage": 68,
+  "verified": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/HANDOFF.md",
+      "sha256": "13d1b12f144d6574516899b621adeb72a6b54d98174fa7614573c31ee194d739",
+      "bytes": 3767
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/M4_hard-candidate.o",
+      "sha256": "2502294fb57ccc85193e07929f62d28eae7f8f92c2d0f2d85ea6fab46b9d7b8c",
+      "bytes": 2124
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/M4_hard-candidate.su",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/M4_hard-control.o",
+      "sha256": "fed09e62247746aa531623a47e82be7f3f294a41106989bb1338b00dfd91e6be",
+      "bytes": 2120
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/M4_hard-control.su",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/M4_hard-product.o",
+      "sha256": "607c0964c415f74ffb89a4336373274ba50e660a1bac13fe59c2db5c89cbb1cc",
+      "bytes": 548
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/M4_soft-candidate.o",
+      "sha256": "667ffe1fd8c1dd666179f0cd4e3fdf03f77e616b0b559e2fe2f9469beafeec14",
+      "bytes": 2100
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/M4_soft-candidate.su",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/M4_soft-control.o",
+      "sha256": "0b9a854ecc7020334036993cdd27e8182e5c12b1ad31fab47dec3c5238cedbf1",
+      "bytes": 2096
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/M4_soft-control.su",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/M4_soft-product.o",
+      "sha256": "ff20f202e576eae54ac16b6a33a1e35ccd28fc5d96cdc4ed999f247671ba6a84",
+      "bytes": 544
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/V164-exp-and-product.patch",
+      "sha256": "963bf6b449825ea45f192df7b98ec468ec72314365196820ce12bfaa21e8964d",
+      "bytes": 6390
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/bindings.ld",
+      "sha256": "80ddb74139584d42a9ebf6fdbbc8f9bc20f74368b07f3ba8173234619e976442",
+      "bytes": 1419
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/build-r2.log",
+      "sha256": "d2a536004c23ba2ee4fd0e93abd1f654840f8dfb07ceef5ce786801f934c339e",
+      "bytes": 1685
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/build-units.py",
+      "sha256": "118b13b3c1033e0f2ff17d14b34bcf66bfd75999136956bdaaefa6c7a71a2d78",
+      "bytes": 4987
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/build.json",
+      "sha256": "e3af442a6ff49cad542cb35f5f7374b356b5e036f8fe397e68d2f5bc513fa71f",
+      "bytes": 30569
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/build.log",
+      "sha256": "5f254fac3822d39ce47b9b7737b59c4f17041cac21afc1f04ffa88489b7ae408",
+      "bytes": 1558
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/build.py",
+      "sha256": "5a37ee99b2fdaa96d255ad1fb855c08063abd1dd2d39b712b15745ddd74d8dbd",
+      "bytes": 5262
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/cached-product.S",
+      "sha256": "f6fa419ccb24858b04912f16fd522894a70494bd66edbdef1071e3d7ed4c66bf",
+      "bytes": 2150
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/cached-product.o",
+      "sha256": "928f6db0a0afebdbf486add6e5e4f951e0ef205c38f5e42356d758a122429c01",
+      "bytes": 864
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate/native_eabi_m0.cpp",
+      "sha256": "9b0bf27d5080eabe779b924e57db448b205ce0d0a20febcaa7355267f1aa311e",
+      "bytes": 38324
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate/native_eabi_m0_pow_exp_product.inc",
+      "sha256": "2943fc30ab8768375063c1df6441d0148320ec1a44719d8722423c825c286735",
+      "bytes": 2141
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate-bindings.ld",
+      "sha256": "4ab429220a0864b952020f74bb2037843a92e81eb64af84c533df8f182655773",
+      "bytes": 1452
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate-full.o",
+      "sha256": "7b34b04937b6c2be57f2bbe070e6d27a67022167775a51a0ca1ab645c3090f31",
+      "bytes": 1792596
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate-full.su",
+      "sha256": "2c63f8cbf604882c13a65526719d65ea5f14768a8cd638283e44e3581634f508",
+      "bytes": 28431
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate.dis",
+      "sha256": "75d988051cb73f7cc56d77ec9a0f03d0f9a30f99104c0dcc5dd65f7ec899b475",
+      "bytes": 113454
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate.elf",
+      "sha256": "5ddab388a96bef9c343e0c11e82797741f7ccb724a812d0532d76aa25c2e794e",
+      "bytes": 1116772
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/certificate.json",
+      "sha256": "7a8447c5c54dbeb7c71a9d02499759cbd0244f8dfa601d9d497a9f988dd45139",
+      "bytes": 4734
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/certificate.log",
+      "sha256": "7a8447c5c54dbeb7c71a9d02499759cbd0244f8dfa601d9d497a9f988dd45139",
+      "bytes": 4734
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/certify.py",
+      "sha256": "849a0db3acbca57935399c1c123049b4f9f9ef1fc8bbcea66da71931eeb693f5",
+      "bytes": 9373
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/check-existing-callers.py",
+      "sha256": "08aff69a889188c1568d0487079b320ba83046c8001af11cd92dad821f3c34c2",
+      "bytes": 5603
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/control/native_eabi_m0.cpp",
+      "sha256": "5b8ce151ae11323b35a6c6e51ab04e4895315109a715b7fd6007fac3c021b9bc",
+      "bytes": 36224
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/control-full.o",
+      "sha256": "9815e2a6b9b46236399ce662ab22c1a5cc098d444ba4bfad8569400540a210f1",
+      "bytes": 1792672
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/control-full.su",
+      "sha256": "73ee9389295e6942a1b0d72866193e3954a915c04e23849c17a06e1bd0772d05",
+      "bytes": 28297
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/control-product.o",
+      "sha256": "0195c1531b63e559035dd771c731fac6abcc79060417864627a09ce6e9efe8a1",
+      "bytes": 872
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/control.dis",
+      "sha256": "7e17211a02d260f90c63f622d99c5a859283641553b2d304d22ca0e6bd0be3f6",
+      "bytes": 109057
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/control.elf",
+      "sha256": "a81adc4026054e57df752881d563f4324b64db2a81ffb5114d6b40fb8e6b6fb0",
+      "bytes": 1116084
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/existing-callers-r2.log",
+      "sha256": "f5713a0e96aa7babef9ee29090bd26fdd9a6e0c5d978a6bde496c936cf665af4",
+      "bytes": 1803
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/existing-callers-r3.log",
+      "sha256": "a3ca01cb953fa8a69b13dd3de007a72e52ad77d91f29b441c39b62ece8e3aa17",
+      "bytes": 1879
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/existing-callers-wrong-reference-trial.json",
+      "sha256": "d98f2d34685cecb05d1cba008d2922444514967fecf127db1405033b980e4bb9",
+      "bytes": 221016
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/existing-callers.json",
+      "sha256": "bbdb92c2b812622d1bfc316504f8f723f8a45e820b87a06901f69f0f0e4f5c44",
+      "bytes": 237467
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/existing-callers.log",
+      "sha256": "2ea8ab6a72f4e59b0523539f283a3bf11e8e79aec3dbc139584f94f60c1ece68",
+      "bytes": 541
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/finalize.py",
+      "sha256": "49a6fa68ee35d30fbd3240936f225b46a78b6caf6228ff36f43d1b395d9a7565",
+      "bytes": 13959
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/generic_M0-candidate.o",
+      "sha256": "301932c5a1b9d1a7456c6586486b386f0f3de91a9fedc13d569f8ab00bb2a4ca",
+      "bytes": 1595104
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/generic_M0-candidate.su",
+      "sha256": "a0f1d6aa80fbf0651735e12958712a723c42553b70fbfba40f6209166ae340c4",
+      "bytes": 23072
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/generic_M0-control.o",
+      "sha256": "e135a0ac89fcc87e293abda9b2fbf6048333c262d918dfb54d61c914a1299f0a",
+      "bytes": 1595096
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/generic_M0-control.su",
+      "sha256": "37cdde83b0a5d1e0d4c33d094cfd5b1cfe870c416dd75504f8afac7ec8be90db",
+      "bytes": 22940
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/generic_M0-product.o",
+      "sha256": "199c4debc85f37dac2b996a7da0007cf73e847566d928ec2e898fdaeb92e3fc4",
+      "bytes": 544
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/integration-product.o",
+      "sha256": "88e5bc10946a8927589bd97094be89c920c4c7658a2093fb7f4c7abcce8c5310",
+      "bytes": 856
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/integration-source-proof.json",
+      "sha256": "ceee58dd5e86be8959e0580a805398a71769ac5cdb2d9d7d45cb7d54b4353ced",
+      "bytes": 1296
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/isolate.py",
+      "sha256": "8f72dc2d8cf51e024a14dc4e5cfec9b3f1df15eed0661aedea42aeb50b17270f",
+      "bytes": 5776
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/isolation-r2.log",
+      "sha256": "262503aaeaa8dacde90d670549d4aca94b1a3d27dc6c2cbcde13601cd7fd6a9b",
+      "bytes": 1675
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/isolation.json",
+      "sha256": "a3db345ce17bd1c4697d0a58f5fbcdbd7b438aa3f360b21b7b10a7ae9eb2785f",
+      "bytes": 81336
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/isolation.log",
+      "sha256": "b45190314baabea5367e9caadbb52797774eaf90f21812effcd9920cabb10a01",
+      "bytes": 354
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/parent-rounded-product.bin",
+      "sha256": "20ddbb4bcbf37baffe9dfed52b4c03def48e66568d6929bc4ea711eb116ce948",
+      "bytes": 182
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/preparation.json",
+      "sha256": "a8a4fe44d312c70391a1651ce9f7805e9b89f849c7d61bb8014c12ead18ed3fa",
+      "bytes": 691
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/probe.py",
+      "sha256": "f3afee6834ec7799ec7a9ef711a0ba33e8a1d9d374512662544199c78082ceda",
+      "bytes": 5213
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/product-unit.S",
+      "sha256": "bcecc43a82f6fed557366f6910fda5ca8783053e4a9e25166241ba5be770c7c2",
+      "bytes": 615
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/product-unit.o",
+      "sha256": "fba167f45610c0dc8a7f0904527b53a271d83e1d625d5b9a2e679427b3be9573",
+      "bytes": 1136
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/qualification.json",
+      "sha256": "f7d201084e4ad383df388d6e7073b870df4aa8d94298d84cbb1d1c91e769a109",
+      "bytes": 66639220
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/qualification.log",
+      "sha256": "a65cc9e4f3c370d06e498ba86d32ca49e8c9e1f1d3f82d6c1cdb78bdffc32d31",
+      "bytes": 4276
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild/cached-product.o",
+      "sha256": "928f6db0a0afebdbf486add6e5e4f951e0ef205c38f5e42356d758a122429c01",
+      "bytes": 864
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild/candidate-full.o",
+      "sha256": "7b34b04937b6c2be57f2bbe070e6d27a67022167775a51a0ca1ab645c3090f31",
+      "bytes": 1792596
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild/candidate-full.su",
+      "sha256": "2c63f8cbf604882c13a65526719d65ea5f14768a8cd638283e44e3581634f508",
+      "bytes": 28431
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild/candidate.elf",
+      "sha256": "5ddab388a96bef9c343e0c11e82797741f7ccb724a812d0532d76aa25c2e794e",
+      "bytes": 1116772
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild/control-full.o",
+      "sha256": "9815e2a6b9b46236399ce662ab22c1a5cc098d444ba4bfad8569400540a210f1",
+      "bytes": 1792672
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild/control-full.su",
+      "sha256": "73ee9389295e6942a1b0d72866193e3954a915c04e23849c17a06e1bd0772d05",
+      "bytes": 28297
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild/control.elf",
+      "sha256": "a81adc4026054e57df752881d563f4324b64db2a81ffb5114d6b40fb8e6b6fb0",
+      "bytes": 1116084
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild/product-unit.o",
+      "sha256": "fba167f45610c0dc8a7f0904527b53a271d83e1d625d5b9a2e679427b3be9573",
+      "bytes": 1136
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild/unit.elf",
+      "sha256": "5d823e0b4fd752fea6bd953de2405ef8cfba264f0ceb22044283b9f8e7d59c84",
+      "bytes": 17304
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild/unit.o",
+      "sha256": "1ec15f1033c392ec52560beb37ccd72a3eec05af5926a92a45f488020ffac487",
+      "bytes": 7644
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild-proof.json",
+      "sha256": "29519e80a796a3f5ec558226b755fcd30d025e40c728afc02d4feb798eeef490",
+      "bytes": 30407
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rebuild-proof.log",
+      "sha256": "c45ad40cb341c1ec5f819de6b200dfd2cdfc6f7f549618e34b77d0d52aaa7176",
+      "bytes": 1356
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/replay-qualification.py",
+      "sha256": "1967e5c92f9393cbb0b8528040726ce51fb378a4088c84b8296b5ce94aa721e6",
+      "bytes": 6402
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/result.json",
+      "sha256": "1e7123188b0cb84380acc840486e21993c3ad9b4ca2922443091a3c259a73288",
+      "bytes": 13699
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/retained-exp-regressions.json",
+      "sha256": "6d4b225aa54c77495ab0568ef126ad4961f2af95339ee3c25018166ebaeeab25",
+      "bytes": 3962800
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/rounded-product.bin",
+      "sha256": "43c7b2bdd81974c27ecd602dbbc0b3ec82070caea16ffeb80d25fb28bc6b9f32",
+      "bytes": 168
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/smoke.json",
+      "sha256": "9110fb7acfe564837301623c5b480f2ab868a944e7b2ba547b8f1d0b1cc036ed",
+      "bytes": 62876
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/smoke.log",
+      "sha256": "d157495bec2090384cd642ce1a6ad13c745d313ea52722bfef2d55cb4bb0c589",
+      "bytes": 1996
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/smoke.py",
+      "sha256": "7e452bb995becbec425bb9bddf3ddf34938149afaedd461700d20e01f57334cb",
+      "bytes": 5358
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/source-lineage-pins.json",
+      "sha256": "dd5434238338c02c147a9540b1c5a54b3a009dadfd1a2f914c56fce9a0d47e73",
+      "bytes": 13785
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit-build.json",
+      "sha256": "9611415db153413c8133a13433c024abb9296b9e705ee05c0007f8bc56316fa6",
+      "bytes": 2449
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit-build.log",
+      "sha256": "7103e349058ffaa59f985b2468a43b9ffa47f458e1872ac97d49834c7be93fd9",
+      "bytes": 943
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit-proof.json",
+      "sha256": "536dd368881c521e2a078de607753bb38cabbb4779322f20545905e661efd8b2",
+      "bytes": 2816
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit-proof.log",
+      "sha256": "536dd368881c521e2a078de607753bb38cabbb4779322f20545905e661efd8b2",
+      "bytes": 2816
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit.cpp",
+      "sha256": "04a1ef0b3b27f771199776c6f65ee41a427cd475186618dae4d79db0d68c56e6",
+      "bytes": 22903
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit.elf",
+      "sha256": "5d823e0b4fd752fea6bd953de2405ef8cfba264f0ceb22044283b9f8e7d59c84",
+      "bytes": 17304
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit.ld",
+      "sha256": "9a2b525473448a1d546783969821d019bb08f0657b66122acda7466e8b05279e",
+      "bytes": 200
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit.o",
+      "sha256": "1ec15f1033c392ec52560beb37ccd72a3eec05af5926a92a45f488020ffac487",
+      "bytes": 7644
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/verify-rebuild.py",
+      "sha256": "43531ddad7678615a5add52faa66dd1996c5f21916b696dce4570318793da757",
+      "bytes": 1163
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/verify-units.py",
+      "sha256": "ca99a00950af5cfee9028e3f3710bc85320327500501809831867a02732af39b",
+      "bytes": 9766
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0.S",
+      "sha256": "1a9d2183fcf3ee72ef5eb523150329f884cd6a1b9f67ca266a2a44229b5d8b44",
+      "bytes": 20768
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0.cpp",
+      "sha256": "5b8ce151ae11323b35a6c6e51ab04e4895315109a715b7fd6007fac3c021b9bc",
+      "bytes": 36224
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0.hpp",
+      "sha256": "bf47da16fb5264994cf1bf4f471f846efe5dc66ec776f0631704755e84d7818a",
+      "bytes": 3113
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_asin.inc",
+      "sha256": "13423ab94f8ded5e52e80c93d2b44bf59aeea3c62ea0afad22d896be09eefad3",
+      "bytes": 16037
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_atan.inc",
+      "sha256": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+      "bytes": 3057
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_atan_fast.inc",
+      "sha256": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+      "bytes": 3693
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_atan_refine.inc",
+      "sha256": "35b099f5ebfc6219245329b285bb46696e8ca2186ebbeb97e5135e0efc66dbe1",
+      "bytes": 3830
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_convert.inc",
+      "sha256": "d4b15b0be7f54c9a67d4d7d4b1e8b60874ff054587b6c09d0ec0cd97338a4cc3",
+      "bytes": 8782
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_cr.cpp",
+      "sha256": "c89cc8c956a2f1bb89060cc21ef0fff28d66c08dba820100d35a60370ab1caa5",
+      "bytes": 4922
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_cr_shim.inc",
+      "sha256": "6b9cc79cecdc4fb2df5ee203228b114b1da25401ed7072d24dd0db84647a7c79",
+      "bytes": 1557
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_cr_types.hpp",
+      "sha256": "55056af4c32208c1208ac54070c9853088d66a2450c081ceac141c237ac90df9",
+      "bytes": 657
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_exp_table.inc",
+      "sha256": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+      "bytes": 17117
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_fma.inc",
+      "sha256": "2404eee35c3d2ed60b95464519eabf627bc58eafec4a4f5e366d38408c129c5c",
+      "bytes": 2259
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_kernels.inc",
+      "sha256": "dc9e0f57cf747675e2a71df049300307f8368e0f2e869f50bf1d69cd52b5d8ed",
+      "bytes": 12001
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log10.inc",
+      "sha256": "9e0422538bbb2a96d745c410d0677b80403b277609a369ae54a034183f67c793",
+      "bytes": 10650
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log10_constants.inc",
+      "sha256": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8",
+      "bytes": 331
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log10_table.inc",
+      "sha256": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99",
+      "bytes": 53832
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log70.inc",
+      "sha256": "6106cadc4b44ff4cce019dcd0eb4e9d66eed15285ebd70aee6af6e482cdba91b",
+      "bytes": 5597
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log70_center.inc",
+      "sha256": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064",
+      "bytes": 1518
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log70_ratio.inc",
+      "sha256": "5451f32a046b9f69006dede642b190b3bd9403a8e7a7e54989a7d81c972153fa",
+      "bytes": 1180
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log70_table.inc",
+      "sha256": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb",
+      "bytes": 92104
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log_subnormal.inc",
+      "sha256": "b20c26b4f6c2981a9dce5d0acd562d798f2763f14405a38d2aefbf8cedfa9339",
+      "bytes": 5884
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_log_table.inc",
+      "sha256": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+      "bytes": 33582
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_argument.inc",
+      "sha256": "33d26fae891145e4ac9a638a9f18ca8ebcb8491816806c78c49fcf2020f8eee3",
+      "bytes": 3096
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_argument_select.inc",
+      "sha256": "d6ecddcb8b3d6aec0f7085edb3ce02b5604e32af974bce50ff801ed6446129fd",
+      "bytes": 1416
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_dyadic128.inc",
+      "sha256": "edd8f8acb0857ebf03d3f81833d4c4427b383401131d543c10c9af4da9982909",
+      "bytes": 5004
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_exact.inc",
+      "sha256": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8",
+      "bytes": 5677
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_exp_body.inc",
+      "sha256": "b2b4061770a7abb82cc3126f5dfa30e099ed9305321d20e13555d28118a04eca",
+      "bytes": 4098
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_exp_product.inc",
+      "sha256": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc",
+      "bytes": 2100
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_fast.inc",
+      "sha256": "fd3a37cb0377913aceb48a7b8a922bddf6597926d304c86bef13db157997da1d",
+      "bytes": 40370
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_integer.inc",
+      "sha256": "0f8d00040ccbd2ac1e208d45db3262ba56fb1fb0eff5526f542f67e7953478f7",
+      "bytes": 4261
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_integer128.inc",
+      "sha256": "e82445b187965999e09a314b9e39e9f5036e587862e8e8571b0930f0d5a4ebd2",
+      "bytes": 3748
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_interval.inc",
+      "sha256": "bf7b776af71fd3c50708c8955651487fee468351e1e63b835a42bdf3572c56e6",
+      "bytes": 12546
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_interval_table.inc",
+      "sha256": "e78e02c26ee64c2b9fdd883c26b31315e0cded2ca02ea4177c2f7576b239a414",
+      "bytes": 586
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_kernels.inc",
+      "sha256": "8196b4a475d6d144fd6b2403a9ccdbccea10ea37f32a900049ef2f075af0adfa",
+      "bytes": 163
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_ln2.inc",
+      "sha256": "3aba7e9d4efb1ff819af04ef6578de2eb0b42e0ba1bfe245ad8cf22dd1f4bdb8",
+      "bytes": 703
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_log6.inc",
+      "sha256": "dc8bd84a6b4c6beda0e3a3e136c96a643364d3cb28011d227001b6a1a8b2534b",
+      "bytes": 2422
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_log_select.inc",
+      "sha256": "10d64ca3239c00f87da4fcbc97f17ccd7eafa1075e327f1bb8e53aebc5309877",
+      "bytes": 679
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_middle.inc",
+      "sha256": "3b93e0e022bd00615b25d14e40909986b51d343573fbf591b9d7ac605f052322",
+      "bytes": 4600
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_root64.inc",
+      "sha256": "9d0c5d40421caba060765e524753d24d1600dde8ac4a05f8ba207109a7029ef7",
+      "bytes": 3089
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_root_prefix.inc",
+      "sha256": "cde302109df7f9c4707041948c57c60a8d51510c2b2568db69645158635e2e5f",
+      "bytes": 101650
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_tail.inc",
+      "sha256": "c4b406ce7f01d96c3f62cb97e60d69565f4d01fe1203109571b8343660953048",
+      "bytes": 657
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_pow_third.inc",
+      "sha256": "92e6b5ed3c21a37098a32836fc31aefb4d9ef790e0ca045b2e13c58ab1d4dd50",
+      "bytes": 985
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_product.inc",
+      "sha256": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b",
+      "bytes": 4740
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_refine.inc",
+      "sha256": "1800428641ddf489fdce847ee0d7df4acef844902b9604fb3d2156a32eced0ce",
+      "bytes": 9692
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_refine_table.inc",
+      "sha256": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+      "bytes": 99755
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_rp2040.S",
+      "sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "bytes": 31792
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_rsqrt_table.inc",
+      "sha256": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+      "bytes": 7876
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_sqrt64_table.inc",
+      "sha256": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+      "bytes": 26047
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_sqrt_special.S.inc",
+      "sha256": "8b536f18e86cb3f7f3024d4e4ba88df65417168197fdecc69c97ab760f9520be",
+      "bytes": 1848
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_sqrt_table.inc",
+      "sha256": "e72b7cbe8d959a2cedb7320d0a3cb76ad81d7419fb8ea6aebf734d8c9eade921",
+      "bytes": 3884
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_checked.inc",
+      "sha256": "f397b794740a4d2f8c191a184c80798849e7807a411dd4cc6aa96e17462aa45f",
+      "bytes": 15604
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_checked_table.inc",
+      "sha256": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad",
+      "bytes": 155696
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_cos70.inc",
+      "sha256": "54771228e6d411181859c37c5dc43e411e68385f5802418bc4732ed13b65cdc5",
+      "bytes": 1370
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_large.S.inc",
+      "sha256": "84d505152b894178b9ab90f7bfa348b24260875d4b501f5e0accd33f8b871503",
+      "bytes": 5845
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_large.inc",
+      "sha256": "d4ed18ca6cdc55898a8bd00f45efbbec62eb27288975afb7bdf1981f1bd98199",
+      "bytes": 8138
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_refine.inc",
+      "sha256": "559094ec98ac8c01693fd65bec7b1212b22115026806bfdf3b96770f2b543e5f",
+      "bytes": 7240
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_small_refine.inc",
+      "sha256": "cf50c17c713e7a0f5d6b15c6644540455be1cf15b501c5c621af7ad61d75355b",
+      "bytes": 1798
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_table.inc",
+      "sha256": "d7b383e977fdfd366febc9e9b6b14eb091f046087f68677901d6d8015801e551",
+      "bytes": 52415
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_trig_tan.inc",
+      "sha256": "4c5f7e6113a4f3577c6feeca84e707f64c58bb20d90a030ae194ee81c9ff3217",
+      "bytes": 6670
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_uint128.hpp",
+      "sha256": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7",
+      "bytes": 5325
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf",
+      "sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+      "bytes": 9015184
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/slower-inputs.json",
+      "sha256": "5dcc6280f81c729634a58fd41f9a6e40c842dec286ad03fbb705a9d5b171a192",
+      "bytes": 139956
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/build/compile_commands.json",
+      "sha256": "74464b896e58b118dc331ae4b64e141012e19c93abdfae4654585e4ee4f06db7",
+      "bytes": 1805962
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tools/certify_m0_exp_fast.py",
+      "sha256": "943f78862e8ca27892499c66bc85ebdbbf39a8ca974a6d870ef527639a6f50e1",
+      "bytes": 3863
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tight-firstpass-20261024/qualification.json",
+      "sha256": "15751936fb96f00293c8704ae53db59dbf722db6c86793972cdf1c44bcd2368e",
+      "bytes": 111297686
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/reference.elf",
+      "sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+      "bytes": 17268
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/research/rp2040-memset-2026-10-21/capture/bootrom.bin",
+      "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "bytes": 16384
+    }
+  ],
+  "patch_exact": true,
+  "CPP_changed_allocated_sections": {
+    ".m0_exp_core": [
+      5100,
+      5144
+    ]
+  },
+  "all_other_allocated_and_semantic_relocations_unchanged": true,
+  "product_bytes": [
+    182,
+    168
+  ],
+  "product_address": "0x20038ee4",
+  "original_flash_wrapper_bytes": 16,
+  "wrapper_is_not_a_unit_body": true,
+  "bare_units_contain_actual_candidate_and_parent_RAM_bodies": true,
+  "unit_has_no_firmware_or_ROM": true,
+  "generic_M0_M4_selected_TUs_equal_and_product_excluded": true,
+  "M4_selected_TUs_allocated_bytes": 0,
+  "whole_M4_not_built": true,
+  "source_to_public_overlay_and_unit_ELF_rebuilt_byte_exact": true,
+  "matched": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/control-full.o",
+      "sha256": "9815e2a6b9b46236399ce662ab22c1a5cc098d444ba4bfad8569400540a210f1",
+      "bytes": 1792672
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/candidate-full.o",
+      "sha256": "7b34b04937b6c2be57f2bbe070e6d27a67022167775a51a0ca1ab645c3090f31",
+      "bytes": 1792596
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/cached-product.o",
+      "sha256": "928f6db0a0afebdbf486add6e5e4f951e0ef205c38f5e42356d758a122429c01",
+      "bytes": 864
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/control.elf",
+      "sha256": "a81adc4026054e57df752881d563f4324b64db2a81ffb5114d6b40fb8e6b6fb0",
+      "bytes": 1116084
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/candidate.elf",
+      "sha256": "5ddab388a96bef9c343e0c11e82797741f7ccb724a812d0532d76aa25c2e794e",
+      "bytes": 1116772
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/unit.o",
+      "sha256": "1ec15f1033c392ec52560beb37ccd72a3eec05af5926a92a45f488020ffac487",
+      "bytes": 7644
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/product-unit.o",
+      "sha256": "fba167f45610c0dc8a7f0904527b53a271d83e1d625d5b9a2e679427b3be9573",
+      "bytes": 1136
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/unit.elf",
+      "sha256": "5d823e0b4fd752fea6bd953de2405ef8cfba264f0ceb22044283b9f8e7d59c84",
+      "bytes": 17304
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/integration-product.o",
+      "sha256": "88e5bc10946a8927589bd97094be89c920c4c7658a2093fb7f4c7abcce8c5310",
+      "bytes": 856
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+        "-DCFG_TUSB_DEBUG=0",
+        "-DCFG_TUSB_MCU=OPT_MCU_RP2040",
+        "-DCFG_TUSB_OS=OPT_OS_PICO",
+        "-DLIB_BOOT_STAGE2_HEADERS=1",
+        "-DLIB_PICO_ATOMIC=1",
+        "-DLIB_PICO_BIT_OPS=1",
+        "-DLIB_PICO_BIT_OPS_PICO=1",
+        "-DLIB_PICO_CLIB_INTERFACE=1",
+        "-DLIB_PICO_CRT0=1",
+        "-DLIB_PICO_CXX_OPTIONS=1",
+        "-DLIB_PICO_DIVIDER=1",
+        "-DLIB_PICO_DIVIDER_HARDWARE=1",
+        "-DLIB_PICO_DOUBLE=1",
+        "-DLIB_PICO_DOUBLE_COMPILER=1",
+        "-DLIB_PICO_FIX_RP2040_USB_DEVICE_ENUMERATION=1",
+        "-DLIB_PICO_FLASH=1",
+        "-DLIB_PICO_FLOAT=1",
+        "-DLIB_PICO_FLOAT_COMPILER=1",
+        "-DLIB_PICO_INT64_OPS=1",
+        "-DLIB_PICO_INT64_OPS_PICO=1",
+        "-DLIB_PICO_MALLOC=1",
+        "-DLIB_PICO_MEM_OPS=1",
+        "-DLIB_PICO_MEM_OPS_MK61=1",
+        "-DLIB_PICO_MULTICORE=1",
+        "-DLIB_PICO_NEWLIB_INTERFACE=1",
+        "-DLIB_PICO_PLATFORM=1",
+        "-DLIB_PICO_PLATFORM_COMMON=1",
+        "-DLIB_PICO_PLATFORM_COMPILER=1",
+        "-DLIB_PICO_PLATFORM_PANIC=1",
+        "-DLIB_PICO_PLATFORM_SECTIONS=1",
+        "-DLIB_PICO_PRINTF=1",
+        "-DLIB_PICO_PRINTF_PICO=1",
+        "-DLIB_PICO_RAND=1",
+        "-DLIB_PICO_RUNTIME=1",
+        "-DLIB_PICO_RUNTIME_INIT=1",
+        "-DLIB_PICO_STANDARD_BINARY_INFO=1",
+        "-DLIB_PICO_STANDARD_LINK=1",
+        "-DLIB_PICO_STDIO=1",
+        "-DLIB_PICO_STDIO_UART=1",
+        "-DLIB_PICO_STDIO_USB=1",
+        "-DLIB_PICO_STDLIB=1",
+        "-DLIB_PICO_SYNC=1",
+        "-DLIB_PICO_SYNC_CRITICAL_SECTION=1",
+        "-DLIB_PICO_SYNC_MUTEX=1",
+        "-DLIB_PICO_SYNC_SEM=1",
+        "-DLIB_PICO_TIME=1",
+        "-DLIB_PICO_TIME_ADAPTER=1",
+        "-DLIB_PICO_UNIQUE_ID=1",
+        "-DLIB_PICO_UTIL=1",
+        "-DLIB_TINYUSB_BOARD=1",
+        "-DLIB_TINYUSB_DEVICE=1",
+        "-DMK61_CORE_STANDALONE=1",
+        "-DMK61_ENABLE_RTC_ALARM_TERMINAL=1",
+        "-DMK61_ENABLE_USB_SCREEN=1",
+        "-DMK61_M0_RP2040_EABI=1",
+        "-DMK61_M61_READ_CACHE_BYTES=2048",
+        "-DMK61_MATH_BACKEND=0",
+        "-DMK61_PICOCALC_BUILD_ID=0x0b3be556U",
+        "-DMK61_PICOCALC_PSRAM_QPI=1",
+        "-DMK61_PICOCALC_SAMPLE_PROFILE=0",
+        "-DMK61_USE_COMPACT_LIBM=1",
+        "-DMK61_USE_M0_EABI=1",
+        "-DMK61_USE_NATIVE_EABI=0",
+        "-DPICO_32BIT=1",
+        "-DPICO_BOARD=\"mk61_picocalc_pico_h\"",
+        "-DPICO_BUILD=1",
+        "-DPICO_CMAKE_BUILD_TYPE=\"Release\"",
+        "-DPICO_COPY_TO_RAM=0",
+        "-DPICO_CORE1_STACK_SIZE=2048",
+        "-DPICO_CXX_ENABLE_EXCEPTIONS=0",
+        "-DPICO_MALLOC_PANIC=0",
+        "-DPICO_NO_FLASH=0",
+        "-DPICO_NO_HARDWARE=0",
+        "-DPICO_ON_DEVICE=1",
+        "-DPICO_PROGRAM_NAME=\"MK61S PicoCalc Pico H\"",
+        "-DPICO_PROGRAM_VERSION_STRING=\"0.8.16\"",
+        "-DPICO_RP2040=1",
+        "-DPICO_RP2040_USB_DEVICE_UFRAME_FIX=1",
+        "-DPICO_STACK_SIZE=32768",
+        "-DPICO_STDIO_DEFAULT_CRLF=1",
+        "-DPICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=0",
+        "-DPICO_STDIO_USB_ENABLE_IRQ_BACKGROUND_TASK=0",
+        "-DPICO_STDIO_USB_ENABLE_RESET_VIA_BAUD_RATE=1",
+        "-DPICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=0",
+        "-DPICO_STDIO_USB_RESET_INTERFACE_SUPPORT_MS_OS_20_DESCRIPTOR=0",
+        "-DPICO_STDIO_USB_USE_DEFAULT_DESCRIPTORS=0",
+        "-DPICO_TARGET_NAME=\"mk61s-picocalc-pico-h\"",
+        "-DPICO_USE_BLOCKED_RAM=0",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../third_party/fatfs",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/build",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_atomic/include",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/lib/tinyusb/src",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/tinyusb/include",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/lib/tinyusb/hw",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_stdlib_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_gpio/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_base_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/build/generated/pico_base",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/boards/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/pico_platform/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/hardware_regs/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_base/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_common/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_compiler/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_panic/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_sections/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/hardware_structs/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/hardware_claim/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_sync/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_sync_spin_lock/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_irq/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_uart/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_resets/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_clocks/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_pll/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_vreg/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_watchdog/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_ticks/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_bootrom/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/boot_picoboot_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/boot_bootrom_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_boot_lock/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_flash/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_time/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_timer/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_sync/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_util/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_time_adapter/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_xosc/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_divider/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_runtime/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_runtime_init/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_bit_ops_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_divider_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_double/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_float/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_malloc/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_binary_info/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_printf/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_stdio/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_stdio_uart/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_stdio_usb/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_unique_id/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_flash/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_xip_cache/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_usb_reset_interface_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_multicore/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/boot_picobin_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_int64_ops/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/boot_stage2/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_fix/rp2040_usb_device_enumeration/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_rtc/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_spi/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_i2c/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_pwm/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_dma/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_pio/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_rand/include",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-g",
+        "-O3",
+        "-DNDEBUG",
+        "-std=gnu++17",
+        "-fstack-usage",
+        "-Wall",
+        "-Wextra",
+        "-Wno-unused-parameter",
+        "-Wno-unused-variable",
+        "-fno-exceptions",
+        "-fno-unwind-tables",
+        "-fno-rtti",
+        "-fno-use-cxa-atexit",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-Os",
+        "-fno-lto",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/control-full.o",
+        "-c",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/control/native_eabi_m0.cpp"
+      ],
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+        "-DCFG_TUSB_DEBUG=0",
+        "-DCFG_TUSB_MCU=OPT_MCU_RP2040",
+        "-DCFG_TUSB_OS=OPT_OS_PICO",
+        "-DLIB_BOOT_STAGE2_HEADERS=1",
+        "-DLIB_PICO_ATOMIC=1",
+        "-DLIB_PICO_BIT_OPS=1",
+        "-DLIB_PICO_BIT_OPS_PICO=1",
+        "-DLIB_PICO_CLIB_INTERFACE=1",
+        "-DLIB_PICO_CRT0=1",
+        "-DLIB_PICO_CXX_OPTIONS=1",
+        "-DLIB_PICO_DIVIDER=1",
+        "-DLIB_PICO_DIVIDER_HARDWARE=1",
+        "-DLIB_PICO_DOUBLE=1",
+        "-DLIB_PICO_DOUBLE_COMPILER=1",
+        "-DLIB_PICO_FIX_RP2040_USB_DEVICE_ENUMERATION=1",
+        "-DLIB_PICO_FLASH=1",
+        "-DLIB_PICO_FLOAT=1",
+        "-DLIB_PICO_FLOAT_COMPILER=1",
+        "-DLIB_PICO_INT64_OPS=1",
+        "-DLIB_PICO_INT64_OPS_PICO=1",
+        "-DLIB_PICO_MALLOC=1",
+        "-DLIB_PICO_MEM_OPS=1",
+        "-DLIB_PICO_MEM_OPS_MK61=1",
+        "-DLIB_PICO_MULTICORE=1",
+        "-DLIB_PICO_NEWLIB_INTERFACE=1",
+        "-DLIB_PICO_PLATFORM=1",
+        "-DLIB_PICO_PLATFORM_COMMON=1",
+        "-DLIB_PICO_PLATFORM_COMPILER=1",
+        "-DLIB_PICO_PLATFORM_PANIC=1",
+        "-DLIB_PICO_PLATFORM_SECTIONS=1",
+        "-DLIB_PICO_PRINTF=1",
+        "-DLIB_PICO_PRINTF_PICO=1",
+        "-DLIB_PICO_RAND=1",
+        "-DLIB_PICO_RUNTIME=1",
+        "-DLIB_PICO_RUNTIME_INIT=1",
+        "-DLIB_PICO_STANDARD_BINARY_INFO=1",
+        "-DLIB_PICO_STANDARD_LINK=1",
+        "-DLIB_PICO_STDIO=1",
+        "-DLIB_PICO_STDIO_UART=1",
+        "-DLIB_PICO_STDIO_USB=1",
+        "-DLIB_PICO_STDLIB=1",
+        "-DLIB_PICO_SYNC=1",
+        "-DLIB_PICO_SYNC_CRITICAL_SECTION=1",
+        "-DLIB_PICO_SYNC_MUTEX=1",
+        "-DLIB_PICO_SYNC_SEM=1",
+        "-DLIB_PICO_TIME=1",
+        "-DLIB_PICO_TIME_ADAPTER=1",
+        "-DLIB_PICO_UNIQUE_ID=1",
+        "-DLIB_PICO_UTIL=1",
+        "-DLIB_TINYUSB_BOARD=1",
+        "-DLIB_TINYUSB_DEVICE=1",
+        "-DMK61_CORE_STANDALONE=1",
+        "-DMK61_ENABLE_RTC_ALARM_TERMINAL=1",
+        "-DMK61_ENABLE_USB_SCREEN=1",
+        "-DMK61_M0_RP2040_EABI=1",
+        "-DMK61_M61_READ_CACHE_BYTES=2048",
+        "-DMK61_MATH_BACKEND=0",
+        "-DMK61_PICOCALC_BUILD_ID=0x0b3be556U",
+        "-DMK61_PICOCALC_PSRAM_QPI=1",
+        "-DMK61_PICOCALC_SAMPLE_PROFILE=0",
+        "-DMK61_USE_COMPACT_LIBM=1",
+        "-DMK61_USE_M0_EABI=1",
+        "-DMK61_USE_NATIVE_EABI=0",
+        "-DPICO_32BIT=1",
+        "-DPICO_BOARD=\"mk61_picocalc_pico_h\"",
+        "-DPICO_BUILD=1",
+        "-DPICO_CMAKE_BUILD_TYPE=\"Release\"",
+        "-DPICO_COPY_TO_RAM=0",
+        "-DPICO_CORE1_STACK_SIZE=2048",
+        "-DPICO_CXX_ENABLE_EXCEPTIONS=0",
+        "-DPICO_MALLOC_PANIC=0",
+        "-DPICO_NO_FLASH=0",
+        "-DPICO_NO_HARDWARE=0",
+        "-DPICO_ON_DEVICE=1",
+        "-DPICO_PROGRAM_NAME=\"MK61S PicoCalc Pico H\"",
+        "-DPICO_PROGRAM_VERSION_STRING=\"0.8.16\"",
+        "-DPICO_RP2040=1",
+        "-DPICO_RP2040_USB_DEVICE_UFRAME_FIX=1",
+        "-DPICO_STACK_SIZE=32768",
+        "-DPICO_STDIO_DEFAULT_CRLF=1",
+        "-DPICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=0",
+        "-DPICO_STDIO_USB_ENABLE_IRQ_BACKGROUND_TASK=0",
+        "-DPICO_STDIO_USB_ENABLE_RESET_VIA_BAUD_RATE=1",
+        "-DPICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=0",
+        "-DPICO_STDIO_USB_RESET_INTERFACE_SUPPORT_MS_OS_20_DESCRIPTOR=0",
+        "-DPICO_STDIO_USB_USE_DEFAULT_DESCRIPTORS=0",
+        "-DPICO_TARGET_NAME=\"mk61s-picocalc-pico-h\"",
+        "-DPICO_USE_BLOCKED_RAM=0",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../third_party/fatfs",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/build",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_atomic/include",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/lib/tinyusb/src",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/tinyusb/include",
+        "-I/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/lib/tinyusb/hw",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_stdlib_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_gpio/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_base_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/build/generated/pico_base",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/boards/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/pico_platform/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/hardware_regs/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_base/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_common/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_compiler/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_panic/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_platform_sections/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/hardware_structs/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/hardware_claim/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_sync/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_sync_spin_lock/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_irq/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_uart/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_resets/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_clocks/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_pll/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_vreg/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_watchdog/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_ticks/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_bootrom/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/boot_picoboot_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/boot_bootrom_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_boot_lock/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_flash/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_time/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_timer/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_sync/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_util/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_time_adapter/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_xosc/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_divider/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_runtime/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_runtime_init/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_bit_ops_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_divider_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_double/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_float/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_malloc/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_binary_info/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_printf/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_stdio/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_stdio_uart/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_stdio_usb/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_unique_id/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_flash/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_xip_cache/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/pico_usb_reset_interface_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_multicore/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/common/boot_picobin_headers/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_int64_ops/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2040/boot_stage2/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_fix/rp2040_usb_device_enumeration/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_rtc/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_spi/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_i2c/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_pwm/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_dma/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/hardware_pio/include",
+        "-isystem",
+        "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_rand/include",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-g",
+        "-O3",
+        "-DNDEBUG",
+        "-std=gnu++17",
+        "-fstack-usage",
+        "-Wall",
+        "-Wextra",
+        "-Wno-unused-parameter",
+        "-Wno-unused-variable",
+        "-fno-exceptions",
+        "-fno-unwind-tables",
+        "-fno-rtti",
+        "-fno-use-cxa-atexit",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-Os",
+        "-fno-lto",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/candidate-full.o",
+        "-c",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate/native_eabi_m0.cpp"
+      ],
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-DMK61_USE_M0_EABI=1",
+        "-DMK61_M0_RP2040_EABI=1",
+        "-c",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/cached-product.S",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/cached-product.o"
+      ],
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+        "--gc-sections",
+        "-e",
+        "mk61_m0_exp",
+        "-T",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/bindings.ld",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/control-full.o",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/control.elf"
+      ],
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+        "--gc-sections",
+        "-e",
+        "mk61_m0_exp",
+        "-T",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate-bindings.ld",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/candidate-full.o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/cached-product.o",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/candidate.elf"
+      ],
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-mfloat-abi=soft",
+        "-Os",
+        "-std=gnu++17",
+        "-fno-exceptions",
+        "-fno-rtti",
+        "-fno-unwind-tables",
+        "-ffunction-sections",
+        "-fno-lto",
+        "-c",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit.cpp",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/unit.o"
+      ],
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-c",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/product-unit.S",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/product-unit.o"
+      ],
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+        "-T",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit.ld",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/unit.o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/product-unit.o",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/unit.elf"
+      ],
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-DMK61_USE_M0_EABI=1",
+        "-DMK61_M0_RP2040_EABI=1",
+        "-x",
+        "assembler-with-cpp",
+        "-c",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate/native_eabi_m0_pow_exp_product.inc",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-independent-20261024/rebuild/integration-product.o"
+      ],
+      "returncode": 0,
+      "stdout": ""
+    }
+  ],
+  "canonical_integration": false,
+  "hardware": false
+}

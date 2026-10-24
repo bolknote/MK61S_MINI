@@ -1,0 +1,2064 @@
+{
+  "status": "PASS_FOCUSED_EXP_NEW_ENDPOINT_STACK_PARENT_CHILD_LIKE_FOR_LIKE",
+  "inputs": 64,
+  "diagnostic_repeat_ARM_calls": 256,
+  "calls_not_added_to_main_qualified_totals": true,
+  "MPFR_calls": 0,
+  "maximum_frame_bytes": {
+    "parent": 744,
+    "candidate": 744
+  },
+  "no_observed_new_stack_increase": true,
+  "observed_peaks_not_universal_bounds": true,
+  "rows": [
+    {
+      "x": "3E82406FA8EE0132",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18009
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18005
+        }
+      }
+    },
+    {
+      "x": "3E82406FA8EE0132",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18009
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18005
+        }
+      }
+    },
+    {
+      "x": "3E82406FA8EE0133",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18043
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18039
+        }
+      }
+    },
+    {
+      "x": "3E82406FA8EE0133",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18043
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18039
+        }
+      }
+    },
+    {
+      "x": "3E9049F06E7592B7",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18147
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18143
+        }
+      }
+    },
+    {
+      "x": "3E9049F06E7592B7",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18147
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18143
+        }
+      }
+    },
+    {
+      "x": "3E9049F06E7592B8",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18135
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18131
+        }
+      }
+    },
+    {
+      "x": "3E9049F06E7592B8",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18135
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18131
+        }
+      }
+    },
+    {
+      "x": "3E9049F06E7592B9",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18194
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18190
+        }
+      }
+    },
+    {
+      "x": "3E9049F06E7592B9",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18194
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18190
+        }
+      }
+    },
+    {
+      "x": "BE99A94473BFE892",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18530
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18526
+        }
+      }
+    },
+    {
+      "x": "BE99A94473BFE892",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18530
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18526
+        }
+      }
+    },
+    {
+      "x": "BE99A94473BFE893",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18530
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18526
+        }
+      }
+    },
+    {
+      "x": "BE99A94473BFE893",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18530
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18526
+        }
+      }
+    },
+    {
+      "x": "BE99A94473BFE894",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18482
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18478
+        }
+      }
+    },
+    {
+      "x": "BE99A94473BFE894",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18482
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18478
+        }
+      }
+    },
+    {
+      "x": "BEA4EBFAE2C62D03",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18667
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18663
+        }
+      }
+    },
+    {
+      "x": "BEA4EBFAE2C62D03",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18667
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18663
+        }
+      }
+    },
+    {
+      "x": "BEA4EBFAE2C62D04",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18668
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18664
+        }
+      }
+    },
+    {
+      "x": "BEA4EBFAE2C62D04",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18668
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18664
+        }
+      }
+    },
+    {
+      "x": "BEA4EBFAE2C62D05",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEA4EBFAE2C62D05",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "3EA9C57F58652E15",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18108
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18104
+        }
+      }
+    },
+    {
+      "x": "3EA9C57F58652E15",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18108
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18104
+        }
+      }
+    },
+    {
+      "x": "3EA9C57F58652E16",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18093
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18089
+        }
+      }
+    },
+    {
+      "x": "3EA9C57F58652E16",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18093
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18089
+        }
+      }
+    },
+    {
+      "x": "BEBACCC1BE118373",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18651
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18647
+        }
+      }
+    },
+    {
+      "x": "BEBACCC1BE118373",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18651
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18647
+        }
+      }
+    },
+    {
+      "x": "BEBACCC1BE118374",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEBACCC1BE118374",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEBB71EEEF19802A",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18419
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18415
+        }
+      }
+    },
+    {
+      "x": "BEBB71EEEF19802A",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18419
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18415
+        }
+      }
+    },
+    {
+      "x": "BEBB71EEEF19802B",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEBB71EEEF19802B",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEBD1DA1F9A90043",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18533
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18529
+        }
+      }
+    },
+    {
+      "x": "BEBD1DA1F9A90043",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18533
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18529
+        }
+      }
+    },
+    {
+      "x": "BEBD1DA1F9A90044",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEBD1DA1F9A90044",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEBD1DA1F9A90045",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEBD1DA1F9A90045",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEC0E6779C646220",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEC0E6779C646220",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEC0E6779C646221",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEC0E6779C646221",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "3EC1BD399F566C29",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3EC1BD399F566C29",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3EC1BD399F566C2A",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3EC1BD399F566C2A",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "BEC22D8561E0CA47",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEC22D8561E0CA47",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEC22D8561E0CA48",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEC22D8561E0CA48",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEC22D8561E0CA49",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18658
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18654
+        }
+      }
+    },
+    {
+      "x": "BEC22D8561E0CA49",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18658
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18654
+        }
+      }
+    },
+    {
+      "x": "3EC41F76A2158380",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3EC41F76A2158380",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3EC41F76A2158381",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3EC41F76A2158381",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3EC41F76A2158382",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18005
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18001
+        }
+      }
+    },
+    {
+      "x": "3EC41F76A2158382",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18005
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18001
+        }
+      }
+    },
+    {
+      "x": "BEC64AFEB5B7A2A1",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEC64AFEB5B7A2A1",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEC64AFEB5B7A2A2",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEC64AFEB5B7A2A2",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEC8BD706E971C82",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18562
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18558
+        }
+      }
+    },
+    {
+      "x": "BEC8BD706E971C82",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18562
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18558
+        }
+      }
+    },
+    {
+      "x": "BEC8BD706E971C83",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEC8BD706E971C83",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEC8BD706E971C84",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEC8BD706E971C84",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BECA3EF11AF64412",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BECA3EF11AF64412",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BECA3EF11AF64413",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BECA3EF11AF64413",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BECDCF8854A6DBF2",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18577
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18573
+        }
+      }
+    },
+    {
+      "x": "BECDCF8854A6DBF2",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18577
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18573
+        }
+      }
+    },
+    {
+      "x": "BECDCF8854A6DBF3",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BECDCF8854A6DBF3",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BECDCF8854A6DBF4",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BECDCF8854A6DBF4",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BED0374C97D7DD8C",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BED0374C97D7DD8C",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BED0374C97D7DD8D",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BED0374C97D7DD8D",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "3ED0C9B54A129FD3",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3ED0C9B54A129FD3",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3ED0C9B54A129FD4",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3ED0C9B54A129FD4",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "BED1302C8F3EC2A3",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BED1302C8F3EC2A3",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BED1302C8F3EC2A4",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BED1302C8F3EC2A4",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BED29010C4FF9A85",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BED29010C4FF9A85",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BED29010C4FF9A86",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BED29010C4FF9A86",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BED29010C4FF9A87",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BED29010C4FF9A87",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "3ED560995086651E",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3ED560995086651E",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3ED560995086651F",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3ED560995086651F",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3ED5609950866520",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18102
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18098
+        }
+      }
+    },
+    {
+      "x": "3ED5609950866520",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18102
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18098
+        }
+      }
+    },
+    {
+      "x": "BED5C4A35B9443B4",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BED5C4A35B9443B4",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BED5C4A35B9443B5",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BED5C4A35B9443B5",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BED61FB389362051",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BED61FB389362051",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BED61FB389362052",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BED61FB389362052",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEDACA391DFEE848",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEDACA391DFEE848",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEDACA391DFEE849",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEDACA391DFEE849",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2269
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2265
+        }
+      }
+    },
+    {
+      "x": "BEDB2C1AB692A66C",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEDB2C1AB692A66C",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEDB2C1AB692A66D",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEDB2C1AB692A66D",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEDB7354830BB9E5",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18672
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18668
+        }
+      }
+    },
+    {
+      "x": "BEDB7354830BB9E5",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18672
+        },
+        "candidate": {
+          "SP_frame_bytes": 744,
+          "write_watermark_bytes": 744,
+          "instructions": 18668
+        }
+      }
+    },
+    {
+      "x": "BEDB7354830BB9E6",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEDB7354830BB9E6",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEDB7354830BB9E7",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "BEDB7354830BB9E7",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2266
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2262
+        }
+      }
+    },
+    {
+      "x": "3EDD258206AF155B",
+      "SIO": "READY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    },
+    {
+      "x": "3EDD258206AF155B",
+      "SIO": "DIRTY",
+      "frames": {
+        "parent": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2228
+        },
+        "candidate": {
+          "SP_frame_bytes": 376,
+          "write_watermark_bytes": 376,
+          "instructions": 2224
+        }
+      }
+    }
+  ],
+  "hardware_accessed": false
+}

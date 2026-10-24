@@ -1,0 +1,51 @@
+{
+  "status": "PASS_COMPLETED_OWN_REVIEW_STEPS",
+  "successful_steps": [
+    {
+      "script": "binding.py",
+      "session": 71794,
+      "exit_code": 0,
+      "own_byte_exact_rebuilds": 23
+    },
+    {
+      "script": "proof.py",
+      "exit_code": 0
+    },
+    {
+      "script": "arm.py",
+      "session": 40057,
+      "exit_code": 0,
+      "qualified_ARM": 19280,
+      "actual_directed_MPFR": 992,
+      "sNaN_shortcuts": 2,
+      "separate_log_generations": 128
+    },
+    {
+      "script": "callers.py",
+      "session": 56323,
+      "exit_code": 0,
+      "qualified_ARM": 1134,
+      "actual_directed_MPFR": 189
+    },
+    {
+      "script": "evidence.py",
+      "session": 30308,
+      "exit_code": 0,
+      "ARM_or_MPFR": 0
+    }
+  ],
+  "excluded_initial_reviewer_bounded_run": {
+    "session": 1251,
+    "exit_code": 1,
+    "ARM": 19280,
+    "actual_directed_MPFR": 992,
+    "sNaN_shortcuts": 2,
+    "separate_log_generations": 128,
+    "reason": "All numerical/ABI loops completed; reviewer asserted every one of29 fixed inputs strictly beats Qfplib. C0861FF4680382C9 instead equals607=607. Corrected assertion to no slower and repeated successful bounded run. No candidate numerical or state failure."
+  },
+  "qualified_own_ARM": 20414,
+  "qualified_own_actual_directed_MPFR": 1181,
+  "qualified_own_sNaN_shortcuts": 2,
+  "hardware": false,
+  "producer_primary_Git_or_canonical_changes": false
+}

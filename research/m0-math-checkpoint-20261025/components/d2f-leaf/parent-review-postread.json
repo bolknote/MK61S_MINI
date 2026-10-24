@@ -1,0 +1,26 @@
+{
+  "status": "PASS_RSQRT_INDEPENDENT_RECEIPT_AND_ALL22_DIRECT_REFS",
+  "receipt": ".build/m0-pow-rsqrt-asm-independent-20261024/FINAL-REVIEW.json",
+  "sha256": "90181e2ed18e8d312fc301ccfde8e93d1c63eced161883dee49fd9840ca86928",
+  "direct_refs_verified": 22,
+  "original507_union": {
+    "no_slower": 418,
+    "strictly_faster": 412,
+    "equal": 6,
+    "remaining": 89,
+    "new_strict": 31,
+    "remaining_by_operation": {
+      "pow": 51,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    },
+    "receipt": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/original507-component-delta.json",
+      "bytes": 12700,
+      "sha256": "409ba1978b5cef6a8f688f3c529ec3184af5fa82c3cf12aa3a65168d7eba4edd"
+    },
+    "not_one_integrated_binary": true
+  },
+  "new_D2F_not_independently_reviewed": true
+}

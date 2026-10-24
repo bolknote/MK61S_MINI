@@ -1,0 +1,8 @@
+{
+  "status": "PRIVATE_WORKING_CANDIDATE_NOT_QUALIFIED",
+  "source_parent": ".build/m0-exp-adaptive-enclosure-20261024",
+  "source_parent_frozen_sha256": "de974c59adb91f98123723c014d0e41e44fa4fb966bc76ff87cf11bec994f5f8",
+  "source_parent_independent_review_pending": true,
+  "changes": "Row0 product exact shift, all other rounded-product arithmetic identical with leaf36B stack and79 instructions. Original numeric admission gates unchanged.",
+  "no_canonical_Git_device_USB_Flash_changes": true
+}

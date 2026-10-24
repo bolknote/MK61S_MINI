@@ -1,0 +1,15 @@
+{
+  "status": "PASS_EXACT_DYADIC_HIGH_PRODUCT_LITERAL_ARM_UNIT",
+  "unit_ELF_sha256": "ad181772c4833fb2742eaa9f6fde55476a182511bf0cb8f7f916f804a8a6f563",
+  "input_sha256": "bb308739e5ec8dfa01cb94c3548108d54e79b70d732eb8789c6d127263ef6cc8",
+  "actual_ARM_calls": 70094,
+  "exact128bit_integer_product_oracles": 70094,
+  "wrong": 0,
+  "instruction_counts": {
+    "9": 70094
+  },
+  "stack_bytes_touched": 0,
+  "ABI_SP_and_bounded_writes_checked_every_call": true,
+  "no_ROM_firmware_external_calls_or_mocks": true,
+  "hardware_accessed": false
+}

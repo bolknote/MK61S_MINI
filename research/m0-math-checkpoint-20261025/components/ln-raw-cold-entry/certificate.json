@@ -1,0 +1,19 @@
+{
+  "status": "PASS_EXACT_NAKED_LN_IEEE_CLASSIFIER_AND_UNCHANGED_NUMERICAL_SOURCE",
+  "source_sha256": "52e3a6f0a32069120fe0ccd3ec6593872cb97bd9579bd1a2e9b8d654bd2efb1a",
+  "candidate_ELF_sha256": "cc8ac3115c96e3424ac9f4f4ac848d403c9114c4d1fc81270042c53d8c417ef6",
+  "parent_result_sha256": "406533549b8d7bf94fcd95e7fe396497561f91590df6096d74bec1dde1caad82",
+  "source_change_only_exact_entry_replacement": true,
+  "previous_raw_near_polynomial_pack_tables_source_identical": true,
+  "sign_exponent_fields_exhausted": 4096,
+  "bit_class_partition_checks": 65536,
+  "fraction_low_partition": "Classifier depends only on sign/exponent plus exact zero/positive-infinity full-bit tests; representatives cover zero/nonzero fraction and low classes.",
+  "zero_return_bits": "FFF0000000000000",
+  "positive_infinity_return_bits": "7FF0000000000000",
+  "other_cold_inputs": "Tail forward original R0/R1 to unchanged mk61_m0_ln_special; raw NaN policy inherited.",
+  "positive_normals": "Tail forward original R0/R1 to unchanged normal source body.",
+  "parent_rational_rounding_proof_inherited": true,
+  "parent_independent_review_not_claimed": true,
+  "new_tables_RAM_or_dependencies": false,
+  "hardware_accessed": false
+}

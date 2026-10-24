@@ -1,0 +1,32 @@
+{
+  "status": "PASS_ENTIRE_SMALL_LOW_LIMB_SEED_DOMAIN",
+  "pairs": 67634176,
+  "denominators": 1024,
+  "factors": 513,
+  "signed_low_limbs": 129,
+  "max_limb_intermediate": 33538055,
+  "max_residue_numerator": 17233,
+  "max_residue_denominator": 3493,
+  "floor_correction_histogram": [
+    8348521,
+    27428305,
+    25338111,
+    6183065,
+    336174
+  ],
+  "digest_fnv64": "69f36adcd7428ad1",
+  "hardware_accessed": false,
+  "source_sha256": "af83817a78b261621a638c5cc3436bfd63ef57371d999766dfad2a50733dcef7",
+  "candidate_ELF_sha256": "c0000b4a468cdb80228fab332978f276a21cf5e229fa1abe7622a287ef396297",
+  "host_test_source_sha256": "57059b3bbe24b098dd2a7be7d8d8e71a650a396b6b6a21b9414570cf57ad6e28",
+  "reciprocal_bytes_sha256": "d64478c1c85910e3dfe619bb5786d4fe1495fd07dfccb3bb057c7b7a80f8ad3a",
+  "compiler_command": [
+    "/usr/bin/clang++",
+    "-O2",
+    "-std=c++17",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-20261024/seed-domain.cpp",
+    "-o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-20261024/seed-domain"
+  ],
+  "not_ARM_execution": true
+}

@@ -1,0 +1,36 @@
+{
+  "status": "PASS_INDEPENDENT_RSQRT_SEED_QUOTIENT_DIRECTIONAL_POINT_AND_GRID",
+  "source_seeds_SHA256": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+  "all512_nearest_seed_integer_inequalities": true,
+  "all512_reciprocal_floor_or_floor_minus1": true,
+  "whole_uint32_quotient_proof": "0<=N/d-N*R/2^32<2 implies floor(N/d)-floor(N*R/2^32) in{0,1,2}; q0*d<=N<2^32, so the remainder is exact and two corrections suffice.",
+  "seed_error": "855035209253/275952697344",
+  "seed_error_float": 3.0984846949588656,
+  "chosen_seed_bound": "25/8",
+  "newton_down": "32212254735625/2199023255552",
+  "point_down": "34411277991177/2199023255552",
+  "point_down_float": 15.648437507105427,
+  "point_up_strict_lt3": true,
+  "unsafe_integer_tails": [
+    497,
+    514
+  ],
+  "unsafe_count18": true,
+  "all_derivative_rounding_and_width_bounds_independent": true,
+  "coordinate_cases": 2560,
+  "zero_coordinate_cases": 1536,
+  "all_point_and_seed_checks_exact_integer": true,
+  "model_factor_high_deltas": [
+    -2,
+    -1,
+    0,
+    1
+  ],
+  "all2046_exponent_scalings_normal_and_exact": true,
+  "full_factor_fallback_multiplication_required_and_preserved": true,
+  "exact_boundary_161bit_input_precondition": true,
+  "boundary_AAPCS": "m usesr0/r1, parityr2; aligned third64bit argument lower is written to[sp,sp+4], and SP remains8-byte aligned at BL. lower exponent=-1 gives bit160-p; compare<0 increments, exact tie increments only odd lower.",
+  "rounding": "If tail<=496, T<q+15.649 stays below the midpoint. If tail>=515, T>q-3 stays strictly above. Accepted tails exclude ties; half-up therefore equals RNE. At the normalized .5/1 endpoints the same interval rounds to the endpoint. Other18 integer tails call the unchanged exact161-bit comparator.",
+  "source_side_notes": "The two common factor-high words use exact shift/subtract multiplication; every other high word uses full32x32 MUL. No assumption that only the two common words can occur is used. Product high-word underestimate<3, and the final floor adds downward error<1.",
+  "hardware": false
+}

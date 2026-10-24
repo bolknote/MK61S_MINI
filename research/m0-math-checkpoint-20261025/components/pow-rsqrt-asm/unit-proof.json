@@ -1,0 +1,26 @@
+{
+  "status": "PASS_QUOTIENT_ARM_ALL512_SEEDS_AND_UINT32_BOUNDARIES",
+  "unit_ELF_sha256": "a14552dce01883cdac4ddc2b9a6393ca63bdc179e9fa3fcf6fee8128563ca2fd",
+  "rsqrt_source_sha256": "898b75536b25ebef1facbeb743c475c6b6c3ab9c7357dc3d4ef7703eed3e675e",
+  "certificate_sha256": "e253b5cbda0c0bde52f7c0a38764480ce157b1dd5ad2497c88c86b571f199744",
+  "seed_rows": 512,
+  "distinct_numerator_seed_pairs": 74742,
+  "fresh_ARM_calls": 149484,
+  "exact_integer_oracle_every_case": true,
+  "instruction_counts": {
+    "36": 68190,
+    "40": 81290,
+    "41": 4
+  },
+  "initial_quotient_underestimates": {
+    "0": 34095,
+    "1": 40645,
+    "2": 2
+  },
+  "SIO_reads_or_writes": 0,
+  "stack_bytes": 20,
+  "PCS_SP_boundedwrites_each_call": true,
+  "vectors_sha256": "a6a452d982b8e8c00c09507052bba8965d951d76328c11050a5b7db565ffe6ca",
+  "no_firmware_ROM_or_mock": true,
+  "hardware_accessed": false
+}

@@ -1,0 +1,15 @@
+{
+  "status": "PASS_FROZEN_AUTHOR_DYADIC_EXP_AND_79_PRODUCT_ALL_PINS",
+  "verified_at_UTC": "2026-10-24T17:05:39.613850+00:00",
+  "packet": ".build/m0-exp-dyadic-product-20261024",
+  "FROZEN_sha256": "acdaac6247165b8b53d3e48dadff2629577e1abd073d2604105cf2f05254031b",
+  "result_sha256": "d93a322369fcc1c11cfa80f645184db2b2c11a684622f5b764016ab13e5a8783",
+  "HANDOFF_sha256": "dde1540399bef4ab836da509a6c80739265eae94816299861fea554cca634529",
+  "candidate_ELF_sha256": "495cb0f305b599d60c457ee7af5513c9140f43f822af54c85aba1bea78858fca",
+  "packet_artifacts_verified": 130,
+  "external_lineage_pins_verified": 887,
+  "all_hashes_and_sizes_match": true,
+  "source_parent_and_child_independent_review_pending": true,
+  "no_canonical_Git_device_USB_Flash_changes": true,
+  "goal_complete": false
+}

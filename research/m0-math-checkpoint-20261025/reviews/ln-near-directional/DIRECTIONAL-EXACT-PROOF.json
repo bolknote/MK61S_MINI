@@ -1,0 +1,22 @@
+{
+  "status": "PASS_FULL_H_ERROR_EXACT_REMAINDERS_AND_DIRECTIONAL_INTERVAL",
+  "full_h_bound": "2260993/4194304",
+  "full_h_bound_float": 0.5390627384185791,
+  "upper": "38419381231188525859621934631664584981629/27041522604068589592727672777080832000000",
+  "lower": "10431790168765770629407176898745882241452043499/6337856860328575685795548307128320000000000000",
+  "upper_float": 1.4207551029470529,
+  "lower_float": 1.6459491589440776,
+  "all_existing_table_rows_verified": 256,
+  "table_bytes": 4096,
+  "table_sha256": "93e938f0f5b76ec40c21a1a9942a4a4e0bcc706c358872fed2eb625192a69b3f",
+  "remainder_checks": 1536,
+  "gate_checks": 6480,
+  "max_abs_signed_residue_strictly_below": 4486,
+  "max_abs_gate_strictly_below": 486472,
+  "exact_error": "h-H=-r/den. B=beta/12-r/den. Added correction q-true in[B-L,B+U]; subtracted in[-B-U,-B+L].",
+  "orientation": "(tail>half)==add selects upper error constraint d-B>=3/2; other side selects d+B>=7/4. Strict U/L make threshold equality safe.",
+  "omitted_fifth_sign": "Correction odd+even approximates -log(1-h); odd-even approximates log(1+h). Both omitted remainders are positive, enlarging only the lower error.",
+  "exact_center": "Only table error<=1/2 remains; any nonzero integer midpoint distance safe. Distance0 always falls back.",
+  "far_distance_and_dyadics": "Distance>=4 retains accepted symmetric parent bound. Near reachable half4 stays away from lower binade edge; later lower midpoint gap>=4. Signed magnitude reflection uses the unchanged RNE pack.",
+  "generic_M0_main_subnormal_and_ratio_proofs_inherited": true
+}

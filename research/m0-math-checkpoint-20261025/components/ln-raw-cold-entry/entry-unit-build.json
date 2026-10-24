@@ -1,0 +1,35 @@
+{
+  "status": "BUILT_EXACT_NAKED_LN_IEEE_ENTRY_UNIT",
+  "source_sha256": "52e3a6f0a32069120fe0ccd3ec6593872cb97bd9579bd1a2e9b8d654bd2efb1a",
+  "exact_fragment_sha256": "df3f3df423d10b1db9e7f57d2aece0786575986766845e661d21fa06ff0d638c",
+  "unit_ELF_sha256": "bb7094fe39911ddb0c53618bf949aba5ab9594a660ba04b74f0f695adc0053d4",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-20261024/entry-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-20261024/entry-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-20261024/entry-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-20261024/entry-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-20261024/entry-unit.elf"
+    ]
+  ],
+  "firmware_or_ROM_mapped": false,
+  "hardware_accessed": false
+}

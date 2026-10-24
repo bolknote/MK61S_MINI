@@ -1,0 +1,38 @@
+{
+  "status": "PASS_EXACT_Q77_CORE_BARE_ARM_RATIONAL_BOUNDS_AND_INTEGER_THIRDS",
+  "source_sha256": "84213d8eb6c7841b48a834cd2304eb8c0ccd6bedc150ee84fd01cf39a8a7e06b",
+  "candidate_ELF_sha256": "1164948d280c23bc66601af789dbd2a4af44c0982fb8c813b35fa2b7a396052e",
+  "unit_ELF_sha256": "19fe194acb5c6beb0ea5e496dd8a7f6b55ee0e1a62622a8ff5c02699cc7c5aca",
+  "actual_ARM_calls": 80120,
+  "function_call_counts": {
+    "audit_h": 8192,
+    "audit_r": 8192,
+    "audit_square": 11784,
+    "audit_cube": 11784,
+    "audit_fourth": 11784,
+    "audit_fifth": 11784,
+    "audit_third": 16600
+  },
+  "argument_pairs": 4096,
+  "all256_denominators": true,
+  "product_configurations": 5892,
+  "third_configurations": 8300,
+  "product54_capsule_entry_calls": 16384,
+  "capsule_entry_SP8_every_call": true,
+  "executed_PC_restricted_to_exact_units_and184Bcapsule": true,
+  "SIO_accesses": 0,
+  "both_SIO_states_preserved": true,
+  "PCS_SP_bounded_writes_every_call": true,
+  "corrected_argument_RNE_not_claimed": true,
+  "all_argument_bounds_and_exact_residues_pass": true,
+  "all_product_rational_bounds_pass": true,
+  "all_thirds_exact_integer_RNE": true,
+  "observed_stack_bytes": 60,
+  "profiled_instruction_range": [
+    9,
+    134
+  ],
+  "transcript_sha256": "27b0b410577033a7d4a948fd3b3632a0f47822898db18bbcc4f32be05f1ee97a",
+  "full_firmware_or_ROM_loaded": false,
+  "hardware_accessed": false
+}

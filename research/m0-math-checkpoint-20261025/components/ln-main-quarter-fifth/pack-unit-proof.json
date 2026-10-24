@@ -1,0 +1,36 @@
+{
+  "status": "PASS_BARE_MAIN_LN_COEFFICIENT_AND_PACK_ARM_RATIONAL_ENDPOINTS",
+  "source_sha256": "4db4753b23ebaa7a17aed662d2f59d6b351f6c0d8739559ad4235e6c615f1fd2",
+  "candidate_ELF_sha256": "2c0d376fe0b12c99f694279c2382977b00001875b4777aed504c0e1e309df728",
+  "unit_ELF_sha256": "3641aeae32885eb14877f65959364a90201c15999bb063b7560169795a71badc",
+  "actual_ARM_calls": 120256,
+  "coefficient_ARM_calls": 106244,
+  "coefficient_configurations": 53122,
+  "coefficient_accepted_configurations": 28800,
+  "coefficient_declined_configurations": 24322,
+  "exact_integer_equality_configurations": 192,
+  "pack_ARM_calls": 13940,
+  "new_coefficient_forced_pack_configurations": 2880,
+  "midpoint_decline_ARM_calls": 72,
+  "rational_RNE_endpoint_checks": 13940,
+  "all_normal_n_magnitudes_1_through_1023": true,
+  "bands_boundaries_both_offset_and_output_signs_and_all_coefficient_residues": true,
+  "output_widths": [
+    64,
+    80
+  ],
+  "signs_parities_and_binade_carries": true,
+  "SIO_accesses": 0,
+  "both_SIO_states_and_input_fixture_preserved": true,
+  "PCS_SP_bounded_writes_every_call": true,
+  "observed_stack_bytes": 72,
+  "profiled_instruction_range": [
+    88,
+    254
+  ],
+  "transcript_sha256": "aa7670c471a3b1740c74d647816324823046431e9fe47a07af5a21272b856a45",
+  "full_firmware_or_ROM_loaded": false,
+  "new_public_candidate_calls": 0,
+  "hardware_accessed": false,
+  "scope": "Actual helper and pack source. New-predicate arithmetic plus rational endpoints and inherited ln2 upper paths; abstract coefficient/residue configurations are not additional public numerical inputs."
+}

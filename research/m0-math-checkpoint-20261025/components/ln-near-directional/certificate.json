@@ -1,0 +1,51 @@
+{
+  "status": "PASS_SOURCE_BOUND_NEAR_LN_DIRECTIONAL_ERROR_INTERVAL",
+  "source_sha256": "ba084abda5a2c3d71071ae800224c552efce2652d2838735782cd16e764b090e",
+  "candidate_ELF_sha256": "272ecb817c396bd655cb19132f4df97c4d5d9da6046dc999a94a164de55e4425",
+  "propagation_function_sha256": "63d1b9cbad5222bb4dab5f3b0634ec417838445f3f0d87d56a1fe454b5b46a17",
+  "quotient_error_bound": "2260993/4194304",
+  "quotient_error_bound_float": 0.5390627384185791,
+  "exact_signed_h_error": "-r/den; r=(delta<<21)-h*den, den=8065..8320",
+  "reduced_argument_bound": "1/16000",
+  "upper": "38419381231188525859621934631664584981629/27041522604068589592727672777080832000000",
+  "upper_float": 1.4207551029470529,
+  "lower": "10431790168765770629407176898745882241452043499/6337856860328575685795548307128320000000000000",
+  "lower_float": 1.6459491589440776,
+  "strict_gate_bases": [
+    "3/2",
+    "7/4"
+  ],
+  "correction_error_interval": "bias12/12-r/den + [-lower,upper]; includes table error",
+  "exact_remainders": {
+    "r2": [
+      -1,
+      0
+    ],
+    "r3": [
+      -1,
+      0,
+      1
+    ],
+    "r4": [
+      -2,
+      -1,
+      0,
+      1
+    ]
+  },
+  "integer_gate_interval_checks": 207360,
+  "maximum_abs_residue_strictly_below": 4486,
+  "maximum_abs_cold_gate_expression_below": 486472,
+  "exact_center_error_at_most": "1/2",
+  "exact_midpoints_always_decline": true,
+  "synthetic_packing_test_required": true,
+  "existing_near_table_rows_certified": 256,
+  "new_tables": false,
+  "new_scalar_thresholds": [
+    18,
+    21
+  ],
+  "lower_binade_edge": "half4 away from lower boundary; later lower half-gaps>=4 exceed strict error",
+  "inherited_product54_bound": true,
+  "hardware_accessed": false
+}

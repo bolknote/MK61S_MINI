@@ -1,0 +1,66 @@
+{
+  "status": "ACCEPTED_ADDITIVE_ORIGINAL507_SEPARATE_COMPONENT_UNION_419",
+  "accepted_baseline": {
+    "no_slower": 418,
+    "strictly_faster": 412,
+    "equal": 6,
+    "remaining": 89,
+    "remaining_by_operation": {
+      "pow": 51,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    },
+    "unchanged_by_this_component": true,
+    "not_one_integrated_binary": true,
+    "parent_ledger": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/original507-component-delta.json",
+      "bytes": 12700,
+      "sha256": "409ba1978b5cef6a8f688f3c529ec3184af5fa82c3cf12aa3a65168d7eba4edd"
+    }
+  },
+  "parent_review_sha256": "bdaba8cf9bbe58c8e36dafe9b8f904eb8428fdd42db0abb070b5f4a42e472554",
+  "new_strict": 1,
+  "new_equal": 0,
+  "new_original_fix": {
+    "operation": "exp",
+    "x": "C041265824E2113C",
+    "parent2248": true,
+    "candidate599": true,
+    "Qfplib622": true,
+    "both_SIO_states_fresh_MPFR_bound": true
+  },
+  "current": {
+    "no_slower": 419,
+    "strictly_faster": 413,
+    "equal": 6,
+    "remaining": 88,
+    "remaining_by_operation": {
+      "pow": 51,
+      "exp": 1,
+      "sin": 22,
+      "cos": 14
+    }
+  },
+  "full_other189_original_jobs_own_replayed": true,
+  "original_exp16_own_replayed": true,
+  "unchanged_prior_other_operation_evidence_inherited": true,
+  "not_one_integrated_binary": true,
+  "whole_math_GO": false,
+  "hardware": false,
+  "release": false,
+  "own_original_exp_classification": {
+    "accepted_parent": {
+      "strict": 14,
+      "equal": 0,
+      "slower": 2
+    },
+    "candidate": {
+      "strict": 15,
+      "equal": 0,
+      "slower": 1
+    }
+  },
+  "own_other189_strict102_equal0_unchanged": true,
+  "unaffected_other302_components_inherited_strict296_equal6": true
+}

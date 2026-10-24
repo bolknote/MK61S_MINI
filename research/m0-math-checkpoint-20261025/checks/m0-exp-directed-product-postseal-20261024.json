@@ -1,0 +1,15 @@
+{
+  "status": "PASS_FROZEN_AUTHOR_PACKET_AND_ALL_EXTERNAL_LINEAGE_PINS",
+  "verified_at_UTC": "2026-10-24T19:53:08.467103+00:00",
+  "packet": ".build/m0-exp-directed-product-20261024",
+  "FROZEN_sha256": "e6ce76786eeb9443af86b04596cac95fc56aba312ba6bdd1b0d2226da8b69b10",
+  "result_sha256": "69a3ec384e20e03f943d8b756335f17166bddd0f2990666cac39f8649b6687d9",
+  "HANDOFF_sha256": "9944b911c477e44fdc12bf41fd20c1b9a623edd1e1f6648e932a2dbd7a775308",
+  "candidate_ELF_sha256": "b4049e5a39c2bc9d663acab44a7683f1811daedd1c43497cd5ad7588b1b408ac",
+  "packet_artifacts_verified": 295,
+  "external_lineage_pins_verified": 1050,
+  "all_hashes_and_sizes_match": true,
+  "independent_review_pending": true,
+  "no_canonical_Git_device_USB_Flash_integration_or_release_changes": true,
+  "goal_complete": false
+}

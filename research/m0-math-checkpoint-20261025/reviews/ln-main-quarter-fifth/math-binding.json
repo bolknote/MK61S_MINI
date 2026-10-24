@@ -1,0 +1,284 @@
+{
+  "status": "PASS_INDEPENDENT_QUARTER_FIFTH_BOUNDS_AND_WHOLE_PRIVATE_BINDING",
+  "target": {
+    "HANDOFF.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/HANDOFF.md",
+      "bytes": 2245,
+      "sha256": "37590bc6604dc21cca8362ca4712e6fb51caa9be2d03082282ce37b5f5062ca3"
+    },
+    "result.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/result.json",
+      "bytes": 8447,
+      "sha256": "60c79f7973c18466d67d3f0d473cd63eb597f378ddb9bb53732edebde6caaf58"
+    },
+    "native_eabi_m0_log70.inc": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/native_eabi_m0_log70.inc",
+      "bytes": 22003,
+      "sha256": "4db4753b23ebaa7a17aed662d2f59d6b351f6c0d8739559ad4235e6c615f1fd2"
+    },
+    "candidate.elf": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/candidate.elf",
+      "bytes": 113276,
+      "sha256": "2c0d376fe0b12c99f694279c2382977b00001875b4777aed504c0e1e309df728"
+    }
+  },
+  "accepted_parent_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 13282,
+    "sha256": "0581902367266ea7a154f15141ec40a1d27aeab9f9ff72033a3f535cc9a7f147"
+  },
+  "sealed_artifacts": 61,
+  "input_pins": 691,
+  "source_other_than_helper_packers_and_metadata_forwarding_exact_parent": true,
+  "exact_inline_unit_functions": true,
+  "bands": {
+    "2049": {
+      "h": "1/2048",
+      "nonlinear": "106497/33538048",
+      "remainder": "16384/6141",
+      "cube": "73465857/134217728",
+      "fourth_lower": "1235670925639497613313/1180591620717411303424",
+      "fourth_upper": "73465857/274877906944",
+      "fifth_lower": "1209552878449485815021569/1208925819614629174706176",
+      "fifth_upper": "73465857/562949953421312",
+      "positive": [
+        "82374393248941608491282143229/37120067291267188809353134080",
+        "645048707207955661565556721/145000262856512456286535680"
+      ],
+      "negative": [
+        "34899697634963683837/17285378319801384960",
+        "172560332302949473738265266429/37120067291267188809353134080"
+      ]
+    },
+    "2081": {
+      "h": "1/2080",
+      "nonlinear": "11833/3784704",
+      "remainder": "17592186044416/7236732628125",
+      "cube": "74612737/136314880",
+      "fourth_lower": "5296267506256643926167681/5065937091242485612544000",
+      "fourth_upper": "74612737/283534950400",
+      "fifth_lower": "5271260487577176473789960321/5268574574892185037045760000",
+      "fifth_upper": "74612737/589752696832000",
+      "positive": [
+        "13503550875115242843625591170151/6085203634000473717787852800000",
+        "2248705351129639293598021829514589/533976618883541568735884083200000"
+      ],
+      "negative": [
+        "1375255597663432447/681164364840960000",
+        "9422220422066834228666387280756397/2135906475534166274943536332800000"
+      ]
+    },
+    "3585": {
+      "h": "1/3584",
+      "nonlinear": "106497/58703872",
+      "remainder": "16777216/180658443",
+      "cube": "128516097/234881024",
+      "fourth_lower": "103325868952205825474609/101235731476518019268608",
+      "fourth_upper": "128516097/841813590016",
+      "fifth_lower": "181466241314348986267140145/181414430805920290529345536",
+      "fifth_upper": "128516097/3017059906617344",
+      "positive": [
+        "4324426086271021819207450847305/1950023716732837202899935166464",
+        "1989477989165413508411860583761/1066419220088270345335902044160"
+      ],
+      "negative": [
+        "327152830125020542333/162151884681149153280",
+        "28196131024070631957414967988543/13650166017129860420299546165248"
+      ]
+    }
+  },
+  "cheap_bounds": {
+    "raw_positive_lower": "115782453811082078419699963901/37120067291267188809353134080",
+    "raw_negative_lower": "50456538122784930301/17285378319801384960",
+    "raw_positive_upper": "739298878064688758151804913/145000262856512456286535680",
+    "raw_negative_upper": "196688376042273146464344803581/37120067291267188809353134080",
+    "exact_positive_lower": "56504436950105035492229123/18133887294219437620592640",
+    "exact_negative_lower": "67695472556032981501/17285378319801384960",
+    "exact_positive_upper": "883909541362908826432534513/145000262856512456286535680",
+    "exact_negative_upper": "196570504668056075697237854461/37120067291267188809353134080",
+    "endpoint_raw_lower_after_remainder": "76254388852610297375854648957616397215326845219262873143911548485558678439850780686396334842640338767954923449486926308122089061052803635327797813301222103/80403946656859105146287046374921257015543184918218319292883178832082573930765145498141936441263974259101397022042275125863905411716659783765079351770480640",
+    "endpoint_exact_lower_after_remainder": "1036029082440118423925692106770111013756753528449/1096076876485150041629053872929539050447380152320"
+  },
+  "endpoint_raw_h_bound_corrected_for_seed_error": true,
+  "endpoint_raw_remainder": "5684294834496528422518492016094093244323589255273040326687042347509439829492658672077167158080955377757677320150285984484481375989231840550371602774201/2618594582538971019257028053246092070201699557668728848489926032635810908020359729625205550928642705067624068459282694214750216958692714012866938667008",
+  "endpoint_exact_remainder": "131207431660240896000000/60443569473079711121963",
+  "producer_Hmin_to_computed_h_difference_float": 1.5197261541132243e-16,
+  "fifth_division_proven_for_all65536_values_without_sweep": true,
+  "nearest_third_word_division_error_at_most_one_third": true,
+  "all2046_normal_k_parity_cases": true,
+  "all1024_den_band_ranges": true,
+  "signed_residue_abs_below": 32768,
+  "independent_adverse_interval_gate_checks": 21132,
+  "exact_bias_range": [
+    "-9/10",
+    "13/20"
+  ],
+  "max_signed_gate_expression_abs_bound": 172096450,
+  "neighbor_midpoint_bound": "42897413/81920",
+  "lowest_binade_neighbor_gap_safe": true,
+  "changed_allocated_sections": {
+    ".text.mk61_m0_ln_positive": [
+      1272,
+      1784
+    ],
+    ".text.ln_main_raw": [
+      1368,
+      1744
+    ]
+  },
+  "object_linked_growth_bytes": 888,
+  "no_new_tables_RAM_libgcc": true,
+  "other_allocated_sections_near_Q77_tables_ASM_equal": true,
+  "generic_M0_M4_controls_byteexact": true,
+  "M4_excluded_TU_not_whole_build": true,
+  "actual_resident_bindings": 39,
+  "whole_CPP_ASM_entire_ELF_and_unit_rebuild_byteexact": true,
+  "rebuild_hashes": {
+    "candidate-full.o": "914f84aba1c288654cb604cc830873e6c059859c20b74784fbeba8b692e0b820",
+    "candidate-ratio.o": "c80865dd3f89454cd4790770059a806133b87f39f1ac5090c12f10e308584fea",
+    "candidate.elf": "2c0d376fe0b12c99f694279c2382977b00001875b4777aed504c0e1e309df728",
+    "pack-unit.o": "3f4c231843d51163a48d9176e80b07a1de0c4806c52e8c391d04386c3ed05095",
+    "pack-unit.elf": "3641aeae32885eb14877f65959364a90201c15999bb063b7560169795a71badc"
+  },
+  "rebuild_commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-fno-use-cxa-atexit",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-fno-lto",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/native_eabi_m0.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-independent-20261024/rebuild/candidate-full.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/ratio.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-independent-20261024/rebuild/candidate-ratio.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_ln",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-independent-20261024/rebuild/candidate-full.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-independent-20261024/rebuild/candidate-ratio.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-independent-20261024/rebuild/candidate.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/pack-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-independent-20261024/rebuild/pack-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/pack-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-independent-20261024/rebuild/pack-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-independent-20261024/rebuild/pack-unit.elf"
+    ]
+  ],
+  "saved_accounting": {
+    "parent_rows_retained": 120988,
+    "total_rows": 177178,
+    "groups": {
+      "READY": {
+        "slower": 45438,
+        "equal": 37379,
+        "faster": 5772
+      },
+      "DIRTY": {
+        "equal": 46797,
+        "slower": 40166,
+        "faster": 1626
+      }
+    },
+    "parent_regression_rows": 85604,
+    "regression_histogram": {
+      "1": 7623,
+      "3": 20498,
+      "2": 14627,
+      "5": 16534,
+      "4": 4437,
+      "6": 14805,
+      "7": 7038,
+      "102": 2,
+      "22": 7,
+      "86": 3,
+      "57": 4,
+      "93": 7,
+      "14": 5,
+      "27": 1,
+      "69": 2,
+      "58": 5,
+      "96": 1,
+      "23": 4,
+      "108": 1
+    },
+    "expanded_parent_raw_losses": 14,
+    "child_raw_losses": 5,
+    "fixed_raw_losses": 9,
+    "new_correct_Qfp_deficits": 0,
+    "all7_earlier_endpoint_probe_parent_losses_fixed": true,
+    "additional_old_control_losses_beyond_endpoint_probe": [
+      "3FF04001FFFFFFFF",
+      "3FF051D3CC2E965E",
+      "3FF064B4DDCFFE1E",
+      "3FF0B9406C720A69",
+      "3FF0C9049694DE26",
+      "3FF0E23E696625E7",
+      "3FF0E29E2E0FBA0B"
+    ],
+    "remaining_raw_inputs": [
+      "3FF04001FFFFFFFF",
+      "3FF051D3CC2E965E",
+      "3FF0C9049694DE26",
+      "3FF0E23E696625E7",
+      "3FF0E29E2E0FBA0B"
+    ]
+  },
+  "author_stack_cost": {
+    "child": 648,
+    "parent": 640,
+    "bare": 72
+  },
+  "hardware_accessed": false
+}

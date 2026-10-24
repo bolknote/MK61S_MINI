@@ -1,0 +1,25 @@
+{
+  "status": "PASS_EXACT_INLINE_NEAR_PACK_BARE_ARM_AND_FRACTION_ENDPOINTS",
+  "actual_ARM_calls": 16896,
+  "configurations": 8448,
+  "accepted": 5777,
+  "declined": 2671,
+  "rational_RNE_endpoint_checks": 11554,
+  "all256_denominators": true,
+  "all_results_exact": true,
+  "midpoint_always_declines": true,
+  "source_sha256": "ba084abda5a2c3d71071ae800224c552efce2652d2838735782cd16e764b090e",
+  "unit_ELF_sha256": "b3f0b7a9f3a0b24314d9b7d1c6a8008e70a1507d0f74c1ce337daa9c8a554821",
+  "firmware_or_ROM_mapped": false,
+  "SIO_accesses": 0,
+  "both_SIO_states_preserved": true,
+  "PCS_SP_bounded_writes_every_call": true,
+  "observed_stack_bytes": 48,
+  "profiled_instruction_range": [
+    72,
+    115
+  ],
+  "transcript_sha256": "9db7add580c86d0f9a1df340287215a6f2d64097d94877ddfc134660e11e345a",
+  "public_qualification": false,
+  "hardware_accessed": false
+}

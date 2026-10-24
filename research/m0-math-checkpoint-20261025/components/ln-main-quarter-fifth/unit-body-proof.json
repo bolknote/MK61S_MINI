@@ -1,0 +1,37 @@
+{
+  "status": "PASS_WHOLE_BARE_PACK_UNIT_REBUILD_BYTE_EXACT",
+  "object_byte_exact": true,
+  "whole_ELF_byte_exact": true,
+  "source_sha256": "4db4753b23ebaa7a17aed662d2f59d6b351f6c0d8739559ad4235e6c615f1fd2",
+  "candidate_ELF_sha256": "2c0d376fe0b12c99f694279c2382977b00001875b4777aed504c0e1e309df728",
+  "unit_ELF_sha256": "3641aeae32885eb14877f65959364a90201c15999bb063b7560169795a71badc",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/pack-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/unit-rebuild/pack-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/pack-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/unit-rebuild/pack-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/unit-rebuild/pack-unit.elf"
+    ]
+  ],
+  "new_ARM_calls": 0,
+  "hardware_accessed": false
+}

@@ -1,0 +1,24 @@
+{
+  "status": "PASS_INTENDED_INTEGRATION_INCLUDE_PRODUCT_BODY_BYTE_EXACT_FIXTURE",
+  "integration_product_source_sha256": "2943fc30ab8768375063c1df6441d0148320ec1a44719d8722423c825c286735",
+  "integration_product_object_sha256": "88e5bc10946a8927589bd97094be89c920c4c7658a2093fb7f4c7abcce8c5310",
+  "fixture_product_source_sha256": "f6fa419ccb24858b04912f16fd522894a70494bd66edbdef1071e3d7ed4c66bf",
+  "only_fixture_source_difference": "Input section name; intended integration retains original.scratch_y.m0_pow_hot.",
+  "patch_sha256": "963bf6b449825ea45f192df7b98ec468ec72314365196820ce12bfaa21e8964d",
+  "patch_base": "Exact frozenV164 math sources, not automatically current canonical checkout.",
+  "command": [
+    "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+    "-mcpu=cortex-m0plus",
+    "-mthumb",
+    "-DMK61_USE_M0_EABI=1",
+    "-DMK61_M0_RP2040_EABI=1",
+    "-x",
+    "assembler-with-cpp",
+    "-c",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate/native_eabi_m0_pow_exp_product.inc",
+    "-o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/integration-product.o"
+  ],
+  "hardware_accessed": false,
+  "patch_applied_to_canonical": false
+}

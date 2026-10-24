@@ -1,0 +1,31 @@
+{
+  "status": "PASS_ALL_SHARED_SECTION_BYTES_OUTSIDE_HELPER_EXACT",
+  "members": [
+    [
+      "mk61_m0_log_ratio70_slow",
+      848,
+      232
+    ],
+    [
+      "pow_fast_log",
+      1080,
+      1784
+    ],
+    [
+      "pow_rsqrt_boundary",
+      0,
+      848
+    ],
+    [
+      "pow_small_integer",
+      2864,
+      936
+    ]
+  ],
+  "target_function_offset": 848,
+  "target_function_bytes": 232,
+  "all_other_functions_literals_padding_identical": true,
+  "source_sha256": "79067df1532a771c3cef484271292d7a592f73e1a0e0d51af86b5359c3de33a7",
+  "candidate_ELF_sha256": "5187e1bbba29ec6b0d24cfc57aba9feb74598cc0b8df0df06fe6b13a53039e7e",
+  "hardware_accessed": false
+}

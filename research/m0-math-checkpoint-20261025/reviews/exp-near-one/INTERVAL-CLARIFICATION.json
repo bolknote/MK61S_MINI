@@ -1,0 +1,17 @@
+{
+  "status": "INTERVAL_ENDPOINT_WORDING_CLARIFICATION_NO_REVIEW_CHANGE",
+  "review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/FINAL-REVIEW.json",
+    "bytes": 11301,
+    "sha256": "6c504f888e1ce0489379d1769b2d1e331b64bda0354eed746fbe98359748634b"
+  },
+  "numeric_note": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/NUMERIC-REVIEW.md",
+    "bytes": 4148,
+    "sha256": "1bb59cfabf1bd277b09d96fc0df990fb57d59b955a634dd15538bd1608fba647"
+  },
+  "correction": "The middle-product directed error interval is (-3,0], inclusive at0. The phrase strictly between -3 and0 in the numeric note and the compressed boolean field name in the review mean strict lower magnitude3, not exclusion of exact0.",
+  "exact_relation": "-3 < retained_product48 - exact_product/2^48 <= 0",
+  "evidence": "proof.py proves omitted nonnegative terms and flooring; bare ARM includes (a,b)=(0,0) with exact0. The existing absolute bound, source guard, RNE conclusion and component verdict are unchanged.",
+  "original_frozen_review_and_manifest_not_modified": true
+}

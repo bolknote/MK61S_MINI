@@ -1,0 +1,28 @@
+{
+  "status": "VALIDATION_SCOPE_AND_EXCLUDED_TRIALS",
+  "selected": "six-term high product, nine-term bit48 product, six-MULS square, exact32bit packing",
+  "prevalidation_scale37to36_corrected_before_any_ARM_oracle_calls": true,
+  "rejected_variants": {
+    "CXX_products": "7180inputs,0wrong,514new raw losses; rejected",
+    "ASM_products": "12diagnostic inputs only; still too slow",
+    "sixmul_square": "7180inputs,0wrong/0new within probe; new power controls exposed later, not full qualification",
+    "coarse_fifth": "12diagnostic inputs only; source superseded",
+    "skip_fifth": "11205inputs,0wrong,4new raw losses; rejected"
+  },
+  "selected_probe": {
+    "inputs": 11205,
+    "fresh_ARM_calls": 67230,
+    "wrong": 0,
+    "new_losses": 0,
+    "excluded_from_qualified_totals": true
+  },
+  "rejected_tight_curvature": "../m0-exp-tight-curvature-20261024/REJECTED.json",
+  "qualified_counts": {
+    "public": 1025392,
+    "parent_audit": 36,
+    "small_integer_units": 104054,
+    "pack_units": 74088,
+    "total": 1203570
+  },
+  "no_new_other_caller_or_MPFR_runs_pooled": true
+}

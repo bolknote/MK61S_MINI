@@ -1,0 +1,45 @@
+"""Issue only a private component receipt; reverify all sealed pins first."""
+from pathlib import Path
+from datetime import datetime,timezone
+import hashlib,json
+O=Path(__file__).resolve().parent;R=O.parents[1];P=R/'.build/m0-d2f-leaf-20261024'
+def read(p):return json.loads(Path(p).read_text())
+def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def ref(p):return dict(path=str(p),bytes=Path(p).stat().st_size,sha256=sha(p))
+assert sha(P/'FROZEN.json')=='87c989edfe183f894ad87a833aed18f7b47172366c6362cf2276c3023a6375cb'
+assert sha(P/'result.json')=='b7399f8fb66ed5c3f040aae88d0004b12f813d55f2333aac14e012ce52aeaa81'
+postread=[]
+for name,base,count in [('FROZEN.json',P,60),('source-lineage-pins.json',R,362)]:
+ files=read(P/name)['files'];assert len(files)==count
+ for n,d in files.items():
+  p=base/n;assert sha(p)==d['sha256'] and p.stat().st_size==d['bytes'];postread.append(ref(p))
+(O/'postread.json').write_text(json.dumps(dict(status='PASS_ALL_FROZEN60_LINEAGE362_AFTER_OWN_REVIEW',FROZEN=ref(P/'FROZEN.json'),verified=postread),indent=2)+'\n')
+b=read(O/'binding.json');p=read(O/'proof.json');a=read(O/'arm-result.json');parent=read(b['accepted_parent']['path'])
+assert b['rebuilds']==11 and b['parent_direct_refs_reverified']==22
+assert p['partition_sum_2pow64']==1<<64
+assert a['fresh_ARM_calls']==27496 and a['unique_inputs']==a['fresh_MPFR_conversions']==3437
+assert a['stack_bytes_candidate']==a['SIO_accesses']==0
+assert [p['author_actual_directed_MPFR_input_conversions'],p['author_NaN_category_shortcuts_no_MPFR']]==[229580,2404]
+assert p['author_vs_correct_reference']==dict(faster=217338,equal=231552,slower=0)
+execution=dict(status='ALL_FINAL_REVIEW_PROGRAMS_COMPLETED_EXIT0',commands=[dict(program='binding.py',exit_code=0,final_chunk='0e9585',HOST=True),dict(program='proof.py',exit_code=0,session_id=85710,final_chunk='5c3c2b',HOST=True),dict(program='arm.py',exit_code=0,session_id=67819,final_chunk='d3628a',HOST=True,JIT_sandbox_override=True,hardware=False)],own_qualified_ARM_calls=27496,own_MPFR_conversions=3437,old_author_runs_not_reexecuted=True)
+(O/'execution.json').write_text(json.dumps(execution,indent=2)+'\n')
+ledger=dict(status='ACCEPTED_PRIVATE_RP_D2F_CONVERSION_COMPONENT_ONLY',operation='__aeabi_d2f',candidate_ELF=ref(P/'candidate.elf'),numeric_return_domain='all raw binary64 input bit patterns; nearest-even gradual underflow; accepted-parent NaN payload/sign/quiet policy',instruction_comparison='all and only source-proven correct Qfplib output classes; all wrong-reference inputs remain recorded',source_proven_complete_correct_reference_partition=True,all_correct_Qfplib_classes_no_slower_in_Thumb_instruction_count=True,observed_author_reference_correct_states=448890,observed_author_deficits_before103496_after0=True,old512_comparable510_deficits_before426_after0=True,physical_cycles_not_measured=True,parent_native_cost_increases_retained=dict(states=110782,delta_instructions=1),original507_separate_union_unchanged=dict(no_slower=418,strictly_faster=412,equal=6,remaining=89,pow51_exp2_sin22_cos14=True),not_integrated_with_previous_components=True)
+(O/'conversion-component-receipt.json').write_text(json.dumps(ledger,indent=2)+'\n')
+target={k:ref(P/n) for k,n in [('frozen','FROZEN.json'),('result','result.json'),('ASM_include','candidate/native_eabi_m0_d2f.inc'),('convert_include','candidate/native_eabi_m0_convert.inc'),('standalone_source','d2f.S'),('tested_private_leaf_ELF','candidate.elf'),('intended_source_private_leaf_ELF','whole-source.elf'),('patch','accepted-rsqrt-to-d2f.patch')]}
+names=['binding.py','binding.json','model.py','proof.py','proof.json','INDEPENDENT-PROOF.md','arm.py','arm-result.json','arm-rows.json','actual-paths.json','own-inputs.bin','candidate.dis','reference.dis','postread.json','execution.json','conversion-component-receipt.json','finalize.py']
+refs={n:ref(O/n) for n in names}
+d=dict(status='GO_PRIVATE_RP_D2F_LEAF_COMPONENT_ONLY',utc=datetime.now(timezone.utc).isoformat(),blockers=[],accepted_parent=b['accepted_parent'],target=target,
+ source_binding=dict(frozen_artifacts60_lineage362_and_parent22refs_verified=True,accepted_parent_control_RP_object_exact=True,resident_parent_entry_and_resolved_BL_bound_to_real_narrow=True,standalone_include_full_object_ELF_exact256=True,own_byte_exact_rebuilds=11,only_RP_changed_section='.text.__aeabi_d2f',all_other_RP_allocated_bytes_semantic_relocations_equal=True,generic_M0_selected_bytes_relocations_equal=True,M4_selected_ASM_empty_and_equal=True,whole_M4_firmware_not_built=True,CPP_not_changed_by_component_patch=True,direct_public_ABI_entry='0x10163001',no_interposition_veneer=True),
+ mathematical_proof=dict(type='Independent reviewed source proof plus mechanical integer interval/bit identities and actual-code correspondence; no formal SMT theorem claim',returned_value_RNE_all_raw64=True,signed_zero_gradual_underflow_normal_overflow_Inf_NaN_covered=True,exact_parent_NaN_payload_sign_quiet_policy=True,all24_subnormal_shifts_including_actual_register_LSR32_covered=True,all_normal_exponents_carry_and_actual_half_cases_covered=True,complete_raw64_cardinality_sum=str(1<<64),complete_Qfplib_correct_partition_independent=True,all_correct_reference_path_costs_no_slower=True,guard_sticky_parity_affine_packing_certificates=p['checks'],no_IEEE_exception_flags_claim=True),
+ own_fresh_checks=dict(unique_inputs=3437,ARM_calls=27496,machine_calls=a['machine_calls'],SIO_states=['READY','DIRTY'],MPFR_direct_conversions=3437,MPFR_version=a['MPFR_version'],MPFR_NaN_category_only=440,exact_integer_RNE_comparisons=3437,raw_parent_bits_including_NaNs_exact=True,leaf_PC_and_SP_checked_every_instruction=True,leaf_memory_reads_only_six_own_literals=True,leaf_ROM_firmware_external_or_mock_calls=0,leaf_stack_bytes=0,leaf_SIO_accesses=0,all28_SIO_bytes_preserved=True,actual_candidate_paths=17,actual_Qfplib_paths=9,all_predicted_costs_match_actual_ARM=True,hardware=False),
+ inherited_and_author_evidence=dict(own_ARM_not_pooled_with_author=True,author_unique_inputs=231984,author_fresh_qualified_ARM_calls=1391904,author_oracle_evaluations=231984,author_actual_directed_MPFR_input_conversions=229580,author_NaN_shortcuts_without_MPFR=2404,accounting_note='The author labels all 231984 oracle evaluations as MPFR references; 2404 NaNs short-circuit before MPFR. Accepted accounting is 229580 actual MPFR input conversions plus 2404 NaN category checks. Exact raw NaN policy is separately verified.',author_smoke11004_excluded=True,author_existing_rows_all463968_reconciled_with_own_integer_and_source_cost_models=True,author_observed_correct_reference_states=448890,author_correct_reference_comparison=p['author_vs_correct_reference'],author_wrong_reference_states15078_retained=True,wrong_reference_NaN_cost_candidate19_Qfplib13_retained=True,wrong_reference_subnormal_costs_retained=True,author_expanded_parent_raw_deficits103496_candidate0=True,old512_full_reconciliation=dict(rows=512,correct_reference510=True,old_deficits426_candidate0=True),inherited_old_corpora_not_reexecuted_by_reviewer=True),
+ size_and_stack=dict(parent_leaf_bytes=68,candidate_leaf_bytes=256,selected_ASM_delta_bytes=188,global_RAM_delta=0,stack_bytes=0,new_external_calls_or_tables_or_libgcc=0,whole_firmware_size_not_built=True,old_C_slowpath_GC_savings_not_claimed=True,parent_cost_increase_state_rows=110782,parent_cost_increase_instructions=1,physical_cycles_not_measured=True),
+ original507_separate_component_union=dict(no_slower=418,strictly_faster=412,equal=6,remaining=89,remaining_by_operation=dict(pow=51,exp=2,sin=22,cos=14),conversion_not_added_to_original507=True,not_one_integrated_binary=True,parent_ledger=parent['original507_separate_component_union']['receipt']),
+ nonblocking_observations=[dict(kind='evidence_accounting',detail='231984 MPFR-label corrected to 229580 actual directed MPFR input conversions and 2404 pre-MPFR NaN shortcuts in this receipt; producer frozen packet left immutable')],
+ retained_open_items=['original507 remaining89 (pow51 exp2 sin22 cos14)','expanded pow7904 and exp395','expanded ln5','conversion FMA and sampled f2d1','generalpow1024 totality','full integrated private math image and complete math acceptance','full firmware relink, section placement/GC size and whole M4 build if integration requested','physical-cycle and hardware acceptance','canonical promotion/release'],
+ grants=dict(private_d2f_component_GO=True,all_math_GO=False,hardware_GO=False,canonical_promotion=False,integration_or_EA9_changes=False,release_GO=False),producer_Git_primary_or_device_state_modified=False,refs=refs)
+(O/'FINAL-REVIEW.json').write_text(json.dumps(d,indent=2)+'\n')
+for group in [d['target'],d['refs']]:
+ for item in group.values():assert ref(Path(item['path']))==item
+assert ref(Path(d['accepted_parent']['path']))==d['accepted_parent']
+print(json.dumps(dict(status=d['status'],FINAL_REVIEW=ref(O/'FINAL-REVIEW.json'),conversion_receipt=ref(O/'conversion-component-receipt.json'),direct_refs_verified=len(target)+len(refs)+1,own_ARM27496_MPFR3437=True,blockers=[],original507_unchanged418=True),indent=2))

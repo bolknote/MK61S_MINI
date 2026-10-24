@@ -1,0 +1,9 @@
+{
+  "status": "PREPARED_NEAR_ONE_BOUNDARY_CORPUS_NOT_RUNTIME_REFERENCES",
+  "inputs": 18816,
+  "MPFR_directed_log_preimage_generations": 2688,
+  "MPFR_version": "4.2.2",
+  "log_generation_not_added_to_exp_reference_count": true,
+  "input_sha256": "b24e4a042f7cdb1142d2e4ecd6f2424270301a6f25dccaa6145e4deca5b329e6",
+  "hardware_accessed": false
+}

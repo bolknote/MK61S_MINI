@@ -1,0 +1,262 @@
+{
+  "status": "GO_PRIVATE_POW_RSQRT_ASM_COMPONENT_ONLY",
+  "utc": "2026-10-24T12:43:19.270309+00:00",
+  "blockers": [],
+  "accepted_parent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square-ordinary-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 11242,
+    "sha256": "4fb68e5ea8dbc4539befb483277ac2ce8e301bc23f1447c8b72de312fbbcdde1"
+  },
+  "target": {
+    "frozen": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/FROZEN.json",
+      "bytes": 15579,
+      "sha256": "21abcd41787ea53463b755b8f82138947ed9296b93831e00cfeac649b9408963"
+    },
+    "result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/result.json",
+      "bytes": 3965,
+      "sha256": "0225a62c8a4da0780a1c14dcc3d9f583e976ea5671235bd5f7e2ead26e9fae36"
+    },
+    "CPP": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/candidate/native_eabi_m0.cpp",
+      "bytes": 39118,
+      "sha256": "2279f6fc4518b41c2ac268f2a2ff6b068f3e2dc751050e304c0367f7754c5f76"
+    },
+    "ASM": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/candidate/native_eabi_m0.S",
+      "bytes": 22804,
+      "sha256": "f048a1c3fa398cf1d4d22d85ffbff41b062907a3a3d3f813105b5f359803b659"
+    },
+    "rsqrt_include": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/candidate/native_eabi_m0_pow_rsqrt.inc",
+      "bytes": 5897,
+      "sha256": "2f2870d0dda86a0e3c430574423d13167c9d45b22e23738e673a77f7089519cb"
+    },
+    "tested_private_overlay_ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/candidate.elf",
+      "bytes": 3752,
+      "sha256": "e55be65b73b9b7bbbb72896904f61f8a1a5b5c5fb7bb052a78a5c580f351867c"
+    },
+    "whole_source_private_function_overlay_ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/whole-source.elf",
+      "bytes": 1108532,
+      "sha256": "72c5badf5dcbfc16a254f1fd6b4ca1d9ae8c703b4973fe66e982a5e35295d48e"
+    },
+    "patch": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/accepted-pow-to-rsqrt.patch",
+      "bytes": 7541,
+      "sha256": "9e9ee9e68b0723d3bd1c016443e841c42315cf8e06762d6eb7b28ed58013f654"
+    }
+  },
+  "source_binding": {
+    "all107_frozen_and230_lineage_hashes_sizes_pass": true,
+    "postflight337_pins_unchanged": true,
+    "ten_own_full_object_and_ELF_rebuilds_byte_exact": true,
+    "all_old_CPP_allocated_bytes_and_semantic_relocations_equal": true,
+    "storage_free_exact_boundary_alias": true,
+    "only_RP_ASM_dispatch_section_changes": true,
+    "wrapper_instructions_equal_only_positive_normal_rsqrt_literal_target_changes": true,
+    "unit_executed_trial_final_and_inline_actual80byte_macro_identical": true,
+    "whole_intended_source_emits_tested_overlay_union": true,
+    "all512_existing_seed_bytes_equal_source_and_resident": true,
+    "generic_M0_M4_selected_CPP_ASM_bytes_relocations_equal": true,
+    "no_new_table_global_RAM_or_libgcc": true
+  },
+  "mathematical_proof": {
+    "all512_seed_nearest_integer_inequalities": true,
+    "reciprocal_floor_or_floor_minus1_all512": true,
+    "whole_uint32_quotient_with_0_1_2_corrections": true,
+    "seed_error_bound": "855035209253/275952697344",
+    "seed_error_float": 3.0984846949588656,
+    "chosen_seed_error_strict_lt": "25/8",
+    "Newton_point_error_down_strict_lt": "34411277991177/2199023255552",
+    "Newton_point_error_down_float": 15.648437507105427,
+    "Newton_point_error_up_strict_lt": 3,
+    "unsafe_integer_tails_inclusive": [
+      497,
+      514
+    ],
+    "unsafe_tails18": true,
+    "source_intermediate_widths_and_carries_bounded": true,
+    "other_factor_high_words_use_full_multiply": true,
+    "all2046_normal_exponent_scalings_exact": true,
+    "exact161bit_boundary_AAPCS_args_and_round_tie_rule": true
+  },
+  "own_fresh_checks": {
+    "public_pairs": 322,
+    "public_ARM_calls": 2576,
+    "quotient_numerator_seed_pairs": 2560,
+    "quotient_ARM_calls": 5120,
+    "focused_stack_ARM_calls": 8,
+    "total_ARM_calls": 7704,
+    "MPFR_references": 322,
+    "MPFR_version": "4.2.2",
+    "all153_original_pow_pairs_bothstates": true,
+    "all31_new_strict_fixes": true,
+    "all18_boundary_tails_both_parities_and_guard_neighbours": true,
+    "all4_factor_high_classes_freshly_executed": true,
+    "live_integer_point_seed_factor_and_inline_quotient_equal_own_model": true,
+    "live_boundary_stack_args_and_return_sign_equal_exact161bit_oracle": true,
+    "independent_exact_RNE_cell_checks": 232,
+    "all512_seed_quotients_and_corrections0_1_2": true,
+    "normal_candidate_SIO_accesses": 0,
+    "normal_full28byte_SIO_preserved": true,
+    "quotient_no_firmware_ROM_or_mock_and_PC_bound": true,
+    "PCS_SP_bounded_stack_writes_every_call": true,
+    "zero_candidate_errors": true,
+    "counts_are_instructions_not_physical_cycles": true
+  },
+  "inherited_and_author_evidence": {
+    "author_fresh_public_ARM_calls": 443784,
+    "author_fresh_MPFR": 116373,
+    "these_include_three_overlapping_acquisition_runs": true,
+    "not_equal_dedup_unique_input_union": true,
+    "inherited149484_quotient_calls_bound_by_exact_actual_bytes_not_rerun": true,
+    "old_trial_or_syntax_failed_launcher_not_added": true,
+    "prior127590_baseline_rows_preserved_not_fresh": true,
+    "legacy_control_label_in_full_rows": "Older pre-square control retained from parent metadata; current fresh control is accepted-parent replica. Never compared as if that legacy field were the new current control.",
+    "all_correct_reference_variants_compared_without_nominal_domain_filter": true,
+    "all_wrong_reference_values_counts_retained": true
+  },
+  "expanded_union": {
+    "unique_pairs": 111912,
+    "distinct_states": 223824,
+    "reference_state_variants": 223976,
+    "parent_raw_deficits": 42790,
+    "candidate_raw_deficits": 7904,
+    "old63795_remaining5912": true,
+    "targeted52215_remaining1992_disjoint": true,
+    "new_losses": 0,
+    "parent_cost_increases": 0,
+    "independent_metadata_reconciliation": true,
+    "these_are_not_original507_counts": true
+  },
+  "size_and_stack": {
+    "new_code_bytes": 776,
+    "new_global_RAM_bytes": 0,
+    "new_tables": 0,
+    "new_static_helper_frame": 64,
+    "own_isolated_fast_stack": 64,
+    "own_isolated_exact_boundary_stack": [
+      196,
+      172
+    ],
+    "author_full_public_stack": [
+      2236,
+      2236
+    ],
+    "own_mixed_public_subset_stack": [
+      968,
+      968
+    ],
+    "whole_firmware_linked_size_not_measured": true,
+    "whole_M4_firmware_not_built": true
+  },
+  "original507_separate_component_union": {
+    "no_slower": 418,
+    "strictly_faster": 412,
+    "equal": 6,
+    "remaining": 89,
+    "new_strict": 31,
+    "remaining_by_operation": {
+      "pow": 51,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    },
+    "receipt": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/original507-component-delta.json",
+      "bytes": 12700,
+      "sha256": "409ba1978b5cef6a8f688f3c529ec3184af5fa82c3cf12aa3a65168d7eba4edd"
+    },
+    "not_one_integrated_binary": true
+  },
+  "retained_open_items": [
+    "7904 expanded pow speed inputs, including1992 newly sampled boundary-path inputs",
+    "general pow1024-bit undecided trap/all-domain totality",
+    "expanded exp395 and ln5",
+    "original exp2/sin22/cos14",
+    "conversion/FMA work",
+    "combined repaired-platform math integration and regression",
+    "physical cycle measurement and device acceptance"
+  ],
+  "grants": {
+    "private_component": true,
+    "whole_math": false,
+    "all_input_speed": false,
+    "canonical": false,
+    "integration": false,
+    "hardware": false,
+    "publication": false,
+    "lease": false
+  },
+  "producer_Git_primary_or_device_state_modified": false,
+  "refs": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/binding.py",
+      "bytes": 8763,
+      "sha256": "77744662c615327332dc12373a4642196a9d169e9aed9c77a6636196edf320f8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/proof.py",
+      "bytes": 6491,
+      "sha256": "927ec53296567e403eadedb29529b1611b60d9732e9b24f188d777efc7a66c1a"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/arm.py",
+      "bytes": 13614,
+      "sha256": "a7e3c4dcf40e74b22dd2364ba3d22833310daf726428bbab93f1c899355542d1"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/stack.py",
+      "bytes": 2478,
+      "sha256": "956c0b4cb89df0527d94b9c5bc05820408aead5e86724afd1405bb2b0c4ba5a9"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/finalize.py",
+      "bytes": 10178,
+      "sha256": "ed20f1b3dcc69de97f6d7a5f1dc80827519a020eda0a2c39b806a6e4246a7051"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/binding.json",
+      "bytes": 127021,
+      "sha256": "e83f3f056ca7e6f69e8b40a94713c89fb8c963b4a24ea54765553a40adcaa4be"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/proof.json",
+      "bytes": 2077,
+      "sha256": "c065c44eee41c05fcc2a1f7f44ccd35ab320f4d8882cc1352b00875445886f2d"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/public-results.json",
+      "bytes": 476736,
+      "sha256": "a27193b2722d865c5f4a5627dc18011b85fd11a8e8beaff3aecd7b2f18cfc311"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/quotient-results.json",
+      "bytes": 956007,
+      "sha256": "3df03dabac027998c3b7e67127bccd9296cfca6e4c9510b3b46a2d8c5c6e8e72"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/arm-result.json",
+      "bytes": 2039,
+      "sha256": "f841177bc0e8ead032e2b5bd0ceffb7239a0f52ccdea42dd44dabdb6d9a3d986"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/stack-result.json",
+      "bytes": 2222,
+      "sha256": "0eb67f67d913b1ee20e36150620c1f9988d0101cf58589bf1b884cb87157d139"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/original507-component-delta.json",
+      "bytes": 12700,
+      "sha256": "409ba1978b5cef6a8f688f3c529ec3184af5fa82c3cf12aa3a65168d7eba4edd"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/execution.json",
+      "bytes": 1478,
+      "sha256": "27e5cee4e670cf029bab26a241f6bef778669f87986ff35687049bc6cf8ee3ee"
+    }
+  ]
+}

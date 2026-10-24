@@ -1,0 +1,91 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/cached-product.o:     file format elf32-littlearm
+
+
+Disassembly of section .scratch_y.m0_exp_product_only:
+
+00000000 <mk61_m0_pow_exp_product>:
+   0:	b5f0      	push	{r4, r5, r6, r7, lr}
+   2:	b085      	sub	sp, #20
+   4:	9000      	str	r0, [sp, #0]
+   6:	9101      	str	r1, [sp, #4]
+   8:	9202      	str	r2, [sp, #8]
+   a:	9303      	str	r3, [sp, #12]
+   c:	0c0a      	lsrs	r2, r1, #16
+   e:	0c1f      	lsrs	r7, r3, #16
+  10:	466b      	mov	r3, sp
+  12:	2600      	movs	r6, #0
+  14:	8818      	ldrh	r0, [r3, #0]
+  16:	8999      	ldrh	r1, [r3, #12]
+  18:	4348      	muls	r0, r1
+  1a:	4604      	mov	r4, r0
+  1c:	2500      	movs	r5, #0
+  1e:	8858      	ldrh	r0, [r3, #2]
+  20:	8959      	ldrh	r1, [r3, #10]
+  22:	4348      	muls	r0, r1
+  24:	1824      	adds	r4, r4, r0
+  26:	4175      	adcs	r5, r6
+  28:	8898      	ldrh	r0, [r3, #4]
+  2a:	8919      	ldrh	r1, [r3, #8]
+  2c:	4348      	muls	r0, r1
+  2e:	1824      	adds	r4, r4, r0
+  30:	4175      	adcs	r5, r6
+  32:	8818      	ldrh	r0, [r3, #0]
+  34:	4378      	muls	r0, r7
+  36:	0c01      	lsrs	r1, r0, #16
+  38:	0400      	lsls	r0, r0, #16
+  3a:	1824      	adds	r4, r4, r0
+  3c:	414d      	adcs	r5, r1
+  3e:	8858      	ldrh	r0, [r3, #2]
+  40:	8999      	ldrh	r1, [r3, #12]
+  42:	4348      	muls	r0, r1
+  44:	0c01      	lsrs	r1, r0, #16
+  46:	0400      	lsls	r0, r0, #16
+  48:	1824      	adds	r4, r4, r0
+  4a:	414d      	adcs	r5, r1
+  4c:	8898      	ldrh	r0, [r3, #4]
+  4e:	8959      	ldrh	r1, [r3, #10]
+  50:	4348      	muls	r0, r1
+  52:	0c01      	lsrs	r1, r0, #16
+  54:	0400      	lsls	r0, r0, #16
+  56:	1824      	adds	r4, r4, r0
+  58:	414d      	adcs	r5, r1
+  5a:	8918      	ldrh	r0, [r3, #8]
+  5c:	4350      	muls	r0, r2
+  5e:	0c01      	lsrs	r1, r0, #16
+  60:	0400      	lsls	r0, r0, #16
+  62:	1824      	adds	r4, r4, r0
+  64:	414d      	adcs	r5, r1
+  66:	0064      	lsls	r4, r4, #1
+  68:	4175      	adcs	r5, r6
+  6a:	8858      	ldrh	r0, [r3, #2]
+  6c:	4378      	muls	r0, r7
+  6e:	182d      	adds	r5, r5, r0
+  70:	2400      	movs	r4, #0
+  72:	8898      	ldrh	r0, [r3, #4]
+  74:	8999      	ldrh	r1, [r3, #12]
+  76:	4348      	muls	r0, r1
+  78:	182d      	adds	r5, r5, r0
+  7a:	4166      	adcs	r6, r4
+  7c:	8958      	ldrh	r0, [r3, #10]
+  7e:	4350      	muls	r0, r2
+  80:	182d      	adds	r5, r5, r0
+  82:	4166      	adcs	r6, r4
+  84:	8898      	ldrh	r0, [r3, #4]
+  86:	4378      	muls	r0, r7
+  88:	0c01      	lsrs	r1, r0, #16
+  8a:	0400      	lsls	r0, r0, #16
+  8c:	182d      	adds	r5, r5, r0
+  8e:	414e      	adcs	r6, r1
+  90:	8998      	ldrh	r0, [r3, #12]
+  92:	4350      	muls	r0, r2
+  94:	0c01      	lsrs	r1, r0, #16
+  96:	0400      	lsls	r0, r0, #16
+  98:	182d      	adds	r5, r5, r0
+  9a:	414e      	adcs	r6, r1
+  9c:	437a      	muls	r2, r7
+  9e:	18b6      	adds	r6, r6, r2
+  a0:	4628      	mov	r0, r5
+  a2:	4631      	mov	r1, r6
+  a4:	b005      	add	sp, #20
+  a6:	bdf0      	pop	{r4, r5, r6, r7, pc}

@@ -1,0 +1,213 @@
+{
+  "status": "PRIVATE_COMPONENT_CODE_GO_NEAR_LN_DIRECTIONAL_REMAINDER_PACK",
+  "material_findings": [],
+  "scope": "Only RP2040 near interval exact division remainders, signed-h residual and directional pack predicate against accepted enclosure parent. No canonical math/library/shipping/HW promotion or whole-ln speed GO. Unqualified endpoint reorder and immutable checkpoint prototype excluded.",
+  "identity": {
+    "HANDOFF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-20261024/HANDOFF.md",
+      "sha256": "d707166ed58c073c8d5aecad5c80446b406c4d62b36d27134ac65298cd5102fe"
+    },
+    "author_result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-20261024/result.json",
+      "sha256": "607c0e11a53050cb4e24aa9f3616fad32fd80dc5eca91eb8e8a47a82f871293e"
+    },
+    "postseal": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-postseal-20261024.json",
+      "sha256": "377843a6ab113cdf742d01234b6faba6e5fc0b02a1ed683d30ada7902a585af6"
+    },
+    "source": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-20261024/native_eabi_m0_log70.inc",
+      "sha256": "ba084abda5a2c3d71071ae800224c552efce2652d2838735782cd16e764b090e"
+    },
+    "own_full_CPP_object": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/candidate-full.o",
+      "sha256": "7795f4498c00ee28ac73dcd61b11a1952979a71b0f9113f72eb4ab6623e59f22"
+    },
+    "own_ratio_object": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/candidate-ratio.o",
+      "sha256": "c80865dd3f89454cd4790770059a806133b87f39f1ac5090c12f10e308584fea"
+    },
+    "own_entire_ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/candidate.elf",
+      "sha256": "272ecb817c396bd655cb19132f4df97c4d5d9da6046dc999a94a164de55e4425"
+    },
+    "own_bare_unit_ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/pack-unit.elf",
+      "sha256": "b3f0b7a9f3a0b24314d9b7d1c6a8008e70a1507d0f74c1ce337daa9c8a554821"
+    },
+    "author_artifacts_verified": 53,
+    "input_pins_verified": 557
+  },
+  "parent": {
+    "accepted_review": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/FINAL-REVIEW.json",
+      "sha256": "be4ab2a8053c3686e797d5dbd33d8808e421cc763d0c0dcf9ff26ce7239f0006"
+    },
+    "control_object_and_ELF_byteexact_parent": true,
+    "ratio_main_subnormal_log10_helpers_and_existing_RNE_proofs_reused": true,
+    "unchanged_155608_helper_calls_not_repeated": true
+  },
+  "exact_mathematics": {
+    "complete_h_error_bound": "2260993/4194304",
+    "complete_h_error_float": 0.5390627384185791,
+    "h_model": "H=delta*2^21/den, den8065..8320. Product omission contributes <1/32+2^-22 plus half-up1/2; existing RNE reciprocal contributes<=1/128. Full bound is69/128+2^-22. Exact e_h=-r/den reconstructed from low32 residue.",
+    "upper": "38419381231188525859621934631664584981629/27041522604068589592727672777080832000000",
+    "lower": "10431790168765770629407176898745882241452043499/6337856860328575685795548307128320000000000000",
+    "upper_float": 1.4207551029470529,
+    "lower_float": 1.6459491589440776,
+    "strict_threshold_bases": [
+      "3/2",
+      "7/4"
+    ],
+    "rounding_bias": "r2=z-2ceil(z/2), r3=cube-3nearest(cube/3), r4=fourth-4floor((fourth+2)/4). For s=+1 odd+even and -1 odd-even, bias12=-4r3-s(6r2+3r4). All source casts and gate intermediates bounded.",
+    "directional_interval": "h-H=-r/den. B=beta/12-r/den. Added correction q-true in[B-L,B+U]; subtracted in[-B-U,-B+L].",
+    "predicate_orientation": "(tail>half)==add selects upper error constraint d-B>=3/2; other side selects d+B>=7/4. Strict U/L make threshold equality safe.",
+    "omitted_remainder_sign": "Correction odd+even approximates -log(1-h); odd-even approximates log(1+h). Both omitted remainders are positive, enlarging only the lower error.",
+    "range": {
+      "signed_residue_abs_strictly_below": 4486,
+      "gate_expression_abs_strictly_below": 486472,
+      "cube_below": "2^29",
+      "near_pack_shift": "3..12"
+    },
+    "tables": "All256 actual existing near reciprocal/log-center rows independently checked with exact rational RNE/log-series intervals;4096bytes unchanged.",
+    "halfways_dyadics_sign": "Distance0 always refines; exact-center distance>=1 safe. Distance>=4 retains parent strict bound. Reachable half4 is separated from lower binade edge; later lower half-gaps>=4. Existing sign/reflection/carry packing unchanged.",
+    "own_gate_checks": 6480,
+    "own_remainder_checks": 1536,
+    "own_Fraction_RNE_endpoint_checks": 196
+  },
+  "source_binding": {
+    "entire_CPP_ASM_ELF_byteexact_no_exclusions": true,
+    "only_changed_allocated_body": "ln_near_interval912->1160",
+    "allocated_code_growth_bytes": 248,
+    "all_other_allocated_bodies_tables_global_RAM_deps_equal": true,
+    "ratio_ASM_byteexact_parent": true,
+    "generic_M0_object_equal": true,
+    "M4_controls": "M0 TU disabled/empty; source guard unchanged. No whole-M4 firmware build.",
+    "bare_unit_exact_final_fragment_and_clz_helpers": true
+  },
+  "own_execution": {
+    "total_actual_ARM_calls": 1026,
+    "bare_exact_pack_calls": 330,
+    "bare_pack_configurations": 165,
+    "product54_calls": 36,
+    "public_calls": 660,
+    "public_unique_inputs": 110,
+    "public_state_rows": 220,
+    "MPFR_version": "4.2.2",
+    "candidate_wrong": 0,
+    "raw_parent_candidate_NaN_policy_equal": true,
+    "ABI_SP_return_bounded_writes_every_call": true,
+    "bare_pack_and_product54_no_SIO_access": true,
+    "DIRTY_public_all28_SIO_bytes_preserved": true,
+    "READY_no_DIRTY_left": true,
+    "actual_near_decline_to_refine_trace_observed": true,
+    "synthetic_threshold_equality_neighbors_and_midpoint_refusal_executed": true,
+    "own_stacks": {
+      "bare_pack": 48,
+      "product54": 36,
+      "public_candidate_subset": 528,
+      "public_parent_subset": 488
+    },
+    "coverage": "Bounded independent controls; author65880-state corpus not replayed. Bare tests load no firmware/ROM; public tests use pinned resident and captured support ROM."
+  },
+  "performance_tradeoff": {
+    "author_unique_inputs": 32940,
+    "author_state_rows": 65880,
+    "retained_parent_counts_checked": 39318,
+    "groups": [
+      {
+        "SIO": "READY",
+        "vs_parent": {
+          "equal": 13701,
+          "slower": 19087,
+          "faster": 152
+        },
+        "parent_correct_Qfp_losses": 89,
+        "candidate_correct_Qfp_losses": 45,
+        "fixed": 44,
+        "Qfplib_wrong": 6257
+      },
+      {
+        "SIO": "DIRTY",
+        "vs_parent": {
+          "equal": 13701,
+          "slower": 19087,
+          "faster": 152
+        },
+        "parent_correct_Qfp_losses": 95,
+        "candidate_correct_Qfp_losses": 51,
+        "fixed": 44,
+        "Qfplib_wrong": 6257
+      }
+    ],
+    "prior34_losses_fixed": 15,
+    "expanded_correct_Qfp_losses_fixed": 44,
+    "new_correct_Qfp_deficits": 0,
+    "remaining_raw_inputs": 51,
+    "remaining_state_rows": 96,
+    "historical_ln10_fixed": 6,
+    "historical_ln10_open": 4,
+    "versus_parent": {
+      "faster": 304,
+      "equal": 27402,
+      "slower": 38174
+    },
+    "regression_instructions": [
+      7,
+      105
+    ],
+    "stack_on_same_expanded_corpus": {
+      "candidate": 640,
+      "parent": 600
+    },
+    "code_bytes_added": 248,
+    "all_losses_incorrect_Qfp_outcomes_and_regressions_retained": true,
+    "not_an_overall_parent_speed_improvement": true,
+    "counts_not_physical_cycles": true,
+    "performance_not_exhaustive_binary64": true
+  },
+  "proofs": {
+    "DIRECTIONAL-EXACT-PROOF.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/DIRECTIONAL-EXACT-PROOF.json",
+      "sha256": "c638e6ee6fd47f44d6ca57aa3f82f67a4a4cfe9a4627b34ba360e0d69ac908bf"
+    },
+    "SOURCE-OBJECT-PROOF.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/SOURCE-OBJECT-PROOF.json",
+      "sha256": "f75f33793cc17312ea3d2ea1c2ea7d843d68166317fb1a989ab5181ec88e1c44"
+    },
+    "BARE-PACKER-ARM.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/BARE-PACKER-ARM.json",
+      "sha256": "85d2c37da2365e2a4f6d04762e19d521d23ba5bb88ae3cb07bacf1ce25c6ba91"
+    },
+    "FULL-H-PRODUCT54-ARM.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/FULL-H-PRODUCT54-ARM.json",
+      "sha256": "58987ebce7e0cf44c85816d71802b178c64f5081b4c53092972c0991dfb699c9"
+    },
+    "SELECTED-PUBLIC-ARM.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/SELECTED-PUBLIC-ARM.json",
+      "sha256": "339e8a40c1d09cd4f05fd4da476274e828dfe4e36b75049036746631ff54f15c"
+    },
+    "AUTHOR-ACCOUNTING.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/AUTHOR-ACCOUNTING.json",
+      "sha256": "501e2e163674f4844c4de1594d29bc9364c516a4ae8ce6f9b6b8bbd97c4b9886"
+    }
+  },
+  "reproducers": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/static-review.py",
+      "sha256": "524f51917532ba791f2e5a47decd1c74ed124463ad825878d2c19679e5d8679c"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/arm-review.py",
+      "sha256": "43df4e5908ad4e414cf496964df8a695b1f1c047d8407d027404b9f1ff63479a"
+    }
+  ],
+  "invariants": {
+    "hardware_USB_Flash_lease_access": false,
+    "Git_canonical_or_checkpoint_changed": false,
+    "frozen_packets_mutated": false,
+    "new_framework_or_polynomial_implemented": false,
+    "full_author_corpus_repeated": false,
+    "whole_math_goal_complete": false
+  }
+}

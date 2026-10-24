@@ -1,0 +1,21 @@
+{
+  "status": "PASS_EXECUTED_QUOTIENT_MODULE_EQUALS_FINAL_UNIT_AND_INLINE_RUNTIME",
+  "unit_calls": 149484,
+  "calls_not_repeated_after_alias_and_guard_only_edits": true,
+  "executed_unit": ".build/m0-pow-rsqrt-asm-20261024/trial-pre-alias-v3/unit.elf",
+  "executed_source": ".build/m0-pow-rsqrt-asm-20261024/trial-pre-alias-v3/rsqrt.S",
+  "unit_proof": {
+    "sha256": "b4abee1cee2b9bcb6814d5cb53a7b64d7d3168e5925724f630e4c88ac870e896",
+    "bytes": 887
+  },
+  "executed_code_binding": {
+    "sha256": "84a8e7dcced56cfc12131e3c4fdb6a1dc3c0bf73006fba24b4285859ca234a1c",
+    "bytes": 761
+  },
+  "final_source_isolation": {
+    "sha256": "0626d93a9843c8371713f48011c0f215529512d18d99466c384a667e58869a04",
+    "bytes": 220002
+  },
+  "actual_macro_bytes": 80,
+  "all_other_trial_and_failed_launcher_calls_excluded": true
+}

@@ -1,0 +1,5 @@
+{
+  "parent": ".build/m0-ln-main-raw-split-family-20261024",
+  "parent_not_yet_qualified": true,
+  "trial": "Revisit frozen old naked IEEE ln entry on current raw-main prototype. Copy only literal start/replace definitions, not producer execution."
+}

@@ -1,0 +1,35 @@
+{
+  "status": "PASS_LITERAL6TERM_HIGH_9TERM_MIDDLE_PRODUCTS_AND6MUL_SQUARE_INTEGER_ORACLES",
+  "bare_ELF_sha256": "d2de9888c4221bd39f9e294b350da06c1bdd2c27155ccb59f49f877fb33f40da",
+  "candidate_ELF_sha256": "e6f2f7e0c55b7d7f2547badb00eacef444a1575eb59bdae7d530eec0ea340fcc",
+  "product_pairs": 40808,
+  "square_shift_pairs": 19366,
+  "all16NZCV_extra_ARM_calls": 3072,
+  "qualified_fresh_ARM_calls": 104054,
+  "instruction_counts": {
+    "mk61_m0_exp_small_product64": {
+      "45": 41832
+    },
+    "mk61_m0_exp_small_product48": {
+      "62": 41832
+    },
+    "mk61_m0_exp_small_square48": {
+      "47": 20390
+    }
+  },
+  "scalar_return_integer_oracles_wrong": 0,
+  "all_Callee_saved_SP_PC_bounded_writes_checked": true,
+  "stack_frame_bytes": 36,
+  "actual_public_function_bytes_identical_to_units": true,
+  "function_bytes_sha256": {
+    "mk61_m0_exp_small_product64": "909166f69c63425c222b55917dec5ead34b07781ef798bd6770f8adaa42602a4",
+    "mk61_m0_exp_small_product48": "3f742922fbd314f3ea3a7b31c01b9c34df7c0471b19b5cd83bdce0ece812df11",
+    "mk61_m0_exp_small_square48": "906a6799e9f46886f4204f33555d52adf5196b81d219a3bfe27fd3573d9c4731"
+  },
+  "product64_domain_a48_b58": true,
+  "product48_domain_a48_b58": true,
+  "square_domain_a48_shift38to58": true,
+  "no_ROM_firmware_external_calls_mocks_or_SIO": true,
+  "actual_MPFR_calls": 0,
+  "hardware_accessed": false
+}

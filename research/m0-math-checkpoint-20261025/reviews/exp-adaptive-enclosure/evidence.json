@@ -1,0 +1,60 @@
+{
+  "status": "PASS_INDEPENDENT_ADAPTIVE_SEALED_EVIDENCE_AND_LEDGER_RECONCILIATION",
+  "state_rows": 880014,
+  "unique_inputs": 440007,
+  "all_old428231_bits_identical": true,
+  "inherited856462_parent_Qfplib_state_measurements_not_fresh": true,
+  "author_fresh_exp_candidate_ARM": 880014,
+  "author_fresh_new_Qfplib_ARM": 23552,
+  "author_fresh_parent_loss_audit_ARM": 2762,
+  "remaining_known_parent_state_rows1284": true,
+  "author_fresh_gate_product_ARM": 736324,
+  "author_fresh_other_callers_ARM": 1134,
+  "author_fresh_pow_loss_states_ARM": 10081,
+  "author_total_qualified_fresh_ARM": 1653867,
+  "author_exp_actual_directed_MPFR_inputs": 440005,
+  "author_other_callers_actual_directed_MPFR_inputs": 189,
+  "author_total_actual_directed_MPFR_validation": 440194,
+  "sNaN_shortcuts_without_MPFR": 2,
+  "separate_log_generations1536_not_validation": true,
+  "same_old428231_losses_before671_after642_fixed29": true,
+  "fixed29_strict28_equal1": true,
+  "same_older48763_losses_before154_after126": true,
+  "expanded440007_losses2023_partition": {
+    "old642": true,
+    "new_preexisting1381": {
+      "small_actual_output_midpoint_log_preimages": 1353,
+      "new_normal_uniform": 15,
+      "normal_and_endpoint_actual_midpoint_log_preimages": 13
+    }
+  },
+  "all2023_losses_parent_bound_no_new_losses": true,
+  "correct_Qfplib_comparison": {
+    "faster": 485398,
+    "slower": 4046,
+    "equal": 2
+  },
+  "wrong_Qfplib_states_retained": 390568,
+  "known_parent_cost_increases200": true,
+  "known_parent_cost_increase_deltas": {
+    "2": 126,
+    "29": 74
+  },
+  "known_parent_cost_increase_Qfplib_partition": {
+    "no_slower_correct_Qfplib": 86,
+    "wrong_Qfplib": 70,
+    "already_slower_correct_Qfplib": 44
+  },
+  "all_prior_tiny_costs_exact_parent": true,
+  "original_exp_remaining_only_positive4085F424184F6DC5": true,
+  "original_pow51_sin22_cos14_unchanged_and_own_bound": true,
+  "expanded_pow_reference_variants10085_and_distinct_fresh_states10081": true,
+  "expanded_pow_remaining7904_unchanged": true,
+  "expanded_pow_MPFR_and_Qfplib_references_inherited": true,
+  "not_full111912_pair_fresh_replay": true,
+  "excluded_final_probe32208_margin336_stack640_and_failed_unit736324": true,
+  "trial_R1_R2_rejected_not_parents": true,
+  "author_observed_stack744_new_corpus_and_same_input_parent744": true,
+  "original507_union419_remaining88": true,
+  "own_ARM_or_MPFR_in_this_file": 0
+}
