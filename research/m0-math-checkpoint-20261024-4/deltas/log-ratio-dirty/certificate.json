@@ -1,0 +1,23 @@
+{
+  "status": "PASS_ALL_RECIPROCALS_AND_EXACT_THREE_BIT_CORRECTION_BOUND",
+  "denominators": 1024,
+  "delta_domain": "0..2^41 inclusive",
+  "reused_table_bytes": 16384,
+  "new_table_bytes": 0,
+  "product46_absolute_error": "73729/16384",
+  "quotient_seed_absolute_error": "106497/16384",
+  "quotient_seed_absolute_error_float": 6.50006103515625,
+  "correction_magnitude_at_most": 7,
+  "residue_representable_as_signed32": true,
+  "rounded_abs_top_below_2_to_15": true,
+  "exact_result": "floor((delta<<29)/den), unchanged from the original helper",
+  "busy_zero_shortcut_exact": true,
+  "hardware_ready_source_prefix_unchanged": true,
+  "both_dyadic_endpoint_shortcuts_exact_all_denominators": true,
+  "dyadic_seed_error_interval": "0<=H-q<3, then at most two unit increments",
+  "ratio_ASM_source_sha256": "30fd45e3489f1f09a45388915c18e7f0c93015033187969509260316480b48ce",
+  "source_sha256": "9480f6ffa1abc80b502f35499b4d8b2fd1fdd42b3de0408af2feaadcd7be6d74",
+  "table_sha256": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99",
+  "seed_kernel_source_sha256": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b",
+  "scope": "Analytic seed bound and all1024 reciprocal/three-bit transition checks; ARM checks are separate."
+}

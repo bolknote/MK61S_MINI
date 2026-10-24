@@ -1,0 +1,23 @@
+{
+  "status": "PASS_EXACT_ALL_DENOMINATOR_SEEDS_ENDPOINTS_AND_CORRECTION",
+  "denominators": 1024,
+  "endpoint_checks": 2048,
+  "three_bit_transition_checks": 24576,
+  "domain": "0<=delta<=2^41; den=2049+2*index, 0<=index<1024",
+  "product_error_interval": [
+    "-73729/16384",
+    "9/2"
+  ],
+  "product_lower_strict": true,
+  "quotient_seed_error_interval": [
+    "-106497/16384",
+    "9/2"
+  ],
+  "quotient_lower_strict": true,
+  "residual_bound": "436105215/16384",
+  "negative_ceiling_top_bound": "503197695/16384",
+  "signed32_low_word_reconstruction_exact": true,
+  "correction_bits": 3,
+  "explanation": "Exact quotient is below2^60. Modulo2^32 subtraction recovers the unique signed residual since its magnitude and negative ceil numerator are <2^15. Three CMP/SUB/ADC steps divide by4den,2den,den. Negative residual uses ceil; endpoints use exact shifted seed and at most2increments. Busy-zero returns unchanged zero result words.",
+  "table_sha256": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99"
+}

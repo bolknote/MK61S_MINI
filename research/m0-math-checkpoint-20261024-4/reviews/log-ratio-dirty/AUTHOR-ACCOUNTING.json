@@ -1,0 +1,35 @@
+{
+  "status": "PASS_HONEST_SEALED_CORPUS_ACCOUNTING_NOT_REPLAY",
+  "unique_inputs": 14907,
+  "states": 29814,
+  "groups": [
+    {
+      "SIO": "READY",
+      "vs_parent": {
+        "equal": 14907
+      },
+      "losses": 27,
+      "parent_losses": 27,
+      "Qfplib_wrong": 1363
+    },
+    {
+      "SIO": "DIRTY",
+      "vs_parent": {
+        "faster": 12893,
+        "equal": 2014
+      },
+      "losses": 27,
+      "parent_losses": 8310,
+      "Qfplib_wrong": 1363
+    }
+  ],
+  "remaining_inputs": 27,
+  "remaining_state_rows": 54,
+  "all_ten_historical_ln_losses_retained": true,
+  "DIRTY_correct_Qfplib_deficits_removed": 8283,
+  "READY_unchanged": true,
+  "new_deficits": 0,
+  "author_public_stack_bytes": 488,
+  "author_helper_stack_bytes": 68,
+  "no_exhaustive_binary64_performance_or_physical_cycles_claim": true
+}

@@ -1,0 +1,12 @@
+{
+  "status": "PASS_FROZEN_LN_ENCLOSURE_PACKET_AND_BINDING_RANGES",
+  "HANDOFF_sha256": "75158b4a34feb2c2929c3f805c81b40938ec3079b8cf055db2360025200ed344",
+  "result_sha256": "9c40ecbe12d871cff65e65cf40672c0b9325314ec0828c797f7d19913a89ad02",
+  "source_sha256": "44d1d70cd02a52e8ba4de34dd5168e23806b3df59f0a93d814a1fe061158aa76",
+  "ELF_sha256": "36d1662268eaa35b5bd688fb7c2ff16958c1bc46dd92166dab5722e96b6f62f6",
+  "root_artifacts_checked": 50,
+  "input_pins_checked": 550,
+  "all_bindings_outside_overlay": true,
+  "scope_clarification": "Allocated object/link code and data size unchanged; textual source files changed.",
+  "hardware_accessed": false
+}

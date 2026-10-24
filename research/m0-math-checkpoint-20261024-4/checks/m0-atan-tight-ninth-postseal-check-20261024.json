@@ -1,0 +1,11 @@
+{
+  "status": "PASS_FROZEN_SMALL_H_ATAN_PACKET_AND_BINDING_RANGES",
+  "result_sha256": "9af6b56537f17bfb9937182ef55ea1e6a3a361670d99db895049b95003def35e",
+  "HANDOFF_sha256": "bfb2a8aa2db8d23b5a4f543ff9f5ac954f0cb0895cefcd41fa8077f4ee3be982",
+  "source_sha256": "a85bbc49f2366ae64d025b36dfd27e86abf63c118e447cd43cedd060cdf87e2e",
+  "ELF_sha256": "fce98d75c6a88d57282b74798371c9c990029193741c4a986483a273321a50c9",
+  "root_artifact_hashes_checked": 54,
+  "input_pins_checked": 103,
+  "all_resident_bindings_outside_overlay": true,
+  "hardware_accessed": false
+}

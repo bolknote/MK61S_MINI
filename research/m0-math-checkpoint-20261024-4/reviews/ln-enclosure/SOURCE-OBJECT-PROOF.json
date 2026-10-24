@@ -1,0 +1,115 @@
+{
+  "status": "PASS_CHILD_SOURCE_ENTIRE_OBJECT_ELF_AND_PARENT_CLOSURE",
+  "source_sha256": "44d1d70cd02a52e8ba4de34dd5168e23806b3df59f0a93d814a1fe061158aa76",
+  "subnormal_sha256": "1b86940454b8ca9c733e3d8e59f72d67b499ac3c59cbb61dd6d231d4c92bc13f",
+  "whole_object_sha256": "0ebe4066bb2a1d0ba0dd6e856739e962927355120453075df56983de2f2f0906",
+  "entire_ELF_sha256": "36d1662268eaa35b5bd688fb7c2ff16958c1bc46dd92166dab5722e96b6f62f6",
+  "no_excluded_bytes": true,
+  "changed_sections": {
+    ".text.ln_near_interval": [
+      912,
+      912
+    ],
+    ".m0_log_subnormal": [
+      2464,
+      2464
+    ],
+    ".text.mk61_m0_ln": [
+      1272,
+      1272
+    ]
+  },
+  "allocated_object_and_linked_delta": 0,
+  "log10_special_unchanged": true,
+  "tables_RAM_undefined_deps_unchanged": true,
+  "primitive_addresses_and_bytes_unchanged": [
+    "mk61_m0_log_ratio70",
+    "mk61_m0_log_ratio70_slow",
+    "_ZL11log10_table"
+  ],
+  "ratio_ASM_object_byteexact_parent": true,
+  "off_target_controls": {
+    "generic_M0": {
+      "exact": true,
+      "allocated_bytes": 247584
+    },
+    "M4_soft": {
+      "exact": true,
+      "allocated_bytes": 0
+    },
+    "M4_hard": {
+      "exact": true,
+      "allocated_bytes": 0
+    }
+  },
+  "M4_controls_only_M0_TU_not_whole_firmware": true,
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-fno-use-cxa-atexit",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-fno-lto",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-20261024/native_eabi_m0.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/candidate-full.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-20261024/ratio.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/candidate-ratio.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_ln",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-20261024/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/candidate-full.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/candidate-ratio.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/candidate.elf"
+    ]
+  ],
+  "author_root_files": 50,
+  "input_pins": 550,
+  "explicit_log10_shared_section_closure": [
+    {
+      "object": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-20261024/control-full.o",
+      "section": ".m0_log_subnormal",
+      "offset": 1112,
+      "bytes": 1352,
+      "sha256": "13dd996589d3043f9ac58c6bbc57a791e017a51b86fb32fe7229200cb8c6ebf6"
+    },
+    {
+      "object": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/candidate-full.o",
+      "section": ".m0_log_subnormal",
+      "offset": 1112,
+      "bytes": 1352,
+      "sha256": "13dd996589d3043f9ac58c6bbc57a791e017a51b86fb32fe7229200cb8c6ebf6"
+    }
+  ]
+}

@@ -1,0 +1,2141 @@
+{
+  "status": "PASS_FRESH_MPFR_BOUNDED_ACTUAL_PUBLIC_LN",
+  "unique_inputs": 50,
+  "state_rows": 100,
+  "actual_ARM_calls": 300,
+  "rows": [
+    {
+      "x": "0000000000000000",
+      "SIO": "READY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "candidate": "FFF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 53,
+        "candidate": 53
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "0000000000000000",
+      "SIO": "DIRTY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "candidate": "FFF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 53,
+        "candidate": 53
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "0000000000000001",
+      "SIO": "READY",
+      "expected": "C0874385446D71C3",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "C0874385446D71C3",
+        "candidate": "C0874385446D71C3"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 613,
+        "candidate": 613
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "0000000000000001",
+      "SIO": "DIRTY",
+      "expected": "C0874385446D71C3",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "C0874385446D71C3",
+        "candidate": "C0874385446D71C3"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 1265,
+        "candidate": 627
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "000FFFFFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "C086232BDD7ABCD2",
+        "candidate": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 585,
+        "candidate": 585
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "000FFFFFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "C086232BDD7ABCD2",
+        "candidate": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "Qfplib": 8,
+        "parent": 1156,
+        "candidate": 711
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "0010000000000000",
+      "SIO": "READY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "Qfplib": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "candidate": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 592,
+        "candidate": 592
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "0010000000000000",
+      "SIO": "DIRTY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "Qfplib": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "candidate": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 1244,
+        "candidate": 606
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "0010000000000001",
+      "SIO": "READY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "Qfplib": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "candidate": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 592,
+        "candidate": 592
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "0010000000000001",
+      "SIO": "DIRTY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "Qfplib": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "candidate": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "Qfplib": 755,
+        "parent": 1266,
+        "candidate": 623
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FE0000000000000",
+      "SIO": "READY",
+      "expected": "BFE62E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "BFE62E42FEFA39EF",
+        "parent": "BFE62E42FEFA39EF",
+        "candidate": "BFE62E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 596,
+        "candidate": 596
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FE0000000000000",
+      "SIO": "DIRTY",
+      "expected": "BFE62E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "BFE62E42FEFA39EF",
+        "parent": "BFE62E42FEFA39EF",
+        "candidate": "BFE62E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 1248,
+        "candidate": 610
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEDD3AEF365CBC8",
+      "SIO": "READY",
+      "expected": "BFB200DC31BB7557",
+      "outputs": {
+        "Qfplib": "BFB200DC31BB7557",
+        "parent": "BFB200DC31BB7557",
+        "candidate": "BFB200DC31BB7557"
+      },
+      "instructions": {
+        "Qfplib": 795,
+        "parent": 2235,
+        "candidate": 2235
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEDD3AEF365CBC8",
+      "SIO": "DIRTY",
+      "expected": "BFB200DC31BB7557",
+      "outputs": {
+        "Qfplib": "BFB200DC31BB7557",
+        "parent": "BFB200DC31BB7557",
+        "candidate": "BFB200DC31BB7557"
+      },
+      "instructions": {
+        "Qfplib": 795,
+        "parent": 2904,
+        "candidate": 2350
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEF9AE55188C8D0",
+      "SIO": "READY",
+      "expected": "BF896EEE92A8E92F",
+      "outputs": {
+        "Qfplib": "BF896EEE92A8E92F",
+        "parent": "BF896EEE92A8E92F",
+        "candidate": "BF896EEE92A8E92F"
+      },
+      "instructions": {
+        "Qfplib": 783,
+        "parent": 2174,
+        "candidate": 2174
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEF9AE55188C8D0",
+      "SIO": "DIRTY",
+      "expected": "BF896EEE92A8E92F",
+      "outputs": {
+        "Qfplib": "BF896EEE92A8E92F",
+        "parent": "BF896EEE92A8E92F",
+        "candidate": "BF896EEE92A8E92F"
+      },
+      "instructions": {
+        "Qfplib": 783,
+        "parent": 2174,
+        "candidate": 2174
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEFE39CE50E5DA4",
+      "SIO": "READY",
+      "expected": "BF6C6FB9B9E8C418",
+      "outputs": {
+        "Qfplib": "BF6C6FB9B9E8C418",
+        "parent": "BF6C6FB9B9E8C418",
+        "candidate": "BF6C6FB9B9E8C418"
+      },
+      "instructions": {
+        "Qfplib": 794,
+        "parent": 2173,
+        "candidate": 2173
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEFE39CE50E5DA4",
+      "SIO": "DIRTY",
+      "expected": "BF6C6FB9B9E8C418",
+      "outputs": {
+        "Qfplib": "BF6C6FB9B9E8C418",
+        "parent": "BF6C6FB9B9E8C418",
+        "candidate": "BF6C6FB9B9E8C418"
+      },
+      "instructions": {
+        "Qfplib": 794,
+        "parent": 2173,
+        "candidate": 2173
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEFE66DEC8E7338",
+      "SIO": "READY",
+      "expected": "BF699C5052B5F2B4",
+      "outputs": {
+        "Qfplib": "BF699C5052B5F2B4",
+        "parent": "BF699C5052B5F2B4",
+        "candidate": "BF699C5052B5F2B4"
+      },
+      "instructions": {
+        "Qfplib": 794,
+        "parent": 2164,
+        "candidate": 2164
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEFE66DEC8E7338",
+      "SIO": "DIRTY",
+      "expected": "BF699C5052B5F2B4",
+      "outputs": {
+        "Qfplib": "BF699C5052B5F2B4",
+        "parent": "BF699C5052B5F2B4",
+        "candidate": "BF699C5052B5F2B4"
+      },
+      "instructions": {
+        "Qfplib": 794,
+        "parent": 2164,
+        "candidate": 2164
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEFE71BC4A8909F",
+      "SIO": "READY",
+      "expected": "BF68EDEEB9FCF0CE",
+      "outputs": {
+        "Qfplib": "BF68EDEEB9FCF0CE",
+        "parent": "BF68EDEEB9FCF0CE",
+        "candidate": "BF68EDEEB9FCF0CE"
+      },
+      "instructions": {
+        "Qfplib": 800,
+        "parent": 2160,
+        "candidate": 2160
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEFE71BC4A8909F",
+      "SIO": "DIRTY",
+      "expected": "BF68EDEEB9FCF0CE",
+      "outputs": {
+        "Qfplib": "BF68EDEEB9FCF0CE",
+        "parent": "BF68EDEEB9FCF0CE",
+        "candidate": "BF68EDEEB9FCF0CE"
+      },
+      "instructions": {
+        "Qfplib": 800,
+        "parent": 2160,
+        "candidate": 2160
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEFFFFFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "BCA0000000000000",
+      "outputs": {
+        "Qfplib": "BCA0000000000000",
+        "parent": "BCA0000000000000",
+        "candidate": "BCA0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 720,
+        "parent": 406,
+        "candidate": 406
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FEFFFFFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "BCA0000000000000",
+      "outputs": {
+        "Qfplib": "BCA0000000000000",
+        "parent": "BCA0000000000000",
+        "candidate": "BCA0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 720,
+        "parent": 406,
+        "candidate": 406
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0000000000000",
+      "SIO": "READY",
+      "expected": "0000000000000000",
+      "outputs": {
+        "Qfplib": "0000000000000000",
+        "parent": "0000000000000000",
+        "candidate": "0000000000000000"
+      },
+      "instructions": {
+        "Qfplib": 683,
+        "parent": 105,
+        "candidate": 105
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0000000000000",
+      "SIO": "DIRTY",
+      "expected": "0000000000000000",
+      "outputs": {
+        "Qfplib": "0000000000000000",
+        "parent": "0000000000000000",
+        "candidate": "0000000000000000"
+      },
+      "instructions": {
+        "Qfplib": 683,
+        "parent": 105,
+        "candidate": 105
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0000000000001",
+      "SIO": "READY",
+      "expected": "3CAFFFFFFFFFFFFF",
+      "outputs": {
+        "Qfplib": "3CB0000000000000",
+        "parent": "3CAFFFFFFFFFFFFF",
+        "candidate": "3CAFFFFFFFFFFFFF"
+      },
+      "instructions": {
+        "Qfplib": 745,
+        "parent": 413,
+        "candidate": 413
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0000000000001",
+      "SIO": "DIRTY",
+      "expected": "3CAFFFFFFFFFFFFF",
+      "outputs": {
+        "Qfplib": "3CB0000000000000",
+        "parent": "3CAFFFFFFFFFFFFF",
+        "candidate": "3CAFFFFFFFFFFFFF"
+      },
+      "instructions": {
+        "Qfplib": 745,
+        "parent": 413,
+        "candidate": 413
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF001FFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "3F3FFE002AA69B13",
+      "outputs": {
+        "Qfplib": "3F3FFE002AA69B18",
+        "parent": "3F3FFE002AA69B13",
+        "candidate": "3F3FFE002AA69B13"
+      },
+      "instructions": {
+        "Qfplib": 749,
+        "parent": 519,
+        "candidate": 519
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF001FFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "3F3FFE002AA69B13",
+      "outputs": {
+        "Qfplib": "3F3FFE002AA69B18",
+        "parent": "3F3FFE002AA69B13",
+        "candidate": "3F3FFE002AA69B13"
+      },
+      "instructions": {
+        "Qfplib": 749,
+        "parent": 519,
+        "candidate": 519
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0020000000000",
+      "SIO": "READY",
+      "expected": "3F3FFE002AA6AB11",
+      "outputs": {
+        "Qfplib": "3F3FFE002AA6AB14",
+        "parent": "3F3FFE002AA6AB11",
+        "candidate": "3F3FFE002AA6AB11"
+      },
+      "instructions": {
+        "Qfplib": 749,
+        "parent": 218,
+        "candidate": 218
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0020000000000",
+      "SIO": "DIRTY",
+      "expected": "3F3FFE002AA6AB11",
+      "outputs": {
+        "Qfplib": "3F3FFE002AA6AB14",
+        "parent": "3F3FFE002AA6AB11",
+        "candidate": "3F3FFE002AA6AB11"
+      },
+      "instructions": {
+        "Qfplib": 749,
+        "parent": 218,
+        "candidate": 218
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0020000000001",
+      "SIO": "READY",
+      "expected": "3F3FFE002AA6BB0F",
+      "outputs": {
+        "Qfplib": "3F3FFE002AA6BB10",
+        "parent": "3F3FFE002AA6BB0F",
+        "candidate": "3F3FFE002AA6BB0F"
+      },
+      "instructions": {
+        "Qfplib": 749,
+        "parent": 537,
+        "candidate": 537
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0020000000001",
+      "SIO": "DIRTY",
+      "expected": "3F3FFE002AA6BB0F",
+      "outputs": {
+        "Qfplib": "3F3FFE002AA6BB10",
+        "parent": "3F3FFE002AA6BB0F",
+        "candidate": "3F3FFE002AA6BB0F"
+      },
+      "instructions": {
+        "Qfplib": 749,
+        "parent": 537,
+        "candidate": 537
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF005FFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "3F57FB811FAF1447",
+      "outputs": {
+        "Qfplib": "3F57FB811FAF1447",
+        "parent": "3F57FB811FAF1447",
+        "candidate": "3F57FB811FAF1447"
+      },
+      "instructions": {
+        "Qfplib": 733,
+        "parent": 515,
+        "candidate": 515
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF005FFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "3F57FB811FAF1447",
+      "outputs": {
+        "Qfplib": "3F57FB811FAF1447",
+        "parent": "3F57FB811FAF1447",
+        "candidate": "3F57FB811FAF1447"
+      },
+      "instructions": {
+        "Qfplib": 733,
+        "parent": 515,
+        "candidate": 515
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0060000000000",
+      "SIO": "READY",
+      "expected": "3F57FB811FAF1845",
+      "outputs": {
+        "Qfplib": "3F57FB811FAF1845",
+        "parent": "3F57FB811FAF1845",
+        "candidate": "3F57FB811FAF1845"
+      },
+      "instructions": {
+        "Qfplib": 733,
+        "parent": 218,
+        "candidate": 218
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0060000000000",
+      "SIO": "DIRTY",
+      "expected": "3F57FB811FAF1845",
+      "outputs": {
+        "Qfplib": "3F57FB811FAF1845",
+        "parent": "3F57FB811FAF1845",
+        "candidate": "3F57FB811FAF1845"
+      },
+      "instructions": {
+        "Qfplib": 733,
+        "parent": 218,
+        "candidate": 218
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0060000000001",
+      "SIO": "READY",
+      "expected": "3F57FB811FAF1C44",
+      "outputs": {
+        "Qfplib": "3F57FB811FAF1C43",
+        "parent": "3F57FB811FAF1C44",
+        "candidate": "3F57FB811FAF1C44"
+      },
+      "instructions": {
+        "Qfplib": 733,
+        "parent": 533,
+        "candidate": 533
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF0060000000001",
+      "SIO": "DIRTY",
+      "expected": "3F57FB811FAF1C44",
+      "outputs": {
+        "Qfplib": "3F57FB811FAF1C43",
+        "parent": "3F57FB811FAF1C44",
+        "candidate": "3F57FB811FAF1C44"
+      },
+      "instructions": {
+        "Qfplib": 733,
+        "parent": 533,
+        "candidate": 533
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF014C46506F61D",
+      "SIO": "READY",
+      "expected": "3F74B6F6717C7EF5",
+      "outputs": {
+        "Qfplib": "3F74B6F6717C7EF5",
+        "parent": "3F74B6F6717C7EF5",
+        "candidate": "3F74B6F6717C7EF5"
+      },
+      "instructions": {
+        "Qfplib": 829,
+        "parent": 2033,
+        "candidate": 2033
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF014C46506F61D",
+      "SIO": "DIRTY",
+      "expected": "3F74B6F6717C7EF5",
+      "outputs": {
+        "Qfplib": "3F74B6F6717C7EF5",
+        "parent": "3F74B6F6717C7EF5",
+        "candidate": "3F74B6F6717C7EF5"
+      },
+      "instructions": {
+        "Qfplib": 829,
+        "parent": 2033,
+        "candidate": 2033
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF01E2A43FC46C8",
+      "SIO": "READY",
+      "expected": "3F7E0DF8102610A7",
+      "outputs": {
+        "Qfplib": "3F7E0DF8102610A7",
+        "parent": "3F7E0DF8102610A7",
+        "candidate": "3F7E0DF8102610A7"
+      },
+      "instructions": {
+        "Qfplib": 805,
+        "parent": 2023,
+        "candidate": 2023
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF01E2A43FC46C8",
+      "SIO": "DIRTY",
+      "expected": "3F7E0DF8102610A7",
+      "outputs": {
+        "Qfplib": "3F7E0DF8102610A7",
+        "parent": "3F7E0DF8102610A7",
+        "candidate": "3F7E0DF8102610A7"
+      },
+      "instructions": {
+        "Qfplib": 805,
+        "parent": 2023,
+        "candidate": 2023
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF3FDFFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "3FCC832A56EBD60B",
+      "outputs": {
+        "Qfplib": "3FCC832A56EBD60B",
+        "parent": "3FCC832A56EBD60B",
+        "candidate": "3FCC832A56EBD60B"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 521,
+        "candidate": 521
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF3FDFFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "3FCC832A56EBD60B",
+      "outputs": {
+        "Qfplib": "3FCC832A56EBD60B",
+        "parent": "3FCC832A56EBD60B",
+        "candidate": "3FCC832A56EBD60B"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 776,
+        "candidate": 645
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF3FE0000000000",
+      "SIO": "READY",
+      "expected": "3FCC832A56EBD612",
+      "outputs": {
+        "Qfplib": "3FCC832A56EBD612",
+        "parent": "3FCC832A56EBD612",
+        "candidate": "3FCC832A56EBD612"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 514,
+        "candidate": 514
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF3FE0000000000",
+      "SIO": "DIRTY",
+      "expected": "3FCC832A56EBD612",
+      "outputs": {
+        "Qfplib": "3FCC832A56EBD612",
+        "parent": "3FCC832A56EBD612",
+        "candidate": "3FCC832A56EBD612"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 574,
+        "candidate": 480
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF3FE0000000001",
+      "SIO": "READY",
+      "expected": "3FCC832A56EBD618",
+      "outputs": {
+        "Qfplib": "3FCC832A56EBD618",
+        "parent": "3FCC832A56EBD618",
+        "candidate": "3FCC832A56EBD618"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 518,
+        "candidate": 518
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF3FE0000000001",
+      "SIO": "DIRTY",
+      "expected": "3FCC832A56EBD618",
+      "outputs": {
+        "Qfplib": "3FCC832A56EBD618",
+        "parent": "3FCC832A56EBD618",
+        "candidate": "3FCC832A56EBD618"
+      },
+      "instructions": {
+        "Qfplib": 773,
+        "parent": 773,
+        "candidate": 642
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF7FDFFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "3FD9EDCE5E838B72",
+      "outputs": {
+        "Qfplib": "3FD9EDCE5E838B72",
+        "parent": "3FD9EDCE5E838B72",
+        "candidate": "3FD9EDCE5E838B72"
+      },
+      "instructions": {
+        "Qfplib": 769,
+        "parent": 521,
+        "candidate": 521
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF7FDFFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "3FD9EDCE5E838B72",
+      "outputs": {
+        "Qfplib": "3FD9EDCE5E838B72",
+        "parent": "3FD9EDCE5E838B72",
+        "candidate": "3FD9EDCE5E838B72"
+      },
+      "instructions": {
+        "Qfplib": 769,
+        "parent": 780,
+        "candidate": 646
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF7FE0000000000",
+      "SIO": "READY",
+      "expected": "3FD9EDCE5E838B75",
+      "outputs": {
+        "Qfplib": "3FD9EDCE5E838B75",
+        "parent": "3FD9EDCE5E838B75",
+        "candidate": "3FD9EDCE5E838B75"
+      },
+      "instructions": {
+        "Qfplib": 769,
+        "parent": 518,
+        "candidate": 518
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF7FE0000000000",
+      "SIO": "DIRTY",
+      "expected": "3FD9EDCE5E838B75",
+      "outputs": {
+        "Qfplib": "3FD9EDCE5E838B75",
+        "parent": "3FD9EDCE5E838B75",
+        "candidate": "3FD9EDCE5E838B75"
+      },
+      "instructions": {
+        "Qfplib": 769,
+        "parent": 578,
+        "candidate": 484
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF7FE0000000001",
+      "SIO": "READY",
+      "expected": "3FD9EDCE5E838B78",
+      "outputs": {
+        "Qfplib": "3FD9EDCE5E838B78",
+        "parent": "3FD9EDCE5E838B78",
+        "candidate": "3FD9EDCE5E838B78"
+      },
+      "instructions": {
+        "Qfplib": 769,
+        "parent": 514,
+        "candidate": 514
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FF7FE0000000001",
+      "SIO": "DIRTY",
+      "expected": "3FD9EDCE5E838B78",
+      "outputs": {
+        "Qfplib": "3FD9EDCE5E838B78",
+        "parent": "3FD9EDCE5E838B78",
+        "candidate": "3FD9EDCE5E838B78"
+      },
+      "instructions": {
+        "Qfplib": 769,
+        "parent": 773,
+        "candidate": 639
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFC71FFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "3FE269A210F4DBE7",
+      "outputs": {
+        "Qfplib": "3FE269A210F4DBE7",
+        "parent": "3FE269A210F4DBE7",
+        "candidate": "3FE269A210F4DBE7"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 517,
+        "candidate": 517
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFC71FFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "3FE269A210F4DBE7",
+      "outputs": {
+        "Qfplib": "3FE269A210F4DBE7",
+        "parent": "3FE269A210F4DBE7",
+        "candidate": "3FE269A210F4DBE7"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 792,
+        "candidate": 642
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFC720000000000",
+      "SIO": "READY",
+      "expected": "3FE269A210F4DBE8",
+      "outputs": {
+        "Qfplib": "3FE269A210F4DBE8",
+        "parent": "3FE269A210F4DBE8",
+        "candidate": "3FE269A210F4DBE8"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 514,
+        "candidate": 514
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFC720000000000",
+      "SIO": "DIRTY",
+      "expected": "3FE269A210F4DBE8",
+      "outputs": {
+        "Qfplib": "3FE269A210F4DBE8",
+        "parent": "3FE269A210F4DBE8",
+        "candidate": "3FE269A210F4DBE8"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 574,
+        "candidate": 480
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFC720000000001",
+      "SIO": "READY",
+      "expected": "3FE269A210F4DBE9",
+      "outputs": {
+        "Qfplib": "3FE269A210F4DBE9",
+        "parent": "3FE269A210F4DBE9",
+        "candidate": "3FE269A210F4DBE9"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 514,
+        "candidate": 514
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFC720000000001",
+      "SIO": "DIRTY",
+      "expected": "3FE269A210F4DBE9",
+      "outputs": {
+        "Qfplib": "3FE269A210F4DBE9",
+        "parent": "3FE269A210F4DBE9",
+        "candidate": "3FE269A210F4DBE9"
+      },
+      "instructions": {
+        "Qfplib": 765,
+        "parent": 789,
+        "candidate": 639
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFF89FFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "3FE5B767524A787B",
+      "outputs": {
+        "Qfplib": "3FE5B767524A787B",
+        "parent": "3FE5B767524A787B",
+        "candidate": "3FE5B767524A787B"
+      },
+      "instructions": {
+        "Qfplib": 801,
+        "parent": 521,
+        "candidate": 521
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFF89FFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "3FE5B767524A787B",
+      "outputs": {
+        "Qfplib": "3FE5B767524A787B",
+        "parent": "3FE5B767524A787B",
+        "candidate": "3FE5B767524A787B"
+      },
+      "instructions": {
+        "Qfplib": 801,
+        "parent": 780,
+        "candidate": 646
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFF8A0000000000",
+      "SIO": "READY",
+      "expected": "3FE5B767524A787C",
+      "outputs": {
+        "Qfplib": "3FE5B767524A787C",
+        "parent": "3FE5B767524A787C",
+        "candidate": "3FE5B767524A787C"
+      },
+      "instructions": {
+        "Qfplib": 801,
+        "parent": 518,
+        "candidate": 518
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFF8A0000000000",
+      "SIO": "DIRTY",
+      "expected": "3FE5B767524A787C",
+      "outputs": {
+        "Qfplib": "3FE5B767524A787C",
+        "parent": "3FE5B767524A787C",
+        "candidate": "3FE5B767524A787C"
+      },
+      "instructions": {
+        "Qfplib": 801,
+        "parent": 578,
+        "candidate": 484
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFF8A0000000001",
+      "SIO": "READY",
+      "expected": "3FE5B767524A787D",
+      "outputs": {
+        "Qfplib": "3FE5B767524A787D",
+        "parent": "3FE5B767524A787D",
+        "candidate": "3FE5B767524A787D"
+      },
+      "instructions": {
+        "Qfplib": 801,
+        "parent": 518,
+        "candidate": 518
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFF8A0000000001",
+      "SIO": "DIRTY",
+      "expected": "3FE5B767524A787D",
+      "outputs": {
+        "Qfplib": "3FE5B767524A787D",
+        "parent": "3FE5B767524A787D",
+        "candidate": "3FE5B767524A787D"
+      },
+      "instructions": {
+        "Qfplib": 801,
+        "parent": 777,
+        "candidate": 643
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFF9FFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "3FE628426EE83766",
+      "outputs": {
+        "Qfplib": "3FE628426EE83766",
+        "parent": "3FE628426EE83766",
+        "candidate": "3FE628426EE83766"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 517,
+        "candidate": 517
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFF9FFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "3FE628426EE83766",
+      "outputs": {
+        "Qfplib": "3FE628426EE83766",
+        "parent": "3FE628426EE83766",
+        "candidate": "3FE628426EE83766"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 748,
+        "candidate": 641
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFFA0000000000",
+      "SIO": "READY",
+      "expected": "3FE628426EE83767",
+      "outputs": {
+        "Qfplib": "3FE628426EE83767",
+        "parent": "3FE628426EE83767",
+        "candidate": "3FE628426EE83767"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 514,
+        "candidate": 514
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFFA0000000000",
+      "SIO": "DIRTY",
+      "expected": "3FE628426EE83767",
+      "outputs": {
+        "Qfplib": "3FE628426EE83767",
+        "parent": "3FE628426EE83767",
+        "candidate": "3FE628426EE83767"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 574,
+        "candidate": 480
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFFA0000000001",
+      "SIO": "READY",
+      "expected": "3FE628426EE83768",
+      "outputs": {
+        "Qfplib": "3FE628426EE83768",
+        "parent": "3FE628426EE83768",
+        "candidate": "3FE628426EE83768"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 514,
+        "candidate": 514
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFFA0000000001",
+      "SIO": "DIRTY",
+      "expected": "3FE628426EE83768",
+      "outputs": {
+        "Qfplib": "3FE628426EE83768",
+        "parent": "3FE628426EE83768",
+        "candidate": "3FE628426EE83768"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 745,
+        "candidate": 638
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFFDFFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "3FE62C42EEF98F3C",
+      "outputs": {
+        "Qfplib": "3FE62C42EEF98F3C",
+        "parent": "3FE62C42EEF98F3C",
+        "candidate": "3FE62C42EEF98F3C"
+      },
+      "instructions": {
+        "Qfplib": 693,
+        "parent": 517,
+        "candidate": 517
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFFDFFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "3FE62C42EEF98F3C",
+      "outputs": {
+        "Qfplib": "3FE62C42EEF98F3C",
+        "parent": "3FE62C42EEF98F3C",
+        "candidate": "3FE62C42EEF98F3C"
+      },
+      "instructions": {
+        "Qfplib": 693,
+        "parent": 744,
+        "candidate": 641
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFFE0000000000",
+      "SIO": "READY",
+      "expected": "3FE62C42EEF98F3D",
+      "outputs": {
+        "Qfplib": "3FE62C42EEF98F3D",
+        "parent": "3FE62C42EEF98F3D",
+        "candidate": "3FE62C42EEF98F3D"
+      },
+      "instructions": {
+        "Qfplib": 693,
+        "parent": 514,
+        "candidate": 514
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFFE0000000000",
+      "SIO": "DIRTY",
+      "expected": "3FE62C42EEF98F3D",
+      "outputs": {
+        "Qfplib": "3FE62C42EEF98F3D",
+        "parent": "3FE62C42EEF98F3D",
+        "candidate": "3FE62C42EEF98F3D"
+      },
+      "instructions": {
+        "Qfplib": 693,
+        "parent": 574,
+        "candidate": 480
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFFE0000000001",
+      "SIO": "READY",
+      "expected": "3FE62C42EEF98F3E",
+      "outputs": {
+        "Qfplib": "3FE62C42EEF98F3E",
+        "parent": "3FE62C42EEF98F3E",
+        "candidate": "3FE62C42EEF98F3E"
+      },
+      "instructions": {
+        "Qfplib": 693,
+        "parent": 514,
+        "candidate": 514
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "3FFFFE0000000001",
+      "SIO": "DIRTY",
+      "expected": "3FE62C42EEF98F3E",
+      "outputs": {
+        "Qfplib": "3FE62C42EEF98F3E",
+        "parent": "3FE62C42EEF98F3E",
+        "candidate": "3FE62C42EEF98F3E"
+      },
+      "instructions": {
+        "Qfplib": 693,
+        "parent": 741,
+        "candidate": 638
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "4000000000000000",
+      "SIO": "READY",
+      "expected": "3FE62E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "3FE62E42FEFA39EF",
+        "parent": "3FE62E42FEFA39EF",
+        "candidate": "3FE62E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 598,
+        "candidate": 598
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "4000000000000000",
+      "SIO": "DIRTY",
+      "expected": "3FE62E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "3FE62E42FEFA39EF",
+        "parent": "3FE62E42FEFA39EF",
+        "candidate": "3FE62E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 1250,
+        "candidate": 612
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "4010000000000000",
+      "SIO": "READY",
+      "expected": "3FF62E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "3FF62E42FEFA39EF",
+        "parent": "3FF62E42FEFA39EF",
+        "candidate": "3FF62E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 707,
+        "parent": 596,
+        "candidate": 596
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "4010000000000000",
+      "SIO": "DIRTY",
+      "expected": "3FF62E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "3FF62E42FEFA39EF",
+        "parent": "3FF62E42FEFA39EF",
+        "candidate": "3FF62E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 707,
+        "parent": 1248,
+        "candidate": 610
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "SIO": "READY",
+      "expected": "40862E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "40862E42FEFA39EF",
+        "parent": "40862E42FEFA39EF",
+        "candidate": "40862E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 725,
+        "parent": 587,
+        "candidate": 587
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": false
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "SIO": "DIRTY",
+      "expected": "40862E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "40862E42FEFA39EF",
+        "parent": "40862E42FEFA39EF",
+        "candidate": "40862E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 725,
+        "parent": 1166,
+        "candidate": 618
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": false
+    },
+    {
+      "x": "7FF0000000000000",
+      "SIO": "READY",
+      "expected": "7FF0000000000000",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF0000000000000",
+        "candidate": "7FF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 59,
+        "candidate": 59
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "7FF0000000000000",
+      "SIO": "DIRTY",
+      "expected": "7FF0000000000000",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF0000000000000",
+        "candidate": "7FF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 59,
+        "candidate": 59
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "7FF0000000000001",
+      "SIO": "READY",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF8000000000001",
+        "candidate": "7FF8000000000001"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 60,
+        "candidate": 60
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "7FF0000000000001",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF8000000000001",
+        "candidate": "7FF8000000000001"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 60,
+        "candidate": 60
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "7FF8000000001234",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF8000000001234",
+        "candidate": "7FF8000000001234"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 57,
+        "candidate": 57
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": false
+    },
+    {
+      "x": "7FF8000000001234",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "7FF0000000000000",
+        "parent": "7FF8000000001234",
+        "candidate": "7FF8000000001234"
+      },
+      "instructions": {
+        "Qfplib": 10,
+        "parent": 57,
+        "candidate": 57
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": false
+    },
+    {
+      "x": "8000000000000000",
+      "SIO": "READY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "candidate": "FFF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 53,
+        "candidate": 53
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "8000000000000000",
+      "SIO": "DIRTY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "candidate": "FFF0000000000000"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 53,
+        "candidate": 53
+      },
+      "correct": {
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "C000000000000000",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "7FF8000000000000",
+        "candidate": "7FF8000000000000"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 60,
+        "candidate": 60
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": false
+    },
+    {
+      "x": "C000000000000000",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "7FF8000000000000",
+        "candidate": "7FF8000000000000"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 60,
+        "candidate": 60
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": false
+    },
+    {
+      "x": "FFF0000000000000",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "7FF8000000000000",
+        "candidate": "7FF8000000000000"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 62,
+        "candidate": 62
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "FFF0000000000000",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "7FF8000000000000",
+        "candidate": "7FF8000000000000"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 62,
+        "candidate": 62
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": true
+    },
+    {
+      "x": "FFF8000000004321",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF8000000004321",
+        "candidate": "FFF8000000004321"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 57,
+        "candidate": 57
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": false
+    },
+    {
+      "x": "FFF8000000004321",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "Qfplib": "FFF0000000000000",
+        "parent": "FFF8000000004321",
+        "candidate": "FFF8000000004321"
+      },
+      "instructions": {
+        "Qfplib": 6,
+        "parent": 57,
+        "candidate": 57
+      },
+      "correct": {
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      },
+      "existing_record_matched": false
+    }
+  ],
+  "MPFR_version": "4.2.2",
+  "full_raw_parent_candidate_NaN_policy_equal": true,
+  "candidate_stack_bytes_observed": 488,
+  "parent_stack_bytes_observed": 488,
+  "ABI_SP_return_bounded_writes_checked_every_call": true,
+  "DIRTY_all28_caller_SIO_bytes_preserved_every_call": true,
+  "READY_no_DIRTY_bit_left": true,
+  "ln2_DIRTY": {
+    "x": "4000000000000000",
+    "SIO": "DIRTY",
+    "expected": "3FE62E42FEFA39EF",
+    "outputs": {
+      "Qfplib": "3FE62E42FEFA39EF",
+      "parent": "3FE62E42FEFA39EF",
+      "candidate": "3FE62E42FEFA39EF"
+    },
+    "instructions": {
+      "Qfplib": 711,
+      "parent": 1250,
+      "candidate": 612
+    },
+    "correct": {
+      "Qfplib": true,
+      "parent": true,
+      "candidate": true
+    },
+    "existing_record_matched": true
+  },
+  "author_corpus_not_repeated": true,
+  "hardware_accessed": false,
+  "ROM_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "resident_ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "Qfplib_ELF_sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26"
+}

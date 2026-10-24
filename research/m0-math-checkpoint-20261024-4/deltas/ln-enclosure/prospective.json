@@ -1,0 +1,25 @@
+{
+  "status": "PROSPECTIVE_EXACT_LN_ENCLOSURES_NOT_IMPLEMENTED",
+  "old_main_bound": "12143881388354481213264281/906251642853202851790848",
+  "old_main_bound_float": 13.400120688467078,
+  "RP_exact_quotient_main_bound": "7157007042211914738946457/906251642853202851790848",
+  "RP_exact_quotient_main_bound_float": 7.897372764676165,
+  "near_bound": "23355077934092334177353737597195802241452043499/6337856860328575685795548307128320000000000000",
+  "near_bound_float": 3.6850118973626564,
+  "proposed_strict_radii": {
+    "main": 8,
+    "near": 4
+  },
+  "proposed_closed_integer_guards": {
+    "main": 7,
+    "near": 3
+  },
+  "basis": "Existing pure propagation, changing only residual error6.500061 to1 for RP exact floor+1.",
+  "radius_equality_safe": "Integer midpoint distance>=radius is safe because each actual error is strictly below radius.",
+  "normal_exponent_error": "Add ceil(abs(k)/2), as before.",
+  "subnormal_exponent_error": "Add ceil(n/2), n1023..1074, as before.",
+  "generic_M0_unchanged_required": true,
+  "no_runtime_changed": true,
+  "certificate_function_source_sha256": "63d1b9cbad5222bb4dab5f3b0634ec417838445f3f0d87d56a1fe454b5b46a17",
+  "certificate_file_sha256": "cf5dab34212c1662b57614a65717586a280463a1c4cedd79fe0a1a169cecee65"
+}

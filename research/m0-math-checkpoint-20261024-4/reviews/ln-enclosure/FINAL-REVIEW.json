@@ -1,0 +1,183 @@
+{
+  "status": "COMPONENT_CODE_GO_STRICT_RP_LN_ENCLOSURES_AND_N128_DISPATCH_ONLY",
+  "material_findings": [],
+  "scope": "Private child of accepted exact busy quotient. Only RP main/near error radii, integer strict-radius guard and negative n128 half-cell dispatch. No whole-ln/library or canonical/math shipping/HW GO; later directional study excluded.",
+  "identity": {
+    "HANDOFF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-20261024/HANDOFF.md",
+      "sha256": "75158b4a34feb2c2929c3f805c81b40938ec3079b8cf055db2360025200ed344"
+    },
+    "author_result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-20261024/result.json",
+      "sha256": "9c40ecbe12d871cff65e65cf40672c0b9325314ec0828c797f7d19913a89ad02"
+    },
+    "postseal": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-postseal-20261024.json",
+      "sha256": "b4abfb989b1c58556f68b2431371a1c196f0b9a1da79014ced8c50c39b888285"
+    },
+    "main_source": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-20261024/native_eabi_m0_log70.inc",
+      "sha256": "44d1d70cd02a52e8ba4de34dd5168e23806b3df59f0a93d814a1fe061158aa76"
+    },
+    "subnormal_source": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-20261024/native_eabi_m0_log_subnormal.inc",
+      "sha256": "1b86940454b8ca9c733e3d8e59f72d67b499ac3c59cbb61dd6d231d4c92bc13f"
+    },
+    "own_full_CPP_object": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/candidate-full.o",
+      "sha256": "0ebe4066bb2a1d0ba0dd6e856739e962927355120453075df56983de2f2f0906"
+    },
+    "own_ratio_object": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/candidate-ratio.o",
+      "sha256": "c80865dd3f89454cd4790770059a806133b87f39f1ac5090c12f10e308584fea"
+    },
+    "own_entire_ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/candidate.elf",
+      "sha256": "36d1662268eaa35b5bd688fb7c2ff16958c1bc46dd92166dab5722e96b6f62f6"
+    },
+    "author_files_verified": 50,
+    "input_pins_verified": 550
+  },
+  "inherited_parent": {
+    "receipt": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-independent-20261024/FINAL-REVIEW.json",
+      "sha256": "45d06d0b57246951d97059355a53bc7c6543bdf2afd989686b70845ccca74f6b"
+    },
+    "exact_quotient_helper_unchanged_addresses_and_bytes": true,
+    "inherited_bare_ARM_calls": 155608,
+    "fresh_bare_helper_calls_claimed": 0
+  },
+  "mathematics": {
+    "main_bound": "7157007042211914738946457/906251642853202851790848",
+    "main_bound_float": 7.897372764676165,
+    "near_bound": "23355077934092334177353737597195802241452043499/6337856860328575685795548307128320000000000000",
+    "near_bound_float": 3.6850118973626564,
+    "strict_radii": {
+      "main": 8,
+      "near": 4
+    },
+    "reason": "Accepted RP floor(delta*2^29/den)+1 has residual error in(0,1]. Propagating that absolute bound through the unchanged square/cube/third/fourth/fifth/Taylor and table errors yields main<8; existing near bound<4. Exact ln2 rounding error<1/2 was rechecked and ceil(abs(k)/2), ceil(n/2) retained.",
+    "RNE_guard": "All affected radii positive; guard=radius-1 rejects exactly integer midpoint distance<radius, including midpoint0. Source rounding unchanged. Fraction endpoint RNE controls include both signs, parity, carries and reachable lower dyadic edges.",
+    "dyadic_edge_closure": "Near half4 is only reachable far above its lower2^-15 binade edge; all later near lower-half gaps>=4>3.685. Main |k|<=1 half>=1024 and radius<=9; |k|>=2 half>=65536 and radius<=520. Subnormal magnitude strictly512..1024, half2^26, radius<=545.",
+    "packing_shifts": "3..27, positive radii, no zero or overwidth shift",
+    "subnormal_domain": "Positive input N*2^-1074 with0<N<2^52; N\u2192double exact, n1074-floor(log2N) in1023..1074. Final magnitude strictly512..1024 and error<8+ceil(n/2). Negative/special IEEE dispatch unchanged.",
+    "n128": "n=floor(((1-x)*2^62+2^48)/2^49). x=16129/16384 is exactly n128 and uses the existing general kernel. Its next binary64 is n127 and uses the near kernel. Existing defensive n128 refine check remains.",
+    "guard_checks": 308,
+    "signed_Fraction_RNE_endpoint_checks": 342,
+    "selected_unchanged_table_rows_checked": [
+      0,
+      127,
+      255
+    ]
+  },
+  "source_binding": {
+    "two_header_delta_reconstructs_parent": true,
+    "own_CPP_ASM_and_entire_ELF_byteexact_without_exclusions": true,
+    "allocated_object_linked_code_data_size_delta": 0,
+    "textual_source_changed": true,
+    "ratio_ASM_and_primitive_closure_unchanged": true,
+    "log10_special_actual_shared_section_body_byteexact": true,
+    "other_allocated_bodies_tables_RAM_deps_unchanged": true,
+    "generic_M0_control_equal": true,
+    "M4_controls": "M0 TU disabled/empty; unchanged RP guard and controls, no whole-M4 image build"
+  },
+  "own_execution": {
+    "unique_public_inputs": 138,
+    "state_rows": 276,
+    "actual_ARM_calls": 828,
+    "MPFR_version": "4.2.2",
+    "candidate_wrong": 0,
+    "raw_parent_candidate_NaN_policy_equal": true,
+    "actual_n128_parent_refine_child_general_and_next_float_near_trace": true,
+    "PCS_SP_return_bounded_writes_every_call": true,
+    "DIRTY_all28_SIO_bytes_preserved": true,
+    "READY_no_DIRTY_left": true,
+    "own_candidate_stack_bytes": 488,
+    "own_parent_stack_bytes": 488,
+    "larger_author_corpus_stack_bytes": 568,
+    "stack_scope": "Own subset reaches488; expanded author parent/candidate maximum568 inherited honestly, not remeasured by subset."
+  },
+  "performance_accounting": {
+    "author_states": 39318,
+    "author_fresh_public_ARM_calls": 157272,
+    "retained_parent_counts_checked": 29814,
+    "groups": [
+      {
+        "SIO": "READY",
+        "vs_parent": {
+          "faster": 9332,
+          "equal": 831,
+          "slower": 9496
+        },
+        "parent_correct_Qfp_losses": 136,
+        "child_correct_Qfp_losses": 31,
+        "fixed": 105,
+        "Qfplib_wrong": 2531
+      },
+      {
+        "SIO": "DIRTY",
+        "vs_parent": {
+          "faster": 9332,
+          "equal": 831,
+          "slower": 9496
+        },
+        "parent_correct_Qfp_losses": 139,
+        "child_correct_Qfp_losses": 34,
+        "fixed": 105,
+        "Qfplib_wrong": 2531
+      }
+    ],
+    "expanded_correct_Qfp_raw_losses_fixed": 105,
+    "prior27_raw_losses_fixed": 14,
+    "historical_ln10_fixed": 5,
+    "historical_ln10_remaining": 5,
+    "remaining_raw_inputs": 34,
+    "remaining_state_rows": 65,
+    "new_correct_Qfp_deficits": 0,
+    "versus_parent": {
+      "faster": 18664,
+      "equal": 1662,
+      "slower_plus_one": 18992
+    },
+    "all_losses_incorrect_Qfp_rows_and_regressions_retained": true,
+    "instructions_not_physical_cycles": true,
+    "not_exhaustive_binary64_performance": true
+  },
+  "proofs": {
+    "STRICT-BOUND-AND-GUARD.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/STRICT-BOUND-AND-GUARD.json",
+      "sha256": "f289e51b955d6fbcc75c91f0275ebe31577fd874370aa84670db796ae8c99e35"
+    },
+    "SOURCE-OBJECT-PROOF.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/SOURCE-OBJECT-PROOF.json",
+      "sha256": "88230cbc85ec54458377fcf0c35d412374da3dfbfe66c39a4477e20753b7db0d"
+    },
+    "SELECTED-PUBLIC-ARM.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/SELECTED-PUBLIC-ARM.json",
+      "sha256": "9a29aa8a1fb3d2e92cef6b1b034797b4742c6e677d4b0ef835e2d23a8b088ccf"
+    },
+    "AUTHOR-ACCOUNTING.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/AUTHOR-ACCOUNTING.json",
+      "sha256": "0869cf20843c0956b434bcfe6e89a9680094a9fee27c01b55fdcec66c6266652"
+    }
+  },
+  "reproducers": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/static-review.py",
+      "sha256": "13d770acb59c5569962373d63182cfba98bd7f46f070030394b4ecb6e6d0e666"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-enclosure-independent-20261024/arm-review.py",
+      "sha256": "f52818a69e8e2b580a4693a7c8e641b5af8890f870488712e1b0529f86256bf1"
+    }
+  ],
+  "invariants": {
+    "hardware_USB_Flash_lease_access": false,
+    "Git_canonical_math_changed": false,
+    "frozen_packets_mutated": false,
+    "whole_author_corpus_repeated": false,
+    "new_framework_or_polynomial_implemented": false,
+    "physical_cycles_measured": false,
+    "whole_math_goal_complete": false
+  }
+}

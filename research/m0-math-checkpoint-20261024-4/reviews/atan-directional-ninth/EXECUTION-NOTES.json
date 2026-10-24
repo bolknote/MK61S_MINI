@@ -1,0 +1,32 @@
+{
+  "host_only_emulator_escalation": "Accepted by automatic review; no hardware commands.",
+  "first_attempt": {
+    "tool_chunk": "12276d",
+    "exit_code": 1,
+    "failure": "Own synthetic pack fixture coverage assertion: missing changed gate witness (inverse).",
+    "cause": "Own inverted synthetic fixture used H aligned64, giving N=H/64 not divisible64. Actual inverted source domain requires both N,D divisible64.",
+    "resolution": "Changed only independent synthetic fixture alignment to4096 for inverted geometry. Frozen producer source/artifacts unchanged.",
+    "mathematical_or_device_failure": false,
+    "earlier_helper_assertions_passed_before_coverage_assertion": true,
+    "first_public_ARM_call_had_occurred": false,
+    "actual_completed_bare_calls_before_coverage_failure": 308
+  },
+  "public_or_helper_large_author_corpus_replayed": false,
+  "USB_Flash_lease_Git_access": false,
+  "successful_runs": [
+    {
+      "tool_chunk": "886ee7",
+      "helper_ARM_calls": 420,
+      "public_ARM_calls": 536,
+      "unique_public_inputs": 67
+    },
+    {
+      "tool_chunk": "4b16d7",
+      "public_ARM_calls": 32,
+      "unique_public_inputs": 4,
+      "reason": "Complete actual inverted helper geometry coverage; no replay of successful prior cases."
+    }
+  ],
+  "qualified_successful_ARM_calls": 988,
+  "all_actual_ARM_calls_including_retained_own_fixture_failure": 1296
+}

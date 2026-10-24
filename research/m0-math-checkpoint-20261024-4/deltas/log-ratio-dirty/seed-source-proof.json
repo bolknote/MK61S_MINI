@@ -1,0 +1,18 @@
+{
+  "status": "PASS_SEED_CAPSULE_BYTE_EXACT_FROM_PINNED_ASSEMBLY_SOURCE",
+  "code_bytes": 184,
+  "code_sha256": "75729579767fb4b3269141b6c62b1ae4fad49ed8817158b0e7d4bedcc717ecc8",
+  "source_sha256": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b",
+  "extracted_macro_sha256": "5d217e4be55ed9010081dcd3f6b41465c40629a9954180e7e7878582625e6dee",
+  "command": [
+    "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+    "-mcpu=cortex-m0plus",
+    "-mthumb",
+    "-mfloat-abi=soft",
+    "-c",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-20261024/seed-kernel.S",
+    "-o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-20261024/seed-kernel.o"
+  ],
+  "hardware_accessed": false
+}

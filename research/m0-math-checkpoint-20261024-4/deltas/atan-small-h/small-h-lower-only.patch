@@ -1,0 +1,15 @@
+--- parent/native_eabi_m0_atan_fast.inc
++++ candidate/native_eabi_m0_atan_fast.inc
+@@ -142,6 +142,12 @@
+           bool safe=repaired_distance>=repaired_radius;
+           if(!safe && bool(tail<half)==reverse)
+             safe=int32_t(5*repaired_distance)+r5>=(normal?11:14);
++          // For h<1/512 the old polynomial's lower error is below
++          // 1.900690+r5/5-r3/3 Q70 (2.400690 in the wider geometry).
++          if(!safe && h<(U(1)<<61) && bool(tail<half)!=reverse) {
++            const int32_t r3_shifted=int32_t(poly_meta>>4);
++            safe=int32_t(15*repaired_distance)+5*r3_shifted-3*r5>=(normal?34:42);
++          }
+           if(!safe) {
+             const AtanTailCorrection ninth=atan_fast_ninth(h,r5);
+             int32_t extra=ninth.delta;

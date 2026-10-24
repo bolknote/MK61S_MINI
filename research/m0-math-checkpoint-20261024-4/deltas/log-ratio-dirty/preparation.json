@@ -1,0 +1,6 @@
+{
+  "status": "PRIVATE_EXACT_DIRTY_LOG_RATIO_PROTOTYPE",
+  "source_sha256": "9480f6ffa1abc80b502f35499b4d8b2fd1fdd42b3de0408af2feaadcd7be6d74",
+  "no_new_tables": true,
+  "no_canonical_or_device_changed": true
+}

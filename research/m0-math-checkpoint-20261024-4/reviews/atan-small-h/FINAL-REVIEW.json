@@ -1,0 +1,535 @@
+{
+  "status": "COMPONENT_CODE_GO_SMALL_H_LOWER_GATE",
+  "blockers": [],
+  "scope": "Only the private +60B one-sided small-h atan gate, relative to accepted directional/ninth component. No new polynomial/helper or whole atan/library/integration/hardware promotion.",
+  "parent_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-directional-ninth-independent-20261024/FINAL-REVIEW.json",
+    "sha256": "67bc49a1d7c2bc717bce9dfd9f046d3fca1f2c49e84561752984482eb7c7b985",
+    "geometry_selector_reciprocal_polynomial_metadata_tables_fallback_proofs_reused": true
+  },
+  "frozen_target": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-tight-ninth-20261024",
+    "HANDOFF_sha256": "bfb2a8aa2db8d23b5a4f543ff9f5ac954f0cb0895cefcd41fa8077f4ee3be982",
+    "result_sha256": "9af6b56537f17bfb9937182ef55ea1e6a3a361670d99db895049b95003def35e",
+    "source_sha256": "a85bbc49f2366ae64d025b36dfd27e86abf63c118e447cd43cedd060cdf87e2e",
+    "full_object_sha256": "7fe226827039b3f6c63b58ad63b9940621924e07ec02a12e19ef9298b8ef9a55",
+    "ELF_sha256": "fce98d75c6a88d57282b74798371c9c990029193741c4a986483a273321a50c9",
+    "pins_before_after": {
+      "author_files": 54,
+      "input_files": 103,
+      "accepted_parent_exact": true
+    }
+  },
+  "source_binding": {
+    "whole_declared_patch_reconstructs_candidate": true,
+    "own_full_object_byteexact": true,
+    "own_entire_relinked_ELF_byteexact_without_exclusions": true,
+    "public_executes_own_relinked_ELF": true,
+    "changed_sections": {
+      ".text.atan_fast": [
+        2040,
+        2100
+      ]
+    },
+    "code_delta_bytes": 60,
+    "tables_bytes": 780,
+    "all_other_allocated_sections_RAM_dependencies_byteexact": true,
+    "generic_M0_M4_allocated_controls": [
+      {
+        "context": "generic_M0",
+        "allocated_bytes": 247584,
+        "exact": true
+      },
+      {
+        "context": "M4_soft",
+        "allocated_bytes": 0,
+        "exact": true
+      },
+      {
+        "context": "M4_hard",
+        "allocated_bytes": 0,
+        "exact": true
+      }
+    ],
+    "resident_binding_count": 38,
+    "resident_bindings_pinned_outside_overlay": true,
+    "pack_wrapper_exact_source_but_distinct_allocation": true,
+    "actual_instructions_gate_domain_and_threshold_hooked": true
+  },
+  "mathematical_review": {
+    "small_h_strict_limit": "h<2^61, with Q70 scale gives h/S<1/512",
+    "lower_base_normal": "11469145323708957071829187909546331944304056321183438397/6034201192159437379785991419404342410498785293597933568",
+    "lower_base_wide": "14486245919788675761722183619248503149553448967982405181/6034201192159437379785991419404342410498785293597933568",
+    "lower_base_floats": [
+      1.9006899104742208,
+      2.4006899104742208
+    ],
+    "exact_error_direction": "P7-atan > -B+r3/3-r5/5. GeometryNegative XOR invert flips sign; new gate uses the opposite side to inherited upper enclosure and recomputes side after residual correction.",
+    "metadata_remainders": "r3[-1,1],r5[-4,9]; r3+1 in upper bits, r5+4 in low4 without overlap.",
+    "encoded_thresholds": [
+      34,
+      42
+    ],
+    "equivalent_unshifted_thresholds": [
+      29,
+      37
+    ],
+    "ratio_correction_strict_bound": "524323/1048576",
+    "alternating_ninth_tail_bound": "1/18432",
+    "derivative_proof": "For |t|<=c+33/S<1, |(t-t^3/3+t^5/5-t^7/7)prime-1|=t^2*(1-t^2+t^4)<=t^2; residual displacement<33 contributes at most33*(c+33/S)^2.",
+    "finite_RNE_endpoint_checks": 10480,
+    "exact_midpoint_declines": true,
+    "int32_arithmetic_and_retained_quantum_binade_safe": true
+  },
+  "own_execution": {
+    "actual_ARM_calls": 428,
+    "bare_pack_ARM_calls": 84,
+    "public_ARM_calls": 344,
+    "public_unique_inputs": 43,
+    "public_READY_DIRTY_states": 86,
+    "MPFR_version": "4.2.2",
+    "oracles": "Inherited independent Fraction Taylor/Machin outward intervals + own fresh directed MPFR for selected finite inputs; unchanged raw NaN policy checked separately.",
+    "pack_h_boundaries": [
+      "2^61-4096",
+      "2^61",
+      "2^61+4096"
+    ],
+    "pack_stages": {
+      "small-h-lower": 12,
+      "fallback": 36,
+      "directional": 36
+    },
+    "actual_new_gate_instruction_witnesses": [
+      {
+        "raw": "3fef1bcdcf0d1830",
+        "SIO": "READY",
+        "h": "0x1ca3476d9ca98387",
+        "distance": 2,
+        "r3_shifted": 2,
+        "r5": 0,
+        "threshold": 34,
+        "lhs": 40,
+        "accepted": true
+      },
+      {
+        "raw": "3fef1bcdcf0d1830",
+        "SIO": "DIRTY",
+        "h": "0x1ca3476d9ca98387",
+        "distance": 2,
+        "r3_shifted": 2,
+        "r5": 0,
+        "threshold": 34,
+        "lhs": 40,
+        "accepted": true
+      },
+      {
+        "raw": "bfef1bcdcf0d1830",
+        "SIO": "READY",
+        "h": "0x1ca3476d9ca98387",
+        "distance": 2,
+        "r3_shifted": 2,
+        "r5": 0,
+        "threshold": 34,
+        "lhs": 40,
+        "accepted": true
+      },
+      {
+        "raw": "bfef1bcdcf0d1830",
+        "SIO": "DIRTY",
+        "h": "0x1ca3476d9ca98387",
+        "distance": 2,
+        "r3_shifted": 2,
+        "r5": 0,
+        "threshold": 34,
+        "lhs": 40,
+        "accepted": true
+      }
+    ],
+    "selected_author_cost_output_controls": 78,
+    "PCS_R4_R11_SP_bounded_stack_every_call": true,
+    "SIO_DIRTY_exact_READY_clean": true,
+    "bare_no_MMIO_or_ROM_or_firmware": true,
+    "public_actual_pinned_resident_helpers_and_BootROM": true,
+    "stack_max": {
+      "V164": 880,
+      "Qfplib": 76,
+      "parent": 912,
+      "candidate": 912
+    },
+    "full_author_corpus_replayed": false
+  },
+  "fixed_two_actual": [
+    {
+      "input": "3fef1bcdcf0d1830",
+      "group": "fixed2-or-small-tradeoff-neighbors",
+      "SIO": "READY",
+      "expected": "3fe8ae47a21a1998",
+      "outputs": {
+        "V164": "3fe8ae47a21a1998",
+        "Qfplib": "3fe8ae47a21a1998",
+        "parent": "3fe8ae47a21a1998",
+        "candidate": "3fe8ae47a21a1998"
+      },
+      "instructions": {
+        "V164": 20785,
+        "Qfplib": 1787,
+        "parent": 21048,
+        "candidate": 1609
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 912,
+        "candidate": 384
+      },
+      "repair_entries": 1,
+      "new_gate_entries": 1,
+      "CORE_entries": 0
+    },
+    {
+      "input": "3fef1bcdcf0d1830",
+      "group": "fixed2-or-small-tradeoff-neighbors",
+      "SIO": "DIRTY",
+      "expected": "3fe8ae47a21a1998",
+      "outputs": {
+        "V164": "3fe8ae47a21a1998",
+        "Qfplib": "3fe8ae47a21a1998",
+        "parent": "3fe8ae47a21a1998",
+        "candidate": "3fe8ae47a21a1998"
+      },
+      "instructions": {
+        "V164": 22501,
+        "Qfplib": 1787,
+        "parent": 22764,
+        "candidate": 1787
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 912,
+        "candidate": 384
+      },
+      "repair_entries": 1,
+      "new_gate_entries": 1,
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfef1bcdcf0d1830",
+      "group": "fixed2-or-small-tradeoff-neighbors",
+      "SIO": "READY",
+      "expected": "bfe8ae47a21a1998",
+      "outputs": {
+        "V164": "bfe8ae47a21a1998",
+        "Qfplib": "bfe8ae47a21a1998",
+        "parent": "bfe8ae47a21a1998",
+        "candidate": "bfe8ae47a21a1998"
+      },
+      "instructions": {
+        "V164": 20784,
+        "Qfplib": 1787,
+        "parent": 21047,
+        "candidate": 1609
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 912,
+        "candidate": 384
+      },
+      "repair_entries": 1,
+      "new_gate_entries": 1,
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfef1bcdcf0d1830",
+      "group": "fixed2-or-small-tradeoff-neighbors",
+      "SIO": "DIRTY",
+      "expected": "bfe8ae47a21a1998",
+      "outputs": {
+        "V164": "bfe8ae47a21a1998",
+        "Qfplib": "bfe8ae47a21a1998",
+        "parent": "bfe8ae47a21a1998",
+        "candidate": "bfe8ae47a21a1998"
+      },
+      "instructions": {
+        "V164": 22500,
+        "Qfplib": 1787,
+        "parent": 22763,
+        "candidate": 1787
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 912,
+        "candidate": 384
+      },
+      "repair_entries": 1,
+      "new_gate_entries": 1,
+      "CORE_entries": 0
+    }
+  ],
+  "retained_tradeoff_actual": [
+    {
+      "input": "bfabb0edc0ae5c6f",
+      "group": "fixed2-or-small-tradeoff-neighbors",
+      "SIO": "READY",
+      "expected": "bfabaa0764572d03",
+      "outputs": {
+        "V164": "bfabaa0764572d03",
+        "Qfplib": "bfabaa0764572d03",
+        "parent": "bfabaa0764572d03",
+        "candidate": "bfabaa0764572d03"
+      },
+      "instructions": {
+        "V164": 20419,
+        "Qfplib": 1804,
+        "parent": 1603,
+        "candidate": 1610
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 384,
+        "candidate": 384
+      },
+      "repair_entries": 1,
+      "new_gate_entries": 0,
+      "CORE_entries": 0
+    },
+    {
+      "input": "bfabb0edc0ae5c6f",
+      "group": "fixed2-or-small-tradeoff-neighbors",
+      "SIO": "DIRTY",
+      "expected": "bfabaa0764572d03",
+      "outputs": {
+        "V164": "bfabaa0764572d03",
+        "Qfplib": "bfabaa0764572d03",
+        "parent": "bfabaa0764572d03",
+        "candidate": "bfabaa0764572d03"
+      },
+      "instructions": {
+        "V164": 22193,
+        "Qfplib": 1804,
+        "parent": 1797,
+        "candidate": 1804
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 384,
+        "candidate": 384
+      },
+      "repair_entries": 1,
+      "new_gate_entries": 0,
+      "CORE_entries": 0
+    }
+  ],
+  "retained_fallback_actual": [
+    {
+      "input": "3f99c24957c90e1f",
+      "group": "retained-fallback-and-specials",
+      "SIO": "READY",
+      "expected": "3f99c0e56701c7ab",
+      "outputs": {
+        "V164": "3f99c0e56701c7ab",
+        "Qfplib": "3f99c0e56701c7aa",
+        "parent": "3f99c0e56701c7ab",
+        "candidate": "3f99c0e56701c7ab"
+      },
+      "instructions": {
+        "V164": 20375,
+        "Qfplib": 1805,
+        "parent": 20612,
+        "candidate": 20618
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 912,
+        "candidate": 912
+      },
+      "repair_entries": 1,
+      "new_gate_entries": 0,
+      "CORE_entries": 1
+    },
+    {
+      "input": "3f99c24957c90e1f",
+      "group": "retained-fallback-and-specials",
+      "SIO": "DIRTY",
+      "expected": "3f99c0e56701c7ab",
+      "outputs": {
+        "V164": "3f99c0e56701c7ab",
+        "Qfplib": "3f99c0e56701c7aa",
+        "parent": "3f99c0e56701c7ab",
+        "candidate": "3f99c0e56701c7ab"
+      },
+      "instructions": {
+        "V164": 22076,
+        "Qfplib": 1805,
+        "parent": 22313,
+        "candidate": 22319
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 912,
+        "candidate": 912
+      },
+      "repair_entries": 1,
+      "new_gate_entries": 0,
+      "CORE_entries": 1
+    },
+    {
+      "input": "bf99c24957c90e1f",
+      "group": "retained-fallback-and-specials",
+      "SIO": "READY",
+      "expected": "bf99c0e56701c7ab",
+      "outputs": {
+        "V164": "bf99c0e56701c7ab",
+        "Qfplib": "bf99c0e56701c7aa",
+        "parent": "bf99c0e56701c7ab",
+        "candidate": "bf99c0e56701c7ab"
+      },
+      "instructions": {
+        "V164": 20398,
+        "Qfplib": 1808,
+        "parent": 20635,
+        "candidate": 20641
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 912,
+        "candidate": 912
+      },
+      "repair_entries": 1,
+      "new_gate_entries": 0,
+      "CORE_entries": 1
+    },
+    {
+      "input": "bf99c24957c90e1f",
+      "group": "retained-fallback-and-specials",
+      "SIO": "DIRTY",
+      "expected": "bf99c0e56701c7ab",
+      "outputs": {
+        "V164": "bf99c0e56701c7ab",
+        "Qfplib": "bf99c0e56701c7aa",
+        "parent": "bf99c0e56701c7ab",
+        "candidate": "bf99c0e56701c7ab"
+      },
+      "instructions": {
+        "V164": 22099,
+        "Qfplib": 1808,
+        "parent": 22336,
+        "candidate": 22342
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 912,
+        "candidate": 912
+      },
+      "repair_entries": 1,
+      "new_gate_entries": 0,
+      "CORE_entries": 1
+    }
+  ],
+  "sealed_author_accounting_not_own_full_reexecution": {
+    "unique_inputs": 58188,
+    "states": 116376,
+    "correct_Qfplib_states": 107542,
+    "wrong_Qfplib_state_outcomes": 8834,
+    "vs_correct_Qfplib": {
+      "faster": 107539,
+      "equal": 3
+    },
+    "vs_parent": {
+      "slower": 132,
+      "faster": 111678,
+      "equal": 4566
+    },
+    "vs_V164": {
+      "faster": 111868,
+      "equal": 4504,
+      "slower": 4
+    },
+    "parent_regression_rows_retained": 132,
+    "parent_delta_range": [
+      1,
+      7
+    ],
+    "V164_regression_rows_retained": 4,
+    "V164_regression_Qfplib_incorrect": true,
+    "equals_correct_Qfplib": [
+      {
+        "input": "BFABB0EDC0AE5C6F",
+        "SIO": "DIRTY",
+        "instructions": 1804
+      },
+      {
+        "input": "3FEF1BCDCF0D1830",
+        "SIO": "DIRTY",
+        "instructions": 1787
+      },
+      {
+        "input": "BFEF1BCDCF0D1830",
+        "SIO": "DIRTY",
+        "instructions": 1787
+      }
+    ],
+    "qualification_sha256": "25d73a7b663ff7b95fc189ee095957060daaecff6e597f552ad5e89e7adb43e3",
+    "regressions_sha256": "67c053955cc76034461b4654a5cd73810469394dac8f17c2f97d0c532725dc44",
+    "all_NaNs_follow_inherited_raw_sign_payload_policy": true,
+    "canonical_MPFR_NaN_different_state_rows": 8,
+    "full_public_corpus_replayed": false,
+    "author_MPFR_calls_not_independently_all_repeated": true
+  },
+  "performance_limits": {
+    "instruction_counts_not_physical_cycles": true,
+    "code_plus_bytes": 60,
+    "stack_max_unchanged_912": true,
+    "zero_slower_than_correct_Qfplib_only_on_measured_author_corpus": true,
+    "author_full_public_ARM_calls": 465504,
+    "author_bare_helper_ARM_calls": 75298,
+    "author_total_actual_ARM_calls": 540802,
+    "all_author_calls_repeated_independently": false,
+    "parent_regressing_states_retained": 132,
+    "parent_regression_instructions": [
+      1,
+      7
+    ],
+    "V164_regressing_states_retained": 4,
+    "V164_regressions_have_incorrect_Qfplib_answers": true,
+    "exhaustive_binary64_performance_proven": false
+  },
+  "whole_atan_GO": false,
+  "whole_library_GO": false,
+  "production_promotion_GO": false,
+  "combined_image_qualification": false,
+  "hardware_GO": false,
+  "physical_cycles_measured": false,
+  "canonical_Git_USB_lease_Flash_access": false,
+  "frozen_author_or_parent_files_changed": false,
+  "limitations": [
+    "This is a source/bounds and compact actual ARM component review; the original whole math scope and other operations remain open.",
+    "The complete author report retains all slow and incorrect-reference rows; this review independently checks selected real outputs/costs and its sealed aggregate accounting, not every MPFR/ARM invocation.",
+    "No combined firmware, physical cycle, cold-power or hardware acceptance."
+  ],
+  "own_artifacts": {
+    "AUTHOR-RECORD-ACCOUNTING.json": "357d95e0b020beae38a6072e25561a226d23da3b00c680cb47666632b9d9df90",
+    "EXACT-LOWER-BOUND.json": "dfea4334397bc320adda94741ac82a3a8e00ef120ebeecb96122cda159bcb23c",
+    "EXECUTION-NOTES.json": "88c330c4e989cce35a9bbbbf49c8791f41672aba7e432418511306d089ad3a79",
+    "OWN-ORACLE-INTERVALS.json": "de2ed37243b3e99fcdfc2c483c8ca385b00c86539f335fb244f780c622754e7a",
+    "SELECTED-PACK-ARM.json": "b6fe45e78881673a61991552364d4e12781fbadf7976a293f818c9b45ffde2b3",
+    "SELECTED-PUBLIC-ARM.json": "77476580a88e79790d268c61a06850cd8c59adb0e1b8fa585928d0804391a5b8",
+    "SOURCE-OBJECT-PROOF.json": "194b23b229c12142c452cf6785eaff23b4a5b513fc2001acbb4effb459ed9275",
+    "candidate-full.o": "7fe226827039b3f6c63b58ad63b9940621924e07ec02a12e19ef9298b8ef9a55",
+    "candidate.dis": "ff35ab8f89c5ca79c6a0579173b8c12eaa065b34235435e8c1afe61ca2341878",
+    "candidate.elf": "fce98d75c6a88d57282b74798371c9c990029193741c4a986483a273321a50c9",
+    "pack-unit.cpp": "ec30c25657c7a2880bf71a2d6e715ded60b42e428a1164d2980b0b83cf71d237",
+    "pack-unit.elf": "9fc8a71d6b3ac3ecf65891e438c2475f916ea9265ff84028122e228a0e2bd91b",
+    "pack-unit.ld": "32669a1344a44042c652da7bae5ccfd3322a01a8e4acc8bc43a4204ac401009e",
+    "pack-unit.o": "97aae5748a2635a061fdb887ee7af58940fb5b201eb17289c266f548ec83b65c",
+    "review.py": "9dd19b4c4a71bc137380f797551338a3d505ed1e7bd66f47709364219134ff46"
+  }
+}

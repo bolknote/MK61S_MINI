@@ -1,0 +1,107 @@
+{
+  "status": "PASS_EXACT_CPP_ASM_WHOLE_ELF_AND_ISOLATION",
+  "whole_CPP_object_sha256": "2c3609d88f1bb99415de6cae03102adc2d340e2392fbef3e9f4b7570df191666",
+  "ratio_object_sha256": "c80865dd3f89454cd4790770059a806133b87f39f1ac5090c12f10e308584fea",
+  "entire_ELF_sha256": "4e1a6b9151b96b5f9355e75c891c508809cad22d6c67fb9ef33354485acd5dff",
+  "no_excluded_bytes": true,
+  "source_delta_paths": 4,
+  "changed_sections": {
+    ".m0_pow_extension": [
+      3644,
+      3800
+    ]
+  },
+  "shared_other_bodies": {
+    "pow_rsqrt_boundary": 848,
+    "pow_small_integer": 936,
+    "pow_fast_log": 1784
+  },
+  "asm_growth_bytes": 8,
+  "total_object_growth_bytes": 164,
+  "linked_growth_bytes": 160,
+  "tables_RAM_undefined_deps_unchanged": true,
+  "off_target_controls": {
+    "generic_M0": {
+      "allocated_bytes": 247584,
+      "exact": true,
+      "scope": "Generic M0 TU with RP2040 macro absent"
+    },
+    "M4_soft": {
+      "allocated_bytes": 0,
+      "exact": true,
+      "scope": "M0 TU disabled in M4; this does not represent a whole M4 firmware build"
+    },
+    "M4_hard": {
+      "allocated_bytes": 0,
+      "exact": true,
+      "scope": "M0 TU disabled in M4; this does not represent a whole M4 firmware build"
+    }
+  },
+  "resident_bindings_checked": 39,
+  "seed_capsule_bytes": 184,
+  "seed_capsule_sha256": "75729579767fb4b3269141b6c62b1ae4fad49ed8817158b0e7d4bedcc717ecc8",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-fno-use-cxa-atexit",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-fno-lto",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-20261024/native_eabi_m0.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-independent-20261024/candidate-full.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-20261024/ratio.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-independent-20261024/candidate-ratio.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_ln",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-20261024/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-independent-20261024/candidate-full.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-independent-20261024/candidate-ratio.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-independent-20261024/candidate.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-20261024/seed-kernel.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-dirty-independent-20261024/seed-kernel.o"
+    ]
+  ],
+  "author_root_files": 51,
+  "input_pins": 542,
+  "hardware_accessed": false
+}

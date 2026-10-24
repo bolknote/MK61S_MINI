@@ -1,0 +1,42 @@
+--- parent/native_eabi_m0_log70_center.inc
++++ candidate/native_eabi_m0_log70_center.inc
+@@ -3,14 +3,31 @@
+ // Three20-bit quotient limbs keep every hardware numerator below2^32.
+ MK61_SOFT_PCS U mk61_m0_log_ratio70(U delta,uint32_t den);
+ __attribute__((optimize("Os"),noinline,cold,section(".m0_pow_extension"))) MK61_SOFT_PCS U mk61_m0_log_ratio70_slow(U delta,uint32_t den) {
+-  uint32_t a=uint32_t(delta>>11);
+-  const uint32_t q0=mk61_m0_math_udiv32(a,den);
+-  uint32_t r=a-q0*den;
+-  a=(r<<20)|((uint32_t(delta)&2047U)<<9);
+-  const uint32_t q1=mk61_m0_math_udiv32(a,den);
+-  r=a-q1*den;
+-  const uint32_t q2=mk61_m0_math_udiv32(r<<20,den);
+-  return (U(q0)<<40)|(U(q1)<<20)|q2;
++  // The log10 table already stores floor(2^75/den), cleared to64.
++  // Its Q46 product estimates H=delta*2^29/den within6.500062 units.
++  const uint32_t* row=log10_table[(den>>1)-1024U];
++  const U reciprocal=(U(row[1])<<32)|(row[0]&~63U);
++  // At either dyadic half-segment endpoint the product needs only shifts.
++  // R is a multiple of64, and R mod2^46 is nonzero for every odd den.
++  if(delta>=(U(1)<<41)-1) {
++    U q=reciprocal>>5;
++    if(delta<(U(1)<<41)) q-=(reciprocal>>46)+1;
++    const uint32_t r=(uint32_t(delta)<<29)-uint32_t(q)*den;
++    return q+uint32_t(r>=den)+uint32_t(r>=2*den);
++  }
++  const U q=mk61_m0_log_product46(delta,reciprocal);
++  const int32_t residue=int32_t((uint32_t(delta)<<29)-uint32_t(q)*den);
++  const bool negative=residue<0;
++  uint32_t top=negative?uint32_t(0)-uint32_t(residue)+den-1U:uint32_t(residue);
++  uint32_t divisor=den<<2,correction;
++  // Three quotient bits suffice. A negative residual needs ceil division
++  // so that subtracting the correction produces exactly floor(H).
++  asm volatile(".syntax unified\n"
++    "movs %[q],#0\ncmp %[n],%[d]\nblo 1f\nsubs %[n],%[n],%[d]\n1:\nadcs %[q],%[q]\n"
++    "lsrs %[d],%[d],#1\ncmp %[n],%[d]\nblo 1f\nsubs %[n],%[n],%[d]\n1:\nadcs %[q],%[q]\n"
++    "lsrs %[d],%[d],#1\ncmp %[n],%[d]\nblo 1f\nsubs %[n],%[n],%[d]\n1:\nadcs %[q],%[q]\n"
++    ".syntax divided\n" : [n]"+&l"(top),[d]"+&l"(divisor),[q]"=&l"(correction) : : "cc");
++  return negative?q-correction:q+correction;
+ }
+ #endif
+ struct Log70Center {U low;uint32_t high;};

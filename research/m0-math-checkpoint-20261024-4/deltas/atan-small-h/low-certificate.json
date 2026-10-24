@@ -1,0 +1,20 @@
+{
+  "status": "PASS_EXACT_SMALL_H_LOWER_ATAN",
+  "h_cap": "1/512",
+  "lower_base_normal": "11469145323708957071829187909546331944304056321183438397/6034201192159437379785991419404342410498785293597933568",
+  "lower_base_normal_float": 1.9006899104742208,
+  "lower_base_wide": "14486245919788675761722183619248503149553448967982405181/6034201192159437379785991419404342410498785293597933568",
+  "lower_base_wide_float": 2.4006899104742208,
+  "scaled_lower_thresholds": {
+    "normal": 29,
+    "wide": 37
+  },
+  "signed_bias": "r3/3-r5/5",
+  "lower_gate": "15*distance+5*r3-3*r5>=threshold",
+  "equivalent_source_gate": "15*distance+5*(r3+1)-3*r5>=34/42",
+  "direction": "only when bool(tail<half)!=(negative!=invert)",
+  "old_polynomial_not_ninth_corrected": true,
+  "runtime_implemented": true,
+  "source_sha256": "a85bbc49f2366ae64d025b36dfd27e86abf63c118e447cd43cedd060cdf87e2e",
+  "inherited_parent_certificate_sha256": "69ce73544661c6dcfe457653c5bd101d5934a94ff86c8f79d6b367b0e0c765d5"
+}

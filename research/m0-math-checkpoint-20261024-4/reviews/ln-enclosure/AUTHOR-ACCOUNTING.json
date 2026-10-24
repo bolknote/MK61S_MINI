@@ -1,0 +1,46 @@
+{
+  "status": "PASS_HONEST_EXPANDED_AUTHOR_AND_RETAINED_PARENT_ACCOUNTING",
+  "public_unique_inputs": 19659,
+  "state_rows": 39318,
+  "parent_state_counts_retained": 29814,
+  "groups": [
+    {
+      "SIO": "READY",
+      "vs_parent": {
+        "faster": 9332,
+        "equal": 831,
+        "slower": 9496
+      },
+      "parent_correct_Qfp_losses": 136,
+      "child_correct_Qfp_losses": 31,
+      "fixed": 105,
+      "Qfplib_wrong": 2531
+    },
+    {
+      "SIO": "DIRTY",
+      "vs_parent": {
+        "faster": 9332,
+        "equal": 831,
+        "slower": 9496
+      },
+      "parent_correct_Qfp_losses": 139,
+      "child_correct_Qfp_losses": 34,
+      "fixed": 105,
+      "Qfplib_wrong": 2531
+    }
+  ],
+  "remaining_raw_inputs": 34,
+  "remaining_state_rows": 65,
+  "new_correct_Qfp_deficits": 0,
+  "prior27_raw_inputs_fixed": 14,
+  "historical10_fixed": 5,
+  "historical10_remaining": 5,
+  "parent_regression_states": 18992,
+  "every_regression_plus_one_instruction": true,
+  "faster_states": 18664,
+  "equal_states": 1662,
+  "author_parent_and_candidate_stack_bytes": 568,
+  "inherited_bare_helper_ARM_calls": 155608,
+  "inherited_helper_calls_not_recounted_fresh": true,
+  "no_physical_cycle_or_exhaustive_binary64_claim": true
+}

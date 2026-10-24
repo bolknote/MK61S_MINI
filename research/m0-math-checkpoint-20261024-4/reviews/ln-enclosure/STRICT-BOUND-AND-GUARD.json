@@ -1,0 +1,23 @@
+{
+  "status": "PASS_EXACT_STRICT_RADIUS_RNE_AND_SELECTOR",
+  "main_bound": "7157007042211914738946457/906251642853202851790848",
+  "near_bound": "23355077934092334177353737597195802241452043499/6337856860328575685795548307128320000000000000",
+  "main_float": 7.897372764676165,
+  "near_float": 3.6850118973626564,
+  "normal_radius": "8+ceil(abs(k)/2); |k|<=1023",
+  "subnormal_radius": "8+ceil(n/2);1023<=n<=1074",
+  "ln2_strict_half_unit_RNE_verified": true,
+  "selected_near_table_rows_verified": [
+    0,
+    127,
+    255
+  ],
+  "guard_checks": 308,
+  "accepted_signed_Fraction_RNE_endpoint_checks": 342,
+  "exact_midpoint_always_declines": true,
+  "near_n128_boundary": "x<=16129/16384 general; next binary64 and above near n<=127",
+  "lower_dyadic_edge": "Near half4 is only reachable far above its lower2^-15 binade edge; all later near lower-half gaps>=4>3.685. Main |k|<=1 half>=1024 and radius<=9; |k|>=2 half>=65536 and radius<=520. Subnormal magnitude strictly512..1024, half2^26, radius<=545.",
+  "n0_relative_near_one_packer_unchanged": true,
+  "packing_shifts_in_affected_domains": "3..27, positive radii, no zero or overwidth shift",
+  "polynomial_primitive_ratio_and_table_proofs_inherited": true
+}

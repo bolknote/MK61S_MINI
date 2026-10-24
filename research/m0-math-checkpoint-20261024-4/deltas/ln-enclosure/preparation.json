@@ -1,0 +1,7 @@
+{
+  "status": "PRIVATE_RP_STRICT_LN_ENCLOSURE_CANDIDATE",
+  "parent_result_sha256": "d76525b1cf50b407f9de8421a643b47a7e8503032cb23a3d6c9eb752bcd3fa3e",
+  "source_sha256": "44d1d70cd02a52e8ba4de34dd5168e23806b3df59f0a93d814a1fe061158aa76",
+  "polynomial_helpers_tables_unchanged": true,
+  "canonical_or_device_changed": false
+}

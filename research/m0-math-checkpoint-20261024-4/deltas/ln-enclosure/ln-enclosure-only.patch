@@ -1,0 +1,85 @@
+--- parent/native_eabi_m0_log70.inc
++++ candidate/native_eabi_m0_log70.inc
+@@ -1,3 +1,12 @@
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++enum : uint32_t {ln_main_radius=8U,ln_near_radius=4U};
++// The first negative near-center has65 log bits and is deliberately
++// excluded. Its entire half-cell uses the certified general kernel.
++enum : U {ln_near_lower=UINT64_C(0x3FEF808000000001)};
++#else
++enum : uint32_t {ln_main_radius=16U,ln_near_radius=8U};
++enum : U {ln_near_lower=UINT64_C(0x3FEF800000000000)};
++#endif
+ // A ten-bit segment index keeps |h| < 1/2048. All fast paths certify a
+ // complete error interval before returning a binary64 rounding.
+ __attribute__((always_inline)) inline double ln_pack70(U low,uint32_t high,U sign,uint32_t error,double x) {
+@@ -5,7 +14,14 @@
+   if(high) {width=32-clz32(high);shift=width+11;bias=int(width)+1023;}
+   else {width=64-clz64(low);shift=width-53;bias=int(width)+959;}
+   const uint32_t tail=uint32_t(low)&((1U<<shift)-1),half=1U<<(shift-1);
+-  if(uint32_t(tail-(half-error))<=2*error) return ln_refine(x);
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  // Actual error is strictly below the integer radius. The discrete
++  // midpoint distance may equal that radius and still be accepted.
++  const uint32_t guard=error-1;
++#else
++  const uint32_t guard=error;
++#endif
++  if(uint32_t(tail-(half-guard))<=2*guard) return ln_refine(x);
+   const uint32_t lo=uint32_t(low),hi=uint32_t(low>>32);
+   const U retained=(U((hi>>shift)|(high<<(32-shift)))<<32)|uint32_t((lo>>shift)|(hi<<(32-shift)));
+   const U q=retained+U(tail>half || (tail==half && (retained&1)));
+@@ -67,7 +83,7 @@
+     if(subtract==negative) {const U before=low;low+=correction;high=low<before;}
+     else low-=correction;
+   }
+-  return ln_pack70(low,high,negative?D::Sign:0,8,x);
++  return ln_pack70(low,high,negative?D::Sign:0,ln_near_radius,x);
+ }
+ __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_ln(double x) {
+   const U b=bits(x);
+@@ -78,7 +94,7 @@
+     return mk61_m0_cr_ln(x);
+ #endif
+   }
+-  if(b>=UINT64_C(0x3FEF800000000000) && b<=UINT64_C(0x3FF0400000000000))
++  if(b>=ln_near_lower && b<=UINT64_C(0x3FF0400000000000))
+     return ln_near_interval(x,b);
+   const int k=int((b>>52)&0x7FFU)-1023;
+   const unsigned index=unsigned((b&D::Fraction)>>42);
+@@ -101,12 +117,12 @@
+   U low=center.low;uint32_t high=center.high;
+   if(negative) {const U old=low;low+=correction;high-=low>old;}
+   else {const U old=low;low+=correction;high+=low<old;}
+-  if(!k) return ln_pack70(low,high,0,16,x);
++  if(!k) return ln_pack70(low,high,0,ln_main_radius,x);
+   const uint32_t n=uint16_t(k<0?-k:k);
+   const U p0=wide32(uint32_t(log70_two_low),n),p1=wide32(uint32_t(log70_two_low>>32),n)+(p0>>32);
+   U result=(p1<<32)|uint32_t(p0);uint32_t upper=uint32_t(p1>>32)+log70_two_high*n;
+   const U old=result;
+   if(k<0) {result-=low;upper-=high+uint32_t(old<low);}
+   else {result+=low;upper+=high+uint32_t(result<old);}
+-  return ln_pack70(result,upper,k<0?D::Sign:0,16+(n+1)/2,x);
++  return ln_pack70(result,upper,k<0?D::Sign:0,ln_main_radius+(n+1)/2,x);
+ }
+--- parent/native_eabi_m0_log_subnormal.inc
++++ candidate/native_eabi_m0_log_subnormal.inc
+@@ -6,7 +6,8 @@
+ __attribute__((always_inline)) inline double ln_subnormal_pack70(U low,uint32_t high,U sign,uint32_t error,double x) {
+   const unsigned shift=27;const int bias=1039;
+   const uint32_t tail=uint32_t(low)&((1U<<shift)-1),half=1U<<(shift-1);
+-  if(uint32_t(tail-(half-error))<=2*error) return mk61_m0_cr_ln(x);
++  const uint32_t guard=error-1;
++  if(uint32_t(tail-(half-guard))<=2*guard) return mk61_m0_cr_ln(x);
+   const uint32_t lo=uint32_t(low),hi=uint32_t(low>>32);
+   const U retained=(U((hi>>shift)|(high<<(32-shift)))<<32)|uint32_t((lo>>shift)|(hi<<(32-shift)));
+   const U q=retained+U(tail>half || (tail==half && (retained&1)));
+@@ -60,7 +61,7 @@
+   U result=(p1<<32)|uint32_t(p0);uint32_t upper=uint32_t(p1>>32)+log70_two_high*n;
+   const U old=result;
+   result-=low;upper-=high+uint32_t(old<low);
+-  return ln_subnormal_pack70(result,upper,D::Sign,16+(n+1)/2,x);
++  return ln_subnormal_pack70(result,upper,D::Sign,ln_main_radius+(n+1)/2,x);
+ }
+ 
+ extern "C" __attribute__((optimize("Os"),noinline,noipa,cold,section(".m0_log_subnormal")))

@@ -1,0 +1,30 @@
+{
+  "status": "PASS_EXACT_SMALL_H_ONE_SIDED_ENCLOSURE",
+  "normal_base": "11469145323708957071829187909546331944304056321183438397/6034201192159437379785991419404342410498785293597933568",
+  "wide_base": "14486245919788675761722183619248503149553448967982405181/6034201192159437379785991419404342410498785293597933568",
+  "normal_base_float": 1.9006899104742208,
+  "wide_base_float": 2.4006899104742208,
+  "thresholds_unshifted": [
+    29,
+    37
+  ],
+  "thresholds_encoded": [
+    34,
+    42
+  ],
+  "metadata_remainders": "r3[-1,1],r5[-4,9]; r3+1 in upper bits, r5+4 in low4 without overlap.",
+  "error_sign": "P7-atan > -B+r3/3-r5/5. GeometryNegative XOR invert flips sign; new gate uses the opposite side to inherited upper enclosure and recomputes side after residual correction.",
+  "derivative_proof": "For |t|<=c+33/S<1, |(t-t^3/3+t^5/5-t^7/7)prime-1|=t^2*(1-t^2+t^4)<=t^2; residual displacement<33 contributes at most33*(c+33/S)^2.",
+  "ratio_bound": "524323/1048576",
+  "alternating_omitted_tail_bound": "1/18432",
+  "finite_RNE_endpoint_checks": 10480,
+  "accepted": {
+    "wide": 3600,
+    "normal": 6880
+  },
+  "declined": 2084,
+  "exact_midpoint_declines": true,
+  "int32_and_retained_quantum_safe": true,
+  "parent_product_ratio_geometry_fallback_proofs_reused": true,
+  "no_large_corpus_repeated": true
+}

@@ -1,0 +1,5 @@
+{
+  "host_only_emulator_escalation": "Unicorn JIT mem_map SIGILL inside sandbox before ARM calls; same local tests completed under automatic-review-approved host escalation. No device operations.",
+  "own_text_comparison_correction": "Initial own disassembly comparison included the output filename banner. Both entire object and entire ELF had already matched; fixed diagnostic text comparison to compare actual disassembly sections. No binary bytes excluded from identity.",
+  "NaN_accounting": "Eight sealed state rows use inherited raw NaN sign/payload instead of canonical MPFR NaN. Audit explicitly checks raw|quiet for every NaN, finite expected bytes exact; no target correction."
+}

@@ -1,0 +1,8 @@
+{
+  "status": "PASS_ENTIRE_SOURCE_RECONSTRUCTED_FROM_ACCEPTED_PARENT_AND_DECLARED_DELTA",
+  "hunks": 4,
+  "parent_source_sha256": "b8a45df5715c7fbf3e7c5a6d29cd7f063daf8695c7f9324cd4a4647ffb682f7b",
+  "patch_sha256": "be8d42ceacc96a36b6577fe446e1a5db0df5bbab77230a062c5dfc12bb9bb78a",
+  "candidate_source_sha256": "996dcd240df881b6592b61aeca95fd446c7522b6fff71bc1c6de8eeed9001d23",
+  "source_readonly": true
+}

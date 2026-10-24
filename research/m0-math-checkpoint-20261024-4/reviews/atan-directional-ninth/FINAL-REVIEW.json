@@ -1,0 +1,618 @@
+{
+  "status": "COMPONENT_CODE_GO_DIRECTIONAL_NINTH_WITH_TWO_SPEED_INPUTS_OPEN",
+  "blockers": [],
+  "scope": "Only the private RP2040 directional/ninth repair delta relative to the independently accepted geometry component.",
+  "parent_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-geometry-independent-20261024/FINAL-REVIEW.json",
+    "sha256": "20f3a52335bf160c89b02bcf25262b4a5306e29cbbe0b61da94e284e8b6ba1fc",
+    "selector_reciprocal_geometry_tables_and_unchanged_fallback_proofs_reused": true
+  },
+  "frozen_target": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-directional-ninth-20261024",
+    "HANDOFF_sha256": "3efc40adb8ef6f022eaf32ea4435a0e3bb8a945e6a0068c56db1c29e7cdb0a63",
+    "result_sha256": "d87a220d5db188d03a5f4b7039da7cedae63957875ace0451cb47bee77e06f03",
+    "source_sha256": "996dcd240df881b6592b61aeca95fd446c7522b6fff71bc1c6de8eeed9001d23",
+    "full_object_sha256": "69095e178c6a559c812fc7528143515387456264e72cc509cbae8fc728f3bbe7",
+    "ELF_sha256": "35247afa5324a99d061028c606b495a5cd2ccf4bb778a62949d285cf32d99b0a",
+    "pins_before_after": {
+      "author_files": 53,
+      "input_files": 97,
+      "parent_review_exact": true
+    }
+  },
+  "source_binding": {
+    "whole_declared_patch_reconstructs_candidate": true,
+    "own_full_object_byteexact": true,
+    "own_entire_relinked_ELF_byteexact_without_exclusions": true,
+    "public_EXECUTED_own_relinked_ELF": true,
+    "inline_source_diagnostic_own_rebuild_exact": true,
+    "inline_wrapper_not_public_register_allocation": true,
+    "changed_sections": {
+      ".text.unlikely.atan_fast_tail_repair": [
+        344,
+        358
+      ],
+      ".text.atan_fast": [
+        1780,
+        2040
+      ]
+    },
+    "added_sections": {
+      ".text.unlikely.atan_inverse_half": 126
+    },
+    "all_other_allocated_sections_tables_global_RAM_undefined_dependencies_exact": true,
+    "atan_table_bytes": 780,
+    "generic_M0_M4_compile_contexts": [
+      {
+        "context": "generic_M0",
+        "allocated_bytes": 247584,
+        "exact": true
+      },
+      {
+        "context": "M4_soft",
+        "allocated_bytes": 0,
+        "exact": true
+      },
+      {
+        "context": "M4_hard",
+        "allocated_bytes": 0,
+        "exact": true
+      }
+    ],
+    "resident_binding_count": 38,
+    "resident_targets_pinned_outside_component": true
+  },
+  "mathematical_review": {
+    "rounded_residual_strict_error": "524323/1048576",
+    "rounded_residual_magnitude_max": 33,
+    "directional_old_upper_base": "6567625726044640885362305040813370753657999994270611259/2514250496733098908244163091418476004374493872332472320",
+    "directional_ninth_upper_base": "2106568560122615527213556575600065271247804342546227856640881/755167707946269922585675605322996360293901107024419723673600",
+    "ninth_symmetric_bound": "5076885587670397045560536948135210575168872555994784772885361/755167707946269922585675605322996360293901107024419723673600",
+    "ninth_Q16_error_exact": "2317/4608",
+    "inverse_predicate_bound": "9717533972470269757881224965752446767730802328096879690775344982788962264018773/1400718393140389035188768206148383341755141159238973802199736231856701440000000",
+    "symmetric_old_regions": [
+      {
+        "h_cap": "1/250",
+        "radius": 6,
+        "bound": "9485465725666318644418715552304181210857978740000930683108535608707940623978856607/1724029898554389379653689955297609126005776375152353143160832000000000000000000000",
+        "bound_float": 5.501914864481147
+      },
+      {
+        "h_cap": "1/160",
+        "radius": 9,
+        "bound": "16111665691448915437582229297481380367075325214410304238669366161109706337/1851120314774365142861940942082863965788464349703057120589596590080000000",
+        "bound_float": 8.703737711080537
+      },
+      {
+        "h_cap": "1/128",
+        "radius": 23,
+        "bound": "6867723619100195103975681979101366908056030578179389285703852272940893/303280888079174834122029676325667074885236818975093062638952943452160",
+        "bound_float": 22.64476229477177
+      }
+    ],
+    "finite_gate_endpoint_RNE_checks": 6240,
+    "exact_remainders": "Third nearest /3 gives r3 in[-1,1]; old fifth truncation r5 in[-4,9]; exact fifth correction gives r5new in[-2,2]. Small integer remainder and /9 domains checked completely.",
+    "important_signs": "Upper P7 error excludes negative omitted ninth tail; upper P9 error includes positive omitted eleventh tail. geometryNegative XOR invert selects the favorable side after EACH applied correction.",
+    "inverse_arithmetic": "For inverted N,D divisible64 and D<2^60, signed low64 product represents the residual/64 without wrap ambiguity; shifted unsigned test certifies <=half-Q70 error.",
+    "retained_quantum": "54+33+16<1024 ensures same retained bits/binade; all new center-midpoint gates decline; strict bounds make equality with distance safe."
+  },
+  "own_execution": {
+    "qualified_ARM_calls": 988,
+    "bare_helper_and_pack_ARM_calls": 420,
+    "public_ARM_calls": 568,
+    "unique_public_inputs": 71,
+    "public_READY_DIRTY_states": 142,
+    "actual_reference_calls_are_qfp_datan2_x_1": true,
+    "Qfplib_is_not_a_separate_public_atan_reference": true,
+    "independent_oracles": "Inherited independent exact Fraction Taylor/Machin outward intervals + fresh directed MPFR4.2.2 for the compact selected finite inputs; parent raw NaN payload/sign policy checked separately.",
+    "MPFR_version": "4.2.2",
+    "fixed18_state_rows_actual": 36,
+    "remaining2_state_rows_actual": 4,
+    "selected_author_cost_output_controls": 140,
+    "accepted_geometry_result_cost_controls": 102,
+    "helper_calls_by_type": {
+      "rounded_residual_rows": 64,
+      "ninth_rows": 144,
+      "inverse_rows": 78,
+      "third_rows": 22,
+      "pack_rows": 112
+    },
+    "pack_stages": {
+      "symmetric": 24,
+      "fallback": 24,
+      "directional": 12,
+      "ninth-symmetric": 24,
+      "ninth-directional": 24,
+      "inverse": 4
+    },
+    "actual_correction_cross_midpoint_witnesses": 48,
+    "actual_public_helper_domains": [
+      "halved-e-6",
+      "inverted",
+      "ordinary"
+    ],
+    "bare_helpers_no_firmware_ROM_or_SIO_MMIO": true,
+    "public_uses_pinned_resident_helpers_and_captured_ROM": true,
+    "PCS_R4_R11_SP_and_bounded_stack_checked_every_call": true,
+    "DIRTY_SIO_exact_READY_clean": true,
+    "stack_max": {
+      "V164": 880,
+      "Qfplib": 76,
+      "parent": 888,
+      "candidate": 912
+    },
+    "wrong_Qfplib_raw_outcomes_retained": [
+      {
+        "input": "8000000000000000",
+        "SIO": "READY",
+        "raw": "0000000000000000",
+        "correct": "8000000000000000"
+      },
+      {
+        "input": "8000000000000000",
+        "SIO": "DIRTY",
+        "raw": "0000000000000000",
+        "correct": "8000000000000000"
+      },
+      {
+        "input": "0000000000000001",
+        "SIO": "READY",
+        "raw": "0000000000000000",
+        "correct": "0000000000000001"
+      },
+      {
+        "input": "0000000000000001",
+        "SIO": "DIRTY",
+        "raw": "0000000000000000",
+        "correct": "0000000000000001"
+      },
+      {
+        "input": "8000000000000001",
+        "SIO": "READY",
+        "raw": "0000000000000000",
+        "correct": "8000000000000001"
+      },
+      {
+        "input": "8000000000000001",
+        "SIO": "DIRTY",
+        "raw": "0000000000000000",
+        "correct": "8000000000000001"
+      },
+      {
+        "input": "000fffffffffffff",
+        "SIO": "READY",
+        "raw": "0000000000000000",
+        "correct": "000fffffffffffff"
+      },
+      {
+        "input": "000fffffffffffff",
+        "SIO": "DIRTY",
+        "raw": "0000000000000000",
+        "correct": "000fffffffffffff"
+      },
+      {
+        "input": "800fffffffffffff",
+        "SIO": "READY",
+        "raw": "0000000000000000",
+        "correct": "800fffffffffffff"
+      },
+      {
+        "input": "800fffffffffffff",
+        "SIO": "DIRTY",
+        "raw": "0000000000000000",
+        "correct": "800fffffffffffff"
+      },
+      {
+        "input": "7ff0000000000001",
+        "SIO": "READY",
+        "raw": "3ff921fb54442d18",
+        "correct": "7ff8000000000001"
+      },
+      {
+        "input": "7ff0000000000001",
+        "SIO": "DIRTY",
+        "raw": "3ff921fb54442d18",
+        "correct": "7ff8000000000001"
+      },
+      {
+        "input": "fff0000000000001",
+        "SIO": "READY",
+        "raw": "bff921fb54442d18",
+        "correct": "fff8000000000001"
+      },
+      {
+        "input": "fff0000000000001",
+        "SIO": "DIRTY",
+        "raw": "bff921fb54442d18",
+        "correct": "fff8000000000001"
+      },
+      {
+        "input": "7ff8000000000123",
+        "SIO": "READY",
+        "raw": "3ff921fb54442d18",
+        "correct": "7ff8000000000123"
+      },
+      {
+        "input": "7ff8000000000123",
+        "SIO": "DIRTY",
+        "raw": "3ff921fb54442d18",
+        "correct": "7ff8000000000123"
+      },
+      {
+        "input": "ffffffffffffffff",
+        "SIO": "READY",
+        "raw": "bff921fb54442d18",
+        "correct": "ffffffffffffffff"
+      },
+      {
+        "input": "ffffffffffffffff",
+        "SIO": "DIRTY",
+        "raw": "bff921fb54442d18",
+        "correct": "ffffffffffffffff"
+      },
+      {
+        "input": "3f90000000000000",
+        "SIO": "READY",
+        "raw": "3f8fff555bbb729a",
+        "correct": "3f8fff555bbb729b"
+      },
+      {
+        "input": "3f90000000000000",
+        "SIO": "DIRTY",
+        "raw": "3f8fff555bbb729a",
+        "correct": "3f8fff555bbb729b"
+      },
+      {
+        "input": "3f99c24957c90e1f",
+        "SIO": "READY",
+        "raw": "3f99c0e56701c7aa",
+        "correct": "3f99c0e56701c7ab"
+      },
+      {
+        "input": "3f99c24957c90e1f",
+        "SIO": "DIRTY",
+        "raw": "3f99c0e56701c7aa",
+        "correct": "3f99c0e56701c7ab"
+      },
+      {
+        "input": "bf99c24957c90e1f",
+        "SIO": "READY",
+        "raw": "bf99c0e56701c7aa",
+        "correct": "bf99c0e56701c7ab"
+      },
+      {
+        "input": "bf99c24957c90e1f",
+        "SIO": "DIRTY",
+        "raw": "bf99c0e56701c7aa",
+        "correct": "bf99c0e56701c7ab"
+      },
+      {
+        "input": "4012a253c99075d1",
+        "SIO": "READY",
+        "raw": "3ff5bfe064dc8ea3",
+        "correct": "3ff5bfe064dc8ea2"
+      },
+      {
+        "input": "4012a253c99075d1",
+        "SIO": "DIRTY",
+        "raw": "3ff5bfe064dc8ea3",
+        "correct": "3ff5bfe064dc8ea2"
+      },
+      {
+        "input": "c012a253c99075d1",
+        "SIO": "READY",
+        "raw": "bff5bfe064dc8ea3",
+        "correct": "bff5bfe064dc8ea2"
+      },
+      {
+        "input": "c012a253c99075d1",
+        "SIO": "DIRTY",
+        "raw": "bff5bfe064dc8ea3",
+        "correct": "bff5bfe064dc8ea2"
+      },
+      {
+        "input": "404554aaaaaaaaac",
+        "SIO": "READY",
+        "raw": "3ff8c1fcd436fa79",
+        "correct": "3ff8c1fcd436fa78"
+      },
+      {
+        "input": "404554aaaaaaaaac",
+        "SIO": "DIRTY",
+        "raw": "3ff8c1fcd436fa79",
+        "correct": "3ff8c1fcd436fa78"
+      },
+      {
+        "input": "c04554aaaaaaaaac",
+        "SIO": "READY",
+        "raw": "bff8c1fcd436fa79",
+        "correct": "bff8c1fcd436fa78"
+      },
+      {
+        "input": "c04554aaaaaaaaac",
+        "SIO": "DIRTY",
+        "raw": "bff8c1fcd436fa79",
+        "correct": "bff8c1fcd436fa78"
+      }
+    ]
+  },
+  "remaining_actual": [
+    {
+      "input": "3fef1bcdcf0d1830",
+      "group": "remaining2",
+      "SIO": "READY",
+      "expected": "3fe8ae47a21a1998",
+      "outputs": {
+        "V164": "3fe8ae47a21a1998",
+        "Qfplib": "3fe8ae47a21a1998",
+        "parent": "3fe8ae47a21a1998",
+        "candidate": "3fe8ae47a21a1998"
+      },
+      "instructions": {
+        "V164": 20785,
+        "Qfplib": 1787,
+        "parent": 20968,
+        "candidate": 21048
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 912
+      },
+      "repair_entries": 1,
+      "inverse_entries": 0,
+      "CORE_entries": 1,
+      "fixed18": false,
+      "remaining2": true
+    },
+    {
+      "input": "3fef1bcdcf0d1830",
+      "group": "remaining2",
+      "SIO": "DIRTY",
+      "expected": "3fe8ae47a21a1998",
+      "outputs": {
+        "V164": "3fe8ae47a21a1998",
+        "Qfplib": "3fe8ae47a21a1998",
+        "parent": "3fe8ae47a21a1998",
+        "candidate": "3fe8ae47a21a1998"
+      },
+      "instructions": {
+        "V164": 22501,
+        "Qfplib": 1787,
+        "parent": 22684,
+        "candidate": 22764
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 912
+      },
+      "repair_entries": 1,
+      "inverse_entries": 0,
+      "CORE_entries": 1,
+      "fixed18": false,
+      "remaining2": true
+    },
+    {
+      "input": "bfef1bcdcf0d1830",
+      "group": "remaining2",
+      "SIO": "READY",
+      "expected": "bfe8ae47a21a1998",
+      "outputs": {
+        "V164": "bfe8ae47a21a1998",
+        "Qfplib": "bfe8ae47a21a1998",
+        "parent": "bfe8ae47a21a1998",
+        "candidate": "bfe8ae47a21a1998"
+      },
+      "instructions": {
+        "V164": 20784,
+        "Qfplib": 1787,
+        "parent": 20967,
+        "candidate": 21047
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 912
+      },
+      "repair_entries": 1,
+      "inverse_entries": 0,
+      "CORE_entries": 1,
+      "fixed18": false,
+      "remaining2": true
+    },
+    {
+      "input": "bfef1bcdcf0d1830",
+      "group": "remaining2",
+      "SIO": "DIRTY",
+      "expected": "bfe8ae47a21a1998",
+      "outputs": {
+        "V164": "bfe8ae47a21a1998",
+        "Qfplib": "bfe8ae47a21a1998",
+        "parent": "bfe8ae47a21a1998",
+        "candidate": "bfe8ae47a21a1998"
+      },
+      "instructions": {
+        "V164": 22500,
+        "Qfplib": 1787,
+        "parent": 22683,
+        "candidate": 22763
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 912
+      },
+      "repair_entries": 1,
+      "inverse_entries": 0,
+      "CORE_entries": 1,
+      "fixed18": false,
+      "remaining2": true
+    }
+  ],
+  "performance_tradeoffs": {
+    "code_delta_bytes": 400,
+    "observed_stack_bytes": 912,
+    "parent_observed_stack_bytes": 888,
+    "selected_parent_regressions": [
+      {
+        "input": "3fef1bcdcf0d1830",
+        "SIO": "READY",
+        "instructions_delta": 80
+      },
+      {
+        "input": "3fef1bcdcf0d1830",
+        "SIO": "DIRTY",
+        "instructions_delta": 80
+      },
+      {
+        "input": "bfef1bcdcf0d1830",
+        "SIO": "READY",
+        "instructions_delta": 80
+      },
+      {
+        "input": "bfef1bcdcf0d1830",
+        "SIO": "DIRTY",
+        "instructions_delta": 80
+      },
+      {
+        "input": "3fe5d1004fc925b6",
+        "SIO": "READY",
+        "instructions_delta": 18
+      },
+      {
+        "input": "3fe5d1004fc925b6",
+        "SIO": "DIRTY",
+        "instructions_delta": 18
+      },
+      {
+        "input": "bfe5d1004fc925b6",
+        "SIO": "READY",
+        "instructions_delta": 18
+      },
+      {
+        "input": "bfe5d1004fc925b6",
+        "SIO": "DIRTY",
+        "instructions_delta": 18
+      },
+      {
+        "input": "3fecb99548f4fa32",
+        "SIO": "READY",
+        "instructions_delta": 22
+      },
+      {
+        "input": "3fecb99548f4fa32",
+        "SIO": "DIRTY",
+        "instructions_delta": 22
+      },
+      {
+        "input": "bfecb99548f4fa32",
+        "SIO": "READY",
+        "instructions_delta": 22
+      },
+      {
+        "input": "bfecb99548f4fa32",
+        "SIO": "DIRTY",
+        "instructions_delta": 22
+      },
+      {
+        "input": "3f99c24957c90e1f",
+        "SIO": "READY",
+        "instructions_delta": 267
+      },
+      {
+        "input": "3f99c24957c90e1f",
+        "SIO": "DIRTY",
+        "instructions_delta": 267
+      },
+      {
+        "input": "bf99c24957c90e1f",
+        "SIO": "READY",
+        "instructions_delta": 267
+      },
+      {
+        "input": "bf99c24957c90e1f",
+        "SIO": "DIRTY",
+        "instructions_delta": 267
+      },
+      {
+        "input": "4012a253c99075d1",
+        "SIO": "READY",
+        "instructions_delta": 93
+      },
+      {
+        "input": "4012a253c99075d1",
+        "SIO": "DIRTY",
+        "instructions_delta": 93
+      },
+      {
+        "input": "c012a253c99075d1",
+        "SIO": "READY",
+        "instructions_delta": 93
+      },
+      {
+        "input": "c012a253c99075d1",
+        "SIO": "DIRTY",
+        "instructions_delta": 93
+      }
+    ],
+    "author_full_profile_not_reexecuted": {
+      "unique_inputs": 53156,
+      "states": 106312,
+      "vs_parent": {
+        "faster": 101748,
+        "equal": 4504,
+        "slower": 60
+      },
+      "vs_V164": {
+        "faster": 101800,
+        "equal": 4504,
+        "slower": 8
+      },
+      "correct_Qfplib_raw_deficits_parent": 20,
+      "correct_Qfplib_raw_deficits_candidate": 2,
+      "new_raw_Qfplib_deficits": 0,
+      "wrong_Qfplib_state_outcomes": 8272
+    },
+    "instructions_not_physical_cycles": true
+  },
+  "own_fixture_failure_retained": "EXECUTION-NOTES.json: first synthetic inverted pack fixture omitted N divisibility64; corrected own fixture only. No target or device failure; no public ARM executed in failed attempt.",
+  "all_author_public_or_helper_sweeps_replayed": false,
+  "whole_atan_GO": false,
+  "whole_library_GO": false,
+  "production_promotion_GO": false,
+  "combined_image_qualification": false,
+  "hardware_GO": false,
+  "physical_cycles_measured": false,
+  "canonical_Git_USB_Flash_lease_access": false,
+  "frozen_author_or_parent_files_changed": false,
+  "limitations": [
+    "Component source/bounds and compact selected actual ARM certification; not exhaustive public all-input atan qualification.",
+    "Two raw speed deficits still use the original CORE-MATH fallback; 60 parent-regressing states and8 V164-regressing states remain explicit producer evidence.",
+    "Code+400B and stack+24B tradeoff; no merged-image, physical timing, cold or hardware acceptance."
+  ],
+  "own_artifacts": {
+    "EXACT-DIRECTIONAL-NINTH-BOUND.json": "941e5b73c2dcd03eb9c72dbb8c658eda3ac81fc798e041654ef4487009774611",
+    "EXECUTION-NOTES.json": "62182bd617b1b4fe05460788c2e67533157ea675221282e224d2f6cb9edb6580",
+    "OWN-ORACLE-INTERVALS.json": "7d990e9f4651d2170d92136ca334da487f33ccddf047305e572a346e7c436480",
+    "PATCH-CLOSURE.json": "45e9526eb1afd48f3eeb0805816c74f6d75acd6fdde27ce6f0a7867875387dd0",
+    "SELECTED-HELPER-ARM.json": "4df93cbfb0f0bff572b066aa55b3feace8cad639d7d6ff15ec2b3eb1f4dfeadc",
+    "SELECTED-INVERTED-ARM-ORACLES.json": "49b166c7236a7ceddb94e4e65b7f27dad033aac0deb039cfdf094ff1c6a0b3b0",
+    "SELECTED-INVERTED-ARM.json": "52386ed45cfa4dbf7556d3c3795307b38458a6527a6b0a5bc4e6a44096efea92",
+    "SELECTED-PUBLIC-ARM.json": "36efefaf58485a84ca5eb352f4f145f187390c4099dc89eb79d13ecd1b9aa7b1",
+    "SOURCE-OBJECT-PROOF.json": "4946290b79415147d547febbd3feadbfa98bcf3df5b27bfe48517e539cde2b46",
+    "candidate-full.o": "69095e178c6a559c812fc7528143515387456264e72cc509cbae8fc728f3bbe7",
+    "candidate.elf": "35247afa5324a99d061028c606b495a5cd2ccf4bb778a62949d285cf32d99b0a",
+    "ninth-unit.elf": "809b9cced3555c1c6cc3b244ce97afb35c51332b6fd2829c201753273274ee88",
+    "ninth-unit.o": "0b9f45fe265015b43c977bcaa22dc55b2625487c38be47172f6075eaa45d5c1c",
+    "pack-unit.cpp": "78f448b39b4ffe9d180eabb771ab0052d716a261e9c91d6f66b5ff7042c868af",
+    "pack-unit.elf": "15ec5d9f77796a47567b91e91b8b364ee2051cf03d1030beddc722640e38a4ed",
+    "pack-unit.ld": "32669a1344a44042c652da7bae5ccfd3322a01a8e4acc8bc43a4204ac401009e",
+    "pack-unit.o": "8f0b65ae7f4847f03e22d7443b908f3d18db9b1dd018eeb3920ea4103fe614da",
+    "review.py": "c69ff54b3811079c5b1e25ba689b89a33caa066bf243753cdeeefa7cf6a18a31"
+  }
+}

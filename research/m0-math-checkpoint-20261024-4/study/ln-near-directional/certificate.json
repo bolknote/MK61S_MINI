@@ -1,0 +1,37 @@
+{
+  "status": "PROSPECTIVE_NEAR_LN_DIRECTIONAL_GATES_NOT_RUNTIME",
+  "base_upper": "52996458457145645941769084446096328981629/27041522604068589592727672777080832000000",
+  "base_upper_float": 1.959817841365632,
+  "base_lower": "13848292643599470648660415136503322241452043499/6337856860328575685795548307128320000000000000",
+  "base_lower_float": 2.1850118973626564,
+  "bias12": "-4*r3-s*(6*r2+3*r4), s=+1 for odd+even, -1 for odd-even",
+  "exact_remainders": {
+    "r2": [
+      -1,
+      0
+    ],
+    "r3": [
+      -1,
+      0,
+      1
+    ],
+    "r4": [
+      -2,
+      -1,
+      0,
+      1
+    ]
+  },
+  "gate": "upper:12*distance-bias12>=24; lower:12*distance+bias12>=27",
+  "upper_class": "(tail>half)==add, where add=(subtract==negative)",
+  "residual_aware_upper": "38419381231188525859621934631664584981629/27041522604068589592727672777080832000000",
+  "residual_aware_upper_float": 1.4207551029470529,
+  "residual_aware_lower": "10431790168765770629407176898745882241452043499/6337856860328575685795548307128320000000000000",
+  "residual_aware_lower_float": 1.6459491589440776,
+  "exact_residual": "r=(delta<<21)-h*(8192+signed_n), recoverable from signed low32",
+  "residual_aware_gate": "upper:den*(12*distance-bias12)+12*r>=18*den; lower:den*(12*distance+bias12)-12*r>=21*den",
+  "residual_aware_midpoint_needs_explicit_rounding_decision": true,
+  "certificate_function_sha256": "63d1b9cbad5222bb4dab5f3b0634ec417838445f3f0d87d56a1fe454b5b46a17",
+  "runtime_implemented": false,
+  "hardware_accessed": false
+}

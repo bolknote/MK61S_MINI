@@ -1,0 +1,38 @@
+{
+  "status": "BUILT_ISOLATED_COPY_OF_ACTUAL_INLINE_SOURCE",
+  "public_source_sha256": "a85bbc49f2366ae64d025b36dfd27e86abf63c118e447cd43cedd060cdf87e2e",
+  "exact_fragment_sha256": "6e8ec6ee3c13c90c1d855b07f86a5116ec5a1ea5996f16f1aa3f679381254d2f",
+  "wrapper_ELF_sha256": "809b9cced3555c1c6cc3b244ce97afb35c51332b6fd2829c201753273274ee88",
+  "exact_third_fragment_sha256": "e783614fba1e1b42ff06d6b25def1176f0cbb473bc061f947f27e7803555a322",
+  "exact_wide_fragment_sha256": "e0915ea27ec6b4475377d7be710a56a3bbf9742e0f023f25a69a490d53af71a9",
+  "scope": "Wrapper source contains the exact inline source fragment; its register allocation is not the public caller. Public bytes are separately bound/replayed.",
+  "no_undefined_symbols": true,
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-tight-ninth-20261024/ninth-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-tight-ninth-20261024/ninth-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-tight-ninth-20261024/ninth-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-tight-ninth-20261024/ninth-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-tight-ninth-20261024/ninth-unit.elf"
+    ]
+  ],
+  "hardware_accessed": false
+}
