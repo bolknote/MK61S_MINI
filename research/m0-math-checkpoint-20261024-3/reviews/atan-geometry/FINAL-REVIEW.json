@@ -1,0 +1,1945 @@
+{
+  "status": "TECHNICAL_GO_PRIVATE_ATAN_GEOMETRY_DELTA_WITH_SEVENTEEN_SPEED_INPUTS_OPEN",
+  "blockers": [],
+  "created_UTC": "2026-10-24T00:16:08.624748+00:00",
+  "scope": "Only widened halved/inverted/hcap admission and exact6/7Q70 residual enclosures over the immutable accepted signed71-bit residual component. No standalone polynomial work, whole atan/library or physical timing claim.",
+  "handoff_sha256": "21e52ab6db11367e20d0f8dd95babc4a58775164602fa27942fb9fd1c02218d3",
+  "author_result_sha256": "2f3f8deb8a78125c6a55c1f146c6dd1c72d9b56ff4f677bba3bacd84ce34f22d",
+  "source_sha256": "b8a45df5715c7fbf3e7c5a6d29cd7f063daf8695c7f9324cd4a4647ffb682f7b",
+  "full_own_object_sha256": "a68a1ad91a4ec5931b2ff8ee16afc7982604b414bffb4651077997f9f99dd569",
+  "entire_own_executed_ELF_sha256": "5cea0e75f3d4a7b29af31c3af6d6315b0e0d569bb7c5a3ca5125bf341cfdecc7",
+  "parent_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-atan-residual-independent-20261024/FINAL-REVIEW.json",
+    "sha256": "b6a2234936391b97077999065e3055fd28e1935e519fd603a6a008c9d44bbaed",
+    "unchanged_helper_body_proof_reused": true,
+    "prior_488_own_helper_calls_repeated": false,
+    "author_30412_helper_corpus_repeated": false
+  },
+  "pins_before_after": {
+    "author_files": 44,
+    "input_files": 91,
+    "parent_own_evidence_exact": true,
+    "all_match": true
+  },
+  "findings": [
+    "Own full source compilation produces objecta68a1ad9 and ENTIRE linked ELF5cea0e75 byte-identical without exclusions. Reversing only the gate/comments reconstructs the accepted parent source exactly. Only .text.atan_fast1748->1780 differs: +32B. The344B helper, all other allocated sections,780B table, globalRAM/undefineddependencies and residentbindings remain exact.",
+    "Sealed genericM0 allocated247584B and M4 soft/hard contributions match the accepted parent exactly. This is component isolation, not a whole M4/firmware rebuild or combined-image qualification.",
+    "Independent Fraction calculation gives5.959509649028886<6Q70 at h<=2^62+2^40 and6.001913910806831<7Q70 at h<=floor(2^70/250). Both integer caps match source exactly. Inherited global quotient error30.50000733698318<33 and D>=2^58 keep signed71-bit and six-bit quotient arithmetic within the accepted proof.",
+    "Non-inverted e=-6 halves its exceptional65-bit denominator with exact numerator halving, producing<.5Q70 ratio error; the ordinary table adds<=.5. Inverted geometry is exact and has two rounded tables totaling<=1, with no halving. Thus table+halving<=1 in every admitted geometry; geometryNegative XOR invert gives the correction direction.",
+    "Packing shifts remain11..18, with normalization tests still short-circuited.1104 independently admitted synthetic open intervals round uniquely at radius6/7 equality, both retained parities, binades and significand carry;192 near-midpoint cases decline. Existing fallback remains intact.",
+    "107selected rawinputs xREADY/DIRTY x4engines=856 own actualARM calls use a pinned independent exact Fraction Taylor/Machin oracle, not author MPFR/table answers. Signedzero/subnormal/Inf/rawNaN policy, dispatch/cap/inverted edges and hard cases agree.106 selected parent results/instruction counts match prior independent evidence.",
+    "Actual helper-entry ABI values N/D/h match independent exact dyadic geometry identities in halved,ordinary,inverted paths and both radius regions.20 additional actualARM calls test only the newly admitted D=2^58 boundary and its truncation edge; no MMIO or SIO change. The prior helper corpus is reused, not repeated.",
+    "All6 newly fixed rawinputs/12state rows beat correct actual Qfplib with DIRTY1696..1715 instructions. Prior4 remain faster at DIRTY1753/1728. All17 remaining raw inputs/34state rows remain slower than correct Qfplib, including ordinary refinement routes, rather than filtering only CORE.",
+    "All4 rawV164 regressions/8state rows reproduce actual costs, including newly attempted repair that falls back at+189/+195 instructions versus parent. Two of these rawinputs have incorrect Qfplib outputs, retained rather than claimed as reference wins. Selected candidate and parent maxstack both888B.",
+    "Each actual call checks PCS/R4-R11/SP/boundedwrites. Candidate code stays within pinned component/resident/capturedROM, MMIO only existing SIOdivider. DIRTY is exact and READY may be used but is leftclean. No abstract ROMcallbacks. Reference remains actual audit_atan->qfp_datan2(originalraw,1.0), not a separate public Qfplib atan API;40 selected rawwrongreference state outcomes retained."
+  ],
+  "exact_regions": [
+    {
+      "hcap": "4194305/1073741824",
+      "integer_hcap": 4611687117939015680,
+      "strict_radius": 6,
+      "total_error": "1066952664723506003589776827150671446856983182366642016721446942682845216536286712463116509/179033633228090837585222528838246173064072002537845401199726863101058628279115127623516160",
+      "total_error_float": 5.959509649028886
+    },
+    {
+      "hcap": "1/250",
+      "integer_hcap": 4722366482869645213,
+      "strict_radius": 7,
+      "total_error": "10347479030780478366451733803335215295031362909006803192462519608707940623978856607/1724029898554389379653689955297609126005776375152353143160832000000000000000000000",
+      "total_error_float": 6.001913910806831
+    }
+  ],
+  "own_execution": {
+    "public_unique_inputs": 107,
+    "public_state_cases": 214,
+    "public_ARM_calls": 856,
+    "new_minimum_denominator_helper_calls": 20,
+    "total_actual_ARM_calls": 876,
+    "Unicorn_version": "2.1.4",
+    "candidate_stack_max": 888,
+    "parent_stack_max": 888,
+    "selected_vs_parent": {
+      "faster": 20,
+      "slower": 38,
+      "equal": 156
+    }
+  },
+  "fixed6_actual": [
+    {
+      "input": "3f9205b0d8e1af59",
+      "group": "fixed6",
+      "SIO": "READY",
+      "expected": "3f920536eb4d1d88",
+      "outputs": {
+        "V164": "3f920536eb4d1d88",
+        "Qfplib": "3f920536eb4d1d88",
+        "parent": "3f920536eb4d1d88",
+        "candidate": "3f920536eb4d1d88"
+      },
+      "instructions": {
+        "V164": 2922,
+        "Qfplib": 1804,
+        "parent": 2885,
+        "candidate": 1509
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "3f9205b0d8e1af59",
+      "group": "fixed6",
+      "SIO": "DIRTY",
+      "expected": "3f920536eb4d1d88",
+      "outputs": {
+        "V164": "3f920536eb4d1d88",
+        "Qfplib": "3f920536eb4d1d88",
+        "parent": "3f920536eb4d1d88",
+        "candidate": "3f920536eb4d1d88"
+      },
+      "instructions": {
+        "V164": 3790,
+        "Qfplib": 1804,
+        "parent": 3753,
+        "candidate": 1711
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "bf9ff6556d0f3f46",
+      "group": "fixed6",
+      "SIO": "READY",
+      "expected": "bf9ff3ad92087f15",
+      "outputs": {
+        "V164": "bf9ff3ad92087f15",
+        "Qfplib": "bf9ff3ad92087f15",
+        "parent": "bf9ff3ad92087f15",
+        "candidate": "bf9ff3ad92087f15"
+      },
+      "instructions": {
+        "V164": 20815,
+        "Qfplib": 1811,
+        "parent": 20775,
+        "candidate": 1506
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "bf9ff6556d0f3f46",
+      "group": "fixed6",
+      "SIO": "DIRTY",
+      "expected": "bf9ff3ad92087f15",
+      "outputs": {
+        "V164": "bf9ff3ad92087f15",
+        "Qfplib": "bf9ff3ad92087f15",
+        "parent": "bf9ff3ad92087f15",
+        "candidate": "bf9ff3ad92087f15"
+      },
+      "instructions": {
+        "V164": 22456,
+        "Qfplib": 1811,
+        "parent": 22416,
+        "candidate": 1696
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "3f902767970881c7",
+      "group": "fixed6",
+      "SIO": "READY",
+      "expected": "3f90270fc87f3ef5",
+      "outputs": {
+        "V164": "3f90270fc87f3ef5",
+        "Qfplib": "3f90270fc87f3ef5",
+        "parent": "3f90270fc87f3ef5",
+        "candidate": "3f90270fc87f3ef5"
+      },
+      "instructions": {
+        "V164": 20628,
+        "Qfplib": 1809,
+        "parent": 20589,
+        "candidate": 1514
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "3f902767970881c7",
+      "group": "fixed6",
+      "SIO": "DIRTY",
+      "expected": "3f90270fc87f3ef5",
+      "outputs": {
+        "V164": "3f90270fc87f3ef5",
+        "Qfplib": "3f90270fc87f3ef5",
+        "parent": "3f90270fc87f3ef5",
+        "candidate": "3f90270fc87f3ef5"
+      },
+      "instructions": {
+        "V164": 22331,
+        "Qfplib": 1809,
+        "parent": 22292,
+        "candidate": 1708
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "bf902767970881c7",
+      "group": "fixed6-signcontrol",
+      "SIO": "READY",
+      "expected": "bf90270fc87f3ef5",
+      "outputs": {
+        "V164": "bf90270fc87f3ef5",
+        "Qfplib": "bf90270fc87f3ef5",
+        "parent": "bf90270fc87f3ef5",
+        "candidate": "bf90270fc87f3ef5"
+      },
+      "instructions": {
+        "V164": 20645,
+        "Qfplib": 1804,
+        "parent": 20606,
+        "candidate": 1514
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "bf902767970881c7",
+      "group": "fixed6-signcontrol",
+      "SIO": "DIRTY",
+      "expected": "bf90270fc87f3ef5",
+      "outputs": {
+        "V164": "bf90270fc87f3ef5",
+        "Qfplib": "bf90270fc87f3ef5",
+        "parent": "bf90270fc87f3ef5",
+        "candidate": "bf90270fc87f3ef5"
+      },
+      "instructions": {
+        "V164": 22348,
+        "Qfplib": 1804,
+        "parent": 22309,
+        "candidate": 1708
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "3f940a1cd7c64f14",
+      "group": "fixed6",
+      "SIO": "READY",
+      "expected": "3f94097539a6c00a",
+      "outputs": {
+        "V164": "3f94097539a6c00a",
+        "Qfplib": "3f94097539a6c00a",
+        "parent": "3f94097539a6c00a",
+        "candidate": "3f94097539a6c00a"
+      },
+      "instructions": {
+        "V164": 20411,
+        "Qfplib": 1806,
+        "parent": 20371,
+        "candidate": 1517
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "3f940a1cd7c64f14",
+      "group": "fixed6",
+      "SIO": "DIRTY",
+      "expected": "3f94097539a6c00a",
+      "outputs": {
+        "V164": "3f94097539a6c00a",
+        "Qfplib": "3f94097539a6c00a",
+        "parent": "3f94097539a6c00a",
+        "candidate": "3f94097539a6c00a"
+      },
+      "instructions": {
+        "V164": 22151,
+        "Qfplib": 1806,
+        "parent": 22111,
+        "candidate": 1715
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "bf940a1cd7c64f14",
+      "group": "fixed6-signcontrol",
+      "SIO": "READY",
+      "expected": "bf94097539a6c00a",
+      "outputs": {
+        "V164": "bf94097539a6c00a",
+        "Qfplib": "bf94097539a6c00a",
+        "parent": "bf94097539a6c00a",
+        "candidate": "bf94097539a6c00a"
+      },
+      "instructions": {
+        "V164": 20417,
+        "Qfplib": 1810,
+        "parent": 20377,
+        "candidate": 1517
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "bf940a1cd7c64f14",
+      "group": "fixed6-signcontrol",
+      "SIO": "DIRTY",
+      "expected": "bf94097539a6c00a",
+      "outputs": {
+        "V164": "bf94097539a6c00a",
+        "Qfplib": "bf94097539a6c00a",
+        "parent": "bf94097539a6c00a",
+        "candidate": "bf94097539a6c00a"
+      },
+      "instructions": {
+        "V164": 22157,
+        "Qfplib": 1810,
+        "parent": 22117,
+        "candidate": 1715
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": true,
+      "remaining17": false,
+      "V164_regression": false
+    }
+  ],
+  "prior_hard4_actual": [
+    {
+      "input": "3fe5d1004fc925b6",
+      "group": "prior-hard4",
+      "SIO": "READY",
+      "expected": "3fe325f02778dc00",
+      "outputs": {
+        "V164": "3fe325f02778dc00",
+        "Qfplib": "3fe325f02778dc00",
+        "parent": "3fe325f02778dc00",
+        "candidate": "3fe325f02778dc00"
+      },
+      "instructions": {
+        "V164": 21085,
+        "Qfplib": 1784,
+        "parent": 1568,
+        "candidate": 1571
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 360,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "3fe5d1004fc925b6",
+      "group": "prior-hard4",
+      "SIO": "DIRTY",
+      "expected": "3fe325f02778dc00",
+      "outputs": {
+        "V164": "3fe325f02778dc00",
+        "Qfplib": "3fe325f02778dc00",
+        "parent": "3fe325f02778dc00",
+        "candidate": "3fe325f02778dc00"
+      },
+      "instructions": {
+        "V164": 22468,
+        "Qfplib": 1784,
+        "parent": 1750,
+        "candidate": 1753
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 360,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "bfe5d1004fc925b6",
+      "group": "prior-hard4",
+      "SIO": "READY",
+      "expected": "bfe325f02778dc00",
+      "outputs": {
+        "V164": "bfe325f02778dc00",
+        "Qfplib": "bfe325f02778dc00",
+        "parent": "bfe325f02778dc00",
+        "candidate": "bfe325f02778dc00"
+      },
+      "instructions": {
+        "V164": 21107,
+        "Qfplib": 1791,
+        "parent": 1568,
+        "candidate": 1571
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 360,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "bfe5d1004fc925b6",
+      "group": "prior-hard4",
+      "SIO": "DIRTY",
+      "expected": "bfe325f02778dc00",
+      "outputs": {
+        "V164": "bfe325f02778dc00",
+        "Qfplib": "bfe325f02778dc00",
+        "parent": "bfe325f02778dc00",
+        "candidate": "bfe325f02778dc00"
+      },
+      "instructions": {
+        "V164": 22490,
+        "Qfplib": 1791,
+        "parent": 1750,
+        "candidate": 1753
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 360,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "3fecb99548f4fa32",
+      "group": "prior-hard4",
+      "SIO": "READY",
+      "expected": "3fe76897850fe9cd",
+      "outputs": {
+        "V164": "3fe76897850fe9cd",
+        "Qfplib": "3fe76897850fe9cd",
+        "parent": "3fe76897850fe9cd",
+        "candidate": "3fe76897850fe9cd"
+      },
+      "instructions": {
+        "V164": 20874,
+        "Qfplib": 1783,
+        "parent": 1555,
+        "candidate": 1558
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 360,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "3fecb99548f4fa32",
+      "group": "prior-hard4",
+      "SIO": "DIRTY",
+      "expected": "3fe76897850fe9cd",
+      "outputs": {
+        "V164": "3fe76897850fe9cd",
+        "Qfplib": "3fe76897850fe9cd",
+        "parent": "3fe76897850fe9cd",
+        "candidate": "3fe76897850fe9cd"
+      },
+      "instructions": {
+        "V164": 22301,
+        "Qfplib": 1783,
+        "parent": 1725,
+        "candidate": 1728
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 360,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "bfecb99548f4fa32",
+      "group": "prior-hard4",
+      "SIO": "READY",
+      "expected": "bfe76897850fe9cd",
+      "outputs": {
+        "V164": "bfe76897850fe9cd",
+        "Qfplib": "bfe76897850fe9cd",
+        "parent": "bfe76897850fe9cd",
+        "candidate": "bfe76897850fe9cd"
+      },
+      "instructions": {
+        "V164": 20901,
+        "Qfplib": 1790,
+        "parent": 1555,
+        "candidate": 1558
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 360,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": false
+    },
+    {
+      "input": "bfecb99548f4fa32",
+      "group": "prior-hard4",
+      "SIO": "DIRTY",
+      "expected": "bfe76897850fe9cd",
+      "outputs": {
+        "V164": "bfe76897850fe9cd",
+        "Qfplib": "bfe76897850fe9cd",
+        "parent": "bfe76897850fe9cd",
+        "candidate": "bfe76897850fe9cd"
+      },
+      "instructions": {
+        "V164": 22328,
+        "Qfplib": 1790,
+        "parent": 1725,
+        "candidate": 1728
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 360,
+        "candidate": 360
+      },
+      "repair_entries": 1,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": false
+    }
+  ],
+  "remaining17_actual": [
+    {
+      "input": "3f961c6fba6918cf",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "3f961b8e94a5d31a",
+      "outputs": {
+        "V164": "3f961b8e94a5d31a",
+        "Qfplib": "3f961b8e94a5d31a",
+        "parent": "3f961b8e94a5d31a",
+        "candidate": "3f961b8e94a5d31a"
+      },
+      "instructions": {
+        "V164": 2934,
+        "Qfplib": 1803,
+        "parent": 2894,
+        "candidate": 2901
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3f961c6fba6918cf",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "3f961b8e94a5d31a",
+      "outputs": {
+        "V164": "3f961b8e94a5d31a",
+        "Qfplib": "3f961b8e94a5d31a",
+        "parent": "3f961b8e94a5d31a",
+        "candidate": "3f961b8e94a5d31a"
+      },
+      "instructions": {
+        "V164": 3829,
+        "Qfplib": 1803,
+        "parent": 3789,
+        "candidate": 3796
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bf961c6fba6918cf",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "bf961b8e94a5d31a",
+      "outputs": {
+        "V164": "bf961b8e94a5d31a",
+        "Qfplib": "bf961b8e94a5d31a",
+        "parent": "bf961b8e94a5d31a",
+        "candidate": "bf961b8e94a5d31a"
+      },
+      "instructions": {
+        "V164": 2934,
+        "Qfplib": 1811,
+        "parent": 2894,
+        "candidate": 2901
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bf961c6fba6918cf",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "bf961b8e94a5d31a",
+      "outputs": {
+        "V164": "bf961b8e94a5d31a",
+        "Qfplib": "bf961b8e94a5d31a",
+        "parent": "bf961b8e94a5d31a",
+        "candidate": "bf961b8e94a5d31a"
+      },
+      "instructions": {
+        "V164": 3829,
+        "Qfplib": 1811,
+        "parent": 3789,
+        "candidate": 3796
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3ffa9c6244ea8335",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "3ff078a30ce419ea",
+      "outputs": {
+        "V164": "3ff078a30ce419ea",
+        "Qfplib": "3ff078a30ce419ea",
+        "parent": "3ff078a30ce419ea",
+        "candidate": "3ff078a30ce419ea"
+      },
+      "instructions": {
+        "V164": 20878,
+        "Qfplib": 1819,
+        "parent": 20846,
+        "candidate": 20853
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 0,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3ffa9c6244ea8335",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "3ff078a30ce419ea",
+      "outputs": {
+        "V164": "3ff078a30ce419ea",
+        "Qfplib": "3ff078a30ce419ea",
+        "parent": "3ff078a30ce419ea",
+        "candidate": "3ff078a30ce419ea"
+      },
+      "instructions": {
+        "V164": 22797,
+        "Qfplib": 1819,
+        "parent": 22765,
+        "candidate": 22772
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 0,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bffa9c6244ea8335",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "bff078a30ce419ea",
+      "outputs": {
+        "V164": "bff078a30ce419ea",
+        "Qfplib": "bff078a30ce419ea",
+        "parent": "bff078a30ce419ea",
+        "candidate": "bff078a30ce419ea"
+      },
+      "instructions": {
+        "V164": 20882,
+        "Qfplib": 1827,
+        "parent": 20850,
+        "candidate": 20857
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 0,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bffa9c6244ea8335",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "bff078a30ce419ea",
+      "outputs": {
+        "V164": "bff078a30ce419ea",
+        "Qfplib": "bff078a30ce419ea",
+        "parent": "bff078a30ce419ea",
+        "candidate": "bff078a30ce419ea"
+      },
+      "instructions": {
+        "V164": 22801,
+        "Qfplib": 1827,
+        "parent": 22769,
+        "candidate": 22776
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 0,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3facb1df86fa69ad",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "3facaa324e0539f6",
+      "outputs": {
+        "V164": "3facaa324e0539f6",
+        "Qfplib": "3facaa324e0539f6",
+        "parent": "3facaa324e0539f6",
+        "candidate": "3facaa324e0539f6"
+      },
+      "instructions": {
+        "V164": 20966,
+        "Qfplib": 1802,
+        "parent": 20938,
+        "candidate": 20938
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 0,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3facb1df86fa69ad",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "3facaa324e0539f6",
+      "outputs": {
+        "V164": "3facaa324e0539f6",
+        "Qfplib": "3facaa324e0539f6",
+        "parent": "3facaa324e0539f6",
+        "candidate": "3facaa324e0539f6"
+      },
+      "instructions": {
+        "V164": 22724,
+        "Qfplib": 1802,
+        "parent": 22696,
+        "candidate": 22696
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 0,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bfacb1df86fa69ad",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "bfacaa324e0539f6",
+      "outputs": {
+        "V164": "bfacaa324e0539f6",
+        "Qfplib": "bfacaa324e0539f6",
+        "parent": "bfacaa324e0539f6",
+        "candidate": "bfacaa324e0539f6"
+      },
+      "instructions": {
+        "V164": 20953,
+        "Qfplib": 1804,
+        "parent": 20925,
+        "candidate": 20925
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 0,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bfacb1df86fa69ad",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "bfacaa324e0539f6",
+      "outputs": {
+        "V164": "bfacaa324e0539f6",
+        "Qfplib": "bfacaa324e0539f6",
+        "parent": "bfacaa324e0539f6",
+        "candidate": "bfacaa324e0539f6"
+      },
+      "instructions": {
+        "V164": 22711,
+        "Qfplib": 1804,
+        "parent": 22683,
+        "candidate": 22683
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 0,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3fbdc06f67cadc09",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "3fbd9e6b7db569e3",
+      "outputs": {
+        "V164": "3fbd9e6b7db569e3",
+        "Qfplib": "3fbd9e6b7db569e3",
+        "parent": "3fbd9e6b7db569e3",
+        "candidate": "3fbd9e6b7db569e3"
+      },
+      "instructions": {
+        "V164": 3083,
+        "Qfplib": 1796,
+        "parent": 3054,
+        "candidate": 3054
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3fbdc06f67cadc09",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "3fbd9e6b7db569e3",
+      "outputs": {
+        "V164": "3fbd9e6b7db569e3",
+        "Qfplib": "3fbd9e6b7db569e3",
+        "parent": "3fbd9e6b7db569e3",
+        "candidate": "3fbd9e6b7db569e3"
+      },
+      "instructions": {
+        "V164": 3977,
+        "Qfplib": 1796,
+        "parent": 3948,
+        "candidate": 3948
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bfbdc06f67cadc09",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "bfbd9e6b7db569e3",
+      "outputs": {
+        "V164": "bfbd9e6b7db569e3",
+        "Qfplib": "bfbd9e6b7db569e3",
+        "parent": "bfbd9e6b7db569e3",
+        "candidate": "bfbd9e6b7db569e3"
+      },
+      "instructions": {
+        "V164": 3083,
+        "Qfplib": 1802,
+        "parent": 3054,
+        "candidate": 3054
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bfbdc06f67cadc09",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "bfbd9e6b7db569e3",
+      "outputs": {
+        "V164": "bfbd9e6b7db569e3",
+        "Qfplib": "bfbd9e6b7db569e3",
+        "parent": "bfbd9e6b7db569e3",
+        "candidate": "bfbd9e6b7db569e3"
+      },
+      "instructions": {
+        "V164": 3977,
+        "Qfplib": 1802,
+        "parent": 3948,
+        "candidate": 3948
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bfabb0edc0ae5c6f",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "bfabaa0764572d03",
+      "outputs": {
+        "V164": "bfabaa0764572d03",
+        "Qfplib": "bfabaa0764572d03",
+        "parent": "bfabaa0764572d03",
+        "candidate": "bfabaa0764572d03"
+      },
+      "instructions": {
+        "V164": 20419,
+        "Qfplib": 1804,
+        "parent": 20388,
+        "candidate": 20388
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 0,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bfabb0edc0ae5c6f",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "bfabaa0764572d03",
+      "outputs": {
+        "V164": "bfabaa0764572d03",
+        "Qfplib": "bfabaa0764572d03",
+        "parent": "bfabaa0764572d03",
+        "candidate": "bfabaa0764572d03"
+      },
+      "instructions": {
+        "V164": 22193,
+        "Qfplib": 1804,
+        "parent": 22162,
+        "candidate": 22162
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 0,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3f9cb1154b8eeb62",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "3f9caf297452f7b0",
+      "outputs": {
+        "V164": "3f9caf297452f7b0",
+        "Qfplib": "3f9caf297452f7b0",
+        "parent": "3f9caf297452f7b0",
+        "candidate": "3f9caf297452f7b0"
+      },
+      "instructions": {
+        "V164": 20275,
+        "Qfplib": 1803,
+        "parent": 20235,
+        "candidate": 20424
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": true
+    },
+    {
+      "input": "3f9cb1154b8eeb62",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "3f9caf297452f7b0",
+      "outputs": {
+        "V164": "3f9caf297452f7b0",
+        "Qfplib": "3f9caf297452f7b0",
+        "parent": "3f9caf297452f7b0",
+        "candidate": "3f9caf297452f7b0"
+      },
+      "instructions": {
+        "V164": 21940,
+        "Qfplib": 1803,
+        "parent": 21900,
+        "candidate": 22089
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": true
+    },
+    {
+      "input": "3f9519603ee90ac1",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "3f95189c9cef802c",
+      "outputs": {
+        "V164": "3f95189c9cef802c",
+        "Qfplib": "3f95189c9cef802c",
+        "parent": "3f95189c9cef802c",
+        "candidate": "3f95189c9cef802c"
+      },
+      "instructions": {
+        "V164": 2965,
+        "Qfplib": 1805,
+        "parent": 2925,
+        "candidate": 2932
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3f9519603ee90ac1",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "3f95189c9cef802c",
+      "outputs": {
+        "V164": "3f95189c9cef802c",
+        "Qfplib": "3f95189c9cef802c",
+        "parent": "3f95189c9cef802c",
+        "candidate": "3f95189c9cef802c"
+      },
+      "instructions": {
+        "V164": 3889,
+        "Qfplib": 1805,
+        "parent": 3849,
+        "candidate": 3856
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bf9519603ee90ac1",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "bf95189c9cef802c",
+      "outputs": {
+        "V164": "bf95189c9cef802c",
+        "Qfplib": "bf95189c9cef802c",
+        "parent": "bf95189c9cef802c",
+        "candidate": "bf95189c9cef802c"
+      },
+      "instructions": {
+        "V164": 2965,
+        "Qfplib": 1806,
+        "parent": 2925,
+        "candidate": 2932
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bf9519603ee90ac1",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "bf95189c9cef802c",
+      "outputs": {
+        "V164": "bf95189c9cef802c",
+        "Qfplib": "bf95189c9cef802c",
+        "parent": "bf95189c9cef802c",
+        "candidate": "bf95189c9cef802c"
+      },
+      "instructions": {
+        "V164": 3889,
+        "Qfplib": 1806,
+        "parent": 3849,
+        "candidate": 3856
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3f9553054cd8b1e6",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "3f95523b56857345",
+      "outputs": {
+        "V164": "3f95523b56857345",
+        "Qfplib": "3f95523b56857345",
+        "parent": "3f95523b56857345",
+        "candidate": "3f95523b56857345"
+      },
+      "instructions": {
+        "V164": 2945,
+        "Qfplib": 1801,
+        "parent": 2905,
+        "candidate": 2912
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3f9553054cd8b1e6",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "3f95523b56857345",
+      "outputs": {
+        "V164": "3f95523b56857345",
+        "Qfplib": "3f95523b56857345",
+        "parent": "3f95523b56857345",
+        "candidate": "3f95523b56857345"
+      },
+      "instructions": {
+        "V164": 3826,
+        "Qfplib": 1801,
+        "parent": 3786,
+        "candidate": 3793
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bf9553054cd8b1e6",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "bf95523b56857345",
+      "outputs": {
+        "V164": "bf95523b56857345",
+        "Qfplib": "bf95523b56857345",
+        "parent": "bf95523b56857345",
+        "candidate": "bf95523b56857345"
+      },
+      "instructions": {
+        "V164": 2945,
+        "Qfplib": 1811,
+        "parent": 2905,
+        "candidate": 2912
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bf9553054cd8b1e6",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "bf95523b56857345",
+      "outputs": {
+        "V164": "bf95523b56857345",
+        "Qfplib": "bf95523b56857345",
+        "parent": "bf95523b56857345",
+        "candidate": "bf95523b56857345"
+      },
+      "instructions": {
+        "V164": 3826,
+        "Qfplib": 1811,
+        "parent": 3786,
+        "candidate": 3793
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3f989ea03f2b2765",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "3f989d697785a298",
+      "outputs": {
+        "V164": "3f989d697785a298",
+        "Qfplib": "3f989d697785a298",
+        "parent": "3f989d697785a298",
+        "candidate": "3f989d697785a298"
+      },
+      "instructions": {
+        "V164": 2957,
+        "Qfplib": 1811,
+        "parent": 2920,
+        "candidate": 2927
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3f989ea03f2b2765",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "3f989d697785a298",
+      "outputs": {
+        "V164": "3f989d697785a298",
+        "Qfplib": "3f989d697785a298",
+        "parent": "3f989d697785a298",
+        "candidate": "3f989d697785a298"
+      },
+      "instructions": {
+        "V164": 3869,
+        "Qfplib": 1811,
+        "parent": 3832,
+        "candidate": 3839
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bf989ea03f2b2765",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "bf989d697785a298",
+      "outputs": {
+        "V164": "bf989d697785a298",
+        "Qfplib": "bf989d697785a298",
+        "parent": "bf989d697785a298",
+        "candidate": "bf989d697785a298"
+      },
+      "instructions": {
+        "V164": 2957,
+        "Qfplib": 1804,
+        "parent": 2920,
+        "candidate": 2927
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "bf989ea03f2b2765",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "bf989d697785a298",
+      "outputs": {
+        "V164": "bf989d697785a298",
+        "Qfplib": "bf989d697785a298",
+        "parent": "bf989d697785a298",
+        "candidate": "bf989d697785a298"
+      },
+      "instructions": {
+        "V164": 3869,
+        "Qfplib": 1804,
+        "parent": 3832,
+        "candidate": 3839
+      },
+      "stack_bytes": {
+        "V164": 528,
+        "Qfplib": 76,
+        "parent": 536,
+        "candidate": 536
+      },
+      "repair_entries": 0,
+      "CORE_entries": 0,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": false
+    },
+    {
+      "input": "3fdd4f22abbc3aa7",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "3fdb7c1a3e0a219b",
+      "outputs": {
+        "V164": "3fdb7c1a3e0a219b",
+        "Qfplib": "3fdb7c1a3e0a219b",
+        "parent": "3fdb7c1a3e0a219b",
+        "candidate": "3fdb7c1a3e0a219b"
+      },
+      "instructions": {
+        "V164": 20922,
+        "Qfplib": 1790,
+        "parent": 20923,
+        "candidate": 21118
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": true
+    },
+    {
+      "input": "3fdd4f22abbc3aa7",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "3fdb7c1a3e0a219b",
+      "outputs": {
+        "V164": "3fdb7c1a3e0a219b",
+        "Qfplib": "3fdb7c1a3e0a219b",
+        "parent": "3fdb7c1a3e0a219b",
+        "candidate": "3fdb7c1a3e0a219b"
+      },
+      "instructions": {
+        "V164": 22606,
+        "Qfplib": 1790,
+        "parent": 22607,
+        "candidate": 22802
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": true
+    }
+  ],
+  "V164_regressions_actual": [
+    {
+      "input": "3f9cb1154b8eeb62",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "3f9caf297452f7b0",
+      "outputs": {
+        "V164": "3f9caf297452f7b0",
+        "Qfplib": "3f9caf297452f7b0",
+        "parent": "3f9caf297452f7b0",
+        "candidate": "3f9caf297452f7b0"
+      },
+      "instructions": {
+        "V164": 20275,
+        "Qfplib": 1803,
+        "parent": 20235,
+        "candidate": 20424
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": true
+    },
+    {
+      "input": "3f9cb1154b8eeb62",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "3f9caf297452f7b0",
+      "outputs": {
+        "V164": "3f9caf297452f7b0",
+        "Qfplib": "3f9caf297452f7b0",
+        "parent": "3f9caf297452f7b0",
+        "candidate": "3f9caf297452f7b0"
+      },
+      "instructions": {
+        "V164": 21940,
+        "Qfplib": 1803,
+        "parent": 21900,
+        "candidate": 22089
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": true
+    },
+    {
+      "input": "3fdd4f22abbc3aa7",
+      "group": "remaining17",
+      "SIO": "READY",
+      "expected": "3fdb7c1a3e0a219b",
+      "outputs": {
+        "V164": "3fdb7c1a3e0a219b",
+        "Qfplib": "3fdb7c1a3e0a219b",
+        "parent": "3fdb7c1a3e0a219b",
+        "candidate": "3fdb7c1a3e0a219b"
+      },
+      "instructions": {
+        "V164": 20922,
+        "Qfplib": 1790,
+        "parent": 20923,
+        "candidate": 21118
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": true
+    },
+    {
+      "input": "3fdd4f22abbc3aa7",
+      "group": "remaining17",
+      "SIO": "DIRTY",
+      "expected": "3fdb7c1a3e0a219b",
+      "outputs": {
+        "V164": "3fdb7c1a3e0a219b",
+        "Qfplib": "3fdb7c1a3e0a219b",
+        "parent": "3fdb7c1a3e0a219b",
+        "candidate": "3fdb7c1a3e0a219b"
+      },
+      "instructions": {
+        "V164": 22606,
+        "Qfplib": 1790,
+        "parent": 22607,
+        "candidate": 22802
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": true,
+      "V164_regression": true
+    },
+    {
+      "input": "bf9cb1154b8eeb62",
+      "group": "V164-regression",
+      "SIO": "READY",
+      "expected": "bf9caf297452f7b0",
+      "outputs": {
+        "V164": "bf9caf297452f7b0",
+        "Qfplib": "bf9caf297452f7b1",
+        "parent": "bf9caf297452f7b0",
+        "candidate": "bf9caf297452f7b0"
+      },
+      "instructions": {
+        "V164": 20291,
+        "Qfplib": 1811,
+        "parent": 20251,
+        "candidate": 20440
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": true
+    },
+    {
+      "input": "bf9cb1154b8eeb62",
+      "group": "V164-regression",
+      "SIO": "DIRTY",
+      "expected": "bf9caf297452f7b0",
+      "outputs": {
+        "V164": "bf9caf297452f7b0",
+        "Qfplib": "bf9caf297452f7b1",
+        "parent": "bf9caf297452f7b0",
+        "candidate": "bf9caf297452f7b0"
+      },
+      "instructions": {
+        "V164": 21956,
+        "Qfplib": 1811,
+        "parent": 21916,
+        "candidate": 22105
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": true
+    },
+    {
+      "input": "bfdd4f22abbc3aa7",
+      "group": "V164-regression",
+      "SIO": "READY",
+      "expected": "bfdb7c1a3e0a219b",
+      "outputs": {
+        "V164": "bfdb7c1a3e0a219b",
+        "Qfplib": "bfdb7c1a3e0a219a",
+        "parent": "bfdb7c1a3e0a219b",
+        "candidate": "bfdb7c1a3e0a219b"
+      },
+      "instructions": {
+        "V164": 20956,
+        "Qfplib": 1792,
+        "parent": 20957,
+        "candidate": 21152
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": true
+    },
+    {
+      "input": "bfdd4f22abbc3aa7",
+      "group": "V164-regression",
+      "SIO": "DIRTY",
+      "expected": "bfdb7c1a3e0a219b",
+      "outputs": {
+        "V164": "bfdb7c1a3e0a219b",
+        "Qfplib": "bfdb7c1a3e0a219a",
+        "parent": "bfdb7c1a3e0a219b",
+        "candidate": "bfdb7c1a3e0a219b"
+      },
+      "instructions": {
+        "V164": 22640,
+        "Qfplib": 1792,
+        "parent": 22641,
+        "candidate": 22836
+      },
+      "stack_bytes": {
+        "V164": 880,
+        "Qfplib": 76,
+        "parent": 888,
+        "candidate": 888
+      },
+      "repair_entries": 1,
+      "CORE_entries": 1,
+      "fixed6": false,
+      "remaining17": false,
+      "V164_regression": true
+    }
+  ],
+  "performance_tradeoffs": {
+    "net_code_bytes_over_residual_parent": 32,
+    "net_over_packing_parent": 476,
+    "stack_delta_over_residual_parent": 0,
+    "selected_parent_deltas": {
+      "-1376": 2,
+      "-2042": 2,
+      "-19269": 1,
+      "-20720": 1,
+      "-19288": 1,
+      "-20739": 1,
+      "-19075": 1,
+      "-20584": 1,
+      "-19092": 1,
+      "-20601": 1,
+      "-18854": 1,
+      "-20396": 1,
+      "-18860": 1,
+      "-20402": 1,
+      "3": 8,
+      "7": 20,
+      "0": 156,
+      "189": 4,
+      "195": 4,
+      "-1450": 2,
+      "-1974": 2,
+      "1": 2
+    },
+    "author_full_profile_not_reexecuted": {
+      "state_cases": 79096,
+      "vs_parent": {
+        "slower": 146,
+        "equal": 78922,
+        "faster": 28
+      },
+      "vs_V164": {
+        "faster": 74580,
+        "equal": 4508,
+        "slower": 8
+      },
+      "raw_correct_Qfplib_deficits_parent": 23,
+      "raw_correct_Qfplib_deficits_candidate": 17,
+      "new_Qfplib_deficits_vs_parent": 0,
+      "wrong_Qfplib_state_outcomes_retained": 6648
+    },
+    "whole_atan_speed_goal_complete": false
+  },
+  "whole_atan_GO": false,
+  "whole_library_GO": false,
+  "production_integration_GO": false,
+  "mixed_image_qualification": false,
+  "hardware_GO": false,
+  "physical_cycles_measured": false,
+  "all_author_public_or_helper_sweeps_replayed": false,
+  "polynomial_analysis_or_NEXT_implemented_or_reviewed": false,
+  "canonical_Git_USB_Flash_lease_access": false,
+  "frozen_author_or_parent_files_changed": false,
+  "limitations": [
+    "Bounded delta proof and compact selected execution; not exhaustive all-input public atan qualification.",
+    "17 raw speed deficits, ordinary additions and4 V164 regression inputs remain explicit.",
+    "No repaired-base integration, whole-library acceptance, physical timing or hardware qualification."
+  ],
+  "own_artifacts": {
+    "review.py": "4cf23bd7716431652c99d1db86c0a776d666a0028de8087e330f9572e76456f9",
+    "SOURCE-OBJECT-PROOF.json": "3429d93cdcc3841bc1573959a0d3dce0b4e44a3e22a1b622e9d81cdfe3104773",
+    "EXACT-GEOMETRY-BOUND.json": "c8e445b5a37848ae79bec01b523ee6be3678f45326bb73c4fba32f5bbe39e0ac",
+    "SELECTED-ARM-GEOMETRY.json": "1909247bbf87a29680aa3e55bdc51959a8fbbc4636a10a7cadfb69461c864d55",
+    "OWN-ORACLE-INTERVALS.json": "d7ef15c3260afa33fc49e18bbc2c36380b697115bb668185c38ca4d00458fa28",
+    "EXECUTION-NOTES.json": "54d2edff10e7314e34a1279f74bd3cf51269645841a991e339d2568d5c7015a9",
+    "candidate-full.o": "a68a1ad91a4ec5931b2ff8ee16afc7982604b414bffb4651077997f9f99dd569",
+    "candidate.elf": "5cea0e75f3d4a7b29af31c3af6d6315b0e0d569bb7c5a3ca5125bf341cfdecc7"
+  }
+}

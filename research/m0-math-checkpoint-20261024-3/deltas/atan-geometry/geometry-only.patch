@@ -1,0 +1,42 @@
+--- residual-parent/code/native_eabi_m0_atan_fast.inc
++++ candidate/code/native_eabi_m0_atan_fast.inc
+@@ -48,7 +48,7 @@
+ #endif
+ }
+ 
+-// Internal domain: non-inverted exponent -5..-1 and quotient error <33.
++// Internal domain: every fast reduction geometry, quotient error <33.
+ // Reuse the parent's exact dyadic numerator and denominator.
+ __attribute__((optimize("Os"),noinline,cold)) static int32_t atan_fast_tail_repair(U n,U d,U h) {
+   const uint32_t al=uint32_t(h),ah=uint32_t(h>>32),bl=uint32_t(d),bh=uint32_t(d>>32);
+@@ -64,7 +64,7 @@
+   const bool negative=high<0;
+   if(negative) {low=U(0)-low;high=~high+int32_t(!low);}
+   // abs(residual)<33*d, so high<=32 and this top word fits uint32.
+-  // d>=2^59, hence the truncated divisor is never zero.
++  // d>=2^58, hence the truncated divisor is at least2^20.
+   const uint32_t top=(uint32_t(high)<<26)|uint32_t(low>>38);
+   const uint32_t delta=atan_tail_divide(top,uint32_t(d>>38));
+   return negative?-int32_t(delta):int32_t(delta);
+@@ -100,7 +100,11 @@
+       // True errors are strictly below the radius, so equality of the
+       // midpoint distance with the radius remains safe.
+       if(distance73<radius73) {
+-        if(normalization>=5 || h>(U(1)<<62)+(U(1)<<40)) return false;
++        uint32_t repaired_radius=6;
++        if(h>(U(1)<<62)+(U(1)<<40)) {
++          if(h>UINT64_C(4722366482869645213)) return false;
++          repaired_radius=7;
++        }
+         int32_t delta=atan_fast_tail_repair(numerator,denominator,h);
+         if(negative!=invert) delta=-delta;
+         // This path starts within54 units of a midpoint. abs(delta)<=33,
+@@ -108,7 +112,7 @@
+         // change. Reuse them, update only the tail and rounding increment.
+         tail=uint32_t(int32_t(tail)+delta);
+         const uint32_t repaired_distance=tail>half?tail-half:half-tail;
+-        if(repaired_distance<6) return false;
++        if(repaired_distance<repaired_radius) return false;
+       }
+     }
+   }

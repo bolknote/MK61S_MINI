@@ -1,0 +1,12 @@
+{
+  "status": "PREPARED_PRIVATE_ATAN_GEOMETRY_EXTENSION",
+  "parent_result_sha256": "e047da61a015906cac349efa0331625bd625c53a7e42de622fb94268225d669c",
+  "source_sha256": "b8a45df5715c7fbf3e7c5a6d29cd7f063daf8695c7f9324cd4a4647ffb682f7b",
+  "small_h_cap": 4611687117939015680,
+  "outer_h_cap": 4722366482869645213,
+  "new_tables": 0,
+  "new_global_RAM": 0,
+  "canonical_or_frozen_changed": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

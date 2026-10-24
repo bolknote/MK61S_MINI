@@ -1,0 +1,789 @@
+{
+  "status": "PRIVATE_ATAN_COMPONENT_PROBE",
+  "rows": [
+    {
+      "x": "3FB97996F4E5F9F0",
+      "expected": "3FB964309C79B7A8",
+      "outputs": {
+        "resident": "3FB964309C79B7A8",
+        "Qfplib": "3FB964309C79B7A8",
+        "parent": "3FB964309C79B7A8",
+        "candidate": "3FB964309C79B7A8"
+      },
+      "instructions": {
+        "resident": 3942,
+        "Qfplib": 1796,
+        "parent": 1557,
+        "candidate": 1558
+      }
+    },
+    {
+      "x": "BFDD440162570130",
+      "expected": "BFDB72E65095F539",
+      "outputs": {
+        "resident": "BFDB72E65095F539",
+        "Qfplib": "BFDB72E65095F539",
+        "parent": "BFDB72E65095F539",
+        "candidate": "BFDB72E65095F539"
+      },
+      "instructions": {
+        "resident": 3914,
+        "Qfplib": 1796,
+        "parent": 1475,
+        "candidate": 1475
+      }
+    },
+    {
+      "x": "BFB97996F4E5F9F0",
+      "expected": "BFB964309C79B7A8",
+      "outputs": {
+        "resident": "BFB964309C79B7A8",
+        "Qfplib": "BFB964309C79B7A8",
+        "parent": "BFB964309C79B7A8",
+        "candidate": "BFB964309C79B7A8"
+      },
+      "instructions": {
+        "resident": 3942,
+        "Qfplib": 1802,
+        "parent": 1557,
+        "candidate": 1558
+      }
+    },
+    {
+      "x": "3FDD440162570130",
+      "expected": "3FDB72E65095F539",
+      "outputs": {
+        "resident": "3FDB72E65095F539",
+        "Qfplib": "3FDB72E65095F539",
+        "parent": "3FDB72E65095F539",
+        "candidate": "3FDB72E65095F539"
+      },
+      "instructions": {
+        "resident": 3914,
+        "Qfplib": 1786,
+        "parent": 1475,
+        "candidate": 1475
+      }
+    },
+    {
+      "x": "3FD3000000000003",
+      "expected": "3FD278372057EF48",
+      "outputs": {
+        "resident": "3FD278372057EF48",
+        "Qfplib": "3FD278372057EF48",
+        "parent": "3FD278372057EF48",
+        "candidate": "3FD278372057EF48"
+      },
+      "instructions": {
+        "resident": 3126,
+        "Qfplib": 1789,
+        "parent": 1578,
+        "candidate": 1578
+      }
+    },
+    {
+      "x": "BFD3000000000003",
+      "expected": "BFD278372057EF48",
+      "outputs": {
+        "resident": "BFD278372057EF48",
+        "Qfplib": "BFD278372057EF48",
+        "parent": "BFD278372057EF48",
+        "candidate": "BFD278372057EF48"
+      },
+      "instructions": {
+        "resident": 3126,
+        "Qfplib": 1792,
+        "parent": 1578,
+        "candidate": 1578
+      }
+    },
+    {
+      "x": "BFDB600000000000",
+      "expected": "BFD9DE2845677160",
+      "outputs": {
+        "resident": "BFD9DE2845677160",
+        "Qfplib": "BFD9DE2845677160",
+        "parent": "BFD9DE2845677160",
+        "candidate": "BFD9DE2845677160"
+      },
+      "instructions": {
+        "resident": 22727,
+        "Qfplib": 1790,
+        "parent": 1555,
+        "candidate": 1556
+      }
+    },
+    {
+      "x": "3FDB600000000000",
+      "expected": "3FD9DE2845677160",
+      "outputs": {
+        "resident": "3FD9DE2845677160",
+        "Qfplib": "3FD9DE284567715F",
+        "parent": "3FD9DE2845677160",
+        "candidate": "3FD9DE2845677160"
+      },
+      "instructions": {
+        "resident": 22718,
+        "Qfplib": 1793,
+        "parent": 1555,
+        "candidate": 1556
+      }
+    },
+    {
+      "x": "3F9BDA3A23F63D6A",
+      "expected": "3F9BD87832E3A786",
+      "outputs": {
+        "resident": "3F9BD87832E3A786",
+        "Qfplib": "3F9BD87832E3A786",
+        "parent": "3F9BD87832E3A786",
+        "candidate": "3F9BD87832E3A786"
+      },
+      "instructions": {
+        "resident": 3800,
+        "Qfplib": 1804,
+        "parent": 1509,
+        "candidate": 1510
+      }
+    },
+    {
+      "x": "BF9BDA3A23F63D6A",
+      "expected": "BF9BD87832E3A786",
+      "outputs": {
+        "resident": "BF9BD87832E3A786",
+        "Qfplib": "BF9BD87832E3A786",
+        "parent": "BF9BD87832E3A786",
+        "candidate": "BF9BD87832E3A786"
+      },
+      "instructions": {
+        "resident": 3800,
+        "Qfplib": 1811,
+        "parent": 1509,
+        "candidate": 1510
+      }
+    },
+    {
+      "x": "3FE5D1004FC925B6",
+      "expected": "3FE325F02778DC00",
+      "outputs": {
+        "resident": "3FE325F02778DC00",
+        "Qfplib": "3FE325F02778DC00",
+        "parent": "3FE325F02778DC00",
+        "candidate": "3FE325F02778DC00"
+      },
+      "instructions": {
+        "resident": 22468,
+        "Qfplib": 1784,
+        "parent": 1750,
+        "candidate": 1753
+      }
+    },
+    {
+      "x": "BFE5D1004FC925B6",
+      "expected": "BFE325F02778DC00",
+      "outputs": {
+        "resident": "BFE325F02778DC00",
+        "Qfplib": "BFE325F02778DC00",
+        "parent": "BFE325F02778DC00",
+        "candidate": "BFE325F02778DC00"
+      },
+      "instructions": {
+        "resident": 22490,
+        "Qfplib": 1791,
+        "parent": 1750,
+        "candidate": 1753
+      }
+    },
+    {
+      "x": "3FECB99548F4FA32",
+      "expected": "3FE76897850FE9CD",
+      "outputs": {
+        "resident": "3FE76897850FE9CD",
+        "Qfplib": "3FE76897850FE9CD",
+        "parent": "3FE76897850FE9CD",
+        "candidate": "3FE76897850FE9CD"
+      },
+      "instructions": {
+        "resident": 22301,
+        "Qfplib": 1783,
+        "parent": 1725,
+        "candidate": 1728
+      }
+    },
+    {
+      "x": "BFECB99548F4FA32",
+      "expected": "BFE76897850FE9CD",
+      "outputs": {
+        "resident": "BFE76897850FE9CD",
+        "Qfplib": "BFE76897850FE9CD",
+        "parent": "BFE76897850FE9CD",
+        "candidate": "BFE76897850FE9CD"
+      },
+      "instructions": {
+        "resident": 22328,
+        "Qfplib": 1790,
+        "parent": 1725,
+        "candidate": 1728
+      }
+    },
+    {
+      "x": "0000000000000000",
+      "expected": "0000000000000000",
+      "outputs": {
+        "resident": "0000000000000000",
+        "Qfplib": "0000000000000000",
+        "parent": "0000000000000000",
+        "candidate": "0000000000000000"
+      },
+      "instructions": {
+        "resident": 19,
+        "Qfplib": 1763,
+        "parent": 19,
+        "candidate": 19
+      }
+    },
+    {
+      "x": "8000000000000000",
+      "expected": "8000000000000000",
+      "outputs": {
+        "resident": "8000000000000000",
+        "Qfplib": "0000000000000000",
+        "parent": "8000000000000000",
+        "candidate": "8000000000000000"
+      },
+      "instructions": {
+        "resident": 19,
+        "Qfplib": 1767,
+        "parent": 19,
+        "candidate": 19
+      }
+    },
+    {
+      "x": "3F90000000000000",
+      "expected": "3F8FFF555BBB729B",
+      "outputs": {
+        "resident": "3F8FFF555BBB729B",
+        "Qfplib": "3F8FFF555BBB729A",
+        "parent": "3F8FFF555BBB729B",
+        "candidate": "3F8FFF555BBB729B"
+      },
+      "instructions": {
+        "resident": 912,
+        "Qfplib": 1813,
+        "parent": 835,
+        "candidate": 835
+      }
+    },
+    {
+      "x": "3FA0000000000000",
+      "expected": "3F9FFD55BBA97625",
+      "outputs": {
+        "resident": "3F9FFD55BBA97625",
+        "Qfplib": "3F9FFD55BBA97625",
+        "parent": "3F9FFD55BBA97625",
+        "candidate": "3F9FFD55BBA97625"
+      },
+      "instructions": {
+        "resident": 955,
+        "Qfplib": 1806,
+        "parent": 849,
+        "candidate": 849
+      }
+    },
+    {
+      "x": "3FB999999999999A",
+      "expected": "3FB983E282E2CC4D",
+      "outputs": {
+        "resident": "3FB983E282E2CC4D",
+        "Qfplib": "3FB983E282E2CC4C",
+        "parent": "3FB983E282E2CC4D",
+        "candidate": "3FB983E282E2CC4D"
+      },
+      "instructions": {
+        "resident": 1600,
+        "Qfplib": 1798,
+        "parent": 1495,
+        "candidate": 1495
+      }
+    },
+    {
+      "x": "3FD0000000000000",
+      "expected": "3FCF5B75F92C80DD",
+      "outputs": {
+        "resident": "3FCF5B75F92C80DD",
+        "Qfplib": "3FCF5B75F92C80DD",
+        "parent": "3FCF5B75F92C80DD",
+        "candidate": "3FCF5B75F92C80DD"
+      },
+      "instructions": {
+        "resident": 962,
+        "Qfplib": 1790,
+        "parent": 848,
+        "candidate": 848
+      }
+    },
+    {
+      "x": "3FE0000000000000",
+      "expected": "3FDDAC670561BB4F",
+      "outputs": {
+        "resident": "3FDDAC670561BB4F",
+        "Qfplib": "3FDDAC670561BB4F",
+        "parent": "3FDDAC670561BB4F",
+        "candidate": "3FDDAC670561BB4F"
+      },
+      "instructions": {
+        "resident": 962,
+        "Qfplib": 1793,
+        "parent": 848,
+        "candidate": 848
+      }
+    },
+    {
+      "x": "3FF0000000000000",
+      "expected": "3FE921FB54442D18",
+      "outputs": {
+        "resident": "3FE921FB54442D18",
+        "Qfplib": "3FE921FB54442D18",
+        "parent": "3FE921FB54442D18",
+        "candidate": "3FE921FB54442D18"
+      },
+      "instructions": {
+        "resident": 968,
+        "Qfplib": 1788,
+        "parent": 854,
+        "candidate": 854
+      }
+    },
+    {
+      "x": "4000000000000000",
+      "expected": "3FF1B6E192EBBE44",
+      "outputs": {
+        "resident": "3FF1B6E192EBBE44",
+        "Qfplib": "3FF1B6E192EBBE44",
+        "parent": "3FF1B6E192EBBE44",
+        "candidate": "3FF1B6E192EBBE44"
+      },
+      "instructions": {
+        "resident": 1136,
+        "Qfplib": 1798,
+        "parent": 1025,
+        "candidate": 1025
+      }
+    },
+    {
+      "x": "4010000000000000",
+      "expected": "3FF5368C951E9CFD",
+      "outputs": {
+        "resident": "3FF5368C951E9CFD",
+        "Qfplib": "3FF5368C951E9CFD",
+        "parent": "3FF5368C951E9CFD",
+        "candidate": "3FF5368C951E9CFD"
+      },
+      "instructions": {
+        "resident": 1127,
+        "Qfplib": 1805,
+        "parent": 1026,
+        "candidate": 1026
+      }
+    },
+    {
+      "x": "4050000000000000",
+      "expected": "3FF8E1FCA98CB633",
+      "outputs": {
+        "resident": "3FF8E1FCA98CB633",
+        "Qfplib": "3FF8E1FCA98CB633",
+        "parent": "3FF8E1FCA98CB633",
+        "candidate": "3FF8E1FCA98CB633"
+      },
+      "instructions": {
+        "resident": 1138,
+        "Qfplib": 1802,
+        "parent": 1027,
+        "candidate": 1027
+      }
+    },
+    {
+      "x": "4060000000000000",
+      "expected": "3FF901FB7EEE715E",
+      "outputs": {
+        "resident": "3FF901FB7EEE715E",
+        "Qfplib": "3FF901FB7EEE715E",
+        "parent": "3FF901FB7EEE715E",
+        "candidate": "3FF901FB7EEE715E"
+      },
+      "instructions": {
+        "resident": 930,
+        "Qfplib": 1801,
+        "parent": 930,
+        "candidate": 930
+      }
+    },
+    {
+      "x": "54B249AD2594C37D",
+      "expected": "3FF921FB54442D18",
+      "outputs": {
+        "resident": "3FF921FB54442D18",
+        "Qfplib": "3FF921FB54442D18",
+        "parent": "3FF921FB54442D18",
+        "candidate": "3FF921FB54442D18"
+      },
+      "instructions": {
+        "resident": 43,
+        "Qfplib": 1788,
+        "parent": 43,
+        "candidate": 43
+      }
+    },
+    {
+      "x": "3FCAC3FC385F516E",
+      "expected": "3FCA62A8623D8A72",
+      "outputs": {
+        "resident": "3FCA62A8623D8A72",
+        "Qfplib": "3FCA62A8623D8A73",
+        "parent": "3FCA62A8623D8A72",
+        "candidate": "3FCA62A8623D8A72"
+      },
+      "instructions": {
+        "resident": 22524,
+        "Qfplib": 1794,
+        "parent": 22520,
+        "candidate": 22524
+      }
+    },
+    {
+      "x": "BFCAC3FC385F516E",
+      "expected": "BFCA62A8623D8A72",
+      "outputs": {
+        "resident": "BFCA62A8623D8A72",
+        "Qfplib": "BFCA62A8623D8A73",
+        "parent": "BFCA62A8623D8A72",
+        "candidate": "BFCA62A8623D8A72"
+      },
+      "instructions": {
+        "resident": 22534,
+        "Qfplib": 1795,
+        "parent": 22530,
+        "candidate": 22534
+      }
+    },
+    {
+      "x": "3FFA9C6244EA8335",
+      "expected": "3FF078A30CE419EA",
+      "outputs": {
+        "resident": "3FF078A30CE419EA",
+        "Qfplib": "3FF078A30CE419EA",
+        "parent": "3FF078A30CE419EA",
+        "candidate": "3FF078A30CE419EA"
+      },
+      "instructions": {
+        "resident": 22797,
+        "Qfplib": 1819,
+        "parent": 22765,
+        "candidate": 22772
+      }
+    },
+    {
+      "x": "BFFA9C6244EA8335",
+      "expected": "BFF078A30CE419EA",
+      "outputs": {
+        "resident": "BFF078A30CE419EA",
+        "Qfplib": "BFF078A30CE419EA",
+        "parent": "BFF078A30CE419EA",
+        "candidate": "BFF078A30CE419EA"
+      },
+      "instructions": {
+        "resident": 22801,
+        "Qfplib": 1827,
+        "parent": 22769,
+        "candidate": 22776
+      }
+    },
+    {
+      "x": "3FA42578CEE83920",
+      "expected": "3FA422D0076E6436",
+      "outputs": {
+        "resident": "3FA422D0076E6436",
+        "Qfplib": "3FA422D0076E6437",
+        "parent": "3FA422D0076E6436",
+        "candidate": "3FA422D0076E6436"
+      },
+      "instructions": {
+        "resident": 22424,
+        "Qfplib": 1803,
+        "parent": 22396,
+        "candidate": 22396
+      }
+    },
+    {
+      "x": "BFA42578CEE83920",
+      "expected": "BFA422D0076E6436",
+      "outputs": {
+        "resident": "BFA422D0076E6436",
+        "Qfplib": "BFA422D0076E6437",
+        "parent": "BFA422D0076E6436",
+        "candidate": "BFA422D0076E6436"
+      },
+      "instructions": {
+        "resident": 22466,
+        "Qfplib": 1802,
+        "parent": 22438,
+        "candidate": 22438
+      }
+    },
+    {
+      "x": "3FACB1DF86FA69AD",
+      "expected": "3FACAA324E0539F6",
+      "outputs": {
+        "resident": "3FACAA324E0539F6",
+        "Qfplib": "3FACAA324E0539F6",
+        "parent": "3FACAA324E0539F6",
+        "candidate": "3FACAA324E0539F6"
+      },
+      "instructions": {
+        "resident": 22724,
+        "Qfplib": 1802,
+        "parent": 22696,
+        "candidate": 22696
+      }
+    },
+    {
+      "x": "BFACB1DF86FA69AD",
+      "expected": "BFACAA324E0539F6",
+      "outputs": {
+        "resident": "BFACAA324E0539F6",
+        "Qfplib": "BFACAA324E0539F6",
+        "parent": "BFACAA324E0539F6",
+        "candidate": "BFACAA324E0539F6"
+      },
+      "instructions": {
+        "resident": 22711,
+        "Qfplib": 1804,
+        "parent": 22683,
+        "candidate": 22683
+      }
+    },
+    {
+      "x": "3F99C24957C90E1F",
+      "expected": "3F99C0E56701C7AB",
+      "outputs": {
+        "resident": "3F99C0E56701C7AB",
+        "Qfplib": "3F99C0E56701C7AA",
+        "parent": "3F99C0E56701C7AB",
+        "candidate": "3F99C0E56701C7AB"
+      },
+      "instructions": {
+        "resident": 22076,
+        "Qfplib": 1805,
+        "parent": 22039,
+        "candidate": 22046
+      }
+    },
+    {
+      "x": "BF99C24957C90E1F",
+      "expected": "BF99C0E56701C7AB",
+      "outputs": {
+        "resident": "BF99C0E56701C7AB",
+        "Qfplib": "BF99C0E56701C7AA",
+        "parent": "BF99C0E56701C7AB",
+        "candidate": "BF99C0E56701C7AB"
+      },
+      "instructions": {
+        "resident": 22099,
+        "Qfplib": 1808,
+        "parent": 22062,
+        "candidate": 22069
+      }
+    },
+    {
+      "x": "3FABB0EDC0AE5C6F",
+      "expected": "3FABAA0764572D03",
+      "outputs": {
+        "resident": "3FABAA0764572D03",
+        "Qfplib": "3FABAA0764572D02",
+        "parent": "3FABAA0764572D03",
+        "candidate": "3FABAA0764572D03"
+      },
+      "instructions": {
+        "resident": 22164,
+        "Qfplib": 1804,
+        "parent": 22133,
+        "candidate": 22133
+      }
+    },
+    {
+      "x": "BFABB0EDC0AE5C6F",
+      "expected": "BFABAA0764572D03",
+      "outputs": {
+        "resident": "BFABAA0764572D03",
+        "Qfplib": "BFABAA0764572D03",
+        "parent": "BFABAA0764572D03",
+        "candidate": "BFABAA0764572D03"
+      },
+      "instructions": {
+        "resident": 22193,
+        "Qfplib": 1804,
+        "parent": 22162,
+        "candidate": 22162
+      }
+    },
+    {
+      "x": "3F9CB1154B8EEB62",
+      "expected": "3F9CAF297452F7B0",
+      "outputs": {
+        "resident": "3F9CAF297452F7B0",
+        "Qfplib": "3F9CAF297452F7B0",
+        "parent": "3F9CAF297452F7B0",
+        "candidate": "3F9CAF297452F7B0"
+      },
+      "instructions": {
+        "resident": 21940,
+        "Qfplib": 1803,
+        "parent": 21900,
+        "candidate": 22089
+      }
+    },
+    {
+      "x": "BF9CB1154B8EEB62",
+      "expected": "BF9CAF297452F7B0",
+      "outputs": {
+        "resident": "BF9CAF297452F7B0",
+        "Qfplib": "BF9CAF297452F7B1",
+        "parent": "BF9CAF297452F7B0",
+        "candidate": "BF9CAF297452F7B0"
+      },
+      "instructions": {
+        "resident": 21956,
+        "Qfplib": 1811,
+        "parent": 21916,
+        "candidate": 22105
+      }
+    },
+    {
+      "x": "3F978E61B9899F1C",
+      "expected": "3F978D517EBF93D1",
+      "outputs": {
+        "resident": "3F978D517EBF93D1",
+        "Qfplib": "3F978D517EBF93D2",
+        "parent": "3F978D517EBF93D1",
+        "candidate": "3F978D517EBF93D1"
+      },
+      "instructions": {
+        "resident": 22252,
+        "Qfplib": 1811,
+        "parent": 22212,
+        "candidate": 22219
+      }
+    },
+    {
+      "x": "BF978E61B9899F1C",
+      "expected": "BF978D517EBF93D1",
+      "outputs": {
+        "resident": "BF978D517EBF93D1",
+        "Qfplib": "BF978D517EBF93D2",
+        "parent": "BF978D517EBF93D1",
+        "candidate": "BF978D517EBF93D1"
+      },
+      "instructions": {
+        "resident": 22251,
+        "Qfplib": 1806,
+        "parent": 22211,
+        "candidate": 22218
+      }
+    },
+    {
+      "x": "3F9FF6556D0F3F46",
+      "expected": "3F9FF3AD92087F15",
+      "outputs": {
+        "resident": "3F9FF3AD92087F15",
+        "Qfplib": "3F9FF3AD92087F16",
+        "parent": "3F9FF3AD92087F15",
+        "candidate": "3F9FF3AD92087F15"
+      },
+      "instructions": {
+        "resident": 22475,
+        "Qfplib": 1803,
+        "parent": 22435,
+        "candidate": 1696
+      }
+    },
+    {
+      "x": "BF9FF6556D0F3F46",
+      "expected": "BF9FF3AD92087F15",
+      "outputs": {
+        "resident": "BF9FF3AD92087F15",
+        "Qfplib": "BF9FF3AD92087F15",
+        "parent": "BF9FF3AD92087F15",
+        "candidate": "BF9FF3AD92087F15"
+      },
+      "instructions": {
+        "resident": 22456,
+        "Qfplib": 1811,
+        "parent": 22416,
+        "candidate": 1696
+      }
+    },
+    {
+      "x": "3F902767970881C7",
+      "expected": "3F90270FC87F3EF5",
+      "outputs": {
+        "resident": "3F90270FC87F3EF5",
+        "Qfplib": "3F90270FC87F3EF5",
+        "parent": "3F90270FC87F3EF5",
+        "candidate": "3F90270FC87F3EF5"
+      },
+      "instructions": {
+        "resident": 22331,
+        "Qfplib": 1809,
+        "parent": 22292,
+        "candidate": 1708
+      }
+    },
+    {
+      "x": "BF902767970881C7",
+      "expected": "BF90270FC87F3EF5",
+      "outputs": {
+        "resident": "BF90270FC87F3EF5",
+        "Qfplib": "BF90270FC87F3EF5",
+        "parent": "BF90270FC87F3EF5",
+        "candidate": "BF90270FC87F3EF5"
+      },
+      "instructions": {
+        "resident": 22348,
+        "Qfplib": 1804,
+        "parent": 22309,
+        "candidate": 1708
+      }
+    },
+    {
+      "x": "3F940A1CD7C64F14",
+      "expected": "3F94097539A6C00A",
+      "outputs": {
+        "resident": "3F94097539A6C00A",
+        "Qfplib": "3F94097539A6C00A",
+        "parent": "3F94097539A6C00A",
+        "candidate": "3F94097539A6C00A"
+      },
+      "instructions": {
+        "resident": 22151,
+        "Qfplib": 1806,
+        "parent": 22111,
+        "candidate": 1715
+      }
+    },
+    {
+      "x": "BF940A1CD7C64F14",
+      "expected": "BF94097539A6C00A",
+      "outputs": {
+        "resident": "BF94097539A6C00A",
+        "Qfplib": "BF94097539A6C00A",
+        "parent": "BF94097539A6C00A",
+        "candidate": "BF94097539A6C00A"
+      },
+      "instructions": {
+        "resident": 22157,
+        "Qfplib": 1810,
+        "parent": 22117,
+        "candidate": 1715
+      }
+    }
+  ]
+}

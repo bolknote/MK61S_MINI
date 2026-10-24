@@ -1,0 +1,139 @@
+{
+  "status": "TWO_RAW_ATAN_SPEED_DEFICITS_OPEN",
+  "raw_inputs": 2,
+  "state_rows": 4,
+  "rows": [
+    {
+      "x": "3FEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "candidate": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000"
+      },
+      "profiled": true,
+      "expected": "3FE8AE47A21A1998",
+      "outputs": {
+        "parent": "3FE8AE47A21A1998",
+        "candidate": "3FE8AE47A21A1998",
+        "Qfplib": "3FE8AE47A21A1998",
+        "resident": "3FE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 20968,
+        "candidate": 21048,
+        "Qfplib": 1787,
+        "resident": 20785
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3FEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FE8AE47A21A1998",
+      "outputs": {
+        "parent": "3FE8AE47A21A1998",
+        "candidate": "3FE8AE47A21A1998",
+        "Qfplib": "3FE8AE47A21A1998",
+        "resident": "3FE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 22684,
+        "candidate": 22764,
+        "Qfplib": 1787,
+        "resident": 22501
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "candidate": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000"
+      },
+      "profiled": true,
+      "expected": "BFE8AE47A21A1998",
+      "outputs": {
+        "parent": "BFE8AE47A21A1998",
+        "candidate": "BFE8AE47A21A1998",
+        "Qfplib": "BFE8AE47A21A1998",
+        "resident": "BFE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 20967,
+        "candidate": 21047,
+        "Qfplib": 1787,
+        "resident": 20784
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFE8AE47A21A1998",
+      "outputs": {
+        "parent": "BFE8AE47A21A1998",
+        "candidate": "BFE8AE47A21A1998",
+        "Qfplib": "BFE8AE47A21A1998",
+        "resident": "BFE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 22683,
+        "candidate": 22763,
+        "Qfplib": 1787,
+        "resident": 22500
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    }
+  ]
+}

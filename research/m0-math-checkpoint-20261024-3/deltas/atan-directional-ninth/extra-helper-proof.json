@@ -1,0 +1,33 @@
+{
+  "status": "PASS_NINTH_AND_INVERTED_RESIDUE_UNBOUNDED_ARM_CONTRACTS",
+  "reduced_h_samples": 1211,
+  "ninth_ARM_calls": 33908,
+  "ninth_profiled_calls": 1344,
+  "ninth_wrapper_instruction_range": [
+    35,
+    35
+  ],
+  "ninth_max_error_Q70": 0.49873508047481835,
+  "ninth_exact_bound": "51/100 Q70",
+  "ninth_reference": "Unbounded Fraction(h**9,9*2**560), exact nearest division by5 and actual decoded ARM outputs.",
+  "inverse_pairs": 532,
+  "inverse_ARM_calls": 6330,
+  "inverse_accepted": 1060,
+  "inverse_declined": 5270,
+  "inverse_reference": "Unbounded signed residual with shifted interval, and Fraction((n<<64),d)-h; every accepted case has error<=1/2.",
+  "exact_third_inputs": 2324,
+  "exact_third_ARM_calls": 4648,
+  "exact_third_transcript_sha256": "2326a4a29924669aa4a03781f05996104082a894498389dd174dfa72320de446",
+  "ninth_stack_bytes": 20,
+  "inverse_stack_bytes": 40,
+  "PCS_SP_bounded_writes_and_both_SIO_states_checked_every_call": true,
+  "no_firmware_or_ROM_mapped": true,
+  "ninth_transcript_sha256": "db010415e91d799fa603ed969e79d0f98f2c69e83fe43d037ab85249d145ac66",
+  "inverse_transcript_sha256": "20eab128ca3ecd035bf1d2a5252d5207df5fb1bc586bbdaa563b5c566941fd94",
+  "source_sha256": "996dcd240df881b6592b61aeca95fd446c7522b6fff71bc1c6de8eeed9001d23",
+  "candidate_ELF_sha256": "35247afa5324a99d061028c606b495a5cd2ccf4bb778a62949d285cf32d99b0a",
+  "ninth_wrapper_ELF_sha256": "809b9cced3555c1c6cc3b244ce97afb35c51332b6fd2829c201753273274ee88",
+  "hardware_accessed": false,
+  "goal_complete": false,
+  "elapsed_seconds": 1.6755476250255015
+}

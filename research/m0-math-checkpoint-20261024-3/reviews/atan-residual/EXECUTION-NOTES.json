@@ -1,0 +1,37 @@
+{
+  "scope": "Own review execution notes; no candidate or author artifact was changed.",
+  "initial_source_fixture_failure": {
+    "exit_code": 1,
+    "cause": "Used a linked-image address lookup on section-relative relocatable symbols. This can select the newly inserted helper section at offset0 instead of the named ratio section. Fixed only own review.py to compare the actual named .text.atan_fast_ratio and .text.atan_fast_reciprocal sections; full own object/relink already matched before this fixture assertion. Corrected source phase passed."
+  },
+  "sandbox_attempts": [
+    {
+      "phase": "helper",
+      "exit_code": 132
+    },
+    {
+      "phase": "public",
+      "exit_code": 132
+    },
+    {
+      "phase": "helper with faulthandler",
+      "exit_code": 132,
+      "trace": "unicorn/unicorn_py3/unicorn.py:831 mem_map -> native_eabi_m0_arm_self_test.py:49 __init__"
+    }
+  ],
+  "sandbox_ARM_calls_completed": 0,
+  "ordinary_auto_review_escalation": {
+    "accepted": true,
+    "scope": "Local read-only Unicorn ARM JIT/emulation only; no USB/Flash/lease/Git/network",
+    "helper_exit_code": 0,
+    "public_exit_code": 0,
+    "auto_review_denials": 0
+  },
+  "completed_commands": [
+    ".build/picocalc-apps-arm-venv/bin/python -B .build/m0-atan-residual-independent-20261024/review.py source",
+    ".build/picocalc-apps-arm-venv/bin/python -B .build/m0-atan-residual-independent-20261024/review.py bounds",
+    ".build/picocalc-apps-arm-venv/bin/python -X faulthandler -B .build/m0-atan-residual-independent-20261024/review.py helper",
+    ".build/picocalc-apps-arm-venv/bin/python -X faulthandler -B .build/m0-atan-residual-independent-20261024/review.py public"
+  ],
+  "bounded_phases_not_broad_corpus": true
+}

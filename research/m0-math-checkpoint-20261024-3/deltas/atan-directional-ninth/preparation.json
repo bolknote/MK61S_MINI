@@ -1,0 +1,10 @@
+{
+  "status": "PREPARED_PRIVATE_DIRECTIONAL_NINTH_ATAN",
+  "source_sha256": "996dcd240df881b6592b61aeca95fd446c7522b6fff71bc1c6de8eeed9001d23",
+  "parent_result_sha256": "2f3f8deb8a78125c6a55c1f146c6dd1c72d9b56ff4f677bba3bacd84ce34f22d",
+  "new_tables": 0,
+  "new_global_RAM": 0,
+  "canonical_or_frozen_changed": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

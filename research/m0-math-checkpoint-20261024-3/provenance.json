@@ -1,0 +1,1112 @@
+{
+  "status": "LOSSLESS_ARCHIVE_OF_PRIVATE_MATH_WORK",
+  "binaries_and_device_records_omitted": true,
+  "intermediate_trials_omitted": true,
+  "original_producers_are_historical": true,
+  "archived_files": [
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/HANDOFF.md",
+      "path": "deltas/atan-residual/HANDOFF.md",
+      "encoding": "identity",
+      "sha256": "650a6f36fc02c71671085fc3ab335aff4654a8b282b59c0267a5df02f9cc5146",
+      "uncompressed_sha256": "650a6f36fc02c71671085fc3ab335aff4654a8b282b59c0267a5df02f9cc5146",
+      "uncompressed_bytes": 3642
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/NEXT.md",
+      "path": "deltas/atan-residual/NEXT.md",
+      "encoding": "identity",
+      "sha256": "4ca028fc68ef0f919e1637743ece0d370b2fc0e149af75325e52b6e318d961f2",
+      "uncompressed_sha256": "4ca028fc68ef0f919e1637743ece0d370b2fc0e149af75325e52b6e318d961f2",
+      "uncompressed_bytes": 2708
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/PROOF.md",
+      "path": "deltas/atan-residual/PROOF.md",
+      "encoding": "identity",
+      "sha256": "89f46594d72adca2f6fe3f57bbc0cd70654f6b773d1dc8936b9565bae2433150",
+      "uncompressed_sha256": "89f46594d72adca2f6fe3f57bbc0cd70654f6b773d1dc8936b9565bae2433150",
+      "uncompressed_bytes": 3654
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/bind-public.py",
+      "path": "deltas/atan-residual/bind-public.py",
+      "encoding": "identity",
+      "sha256": "3b12326607d18e3fc49eaad8deff5ec1c013d8ab0c29252234c1f05b24bcbc72",
+      "uncompressed_sha256": "3b12326607d18e3fc49eaad8deff5ec1c013d8ab0c29252234c1f05b24bcbc72",
+      "uncompressed_bytes": 2711
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/build.py",
+      "path": "deltas/atan-residual/build.py",
+      "encoding": "identity",
+      "sha256": "5987c8d6e76ac74359317490b22fbdd7ae5f4cc46c234ea954c13d47339c2cad",
+      "uncompressed_sha256": "5987c8d6e76ac74359317490b22fbdd7ae5f4cc46c234ea954c13d47339c2cad",
+      "uncompressed_bytes": 2766
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/candidate-build.json",
+      "path": "deltas/atan-residual/candidate-build.json",
+      "encoding": "identity",
+      "sha256": "23e0e76b6f450c78544a673f8cefae978846f842cf8d6f1e8d26c6ff488f7907",
+      "uncompressed_sha256": "23e0e76b6f450c78544a673f8cefae978846f842cf8d6f1e8d26c6ff488f7907",
+      "uncompressed_bytes": 4674
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/candidate.ld",
+      "path": "deltas/atan-residual/candidate.ld",
+      "encoding": "identity",
+      "sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_bytes": 1411
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/certificate.json",
+      "path": "deltas/atan-residual/certificate.json",
+      "encoding": "identity",
+      "sha256": "f0c47106a583bf8682ab5b3bf097944d3b575b3973d7490f0c0f01599c74b293",
+      "uncompressed_sha256": "f0c47106a583bf8682ab5b3bf097944d3b575b3973d7490f0c0f01599c74b293",
+      "uncompressed_bytes": 2323
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/certify.py",
+      "path": "deltas/atan-residual/certify.py",
+      "encoding": "identity",
+      "sha256": "9c3d23f469677d8a1ddb7f55d5dcca753d077c3a8869465ad218ddc40c9bf37a",
+      "uncompressed_sha256": "9c3d23f469677d8a1ddb7f55d5dcca753d077c3a8869465ad218ddc40c9bf37a",
+      "uncompressed_bytes": 3533
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/cold-profile.json",
+      "path": "deltas/atan-residual/cold-profile.json",
+      "encoding": "identity",
+      "sha256": "fc9fd1ef453f43db8a26eaef19c14d12c0ba2d4ea4f82a27156bbc34741cf6a4",
+      "uncompressed_sha256": "fc9fd1ef453f43db8a26eaef19c14d12c0ba2d4ea4f82a27156bbc34741cf6a4",
+      "uncompressed_bytes": 24812
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/control-build.json",
+      "path": "deltas/atan-residual/control-build.json",
+      "encoding": "identity",
+      "sha256": "33e03103b65ea90919e49490d43185f9fb03fc5fa26b4c5c6b1524e296e91ed2",
+      "uncompressed_sha256": "33e03103b65ea90919e49490d43185f9fb03fc5fa26b4c5c6b1524e296e91ed2",
+      "uncompressed_bytes": 3314
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/control.ld",
+      "path": "deltas/atan-residual/control.ld",
+      "encoding": "identity",
+      "sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_bytes": 1411
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/diagnose-cold.py",
+      "path": "deltas/atan-residual/diagnose-cold.py",
+      "encoding": "identity",
+      "sha256": "6b24a06bfba99312188a4b7b8a06ea1c4c9231549a0b28f53ef9a80c06227e7f",
+      "uncompressed_sha256": "6b24a06bfba99312188a4b7b8a06ea1c4c9231549a0b28f53ef9a80c06227e7f",
+      "uncompressed_bytes": 5147
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/diagnosis.json",
+      "path": "deltas/atan-residual/diagnosis.json",
+      "encoding": "identity",
+      "sha256": "5c7505b05c2e3dc45f60d714b884bbe7ea6664e3e27b3d17270727625c6702ad",
+      "uncompressed_sha256": "5c7505b05c2e3dc45f60d714b884bbe7ea6664e3e27b3d17270727625c6702ad",
+      "uncompressed_bytes": 21159
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/helper-proof.json",
+      "path": "deltas/atan-residual/helper-proof.json",
+      "encoding": "identity",
+      "sha256": "5df3d7414e0f2808aaf98eb66da8d00f97f2bea98b4f3c00c1b54e5a9e5886bd",
+      "uncompressed_sha256": "5df3d7414e0f2808aaf98eb66da8d00f97f2bea98b4f3c00c1b54e5a9e5886bd",
+      "uncompressed_bytes": 5127
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/input-pins.json",
+      "path": "deltas/atan-residual/input-pins.json",
+      "encoding": "identity",
+      "sha256": "303b22c98facf7d0724745f8fe18ca1025a6e4ecd7f95b942f24707c2977d870",
+      "uncompressed_sha256": "303b22c98facf7d0724745f8fe18ca1025a6e4ecd7f95b942f24707c2977d870",
+      "uncompressed_bytes": 13133
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/isolate.py",
+      "path": "deltas/atan-residual/isolate.py",
+      "encoding": "identity",
+      "sha256": "1779912bfe129ccc94c64281550fe17000f2135d2078d89b1dd4304e3cf61e80",
+      "uncompressed_sha256": "1779912bfe129ccc94c64281550fe17000f2135d2078d89b1dd4304e3cf61e80",
+      "uncompressed_bytes": 4198
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/isolation.json",
+      "path": "deltas/atan-residual/isolation.json",
+      "encoding": "identity",
+      "sha256": "712456eaeee2771b1c749d95aa87941ad637f156068b431a4bb44dfd2401cac2",
+      "uncompressed_sha256": "712456eaeee2771b1c749d95aa87941ad637f156068b431a4bb44dfd2401cac2",
+      "uncompressed_bytes": 6480
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/native_eabi_m0.cpp",
+      "path": "deltas/atan-residual/native_eabi_m0.cpp",
+      "encoding": "identity",
+      "sha256": "5b8ce151ae11323b35a6c6e51ab04e4895315109a715b7fd6007fac3c021b9bc",
+      "uncompressed_sha256": "5b8ce151ae11323b35a6c6e51ab04e4895315109a715b7fd6007fac3c021b9bc",
+      "uncompressed_bytes": 36224
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/native_eabi_m0_atan.inc",
+      "path": "deltas/atan-residual/native_eabi_m0_atan.inc",
+      "encoding": "identity",
+      "sha256": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+      "uncompressed_sha256": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+      "uncompressed_bytes": 3057
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/native_eabi_m0_atan_fast.inc",
+      "path": "deltas/atan-residual/native_eabi_m0_atan_fast.inc",
+      "encoding": "identity",
+      "sha256": "aa6ce7be864f7f364e106711d7173f66b78f1fe512f29779e7793dd99835c517",
+      "uncompressed_sha256": "aa6ce7be864f7f364e106711d7173f66b78f1fe512f29779e7793dd99835c517",
+      "uncompressed_bytes": 8726
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/preparation.json",
+      "path": "deltas/atan-residual/preparation.json",
+      "encoding": "identity",
+      "sha256": "7cc10c259bb2d1611e88c032bd874211e63f91f7e7244a8acf9bf5d31da1a8d7",
+      "uncompressed_sha256": "7cc10c259bb2d1611e88c032bd874211e63f91f7e7244a8acf9bf5d31da1a8d7",
+      "uncompressed_bytes": 469
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/prepare.py",
+      "path": "deltas/atan-residual/prepare.py",
+      "encoding": "identity",
+      "sha256": "da702463f979dec3e0d9601858bbe66278033a7f4feaa6526d1ccc978612e97c",
+      "uncompressed_sha256": "da702463f979dec3e0d9601858bbe66278033a7f4feaa6526d1ccc978612e97c",
+      "uncompressed_bytes": 5122
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/probe.json",
+      "path": "deltas/atan-residual/probe.json",
+      "encoding": "identity",
+      "sha256": "79dd4cc2d47b92b7be30c53639ecddd91d53e6b071c0108243b4a538de32ccc7",
+      "uncompressed_sha256": "79dd4cc2d47b92b7be30c53639ecddd91d53e6b071c0108243b4a538de32ccc7",
+      "uncompressed_bytes": 10783
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/probe.py",
+      "path": "deltas/atan-residual/probe.py",
+      "encoding": "identity",
+      "sha256": "198a5f1235078824a897696b80f1dfa8a7211cbb8b7745647e42163a9fe78ada",
+      "uncompressed_sha256": "198a5f1235078824a897696b80f1dfa8a7211cbb8b7745647e42163a9fe78ada",
+      "uncompressed_bytes": 2784
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/profile-cold.py",
+      "path": "deltas/atan-residual/profile-cold.py",
+      "encoding": "identity",
+      "sha256": "9a56369a5bfaa1d7bedef5f8ca0c553a14714aa99effea0458abd9cd46b379bf",
+      "uncompressed_sha256": "9a56369a5bfaa1d7bedef5f8ca0c553a14714aa99effea0458abd9cd46b379bf",
+      "uncompressed_bytes": 3252
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/public-body-proof.json",
+      "path": "deltas/atan-residual/public-body-proof.json",
+      "encoding": "identity",
+      "sha256": "ce892379d4516b630571f4ceac0c67d00d2059381004db07b842ddbe7cd1ff95",
+      "uncompressed_sha256": "ce892379d4516b630571f4ceac0c67d00d2059381004db07b842ddbe7cd1ff95",
+      "uncompressed_bytes": 2076
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/qualification.json",
+      "path": "deltas/atan-residual/qualification.json.gz",
+      "encoding": "gzip",
+      "sha256": "cbb6f3e312ef0123100cc1539fdc2ceda2fa5cb1694aa00447e3eed41a91d1ea",
+      "uncompressed_sha256": "6ae2d1af59457df5331cba238bb8a9257a97319dc8d436ed25ed539ec0d7832a",
+      "uncompressed_bytes": 61427126
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/qualify.py",
+      "path": "deltas/atan-residual/qualify.py",
+      "encoding": "identity",
+      "sha256": "41d59815daaee0029b70c67b645ccd68da8db104c5170a8a271c9304754df9eb",
+      "uncompressed_sha256": "41d59815daaee0029b70c67b645ccd68da8db104c5170a8a271c9304754df9eb",
+      "uncompressed_bytes": 8626
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/residual-only.patch",
+      "path": "deltas/atan-residual/residual-only.patch",
+      "encoding": "identity",
+      "sha256": "6375967d49294ff7f88678b62ca753d605e3982acd046fe8d5a5cf679a8161cb",
+      "uncompressed_sha256": "6375967d49294ff7f88678b62ca753d605e3982acd046fe8d5a5cf679a8161cb",
+      "uncompressed_bytes": 4923
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/result.json",
+      "path": "deltas/atan-residual/result.json",
+      "encoding": "identity",
+      "sha256": "e047da61a015906cac349efa0331625bd625c53a7e42de622fb94268225d669c",
+      "uncompressed_sha256": "e047da61a015906cac349efa0331625bd625c53a7e42de622fb94268225d669c",
+      "uncompressed_bytes": 14540
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/seal.py",
+      "path": "deltas/atan-residual/seal.py",
+      "encoding": "identity",
+      "sha256": "a2070df002c803478036ccb9e7ec70752f798229e6fc9a21ae68d46b3436a36b",
+      "uncompressed_sha256": "a2070df002c803478036ccb9e7ec70752f798229e6fc9a21ae68d46b3436a36b",
+      "uncompressed_bytes": 6422
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/speed-proof.json",
+      "path": "deltas/atan-residual/speed-proof.json",
+      "encoding": "identity",
+      "sha256": "ff5a951b0ecee6b2b00ec6cabb979d39e23c33523d44505cbfa5048ccbd5221f",
+      "uncompressed_sha256": "ff5a951b0ecee6b2b00ec6cabb979d39e23c33523d44505cbfa5048ccbd5221f",
+      "uncompressed_bytes": 13270
+    },
+    {
+      "source": ".build/m0-atan-residual-original-goal-20261024/verify-helper.py",
+      "path": "deltas/atan-residual/verify-helper.py",
+      "encoding": "identity",
+      "sha256": "233ff9b75e7884a76d91176e92a3c623b0c1aa695b711870b15cf68f4d68096b",
+      "uncompressed_sha256": "233ff9b75e7884a76d91176e92a3c623b0c1aa695b711870b15cf68f4d68096b",
+      "uncompressed_bytes": 4065
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/HANDOFF.md",
+      "path": "deltas/atan-geometry/HANDOFF.md",
+      "encoding": "identity",
+      "sha256": "21e52ab6db11367e20d0f8dd95babc4a58775164602fa27942fb9fd1c02218d3",
+      "uncompressed_sha256": "21e52ab6db11367e20d0f8dd95babc4a58775164602fa27942fb9fd1c02218d3",
+      "uncompressed_bytes": 3305
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/PROOF.md",
+      "path": "deltas/atan-geometry/PROOF.md",
+      "encoding": "identity",
+      "sha256": "bf90fcab11a3b50287f82aeea6820af82c6df3194f7807697f4a86aa858dcc0a",
+      "uncompressed_sha256": "bf90fcab11a3b50287f82aeea6820af82c6df3194f7807697f4a86aa858dcc0a",
+      "uncompressed_bytes": 2158
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/bind-public.py",
+      "path": "deltas/atan-geometry/bind-public.py",
+      "encoding": "identity",
+      "sha256": "3b12326607d18e3fc49eaad8deff5ec1c013d8ab0c29252234c1f05b24bcbc72",
+      "uncompressed_sha256": "3b12326607d18e3fc49eaad8deff5ec1c013d8ab0c29252234c1f05b24bcbc72",
+      "uncompressed_bytes": 2711
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/build.py",
+      "path": "deltas/atan-geometry/build.py",
+      "encoding": "identity",
+      "sha256": "dd4b5402d892af72602fe52cf71cd401f37717030125ea117df038ff746ca1d9",
+      "uncompressed_sha256": "dd4b5402d892af72602fe52cf71cd401f37717030125ea117df038ff746ca1d9",
+      "uncompressed_bytes": 2775
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/candidate-build.json",
+      "path": "deltas/atan-geometry/candidate-build.json",
+      "encoding": "identity",
+      "sha256": "23f402ec3df28b32a555cde02aa82426af4d5aa8f75067557f14608f777fd635",
+      "uncompressed_sha256": "23f402ec3df28b32a555cde02aa82426af4d5aa8f75067557f14608f777fd635",
+      "uncompressed_bytes": 4638
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/candidate.ld",
+      "path": "deltas/atan-geometry/candidate.ld",
+      "encoding": "identity",
+      "sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_bytes": 1411
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/certificate.json",
+      "path": "deltas/atan-geometry/certificate.json",
+      "encoding": "identity",
+      "sha256": "90a1b75b31cd9d47027c69921b391a0e89f3568c8bb9018f6cb4ab8239f98578",
+      "uncompressed_sha256": "90a1b75b31cd9d47027c69921b391a0e89f3568c8bb9018f6cb4ab8239f98578",
+      "uncompressed_bytes": 2672
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/certify.py",
+      "path": "deltas/atan-geometry/certify.py",
+      "encoding": "identity",
+      "sha256": "95b1a7e88babf2ed161a041f4b152c999080c55856f09d0d5775dcaf899e356c",
+      "uncompressed_sha256": "95b1a7e88babf2ed161a041f4b152c999080c55856f09d0d5775dcaf899e356c",
+      "uncompressed_bytes": 2930
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/control-build.json",
+      "path": "deltas/atan-geometry/control-build.json",
+      "encoding": "identity",
+      "sha256": "50a6519e1f7a01fd04933d1b8e43747c6ecdcb82105e4d422ef73d1e81316fb1",
+      "uncompressed_sha256": "50a6519e1f7a01fd04933d1b8e43747c6ecdcb82105e4d422ef73d1e81316fb1",
+      "uncompressed_bytes": 3303
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/control.ld",
+      "path": "deltas/atan-geometry/control.ld",
+      "encoding": "identity",
+      "sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_bytes": 1411
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/geometry-only.patch",
+      "path": "deltas/atan-geometry/geometry-only.patch",
+      "encoding": "identity",
+      "sha256": "9da295570ccd4bd5c32c9c69f05a33a5cffe3bbc1d401586239e057a5c932bc8",
+      "uncompressed_sha256": "9da295570ccd4bd5c32c9c69f05a33a5cffe3bbc1d401586239e057a5c932bc8",
+      "uncompressed_bytes": 1964
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/helper-proof.json",
+      "path": "deltas/atan-geometry/helper-proof.json",
+      "encoding": "identity",
+      "sha256": "e9a4276b087324ca69283b80814b5c01697a8eca956b8df635705c1e6114382f",
+      "uncompressed_sha256": "e9a4276b087324ca69283b80814b5c01697a8eca956b8df635705c1e6114382f",
+      "uncompressed_bytes": 5128
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/input-pins.json",
+      "path": "deltas/atan-geometry/input-pins.json",
+      "encoding": "identity",
+      "sha256": "2500be3181ca60fabfd3f6c37930b38f3646b1a0ec757ac38381b56aa9393aac",
+      "uncompressed_sha256": "2500be3181ca60fabfd3f6c37930b38f3646b1a0ec757ac38381b56aa9393aac",
+      "uncompressed_bytes": 14067
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/isolate.py",
+      "path": "deltas/atan-geometry/isolate.py",
+      "encoding": "identity",
+      "sha256": "76d828042528c2ca01cc342676028e350251e1a584963149771b3778fc64d539",
+      "uncompressed_sha256": "76d828042528c2ca01cc342676028e350251e1a584963149771b3778fc64d539",
+      "uncompressed_bytes": 4165
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/isolation.json",
+      "path": "deltas/atan-geometry/isolation.json",
+      "encoding": "identity",
+      "sha256": "0647c85a7f16c4aafa44bb31184099a8f6ad42529f6253e7ae0b6848b87d3f78",
+      "uncompressed_sha256": "0647c85a7f16c4aafa44bb31184099a8f6ad42529f6253e7ae0b6848b87d3f78",
+      "uncompressed_bytes": 6406
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/native_eabi_m0.cpp",
+      "path": "deltas/atan-geometry/native_eabi_m0.cpp",
+      "encoding": "identity",
+      "sha256": "5b8ce151ae11323b35a6c6e51ab04e4895315109a715b7fd6007fac3c021b9bc",
+      "uncompressed_sha256": "5b8ce151ae11323b35a6c6e51ab04e4895315109a715b7fd6007fac3c021b9bc",
+      "uncompressed_bytes": 36224
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/native_eabi_m0_atan.inc",
+      "path": "deltas/atan-geometry/native_eabi_m0_atan.inc",
+      "encoding": "identity",
+      "sha256": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+      "uncompressed_sha256": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+      "uncompressed_bytes": 3057
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/native_eabi_m0_atan_fast.inc",
+      "path": "deltas/atan-geometry/native_eabi_m0_atan_fast.inc",
+      "encoding": "identity",
+      "sha256": "b8a45df5715c7fbf3e7c5a6d29cd7f063daf8695c7f9324cd4a4647ffb682f7b",
+      "uncompressed_sha256": "b8a45df5715c7fbf3e7c5a6d29cd7f063daf8695c7f9324cd4a4647ffb682f7b",
+      "uncompressed_bytes": 8843
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/preparation.json",
+      "path": "deltas/atan-geometry/preparation.json",
+      "encoding": "identity",
+      "sha256": "9975407d00487aa86b4ef41301b874c58f5f2683f7f68c2812025b9585e327ad",
+      "uncompressed_sha256": "9975407d00487aa86b4ef41301b874c58f5f2683f7f68c2812025b9585e327ad",
+      "uncompressed_bytes": 454
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/prepare.py",
+      "path": "deltas/atan-geometry/prepare.py",
+      "encoding": "identity",
+      "sha256": "9b2a066191b6cc3901b123ee64fe7c4e01dd8a9158e9d8505dd09597f72ee26a",
+      "uncompressed_sha256": "9b2a066191b6cc3901b123ee64fe7c4e01dd8a9158e9d8505dd09597f72ee26a",
+      "uncompressed_bytes": 2239
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/probe.json",
+      "path": "deltas/atan-geometry/probe.json",
+      "encoding": "identity",
+      "sha256": "7b2b7bb66d1c77dda5cd89ef6f767f535402adbef7c2f3af9ed2e1c396349a40",
+      "uncompressed_sha256": "7b2b7bb66d1c77dda5cd89ef6f767f535402adbef7c2f3af9ed2e1c396349a40",
+      "uncompressed_bytes": 19595
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/probe.py",
+      "path": "deltas/atan-geometry/probe.py",
+      "encoding": "identity",
+      "sha256": "4a5193a1ec133fb45bb74c9084c9885c8ac614470d4de9709f9432b86768bfe9",
+      "uncompressed_sha256": "4a5193a1ec133fb45bb74c9084c9885c8ac614470d4de9709f9432b86768bfe9",
+      "uncompressed_bytes": 2982
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/profile-cold.py",
+      "path": "deltas/atan-geometry/profile-cold.py",
+      "encoding": "identity",
+      "sha256": "9a56369a5bfaa1d7bedef5f8ca0c553a14714aa99effea0458abd9cd46b379bf",
+      "uncompressed_sha256": "9a56369a5bfaa1d7bedef5f8ca0c553a14714aa99effea0458abd9cd46b379bf",
+      "uncompressed_bytes": 3252
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/public-body-proof.json",
+      "path": "deltas/atan-geometry/public-body-proof.json",
+      "encoding": "identity",
+      "sha256": "9fed083a918ac7ffd57a51f53698c93532dfafe451763dbda469240776146c7d",
+      "uncompressed_sha256": "9fed083a918ac7ffd57a51f53698c93532dfafe451763dbda469240776146c7d",
+      "uncompressed_bytes": 2051
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/qualification.json",
+      "path": "deltas/atan-geometry/qualification.json.gz",
+      "encoding": "gzip",
+      "sha256": "bbef330b722bc92cb4e62e4ce43456e6c8312c2542d092c87b2b6811cf7b932d",
+      "uncompressed_sha256": "3dcdbe6abf7aec1d07029c0cd2f47cf10052aea482f3a2d72c45d57d471189a6",
+      "uncompressed_bytes": 81352520
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/qualify.py",
+      "path": "deltas/atan-geometry/qualify.py",
+      "encoding": "identity",
+      "sha256": "245930d1f1563283c6e148ce27adfdc53934d8aa39984c6fca92b2898cf7e546",
+      "uncompressed_sha256": "245930d1f1563283c6e148ce27adfdc53934d8aa39984c6fca92b2898cf7e546",
+      "uncompressed_bytes": 9136
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/regressions.json",
+      "path": "deltas/atan-geometry/regressions.json",
+      "encoding": "identity",
+      "sha256": "056c29b7f167dc1ddb94e00327bc0e501ecc5120aed8cd9be9672fb021ec062a",
+      "uncompressed_sha256": "056c29b7f167dc1ddb94e00327bc0e501ecc5120aed8cd9be9672fb021ec062a",
+      "uncompressed_bytes": 8954
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/remaining-slower.json",
+      "path": "deltas/atan-geometry/remaining-slower.json",
+      "encoding": "identity",
+      "sha256": "a213a6b8b27e20a9c4db5a1230f42ebd67ae09e90a8e18b13fd7ddb8793655db",
+      "uncompressed_sha256": "a213a6b8b27e20a9c4db5a1230f42ebd67ae09e90a8e18b13fd7ddb8793655db",
+      "uncompressed_bytes": 34957
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/result.json",
+      "path": "deltas/atan-geometry/result.json",
+      "encoding": "identity",
+      "sha256": "2f3f8deb8a78125c6a55c1f146c6dd1c72d9b56ff4f677bba3bacd84ce34f22d",
+      "uncompressed_sha256": "2f3f8deb8a78125c6a55c1f146c6dd1c72d9b56ff4f677bba3bacd84ce34f22d",
+      "uncompressed_bytes": 18031
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/seal.py",
+      "path": "deltas/atan-geometry/seal.py",
+      "encoding": "identity",
+      "sha256": "b0112e77dc6bb58e519bcf4d3fa83adb76d46fdc1aaafd7b3d388ceafd248c5a",
+      "uncompressed_sha256": "b0112e77dc6bb58e519bcf4d3fa83adb76d46fdc1aaafd7b3d388ceafd248c5a",
+      "uncompressed_bytes": 4865
+    },
+    {
+      "source": ".build/m0-atan-residual-geometry-20261024/verify-helper.py",
+      "path": "deltas/atan-geometry/verify-helper.py",
+      "encoding": "identity",
+      "sha256": "0c578e39d0c9eea8cf964f8bc3e06288a91125e8cb3f57df8a1ced256223ffe2",
+      "uncompressed_sha256": "0c578e39d0c9eea8cf964f8bc3e06288a91125e8cb3f57df8a1ced256223ffe2",
+      "uncompressed_bytes": 4065
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/HANDOFF.md",
+      "path": "deltas/atan-directional-ninth/HANDOFF.md",
+      "encoding": "identity",
+      "sha256": "3efc40adb8ef6f022eaf32ea4435a0e3bb8a945e6a0068c56db1c29e7cdb0a63",
+      "uncompressed_sha256": "3efc40adb8ef6f022eaf32ea4435a0e3bb8a945e6a0068c56db1c29e7cdb0a63",
+      "uncompressed_bytes": 3311
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/PROOF.md",
+      "path": "deltas/atan-directional-ninth/PROOF.md",
+      "encoding": "identity",
+      "sha256": "cecccde9eea1062a359192a0e12c069b939869a4dffe19dbf323be03c575b360",
+      "uncompressed_sha256": "cecccde9eea1062a359192a0e12c069b939869a4dffe19dbf323be03c575b360",
+      "uncompressed_bytes": 7285
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/bind-public.py",
+      "path": "deltas/atan-directional-ninth/bind-public.py",
+      "encoding": "identity",
+      "sha256": "3b12326607d18e3fc49eaad8deff5ec1c013d8ab0c29252234c1f05b24bcbc72",
+      "uncompressed_sha256": "3b12326607d18e3fc49eaad8deff5ec1c013d8ab0c29252234c1f05b24bcbc72",
+      "uncompressed_bytes": 2711
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/binding-overlay-proof.json",
+      "path": "deltas/atan-directional-ninth/binding-overlay-proof.json",
+      "encoding": "identity",
+      "sha256": "cb54c9682ca1c740c6d4466b1d9579018e4f79ffcff0ab2f1c5cf9256da10e1a",
+      "uncompressed_sha256": "cb54c9682ca1c740c6d4466b1d9579018e4f79ffcff0ab2f1c5cf9256da10e1a",
+      "uncompressed_bytes": 435
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/build-ninth-unit.py",
+      "path": "deltas/atan-directional-ninth/build-ninth-unit.py",
+      "encoding": "identity",
+      "sha256": "809bf4fbb046b0933ee94d5fa5ecf7b2cbad2b63efdf87e63027295202bc0997",
+      "uncompressed_sha256": "809bf4fbb046b0933ee94d5fa5ecf7b2cbad2b63efdf87e63027295202bc0997",
+      "uncompressed_bytes": 2849
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/build.py",
+      "path": "deltas/atan-directional-ninth/build.py",
+      "encoding": "identity",
+      "sha256": "00f39b9a5656f8996ab14487d76cc3ac6c9f900d0ac4e739d774730d88d52a26",
+      "uncompressed_sha256": "00f39b9a5656f8996ab14487d76cc3ac6c9f900d0ac4e739d774730d88d52a26",
+      "uncompressed_bytes": 2770
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/candidate-build.json",
+      "path": "deltas/atan-directional-ninth/candidate-build.json",
+      "encoding": "identity",
+      "sha256": "07a4486eafc3b9bea8cfce222cf00d5cd1e56734894a590ea9a94f61253b0a68",
+      "uncompressed_sha256": "07a4486eafc3b9bea8cfce222cf00d5cd1e56734894a590ea9a94f61253b0a68",
+      "uncompressed_bytes": 4633
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/candidate.ld",
+      "path": "deltas/atan-directional-ninth/candidate.ld",
+      "encoding": "identity",
+      "sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_bytes": 1411
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/certificate.json",
+      "path": "deltas/atan-directional-ninth/certificate.json",
+      "encoding": "identity",
+      "sha256": "69ce73544661c6dcfe457653c5bd101d5934a94ff86c8f79d6b367b0e0c765d5",
+      "uncompressed_sha256": "69ce73544661c6dcfe457653c5bd101d5934a94ff86c8f79d6b367b0e0c765d5",
+      "uncompressed_bytes": 2543
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/certify.py",
+      "path": "deltas/atan-directional-ninth/certify.py",
+      "encoding": "identity",
+      "sha256": "a17a54777208c223a475614dacce77ea52848549c22c322d1baa1a43990087e5",
+      "uncompressed_sha256": "a17a54777208c223a475614dacce77ea52848549c22c322d1baa1a43990087e5",
+      "uncompressed_bytes": 3408
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/control-build.json",
+      "path": "deltas/atan-directional-ninth/control-build.json",
+      "encoding": "identity",
+      "sha256": "0faa0c2e83cb8cd8981c87d155514cf50cc5736d48cbc1499e687ce69d884040",
+      "uncompressed_sha256": "0faa0c2e83cb8cd8981c87d155514cf50cc5736d48cbc1499e687ce69d884040",
+      "uncompressed_bytes": 3298
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/control.ld",
+      "path": "deltas/atan-directional-ninth/control.ld",
+      "encoding": "identity",
+      "sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_sha256": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+      "uncompressed_bytes": 1411
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/directional-ninth-only.patch",
+      "path": "deltas/atan-directional-ninth/directional-ninth-only.patch",
+      "encoding": "identity",
+      "sha256": "be8d42ceacc96a36b6577fe446e1a5db0df5bbab77230a062c5dfc12bb9bb78a",
+      "uncompressed_sha256": "be8d42ceacc96a36b6577fe446e1a5db0df5bbab77230a062c5dfc12bb9bb78a",
+      "uncompressed_bytes": 5897
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/extra-helper-proof.json",
+      "path": "deltas/atan-directional-ninth/extra-helper-proof.json",
+      "encoding": "identity",
+      "sha256": "2c5d232c4712487a05246c0b1094c07cd63b3cd7fe78c012740e200af2342ab3",
+      "uncompressed_sha256": "2c5d232c4712487a05246c0b1094c07cd63b3cd7fe78c012740e200af2342ab3",
+      "uncompressed_bytes": 1573
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/helper-proof.json",
+      "path": "deltas/atan-directional-ninth/helper-proof.json",
+      "encoding": "identity",
+      "sha256": "db35ebf3b48e2d5cfdcb1281f1b989d094349a47962488136885a503ebf52c11",
+      "uncompressed_sha256": "db35ebf3b48e2d5cfdcb1281f1b989d094349a47962488136885a503ebf52c11",
+      "uncompressed_bytes": 5134
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/input-pins.json",
+      "path": "deltas/atan-directional-ninth/input-pins.json",
+      "encoding": "identity",
+      "sha256": "e12aeadd882ffbdda1a71c66a2f4cb40105c859d365ec4cc9aa46b9a939d468d",
+      "uncompressed_sha256": "e12aeadd882ffbdda1a71c66a2f4cb40105c859d365ec4cc9aa46b9a939d468d",
+      "uncompressed_bytes": 14881
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/isolate.py",
+      "path": "deltas/atan-directional-ninth/isolate.py",
+      "encoding": "identity",
+      "sha256": "b8f0fe320075365d30e728c5e29a78c36c3d421fa110bd6abe33e00784b0cfb0",
+      "uncompressed_sha256": "b8f0fe320075365d30e728c5e29a78c36c3d421fa110bd6abe33e00784b0cfb0",
+      "uncompressed_bytes": 4242
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/isolation.json",
+      "path": "deltas/atan-directional-ninth/isolation.json",
+      "encoding": "identity",
+      "sha256": "287b17cd675d290ac6f2f58db13e87c4ecbe77ea881f65b9caec812db37cea05",
+      "uncompressed_sha256": "287b17cd675d290ac6f2f58db13e87c4ecbe77ea881f65b9caec812db37cea05",
+      "uncompressed_bytes": 6517
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/native_eabi_m0.cpp",
+      "path": "deltas/atan-directional-ninth/native_eabi_m0.cpp",
+      "encoding": "identity",
+      "sha256": "5b8ce151ae11323b35a6c6e51ab04e4895315109a715b7fd6007fac3c021b9bc",
+      "uncompressed_sha256": "5b8ce151ae11323b35a6c6e51ab04e4895315109a715b7fd6007fac3c021b9bc",
+      "uncompressed_bytes": 36224
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/native_eabi_m0_atan.inc",
+      "path": "deltas/atan-directional-ninth/native_eabi_m0_atan.inc",
+      "encoding": "identity",
+      "sha256": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+      "uncompressed_sha256": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+      "uncompressed_bytes": 3057
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/native_eabi_m0_atan_fast.inc",
+      "path": "deltas/atan-directional-ninth/native_eabi_m0_atan_fast.inc",
+      "encoding": "identity",
+      "sha256": "996dcd240df881b6592b61aeca95fd446c7522b6fff71bc1c6de8eeed9001d23",
+      "uncompressed_sha256": "996dcd240df881b6592b61aeca95fd446c7522b6fff71bc1c6de8eeed9001d23",
+      "uncompressed_bytes": 11076
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/ninth-unit-build.json",
+      "path": "deltas/atan-directional-ninth/ninth-unit-build.json",
+      "encoding": "identity",
+      "sha256": "626694d917ca2e959c97640198f613a82761f250fb77a787f93f475b87baf3e0",
+      "uncompressed_sha256": "626694d917ca2e959c97640198f613a82761f250fb77a787f93f475b87baf3e0",
+      "uncompressed_bytes": 1834
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/ninth-unit.cpp",
+      "path": "deltas/atan-directional-ninth/ninth-unit.cpp",
+      "encoding": "identity",
+      "sha256": "0d919c256c25000968066d191cbcb1096c936a7dce613f1a090392a1f8e3ffe9",
+      "uncompressed_sha256": "0d919c256c25000968066d191cbcb1096c936a7dce613f1a090392a1f8e3ffe9",
+      "uncompressed_bytes": 1427
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/ninth-unit.ld",
+      "path": "deltas/atan-directional-ninth/ninth-unit.ld",
+      "encoding": "identity",
+      "sha256": "be56f614a7ff19d96faed25f197e21f85de02d79408c73106267cc525876ea39",
+      "uncompressed_sha256": "be56f614a7ff19d96faed25f197e21f85de02d79408c73106267cc525876ea39",
+      "uncompressed_bytes": 128
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/preparation.json",
+      "path": "deltas/atan-directional-ninth/preparation.json",
+      "encoding": "identity",
+      "sha256": "dd818ed3d0223f09d23203fde7b1ded0bd5d5ac6f57aa2f61483ce96ee08083d",
+      "uncompressed_sha256": "dd818ed3d0223f09d23203fde7b1ded0bd5d5ac6f57aa2f61483ce96ee08083d",
+      "uncompressed_bytes": 377
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/prepare.py",
+      "path": "deltas/atan-directional-ninth/prepare.py",
+      "encoding": "identity",
+      "sha256": "adc84e59b95f9da881426cb5978f9aa825ce2962cfff71b94b181e70b6973144",
+      "uncompressed_sha256": "adc84e59b95f9da881426cb5978f9aa825ce2962cfff71b94b181e70b6973144",
+      "uncompressed_bytes": 5502
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/probe.json",
+      "path": "deltas/atan-directional-ninth/probe.json",
+      "encoding": "identity",
+      "sha256": "8a9a6b5aab4b9cf1ddf5c8f98e2c412b1f6928e51543875c78d56722126fe1ca",
+      "uncompressed_sha256": "8a9a6b5aab4b9cf1ddf5c8f98e2c412b1f6928e51543875c78d56722126fe1ca",
+      "uncompressed_bytes": 17559
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/probe.py",
+      "path": "deltas/atan-directional-ninth/probe.py",
+      "encoding": "identity",
+      "sha256": "1196e52956b2e50486c8859323a30dbacf4d485a7924718cf42c8d79585e6e55",
+      "uncompressed_sha256": "1196e52956b2e50486c8859323a30dbacf4d485a7924718cf42c8d79585e6e55",
+      "uncompressed_bytes": 2981
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/public-body-proof.json",
+      "path": "deltas/atan-directional-ninth/public-body-proof.json",
+      "encoding": "identity",
+      "sha256": "cae4895fb9f94ef59dc57d9a04b7980b4fc8844522558d72647b6a5379505280",
+      "uncompressed_sha256": "cae4895fb9f94ef59dc57d9a04b7980b4fc8844522558d72647b6a5379505280",
+      "uncompressed_bytes": 2051
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/qualification.json",
+      "path": "deltas/atan-directional-ninth/qualification.json.gz",
+      "encoding": "gzip",
+      "sha256": "bc1b70bccd0378969463bed819bae5f2cc5c24b4888d73010564f36061e7eaf5",
+      "uncompressed_sha256": "165f4c1196cb276c77bc34b5c9b1d2079f25404784a43334ba5d1f858ebebdf3",
+      "uncompressed_bytes": 109342305
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/qualify.py",
+      "path": "deltas/atan-directional-ninth/qualify.py",
+      "encoding": "identity",
+      "sha256": "2994e1e4410a73a7c01106891995a264d6275050232e755c0ea7b971f58dc604",
+      "uncompressed_sha256": "2994e1e4410a73a7c01106891995a264d6275050232e755c0ea7b971f58dc604",
+      "uncompressed_bytes": 9042
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/regressions.json",
+      "path": "deltas/atan-directional-ninth/regressions.json",
+      "encoding": "identity",
+      "sha256": "c9e72818780b7f4dd123f5261368115d55aa51a864c03da696c411cf9d37ff76",
+      "uncompressed_sha256": "c9e72818780b7f4dd123f5261368115d55aa51a864c03da696c411cf9d37ff76",
+      "uncompressed_bytes": 71446
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/remaining-slower.json",
+      "path": "deltas/atan-directional-ninth/remaining-slower.json",
+      "encoding": "identity",
+      "sha256": "d84842e679a4283a40f0232d6054ad0e7ba08cb435927ebb8c57bcc809baced9",
+      "uncompressed_sha256": "d84842e679a4283a40f0232d6054ad0e7ba08cb435927ebb8c57bcc809baced9",
+      "uncompressed_bytes": 4241
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/result.json",
+      "path": "deltas/atan-directional-ninth/result.json",
+      "encoding": "identity",
+      "sha256": "d87a220d5db188d03a5f4b7039da7cedae63957875ace0451cb47bee77e06f03",
+      "uncompressed_sha256": "d87a220d5db188d03a5f4b7039da7cedae63957875ace0451cb47bee77e06f03",
+      "uncompressed_bytes": 43386
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/seal.py",
+      "path": "deltas/atan-directional-ninth/seal.py",
+      "encoding": "identity",
+      "sha256": "a65ddb235249eb78f0b20a6dbad8189343a2f23deba2bcc829d6cac9720327f1",
+      "uncompressed_sha256": "a65ddb235249eb78f0b20a6dbad8189343a2f23deba2bcc829d6cac9720327f1",
+      "uncompressed_bytes": 6071
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/verify-extra-helpers.py",
+      "path": "deltas/atan-directional-ninth/verify-extra-helpers.py",
+      "encoding": "identity",
+      "sha256": "4641f8128c3729f9afd5446f4a1fed836f2cf79238cf940ba54dcbe10b38df1d",
+      "uncompressed_sha256": "4641f8128c3729f9afd5446f4a1fed836f2cf79238cf940ba54dcbe10b38df1d",
+      "uncompressed_bytes": 5493
+    },
+    {
+      "source": ".build/m0-atan-directional-ninth-20261024/verify-helper.py",
+      "path": "deltas/atan-directional-ninth/verify-helper.py",
+      "encoding": "identity",
+      "sha256": "af8760e1215997e91b851fe9a6e1e92956fa8e074ddba2e44b7f3dcb63641b9e",
+      "uncompressed_sha256": "af8760e1215997e91b851fe9a6e1e92956fa8e074ddba2e44b7f3dcb63641b9e",
+      "uncompressed_bytes": 4105
+    },
+    {
+      "source": ".build/m0-atan-residual-independent-20261024/EXACT-RESIDUAL-BOUND.json",
+      "path": "reviews/atan-residual/EXACT-RESIDUAL-BOUND.json",
+      "encoding": "identity",
+      "sha256": "64d6895285356de1a776dde2aabd0c8d9ddd31ab7ace144f2d7aba73530988d6",
+      "uncompressed_sha256": "64d6895285356de1a776dde2aabd0c8d9ddd31ab7ace144f2d7aba73530988d6",
+      "uncompressed_bytes": 1713
+    },
+    {
+      "source": ".build/m0-atan-residual-independent-20261024/EXECUTION-NOTES.json",
+      "path": "reviews/atan-residual/EXECUTION-NOTES.json",
+      "encoding": "identity",
+      "sha256": "bcb40d471a882b037604b6ed9a53ee18ab1537dc8df0548f7dba221abd1032c4",
+      "uncompressed_sha256": "bcb40d471a882b037604b6ed9a53ee18ab1537dc8df0548f7dba221abd1032c4",
+      "uncompressed_bytes": 1732
+    },
+    {
+      "source": ".build/m0-atan-residual-independent-20261024/FINAL-REVIEW.json",
+      "path": "reviews/atan-residual/FINAL-REVIEW.json",
+      "encoding": "identity",
+      "sha256": "b6a2234936391b97077999065e3055fd28e1935e519fd603a6a008c9d44bbaed",
+      "uncompressed_sha256": "b6a2234936391b97077999065e3055fd28e1935e519fd603a6a008c9d44bbaed",
+      "uncompressed_bytes": 26037
+    },
+    {
+      "source": ".build/m0-atan-residual-independent-20261024/OWN-ORACLE-INTERVALS.json",
+      "path": "reviews/atan-residual/OWN-ORACLE-INTERVALS.json",
+      "encoding": "identity",
+      "sha256": "f8099d01629464c56bc4181c528a169888ae7f48e65416f55859f47eae7c8323",
+      "uncompressed_sha256": "f8099d01629464c56bc4181c528a169888ae7f48e65416f55859f47eae7c8323",
+      "uncompressed_bytes": 36711
+    },
+    {
+      "source": ".build/m0-atan-residual-independent-20261024/SELECTED-HELPER-ARM.json",
+      "path": "reviews/atan-residual/SELECTED-HELPER-ARM.json",
+      "encoding": "identity",
+      "sha256": "124fc283acc32517b66b2dd065492e26c23b772ff21946a4cf554c55d27328f0",
+      "uncompressed_sha256": "124fc283acc32517b66b2dd065492e26c23b772ff21946a4cf554c55d27328f0",
+      "uncompressed_bytes": 117448
+    },
+    {
+      "source": ".build/m0-atan-residual-independent-20261024/SELECTED-PUBLIC-ARM.json",
+      "path": "reviews/atan-residual/SELECTED-PUBLIC-ARM.json",
+      "encoding": "identity",
+      "sha256": "210c28d51e46efad905d8e9ce17a4792e1931eb099e90ad813ec028dcf455b6f",
+      "uncompressed_sha256": "210c28d51e46efad905d8e9ce17a4792e1931eb099e90ad813ec028dcf455b6f",
+      "uncompressed_bytes": 103495
+    },
+    {
+      "source": ".build/m0-atan-residual-independent-20261024/SOURCE-OBJECT-PROOF.json",
+      "path": "reviews/atan-residual/SOURCE-OBJECT-PROOF.json",
+      "encoding": "identity",
+      "sha256": "12a93f7e5e2252644338aff52625850dcf35e8a9e16c91aa32c49789de5c757a",
+      "uncompressed_sha256": "12a93f7e5e2252644338aff52625850dcf35e8a9e16c91aa32c49789de5c757a",
+      "uncompressed_bytes": 4493
+    },
+    {
+      "source": ".build/m0-atan-residual-independent-20261024/review.py",
+      "path": "reviews/atan-residual/review.py",
+      "encoding": "identity",
+      "sha256": "aa3f08cd162f4035c2362fe720058110af88683b3a987b4c0b074586d8d9b775",
+      "uncompressed_sha256": "aa3f08cd162f4035c2362fe720058110af88683b3a987b4c0b074586d8d9b775",
+      "uncompressed_bytes": 23032
+    },
+    {
+      "source": ".build/m0-atan-geometry-independent-20261024/EXACT-GEOMETRY-BOUND.json",
+      "path": "reviews/atan-geometry/EXACT-GEOMETRY-BOUND.json",
+      "encoding": "identity",
+      "sha256": "c8e445b5a37848ae79bec01b523ee6be3678f45326bb73c4fba32f5bbe39e0ac",
+      "uncompressed_sha256": "c8e445b5a37848ae79bec01b523ee6be3678f45326bb73c4fba32f5bbe39e0ac",
+      "uncompressed_bytes": 3382
+    },
+    {
+      "source": ".build/m0-atan-geometry-independent-20261024/EXECUTION-NOTES.json",
+      "path": "reviews/atan-geometry/EXECUTION-NOTES.json",
+      "encoding": "identity",
+      "sha256": "54d2edff10e7314e34a1279f74bd3cf51269645841a991e339d2568d5c7015a9",
+      "uncompressed_sha256": "54d2edff10e7314e34a1279f74bd3cf51269645841a991e339d2568d5c7015a9",
+      "uncompressed_bytes": 963
+    },
+    {
+      "source": ".build/m0-atan-geometry-independent-20261024/FINAL-REVIEW.json",
+      "path": "reviews/atan-geometry/FINAL-REVIEW.json",
+      "encoding": "identity",
+      "sha256": "20f3a52335bf160c89b02bcf25262b4a5306e29cbbe0b61da94e284e8b6ba1fc",
+      "uncompressed_sha256": "20f3a52335bf160c89b02bcf25262b4a5306e29cbbe0b61da94e284e8b6ba1fc",
+      "uncompressed_bytes": 52147
+    },
+    {
+      "source": ".build/m0-atan-geometry-independent-20261024/OWN-ORACLE-INTERVALS.json",
+      "path": "reviews/atan-geometry/OWN-ORACLE-INTERVALS.json",
+      "encoding": "identity",
+      "sha256": "d7ef15c3260afa33fc49e18bbc2c36380b697115bb668185c38ca4d00458fa28",
+      "uncompressed_sha256": "d7ef15c3260afa33fc49e18bbc2c36380b697115bb668185c38ca4d00458fa28",
+      "uncompressed_bytes": 59398
+    },
+    {
+      "source": ".build/m0-atan-geometry-independent-20261024/SELECTED-ARM-GEOMETRY.json",
+      "path": "reviews/atan-geometry/SELECTED-ARM-GEOMETRY.json.gz",
+      "encoding": "gzip",
+      "sha256": "922e886054df7e80cf474aa9548518d604b92d24ce5b8ac6eac885438d88bc2c",
+      "uncompressed_sha256": "1909247bbf87a29680aa3e55bdc51959a8fbbc4636a10a7cadfb69461c864d55",
+      "uncompressed_bytes": 213036
+    },
+    {
+      "source": ".build/m0-atan-geometry-independent-20261024/SOURCE-OBJECT-PROOF.json",
+      "path": "reviews/atan-geometry/SOURCE-OBJECT-PROOF.json",
+      "encoding": "identity",
+      "sha256": "3429d93cdcc3841bc1573959a0d3dce0b4e44a3e22a1b622e9d81cdfe3104773",
+      "uncompressed_sha256": "3429d93cdcc3841bc1573959a0d3dce0b4e44a3e22a1b622e9d81cdfe3104773",
+      "uncompressed_bytes": 3882
+    },
+    {
+      "source": ".build/m0-atan-geometry-independent-20261024/review.py",
+      "path": "reviews/atan-geometry/review.py",
+      "encoding": "identity",
+      "sha256": "4cf23bd7716431652c99d1db86c0a776d666a0028de8087e330f9572e76456f9",
+      "uncompressed_sha256": "4cf23bd7716431652c99d1db86c0a776d666a0028de8087e330f9572e76456f9",
+      "uncompressed_bytes": 23491
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/NEXT.md",
+      "path": "study/NEXT.md",
+      "encoding": "identity",
+      "sha256": "73ce1b5685e400644aaf46c75e3a90ce6d58e4c1f61fe2076805857e736e86e5",
+      "uncompressed_sha256": "73ce1b5685e400644aaf46c75e3a90ce6d58e4c1f61fe2076805857e736e86e5",
+      "uncompressed_bytes": 6470
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/build.json",
+      "path": "study/build.json",
+      "encoding": "identity",
+      "sha256": "c24a37fbfc36180130cd76bff648c8c8b5e13c85250811e41593663791029d5f",
+      "uncompressed_sha256": "c24a37fbfc36180130cd76bff648c8c8b5e13c85250811e41593663791029d5f",
+      "uncompressed_bytes": 1351
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/build.py",
+      "path": "study/build.py",
+      "encoding": "identity",
+      "sha256": "6e47c8933ee9b544a9d078c5affb22bc7295afc331f21a5d681dab70996d84be",
+      "uncompressed_sha256": "6e47c8933ee9b544a9d078c5affb22bc7295afc331f21a5d681dab70996d84be",
+      "uncompressed_bytes": 1490
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/certificate.json",
+      "path": "study/certificate.json",
+      "encoding": "identity",
+      "sha256": "ac3b5ee2f379d9e1df28596af64514693a44184b2da92a671589539345c0947f",
+      "uncompressed_sha256": "ac3b5ee2f379d9e1df28596af64514693a44184b2da92a671589539345c0947f",
+      "uncompressed_bytes": 2054
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/certificate.py",
+      "path": "study/certificate.py",
+      "encoding": "identity",
+      "sha256": "03a7dca6eea35ff22f31b312763d85066ba9b36fbf9ef6ebd0c5ce9352e94c4e",
+      "uncompressed_sha256": "03a7dca6eea35ff22f31b312763d85066ba9b36fbf9ef6ebd0c5ce9352e94c4e",
+      "uncompressed_bytes": 4241
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/cheap-design-bounds.json",
+      "path": "study/cheap-design-bounds.json",
+      "encoding": "identity",
+      "sha256": "efeb0cb639d011558b6370c0988201f3e4a69ef60234542997512a2c424f50a0",
+      "uncompressed_sha256": "efeb0cb639d011558b6370c0988201f3e4a69ef60234542997512a2c424f50a0",
+      "uncompressed_bytes": 2193
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/cheap-design-certificate.py",
+      "path": "study/cheap-design-certificate.py",
+      "encoding": "identity",
+      "sha256": "307491d24d0590b776ad266a28fff9737c650c66d7d2550a7ba0936861ba44ac",
+      "uncompressed_sha256": "307491d24d0590b776ad266a28fff9737c650c66d7d2550a7ba0936861ba44ac",
+      "uncompressed_bytes": 2984
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/diagnose-expanded.py",
+      "path": "study/diagnose-expanded.py",
+      "encoding": "identity",
+      "sha256": "36c3f66699f42b8c1d6977b43619e4e459ce59a90d1933497c1eebd12975367b",
+      "uncompressed_sha256": "36c3f66699f42b8c1d6977b43619e4e459ce59a90d1933497c1eebd12975367b",
+      "uncompressed_bytes": 5191
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/diagnosis.json",
+      "path": "study/diagnosis.json",
+      "encoding": "identity",
+      "sha256": "9a94362e0d9eb6291bba139f3e970a109fe33209474dbca9aa587154eaf855c3",
+      "uncompressed_sha256": "9a94362e0d9eb6291bba139f3e970a109fe33209474dbca9aa587154eaf855c3",
+      "uncompressed_bytes": 18419
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/kernel-proof.json",
+      "path": "study/kernel-proof.json",
+      "encoding": "identity",
+      "sha256": "ec698ce901715d6b117a76bed6562cb45dd77247f047c5e5a1f0bb0c2aa49303",
+      "uncompressed_sha256": "ec698ce901715d6b117a76bed6562cb45dd77247f047c5e5a1f0bb0c2aa49303",
+      "uncompressed_bytes": 2326
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/model-expanded.json",
+      "path": "study/model-expanded.json",
+      "encoding": "identity",
+      "sha256": "31d51bec4d347443b87b79d6e374b519b84a9d214d442dbd976de91fb0d9be1b",
+      "uncompressed_sha256": "31d51bec4d347443b87b79d6e374b519b84a9d214d442dbd976de91fb0d9be1b",
+      "uncompressed_bytes": 7137
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/model-expanded.py",
+      "path": "study/model-expanded.py",
+      "encoding": "identity",
+      "sha256": "686420fd9867fa4ee68023a32a6f9766d6b5bb18a21527631f0ba1dd53fe6810",
+      "uncompressed_sha256": "686420fd9867fa4ee68023a32a6f9766d6b5bb18a21527631f0ba1dd53fe6810",
+      "uncompressed_bytes": 8051
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/model.json",
+      "path": "study/model.json",
+      "encoding": "identity",
+      "sha256": "a5622bad045b3f9bdbcf8fc60a9752cbe928b8cf76464ba6cedc4597b91c42b9",
+      "uncompressed_sha256": "a5622bad045b3f9bdbcf8fc60a9752cbe928b8cf76464ba6cedc4597b91c42b9",
+      "uncompressed_bytes": 7724
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/model.py",
+      "path": "study/model.py",
+      "encoding": "identity",
+      "sha256": "e37dbb4b78e9ed5ab355efe799c1a5add966ec19ecbe9f0466fe820c3f80bcdb",
+      "uncompressed_sha256": "e37dbb4b78e9ed5ab355efe799c1a5add966ec19ecbe9f0466fe820c3f80bcdb",
+      "uncompressed_bytes": 8045
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/path-costs.json",
+      "path": "study/path-costs.json",
+      "encoding": "identity",
+      "sha256": "9e8c767eff5ada7122ef0c1ac382eef540fd8d1ca717eaf83ff6a54616f81d0d",
+      "uncompressed_sha256": "9e8c767eff5ada7122ef0c1ac382eef540fd8d1ca717eaf83ff6a54616f81d0d",
+      "uncompressed_bytes": 8948
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/poly-correction.cpp",
+      "path": "study/poly-correction.cpp",
+      "encoding": "identity",
+      "sha256": "ac79051121c98ee2aeb9db3b413c981d30ee9e74618dcdc4681c7d3bf6e6c535",
+      "uncompressed_sha256": "ac79051121c98ee2aeb9db3b413c981d30ee9e74618dcdc4681c7d3bf6e6c535",
+      "uncompressed_bytes": 1416
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/poly.ld",
+      "path": "study/poly.ld",
+      "encoding": "identity",
+      "sha256": "f8631a50efeb9ddbeba21589939538305098b0e25f52b06a001d84389d54e0c6",
+      "uncompressed_sha256": "f8631a50efeb9ddbeba21589939538305098b0e25f52b06a001d84389d54e0c6",
+      "uncompressed_bytes": 128
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/profile-paths.py",
+      "path": "study/profile-paths.py",
+      "encoding": "identity",
+      "sha256": "429ca1b907bde30af6ab223b6a9588dcd0cc15cd3b2149b738b525831ca8b845",
+      "uncompressed_sha256": "429ca1b907bde30af6ab223b6a9588dcd0cc15cd3b2149b738b525831ca8b845",
+      "uncompressed_bytes": 3101
+    },
+    {
+      "source": ".build/m0-atan-polynomial-analysis-20261024/verify-kernel.py",
+      "path": "study/verify-kernel.py",
+      "encoding": "identity",
+      "sha256": "663a1f556ab592afdc261ffa1aeaf36446f30ab1151823b1b6bb1b47a42d75c8",
+      "uncompressed_sha256": "663a1f556ab592afdc261ffa1aeaf36446f30ab1151823b1b6bb1b47a42d75c8",
+      "uncompressed_bytes": 5372
+    },
+    {
+      "source": ".build/m0-math-original-goal-status-20261023/status.json",
+      "path": "status/status.json",
+      "encoding": "identity",
+      "sha256": "206ce4b53594a5d73d3a2c0acf55c0935276dbbaf7cc0014d419754fa3d130ff",
+      "uncompressed_sha256": "206ce4b53594a5d73d3a2c0acf55c0935276dbbaf7cc0014d419754fa3d130ff",
+      "uncompressed_bytes": 8884
+    },
+    {
+      "source": ".build/m0-math-original-goal-status-20261023/HANDOFF.md",
+      "path": "status/HANDOFF.md",
+      "encoding": "identity",
+      "sha256": "a374c0bbaf6241fd052f7c688cc7ef1e0f099e3dcdd263a4e90710a243e56147",
+      "uncompressed_sha256": "a374c0bbaf6241fd052f7c688cc7ef1e0f099e3dcdd263a4e90710a243e56147",
+      "uncompressed_bytes": 16745
+    }
+  ]
+}

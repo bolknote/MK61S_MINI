@@ -1,0 +1,57 @@
+{
+  "status": "PASS_INTERMEDIATE_RESEARCH_CHECKPOINT",
+  "archive_files": 141,
+  "original_artifacts": 138,
+  "preceding_archives_verified": 2,
+  "preceding_second_files": 112,
+  "independent_receipts": 2,
+  "local_originals_checked": true,
+  "components": {
+    "atan-residual": {
+      "public_cases": 65416,
+      "total_qualified_ARM_calls": 258916,
+      "candidate_wrong": 0,
+      "independent_review": true
+    },
+    "atan-geometry": {
+      "public_cases": 79096,
+      "total_qualified_ARM_calls": 346796,
+      "candidate_wrong": 0,
+      "independent_review": true
+    },
+    "atan-directional-ninth": {
+      "public_cases": 106312,
+      "total_qualified_ARM_calls": 500546,
+      "candidate_wrong": 0,
+      "independent_review": false
+    }
+  },
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "goal_complete": false,
+  "rebuilt_ELF_hashes": {
+    "atan-residual": "f7c4c88bd931f48b97e361528d9d9fa78301a2eaf8a0165d543f6c0d49c49a35",
+    "atan-geometry": "5cea0e75f3d4a7b29af31c3af6d6315b0e0d569bb7c5a3ca5125bf341cfdecc7",
+    "atan-directional-ninth": "35247afa5324a99d061028c606b495a5cd2ccf4bb778a62949d285cf32d99b0a",
+    "inline-ninth-unit": "809b9cced3555c1c6cc3b244ce97afb35c51332b6fd2829c201753273274ee88"
+  },
+  "replay": {
+    "fresh_bare_helper_ARM_calls": 75298,
+    "reproduced_transcripts": {
+      "helper-proof.json": {
+        "digest_sha256": "ca7bfbe43342069bc0c208911440afb5ced2b084f59961eaf6bd9d52e65bd8f4"
+      },
+      "extra-helper-proof.json": {
+        "exact_third_transcript_sha256": "2326a4a29924669aa4a03781f05996104082a894498389dd174dfa72320de446",
+        "ninth_transcript_sha256": "db010415e91d799fa603ed969e79d0f98f2c69e83fe43d037ab85249d145ac66",
+        "inverse_transcript_sha256": "20eab128ca3ecd035bf1d2a5252d5207df5fb1bc586bbdaa563b5c566941fd94"
+      }
+    },
+    "fresh_MPFR_unique_inputs": 53156,
+    "MPFR_version": "4.2.2",
+    "public_atan_or_Qfplib_ARM_replayed": false,
+    "firmware_or_ROM_mapped": false,
+    "whole_library_replayed": false,
+    "hardware_accessed": false
+  }
+}

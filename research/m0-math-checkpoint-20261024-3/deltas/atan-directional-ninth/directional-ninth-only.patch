@@ -1,0 +1,115 @@
+--- geometry-parent/code/native_eabi_m0_atan_fast.inc
++++ candidate/code/native_eabi_m0_atan_fast.inc
+@@ -66,15 +66,42 @@
+   // abs(residual)<33*d, so high<=32 and this top word fits uint32.
+   // d>=2^58, hence the truncated divisor is at least2^20.
+   const uint32_t top=(uint32_t(high)<<26)|uint32_t(low>>38);
+-  const uint32_t delta=atan_tail_divide(top,uint32_t(d>>38));
++  const uint32_t den=uint32_t(d>>38);
++  const uint32_t rounded=top+(den>>1);
++  if(rounded<den) return 0;
++  const uint32_t delta=atan_tail_divide(rounded,den);
+   return negative?-int32_t(delta):int32_t(delta);
++}
++
++// Inverted N,D are multiples of64. The signed low64 product is the
++// exact residual divided by64, since its magnitude is below2^60.
++__attribute__((optimize("Os"),noinline,cold)) static bool atan_inverse_half(U h,U d) {
++  const U factor=d>>6;
++  const uint32_t al=uint32_t(h),ah=uint32_t(h>>32);
++  const uint32_t bl=uint32_t(factor),bh=uint32_t(factor>>32);
++  U residue=wide32(al,bl)+(U(ah*bl+al*bh)<<32);
++  // The unsigned shifted interval is a safe subset of |R'|<=factor/2.
++  return residue+(factor>>1)<factor;
++}
++
++// Four Q16 products approximate h^9/9 within .51 Q70, without wide MUL.
++struct AtanTailCorrection {int32_t delta,remainder;};
++__attribute__((always_inline)) inline AtanTailCorrection atan_fast_ninth(U h,int32_t r5) {
++  const uint32_t x=uint32_t(h>>47);
++  const uint32_t q2=(x*x+32768U)>>16;
++  const uint32_t q4=(q2*q2+32768U)>>16;
++  const uint32_t q8=(q4*q4+32768U)>>16;
++  const uint32_t q9=(q8*x+32768U)>>16;
++  const uint32_t ninth=((((q9+2304U)>>9)*7282U)>>16);
++  const uint32_t v=uint32_t(r5+7),q5=(v*13108U)>>16;
++  return {int32_t(q5+ninth)-1,int32_t(v)-int32_t(5*q5)-2};
+ }
+ 
+ // Pack the bounded atan domain without the general96-bit CLZ path.
+ // Non-inverted inputs have output exponent e or e-1. Inverted inputs
+ // have output exponent0 or-1 and use base e=0. Enclosures remain in
+ // Q73 units, including the fractional121/8 Q70 directional bound.
+-__attribute__((always_inline)) inline bool atan_fast_pack(Refine96 q,int source_e,bool invert,bool negative,U h,U numerator,U denominator,U sign,U &result) {
++__attribute__((always_inline)) inline bool atan_fast_pack(Refine96 q,int source_e,bool invert,bool negative,U h,U numerator,U denominator,U sign,uint32_t poly_meta,U &result) {
+   const int e=invert?0:source_e;
+   const uint32_t numerator_high=uint32_t(numerator>>32);
+   const unsigned lower=unsigned(q.high<(1U<<unsigned(e+6)));
+@@ -100,19 +127,34 @@
+       // True errors are strictly below the radius, so equality of the
+       // midpoint distance with the radius remains safe.
+       if(distance73<radius73) {
+-        uint32_t repaired_radius=6;
+-        if(h>(U(1)<<62)+(U(1)<<40)) {
+-          if(h>UINT64_C(4722366482869645213)) return false;
+-          repaired_radius=7;
++        // A cheap inverted low64 residual can certify the unchanged q.
++        if(!(invert && h<=UINT64_C(6558842337318951685) && distance>=7 &&
++             atan_inverse_half(h,denominator))) {
++          const bool reverse=negative!=invert;
++          const bool normal=normalization<5;
++          const int32_t r5=int32_t(poly_meta&15U)-4;
++          int32_t delta=atan_fast_tail_repair(numerator,denominator,h);
++          if(reverse) delta=-delta;
++          tail=uint32_t(int32_t(tail)+delta);
++          uint32_t repaired_distance=tail>half?tail-half:half-tail;
++          const uint32_t repaired_radius=h>UINT64_C(7378697629483820646)?23U:
++            h>UINT64_C(4722366482869645213)?9U:6U;
++          bool safe=repaired_distance>=repaired_radius;
++          if(!safe && bool(tail<half)==reverse)
++            safe=int32_t(5*repaired_distance)+r5>=(normal?11:14);
++          if(!safe) {
++            const AtanTailCorrection ninth=atan_fast_ninth(h,r5);
++            int32_t extra=ninth.delta;
++            const int32_t corrected_r5=ninth.remainder;
++            if(reverse) extra=-extra;
++            tail=uint32_t(int32_t(tail)+extra);
++            repaired_distance=tail>half?tail-half:half-tail;
++            const int32_t r3=int32_t(poly_meta>>4)-1;
++            if(repaired_distance<7 && !(bool(tail<half)==reverse &&
++                int32_t(15*repaired_distance)>=(normal?35:42)+5*r3-3*corrected_r5))
++              return false;
++          }
+         }
+-        int32_t delta=atan_fast_tail_repair(numerator,denominator,h);
+-        if(negative!=invert) delta=-delta;
+-        // This path starts within54 units of a midpoint. abs(delta)<=33,
+-        // half>=1024: the quantum index, binade and retained bits cannot
+-        // change. Reuse them, update only the tail and rounding increment.
+-        tail=uint32_t(int32_t(tail)+delta);
+-        const uint32_t repaired_distance=tail>half?tail-half:half-tail;
+-        if(repaired_distance<repaired_radius) return false;
+       }
+     }
+   }
+@@ -157,6 +199,11 @@
+   const U third=math62_third(c3);
+   const U fifth=(wide32(uint32_t(c5>>3),0xCCCCCCCDU)+(U(1)<<30))>>31;
+   const U seventh=wide32(c7+3,2454267027U)>>34;
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  const int32_t r3=int32_t(uint32_t(c3)-3U*uint32_t(third));
++  const int32_t r5=int32_t(uint32_t(c5)-5U*uint32_t(fifth));
++  const uint32_t poly_meta=uint32_t(r5+4)|(uint32_t(r3+1)<<4);
++#endif
+   const U reduction=third-fifth+seventh;
+   if(reduction>h) return atan_refine(original,index);
+   const U correction=h-reduction;
+@@ -166,7 +213,7 @@
+   if(invert) q=r96_sub({(U(refine_atan_half_pi[1])<<32)|refine_atan_half_pi[0],refine_atan_half_pi[2]},q);
+   U result;
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+-  if(atan_fast_pack(q,e,invert,negative,h,numerator,denominator,sign,result)) return real(result);
++  if(atan_fast_pack(q,e,invert,negative,h,numerator,denominator,sign,poly_meta,result)) return real(result);
+ #else
+   if(r96_pack(q,24,sign,64,result)) return real(result);
+ #endif
