@@ -1,5 +1,83 @@
 {
   "status": "PASS_COMPACT_CACHED_EXECUTION_ABA_LATENCY_EXACT_ORIGINAL_RESTORED",
+  "main_based_integration": {
+    "status": "PASS_HOST_REPEAT_TESTS_AND_STRICT_RESOURCE_CHECKS",
+    "tested_code_commit": "95a7d2553be720825609dc7acf5ca611bd6c61c0",
+    "tested_code_tree": "d44c88f29ec536708cc9bae1ad243897c716b79f",
+    "base_main": "d0b9cbd6c47648b136104f7a66a714af3db9f7e5",
+    "code_tree_excluding_report": "cf56fbf064c106a4c1213e05c9e5620795986752",
+    "additional_staging_dependencies": 0,
+    "own_seven_path_blobs_exact": true,
+    "all_other_main_paths_retained": true,
+    "V6_core_and_case297_not_imported_or_modified": true,
+    "two_existing_repeat_suites_both_arithmetics_and_ASan_UBSan": "PASS_actual_exit0",
+    "warm_C9_NOR_reads_and_writes": 0,
+    "normalized_166_compile_commands_equal_per_pair": true,
+    "builds": [
+      {
+        "release_case": "f411-classic-v3",
+        "control_bytes": 375724,
+        "candidate_bytes": 374604,
+        "flash_delta": -1120,
+        "globals_bytes": 21496,
+        "max_static_frame_bytes": 1928,
+        "global_RAM_delta": 0,
+        "max_frame_delta": 0,
+        "gates": {
+          "FLASH_MIN_HEADROOM": 131072,
+          "GLOBAL_RAM_LIMIT": 49152,
+          "STACK_FRAME_LIMIT": 3072
+        },
+        "control_build": "95F3C471",
+        "candidate_build": "D28AE2E1"
+      },
+      {
+        "release_case": "f411-classic-v3-usb-screen",
+        "control_bytes": 380028,
+        "candidate_bytes": 378876,
+        "flash_delta": -1152,
+        "globals_bytes": 21768,
+        "max_static_frame_bytes": 1928,
+        "global_RAM_delta": 0,
+        "max_frame_delta": 0,
+        "gates": {
+          "FLASH_MIN_HEADROOM": 131072,
+          "GLOBAL_RAM_LIMIT": 49152,
+          "STACK_FRAME_LIMIT": 3072
+        },
+        "control_build": "927022A1",
+        "candidate_build": "6A0783C1"
+      },
+      {
+        "release_case": "f401-product-classic-v3",
+        "control_bytes": 257772,
+        "candidate_bytes": 257580,
+        "flash_delta": -192,
+        "globals_bytes": 29588,
+        "max_static_frame_bytes": 1304,
+        "global_RAM_delta": 0,
+        "max_frame_delta": 0,
+        "gates": {
+          "FLASH_MIN_HEADROOM": 4096,
+          "GLOBAL_RAM_LIMIT": 52428,
+          "STACK_FRAME_LIMIT": 2048
+        },
+        "control_build": "8E432EF1",
+        "candidate_build": "20E5C6B6"
+      }
+    ],
+    "hardware_on_main_based_tuple": false,
+    "qualification": "The timings above belong to the matched92be fixture, not this d0-based whole image. Source V6 and dirty-row/memchr/editor staging differences are not silently imported. Final HOST tuple retains actual main's remaining VM behavior and tests.",
+    "strict_limits_only_generated_cache_changes": true,
+    "product_budget_or_test_threshold_changes": false,
+    "root_original_return_CLOSED_sha256": "7183ce2180cf3acd364fad849b280af6f6a87a90b02c60291e41c8d36ad4879a",
+    "root_return_receipt_sha256": "e5d04f937cd92bfc2516e243219bc151712ed9d33a1cbfcd0a4fa4347018268d",
+    "external_settings_sector_raw_identity_not_measured": true,
+    "evidence": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/main-integration-host-receipt-001.json",
+      "sha256": "15a94d85cc2d83cde3fe5eda91db2023f85cf89960d6ba58f333afcb05ce435b"
+    }
+  },
   "date": "2026-10-24",
   "timezone": "Europe/Moscow",
   "tested_base": "92be3a44c784238ebf76429c9e9230059dbdc910",
