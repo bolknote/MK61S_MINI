@@ -188,6 +188,7 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
   const uint32_t first=instruction;
   const bool short_value=hint==Op::INTEGER_SHORT;
   if(data.stack_capacity-s.sp<(short_value?1:2))return 0;
+  Value* const top=data.stack+s.sp;
   uint32_t after,last;
   uint8_t count=3,dst=255,delta;
   Value a,b;
@@ -195,6 +196,14 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
   if(short_value) {
 #if MK61_VM_INTEGER_SPAN
     if(v.end-first<2 || *operands>=26)return 0;
+#if !defined(MK61_BUILD_LANGUAGE_VM_MODULE)
+    // Scalar LOAD writes this cell before fetching the remaining block.
+    // If it aliases raw code, leave each write/fetch to the ordinary kernel.
+    // Module entry points keep immutable images and own their operand stack;
+    // raw kernel clients retain the broader code/value alias contract.
+    const uintptr_t code=(uintptr_t)v.bytes,cell=(uintptr_t)top;
+    if(!v.reader && (cell>=code ? cell-code<v.end : code-cell<sizeof(Value)))return 0;
+#endif
     a=data.variables[*operands];if(!a.finite())return 0;
     const uint32_t middle=block_next(v,(first+2));
     if(!middle || middle>=v.end)return 0;
@@ -203,15 +212,16 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
       if(!a.integer())return 0;
       const int32_t index=a.integer_value();
       if(!data.array || index<0 || (uint32_t)index>=data.array_count ||
-         data.array+index==data.stack+s.sp)return 0;
+         data.array+index==top)return 0;
       a=data.array[index];if(!a.finite())return 0;
     } else {
       if(v.end-middle<2 || op!=Op::FUNCTION || (Function)v.byte(middle+1)!=Function::ABS)return 0;
       a=a.absolute();
     }
     last=block_next(v,(middle+(op==Op::LOAD_ARRAY?1:2)));
-    if(!last || v.end-last<2 || (Op)v.byte(last)!=Op::STORE || v.byte(last+1)>=26)return 0;
-    dst=v.byte(last+1);after=(last+2);delta=0;
+    if(!last || v.end-last<2 || (Op)v.byte(last)!=Op::STORE)return 0;
+    dst=v.byte(last+1);if(dst>=26)return 0;
+    after=(last+2);delta=0;
 #else
     return 0;
 #endif
@@ -265,7 +275,7 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
   if(!v.good())return 0;
   // Match even inactive cells: INPUT, snapshots and scalar fallback retain
   // the exact same operand bank, not only the final numerical result.
-  data.stack[s.sp]=a;if(!short_value)data.stack[s.sp+1]=b;
+  top[0]=a;if(!short_value)top[1]=b;
   if(dst<26)data.variables[dst]=a;
   s.sp=(uint8_t)(s.sp+delta);s.pc=after;instruction=last;steps+=count-1;
 #if defined(LANGUAGE_VM_TEST_INTEGER_BLOCK)
