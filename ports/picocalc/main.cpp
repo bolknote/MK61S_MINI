@@ -479,7 +479,7 @@ int main() {
         for(unsigned i = 0; i < input_budget; ++i) {
             const bool exclusive=terminal.input_active();
             int c = picocalc::console::read(exclusive,sleep_clocks.usb_available());
-            if(c == PICO_ERROR_TIMEOUT) break;
+            if(c < 0) break;
             if(picocalc::console::input_usb()) c=remote_screen.receive((u8)c,millis());
             if(c<0 || !picocalc::console::accept(c,exclusive)) continue;
             if(c == 5 || (terminal.raw() && !services.active() && (c == '?' || c == 'm'))) {
