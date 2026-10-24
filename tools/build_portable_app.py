@@ -315,6 +315,10 @@ def build(args: argparse.Namespace) -> dict:
         plain_object = source == ROOT / "sdk/portable/memory.c" or (
             has_rust and source == ROOT / "sdk/portable/start.c")
         support = ["-fno-lto"] if plain_object else []
+        if system and args.system == "language-input" and source == ROOT / "sdk/portable/memory.c":
+            # INPUT compiles at most 64 source characters. Use the measured
+            # 270-byte M4 body to fit tight 20-KiB bundles, including BBS builds.
+            support += ["-DMK61_MEMCHR_WORDS=4"]
         if shared_system_runtime and source == ROOT / "sdk/portable/memory.c":
             # Keep SDK strcmp, which has no resident runtime slot. Its compact
             # byte loop avoids linking newlib's much larger ARM routine.

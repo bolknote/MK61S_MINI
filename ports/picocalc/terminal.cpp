@@ -106,13 +106,15 @@ void Terminal::navigate(int delta) {
   redraw();
 }
 int Terminal::receive(u8 byte) {
+  auto& escape=escape_[input_source_];
+  bool& cr=cr_[input_source_];
   if (byte == 0x1D || byte == 0x1E || byte == 0x1F) {
     raw_ = byte == 0x1D ? !raw_ : byte == 0x1E;
     pending_ = overflow_ = false;
     length_ = cursor_ = 0;
     line_[0] = 0;
-    escape_.reset();
-    cr_ = false;
+    escape.reset();
+    cr = false;
     if (!raw_)
       out("\r\nMK61S PicoCalc terminal; help; raw = keyboard\r\nmk61> ");
     return -1;
@@ -122,7 +124,7 @@ int Terminal::receive(u8 byte) {
   if (pending_)
     return -1;
   terminal_line_editor::Key key;
-  if (escape_.feed(byte, key)) {
+  if (escape.feed(byte, key)) {
     using K = terminal_line_editor::Key;
     if (key == K::UP)
       navigate(1);
@@ -146,16 +148,16 @@ int Terminal::receive(u8 byte) {
     return -1;
   }
   if (byte == '\r' || byte == '\n') {
-    if (byte == '\n' && cr_) {
-      cr_ = false;
+    if (byte == '\n' && cr) {
+      cr = false;
       return -1;
     }
-    cr_ = byte == '\r';
+    cr = byte == '\r';
     out("\r\n");
     pending_ = true;
     return -1;
   }
-  cr_ = false;
+  cr = false;
   if (byte == 3) {
     cancel_upload();
     length_ = cursor_ = 0;

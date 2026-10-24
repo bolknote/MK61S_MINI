@@ -16,6 +16,12 @@ void* memcpy(void* destination, const void* source, size_t size) {
 }
 #endif
 
+#include "native_libc.h"
+#if !MK61_USE_NATIVE_LIBC
+#define MK61_MEMCHR_M4_FLASH 1
+#include "memory_search_arm.h"
+#endif
+
 #define MK61_MEMCMP_M4_FLASH 1
 #include "memory_compare_arm.h"
 #ifndef MK61_ARM_MEMCMP
