@@ -1,0 +1,12 @@
+{
+  "status": "IDENTICAL_PARENT_HELPER_CLOSURE_REUSED",
+  "symbols": [
+    "mk61_m0_log_ratio70",
+    "mk61_m0_log_ratio70_slow",
+    "log10_table"
+  ],
+  "addresses_and_bytes_identical": true,
+  "parent_helper_proof_sha256": "57135c06ababf429eddf91d2841c3c7a3cbd027bbed02262263769204cc6161e",
+  "inherited_parent_ARM_calls": 155608,
+  "fresh_helper_calls_claimed": 0
+}

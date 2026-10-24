@@ -1,0 +1,95 @@
+{
+  "status": "READ_ONLY_ACTUAL_V164_ATAN_DIAGNOSIS",
+  "ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "records": [
+    {
+      "x": "3FEF1BCDCF0D1830",
+      "output": "3FE8AE47A21A1998",
+      "instructions": 20785,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            3473741872,
+            1072634829,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            3473741872,
+            1072634829,
+            3473741872,
+            6233037
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            3515023360,
+            29154544,
+            623631264,
+            260619224
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            1388165632,
+            4169907586,
+            28,
+            2
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            3473741872,
+            1072634829,
+            62,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            3515023360,
+            29154544,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            3473741872,
+            1072634829,
+            3,
+            0
+          ]
+        }
+      ],
+      "index": 62,
+      "exponent": -1,
+      "invert": false,
+      "negative_reduction": false,
+      "numerator": "0x1bcdcf0d1830000",
+      "denominator": "0xf88bbd8252bdba0",
+      "h": "0x1ca3476d9ca98387",
+      "h_error": 3.478185085942703,
+      "q": "0x315c8f443433310001",
+      "midpoint_distance_Q70": 1,
+      "q_error_Q70": 3.860700885343213,
+      "true_midpoint_distance_Q70": 2.860700885343213,
+      "source_radius": 64,
+      "c3": 6304624534258,
+      "c5": 19261890,
+      "c7": 59
+    }
+  ],
+  "MPFR_version": "4.2.2",
+  "hardware_accessed": false,
+  "canonical_or_frozen_changed": false
+}

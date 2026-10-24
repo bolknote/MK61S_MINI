@@ -1,0 +1,136 @@
+{
+  "status": "PASS_ACTUAL_READY_DIRTY_DISPATCH_AND_ZERO_ENDPOINTS",
+  "actual_ARM_calls": 16,
+  "rows": [
+    {
+      "den": 2049,
+      "delta": "0",
+      "SIO": "READY",
+      "exact": "0",
+      "instructions": 42,
+      "SIO_accesses": 12
+    },
+    {
+      "den": 2049,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "exact": "0",
+      "instructions": 8,
+      "SIO_accesses": 1
+    },
+    {
+      "den": 2049,
+      "delta": "1",
+      "SIO": "READY",
+      "exact": "262016",
+      "instructions": 42,
+      "SIO_accesses": 12
+    },
+    {
+      "den": 2049,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "exact": "262016",
+      "instructions": 166,
+      "SIO_accesses": 1
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "exact": "576179414698328175",
+      "instructions": 42,
+      "SIO_accesses": 12
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "exact": "576179414698328175",
+      "instructions": 73,
+      "SIO_accesses": 1
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "exact": "576179414698590192",
+      "instructions": 42,
+      "SIO_accesses": 12
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "exact": "576179414698590192",
+      "instructions": 56,
+      "SIO_accesses": 1
+    },
+    {
+      "den": 4095,
+      "delta": "0",
+      "SIO": "READY",
+      "exact": "0",
+      "instructions": 42,
+      "SIO_accesses": 12
+    },
+    {
+      "den": 4095,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "exact": "0",
+      "instructions": 8,
+      "SIO_accesses": 1
+    },
+    {
+      "den": 4095,
+      "delta": "1",
+      "SIO": "READY",
+      "exact": "131104",
+      "instructions": 42,
+      "SIO_accesses": 12
+    },
+    {
+      "den": 4095,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "exact": "131104",
+      "instructions": 166,
+      "SIO_accesses": 1
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "exact": "288300762079822816",
+      "instructions": 42,
+      "SIO_accesses": 12
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "exact": "288300762079822816",
+      "instructions": 73,
+      "SIO_accesses": 1
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "exact": "288300762079953920",
+      "instructions": 42,
+      "SIO_accesses": 12
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "exact": "288300762079953920",
+      "instructions": 56,
+      "SIO_accesses": 1
+    }
+  ],
+  "DIRTY_only_one_CSR_read_no_writes": true,
+  "instruction_counts_are_not_cycles": true
+}

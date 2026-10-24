@@ -1,0 +1,24 @@
+{
+  "status": "PASS_EXACT_RP_LN_STRICT_RADII_AND_SELECTOR",
+  "main_bound": "7157007042211914738946457/906251642853202851790848",
+  "main_bound_float": 7.897372764676165,
+  "near_bound": "23355077934092334177353737597195802241452043499/6337856860328575685795548307128320000000000000",
+  "near_bound_float": 3.6850118973626564,
+  "strict_radii": {
+    "main": 8,
+    "near": 4
+  },
+  "generic_radii_unchanged": {
+    "main": 16,
+    "near": 8
+  },
+  "packing_rule": "Integer distance>=strict radius is safe; closed guard=radius-1.",
+  "integer_guard_boundary_checks": 24612,
+  "exponent_error_ceil_half_unchanged": true,
+  "negative_n128_half_cell": "Route x<=16129/16384 through the existing general normal kernel.",
+  "polynomial_helpers_tables_unchanged": true,
+  "source_sha256": "44d1d70cd02a52e8ba4de34dd5168e23806b3df59f0a93d814a1fe061158aa76",
+  "subnormal_source_sha256": "1b86940454b8ca9c733e3d8e59f72d67b499ac3c59cbb61dd6d231d4c92bc13f",
+  "propagation_function_sha256": "63d1b9cbad5222bb4dab5f3b0634ec417838445f3f0d87d56a1fe454b5b46a17",
+  "hardware_accessed": false
+}

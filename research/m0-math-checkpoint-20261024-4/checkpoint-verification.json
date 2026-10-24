@@ -1,0 +1,54 @@
+{
+  "status": "PASS_INTERMEDIATE_RESEARCH_CHECKPOINT",
+  "archive_files": 181,
+  "original_artifacts": 178,
+  "preceding_archives_verified": 3,
+  "preceding_third_files": 141,
+  "independent_receipts": 4,
+  "local_originals_checked": true,
+  "components": {
+    "atan-small-h": {
+      "unique_inputs": 58188,
+      "public_state_cases": 116376,
+      "candidate_wrong": 0,
+      "remaining_correct_Qfplib_raw_inputs": 0
+    },
+    "log-ratio-dirty": {
+      "unique_inputs": 14907,
+      "public_state_cases": 29814,
+      "candidate_wrong": 0,
+      "remaining_correct_Qfplib_raw_inputs": 27
+    },
+    "ln-enclosure": {
+      "unique_inputs": 19659,
+      "public_state_cases": 39318,
+      "candidate_wrong": 0,
+      "remaining_correct_Qfplib_raw_inputs": 34
+    }
+  },
+  "near_rounding_prototype": "BUILT_ONLY_UNQUALIFIED",
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "goal_complete": false,
+  "rebuilt_hashes": {
+    "atan-small-h": "fce98d75c6a88d57282b74798371c9c990029193741c4a986483a273321a50c9",
+    "log-ratio-dirty": "4e1a6b9151b96b5f9355e75c891c508809cad22d6c67fb9ef33354485acd5dff",
+    "ln-enclosure": "36d1662268eaa35b5bd688fb7c2ff16958c1bc46dd92166dab5722e96b6f62f6",
+    "ln-near-rounding": "272ecb817c396bd655cb19132f4df97c4d5d9da6046dc999a94a164de55e4425",
+    "inline-ninth-unit": "809b9cced3555c1c6cc3b244ce97afb35c51332b6fd2829c201753273274ee88",
+    "product-seed-code": "75729579767fb4b3269141b6c62b1ae4fad49ed8817158b0e7d4bedcc717ecc8"
+  },
+  "oracle_replay": {
+    "fresh_MPFR_unique_inputs": {
+      "atan": 58188,
+      "ln": 19659
+    },
+    "MPFR_version": "4.2.2",
+    "public_ARM_or_Qfplib_reexecuted": false,
+    "prototype_qualified": false,
+    "hardware_accessed": false
+  },
+  "checkpoint_sha256": "a16f65a95f5e2a893c464cd787723aaf88542cd06ec141838ecd20966689e4f8",
+  "verifier_sha256": "788214c91a7957f22ef3342b7a05a2eb47014ee43b4b944c678e68353a2cece1",
+  "verification_scope": "Saved records and fresh full component builds plus MPFR oracle replay; no public ARM/firmware/hardware replay."
+}

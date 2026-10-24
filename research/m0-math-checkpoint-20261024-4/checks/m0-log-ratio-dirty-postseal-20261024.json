@@ -1,0 +1,11 @@
+{
+  "status": "PASS_FROZEN_DIRTY_LOG_RATIO_PACKET_AND_BINDING_RANGES",
+  "HANDOFF_sha256": "2d4be03240a2bc94b5e36c3a30505e951788d78d098c0b94d99533b2f0a5a677",
+  "result_sha256": "d76525b1cf50b407f9de8421a643b47a7e8503032cb23a3d6c9eb752bcd3fa3e",
+  "source_sha256": "9480f6ffa1abc80b502f35499b4d8b2fd1fdd42b3de0408af2feaadcd7be6d74",
+  "ELF_sha256": "4e1a6b9151b96b5f9355e75c891c508809cad22d6c67fb9ef33354485acd5dff",
+  "root_artifacts_checked": 51,
+  "input_pins_checked": 542,
+  "all_resident_bindings_outside_overlay": true,
+  "hardware_accessed": false
+}

@@ -1,0 +1,2107 @@
+{
+  "status": "PASS_BOUNDED_BARE_INTEGER_HELPER_AND_SEED",
+  "pairs": 104,
+  "actual_ARM_calls": 416,
+  "denominators": 9,
+  "rows": [
+    {
+      "den": 2049,
+      "delta": "0",
+      "SIO": "READY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "1",
+      "SIO": "READY",
+      "seed": "262020",
+      "exact": "262016",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "seed": "262020",
+      "exact": "262016",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "65535",
+      "SIO": "READY",
+      "seed": "17171222656",
+      "exact": "17171222653",
+      "correction": -3,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "65535",
+      "SIO": "DIRTY",
+      "seed": "17171222656",
+      "exact": "17171222653",
+      "correction": -3,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "65536",
+      "SIO": "READY",
+      "seed": "17171484674",
+      "exact": "17171484670",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "65536",
+      "SIO": "DIRTY",
+      "seed": "17171484674",
+      "exact": "17171484670",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "65537",
+      "SIO": "READY",
+      "seed": "17171746690",
+      "exact": "17171746686",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "65537",
+      "SIO": "DIRTY",
+      "seed": "17171746690",
+      "exact": "17171746686",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "seed": "1125350419071166",
+      "exact": "1125350419071167",
+      "correction": 1,
+      "instructions": 148,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "seed": "1125350419071166",
+      "exact": "1125350419071167",
+      "correction": 1,
+      "instructions": 148,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "seed": "1125350419333188",
+      "exact": "1125350419333183",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "seed": "1125350419333188",
+      "exact": "1125350419333183",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "seed": "1125350419595204",
+      "exact": "1125350419595200",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "seed": "1125350419595204",
+      "exact": "1125350419595200",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "1898311054047",
+      "SIO": "READY",
+      "seed": "497387987723716045",
+      "exact": "497387987723716047",
+      "correction": 2,
+      "instructions": 148,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "1898311054047",
+      "SIO": "DIRTY",
+      "seed": "497387987723716045",
+      "exact": "497387987723716047",
+      "correction": 2,
+      "instructions": 148,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "seed": "576179414698066158",
+      "exact": "576179414698066159",
+      "correction": 1,
+      "instructions": 150,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "seed": "576179414698066158",
+      "exact": "576179414698066159",
+      "correction": 1,
+      "instructions": 150,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "seed": "576179414698328174",
+      "exact": "576179414698328175",
+      "correction": 1,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "seed": "576179414698328174",
+      "exact": "576179414698328175",
+      "correction": 1,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "seed": "576179414698590196",
+      "exact": "576179414698590192",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "seed": "576179414698590196",
+      "exact": "576179414698590192",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "0",
+      "SIO": "READY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "1",
+      "SIO": "READY",
+      "seed": "261765",
+      "exact": "261760",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "seed": "261765",
+      "exact": "261760",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "65535",
+      "SIO": "READY",
+      "seed": "17154478411",
+      "exact": "17154478409",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "65535",
+      "SIO": "DIRTY",
+      "seed": "17154478411",
+      "exact": "17154478409",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "65536",
+      "SIO": "READY",
+      "seed": "17154740174",
+      "exact": "17154740170",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "65536",
+      "SIO": "DIRTY",
+      "seed": "17154740174",
+      "exact": "17154740170",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "65537",
+      "SIO": "READY",
+      "seed": "17155001935",
+      "exact": "17155001930",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "65537",
+      "SIO": "DIRTY",
+      "seed": "17155001935",
+      "exact": "17155001930",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "seed": "1124253051524537",
+      "exact": "1124253051524535",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "seed": "1124253051524537",
+      "exact": "1124253051524535",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "seed": "1124253051786300",
+      "exact": "1124253051786296",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "seed": "1124253051786300",
+      "exact": "1124253051786296",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "seed": "1124253052048061",
+      "exact": "1124253052048056",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "seed": "1124253052048061",
+      "exact": "1124253052048056",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "seed": "575617562514060244",
+      "exact": "575617562514060244",
+      "correction": 0,
+      "instructions": 149,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "seed": "575617562514060244",
+      "exact": "575617562514060244",
+      "correction": 0,
+      "instructions": 149,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "seed": "575617562514322005",
+      "exact": "575617562514322005",
+      "correction": 0,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "seed": "575617562514322005",
+      "exact": "575617562514322005",
+      "correction": 0,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "seed": "575617562514583768",
+      "exact": "575617562514583765",
+      "correction": -3,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "seed": "575617562514583768",
+      "exact": "575617562514583765",
+      "correction": -3,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "0",
+      "SIO": "READY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "1",
+      "SIO": "READY",
+      "seed": "209801",
+      "exact": "209797",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "seed": "209801",
+      "exact": "209797",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "65535",
+      "SIO": "READY",
+      "seed": "13749056359",
+      "exact": "13749056357",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "65535",
+      "SIO": "DIRTY",
+      "seed": "13749056359",
+      "exact": "13749056357",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "65536",
+      "SIO": "READY",
+      "seed": "13749266158",
+      "exact": "13749266154",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "65536",
+      "SIO": "DIRTY",
+      "seed": "13749266158",
+      "exact": "13749266154",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "65537",
+      "SIO": "READY",
+      "seed": "13749475955",
+      "exact": "13749475951",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "65537",
+      "SIO": "DIRTY",
+      "seed": "13749475955",
+      "exact": "13749475951",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "seed": "901071906477853",
+      "exact": "901071906477851",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "seed": "901071906477853",
+      "exact": "901071906477851",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "seed": "901071906687653",
+      "exact": "901071906687649",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "seed": "901071906687653",
+      "exact": "901071906687649",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "seed": "901071906897450",
+      "exact": "901071906897446",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "seed": "901071906897450",
+      "exact": "901071906897446",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "1262918828537",
+      "SIO": "READY",
+      "seed": "264956773450031585",
+      "exact": "264956773450031580",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "1262918828537",
+      "SIO": "DIRTY",
+      "seed": "264956773450031585",
+      "exact": "264956773450031580",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "seed": "461348816223656726",
+      "exact": "461348816223656725",
+      "correction": -1,
+      "instructions": 159,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "seed": "461348816223656726",
+      "exact": "461348816223656725",
+      "correction": -1,
+      "instructions": 159,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "seed": "461348816223866523",
+      "exact": "461348816223866523",
+      "correction": 0,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "seed": "461348816223866523",
+      "exact": "461348816223866523",
+      "correction": 0,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "seed": "461348816224076324",
+      "exact": "461348816224076320",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 2559,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "seed": "461348816224076324",
+      "exact": "461348816224076320",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "0",
+      "SIO": "READY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "1",
+      "SIO": "READY",
+      "seed": "174824",
+      "exact": "174819",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "seed": "174824",
+      "exact": "174819",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "65535",
+      "SIO": "READY",
+      "seed": "11456800788",
+      "exact": "11456800787",
+      "correction": -1,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "65535",
+      "SIO": "DIRTY",
+      "seed": "11456800788",
+      "exact": "11456800787",
+      "correction": -1,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "65536",
+      "SIO": "READY",
+      "seed": "11456975611",
+      "exact": "11456975606",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "65536",
+      "SIO": "DIRTY",
+      "seed": "11456975611",
+      "exact": "11456975606",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "65537",
+      "SIO": "READY",
+      "seed": "11457150430",
+      "exact": "11457150426",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "65537",
+      "SIO": "DIRTY",
+      "seed": "11457150430",
+      "exact": "11457150426",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "seed": "750844353199878",
+      "exact": "750844353199877",
+      "correction": -1,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "seed": "750844353199878",
+      "exact": "750844353199877",
+      "correction": -1,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "seed": "750844353374701",
+      "exact": "750844353374696",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "seed": "750844353374701",
+      "exact": "750844353374696",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "seed": "750844353549520",
+      "exact": "750844353549516",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "seed": "750844353549520",
+      "exact": "750844353549516",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "seed": "384432308927495135",
+      "exact": "384432308927495135",
+      "correction": 0,
+      "instructions": 149,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "seed": "384432308927495135",
+      "exact": "384432308927495135",
+      "correction": 0,
+      "instructions": 149,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "seed": "384432308927669955",
+      "exact": "384432308927669955",
+      "correction": 0,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "seed": "384432308927669955",
+      "exact": "384432308927669955",
+      "correction": 0,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "seed": "384432308927844778",
+      "exact": "384432308927844774",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "seed": "384432308927844778",
+      "exact": "384432308927844774",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "0",
+      "SIO": "READY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "1",
+      "SIO": "READY",
+      "seed": "149842",
+      "exact": "149838",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "seed": "149842",
+      "exact": "149838",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "65535",
+      "SIO": "READY",
+      "seed": "9819658170",
+      "exact": "9819658168",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "65535",
+      "SIO": "DIRTY",
+      "seed": "9819658170",
+      "exact": "9819658168",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "65536",
+      "SIO": "READY",
+      "seed": "9819808011",
+      "exact": "9819808006",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "65536",
+      "SIO": "DIRTY",
+      "seed": "9819808011",
+      "exact": "9819808006",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "65537",
+      "SIO": "READY",
+      "seed": "9819957849",
+      "exact": "9819957845",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "65537",
+      "SIO": "DIRTY",
+      "seed": "9819957849",
+      "exact": "9819957845",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "seed": "643550937392359",
+      "exact": "643550937392359",
+      "correction": 0,
+      "instructions": 147,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "seed": "643550937392359",
+      "exact": "643550937392359",
+      "correction": 0,
+      "instructions": 147,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "seed": "643550937542202",
+      "exact": "643550937542197",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "seed": "643550937542202",
+      "exact": "643550937542197",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "seed": "643550937692040",
+      "exact": "643550937692035",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "seed": "643550937692040",
+      "exact": "643550937692035",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "seed": "329498080021305487",
+      "exact": "329498080021305487",
+      "correction": 0,
+      "instructions": 149,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "seed": "329498080021305487",
+      "exact": "329498080021305487",
+      "correction": 0,
+      "instructions": 149,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "seed": "329498080021455325",
+      "exact": "329498080021455325",
+      "correction": 0,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "seed": "329498080021455325",
+      "exact": "329498080021455325",
+      "correction": 0,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "seed": "329498080021605168",
+      "exact": "329498080021605164",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3583,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "seed": "329498080021605168",
+      "exact": "329498080021605164",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "0",
+      "SIO": "READY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "1",
+      "SIO": "READY",
+      "seed": "147456",
+      "exact": "147451",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "seed": "147456",
+      "exact": "147451",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "65535",
+      "SIO": "READY",
+      "seed": "9663234064",
+      "exact": "9663234061",
+      "correction": -3,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "65535",
+      "SIO": "DIRTY",
+      "seed": "9663234064",
+      "exact": "9663234061",
+      "correction": -3,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "65536",
+      "SIO": "READY",
+      "seed": "9663381517",
+      "exact": "9663381512",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "65536",
+      "SIO": "DIRTY",
+      "seed": "9663381517",
+      "exact": "9663381512",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "65537",
+      "SIO": "READY",
+      "seed": "9663528968",
+      "exact": "9663528964",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "65537",
+      "SIO": "DIRTY",
+      "seed": "9663528968",
+      "exact": "9663528964",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "seed": "633299370688500",
+      "exact": "633299370688498",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "seed": "633299370688500",
+      "exact": "633299370688498",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "seed": "633299370835954",
+      "exact": "633299370835950",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "seed": "633299370835954",
+      "exact": "633299370835950",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "seed": "633299370983406",
+      "exact": "633299370983401",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "seed": "633299370983406",
+      "exact": "633299370983401",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "2048365677211",
+      "SIO": "READY",
+      "seed": "302034591934569401",
+      "exact": "302034591934569400",
+      "correction": -1,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "2048365677211",
+      "SIO": "DIRTY",
+      "seed": "302034591934569401",
+      "exact": "302034591934569400",
+      "correction": -1,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "seed": "324249277867711498",
+      "exact": "324249277867711497",
+      "correction": -1,
+      "instructions": 159,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "seed": "324249277867711498",
+      "exact": "324249277867711497",
+      "correction": -1,
+      "instructions": 159,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "seed": "324249277867858950",
+      "exact": "324249277867858948",
+      "correction": -2,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "seed": "324249277867858950",
+      "exact": "324249277867858948",
+      "correction": -2,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "seed": "324249277868006404",
+      "exact": "324249277868006400",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 3641,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "seed": "324249277868006404",
+      "exact": "324249277868006400",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "0",
+      "SIO": "READY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "1",
+      "SIO": "READY",
+      "seed": "132992",
+      "exact": "132987",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "seed": "132992",
+      "exact": "132987",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "65535",
+      "SIO": "READY",
+      "seed": "8715341892",
+      "exact": "8715341891",
+      "correction": -1,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "65535",
+      "SIO": "DIRTY",
+      "seed": "8715341892",
+      "exact": "8715341891",
+      "correction": -1,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "65536",
+      "SIO": "READY",
+      "seed": "8715474884",
+      "exact": "8715474879",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "65536",
+      "SIO": "DIRTY",
+      "seed": "8715474884",
+      "exact": "8715474879",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "65537",
+      "SIO": "READY",
+      "seed": "8715607871",
+      "exact": "8715607867",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "65537",
+      "SIO": "DIRTY",
+      "seed": "8715607871",
+      "exact": "8715607867",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "seed": "571177361574637",
+      "exact": "571177361574640",
+      "correction": 3,
+      "instructions": 149,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "seed": "571177361574637",
+      "exact": "571177361574640",
+      "correction": 3,
+      "instructions": 149,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "seed": "571177361707632",
+      "exact": "571177361707627",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "seed": "571177361707632",
+      "exact": "571177361707627",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "seed": "571177361840620",
+      "exact": "571177361840615",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "seed": "571177361840620",
+      "exact": "571177361840615",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "seed": "292442809194039519",
+      "exact": "292442809194039524",
+      "correction": 5,
+      "instructions": 151,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "seed": "292442809194039519",
+      "exact": "292442809194039524",
+      "correction": 5,
+      "instructions": 151,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "seed": "292442809194172507",
+      "exact": "292442809194172512",
+      "correction": 5,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "seed": "292442809194172507",
+      "exact": "292442809194172512",
+      "correction": 5,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "seed": "292442809194305502",
+      "exact": "292442809194305499",
+      "correction": -3,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4037,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "seed": "292442809194305502",
+      "exact": "292442809194305499",
+      "correction": -3,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "0",
+      "SIO": "READY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "1",
+      "SIO": "READY",
+      "seed": "131172",
+      "exact": "131168",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "seed": "131172",
+      "exact": "131168",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "65535",
+      "SIO": "READY",
+      "seed": "8596099492",
+      "exact": "8596099491",
+      "correction": -1,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "65535",
+      "SIO": "DIRTY",
+      "seed": "8596099492",
+      "exact": "8596099491",
+      "correction": -1,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "65536",
+      "SIO": "READY",
+      "seed": "8596230663",
+      "exact": "8596230659",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "65536",
+      "SIO": "DIRTY",
+      "seed": "8596230663",
+      "exact": "8596230659",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "65537",
+      "SIO": "READY",
+      "seed": "8596361831",
+      "exact": "8596361827",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "65537",
+      "SIO": "DIRTY",
+      "seed": "8596361831",
+      "exact": "8596361827",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "seed": "563362572361793",
+      "exact": "563362572361794",
+      "correction": 1,
+      "instructions": 148,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "seed": "563362572361793",
+      "exact": "563362572361794",
+      "correction": 1,
+      "instructions": 148,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "seed": "563362572492966",
+      "exact": "563362572492962",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "seed": "563362572492966",
+      "exact": "563362572492962",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "seed": "563362572624134",
+      "exact": "563362572624130",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "seed": "563362572624134",
+      "exact": "563362572624130",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "seed": "288441637116134266",
+      "exact": "288441637116134268",
+      "correction": 2,
+      "instructions": 150,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "seed": "288441637116134266",
+      "exact": "288441637116134268",
+      "correction": 2,
+      "instructions": 150,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "seed": "288441637116265434",
+      "exact": "288441637116265436",
+      "correction": 2,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "seed": "288441637116265434",
+      "exact": "288441637116265436",
+      "correction": 2,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "seed": "288441637116396608",
+      "exact": "288441637116396604",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "seed": "288441637116396608",
+      "exact": "288441637116396604",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "0",
+      "SIO": "READY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "seed": "4",
+      "exact": "0",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "1",
+      "SIO": "READY",
+      "seed": "131108",
+      "exact": "131104",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "seed": "131108",
+      "exact": "131104",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "65535",
+      "SIO": "READY",
+      "seed": "8591901156",
+      "exact": "8591901152",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "65535",
+      "SIO": "DIRTY",
+      "seed": "8591901156",
+      "exact": "8591901152",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "65536",
+      "SIO": "READY",
+      "seed": "8592032260",
+      "exact": "8592032256",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "65536",
+      "SIO": "DIRTY",
+      "seed": "8592032260",
+      "exact": "8592032256",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "65537",
+      "SIO": "READY",
+      "seed": "8592163364",
+      "exact": "8592163360",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "65537",
+      "SIO": "DIRTY",
+      "seed": "8592163364",
+      "exact": "8592163360",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "seed": "563087425806308",
+      "exact": "563087425806305",
+      "correction": -3,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "seed": "563087425806308",
+      "exact": "563087425806305",
+      "correction": -3,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "seed": "563087425937414",
+      "exact": "563087425937410",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "seed": "563087425937414",
+      "exact": "563087425937410",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "seed": "563087426068518",
+      "exact": "563087426068514",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "seed": "563087426068518",
+      "exact": "563087426068514",
+      "correction": -4,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "674329563399",
+      "SIO": "READY",
+      "seed": "88407308349348710",
+      "exact": "88407308349348705",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "674329563399",
+      "SIO": "DIRTY",
+      "seed": "88407308349348710",
+      "exact": "88407308349348705",
+      "correction": -5,
+      "instructions": 158,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "807425342203",
+      "SIO": "READY",
+      "seed": "105856698373733017",
+      "exact": "105856698373733015",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "807425342203",
+      "SIO": "DIRTY",
+      "seed": "105856698373733017",
+      "exact": "105856698373733015",
+      "correction": -2,
+      "instructions": 157,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "seed": "288300762079691714",
+      "exact": "288300762079691712",
+      "correction": -2,
+      "instructions": 159,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "seed": "288300762079691714",
+      "exact": "288300762079691712",
+      "correction": -2,
+      "instructions": 159,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "seed": "288300762079822818",
+      "exact": "288300762079822816",
+      "correction": -2,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "seed": "288300762079822818",
+      "exact": "288300762079822816",
+      "correction": -2,
+      "instructions": 64,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "seed": "288300762079953924",
+      "exact": "288300762079953920",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "seed": "288300762079953924",
+      "exact": "288300762079953920",
+      "correction": -4,
+      "instructions": 47,
+      "seed_instructions": 92
+    }
+  ],
+  "exact_floor_every_result": true,
+  "exact_source_retained_limb_seed_model": true,
+  "SIO_accesses": 0,
+  "PCS_SP_bounded_stack_checked_every_call": true,
+  "stack_bytes_observed": 68,
+  "correction_counts": {
+    "-5": 38,
+    "-4": 90,
+    "-3": 10,
+    "-2": 20,
+    "-1": 14,
+    "0": 16,
+    "1": 8,
+    "2": 6,
+    "3": 2,
+    "5": 4
+  },
+  "firmware_or_ROM_loaded": false,
+  "additional_seed_bytes": 184
+}

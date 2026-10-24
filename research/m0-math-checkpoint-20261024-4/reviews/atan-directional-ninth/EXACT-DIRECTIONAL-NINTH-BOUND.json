@@ -1,0 +1,44 @@
+{
+  "status": "PASS_INDEPENDENT_FRACTION_DIRECTIONAL_NINTH_ENCLOSURES",
+  "old_positive_base": "6567625726044640885362305040813370753657999994270611259/2514250496733098908244163091418476004374493872332472320",
+  "old_positive_base_float": 2.6121604567954986,
+  "ninth_positive_base": "2106568560122615527213556575600065271247804342546227856640881/755167707946269922585675605322996360293901107024419723673600",
+  "ninth_positive_base_float": 2.7895373940863712,
+  "ninth_symmetric_bound": "5076885587670397045560536948135210575168872555994784772885361/755167707946269922585675605322996360293901107024419723673600",
+  "ninth_symmetric_bound_float": 6.722858425021024,
+  "Q16_ninth_error_exact": "2317/4608",
+  "regions": [
+    {
+      "h_cap": "1/250",
+      "radius": 6,
+      "bound": "9485465725666318644418715552304181210857978740000930683108535608707940623978856607/1724029898554389379653689955297609126005776375152353143160832000000000000000000000",
+      "bound_float": 5.501914864481147
+    },
+    {
+      "h_cap": "1/160",
+      "radius": 9,
+      "bound": "16111665691448915437582229297481380367075325214410304238669366161109706337/1851120314774365142861940942082863965788464349703057120589596590080000000",
+      "bound_float": 8.703737711080537
+    },
+    {
+      "h_cap": "1/128",
+      "radius": 23,
+      "bound": "6867723619100195103975681979101366908056030578179389285703852272940893/303280888079174834122029676325667074885236818975093062638952943452160",
+      "bound_float": 22.64476229477177
+    }
+  ],
+  "inverse_bound": "9717533972470269757881224965752446767730802328096879690775344982788962264018773/1400718393140389035188768206148383341755141159238973802199736231856701440000000",
+  "inverse_bound_float": 6.937535781681076,
+  "gate_endpoint_RNE_checks": 6240,
+  "gate_declines": 912,
+  "directional_sign": "final q error flips iff geometryNegative XOR invert; upper-polynomial-error is relevant above midpoint when not reversed, below midpoint when reversed; direction is recomputed after each correction.",
+  "polynomial_signs": "P7-atan includes -h^9/9 (nonpositive, dropped only in upper bound); after adding ninth, omitted -h^11/11 in atan becomes positive P9 error and is included.",
+  "Q16_error_derivation": "x=floor(65536*h/2^63), all x and q<=65535. Unit-scale Lipschitz plus nearest-rounding errors:1->2.5->5.5->11.5->13. Final /4608 nearest adds .5;13/4608+.5=2317/4608.",
+  "rounded_residual_bound": "524323/1048576",
+  "rounded_residual_proof": "For b=floor(D/2^38)>=2^20, t=floor(abs(R)/2^38), r=abs(R)/D<33: -1/b < t/b-r <33/b. floor((t+floor(b/2))/b) adds at most .5+1/(2b) error, below the stated .5+35/2^20.",
+  "inverse_proof": "Inverted N,D are multiples64 and D<2^60. Rprime=(N<<58)-h*(D>>6), abs(Rprime)<33*(D>>6)<2^60. low64(h*(D>>6)) represents -Rprime; shifted unsigned interval true implies abs(Rprime)<=floor((D>>6)/2).",
+  "exact_midpoint_new_gates_decline": true,
+  "retained_quantum_unchanged": true,
+  "parent_selector_reciprocal_and_tables_proof_reused": true,
+  "large_corpus_repeated": false
+}

@@ -1,0 +1,51 @@
+{
+  "status": "PASS_SEALED_AUTHOR_RECORD_ACCOUNTING_NOT_REEXECUTION",
+  "unique_inputs": 58188,
+  "states": 116376,
+  "correct_Qfplib_states": 107542,
+  "wrong_Qfplib_state_outcomes": 8834,
+  "vs_correct_Qfplib": {
+    "faster": 107539,
+    "equal": 3
+  },
+  "vs_parent": {
+    "slower": 132,
+    "faster": 111678,
+    "equal": 4566
+  },
+  "vs_V164": {
+    "faster": 111868,
+    "equal": 4504,
+    "slower": 4
+  },
+  "parent_regression_rows_retained": 132,
+  "parent_delta_range": [
+    1,
+    7
+  ],
+  "V164_regression_rows_retained": 4,
+  "V164_regression_Qfplib_incorrect": true,
+  "equals_correct_Qfplib": [
+    {
+      "input": "BFABB0EDC0AE5C6F",
+      "SIO": "DIRTY",
+      "instructions": 1804
+    },
+    {
+      "input": "3FEF1BCDCF0D1830",
+      "SIO": "DIRTY",
+      "instructions": 1787
+    },
+    {
+      "input": "BFEF1BCDCF0D1830",
+      "SIO": "DIRTY",
+      "instructions": 1787
+    }
+  ],
+  "qualification_sha256": "25d73a7b663ff7b95fc189ee095957060daaecff6e597f552ad5e89e7adb43e3",
+  "regressions_sha256": "67c053955cc76034461b4654a5cd73810469394dac8f17c2f97d0c532725dc44",
+  "all_NaNs_follow_inherited_raw_sign_payload_policy": true,
+  "canonical_MPFR_NaN_different_state_rows": 8,
+  "full_public_corpus_replayed": false,
+  "author_MPFR_calls_not_independently_all_repeated": true
+}
