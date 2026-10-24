@@ -26,6 +26,7 @@ __asm__(".global mk61_vm_file_cache_enabled\n.set mk61_vm_file_cache_enabled, 0"
 #include "language_vm_flow.hpp"
 #include "dwt_profiler.hpp"
 #include "language_compiler_flow.hpp"
+#include "language_vm_cached_execution.hpp"
 #include "app_flow_transfer.hpp"
 #include "shared_memory.hpp"
 #include "native_libc.h"
@@ -48,7 +49,6 @@ __asm__(".global mk61_vm_file_cache_enabled\n.set mk61_vm_file_cache_enabled, 0"
 #include "language_flash_store.hpp"
 #include "resident_firmware.hpp"
 #include "loadable_module_system_app.hpp"
-#include "language_vm_repeat.hpp"
 #include "development.hpp"
 #include "keyboard.h"
 extern void idle_main_process(void);
@@ -457,56 +457,6 @@ uint32_t flash_fingerprint(Language language,flash::ReadCache* cache) {
 }
 }
 #endif
-#if MK61_FLASH_LANGUAGE_VM && MK61_FLASH_VM_PAGE_CACHE_BYTES
-#ifndef MK61_VM_REPEAT_CALLS
-#define MK61_VM_REPEAT_CALLS 1
-#endif
-#if MK61_VM_REPEAT_CALLS != 0 && MK61_VM_REPEAT_CALLS != 1
-#error "MK61_VM_REPEAT_CALLS must be 0 or 1"
-#endif
-#if MK61_VM_REPEAT_CALLS
-namespace {
-bool repeat_cached_call(Language language,loadable_module::Command command,uint32_t a,uint32_t b,
-                        shared_memory::WorkspacePartition& partition,PersistentValues& values,CompilerContext& context,
-                        uint32_t& stamp,uint32_t& result,loadable_module::RuntimeStatus& status) {
-  using namespace loadable_module;
-  auto* cache=flash_page_cache(false);
-  if(!cache)return false;
-  const uint16_t source=flash_source(language,command,a,values);
-  const uint32_t revision=program_store::media_revision();uint32_t fingerprint;
-  if(source==0xFFFF || !cache->fingerprint(revision,language,fingerprint))return false;
-  flash::RepeatImage image(*cache,revision,source,fingerprint,language);
-  if(!image || ((image.validated().flags&2) && language==Language::FOCAL &&
-       !core_61::expanded_program_is_on()))return false;
-  // This path builds a fresh continuation itself and never reads dead
-  // prefix bytes. Avoid clearing the entire 4176-byte prefix once more;
-  // the partition still scrubs it before publishing the full snapshot.
-  (void)partition.reuse_prefix(); // Otherwise acquire retains its usual zeroing policy.
-  shared_memory::Lease state;
-  if(!workspace(state)){status=RuntimeStatus::BUSY;return true;}
-  // Acquiring a workspace may evict another owner. Do not start a stale
-  // descriptor if that operation changed C9; the loan itself stays pinned.
-  if(program_store::media_revision()!=revision)return false;
-  auto* execution=state.as<ExecutionState>();
-  auto lookup=image.io();
-  if(!prepare_repeat_call(context,image,values,*execution,command,b,lookup)) {
-    status=RuntimeStatus::CORRUPT_MODULE;return true;
-  }
-  stamp=image.source_stamp();
-  (void)program_store_text_font_activate();
-  // The ordinary flow retains INPUT/resume, finish/error/editor semantics
-  // and reloads an evicted executor. No callback into a cached APP survives.
-  const auto first=mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_VM,MK61_APP_FLOW_SYSTEM_FILE,FLOW_RUN_PROGRAM);
-#if defined(LANGUAGE_VM_HOST_TEST)
-  status=(RuntimeStatus)app_flow::run(first,&context,sizeof(context),result,flow_invoke,nullptr);
-#else
-  status=loadable_module::run_flow(first,&context,sizeof(context),result);
-#endif
-  return true;
-}
-}
-#endif
-#endif
 static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
     loadable_module::Command command, uint32_t a, uint32_t b, uint32_t& result,
     uint16_t* edit_id = nullptr, uint32_t* edit_position = nullptr) {
@@ -566,9 +516,6 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   RuntimeStatus status=RuntimeStatus::OK;
 #if MK61_FLASH_LANGUAGE_VM
   uint32_t execution_stamp=0;
-#if MK61_FLASH_VM_PAGE_CACHE_BYTES && MK61_VM_REPEAT_CALLS
-  if(!repeat_cached_call(language,command,a,b,partition,*values,context,execution_stamp,result,status))
-#endif
 #endif
   {
   context.execution={};
@@ -631,18 +578,45 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
         execution.array_count=language==Language::BASIC?385:64;
         execution.mode=command==Command::TINYBASIC_RUN_ID_STATUS?(uint8_t)b:0;
         auto* continuation=state.as<ExecutionState>();
-        continuation->language=language;
-        context.vm={};context.vm.magic=FLOW_CONTEXT_MAGIC;
-        context.vm.original_command=(uint32_t)command;
-        context.vm.program_validated=*certificate;
-        context.vm.program={sizeof(OverlayRequest),REQUEST_VERSION,&execution,
-            continuation,&context.vm.program_validated,OverlayAction::START,{0,0,0}};
-        context.source_id=source_id;context.prepared=true;context.cache_target=true;
-        View view;
-        if(!validated_view(context.vm.program,view))return RuntimeStatus::CORRUPT_MODULE;
-        initialize_validated_state(execution,*certificate,*continuation);
+        if(!prepare_cached_execution(context,*certificate,*continuation,command))
+          return RuntimeStatus::CORRUPT_MODULE;
+        context.source_id=source_id;context.cache_target=true;
       }
       activate_cached_text_font();
+      first=mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_VM,MK61_APP_FLOW_SYSTEM_FILE,FLOW_RUN_PROGRAM);
+    }
+  }
+#endif
+#if MK61_FLASH_LANGUAGE_VM
+  const uint16_t flash_id=flash_source(language,command,a,*values);
+  if(!context.prepared && flash_id!=0xFFFF) {
+    context.compile.request.source_id=flash_id;
+    ValidatedImage certificate;
+    if(store.load(certificate) && certificate.language==language &&
+       (!(certificate.flags&2) || language!=Language::FOCAL || core_61::expanded_program_is_on())) {
+      auto& r=context.execution;
+      // No compiler native frame is live here. Preserve an already loaded
+      // VM between RUNs; load(kind) still replaces/revalidates other APPs.
+      // A verified cache hit initializes every live execution field below.
+      // Reuse dead prefix bytes instead of clearing compiler scratch again;
+      // close() still scrubs the complete prefix before retaining a snapshot.
+      (void)partition.reuse_prefix();
+      auto& state=memory.workspace_lease();
+      if(!workspace(state))return RuntimeStatus::BUSY;
+      store.invalidate();
+      r.size=sizeof(r);r.version=REQUEST_VERSION;r.image_size=certificate.size;
+      r.paged=store.input(certificate.size);r.storage=&flash_io;
+      r.variables=values->variables[language==Language::BASIC?0:1];
+      r.array=language==Language::BASIC?values->array:values->focal_array;r.array_count=language==Language::BASIC?385:64;
+      r.mode=command==Command::TINYBASIC_RUN_ID_STATUS?uint8_t(b):0;
+      if(!prepare_cached_execution(context,certificate,*state.as<ExecutionState>(),command))
+        return RuntimeStatus::CORRUPT_MODULE;
+      context.source_id=flash_id;
+      const uint8_t* image;
+      if(!store.materialize(image))return RuntimeStatus::CORRUPT_MODULE;
+      if(image){r.image=image;r.paged={};}
+      values->selected[language==Language::BASIC?0:1]=flash_id;
+      (void)program_store_text_font_activate();
       first=mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_VM,MK61_APP_FLOW_SYSTEM_FILE,FLOW_RUN_PROGRAM);
     }
   }
@@ -653,40 +627,6 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
     context.compile.values=values; context.compile.command=(uint32_t)command;
     context.compile.argument0=a; context.compile.argument1=b;
   }
-#if MK61_FLASH_LANGUAGE_VM
-  const uint16_t flash_id=flash_source(language,command,a,*values);
-  if(!context.prepared && flash_id!=0xFFFF) {
-    context.compile.request.source_id=flash_id;
-    ValidatedImage certificate;
-    if(store.load(certificate) && certificate.language==language &&
-       (!(certificate.flags&2) || language!=Language::FOCAL || core_61::expanded_program_is_on())) {
-      auto& stage=context.compile;auto& r=context.execution;auto& plan=stage.transfer;
-      stage.request.compiled={Error::NONE,certificate.size,0,0,certificate.stack};
-      stage.request.storage=&flash_io;
-      plan.size=certificate.size;plan.prefix=sizeof(ExecutionState);
-      // No compiler native frame is live here. Preserve an already loaded
-      // VM between RUNs; load(kind) still replaces/revalidates other APPs.
-      const auto committed=memory.commit_paged(plan,false);
-      if(committed!=RuntimeStatus::OK)return committed;
-      store.invalidate();
-      r.size=sizeof(r);r.version=REQUEST_VERSION;r.paged=store.input(certificate.size);r.storage=&flash_io;
-      r.variables=values->variables[language==Language::BASIC?0:1];
-      r.array=language==Language::BASIC?values->array:values->focal_array;r.array_count=language==Language::BASIC?385:64;
-      r.mode=command==Command::TINYBASIC_RUN_ID_STATUS?uint8_t(b):0;
-      app_flow::Step step={};step.size=sizeof(step);step.version=MK61_APP_FLOW_VERSION;step.current=first;step.context=&context;step.context_size=sizeof(context);
-      if(!prepare_compiled_flow(&step))return RuntimeStatus::CORRUPT_MODULE;
-      context.vm.program_validated=certificate;
-      View view;if(!validated_view(context.vm.program,view))return RuntimeStatus::CORRUPT_MODULE;
-      initialize_validated_state(r,certificate,*context.vm.program.state);
-      const uint8_t* image;
-      if(!store.materialize(image))return RuntimeStatus::CORRUPT_MODULE;
-      if(image){r.image=image;r.paged={};}
-      values->selected[language==Language::BASIC?0:1]=flash_id;
-      (void)program_store_text_font_activate();
-      first=mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_VM,MK61_APP_FLOW_SYSTEM_FILE,FLOW_RUN_PROGRAM);
-    }
-  }
-#endif
 #if MK61_VM_FILE_CACHE && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
   const uint16_t driver=!context.prepared && cacheable && source_id!=0xFFFF?file_cache_driver():0xFFFF;
   context.cache_driver=driver;

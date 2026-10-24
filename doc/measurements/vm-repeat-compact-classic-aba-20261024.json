@@ -1,0 +1,403 @@
+{
+  "status": "PASS_COMPACT_CACHED_EXECUTION_ABA_LATENCY_EXACT_ORIGINAL_RESTORED",
+  "date": "2026-10-24",
+  "timezone": "Europe/Moscow",
+  "tested_base": "92be3a44c784238ebf76429c9e9230059dbdc910",
+  "branch": "feature/vm-repeat-compact",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "usb": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "hardware_arithmetic": "owned BINARY64"
+  },
+  "scope": {
+    "program_specific": false,
+    "programs_changed": false,
+    "bytecode_or_APP_ABI_changed": false,
+    "VM_core_changed": false,
+    "five_System_APPs_byte_identical_between_variants": true,
+    "limits_weakened": false,
+    "whole_shipping_firmware_acceptance": false
+  },
+  "implementation": [
+    "Remove the separate cached-repeat entry and its invocation setup.",
+    "Use the ordinary Store/RAM cache path with a shared certified-execution binder.",
+    "Do not construct or clear the CompilerStage/Step on a certified cache hit.",
+    "Reuse dead compiler prefix bytes; initialize every live continuation/I/O field and still scrub the entire prefix before retaining a snapshot.",
+    "Keep the previous repeat semantic tests as a test-only raw-image fixture exercising the production binder; add ten malformed-certificate rejection cases."
+  ],
+  "performance": {
+    "method": "MCU accepted OK to next blocking key wait, profiler stopped; six searches per stage: cold, warmup, USB, detached, detached, USB. First two excluded from warm comparison. A/B/A uses identical game and APPs; only resident differs. Detached is USB Screen disabled, not USB cable removed.",
+    "comparison": {
+      "stages": [
+        {
+          "name": "A",
+          "samples": {
+            "continuous": [
+              24.797166,
+              24.697307
+            ],
+            "headless": [
+              23.757983,
+              23.712975
+            ]
+          },
+          "continuous_seconds": 24.7472365,
+          "headless_seconds": 23.735478999999998,
+          "saved_seconds": 1.0117575000000016,
+          "elapsed_reduction_percent": 4.088365583769327
+        },
+        {
+          "name": "B",
+          "samples": {
+            "continuous": [
+              24.838983,
+              24.734216
+            ],
+            "headless": [
+              23.761366,
+              23.716893
+            ]
+          },
+          "continuous_seconds": 24.7865995,
+          "headless_seconds": 23.739129499999997,
+          "saved_seconds": 1.0474700000000041,
+          "elapsed_reduction_percent": 4.225952817771573
+        },
+        {
+          "name": "A-control",
+          "samples": {
+            "continuous": [
+              24.810107,
+              24.681598
+            ],
+            "headless": [
+              23.745966,
+              23.701081
+            ]
+          },
+          "continuous_seconds": 24.745852499999998,
+          "headless_seconds": 23.7235235,
+          "saved_seconds": 1.0223289999999992,
+          "elapsed_reduction_percent": 4.131314530384433
+        }
+      ],
+      "modes": {
+        "continuous": {
+          "reference_seconds": 24.7465445,
+          "candidate_seconds": 24.7865995,
+          "saved_seconds": -0.040055000000002394,
+          "elapsed_reduction_percent": -0.1618609822474415,
+          "speedup": 0.9983840058415434,
+          "control_drift_percent": -0.005592543636145919
+        },
+        "headless": {
+          "reference_seconds": 23.72950125,
+          "candidate_seconds": 23.739129499999997,
+          "saved_seconds": -0.009628249999998673,
+          "elapsed_reduction_percent": -0.04057502051375561,
+          "speedup": 0.9995944143613186,
+          "control_drift_percent": -0.050369743960076985
+        }
+      }
+    },
+    "runs": [
+      {
+        "name": "A",
+        "build": "A3CC72EF",
+        "seconds": [
+          43.528646,
+          24.768432,
+          24.797166,
+          23.757983,
+          23.712975,
+          24.697307
+        ]
+      },
+      {
+        "name": "B",
+        "build": "C846C707",
+        "seconds": [
+          43.380043,
+          24.789112,
+          24.838983,
+          23.761366,
+          23.716893,
+          24.734216
+        ]
+      },
+      {
+        "name": "A-control",
+        "build": "A3CC72EF",
+        "seconds": [
+          43.437402,
+          24.748865,
+          24.810107,
+          23.745966,
+          23.701081,
+          24.681598
+        ]
+      }
+    ],
+    "cold": {
+      "samples_seconds": [
+        43.528646,
+        43.380043,
+        43.437402
+      ]
+    },
+    "searches": 18,
+    "all_nodes": 420,
+    "move": "e2e3",
+    "full_eight_rank_board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "interpretation": "No chess speedup claimed. Candidate is 40.055ms (0.161861%) slower with USB Screen and 9.62825ms (0.040575%) slower detached than mean controls. This change trades the old separate entry for almost unchanged execution time and substantially lower Flash cost; the small samples do not establish statistical equivalence."
+  },
+  "resources": {
+    "shipping_flash_bytes": {
+      "f411_classic_default": {
+        "control": 376140,
+        "candidate": 375004,
+        "delta": -1136
+      },
+      "f411_classic_usb_fixture": {
+        "control": 380428,
+        "candidate": 379276,
+        "delta": -1152
+      },
+      "f401_classic_default": {
+        "control": 257992,
+        "candidate": 257800,
+        "delta": -192
+      }
+    },
+    "repeat_cost_same_usb_base": {
+      "disabled_control": 379196,
+      "old_repeat": 380428,
+      "new_common": 379276,
+      "old_cost": 1232,
+      "new_cost": 80
+    },
+    "globals_bytes": {
+      "f411_classic_default": 21496,
+      "f411_classic_usb_fixture": 21768,
+      "f401_classic_default": 29604
+    },
+    "max_static_frame_bytes": {
+      "f411": 1928,
+      "f401": 1304
+    },
+    "deltas": {
+      "global_RAM_bytes": 0,
+      "maximum_static_frame_bytes": 0
+    },
+    "gates": {
+      "f411_headroom": 131072,
+      "f411_globals": 49152,
+      "f411_max_frame": 3072,
+      "f401_classic_headroom": 4096,
+      "f401_globals": 52428,
+      "f401_max_frame": 2048,
+      "stack_bytes": 16384,
+      "stack_guard_bytes": 256
+    },
+    "APP_limit_bytes": 20480,
+    "LANGVM_loaded_bytes": 20340,
+    "Flash_page_cache_bytes": 32768,
+    "normal_profile_distinction": "Shipping sizes are uninstrumented builds. Performance uses only MK61_KEY_WAIT_BENCHMARK; latency uses separate diagnostic builds and is not a shipping speed sample. Normal default F411 USB=0 was built for size, not hardware-benchmarked.",
+    "hardware_stack_watermark_remaining_bytes": [
+      {
+        "name": "A",
+        "bytes": 8736
+      },
+      {
+        "name": "B",
+        "bytes": 8648
+      },
+      {
+        "name": "A-control",
+        "bytes": 8680
+      }
+    ],
+    "hardware_stack_caveat": "Whole-stage watermarks are A8736/B8648/A-control8680 bytes remaining. Candidate's lowest observed remaining stack is 32 bytes below the lower control, not zero runtime-stack growth proof. Static maximum frame and configured stack/guard budgets are unchanged; all layouts/health checks pass. The controls themselves differ by56 bytes."
+  },
+  "latency": {
+    "diagnostic_only": true,
+    "not_shipping_performance_samples": true,
+    "method": "Separate diagnostic A/B/A: cold/warm chess and existing large BASIC/FOCAL working-set, both languages INPUT/ESC, two Graphics windows per stage.",
+    "stages": [
+      {
+        "name": "A",
+        "status": "PASS",
+        "build": "23032B85",
+        "cold_row_max_us": 23166.916666666668,
+        "warm_row_max_us": 13334.583333333334,
+        "cold_usb_max_us": 6650.28125,
+        "warm_usb_max_us": 5777.78125,
+        "cold_ping_max_seconds": 0.005721042020013556,
+        "warm_ping_max_seconds": 0.003378707973752171,
+        "generic_row_max_us": 89081.34375,
+        "generic_usb_max_us": 62746.947916666664,
+        "generic_ping_max_seconds": 0.05590929099707864,
+        "keyboard_overflows": 0,
+        "gates_passed": 11
+      },
+      {
+        "name": "B",
+        "status": "PASS",
+        "build": "3D8642CC",
+        "cold_row_max_us": 23087.104166666668,
+        "warm_row_max_us": 13084.697916666666,
+        "cold_usb_max_us": 6692.9375,
+        "warm_usb_max_us": 5761.458333333333,
+        "cold_ping_max_seconds": 0.005212499992921948,
+        "warm_ping_max_seconds": 0.002548832999309525,
+        "generic_row_max_us": 89262.57291666667,
+        "generic_usb_max_us": 62748.104166666664,
+        "generic_ping_max_seconds": 0.052200500009348616,
+        "keyboard_overflows": 0,
+        "gates_passed": 11
+      },
+      {
+        "name": "A-control",
+        "status": "PASS",
+        "build": "23032B85",
+        "cold_row_max_us": 23945.34375,
+        "warm_row_max_us": 13147.260416666666,
+        "cold_usb_max_us": 6930.28125,
+        "warm_usb_max_us": 5861.260416666667,
+        "cold_ping_max_seconds": 0.006062333006411791,
+        "warm_ping_max_seconds": 0.002445417019771412,
+        "generic_row_max_us": 89263.57291666667,
+        "generic_usb_max_us": 62747.083333333336,
+        "generic_ping_max_seconds": 0.06020720800734125,
+        "keyboard_overflows": 0,
+        "gates_passed": 11
+      }
+    ],
+    "warm_gap_limit_us": 30000,
+    "cold_and_generic_gap_limit_us": 100000,
+    "nonce_PONG_deadline_seconds": 1,
+    "CRC_nonce_and_nonzero_service_samples_required": true,
+    "passed_gates": 33,
+    "keyboard_overflows": 0,
+    "qualification": "Passing unchanged gates is not a claim that every latency tail improved. Generic row peaks: A89081.34375us, B89262.57291666667us, A-control89263.57291666667us. Main-based integration is HOST-qualified separately; these measurements belong to the frozen92be fixture."
+  },
+  "local_validation": {
+    "both_arithmetics_host_and_sanitizers": "PASS",
+    "full_VM_suite": "PASS",
+    "C9_repeats_INPUT_ESC_errors_epochs_poison_zero_warm_NOR_IO": "PASS",
+    "malformed_certificate_rejections": 10,
+    "overlay_RAM_file_mixed_cache": "PASS",
+    "actual_ARM_loader_storage_input_cold_USB_cache": "PASS",
+    "qualified_caller_fault_replay": "PASS_10_CASES",
+    "measured_f401_hardware": false
+  },
+  "provenance": {
+    "frozen_packet_sha256": "a19ceda713d9057d2be88e6ed394db15dec8cae39d96c0a0c971d93d175d4b37",
+    "frozen_pins": 11117,
+    "lab": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU",
+    "independent_review_sha256": "620db7aa99636e6b67cdc15284e38b0a26a2ac033924174c565ea2040b9d8fc2",
+    "actual_main_at_test": "d0b9cbd6c47648b136104f7a66a714af3db9f7e5",
+    "fixture_base_is_not_main": true,
+    "integration_boundary": "Hardware fixture base92be includes separately staged dirty-row, memchr/editor and V6 VM-core changes. Own cached-execution/Store/CompilerStage/Flow/workspace/ABI paths are unchanged from d0 main; not every VM dependency or executed body is identical. Hardware values describe this matched component A/B/A, not a fresh whole-main benchmark. The compact change does not introduce or absorb those staged components.",
+    "main_dependency_independent_review_sha256": "2b1b9d6816f95a5bcc8f8fce18253100cc8f701e95a74e66b62c44d14b7e788e",
+    "closure_proposal_sha256": "6dcfd9cda9a6c04149de16403e2b7b2018a4afde811b2f479ec0697fcc5417b0",
+    "operator_exit_noholder_sha256": "e88e9b12d7b67666dec2fa221270b56cf9810ae2146e7a02b1203625522ffabd",
+    "scoped_lsof_warning": "Exact target lsof has no process rows and rc1, with retained Time Machine SMB stat warning. Not a global warning-free/noholder claim; ROOT independently closes the lease.",
+    "artifacts": [
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/packet.json",
+        "sha256": "a19ceda713d9057d2be88e6ed394db15dec8cae39d96c0a0c971d93d175d4b37"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hardware-window/result.json",
+        "sha256": "c1a5846417121df2e3b5288affef050fddb5162e151581d05747cdfcd12a3006"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/operator-output.log",
+        "sha256": "9df659ba69f5d2293d5d85f287a8d385dc7239eb95aa45c8bf909ecfb8e9bcea"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hil-performance-compact-0/report.json",
+        "sha256": "0b9b4d75959192eaef05dfdf92d6714861b1e33e502a4890652345dc52b694fc"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hil-latency-compact-1/report.json",
+        "sha256": "d2183a9c096ad936a403069edd99aefb3800796590408a36da52919971e3626e"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hardware-window/performance/state-before.json",
+        "sha256": "0f30e93ab142a0981f8c47dfdb30f6799130e35286de7d5f3a4583d422dc1269"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hardware-window/performance/state-after.json",
+        "sha256": "28c8ac08e16d85045494a743f36afc0ed1d1bc441e095e4499c8d60e064853b0"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hardware-window/latency/state-before.json",
+        "sha256": "5d60c14cf55dcfe098d5ca2072cbca414d8dce9f0d99f91889654aeb483c44d3"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hardware-window/latency/state-after.json",
+        "sha256": "8cff102898cac0c6894c3a40f5036a016a6cf75dfeea11e446bc0f51675f0cee"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hil-performance-compact-0/qualified-original-return/result.json",
+        "sha256": "43a891513f9ee0c29577accc36578d279dbed6f321c42d28eb268f2c28698d24"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hil-latency-compact-1/qualified-original-return/result.json",
+        "sha256": "99cd803ed1498c6194ffc964035578ed32b0f7692ea5b6d78c64ddf12093fe86"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hardware-window/performance/original-a.bin",
+        "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hardware-window/performance/original-b.bin",
+        "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hardware-window/latency/original-a.bin",
+        "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hardware-window/latency/original-b.bin",
+        "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hil-performance-compact-0/qualified-original-return/independent-original-full.bin",
+        "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/vm-repeat-compact-20261024.COZNnU/hil-latency-compact-1/qualified-original-return/independent-original-full.bin",
+        "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1"
+      }
+    ]
+  },
+  "preserved_in_tested_base": [
+    "M61 IF/OPEN cache",
+    "dirty-row summary",
+    "V6 raw alias fix and case297",
+    "compiler keyboard/USB polling",
+    "bounded APP-load input service",
+    "certificate validation",
+    "APP/bytecode ABI",
+    "Flash/RAM/frame/cache limits"
+  ],
+  "restoration": {
+    "both_phases_complete": true,
+    "actual_operator_exit_code": 0,
+    "original_build": "3AB3DD45",
+    "full_internal_Flash_bytes": 524288,
+    "full_internal_Flash_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+    "files": 24,
+    "directories": 2,
+    "typed_program_registers_stack_hout_pwd_preserved": true,
+    "ticking_unset_RTC_and_alarms_preserved": true,
+    "date_or_alarm_writes": false,
+    "filesystem_preservation_is_logical_not_raw_NOR_identity": true,
+    "other_devices_touched": false
+  }
+}

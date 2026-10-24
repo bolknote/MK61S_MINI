@@ -1,7 +1,10 @@
 #ifndef MK61_LANGUAGE_VM_REPEAT_HPP
 #define MK61_LANGUAGE_VM_REPEAT_HPP
 #include "language_flash_cache.hpp"
-#include "language_compiler_flow.hpp"
+#include "language_vm_cached_execution.hpp"
+
+// Test-only raw-image adapter. Production repeated calls use the same Store
+// and preparation helper as all other certified file/RAM-cache launches.
 
 namespace language_vm { namespace flash {
 // A synchronous prepared-call loan, not another cache. Both its descriptor
@@ -57,18 +60,12 @@ inline bool prepare_repeat_call(CompilerContext& context,const flash::RepeatImag
   r.array_count=language==Language::BASIC?385:64;
   r.mode=command==loadable_module::Command::TINYBASIC_RUN_ID_STATUS?uint8_t(mode):0;
   r.storage=&lookup;
-  context.vm={};context.vm.magic=FLOW_CONTEXT_MAGIC;context.vm.original_command=(uint32_t)command;
-  context.vm.program_validated=image.validated();
-  context.vm.program={sizeof(OverlayRequest),REQUEST_VERSION,&r,&state,
-      &context.vm.program_validated,OverlayAction::START,{0,0,0}};
-  state.language=language;
+  context.language=language;
   values.selected[language==Language::BASIC?0:1]=image.source();
   // Keep the resident's existing certificate check and CORRUPT_MODULE
   // contract, including a malformed descriptor cached by an earlier load.
   // The executor still performs its independent request/view checks.
-  View view;
-  if(!validated_view(context.vm.program,view))return false;
-  initialize_validated_state(r,image.validated(),state);
+  if(!prepare_cached_execution(context,image.validated(),state,command))return false;
   context.source_id=image.source();context.prepared=true;context.cache_target=false;
   context.storage=nullptr;context.cache_driver=0xFFFF;context.clear_requested=0;context.language=language;
   return true;
