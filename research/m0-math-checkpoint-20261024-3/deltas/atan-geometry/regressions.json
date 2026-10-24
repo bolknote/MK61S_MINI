@@ -1,0 +1,308 @@
+{
+  "status": "ALL_OBSERVED_REGRESSIONS_RETAINED",
+  "vs_parent": {
+    "slower": 146,
+    "equal": 78922,
+    "faster": 28
+  },
+  "vs_V164": {
+    "faster": 74580,
+    "equal": 4508,
+    "slower": 8
+  },
+  "V164_regression_rows": [
+    {
+      "x": "3F9CB1154B8EEB62",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffff2d000100ffffffff2d000100d3ff0000e807000001000000",
+        "candidate": "ffffffff2d000100ffffffff2d000100d3ff0000e807000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff2d000100ffffffff2d000100d3ff0000e807000001000000"
+      },
+      "profiled": true,
+      "expected": "3F9CAF297452F7B0",
+      "outputs": {
+        "parent": "3F9CAF297452F7B0",
+        "candidate": "3F9CAF297452F7B0",
+        "Qfplib": "3F9CAF297452F7B0",
+        "resident": "3F9CAF297452F7B0"
+      },
+      "instructions": {
+        "parent": 20235,
+        "candidate": 20424,
+        "Qfplib": 1803,
+        "resident": 20275
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3F9CB1154B8EEB62",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F9CAF297452F7B0",
+      "outputs": {
+        "parent": "3F9CAF297452F7B0",
+        "candidate": "3F9CAF297452F7B0",
+        "Qfplib": "3F9CAF297452F7B0",
+        "resident": "3F9CAF297452F7B0"
+      },
+      "instructions": {
+        "parent": 21900,
+        "candidate": 22089,
+        "Qfplib": 1803,
+        "resident": 21940
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BF9CB1154B8EEB62",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffff2d000100ffffffff2d000100d3ff0000e807000001000000",
+        "candidate": "ffffffff2d000100ffffffff2d000100d3ff0000e807000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff2d000100ffffffff2d000100d3ff0000e807000001000000"
+      },
+      "profiled": true,
+      "expected": "BF9CAF297452F7B0",
+      "outputs": {
+        "parent": "BF9CAF297452F7B0",
+        "candidate": "BF9CAF297452F7B0",
+        "Qfplib": "BF9CAF297452F7B1",
+        "resident": "BF9CAF297452F7B0"
+      },
+      "instructions": {
+        "parent": 20251,
+        "candidate": 20440,
+        "Qfplib": 1811,
+        "resident": 20291
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BF9CB1154B8EEB62",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF9CAF297452F7B0",
+      "outputs": {
+        "parent": "BF9CAF297452F7B0",
+        "candidate": "BF9CAF297452F7B0",
+        "Qfplib": "BF9CAF297452F7B1",
+        "resident": "BF9CAF297452F7B0"
+      },
+      "instructions": {
+        "parent": 21916,
+        "candidate": 22105,
+        "Qfplib": 1811,
+        "resident": 21956
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3FDD4F22ABBC3AA7",
+      "group": "all_geometry_outer_h_cap",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffb2350100ffffffffb23501009dd30000d55b000001000000",
+        "candidate": "ffffffffb2350100ffffffffb23501009dd30000d55b000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffb2350100ffffffffb23501009dd30000d55b000001000000"
+      },
+      "profiled": true,
+      "expected": "3FDB7C1A3E0A219B",
+      "outputs": {
+        "parent": "3FDB7C1A3E0A219B",
+        "candidate": "3FDB7C1A3E0A219B",
+        "Qfplib": "3FDB7C1A3E0A219B",
+        "resident": "3FDB7C1A3E0A219B"
+      },
+      "instructions": {
+        "parent": 20923,
+        "candidate": 21118,
+        "Qfplib": 1790,
+        "resident": 20922
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3FDD4F22ABBC3AA7",
+      "group": "all_geometry_outer_h_cap",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FDB7C1A3E0A219B",
+      "outputs": {
+        "parent": "3FDB7C1A3E0A219B",
+        "candidate": "3FDB7C1A3E0A219B",
+        "Qfplib": "3FDB7C1A3E0A219B",
+        "resident": "3FDB7C1A3E0A219B"
+      },
+      "instructions": {
+        "parent": 22607,
+        "candidate": 22802,
+        "Qfplib": 1790,
+        "resident": 22606
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFDD4F22ABBC3AA7",
+      "group": "all_geometry_outer_h_cap",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffb2350100ffffffffb23501009dd30000d55b000001000000",
+        "candidate": "ffffffffb2350100ffffffffb23501009dd30000d55b000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffb2350100ffffffffb23501009dd30000d55b000001000000"
+      },
+      "profiled": true,
+      "expected": "BFDB7C1A3E0A219B",
+      "outputs": {
+        "parent": "BFDB7C1A3E0A219B",
+        "candidate": "BFDB7C1A3E0A219B",
+        "Qfplib": "BFDB7C1A3E0A219A",
+        "resident": "BFDB7C1A3E0A219B"
+      },
+      "instructions": {
+        "parent": 20957,
+        "candidate": 21152,
+        "Qfplib": 1792,
+        "resident": 20956
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFDD4F22ABBC3AA7",
+      "group": "all_geometry_outer_h_cap",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFDB7C1A3E0A219B",
+      "outputs": {
+        "parent": "BFDB7C1A3E0A219B",
+        "candidate": "BFDB7C1A3E0A219B",
+        "Qfplib": "BFDB7C1A3E0A219A",
+        "resident": "BFDB7C1A3E0A219B"
+      },
+      "instructions": {
+        "parent": 22641,
+        "candidate": 22836,
+        "Qfplib": 1792,
+        "resident": 22640
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    }
+  ],
+  "parent_instruction_deltas": {
+    "-20739": 1,
+    "-20720": 1,
+    "-20601": 1,
+    "-20584": 1,
+    "-20402": 1,
+    "-20396": 1,
+    "-19288": 1,
+    "-19269": 1,
+    "-19092": 1,
+    "-19075": 1,
+    "-18860": 1,
+    "-18854": 1,
+    "-2108": 2,
+    "-2102": 2,
+    "-2042": 2,
+    "-1974": 2,
+    "-1450": 2,
+    "-1436": 2,
+    "-1404": 2,
+    "-1376": 2,
+    "0": 78922,
+    "1": 74,
+    "3": 20,
+    "4": 4,
+    "7": 40,
+    "189": 4,
+    "195": 4
+  }
+}

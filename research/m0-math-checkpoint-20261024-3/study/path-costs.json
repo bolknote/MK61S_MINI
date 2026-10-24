@@ -1,0 +1,404 @@
+{
+  "status": "ATTRIBUTED_ACTUAL_ARM_DIRTY_PATH_COSTS_NOT_NEW_RUNTIME",
+  "cases": 19,
+  "rows": [
+    {
+      "x": "3F9519603EE90AC1",
+      "total": 3856,
+      "Qfplib": 1805,
+      "first_fallback_instruction": 1491,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1491
+        }
+      ],
+      "budget_before_Qfplib": 314
+    },
+    {
+      "x": "3F9553054CD8B1E6",
+      "total": 3793,
+      "Qfplib": 1801,
+      "first_fallback_instruction": 1490,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1490
+        }
+      ],
+      "budget_before_Qfplib": 311
+    },
+    {
+      "x": "3F961C6FBA6918CF",
+      "total": 3796,
+      "Qfplib": 1803,
+      "first_fallback_instruction": 1490,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1490
+        }
+      ],
+      "budget_before_Qfplib": 313
+    },
+    {
+      "x": "3F989EA03F2B2765",
+      "total": 3839,
+      "Qfplib": 1811,
+      "first_fallback_instruction": 1481,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1481
+        }
+      ],
+      "budget_before_Qfplib": 330
+    },
+    {
+      "x": "3F9CB1154B8EEB62",
+      "total": 22089,
+      "Qfplib": 1803,
+      "first_fallback_instruction": 1656,
+      "repair_instructions": 162,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_fast_tail_repair",
+          "instruction": 1477
+        },
+        {
+          "function": "repair_return",
+          "instruction": 1639
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1656
+        },
+        {
+          "function": "CORE",
+          "instruction": 3833
+        }
+      ],
+      "budget_before_Qfplib": 147
+    },
+    {
+      "x": "3FACB1DF86FA69AD",
+      "total": 22696,
+      "Qfplib": 1802,
+      "first_fallback_instruction": 1496,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1496
+        },
+        {
+          "function": "CORE",
+          "instruction": 3835
+        }
+      ],
+      "budget_before_Qfplib": 306
+    },
+    {
+      "x": "3FBDC06F67CADC09",
+      "total": 3948,
+      "Qfplib": 1796,
+      "first_fallback_instruction": 1491,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1491
+        }
+      ],
+      "budget_before_Qfplib": 305
+    },
+    {
+      "x": "3FDD4F22ABBC3AA7",
+      "total": 22802,
+      "Qfplib": 1790,
+      "first_fallback_instruction": 1699,
+      "repair_instructions": 162,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_fast_tail_repair",
+          "instruction": 1520
+        },
+        {
+          "function": "repair_return",
+          "instruction": 1682
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1699
+        },
+        {
+          "function": "CORE",
+          "instruction": 4072
+        }
+      ],
+      "budget_before_Qfplib": 91
+    },
+    {
+      "x": "3FE5D1004FC925B6",
+      "total": 1753,
+      "Qfplib": 1784,
+      "first_fallback_instruction": null,
+      "repair_instructions": 161,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_fast_tail_repair",
+          "instruction": 1534
+        },
+        {
+          "function": "repair_return",
+          "instruction": 1695
+        }
+      ],
+      "budget_before_Qfplib": 31
+    },
+    {
+      "x": "3FECB99548F4FA32",
+      "total": 1728,
+      "Qfplib": 1783,
+      "first_fallback_instruction": null,
+      "repair_instructions": 161,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_fast_tail_repair",
+          "instruction": 1510
+        },
+        {
+          "function": "repair_return",
+          "instruction": 1671
+        }
+      ],
+      "budget_before_Qfplib": 55
+    },
+    {
+      "x": "3FFA9C6244EA8335",
+      "total": 22772,
+      "Qfplib": 1819,
+      "first_fallback_instruction": 1704,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1704
+        },
+        {
+          "function": "CORE",
+          "instruction": 4032
+        }
+      ],
+      "budget_before_Qfplib": 115
+    },
+    {
+      "x": "BF9519603EE90AC1",
+      "total": 3856,
+      "Qfplib": 1806,
+      "first_fallback_instruction": 1491,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1491
+        }
+      ],
+      "budget_before_Qfplib": 315
+    },
+    {
+      "x": "BF9553054CD8B1E6",
+      "total": 3793,
+      "Qfplib": 1811,
+      "first_fallback_instruction": 1490,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1490
+        }
+      ],
+      "budget_before_Qfplib": 321
+    },
+    {
+      "x": "BF961C6FBA6918CF",
+      "total": 3796,
+      "Qfplib": 1811,
+      "first_fallback_instruction": 1490,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1490
+        }
+      ],
+      "budget_before_Qfplib": 321
+    },
+    {
+      "x": "BF989EA03F2B2765",
+      "total": 3839,
+      "Qfplib": 1804,
+      "first_fallback_instruction": 1481,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1481
+        }
+      ],
+      "budget_before_Qfplib": 323
+    },
+    {
+      "x": "BFABB0EDC0AE5C6F",
+      "total": 22162,
+      "Qfplib": 1804,
+      "first_fallback_instruction": 1510,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1510
+        },
+        {
+          "function": "CORE",
+          "instruction": 3839
+        }
+      ],
+      "budget_before_Qfplib": 294
+    },
+    {
+      "x": "BFACB1DF86FA69AD",
+      "total": 22683,
+      "Qfplib": 1804,
+      "first_fallback_instruction": 1496,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1496
+        },
+        {
+          "function": "CORE",
+          "instruction": 3835
+        }
+      ],
+      "budget_before_Qfplib": 308
+    },
+    {
+      "x": "BFBDC06F67CADC09",
+      "total": 3948,
+      "Qfplib": 1802,
+      "first_fallback_instruction": 1491,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1491
+        }
+      ],
+      "budget_before_Qfplib": 311
+    },
+    {
+      "x": "BFFA9C6244EA8335",
+      "total": 22776,
+      "Qfplib": 1827,
+      "first_fallback_instruction": 1704,
+      "repair_instructions": null,
+      "trace": [
+        {
+          "function": "atan_fast",
+          "instruction": 45
+        },
+        {
+          "function": "atan_refine",
+          "instruction": 1704
+        },
+        {
+          "function": "CORE",
+          "instruction": 4032
+        }
+      ],
+      "budget_before_Qfplib": 123
+    }
+  ],
+  "full_instruction_counts_reproduced": true,
+  "candidate_ELF_sha256": "5cea0e75f3d4a7b29af31c3af6d6315b0e0d569bb7c5a3ca5125bf341cfdecc7",
+  "hardware_accessed": false,
+  "goal_complete": false
+}

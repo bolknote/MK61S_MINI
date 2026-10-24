@@ -1,0 +1,34 @@
+{
+  "status": "PASS_EXACT_RATIONAL_EXPERIMENTAL_NINTH_POLYNOMIAL_CERTIFICATE",
+  "parent_result_sha256": "e047da61a015906cac349efa0331625bd625c53a7e42de622fb94268225d669c",
+  "discarded_cross_error": "503836901187256321/1180591620717411303424",
+  "cross_error_cap": "1/2048",
+  "old_fifth_remainder_range": [
+    -4,
+    9
+  ],
+  "corrected_fifth_remainder_range": [
+    -2,
+    2
+  ],
+  "modulo3_divisor_cases": 1279,
+  "modulo7_divisor_cases": 8703,
+  "small_fifth_divisor_cases": 65,
+  "small_ninth_divisor_cases": 130,
+  "combined_rounding_remainder_cases": 945,
+  "maximum_combined_bias_error": "157/315",
+  "polynomial_error_bound": "91791097163536794524975636981479711191850240053673943932802272012599494007130794167/91294174027544527925672490905996698478580878891152237981687116942328963639132815360",
+  "polynomial_error_bound_float": 1.0054430979992472,
+  "rounded_ratio_error_bound": "524323/1048576",
+  "all_geometry_angle_bound": "228919286564492885904256753747632499536948591815857371442179982656424079285011196087/91294174027544527925672490905996698478580878891152237981687116942328963639132815360",
+  "all_geometry_angle_bound_float": 2.5074906367565717,
+  "strict_angle_radius_Q70": 3,
+  "quotient_rounding_reason": "Top/Den-u=(u*frac(D/2^38)-frac(abs(R)/2^38))/Den lies in(-1/Den,33/Den). floor((Top+floor(Den/2))/Den) differs from u by less than .5+35/2^20. Its magnitude is at most33.",
+  "combined_rounding_reason": "Four exact nearest-division remainders give bias numerator -105*r3+63*r5-45*r7+35*r9 over315. Thresholds158/473 yield its nearest integer without a division.",
+  "angle_geometry_reason": "Table error plus optional denominator-halving error is at most1 Q70 across all parent geometry classes. Reusing the polynomial at h adds at most33*(hcap+33/2^70)^2 beyond the linear quotient correction.",
+  "typed_operand_precondition": "Pinned parent selector proof: h<1/128, Z<2^56,C3<2^49,C5<2^35,C7<2^22.",
+  "runtime_implemented": false,
+  "public_speed_GO": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

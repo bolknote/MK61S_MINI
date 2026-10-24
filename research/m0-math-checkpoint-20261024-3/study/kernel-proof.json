@@ -1,0 +1,83 @@
+{
+  "status": "PASS_ISOLATED_ARM_POLYNOMIAL_TAIL_NOT_PUBLIC_RUNTIME",
+  "hard_magnitudes": 11,
+  "hard_rows": [
+    {
+      "x": "3F902767970881C7",
+      "poly_delta": 0,
+      "instructions": 119
+    },
+    {
+      "x": "3F940A1CD7C64F14",
+      "poly_delta": 1,
+      "instructions": 120
+    },
+    {
+      "x": "3F978E61B9899F1C",
+      "poly_delta": 12,
+      "instructions": 119
+    },
+    {
+      "x": "3F99C24957C90E1F",
+      "poly_delta": 2,
+      "instructions": 120
+    },
+    {
+      "x": "3F9CB1154B8EEB62",
+      "poly_delta": 1,
+      "instructions": 119
+    },
+    {
+      "x": "3F9FF6556D0F3F46",
+      "poly_delta": 0,
+      "instructions": 118
+    },
+    {
+      "x": "3FA42578CEE83920",
+      "poly_delta": 11,
+      "instructions": 119
+    },
+    {
+      "x": "3FABB0EDC0AE5C6F",
+      "poly_delta": 10,
+      "instructions": 119
+    },
+    {
+      "x": "3FACB1DF86FA69AD",
+      "poly_delta": 4,
+      "instructions": 118
+    },
+    {
+      "x": "3FCAC3FC385F516E",
+      "poly_delta": 2,
+      "instructions": 118
+    },
+    {
+      "x": "3FFA9C6244EA8335",
+      "poly_delta": 1,
+      "instructions": 118
+    }
+  ],
+  "reduced_h_samples": 4282,
+  "actual_kernel_ARM_calls": 8586,
+  "actual_source_product_ARM_calls": 8575,
+  "instruction_min": 117,
+  "instruction_max": 121,
+  "instruction_mean": 118.85767528534824,
+  "observed_stack_bytes": 32,
+  "PCS_SP_bounded_writes_and_SIO_preserved_every_call": true,
+  "directed_MPFR_version": "4.2.2",
+  "polynomial_error_max_Q70": 0.8138894449882227,
+  "polynomial_error_bound": "91791097163536794524975636981479711191850240053673943932802272012599494007130794167/91294174027544527925672490905996698478580878891152237981687116942328963639132815360",
+  "transcript_sha256": "3d2d39e61b86e20dfa59a03aa9c51e653f05506181678b01712165fb7a21c7c6",
+  "source_sha256": "ac79051121c98ee2aeb9db3b413c981d30ee9e74618dcdc4681c7d3bf6e6c535",
+  "ELF_sha256": "f475a83acd22e6fc4f65210443790e1ffda477c7ec0a68164f8a592142a3fb50",
+  "model_source_sha256": "e37dbb4b78e9ed5ab355efe799c1a5add966ec19ecbe9f0466fe820c3f80bcdb",
+  "helper_maps_firmware_or_ROM": false,
+  "no_undefined_symbols": true,
+  "public_runtime_implemented": false,
+  "public_speed_or_correctness_GO": false,
+  "hardware_accessed": false,
+  "goal_complete": false,
+  "elapsed_seconds": 6.638415333000012
+}

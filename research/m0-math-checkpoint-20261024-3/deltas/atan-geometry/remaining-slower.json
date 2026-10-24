@@ -1,0 +1,1129 @@
+{
+  "status": "SEVENTEEN_RAW_ATAN_SPEED_DEFICITS_OPEN",
+  "raw_inputs": 17,
+  "state_rows": 34,
+  "rows": [
+    {
+      "x": "3F961C6FBA6918CF",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "8fc145680b8000008fc145680b80000079d000005c4c000001000000",
+        "candidate": "8fc145680b8000008fc145680b80000079d000005c4c000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "8fc145680b8000008fc145680b80000079d000005c4c000001000000"
+      },
+      "profiled": true,
+      "expected": "3F961B8E94A5D31A",
+      "outputs": {
+        "parent": "3F961B8E94A5D31A",
+        "candidate": "3F961B8E94A5D31A",
+        "Qfplib": "3F961B8E94A5D31A",
+        "resident": "3F961B8E94A5D31A"
+      },
+      "instructions": {
+        "parent": 2894,
+        "candidate": 2901,
+        "Qfplib": 1803,
+        "resident": 2934
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F961C6FBA6918CF",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F961B8E94A5D31A",
+      "outputs": {
+        "parent": "3F961B8E94A5D31A",
+        "candidate": "3F961B8E94A5D31A",
+        "Qfplib": "3F961B8E94A5D31A",
+        "resident": "3F961B8E94A5D31A"
+      },
+      "instructions": {
+        "parent": 3789,
+        "candidate": 3796,
+        "Qfplib": 1803,
+        "resident": 3829
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF961C6FBA6918CF",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "8fc145680b8000008fc145680b80000079d000005c4c000001000000",
+        "candidate": "8fc145680b8000008fc145680b80000079d000005c4c000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "8fc145680b8000008fc145680b80000079d000005c4c000001000000"
+      },
+      "profiled": true,
+      "expected": "BF961B8E94A5D31A",
+      "outputs": {
+        "parent": "BF961B8E94A5D31A",
+        "candidate": "BF961B8E94A5D31A",
+        "Qfplib": "BF961B8E94A5D31A",
+        "resident": "BF961B8E94A5D31A"
+      },
+      "instructions": {
+        "parent": 2894,
+        "candidate": 2901,
+        "Qfplib": 1811,
+        "resident": 2934
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF961C6FBA6918CF",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF961B8E94A5D31A",
+      "outputs": {
+        "parent": "BF961B8E94A5D31A",
+        "candidate": "BF961B8E94A5D31A",
+        "Qfplib": "BF961B8E94A5D31A",
+        "resident": "BF961B8E94A5D31A"
+      },
+      "instructions": {
+        "parent": 3789,
+        "candidate": 3796,
+        "Qfplib": 1811,
+        "resident": 3829
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FFA9C6244EA8335",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffff2ee30100ffffffff2ee30100a2870000e3fa000001000000",
+        "candidate": "ffffffff2ee30100ffffffff2ee30100a2870000e3fa000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff2ee30100ffffffff2ee30100a2870000e3fa000001000000"
+      },
+      "profiled": true,
+      "expected": "3FF078A30CE419EA",
+      "outputs": {
+        "parent": "3FF078A30CE419EA",
+        "candidate": "3FF078A30CE419EA",
+        "Qfplib": "3FF078A30CE419EA",
+        "resident": "3FF078A30CE419EA"
+      },
+      "instructions": {
+        "parent": 20846,
+        "candidate": 20853,
+        "Qfplib": 1819,
+        "resident": 20878
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3FFA9C6244EA8335",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FF078A30CE419EA",
+      "outputs": {
+        "parent": "3FF078A30CE419EA",
+        "candidate": "3FF078A30CE419EA",
+        "Qfplib": "3FF078A30CE419EA",
+        "resident": "3FF078A30CE419EA"
+      },
+      "instructions": {
+        "parent": 22765,
+        "candidate": 22772,
+        "Qfplib": 1819,
+        "resident": 22797
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFFA9C6244EA8335",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffff2ee30100ffffffff2ee30100a2870000e3fa000001000000",
+        "candidate": "ffffffff2ee30100ffffffff2ee30100a2870000e3fa000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff2ee30100ffffffff2ee30100a2870000e3fa000001000000"
+      },
+      "profiled": true,
+      "expected": "BFF078A30CE419EA",
+      "outputs": {
+        "parent": "BFF078A30CE419EA",
+        "candidate": "BFF078A30CE419EA",
+        "Qfplib": "BFF078A30CE419EA",
+        "resident": "BFF078A30CE419EA"
+      },
+      "instructions": {
+        "parent": 20850,
+        "candidate": 20857,
+        "Qfplib": 1827,
+        "resident": 20882
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFFA9C6244EA8335",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFF078A30CE419EA",
+      "outputs": {
+        "parent": "BFF078A30CE419EA",
+        "candidate": "BFF078A30CE419EA",
+        "Qfplib": "BFF078A30CE419EA",
+        "resident": "BFF078A30CE419EA"
+      },
+      "instructions": {
+        "parent": 22769,
+        "candidate": 22776,
+        "Qfplib": 1827,
+        "resident": 22801
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3FACB1DF86FA69AD",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffe1000100ffffffffe10001001fff0000c0c5000001000000",
+        "candidate": "ffffffffe1000100ffffffffe10001001fff0000c0c5000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffe1000100ffffffffe10001001fff0000c0c5000001000000"
+      },
+      "profiled": true,
+      "expected": "3FACAA324E0539F6",
+      "outputs": {
+        "parent": "3FACAA324E0539F6",
+        "candidate": "3FACAA324E0539F6",
+        "Qfplib": "3FACAA324E0539F6",
+        "resident": "3FACAA324E0539F6"
+      },
+      "instructions": {
+        "parent": 20938,
+        "candidate": 20938,
+        "Qfplib": 1802,
+        "resident": 20966
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3FACB1DF86FA69AD",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FACAA324E0539F6",
+      "outputs": {
+        "parent": "3FACAA324E0539F6",
+        "candidate": "3FACAA324E0539F6",
+        "Qfplib": "3FACAA324E0539F6",
+        "resident": "3FACAA324E0539F6"
+      },
+      "instructions": {
+        "parent": 22696,
+        "candidate": 22696,
+        "Qfplib": 1802,
+        "resident": 22724
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFACB1DF86FA69AD",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffe1000100ffffffffe10001001fff0000c0c5000001000000",
+        "candidate": "ffffffffe1000100ffffffffe10001001fff0000c0c5000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffe1000100ffffffffe10001001fff0000c0c5000001000000"
+      },
+      "profiled": true,
+      "expected": "BFACAA324E0539F6",
+      "outputs": {
+        "parent": "BFACAA324E0539F6",
+        "candidate": "BFACAA324E0539F6",
+        "Qfplib": "BFACAA324E0539F6",
+        "resident": "BFACAA324E0539F6"
+      },
+      "instructions": {
+        "parent": 20925,
+        "candidate": 20925,
+        "Qfplib": 1804,
+        "resident": 20953
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFACB1DF86FA69AD",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFACAA324E0539F6",
+      "outputs": {
+        "parent": "BFACAA324E0539F6",
+        "candidate": "BFACAA324E0539F6",
+        "Qfplib": "BFACAA324E0539F6",
+        "resident": "BFACAA324E0539F6"
+      },
+      "instructions": {
+        "parent": 22683,
+        "candidate": 22683,
+        "Qfplib": 1804,
+        "resident": 22711
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3FBDC06F67CADC09",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "9c8d2201a08100009c8d2201a08100003d0200007c6a000001000000",
+        "candidate": "9c8d2201a08100009c8d2201a08100003d0200007c6a000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "9c8d2201a08100009c8d2201a08100003d0200007c6a000001000000"
+      },
+      "profiled": true,
+      "expected": "3FBD9E6B7DB569E3",
+      "outputs": {
+        "parent": "3FBD9E6B7DB569E3",
+        "candidate": "3FBD9E6B7DB569E3",
+        "Qfplib": "3FBD9E6B7DB569E3",
+        "resident": "3FBD9E6B7DB569E3"
+      },
+      "instructions": {
+        "parent": 3054,
+        "candidate": 3054,
+        "Qfplib": 1796,
+        "resident": 3083
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FBDC06F67CADC09",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FBD9E6B7DB569E3",
+      "outputs": {
+        "parent": "3FBD9E6B7DB569E3",
+        "candidate": "3FBD9E6B7DB569E3",
+        "Qfplib": "3FBD9E6B7DB569E3",
+        "resident": "3FBD9E6B7DB569E3"
+      },
+      "instructions": {
+        "parent": 3948,
+        "candidate": 3948,
+        "Qfplib": 1796,
+        "resident": 3977
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFBDC06F67CADC09",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "9c8d2201a08100009c8d2201a08100003d0200007c6a000001000000",
+        "candidate": "9c8d2201a08100009c8d2201a08100003d0200007c6a000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "9c8d2201a08100009c8d2201a08100003d0200007c6a000001000000"
+      },
+      "profiled": true,
+      "expected": "BFBD9E6B7DB569E3",
+      "outputs": {
+        "parent": "BFBD9E6B7DB569E3",
+        "candidate": "BFBD9E6B7DB569E3",
+        "Qfplib": "BFBD9E6B7DB569E3",
+        "resident": "BFBD9E6B7DB569E3"
+      },
+      "instructions": {
+        "parent": 3054,
+        "candidate": 3054,
+        "Qfplib": 1802,
+        "resident": 3083
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFBDC06F67CADC09",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFBD9E6B7DB569E3",
+      "outputs": {
+        "parent": "BFBD9E6B7DB569E3",
+        "candidate": "BFBD9E6B7DB569E3",
+        "Qfplib": "BFBD9E6B7DB569E3",
+        "resident": "BFBD9E6B7DB569E3"
+      },
+      "instructions": {
+        "parent": 3948,
+        "candidate": 3948,
+        "Qfplib": 1802,
+        "resident": 3977
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFABB0EDC0AE5C6F",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffae000100ffffffffae00010052ff00004376000001000000",
+        "candidate": "ffffffffae000100ffffffffae00010052ff00004376000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffae000100ffffffffae00010052ff00004376000001000000"
+      },
+      "profiled": true,
+      "expected": "BFABAA0764572D03",
+      "outputs": {
+        "parent": "BFABAA0764572D03",
+        "candidate": "BFABAA0764572D03",
+        "Qfplib": "BFABAA0764572D03",
+        "resident": "BFABAA0764572D03"
+      },
+      "instructions": {
+        "parent": 20388,
+        "candidate": 20388,
+        "Qfplib": 1804,
+        "resident": 20419
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFABB0EDC0AE5C6F",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFABAA0764572D03",
+      "outputs": {
+        "parent": "BFABAA0764572D03",
+        "candidate": "BFABAA0764572D03",
+        "Qfplib": "BFABAA0764572D03",
+        "resident": "BFABAA0764572D03"
+      },
+      "instructions": {
+        "parent": 22162,
+        "candidate": 22162,
+        "Qfplib": 1804,
+        "resident": 22193
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3F9CB1154B8EEB62",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffff2d000100ffffffff2d000100d3ff0000e807000001000000",
+        "candidate": "ffffffff2d000100ffffffff2d000100d3ff0000e807000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff2d000100ffffffff2d000100d3ff0000e807000001000000"
+      },
+      "profiled": true,
+      "expected": "3F9CAF297452F7B0",
+      "outputs": {
+        "parent": "3F9CAF297452F7B0",
+        "candidate": "3F9CAF297452F7B0",
+        "Qfplib": "3F9CAF297452F7B0",
+        "resident": "3F9CAF297452F7B0"
+      },
+      "instructions": {
+        "parent": 20235,
+        "candidate": 20424,
+        "Qfplib": 1803,
+        "resident": 20275
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3F9CB1154B8EEB62",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F9CAF297452F7B0",
+      "outputs": {
+        "parent": "3F9CAF297452F7B0",
+        "candidate": "3F9CAF297452F7B0",
+        "Qfplib": "3F9CAF297452F7B0",
+        "resident": "3F9CAF297452F7B0"
+      },
+      "instructions": {
+        "parent": 21900,
+        "candidate": 22089,
+        "Qfplib": 1803,
+        "resident": 21940
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3F9519603EE90AC1",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "941d47750a800000941d47750a8000007bea0000c674000001000000",
+        "candidate": "941d47750a800000941d47750a8000007bea0000c674000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "941d47750a800000941d47750a8000007bea0000c674000001000000"
+      },
+      "profiled": true,
+      "expected": "3F95189C9CEF802C",
+      "outputs": {
+        "parent": "3F95189C9CEF802C",
+        "candidate": "3F95189C9CEF802C",
+        "Qfplib": "3F95189C9CEF802C",
+        "resident": "3F95189C9CEF802C"
+      },
+      "instructions": {
+        "parent": 2925,
+        "candidate": 2932,
+        "Qfplib": 1805,
+        "resident": 2965
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F9519603EE90AC1",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F95189C9CEF802C",
+      "outputs": {
+        "parent": "3F95189C9CEF802C",
+        "candidate": "3F95189C9CEF802C",
+        "Qfplib": "3F95189C9CEF802C",
+        "resident": "3F95189C9CEF802C"
+      },
+      "instructions": {
+        "parent": 3849,
+        "candidate": 3856,
+        "Qfplib": 1805,
+        "resident": 3889
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF9519603EE90AC1",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "941d47750a800000941d47750a8000007bea0000c674000001000000",
+        "candidate": "941d47750a800000941d47750a8000007bea0000c674000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "941d47750a800000941d47750a8000007bea0000c674000001000000"
+      },
+      "profiled": true,
+      "expected": "BF95189C9CEF802C",
+      "outputs": {
+        "parent": "BF95189C9CEF802C",
+        "candidate": "BF95189C9CEF802C",
+        "Qfplib": "BF95189C9CEF802C",
+        "resident": "BF95189C9CEF802C"
+      },
+      "instructions": {
+        "parent": 2925,
+        "candidate": 2932,
+        "Qfplib": 1806,
+        "resident": 2965
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF9519603EE90AC1",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF95189C9CEF802C",
+      "outputs": {
+        "parent": "BF95189C9CEF802C",
+        "candidate": "BF95189C9CEF802C",
+        "Qfplib": "BF95189C9CEF802C",
+        "resident": "BF95189C9CEF802C"
+      },
+      "instructions": {
+        "parent": 3849,
+        "candidate": 3856,
+        "Qfplib": 1806,
+        "resident": 3889
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F9553054CD8B1E6",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "9a7104310a8000009a7104310a80000001620000901d000001000000",
+        "candidate": "9a7104310a8000009a7104310a80000001620000901d000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "9a7104310a8000009a7104310a80000001620000901d000001000000"
+      },
+      "profiled": true,
+      "expected": "3F95523B56857345",
+      "outputs": {
+        "parent": "3F95523B56857345",
+        "candidate": "3F95523B56857345",
+        "Qfplib": "3F95523B56857345",
+        "resident": "3F95523B56857345"
+      },
+      "instructions": {
+        "parent": 2905,
+        "candidate": 2912,
+        "Qfplib": 1801,
+        "resident": 2945
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F9553054CD8B1E6",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F95523B56857345",
+      "outputs": {
+        "parent": "3F95523B56857345",
+        "candidate": "3F95523B56857345",
+        "Qfplib": "3F95523B56857345",
+        "resident": "3F95523B56857345"
+      },
+      "instructions": {
+        "parent": 3786,
+        "candidate": 3793,
+        "Qfplib": 1801,
+        "resident": 3826
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF9553054CD8B1E6",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "9a7104310a8000009a7104310a80000001620000901d000001000000",
+        "candidate": "9a7104310a8000009a7104310a80000001620000901d000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "9a7104310a8000009a7104310a80000001620000901d000001000000"
+      },
+      "profiled": true,
+      "expected": "BF95523B56857345",
+      "outputs": {
+        "parent": "BF95523B56857345",
+        "candidate": "BF95523B56857345",
+        "Qfplib": "BF95523B56857345",
+        "resident": "BF95523B56857345"
+      },
+      "instructions": {
+        "parent": 2905,
+        "candidate": 2912,
+        "Qfplib": 1811,
+        "resident": 2945
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF9553054CD8B1E6",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF95523B56857345",
+      "outputs": {
+        "parent": "BF95523B56857345",
+        "candidate": "BF95523B56857345",
+        "Qfplib": "BF95523B56857345",
+        "resident": "BF95523B56857345"
+      },
+      "instructions": {
+        "parent": 3786,
+        "candidate": 3793,
+        "Qfplib": 1811,
+        "resident": 3826
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F989EA03F2B2765",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "27e5a3491880000027e5a349188000002c9300000719000001000000",
+        "candidate": "27e5a3491880000027e5a349188000002c9300000719000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "27e5a3491880000027e5a349188000002c9300000719000001000000"
+      },
+      "profiled": true,
+      "expected": "3F989D697785A298",
+      "outputs": {
+        "parent": "3F989D697785A298",
+        "candidate": "3F989D697785A298",
+        "Qfplib": "3F989D697785A298",
+        "resident": "3F989D697785A298"
+      },
+      "instructions": {
+        "parent": 2920,
+        "candidate": 2927,
+        "Qfplib": 1811,
+        "resident": 2957
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F989EA03F2B2765",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F989D697785A298",
+      "outputs": {
+        "parent": "3F989D697785A298",
+        "candidate": "3F989D697785A298",
+        "Qfplib": "3F989D697785A298",
+        "resident": "3F989D697785A298"
+      },
+      "instructions": {
+        "parent": 3832,
+        "candidate": 3839,
+        "Qfplib": 1811,
+        "resident": 3869
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF989EA03F2B2765",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "27e5a3491880000027e5a349188000002c9300000719000001000000",
+        "candidate": "27e5a3491880000027e5a349188000002c9300000719000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "27e5a3491880000027e5a349188000002c9300000719000001000000"
+      },
+      "profiled": true,
+      "expected": "BF989D697785A298",
+      "outputs": {
+        "parent": "BF989D697785A298",
+        "candidate": "BF989D697785A298",
+        "Qfplib": "BF989D697785A298",
+        "resident": "BF989D697785A298"
+      },
+      "instructions": {
+        "parent": 2920,
+        "candidate": 2927,
+        "Qfplib": 1804,
+        "resident": 2957
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF989EA03F2B2765",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF989D697785A298",
+      "outputs": {
+        "parent": "BF989D697785A298",
+        "candidate": "BF989D697785A298",
+        "Qfplib": "BF989D697785A298",
+        "resident": "BF989D697785A298"
+      },
+      "instructions": {
+        "parent": 3832,
+        "candidate": 3839,
+        "Qfplib": 1804,
+        "resident": 3869
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 0,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FDD4F22ABBC3AA7",
+      "group": "all_geometry_outer_h_cap",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffb2350100ffffffffb23501009dd30000d55b000001000000",
+        "candidate": "ffffffffb2350100ffffffffb23501009dd30000d55b000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffb2350100ffffffffb23501009dd30000d55b000001000000"
+      },
+      "profiled": true,
+      "expected": "3FDB7C1A3E0A219B",
+      "outputs": {
+        "parent": "3FDB7C1A3E0A219B",
+        "candidate": "3FDB7C1A3E0A219B",
+        "Qfplib": "3FDB7C1A3E0A219B",
+        "resident": "3FDB7C1A3E0A219B"
+      },
+      "instructions": {
+        "parent": 20923,
+        "candidate": 21118,
+        "Qfplib": 1790,
+        "resident": 20922
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3FDD4F22ABBC3AA7",
+      "group": "all_geometry_outer_h_cap",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FDB7C1A3E0A219B",
+      "outputs": {
+        "parent": "3FDB7C1A3E0A219B",
+        "candidate": "3FDB7C1A3E0A219B",
+        "Qfplib": "3FDB7C1A3E0A219B",
+        "resident": "3FDB7C1A3E0A219B"
+      },
+      "instructions": {
+        "parent": 22607,
+        "candidate": 22802,
+        "Qfplib": 1790,
+        "resident": 22606
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    }
+  ]
+}

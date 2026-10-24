@@ -1,0 +1,18 @@
+{
+  "status": "PASS_INDEPENDENT_EXACT_FRACTION_RESIDUAL_AND_ROUNDING_BOUND",
+  "ratio_error_Q70": "384230043723166705574193965585432577/20769187434139310514121985316880384",
+  "ratio_error_strictly_below_33": true,
+  "polynomial_and_table_Q70": "798306259083268804829075714206589080555675749331329722218277483026366014282451020316428509/179033633228090837585222528838246173064072002537845401199726863101058628279115127623516160",
+  "signed_quotient_error_bound": "524305/524288",
+  "curvature_error": "701832716434233945742073948591609646177/1393796574908163946345982392040522594123776",
+  "total_error_Q70": "977435848109460584797165562731548360324947181097719316121583511132315902396729148651358429/179033633228090837585222528838246173064072002537845401199726863101058628279115127623516160",
+  "total_error_float": 5.459509649028886,
+  "strict_radius": 6,
+  "signed71_reason": "|R|<33D<2^70; low64 plus signed low7 high bits uniquely recover R modulo2^71. 32-bit high-high product is sufficient modulo2^32.",
+  "divider_reason": "D0>=2^21, D0<2^26; R0<33(D0+1); q0<=33. Six iterations choose bits32,16,8,4,2,1; CMP/SUB preserve borrow as ADC carry; no zero divisor/shift overflow.",
+  "geometry_reason": "Only non-inverted e=-5..-1 reaches repair: normalization=e+5<5. Nearest1/64 selection gives N<<normalization=2^69*|x-index/64|<=2^62. No denominator halving; inherited ratio error<=6.5+B.",
+  "tail_reason": "Pre-repair midpoint distance<426/8=53.25; |delta|<=33; minimum half1024. Retained bits and binade cannot change. distance>=6 accepts only one RNE cell; smaller/tie retains old fallback.",
+  "admitted_synthetic_intervals": 312,
+  "declined_near_ties": 108,
+  "large_author_sweeps_repeated": false
+}

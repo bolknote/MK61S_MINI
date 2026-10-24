@@ -1,0 +1,19 @@
+{
+  "status": "PASS_RESIDENT_BINDINGS_OUTSIDE_COMPONENT_OVERLAY",
+  "allocated_component_ranges": [
+    [
+      270028800,
+      270038664,
+      ".text"
+    ],
+    [
+      270038664,
+      270039444,
+      ".rodata"
+    ]
+  ],
+  "resident_bindings_checked": 38,
+  "all_bound_addresses_outside_overlay": true,
+  "candidate_ELF_sha256": "35247afa5324a99d061028c606b495a5cd2ccf4bb778a62949d285cf32d99b0a",
+  "hardware_accessed": false
+}

@@ -1,0 +1,40 @@
+{
+  "status": "PASS_EXACT_RATIONAL_ALL_GEOMETRY_ATAN_REPAIR",
+  "parent_bound_function_sha256": "d8299d0763ef66f0fb687e9d4a00bbfdbe017005002b95ffa893a6c96a394644",
+  "parent_table_proof_sha256": "1ba0eaa826b9564942207ae3766a32d794595630d481c1380acf78fc835d42ba",
+  "global_ratio_error": "316730184562213946403297513305571329/10384593717069655257060992658440192",
+  "global_ratio_error_float": 30.50000733698318,
+  "regions": [
+    {
+      "h_cap": "4194305/1073741824",
+      "integer_h_cap": 4611687117939015680,
+      "strict_radius_Q70": 6,
+      "polynomial_and_table_or_halving_error": "887823075697314223621686978625712167087711750600252422818140914576895328422008584128186589/179033633228090837585222528838246173064072002537845401199726863101058628279115127623516160",
+      "residual_truncation_error": "524305/524288",
+      "derivative_error": "701832716434233945742073948591609646177/1393796574908163946345982392040522594123776",
+      "total_error": "1066952664723506003589776827150671446856983182366642016721446942682845216536286712463116509/179033633228090837585222528838246173064072002537845401199726863101058628279115127623516160",
+      "total_error_float": 5.959509649028886
+    },
+    {
+      "h_cap": "1/250",
+      "integer_h_cap": 4722366482869645213,
+      "strict_radius_Q70": 7,
+      "polynomial_and_table_or_halving_error": "8622482942896463364202755772918193831762042771015317278614070273411940623978856607/1724029898554389379653689955297609126005776375152353143160832000000000000000000000",
+      "residual_truncation_error": "524305/524288",
+      "derivative_error": "11498821742992352718062389104491925641628777/21778071482940061661655974875633165533184000000",
+      "total_error": "10347479030780478366451733803335215295031362909006803192462519608707940623978856607/1724029898554389379653689955297609126005776375152353143160832000000000000000000000",
+      "total_error_float": 6.001913910806831
+    }
+  ],
+  "minimum_denominator": "2^58",
+  "minimum_truncated_divisor": "2^20",
+  "geometry_reason": "Inverted D=(s<<6)+(index<<(52-e))>=2^58. Ordinary D>=2^58. The exponent-6 branch halves its exceptional65-bit denominator and loses less than .5 Q70; inverted geometry does not halve. Table error is <=.5 ordinary and <=1 inverted.",
+  "tail_reuse_reason": "Accepted parent reaches repair only within54 Q70 of midpoint. abs(delta)<=33; half>=1024. The quantum/binade/retained significand cannot change.",
+  "helper_signed_modular_bits": 71,
+  "helper_quotient_bits": 6,
+  "original_fallback_kept": true,
+  "new_tables_or_global_RAM": false,
+  "canonical_or_frozen_changed": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

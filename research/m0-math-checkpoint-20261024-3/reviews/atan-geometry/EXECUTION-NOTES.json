@@ -1,0 +1,15 @@
+{
+  "status": "COMPLETED_BOUNDED_HOST_ONLY_REVIEW",
+  "source_exit_code": 0,
+  "bounds_exit_code": 0,
+  "ARM_exit_code": 0,
+  "pre_execution_fixture_edit": "A missing space before else in own review.py was caught by AST parse and corrected before source/bounds/ARM phases; no frozen input changed.",
+  "Unicorn_host_execution": "Ordinary require_escalated auto-review accepted the local read-only JIT replay. Prior residual review proved sandbox SIGILL at mem_map before ARM; no redundant sandbox attempt was made here.",
+  "auto_review_denials": 0,
+  "USB_Flash_lease_Git_network": false,
+  "commands": [
+    ".build/picocalc-apps-arm-venv/bin/python -B .build/m0-atan-geometry-independent-20261024/review.py source",
+    ".build/picocalc-apps-arm-venv/bin/python -B .build/m0-atan-geometry-independent-20261024/review.py bounds",
+    ".build/picocalc-apps-arm-venv/bin/python -X faulthandler -B .build/m0-atan-geometry-independent-20261024/review.py arm"
+  ]
+}

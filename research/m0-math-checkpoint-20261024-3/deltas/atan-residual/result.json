@@ -1,0 +1,380 @@
+{
+  "status": "AUTHOR_PASS_BOUNDED_ATAN_RESIDUAL_WITH_ELEVEN_NEWLY_MEASURED_PREEXISTING_SPEED_INPUTS_OPEN",
+  "public_cases": 65416,
+  "unique_inputs": 32708,
+  "public_ARM_calls": 228332,
+  "additional_cold_route_ARM_calls": 176,
+  "helper_ARM_calls": 30408,
+  "total_actual_ARM_calls": 258916,
+  "distinct_profiled_state_cases": 32124,
+  "candidate_wrong": 0,
+  "old4_faster_correct_Qfplib_both_states": true,
+  "hard4": [
+    {
+      "x": "3FE5D1004FC925B6",
+      "group": "small_h_boundary",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffbd770100ffffffffbd7701006bae0000007e000001000000",
+        "candidate": "00000040febb000000000040febb0000275700004e0a000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffbd770100ffffffffbd7701006bae0000007e000001000000"
+      },
+      "profiled": true,
+      "expected": "3FE325F02778DC00",
+      "outputs": {
+        "parent": "3FE325F02778DC00",
+        "candidate": "3FE325F02778DC00",
+        "Qfplib": "3FE325F02778DC00",
+        "resident": "3FE325F02778DC00"
+      },
+      "instructions": {
+        "parent": 21081,
+        "candidate": 1568,
+        "Qfplib": 1784,
+        "resident": 21085
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FE5D1004FC925B6",
+      "group": "small_h_boundary",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FE325F02778DC00",
+      "outputs": {
+        "parent": "3FE325F02778DC00",
+        "candidate": "3FE325F02778DC00",
+        "Qfplib": "3FE325F02778DC00",
+        "resident": "3FE325F02778DC00"
+      },
+      "instructions": {
+        "parent": 22464,
+        "candidate": 1750,
+        "Qfplib": 1784,
+        "resident": 22468
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFE5D1004FC925B6",
+      "group": "small_h_boundary",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffbd770100ffffffffbd7701006bae0000007e000001000000",
+        "candidate": "00000040febb000000000040febb0000275700004e0a000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffbd770100ffffffffbd7701006bae0000007e000001000000"
+      },
+      "profiled": true,
+      "expected": "BFE325F02778DC00",
+      "outputs": {
+        "parent": "BFE325F02778DC00",
+        "candidate": "BFE325F02778DC00",
+        "Qfplib": "BFE325F02778DC00",
+        "resident": "BFE325F02778DC00"
+      },
+      "instructions": {
+        "parent": 21103,
+        "candidate": 1568,
+        "Qfplib": 1791,
+        "resident": 21107
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFE5D1004FC925B6",
+      "group": "small_h_boundary",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFE325F02778DC00",
+      "outputs": {
+        "parent": "BFE325F02778DC00",
+        "candidate": "BFE325F02778DC00",
+        "Qfplib": "BFE325F02778DC00",
+        "resident": "BFE325F02778DC00"
+      },
+      "instructions": {
+        "parent": 22486,
+        "candidate": 1750,
+        "Qfplib": 1791,
+        "resident": 22490
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FECB99548F4FA32",
+      "group": "small_h_boundary",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffff47d00100ffffffff47d00100288d0000e759000001000000",
+        "candidate": "0000004055e600000000004055e60000214700000bbc000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff47d00100ffffffff47d00100288d0000e759000001000000"
+      },
+      "profiled": true,
+      "expected": "3FE76897850FE9CD",
+      "outputs": {
+        "parent": "3FE76897850FE9CD",
+        "candidate": "3FE76897850FE9CD",
+        "Qfplib": "3FE76897850FE9CD",
+        "resident": "3FE76897850FE9CD"
+      },
+      "instructions": {
+        "parent": 20861,
+        "candidate": 1555,
+        "Qfplib": 1783,
+        "resident": 20874
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FECB99548F4FA32",
+      "group": "small_h_boundary",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FE76897850FE9CD",
+      "outputs": {
+        "parent": "3FE76897850FE9CD",
+        "candidate": "3FE76897850FE9CD",
+        "Qfplib": "3FE76897850FE9CD",
+        "resident": "3FE76897850FE9CD"
+      },
+      "instructions": {
+        "parent": 22288,
+        "candidate": 1725,
+        "Qfplib": 1783,
+        "resident": 22301
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFECB99548F4FA32",
+      "group": "small_h_boundary",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffff47d00100ffffffff47d00100288d0000e759000001000000",
+        "candidate": "0000004055e600000000004055e60000214700000bbc000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff47d00100ffffffff47d00100288d0000e759000001000000"
+      },
+      "profiled": true,
+      "expected": "BFE76897850FE9CD",
+      "outputs": {
+        "parent": "BFE76897850FE9CD",
+        "candidate": "BFE76897850FE9CD",
+        "Qfplib": "BFE76897850FE9CD",
+        "resident": "BFE76897850FE9CD"
+      },
+      "instructions": {
+        "parent": 20888,
+        "candidate": 1555,
+        "Qfplib": 1790,
+        "resident": 20901
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFECB99548F4FA32",
+      "group": "small_h_boundary",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFE76897850FE9CD",
+      "outputs": {
+        "parent": "BFE76897850FE9CD",
+        "candidate": "BFE76897850FE9CD",
+        "Qfplib": "BFE76897850FE9CD",
+        "resident": "BFE76897850FE9CD"
+      },
+      "instructions": {
+        "parent": 22315,
+        "candidate": 1725,
+        "Qfplib": 1790,
+        "resident": 22328
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    }
+  ],
+  "remaining_correct_Qfplib_slower_inputs": 11,
+  "new_correct_Qfplib_deficits_vs_parent": 0,
+  "vs_parent": {
+    "slower": 31592,
+    "equal": 520,
+    "faster": 12
+  },
+  "vs_V164": {
+    "faster": 31628,
+    "equal": 496
+  },
+  "parent_instruction_deltas": {
+    "-20736": 1,
+    "-20714": 1,
+    "-20590": 1,
+    "-20563": 1,
+    "-19535": 1,
+    "-19513": 1,
+    "-19333": 1,
+    "-19306": 1,
+    "-1877": 2,
+    "-1451": 2,
+    "0": 520,
+    "1": 928,
+    "2": 302,
+    "3": 1424,
+    "4": 1192,
+    "5": 13610,
+    "6": 14084,
+    "7": 8,
+    "8": 12,
+    "9": 28,
+    "10": 4
+  },
+  "full_functional_Qfplib_wrong_state_rows": 5760,
+  "all_observed_CORE_routes_measured": true,
+  "MPFR_version": "4.2.2",
+  "candidate_stack_max_observed": 888,
+  "parent_stack_max_observed": 872,
+  "total_allocated_code_bytes_delta": 444,
+  "new_tables_or_global_RAM_or_libgcc_dependency": false,
+  "generic_M0_M4_allocated_controls_equal": true,
+  "whole_independent_relink_ELF_identical": true,
+  "source_sha256": "aa6ce7be864f7f364e106711d7173f66b78f1fe512f29779e7793dd99835c517",
+  "candidate_full_object_sha256": "163cfa097f5df1a28b6d62dba7bd927d7c7ebf0aa11327ceafd369b90182f02e",
+  "candidate_ELF_sha256": "f7c4c88bd931f48b97e361528d9d9fa78301a2eaf8a0165d543f6c0d49c49a35",
+  "immutable_parent_ELF_sha256": "93830c121ef76ccc3278233bd54b4ed2a5f2a4313a466d8854115c097f02f946",
+  "independent_review": "not_claimed",
+  "canonical_or_frozen_changed": false,
+  "Git_USB_Flash_accessed": false,
+  "production_integration": false,
+  "physical_cycles_measured": false,
+  "whole_library_goal_complete": false,
+  "files": {
+    "HANDOFF.md": "650a6f36fc02c71671085fc3ab335aff4654a8b282b59c0267a5df02f9cc5146",
+    "M4_hard-candidate.o": "faf93cd522aa92bd3704b7adef38f3b87c287d85430952ae26cb6ecb58a18957",
+    "M4_hard-control.o": "faf93cd522aa92bd3704b7adef38f3b87c287d85430952ae26cb6ecb58a18957",
+    "M4_soft-candidate.o": "27eba77c911504ceae3d1d42fe7a0f9fbfed02f7b07d5d9ac6f376ec58283c8b",
+    "M4_soft-control.o": "27eba77c911504ceae3d1d42fe7a0f9fbfed02f7b07d5d9ac6f376ec58283c8b",
+    "NEXT.md": "4ca028fc68ef0f919e1637743ece0d370b2fc0e149af75325e52b6e318d961f2",
+    "PROOF.md": "89f46594d72adca2f6fe3f57bbc0cd70654f6b773d1dc8936b9565bae2433150",
+    "bind-public.py": "3b12326607d18e3fc49eaad8deff5ec1c013d8ab0c29252234c1f05b24bcbc72",
+    "build.py": "5987c8d6e76ac74359317490b22fbdd7ae5f4cc46c234ea954c13d47339c2cad",
+    "candidate-build.json": "23e0e76b6f450c78544a673f8cefae978846f842cf8d6f1e8d26c6ff488f7907",
+    "candidate-full.o": "163cfa097f5df1a28b6d62dba7bd927d7c7ebf0aa11327ceafd369b90182f02e",
+    "candidate.dis": "6d0a08bfd0dc448fe5af06559b96227060e6a8126559e626a9e9bb5f420fc067",
+    "candidate.elf": "f7c4c88bd931f48b97e361528d9d9fa78301a2eaf8a0165d543f6c0d49c49a35",
+    "candidate.ld": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+    "certificate.json": "f0c47106a583bf8682ab5b3bf097944d3b575b3973d7490f0c0f01599c74b293",
+    "certify.py": "9c3d23f469677d8a1ddb7f55d5dcca753d077c3a8869465ad218ddc40c9bf37a",
+    "cold-profile.json": "fc9fd1ef453f43db8a26eaef19c14d12c0ba2d4ea4f82a27156bbc34741cf6a4",
+    "control-build.json": "33e03103b65ea90919e49490d43185f9fb03fc5fa26b4c5c6b1524e296e91ed2",
+    "control-full.o": "fe74189c9165e4d9378b4a182130fdb24f827579896a34f3ec43d5372333366e",
+    "control.dis": "cb8fbe17f2a4a9347c1f18cf34b99d84a5492e546f8180f70953d5b43deea456",
+    "control.elf": "93830c121ef76ccc3278233bd54b4ed2a5f2a4313a466d8854115c097f02f946",
+    "control.ld": "c120657ede48b9830956a1618e587011dd6db79b1ef23b3bc2e51e0193f80397",
+    "diagnose-cold.py": "6b24a06bfba99312188a4b7b8a06ea1c4c9231549a0b28f53ef9a80c06227e7f",
+    "diagnosis.json": "5c7505b05c2e3dc45f60d714b884bbe7ea6664e3e27b3d17270727625c6702ad",
+    "generic_M0-candidate.o": "2955bf9236af6cef44cb10c749be350efe6469093c47b9012eda7257a60973b5",
+    "generic_M0-control.o": "2955bf9236af6cef44cb10c749be350efe6469093c47b9012eda7257a60973b5",
+    "helper-proof.json": "5df3d7414e0f2808aaf98eb66da8d00f97f2bea98b4f3c00c1b54e5a9e5886bd",
+    "independent-public.elf": "f7c4c88bd931f48b97e361528d9d9fa78301a2eaf8a0165d543f6c0d49c49a35",
+    "independent-public.o": "163cfa097f5df1a28b6d62dba7bd927d7c7ebf0aa11327ceafd369b90182f02e",
+    "input-pins.json": "303b22c98facf7d0724745f8fe18ca1025a6e4ecd7f95b942f24707c2977d870",
+    "isolate.py": "1779912bfe129ccc94c64281550fe17000f2135d2078d89b1dd4304e3cf61e80",
+    "isolation.json": "712456eaeee2771b1c749d95aa87941ad637f156068b431a4bb44dfd2401cac2",
+    "native_eabi_m0.cpp": "5b8ce151ae11323b35a6c6e51ab04e4895315109a715b7fd6007fac3c021b9bc",
+    "native_eabi_m0_atan.inc": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+    "native_eabi_m0_atan_fast.inc": "aa6ce7be864f7f364e106711d7173f66b78f1fe512f29779e7793dd99835c517",
+    "preparation.json": "7cc10c259bb2d1611e88c032bd874211e63f91f7e7244a8acf9bf5d31da1a8d7",
+    "prepare.py": "da702463f979dec3e0d9601858bbe66278033a7f4feaa6526d1ccc978612e97c",
+    "probe.json": "79dd4cc2d47b92b7be30c53639ecddd91d53e6b071c0108243b4a538de32ccc7",
+    "probe.py": "198a5f1235078824a897696b80f1dfa8a7211cbb8b7745647e42163a9fe78ada",
+    "profile-cold.py": "9a56369a5bfaa1d7bedef5f8ca0c553a14714aa99effea0458abd9cd46b379bf",
+    "public-body-proof.json": "ce892379d4516b630571f4ceac0c67d00d2059381004db07b842ddbe7cd1ff95",
+    "qualification.json": "6ae2d1af59457df5331cba238bb8a9257a97319dc8d436ed25ed539ec0d7832a",
+    "qualify.py": "41d59815daaee0029b70c67b645ccd68da8db104c5170a8a271c9304754df9eb",
+    "residual-only.patch": "6375967d49294ff7f88678b62ca753d605e3982acd046fe8d5a5cf679a8161cb",
+    "seal.py": "a2070df002c803478036ccb9e7ec70752f798229e6fc9a21ae68d46b3436a36b",
+    "speed-proof.json": "ff5a951b0ecee6b2b00ec6cabb979d39e23c33523d44505cbfa5048ccbd5221f",
+    "verify-helper.py": "233ff9b75e7884a76d91176e92a3c623b0c1aa695b711870b15cf68f4d68096b"
+  }
+}

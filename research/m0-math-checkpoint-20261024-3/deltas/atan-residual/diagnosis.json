@@ -1,0 +1,955 @@
+{
+  "status": "READ_ONLY_ACTUAL_V164_ATAN_DIAGNOSIS",
+  "ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+  "records": [
+    {
+      "x": "3F902767970881C7",
+      "output": "3F90270FC87F3EF5",
+      "instructions": 20628,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            2533917127,
+            1066411879,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            2533917127,
+            1066411879,
+            2533917127,
+            10087
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            1141782528,
+            20659384,
+            3414442211,
+            2148012979
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            3414442211,
+            2148012979,
+            32,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            2533917127,
+            1066411879,
+            1,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            1141782528,
+            20659384,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            2533917127,
+            1066411879,
+            9,
+            0
+          ]
+        }
+      ],
+      "index": 1,
+      "exponent": -6,
+      "invert": false,
+      "negative_reduction": false,
+      "numerator": "0x13b3cb8440e3800",
+      "denominator": "0x800813b3cb8440e3",
+      "h": "0x27651aa67f6401c",
+      "h_error": 3.9400625948800707,
+      "q": "0x10270fc87f3ef480e",
+      "midpoint_distance_Q70": 14,
+      "q_error_Q70": 4.413929761456555,
+      "true_midpoint_distance_Q70": 9.586070238543444,
+      "source_radius": 64,
+      "c3": 4006832533,
+      "c5": 90,
+      "c7": 0
+    },
+    {
+      "x": "3F940A1CD7C64F14",
+      "output": "3F94097539A6C00A",
+      "instructions": 20411,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            3620097812,
+            1066666524,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            3620097812,
+            1066666524,
+            3620097812,
+            264732
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            846766080,
+            542172862,
+            1810048906,
+            2148140302
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            1810048906,
+            2148140302,
+            32,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            3620097812,
+            1066666524,
+            1,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            846766080,
+            542172862,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            3620097812,
+            1066666524,
+            10,
+            0
+          ]
+        }
+      ],
+      "index": 1,
+      "exponent": -6,
+      "invert": false,
+      "negative_reduction": false,
+      "numerator": "0x2050e6be3278a000",
+      "denominator": "0x800a050e6be3278a",
+      "h": "0x409cbeb01821efd1",
+      "h_error": 2.49519038870145,
+      "q": "0x14097539a6c00a7f8",
+      "midpoint_distance_Q70": 8,
+      "q_error_Q70": 1.192899980068619,
+      "true_midpoint_distance_Q70": 9.192899980068619,
+      "source_radius": 64,
+      "c3": 72407769936731,
+      "c5": 1126096188,
+      "c7": 17513
+    },
+    {
+      "x": "3F978E61B9899F1C",
+      "output": "3F978D517EBF93D1",
+      "instructions": 20464,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            3112804124,
+            1066896993,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            3112804124,
+            1066896993,
+            3112804124,
+            495201
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            1291378688,
+            1014173132,
+            3703885710,
+            2148255536
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            3703885710,
+            2148255536,
+            32,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            3112804124,
+            1066896993,
+            1,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            1291378688,
+            1014173132,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            3112804124,
+            1066896993,
+            6,
+            0
+          ]
+        }
+      ],
+      "index": 1,
+      "exponent": -6,
+      "invert": false,
+      "negative_reduction": false,
+      "numerator": "0x3c730dcc4cf8e000",
+      "denominator": "0x800bc730dcc4cf8e",
+      "h": "0x78dafcb44b0207fe",
+      "h_error": 5.020139935680075,
+      "q": "0x178d517ebf93d17f5",
+      "midpoint_distance_Q70": 11,
+      "q_error_Q70": -6.920497742980109,
+      "true_midpoint_distance_Q70": 4.079502257019891,
+      "source_radius": 64,
+      "c3": 473847133701902,
+      "c5": 25782832791,
+      "c7": 1402888
+    },
+    {
+      "x": "3F99C24957C90E1F",
+      "output": "3F99C0E56701C7AB",
+      "instructions": 20375,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            1472794143,
+            1067041353,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            1472794143,
+            1067041353,
+            1472794143,
+            639561
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            3079604224,
+            837662017,
+            1472794143,
+            2149171785
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            1472794143,
+            2149171785,
+            32,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            1472794143,
+            1067041353,
+            2,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            3079604224,
+            837662017,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            1472794143,
+            1067041353,
+            5,
+            0
+          ]
+        }
+      ],
+      "index": 2,
+      "exponent": -6,
+      "invert": false,
+      "negative_reduction": true,
+      "numerator": "0x31edb541b78f0800",
+      "denominator": "0x8019c24957c90e1f",
+      "h": "0x63c7562151f43887",
+      "h_error": 2.7909584754690013,
+      "q": "0x19c0e56701c7aa804",
+      "midpoint_distance_Q70": 4,
+      "q_error_Q70": -1.2000166175312559,
+      "true_midpoint_distance_Q70": 5.200016617531256,
+      "source_radius": 64,
+      "c3": 266656917182609,
+      "c5": 9889817832,
+      "c7": 366795
+    },
+    {
+      "x": "3F9CB1154B8EEB62",
+      "output": "3F9CAF297452F7B0",
+      "instructions": 20275,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            1267657570,
+            1067233557,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            1267657570,
+            1067233557,
+            1267657570,
+            831765
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            2292510720,
+            444028323,
+            1267657570,
+            2149363989
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            1267657570,
+            2149363989,
+            32,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            1267657570,
+            1067233557,
+            2,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            2292510720,
+            444028323,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            1267657570,
+            1067233557,
+            4,
+            0
+          ]
+        }
+      ],
+      "index": 2,
+      "exponent": -6,
+      "invert": false,
+      "negative_reduction": true,
+      "numerator": "0x1a7755a388a4f000",
+      "denominator": "0x801cb1154b8eeb62",
+      "h": "0x34e2d07f04c308e2",
+      "h_error": 3.0514718301145494,
+      "q": "0x1caf297452f7b07f9",
+      "midpoint_distance_Q70": 7,
+      "q_error_Q70": -2.1127081348797656,
+      "true_midpoint_distance_Q70": 4.887291865120234,
+      "source_radius": 64,
+      "c3": 39706525891832,
+      "c5": 413716986,
+      "c7": 4311
+    },
+    {
+      "x": "3F9FF6556D0F3F46",
+      "output": "3F9FF3AD92087F15",
+      "instructions": 20834,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            1829715782,
+            1067447893,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            1829715782,
+            1067447893,
+            1829715782,
+            1046101
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            2248527872,
+            5067927,
+            1829715782,
+            2149578325
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            1829715782,
+            2149578325,
+            32,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            1829715782,
+            1067447893,
+            2,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            2248527872,
+            5067927,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            1829715782,
+            1067447893,
+            9,
+            0
+          ]
+        }
+      ],
+      "index": 2,
+      "exponent": -6,
+      "invert": false,
+      "negative_reduction": true,
+      "numerator": "0x4d54978605d000",
+      "denominator": "0x801ff6556d0f3f46",
+      "h": "0x9a829a109d2219",
+      "h_error": 3.1567368230278188,
+      "q": "0x1ff3ad92087f157f4",
+      "midpoint_distance_Q70": 12,
+      "q_error_Q70": -2.9554668855987614,
+      "true_midpoint_distance_Q70": 9.044533114401238,
+      "source_radius": 64,
+      "c3": 59018904,
+      "c5": 0,
+      "c7": 0
+    },
+    {
+      "x": "3FA42578CEE83920",
+      "output": "3FA422D0076E6436",
+      "instructions": 20753,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            3471325472,
+            1067722104,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            3471325472,
+            1067722104,
+            3471325472,
+            1320312
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            2087583744,
+            1034449681,
+            1824041824,
+            2151444586
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            1824041824,
+            2151444586,
+            32,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            3471325472,
+            1067722104,
+            3,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            2087583744,
+            1034449681,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            3471325472,
+            1067722104,
+            7,
+            0
+          ]
+        }
+      ],
+      "index": 3,
+      "exponent": -5,
+      "invert": false,
+      "negative_reduction": true,
+      "numerator": "0x3da873117c6e0000",
+      "denominator": "0x803c706a6cb8ab60",
+      "h": "0x7b16c75b403c264e",
+      "h_error": 6.085158076258072,
+      "q": "0x2845a00edcc86cffd",
+      "midpoint_distance_Q70": 3,
+      "q_error_Q70": 4.997154062070953,
+      "true_midpoint_distance_Q70": 7.997154062070953,
+      "source_radius": 64,
+      "c3": 500607545330268,
+      "c5": 28255035298,
+      "c7": 1594756
+    },
+    {
+      "x": "3FABB0EDC0AE5C6F",
+      "output": "3FABAA0764572D03",
+      "instructions": 20390,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            3232652399,
+            1068216557,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            3232652399,
+            1068216557,
+            3232652399,
+            1814765
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            3855020032,
+            990829578,
+            1108022605,
+            2152927945
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            1108022605,
+            2152927945,
+            32,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            3232652399,
+            1068216557,
+            3,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            3855020032,
+            990829578,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            3232652399,
+            1068216557,
+            3,
+            0
+          ]
+        }
+      ],
+      "index": 3,
+      "exponent": -5,
+      "invert": false,
+      "negative_reduction": false,
+      "numerator": "0x3b0edc0ae5c6f000",
+      "denominator": "0x805312c9420b154d",
+      "h": "0x75d1411ae791999e",
+      "h_error": 0.39341180311954854,
+      "q": "0x37540ec8ae5a04ffa",
+      "midpoint_distance_Q70": 6,
+      "q_error_Q70": -8.864168546626262,
+      "true_midpoint_distance_Q70": 2.8641685466262623,
+      "source_radius": 64,
+      "c3": 439003697829102,
+      "c5": 22701113822,
+      "c7": 1173887
+    },
+    {
+      "x": "3FACB1DF86FA69AD",
+      "output": "3FACAA324E0539F6",
+      "instructions": 20966,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            2264557997,
+            1068282335,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            2264557997,
+            1068282335,
+            2264557997,
+            1880543
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            1499803648,
+            887228304,
+            468297396,
+            2155005822
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            468297396,
+            2155005822,
+            32,
+            0
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            2264557997,
+            1068282335,
+            4,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            1499803648,
+            887228304,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            2264557997,
+            1068282335,
+            8,
+            0
+          ]
+        }
+      ],
+      "index": 4,
+      "exponent": -5,
+      "invert": false,
+      "negative_reduction": true,
+      "numerator": "0x34e2079059653000",
+      "denominator": "0x8072c77e1be9a6b4",
+      "h": "0x69658c6beb6ae2db",
+      "h_error": 5.223772151757531,
+      "q": "0x3954649c0a73ecff5",
+      "midpoint_distance_Q70": 11,
+      "q_error_Q70": -1.8883178658393889,
+      "true_midpoint_distance_Q70": 9.111682134160612,
+      "source_radius": 64,
+      "c3": 314282787003937,
+      "c5": 13005723850,
+      "c7": 538206
+    },
+    {
+      "x": "3FCAC3FC385F516E",
+      "output": "3FCA62A8623D8A72",
+      "instructions": 21036,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            945770862,
+            1070253052,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            945770862,
+            1070253052,
+            945770862,
+            3851260
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            4111917056,
+            205505413,
+            3705086614,
+            559674318
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            1935444568,
+            2238697275,
+            30,
+            3
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            945770862,
+            1070253052,
+            13,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            4111917056,
+            205505413,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            945770862,
+            1070253052,
+            16,
+            0
+          ]
+        }
+      ],
+      "index": 13,
+      "exponent": -3,
+      "invert": false,
+      "negative_reduction": false,
+      "numerator": "0xc3fc385f516e000",
+      "denominator": "0x215bf3cedcd72296",
+      "h": "0x5dffffffffff146c",
+      "h_error": 2.9386762254549055,
+      "q": "0xd3154311ec5393ff0",
+      "midpoint_distance_Q70": 16,
+      "q_error_Q70": 0.5608900223562984,
+      "true_midpoint_distance_Q70": 16.560890022356297,
+      "source_radius": 64,
+      "c3": 222958194786298,
+      "c5": 7339040217,
+      "c7": 241577
+    },
+    {
+      "x": "3FFA9C6244EA8335",
+      "output": "3FF078A30CE419EA",
+      "instructions": 20878,
+      "trace": [
+        {
+          "function": "mk61_m0_atan",
+          "registers": [
+            1156219701,
+            1073388642,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "atan_fast",
+          "registers": [
+            1156219701,
+            1073388642,
+            1156219701,
+            6986850
+          ]
+        },
+        {
+          "function": "atan_fast_ratio",
+          "registers": [
+            1277266048,
+            53631601,
+            983616832,
+            151459985
+          ]
+        },
+        {
+          "function": "atan_fast_reciprocal",
+          "registers": [
+            2852967424,
+            2423359763,
+            28,
+            3
+          ]
+        },
+        {
+          "function": "atan_refine",
+          "registers": [
+            1156219701,
+            1073388642,
+            38,
+            0
+          ]
+        },
+        {
+          "function": "atan_ratio_words",
+          "registers": [
+            1277266048,
+            53631601,
+            0,
+            0
+          ]
+        },
+        {
+          "function": "mk61_m0_cr_atan",
+          "registers": [
+            1156219701,
+            1073388642,
+            5,
+            0
+          ]
+        }
+      ],
+      "index": 38,
+      "exponent": 0,
+      "invert": true,
+      "negative_reduction": false,
+      "numerator": "0x3325a714c218880",
+      "denominator": "0x90718913aa0cd40",
+      "h": "0x5aa62226c76434b6",
+      "h_error": -0.003534205616188364,
+      "q": "0x41e28c339067a60007",
+      "midpoint_distance_Q70": 7,
+      "q_error_Q70": 1.1231016126891815,
+      "true_midpoint_distance_Q70": 5.876898387310819,
+      "source_radius": 64,
+      "c3": 199953189583176,
+      "c5": 6120883252,
+      "c7": 187370
+    }
+  ],
+  "MPFR_version": "4.2.2",
+  "hardware_accessed": false,
+  "canonical_or_frozen_changed": false
+}

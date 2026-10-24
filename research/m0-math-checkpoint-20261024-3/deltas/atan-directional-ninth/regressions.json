@@ -1,0 +1,2344 @@
+{
+  "status": "ALL_OBSERVED_REGRESSIONS_RETAINED",
+  "vs_parent": {
+    "faster": 101748,
+    "equal": 4504,
+    "slower": 60
+  },
+  "vs_V164": {
+    "faster": 101800,
+    "equal": 4504,
+    "slower": 8
+  },
+  "parent_regression_rows": [
+    {
+      "x": "3FE5D1004FC925B6",
+      "group": "small_h_boundary",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040febb000000000040febb0000275700004e0a000001000000",
+        "candidate": "00000040febb000000000040febb0000275700004e0a000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffbd770100ffffffffbd7701006bae0000007e000001000000"
+      },
+      "profiled": true,
+      "expected": "3FE325F02778DC00",
+      "outputs": {
+        "parent": "3FE325F02778DC00",
+        "candidate": "3FE325F02778DC00",
+        "Qfplib": "3FE325F02778DC00",
+        "resident": "3FE325F02778DC00"
+      },
+      "instructions": {
+        "parent": 1571,
+        "candidate": 1589,
+        "Qfplib": 1784,
+        "resident": 21085
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FE5D1004FC925B6",
+      "group": "small_h_boundary",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FE325F02778DC00",
+      "outputs": {
+        "parent": "3FE325F02778DC00",
+        "candidate": "3FE325F02778DC00",
+        "Qfplib": "3FE325F02778DC00",
+        "resident": "3FE325F02778DC00"
+      },
+      "instructions": {
+        "parent": 1753,
+        "candidate": 1771,
+        "Qfplib": 1784,
+        "resident": 22468
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFE5D1004FC925B6",
+      "group": "small_h_boundary",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040febb000000000040febb0000275700004e0a000001000000",
+        "candidate": "00000040febb000000000040febb0000275700004e0a000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffbd770100ffffffffbd7701006bae0000007e000001000000"
+      },
+      "profiled": true,
+      "expected": "BFE325F02778DC00",
+      "outputs": {
+        "parent": "BFE325F02778DC00",
+        "candidate": "BFE325F02778DC00",
+        "Qfplib": "BFE325F02778DC00",
+        "resident": "BFE325F02778DC00"
+      },
+      "instructions": {
+        "parent": 1571,
+        "candidate": 1589,
+        "Qfplib": 1791,
+        "resident": 21107
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFE5D1004FC925B6",
+      "group": "small_h_boundary",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFE325F02778DC00",
+      "outputs": {
+        "parent": "BFE325F02778DC00",
+        "candidate": "BFE325F02778DC00",
+        "Qfplib": "BFE325F02778DC00",
+        "resident": "BFE325F02778DC00"
+      },
+      "instructions": {
+        "parent": 1753,
+        "candidate": 1771,
+        "Qfplib": 1791,
+        "resident": 22490
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FECB99548F4FA32",
+      "group": "small_h_boundary",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "0000004055e600000000004055e60000214700000bbc000001000000",
+        "candidate": "0000004055e600000000004055e60000214700000bbc000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff47d00100ffffffff47d00100288d0000e759000001000000"
+      },
+      "profiled": true,
+      "expected": "3FE76897850FE9CD",
+      "outputs": {
+        "parent": "3FE76897850FE9CD",
+        "candidate": "3FE76897850FE9CD",
+        "Qfplib": "3FE76897850FE9CD",
+        "resident": "3FE76897850FE9CD"
+      },
+      "instructions": {
+        "parent": 1558,
+        "candidate": 1580,
+        "Qfplib": 1783,
+        "resident": 20874
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FECB99548F4FA32",
+      "group": "small_h_boundary",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FE76897850FE9CD",
+      "outputs": {
+        "parent": "3FE76897850FE9CD",
+        "candidate": "3FE76897850FE9CD",
+        "Qfplib": "3FE76897850FE9CD",
+        "resident": "3FE76897850FE9CD"
+      },
+      "instructions": {
+        "parent": 1728,
+        "candidate": 1750,
+        "Qfplib": 1783,
+        "resident": 22301
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFECB99548F4FA32",
+      "group": "small_h_boundary",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "0000004055e600000000004055e60000214700000bbc000001000000",
+        "candidate": "0000004055e600000000004055e60000214700000bbc000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff47d00100ffffffff47d00100288d0000e759000001000000"
+      },
+      "profiled": true,
+      "expected": "BFE76897850FE9CD",
+      "outputs": {
+        "parent": "BFE76897850FE9CD",
+        "candidate": "BFE76897850FE9CD",
+        "Qfplib": "BFE76897850FE9CD",
+        "resident": "BFE76897850FE9CD"
+      },
+      "instructions": {
+        "parent": 1558,
+        "candidate": 1580,
+        "Qfplib": 1790,
+        "resident": 20901
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFECB99548F4FA32",
+      "group": "small_h_boundary",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFE76897850FE9CD",
+      "outputs": {
+        "parent": "BFE76897850FE9CD",
+        "candidate": "BFE76897850FE9CD",
+        "Qfplib": "BFE76897850FE9CD",
+        "resident": "BFE76897850FE9CD"
+      },
+      "instructions": {
+        "parent": 1728,
+        "candidate": 1750,
+        "Qfplib": 1790,
+        "resident": 22328
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FEEBD4C6CD7BDA4",
+      "group": "small_h_boundary",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "0000004031f500000000004031f50000d2420000ce3b000001000000",
+        "candidate": "0000004031f500000000004031f50000d2420000ce3b000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "e6e51a6031f50000e6e51a6031f50000576400003f6e000001000000"
+      },
+      "profiled": true,
+      "expected": "3FE87D694CC21E83",
+      "outputs": {
+        "parent": "3FE87D694CC21E83",
+        "candidate": "3FE87D694CC21E83",
+        "Qfplib": "3FE87D694CC21E82",
+        "resident": "3FE87D694CC21E83"
+      },
+      "instructions": {
+        "parent": 1565,
+        "candidate": 1585,
+        "Qfplib": 1787,
+        "resident": 3026
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FEEBD4C6CD7BDA4",
+      "group": "small_h_boundary",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FE87D694CC21E83",
+      "outputs": {
+        "parent": "3FE87D694CC21E83",
+        "candidate": "3FE87D694CC21E83",
+        "Qfplib": "3FE87D694CC21E82",
+        "resident": "3FE87D694CC21E83"
+      },
+      "instructions": {
+        "parent": 1735,
+        "candidate": 1755,
+        "Qfplib": 1787,
+        "resident": 3622
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFEEBD4C6CD7BDA4",
+      "group": "small_h_boundary",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "0000004031f500000000004031f50000d2420000ce3b000001000000",
+        "candidate": "0000004031f500000000004031f50000d2420000ce3b000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "e6e51a6031f50000e6e51a6031f50000576400003f6e000001000000"
+      },
+      "profiled": true,
+      "expected": "BFE87D694CC21E83",
+      "outputs": {
+        "parent": "BFE87D694CC21E83",
+        "candidate": "BFE87D694CC21E83",
+        "Qfplib": "BFE87D694CC21E82",
+        "resident": "BFE87D694CC21E83"
+      },
+      "instructions": {
+        "parent": 1565,
+        "candidate": 1585,
+        "Qfplib": 1791,
+        "resident": 3026
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFEEBD4C6CD7BDA4",
+      "group": "small_h_boundary",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFE87D694CC21E83",
+      "outputs": {
+        "parent": "BFE87D694CC21E83",
+        "candidate": "BFE87D694CC21E83",
+        "Qfplib": "BFE87D694CC21E82",
+        "resident": "BFE87D694CC21E83"
+      },
+      "instructions": {
+        "parent": 1735,
+        "candidate": 1755,
+        "Qfplib": 1791,
+        "resident": 3622
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F9C4581690F9618",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "000000401c800000000000401c800000e47f00001003000001000000",
+        "candidate": "000000401c800000000000401c800000e47f00001003000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "b69f6d561c800000b69f6d561c800000b5ac0000ea3b000001000000"
+      },
+      "profiled": true,
+      "expected": "3F9C43AADBEA1CED",
+      "outputs": {
+        "parent": "3F9C43AADBEA1CED",
+        "candidate": "3F9C43AADBEA1CED",
+        "Qfplib": "3F9C43AADBEA1CEC",
+        "resident": "3F9C43AADBEA1CED"
+      },
+      "instructions": {
+        "parent": 1517,
+        "candidate": 1539,
+        "Qfplib": 1799,
+        "resident": 2955
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F9C4581690F9618",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F9C43AADBEA1CED",
+      "outputs": {
+        "parent": "3F9C43AADBEA1CED",
+        "candidate": "3F9C43AADBEA1CED",
+        "Qfplib": "3F9C43AADBEA1CEC",
+        "resident": "3F9C43AADBEA1CED"
+      },
+      "instructions": {
+        "parent": 1707,
+        "candidate": 1729,
+        "Qfplib": 1799,
+        "resident": 3849
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF9C4581690F9618",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "000000401c800000000000401c800000e47f00001003000001000000",
+        "candidate": "000000401c800000000000401c800000e47f00001003000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "b69f6d561c800000b69f6d561c800000b5ac0000ea3b000001000000"
+      },
+      "profiled": true,
+      "expected": "BF9C43AADBEA1CED",
+      "outputs": {
+        "parent": "BF9C43AADBEA1CED",
+        "candidate": "BF9C43AADBEA1CED",
+        "Qfplib": "BF9C43AADBEA1CEC",
+        "resident": "BF9C43AADBEA1CED"
+      },
+      "instructions": {
+        "parent": 1517,
+        "candidate": 1539,
+        "Qfplib": 1812,
+        "resident": 2955
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF9C4581690F9618",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF9C43AADBEA1CED",
+      "outputs": {
+        "parent": "BF9C43AADBEA1CED",
+        "candidate": "BF9C43AADBEA1CED",
+        "Qfplib": "BF9C43AADBEA1CEC",
+        "resident": "BF9C43AADBEA1CED"
+      },
+      "instructions": {
+        "parent": 1707,
+        "candidate": 1729,
+        "Qfplib": 1812,
+        "resident": 3849
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F99C24957C90E1F",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000",
+        "candidate": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000"
+      },
+      "profiled": true,
+      "expected": "3F99C0E56701C7AB",
+      "outputs": {
+        "parent": "3F99C0E56701C7AB",
+        "candidate": "3F99C0E56701C7AB",
+        "Qfplib": "3F99C0E56701C7AA",
+        "resident": "3F99C0E56701C7AB"
+      },
+      "instructions": {
+        "parent": 20345,
+        "candidate": 20612,
+        "Qfplib": 1805,
+        "resident": 20375
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3F99C24957C90E1F",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F99C0E56701C7AB",
+      "outputs": {
+        "parent": "3F99C0E56701C7AB",
+        "candidate": "3F99C0E56701C7AB",
+        "Qfplib": "3F99C0E56701C7AA",
+        "resident": "3F99C0E56701C7AB"
+      },
+      "instructions": {
+        "parent": 22046,
+        "candidate": 22313,
+        "Qfplib": 1805,
+        "resident": 22076
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BF99C24957C90E1F",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000",
+        "candidate": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000"
+      },
+      "profiled": true,
+      "expected": "BF99C0E56701C7AB",
+      "outputs": {
+        "parent": "BF99C0E56701C7AB",
+        "candidate": "BF99C0E56701C7AB",
+        "Qfplib": "BF99C0E56701C7AA",
+        "resident": "BF99C0E56701C7AB"
+      },
+      "instructions": {
+        "parent": 20368,
+        "candidate": 20635,
+        "Qfplib": 1808,
+        "resident": 20398
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BF99C24957C90E1F",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF99C0E56701C7AB",
+      "outputs": {
+        "parent": "BF99C0E56701C7AB",
+        "candidate": "BF99C0E56701C7AB",
+        "Qfplib": "BF99C0E56701C7AA",
+        "resident": "BF99C0E56701C7AB"
+      },
+      "instructions": {
+        "parent": 22069,
+        "candidate": 22336,
+        "Qfplib": 1808,
+        "resident": 22099
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3F9205B0D8E1AF59",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040098000000000004009800000f77f00005100000001000000",
+        "candidate": "00000040098000000000004009800000f77f00005100000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "08582842098000000858284209800000478400008931000001000000"
+      },
+      "profiled": true,
+      "expected": "3F920536EB4D1D88",
+      "outputs": {
+        "parent": "3F920536EB4D1D88",
+        "candidate": "3F920536EB4D1D88",
+        "Qfplib": "3F920536EB4D1D88",
+        "resident": "3F920536EB4D1D88"
+      },
+      "instructions": {
+        "parent": 1509,
+        "candidate": 1531,
+        "Qfplib": 1804,
+        "resident": 2922
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F9205B0D8E1AF59",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F920536EB4D1D88",
+      "outputs": {
+        "parent": "3F920536EB4D1D88",
+        "candidate": "3F920536EB4D1D88",
+        "Qfplib": "3F920536EB4D1D88",
+        "resident": "3F920536EB4D1D88"
+      },
+      "instructions": {
+        "parent": 1711,
+        "candidate": 1733,
+        "Qfplib": 1804,
+        "resident": 3790
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF9205B0D8E1AF59",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040098000000000004009800000f77f00005100000001000000",
+        "candidate": "00000040098000000000004009800000f77f00005100000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "08582842098000000858284209800000478400008931000001000000"
+      },
+      "profiled": true,
+      "expected": "BF920536EB4D1D88",
+      "outputs": {
+        "parent": "BF920536EB4D1D88",
+        "candidate": "BF920536EB4D1D88",
+        "Qfplib": "BF920536EB4D1D89",
+        "resident": "BF920536EB4D1D88"
+      },
+      "instructions": {
+        "parent": 1509,
+        "candidate": 1531,
+        "Qfplib": 1807,
+        "resident": 2922
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF9205B0D8E1AF59",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF920536EB4D1D88",
+      "outputs": {
+        "parent": "BF920536EB4D1D88",
+        "candidate": "BF920536EB4D1D88",
+        "Qfplib": "BF920536EB4D1D89",
+        "resident": "BF920536EB4D1D88"
+      },
+      "instructions": {
+        "parent": 1711,
+        "candidate": 1733,
+        "Qfplib": 1807,
+        "resident": 3790
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F915A455596086F",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040088000000000004008800000f87f00004000000001000000",
+        "candidate": "00000040088000000000004008800000f87f00004000000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "194cc40908800000194cc4090880000087130000e12f000001000000"
+      },
+      "profiled": true,
+      "expected": "3F9159D87F25F42B",
+      "outputs": {
+        "parent": "3F9159D87F25F42B",
+        "candidate": "3F9159D87F25F42B",
+        "Qfplib": "3F9159D87F25F42C",
+        "resident": "3F9159D87F25F42B"
+      },
+      "instructions": {
+        "parent": 1515,
+        "candidate": 1537,
+        "Qfplib": 1807,
+        "resident": 2988
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F915A455596086F",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F9159D87F25F42B",
+      "outputs": {
+        "parent": "3F9159D87F25F42B",
+        "candidate": "3F9159D87F25F42B",
+        "Qfplib": "3F9159D87F25F42C",
+        "resident": "3F9159D87F25F42B"
+      },
+      "instructions": {
+        "parent": 1709,
+        "candidate": 1731,
+        "Qfplib": 1807,
+        "resident": 3848
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF915A455596086F",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040088000000000004008800000f87f00004000000001000000",
+        "candidate": "00000040088000000000004008800000f87f00004000000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "194cc40908800000194cc4090880000087130000e12f000001000000"
+      },
+      "profiled": true,
+      "expected": "BF9159D87F25F42B",
+      "outputs": {
+        "parent": "BF9159D87F25F42B",
+        "candidate": "BF9159D87F25F42B",
+        "Qfplib": "BF9159D87F25F42C",
+        "resident": "BF9159D87F25F42B"
+      },
+      "instructions": {
+        "parent": 1515,
+        "candidate": 1537,
+        "Qfplib": 1807,
+        "resident": 2988
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF915A455596086F",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF9159D87F25F42B",
+      "outputs": {
+        "parent": "BF9159D87F25F42B",
+        "candidate": "BF9159D87F25F42B",
+        "Qfplib": "BF9159D87F25F42C",
+        "resident": "BF9159D87F25F42B"
+      },
+      "instructions": {
+        "parent": 1709,
+        "candidate": 1731,
+        "Qfplib": 1807,
+        "resident": 3848
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FD3CF0E5C6B9EA7",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040618c000000000040618c0000b67400000a3f000001000000",
+        "candidate": "00000040618c000000000040618c0000b67400000a3f000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff09180100ffffffff0918010007ea0000c01d000001000000"
+      },
+      "profiled": true,
+      "expected": "3FD335D69FDAAB11",
+      "outputs": {
+        "parent": "3FD335D69FDAAB11",
+        "candidate": "3FD335D69FDAAB11",
+        "Qfplib": "3FD335D69FDAAB11",
+        "resident": "3FD335D69FDAAB11"
+      },
+      "instructions": {
+        "parent": 1557,
+        "candidate": 1574,
+        "Qfplib": 1786,
+        "resident": 20971
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FD3CF0E5C6B9EA7",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FD335D69FDAAB11",
+      "outputs": {
+        "parent": "3FD335D69FDAAB11",
+        "candidate": "3FD335D69FDAAB11",
+        "Qfplib": "3FD335D69FDAAB11",
+        "resident": "3FD335D69FDAAB11"
+      },
+      "instructions": {
+        "parent": 1739,
+        "candidate": 1756,
+        "Qfplib": 1786,
+        "resident": 22692
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFD3CF0E5C6B9EA7",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040618c000000000040618c0000b67400000a3f000001000000",
+        "candidate": "00000040618c000000000040618c0000b67400000a3f000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff09180100ffffffff0918010007ea0000c01d000001000000"
+      },
+      "profiled": true,
+      "expected": "BFD335D69FDAAB11",
+      "outputs": {
+        "parent": "BFD335D69FDAAB11",
+        "candidate": "BFD335D69FDAAB11",
+        "Qfplib": "BFD335D69FDAAB11",
+        "resident": "BFD335D69FDAAB11"
+      },
+      "instructions": {
+        "parent": 1557,
+        "candidate": 1574,
+        "Qfplib": 1795,
+        "resident": 21000
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFD3CF0E5C6B9EA7",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFD335D69FDAAB11",
+      "outputs": {
+        "parent": "BFD335D69FDAAB11",
+        "candidate": "BFD335D69FDAAB11",
+        "Qfplib": "BFD335D69FDAAB11",
+        "resident": "BFD335D69FDAAB11"
+      },
+      "instructions": {
+        "parent": 1739,
+        "candidate": 1756,
+        "Qfplib": 1795,
+        "resident": 22721
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FC0415F1F25CD08",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040088200000000004008820000007e00000010000001000000",
+        "candidate": "00000040088200000000004008820000007e00000010000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "a7ba811f08820000a7ba811f08820000073e00006f3c000001000000"
+      },
+      "profiled": true,
+      "expected": "3FC02B36E4F16FA3",
+      "outputs": {
+        "parent": "3FC02B36E4F16FA3",
+        "candidate": "3FC02B36E4F16FA3",
+        "Qfplib": "3FC02B36E4F16FA3",
+        "resident": "3FC02B36E4F16FA3"
+      },
+      "instructions": {
+        "parent": 1561,
+        "candidate": 1578,
+        "Qfplib": 1790,
+        "resident": 3046
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FC0415F1F25CD08",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FC02B36E4F16FA3",
+      "outputs": {
+        "parent": "3FC02B36E4F16FA3",
+        "candidate": "3FC02B36E4F16FA3",
+        "Qfplib": "3FC02B36E4F16FA3",
+        "resident": "3FC02B36E4F16FA3"
+      },
+      "instructions": {
+        "parent": 1731,
+        "candidate": 1748,
+        "Qfplib": 1790,
+        "resident": 3896
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFC0415F1F25CD08",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040088200000000004008820000007e00000010000001000000",
+        "candidate": "00000040088200000000004008820000007e00000010000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "a7ba811f08820000a7ba811f08820000073e00006f3c000001000000"
+      },
+      "profiled": true,
+      "expected": "BFC02B36E4F16FA3",
+      "outputs": {
+        "parent": "BFC02B36E4F16FA3",
+        "candidate": "BFC02B36E4F16FA3",
+        "Qfplib": "BFC02B36E4F16FA3",
+        "resident": "BFC02B36E4F16FA3"
+      },
+      "instructions": {
+        "parent": 1561,
+        "candidate": 1578,
+        "Qfplib": 1800,
+        "resident": 3046
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFC0415F1F25CD08",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFC02B36E4F16FA3",
+      "outputs": {
+        "parent": "BFC02B36E4F16FA3",
+        "candidate": "BFC02B36E4F16FA3",
+        "Qfplib": "BFC02B36E4F16FA3",
+        "resident": "BFC02B36E4F16FA3"
+      },
+      "instructions": {
+        "parent": 1731,
+        "candidate": 1748,
+        "Qfplib": 1800,
+        "resident": 3896
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F9FF6556D0F3F46",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "000000401f800000000000401f800000e17f0000c103000001000000",
+        "candidate": "000000401f800000000000401f800000e17f0000c103000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff4b000100ffffffff4b000100b5ff0000f815000001000000"
+      },
+      "profiled": true,
+      "expected": "3F9FF3AD92087F15",
+      "outputs": {
+        "parent": "3F9FF3AD92087F15",
+        "candidate": "3F9FF3AD92087F15",
+        "Qfplib": "3F9FF3AD92087F16",
+        "resident": "3F9FF3AD92087F15"
+      },
+      "instructions": {
+        "parent": 1506,
+        "candidate": 1528,
+        "Qfplib": 1803,
+        "resident": 20834
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F9FF6556D0F3F46",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F9FF3AD92087F15",
+      "outputs": {
+        "parent": "3F9FF3AD92087F15",
+        "candidate": "3F9FF3AD92087F15",
+        "Qfplib": "3F9FF3AD92087F16",
+        "resident": "3F9FF3AD92087F15"
+      },
+      "instructions": {
+        "parent": 1696,
+        "candidate": 1718,
+        "Qfplib": 1803,
+        "resident": 22475
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF9FF6556D0F3F46",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "000000401f800000000000401f800000e17f0000c103000001000000",
+        "candidate": "000000401f800000000000401f800000e17f0000c103000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff4b000100ffffffff4b000100b5ff0000f815000001000000"
+      },
+      "profiled": true,
+      "expected": "BF9FF3AD92087F15",
+      "outputs": {
+        "parent": "BF9FF3AD92087F15",
+        "candidate": "BF9FF3AD92087F15",
+        "Qfplib": "BF9FF3AD92087F15",
+        "resident": "BF9FF3AD92087F15"
+      },
+      "instructions": {
+        "parent": 1506,
+        "candidate": 1528,
+        "Qfplib": 1811,
+        "resident": 20815
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF9FF6556D0F3F46",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF9FF3AD92087F15",
+      "outputs": {
+        "parent": "BF9FF3AD92087F15",
+        "candidate": "BF9FF3AD92087F15",
+        "Qfplib": "BF9FF3AD92087F15",
+        "resident": "BF9FF3AD92087F15"
+      },
+      "instructions": {
+        "parent": 1696,
+        "candidate": 1718,
+        "Qfplib": 1811,
+        "resident": 22456
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F902767970881C7",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040088000000000004008800000f87f00004000000001000000",
+        "candidate": "00000040088000000000004008800000f87f00004000000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff0c000100ffffffff0c000100f4ff00008f00000001000000"
+      },
+      "profiled": true,
+      "expected": "3F90270FC87F3EF5",
+      "outputs": {
+        "parent": "3F90270FC87F3EF5",
+        "candidate": "3F90270FC87F3EF5",
+        "Qfplib": "3F90270FC87F3EF5",
+        "resident": "3F90270FC87F3EF5"
+      },
+      "instructions": {
+        "parent": 1514,
+        "candidate": 1537,
+        "Qfplib": 1809,
+        "resident": 20628
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F902767970881C7",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F90270FC87F3EF5",
+      "outputs": {
+        "parent": "3F90270FC87F3EF5",
+        "candidate": "3F90270FC87F3EF5",
+        "Qfplib": "3F90270FC87F3EF5",
+        "resident": "3F90270FC87F3EF5"
+      },
+      "instructions": {
+        "parent": 1708,
+        "candidate": 1731,
+        "Qfplib": 1809,
+        "resident": 22331
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF902767970881C7",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040088000000000004008800000f87f00004000000001000000",
+        "candidate": "00000040088000000000004008800000f87f00004000000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff0c000100ffffffff0c000100f4ff00008f00000001000000"
+      },
+      "profiled": true,
+      "expected": "BF90270FC87F3EF5",
+      "outputs": {
+        "parent": "BF90270FC87F3EF5",
+        "candidate": "BF90270FC87F3EF5",
+        "Qfplib": "BF90270FC87F3EF5",
+        "resident": "BF90270FC87F3EF5"
+      },
+      "instructions": {
+        "parent": 1514,
+        "candidate": 1537,
+        "Qfplib": 1804,
+        "resident": 20645
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF902767970881C7",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF90270FC87F3EF5",
+      "outputs": {
+        "parent": "BF90270FC87F3EF5",
+        "candidate": "BF90270FC87F3EF5",
+        "Qfplib": "BF90270FC87F3EF5",
+        "resident": "BF90270FC87F3EF5"
+      },
+      "instructions": {
+        "parent": 1708,
+        "candidate": 1731,
+        "Qfplib": 1804,
+        "resident": 22348
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F940A1CD7C64F14",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "000000400a800000000000400a800000f67f00006400000001000000",
+        "candidate": "000000400a800000000000400a800000f67f00006400000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff1f000100ffffffff1f000100e1ff0000c003000001000000"
+      },
+      "profiled": true,
+      "expected": "3F94097539A6C00A",
+      "outputs": {
+        "parent": "3F94097539A6C00A",
+        "candidate": "3F94097539A6C00A",
+        "Qfplib": "3F94097539A6C00A",
+        "resident": "3F94097539A6C00A"
+      },
+      "instructions": {
+        "parent": 1517,
+        "candidate": 1535,
+        "Qfplib": 1806,
+        "resident": 20411
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3F940A1CD7C64F14",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F94097539A6C00A",
+      "outputs": {
+        "parent": "3F94097539A6C00A",
+        "candidate": "3F94097539A6C00A",
+        "Qfplib": "3F94097539A6C00A",
+        "resident": "3F94097539A6C00A"
+      },
+      "instructions": {
+        "parent": 1715,
+        "candidate": 1733,
+        "Qfplib": 1806,
+        "resident": 22151
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF940A1CD7C64F14",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "000000400a800000000000400a800000f67f00006400000001000000",
+        "candidate": "000000400a800000000000400a800000f67f00006400000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff1f000100ffffffff1f000100e1ff0000c003000001000000"
+      },
+      "profiled": true,
+      "expected": "BF94097539A6C00A",
+      "outputs": {
+        "parent": "BF94097539A6C00A",
+        "candidate": "BF94097539A6C00A",
+        "Qfplib": "BF94097539A6C00A",
+        "resident": "BF94097539A6C00A"
+      },
+      "instructions": {
+        "parent": 1517,
+        "candidate": 1535,
+        "Qfplib": 1810,
+        "resident": 20417
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BF940A1CD7C64F14",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF94097539A6C00A",
+      "outputs": {
+        "parent": "BF94097539A6C00A",
+        "candidate": "BF94097539A6C00A",
+        "Qfplib": "BF94097539A6C00A",
+        "resident": "BF94097539A6C00A"
+      },
+      "instructions": {
+        "parent": 1715,
+        "candidate": 1733,
+        "Qfplib": 1810,
+        "resident": 22157
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "4012A253C99075D1",
+      "group": "all_geometry_inner_h_cap_inverted",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040129c000000000040129c0000fa6800006c46000001000000",
+        "candidate": "00000040129c000000000040129c0000fa6800006c46000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "e0145749129c0000e0145749129c00004c780000884f000001000000"
+      },
+      "profiled": true,
+      "expected": "3FF5BFE064DC8EA2",
+      "outputs": {
+        "parent": "3FF5BFE064DC8EA2",
+        "candidate": "3FF5BFE064DC8EA2",
+        "Qfplib": "3FF5BFE064DC8EA3",
+        "resident": "3FF5BFE064DC8EA2"
+      },
+      "instructions": {
+        "parent": 1566,
+        "candidate": 1659,
+        "Qfplib": 1792,
+        "resident": 3049
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "4012A253C99075D1",
+      "group": "all_geometry_inner_h_cap_inverted",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FF5BFE064DC8EA2",
+      "outputs": {
+        "parent": "3FF5BFE064DC8EA2",
+        "candidate": "3FF5BFE064DC8EA2",
+        "Qfplib": "3FF5BFE064DC8EA3",
+        "resident": "3FF5BFE064DC8EA2"
+      },
+      "instructions": {
+        "parent": 1930,
+        "candidate": 2023,
+        "Qfplib": 1792,
+        "resident": 3937
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "C012A253C99075D1",
+      "group": "all_geometry_inner_h_cap_inverted",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040129c000000000040129c0000fa6800006c46000001000000",
+        "candidate": "00000040129c000000000040129c0000fa6800006c46000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "e0145749129c0000e0145749129c00004c780000884f000001000000"
+      },
+      "profiled": true,
+      "expected": "BFF5BFE064DC8EA2",
+      "outputs": {
+        "parent": "BFF5BFE064DC8EA2",
+        "candidate": "BFF5BFE064DC8EA2",
+        "Qfplib": "BFF5BFE064DC8EA3",
+        "resident": "BFF5BFE064DC8EA2"
+      },
+      "instructions": {
+        "parent": 1566,
+        "candidate": 1659,
+        "Qfplib": 1790,
+        "resident": 3049
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "C012A253C99075D1",
+      "group": "all_geometry_inner_h_cap_inverted",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFF5BFE064DC8EA2",
+      "outputs": {
+        "parent": "BFF5BFE064DC8EA2",
+        "candidate": "BFF5BFE064DC8EA2",
+        "Qfplib": "BFF5BFE064DC8EA3",
+        "resident": "BFF5BFE064DC8EA2"
+      },
+      "instructions": {
+        "parent": 1930,
+        "candidate": 2023,
+        "Qfplib": 1790,
+        "resident": 3937
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FE8E62061956CCD",
+      "group": "global_cap",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040cfcd000000000040cfcd00009b4f0000ab82000001000000",
+        "candidate": "00000040cfcd000000000040cfcd00009b4f0000ab82000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "bf4c5f20cfcd0000bf4c5f20cfcd000044280000c349000001000000"
+      },
+      "profiled": true,
+      "expected": "3FE528DE06626379",
+      "outputs": {
+        "parent": "3FE528DE06626379",
+        "candidate": "3FE528DE06626379",
+        "Qfplib": "3FE528DE06626379",
+        "resident": "3FE528DE06626379"
+      },
+      "instructions": {
+        "parent": 1573,
+        "candidate": 1591,
+        "Qfplib": 1789,
+        "resident": 3036
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FE8E62061956CCD",
+      "group": "global_cap",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FE528DE06626379",
+      "outputs": {
+        "parent": "3FE528DE06626379",
+        "candidate": "3FE528DE06626379",
+        "Qfplib": "3FE528DE06626379",
+        "resident": "3FE528DE06626379"
+      },
+      "instructions": {
+        "parent": 1759,
+        "candidate": 1777,
+        "Qfplib": 1789,
+        "resident": 3901
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFE8E62061956CCD",
+      "group": "global_cap",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "00000040cfcd000000000040cfcd00009b4f0000ab82000001000000",
+        "candidate": "00000040cfcd000000000040cfcd00009b4f0000ab82000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "bf4c5f20cfcd0000bf4c5f20cfcd000044280000c349000001000000"
+      },
+      "profiled": true,
+      "expected": "BFE528DE06626379",
+      "outputs": {
+        "parent": "BFE528DE06626379",
+        "candidate": "BFE528DE06626379",
+        "Qfplib": "BFE528DE06626378",
+        "resident": "BFE528DE06626379"
+      },
+      "instructions": {
+        "parent": 1573,
+        "candidate": 1591,
+        "Qfplib": 1785,
+        "resident": 3036
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "BFE8E62061956CCD",
+      "group": "global_cap",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFE528DE06626379",
+      "outputs": {
+        "parent": "BFE528DE06626379",
+        "candidate": "BFE528DE06626379",
+        "Qfplib": "BFE528DE06626378",
+        "resident": "BFE528DE06626379"
+      },
+      "instructions": {
+        "parent": 1759,
+        "candidate": 1777,
+        "Qfplib": 1785,
+        "resident": 3901
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 0
+    },
+    {
+      "x": "3FEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "candidate": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000"
+      },
+      "profiled": true,
+      "expected": "3FE8AE47A21A1998",
+      "outputs": {
+        "parent": "3FE8AE47A21A1998",
+        "candidate": "3FE8AE47A21A1998",
+        "Qfplib": "3FE8AE47A21A1998",
+        "resident": "3FE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 20968,
+        "candidate": 21048,
+        "Qfplib": 1787,
+        "resident": 20785
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3FEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FE8AE47A21A1998",
+      "outputs": {
+        "parent": "3FE8AE47A21A1998",
+        "candidate": "3FE8AE47A21A1998",
+        "Qfplib": "3FE8AE47A21A1998",
+        "resident": "3FE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 22684,
+        "candidate": 22764,
+        "Qfplib": 1787,
+        "resident": 22501
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "candidate": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000"
+      },
+      "profiled": true,
+      "expected": "BFE8AE47A21A1998",
+      "outputs": {
+        "parent": "BFE8AE47A21A1998",
+        "candidate": "BFE8AE47A21A1998",
+        "Qfplib": "BFE8AE47A21A1998",
+        "resident": "BFE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 20967,
+        "candidate": 21047,
+        "Qfplib": 1787,
+        "resident": 20784
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFE8AE47A21A1998",
+      "outputs": {
+        "parent": "BFE8AE47A21A1998",
+        "candidate": "BFE8AE47A21A1998",
+        "Qfplib": "BFE8AE47A21A1998",
+        "resident": "BFE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 22683,
+        "candidate": 22763,
+        "Qfplib": 1787,
+        "resident": 22500
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    }
+  ],
+  "V164_regression_rows": [
+    {
+      "x": "3F99C24957C90E1F",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000",
+        "candidate": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000"
+      },
+      "profiled": true,
+      "expected": "3F99C0E56701C7AB",
+      "outputs": {
+        "parent": "3F99C0E56701C7AB",
+        "candidate": "3F99C0E56701C7AB",
+        "Qfplib": "3F99C0E56701C7AA",
+        "resident": "3F99C0E56701C7AB"
+      },
+      "instructions": {
+        "parent": 20345,
+        "candidate": 20612,
+        "Qfplib": 1805,
+        "resident": 20375
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3F99C24957C90E1F",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3F99C0E56701C7AB",
+      "outputs": {
+        "parent": "3F99C0E56701C7AB",
+        "candidate": "3F99C0E56701C7AB",
+        "Qfplib": "3F99C0E56701C7AA",
+        "resident": "3F99C0E56701C7AB"
+      },
+      "instructions": {
+        "parent": 22046,
+        "candidate": 22313,
+        "Qfplib": 1805,
+        "resident": 22076
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BF99C24957C90E1F",
+      "group": "random_reduced",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000",
+        "candidate": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffff28000100ffffffff28000100d8ff00003f06000001000000"
+      },
+      "profiled": true,
+      "expected": "BF99C0E56701C7AB",
+      "outputs": {
+        "parent": "BF99C0E56701C7AB",
+        "candidate": "BF99C0E56701C7AB",
+        "Qfplib": "BF99C0E56701C7AA",
+        "resident": "BF99C0E56701C7AB"
+      },
+      "instructions": {
+        "parent": 20368,
+        "candidate": 20635,
+        "Qfplib": 1808,
+        "resident": 20398
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BF99C24957C90E1F",
+      "group": "random_reduced",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BF99C0E56701C7AB",
+      "outputs": {
+        "parent": "BF99C0E56701C7AB",
+        "candidate": "BF99C0E56701C7AB",
+        "Qfplib": "BF99C0E56701C7AA",
+        "resident": "BF99C0E56701C7AB"
+      },
+      "instructions": {
+        "parent": 22069,
+        "candidate": 22336,
+        "Qfplib": 1808,
+        "resident": 22099
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": false,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3FEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "candidate": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000"
+      },
+      "profiled": true,
+      "expected": "3FE8AE47A21A1998",
+      "outputs": {
+        "parent": "3FE8AE47A21A1998",
+        "candidate": "3FE8AE47A21A1998",
+        "Qfplib": "3FE8AE47A21A1998",
+        "resident": "3FE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 20968,
+        "candidate": 21048,
+        "Qfplib": 1787,
+        "resident": 20785
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "3FEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "3FE8AE47A21A1998",
+      "outputs": {
+        "parent": "3FE8AE47A21A1998",
+        "candidate": "3FE8AE47A21A1998",
+        "Qfplib": "3FE8AE47A21A1998",
+        "resident": "3FE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 22684,
+        "candidate": 22764,
+        "Qfplib": 1787,
+        "resident": 22501
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "READY",
+      "SIO_after": {
+        "parent": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "candidate": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000",
+        "Qfplib": "00000000000000000000000000000000000000000000000001000000",
+        "resident": "ffffffffd5f20100ffffffffd5f20100608300001ff1010001000000"
+      },
+      "profiled": true,
+      "expected": "BFE8AE47A21A1998",
+      "outputs": {
+        "parent": "BFE8AE47A21A1998",
+        "candidate": "BFE8AE47A21A1998",
+        "Qfplib": "BFE8AE47A21A1998",
+        "resident": "BFE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 20967,
+        "candidate": 21047,
+        "Qfplib": 1787,
+        "resident": 20784
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    },
+    {
+      "x": "BFEF1BCDCF0D1830",
+      "group": "directional_middle_cap",
+      "SIO": "DIRTY",
+      "SIO_after": {
+        "parent": "11000000030000001100000003000000050000000200000003000000",
+        "candidate": "11000000030000001100000003000000050000000200000003000000",
+        "Qfplib": "11000000030000001100000003000000050000000200000003000000",
+        "resident": "11000000030000001100000003000000050000000200000003000000"
+      },
+      "profiled": true,
+      "expected": "BFE8AE47A21A1998",
+      "outputs": {
+        "parent": "BFE8AE47A21A1998",
+        "candidate": "BFE8AE47A21A1998",
+        "Qfplib": "BFE8AE47A21A1998",
+        "resident": "BFE8AE47A21A1998"
+      },
+      "instructions": {
+        "parent": 22683,
+        "candidate": 22763,
+        "Qfplib": 1787,
+        "resident": 22500
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true,
+        "resident": true
+      },
+      "candidate_repair_entries": 1,
+      "candidate_CORE_entries": 1
+    }
+  ],
+  "parent_instruction_deltas": {
+    "-21199": 1,
+    "-21177": 1,
+    "-21068": 1,
+    "-21034": 1,
+    "-20973": 1,
+    "-20969": 1,
+    "-20940": 1,
+    "-20927": 1,
+    "-20840": 1,
+    "-20819": 1,
+    "-20808": 1,
+    "-20779": 1,
+    "-20769": 1,
+    "-20762": 1,
+    "-20647": 1,
+    "-20605": 1,
+    "-20439": 1,
+    "-20438": 1,
+    "-20372": 1,
+    "-20365": 1,
+    "-20356": 1,
+    "-20336": 1,
+    "-19648": 1,
+    "-19626": 1,
+    "-19550": 1,
+    "-19516": 1,
+    "-19473": 1,
+    "-19463": 1,
+    "-19418": 1,
+    "-19414": 1,
+    "-19372": 1,
+    "-19359": 1,
+    "-19273": 1,
+    "-19272": 1,
+    "-19251": 1,
+    "-19227": 1,
+    "-19162": 1,
+    "-19120": 1,
+    "-18897": 1,
+    "-18881": 1,
+    "-18849": 1,
+    "-18848": 1,
+    "-18785": 1,
+    "-18756": 1,
+    "-2213": 2,
+    "-2172": 2,
+    "-2124": 2,
+    "-2119": 2,
+    "-2101": 2,
+    "-2087": 2,
+    "-2066": 2,
+    "-2062": 2,
+    "-1505": 2,
+    "-1462": 2,
+    "-1406": 2,
+    "-1398": 2,
+    "-1397": 2,
+    "-1393": 2,
+    "-1379": 2,
+    "-1369": 2,
+    "-22": 12,
+    "-21": 20,
+    "-20": 8,
+    "-17": 28,
+    "-15": 10,
+    "-12": 15326,
+    "-11": 30626,
+    "-10": 15388,
+    "-9": 10276,
+    "-8": 19272,
+    "-7": 10242,
+    "-6": 464,
+    "0": 4504,
+    "17": 8,
+    "18": 12,
+    "20": 4,
+    "22": 20,
+    "23": 4,
+    "80": 4,
+    "93": 4,
+    "267": 4
+  }
+}

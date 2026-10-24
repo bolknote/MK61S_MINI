@@ -1,0 +1,81 @@
+{
+  "status": "PASS_INDEPENDENT_EXACT_FRACTION_ALL_GEOMETRY_RADII",
+  "regions": [
+    {
+      "hcap": "4194305/1073741824",
+      "integer_hcap": 4611687117939015680,
+      "strict_radius": 6,
+      "total_error": "1066952664723506003589776827150671446856983182366642016721446942682845216536286712463116509/179033633228090837585222528838246173064072002537845401199726863101058628279115127623516160",
+      "total_error_float": 5.959509649028886
+    },
+    {
+      "hcap": "1/250",
+      "integer_hcap": 4722366482869645213,
+      "strict_radius": 7,
+      "total_error": "10347479030780478366451733803335215295031362909006803192462519608707940623978856607/1724029898554389379653689955297609126005776375152353143160832000000000000000000000",
+      "total_error_float": 6.001913910806831
+    }
+  ],
+  "global_ratio_error": "316730184562213946403297513305571329/10384593717069655257060992658440192",
+  "minimum_denominator": 288230376151711744,
+  "minimum_truncated_divisor": 1048576,
+  "ratio_premise": "Inherited normalized quotient error is <=6.5+2B<33. D>=2^58 means the unchanged truncated quotient bound1+34/2^20 and signed71-bit arithmetic remain valid.",
+  "geometry_proof": "Inverted D=(s<<6)+(index<<(52-e))>=2^58 and is exact. Ordinary e=-6 halves its65-bit D with exact numerator halving: stored residual ratio excess <.5Q70 since its true h<2^63 and Dhalf>=2^63. Ordinary table<=.5; inverted table+pi/2<=1 with no halving. Their combined worst case<=1.",
+  "sign_proof": "q gets +correction when geometry nonnegative, - when negative; pi/2 inversion reverses it. Thus delta sign is reversed iff geometryNegative XOR invert. Original input sign remains in final pack.",
+  "shifts": "Fast source e=-6..6; e=invert?0:source_e gives pack shifts11..18. normalization=unsigned(source_e+5) is used only behind normalization<5 short-circuit gates; widening repair introduces no negative shift.",
+  "sampled_exact_geometries": [
+    {
+      "exponent": -6,
+      "inverted": false,
+      "denominator": 9225623836668461056,
+      "halving_error_Q70": "16777216/75594761717661369896961"
+    },
+    {
+      "exponent": -6,
+      "inverted": false,
+      "denominator": 9232379236109516799,
+      "halving_error_Q70": "0"
+    },
+    {
+      "exponent": -5,
+      "inverted": false,
+      "denominator": 9232379236109516834,
+      "halving_error_Q70": "0"
+    },
+    {
+      "exponent": -1,
+      "inverted": false,
+      "denominator": 1152921504606846912,
+      "halving_error_Q70": "0"
+    },
+    {
+      "exponent": 0,
+      "inverted": true,
+      "denominator": 576460752303423552,
+      "halving_error_Q70": "0"
+    },
+    {
+      "exponent": 2,
+      "inverted": true,
+      "denominator": 306244774661201600,
+      "halving_error_Q70": "0"
+    },
+    {
+      "exponent": 5,
+      "inverted": true,
+      "denominator": 576601489791778752,
+      "halving_error_Q70": "0"
+    },
+    {
+      "exponent": 6,
+      "inverted": true,
+      "denominator": 288300744895889408,
+      "halving_error_Q70": "0"
+    }
+  ],
+  "admitted_synthetic_open_intervals": 1104,
+  "declined_near_ties": 192,
+  "tail_reuse": "Within53.25Q70 before correction plus |delta|<=33 is <minimumhalf1024; quantum/binade stay exact. At distance>=radius, strict bound stays within one RNE cell, including equality6/7.",
+  "prior_helper_proof_reused": true,
+  "large_helper_or_public_corpus_repeated": false
+}
