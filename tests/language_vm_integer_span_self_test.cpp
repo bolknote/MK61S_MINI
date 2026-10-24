@@ -99,10 +99,23 @@ void equal(Fixture& a,Fixture& b,unsigned limit,bool resume=false) {
   }
   ++comparisons;
 }
+void short_code_alias(const char* source,Language language,Value value,unsigned offset,unsigned limit,unsigned stop=0) {
+  Fixture fast(source,language,value,5),reference(source,language,value,5);
+  Value first[MAX_IMAGE/sizeof(Value)]={},second[MAX_IMAGE/sizeof(Value)]={};
+  Value* images[]={first,second};Fixture* fixtures[]={&fast,&reference};
+  for(unsigned which=0;which<2;++which) {
+    auto& f=*fixtures[which];auto* cells=images[which];
+    std::memcpy(cells,f.image,f.view.size);
+    assert(inspect(reinterpret_cast<const uint8_t*>(cells),(uint16_t)f.view.size,f.view)==Error::NONE);
+    f.state.stack=cells+f.view.code/sizeof(Value)+offset;f.state.stack_capacity=32;f.stop=stop;
+  }
+  aliased_code_fixture=true;equal(fast,reference,limit);aliased_code_fixture=false;
+  assert(!std::memcmp(first,second,sizeof(first)));
+}
 }
 namespace language_vm {
 void trace_instruction(const View& v,uint16_t pc,uint32_t steps) {
-  if(recording)recording->trace.insert(recording->trace.end(),{pc,steps,(uint64_t)scalar_op((Op)v.bytes[pc])});
+  if(recording)recording->trace.insert(recording->trace.end(),{pc,steps,(uint64_t)scalar_op((Op)v.byte(pc))});
 }
 void integer_span_applied(uint16_t first,uint8_t count) {
   ++spans;multiple+=count>1;
@@ -116,6 +129,50 @@ void integer_span_applied(uint16_t first,uint8_t count) {
 void integer_short_block_applied(uint16_t) {++short_blocks;}
 }
 int main() {
+  // Original case297/limit3: LOAD writes the first inactive stack cell over
+  // SOURCE_POS/ABS/STORE. Prefetching the whole short block changes subsequent
+  // scalar fetches. The image is valid before RUN; this alias is not rejected.
+  short_code_alias("10 A=ABS(I)\n",Language::BASIC,-3,1,3);
+  for(Language language:{Language::BASIC,Language::FOCAL})for(bool array:{false,true}) {
+    if(array && language==Language::FOCAL)continue;
+    const char* source=array?"10 A=@(I)\n":language==Language::BASIC?"10 A=ABS(I)\n":"1.1 S A=ABS(I)\n";
+    for(Value value:{Value(-3),Value(3),Value(.5),Value::floating_bits(UINT64_C(0x8000000000000000))})
+      for(unsigned offset:{0U,1U,2U,3U,4U})for(unsigned limit:{0U,1U,2U,3U,4U,31U,32U,33U})
+        for(unsigned stop:{0U,1U,2U})short_code_alias(source,language,value,offset,limit,stop);
+    // Ordinary immutable code still takes the existing short fast path.
+    Fixture fast(source,language,3,5),reference(source,language,3,5);
+    const unsigned before=multiple;equal(fast,reference,0);assert(multiple==before+1);
+    // A reader ignores View::bytes. An overlapping, unused pointer must not
+    // disable the short path when the actual callback supplies immutable code.
+    Fixture paged(source,language,3,5),paged_reference(source,language,3,5);
+    auto read=[](void* raw,uint32_t at,uint8_t* out,uint16_t n) {
+      std::memcpy(out,static_cast<const uint8_t*>(raw)+at,n);return true;
+    };
+    flash::Reader reader({paged.image,read,paged.view.size});
+    flash::Reader reference_reader({paged_reference.image,read,paged_reference.view.size});
+    paged.view.reader=&reader;paged_reference.view.reader=&reference_reader;
+    paged.view.bytes=reinterpret_cast<const uint8_t*>(paged.stack);
+    paged_reference.view.bytes=reinterpret_cast<const uint8_t*>(paged_reference.stack);
+    const unsigned before_reader=multiple;aliased_code_fixture=true;
+    equal(paged,paged_reference,0);aliased_code_fixture=false;
+    assert(multiple==before_reader+1);
+  }
+  // Half-open bounds: a full writable cell ending at image[0], or starting
+  // exactly at image[end], is adjacent, not aliased. Keep the fast path.
+  for(bool before:{false,true}) {
+    Fixture fast("10 A=ABS(I)\n",Language::BASIC,-3,5),reference("10 A=ABS(I)\n",Language::BASIC,-3,5);
+    Value first[MAX_IMAGE/sizeof(Value)]={},second[MAX_IMAGE/sizeof(Value)]={};
+    Value* banks[]={first,second};Fixture* fixtures[]={&fast,&reference};
+    for(unsigned which=0;which<2;++which) {
+      auto& f=*fixtures[which];auto* cells=banks[which];
+      const unsigned offset=before?sizeof(Value):(sizeof(Value)-f.view.end%sizeof(Value))%sizeof(Value);
+      auto* image=reinterpret_cast<uint8_t*>(cells)+offset;
+      std::memcpy(image,f.image,f.view.size);assert(inspect(image,(uint16_t)f.view.size,f.view)==Error::NONE);
+      f.state.stack=before?cells:cells+(offset+f.view.end)/sizeof(Value);f.state.stack_capacity=32;
+    }
+    const unsigned initial=multiple;aliased_code_fixture=true;equal(fast,reference,0);aliased_code_fixture=false;
+    assert(multiple==initial+1 && !std::memcmp(first,second,sizeof(first)));
+  }
   const char* basic[]={
     "10 A=(I+3)*(J-2);B=I*J+I-J\n20 END\n",
     "10 A=I/J+I MOD J;B=INT(I/J)+J\n",

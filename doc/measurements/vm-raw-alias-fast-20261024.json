@@ -1,0 +1,506 @@
+{
+  "schema": 1,
+  "date": "2026-10-24",
+  "status": "LOCAL_ALIAS_CORRECTNESS_AND_RAW_ARM_NONREGRESSION_PASS_PENDING_INDEPENDENT_REVIEW",
+  "scope": "Remove the V5 raw ARM regression while retaining the raw stack/bytecode overlap repair. No test assertions, thresholds, limits, bytecode ABI or field layouts weakened.",
+  "base_sha": "d81574972a850d8cca427887954f67b46792fd9c",
+  "branch": "feature/vm-raw-alias-fast",
+  "worktree": "/Users/bolk/.codex/worktrees/vm-raw-alias-fast/MK61S_MINI",
+  "lab": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k",
+  "code_changes": [
+    "Keep V5's overflow-safe raw image/first-written-cell overlap guard and scalar fallback, under the same existing module build-kind specialization.",
+    "Compute the checked operand-bank top pointer once; reuse it for the alias guard, array/stack equality guard and final dead-cell-preserving writes.",
+    "Read STORE's destination byte once, validate the cached byte and reuse it; eliminate the second View::byte call."
+  ],
+  "generic_policy": "No program identity, chess source, opcode-frequency tuning, new VM format, static cache or extra persistent state.",
+  "frozen_delta": {
+    "candidate_vm_sha256": "798150272fb2ba2b42f2beb8d839189915aea8ce7ebc23ec804ae40faa951479",
+    "baseline_vm_sha256": "671c1d2a7bc09a7e0638c012a15d65fe40df3ad08d26b77ccc88bc5cc835593f",
+    "test_file": "tests/language_vm_integer_span_self_test.cpp",
+    "test_sha256": "ff911f90642f24e160e3ef8fe4325b4d5bffa6e9694b198b86cc1330ee3f3cc6",
+    "test_identical_to_frozen_v5": true,
+    "speed_gate_file": "tests/run_language_vm_speed_arm_tests.py",
+    "speed_gate_sha256": "98ea7d6a4c26d1fef5b61668d4e5cefed3e6e93f581d041d76ea082f61c61cf5",
+    "speed_gate_unchanged_from_base": true,
+    "patch": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/frozen-v6/v6.patch",
+    "patch_sha256": "d044e4f87f85712b38ea8eafbe3400d13f7c614bc59cf27cd74ca3d7c0a5d26f"
+  },
+  "tests": {
+    "sanitizers": "AddressSanitizer + UndefinedBehaviorSanitizer",
+    "math_backends": {
+      "0": "BINARY64",
+      "1": "MK61_CORE"
+    },
+    "integer_span": {
+      "status": "PASS",
+      "comparisons_per_backend_per_mode": 174479,
+      "modes": [
+        "LANGUAGE_VM_TRACE",
+        "MK61_VM_TEST_NO_TRACE=1",
+        "MK61_VM_TEST_NO_TRACE=1 MK61_VM_TEST_PICO_ENTRY=1"
+      ],
+      "commands": [
+        "MK61_TEST_SANITIZERS=1 bash tests/run_language_vm_integer_span_tests.sh",
+        "MK61_TEST_SANITIZERS=1 MK61_VM_TEST_NO_TRACE=1 bash tests/run_language_vm_integer_span_tests.sh",
+        "MK61_TEST_SANITIZERS=1 MK61_VM_TEST_NO_TRACE=1 MK61_VM_TEST_PICO_ENTRY=1 bash tests/run_language_vm_integer_span_tests.sh"
+      ],
+      "logs": [
+        "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/frozen-v6/v6-trace.log",
+        "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/frozen-v6/v6-no-trace.log",
+        "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/frozen-v6/v6-pico-entry.log"
+      ],
+      "coverage": "Original valid-image case297; full alias matrix and full cloned banks; raw adjacency; immutable Reader callback with ignored overlapping bytes pointer; ordinary fast-path controls; existing trace/steps/dead cells/polls/errors/INPUT/ESC/resume assertions."
+    },
+    "compiled_blocks": {
+      "status": "PASS",
+      "comparisons_per_configuration": 46029,
+      "configurations_per_backend": 4,
+      "command": "MK61_TEST_SANITIZERS=1 bash tests/run_language_vm_compiled_block_tests.sh",
+      "log": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/frozen-v6/v6-blocks.log"
+    },
+    "control_spans": {
+      "status": "PASS",
+      "comparisons_per_backend": {
+        "HOST": 106424,
+        "MK61_BUILD_LANGUAGE_VM_MODULE": 106456
+      },
+      "command": "bash tests/run_language_vm_control_span_tests.sh",
+      "coverage": "Full-state raw/paged comparisons; masks, forward/back/self branches, limits, ESC and truncation.",
+      "log": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/frozen-v6/v6-control.log"
+    },
+    "input": {
+      "status": "PASS",
+      "backends": [
+        0,
+        1
+      ],
+      "image_capacity": 256,
+      "maximum_observed": 134,
+      "command": "set -euo pipefail\nfor backend in 0 1; do\n clang++ -std=c++17 -O1 -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -DMK61_MATH_BACKEND=\"$backend\" -Icode tests/language_vm_input_self_test.cpp code/language_bytecode.cpp code/language_vm.cpp code/language_vm_validation.cpp -o /private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/input-$backend\n /private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/input-$backend\ndone",
+      "log": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/frozen-v6/v6-input.log"
+    },
+    "overlay": {
+      "status": "PASS",
+      "profiles": 4,
+      "command": "MK61_TEST_SANITIZERS=1 bash tests/run_language_vm_overlay_tests.sh",
+      "log": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/frozen-v6/v6-overlay.log",
+      "coverage": "Loops/calls/array INPUT, retries/cancellation/failures, USB/screen-loan/no-BULK and workspace ownership/restoration."
+    }
+  },
+  "raw_arm": {
+    "status": "PASS",
+    "gate_exit_codes": [
+      0,
+      0
+    ],
+    "backends": [
+      0,
+      1
+    ],
+    "matched_results_both_backends": true,
+    "baseline": "Original unguarded d815, not the slower V5 guard.",
+    "command_binary64": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python -B tests/run_language_vm_speed_arm_tests.py --baseline-source /private/tmp/mk61-vm-raw-alias-20261024.vmPlAi/baseline-source --candidate-source /Users/bolk/.codex/worktrees/vm-raw-alias-fast/MK61S_MINI --arm-toolchain-bin /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin --output-dir /private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/arm-v6 --execution-only --target-case basic_array_abs",
+    "command_core": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python -B tests/run_language_vm_speed_arm_tests.py --baseline-source /private/tmp/mk61-vm-raw-alias-20261024.vmPlAi/baseline-source --candidate-source /Users/bolk/.codex/worktrees/vm-raw-alias-fast/MK61S_MINI --arm-toolchain-bin /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin --output-dir /private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/arm-v6-core --execution-only --target-case basic_array_abs --math-backend 1",
+    "unchanged_gate": {
+      "target_cases": [
+        "basic_array_abs"
+      ],
+      "minimum_target_improvement_percent": 0,
+      "maximum_control_regression_percent": 0,
+      "execution_only": true,
+      "note": "Strictly positive target improvement and no increase in ANY control. All 15 original cases run; no case removed, reclassified or threshold relaxed."
+    },
+    "flags": "Cortex-M4 Thumb hard ABI, -Os, no LTO; exact existing raw run() fixture.",
+    "measurement": "Executed emulated ARM instructions, not CPU cycles, actual Classic/Pico speed, chess wall time or input latency.",
+    "improved_cases": 4,
+    "unchanged_cases": 11,
+    "regressed_cases": 0,
+    "comparisons": [
+      {
+        "case": "basic_integer",
+        "before": 1016315,
+        "after": 1016315,
+        "delta": 0,
+        "change_percent": 0,
+        "value_identical": true
+      },
+      {
+        "case": "basic_mixed",
+        "before": 530409,
+        "after": 530409,
+        "delta": 0,
+        "change_percent": 0,
+        "value_identical": true
+      },
+      {
+        "case": "basic_branches",
+        "before": 413673,
+        "after": 413673,
+        "delta": 0,
+        "change_percent": 0,
+        "value_identical": true
+      },
+      {
+        "case": "basic_subroutines",
+        "before": 435373,
+        "after": 435373,
+        "delta": 0,
+        "change_percent": 0,
+        "value_identical": true
+      },
+      {
+        "case": "basic_wide",
+        "before": 1110746,
+        "after": 1110746,
+        "delta": 0,
+        "change_percent": 0,
+        "value_identical": true
+      },
+      {
+        "case": "basic_decimals",
+        "before": 1797773,
+        "after": 1797773,
+        "delta": 0,
+        "change_percent": 0,
+        "value_identical": true
+      },
+      {
+        "case": "basic_expressions",
+        "before": 888757,
+        "after": 888757,
+        "delta": 0,
+        "change_percent": 0,
+        "value_identical": true
+      },
+      {
+        "case": "basic_array_abs",
+        "before": 1059476,
+        "after": 1057874,
+        "delta": -1602,
+        "change_percent": -0.1512068229955199,
+        "value_identical": true
+      },
+      {
+        "case": "basic_float_abs",
+        "before": 954270,
+        "after": 949956,
+        "delta": -4314,
+        "change_percent": -0.4520733125844889,
+        "value_identical": true
+      },
+      {
+        "case": "basic_float_array",
+        "before": 341847,
+        "after": 339255,
+        "delta": -2592,
+        "change_percent": -0.7582339467656629,
+        "value_identical": true
+      },
+      {
+        "case": "focal_integer",
+        "before": 251332,
+        "after": 251332,
+        "delta": 0,
+        "change_percent": 0,
+        "value_identical": true
+      },
+      {
+        "case": "focal_expressions",
+        "before": 667400,
+        "after": 667400,
+        "delta": 0,
+        "change_percent": 0,
+        "value_identical": true
+      },
+      {
+        "case": "focal_abs",
+        "before": 462117,
+        "after": 457794,
+        "delta": -4323,
+        "change_percent": -0.9354773791052873,
+        "value_identical": true
+      },
+      {
+        "case": "focal_mixed",
+        "before": 537380,
+        "after": 537380,
+        "delta": 0,
+        "change_percent": 0,
+        "value_identical": true
+      },
+      {
+        "case": "focal_subroutines",
+        "before": 415422,
+        "after": 415422,
+        "delta": 0,
+        "change_percent": 0,
+        "value_identical": true
+      }
+    ],
+    "raw_elf_rom_bytes": {
+      "before": 23964,
+      "after": 23948,
+      "delta": -16
+    },
+    "compiled_block_prologue_bytes": {
+      "before": 56,
+      "after": 56
+    },
+    "reports": [
+      {
+        "path": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/arm-v6/report.json",
+        "sha256": "ea233998b5516d76fb123fadc9ab670ab77a3e29951975891b8000729a390a1e"
+      },
+      {
+        "path": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/arm-v6-core/report.json",
+        "sha256": "9f745be891866e07346f013ffb5a04a47f1e90d89f2c49db37dd66a7b6ab0318"
+      }
+    ]
+  },
+  "actual_split_langvm": {
+    "target": "STM32 Cortex-M4 split module; CORE backend supplied by unchanged system_compat.hpp",
+    "build_command": "python3 tools/build_portable_app.py --system language-vm --split-language-vm --no-ui-fonts --arm-toolchain-bin /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin --output-dir /private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/langvm-v6",
+    "flags": [
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-mfpu=fpv4-sp-d16",
+      "-mfloat-abi=hard",
+      "-Oz",
+      "-flto",
+      "-fipa-pta",
+      "-mword-relocations",
+      "-fno-builtin",
+      "-DMK61_BUILD_LANGUAGE_VM_MODULE"
+    ],
+    "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+    "before": {
+      "image_bytes": 20352,
+      "bss_bytes": 20,
+      "memory_bytes": 20372,
+      "app_bytes": 13843,
+      "max_static_frame": 1304,
+      "compiled_block_prologue": 56
+    },
+    "after": {
+      "image_bytes": 20320,
+      "bss_bytes": 20,
+      "memory_bytes": 20340,
+      "app_bytes": 13804,
+      "max_static_frame": 1304,
+      "compiled_block_prologue": 56
+    },
+    "delta": {
+      "image_bytes": -32,
+      "bss_bytes": 0,
+      "memory_bytes": -32,
+      "app_bytes": -39,
+      "max_static_frame": 0,
+      "compiled_block_prologue": 0
+    },
+    "limits_unchanged": {
+      "memory_bytes": 20480,
+      "static_frame_bytes": 5120
+    },
+    "budget_status": "PASS",
+    "native_archive_gate": "PASS; no libgcc/libm/libstdc++/libc/libnosys members in shipping APP",
+    "baseline_app": "/private/tmp/mk61-vm-raw-alias-20261024.vmPlAi/baseline-langvm/LANGVM.APP",
+    "baseline_sha256": "382ccf3e62693ee6806e5023494fa63fefc763231867cc7bfaa22ef0e58ff8a9",
+    "candidate_app": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/langvm-v6/LANGVM.APP",
+    "candidate_sha256": "d2e7996a4513dfd6ff7906d7f0ba83febbb300e2ad4147975b5303b52ce09ed7",
+    "normalized_compile_commands_sha256": "b65de4cd6ee0fe5f3a0eaee24eaa270ce18dae1283c4d1a957c31bfc4f38dc84",
+    "normalization": "Replace only each source-root prefix with $ROOT and remove only final output-object path; identical result for baseline and candidate.",
+    "compile_commands_sha256": "64c5c4ca2527cfdde22ea67d43125f515e0fa333e7f588fb6f2299ab584ea0e4",
+    "stack_summary_sha256": "70f09b4329b6e525cd10eedcf7cd4cdee93ae2a70418722f3cdfb6e5043c2fe2",
+    "log": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/frozen-v6/v6-app.log",
+    "qualification": "APP allocation/file sizes and function frames only. No claim of a new whole-firmware build, hardware stack watermark, latency result or chess A/B/A. Actual APP is no longer byte-identical because the shared short-block implementation is smaller."
+  },
+  "case297": {
+    "source": "10 A=ABS(I)\\n",
+    "language": "BASIC",
+    "I": -3,
+    "initial_A": -10,
+    "valid_image": true,
+    "undefined_behavior_detected": false,
+    "code": 36,
+    "end": 50,
+    "stack_cell_offset": 40,
+    "limit": 3,
+    "scalar": {
+      "error": "INVALID_IMAGE",
+      "pc": 41,
+      "steps": 2,
+      "sp": 1,
+      "A": -10,
+      "stack0": "7ffc0001fffffffd"
+    },
+    "unguarded_fast": {
+      "error": "LIMIT",
+      "pc": 48,
+      "steps": 3,
+      "sp": 0,
+      "A": 3,
+      "stack0": "7ffc000100000003"
+    },
+    "before_proof": "/private/tmp/mk61-vm-raw-alias-20261024.vmPlAi/before-v1.log",
+    "before_result": "The first added exact-reference comparison aborts on d815; the original exact reproducer also establishes the mismatch on both arithmetic backends.",
+    "after_result": "Exact scalar equality on both arithmetic backends, with and without trace and with the existing Pico-entry test policy."
+  },
+  "contract_audit_reused_from_v5": {
+    "report_sha256": "a6038167c9faf0da8662782058f8a9d063866f3f8988db7a1a6c0f73992ca17b",
+    "runtime_guard_contract_unchanged": true,
+    "module_contract_audit": {
+      "qualification": "Lifetime/ownership contracts and concrete caller constructions, not a new pointer-disjointness validator or a security boundary against fabricated native APP requests. A certificate alone does not prove disjoint addresses.",
+      "entry_points": [
+        {
+          "entry": "Split mk61_app_command LANGUAGE_VM_RUN",
+          "path": [
+            "code/language_vm_overlay_entry.cpp:291",
+            "code/language_vm_overlay_entry.cpp:228",
+            "code/language_vm_abi.hpp:127",
+            "code/language_vm_abi.hpp:138"
+          ],
+          "invariant": "execute receives the internal resident-owned OverlayRequest and immutable certified image; caller storage ownership separates the image from ExecutionState."
+        },
+        {
+          "entry": "Split MK61_APP_FLOW_STEP",
+          "path": [
+            "code/language_vm_overlay_entry.cpp:288",
+            "code/language_vm_flow.cpp:70"
+          ],
+          "invariant": "flow_vm routes FLOW_RUN_PROGRAM/FLOW_AFTER_INPUT and FLOW_EVALUATE_EXPRESSION through the same execute callback, not a separate raw stack-binding service."
+        },
+        {
+          "entry": "START and RESUME",
+          "path": [
+            "code/language_vm_overlay_entry.cpp:243",
+            "code/language_vm_overlay_entry.cpp:245"
+          ],
+          "invariant": "Both bind the operand bank to s.stack, never to a caller-selected Bindings::stack. RESUME bounds sp before writing the input value."
+        },
+        {
+          "entry": "EXPRESSION / INPUT",
+          "path": [
+            "code/language_vm_flow.cpp:64",
+            "code/language_vm_flow.cpp:154",
+            "code/language_vm_overlay_entry.cpp:223",
+            "code/language_vm_abi.hpp:165"
+          ],
+          "invariant": "Temporary bytecode occupies upper 32 Value slots; expression operands borrow only the unused lower 64 slots. Capacity/declared need/runtime push checks prevent crossing the image boundary."
+        },
+        {
+          "entry": "ABORT",
+          "path": [
+            "code/language_vm_overlay_entry.cpp:242"
+          ],
+          "invariant": "No run() call; returns cancelled/IO status."
+        },
+        {
+          "entry": "Legacy unsplit module LANGUAGE_VM_RUN",
+          "path": [
+            "code/language_vm_module_entry.cpp:414",
+            "code/language_vm_module_entry.cpp:437",
+            "code/language_vm_module_entry.cpp:488"
+          ],
+          "invariant": "Validates the image and binds the private Runtime::stack. Request has no stack pointer. Actual unsplit APP byte identity was not measured."
+        },
+        {
+          "entry": "Existing optional linked KernelExport",
+          "path": [
+            "code/language_vm_overlay_entry.cpp:215",
+            "code/language_vm_overlay_entry.cpp:281",
+            "code/language_linked_program.hpp:65",
+            "code/language_linked_program.hpp:86",
+            "code/language_linked_resident.cpp:70",
+            "code/language_linked_resident.cpp:89"
+          ],
+          "invariant": "Experimental command is documented for pinned whole-member immutable images; the concrete resident binds state.stack and borrows pinned cache bytes. It is not a public arbitrary raw-kernel service. This optional build was not rebuilt here; reviewer must examine this contract assumption explicitly."
+        },
+        {
+          "entry": "INFO, FLOW_INFO, initialize",
+          "path": [
+            "code/language_vm_overlay_entry.cpp:275",
+            "code/language_vm_overlay_entry.cpp:287"
+          ],
+          "invariant": "Binding/information operations do not execute bytecode."
+        }
+      ],
+      "storage_paths": [
+        {
+          "path": [
+            "code/language_compiler_flow.cpp:78",
+            "code/app_flow_transfer.cpp:47",
+            "code/language_compiler_flow.cpp:143"
+          ],
+          "invariant": "Compiled raw image copied beyond the complete sizeof(ExecutionState) prefix, or retained in a separate staging lease."
+        },
+        {
+          "path": [
+            "code/language_vm_resident.cpp:620",
+            "code/app_flow_transfer.hpp:21"
+          ],
+          "invariant": "RAM cached image is separately owned/pinned; state has its own workspace lease."
+        },
+        {
+          "path": [
+            "code/language_vm_resident.cpp:664",
+            "code/language_vm_resident.cpp:683",
+            "code/language_flash_cache.hpp:98"
+          ],
+          "invariant": "LBV2 uses immutable paged store input or pinned materialized ReadCache frames. Reader object belongs to the current APP invocation."
+        }
+      ],
+      "unchanged_contract_dependency_sha256": {
+        "code/language_vm_abi.hpp": "048205466b8f3af4ba85bcca8598f34047fb353eddb81d2c4c1c4b3e0d3d0f19",
+        "code/language_vm_overlay_entry.cpp": "3e8a3fe4da19a550aff972ed7e1b54104033f30de41f8ffba75b87f7b243ef0e",
+        "code/language_vm_module_entry.cpp": "ebb58490945c4db7ac720e2ef63f79b5654def8b92bce8603e10e0350209b102",
+        "code/language_vm_flow.cpp": "94ec74a0b8126c58550b720dba56d99db4a917dd1257c1fcdbf12dd43348ed06",
+        "code/language_compiler_flow.cpp": "86a544378e0d061c77b6c851f8cb2f0bff9f16e8c5caf288d1c54a381fecf56a",
+        "code/app_flow_transfer.cpp": "16185b9884ee455a71444542847c0f12edc752955d6396ea6bf3777fa645ca5d",
+        "code/language_flash_cache.hpp": "088764213b75e1b3b434d3ea672dd9be9e297242acbe6e6ecab9a05095ed5e8d",
+        "code/language_linked_program.hpp": "7d2fcf17da64e44ac2292b930f1507e42aab2655b4d456b9fc1a7e317a6df626",
+        "tools/build_portable_app.py": "2a2c0ae5d22a7670cfc6ee42a50ccaa3df5132ece28d60207d5e49ab7de8c0a8"
+      }
+    },
+    "independent_review_still_required": true
+  },
+  "known_separate_reader_fault": {
+    "status": "PRE_EXISTING_UNCHANGED_NOT_FIXED",
+    "description": "Immutable Reader callback fails on page>=256 in 42 REM + ABS. Both d815 and V6 retain the same optimized/scalar failure-order difference under both math backends.",
+    "optimized": {
+      "error": "IO",
+      "pc": 251,
+      "sp": 1,
+      "steps": 43,
+      "stack0": "7ffc0001fffffffd"
+    },
+    "scalar": {
+      "error": "IO",
+      "pc": 256,
+      "sp": 1,
+      "steps": 44,
+      "stack0": "7ffc000100000003"
+    },
+    "source": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/reader-fault-counterexample.cpp",
+    "source_sha256": "c4d5c7ff75f30a480ba7c1851e904da77dd4747ab8ff661a9bba4069cc6e8773",
+    "command": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/frozen-v6/run-reader-fault-counterexample.sh",
+    "log": "/private/tmp/mk61-vm-raw-alias-fast-20261024.EKR71k/frozen-v6/v6-reader-fault.log",
+    "sanitizer_errors": 0,
+    "qualification": "Not included as a passing scalar-equivalence case. This patch makes no blanket equivalence claim for arbitrary failing/side-effecting Reader callbacks."
+  },
+  "isolation": {
+    "frozen_v5_unchanged": {
+      "worktree": "/Users/bolk/.codex/worktrees/vm-raw-alias-guard/MK61S_MINI",
+      "vm_sha256": "031901f2a5e183dbe10bdf9f48683e4c0bc82cac8965d02061107420daeb5a8f",
+      "test_sha256": "ff911f90642f24e160e3ef8fe4325b4d5bffa6e9694b198b86cc1330ee3f3cc6",
+      "report_sha256": "a6038167c9faf0da8662782058f8a9d063866f3f8988db7a1a6c0f73992ca17b"
+    },
+    "no_main_or_shipping_writes_by_this_task": true,
+    "merged": false,
+    "pushed": false,
+    "committed": false,
+    "hardware_touched": false,
+    "classic_closed_handoff_sha256": "1333e889efc49f732681e0b4ad57c01fae80c1a807173756cd1aa3f0cecd16c9",
+    "hardware_qualification": false,
+    "integration": "Pending independent review; no main merge or hardware grant inferred from local PASS."
+  }
+}
