@@ -75,22 +75,21 @@ void SleepClocks::enter() {
   usb_ctrl_ = clocks_hw->clk[clk_usb].ctrl;
   usb_div_ = clocks_hw->clk[clk_usb].div;
   usb_hz_ = clock_get_hz(clk_usb);
-  // At 48 MHz USB continues to enumerate and serve CDC. Battery operation
-  // uses XOSC at 12 MHz. Never switch off a PLL while any slice uses it.
-  clock_configure_undivided(clk_sys,
-      usb_ ? CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX
-           : CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLK_REF,
-      usb_ ? CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB : 0,
-      usb_ ? USB_CLK_HZ : clock_get_hz(clk_ref));
-  clock_configure_undivided(clk_peri, 0,
-      CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS, clock_get_hz(clk_sys));
-  pll_deinit(pll_sys);
+  // RP2040-E16 requires clk_sys at least 10% faster than active 48 MHz USB.
+  // With VBUS retain the normal SYS/peripheral clocks and PLL_SYS, including
+  // before enumeration. WFE still gates the unused clocks through SLEEP_EN.
   clock_stop(clk_adc);
   if (!usb_) {
+    // Stop USB at the still-safe RUN frequency before selecting 12 MHz REF.
     tud_disconnect();
     usb_irq_ = irq_is_enabled(USBCTRL_IRQ);
     irq_set_enabled(USBCTRL_IRQ, false);
     clock_stop(clk_usb);
+    clock_configure_undivided(clk_sys, CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLK_REF,
+                             0, clock_get_hz(clk_ref));
+    clock_configure_undivided(clk_peri, 0,
+        CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS, clock_get_hz(clk_sys));
+    pll_deinit(pll_sys);
     pll_deinit(pll_usb);
     ++battery_entries_;
   }
@@ -110,12 +109,15 @@ void SleepClocks::enter() {
 void SleepClocks::leave() {
   if (!active_) return;
   io_worker::drain();
-  // set_sys_clock_hz briefly uses PLL_USB while restarting PLL_SYS.
-  if (!usb_) pll_init(pll_usb, PLL_USB_REFDIV, PLL_USB_VCO_FREQ_HZ,
-                     PLL_USB_POSTDIV1, PLL_USB_POSTDIV2);
-  set_sys_clock_hz(sys_hz_, true);
-  clock_configure_undivided(clk_peri, 0,
-      CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS, peri_hz_);
+  // USB sleep kept the normal clocks. Even restoring the same rate through
+  // set_sys_clock_hz would briefly select 48 MHz PLL_USB and violate E16.
+  if (!usb_) {
+    pll_init(pll_usb, PLL_USB_REFDIV, PLL_USB_VCO_FREQ_HZ,
+             PLL_USB_POSTDIV1, PLL_USB_POSTDIV2);
+    set_sys_clock_hz(sys_hz_, true);
+    clock_configure_undivided(clk_peri, 0,
+        CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS, peri_hz_);
+  }
   clocks_hw->clk[clk_adc].div = adc_div_;
   clocks_hw->clk[clk_adc].ctrl = adc_ctrl_;
   clock_set_reported_hz(clk_adc, adc_hz_);

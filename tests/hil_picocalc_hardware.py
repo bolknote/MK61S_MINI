@@ -77,7 +77,7 @@ def main():
         began=time.monotonic();sleeping=p.expect('SLEEP=1',timeout=3)
         diagnostic_seconds=time.monotonic()-began
         healthy(sleeping,report['build'])
-        assert 'POWER_MODE=SLEEP_USB SYS_HZ=48000000' in sleeping,sleeping
+        assert 'POWER_MODE=SLEEP_USB SYS_HZ=125000000' in sleeping,sleeping
         usb_console='CONSOLE=USB ' in sleeping
         if usb_console:
             # A second USB reply must neither enqueue UART bytes nor flush
@@ -96,8 +96,8 @@ def main():
         assert not mask(sleeping,'SLEEP_CLOCK1')&0x3C0,sleeping
         report['sleep_uart']=dict(status_seconds=diagnostic_seconds,status=sleeping,
             temporary_clock_lease_restored=True)
-        passed('USB replies are independent of UART in 48 MHz sleep' if usb_console else
-               'UART diagnostics finish in 48 MHz sleep; temporary DMA/UART/SRAM clock lease restores the sleep mask')
+        passed('USB replies are independent of UART in 125 MHz sleep' if usb_console else
+               'UART diagnostics finish in 125 MHz sleep; temporary DMA/UART/SRAM clock lease restores the sleep mask')
         end=time.monotonic()+10
         while time.monotonic()<end:
             p.pump(.1)

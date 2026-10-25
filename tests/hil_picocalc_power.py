@@ -71,13 +71,13 @@ def main():
             p.system(7, 'SLEEP=1')
             p.pump(.3)
             asleep = p.expect('SLEEP=1', 'LCD_BKL=0 KBD_BKL=0', 'POWER_MODE=SLEEP_USB',
-                              'SYS_HZ=48000000 PERI_HZ=48000000 PLL_MASK=2')
+                              'SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3')
             p.pump(1.2)
             awake = p.step(b' ', 'SLEEP=0', 'LCD_BKL=240 KBD_BKL=40', 'POWER_MODE=RUN',
                            'SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3', 'X_RAW=[ 4.2000000  01]')
             assert 'KBD=OK errors=0' in awake and 'SCREEN_ERRORS=0' in awake
             cycles.append({'asleep': asleep, 'awake': awake})
-        cases.append('three real sleep/wake cycles: PLL_SYS off, USB alive at 48 MHz, full 125 MHz restoration, RAM/backlight/keypad preserved')
+        cases.append('three real sleep/wake cycles: USB/SYS stay at normal 125 MHz with E16 margin, RAM/backlight/keypad preserved')
         final_clock = p.clock(0, start)
         elapsed = time.monotonic() - start_wall
         assert abs((final_clock - start).total_seconds() - elapsed) < 2

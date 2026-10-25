@@ -6,7 +6,8 @@ struct IdleStatistics { u32 waits;u64 wait_us; };
 void idle_until(u64 deadline);
 IdleStatistics idle_statistics();
 // RP2040 SLEEP keeps the XOSC/RTC and polls the stock I2C keyboard. The
-// main PLL is off; USB's PLL is retained only while VBUS is present.
+// USB sleep retains the normal SYS/peripheral clocks and both PLLs for E16.
+// Battery sleep runs from 12 MHz XOSC with USB stopped and both PLLs off.
 class SleepClocks {
 public:
   void init();
