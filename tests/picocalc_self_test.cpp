@@ -253,6 +253,8 @@ int main(int argc, char** argv) {
     picocalc_firmware_test();
     extern void picocalc_io_test();
     picocalc_io_test();
+    extern void picocalc_layout_self_test();
+    picocalc_layout_self_test();
 
     calc.init();
     for(unsigned i = 0; i < 32; ++i) require(calc.input('1'), "queue capacity");

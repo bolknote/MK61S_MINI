@@ -520,8 +520,10 @@ void Ui::sync_alarms() {
   }
 }
 const char *Ui::footer() const {
-  if (page_ == Page::CALCULATOR)
+  if (page_ == Page::CALCULATOR) {
+    if(view_==View::REGISTERS) return text(M8("Tab:menu ↑/↓:view"),M8("Tab:меню ↑/↓:вид"));
     return text("Tab: menu   Up/Down: view", M8("Tab: меню   Up/Down: вид"));
+  }
   if (page_ == Page::SETTINGS && selected() == 3)
     return text("Memory change resets calculator",
                 M8("Смена памяти сбрасывает калькулятор"));

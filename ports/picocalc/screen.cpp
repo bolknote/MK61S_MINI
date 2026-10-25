@@ -195,23 +195,39 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
         text(WIDTH-(battery_.available?44:10)-fonts::text_width(clock_font,time,5),9,time,16);
         font_settings_=saved;
     }
+    // The large face is the IK1302 display latch (X2), not the stack X.
+    text(10,72,"X2",16);
     const unsigned font_size = ui.settings().ui_font_size;
     line(147);
     if(ui.view() == View::STACK) {
-        for(unsigned i = 0; i < 4; ++i) {
+        auto font=ui.settings();if(font.ui_font_family==1) font.ui_font_size=16;
+        const unsigned value_left=18+fonts::text_width(font,"X1",2)+8;
+        static constexpr const char* labels[]={"X","Y","Z","T","X1"};
+        for(unsigned i = 0; i < 5; ++i) {
             char raw[INDICATOR_STRING_LENGTH];
-            const char* number = i < 3 ? model.stack_values[i] : read_stack_register(X1, raw, nullptr);
-            std::snprintf(status, sizeof(status), "%s  %s", i == 0 ? "Y" : i == 1 ? "Z" : i == 2 ? "T" : "X1", number);
-            text(18, 158 + i * 24, status, 16);
+            const char* number = i==0 ? read_stack_register(X,raw,nullptr) :
+                i<4 ? model.stack_values[i-1] : read_stack_register(X1,raw,nullptr);
+            const unsigned y=154+i*24;
+            text(18,y,labels[i],16,value_left-4);
+            text(value_left,y,number,16);
         }
     } else if(ui.view() == View::REGISTERS) {
+        unsigned label_width=0;
+        for(unsigned index=0;index<15;++index) {
+            char label[4];std::snprintf(label,sizeof(label),"R%X",index);
+            const unsigned width=fonts::text_width(ui.settings(),label,2);
+            if(width>label_width) label_width=width;
+        }
+        const unsigned value_left=18+label_width+8;
         for(unsigned row = 0; row < 6; ++row) {
             const unsigned index = ui.offset() + row;
-            char raw[INDICATOR_STRING_LENGTH];
+            char raw[INDICATOR_STRING_LENGTH],label[4];
             if(index >= 15) break;
             MK61Emu_ReadRegister((int)index, raw, nullptr);
-            std::snprintf(status, sizeof(status), "R%X   %s", index, raw);
-            text(18, 154 + row * 20, status, font_size);
+            std::snprintf(label,sizeof(label),"R%X",index);
+            const unsigned y=154+row*20;
+            text(18,y,label,font_size,value_left-4);
+            text(value_left,y,raw,font_size);
         }
     } else if(ui.view() == View::PROGRAM) {
         for(unsigned row = 0; row < 6; ++row) {
@@ -230,7 +246,8 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
             M8("F E: ПРГ   F N: АВТ"),M8("D: Г   A: Р   T: ГРД")};
         for(unsigned row = 0; row < 6; ++row) text(10, 154 + row * 20, russian?help_ru[row]:help_en[row], 12);
     }
-    std::snprintf(status, sizeof(status), russian?M8("ШАГ %02X  %u шагов"):"IP %02X  %u steps", model.ip,
+    if(ui.view()==View::REGISTERS) std::snprintf(status,sizeof(status),"%s",M8("Shift+↑/↓: R0-RE"));
+    else std::snprintf(status, sizeof(status), russian?M8("ШАГ %02X  %u шагов"):"IP %02X  %u steps", model.ip,
         (unsigned)core_61::program_steps());
     text(10, 280, status, 12);
     text(10, 301, ui.footer(), 12);
@@ -271,7 +288,11 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
     if(!keyboard_online) text(190, 10, "KBD?", 12);
     line(32);
     if(services && services->active()) {
-        unsigned first = 0, rows = Services::ROWS, top = 42;
+        const unsigned menu_rows=services->selection_menu_rows();
+        const auto metrics=fonts::info(ui->settings());
+        const unsigned measured_pitch=metrics.height+metrics.line_gap+8;
+        const unsigned menu_pitch=measured_pitch>27?measured_pitch:27;
+        unsigned first=0,rows=menu_rows?menu_rows:Services::ROWS,top=menu_rows?49:42;
         if(graphics) {
             if(native) {
                 if(services->graphical_document()) {
@@ -290,7 +311,7 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
         if(services->fixed_text()) scroll_region_={42,238};
         for(unsigned row = 0; row < rows; ++row) {
             char value[Services::COLS + 1]; services->row(first + row, value);
-            if(!services->fixed_text()) { text(10, top + row * 17, value, ui->settings().ui_font_size); continue; }
+            if(!services->fixed_text()) { text(10, top + row * (menu_rows?menu_pitch:17), value, ui->settings().ui_font_size); continue; }
             auto font=ui->settings();font.ui_font_family=1;font.ui_font_size=16;
             unsigned x=8;
             for(unsigned column=0;value[column];++column) {

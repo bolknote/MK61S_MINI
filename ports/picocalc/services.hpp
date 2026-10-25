@@ -36,6 +36,10 @@ public:
     const char* title() const;
     void heading(char out[64]) const;
     bool fixed_text() const { return page_ == ServicePage::EDITOR || page_ == ServicePage::CONSOLE || page_ == ServicePage::PROMPT; }
+    unsigned selection_menu_rows() const {
+        return page_==ServicePage::FILE_ACTIONS ? 5U : page_==ServicePage::DEVELOPMENT ? 4U :
+            page_==ServicePage::LANGUAGE ? (tool_==Document::MK61 ? 2U : 4U) : 0U;
+    }
     unsigned first_console_row(unsigned visible) const {
         const unsigned row=console_frame_open_?front_console_row_:console_row_;
         return !markdown_ && row>=visible?row+1-visible:0;
