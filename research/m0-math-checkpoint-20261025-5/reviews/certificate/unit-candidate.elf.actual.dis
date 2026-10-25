@@ -1,0 +1,57 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/candidate.elf:     file format elf32-littlearm
+
+
+Disassembly of section .unit:
+
+101e1000 <unit_remainder_sign>:
+101e1000:	b5f0      	push	{r4, r5, r6, r7, lr}
+101e1002:	4604      	mov	r4, r0
+101e1004:	4610      	mov	r0, r2
+101e1006:	460a      	mov	r2, r1
+
+101e1008 <unit_certificate_begin>:
+101e1008:	0c15      	lsrs	r5, r2, #16
+101e100a:	0c06      	lsrs	r6, r0, #16
+101e100c:	4375      	muls	r5, r6
+101e100e:	1b64      	subs	r4, r4, r5
+101e1010:	0c66      	lsrs	r6, r4, #17
+101e1012:	04b6      	lsls	r6, r6, #18
+101e1014:	d002      	beq.n	101e101c <unit_certificate_begin+0x14>
+101e1016:	d21b      	bcs.n	101e1050 <l1_1+0x16>
+101e1018:	2001      	movs	r0, #1
+101e101a:	bdf0      	pop	{r4, r5, r6, r7, pc}
+101e101c:	1964      	adds	r4, r4, r5
+101e101e:	b295      	uxth	r5, r2
+101e1020:	b286      	uxth	r6, r0
+101e1022:	4375      	muls	r5, r6
+101e1024:	0c17      	lsrs	r7, r2, #16
+101e1026:	437e      	muls	r6, r7
+101e1028:	0c03      	lsrs	r3, r0, #16
+101e102a:	435f      	muls	r7, r3
+101e102c:	b292      	uxth	r2, r2
+101e102e:	435a      	muls	r2, r3
+101e1030:	18b6      	adds	r6, r6, r2
+101e1032:	d302      	bcc.n	101e103a <l1_1>
+101e1034:	2201      	movs	r2, #1
+101e1036:	0412      	lsls	r2, r2, #16
+101e1038:	18bf      	adds	r7, r7, r2
+
+101e103a <l1_1>:
+101e103a:	0432      	lsls	r2, r6, #16
+101e103c:	0c33      	lsrs	r3, r6, #16
+101e103e:	1952      	adds	r2, r2, r5
+101e1040:	417b      	adcs	r3, r7
+101e1042:	4252      	negs	r2, r2
+101e1044:	419c      	sbcs	r4, r3
+101e1046:	2c00      	cmp	r4, #0
+101e1048:	d005      	beq.n	101e1056 <l1_1+0x1c>
+101e104a:	d401      	bmi.n	101e1050 <l1_1+0x16>
+101e104c:	2001      	movs	r0, #1
+101e104e:	bdf0      	pop	{r4, r5, r6, r7, pc}
+101e1050:	2000      	movs	r0, #0
+101e1052:	3801      	subs	r0, #1
+101e1054:	bdf0      	pop	{r4, r5, r6, r7, pc}
+101e1056:	2000      	movs	r0, #0
+101e1058:	bdf0      	pop	{r4, r5, r6, r7, pc}
+101e105a:	46c0      	nop			@ (mov r8, r8)

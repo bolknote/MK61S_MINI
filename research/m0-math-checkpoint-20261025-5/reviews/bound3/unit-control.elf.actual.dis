@@ -1,0 +1,103 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/rebuild/unit/control.elf:     file format elf32-littlearm
+
+
+Disassembly of section .unit:
+
+101e1000 <unit_inline_seed>:
+101e1000:	b5f0      	push	{r4, r5, r6, r7, lr}
+
+101e1002 <mk61_m0_inline_seed_begin>:
+101e1002:	0a4e      	lsrs	r6, r1, #9
+101e1004:	3e80      	subs	r6, #128	@ 0x80
+101e1006:	0076      	lsls	r6, r6, #1
+101e1008:	a40b      	add	r4, pc, #44	@ (adr r4, 101e1038 <mk61_m0_inline_seed_done+0x4>)
+101e100a:	5ba6      	ldrh	r6, [r4, r6]
+101e100c:	1c4c      	adds	r4, r1, #1
+101e100e:	0864      	lsrs	r4, r4, #1
+101e1010:	4374      	muls	r4, r6
+101e1012:	0064      	lsls	r4, r4, #1
+101e1014:	1464      	asrs	r4, r4, #17
+101e1016:	4374      	muls	r4, r6
+101e1018:	13e4      	asrs	r4, r4, #15
+101e101a:	1b36      	subs	r6, r6, r4
+101e101c:	0037      	movs	r7, r6
+101e101e:	434f      	muls	r7, r1
+101e1020:	43ff      	mvns	r7, r7
+101e1022:	d404      	bmi.n	101e102e <mk61_m0_inline_seed_begin+0x2c>
+101e1024:	428f      	cmp	r7, r1
+101e1026:	d305      	bcc.n	101e1034 <mk61_m0_inline_seed_done>
+101e1028:	3601      	adds	r6, #1
+101e102a:	1a7f      	subs	r7, r7, r1
+101e102c:	e002      	b.n	101e1034 <mk61_m0_inline_seed_done>
+101e102e:	3e01      	subs	r6, #1
+101e1030:	187f      	adds	r7, r7, r1
+101e1032:	d4fc      	bmi.n	101e102e <mk61_m0_inline_seed_begin+0x2c>
+
+101e1034 <mk61_m0_inline_seed_done>:
+101e1034:	4630      	mov	r0, r6
+101e1036:	bdf0      	pop	{r4, r5, r6, r7, pc}
+101e1038:	fd08ff00 	.word	0xfd08ff00
+101e103c:	f92ffb18 	.word	0xf92ffb18
+101e1040:	f574f74e 	.word	0xf574f74e
+101e1044:	f1d4f3a0 	.word	0xf1d4f3a0
+101e1048:	ee50f00f 	.word	0xee50f00f
+101e104c:	eae5ec97 	.word	0xeae5ec97
+101e1050:	e793e939 	.word	0xe793e939
+101e1054:	e459e5f3 	.word	0xe459e5f3
+101e1058:	e135e2c4 	.word	0xe135e2c4
+101e105c:	de27dfac 	.word	0xde27dfac
+101e1060:	db2fdca8 	.word	0xdb2fdca8
+101e1064:	d84ad9ba 	.word	0xd84ad9ba
+101e1068:	d578d6df 	.word	0xd578d6df
+101e106c:	d2bad417 	.word	0xd2bad417
+101e1070:	d00dd161 	.word	0xd00dd161
+101e1074:	cd71cebc 	.word	0xcd71cebc
+101e1078:	cae5cc29 	.word	0xcae5cc29
+101e107c:	c86ac9a6 	.word	0xc86ac9a6
+101e1080:	c5fec732 	.word	0xc5fec732
+101e1084:	c3a1c4ce 	.word	0xc3a1c4ce
+101e1088:	c152c278 	.word	0xc152c278
+101e108c:	bf11c030 	.word	0xbf11c030
+101e1090:	bcddbdf5 	.word	0xbcddbdf5
+101e1094:	bab6bbc8 	.word	0xbab6bbc8
+101e1098:	b89bb9a7 	.word	0xb89bb9a7
+101e109c:	b68db793 	.word	0xb68db793
+101e10a0:	b48ab58a 	.word	0xb48ab58a
+101e10a4:	b292b38c 	.word	0xb292b38c
+101e10a8:	b0a5b19a 	.word	0xb0a5b19a
+101e10ac:	aec3afb3 	.word	0xaec3afb3
+101e10b0:	acebadd5 	.word	0xacebadd5
+101e10b4:	ab1cac02 	.word	0xab1cac02
+101e10b8:	a957aa39 	.word	0xa957aa39
+101e10bc:	a79ca879 	.word	0xa79ca879
+101e10c0:	a5e9a6c2 	.word	0xa5e9a6c2
+101e10c4:	a440a513 	.word	0xa440a513
+101e10c8:	a29ea36e 	.word	0xa29ea36e
+101e10cc:	a105a1d1 	.word	0xa105a1d1
+101e10d0:	9f74a03c 	.word	0x9f74a03c
+101e10d4:	9deb9eae 	.word	0x9deb9eae
+101e10d8:	9c699d29 	.word	0x9c699d29
+101e10dc:	9aee9baa 	.word	0x9aee9baa
+101e10e0:	997a9a33 	.word	0x997a9a33
+101e10e4:	980e98c3 	.word	0x980e98c3
+101e10e8:	96a8975a 	.word	0x96a8975a
+101e10ec:	954895f7 	.word	0x954895f7
+101e10f0:	93ef949b 	.word	0x93ef949b
+101e10f4:	929c9345 	.word	0x929c9345
+101e10f8:	915091f5 	.word	0x915091f5
+101e10fc:	900990ab 	.word	0x900990ab
+101e1100:	8ec78f67 	.word	0x8ec78f67
+101e1104:	8d8b8e29 	.word	0x8d8b8e29
+101e1108:	8c558cf0 	.word	0x8c558cf0
+101e110c:	8b248bbc 	.word	0x8b248bbc
+101e1110:	89f88a8d 	.word	0x89f88a8d
+101e1114:	88d18964 	.word	0x88d18964
+101e1118:	87af883f 	.word	0x87af883f
+101e111c:	86928720 	.word	0x86928720
+101e1120:	85798605 	.word	0x85798605
+101e1124:	846584ee 	.word	0x846584ee
+101e1128:	835583dc 	.word	0x835583dc
+101e112c:	824a82cf 	.word	0x824a82cf
+101e1130:	814381c6 	.word	0x814381c6
+101e1134:	804080c1 	.word	0x804080c1

@@ -1,0 +1,10 @@
+{
+  "status": "EXCLUDED_HOST_SOURCE_MARKER_FILTER_ASSERTION",
+  "source_sha256": "d035e19d4940c5ca0b1717bffa1911ebbf8934cd4d5914450640ebbc9143641b",
+  "error": "strip_markers did not remove existing control-only .Lcertificate_up/.Lcertificate_down labels",
+  "cause": "Independent reviewer marker normalizer omitted two zero-byte local label lines. The direct diff contains only marker labels; no compiler command had started.",
+  "actual_ARM_calls": 0,
+  "actual_MPFR_calls": 0,
+  "compiler_commands_started": 0,
+  "supplier_modified": false
+}

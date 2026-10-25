@@ -1,0 +1,38 @@
+{
+  "status": "PASS_ALL65536_SEEDS_ALL16_NZCV_AND_LIVE_CONTEXT",
+  "tests": 1048576,
+  "actual_ARM_calls": 2097152,
+  "exhaustive_divisors": 65536,
+  "all16_flags_for_every_divisor": true,
+  "private_R0_zero_required_and_preserved": true,
+  "all_R1_R2_R3_R5_R12_SP_preserved": true,
+  "exact_floor_quotient_identical": true,
+  "third_step_R7_residual_difference_matches_dead_value_model": true,
+  "PCS_SP_PC_and_only20B_wrapper_writes_checked": true,
+  "no_inline_memory_writes": true,
+  "instruction_delta_histogram": {
+    "-3": 18592,
+    "0": 1029984
+  },
+  "cost_histograms": {
+    "control": {
+      "22": 82672,
+      "23": 564032,
+      "25": 2240,
+      "26": 381040,
+      "29": 18592
+    },
+    "candidate": {
+      "22": 82672,
+      "23": 564032,
+      "25": 2240,
+      "26": 399632
+    }
+  },
+  "no_parent_cost_increases": true,
+  "unit_wrapper_costs_not_production_division_claim": true,
+  "actual_MPFR_calls": 0,
+  "records_sha256": "dea9a60b9dac0c30347f64c38276e85284d64511c21a7fb05a8bbf74d52e475d",
+  "elapsed_seconds": 219.0463966249954,
+  "hardware_accessed": false
+}

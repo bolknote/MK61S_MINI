@@ -1,0 +1,21 @@
+{
+  "status": "PASS_FINAL_RECEIPT_MANIFEST_ALL_QUOTIENT_LIVENESS_AND_HONEST_CYCLE_LIMITS",
+  "final_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/FINAL-REVIEW.json",
+    "bytes": 14017,
+    "sha256": "d2cd51aa164cf981f04193553d0cb5683defa6afa980ed33463b837e5095093e"
+  },
+  "manifest": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/MANIFEST.json",
+    "bytes": 18032,
+    "sha256": "a9d768bcaa01f30ec01346cdbc7d37466cb371002c596621bf9937e764e1fe4c"
+  },
+  "verified_manifest_files": 66,
+  "own_ARM2908_MPFR62_plus6sNaN": true,
+  "own2HOSTpreflights_numerical_failures0": true,
+  "rejected_author_calls_excluded": true,
+  "all_ancestral_tradeoffs_and_error1_branch_cycle_uncertainty_preserved": true,
+  "no_required_finite_review_work_remaining": true,
+  "integration_adoption_hardware_main_release_all_false": true,
+  "devices": 0
+}

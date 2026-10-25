@@ -1,0 +1,8 @@
+{
+  "status": "EXCLUDED_OWN_PROOF_PYTHON_SYNTAX_PREFLIGHT",
+  "error": "assert Z==not fast requires parentheses around not fast",
+  "source_sha256": "6a22e3d34b37dc51a394caa8af1b70b4c53bb164ee4820525ab8c7e1143d62a7",
+  "actual_ARM_calls": 0,
+  "actual_MPFR_calls": 0,
+  "supplier_modified": false
+}

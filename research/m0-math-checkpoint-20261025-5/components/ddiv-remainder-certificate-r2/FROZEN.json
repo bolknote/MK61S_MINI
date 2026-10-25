@@ -1,0 +1,90 @@
+{
+  "status": "FROZEN_BARE_EXACT_REMAINDER_SIGN_UNIT",
+  "utc": "2026-10-25T03:53:52.639720+00:00",
+  "files": {
+    "HANDOFF.md": {
+      "bytes": 717,
+      "sha256": "139323034235bd8e841c1cb3d5696385635ce4a6e82d278de81d99d950c0b2c0"
+    },
+    "LICENSE.TXT": {
+      "bytes": 1489,
+      "sha256": "483f865953435b66c443dee7558debe3cc3cf8fcbb6a112fd9fc6a795d53f1f6"
+    },
+    "build.json": {
+      "bytes": 2244,
+      "sha256": "6e8ed816441c53e1e84fcb79d91748df2c8503eab6ca77b6d01b61636c9ca36b"
+    },
+    "build.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build.py": {
+      "bytes": 2240,
+      "sha256": "74cdafbf85d72ea1a0f69f10846b3b93a47a74e06cbb00a1edc89a8c1e7a6045"
+    },
+    "candidate.S": {
+      "bytes": 2819,
+      "sha256": "e001daaa2e1bf17854e768a0bb30dad2c21bd1622892d6bb438211b13178f3f6"
+    },
+    "candidate.elf": {
+      "bytes": 4600,
+      "sha256": "27373ed6731ce56fb64ac9e6c9b6d4841b608f6dacd49c319aa0c0d95dabfafa"
+    },
+    "candidate.ld": {
+      "bytes": 177,
+      "sha256": "21c36656d5e3c439dd5372333586aa1b737636b18c56aea086f52a50cb2b8cdc"
+    },
+    "candidate.o": {
+      "bytes": 892,
+      "sha256": "8fb2cbbfb8a16ff9fe2f1ccf4c34270c07f7df38c1c1cc5f82ff8ffee2a3968e"
+    },
+    "control.S": {
+      "bytes": 2730,
+      "sha256": "911d00a1bea5884b7c4653015bb1ed6a954ab1a7c68f632c5c952e9d45331ebd"
+    },
+    "control.elf": {
+      "bytes": 4572,
+      "sha256": "778574cbd391b88f00f8f5fb5e4d8a64440125aeadd2ea59ca88880c70089222"
+    },
+    "control.ld": {
+      "bytes": 177,
+      "sha256": "21c36656d5e3c439dd5372333586aa1b737636b18c56aea086f52a50cb2b8cdc"
+    },
+    "control.o": {
+      "bytes": 868,
+      "sha256": "b9719c8ad9143951b5d712ac5cf3ee0dfbe849426073570fbd8cbb26d749cd29"
+    },
+    "remainder-certificate.inc": {
+      "bytes": 413,
+      "sha256": "6d31628badd689b4bce884760056ff868d3def9241d4a17bb548846e184913c5"
+    },
+    "source-parent.json": {
+      "bytes": 602,
+      "sha256": "8de4830e210eab6e834d73b8c1e5e1cd2a6f65cee06ef4ea5f61746822a21e22"
+    },
+    "study.py": {
+      "bytes": 1985,
+      "sha256": "ee8ae2cbcfe25cf11614466dc1ca4b9d45d9c88a1494a2e69e4657c850ae2ed4"
+    },
+    "unit-proof.json": {
+      "bytes": 895,
+      "sha256": "1f500a05886aaa862de78c270eec954e24b7727959baa9fd59ad7660597fa82a"
+    },
+    "unit-proof.log": {
+      "bytes": 1338,
+      "sha256": "3da95c4ba1544a31ef40241e5d2aba37050b232222dcf8892f27aebe09d61134"
+    },
+    "unit-records.jsonl.gz": {
+      "bytes": 1796273,
+      "sha256": "178825db7564d1589f99ddb011a3dd60093f02d7b397bcc03bddd70df02c4840"
+    },
+    "verify-unit.py": {
+      "bytes": 3580,
+      "sha256": "3ec6b54b3a99e7572efe430027c1d90d4a29b20e0946fc6205961bcf2ba55fbb"
+    }
+  },
+  "actual_ARM_calls": 201600,
+  "actual_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

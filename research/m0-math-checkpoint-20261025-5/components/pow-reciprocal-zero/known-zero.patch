@@ -1,0 +1,156 @@
+--- parent/hardware.S
++++ candidate/hardware.S
+@@ -72,7 +72,7 @@
+  adds \rzl,\rt0                @                  ZL
+  adcs \rzh,\rt2                @                      ¯ZH
+ .endm
+-#include "remainder-certificate.inc"
++#include "candidate-remainder-certificate.inc"
+ .section .m0_ddiv_hint_hw,"ax",%progbits
+ .p2align 2
+ .Lrp2040_small_divisor:
+@@ -263,17 +263,21 @@
+ @ r12   result sign, exponent
+ 
+  ldr r2,[r13,#0]               @ xL
+- mul32_32_64 r2,r5, r2,r3, r1,r4,r7,r2,r3  @ xL*a0
++.global mk61_m0_reciprocal1_before_second_product
++mk61_m0_reciprocal1_before_second_product:
++ mul32_32_64 r2,r5, r2,r3, r1,r0,r7,r2,r3  @ xL*a0; preserve R4=0
+ .global mk61_m0_reciprocal1_after_second_product
+ mk61_m0_reciprocal1_after_second_product:
+- ldr r4,[r13,#4]               @ xH
+- muls r4,r5                    @ xH*a0
+- adds r3,r4                    @ r2:r3 now x*a0 Q82
++ ldr r1,[r13,#4]               @ xH; R1 is dead temporary
++ muls r1,r5                    @ xH*a0
++ adds r3,r1                    @ r2:r3 now x*a0 Q82
+  lsrs r2,#25
+  lsls r1,r3,#7
+  orrs r2,r1                    @ r2 now x*a0 Q57; r7:r2 is x*a0 Q89
+- lsls r4,r0,#5                 @ y Q57
++ // R4=0 survives the second product and xH temporary.
+  subs r0,r4,r2                 @ r0x=y-x*a0 Q57 (signed)
++.global mk61_m0_reciprocal1_after_y_residual
++mk61_m0_reciprocal1_after_y_residual:
+ 
+ @ here
+ @ r0  r0x Q57
+@@ -302,7 +306,9 @@
+ @ here candidate quotient a1 is in range [0.5,1)
+ @ so 30 significant bits in r5
+ 
+- lsls r4,#1                    @ y now Q58
++.global mk61_m0_reciprocal1_half_normalization
++mk61_m0_reciprocal1_half_normalization:
++ // R4 is already zero; next shifts replace flags.
+  lsrs r1,r5,#9                 @ to Q52
+  lsls r0,r5,#23
+  lsrs r3,#9                    @ 0.5ulp-significance bit in carry: if this is 1 we may need to correct result
+@@ -349,9 +355,8 @@
+ .global mk61_m0_reciprocal1_certificate_up
+ mk61_m0_reciprocal1_certificate_up:
+ .Lcertificate_up:
+- movs r2,#0                    @ round up
+- adds r0,#1
+- adcs r1,r2
++ adds r0,#1                    @ round up with known-zero R6
++ adcs r1,r6
+ 1:
+ .global mk61_m0_reciprocal1_certificate_down
+ mk61_m0_reciprocal1_certificate_down:
+@@ -361,6 +366,8 @@
+  orrs r0,r2
+  lsrs r1,#1
+ dd_2:
++.global mk61_m0_reciprocal1_pack_begin
++mk61_m0_reciprocal1_pack_begin:
+  add r13,#8
+  mov r2,r12
+  lsls r7,r2,#31                @ result sign
+@@ -379,6 +386,7 @@
+  sbcs r4,r3
+  cmp r4,#0
+  bmi .Lcertificate_down
++ movs r6,#0                   @ full multiplication clobbered R6
+  b .Lcertificate_up
+ 
+ .size mk61_m0_reciprocal1,.-mk61_m0_reciprocal1
+--- parent/software.S
++++ candidate/software.S
+@@ -73,7 +73,7 @@
+  adcs \rzh,\rt2                @                      ¯ZH
+ .endm
+ #include "inline-seed.inc"
+-#include "remainder-certificate.inc"
++#include "candidate-remainder-certificate.inc"
+ .section .m0_ddiv_hint_sw,"ax",%progbits
+ .p2align 2
+ .global mk61_m0_reciprocal1_sw_from_guard
+@@ -169,17 +169,21 @@
+ @ r12   result sign, exponent
+ 
+  ldr r2,[r13,#0]               @ xL
+- mul32_32_64 r2,r5, r2,r3, r1,r4,r7,r2,r3  @ xL*a0
++.global mk61_m0_reciprocal1_sw_before_second_product
++mk61_m0_reciprocal1_sw_before_second_product:
++ mul32_32_64 r2,r5, r2,r3, r1,r0,r7,r2,r3  @ xL*a0; preserve R4=0
+ .global mk61_m0_reciprocal1_sw_after_second_product
+ mk61_m0_reciprocal1_sw_after_second_product:
+- ldr r4,[r13,#4]               @ xH
+- muls r4,r5                    @ xH*a0
+- adds r3,r4                    @ r2:r3 now x*a0 Q82
++ ldr r1,[r13,#4]               @ xH; R1 is dead temporary
++ muls r1,r5                    @ xH*a0
++ adds r3,r1                    @ r2:r3 now x*a0 Q82
+  lsrs r2,#25
+  lsls r1,r3,#7
+  orrs r2,r1                    @ r2 now x*a0 Q57; r7:r2 is x*a0 Q89
+- lsls r4,r0,#5                 @ y Q57
++ // R4=0 survives the second product and xH temporary.
+  subs r0,r4,r2                 @ r0x=y-x*a0 Q57 (signed)
++.global mk61_m0_reciprocal1_sw_after_y_residual
++mk61_m0_reciprocal1_sw_after_y_residual:
+ 
+ @ here
+ @ r0  r0x Q57
+@@ -208,7 +212,9 @@
+ @ here candidate quotient a1 is in range [0.5,1)
+ @ so 30 significant bits in r5
+ 
+- lsls r4,#1                    @ y now Q58
++.global mk61_m0_reciprocal1_sw_half_normalization
++mk61_m0_reciprocal1_sw_half_normalization:
++ // R4 is already zero; next shifts replace flags.
+  lsrs r1,r5,#9                 @ to Q52
+  lsls r0,r5,#23
+  lsrs r3,#9                    @ 0.5ulp-significance bit in carry: if this is 1 we may need to correct result
+@@ -255,9 +261,8 @@
+ .global mk61_m0_reciprocal1_sw_certificate_up
+ mk61_m0_reciprocal1_sw_certificate_up:
+ .Lcertificate_up:
+- movs r2,#0                    @ round up
+- adds r0,#1
+- adcs r1,r2
++ adds r0,#1                    @ round up with known-zero R6
++ adcs r1,r6
+ 1:
+ .global mk61_m0_reciprocal1_sw_certificate_down
+ mk61_m0_reciprocal1_sw_certificate_down:
+@@ -267,6 +272,8 @@
+  orrs r0,r2
+  lsrs r1,#1
+ dd_2:
++.global mk61_m0_reciprocal1_sw_pack_begin
++mk61_m0_reciprocal1_sw_pack_begin:
+  add r13,#8
+  mov r2,r12
+  lsls r7,r2,#31                @ result sign
+@@ -285,6 +292,7 @@
+  sbcs r4,r3
+  cmp r4,#0
+  bmi .Lcertificate_down
++ movs r6,#0                   @ full multiplication clobbered R6
+  b .Lcertificate_up
+ 
+ .size mk61_m0_reciprocal1_sw_from_guard,.-mk61_m0_reciprocal1_sw_from_guard

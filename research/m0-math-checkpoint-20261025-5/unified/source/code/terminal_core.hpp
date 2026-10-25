@@ -1,0 +1,398 @@
+#ifndef TERMINAL_CORE_HPP
+#define TERMINAL_CORE_HPP
+
+#include "mk_math.hpp"
+#include "rust_types.h"
+
+#include <string.h>
+
+namespace terminal_core {
+
+static constexpr usize INPUT_CAPACITY = 240;
+static constexpr usize MAX_INPUT_TEXT = INPUT_CAPACITY - 1;
+
+inline bool input_can_append(usize length) {
+  return length < MAX_INPUT_TEXT;
+}
+
+// Переносит лишь адрес подстроки из временного командного буфера в исходную
+// строку скрипта. Текст не копируется; указатели на литералы остаются как есть.
+inline bool rebind_script_argument(const char* source, usize source_length,
+                                   const u8* transient, usize capacity,
+                                   const char*& argument) {
+  if(source == nullptr || transient == nullptr || argument == nullptr ||
+     capacity == 0) return false;
+  const uintptr_t argument_address = (uintptr_t) argument;
+  const uintptr_t transient_address = (uintptr_t) transient;
+  if(argument_address < transient_address ||
+     argument_address >= transient_address + capacity) return true;
+  const usize offset =
+      (usize) (argument_address - transient_address);
+  if(offset > source_length) return false;
+  argument = source + offset;
+  return true;
+}
+
+// `if` executes its tail by moving that nested command to the beginning of
+// the terminal input buffer.  Results such as GOTO_LABEL retain a pointer into
+// the moved text.  Translate that pointer back to the corresponding offset in
+// the original conditional line before execute_script_line() rebinds it to
+// the persistent source string.  Calls compose, so nested `if ... if ...`
+// commands restore one prefix at a time.
+inline bool restore_conditional_argument_offset(
+    const u8* transient, usize capacity, usize tail_offset,
+    usize tail_length, const char*& argument) {
+  if(transient == nullptr || argument == nullptr || capacity == 0) return false;
+  const uintptr_t argument_address = (uintptr_t) argument;
+  const uintptr_t transient_address = (uintptr_t) transient;
+  if(argument_address < transient_address ||
+     argument_address >= transient_address + capacity) return true;
+  const usize nested_offset =
+      (usize) (argument_address - transient_address);
+  if(nested_offset > tail_length ||
+     tail_offset >= capacity - nested_offset) {
+    return false;
+  }
+  argument = (const char*) transient + tail_offset + nested_offset;
+  return true;
+}
+
+inline bool is_space(char c) {
+  return c == ' ' || c == '\t';
+}
+
+inline bool is_end(char c) {
+  return c == 0 || c == '\r' || c == '\n';
+}
+
+inline const char* skip_spaces(const char* p) {
+  while(p != 0 && is_space(*p)) p++;
+  return p;
+}
+
+inline bool at_end(const char* p) {
+  p = skip_spaces(p);
+  return p == 0 || is_end(*p);
+}
+
+// Похожий на командную оболочку разбор токенов для команд файловой системы.
+// Токен можно заключить в согласованные одинарные или двойные кавычки; обратная
+// косая черта остаётся обычным символом, поскольку допустима как разделитель пути.
+inline bool parse_token(const char*& p, char* out, usize capacity) {
+  p = skip_spaces(p);
+  if(p == 0 || is_end(*p) || out == 0 || capacity < 2) return false;
+  usize length = 0;
+  const char quote = (*p == '"' || *p == '\'') ? *p++ : 0;
+  while(!is_end(*p) && (quote == 0 ? !is_space(*p) : *p != quote)) {
+    if(length + 1 >= capacity) return false;
+    out[length++] = *p++;
+  }
+  if(quote != 0) {
+    if(*p != quote) return false;
+    p++;
+    if(!is_space(*p) && !is_end(*p)) return false;
+  }
+  if(length == 0) return false;
+  out[length] = 0;
+  return true;
+}
+
+inline int digit_value(char c, usize base) {
+  int digit = -1;
+  if(c >= '0' && c <= '9') digit = c - '0';
+  else if(c >= 'a' && c <= 'f') digit = c - 'a' + 10;
+  else if(c >= 'A' && c <= 'F') digit = c - 'A' + 10;
+  return digit >= 0 && (usize) digit < base ? digit : -1;
+}
+
+inline bool parse_unsigned(const char*& p, usize base, usize maximum, usize& out) {
+  if(base < 2 || base > 16) return false;
+  p = skip_spaces(p);
+  if(p == 0) return false;
+  const char* begin = p;
+  usize value = 0;
+  while(true) {
+    const int digit = digit_value(*p, base);
+    if(digit < 0) break;
+    if((usize) digit > maximum) return false;
+    if(value > (maximum - (usize) digit) / base) return false;
+    value = value * base + (usize) digit;
+    p++;
+  }
+  if(p == begin || (!is_space(*p) && !is_end(*p))) return false;
+  out = value;
+  return true;
+}
+
+inline bool parse_single_unsigned(const char* p, usize base, usize maximum, usize& out) {
+  return parse_unsigned(p, base, maximum, out) && at_end(p);
+}
+
+enum class RunAddressParse : u8 { NOT_ADDRESS, VALID, INVALID };
+
+// Only a complete decimal argument is an address. Names such as 8.m61,
+// quoted numeric names and paths retain the existing file-launch syntax.
+inline RunAddressParse parse_run_address(const char* args, usize steps,
+                                         u8& address) {
+  const char* begin = skip_spaces(args);
+  if(begin == nullptr || is_end(*begin)) return RunAddressParse::NOT_ADDRESS;
+  const char* p = begin;
+  const bool signed_number = *p == '+' || *p == '-';
+  if(signed_number) p++;
+  if(*p < '0' || *p > '9') return RunAddressParse::NOT_ADDRESS;
+  while(*p >= '0' && *p <= '9') p++;
+  if(!at_end(p)) return RunAddressParse::NOT_ADDRESS;
+  usize value = 0;
+  if(signed_number || steps == 0 ||
+     !parse_single_unsigned(begin, 10, steps - 1, value) || value > 255)
+    return RunAddressParse::INVALID;
+  address = (u8) value;
+  return RunAddressParse::VALID;
+}
+
+inline bool exact_confirmation(const char* line, char answer) {
+  line = skip_spaces(line);
+  if(line == 0 || (*line != answer && *line != (char) (answer - 'a' + 'A'))) return false;
+  return at_end(line + 1);
+}
+
+// Разбор конечного десятичного значения калькулятора. Ограничение числа значащих
+// цифр во входных данных и величины порядка также не позволяет разбору без libm
+// выполнять неограниченную работу на злонамеренных данных.
+inline bool parse_decimal(const char*& p, double& out) {
+  p = skip_spaces(p);
+  if(p == 0) return false;
+  const char* begin = p;
+  if(*p == '+' || *p == '-') p++;
+
+  usize digits = 0;
+  u32 integer = 0;
+  while(*p >= '0' && *p <= '9') {
+    // Unsigned wrapping is harmless: only <=9 digits use this accumulator.
+    integer = integer * 10 + (u32) (*p - '0');
+    digits++; p++;
+  }
+  // Up to nine integral digits fit in u32 and convert exactly to binary64.
+  // Decimal/exponent forms keep the established parser and rounding rules.
+  if(digits - 1U < 9 && *p != '.' && (*p | 0x20) != 'e') {
+    const double value = (double) integer;
+    out = *begin == '-' ? -value : value; // Preserve negative zero, too.
+    return true;
+  }
+  if(*p == '.') {
+    p++;
+    while(*p >= '0' && *p <= '9') { digits++; p++; }
+  }
+  if(digits == 0 || digits > 18) return false;
+
+  if(*p == 'e' || *p == 'E') {
+    p++;
+    if(*p == '+' || *p == '-') p++;
+    const char* exponent_begin = p;
+    usize exponent = 0;
+    while(*p >= '0' && *p <= '9') {
+      const usize digit = (usize) (*p++ - '0');
+      if(exponent > (99 - digit) / 10) return false;
+      exponent = exponent * 10 + digit;
+    }
+    if(p == exponent_begin) return false;
+  }
+
+  const char* parsed_end = begin;
+  const double value = mk_math::strtod(begin, &parsed_end);
+  // The grammar above admits only decimal digits, <=18 digits total and
+  // |exponent|<=99: any nonzero magnitude is in [1e-117, 1e117]. It cannot
+  // overflow, underflow or produce NaN in binary64. Keep those bounds, not
+  // redundant soft-double comparisons after the conversion.
+  if(parsed_end != p) return false;
+  out = value;
+  return true;
+}
+
+inline bool parse_single_decimal(const char* p, double& out) {
+  return parse_decimal(p, out) && at_end(p);
+}
+
+inline bool parse_mk_display_value(const char* v, double& out) {
+  // Normalized single-digit integers are common in script conditions. Their
+  // complete display representation is exact; avoid the string roundtrip.
+  if(v[1] >= '0' && v[1] <= '9' && v[2] == '.' &&
+     v[12] == '0' && v[13] == '0') {
+    int i = 3;
+    while(i <= 9 && (v[i] == '0' || v[i] == ' ')) ++i;
+    if(i == 10) {
+      const double value = (double) (v[1] - '0');
+      out = v[0] == '-' ? -value : value;
+      return true;
+    }
+  }
+  char buffer[20];
+  char* w = buffer;
+  if(v[0] == '-') *w++ = '-';
+  for(int i = 1; i <= 9; i++) {
+    const char c = v[i];
+    if(c == '.') { *w++ = c; continue; }
+    if(c == ' ') continue;
+    if(c < '0' || c > '9') return false;
+    *w++ = c;
+  }
+  if(v[12] < '0' || v[12] > '9' || v[13] < '0' || v[13] > '9') return false;
+  *w++ = 'e';
+  *w++ = (v[11] == '-') ? '-' : '+';
+  *w++ = v[12];
+  *w++ = v[13];
+  *w = 0;
+  out = mk_math::atof(buffer);
+  return true;
+}
+
+inline isize find_mnemonic(const char* isa, const char* token, usize token_len) {
+  if(isa == 0 || token == 0 || token_len == 0) return -1;
+  usize opcode = 0;
+  const char* item = isa;
+  while(true) {
+    const char* end = item;
+    while(*end != 0 && *end != ',') end++;
+    const usize item_len = (usize) (end - item);
+    if(item_len == token_len && memcmp(item, token, token_len) == 0) return (isize) opcode;
+    if(*end == 0) break;
+    item = end + 1;
+    opcode++;
+  }
+  return -1;
+}
+
+enum class AssemblyError : u8 {
+  NONE,
+  EMPTY,
+  BAD_ADDRESS,
+  UNKNOWN_MNEMONIC,
+  TOO_LONG
+};
+
+struct Assembly {
+  usize address;
+  usize count;
+  u8 opcodes[112];
+  AssemblyError error;
+  const char* error_at;
+};
+
+inline bool token_is_decimal_address(const char* begin, const char* end) {
+  if(end - begin != 4) return false;
+  for(const char* p = begin; p < end; p++) if(*p < '0' || *p > '9') return false;
+  return true;
+}
+
+using MnemonicLookup = isize (*)(const char* token, usize length);
+
+// Calculator aliases such as "Kx!=0 0" are one mnemonic even though their
+// spelling contains whitespace. Choose the longest whole mnemonic, allowing
+// normal spaces/tabs between its parts and preserving token boundaries.
+inline isize match_mnemonic(const char* isa, const char* input, usize& consumed) {
+  isize result = -1;
+  consumed = 0;
+  if(isa == nullptr || input == nullptr) return result;
+  usize opcode = 0;
+  for(const char* item = isa;; ++opcode) {
+    const char* end = item;
+    while(*end != 0 && *end != ',') ++end;
+    const char* spelling = item;
+    const char* cursor = input;
+    while(spelling < end) {
+      if(is_space(*spelling)) {
+        if(!is_space(*cursor)) break;
+        cursor = skip_spaces(cursor);
+        do { ++spelling; } while(spelling < end && is_space(*spelling));
+      } else {
+        if(*cursor != *spelling) break;
+        ++cursor;
+        ++spelling;
+      }
+    }
+    const usize length = (usize) (cursor - input);
+    if(spelling == end && length > consumed &&
+       (is_space(*cursor) || is_end(*cursor)) &&
+       !(end - item == 1 && *item == '?')) {
+      result = (isize) opcode;
+      consumed = length;
+    }
+    if(*end == 0) break;
+    item = end + 1;
+  }
+  return result;
+}
+
+inline Assembly parse_assembly(const char* args, isize current_address, const char* isa,
+                               usize max_steps, MnemonicLookup lookup = nullptr) {
+  Assembly result = {};
+  result.error = AssemblyError::NONE;
+  const char* p = skip_spaces(args);
+  if(p == 0 || is_end(*p)) {
+    result.error = AssemblyError::EMPTY;
+    result.error_at = p;
+    return result;
+  }
+
+  const char* first = p;
+  while(!is_space(*p) && !is_end(*p)) p++;
+  if(token_is_decimal_address(first, p)) {
+    usize address = 0;
+    for(const char* q = first; q < p; q++) address = address * 10 + (usize) (*q - '0');
+    if(address >= max_steps) {
+      result.error = AssemblyError::BAD_ADDRESS;
+      result.error_at = first;
+      return result;
+    }
+    result.address = address;
+    p = skip_spaces(p);
+  } else {
+    if(current_address < 0 || (usize) current_address >= max_steps) {
+      result.error = AssemblyError::BAD_ADDRESS;
+      result.error_at = first;
+      return result;
+    }
+    result.address = (usize) current_address;
+    p = first;
+  }
+
+  while(!is_end(*p)) {
+    p = skip_spaces(p);
+    if(is_end(*p)) break;
+    const char* token = p;
+    usize consumed = 0;
+    isize opcode = match_mnemonic(isa, token, consumed);
+    if(opcode >= 0) {
+      p += consumed;
+    } else {
+      while(!is_space(*p) && !is_end(*p)) p++;
+      if(lookup != nullptr) opcode = lookup(token, (usize) (p - token));
+    }
+    if(opcode < 0 && p - token == 2) {
+      const int high = digit_value(token[0], 16);
+      const int low = digit_value(token[1], 16);
+      if(high >= 0 && low >= 0) opcode = (isize) ((high << 4) | low);
+    }
+    if(opcode < 0 || opcode > 255) {
+      result.error = AssemblyError::UNKNOWN_MNEMONIC;
+      result.error_at = token;
+      return result;
+    }
+    if(result.address + result.count >= max_steps || result.count >= sizeof(result.opcodes)) {
+      result.error = AssemblyError::TOO_LONG;
+      result.error_at = token;
+      return result;
+    }
+    result.opcodes[result.count++] = (u8) opcode;
+  }
+
+  if(result.count == 0) {
+    result.error = AssemblyError::EMPTY;
+    result.error_at = p;
+  }
+  return result;
+}
+
+} // пространство имён terminal_core
+
+#endif

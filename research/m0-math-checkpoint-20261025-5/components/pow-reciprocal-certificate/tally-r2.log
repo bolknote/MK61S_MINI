@@ -1,0 +1,63 @@
+{
+  "status": "PASS_ALL_PUBLIC_SCALAR_AND_UNIT_ACCOUNTING",
+  "same_corpus_pairs": 120980,
+  "states": 241960,
+  "loss_pairs": [
+    11371,
+    11369
+  ],
+  "strict_fixes": 1,
+  "equal_fixes": 1,
+  "new_losses": 0,
+  "correct_Qfplib_comparison": {
+    "slower": 21026,
+    "faster": 178685,
+    "equal": 2705
+  },
+  "wrong_public_Qfplib_variants": 77106,
+  "public_instruction_delta_histogram": {
+    "-15": 30,
+    "-12": 324,
+    "0": 241574,
+    "7": 6,
+    "8": 26
+  },
+  "original153": {
+    "parent": {
+      "slower": 34,
+      "strict": 119
+    },
+    "candidate": {
+      "slower": 33,
+      "strict": 120
+    }
+  },
+  "scalar_loss_states": [
+    13,
+    1
+  ],
+  "new_scalar_loss_states": 0,
+  "scalar_correct_comparison": {
+    "parent": {
+      "faster": 32370,
+      "equal": 5,
+      "slower": 13
+    },
+    "candidate": {
+      "faster": 32382,
+      "equal": 5,
+      "slower": 1
+    }
+  },
+  "wrong_scalar_Qfplib_variants": 9600,
+  "scalar_parent_increase_histogram": {
+    "8": 846,
+    "7": 286
+  },
+  "total_qualified_fresh_ARM_calls": 673814,
+  "actual_directed_MPFR_inputs": 26011,
+  "sNaN_policy_shortcuts": 110,
+  "new_ARM_or_MPFR_calls_in_this_recount": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

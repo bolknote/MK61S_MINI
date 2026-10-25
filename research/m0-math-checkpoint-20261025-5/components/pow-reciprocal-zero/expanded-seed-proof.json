@@ -1,0 +1,163 @@
+{
+  "status": "PASS_EXPANDED_ALL_SEED_DIVISORS_TWO_MANTISSA_PATTERNS",
+  "candidate_ELF_sha256": "a2957007576c1803479e122991316559b0a7b0cc63b9355c6874bfd29846404a",
+  "input_seed_divisors": 65536,
+  "patterns_per_divisor": 2,
+  "fresh_scalar_inputs": 131072,
+  "states": 262144,
+  "actual_ARM_calls": 786432,
+  "actual_directed_MPFR_inputs": 131072,
+  "sNaN_policy_shortcuts": 0,
+  "MPFR_version": "4.2.2",
+  "actual_software_seed_divisors_observed": 65536,
+  "correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 262096,
+      "equal": 34,
+      "slower": 14
+    },
+    "candidate": {
+      "faster": 262131,
+      "slower": 2,
+      "equal": 11
+    }
+  },
+  "parent_loss_states": 14,
+  "candidate_loss_states": 2,
+  "new_loss_states": 0,
+  "wrong_Qfplib_variants_retained": 0,
+  "parent_instruction_delta_histogram": {
+    "-3": 53412,
+    "-2": 208730,
+    "0": 2
+  },
+  "certificate_calls_by_class": {
+    "certified": 119532,
+    "full": 11516
+  },
+  "all_parent_costs_no_lower_than_candidate": true,
+  "all_live_joins_full_after_y_residual_and_certificate_decisions_checked": true,
+  "DIRTY_SIO_preserved_no_writes": true,
+  "observed_stacks": {
+    "parent": 28,
+    "candidate": 28
+  },
+  "records_sha256": "5e340b277c434945b8e35a9f20c03df574b96b3d4e9bedb8033f6d96e1c8840a",
+  "remaining": [
+    {
+      "D": 68846,
+      "pattern": 1,
+      "denominator": "3FF0CEE65125761B",
+      "NZCV": 15,
+      "SIO": "DIRTY",
+      "expected": "3FEE761901E3093C",
+      "results": {
+        "parent": {
+          "output": "3FEE761901E3093C",
+          "instructions": 152,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEE761901E3093C",
+          "instructions": 149,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEE761901E3093C",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FF0CEE65125761B"
+        }
+      ],
+      "software_seed_divisors": [
+        68846
+      ],
+      "first_product_reciprocals": [
+        1022112260
+      ],
+      "remainder_certificates": [
+        {
+          "base": 20558288,
+          "u": 1361409563,
+          "v": 63312503,
+          "estimate": 491570,
+          "exact": 489625,
+          "fast": true,
+          "negative": false,
+          "cross_overflow": false,
+          "full": false,
+          "decision": "up"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 1
+      }
+    },
+    {
+      "D": 69856,
+      "pattern": 1,
+      "denominator": "3FF10E0E8502C07D",
+      "NZCV": 1,
+      "SIO": "DIRTY",
+      "expected": "3FEE054B693CF2BC",
+      "results": {
+        "parent": {
+          "output": "3FEE054B693CF2BC",
+          "instructions": 149,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEE054B693CF2BC",
+          "instructions": 147,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEE054B693CF2BC",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FF10E0E8502C07D"
+        }
+      ],
+      "software_seed_divisors": [
+        69856
+      ],
+      "first_product_reciprocals": [
+        1007326930
+      ],
+      "remainder_certificates": [
+        {
+          "base": 1834101284,
+          "u": 2231550077,
+          "v": 3531203961,
+          "estimate": 4294420530,
+          "exact": 4294349494,
+          "fast": true,
+          "negative": true,
+          "cross_overflow": true,
+          "full": false,
+          "decision": "down"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      }
+    }
+  ],
+  "elapsed_seconds": 246.97529545798898,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

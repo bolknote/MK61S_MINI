@@ -1,0 +1,7 @@
+{
+  "status": "EXCLUDED_BUILD_SOURCE_SELECTOR_ASSERTION",
+  "cause": "Hardware section is .m0_ddiv_hint_hw, not .m0_ddiv_hint. No compiler command had started.",
+  "actual_ARM_calls": 0,
+  "actual_MPFR_calls": 0,
+  "no_candidate_ELF_created": true
+}

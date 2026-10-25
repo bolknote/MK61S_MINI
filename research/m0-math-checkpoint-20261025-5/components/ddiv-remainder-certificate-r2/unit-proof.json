@@ -1,0 +1,40 @@
+{
+  "status": "PASS_ACTUAL_ARM_EXACT_REMAINDER_SIGN_ALL_FLAGS_AND_BOUNDARIES",
+  "tests": 100800,
+  "actual_ARM_calls": 201600,
+  "all_signs_equal_exact64bit_product_model": true,
+  "all16_NZCV_and_noisy_live_R1_R12_checked": true,
+  "PCS_SP_PC_and_only20B_wrapper_stack_writes_checked": true,
+  "classes": {
+    "fallback": 12803,
+    "certified": 87997
+  },
+  "cost_histograms": {
+    "control": {
+      "25": 1008,
+      "26": 46316,
+      "27": 45901,
+      "28": 16,
+      "29": 3925,
+      "30": 3634
+    },
+    "candidate": {
+      "14": 44864,
+      "15": 43133,
+      "33": 1008,
+      "34": 4881,
+      "35": 5890,
+      "36": 16,
+      "37": 496,
+      "38": 512
+    }
+  },
+  "delta_histogram": {
+    "-15": 6551,
+    "-12": 81446,
+    "8": 12803
+  },
+  "unit_sign_wrapper_costs_not_public_division_claim": true,
+  "elapsed_seconds": 19.66250058298465,
+  "hardware_accessed": false
+}

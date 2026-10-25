@@ -1,0 +1,9 @@
+{
+  "status": "EXCLUDED_OWN_BRANCH_BYTE_COMPARISON_PREFLIGHT",
+  "error": "Comparison of unchanged pre-certificate core included PC-relative branches to relocated dd_2 packing target",
+  "source_sha256": "94b533f52c8c031db60ffc7103820f4ac40b2242592c7cf784d18d05d06874d6",
+  "correction": "Compare every nonbranch halfword exactly; normalize only decoded branches by relative internal target or exact corresponding dd_2 packing entry",
+  "actual_ARM_calls": 0,
+  "actual_MPFR_calls": 0,
+  "supplier_modified": false
+}

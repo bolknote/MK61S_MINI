@@ -1,0 +1,16 @@
+{
+  "source": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-zero-independent-20261025/arm.py",
+  "source_sha256": "4a3ba65e984d8ca98211253c26c5b4924d531b5d73f552e1ff94d43ea966f986",
+  "inherited_functions": [
+    "ref",
+    "save",
+    "memory",
+    "equal",
+    "call",
+    "expected",
+    "loader",
+    "state"
+  ],
+  "fresh_audit_delta": "Both images use Zero product. New seed R7 is old-D only for error3; add complete post ADD1/LSR state trace; fresh equivalent below separates old/control vs candidate.",
+  "whole_parent_harness_not_executed": true
+}

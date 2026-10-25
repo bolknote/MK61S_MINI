@@ -1,0 +1,47 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-zero-independent-20261025/rebuild/unit/control.elf:     file format elf32-littlearm
+
+
+Disassembly of section .unit:
+
+101e1000 <unit_remainder_sign>:
+101e1000:	b5f0      	push	{r4, r5, r6, r7, lr}
+101e1002:	4604      	mov	r4, r0
+101e1004:	4610      	mov	r0, r2
+101e1006:	460a      	mov	r2, r1
+
+101e1008 <unit_certificate_begin>:
+101e1008:	b295      	uxth	r5, r2
+101e100a:	b286      	uxth	r6, r0
+101e100c:	4375      	muls	r5, r6
+101e100e:	0c17      	lsrs	r7, r2, #16
+101e1010:	437e      	muls	r6, r7
+101e1012:	0c03      	lsrs	r3, r0, #16
+101e1014:	435f      	muls	r7, r3
+101e1016:	b292      	uxth	r2, r2
+101e1018:	435a      	muls	r2, r3
+101e101a:	18b6      	adds	r6, r6, r2
+101e101c:	d302      	bcc.n	101e1024 <l0_1>
+101e101e:	2201      	movs	r2, #1
+101e1020:	0412      	lsls	r2, r2, #16
+101e1022:	18bf      	adds	r7, r7, r2
+
+101e1024 <l0_1>:
+101e1024:	0432      	lsls	r2, r6, #16
+101e1026:	0c33      	lsrs	r3, r6, #16
+101e1028:	1952      	adds	r2, r2, r5
+101e102a:	417b      	adcs	r3, r7
+101e102c:	4252      	negs	r2, r2
+101e102e:	419c      	sbcs	r4, r3
+101e1030:	2c00      	cmp	r4, #0
+101e1032:	d005      	beq.n	101e1040 <unit_cert_negative+0x6>
+101e1034:	d401      	bmi.n	101e103a <unit_cert_negative>
+101e1036:	2001      	movs	r0, #1
+101e1038:	bdf0      	pop	{r4, r5, r6, r7, pc}
+
+101e103a <unit_cert_negative>:
+101e103a:	2000      	movs	r0, #0
+101e103c:	3801      	subs	r0, #1
+101e103e:	bdf0      	pop	{r4, r5, r6, r7, pc}
+101e1040:	2000      	movs	r0, #0
+101e1042:	bdf0      	pop	{r4, r5, r6, r7, pc}

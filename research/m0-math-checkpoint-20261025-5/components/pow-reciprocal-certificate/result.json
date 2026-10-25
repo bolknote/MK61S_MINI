@@ -1,0 +1,138 @@
+{
+  "status": "FROZEN_AUTHOR_PRIVATE_EXACT_REMAINDER_CERTIFICATE_PENDING_REVIEW",
+  "source_parent": ".build/m0-pow-reciprocal-inline-20261025",
+  "source_parent_FROZEN_sha256": "0be351d573878a48f13f5d41edd2812a23ab269556b929db9aa8324e6a0bf219",
+  "parent_inline_independent_review_pending": true,
+  "ROOT_receipts_present_at_seal": {
+    "soft": {
+      "path": ".build/m0-pow-reciprocal-soft-root-acceptance-20261025-001/RECEIPT.json",
+      "bytes": 15734,
+      "sha256": "de2f15995d64baa1e7e68aec9d45cc90efa43264ce1cf5985fb3fc7d6849372c"
+    },
+    "lut": {
+      "path": ".build/m0-pow-reciprocal-lut-root-acceptance-20261025-001/RECEIPT.json",
+      "bytes": 17315,
+      "sha256": "19a0b7fc1f415cd90fcf3ec20e523939c79ec8518c988774547c2cc991cdb198"
+    },
+    "one": {
+      "path": ".build/m0-pow-reciprocal-one-root-acceptance-20261025-001/RECEIPT.json",
+      "bytes": 18162,
+      "sha256": "78a3c26a8954dcbf8dd8d54719825989dbf6beca103cc93d80b9795a14c9290f"
+    }
+  },
+  "candidate_ELF_sha256": "aac32d20ff3c7c0f28d77b091e012fb997ce8dce1ec009f259803a8690e36be8",
+  "source_proof_sha256": "e8c545179e681e6004a718d42b843f89629864e187818a09e58d8ad4302f618d",
+  "numeric_proof_sha256": "75cc8a55d1a4202db693d04f2539070a4c27c736b2eb0a2c1e99464da91084c2",
+  "shared_bare_unit_FROZEN_sha256": "904e63f0ecb510f8db9953ce686510167d598e1a4905a04ce31f2fb3d3ec3cf3",
+  "private_contract": "exact positive numerator1, denominator any binary64; not general division",
+  "other_resident_ddiv_callers_unchanged": true,
+  "omitted_high_product_plus_borrow_bound": 131071,
+  "uncertain_intervals_near_zero_and_INT32_MIN_use_parent_full_product": true,
+  "all_actual_certificate_decisions_checked": true,
+  "bare_unit_tests": 100800,
+  "bare_unit_ARM_calls": 201600,
+  "live_R1_R12_SP_PCS_and_flags_checked": true,
+  "before_certificate_actual_R0_R7_R12_SP_NZCV_frame28_identical": true,
+  "known_zero_yL_shift_removed": true,
+  "same_corpus_pairs": 120980,
+  "states": 241960,
+  "reference_state_variants": 279522,
+  "loss_pairs": [
+    11371,
+    11369
+  ],
+  "strict_fixes": 1,
+  "equal_fixes": 1,
+  "new_raw_losses": 0,
+  "candidate_wrong": 0,
+  "accelerated_public_states": 354,
+  "public_instruction_reduction_range": [
+    12,
+    15
+  ],
+  "public_parent_cost_increase_states": 32,
+  "public_parent_increase_histogram": {
+    "8": 26,
+    "7": 6
+  },
+  "direct_expanded_pairs": 20994,
+  "direct_states": 41988,
+  "direct_loss_states": [
+    13,
+    1
+  ],
+  "new_direct_Qfplib_loss_states": 0,
+  "direct_correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 32370,
+      "equal": 5,
+      "slower": 13
+    },
+    "candidate": {
+      "faster": 32382,
+      "equal": 5,
+      "slower": 1
+    }
+  },
+  "direct_parent_cost_increase_states": 1132,
+  "direct_parent_increase_histogram": {
+    "8": 846,
+    "7": 286
+  },
+  "remaining_direct_denominator": "3FF27D0DF6735E90",
+  "remaining_direct_state": "DIRTY",
+  "remaining_direct_lag_instructions": 3,
+  "all_correct_incorrect_Qfplib_outputs_costs_and_parent_increases_retained": true,
+  "no_nominal_reference_domain_filter": true,
+  "wrong_direct_Qfplib_variants": 9600,
+  "wrong_public_Qfplib_variants": 77106,
+  "public_correct_Qfplib_comparison": {
+    "slower": 21026,
+    "faster": 178685,
+    "equal": 2705
+  },
+  "total_qualified_fresh_ARM_calls": 673814,
+  "fresh_full_candidate_ARM_calls": 241960,
+  "fresh_parent_reciprocal_path_ARM_calls": 778,
+  "fresh_public_MPFR_control_reference_ARM_calls": 61524,
+  "fresh_scalar_ARM_calls": 167952,
+  "fresh_bare_unit_ARM_calls": 201600,
+  "actual_directed_MPFR_inputs": 26011,
+  "sNaN_policy_shortcuts": 110,
+  "parent_campaigns_and_integer_model_not_fresh": true,
+  "host_build_selector_preflight0_ARM0_MPFR_excluded": true,
+  "host_tally_NaN_policy_preflight0_ARM0_MPFR_excluded": true,
+  "private_code_bytes": [
+    1072,
+    1108
+  ],
+  "allocated_code_delta_bytes": 36,
+  "unchanged256B_table": true,
+  "no_new_tables_RAM_or_libgcc": true,
+  "default_M0_M4_selected_controls_and6_disabled_objects_empty": true,
+  "twenty_two_original_path_source_object_ELF_rebuilds_exact": true,
+  "full_observed_stack_bytes": 2284,
+  "fresh_public_controls_stack_bytes": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148
+  },
+  "direct_stack_bytes": {
+    "parent": 176,
+    "control": 176,
+    "candidate": 176
+  },
+  "parent_subset_not_full_stack_comparator": true,
+  "original_pow153_remaining": [
+    34,
+    33
+  ],
+  "author_separate507_no_slower": 438,
+  "author_separate507_strict": 432,
+  "author_separate507_equal": 6,
+  "reviewed_separate507_no_slower": 422,
+  "independent_review_pending": true,
+  "other_needed_math_general_totality_source_merge_actual_R12_loader_layout_14B_overlay_physical_cycles_release_pending": true,
+  "canonical_runtime_M4_Git_device_USB_Flash_or_release_changed": false,
+  "goal_complete": false
+}

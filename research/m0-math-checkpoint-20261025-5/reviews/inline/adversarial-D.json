@@ -1,0 +1,10 @@
+{
+  "status": "EXACT_DOMAIN_CORRECTION_CLASS_EXAMPLES",
+  "values": {
+    "error0": 65536,
+    "error1": 65538,
+    "error2": 65540,
+    "error-1": 65981,
+    "error3": 66226
+  }
+}

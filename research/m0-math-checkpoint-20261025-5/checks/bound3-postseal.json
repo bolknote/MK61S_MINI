@@ -1,0 +1,10 @@
+{
+  "status": "PASS_POSTSEAL_ALL_LOCAL_EXTERNAL_AND_BOUND3_UNIT_PINS",
+  "local_pins": 84,
+  "external_pins": 2742,
+  "FROZEN_sha256": "0a5480ab5d386448b05bc3ffe0993ccda2c417025cd31779cb732929e30c56a0",
+  "unit_FROZEN_sha256": "58764a6b8b12a221d8cc7061ba60a50541068bf366181aad277c3253757b078e",
+  "frozen_files_modified": false,
+  "actual_ARM_or_MPFR_calls": 0,
+  "hardware_accessed": false
+}

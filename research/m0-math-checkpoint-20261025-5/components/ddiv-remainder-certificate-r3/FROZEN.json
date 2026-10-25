@@ -1,0 +1,90 @@
+{
+  "status": "FROZEN_BARE_R3_REMAINDER_SIGN_UNIT",
+  "utc": "2026-10-25T04:16:18.155452+00:00",
+  "files": {
+    "HANDOFF.md": {
+      "bytes": 566,
+      "sha256": "2530cf820b14278df980f9d5d1ae5e460ece3543ff31c33645667de118317101"
+    },
+    "LICENSE.TXT": {
+      "bytes": 1489,
+      "sha256": "483f865953435b66c443dee7558debe3cc3cf8fcbb6a112fd9fc6a795d53f1f6"
+    },
+    "build.json": {
+      "bytes": 2244,
+      "sha256": "f1a1ecd5cb8c3c0615ddeebc6dbe129bb3c41be1b5cd3238f558fe9665e4b748"
+    },
+    "build.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build.py": {
+      "bytes": 2336,
+      "sha256": "1658f81304d66f6c50f2a2c765efbb5cb2e7aea68e7ae33d6f5c11f9c19e3d64"
+    },
+    "candidate.S": {
+      "bytes": 2913,
+      "sha256": "4b4e79212b98c6e15400d311127d3247515c2d5eb23106c593878c2e2f95de67"
+    },
+    "candidate.elf": {
+      "bytes": 4668,
+      "sha256": "8757736f45ee3e0a04a67d2a78786a77511388db4d700c4fed4e937f856c2081"
+    },
+    "candidate.ld": {
+      "bytes": 177,
+      "sha256": "21c36656d5e3c439dd5372333586aa1b737636b18c56aea086f52a50cb2b8cdc"
+    },
+    "candidate.o": {
+      "bytes": 960,
+      "sha256": "df8dd2ccc5089e67a48cb50374230e21e3cf6da217826d10c0405a6e12a90f5f"
+    },
+    "control.S": {
+      "bytes": 2777,
+      "sha256": "182f3ef1b3fcf1ea2cb1603d8d4dd3c607bd680515a873e50952b3584387c771"
+    },
+    "control.elf": {
+      "bytes": 4608,
+      "sha256": "e61cc8f3a960e0fb07c1e7e3a4552781975fb7156fda71082965ba56966b1ece"
+    },
+    "control.ld": {
+      "bytes": 177,
+      "sha256": "21c36656d5e3c439dd5372333586aa1b737636b18c56aea086f52a50cb2b8cdc"
+    },
+    "control.o": {
+      "bytes": 904,
+      "sha256": "f8a77ea9c6f641f07dc2d957e4a61f2cf153f16eb9350fc339f19a4e5a8c8446"
+    },
+    "remainder-certificate.inc": {
+      "bytes": 413,
+      "sha256": "60b7749266b8648f8b51283766029cb00c9f9b128313d6e36db539ac3af7a16e"
+    },
+    "source-parent.json": {
+      "bytes": 323,
+      "sha256": "0f2ea589a8f456e89fd3a9a4f8f02a8842de94fb932b7ff97f6d964609caf904"
+    },
+    "study.py": {
+      "bytes": 1985,
+      "sha256": "ee8ae2cbcfe25cf11614466dc1ca4b9d45d9c88a1494a2e69e4657c850ae2ed4"
+    },
+    "unit-proof.json": {
+      "bytes": 949,
+      "sha256": "6545ac4e6f9f38bac137515d4c53bf233ce1a6c80b798e7bdc651384d4715329"
+    },
+    "unit-proof.log": {
+      "bytes": 1392,
+      "sha256": "1cfac00f2eba35672cf594711bd22ec7c02998d2aeb6d877f213755433b75db1"
+    },
+    "unit-records.jsonl.gz": {
+      "bytes": 1796273,
+      "sha256": "178825db7564d1589f99ddb011a3dd60093f02d7b397bcc03bddd70df02c4840"
+    },
+    "verify-unit.py": {
+      "bytes": 4016,
+      "sha256": "d5750527bdc9a07afa1fca5a37124b80de2b4d370f985d0835b5a18d0cab57a3"
+    }
+  },
+  "actual_ARM_calls": 201600,
+  "actual_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

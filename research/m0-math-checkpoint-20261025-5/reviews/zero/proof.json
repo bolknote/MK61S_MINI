@@ -1,0 +1,61 @@
+{
+  "status": "PASS_FRESH_KNOWN_ZERO_REGISTER_PERMUTATION_LIVE_FLAGS_AND_EMITTED_FALLBACK_PROOF",
+  "parent_universal_certificate_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/proof.json",
+    "bytes": 3047,
+    "sha256": "eddabc42683449967b098371ea38a3c0416b30086c2618596f06b7ea93558d32"
+  },
+  "later_parent_ROOT_additive": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-root-acceptance-20261025-001/RECEIPT.json",
+    "bytes": 22999,
+    "sha256": "aa392003a9237e3d945768cfd2651c9aa3d8be2746a9e5046e520e68298801ba"
+  },
+  "product": "At the actual positive-one second-product entry, R0=R4=0. The complete36B Thumb multiplication is exactly renamed R0<->R4, including branch predicates, from equal initial states; all other outputs and NZCV coincide.",
+  "xH_and_residual": "R1 old product temporary is dead. LDR/MUL/ADD using R1 instead of R4 computes identical xH*a0 and R3 sum; LSLS R1,R3,7 overwrites that temporary. R4 remains0. SUBS R0,R4,R2 kills the scratch R0 and all prior NZCV; full R0-R7/R12/SP/NZCV/frame28 rejoin.",
+  "zero_double": "R4=0 is retained through signed correction. Removing LSLS R4,1 is safe: the next LSRS R1,R5,9 overwrites NZC before any consumer; V was not changed by the removed shift.",
+  "certificate": "Only scratch R6->R3 changes. Every scratch read follows its definition. The same uint32 bound E=[0,131071], inclusive two signed discontinuity bands and complete full-product fallback apply. Emitted12B prefix is exact register renaming.",
+  "generic_R6_contract": "ARBITRARY R6 survives every decisive shared macro branch, not merely the private zero case. Full multiplication may clobber R6; no generic full-path preservation claim.",
+  "positive_ADC": "Existing MOVS R6,0 before quotient rounding still executes. Decisive certificate never writes R6; ADD R0,1 sets carry before ADC R1,R6. The removed MOVS R2,0 has no remaining reader: down shift defines R2 before ORR and pack defines it again.",
+  "full_path": "Restore modular base, execute identical44B complete product/borrow/CMP prefix. BMI goes directly down; positive path explicitly MOVS R6,0 then branches up before ADC. R3 scratch is overwritten before its first old full-product use.",
+  "pack": "Down shifts and16B pack unchanged. Only dead R3/R6 differ; R0/R1/R2/R4/R5/R7/R12/SP/NZCV and frame are projected equally before pack; all saved R4-R7 restored.",
+  "no_unchanged186B_suffix_claim": true,
+  "positive_one_precondition_not_generic_C_ABI": true,
+  "source_reverse_binding_not_used_as_only_equivalence_proof": true,
+  "mapping": {
+    "mk61_m0_reciprocal1": {
+      "before_second": "0x101e10da",
+      "after_second": "0x101e10fe",
+      "after_residual": "0x101e110c",
+      "half": "0x101e1138",
+      "begin": "0x101e1168",
+      "full": "0x101e1194",
+      "up": "0x101e1178",
+      "down": "0x101e117c",
+      "pack": "0x101e1184"
+    },
+    "mk61_m0_reciprocal1_sw": {
+      "before_second": "0x101e1260",
+      "after_second": "0x101e1284",
+      "after_residual": "0x101e1292",
+      "half": "0x101e12be",
+      "begin": "0x101e12ee",
+      "full": "0x101e131a",
+      "up": "0x101e12fe",
+      "down": "0x101e1302",
+      "pack": "0x101e130a"
+    },
+    "unit": {
+      "begin": "0x101e1008",
+      "up": "0x101e1018",
+      "full": "0x101e101c",
+      "down": "0x101e1050"
+    }
+  },
+  "exact_lossless_RNE_and_IEEE_guards_precision_inherited_by_full_source_proof": true,
+  "performance": "Only deletes second-product reconstruction, zero doubling, decisive-positive zero MOV; full-positive zero restore replaces old zero MOV. No instruction path gains cost relative to immediate Certificate, but Certificate ancestral regressions persist.",
+  "parent32_public_regressions_and2_already_losing_not_erased": true,
+  "performance_adoption_GO": false,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "devices": 0
+}

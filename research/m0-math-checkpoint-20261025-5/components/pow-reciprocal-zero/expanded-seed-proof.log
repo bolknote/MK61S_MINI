@@ -1,0 +1,81 @@
+reciprocal-zero-seeds 1 /65536 0.0
+reciprocal-zero-seeds 2049 /65536 7.7
+reciprocal-zero-seeds 4097 /65536 15.4
+reciprocal-zero-seeds 6145 /65536 23.1
+reciprocal-zero-seeds 8193 /65536 30.9
+reciprocal-zero-seeds 10241 /65536 38.6
+reciprocal-zero-seeds 12289 /65536 46.4
+reciprocal-zero-seeds 14337 /65536 54.1
+reciprocal-zero-seeds 16385 /65536 61.7
+reciprocal-zero-seeds 18433 /65536 69.4
+reciprocal-zero-seeds 20481 /65536 77.1
+reciprocal-zero-seeds 22529 /65536 84.8
+reciprocal-zero-seeds 24577 /65536 92.5
+reciprocal-zero-seeds 26625 /65536 100.2
+reciprocal-zero-seeds 28673 /65536 107.9
+reciprocal-zero-seeds 30721 /65536 115.6
+reciprocal-zero-seeds 32769 /65536 123.3
+reciprocal-zero-seeds 34817 /65536 131.0
+reciprocal-zero-seeds 36865 /65536 138.7
+reciprocal-zero-seeds 38913 /65536 146.4
+reciprocal-zero-seeds 40961 /65536 154.1
+reciprocal-zero-seeds 43009 /65536 161.9
+reciprocal-zero-seeds 45057 /65536 169.6
+reciprocal-zero-seeds 47105 /65536 177.4
+reciprocal-zero-seeds 49153 /65536 185.2
+reciprocal-zero-seeds 51201 /65536 192.9
+reciprocal-zero-seeds 53249 /65536 200.6
+reciprocal-zero-seeds 55297 /65536 208.3
+reciprocal-zero-seeds 57345 /65536 216.1
+reciprocal-zero-seeds 59393 /65536 223.8
+reciprocal-zero-seeds 61441 /65536 231.5
+reciprocal-zero-seeds 63489 /65536 239.3
+{
+  "status": "PASS_EXPANDED_ALL_SEED_DIVISORS_TWO_MANTISSA_PATTERNS",
+  "candidate_ELF_sha256": "a2957007576c1803479e122991316559b0a7b0cc63b9355c6874bfd29846404a",
+  "input_seed_divisors": 65536,
+  "patterns_per_divisor": 2,
+  "fresh_scalar_inputs": 131072,
+  "states": 262144,
+  "actual_ARM_calls": 786432,
+  "actual_directed_MPFR_inputs": 131072,
+  "sNaN_policy_shortcuts": 0,
+  "MPFR_version": "4.2.2",
+  "actual_software_seed_divisors_observed": 65536,
+  "correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 262096,
+      "equal": 34,
+      "slower": 14
+    },
+    "candidate": {
+      "faster": 262131,
+      "slower": 2,
+      "equal": 11
+    }
+  },
+  "parent_loss_states": 14,
+  "candidate_loss_states": 2,
+  "new_loss_states": 0,
+  "wrong_Qfplib_variants_retained": 0,
+  "parent_instruction_delta_histogram": {
+    "-3": 53412,
+    "-2": 208730,
+    "0": 2
+  },
+  "certificate_calls_by_class": {
+    "certified": 119532,
+    "full": 11516
+  },
+  "all_parent_costs_no_lower_than_candidate": true,
+  "all_live_joins_full_after_y_residual_and_certificate_decisions_checked": true,
+  "DIRTY_SIO_preserved_no_writes": true,
+  "observed_stacks": {
+    "parent": 28,
+    "candidate": 28
+  },
+  "records_sha256": "5e340b277c434945b8e35a9f20c03df574b96b3d4e9bedb8033f6d96e1c8840a",
+  "elapsed_seconds": 246.97529545798898,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

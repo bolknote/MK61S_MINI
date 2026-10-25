@@ -1,0 +1,67 @@
+{
+  "status": "REPORT_CORRIGENDUM_PUBLIC_PARENT_COST_INCREASE_SCOPE",
+  "packet": ".build/m0-pow-reciprocal-certificate-20261025",
+  "FROZEN_sha256": "99110367092d4c7397967d9f3b06fb282843431bd7af5b71ea1038a77b4ac329",
+  "HANDOFF_sha256": "5729146db8d8cedd47aa540b11728bc532d5ba706696c01211a4beaa29068607",
+  "result_sha256": "50b9e0c53b15ebe2a2851a50ac1bcd533558880c02314ce620de5eb55c756a4f",
+  "records_sha256": "9b8b29e71f87e2bc34fe0ec12241274e6e8d592a168e7eb17dc547ca0164e1b1",
+  "original_HANDOFF_claim": "32 states add7-8; all remain no slower than their correct Qfplib references.",
+  "corrected_claim": "32 public states add7-8 instructions; none creates a new Qfplib loss. Two of these were already slower than correct Qfplib and become slower still. The scalar1132 increased states have no correct-Qfplib loss.",
+  "counts": {
+    "increased_states": 32,
+    "increased_states_with_correct_Qfplib": 2,
+    "already_slow_states_further_slowed": 2
+  },
+  "witnesses": [
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "READY",
+      "parent": 1697,
+      "candidate": 1705,
+      "references": {
+        "qfp_composed_pow": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1526,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_exact": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1547,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_integer": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1584,
+          "correct_Qfplib": true
+        }
+      }
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "DIRTY",
+      "parent": 1706,
+      "candidate": 1714,
+      "references": {
+        "qfp_composed_pow": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1526,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_exact": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1547,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_integer": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1584,
+          "correct_Qfplib": true
+        }
+      }
+    }
+  ],
+  "raw_costs_loss_sets_outputs_or_qualification_counts_changed": false,
+  "frozen_files_unchanged": true
+}

@@ -1,0 +1,19 @@
+{
+  "status": "COMPLETE_MATH_SOURCE_UNITS_COMPILED_NOT_LINKED",
+  "undefined_remaining": [
+    "memcpy",
+    "memset"
+  ],
+  "strong_duplicate_definitions": {},
+  "exact_boundary_compare_real_Thumb_alias": true,
+  "private_reciprocal_objects_match_qualified_bound3": true,
+  "boundary_object_matches_qualified_source": true,
+  "earlier_core_CPP_ASM_allocated_code_symbols_semantic_relocations_equal_after_local_header_copy": true,
+  "final_ELF_linked": false,
+  "actual_linked_R12_guard_passed": false,
+  "loader_layout_guard_passed": false,
+  "actual_ARM_or_MPFR_calls": 0,
+  "canonical_M4_Git_device_USB_Flash_changed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

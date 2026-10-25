@@ -1,0 +1,85 @@
+{
+  "status": "PASS_SAME_CORPUS_PUBLIC_AND_EXPANDED_SCALAR_RECOUNT_ALL_INCREASES_KEPT",
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "public_pairs120980_states241960_refvariants279522": true,
+  "wrong_public77106_retained": true,
+  "loss_pairs": [
+    11372,
+    11371
+  ],
+  "one_new_strict_pair": true,
+  "separate_reference_state_equality_not_strict_fix": [
+    {
+      "x": "3FE4F79E13C3C1C2",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "reference": "qfp_composed_pow",
+      "parent": 1507,
+      "candidate": 1505,
+      "Qfplib": 1505
+    }
+  ],
+  "public_correct_Qfplib": {
+    "slower": 21028,
+    "faster": 178683,
+    "equal": 2705
+  },
+  "faster754_READY377_DIRTY377": true,
+  "public_savings": [
+    2,
+    7
+  ],
+  "parent_replays778_include24_unchanged_controls": true,
+  "no_public_increases_wrong_or_newloss": true,
+  "all_public_exact_sign_and_inline_saving_model": true,
+  "all10254_fresh_overlap": true,
+  "immediate_parent_field": "parent_reciprocal_instructions overwritten with numerator-one candidate cost; older history excluded",
+  "original153": {
+    "parent": {
+      "slower": 34,
+      "strict": 119
+    },
+    "candidate": {
+      "slower": 34,
+      "strict": 119
+    }
+  },
+  "expanded_scalar_same_corpus_pairs20994_states41988": true,
+  "not_compared_to_parent_old25536state_score": true,
+  "scalar_correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 24966,
+      "slower": 7422
+    },
+    "candidate": {
+      "faster": 32370,
+      "equal": 5,
+      "slower": 13
+    }
+  },
+  "wrong_scalar9600_preserved": true,
+  "scalar_parent_increase_states": 9664,
+  "scalar_parent_increase_histogram": {
+    "8": 3168,
+    "2": 352,
+    "11": 6144
+  },
+  "all_increases_retained_even_wrong_references": true,
+  "no_new_correct_Qfp_deficits_not_universal_parent_speed_win": true,
+  "scalar_remaining13_and5equals_kept_not_strict_wins": true,
+  "strict_quietNaN_no_nominal_filter": true,
+  "author615606_partition": [
+    241960,
+    778,
+    61524,
+    167952,
+    143392
+  ],
+  "author26011MPFR_plus110sNaN": true,
+  "author_bare71696oldplusnew143392_no_wrapper_speed_stack_claim": true,
+  "author_symbol_failure0_nestedSP318complete2partial23MPFR_excluded": true,
+  "parent_campaigns_not_fresh": true,
+  "reviewed507_stays422_author437_not_promoted": true,
+  "device_IO": 0
+}

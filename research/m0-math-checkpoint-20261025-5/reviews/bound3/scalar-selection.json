@@ -1,0 +1,384 @@
+{
+  "all5_error_class_examples": {
+    "0": {
+      "denominator": "0010000000000001",
+      "NZCV": 0,
+      "group": "all16_flags_IEEE_edges",
+      "SIO": "DIRTY",
+      "expected": "7FCFFFFFFFFFFFFE",
+      "results": {
+        "parent": {
+          "output": "7FCFFFFFFFFFFFFE",
+          "instructions": 120,
+          "correct": true
+        },
+        "control": {
+          "output": "7FCFFFFFFFFFFFFE",
+          "instructions": 120,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FCFFFFFFFFFFFFE",
+          "instructions": 120,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FCFFFFFFFFFFFFE",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "0010000000000001"
+        }
+      ],
+      "software_seed_divisors": [
+        65536
+      ],
+      "first_product_reciprocals": [
+        1073741824
+      ],
+      "remainder_certificates": [],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": []
+    },
+    "1": {
+      "denominator": "001805EC17426EC0",
+      "NZCV": 3,
+      "group": "all_exponents_signs",
+      "SIO": "DIRTY",
+      "expected": "7FC55012FEA86EAF",
+      "results": {
+        "parent": {
+          "output": "7FC55012FEA86EAF",
+          "instructions": 121,
+          "correct": true
+        },
+        "control": {
+          "output": "7FC55012FEA86EAF",
+          "instructions": 121,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FC55012FEA86EAF",
+          "instructions": 121,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FC55012FEA86EAF",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "001805EC17426EC0"
+        }
+      ],
+      "software_seed_divisors": [
+        98398
+      ],
+      "first_product_reciprocals": [
+        715138558
+      ],
+      "remainder_certificates": [],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": []
+    },
+    "2": {
+      "denominator": "80294A0C03CCFBA2",
+      "NZCV": 7,
+      "group": "all_exponents_signs",
+      "SIO": "DIRTY",
+      "expected": "FFB43EEA1F7AA6D3",
+      "results": {
+        "parent": {
+          "output": "FFB43EEA1F7AA6D3",
+          "instructions": 124,
+          "correct": true
+        },
+        "control": {
+          "output": "FFB43EEA1F7AA6D3",
+          "instructions": 124,
+          "correct": true
+        },
+        "candidate": {
+          "output": "FFB43EEA1F7AA6D3",
+          "instructions": 124,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "FFB43EEA1F7AA6D3",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "80294A0C03CCFBA2"
+        }
+      ],
+      "software_seed_divisors": [
+        103584
+      ],
+      "first_product_reciprocals": [
+        679334975
+      ],
+      "remainder_certificates": [],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": []
+    },
+    "3": {
+      "denominator": "8241AD67C54A2C2B",
+      "NZCV": 6,
+      "group": "all_exponents_signs",
+      "SIO": "DIRTY",
+      "expected": "FD9CF6AE0C34C691",
+      "results": {
+        "parent": {
+          "output": "FD9CF6AE0C34C691",
+          "instructions": 127,
+          "correct": true
+        },
+        "control": {
+          "output": "FD9CF6AE0C34C691",
+          "instructions": 127,
+          "correct": true
+        },
+        "candidate": {
+          "output": "FD9CF6AE0C34C691",
+          "instructions": 124,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "FD9CF6AE0C34C691",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "8241AD67C54A2C2B"
+        }
+      ],
+      "software_seed_divisors": [
+        72406
+      ],
+      "first_product_reciprocals": [
+        971856920
+      ],
+      "remainder_certificates": [],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": [
+        72406
+      ]
+    },
+    "-1": {
+      "denominator": "0CB1845EBD22AC44",
+      "NZCV": 3,
+      "group": "all_exponents_signs",
+      "SIO": "DIRTY",
+      "expected": "732D3A87969C6228",
+      "results": {
+        "parent": {
+          "output": "732D3A87969C6228",
+          "instructions": 143,
+          "correct": true
+        },
+        "control": {
+          "output": "732D3A87969C6228",
+          "instructions": 143,
+          "correct": true
+        },
+        "candidate": {
+          "output": "732D3A87969C6228",
+          "instructions": 143,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "732D3A87969C6228",
+          "instructions": 178,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "0CB1845EBD22AC44"
+        }
+      ],
+      "software_seed_divisors": [
+        71749
+      ],
+      "first_product_reciprocals": [
+        980750126
+      ],
+      "remainder_certificates": [
+        {
+          "base": 560069190,
+          "u": 3173166148,
+          "v": 758694993,
+          "estimate": 4294549718,
+          "exact": 4294504797,
+          "fast": true,
+          "negative": true,
+          "cross_overflow": false,
+          "full": false,
+          "decision": "down"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": []
+    }
+  },
+  "expanded_two_old_losses_now_fixed": [
+    {
+      "D": 68846,
+      "pattern": 1,
+      "denominator": "3FF0CEE65125761B",
+      "NZCV": 15,
+      "SIO": "DIRTY",
+      "expected": "3FEE761901E3093C",
+      "results": {
+        "parent": {
+          "output": "3FEE761901E3093C",
+          "instructions": 149,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEE761901E3093C",
+          "instructions": 146,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEE761901E3093C",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FF0CEE65125761B"
+        }
+      ],
+      "software_seed_divisors": [
+        68846
+      ],
+      "first_product_reciprocals": [
+        1022112260
+      ],
+      "remainder_certificates": [
+        {
+          "base": 20558288,
+          "u": 1361409563,
+          "v": 63312503,
+          "estimate": 491570,
+          "exact": 489625,
+          "fast": true,
+          "negative": false,
+          "cross_overflow": false,
+          "full": false,
+          "decision": "up"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 1
+      },
+      "bound3_seed_divisors": [
+        68846
+      ]
+    },
+    {
+      "D": 69856,
+      "pattern": 1,
+      "denominator": "3FF10E0E8502C07D",
+      "NZCV": 1,
+      "SIO": "DIRTY",
+      "expected": "3FEE054B693CF2BC",
+      "results": {
+        "parent": {
+          "output": "3FEE054B693CF2BC",
+          "instructions": 147,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEE054B693CF2BC",
+          "instructions": 144,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEE054B693CF2BC",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FF10E0E8502C07D"
+        }
+      ],
+      "software_seed_divisors": [
+        69856
+      ],
+      "first_product_reciprocals": [
+        1007326930
+      ],
+      "remainder_certificates": [
+        {
+          "base": 1834101284,
+          "u": 2231550077,
+          "v": 3531203961,
+          "estimate": 4294420530,
+          "exact": 4294349494,
+          "fast": true,
+          "negative": true,
+          "cross_overflow": true,
+          "full": false,
+          "decision": "down"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": [
+        69856
+      ]
+    }
+  ]
+}

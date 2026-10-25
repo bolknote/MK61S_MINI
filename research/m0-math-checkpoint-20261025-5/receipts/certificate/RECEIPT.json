@@ -1,0 +1,503 @@
+{
+  "schema": "root-private-sign-certificate-correctness-acceptance-v1",
+  "created_utc": "2026-10-25T04:28:47.229962+00:00",
+  "status": "CORRECTNESS_COMPONENT_ACCEPTED_WITH_RETAINED_PERFORMANCE_TRADEOFF",
+  "FROZEN_sha256": "99110367092d4c7397967d9f3b06fb282843431bd7af5b71ea1038a77b4ac329",
+  "independent_review_sha256": "6cfdc8862299f9eb776b15dc0aceab8086fb4c847552df58d3e9cd1be3a6fddd",
+  "parent": "inline0be/ROOT7da9 additive",
+  "private_correctness_component_GO": true,
+  "performance_adoption_GO": false,
+  "integration_GO": false,
+  "hardware_or_main_or_release_GO": false,
+  "whole507_GO": false,
+  "reviewed507_no_slower": 422,
+  "certificate_contract": {
+    "all_uint32_error_with_borrow": [
+      0,
+      131071
+    ],
+    "accept": "(A&0x7fffffff)>=131072",
+    "uncertain_bands_inclusive": [
+      [
+        0,
+        131071
+      ],
+      [
+        2147483648,
+        2147614719
+      ]
+    ],
+    "fallback": "original complete product/borrow/sign, zero andINTMIN included",
+    "known_zero_shift": "private positive-one proof only",
+    "missing_limbs_flags_dead_before_RNE_source_verified": true
+  },
+  "independent_evidence": {
+    "ARM": 5592,
+    "MPFR": 61,
+    "sNaN_shortcuts": 6,
+    "own_rebuilds": 12,
+    "production_decisions": 324,
+    "fallback_restores": 134,
+    "after_second_joins": 332,
+    "own_failed_numerical_calls": 0,
+    "HOST_preflight_failures0ARM0MPFR": 4
+  },
+  "retained_tradeoffs": {
+    "public_loss_pairs": [
+      11371,
+      11369
+    ],
+    "strict_fixes": 1,
+    "equality_fixes": 1,
+    "public_faster_states": 354,
+    "public_slower_states": 32,
+    "public_slower_histogram": {
+      "+7": 6,
+      "+8": 26
+    },
+    "two_existing_correctQfp_losses_further_worsen": {
+      "READY": [
+        1697,
+        1705
+      ],
+      "DIRTY": [
+        1706,
+        1714
+      ],
+      "correct_Qfp_costs": [
+        1526,
+        1547,
+        1584
+      ]
+    },
+    "other30_increases_no_correctQfp_ref": true,
+    "scalar_parent_increases": 1132,
+    "scalar_losses": [
+      13,
+      1
+    ],
+    "remaining_DIRTY": "3FF27D0DF6735E90149vs146",
+    "no_new_loss_is_not_no_regression": true,
+    "bound_author_corrigendum": "5cd5994f20429814820d5702b8c84782848733e8ee5f95aa17b6a070719a2127",
+    "allocation_bytes": [
+      1072,
+      1108
+    ]
+  },
+  "requirements": [
+    "No automatic performance adoption; later child no-parent-increase does not erase this ancestry tradeoff.",
+    "Exact source merge/relink with near-one sibling; qualify actual private entry/live state/READY9ALU/RNE/PCS and compiler contexts.",
+    "Fresh integrated sharedR12/loader/layout/FlashRAMstack/scratch4080 guards; old168Boverlay14B corruption must be rejected.",
+    "Generalpowtotality/remainingmath/physicalcycles/hardware/release remain open. Following Zero child is not accepted here."
+  ],
+  "root_verification": "Review/manifest/requirements/validation/direct hash-size tuples verified. ROOT did not rerun ARM/MPFR or full corpus.",
+  "validated_unique_pins": 81,
+  "no_device_IO_canonical_or_Git_mutation": true,
+  "pins": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/FINAL-REVIEW.json",
+      "bytes": 16182,
+      "sha256": "6cfdc8862299f9eb776b15dc0aceab8086fb4c847552df58d3e9cd1be3a6fddd"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/FROZEN.json",
+      "bytes": 11505,
+      "sha256": "99110367092d4c7397967d9f3b06fb282843431bd7af5b71ea1038a77b4ac329"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/result.json",
+      "bytes": 4849,
+      "sha256": "50b9e0c53b15ebe2a2851a50ac1bcd533558880c02314ce620de5eb55c756a4f"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/HANDOFF.md",
+      "bytes": 3605,
+      "sha256": "5729146db8d8cedd47aa540b11728bc532d5ba706696c01211a4beaa29068607"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/candidate.elf",
+      "bytes": 161528,
+      "sha256": "aac32d20ff3c7c0f28d77b091e012fb997ce8dce1ec009f259803a8690e36be8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-remainder-certificate-r2-20261025/FROZEN.json",
+      "bytes": 2891,
+      "sha256": "904e63f0ecb510f8db9953ce686510167d598e1a4905a04ce31f2fb3d3ec3cf3"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-report-corrigendum-20261025.json",
+      "bytes": 2338,
+      "sha256": "5cd5994f20429814820d5702b8c84782848733e8ee5f95aa17b6a070719a2127"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-20261025/FROZEN.json",
+      "bytes": 13435,
+      "sha256": "0be351d573878a48f13f5d41edd2812a23ab269556b929db9aa8324e6a0bf219"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-independent-20261025/FINAL-REVIEW.json",
+      "bytes": 11548,
+      "sha256": "4d457dfb509ddbdd7cd4b067bc9f6e413d058c7fd58db3810fbad8a5acc534a0"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-root-acceptance-20261025-001/RECEIPT.json",
+      "bytes": 19203,
+      "sha256": "7da9d4245d12468f80252912fa7e83002bf25392b1524b33ce6f7f98a567d43d"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+      "bytes": 2653,
+      "sha256": "a715f89bf77448fd6070382e9e52fd0f73a45fd547bb4ee8edada13207a5eddf"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/MANIFEST.json",
+      "bytes": 19327,
+      "sha256": "4fff2124eaa049466ce34ea5e672c484bc22016ae6d584d403d520f0d94c3a3a"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/binding.json",
+      "bytes": 614235,
+      "sha256": "47c858f687a7b7ba2774bd6d7c397e866a3961bec9c698cb6206bd539f9fbd4c"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/proof.json",
+      "bytes": 3047,
+      "sha256": "eddabc42683449967b098371ea38a3c0416b30086c2618596f06b7ea93558d32"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/accounting.json",
+      "bytes": 6719,
+      "sha256": "ea0f418e7a30c749766262eea58ecacdba82004dc610fcf779bb6d4c3bb0bfb7"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/unit-arm.json",
+      "bytes": 1100022,
+      "sha256": "d365f73362d69d079556fe224a056d9ce7091ee021e58b0f848c7cacfea12988"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/scalar-arm-mpfr.json",
+      "bytes": 2175572,
+      "sha256": "0349b8526d642100775472ee16476f8bd3c17dc38fee5177b9eec3ae0fbe43b2"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/public-arm-mpfr.json",
+      "bytes": 147124,
+      "sha256": "a05a767aaa2f479d4b71f859e24b6d942d246931f2abea3699377829102ae100"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/closure.json",
+      "bytes": 3872,
+      "sha256": "7c2064efb37b3bd89cb6db6d3e50a40870817b0671cc4c8f6d8bff4c11be94c2"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/NOTES.md",
+      "bytes": 5478,
+      "sha256": "7a4c5403f48f272696176ebb1b3216da237562aba34678e1c6fdd8a115e46068"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/HOST-PREFLIGHT-001.json",
+      "bytes": 545,
+      "sha256": "2886097bdb327586539d116ddd93cbd39bd60baef4bc0e98c78ad14c258c96d9"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/HOST-PREFLIGHT-002.json",
+      "bytes": 791,
+      "sha256": "f23456deaee129c557a278114b2798db40889880381e29e01f954e1b9013816f"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/HOST-PREFLIGHT-003.json",
+      "bytes": 299,
+      "sha256": "e27f1f6abbba5efc0c7bbb7465dd7f7c6df365566293ae005e4e8c4434821db5"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/HOST-PREFLIGHT-004.json",
+      "bytes": 517,
+      "sha256": "e3087348f5ac6b239309c9d94b4f24d8de7122d6d023c83ddecadce2a4b00d3d"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/accounting.py",
+      "bytes": 11462,
+      "sha256": "335ebb118bd988ec9f17e21ce8a43d69d89d3cd9444a9551a14a21419d152a8e"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/arm.py",
+      "bytes": 22170,
+      "sha256": "03d44c271999a5170a56ae092f062366edfba86862d970b708cc56cce8d5d935"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/binding-preflight-001.py",
+      "bytes": 7857,
+      "sha256": "d035e19d4940c5ca0b1717bffa1911ebbf8934cd4d5914450640ebbc9143641b"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/binding-preflight-002.py",
+      "bytes": 7900,
+      "sha256": "2ff8677bd345b148bc777b46c40b044138bb7f058cfef6589d2e85d2a79e5c20"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/binding.py",
+      "bytes": 8150,
+      "sha256": "a40ac8b622f639d89d2181b4cf3b205792e46419b1150f53745b1b8c79ffcc90"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/candidate.elf.actual.dis",
+      "bytes": 132244,
+      "sha256": "0e08401d99e30bbfe3c506c1cd3372e403ed368dbcb3a3513ee95fe0d567fd17"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/closure.py",
+      "bytes": 6863,
+      "sha256": "d9b8144f840496315b01ba7b1ab38ab1eebc2561fa67c42dc19770faf288d6e7"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/control.elf.actual.dis",
+      "bytes": 131246,
+      "sha256": "8bb4523fdff566715c0d7e6d9931106f75a28cac37a713b9848e6d7fead8507b"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/finalize.py",
+      "bytes": 10772,
+      "sha256": "676b53e573534666eb8f1cff579f1a170b3f8a8f5da650680fc7f75b1212cdc1"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/proof-preflight-003.py",
+      "bytes": 6616,
+      "sha256": "6a22e3d34b37dc51a394caa8af1b70b4c53bb164ee4820525ab8c7e1143d62a7"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/proof-preflight-004.py",
+      "bytes": 6618,
+      "sha256": "94b533f52c8c031db60ffc7103820f4ac40b2242592c7cf784d18d05d06874d6"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/proof.py",
+      "bytes": 7259,
+      "sha256": "08608b9184ac620aaa012c3a072676427b59aec837b01644a80ce48f5dd82bae"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/RP-candidate.o",
+      "bytes": 25360,
+      "sha256": "61f40f88f26989e57c7c252f04764e2f56be73077dca41b273dead850d7875f9"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/RP-candidate.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/RP-candidate.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/RP-control.o",
+      "bytes": 25356,
+      "sha256": "0cb54abfc9adc38eb54a2cd055bb70d3e5ecf69f6054bc918178535caa5a9577"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/RP-control.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/RP-control.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/candidate-ddiv.o",
+      "bytes": 2072,
+      "sha256": "95ef9465c4fe16866cb6f740acd43152940b5113594ea6a13dabfa0000340200"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/candidate-ddiv.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/candidate-ddiv.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/candidate-software.o",
+      "bytes": 2068,
+      "sha256": "eff4f6619f8e614f50d3af431d803f739408abcb43e528012dcf529104909895"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/candidate-software.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/candidate-software.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/candidate.elf",
+      "bytes": 161528,
+      "sha256": "aac32d20ff3c7c0f28d77b091e012fb997ce8dce1ec009f259803a8690e36be8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/candidate.elf.stderr",
+      "bytes": 517,
+      "sha256": "053187010601e466b0bdac9a22754c8bce57acadeff3562102727aeebc95d550"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/candidate.elf.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/control-ddiv.o",
+      "bytes": 2000,
+      "sha256": "5c151992dc6fe4c2c7751d9357a1a3360d585bb215dd11e82149daadb3920c2d"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/control-ddiv.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/control-ddiv.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/control.elf",
+      "bytes": 161396,
+      "sha256": "1dc55cef0eef6ba9fd535fd88a5496bdf4097c2a7e26ec965e5e10ac1ed0a345"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/control.elf.stderr",
+      "bytes": 707,
+      "sha256": "939de2c4f14b1a44d95e237a566a954e6f03c3564f45d8ba9a72016f53e6ada8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/control.elf.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/software.o",
+      "bytes": 1996,
+      "sha256": "bcf69eae6ec0ce50ed225441e2c4447c464050e3b499dfb2ca95f1599428f638"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/software.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/software.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/candidate.elf",
+      "bytes": 4600,
+      "sha256": "27373ed6731ce56fb64ac9e6c9b6d4841b608f6dacd49c319aa0c0d95dabfafa"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/candidate.elf.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/candidate.elf.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/candidate.o",
+      "bytes": 892,
+      "sha256": "8fb2cbbfb8a16ff9fe2f1ccf4c34270c07f7df38c1c1cc5f82ff8ffee2a3968e"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/candidate.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/candidate.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/control.elf",
+      "bytes": 4572,
+      "sha256": "778574cbd391b88f00f8f5fb5e4d8a64440125aeadd2ea59ca88880c70089222"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/control.elf.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/control.elf.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/control.o",
+      "bytes": 868,
+      "sha256": "b9719c8ad9143951b5d712ac5cf3ee0dfbe849426073570fbd8cbb26d749cd29"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/control.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild/unit/control.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild-preflight-002/unit-control.elf",
+      "bytes": 4576,
+      "sha256": "c2f7f5cd20b2f5c99aaf3e4f33950daf9ee01bdd680010233b99158cf67adcb8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild-preflight-002/unit-control.elf.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/rebuild-preflight-002/unit-control.elf.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/scalar-selection.json",
+      "bytes": 22344,
+      "sha256": "9c39cca9a99ad66743fb7ebb2273f55e4b21f8cd734e212f35bf9e58349683ee"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/selected-public-jobs.json",
+      "bytes": 5535,
+      "sha256": "4d5ba6a33c9ff247b195af7e9c75a9afede788a312618a7a8b737907dffa9e87"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/unit-candidate.elf.actual.dis",
+      "bytes": 2012,
+      "sha256": "933c03a65ced2fd5583887c23f286469ad721c660129d11e46159fd495068661"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/unit-control.elf.actual.dis",
+      "bytes": 1516,
+      "sha256": "40388f6a72c86c7f7839a709b6dead83ed36d25e097ccccc8eb8961a9b6236f0"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/unit-selection.json",
+      "bytes": 15561,
+      "sha256": "cd678b8f73bee141e5b9657fa2554844cf6d1d09aab2e6ed0f231ddca1aaff26"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/VALIDATION.json",
+      "bytes": 952,
+      "sha256": "ef003eafa7a10042394d6d77c245237b1e564190f3a494ff1408c06c4c4fa9ef"
+    }
+  ]
+}

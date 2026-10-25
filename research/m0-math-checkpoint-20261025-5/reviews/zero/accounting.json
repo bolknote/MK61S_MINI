@@ -1,0 +1,236 @@
+{
+  "status": "PASS_ALL_THREE_SAVED_CORPORA_WITH_EXPLICIT_ANCESTRAL_TRADEOFF",
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "public_pairs120980_states241960_refs279522": true,
+  "wrong_public77106_retained": true,
+  "loss_pairs": [
+    11369,
+    11369
+  ],
+  "strict_pair_fixes": 0,
+  "equality_pair_fixes": 0,
+  "public_delta": {
+    "0": 241206,
+    "-2": 612,
+    "-3": 142
+  },
+  "faster754_READY377_DIRTY377": true,
+  "public_current_parent_increases0_newloss0_wrong0": true,
+  "all10254_overlap": true,
+  "parent_replays778_include24unchanged": true,
+  "separate_reference_equality_to_faster_not_pair_fix": [
+    {
+      "x": "3FE4F79E13C3C1C2",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "reference": "qfp_composed_pow",
+      "parent": 1505,
+      "candidate": 1503,
+      "Qfplib": 1505
+    }
+  ],
+  "original153": {
+    "parent": {
+      "slower": 33,
+      "strict": 120
+    },
+    "candidate": {
+      "slower": 33,
+      "strict": 120
+    }
+  },
+  "ancestral_Certificate32_increases_still_worse_than_Inline_hist": {
+    "6": 26,
+    "5": 6
+  },
+  "ancestral_two_already_losing_Qfp_regressions": [
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "READY",
+      "Inline": 1697,
+      "Certificate": 1705,
+      "Zero": 1703,
+      "has_correct_Qfp": true
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1706,
+      "Certificate": 1714,
+      "Zero": 1712,
+      "has_correct_Qfp": true
+    }
+  ],
+  "corrigendum5cd5994f_still_binding": true,
+  "performance_adoption_GO": false,
+  "same_scalar20994cases41988states": true,
+  "same_scalar_comparison": {
+    "parent": {
+      "faster": 32382,
+      "equal": 5,
+      "slower": 1
+    },
+    "candidate": {
+      "faster": 32387,
+      "equal": 1
+    }
+  },
+  "same_scalar_wrong9600_retained": true,
+  "same_scalar_delta": {
+    "0": 17260,
+    "-2": 19754,
+    "-3": 4974
+  },
+  "same_scalar_loss1to0_not_universal": true,
+  "expanded131072inputs262144states65536D_two_patterns": true,
+  "all65536_actual_softD_observed": true,
+  "expanded_comparison": {
+    "parent": {
+      "faster": 262096,
+      "equal": 34,
+      "slower": 14
+    },
+    "candidate": {
+      "faster": 262131,
+      "slower": 2,
+      "equal": 11
+    }
+  },
+  "expanded_delta": {
+    "0": 2,
+    "-2": 208730,
+    "-3": 53412
+  },
+  "expanded_loss14to2_newloss0_wrong0": true,
+  "expanded_remaining": [
+    {
+      "D": 68846,
+      "pattern": 1,
+      "denominator": "3FF0CEE65125761B",
+      "NZCV": 15,
+      "SIO": "DIRTY",
+      "expected": "3FEE761901E3093C",
+      "results": {
+        "parent": {
+          "output": "3FEE761901E3093C",
+          "instructions": 152,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEE761901E3093C",
+          "instructions": 149,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEE761901E3093C",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FF0CEE65125761B"
+        }
+      ],
+      "software_seed_divisors": [
+        68846
+      ],
+      "first_product_reciprocals": [
+        1022112260
+      ],
+      "remainder_certificates": [
+        {
+          "base": 20558288,
+          "u": 1361409563,
+          "v": 63312503,
+          "estimate": 491570,
+          "exact": 489625,
+          "fast": true,
+          "negative": false,
+          "cross_overflow": false,
+          "full": false,
+          "decision": "up"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 1
+      }
+    },
+    {
+      "D": 69856,
+      "pattern": 1,
+      "denominator": "3FF10E0E8502C07D",
+      "NZCV": 1,
+      "SIO": "DIRTY",
+      "expected": "3FEE054B693CF2BC",
+      "results": {
+        "parent": {
+          "output": "3FEE054B693CF2BC",
+          "instructions": 149,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEE054B693CF2BC",
+          "instructions": 147,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEE054B693CF2BC",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FF10E0E8502C07D"
+        }
+      ],
+      "software_seed_divisors": [
+        69856
+      ],
+      "first_product_reciprocals": [
+        1007326930
+      ],
+      "remainder_certificates": [
+        {
+          "base": 1834101284,
+          "u": 2231550077,
+          "v": 3531203961,
+          "estimate": 4294420530,
+          "exact": 4294349494,
+          "fast": true,
+          "negative": true,
+          "cross_overflow": true,
+          "full": false,
+          "decision": "down"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      }
+    }
+  ],
+  "author1460246_additive_partition": [
+    241960,
+    778,
+    61524,
+    167952,
+    201600,
+    786432
+  ],
+  "author157083MPFR_plus110sNaN": true,
+  "overlapping_campaigns_NOT_unique_union": true,
+  "parent_campaigns_not_fresh": true,
+  "no_parent_increases_in_current_three_corpora_NOT_erasing_ancestral_regressions": true,
+  "reviewed507422_not_author438": true,
+  "devices": 0
+}

@@ -1,0 +1,87 @@
+{
+  "status": "PASS_FRESH_KNOWN_ZERO_PRIVATE_CALLER_FULL_RESIDUAL_PACK_AND_RESOURCE_CLOSURE",
+  "counts": {
+    "calls": 460,
+    "before": 408,
+    "after": 408,
+    "residual": 408,
+    "half": 408,
+    "zeros": 382,
+    "pre_cert": 382,
+    "certificates": 382,
+    "down": 382,
+    "pack": 408,
+    "inline": 202,
+    "pops": 460,
+    "returns": 16,
+    "latency9": 202,
+    "classified": 382,
+    "restored": 134,
+    "zero_up": 202,
+    "nested": 8
+  },
+  "own_ARM6024_MPFR69_plus6sNaN": true,
+  "exact_permutation_full_product_state_and_full_after_residual_checked": true,
+  "generic_arbitraryR6_actual_decisive_target128checks": true,
+  "fresh_complete_residual_pre_cert_and_projected_pack_NZCV_frame_join_not_unchanged186suffix": true,
+  "positive_ADC_known_zero202_and134fullbase_restores_checked": true,
+  "private_zero_vs_generic_R6_preservation_separate": true,
+  "fresh_sole_positive_one_BL_return_PCS_original20B_frame_R6guard_R12_checked": true,
+  "hidden_private_entries": {
+    "mk61_m0_reciprocal1": 2,
+    "mk61_m0_reciprocal1_sw_from_guard": 2
+  },
+  "allocation1100_free_Flash_no_new_RAM_or_overlap": true,
+  "no_overlap_refs": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf",
+      "bytes": 9015184,
+      "sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate.elf",
+      "bytes": 1116772,
+      "sha256": "5ddab388a96bef9c343e0c11e82797741f7ccb724a812d0532d76aa25c2e794e"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square-ordinary-20261024/candidate.elf",
+      "bytes": 1101716,
+      "sha256": "6e1cf7ded4ee258b49ddffcd1e893f4ec170700b181265048ad06ce0b9c1b8ae"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/candidate.elf",
+      "bytes": 3752,
+      "sha256": "e55be65b73b9b7bbbb72896904f61f8a1a5b5c5fb7bb052a78a5c580f351867c"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/candidate.elf",
+      "bytes": 1203168,
+      "sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-r2-20261025/candidate.elf",
+      "bytes": 11292,
+      "sha256": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/candidate.elf",
+      "bytes": 16236,
+      "sha256": "63a80f08c546e7bd07db6056eb1f64aa0de573c7296e5572b090e9d9f6edbfa9"
+    }
+  ],
+  "both_new_expanded_remaining_losses_and_old_loss_now_equal_checked": true,
+  "ancestral32regressions26plus6_6plus5vsInline_and2already_losing_kept": true,
+  "numerical_failed_partial_discarded_calls": 0,
+  "one_own_HOST_syntax_preflight0ARM0MPFR_preserved": true,
+  "source_merge_actual_R12_loader_layout_old168overlay14B_required": true,
+  "near_one_separate_sibling": true,
+  "reviewed507422_not_author438": true,
+  "integration_GO": false,
+  "performance_adoption_GO": false,
+  "hardware_GO": false,
+  "main_GO": false,
+  "release_GO": false,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "devices": 0
+}

@@ -1,0 +1,1500 @@
+
+Discarded input sections
+
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text._ZN7m0_eabi11jam_productENS_7ProductEj
+                0x00000000       0x4e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text._ZN7m0_eabi17integer_magnitudeEx
+                0x00000000       0x18 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text.__clzsi2
+                0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .comment       0x00000000       0x39 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .ARM.attributes
+                0x00000000       0x32 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+ .note.GNU-stack
+                0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+ .ARM.attributes
+                0x00000000       0x22 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .ARM.extab.m0_pow_root_prefix
+                0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .ARM.exidx.m0_pow_root_prefix
+                0x00000000       0x50 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .ARM.extab.m0_pow_boundary_exact
+                0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .ARM.exidx.m0_pow_boundary_exact
+                0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .ARM.extab.m0_pow_near_one_refine
+                0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .ARM.exidx.m0_pow_near_one_refine
+                0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .ARM.extab.m0_pow_square_fixed
+                0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .ARM.exidx.m0_pow_square_fixed
+                0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .ARM.extab.m0_pow_tail_extra
+                0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .ARM.exidx.m0_pow_tail_extra
+                0x00000000       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .comment       0x00000000       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .note.GNU-stack
+                0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .ARM.attributes
+                0x00000000       0x38 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .group         0x00000000        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .comment       0x00000000       0x39 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .ARM.attributes
+                0x00000000       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .comment       0x00000000       0x39 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .ARM.attributes
+                0x00000000       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1.S.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1.S.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1.S.o
+ .ARM.attributes
+                0x00000000       0x22 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1.S.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1_sw.S.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1_sw.S.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1_sw.S.o
+ .ARM.attributes
+                0x00000000       0x22 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1_sw.S.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-boundary.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-boundary.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-boundary.o
+ .comment       0x00000000       0x39 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-boundary.o
+ .ARM.attributes
+                0x00000000       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-boundary.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .text.__wrap_memmove
+                0x00000000      0x4a8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .text.__wrap_memcmp
+                0x00000000      0x408 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .comment       0x00000000       0x39 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .ARM.attributes
+                0x00000000       0x32 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+ .preinit_array.00300
+                0x00000000        0x4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+ .ARM.attributes
+                0x00000000       0x22 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+ .text.rom_func_lookup
+                0x00000000       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+ .text.rom_data_lookup
+                0x00000000       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+ .text.rom_reset_usb_boot
+                0x00000000       0x1c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+ .text.rom_reset_usb_boot_extra
+                0x00000000       0x24 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+ .comment       0x00000000       0x39 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+ .ARM.attributes
+                0x00000000       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+ .text          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-loader.o
+ .data          0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-loader.o
+ .bss           0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-loader.o
+ .comment       0x00000000       0x39 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-loader.o
+ .ARM.attributes
+                0x00000000       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-loader.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x10010000         0x001f0000         xr
+RAM              0x20000000         0x00038000         xrw
+HOT              0x20038000         0x00001000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.sqrt_group     0x10010000     0x2330
+ *(.m0_sqrt_special)
+ .m0_sqrt_special
+                0x10010000       0xa4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+                0x10010000                mk61_m0_sqrt_special
+ *(.m0_sqrt64_fixed.mk61_m0_sqrt)
+ *fill*         0x100100a4       0x1c 
+ .m0_sqrt64_fixed.mk61_m0_sqrt
+                0x100100c0     0x2160 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x100100c0                compact_math::sqrt(double)
+                0x100100c0                mk61_m0_sqrt
+                0x10010220                pow_sqrt64_coefficients
+ *(.m0_sqrt64_fixed.*)
+ .m0_sqrt64_fixed.root64
+                0x10012220      0x110 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+                0x10012220                pow_sqrt64_raw
+
+.pow_log_group  0x10012330      0xee8
+ *(.m0_pow_log_selector)
+ .m0_pow_log_selector
+                0x10012330       0x24 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+                0x10012330                mk61_m0_pow_log_select
+ *(.m0_pow_extension)
+ .m0_pow_extension
+                0x10012354      0xe3c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10012354                mk61_m0_pow_rsqrt_boundary
+                0x100126a4                mk61_m0_log_ratio70_slow
+                0x100126f0                pow_fast_log
+ .m0_pow_extension
+                0x10013190       0x64 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x10013190                mk61_m0_log_ratio70
+ *fill*         0x100131f4        0x4 
+ .m0_pow_extension.__stub
+                0x100131f8       0x20 linker stubs
+
+.pow_dispatch_group
+                0x10013218     0x1320
+ *(.m0_pow_dispatch_extension)
+ .m0_pow_dispatch_extension
+                0x10013218      0x5dc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10013218                pow_rsqrt
+                0x1001355c                mk61_m0_pow_negative_integer_dispatch
+                0x1001361c                mk61_m0_pow_dispatch
+ .m0_pow_dispatch_extension
+                0x100137f4      0x514 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x100137f4                compact_math::pow(double, double)
+                0x100137f4                mk61_m0_pow_fast
+                0x100138b8                mk61_m0_pow_square_exact
+                0x10013a00                mk61_m0_pow_rsqrt_fast
+                0x10013ab8                mk61_m0_pow_center_quotient_end
+                0x10013c68                mk61_m0_pow_rsqrt_point
+ .m0_pow_dispatch_extension.__stub
+                0x10013d08       0x30 linker stubs
+ *(.m0_pow_extension_data)
+ .m0_pow_extension_data
+                0x10013d38      0x800 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10013d38                factor_rsqrt_seeds
+ *(.m0_pow_argument_extension)
+
+.text           0x10014538    0x36908
+ *(.text*)
+ .text.unlikely.checked_trig_tan_sixth
+                0x10014538       0x8a /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text.unlikely.checked_trig_backend
+                0x100145c2       0x1c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ *fill*         0x100145de        0x2 
+ .text.unlikely.atan_inverse_correction.constprop.0
+                0x100145e0      0x374 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text._ZN7m0_eabi3jamEyj
+                0x10014954       0x3e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10014954                m0_eabi::jam(unsigned long long, unsigned int)
+ .text.atan_fast_reciprocal
+                0x10014992      0x20c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text.atan_fast_ratio
+                0x10014b9e       0x40 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ *fill*         0x10014bde        0x2 
+ .text.unlikely.ln_refine
+                0x10014be0     0x194c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text.ln_near_one
+                0x1001652c      0x4e4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text.ln_near_interval
+                0x10016a10      0x390 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text.unlikely.atan_refine
+                0x10016da0      0xb04 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text.atan_fast
+                0x100178a4      0x6d0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text.unlikely.checked_trig_tan_midpoint.isra.0
+                0x10017f74      0x220 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text._ZN7m0_eabi19divide_significandsEyyRy
+                0x10018194      0x2b0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10018194                m0_eabi::divide_significands(unsigned long long, unsigned long long, unsigned long long&)
+ .text.__aeabi_drsub
+                0x10018444       0x14 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10018444                __aeabi_drsub
+ .text.math62_sincos_small
+                0x10018458      0xa68 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10018458                math62_sincos_small
+ .text.mk61_m0_sincos_small
+                0x10018ec0      0x170 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10018ec0                mk61_m0_sincos_small
+ .text.math62_tan_small
+                0x10019030      0x558 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10019030                math62_tan_small
+ .text.trig_small_relative.isra.0
+                0x10019588       0xb0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text.trig_small_result
+                0x10019638       0xe8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .text.mk61_m0_tan_small
+                0x10019720      0x148 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10019720                mk61_m0_tan_small
+ .text.mk61_m0_atan_reduced
+                0x10019868      0x4f0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10019868                mk61_m0_atan_reduced
+ .text.mk61_m0_ln_approx
+                0x10019d58     0x119c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10019d58                mk61_m0_ln_approx
+ .text.mk61_m0_ln
+                0x1001aef4      0x4f8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001aef4                compact_math::ln(double)
+                0x1001aef4                mk61_m0_ln
+ .text.mk61_m0_atan
+                0x1001b3ec      0x36c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001b3ec                compact_math::atan(double)
+                0x1001b3ec                mk61_m0_atan
+ .text.mk61_m0_reduce_pio2
+                0x1001b758      0x64c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001b758                mk61_m0_reduce_pio2
+ .text.trig_fixed
+                0x1001bda4      0x118 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001bda4                trig_fixed
+ .text.trig_sincos_fixed
+                0x1001bebc      0x454 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001bebc                trig_sincos_fixed
+ .text.mk61_m0_sincos_reduced
+                0x1001c310       0x7c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001c310                mk61_m0_sincos_reduced
+ .text.mk61_m0_trig_medium
+                0x1001c38c      0x6d0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001c38c                mk61_m0_trig_medium
+ .text.__aeabi_lmul
+                0x1001ca5c        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001ca5c                __aeabi_lmul
+ .text.__clzdi2
+                0x1001ca64        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001ca64                __clzdi2
+ .text.mk61_m0_divmod64
+                0x1001ca6c       0xba /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001ca6c                mk61_m0_divmod64
+ .text.mk61_m0_udiv32
+                0x1001cb26       0x46 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001cb26                mk61_m0_udiv32
+ .text.mk61_m0_sdiv32
+                0x1001cb6c       0x44 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001cb6c                mk61_m0_sdiv32
+ .text.mk61_m0_sdivmod64
+                0x1001cbb0       0x98 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001cbb0                mk61_m0_sdivmod64
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE9normalizeEyRi
+                0x1001cc48       0x40 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001cc48                m0_eabi::Binary<52u, 11u>::normalize(unsigned long long, int&)
+ .text.mk61_m0_sqrt_slow
+                0x1001cc88       0x80 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001cc88                mk61_m0_sqrt_slow
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE4packEyiy
+                0x1001cd08       0x98 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001cd08                m0_eabi::Binary<52u, 11u>::pack(unsigned long long, int, unsigned long long)
+ .text._ZN7m0_eabi5fusedEyyy
+                0x1001cda0      0x524 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001cda0                m0_eabi::fused(unsigned long long, unsigned long long, unsigned long long)
+ .text.mk61_m0_fma
+                0x1001d2c4       0x12 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d2c4                mk61_m0_fma
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE9normalizeEyRi
+                0x1001d2d6       0x3c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d2d6                m0_eabi::Binary<23u, 8u>::normalize(unsigned long long, int&)
+ *fill*         0x1001d312        0x2 
+ .text._ZN7m0_eabi6extendEy
+                0x1001d314       0x54 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d314                m0_eabi::extend(unsigned long long)
+ .text.mk61_m0_f2d_slow
+                0x1001d368        0xa /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d368                mk61_m0_f2d_slow
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE4packEyiy
+                0x1001d372       0x9a /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d372                m0_eabi::Binary<23u, 8u>::pack(unsigned long long, int, unsigned long long)
+ .text._ZN7m0_eabi6narrowEy
+                0x1001d40c       0x74 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d40c                m0_eabi::narrow(unsigned long long)
+ .text.mk61_m0_d2f_slow
+                0x1001d480        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d480                mk61_m0_d2f_slow
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE3addEyy
+                0x1001d488      0x170 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d488                m0_eabi::Binary<52u, 11u>::add(unsigned long long, unsigned long long)
+ .text.mk61_m0_dadd_slow
+                0x1001d5f8        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d5f8                mk61_m0_dadd_slow
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE3mulEyy
+                0x1001d600      0x1e0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d600                m0_eabi::Binary<52u, 11u>::mul(unsigned long long, unsigned long long)
+ .text.mk61_m0_dmul_slow
+                0x1001d7e0        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d7e0                mk61_m0_dmul_slow
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE3divEyy
+                0x1001d7e8      0x148 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d7e8                m0_eabi::Binary<52u, 11u>::div(unsigned long long, unsigned long long)
+ .text.mk61_m0_ddiv_slow
+                0x1001d930        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d930                mk61_m0_ddiv_slow
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE3addEyy
+                0x1001d938      0x140 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001d938                m0_eabi::Binary<23u, 8u>::add(unsigned long long, unsigned long long)
+ .text.__aeabi_fadd
+                0x1001da78        0xe /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001da78                __aeabi_fadd
+ .text.__aeabi_fsub
+                0x1001da86       0x12 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001da86                __aeabi_fsub
+ .text.__aeabi_frsub
+                0x1001da98        0xe /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001da98                __aeabi_frsub
+ *fill*         0x1001daa6        0x2 
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE3mulEyy
+                0x1001daa8      0x174 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001daa8                m0_eabi::Binary<23u, 8u>::mul(unsigned long long, unsigned long long)
+ .text.__aeabi_fmul
+                0x1001dc1c        0xe /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001dc1c                __aeabi_fmul
+ *fill*         0x1001dc2a        0x2 
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE3divEyy
+                0x1001dc2c      0x120 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001dc2c                m0_eabi::Binary<23u, 8u>::div(unsigned long long, unsigned long long)
+ .text.__aeabi_fdiv
+                0x1001dd4c        0xe /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001dd4c                __aeabi_fdiv
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE7compareEyy
+                0x1001dd5a       0x64 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001dd5a                m0_eabi::Binary<23u, 8u>::compare(unsigned long long, unsigned long long)
+ .text.__aeabi_fcmpeq
+                0x1001ddbe       0x12 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001ddbe                __aeabi_fcmpeq
+ .text.__aeabi_fcmplt
+                0x1001ddd0       0x14 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001ddd0                __aeabi_fcmplt
+ .text.__aeabi_fcmple
+                0x1001dde4       0x14 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001dde4                __aeabi_fcmple
+ .text.__aeabi_fcmpge
+                0x1001ddf8       0x18 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001ddf8                __aeabi_fcmpge
+ .text.__aeabi_fcmpgt
+                0x1001de10       0x14 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001de10                __aeabi_fcmpgt
+ .text.__aeabi_fcmpun
+                0x1001de24       0x14 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001de24                __aeabi_fcmpun
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE12from_integerEyy
+                0x1001de38       0x52 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001de38                m0_eabi::Binary<23u, 8u>::from_integer(unsigned long long, unsigned long long)
+ .text.__aeabi_i2f
+                0x1001de8a       0x1e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001de8a                __aeabi_i2f
+ .text.__aeabi_ui2f
+                0x1001dea8        0xe /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001dea8                __aeabi_ui2f
+ *fill*         0x1001deb6        0x2 
+ .text._ZN7m0_eabi6BinaryILj52ELj11EE17magnitude_integerEy
+                0x1001deb8       0x58 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001deb8                m0_eabi::Binary<52u, 11u>::magnitude_integer(unsigned long long)
+ .text.__aeabi_d2uiz
+                0x1001df10       0x1a /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001df10                __aeabi_d2uiz
+ .text.mk61_m0_d2ulz_slow
+                0x1001df2a       0x18 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001df2a                mk61_m0_d2ulz_slow
+ .text.mk61_m0_d2lz_slow
+                0x1001df42       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001df42                mk61_m0_d2lz_slow
+ *fill*         0x1001df62        0x2 
+ .text.mk61_m0_d2iz_slow
+                0x1001df64       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001df64                mk61_m0_d2iz_slow
+ .text._ZN7m0_eabi6BinaryILj23ELj8EE17magnitude_integerEy
+                0x1001df94       0x50 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001df94                m0_eabi::Binary<23u, 8u>::magnitude_integer(unsigned long long)
+ .text.__aeabi_f2iz
+                0x1001dfe4       0x34 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001dfe4                __aeabi_f2iz
+ .text.__aeabi_f2uiz
+                0x1001e018       0x1c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1001e018                __aeabi_f2uiz
+ .text.__aeabi_i2d
+                0x1001e034      0x36c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e034                __aeabi_i2d
+                0x1001e044                __aeabi_ui2d
+                0x1001e0c0                __aeabi_l2d
+                0x1001e0d6                __aeabi_ul2d
+ .text.__aeabi_d2f
+                0x1001e3a0      0x100 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e3a0                __aeabi_d2f
+ .text.__aeabi_dcmpeq
+                0x1001e4a0       0x34 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e4a0                __aeabi_dcmpeq
+ .text.__aeabi_dcmplt
+                0x1001e4d4       0x60 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e4d4                __aeabi_dcmplt
+ .text.__aeabi_dcmple
+                0x1001e534       0x60 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e534                __aeabi_dcmple
+ .text.__aeabi_dcmpge
+                0x1001e594       0x60 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e594                __aeabi_dcmpge
+ .text.__aeabi_dcmpgt
+                0x1001e5f4       0x60 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e5f4                __aeabi_dcmpgt
+ .text.__aeabi_dcmpun
+                0x1001e654       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e654                __aeabi_dcmpun
+ .text.__aeabi_d2iz
+                0x1001e680       0x50 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e680                __aeabi_d2iz
+ .text.__aeabi_d2lz
+                0x1001e6d0       0x7c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e6d0                __aeabi_d2lz
+ .text.__aeabi_d2ulz
+                0x1001e74c       0x68 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e74c                __aeabi_d2ulz
+ .text.mk61_m0_product62
+                0x1001e7b4       0xcc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e7b4                mk61_m0_product62
+ .text.mk61_m0_trig_pack
+                0x1001e880       0x60 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e880                mk61_m0_trig_pack
+ .text.__aeabi_uldivmod
+                0x1001e8e0       0x12 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e8e0                __aeabi_uldivmod
+ .text.__aeabi_ldivmod
+                0x1001e8f2       0x12 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e8f2                __aeabi_ldivmod
+ .text.__aeabi_uidiv
+                0x1001e904        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e904                __aeabi_uidiv
+                0x1001e904                __aeabi_uidivmod
+ .text.mk61_m0_math_udiv32
+                0x1001e90c       0x24 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e90c                mk61_m0_math_udiv32
+ .text.__aeabi_idiv
+                0x1001e930        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e930                __aeabi_idiv
+                0x1001e930                __aeabi_idivmod
+ .text.__aeabi_idiv0
+                0x1001e938        0x2 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e938                __aeabi_idiv0
+ .text.__aeabi_ldiv0
+                0x1001e93a        0x2 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e93a                __aeabi_ldiv0
+ .text.mk61_m0_sqrtf
+                0x1001e93c      0x8dc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x1001e93c                mk61_m0_sqrtf
+ .text.mk61_rp2040_arithmetic
+                0x1001f218      0x6bc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+                0x1001f222                __aeabi_dsub
+                0x1001f22c                __aeabi_dadd
+                0x1001f53e                __aeabi_dmul
+                0x1001f710                __aeabi_ddiv
+ .text.unlikely._ZN8core_sinL12cmp_dint_absEPKN14core_m0_shared4TrigES3_
+                0x1001f8d4       0xd8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text.unlikely._ZN8core_sinL7cp_dintEPN14core_m0_shared4TrigEPKS1_
+                0x1001f9ac       0x1e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ *fill*         0x1001f9ca        0x2 
+ .text.unlikely._ZN8core_sinL8dint_todEPN14core_m0_shared4TrigE
+                0x1001f9cc      0x1e4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text.unlikely._ZN9core_asinL16as_asin_databaseEdd
+                0x1001fbb0       0xb0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_logL7cp_dintEPN14core_m0_shared3LogEPKS1_
+                0x1001fc60       0x22 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_logL8cmp_dintEPKN14core_m0_shared3LogES3_
+                0x1001fc82       0x64 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ *fill*         0x1001fce6        0x2 
+ .text._ZN8core_logL8dint_todEPN14core_m0_shared3LogE
+                0x1001fce8       0xa4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL7cp_dintEPNS_8dint64_tEPKS0_
+                0x1001fd8c       0x1e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL7cp_qintEPNS_8qint64_tEPKS0_
+                0x1001fdaa       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ *fill*         0x1001fdd6        0x2 
+ .text.unlikely._ZN8core_expL15as_exp_databaseEdd
+                0x1001fdd8       0xd0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_sinL5a_mulEPdS0_dd
+                0x1001fea8       0x48 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_sinL5d_mulEPdS0_dddd
+                0x1001fef0       0x44 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_sinL5s_mulEPdS0_ddd
+                0x1001ff34       0x32 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ *fill*         0x1001ff66        0x2 
+ .text._ZN8core_sinL10evalPSfastEPdS0_dddd
+                0x1001ff68       0xe0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_sinL10evalPCfastEPdS0_dd
+                0x10020048       0xbc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text.unlikely._ZN9core_atanL9muldd_accEddddPd
+                0x10020104       0x9e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ *fill*         0x100201a2        0x2 
+ .text._ZN8core_sinL6set_ddEPdS0_yy
+                0x100201a4      0x1a0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text.unlikely._ZN8core_sinL10dint_fromdEPN14core_m0_shared4TrigEd
+                0x10020344       0x90 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text.unlikely._ZN8core_sinL9normalizeEPN14core_m0_shared4TrigE
+                0x100203d4       0x9a /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL12cmp_dint_absEPKNS_8dint64_tES2_
+                0x1002046e       0xc8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ *fill*         0x10020536        0x2 
+ .text.unlikely._ZN9core_atanL15as_atan_refine2Edd
+                0x10020538      0x660 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._Z14mk61_m0_wide32mm
+                0x10020b98       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10020b98                mk61_m0_wide32(unsigned long, unsigned long)
+ .text._Zml15mk61_m0_uint128S_
+                0x10020bc4       0xae /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10020bc4                operator*(mk61_m0_uint128, mk61_m0_uint128)
+ .text._ZN8core_logL8mul_dintEPN14core_m0_shared3LogEPKS1_S4_
+                0x10020c72      0x1f6 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN10core_log10L8mul_dintEPN14core_m0_shared3LogEPKS1_S4_
+                0x10020e68      0x1f6 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL8mul_qintEPNS_8qint64_tEPKS0_S3_
+                0x1002105e      0x59c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL11mul_qint_41EPNS_8qint64_tEPKS0_S3_
+                0x100215fa      0x2a8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ *fill*         0x100218a2        0x2 
+ .text.unlikely._ZN8core_sinL6reduceEPN14core_m0_shared4TrigE
+                0x100218a4      0x4dc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL10mul_qint_2EPNS_8qint64_tExPKS0_.constprop.0
+                0x10021d80      0x2f4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._Z10core_rounddi
+                0x10022074      0x114 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10022074                core_round(double, int)
+ .text._ZN8core_sinL11reduce_fastEPdS0_dS0_
+                0x10022188      0x368 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._Z10core_ctzlly
+                0x100224f0       0x1a /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x100224f0                core_ctzll(unsigned long long)
+ *fill*         0x1002250a        0x2 
+ .text._ZN9core_asinL16roundeven_finiteEd
+                0x1002250c       0x80 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text.unlikely._ZN9core_acosL14as_acos_refineEdd
+                0x1002258c      0x7cc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text.unlikely._ZN8core_expL15as_exp_accurateEd
+                0x10022d58      0x540 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL6is_intEd
+                0x10023298       0x18 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text.unlikely._ZN9core_asinL14as_asin_refineEdd
+                0x100232b0      0x65c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL8is_exactEdd
+                0x1002390c      0x47c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZlsIiLi0EE15mk61_m0_uint128S0_T_
+                0x10023d88       0x94 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10023d88                mk61_m0_uint128 operator<< <int, 0>(mk61_m0_uint128, int)
+ .text._ZN8core_powL14mul_dint_int64EPNS_8dint64_tEPKS0_x.constprop.0
+                0x10023e1c      0x204 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN9core_atan7cr_atanEd
+                0x10024020      0x414 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10024020                core_atan::cr_atan(double)
+ .text.mk61_m0_cr_atan
+                0x10024434        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10024434                mk61_m0_cr_atan
+ .text._ZN9core_asin7cr_asinEd
+                0x1002443c      0x3b0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002443c                core_asin::cr_asin(double)
+ .text.mk61_m0_cr_asin
+                0x100247ec        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x100247ec                mk61_m0_cr_asin
+ .text._ZN9core_acos7cr_acosEd
+                0x100247f4      0x470 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x100247f4                core_acos::cr_acos(double)
+ .text.mk61_m0_cr_acos
+                0x10024c64        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10024c64                mk61_m0_cr_acos
+ .text._ZN8core_exp6cr_expEd
+                0x10024c6c      0x354 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10024c6c                core_exp::cr_exp(double)
+ .text.mk61_m0_cr_exp
+                0x10024fc0        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10024fc0                mk61_m0_cr_exp
+ .text._ZrsIyLi0EE15mk61_m0_uint128S0_T_
+                0x10024fc8       0x90 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10024fc8                mk61_m0_uint128 operator>><unsigned long long, 0>(mk61_m0_uint128, unsigned long long)
+ .text._ZrsIiLi0EE15mk61_m0_uint128S0_T_
+                0x10025058       0x88 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10025058                mk61_m0_uint128 operator>><int, 0>(mk61_m0_uint128, int)
+ .text._ZlsIyLi0EE15mk61_m0_uint128S0_T_
+                0x100250e0       0x9c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x100250e0                mk61_m0_uint128 operator<< <unsigned long long, 0>(mk61_m0_uint128, unsigned long long)
+ .text.unlikely._ZN8core_sinL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_
+                0x1002517c      0x3f4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text.unlikely._ZN8core_cosL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_
+                0x10025570      0x3f4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_tanL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_
+                0x10025964      0x3f4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL8add_dintEPNS_8dint64_tEPKS0_S3_
+                0x10025d58      0x3f4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL11add_qint_22EPNS_8qint64_tEPKS0_S3_
+                0x1002614c      0x454 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL8add_qintEPNS_8qint64_tEPKS0_S3_
+                0x100265a0      0xc0c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text.unlikely._ZN8core_sinL11mul_dint_21EPN14core_m0_shared4TrigEPKS1_S4_
+                0x100271ac      0x118 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text.unlikely._ZN8core_sinL8mul_dintEPN14core_m0_shared4TrigEPKS1_S4_
+                0x100272c4      0x198 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_cos6cr_cosEd
+                0x1002745c      0x6d4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002745c                core_cos::cr_cos(double)
+ .text.mk61_m0_cr_cos
+                0x10027b30        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10027b30                mk61_m0_cr_cos
+ .text._ZN8core_tanL8inv_dintEPN14core_m0_shared4TrigES2_
+                0x10027b38      0x31c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_tanL12tan_accurateEd
+                0x10027e54      0x38c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_tan6cr_tanEd
+                0x100281e0      0x8dc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x100281e0                core_tan::cr_tan(double)
+ .text.mk61_m0_cr_tan
+                0x10028abc        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10028abc                mk61_m0_cr_tan
+ .text._ZN8core_sin6cr_sinEd
+                0x10028ac4      0x70c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10028ac4                core_sin::cr_sin(double)
+ .text.mk61_m0_cr_sin
+                0x100291d0        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x100291d0                mk61_m0_cr_sin
+ .text._ZN8core_logL8add_dintEPN14core_m0_shared3LogEPKS1_S4_
+                0x100291d8      0x33c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_log6cr_logEd
+                0x10029514      0x728 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10029514                core_log::cr_log(double)
+ .text.mk61_m0_cr_ln
+                0x10029c3c        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10029c3c                mk61_m0_cr_ln
+ .text._ZN10core_log10L8add_dintEPN14core_m0_shared3LogEPKS1_S4_
+                0x10029c44      0x33c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN10core_log108cr_log10Ed
+                0x10029f80      0x770 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x10029f80                core_log10::cr_log10(double)
+ .text.mk61_m0_cr_log10
+                0x1002a6f0        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002a6f0                mk61_m0_cr_log10
+ .text._ZN8core_powL11mul_dint_11EPNS_8dint64_tEPKS0_S3_
+                0x1002a6f8       0xae /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ *fill*         0x1002a7a6        0x2 
+ .text._ZN8core_powL11add_dint_11EPNS_8dint64_tEPKS0_S3_
+                0x1002a7a8      0x23c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL11mul_dint_21EPNS_8dint64_tEPKS0_S3_
+                0x1002a9e4      0x10e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL8mul_dintEPNS_8dint64_tEPKS0_S3_
+                0x1002aaf2      0x18e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .text._ZN8core_powL11mul_qint_11EPNS_8qint64_tEPKS0_S3_
+                0x1002ac80       0xb6 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ *fill*         0x1002ad36        0x2 
+ .text._ZN15m0_pow_interval5FixedILj512EE9normalizeEyRyRi
+                0x1002ad38       0x60 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002ad38                m0_pow_interval::Fixed<512u>::normalize(unsigned long long, unsigned long long&, int&)
+ .text._ZN15m0_pow_interval5FixedILj512EE5timesERKNS1_1BEy
+                0x1002ad98       0x80 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002ad98                m0_pow_interval::Fixed<512u>::times(m0_pow_interval::Fixed<512u>::B const&, unsigned long long)
+ .text._ZN15m0_pow_interval5FixedILj512EE3addERKNS1_1BES4_
+                0x1002ae18       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002ae18                m0_pow_interval::Fixed<512u>::add(m0_pow_interval::Fixed<512u>::B const&, m0_pow_interval::Fixed<512u>::B const&)
+ .text._ZN15m0_pow_interval5FixedILj512EE7compareERKNS1_1BES4_
+                0x1002ae48       0x22 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002ae48                m0_pow_interval::Fixed<512u>::compare(m0_pow_interval::Fixed<512u>::B const&, m0_pow_interval::Fixed<512u>::B const&)
+ .text._ZN15m0_pow_interval5FixedILj512EE8subtractERKNS1_1BES4_
+                0x1002ae6a       0x3e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002ae6a                m0_pow_interval::Fixed<512u>::subtract(m0_pow_interval::Fixed<512u>::B const&, m0_pow_interval::Fixed<512u>::B const&)
+ .text._ZN15m0_pow_interval5FixedILj512EE9shifted64ERKNS1_1BEj
+                0x1002aea8       0x6c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002aea8                m0_pow_interval::Fixed<512u>::shifted64(m0_pow_interval::Fixed<512u>::B const&, unsigned int)
+ .text._ZN15m0_pow_interval5FixedILj512EE10differenceERKNS1_1BES4_
+                0x1002af14       0x36 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002af14                m0_pow_interval::Fixed<512u>::difference(m0_pow_interval::Fixed<512u>::B const&, m0_pow_interval::Fixed<512u>::B const&)
+ *fill*         0x1002af4a        0x2 
+ .text._ZN15m0_pow_interval5FixedILj1024EE9normalizeEyRyRi
+                0x1002af4c       0x60 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002af4c                m0_pow_interval::Fixed<1024u>::normalize(unsigned long long, unsigned long long&, int&)
+ .text._ZN15m0_pow_interval5FixedILj1024EE5timesERKNS1_1BEy
+                0x1002afac       0x80 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002afac                m0_pow_interval::Fixed<1024u>::times(m0_pow_interval::Fixed<1024u>::B const&, unsigned long long)
+ .text._ZN15m0_pow_interval5FixedILj1024EE3addERKNS1_1BES4_
+                0x1002b02c       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b02c                m0_pow_interval::Fixed<1024u>::add(m0_pow_interval::Fixed<1024u>::B const&, m0_pow_interval::Fixed<1024u>::B const&)
+ .text._ZN15m0_pow_interval5FixedILj1024EE7compareERKNS1_1BES4_
+                0x1002b05c       0x22 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b05c                m0_pow_interval::Fixed<1024u>::compare(m0_pow_interval::Fixed<1024u>::B const&, m0_pow_interval::Fixed<1024u>::B const&)
+ .text._ZN15m0_pow_interval5FixedILj1024EE8subtractERKNS1_1BES4_
+                0x1002b07e       0x3e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b07e                m0_pow_interval::Fixed<1024u>::subtract(m0_pow_interval::Fixed<1024u>::B const&, m0_pow_interval::Fixed<1024u>::B const&)
+ .text._ZN15m0_pow_interval5FixedILj1024EE9shifted64ERKNS1_1BEj
+                0x1002b0bc       0x6c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b0bc                m0_pow_interval::Fixed<1024u>::shifted64(m0_pow_interval::Fixed<1024u>::B const&, unsigned int)
+ .text._ZN15m0_pow_interval5FixedILj1024EE10differenceERKNS1_1BES4_
+                0x1002b128       0x36 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b128                m0_pow_interval::Fixed<1024u>::difference(m0_pow_interval::Fixed<1024u>::B const&, m0_pow_interval::Fixed<1024u>::B const&)
+ .text._ZN15m0_pow_interval5FixedILj512EE12word_productEmm
+                0x1002b15e       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b15e                m0_pow_interval::Fixed<512u>::word_product(unsigned long, unsigned long)
+ .text._ZN15m0_pow_interval5FixedILj512EE9incrementERKNS1_1BE
+                0x1002b18a       0x28 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b18a                m0_pow_interval::Fixed<512u>::increment(m0_pow_interval::Fixed<512u>::B const&)
+ .text._ZN15m0_pow_interval5FixedILj512EE7productERKNS1_1BES4_b
+                0x1002b1b2       0xac /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b1b2                m0_pow_interval::Fixed<512u>::product(m0_pow_interval::Fixed<512u>::B const&, m0_pow_interval::Fixed<512u>::B const&, bool)
+ *fill*         0x1002b25e        0x2 
+ .text._ZN15m0_pow_interval5FixedILj512EE6divideERKNS1_1BEmb
+                0x1002b260       0x64 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b260                m0_pow_interval::Fixed<512u>::divide(m0_pow_interval::Fixed<512u>::B const&, unsigned long, bool)
+ .text._ZN15m0_pow_interval5FixedILj512EE12log_mantissaEy
+                0x1002b2c4      0x1b0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b2c4                m0_pow_interval::Fixed<512u>::log_mantissa(unsigned long long)
+ .text._ZN15m0_pow_interval5FixedILj512EE12exp_endpointERKNS1_1SE
+                0x1002b474      0x154 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b474                m0_pow_interval::Fixed<512u>::exp_endpoint(m0_pow_interval::Fixed<512u>::S const&)
+ .text._ZN15m0_pow_interval5FixedILj512EE9any_belowERKNS1_1BEj
+                0x1002b5c8       0x46 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b5c8                m0_pow_interval::Fixed<512u>::any_below(m0_pow_interval::Fixed<512u>::B const&, unsigned int)
+ .text._ZN15m0_pow_interval5FixedILj512EE5shiftERKNS1_1BEib
+                0x1002b60e       0xee /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b60e                m0_pow_interval::Fixed<512u>::shift(m0_pow_interval::Fixed<512u>::B const&, int, bool)
+ .text._ZN15m0_pow_interval5FixedILj512EE7roundedERKNS1_1BEi
+                0x1002b6fc       0xcc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b6fc                m0_pow_interval::Fixed<512u>::rounded(m0_pow_interval::Fixed<512u>::B const&, int)
+ .text._ZN15m0_pow_interval5FixedILj512EE14exact_boundaryEyyRy
+                0x1002b7c8      0x344 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002b7c8                m0_pow_interval::Fixed<512u>::exact_boundary(unsigned long long, unsigned long long, unsigned long long&)
+ .text._ZN15m0_pow_interval5FixedILj512EE8evaluateEyyRy
+                0x1002bb0c      0x418 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002bb0c                m0_pow_interval::Fixed<512u>::evaluate(unsigned long long, unsigned long long, unsigned long long&)
+ .text._ZN15m0_pow_interval5FixedILj1024EE12word_productEmm
+                0x1002bf24       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002bf24                m0_pow_interval::Fixed<1024u>::word_product(unsigned long, unsigned long)
+ .text._ZN15m0_pow_interval5FixedILj1024EE9incrementERKNS1_1BE
+                0x1002bf50       0x28 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002bf50                m0_pow_interval::Fixed<1024u>::increment(m0_pow_interval::Fixed<1024u>::B const&)
+ .text._ZN15m0_pow_interval5FixedILj1024EE7productERKNS1_1BES4_b
+                0x1002bf78       0xae /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002bf78                m0_pow_interval::Fixed<1024u>::product(m0_pow_interval::Fixed<1024u>::B const&, m0_pow_interval::Fixed<1024u>::B const&, bool)
+ *fill*         0x1002c026        0x2 
+ .text._ZN15m0_pow_interval5FixedILj1024EE6divideERKNS1_1BEmb
+                0x1002c028       0x64 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002c028                m0_pow_interval::Fixed<1024u>::divide(m0_pow_interval::Fixed<1024u>::B const&, unsigned long, bool)
+ .text._ZN15m0_pow_interval5FixedILj1024EE12log_mantissaEy
+                0x1002c08c      0x1e8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002c08c                m0_pow_interval::Fixed<1024u>::log_mantissa(unsigned long long)
+ .text._ZN15m0_pow_interval5FixedILj1024EE12exp_endpointERKNS1_1SE
+                0x1002c274      0x170 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002c274                m0_pow_interval::Fixed<1024u>::exp_endpoint(m0_pow_interval::Fixed<1024u>::S const&)
+ .text._ZN15m0_pow_interval5FixedILj1024EE9any_belowERKNS1_1BEj
+                0x1002c3e4       0x46 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002c3e4                m0_pow_interval::Fixed<1024u>::any_below(m0_pow_interval::Fixed<1024u>::B const&, unsigned int)
+ .text._ZN15m0_pow_interval5FixedILj1024EE5shiftERKNS1_1BEib
+                0x1002c42a       0xee /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002c42a                m0_pow_interval::Fixed<1024u>::shift(m0_pow_interval::Fixed<1024u>::B const&, int, bool)
+ .text._ZN15m0_pow_interval5FixedILj1024EE7roundedERKNS1_1BEi
+                0x1002c518       0xc8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002c518                m0_pow_interval::Fixed<1024u>::rounded(m0_pow_interval::Fixed<1024u>::B const&, int)
+ .text._ZN15m0_pow_interval5FixedILj1024EE14exact_boundaryEyyRy
+                0x1002c5e0      0x344 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002c5e0                m0_pow_interval::Fixed<1024u>::exact_boundary(unsigned long long, unsigned long long, unsigned long long&)
+ .text._ZN15m0_pow_interval5FixedILj1024EE8evaluateEyyRy
+                0x1002c924      0x4e8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002c924                m0_pow_interval::Fixed<1024u>::evaluate(unsigned long long, unsigned long long, unsigned long long&)
+ .text.unlikely.mk61_m0_pow_rescue
+                0x1002ce0c       0x68 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002ce0c                mk61_m0_pow_rescue
+ .text._ZN8core_pow6cr_powEdd
+                0x1002ce74      0xac0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002ce74                core_pow::cr_pow(double, double)
+ .text.mk61_m0_cr_pow
+                0x1002d934        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002d934                mk61_m0_cr_pow
+ .text.mk61_m0_cr_pow_refined
+                0x1002d93c       0x34 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1002d93c                mk61_m0_cr_pow_refined
+ .text._ZN12compact_math3sinEd
+                0x1002d970        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+                0x1002d970                compact_math::sin(double)
+ .text._ZN12compact_math3cosEd
+                0x1002d97c        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+                0x1002d97c                compact_math::cos(double)
+ .text._ZN12compact_math3tanEd
+                0x1002d988        0xc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+                0x1002d988                compact_math::tan(double)
+ .text.__wrap_memcpy
+                0x1002d994      0x238 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+                0x1002d994                __wrap___aeabi_memcpy8
+                0x1002d994                __wrap___aeabi_memcpy4
+                0x1002d994                __wrap___aeabi_memcpy
+                0x1002d994                __wrap_memcpy
+ .text.__aeabi_mem_init
+                0x1002dbcc       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+                0x1002dbcc                __aeabi_mem_init
+ .text.mk61_memset
+                0x1002dbdc       0x1c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+                0x1002dbdc                __wrap___aeabi_memset
+                0x1002dbe2                __wrap_memset
+                0x1002dbe8                __wrap___aeabi_memset4
+                0x1002dbe8                __wrap___aeabi_memset8
+ .text.rom_funcs_lookup
+                0x1002dbf8       0x44 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+                0x1002dbf8                rom_funcs_lookup
+ .text.unified_math_init
+                0x1002dc3c       0x58 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-loader.o
+                0x1002dc3c                unified_math_init
+ *(.m0_*)
+ .m0_exp_small_products
+                0x1002dc94      0x138 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1002dc94                mk61_m0_exp_small_product64
+                0x1002dcee                mk61_m0_exp_small_product48
+                0x1002dd6c                mk61_m0_exp_small_square48
+ .m0_asin_extension
+                0x1002ddcc     0x1c1c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1002f9d4                mk61_m0_asin
+                0x1002f9d4                compact_math::asin(double)
+                0x1002f9de                compact_math::acos(double)
+                0x1002f9de                mk61_m0_acos
+ .m0_trig_cos70
+                0x1002f9e8      0x340 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_tiny_sin
+                0x1002fd28       0x44 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_sin70
+                0x1002fd6c      0x368 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_exp_tiny   0x100300d4      0x1d8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_pow_near_one_refine
+                0x100302ac      0xe34 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x100302ac                mk61_m0_pow_near_one_binomial_dispatch
+ .m0_trig_inverse
+                0x100310e0      0x14a /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ *fill*         0x1003122a        0x2 
+ .m0_trig_large
+                0x1003122c      0xae4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10031600                mk61_m0_trig_large_argument
+                0x10031834                mk61_m0_trig_large_refine
+                0x10031aec                mk61_m0_trig_large
+ .m0_trig_table
+                0x10031d10      0x794 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_cache_ratio
+                0x100324a4      0x3e6 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_cache_clz32
+                0x1003288a       0x42 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1003288a                m0_eabi::clz32(unsigned long)
+ .m0_pow_integer_fixed
+                0x100328cc      0x230 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_cache_clz64
+                0x10032afc       0x16 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10032afc                m0_eabi::clz64(unsigned long long)
+ *fill*         0x10032b12        0x2 
+ .m0_trig_argument
+                0x10032b14      0x630 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_pow_near_argument_fixed
+                0x10033144      0x41c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_asin_refine_extension
+                0x10033560     0x10cc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_cache_low_product
+                0x1003462c       0x4e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1003462c                m0_eabi::low_product(unsigned long long, unsigned long long)
+ *fill*         0x1003467a        0x2 
+ .m0_pow_refine_extension
+                0x1003467c     0x2c10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_cache_atan_ratio
+                0x1003728c      0x2bc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_refine_values_fixed
+                0x10037548     0x1ee0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_refine_fixed
+                0x10039428      0x83c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_math_extension
+                0x10039c64     0x3214 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1003c874                compact_math::log10(double)
+                0x1003c874                mk61_m0_log10
+ .m0_exp_core   0x1003ce78     0x1444 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1003dd10                mk61_m0_exp
+                0x1003dd10                compact_math::exp(double)
+                0x1003e0d2                mk61_m0_exp_fraction_capture
+ .m0_exp_small  0x1003e2bc      0x34c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_tan_table
+                0x1003e608      0x5e4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_log_subnormal
+                0x1003ebec      0x9a0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1003ebec                mk61_m0_ln_special
+                0x1003f044                mk61_m0_log10_special
+ .m0_trig_cache_mulq62
+                0x1003f58c      0x1d2 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x1003f58c                mk61_m0_mul_q62
+ *fill*         0x1003f75e        0x2 
+ .m0_trig_fast_table
+                0x1003f760      0x3c4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_tan_small
+                0x1003fb24      0x56c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_small
+                0x10040090      0xa38 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_trig_dispatch
+                0x10040ac8      0x248 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10040ac8                mk61_m0_trig
+ .m0_exp_endpoints
+                0x10040d10      0x168 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10040d10                mk61_m0_exp_endpoint
+ .m0_pow_log6   0x10040e78      0x300 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10040e78                mk61_m0_pow_log_ordinary
+ .m0_pow_small_y_cold
+                0x10041178      0x6b8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10041178                mk61_m0_pow_small_y
+ .m0_pow_middle
+                0x10041830      0x8f0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10041830                mk61_m0_pow_middle_interval
+                0x100420e0                mk61_m0_pow_midpoint
+ .m0_pow_dispatch_ordinary
+                0x10042120      0x110 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x10042120                mk61_m0_pow_dispatch_ordinary
+ .m0_pow_exact_extension
+                0x10042230      0x108 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_math_extension_data
+                0x10042338     0x4000 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .m0_conversion_fixed.__aeabi_f2d
+                0x10046338       0xac /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x10046338                __aeabi_f2d
+ .m0_log_product_extension
+                0x100463e4      0x1fa /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x100463e4                mk61_m0_log_product46
+                0x1004649c                mk61_m0_log_product54
+                0x10046554                mk61_m0_log_cube70
+ *fill*         0x100465de        0x2 
+ .m0_pow_exp_table_transition
+                0x100465e0       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x100465e0                mk61_m0_pow_exp_table_product_flash
+ .m0_pow_root_prefix
+                0x100465f0     0x122c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+                0x100465f0                pow_integer128_approx_high64
+                0x1004664e                pow_integer128_base
+                0x100467c0                root64_boundary
+                0x10046924                pow_root128_decide
+                0x100469d4                root64_distance
+                0x10046b40                factor64_base
+                0x10046c0e                factor64_multiply
+                0x10046cf0                pow_root128_ranged
+                0x10046d20                pow_root128
+                0x100476a8                mk61_m0_boundary128_compare
+ .m0_pow_boundary_exact
+                0x1004781c      0x214 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .m0_pow_near_one_refine
+                0x10047a30      0x1ea /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+                0x10047a30                pow_integer128_multiply
+ .m0_pow_square_fixed
+                0x10047c1a      0x136 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+                0x10047c1a                pow_integer128_square
+ .m0_pow_tail_extra
+                0x10047d50      0x300 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .m0_pow_tiny_cold
+                0x10048050       0x84 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+                0x10048050                mk61_m0_pow_tiny_or_cr
+ .m0_pow_small_y_cold
+                0x100480d4       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+                0x100480d4                mk61_m0_pow_exp_product_flash
+ .m0_trig_large
+                0x100480e4      0x320 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+                0x100480e4                mk61_m0_trig_product
+                0x100482dc                mk61_m0_trig_pi2_product
+ .m0_pow_argument_select
+                0x10048404       0x80 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+                0x10048404                mk61_m0_pow_argument_select
+ .m0_pow_exact_extension
+                0x10048484      0x560 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x1004883e                mk61_m0_pow_exact_small
+ .m0_trig_large
+                0x100489e4        0x8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+                0x100489e4                mk61_m0_trig_inverse_table
+ .m0_pow_accurate
+                0x100489ec     0x1ebc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .m0_ddiv_hint_hw
+                0x1004a8a8      0x1f8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1.S.o
+                0x1004a906                mk61_m0_reciprocal1
+                0x1004a96a                mk61_m0_reciprocal1_join
+                0x1004a97c                mk61_m0_reciprocal1_first_product
+                0x1004a982                mk61_m0_reciprocal1_before_second_product
+                0x1004a9a6                mk61_m0_reciprocal1_after_second_product
+                0x1004a9b4                mk61_m0_reciprocal1_after_y_residual
+                0x1004a9e0                mk61_m0_reciprocal1_half_normalization
+                0x1004aa02                mk61_m0_reciprocal1_y_low_shift
+                0x1004aa10                mk61_m0_reciprocal1_certificate_begin
+                0x1004aa20                mk61_m0_reciprocal1_certificate_up
+                0x1004aa24                mk61_m0_reciprocal1_certificate_down
+                0x1004aa2c                mk61_m0_reciprocal1_pack_begin
+                0x1004aa3c                mk61_m0_reciprocal1_certificate_full
+ .m0_ddiv_hint_sw
+                0x1004aaa0      0x25c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1_sw.S.o
+                0x1004aaa0                mk61_m0_reciprocal1_sw_from_guard
+                0x1004aaba                mk61_m0_inline_seed_begin
+                0x1004aaf2                mk61_m0_inline_seed_done
+                0x1004aaf6                mk61_m0_reciprocal1_sw_join
+                0x1004ab08                mk61_m0_reciprocal1_sw_first_product
+                0x1004ab0e                mk61_m0_reciprocal1_sw_before_second_product
+                0x1004ab32                mk61_m0_reciprocal1_sw_after_second_product
+                0x1004ab40                mk61_m0_reciprocal1_sw_after_y_residual
+                0x1004ab6c                mk61_m0_reciprocal1_sw_half_normalization
+                0x1004ab8e                mk61_m0_reciprocal1_sw_y_low_shift
+                0x1004ab9c                mk61_m0_reciprocal1_sw_certificate_begin
+                0x1004abac                mk61_m0_reciprocal1_sw_certificate_up
+                0x1004abb0                mk61_m0_reciprocal1_sw_certificate_down
+                0x1004abb8                mk61_m0_reciprocal1_sw_pack_begin
+                0x1004abc8                mk61_m0_reciprocal1_sw_certificate_full
+ .m0_pow_boundary128_code
+                0x1004acfc       0xe4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-boundary.o
+                0x1004acfc                mk61_m0_boundary128
+ .m0_pow_boundary128_code.__stub
+                0x1004ade0       0x60 linker stubs
+ *(.time_critical*)
+
+.glue_7         0x1004ae40        0x0
+ .glue_7        0x1004ae40        0x0 linker stubs
+
+.glue_7t        0x1004ae40        0x0
+ .glue_7t       0x1004ae40        0x0 linker stubs
+
+.vfp11_veneer   0x1004ae40        0x0
+ .vfp11_veneer  0x1004ae40        0x0 linker stubs
+
+.v4_bx          0x1004ae40        0x0
+ .v4_bx         0x1004ae40        0x0 linker stubs
+
+.iplt           0x1004ae40        0x0
+ .iplt          0x1004ae40        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+
+.rodata         0x1004ae40    0x39e50
+ *(.rodata*)
+ .rodata._ZN7m0_eabiL19trig94_coefficientsE
+                0x1004ae40       0x60 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL14trig_tan_tableE
+                0x1004aea0     0x64c0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL12trig94_tableE
+                0x10051360     0x4b90 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL10log70_highE
+                0x10055ef0      0x400 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL9log70_lowE
+                0x100562f0     0x2000 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL17refine_atan_tableE
+                0x100582f0      0x30c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL16refine_log_tableE
+                0x100585fc     0x6000 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL16refine_exp_tableE
+                0x1005e5fc     0x1800 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ *fill*         0x1005fdfc        0x4 
+ .rodata._ZN7m0_eabiL14log_near_tableE
+                0x1005fe00     0x1000 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL9log_tableE
+                0x10060e00     0x1000 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL10trig_tableE
+                0x10061e00     0x3260 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL8trig_pi2E
+                0x10065060       0x18 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL9exp_tableE
+                0x10065078     0x1000 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZN7m0_eabiL16reciprocal_seedsE
+                0x10066078      0x100 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .rodata._ZZN8core_pow6cr_powEddE3err
+                0x10066178       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN8core_powL8is_exactEddE4xmax
+                0x10066188      0x110 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN8core_powL5log_1EPdS0_dE2cm
+                0x10066298       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL2T2E
+                0x100662a8      0x400 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL2T1E
+                0x100666a8      0x400 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL8_LOG_INVE
+                0x10066aa8      0xb60 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL8_INVERSEE
+                0x10067608      0x5b0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL3Q_3E
+                0x10067bb8      0x2d0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL3P_3E
+                0x10067e88      0x360 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL4T2_3E
+                0x100681e8      0xc00 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL4T1_3E
+                0x10068de8      0xc00 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL12_LOG_INV_3_2E
+                0x100699e8     0x1830 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL12_LOG_INV_3_1E
+                0x1006b218     0x1140 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL12_INVERSE_3_2E
+                0x1006c358     0x1830 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL12_INVERSE_3_1E
+                0x1006db88     0x1140 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL6ZERO_QE
+                0x1006ecc8       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL10LOG2_INV_QE
+                0x1006ecf8       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL6LOG2_QE
+                0x1006ed28       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL7M_ONE_QE
+                0x1006ed58       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL3Q_2E
+                0x1006ed88      0x100 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL3P_2E
+                0x1006ee88      0x120 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL4T2_2E
+                0x1006efa8      0x800 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL4T1_2E
+                0x1006f7a8      0x800 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL12_LOG_INV_2_2E
+                0x1006ffa8     0x1020 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL12_LOG_INV_2_1E
+                0x10070fc8      0xb80 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL12_INVERSE_2_2E
+                0x10071b48     0x1020 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL12_INVERSE_2_1E
+                0x10072b68      0xb80 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL4ZEROE
+                0x100736e8       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL8LOG2_INVE
+                0x10073708       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_powL5M_ONEE
+                0x10073728       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN15m0_pow_intervalL8ln2_1024E
+                0x10073748       0x80 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN8core_expL15as_exp_accurateEdE2ch
+                0x100737c8       0x70 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_expL2t1E
+                0x10073838      0x400 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_expL2t0E
+                0x10073c38      0x400 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN8core_expL15as_exp_databaseEddE2s2
+                0x10074038       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_expL2dbE
+                0x10074048      0x198 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN10core_log108cr_log10EdE5pow10
+                0x100741e0      0x100 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN10core_log10L8_LOG_INVE
+                0x100742e0     0x16b0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN10core_log10L8_INVERSEE
+                0x10075990      0xb58 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN10core_log10L4ZEROE
+                0x100764e8       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN10core_log10L14ONE_OVER_LOG10E
+                0x10076508       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN10core_log10L5M_ONEE
+                0x10076528       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN8core_logL11cr_log_fastEPdS0_iNS_6d64u64EE2cm
+                0x10076548       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN8core_logL11cr_log_fastEPdS0_iNS_6d64u64EE2cy
+                0x10076558       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_logL8_LOG_INVE
+                0x10076568     0x16b0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_logL8_INVERSEE
+                0x10077c18      0xb58 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_logL3P_2E
+                0x10078770      0x1a0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_logL10_LOG_INV_2E
+                0x10078910     0x1e00 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_logL10_INVERSE_2E
+                0x1007a710     0x1e00 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_logL4ZEROE
+                0x1007c510       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_logL5M_ONEE
+                0x1007c530       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN9core_acosL14as_acos_refineEddE1c
+                0x1007c550       0x50 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN9core_acos7cr_acosEdE3off
+                0x1007c5a0       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN9core_acos7cr_acosEdE2cc
+                0x1007c5c0      0x840 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN9core_asinL16as_asin_databaseEddE2db
+                0x1007ce00      0x2b8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN9core_asinL14as_asin_refineEddE1c
+                0x1007d0b8       0x50 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN9core_asinL14as_asin_refineEddE1s
+                0x1007d108      0x210 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN9core_asin7cr_asinEdE3off
+                0x1007d318       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN9core_asin7cr_asinEdE2cc
+                0x1007d338      0x840 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN9core_atanL15as_atan_refine2EddE2db
+                0x1007db78      0x120 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN9core_atanL15as_atan_refine2EddE2ch
+                0x1007dc98       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN9core_atanL1cE
+                0x1007dcc8       0xba /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ *fill*         0x1007dd82        0x6 
+ .rodata._ZN9core_atanL1AE
+                0x1007dd88      0x810 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN8core_tanL12tan_accurateEdE10exceptions
+                0x1007e598       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_tanL2PCE
+                0x1007e5c8       0xc0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_tanL2PSE
+                0x1007e688       0xc0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_tanL4TinvE
+                0x1007e748      0x800 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_tanL5MAGICE
+                0x1007ef48       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_tanL3ONEE
+                0x1007ef68       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_tanL4ZEROE
+                0x1007ef88       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN8core_cosL12cos_accurateEdE10exceptions
+                0x1007efa8       0x78 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_cosL2PCE
+                0x1007f020       0xc0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_cosL2PSE
+                0x1007f0e0       0xc0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_cosL5MAGICE
+                0x1007f1a0       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_cosL4ZEROE
+                0x1007f1c0       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN8core_sinL12sin_accurateEdE10exceptions
+                0x1007f1e0       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZZN8core_sinL8sin_fastEPdS0_dE3sgn
+                0x1007f210       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_sinL2SCE
+                0x1007f220     0x1800 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_sinL2PCE
+                0x10080a20       0xc0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_sinL2PSE
+                0x10080ae0       0xc0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_sinL1CE
+                0x10080ba0     0x2000 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_sinL1SE
+                0x10082ba0     0x2000 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_sinL1TE
+                0x10084ba0       0xa0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_sinL5MAGICE
+                0x10084c40       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata._ZN8core_sinL4ZEROE
+                0x10084c60       0x20 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .rodata        0x10084c80       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ *(.data.rel.ro*)
+
+.scratch_y      0x20038000      0xff0 load address 0x10084c90
+                0x20038000                        __scratch_y_start__ = .
+ *(.scratch_y*)
+ .scratch_y.m0_pow_hot
+                0x20038000      0xd34 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                0x200383c0                mk61_m0_pow_positive_checked_dispatch
+ .scratch_y.m0_shift_hot
+                0x20038d34       0x60 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x20038d34                __aeabi_llsl
+                0x20038d54                __aeabi_llsr
+                0x20038d74                __aeabi_lasr
+ .scratch_y.m0_pow_hot
+                0x20038d94      0x208 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                0x20038d94                mk61_m0_pow_argument
+                0x20038ee4                mk61_m0_pow_exp_product
+                0x20038f7e                mk61_m0_pow_exp_table_product
+ *fill*         0x20038f9c        0x4 
+ .scratch_y.m0_pow_hot.__stub
+                0x20038fa0       0x50 linker stubs
+                0x20038ff0                        . = ALIGN (0x4)
+                0x20038ff0                        __scratch_y_end__ = .
+                0x10084c90                        __scratch_y_source__ = LOADADDR (.scratch_y)
+
+.rel.dyn        0x20038ff0        0x0 load address 0x10085c80
+ .rel.iplt      0x20038ff0        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+
+.data           0x20000000       0x10 load address 0x10085c80
+                0x20000000                        __data_start__ = .
+ *(.data*)
+ .data.aeabi_mem_funcs
+                0x20000000       0x10 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+                0x20000000                aeabi_mem_funcs
+                0x20000010                aeabi_mem_funcs_end
+                0x20000010                        . = ALIGN (0x4)
+                0x20000010                        __data_end__ = .
+                0x10085c80                        __data_source__ = LOADADDR (.data)
+
+.igot.plt       0x20000010        0x0 load address 0x10085c90
+ .igot.plt      0x20000010        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+
+.bss            0x20000010        0x0 load address 0x10085c90
+                0x20000010                        __bss_start__ = .
+ *(.bss*)
+ *(COMMON)
+                0x20000010                        . = ALIGN (0x4)
+                0x20000010                        __bss_end__ = .
+                0x20039000                        __StackBottom = 0x20039000
+                0x20041000                        __StackTop = 0x20041000
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+ *(.comment)
+ *(.note*)
+ *(.ARM.attributes)
+ *(.preinit_array*)
+ *(.init_array*)
+                0x00000001                        ASSERT ((SIZEOF (.scratch_y) <= 0xff0), Math scratch bank exceeds 4080 bytes)
+                0x00000001                        ASSERT ((__scratch_y_end__ <= __StackBottom), Math code overlaps stack)
+                0x00000001                        ASSERT ((__bss_end__ <= 0x20038000), Math data overlaps scratch bank)
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1.S.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_reciprocal1_sw.S.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-boundary.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-loader.o
+OUTPUT(/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/candidate.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x00000000    0xb3fdf
+ .debug_info    0x00000000    0x62239 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .debug_info    0x00062239      0x246 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+ .debug_info    0x0006247f      0x17e /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .debug_info    0x000625fd    0x50442 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .debug_info    0x000b2a3f      0xdcd /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .debug_info    0x000b380c      0x138 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .debug_info    0x000b3944       0x23 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+ .debug_info    0x000b3967      0x678 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+
+.debug_abbrev   0x00000000     0x1820
+ .debug_abbrev  0x00000000      0x8ce /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .debug_abbrev  0x000008ce       0x26 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+ .debug_abbrev  0x000008f4       0x26 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .debug_abbrev  0x0000091a      0xab6 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .debug_abbrev  0x000013d0      0x1ce /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .debug_abbrev  0x0000159e       0xb4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .debug_abbrev  0x00001652       0x12 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+ .debug_abbrev  0x00001664      0x1bc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+
+.debug_loclists
+                0x00000000    0x90e40
+ .debug_loclists
+                0x00000000    0x70c6a /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .debug_loclists
+                0x00070c6a    0x1fdb3 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .debug_loclists
+                0x00090a1d       0x66 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .debug_loclists
+                0x00090a83       0x6c /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .debug_loclists
+                0x00090aef      0x351 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+
+.debug_aranges  0x00000000      0xb40
+ .debug_aranges
+                0x00000000      0x4d8 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .debug_aranges
+                0x000004d8      0x100 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+ .debug_aranges
+                0x000005d8       0x80 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .debug_aranges
+                0x00000658      0x420 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .debug_aranges
+                0x00000a78       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .debug_aranges
+                0x00000aa8       0x30 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .debug_aranges
+                0x00000ad8       0x28 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+ .debug_aranges
+                0x00000b00       0x40 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+
+.debug_rnglists
+                0x00000000     0xb8a0
+ .debug_rnglists
+                0x00000000     0x89d6 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .debug_rnglists
+                0x000089d6       0xc4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+ .debug_rnglists
+                0x00008a9a       0x66 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .debug_rnglists
+                0x00008b00     0x2c34 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .debug_rnglists
+                0x0000b734       0x1f /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .debug_rnglists
+                0x0000b753       0x22 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .debug_rnglists
+                0x0000b775       0x19 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+ .debug_rnglists
+                0x0000b78e      0x112 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+
+.debug_line     0x00000000    0x486a3
+ .debug_line    0x00000000    0x32dfc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .debug_line    0x00032dfc      0x997 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+ .debug_line    0x00033793     0x121d /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .debug_line    0x000349b0    0x1336d /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .debug_line    0x00047d1d      0x263 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .debug_line    0x00047f80      0x1b1 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .debug_line    0x00048131       0x6b /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+ .debug_line    0x0004819c      0x507 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+
+.debug_str      0x00000000     0x5a8d
+ .debug_str     0x00000000     0x5a8d /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+                               0x2859 (size before relaxing)
+ .debug_str     0x00005a8d      0x3ad /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+ .debug_str     0x00005a8d      0x2fc /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .debug_str     0x00005a8d     0x3180 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .debug_str     0x00005a8d      0x423 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .debug_str     0x00005a8d      0x1db /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .debug_str     0x00005a8d       0xc2 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o
+ .debug_str     0x00005a8d      0x39a /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+
+.debug_frame    0x00000000     0x23f4
+ .debug_frame   0x00000000     0x1264 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-cpp.o
+ .debug_frame   0x00001264     0x1058 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_cr.cpp.o
+ .debug_frame   0x000022bc       0x58 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-compact_math.cpp.o
+ .debug_frame   0x00002314       0x40 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory.c.o
+ .debug_frame   0x00002354       0xa0 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_bootrom.c.o
+
+.debug_line_str
+                0x00000000      0x2bf
+ .debug_line_str
+                0x00000000      0x2bf /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-merged-asm.o
+                                0x1d8 (size before relaxing)
+ .debug_line_str
+                0x000002bf      0x167 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_eabi_m0_rp2040.S.o
+ .debug_line_str
+                0x000002bf       0xb4 /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/RP-unified-native_math_memory_fill.S.o

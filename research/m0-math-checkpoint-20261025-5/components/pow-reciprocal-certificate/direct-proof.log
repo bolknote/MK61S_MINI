@@ -1,0 +1,67 @@
+reciprocal1-direct 0 / 20994 0.0
+reciprocal1-direct 1024 / 20994 2.3
+reciprocal1-direct 2048 / 20994 4.6
+reciprocal1-direct 3072 / 20994 6.9
+reciprocal1-direct 4096 / 20994 9.2
+reciprocal1-direct 5120 / 20994 11.5
+reciprocal1-direct 6144 / 20994 13.8
+reciprocal1-direct 7168 / 20994 16.1
+reciprocal1-direct 8192 / 20994 18.4
+reciprocal1-direct 9216 / 20994 20.8
+reciprocal1-direct 10240 / 20994 23.1
+reciprocal1-direct 11264 / 20994 25.4
+reciprocal1-direct 12288 / 20994 27.7
+reciprocal1-direct 13312 / 20994 29.4
+reciprocal1-direct 14336 / 20994 30.6
+reciprocal1-direct 15360 / 20994 34.8
+reciprocal1-direct 16384 / 20994 41.8
+reciprocal1-direct 17408 / 20994 45.7
+reciprocal1-direct 18432 / 20994 49.8
+reciprocal1-direct 19456 / 20994 56.1
+reciprocal1-direct 20480 / 20994 61.5
+{
+  "status": "PASS_PRIVATE_EXACT_REMAINDER_CERTIFICATE_ALL_DENOMINATOR_CLASSES",
+  "pairs": 20994,
+  "states": 41988,
+  "actual_ARM_calls": 167952,
+  "actual_directed_MPFR_inputs": 20960,
+  "sNaN_policy_shortcuts": 34,
+  "MPFR_version": "4.2.2",
+  "numerator_contract": "exact positive1 only; denominator any binary64",
+  "all_parent_return_bits_equal": true,
+  "all_after_second_product_R0_R7_R12_SP_NZCV_frame28B_identical": true,
+  "direct_first_product_calls": 24728,
+  "all_actual_costs_match_exact_remainder_certificate_model": true,
+  "instruction_delta_histogram": {
+    "-15": 760,
+    "-12": 10404,
+    "0": 29692,
+    "7": 286,
+    "8": 846
+  },
+  "correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 32370,
+      "equal": 5,
+      "slower": 13
+    },
+    "candidate": {
+      "faster": 32382,
+      "equal": 5,
+      "slower": 1
+    }
+  },
+  "all_Qfplib_raw_outputs_costs_and_flags_retained": true,
+  "DIRTY_SIO_preserved_no_writes": true,
+  "inline_live_SP_is_own_entry_minus20_checked": true,
+  "observed_stacks": {
+    "parent": 176,
+    "control": 176,
+    "candidate": 176
+  },
+  "candidate_ELF_sha256": "aac32d20ff3c7c0f28d77b091e012fb997ce8dce1ec009f259803a8690e36be8",
+  "records_sha256": "d4bff81a40b9be8971e1acf0b2005f332c0dea34c350d0ed1e714ade19191dc1",
+  "elapsed_seconds": 64.22644574998412,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

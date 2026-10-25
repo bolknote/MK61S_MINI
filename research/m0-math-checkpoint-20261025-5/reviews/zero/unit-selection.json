@@ -1,0 +1,738 @@
+{
+  "status": "BOUNDED_EXACT_DISCONTINUITY_AND_BORROW_CASES",
+  "triples": [
+    {
+      "base": 0,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 1,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131070,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131071,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131072,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131073,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483647,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483648,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483649,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614718,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614719,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614720,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 4294967295,
+      "u": 0,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 0,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 1,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131070,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131071,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131072,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131073,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483647,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483648,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483649,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614718,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614719,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614720,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 4294967295,
+      "u": 1,
+      "v": 1,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2,
+      "u": 1,
+      "v": 1,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 2147483650,
+      "u": 1,
+      "v": 1,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 0,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 1,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131070,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131071,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131072,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131073,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483647,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483648,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483649,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614718,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614719,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614720,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 4294967295,
+      "u": 65535,
+      "v": 65535,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2,
+      "u": 65535,
+      "v": 65535,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 2147483650,
+      "u": 65535,
+      "v": 65535,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 1,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131071,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131072,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131073,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 131074,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483648,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483649,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483650,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614719,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614720,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147614721,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 0,
+      "u": 65536,
+      "v": 65536,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147385345,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147385346,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147516415,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147516416,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147516417,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147516418,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 4294868992,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 4294868993,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 4294868994,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 32767,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 32768,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 32769,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147385344,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147450880,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 2147450881,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 2147450879,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 4294934527,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 4294934528,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 4294934529,
+      "u": 4294901761,
+      "v": 2147483647,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 4294836225,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 4294836226,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 4294967295,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 0,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 1,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147352576,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147352577,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147352578,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483647,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483648,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2147483649,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 4294836224,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 4294967294,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 2147483646,
+      "u": 4294967295,
+      "v": 4294967295,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 1073741824,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 1073741825,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 1073872894,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 1073872895,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 1073872896,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 1073872897,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 3221225471,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 3221225472,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 3221225473,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 3221356542,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 3221356543,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 3221356544,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 1073741823,
+      "u": 2147483648,
+      "v": 2147483648,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 304037040,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 304037041,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 304168110,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 304168111,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 304168112,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 304168113,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2451520687,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2451520688,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2451520689,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2451651758,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2451651759,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 2451651760,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 304037039,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "classifier_inclusive_boundaries"
+    },
+    {
+      "base": 304082358,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 304082359,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 304082357,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 2451566005,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 2451566006,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    },
+    {
+      "base": 2451566007,
+      "u": 305441741,
+      "v": 4275852338,
+      "group": "exact_sign_zero_INTMIN_and_wrap"
+    }
+  ],
+  "flags": "all16_each_triple"
+}

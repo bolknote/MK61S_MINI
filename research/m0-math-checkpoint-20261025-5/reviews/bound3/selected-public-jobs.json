@@ -1,0 +1,978 @@
+{
+  "jobs": [
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "group": "ancestral_already_losing_regression"
+    },
+    {
+      "x": "3FB18F7DDFA4B19A",
+      "y": "BFF4000000000000",
+      "group": "actual_bound3_public_speedup"
+    },
+    {
+      "x": "3FB18F7DDFA4B19B",
+      "y": "BFF4000000000000",
+      "group": "actual_bound3_public_speedup"
+    },
+    {
+      "x": "3FB18F7DDFA4B19C",
+      "y": "BFF4000000000000",
+      "group": "actual_bound3_public_speedup"
+    },
+    {
+      "x": "3FCE1C93A6958ABD",
+      "y": "BFF4000000000000",
+      "group": "actual_bound3_public_speedup"
+    },
+    {
+      "x": "3FCE1C93A6958ABE",
+      "y": "BFF4000000000000",
+      "group": "actual_bound3_public_speedup"
+    },
+    {
+      "x": "3FCE1C93A6958ABF",
+      "y": "BFF4000000000000",
+      "group": "actual_bound3_public_speedup"
+    },
+    {
+      "x": "40449B1CFD487AC5",
+      "y": "BFFC000000000000",
+      "group": "actual_bound3_public_speedup"
+    },
+    {
+      "x": "40449B1CFD487AC6",
+      "y": "BFFC000000000000",
+      "group": "actual_bound3_public_speedup"
+    },
+    {
+      "x": "40449B1CFD487AC7",
+      "y": "BFFC000000000000",
+      "group": "actual_bound3_public_speedup"
+    },
+    {
+      "x": "400B1FE7CB6FA4C6",
+      "y": "BFFF000000000000",
+      "group": "actual_bound3_public_speedup"
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "original153_control"
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "original153_control"
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "original153_control"
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "group": "original153_control"
+    }
+  ],
+  "ancestry32": [
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "READY",
+      "Inline": 1697,
+      "Certificate": 1705,
+      "Zero": 1703,
+      "has_correct_Qfp": true,
+      "Bound3": 1703
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1706,
+      "Certificate": 1714,
+      "Zero": 1712,
+      "has_correct_Qfp": true,
+      "Bound3": 1712
+    },
+    {
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "C008000000000000",
+      "SIO": "READY",
+      "Inline": 1359,
+      "Certificate": 1367,
+      "Zero": 1365,
+      "has_correct_Qfp": false,
+      "Bound3": 1365
+    },
+    {
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "C008000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1367,
+      "Certificate": 1375,
+      "Zero": 1373,
+      "has_correct_Qfp": false,
+      "Bound3": 1373
+    },
+    {
+      "x": "3FF837884FE59E7B",
+      "y": "C020000000000000",
+      "SIO": "READY",
+      "Inline": 1463,
+      "Certificate": 1471,
+      "Zero": 1469,
+      "has_correct_Qfp": false,
+      "Bound3": 1469
+    },
+    {
+      "x": "3FF837884FE59E7B",
+      "y": "C020000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1472,
+      "Certificate": 1480,
+      "Zero": 1478,
+      "has_correct_Qfp": false,
+      "Bound3": 1478
+    },
+    {
+      "x": "3FA337A37C73FD4E",
+      "y": "BFF8000000000000",
+      "SIO": "READY",
+      "Inline": 1146,
+      "Certificate": 1154,
+      "Zero": 1152,
+      "has_correct_Qfp": false,
+      "Bound3": 1152
+    },
+    {
+      "x": "3FA337A37C73FD4E",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1155,
+      "Certificate": 1163,
+      "Zero": 1161,
+      "has_correct_Qfp": false,
+      "Bound3": 1161
+    },
+    {
+      "x": "3FA0092F95A0C764",
+      "y": "C004000000000000",
+      "SIO": "READY",
+      "Inline": 1310,
+      "Certificate": 1318,
+      "Zero": 1316,
+      "has_correct_Qfp": false,
+      "Bound3": 1316
+    },
+    {
+      "x": "3FA0092F95A0C764",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1322,
+      "Certificate": 1330,
+      "Zero": 1328,
+      "has_correct_Qfp": false,
+      "Bound3": 1328
+    },
+    {
+      "x": "3FAAE46EA0E2CCA4",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "Inline": 1490,
+      "Certificate": 1498,
+      "Zero": 1496,
+      "has_correct_Qfp": false,
+      "Bound3": 1496
+    },
+    {
+      "x": "3FAAE46EA0E2CCA4",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1498,
+      "Certificate": 1506,
+      "Zero": 1504,
+      "has_correct_Qfp": false,
+      "Bound3": 1504
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "Inline": 1517,
+      "Certificate": 1524,
+      "Zero": 1522,
+      "has_correct_Qfp": false,
+      "Bound3": 1522
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1526,
+      "Certificate": 1533,
+      "Zero": 1531,
+      "has_correct_Qfp": false,
+      "Bound3": 1531
+    },
+    {
+      "x": "4006B335AFD468A5",
+      "y": "C004000000000000",
+      "SIO": "READY",
+      "Inline": 1305,
+      "Certificate": 1313,
+      "Zero": 1311,
+      "has_correct_Qfp": false,
+      "Bound3": 1311
+    },
+    {
+      "x": "4006B335AFD468A5",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1314,
+      "Certificate": 1322,
+      "Zero": 1320,
+      "has_correct_Qfp": false,
+      "Bound3": 1320
+    },
+    {
+      "x": "402D507BADD65812",
+      "y": "BFF8000000000000",
+      "SIO": "READY",
+      "Inline": 1109,
+      "Certificate": 1116,
+      "Zero": 1114,
+      "has_correct_Qfp": false,
+      "Bound3": 1114
+    },
+    {
+      "x": "402D507BADD65812",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1118,
+      "Certificate": 1125,
+      "Zero": 1123,
+      "has_correct_Qfp": false,
+      "Bound3": 1123
+    },
+    {
+      "x": "402D507BADD65813",
+      "y": "C004000000000000",
+      "SIO": "READY",
+      "Inline": 1268,
+      "Certificate": 1275,
+      "Zero": 1273,
+      "has_correct_Qfp": false,
+      "Bound3": 1273
+    },
+    {
+      "x": "402D507BADD65813",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1280,
+      "Certificate": 1287,
+      "Zero": 1285,
+      "has_correct_Qfp": false,
+      "Bound3": 1285
+    },
+    {
+      "x": "40704CC83B93F25D",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "Inline": 1517,
+      "Certificate": 1525,
+      "Zero": 1523,
+      "has_correct_Qfp": false,
+      "Bound3": 1523
+    },
+    {
+      "x": "40704CC83B93F25D",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1526,
+      "Certificate": 1534,
+      "Zero": 1532,
+      "has_correct_Qfp": false,
+      "Bound3": 1532
+    },
+    {
+      "x": "3F5BDF4A3B05FF8E",
+      "y": "BFF4000000000000",
+      "SIO": "READY",
+      "Inline": 1441,
+      "Certificate": 1449,
+      "Zero": 1447,
+      "has_correct_Qfp": false,
+      "Bound3": 1447
+    },
+    {
+      "x": "3F5BDF4A3B05FF8E",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1453,
+      "Certificate": 1461,
+      "Zero": 1459,
+      "has_correct_Qfp": false,
+      "Bound3": 1459
+    },
+    {
+      "x": "3F5BDF4A3B05FF8F",
+      "y": "BFF4000000000000",
+      "SIO": "READY",
+      "Inline": 1441,
+      "Certificate": 1449,
+      "Zero": 1447,
+      "has_correct_Qfp": false,
+      "Bound3": 1447
+    },
+    {
+      "x": "3F5BDF4A3B05FF8F",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1453,
+      "Certificate": 1461,
+      "Zero": 1459,
+      "has_correct_Qfp": false,
+      "Bound3": 1459
+    },
+    {
+      "x": "3F5BDF4A3B05FF90",
+      "y": "BFF4000000000000",
+      "SIO": "READY",
+      "Inline": 1441,
+      "Certificate": 1449,
+      "Zero": 1447,
+      "has_correct_Qfp": false,
+      "Bound3": 1447
+    },
+    {
+      "x": "3F5BDF4A3B05FF90",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1453,
+      "Certificate": 1461,
+      "Zero": 1459,
+      "has_correct_Qfp": false,
+      "Bound3": 1459
+    },
+    {
+      "x": "40F2F9C0159690A6",
+      "y": "BFFC000000000000",
+      "SIO": "READY",
+      "Inline": 1685,
+      "Certificate": 1693,
+      "Zero": 1691,
+      "has_correct_Qfp": false,
+      "Bound3": 1691
+    },
+    {
+      "x": "40F2F9C0159690A6",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1694,
+      "Certificate": 1702,
+      "Zero": 1700,
+      "has_correct_Qfp": false,
+      "Bound3": 1700
+    },
+    {
+      "x": "40F0970E3C07A09C",
+      "y": "BFFC000000000000",
+      "SIO": "READY",
+      "Inline": 2361,
+      "Certificate": 2369,
+      "Zero": 2367,
+      "has_correct_Qfp": false,
+      "Bound3": 2367
+    },
+    {
+      "x": "40F0970E3C07A09C",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "Inline": 2373,
+      "Certificate": 2381,
+      "Zero": 2379,
+      "has_correct_Qfp": false,
+      "Bound3": 2379
+    }
+  ],
+  "actual_speedup_rows": [
+    {
+      "x": "3FB18F7DDFA4B19A",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "candidate": "403C7C5D5BE52F18",
+      "candidate_instructions": 1437,
+      "parent_instructions": 1962,
+      "expected": "403C7C5D5BE52F18",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "403C7C5D5BE52F19",
+          "instructions": 1586,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_exact": {
+          "output": "403C7C5D5BE52F19",
+          "instructions": 1607,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_integer": {
+          "output": "C03C7C5D5BE52F19",
+          "instructions": 1644,
+          "correct_Qfplib": false
+        }
+      },
+      "parent_boundary_instructions": 1886,
+      "boundary_calls": [],
+      "midpoint_operands": [],
+      "parent_reciprocal_instructions": 1440,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FA1F94F69441D66"
+        }
+      ],
+      "software_seed_divisors": [
+        73620
+      ],
+      "first_product_reciprocals": [
+        955824824
+      ],
+      "remainder_certificates": [
+        {
+          "base": 1267338339,
+          "u": 1766071654,
+          "v": 3083492911,
+          "estimate": 4294402235,
+          "exact": 4294386917,
+          "fast": true,
+          "negative": true,
+          "cross_overflow": false,
+          "full": false,
+          "decision": "down"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": [
+        73620
+      ]
+    },
+    {
+      "x": "3FB18F7DDFA4B19B",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "candidate": "403C7C5D5BE52F16",
+      "candidate_instructions": 1438,
+      "parent_instructions": 1951,
+      "expected": "403C7C5D5BE52F16",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "403C7C5D5BE52F15",
+          "instructions": 1592,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_exact": {
+          "output": "403C7C5D5BE52F15",
+          "instructions": 1613,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_integer": {
+          "output": "C03C7C5D5BE52F15",
+          "instructions": 1650,
+          "correct_Qfplib": false
+        }
+      },
+      "parent_boundary_instructions": 1875,
+      "boundary_calls": [],
+      "midpoint_operands": [],
+      "parent_reciprocal_instructions": 1441,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FA1F94F69441D67"
+        }
+      ],
+      "software_seed_divisors": [
+        73620
+      ],
+      "first_product_reciprocals": [
+        955824824
+      ],
+      "remainder_certificates": [
+        {
+          "base": 1268316389,
+          "u": 1766071655,
+          "v": 3083492907,
+          "estimate": 412989,
+          "exact": 397672,
+          "fast": true,
+          "negative": false,
+          "cross_overflow": false,
+          "full": false,
+          "decision": "up"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 1
+      },
+      "bound3_seed_divisors": [
+        73620
+      ]
+    },
+    {
+      "x": "3FB18F7DDFA4B19C",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "candidate": "403C7C5D5BE52F14",
+      "candidate_instructions": 1422,
+      "parent_instructions": 1967,
+      "expected": "403C7C5D5BE52F14",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "403C7C5D5BE52F15",
+          "instructions": 1592,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_exact": {
+          "output": "403C7C5D5BE52F15",
+          "instructions": 1613,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_integer": {
+          "output": "C03C7C5D5BE52F15",
+          "instructions": 1650,
+          "correct_Qfplib": false
+        }
+      },
+      "parent_boundary_instructions": 1891,
+      "boundary_calls": [],
+      "midpoint_operands": [],
+      "parent_reciprocal_instructions": 1425,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FA1F94F69441D68"
+        }
+      ],
+      "software_seed_divisors": [
+        73620
+      ],
+      "first_product_reciprocals": [
+        955824824
+      ],
+      "remainder_certificates": [],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": [
+        73620
+      ]
+    },
+    {
+      "x": "3FCE1C93A6958ABD",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "candidate": "40186A35CFF65EEE",
+      "candidate_instructions": 1397,
+      "parent_instructions": 1923,
+      "expected": "40186A35CFF65EEE",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "40186A35CFF65EEF",
+          "instructions": 1538,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_exact": {
+          "output": "40186A35CFF65EEF",
+          "instructions": 1559,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_integer": {
+          "output": "C0186A35CFF65EEF",
+          "instructions": 1596,
+          "correct_Qfplib": false
+        }
+      },
+      "parent_boundary_instructions": 1863,
+      "boundary_calls": [],
+      "midpoint_operands": [],
+      "parent_reciprocal_instructions": 1400,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FC4F8874FD3207B"
+        }
+      ],
+      "software_seed_divisors": [
+        85896
+      ],
+      "first_product_reciprocals": [
+        819227552
+      ],
+      "remainder_certificates": [],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": [
+        85896
+      ]
+    },
+    {
+      "x": "3FCE1C93A6958ABE",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "candidate": "40186A35CFF65EED",
+      "candidate_instructions": 1416,
+      "parent_instructions": 1942,
+      "expected": "40186A35CFF65EED",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "40186A35CFF65EED",
+          "instructions": 1544,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_exact": {
+          "output": "40186A35CFF65EED",
+          "instructions": 1565,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_integer": {
+          "output": "C0186A35CFF65EED",
+          "instructions": 1602,
+          "correct_Qfplib": false
+        }
+      },
+      "parent_boundary_instructions": 1882,
+      "boundary_calls": [],
+      "midpoint_operands": [],
+      "parent_reciprocal_instructions": 1419,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FC4F8874FD3207B"
+        }
+      ],
+      "software_seed_divisors": [
+        85896
+      ],
+      "first_product_reciprocals": [
+        819227552
+      ],
+      "remainder_certificates": [],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": [
+        85896
+      ]
+    },
+    {
+      "x": "3FCE1C93A6958ABF",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "candidate": "40186A35CFF65EEC",
+      "candidate_instructions": 1438,
+      "parent_instructions": 1942,
+      "expected": "40186A35CFF65EEC",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "40186A35CFF65EED",
+          "instructions": 1544,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_exact": {
+          "output": "40186A35CFF65EED",
+          "instructions": 1565,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_integer": {
+          "output": "C0186A35CFF65EED",
+          "instructions": 1602,
+          "correct_Qfplib": false
+        }
+      },
+      "parent_boundary_instructions": 1882,
+      "boundary_calls": [],
+      "midpoint_operands": [],
+      "parent_reciprocal_instructions": 1441,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FC4F8874FD3207C"
+        }
+      ],
+      "software_seed_divisors": [
+        85896
+      ],
+      "first_product_reciprocals": [
+        819227552
+      ],
+      "remainder_certificates": [
+        {
+          "base": 837052093,
+          "u": 1339236476,
+          "v": 2683092441,
+          "estimate": 443193,
+          "exact": 422843,
+          "fast": true,
+          "negative": false,
+          "cross_overflow": false,
+          "full": false,
+          "decision": "up"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 1
+      },
+      "bound3_seed_divisors": [
+        85896
+      ]
+    },
+    {
+      "x": "40449B1CFD487AC5",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "candidate": "3F5871148A891534",
+      "candidate_instructions": 1656,
+      "parent_instructions": 2179,
+      "expected": "3F5871148A891534",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "3F5871148A891534",
+          "instructions": 1523,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_exact": {
+          "output": "3F5871148A891534",
+          "instructions": 1544,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_integer": {
+          "output": "BF5871148A891534",
+          "instructions": 1581,
+          "correct_Qfplib": false
+        }
+      },
+      "parent_boundary_instructions": 2103,
+      "boundary_calls": [],
+      "midpoint_operands": [],
+      "parent_reciprocal_instructions": 1659,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "4084F2A255E42FBE"
+        }
+      ],
+      "software_seed_divisors": [
+        85802
+      ],
+      "first_product_reciprocals": [
+        820128021
+      ],
+      "remainder_certificates": [
+        {
+          "base": 118385508,
+          "u": 1441017790,
+          "v": 353512039,
+          "estimate": 4294749532,
+          "exact": 4294744884,
+          "fast": true,
+          "negative": true,
+          "cross_overflow": false,
+          "full": false,
+          "decision": "down"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": [
+        85802
+      ]
+    },
+    {
+      "x": "40449B1CFD487AC6",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "candidate": "3F5871148A891532",
+      "candidate_instructions": 1661,
+      "parent_instructions": 2184,
+      "expected": "3F5871148A891532",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "3F5871148A891534",
+          "instructions": 1523,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_exact": {
+          "output": "3F5871148A891534",
+          "instructions": 1544,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_integer": {
+          "output": "BF5871148A891534",
+          "instructions": 1581,
+          "correct_Qfplib": false
+        }
+      },
+      "parent_boundary_instructions": 2108,
+      "boundary_calls": [],
+      "midpoint_operands": [],
+      "parent_reciprocal_instructions": 1664,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "4084F2A255E42FBF"
+        }
+      ],
+      "software_seed_divisors": [
+        85802
+      ],
+      "first_product_reciprocals": [
+        820128021
+      ],
+      "remainder_certificates": [
+        {
+          "base": 117927551,
+          "u": 1441017791,
+          "v": 353512037,
+          "estimate": 4294291575,
+          "exact": 4294286927,
+          "fast": true,
+          "negative": true,
+          "cross_overflow": false,
+          "full": false,
+          "decision": "down"
+        }
+      ],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": [
+        85802
+      ]
+    },
+    {
+      "x": "40449B1CFD487AC7",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "candidate": "3F5871148A891530",
+      "candidate_instructions": 1641,
+      "parent_instructions": 2174,
+      "expected": "3F5871148A891530",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "3F5871148A891534",
+          "instructions": 1523,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_exact": {
+          "output": "3F5871148A891534",
+          "instructions": 1544,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_integer": {
+          "output": "BF5871148A891534",
+          "instructions": 1581,
+          "correct_Qfplib": false
+        }
+      },
+      "parent_boundary_instructions": 2098,
+      "boundary_calls": [],
+      "midpoint_operands": [],
+      "parent_reciprocal_instructions": 1644,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "4084F2A255E42FC1"
+        }
+      ],
+      "software_seed_divisors": [
+        85802
+      ],
+      "first_product_reciprocals": [
+        820128021
+      ],
+      "remainder_certificates": [],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": [
+        85802
+      ]
+    },
+    {
+      "x": "400B1FE7CB6FA4C6",
+      "y": "BFFF000000000000",
+      "SIO": "DIRTY",
+      "candidate": "3FB808D2709F1050",
+      "candidate_instructions": 2686,
+      "parent_instructions": 3293,
+      "expected": "3FB808D2709F1050",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "3FB808D2709F1051",
+          "instructions": 1515,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_exact": {
+          "output": "3FB808D2709F1051",
+          "instructions": 1536,
+          "correct_Qfplib": false
+        },
+        "qfp_composed_pow_integer": {
+          "output": "BFB808D2709F1051",
+          "instructions": 1573,
+          "correct_Qfplib": false
+        }
+      },
+      "parent_boundary_instructions": 3143,
+      "boundary_calls": [],
+      "midpoint_operands": [],
+      "parent_reciprocal_instructions": 2689,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "40254D80B5A65FDC"
+        }
+      ],
+      "software_seed_divisors": [
+        87256
+      ],
+      "first_product_reciprocals": [
+        806462690
+      ],
+      "remainder_certificates": [],
+      "removed_zero_operations": {
+        "first_product_calls": 1,
+        "half_normalization_calls": 1,
+        "fast_round_up_calls": 0
+      },
+      "bound3_seed_divisors": [
+        87256
+      ]
+    }
+  ]
+}

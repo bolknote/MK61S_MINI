@@ -1,0 +1,18 @@
+{
+  "status": "EXCLUDED_HOST_TRACE_PARENT_CONTROL_MODE_ERROR",
+  "first_state_index": 2363,
+  "input": {
+    "x": "3FB18F7DDFA4B19A",
+    "y": "BFF4000000000000",
+    "SIO": "DIRTY",
+    "seed_D": 73620
+  },
+  "cause": "The verifier applied the old/new dead-R7 delta rule while comparing the unchanged parent with its byte-identical control. Parent/control outputs and costs matched; candidate precision matched, but the new-vs-old projection and cost checks were not reached for that final state.",
+  "completed_ARM_calls": 14184,
+  "partial_aborted_ARM_calls": 0,
+  "directed_MPFR_input_evaluations": 1106,
+  "sNaN_policy_shortcuts": 76,
+  "all_failed_run_calls_excluded_from_qualification": true,
+  "hardware_accessed": false,
+  "full_and_expanded_default_true_old_and_new_trace_semantics_identical": true
+}

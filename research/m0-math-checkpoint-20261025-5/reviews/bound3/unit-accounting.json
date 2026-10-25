@@ -1,0 +1,39 @@
+{
+  "status": "PASS_ALL65536_SAVED_VECTORS_ALL1048576_FLAGS_EXACT_INTEGER_AND_COST_BINDING",
+  "saved_D_rows": 65536,
+  "saved_flag_tests": 1048576,
+  "author_paired_ARM_calls": 2097152,
+  "delta_histogram": {
+    "0": 1029984,
+    "-3": 18592
+  },
+  "cost_histograms": {
+    "control": {
+      "22": 82672,
+      "23": 564032,
+      "26": 381040,
+      "25": 2240,
+      "29": 18592
+    },
+    "candidate": {
+      "22": 82672,
+      "23": 564032,
+      "26": 399632,
+      "25": 2240
+    }
+  },
+  "error_histogram_flags": {
+    "0": 82672,
+    "1": 564032,
+    "2": 381040,
+    "-1": 2240,
+    "3": 18592
+  },
+  "error1_branch_direction_changes_in564032cases_NOT_measured_cycles": true,
+  "all5errors_and_everyflag_bound_to_independent_HOSTmodel": true,
+  "saved_signed_residual_normalized_modulo_uint32_only": true,
+  "no_new_ARM_calls": 0,
+  "no_new_MPFR_inputs": 0,
+  "records_sha256": "dea9a60b9dac0c30347f64c38276e85284d64511c21a7fb05a8bbf74d52e475d",
+  "devices": 0
+}

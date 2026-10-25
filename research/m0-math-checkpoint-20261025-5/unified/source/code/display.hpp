@@ -1,0 +1,740 @@
+#ifndef MK61_DISPLAY_HPP
+#define MK61_DISPLAY_HPP
+
+#include "config.h"
+#include "rust_types.h"
+#include "shared_memory.hpp"
+#include <Arduino.h>
+#include <Print.h>
+
+#if defined(DISPLAY_UC1609) && !defined(MK61_DISPLAY_UC1609)
+  #define MK61_DISPLAY_UC1609
+#endif
+
+#if defined(DISPLAY_LCD1602) && !defined(MK61_DISPLAY_LCD1602)
+  #define MK61_DISPLAY_LCD1602
+#endif
+
+#if !defined(MK61_DISPLAY_LCD1602) && !defined(MK61_DISPLAY_UC1609)
+  #define MK61_DISPLAY_LCD1602
+#endif
+
+#if defined(MK61_DISPLAY_LCD1602) && defined(MK61_DISPLAY_UC1609)
+  #error "Select only one display backend"
+#endif
+
+#if defined(MK61_DISPLAY_UC1609) || MK61_ENABLE_USB_SCREEN
+  #define MK61_HAS_GRAPHICAL_TEXT_SETTINGS 1
+#else
+  #define MK61_HAS_GRAPHICAL_TEXT_SETTINGS 0
+#endif
+
+#if defined(MK61_DISPLAY_LCD1602)
+  #include "character_display_geometry.hpp"
+#if defined(MK61_OLED1602_WS0010)
+  #include "ws0010_controller.hpp"
+  #include "oled_protection.hpp"
+#endif
+  #include "hd44780_controller.hpp"
+#else
+  #include "ERM19264_UC1609.h"
+  #include "builtin_font.hpp"
+  #include "prepared_font.hpp"
+  #include "text_screen.hpp"
+#if MK61_PROPORTIONAL_UI_FONTS
+  #include "ui_font.hpp"
+#endif
+#endif
+
+#if MK61_ENABLE_USB_SCREEN
+  #include "usb_screen_surface.hpp"
+#endif
+#include "disk_activity.hpp"
+
+namespace lcd_display {
+
+static constexpr u8 COLS = 16;
+
+enum class BusyFlagStatus : u8 {
+  NOT_AVAILABLE,
+  ACTIVE,
+  FIXED_DELAYS,
+};
+
+} // namespace lcd_display
+#include "display_profile.hpp"
+namespace lcd_display {
+
+#if defined(MK61_DISPLAY_LCD1602)
+static constexpr u8 ROWS = character_display_geometry::ROWS;
+static constexpr u8 DDRAM_COLS = character_display_geometry::DDRAM_COLS;
+// A00/A02 retain a full 2x40 diff shadow. WS0010 streams the owner's 2x64
+// layout into controller DDRAM and keeps only the visible and Home windows.
+#if defined(MK61_OLED1602_WS0010)
+static constexpr u8 DDRAM_SHADOW_COLS = COLS;
+#else
+static constexpr u8 DDRAM_SHADOW_COLS = DDRAM_COLS;
+#endif
+static constexpr u8 DEFAULT_ROWS = ROWS;
+static constexpr u8 MAX_ROWS = ROWS;
+static constexpr TextProfile defaultTextProfileForRows(u8) {
+  return {ROWS, 5, 8, 0};
+}
+static inline TextProfile normalizeTextProfile(TextProfile) {
+  return defaultTextProfileForRows(ROWS);
+}
+#else
+// ROWS задаёт текстовую сетку по умолчанию. Графические дисплеи сохраняют
+// 16-столбцовый интерфейс и во время работы переключаются между несколькими
+// фиксированными наборами шрифтов.
+static constexpr u8 ROWS = FONT_5X8_ROWS;
+static constexpr u8 DEFAULT_ROWS = FONT_5X8_ROWS;
+static constexpr u8 MAX_ROWS = GRAPHICS_MAX_ROWS;
+
+static constexpr TextProfile defaultTextProfileForRows(u8 rows) {
+  return defaultGraphicalTextProfileForRows(rows);
+}
+
+static inline TextProfile presetTextProfile(TextProfile profile) {
+  return presetGraphicalTextProfile(profile);
+}
+
+static inline TextProfile normalizeTextProfile(TextProfile profile) {
+  return normalizeGraphicalTextProfile(profile);
+}
+#endif
+
+#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+static constexpr TextProfile defaultSettingsTextProfile(void) {
+  return textProfile5x8();
+}
+
+static constexpr TextProfile defaultSettingsTextProfileForRows(u8 rows) {
+  return defaultGraphicalTextProfileForRows(rows);
+}
+
+static inline TextProfile normalizeSettingsTextProfile(TextProfile profile) {
+  return normalizeGraphicalTextProfile(profile);
+}
+#else
+static constexpr TextProfile defaultSettingsTextProfile(void) {
+  return defaultTextProfileForRows(DEFAULT_ROWS);
+}
+
+static constexpr TextProfile defaultSettingsTextProfileForRows(u8 rows) {
+  return defaultTextProfileForRows(rows);
+}
+
+static inline TextProfile normalizeSettingsTextProfile(TextProfile profile) {
+  return normalizeTextProfile(profile);
+}
+#endif
+
+#if MK61_ENABLE_USB_SCREEN
+static constexpr u8 RUNTIME_MAX_ROWS = GRAPHICS_MAX_ROWS;
+#else
+static constexpr u8 RUNTIME_MAX_ROWS = MAX_ROWS;
+#endif
+
+} // пространство имён lcd_display
+
+class MK61Display;
+#if MK61_NARROW_IO_SUPPORTED
+using MK61DisplayOutput = mk61_io::Output<MK61Display>;
+#else
+using MK61DisplayOutput = Print;
+#endif
+
+class MK61Display : public MK61DisplayOutput {
+  public:
+    MK61Display(void);
+
+    void begin(u8 cols = lcd_display::COLS, u8 rows = lcd_display::ROWS);
+    // Reinitialises an already powered character controller without losing
+    // the visible window, custom glyphs or cursor/display-control state.
+    // Currently supported by the explicit WS0010 backend.
+    bool reinitialize(void);
+#if MK61_DEEP_IDLE_ENABLED && \
+    (defined(MK61_OLED1602_WS0010) || defined(MK61_DISPLAY_UC1609))
+    // STOP is entered only after the backend proves that no modal renderer or
+    // outstanding display transaction owns the panel. The pair preserves the
+    // logical screen and restores the same visible state on wake.
+    bool deepIdleReady(void) const;
+    bool prepareDeepIdle(void);
+    bool resumeDeepIdle(void);
+#endif
+#if defined(MK61_OLED1602_WS0010)
+    bool supportsWs0010Graphics(void) const {
+      return MK61_WS0010_GRAPHICS_100X16 != 0;
+    }
+    bool beginWs0010Graphics(void);
+    bool writeWs0010GraphicsPage(u8 page, u8 first,
+                                 const u8* data, usize count);
+    bool presentWs0010Graphics(void);
+    bool showWs0010GraphicsFrame(const u8* frame, usize size);
+    bool showWs0010GraphicsQualificationFrame(const u8* frame, usize size);
+    bool readWs0010GraphicsQualificationFrame(u8* frame, usize size);
+    ws0010::GraphicsOwner ws0010GraphicsOwner(void) const {
+      return ws0010_graphics_owner;
+    }
+    bool ws0010GraphicsQualificationActive(void) const {
+      return ws0010_graphics_owner == ws0010::GraphicsOwner::QUALIFICATION;
+    }
+    bool endWs0010Graphics(void);
+    bool returnWs0010Home(void);
+    bool shiftWs0010Cursor(bool right);
+    bool showWs0010EntryModeTest(bool automatic_shift);
+    bool showWs0010ZeroRunTest(void);
+    void configureOledProtection(oled_protection::Timeout timeout, u32 now);
+    void noteDisplayActivity(u32 now);
+    void pollOledProtection(u32 now, bool passive_calculator_wait);
+    void setDisplayEnabled(bool enabled, u32 now);
+    bool displayEnabled(void) const { return oled_protection_state.awake(); }
+    bool internalPowerEnabled(void) const {
+      return (ws0010_power_state & WS0010_POWER_ENABLED) != 0;
+    }
+    oled_protection::Timeout oledProtectionTimeout(void) const {
+      return oled_protection_state.timeout();
+    }
+#endif
+    void clear(void);
+    void flush(void);
+#if MK61_DISK_ACTIVITY_SUPPORTED
+    void noteDiskActivity(u32 now) { disk_activity_.note(now); }
+    void pollDiskActivity(u32 now);
+    void pauseDiskActivity(void) {
+      disk_activity_.pause();pollDiskActivity(millis());
+    }
+    void resumeDiskActivity(void) { disk_activity_.resume(); }
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+    void beginDiskSaving(bool russian);
+    void endDiskSaving(void);
+#endif
+    void beginUpdate(void);
+    void endUpdate(void);
+    // M8 word flow shared by language runtimes. It uses the active FMK's
+    // real advances on a graphical UI and Unicode cells on character panels.
+    // Returns the number of rows replaced.
+    u8 printWrappedText(const char* text, u16 length, u8 first_row,
+                        u8 max_rows, bool tail = false,
+                        bool empty_line = false);
+    void setRows(u8 rows);
+    void setTextProfile(lcd_display::TextProfile profile);
+    // Runtime-owned restoration path for a previously observed geometry.
+    // User settings still pass through setTextProfile() and its preset policy.
+    void restoreTextProfile(lcd_display::TextProfile profile);
+    lcd_display::TextProfile textProfile(void) const;
+#if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
+    // Family 0 is fixed 5x8, family 1 is Ark Pixel, family 4 is UC_Font_One
+    // enlarged exactly 2x, and family 5 is the resident compact 3x5 face.
+    void setUiFont(u8 family, u8 size);
+    u8 uiFontFamily(void) const {
+      return (ui_font_state & 128U) ? 5U :
+          ((ui_font_state & 64U) ? 4U : (ui_font_state & 3U));
+    }
+    u8 uiFontSize(void) const {
+      return uiFontCompact3x5() ? 5U : (uiFontClassic10x16() ? 16U :
+        ((ui_font_state & 32U) ? 16U : ((ui_font_state & 4U) ? 14U : 12U)));
+    }
+    bool uiFontClassic10x16(void) const { return (ui_font_state & 64U) != 0; }
+    bool uiFontCompact3x5(void) const { return (ui_font_state & 128U) != 0; }
+    bool uiFontEnabled(void) const { return uiFontFamily() != 0; }
+    bool uiTextContext(void) const { return (ui_font_state & 8U) != 0; }
+    bool uiTextActive(void) const {
+      // This is a logical foreground mode, not a physical-controller state.
+      // USB Screen has its own pixel surface but must preserve the same
+      // proportional layout and therefore remains an active UI target.
+      return uiTextContext() && !preview_profile_active;
+    }
+    void beginUiText(void);
+    void endUiText(void);
+    ui_font::Face uiFontFace(void) const {
+      return {ui_font::Family::PIXEL,
+              uiFontSize() == 16 ? ui_font::Size::PX16
+                  : uiFontSize() == 14 ? ui_font::Size::PX14 : ui_font::Size::PX12};
+    }
+    // Replaces a whole row, clips by advance, and adds an ellipsis when needed.
+    // Optional marker and right-hand type icon occupy fixed, separate gutters.
+    void printUiLine(u8 row, const char* text, char marker = 0, u16 trailing = 0);
+    u16 measureUiText(const char* text) const;
+    u16 measureUiText(const char* text, u16 length) const;
+    // Pixel width available to an undecorated UI row, or zero while the
+    // ordinary fixed-cell renderer owns the foreground.
+    u16 uiTextWidth(void) const;
+#else
+    void setUiFont(u8, u8) {}
+    u8 uiFontFamily(void) const { return 0; }
+    u8 uiFontSize(void) const { return 14; }
+    bool uiFontClassic10x16(void) const { return false; }
+    bool uiFontCompact3x5(void) const { return false; }
+    bool uiFontEnabled(void) const { return false; }
+    bool uiTextContext(void) const { return false; }
+    bool uiTextActive(void) const { return false; }
+    void beginUiText(void) {}
+    void endUiText(void) {}
+    void printUiLine(u8, const char*, char = 0, u16 = 0) {}
+    u16 measureUiText(const char*) const { return 0; }
+    u16 measureUiText(const char*, u16) const { return 0; }
+    u16 uiTextWidth(void) const { return 0; }
+#endif
+#if MK61_FIXED_CALCULATOR_FACE
+    // Independent of the menu face: MK-61 segments or Classic 10x16 digits.
+    void setCalculatorFont(u8 font);
+    void beginCalculatorFace(void);
+    void invalidateCalculatorFace(void);
+    bool calculatorFaceActive(void) const {
+      return (ui_font_state & 16U) != 0;
+    }
+#else
+    void setCalculatorFont(u8) {}
+    void beginCalculatorFace(void) {}
+    void invalidateCalculatorFace(void) {}
+    bool calculatorFaceActive(void) const { return false; }
+#endif
+    void setCursor(u8 x, u8 y);
+    void cursorOn(void);
+    void cursorOff(void);
+    void blinkOn(void);
+    void blinkOff(void);
+    bool supportsCursor(void) const;
+    bool hasHardwareCursor(void) const;
+    void createChar(u8 nChar, uint8_t* glyph);
+    void clearCustomChars(void);
+    void clearCustomChar(u8 nChar);
+#if defined(MK61_DISPLAY_LCD1602)
+    bool readCell(u8 x, u8 y, u8& value) const;
+    bool copyCustomChar(u8 nChar, u8 glyph[8]) const;
+    void renderShiftedViewport(
+      const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
+    // Moves an already loaded native DDRAM layout without retransmitting it.
+    // `cells` remains owner-owned and is consulted only to refresh the compact
+    // visible-window shadow used by USB/recovery.
+    bool shiftShiftedViewport(
+      const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
+#if defined(MK61_OLED1602_WS0010)
+    // Rewrites one controller DDRAM row while preserving the other row and
+    // the shared hardware shift. This is the independent-scroll path for a
+    // 2-line module whose display-shift command necessarily moves both rows.
+    bool updateWs0010ShiftedViewportRow(
+      const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS],
+      u8 row, u8 shift);
+#endif
+    void endShiftedViewport(void);
+#if defined(MK61_OLED1602_WS0010)
+    u16 reinitializationCount(void) const { return reinitialization_count; }
+    ws0010::InitializationPhase initializationPhase(void) const {
+      return initialization_phase;
+    }
+#endif
+#endif
+    bool showTopRightOverlay(const u32* rows, u8 width, u8 height,
+                             u8 clear_border);
+    void hideTopRightOverlay(void);
+    void writeCodepoint(u16 codepoint);
+    bool installPreparedFont(const u8* data, u16 size);
+#if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
+    bool installPreparedUiFont(const u8* data, u16 size,
+                               u8 expected_height);
+    void clearExternalUiFont(void);
+    const prepared_font::Face* externalUiFont(void) const;
+#endif
+    bool setFontPreview(const u8* data, u16 size);
+    void clearFontPreview(void);
+    void useBuiltinFont(void);
+    bool externalFontActive(void) const;
+    bool externalTextFontActive(void) const;
+    bool suspendExternalFontForUsb(void);
+    // Modal-пара подавляет фоновые flush во время просмотра WBMP.
+    // Сам showFullscreenBitmap остаётся пригоден для одноразового DFU-сплеша.
+    bool supportsFullscreenBitmap(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return true;
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+      return true;
+#elif defined(MK61_OLED1602_WS0010)
+      return MK61_WS0010_GRAPHICS_100X16 != 0;
+#else
+      return false;
+#endif
+    }
+    u16 fullscreenBitmapWidth(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return usb_screen::WIDTH;
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+      return lcd_display::PIXEL_WIDTH;
+#elif defined(MK61_OLED1602_WS0010)
+      return MK61_WS0010_GRAPHICS_100X16
+          ? ws0010::GRAPHICS_VISIBLE_WIDTH : 0;
+#else
+      return 0;
+#endif
+    }
+    u16 fullscreenBitmapHeight(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return usb_screen::HEIGHT;
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+      return lcd_display::PIXEL_HEIGHT;
+#elif defined(MK61_OLED1602_WS0010)
+      return MK61_WS0010_GRAPHICS_100X16 ? ws0010::GRAPHICS_HEIGHT : 0;
+#else
+      return 0;
+#endif
+    }
+    bool beginFullscreenBitmap(void);
+    bool showFullscreenBitmap(const u8* bitmap, usize size);
+    // Copy logical text rows into a caller-owned page bitmap without showing
+    // it or touching unrelated rows. Used by the shared BASIC canvas.
+    bool copyTextBitmap(u8* bitmap, usize size, u8 first_row, u8 count);
+    int flowTextBitmap(u8* bitmap, usize size, const char* text, u16 length,
+                       u8 first_row, u8 max_rows, bool empty_line);
+    void endFullscreenBitmap(void);
+    bool beginCellAnimation(void);
+    bool writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
+                                        const u8* cells, usize count);
+    void endCellAnimation(void);
+    lcd_display::BusyFlagStatus busyFlagStatus(void) const;
+    bool busyFlagObserved(void) const;
+    bool busyFlagFaulted(void) const;
+    u32 busyFlagTimeouts(void) const;
+    u8 cols(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return usb_surface.cols();
+#endif
+#if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
+      return grid.cols();
+#else
+      return lcd_display::COLS;
+#endif
+    }
+    u8 cursorX(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return usb_surface.cursorX();
+#endif
+#if defined(MK61_DISPLAY_LCD1602)
+      return shadow_cursor_x;
+#else
+      return grid.cursorX();
+#endif
+    }
+    u8 cursorY(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return usb_surface.cursorY();
+#endif
+#if defined(MK61_DISPLAY_LCD1602)
+      return shadow_cursor_y;
+#else
+      return grid.cursorY();
+#endif
+    }
+    u8 rows(void) const {
+#if MK61_ENABLE_USB_SCREEN
+      if(usb_screen_active) return usb_surface.rows();
+#endif
+#if defined(MK61_DISPLAY_LCD1602)
+      return lcd_display::ROWS;
+#else
+      return grid.rows();
+#endif
+    }
+    bool graphicsMode(void) const {
+#if defined(MK61_DISPLAY_UC1609)
+      return true;
+#elif defined(MK61_OLED1602_WS0010)
+#if MK61_ENABLE_USB_SCREEN
+      // USB Screen is a graphics backend even when the physical WS0010 is
+      // currently in character mode. Modal graphics owners must therefore
+      // see the active virtual display, not the dormant physical mode.
+      if(usb_screen_active) return true;
+#endif
+#if MK61_WS0010_GRAPHICS_100X16
+      return ws0010::graphicsOwned(ws0010_graphics_owner);
+#else
+      return false;
+#endif
+#elif MK61_ENABLE_USB_SCREEN
+      return usb_screen_active;
+#else
+      return false;
+#endif
+    }
+
+#if MK61_ENABLE_USB_SCREEN
+    bool enterUsbScreen(void);
+    void leaveUsbScreen(void);
+    bool usbScreenActive(void) const { return usb_screen_active; }
+    u32 displayModeRevision(void) const { return display_mode_revision; }
+    const u8* usbScreenFramebuffer(void) const {
+      return usb_surface.framebuffer();
+    }
+    u32 usbScreenRevision(void) const { return usb_surface.revision(); }
+#else
+    bool enterUsbScreen(void) { return false; }
+    void leaveUsbScreen(void) {}
+    bool usbScreenActive(void) const { return false; }
+    u32 displayModeRevision(void) const { return 0; }
+    const u8* usbScreenFramebuffer(void) const { return NULL; }
+    u32 usbScreenRevision(void) const { return 0; }
+#endif
+
+    using MK61DisplayOutput::print;
+    using MK61DisplayOutput::println;
+    using MK61DisplayOutput::write;
+
+#if MK61_NARROW_IO_SUPPORTED
+    size_t write(uint8_t value);
+#elif ARDUINO >= 100
+    virtual size_t write(uint8_t value) override;
+#else
+    virtual void write(uint8_t value) override;
+#endif
+
+  private:
+#if MK61_SCREEN_BUFFER_LOAN
+    friend class DisplayBufferLoan;
+    bool screen_buffer_loan_active = false;
+#endif
+#if MK61_DISK_ACTIVITY_SUPPORTED
+    disk_activity::Activity disk_activity_;
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+    disk_activity::Overlay disk_overlay_;
+    bool disk_saving_ = false;
+    bool disk_saving_ru_ = false;
+    u8 disk_step_ = 0;
+    u32 disk_frame_at_ = 0;
+    void presentPage(u8 page, u8 first, u8 count, u8* pixels);
+#endif
+    bool writeCellAnimationFrame(const u8* cells, usize count);
+#if defined(MK61_DISPLAY_LCD1602)
+    u8 ddram_shadow[lcd_display::ROWS][lcd_display::DDRAM_SHADOW_COLS];
+#if defined(MK61_OLED1602_WS0010)
+    u8 ddram_home_shadow[lcd_display::ROWS][lcd_display::COLS];
+#endif
+    u8 shadow_cursor_x;
+    u8 shadow_cursor_y;
+    u8 custom_glyphs[8][8];
+    bool custom_valid[8];
+    u8 display_control;
+    // Bit-packed so richer BF diagnostics do not enlarge MK61Display.
+    u8 busy_flag_state;
+    u32 busy_flag_timeouts;
+    bool shifted_viewport_active;
+    u8 shifted_viewport_shift;
+#if defined(MK61_OLED1602_WS0010)
+    static constexpr u8 WS0010_POWER_ENABLED = 0x01u;
+    static constexpr u8 WS0010_DEEP_RESTORE_POWER = 0x02u;
+    u16 reinitialization_count;
+    ws0010::InitializationPhase initialization_phase;
+#if MK61_WS0010_GRAPHICS_100X16
+    ws0010::GraphicsOwner ws0010_graphics_owner;
+#else
+    static constexpr ws0010::GraphicsOwner ws0010_graphics_owner = ws0010::GraphicsOwner::NONE;
+#endif
+    // Bit 0 is the tracked WS0010 DC/DC PWR state; bit 1 records whether a
+    // deep-idle transaction must restore it. Packed explicitly so the normal
+    // OLED timeout costs no extra bool/padding pair on F401/F411.
+    u8 ws0010_power_state;
+    oled_protection::State oled_protection_state;
+
+    bool beginWs0010GraphicsFor(ws0010::GraphicsOwner owner);
+    bool writeWs0010GraphicsPageFor(ws0010::GraphicsOwner owner,
+                                    u8 page, u8 first,
+                                    const u8* data, usize count);
+    bool presentWs0010GraphicsFor(ws0010::GraphicsOwner owner);
+    bool showWs0010GraphicsFrameFor(ws0010::GraphicsOwner owner,
+                                    const u8* frame, usize size);
+    bool readWs0010GraphicsFrameFor(ws0010::GraphicsOwner owner,
+                                    u8* frame, usize size);
+    bool initializeWs0010Controller(bool cold_start,
+                                    bool display_on_after_init);
+    void refreshWs0010VisibleShadow(
+      const u8 cells[lcd_display::ROWS][lcd_display::DDRAM_COLS], u8 shift);
+    void restoreWs0010DdramAddress(void);
+    bool setWs0010InternalPower(bool enabled);
+#endif
+
+    void probeBusyFlag(void);
+    void sendByte(u8 value, bool data, u32 fallback_delay_us = 0);
+    void sendCommand(u8 value, u32 fallback_delay_us = 0);
+    void sendData(u8 value);
+    void sendDisplayControl(void);
+    void writeCharacterCell(u8 value);
+#else
+    static constexpr u8 CUSTOM_GLYPHS = 8;
+    static constexpr u8 RENDER_PAGE_HEIGHT = 8;
+    static constexpr u8 RENDER_PAGE_COUNT =
+      lcd_display::PIXEL_HEIGHT / RENDER_PAGE_HEIGHT;
+    static_assert(lcd_display::PIXEL_HEIGHT % RENDER_PAGE_HEIGHT == 0,
+                  "display height must contain whole UC1609 pages");
+    static constexpr u8 TOP_RIGHT_OVERLAY_MAX_WIDTH = 32;
+    static constexpr u8 TOP_RIGHT_OVERLAY_MAX_HEIGHT = 16;
+#if MK61_ENABLE_USB_SCREEN && !MK61_SCOPED_RESIDENT_BUFFERS
+    // В обычном режиме UC1609 отрисовщику нужна только первая страница на 192 байта.
+    // USB-экран повторно использует этот блок как полный кадровый буфер 192x64.
+    uint8_t render_buffer[usb_screen::FRAME_BYTES];
+#else
+    uint8_t render_buffer[lcd_display::PIXEL_WIDTH];
+#endif
+    ERM19264_UC1609 lcd;
+    u8 render_width;
+    text_screen::Grid grid;
+    uint8_t custom_glyphs[CUSTOM_GLYPHS][8];
+    bool custom_valid[CUSTOM_GLYPHS];
+    prepared_font::Face active_font;
+    prepared_font::Face preview_font;
+    enum class ActiveFontState : u8 {
+      BUILTIN,
+      READY,
+      SUSPENDED
+    };
+    enum class ActiveFontRole : u8 {
+      TEXT,
+      UI
+    };
+    ActiveFontState active_font_state;
+    ActiveFontRole active_font_role;
+    bool initialized;
+#if MK61_ANY_FULLSCREEN_FILE
+    // Bit 0: bitmap active; bit 1: restore calculator renderer on exit.
+    u8 fullscreen_bitmap_active;
+#endif
+    bool screen_dirty;
+    bool dirty;
+    // Вне текстовой сетки damage создаёт верхняя правая пиксельная накладка.
+    u16 extra_dirty_page_cols[RENDER_PAGE_COUNT];
+    usize update_depth;
+    lcd_display::TextProfile active_profile;
+    lcd_display::TextProfile preview_saved_profile;
+    bool cursor_underline;
+    bool cursor_blink;
+    bool cursor_blink_phase;
+    t_time_ms cursor_next_blink_ms;
+    bool preview_profile_active;
+    u32 top_right_overlay_rows[TOP_RIGHT_OVERLAY_MAX_HEIGHT];
+    u8 top_right_overlay_width;
+    u8 top_right_overlay_height;
+    u8 top_right_overlay_clear_border;
+    bool top_right_overlay_visible;
+#if MK61_PROPORTIONAL_UI_FONTS || MK61_FIXED_CALCULATOR_FACE
+    u8 ui_font_state;
+#endif
+#if MK61_PROPORTIONAL_UI_FONTS
+    bool active_ui_font_runtime;
+    u16 ui_row_gutters;
+    u16 ui_row_tails;
+#endif
+
+    void clearShadow(void);
+    void clearPhysicalScreen(void);
+    static u8 sanitizeRows(u8 rows);
+    u8 rowTop(u8 row) const;
+    u8 rowPitch(u8 row) const;
+    u8 glyphHeight(u8 row) const;
+    u8 glyphTop(u8 row) const;
+    u8 glyphWidth(void) const;
+    u8 glyphLeft(void) const;
+    void setRenderPixel(i16 x, i16 y);
+    void fillRenderRect(i16 x, i16 y, i16 width, i16 height,
+                        bool foreground);
+    void drawGlyph(u8 x, i16 row_y, u8 row, const uint8_t* bitmap, u8 source_width, u8 source_height);
+    void drawToken(u8 x, i16 row_y, u8 row, u16 value, bool custom);
+    void drawCursor(u8 x, i16 row_y, u8 row, bool block);
+    void moveCursorTo(u8 x, u8 y);
+    bool cursorOverlayVisible(void) const;
+    void markCellDirtyDeferred(u8 x, u8 y);
+    void markCursorCellDirty(void);
+    void markCellDirty(u8 x, u8 y);
+    void markScreenDirty(void);
+    void markAllDirty(void);
+    void markTopRightOverlayDirty(u8 width, u8 height, u8 clear_border);
+    void drawTopRightOverlay(u8 first_col, u8 count, u8 page_y);
+    void updateCursorBlink(void);
+    void renderPageRun(u8 page, u8 first_col, u8 count);
+    void applyTextProfile(lcd_display::TextProfile profile, bool exact_geometry = false);
+    lcd_display::TextProfile recommendedProfile(
+      const prepared_font::Metrics& metrics) const;
+    bool installPreparedFontImpl(const u8* data, u16 size,
+                                 u8 expected_height, ActiveFontRole role);
+    const prepared_font::Face* selectedFont(void) const;
+    builtin_font::FaceId fallbackFont(void) const;
+    bool resolveToken(u16 value, bool custom, builtin_font::Raster& raster) const;
+#if MK61_PROPORTIONAL_UI_FONTS
+    void renderUiPage(u8 page, u8 first_col, u8 count, bool present = true);
+    u8 uiAdvance(u16 codepoint, bool custom) const;
+    u8 uiRows(void) const;
+    u8 uiCols(void) const;
+    u8 uiTop(void) const;
+    u8 uiHeight(void) const;
+    u8 uiLineGap(void) const;
+#endif
+#endif
+#if MK61_ENABLE_USB_SCREEN
+#if defined(MK61_DISPLAY_LCD1602)
+    // Графическую ОЗУ LCD1602 нельзя прочитать, поэтому нужен отдельный буфер.
+#if !MK61_SCOPED_RESIDENT_BUFFERS
+    u8 usb_framebuffer[usb_screen::FRAME_BYTES];
+#endif
+    lcd_display::TextProfile usb_text_profile;
+#endif
+#if MK61_SCOPED_RESIDENT_BUFFERS
+    shared_memory::LifetimeBuffer usb_framebuffer_storage;
+    bool prepareUsbFramebuffer();
+    void releaseUsbFramebuffer();
+#endif
+    usb_screen::Surface usb_surface;
+    bool usb_screen_active;
+    u32 display_mode_revision;
+    bool physical_screen_enabled;
+#if defined(MK61_DISPLAY_LCD1602)
+    prepared_font::Face usb_preview_font;
+    usb_screen::TextProfile usb_preview_saved_profile;
+    bool usb_preview_font_active;
+#endif
+
+    bool setPhysicalScreenEnabled(bool enabled);
+    static usb_screen::TextProfile usbTextProfile(
+      lcd_display::TextProfile profile);
+#endif
+};
+
+class MK61DisplayTextScope {
+  public:
+    explicit MK61DisplayTextScope(MK61Display& display, bool ui = true)
+        : display_(display), previous_(display.uiTextContext()) {
+      if(ui) display_.beginUiText(); else display_.endUiText();
+    }
+    ~MK61DisplayTextScope() {
+      if(previous_) display_.beginUiText(); else display_.endUiText();
+    }
+    MK61DisplayTextScope(const MK61DisplayTextScope&) = delete;
+    MK61DisplayTextScope& operator=(const MK61DisplayTextScope&) = delete;
+  private:
+    MK61Display& display_;
+    bool previous_;
+};
+
+class MK61DisplayUpdate {
+  public:
+    explicit MK61DisplayUpdate(MK61Display& display) : display(display) {
+      display.beginUpdate();
+    }
+
+    ~MK61DisplayUpdate(void) {
+      display.endUpdate();
+    }
+
+    MK61DisplayUpdate(const MK61DisplayUpdate&) = delete;
+    MK61DisplayUpdate& operator=(const MK61DisplayUpdate&) = delete;
+
+  private:
+    MK61Display& display;
+};
+
+extern MK61Display* main_lcd_pointer;
+static inline MK61Display& main_lcd(void) { return *main_lcd_pointer; }
+
+#endif

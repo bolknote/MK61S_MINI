@@ -1,0 +1,62 @@
+{
+  "status": "BOUNDED_STRICT_FIX_SEPARATE_EQUALITY_ONEUP_AND_CONTROLS",
+  "jobs": [
+    {
+      "x": "3FEB84F6C510641E",
+      "y": "C00C000000000000",
+      "group": "single_new_strict_pair_fix"
+    },
+    {
+      "x": "3FE4F79E13C3C1C2",
+      "y": "C00C000000000000",
+      "group": "separate_new_reference_state_equality_not_strict_fix"
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "3FF654E7580FA958",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "401FB34C9D8CF59F",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    }
+  ],
+  "strict_fixed_pair": [
+    [
+      "3FEB84F6C510641E",
+      "C00C000000000000"
+    ]
+  ],
+  "separate_equal_transition": [
+    {
+      "x": "3FE4F79E13C3C1C2",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "reference": "qfp_composed_pow",
+      "parent": 1507,
+      "candidate": 1505,
+      "Qfplib": 1505
+    }
+  ]
+}

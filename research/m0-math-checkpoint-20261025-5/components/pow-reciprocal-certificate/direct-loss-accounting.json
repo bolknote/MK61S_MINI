@@ -1,0 +1,66 @@
+{
+  "remaining": [
+    {
+      "denominator": "3FF27D0DF6735E90",
+      "NZCV": 13,
+      "group": "normal_seed_samples",
+      "SIO": "DIRTY",
+      "expected": "3FEBB161CF4596AC",
+      "results": {
+        "parent": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 161,
+          "correct": true
+        },
+        "control": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 161,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 149,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "3FF27D0DF6735E90"
+        }
+      ],
+      "software_seed_divisors": [
+        75728
+      ],
+      "first_product_reciprocals": [
+        929219488
+      ],
+      "remainder_certificates": [
+        {
+          "base": 2561216485,
+          "u": 4134755984,
+          "v": 2659921239,
+          "estimate": 542068,
+          "exact": 515901,
+          "fast": true,
+          "negative": false,
+          "cross_overflow": false,
+          "expected_saving": 12,
+          "full": false,
+          "decision": "up"
+        }
+      ]
+    }
+  ],
+  "scalar_parent_increase_histogram": {
+    "8": 846,
+    "7": 286
+  },
+  "new_losses": 0
+}

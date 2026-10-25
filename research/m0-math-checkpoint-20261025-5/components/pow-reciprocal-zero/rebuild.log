@@ -1,0 +1,27 @@
+rebuild 1 / 22 RP-control.o
+rebuild 2 / 22 RP-candidate.o
+rebuild 3 / 22 generic_M0-control.o
+rebuild 4 / 22 generic_M0-candidate.o
+rebuild 5 / 22 M4_soft-control.o
+rebuild 6 / 22 M4_soft-candidate.o
+rebuild 7 / 22 M4_hard-control.o
+rebuild 8 / 22 M4_hard-candidate.o
+rebuild 9 / 22 control-ddiv.o
+rebuild 10 / 22 candidate-ddiv.o
+rebuild 11 / 22 software.o
+rebuild 12 / 22 candidate-software.o
+rebuild 13 / 22 control-seed17.o
+rebuild 14 / 22 candidate-seed17.o
+rebuild 15 / 22 control.elf
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-zero-20261025/software.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: cannot find entry symbol mk61_m0_hint_ddiv; not setting start address
+rebuild 16 / 22 candidate.elf
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-zero-20261025/candidate-software.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+rebuild 17 / 22 generic_M0-candidate-ddiv-disabled.o
+rebuild 18 / 22 generic_M0-candidate-software-disabled.o
+rebuild 19 / 22 M4_soft-candidate-ddiv-disabled.o
+rebuild 20 / 22 M4_soft-candidate-software-disabled.o
+rebuild 21 / 22 M4_hard-candidate-ddiv-disabled.o
+rebuild 22 / 22 M4_hard-candidate-software-disabled.o

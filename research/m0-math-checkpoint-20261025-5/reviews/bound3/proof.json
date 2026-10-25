@@ -1,0 +1,64 @@
+{
+  "status": "PASS_PRIVATE_R0_ZERO_BOUND3_FULL_DOMAIN_AND_FRESH_R7_DEADNESS_PROOF",
+  "domain": "D=65536..131071 all65536, actual128 integer table values, exact uint32/ASR operations from emitted Thumb",
+  "error_histogram": {
+    "0": 5167,
+    "1": 35252,
+    "2": 23815,
+    "-1": 140,
+    "3": 1162
+  },
+  "quotient": "floor((2^32-1)/D) exact for every D. Initial true residual r-kD is signed-safe; no modular sign ambiguity.",
+  "k1": "First decrement+ADD yields residual>=0, BPL exits; branch direction differs from old BMI loop even with same instruction count.",
+  "k2": "After second decrement+ADD, unsigned carry1 so immediate SBC q,R0 subtracts0 under R0=0.",
+  "k3": "Second ADD leaves negative residual and carry0, immediate SBC q,R0 subtracts1; quotient exact. R7=old_residue-D, deliberately not exact remainder.",
+  "private_contract": "NEW seed requires raw R0=0, proved at sole actual positive-one root entry and unchanged guarded software prefix; cannot transfer old generic R0-input preservation contract.",
+  "negative_R0_control": "For k2/3 a nonzero R0 would subtract it as well. Such input is outside this private contract, not qualified generic seed ABI.",
+  "post_seed": "ADDS q,1 cannot signed-overflow for q in[32768,65535]; V=0, following LSRS produces identical NZCV and u0. R7 alone may differ.",
+  "R7_liveness": "No emitted R7 reference between seed done and second product; first R7 use is LSRS R7,R2,16 overwrite before any read. Under new Zero scratch product, after-second full states and all later R3-certificate joins rejoin.",
+  "unit_and_production_macro_byteequal_except_decoded_ADR": true,
+  "same_table_all128_constants": true,
+  "unchanged_complete_after_seed_function_suffix": true,
+  "incoming_NZCV_dead_before_every_carry_use": true,
+  "oldloop_control_retained": true,
+  "instruction_nonincrease_NOT_cycle_nonregression": true,
+  "physical_branch_cost_unmeasured": true,
+  "mapping": {
+    "control": {
+      "begin": 270406162,
+      "done": 270406212,
+      "table": 270406476,
+      "bytes": 50,
+      "after_round": 270406216,
+      "before_second": 270406240,
+      "after_second": 270406276,
+      "sw": 270406136,
+      "R7_dead_before_first_overwrite": true
+    },
+    "candidate": {
+      "begin": 270406162,
+      "done": 270406218,
+      "table": 270406484,
+      "bytes": 56,
+      "after_round": 270406222,
+      "before_second": 270406246,
+      "after_second": 270406282,
+      "sw": 270406136,
+      "R7_dead_before_first_overwrite": true
+    },
+    "unit_control": {
+      "begin": 270405634,
+      "done": 270405684,
+      "after_round": null
+    },
+    "unit_candidate": {
+      "begin": 270405634,
+      "done": 270405690,
+      "after_round": null
+    }
+  },
+  "performance_adoption_GO": false,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "devices": 0
+}

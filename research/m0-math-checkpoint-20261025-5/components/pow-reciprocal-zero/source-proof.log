@@ -1,0 +1,22 @@
+{
+  "status": "PASS_EXACT_REGISTER_PERMUTATION_AND_KNOWN_ZERO_SOURCE_PROOF",
+  "exact_reverse_transform_restores_both_complete_parent_sources": true,
+  "second_product_is_R0_R4_permutation_from_equal_zero_inputs": true,
+  "xH_temporary_R1_dead_before_original_shift_and_full_after_residual_join": true,
+  "all_full_R0_R7_R12_SP_NZCV_frame28_after_residual_checked": true,
+  "removed_zero_double_flags_replaced_before_use": true,
+  "certificate_scratch_R3_written_before_read_R6_zero_preserved": true,
+  "full_fallback_explicitly_restores_R6_zero_before_upward_ADCS": true,
+  "old_R2_zero_write_dead_before_pack": true,
+  "all_exact_product_midpoint_and_RNE_decisions_unchanged": true,
+  "READY_nine_ALU_gap_unchanged": true,
+  "all7_DIRTY_SIO_words_preserved": true,
+  "same256B_seed_table_and_inline_seed": true,
+  "no_new_tables_RAM_libgcc_or_external_calls": true,
+  "default_M0_M4_selected_controls_equal": true,
+  "six_added_disabled_objects_empty": true,
+  "private_numerator_positive1_only": true,
+  "not_generic_division": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

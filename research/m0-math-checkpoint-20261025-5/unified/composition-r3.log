@@ -1,0 +1,19 @@
+{
+  "status": "CPP_AND_CORE_ASM_SOURCE_COMPOSED_AND_COMPILED_NOT_LINKED",
+  "source_CPP_composition_only_two_exp_insertions": true,
+  "RP_CPP_allocated_code_matches_near_one": true,
+  "RP_CPP_three_pow_call_relocations_match_table_parent": true,
+  "RP_core_ASM_allocated_code_matches_table_product": true,
+  "default_M0_M4_selected_objects_equal": true,
+  "complete_RP_native_root_square_boundary_reciprocal_sources_not_yet_composed": true,
+  "final_ELF_linked": false,
+  "actual_linked_R12_guard_passed": false,
+  "loader_layout_guard_passed": false,
+  "old168B_overlay_must_not_be_used": true,
+  "actual_ARM_or_MPFR_calls": 0,
+  "canonical_M4_Git_device_USB_Flash_changed": false,
+  "integration_GO": false,
+  "hardware_GO": false,
+  "release_GO": false,
+  "goal_complete": false
+}
