@@ -1,0 +1,16 @@
+{
+  "status": "PASS_FROZEN_EXACT_BOUNDARY128_ALL_LOCAL_EXTERNAL_PINS",
+  "directory": ".build/m0-pow-boundary128-20261025",
+  "FROZEN_sha256": "61c98b938cf723f2f9b63ef06f22a3033c1b07af979dbe56ef9a2a2d56ed3393",
+  "result_sha256": "9100e2567699992f13dac767bf35851d642d80f449110f631c7d2b5a5648ce8f",
+  "HANDOFF_sha256": "5f6d506cb7a7fd13fc85b463acfeb532f64f37a0970ec488b524647ec9ca7c43",
+  "candidate_ELF_sha256": "63a80f08c546e7bd07db6056eb1f64aa0de573c7296e5572b090e9d9f6edbfa9",
+  "local_pins": 68,
+  "external_pins": 1695,
+  "canonical_diff_empty": true,
+  "index_empty": true,
+  "HEAD": "7bfad29cf926c7db8dea88bb5d1a33b64fbcced3",
+  "actual_ARM_or_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

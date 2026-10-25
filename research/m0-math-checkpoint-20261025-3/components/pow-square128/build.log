@@ -1,0 +1,21 @@
+{
+  "status": "BUILT_PRIVATE_SQUARE128_NOT_QUALIFIED",
+  "images": {
+    "control": {
+      "ELF_sha256": "5a7634298e9c0d61138ec72a6d171b069abb94997dc0894c3bd21c4537a6a273",
+      "function_bytes": 310,
+      "slot_bytes": 310
+    },
+    "candidate": {
+      "ELF_sha256": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898",
+      "function_bytes": 232,
+      "slot_bytes": 310
+    }
+  },
+  "entry_address": 269458588,
+  "only_changed_allocated_section": ".m0_pow_square_fixed",
+  "allocated_section_size_unchanged": true,
+  "all_other_RP_bytes_and_relocations_equal": true,
+  "default_M0_M4_soft_hard_selected_assembly_equal": true,
+  "hardware_accessed": false
+}

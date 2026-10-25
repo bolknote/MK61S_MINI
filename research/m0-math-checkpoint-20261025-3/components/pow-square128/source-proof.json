@@ -1,0 +1,98 @@
+{
+  "status": "PASS_ONE_SLOT_EXACT_INTEGER_TRANSFORM_SOURCE_ABI_STATIC_COST_BINDING",
+  "baseline_inputs": {
+    ".build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf": {
+      "sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1",
+      "bytes": 9015184
+    },
+    ".build/m0-v138-execution-20261023/reference/reference.elf": {
+      "sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+      "bytes": 17268
+    },
+    "research/rp2040-memset-2026-10-21/capture/bootrom.bin": {
+      "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "bytes": 16384
+    },
+    ".build/m0-exp-cached-product-20261024/candidate.elf": {
+      "sha256": "5ddab388a96bef9c343e0c11e82797741f7ccb724a812d0532d76aa25c2e794e",
+      "bytes": 1116772
+    },
+    ".build/m0-pow-square-ordinary-20261024/candidate.elf": {
+      "sha256": "6e1cf7ded4ee258b49ddffcd1e893f4ec170700b181265048ad06ce0b9c1b8ae",
+      "bytes": 1101716
+    },
+    ".build/m0-pow-rsqrt-asm-20261024/candidate.elf": {
+      "sha256": "e55be65b73b9b7bbbb72896904f61f8a1a5b5c5fb7bb052a78a5c580f351867c",
+      "bytes": 3752
+    },
+    ".build/m0-exp-directed-product-20261024/candidate.elf": {
+      "sha256": "b4049e5a39c2bc9d663acab44a7683f1811daedd1c43497cd5ad7588b1b408ac",
+      "bytes": 1127828
+    }
+  },
+  "parent_root_receipt_sha256": "09b8c7326b37b67e106ff517cc594dc02d09fa0643ed96dee47c48af747f6d4d",
+  "only_source_change": "pow_integer128_square body; old slot padded to310 bytes",
+  "only_RP_allocated_section_changed": ".m0_pow_square_fixed",
+  "old_bytes": 310,
+  "new_function_bytes": 232,
+  "slot_bytes": 310,
+  "all_other_addresses_bytes_relocations_and_BSS_unchanged": true,
+  "default_M0_M4_soft_hard_allocated_bytes_semantic_relocations_identical": true,
+  "original94byte_helper_bound": true,
+  "no_new_table_RAM_libgcc_ROM_math_dependency": true,
+  "radius_rules_and_all24_output_bytes_transform_identical": true,
+  "caller_return_and_flags_unused": true,
+  "actual_ASM_callers": [
+    {
+      "line": 2074,
+      "instructions": [
+        "\tadd\tr0, sp, #80",
+        "\tbl\tpow_integer128_square",
+        "\t.inst.n\t0x1e64 @ subs\tr4, r4, #1",
+        "\tmov\tr0, r6",
+        "\tlsrs\tr0, r4",
+        "\tlsls\tr0, r0, #31",
+        "\tbeq\t.Lpow_horner_BB10_37",
+        "@ %bb.36:                               @   in Loop: Header=BB10_37 Depth=1"
+      ]
+    },
+    {
+      "line": 3977,
+      "instructions": [
+        "\tadd\tr0, sp, #56",
+        "\tbl\tpow_integer128_square",
+        "\t.inst.n\t0x1e64 @ subs\tr4, r4, #1",
+        "\tmov\tr0, r5",
+        "\tlsrs\tr0, r4",
+        "\tlsls\tr0, r0, #31",
+        "\tbeq\t.Lpow_horner_BB14_9",
+        "@ %bb.11:                               @   in Loop: Header=BB14_9 Depth=1"
+      ]
+    }
+  ],
+  "static_CFG_instruction_costs": {
+    "control": {
+      "(False, False)": 129,
+      "(False, True)": 116,
+      "(True, False)": 195,
+      "(True, True)": 182
+    },
+    "candidate": {
+      "(False, False)": 94,
+      "(False, True)": 89,
+      "(True, False)": 154,
+      "(True, True)": 149
+    }
+  },
+  "class_costs_match_actual_bare_unit_runs": true,
+  "frame_bytes": {
+    "old_kernel": 48,
+    "new_kernel": 40,
+    "unchanged_helper": 20
+  },
+  "ordinary_void_PCS_no_extra_private_return_contract": true,
+  "inherited_public_RNE_enclosures_unchanged": true,
+  "general_pow_totality_not_established": true,
+  "actual_ARM_calls": 0,
+  "hardware_accessed": false
+}

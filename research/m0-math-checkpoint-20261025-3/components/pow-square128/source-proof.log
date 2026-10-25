@@ -1,0 +1,40 @@
+{
+  "status": "PASS_ONE_SLOT_EXACT_INTEGER_TRANSFORM_SOURCE_ABI_STATIC_COST_BINDING",
+  "parent_root_receipt_sha256": "09b8c7326b37b67e106ff517cc594dc02d09fa0643ed96dee47c48af747f6d4d",
+  "only_source_change": "pow_integer128_square body; old slot padded to310 bytes",
+  "only_RP_allocated_section_changed": ".m0_pow_square_fixed",
+  "old_bytes": 310,
+  "new_function_bytes": 232,
+  "slot_bytes": 310,
+  "all_other_addresses_bytes_relocations_and_BSS_unchanged": true,
+  "default_M0_M4_soft_hard_allocated_bytes_semantic_relocations_identical": true,
+  "original94byte_helper_bound": true,
+  "no_new_table_RAM_libgcc_ROM_math_dependency": true,
+  "radius_rules_and_all24_output_bytes_transform_identical": true,
+  "caller_return_and_flags_unused": true,
+  "static_CFG_instruction_costs": {
+    "control": {
+      "(False, False)": 129,
+      "(False, True)": 116,
+      "(True, False)": 195,
+      "(True, True)": 182
+    },
+    "candidate": {
+      "(False, False)": 94,
+      "(False, True)": 89,
+      "(True, False)": 154,
+      "(True, True)": 149
+    }
+  },
+  "class_costs_match_actual_bare_unit_runs": true,
+  "frame_bytes": {
+    "old_kernel": 48,
+    "new_kernel": 40,
+    "unchanged_helper": 20
+  },
+  "ordinary_void_PCS_no_extra_private_return_contract": true,
+  "inherited_public_RNE_enclosures_unchanged": true,
+  "general_pow_totality_not_established": true,
+  "actual_ARM_calls": 0,
+  "hardware_accessed": false
+}

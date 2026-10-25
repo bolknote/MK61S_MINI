@@ -1,0 +1,10 @@
+{
+  "status": "BARE_SEED_PASS_PUBLIC_DIVIDER_NOT_IMPLEMENTED",
+  "bare_ARM_calls": 66288,
+  "exhaustive_divisors": 65536,
+  "connected_to_binary64_division": false,
+  "public_divider_qualified": false,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

@@ -1,0 +1,12 @@
+{
+  "status": "QUALIFIED_PRIVATE_EXACT_SQUARE128_COMPONENT_PENDING_INDEPENDENT_REVIEW",
+  "previous_goal_turn_classification": "progress: committed checkpoint7bfad29cf with explicit unfinished kernel",
+  "this_turn_classification": "progress: full replay, fresh MPFR controls, universal transform/cost proof and frozen component",
+  "HEAD": "7bfad29cf926c7db8dea88bb5d1a33b64fbcced3",
+  "canonical_runtime_changed": false,
+  "M4_changed": false,
+  "device_or_Flash_accessed": false,
+  "independent_review_pending": true,
+  "integration_and_release_GO": false,
+  "goal_complete": false
+}

@@ -1,0 +1,39 @@
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-bound80-20261025/filter.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+{
+  "status": "EXPERIMENTAL_CONSERVATIVE_BOUNDARY80_PUBLIC_IMAGES_NOT_QUALIFIED",
+  "images": {
+    "control": {
+      "ELF_sha256": "02c6391b12b24ccd939b2da1f495fd51f44aa9b3a7c2e8328e9c21c771f4f7b2",
+      "allocated": {
+        ".front": {
+          "address": 269811712,
+          "bytes": 532
+        }
+      }
+    },
+    "candidate": {
+      "ELF_sha256": "ea7caefc333752f0210b6d951813c14e16ebb7d7604443d09db50dd1588572e1",
+      "allocated": {
+        ".front": {
+          "address": 269811712,
+          "bytes": 532
+        },
+        ".bound80": {
+          "address": 270401536,
+          "bytes": 1088
+        },
+        ".fallback": {
+          "address": 270402624,
+          "bytes": 532
+        }
+      }
+    }
+  },
+  "source_parent": ".build/m0-pow-square128-r2-20261025",
+  "source_parent_FROZEN_sha256": "31de9242e96642ed7de050a2a7a51a5baeacdd9c8842e4b0d7f3f2c74e2e681d",
+  "M0_M4_selected_RP_source_controls_equal": true,
+  "all_other_RP_allocated_sections_bytes_relocations_unchanged": true,
+  "old_control_entry532bytes_exact_resident": true,
+  "hardware_accessed": false
+}

@@ -1,0 +1,27 @@
+{
+  "status": "REJECTED_AS_INSUFFICIENT_PRECISION_AND_SLOWER_PUBLIC_PATH",
+  "candidate_ELF_sha256": "ea7caefc333752f0210b6d951813c14e16ebb7d7604443d09db50dd1588572e1",
+  "bare_ARM_calls": 19221,
+  "pilot_ARM_calls": 1836,
+  "pilot_MPFR_inputs": 153,
+  "candidate_wrong_in_pilot": 0,
+  "all56_public_boundary_calls_fell_back": true,
+  "public_instruction_increase_range": [
+    262,
+    904
+  ],
+  "exact_relative_gap_bits_histogram": {
+    "101": 8,
+    "97": 2,
+    "98": 3,
+    "104": 3,
+    "100": 4,
+    "102": 5,
+    "99": 2,
+    "108": 1
+  },
+  "ideal96_model_decisions": 0,
+  "full_corpus_not_run": true,
+  "all_calls_excluded_from_qualified_boundary128_totals": true,
+  "no_canonical_or_device_changes": true
+}

@@ -1,0 +1,42 @@
+square128-public 0 / 153
+square128-public 32 / 153
+square128-public 64 / 153
+square128-public 96 / 153
+square128-public 128 / 153
+{
+  "status": "PILOT_PUBLIC153_EXACT_SQUARE128",
+  "candidate_ELF_sha256": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898",
+  "fresh_ARM_calls": 918,
+  "oracle_evaluations": 153,
+  "candidate_wrong": 0,
+  "parent_remaining": 35,
+  "candidate_remaining": 34,
+  "fixed_pairs": [
+    [
+      "3FD0000000000000",
+      "C016000000000000"
+    ]
+  ],
+  "new_raw_losses": 0,
+  "cost_delta_histogram": {
+    "0": 260,
+    "-150": 4,
+    "-158": 2,
+    "-142": 6,
+    "-126": 2,
+    "-101": 4,
+    "-76": 4,
+    "-93": 4,
+    "-60": 2,
+    "-109": 6,
+    "-27": 2,
+    "-134": 4,
+    "-117": 4,
+    "-105": 2
+  },
+  "stacks": {
+    "parent": 968,
+    "candidate": 968
+  },
+  "hardware_accessed": false
+}

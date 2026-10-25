@@ -1,0 +1,40 @@
+seed17 0 / 66288
+seed17 8192 / 66288
+seed17 16384 / 66288
+seed17 24576 / 66288
+seed17 32768 / 66288
+seed17 40960 / 66288
+seed17 49152 / 66288
+seed17 57344 / 66288
+seed17 65536 / 66288
+{
+  "status": "PASS_ALL65536_DIVISORS_EXACT_INTEGER_QUOTIENT_R12_PCS_NZCV",
+  "actual_ARM_calls": 66288,
+  "exhaustive_divisors": 65536,
+  "extra_all16_NZCV_edge_calls": 752,
+  "code_bytes": 194,
+  "cost_histogram": {
+    "82": 35,
+    "83": 53,
+    "84": 350,
+    "85": 1373,
+    "86": 3729,
+    "87": 7458,
+    "88": 11391,
+    "89": 13395,
+    "90": 12197,
+    "91": 8657,
+    "92": 4724,
+    "93": 1976,
+    "94": 614,
+    "95": 158,
+    "96": 144,
+    "97": 34
+  },
+  "R12_preserved_every_call": true,
+  "PCS_SP_PC_checked": true,
+  "no_stack_or_memory_writes": true,
+  "firmware_ROM_or_arithmetic_mocks_mapped": false,
+  "ELF_sha256": "9314af457605b7673534aca8d76ac5c6f0b87588181c4786157d1277ee4116c7",
+  "hardware_accessed": false
+}

@@ -1,0 +1,24 @@
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/helper.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/helper.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+{
+  "status": "PASS_THIRTEEN_FULL_SOURCE_OBJECT_AND_ELF_REBUILDS_BYTE_EXACT",
+  "outputs": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/unit-candidate.elf": "2635ebceecc2bcc2ec1fb521ed9da6e42e3f8bbc4db20ea1d6dfbeb3e45c6f04",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/M4_soft-control.o": "2294654d4c4ceb027fa76143fcbf8ede25f66133061c065f045221fd5e862b5d",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/M4_soft-candidate.o": "2294654d4c4ceb027fa76143fcbf8ede25f66133061c065f045221fd5e862b5d",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/generic_M0-candidate.o": "178cb1e699c72dfbee438d4d2cbc007a8a92f1660a6ce60a20adcb21c93a6ee3",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/control.elf": "5a7634298e9c0d61138ec72a6d171b069abb94997dc0894c3bd21c4537a6a273",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/candidate.elf": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/M4_hard-control.o": "43e2ef436152dc5d121cef52bc8c23b3c5d47f9ad3ac2cf2af8d756b10a1f05d",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/RP-control.o": "cf431e6e9ac095a63a447246dcdf2a84871d29f0cd28bc93868420817403fe1e",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/M4_hard-candidate.o": "43e2ef436152dc5d121cef52bc8c23b3c5d47f9ad3ac2cf2af8d756b10a1f05d",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/RP-candidate.o": "c1acaf537686bfdb73bf3fd1c495beab8cd28566dc7f31c09020c5bf1e046495",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/unit-control.elf": "8a3e26704db9cf22689d613529f8521464c2349b2ce6650dd439bce3009cff1d",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/helper.o": "dc7b7860d672e39d113ce9fb0bb9bb0910a0ee806645985200a0d2bd92c572f8",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/generic_M0-control.o": "178cb1e699c72dfbee438d4d2cbc007a8a92f1660a6ce60a20adcb21c93a6ee3"
+  },
+  "actual_ARM_or_MPFR_calls": 0,
+  "hardware_accessed": false
+}

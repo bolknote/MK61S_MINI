@@ -1,0 +1,17 @@
+{
+  "status": "PASS_REISSUED_FROZEN_PACKET_ALL_PINS",
+  "directory": ".build/m0-pow-square128-r2-20261025",
+  "FROZEN_sha256": "31de9242e96642ed7de050a2a7a51a5baeacdd9c8842e4b0d7f3f2c74e2e681d",
+  "result_sha256": "e8cf0f97d32cc40dde177a2d6f6d5a9c22cb4afd56ff88abb694716418050152",
+  "HANDOFF_sha256": "e9517967bfedbaa8edcd9ecc517511d27f5c8ea1c90091d915548f9fdaf191ee",
+  "local_pins": 69,
+  "external_pins": 1585,
+  "rejected_first_seal_preserved": true,
+  "math_inputs_sources_binaries_unchanged": true,
+  "actual_ARM_or_MPFR_calls": 0,
+  "canonical_diff_empty": true,
+  "index_empty": true,
+  "HEAD": "7bfad29cf926c7db8dea88bb5d1a33b64fbcced3",
+  "hardware_accessed": false,
+  "goal_complete": false
+}

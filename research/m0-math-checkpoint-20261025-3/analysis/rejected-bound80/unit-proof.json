@@ -1,0 +1,55 @@
+{
+  "status": "PASS_EXACT_INTEGER_INTERVAL_ENDPOINTS_BARE_BOUND80_KERNELS",
+  "actual_ARM_calls": 19221,
+  "square_cases": 6148,
+  "multiply_cases": 6000,
+  "compare_cases": 6000,
+  "wide32_cases": 1073,
+  "all16_NZCV_and_noisy_volatiles": true,
+  "PCS_SP_PC_boundedwrites_checked": true,
+  "square_and_multiply_enclose_both_exact_real_input_interval_endpoints": true,
+  "compare_nonzero_sign_always_proved_from_exact_endpoints": true,
+  "comparison_decisions": {
+    "1": 2581,
+    "-1": 2595,
+    "0": 824
+  },
+  "cost_histograms": {
+    "mk61_m0_bound80_wide32": {
+      "22": 1073
+    },
+    "mk61_m0_bound80_square": {
+      "91": 3504,
+      "95": 2644
+    },
+    "mk61_m0_bound80_multiply": {
+      "217": 3542,
+      "209": 2458
+    },
+    "mk61_m0_bound80_compare": {
+      "12": 1175,
+      "19": 1204,
+      "81": 383,
+      "63": 291,
+      "59": 294,
+      "79": 273,
+      "73": 300,
+      "51": 303,
+      "65": 276,
+      "74": 296,
+      "82": 288,
+      "85": 311,
+      "71": 297,
+      "92": 309
+    }
+  },
+  "observed_frames": {
+    "mk61_m0_bound80_wide32": 16,
+    "mk61_m0_bound80_square": 32,
+    "mk61_m0_bound80_multiply": 64,
+    "mk61_m0_bound80_compare": 40
+  },
+  "firmware_ROM_or_arithmetic_mocks_mapped": false,
+  "public_MPFR_or_Qfplib_qualification": false,
+  "hardware_accessed": false
+}

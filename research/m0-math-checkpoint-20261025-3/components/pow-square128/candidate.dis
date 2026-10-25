@@ -1,0 +1,143 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/candidate.elf:     file format elf32-littlearm
+
+
+Disassembly of section .square:
+
+100f9c9c <pow_integer128_square>:
+100f9c9c:	b5f0      	push	{r4, r5, r6, r7, lr}
+100f9c9e:	b085      	sub	sp, #20
+100f9ca0:	4607      	mov	r7, r0
+100f9ca2:	6838      	ldr	r0, [r7, #0]
+100f9ca4:	687d      	ldr	r5, [r7, #4]
+100f9ca6:	4606      	mov	r6, r0
+100f9ca8:	b282      	uxth	r2, r0
+100f9caa:	0c03      	lsrs	r3, r0, #16
+100f9cac:	4614      	mov	r4, r2
+100f9cae:	4354      	muls	r4, r2
+100f9cb0:	435a      	muls	r2, r3
+100f9cb2:	435b      	muls	r3, r3
+100f9cb4:	0451      	lsls	r1, r2, #17
+100f9cb6:	0bd2      	lsrs	r2, r2, #15
+100f9cb8:	1864      	adds	r4, r4, r1
+100f9cba:	4153      	adcs	r3, r2
+100f9cbc:	9400      	str	r4, [sp, #0]
+100f9cbe:	9301      	str	r3, [sp, #4]
+100f9cc0:	4628      	mov	r0, r5
+100f9cc2:	b282      	uxth	r2, r0
+100f9cc4:	0c03      	lsrs	r3, r0, #16
+100f9cc6:	4614      	mov	r4, r2
+100f9cc8:	4354      	muls	r4, r2
+100f9cca:	435a      	muls	r2, r3
+100f9ccc:	435b      	muls	r3, r3
+100f9cce:	0451      	lsls	r1, r2, #17
+100f9cd0:	0bd2      	lsrs	r2, r2, #15
+100f9cd2:	1864      	adds	r4, r4, r1
+100f9cd4:	4153      	adcs	r3, r2
+100f9cd6:	9402      	str	r4, [sp, #8]
+100f9cd8:	9303      	str	r3, [sp, #12]
+100f9cda:	b2b4      	uxth	r4, r6
+100f9cdc:	0c36      	lsrs	r6, r6, #16
+100f9cde:	b2aa      	uxth	r2, r5
+100f9ce0:	0c2d      	lsrs	r5, r5, #16
+100f9ce2:	4620      	mov	r0, r4
+100f9ce4:	4350      	muls	r0, r2
+100f9ce6:	4372      	muls	r2, r6
+100f9ce8:	0c03      	lsrs	r3, r0, #16
+100f9cea:	18d2      	adds	r2, r2, r3
+100f9cec:	436c      	muls	r4, r5
+100f9cee:	b293      	uxth	r3, r2
+100f9cf0:	18e4      	adds	r4, r4, r3
+100f9cf2:	4375      	muls	r5, r6
+100f9cf4:	0c12      	lsrs	r2, r2, #16
+100f9cf6:	18ad      	adds	r5, r5, r2
+100f9cf8:	0c21      	lsrs	r1, r4, #16
+100f9cfa:	1949      	adds	r1, r1, r5
+100f9cfc:	0424      	lsls	r4, r4, #16
+100f9cfe:	b280      	uxth	r0, r0
+100f9d00:	4320      	orrs	r0, r4
+100f9d02:	9a01      	ldr	r2, [sp, #4]
+100f9d04:	9b02      	ldr	r3, [sp, #8]
+100f9d06:	9c03      	ldr	r4, [sp, #12]
+100f9d08:	2600      	movs	r6, #0
+100f9d0a:	1812      	adds	r2, r2, r0
+100f9d0c:	414b      	adcs	r3, r1
+100f9d0e:	4174      	adcs	r4, r6
+100f9d10:	1812      	adds	r2, r2, r0
+100f9d12:	414b      	adcs	r3, r1
+100f9d14:	4174      	adcs	r4, r6
+100f9d16:	9201      	str	r2, [sp, #4]
+100f9d18:	9302      	str	r3, [sp, #8]
+100f9d1a:	9403      	str	r4, [sp, #12]
+100f9d1c:	68b8      	ldr	r0, [r7, #8]
+100f9d1e:	68f9      	ldr	r1, [r7, #12]
+100f9d20:	4602      	mov	r2, r0
+100f9d22:	430a      	orrs	r2, r1
+100f9d24:	d014      	beq.n	100f9d50 <pow_integer128_square+0xb4>
+100f9d26:	683a      	ldr	r2, [r7, #0]
+100f9d28:	687b      	ldr	r3, [r7, #4]
+100f9d2a:	f054 fc9d 	bl	1014e668 <pow_integer128_approx_high64>
+100f9d2e:	9a00      	ldr	r2, [sp, #0]
+100f9d30:	9b01      	ldr	r3, [sp, #4]
+100f9d32:	9c02      	ldr	r4, [sp, #8]
+100f9d34:	9d03      	ldr	r5, [sp, #12]
+100f9d36:	2600      	movs	r6, #0
+100f9d38:	1812      	adds	r2, r2, r0
+100f9d3a:	414b      	adcs	r3, r1
+100f9d3c:	4174      	adcs	r4, r6
+100f9d3e:	4175      	adcs	r5, r6
+100f9d40:	1812      	adds	r2, r2, r0
+100f9d42:	414b      	adcs	r3, r1
+100f9d44:	4174      	adcs	r4, r6
+100f9d46:	4175      	adcs	r5, r6
+100f9d48:	6979      	ldr	r1, [r7, #20]
+100f9d4a:	0049      	lsls	r1, r1, #1
+100f9d4c:	3110      	adds	r1, #16
+100f9d4e:	e006      	b.n	100f9d5e <pow_integer128_square+0xc2>
+100f9d50:	9a00      	ldr	r2, [sp, #0]
+100f9d52:	9b01      	ldr	r3, [sp, #4]
+100f9d54:	9c02      	ldr	r4, [sp, #8]
+100f9d56:	9d03      	ldr	r5, [sp, #12]
+100f9d58:	6979      	ldr	r1, [r7, #20]
+100f9d5a:	2901      	cmp	r1, #1
+100f9d5c:	4149      	adcs	r1, r1
+100f9d5e:	6938      	ldr	r0, [r7, #16]
+100f9d60:	0040      	lsls	r0, r0, #1
+100f9d62:	2d00      	cmp	r5, #0
+100f9d64:	d405      	bmi.n	100f9d72 <pow_integer128_square+0xd6>
+100f9d66:	0052      	lsls	r2, r2, #1
+100f9d68:	415b      	adcs	r3, r3
+100f9d6a:	4164      	adcs	r4, r4
+100f9d6c:	416d      	adcs	r5, r5
+100f9d6e:	0049      	lsls	r1, r1, #1
+100f9d70:	e000      	b.n	100f9d74 <pow_integer128_square+0xd8>
+100f9d72:	3001      	adds	r0, #1
+100f9d74:	6138      	str	r0, [r7, #16]
+100f9d76:	6179      	str	r1, [r7, #20]
+100f9d78:	60ba      	str	r2, [r7, #8]
+100f9d7a:	60fb      	str	r3, [r7, #12]
+100f9d7c:	603c      	str	r4, [r7, #0]
+100f9d7e:	607d      	str	r5, [r7, #4]
+100f9d80:	b005      	add	sp, #20
+100f9d82:	bdf0      	pop	{r4, r5, r6, r7, pc}
+100f9d84:	bf00bf00 	.word	0xbf00bf00
+100f9d88:	bf00bf00 	.word	0xbf00bf00
+100f9d8c:	bf00bf00 	.word	0xbf00bf00
+100f9d90:	bf00bf00 	.word	0xbf00bf00
+100f9d94:	bf00bf00 	.word	0xbf00bf00
+100f9d98:	bf00bf00 	.word	0xbf00bf00
+100f9d9c:	bf00bf00 	.word	0xbf00bf00
+100f9da0:	bf00bf00 	.word	0xbf00bf00
+100f9da4:	bf00bf00 	.word	0xbf00bf00
+100f9da8:	bf00bf00 	.word	0xbf00bf00
+100f9dac:	bf00bf00 	.word	0xbf00bf00
+100f9db0:	bf00bf00 	.word	0xbf00bf00
+100f9db4:	bf00bf00 	.word	0xbf00bf00
+100f9db8:	bf00bf00 	.word	0xbf00bf00
+100f9dbc:	bf00bf00 	.word	0xbf00bf00
+100f9dc0:	bf00bf00 	.word	0xbf00bf00
+100f9dc4:	bf00bf00 	.word	0xbf00bf00
+100f9dc8:	bf00bf00 	.word	0xbf00bf00
+100f9dcc:	bf00bf00 	.word	0xbf00bf00
+100f9dd0:	Address 0x100f9dd0 is out of bounds.
+

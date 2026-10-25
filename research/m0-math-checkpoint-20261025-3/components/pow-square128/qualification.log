@@ -1,0 +1,285 @@
+square128-full 1 / 232936 elapsed 0.0
+square128-full 1025 / 232936 elapsed 0.4
+square128-full 2049 / 232936 elapsed 0.7
+square128-full 3073 / 232936 elapsed 0.9
+square128-full 4097 / 232936 elapsed 1.2
+square128-full 5121 / 232936 elapsed 1.4
+square128-full 6145 / 232936 elapsed 1.9
+square128-full 7169 / 232936 elapsed 3.7
+square128-full 8193 / 232936 elapsed 4.9
+square128-full 9217 / 232936 elapsed 6.0
+square128-full 10241 / 232936 elapsed 7.3
+square128-full 11265 / 232936 elapsed 8.6
+square128-full 12289 / 232936 elapsed 9.6
+square128-full 13313 / 232936 elapsed 9.8
+square128-full 14337 / 232936 elapsed 10.1
+square128-full 15361 / 232936 elapsed 10.3
+square128-full 16385 / 232936 elapsed 10.5
+square128-full 17409 / 232936 elapsed 10.7
+square128-full 18433 / 232936 elapsed 10.9
+square128-full 19457 / 232936 elapsed 11.2
+square128-full 20481 / 232936 elapsed 11.4
+square128-full 21505 / 232936 elapsed 11.6
+square128-full 22529 / 232936 elapsed 11.8
+square128-full 23553 / 232936 elapsed 12.0
+square128-full 24577 / 232936 elapsed 12.3
+square128-full 25601 / 232936 elapsed 12.5
+square128-full 26625 / 232936 elapsed 12.7
+square128-full 27649 / 232936 elapsed 12.9
+square128-full 28673 / 232936 elapsed 13.1
+square128-full 29697 / 232936 elapsed 13.4
+square128-full 30721 / 232936 elapsed 13.6
+square128-full 31745 / 232936 elapsed 13.8
+square128-full 32769 / 232936 elapsed 14.0
+square128-full 33793 / 232936 elapsed 14.2
+square128-full 34817 / 232936 elapsed 14.5
+square128-full 35841 / 232936 elapsed 14.7
+square128-full 36865 / 232936 elapsed 14.9
+square128-full 37889 / 232936 elapsed 15.1
+square128-full 38913 / 232936 elapsed 15.3
+square128-full 39937 / 232936 elapsed 15.6
+square128-full 40961 / 232936 elapsed 15.8
+square128-full 41985 / 232936 elapsed 16.0
+square128-full 43009 / 232936 elapsed 16.3
+square128-full 44033 / 232936 elapsed 16.5
+square128-full 45057 / 232936 elapsed 16.7
+square128-full 46081 / 232936 elapsed 17.0
+square128-full 47105 / 232936 elapsed 17.2
+square128-full 48129 / 232936 elapsed 17.4
+square128-full 49153 / 232936 elapsed 17.7
+square128-full 50177 / 232936 elapsed 17.9
+square128-full 51201 / 232936 elapsed 18.2
+square128-full 52225 / 232936 elapsed 18.4
+square128-full 53249 / 232936 elapsed 18.6
+square128-full 54273 / 232936 elapsed 18.9
+square128-full 55297 / 232936 elapsed 19.1
+square128-full 56321 / 232936 elapsed 19.3
+square128-full 57345 / 232936 elapsed 19.6
+square128-full 58369 / 232936 elapsed 19.8
+square128-full 59393 / 232936 elapsed 20.0
+square128-full 60417 / 232936 elapsed 20.3
+square128-full 61441 / 232936 elapsed 20.5
+square128-full 62465 / 232936 elapsed 20.7
+square128-full 63489 / 232936 elapsed 21.0
+square128-full 64513 / 232936 elapsed 21.2
+square128-full 65537 / 232936 elapsed 21.4
+square128-full 66561 / 232936 elapsed 21.7
+square128-full 67585 / 232936 elapsed 21.9
+square128-full 68609 / 232936 elapsed 22.1
+square128-full 69633 / 232936 elapsed 22.4
+square128-full 70657 / 232936 elapsed 22.6
+square128-full 71681 / 232936 elapsed 22.8
+square128-full 72705 / 232936 elapsed 23.1
+square128-full 73729 / 232936 elapsed 23.3
+square128-full 74753 / 232936 elapsed 23.6
+square128-full 75777 / 232936 elapsed 23.8
+square128-full 76801 / 232936 elapsed 24.0
+square128-full 77825 / 232936 elapsed 24.3
+square128-full 78849 / 232936 elapsed 24.5
+square128-full 79873 / 232936 elapsed 24.7
+square128-full 80897 / 232936 elapsed 25.0
+square128-full 81921 / 232936 elapsed 25.2
+square128-full 82945 / 232936 elapsed 25.5
+square128-full 83969 / 232936 elapsed 25.7
+square128-full 84993 / 232936 elapsed 25.9
+square128-full 86017 / 232936 elapsed 26.2
+square128-full 87041 / 232936 elapsed 26.4
+square128-full 88065 / 232936 elapsed 26.6
+square128-full 89089 / 232936 elapsed 26.9
+square128-full 90113 / 232936 elapsed 27.1
+square128-full 91137 / 232936 elapsed 27.3
+square128-full 92161 / 232936 elapsed 27.6
+square128-full 93185 / 232936 elapsed 27.8
+square128-full 94209 / 232936 elapsed 28.0
+square128-full 95233 / 232936 elapsed 28.3
+square128-full 96257 / 232936 elapsed 28.5
+square128-full 97281 / 232936 elapsed 28.7
+square128-full 98305 / 232936 elapsed 28.9
+square128-full 99329 / 232936 elapsed 29.2
+square128-full 100353 / 232936 elapsed 29.4
+square128-full 101377 / 232936 elapsed 29.6
+square128-full 102401 / 232936 elapsed 29.8
+square128-full 103425 / 232936 elapsed 30.0
+square128-full 104449 / 232936 elapsed 30.2
+square128-full 105473 / 232936 elapsed 30.5
+square128-full 106497 / 232936 elapsed 30.7
+square128-full 107521 / 232936 elapsed 30.9
+square128-full 108545 / 232936 elapsed 31.1
+square128-full 109569 / 232936 elapsed 31.3
+square128-full 110593 / 232936 elapsed 31.5
+square128-full 111617 / 232936 elapsed 31.8
+square128-full 112641 / 232936 elapsed 32.0
+square128-full 113665 / 232936 elapsed 32.2
+square128-full 114689 / 232936 elapsed 32.4
+square128-full 115713 / 232936 elapsed 32.6
+square128-full 116737 / 232936 elapsed 32.8
+square128-full 117761 / 232936 elapsed 33.1
+square128-full 118785 / 232936 elapsed 33.3
+square128-full 119809 / 232936 elapsed 33.5
+square128-full 120833 / 232936 elapsed 33.7
+square128-full 121857 / 232936 elapsed 33.9
+square128-full 122881 / 232936 elapsed 34.2
+square128-full 123905 / 232936 elapsed 34.4
+square128-full 124929 / 232936 elapsed 34.6
+square128-full 125953 / 232936 elapsed 35.9
+square128-full 126977 / 232936 elapsed 38.8
+square128-full 128001 / 232936 elapsed 40.8
+square128-full 129025 / 232936 elapsed 41.3
+square128-full 130049 / 232936 elapsed 41.7
+square128-full 131073 / 232936 elapsed 42.2
+square128-full 132097 / 232936 elapsed 42.7
+square128-full 133121 / 232936 elapsed 43.2
+square128-full 134145 / 232936 elapsed 43.6
+square128-full 135169 / 232936 elapsed 44.1
+square128-full 136193 / 232936 elapsed 44.6
+square128-full 137217 / 232936 elapsed 45.1
+square128-full 138241 / 232936 elapsed 45.6
+square128-full 139265 / 232936 elapsed 46.0
+square128-full 140289 / 232936 elapsed 46.5
+square128-full 141313 / 232936 elapsed 47.0
+square128-full 142337 / 232936 elapsed 47.5
+square128-full 143361 / 232936 elapsed 48.0
+square128-full 144385 / 232936 elapsed 48.4
+square128-full 145409 / 232936 elapsed 48.9
+square128-full 146433 / 232936 elapsed 49.4
+square128-full 147457 / 232936 elapsed 49.9
+square128-full 148481 / 232936 elapsed 50.4
+square128-full 149505 / 232936 elapsed 50.8
+square128-full 150529 / 232936 elapsed 51.3
+square128-full 151553 / 232936 elapsed 51.8
+square128-full 152577 / 232936 elapsed 52.3
+square128-full 153601 / 232936 elapsed 52.8
+square128-full 154625 / 232936 elapsed 53.2
+square128-full 155649 / 232936 elapsed 53.7
+square128-full 156673 / 232936 elapsed 54.2
+square128-full 157697 / 232936 elapsed 54.7
+square128-full 158721 / 232936 elapsed 55.2
+square128-full 159745 / 232936 elapsed 55.6
+square128-full 160769 / 232936 elapsed 56.1
+square128-full 161793 / 232936 elapsed 56.6
+square128-full 162817 / 232936 elapsed 57.1
+square128-full 163841 / 232936 elapsed 57.5
+square128-full 164865 / 232936 elapsed 58.0
+square128-full 165889 / 232936 elapsed 58.5
+square128-full 166913 / 232936 elapsed 59.0
+square128-full 167937 / 232936 elapsed 59.5
+square128-full 168961 / 232936 elapsed 59.9
+square128-full 169985 / 232936 elapsed 60.4
+square128-full 171009 / 232936 elapsed 60.9
+square128-full 172033 / 232936 elapsed 61.4
+square128-full 173057 / 232936 elapsed 61.9
+square128-full 174081 / 232936 elapsed 62.3
+square128-full 175105 / 232936 elapsed 62.8
+square128-full 176129 / 232936 elapsed 63.3
+square128-full 177153 / 232936 elapsed 63.8
+square128-full 178177 / 232936 elapsed 64.3
+square128-full 179201 / 232936 elapsed 64.7
+square128-full 180225 / 232936 elapsed 65.2
+square128-full 181249 / 232936 elapsed 65.7
+square128-full 182273 / 232936 elapsed 66.2
+square128-full 183297 / 232936 elapsed 66.7
+square128-full 184321 / 232936 elapsed 67.2
+square128-full 185345 / 232936 elapsed 67.6
+square128-full 186369 / 232936 elapsed 68.1
+square128-full 187393 / 232936 elapsed 68.6
+square128-full 188417 / 232936 elapsed 69.1
+square128-full 189441 / 232936 elapsed 69.6
+square128-full 190465 / 232936 elapsed 70.1
+square128-full 191489 / 232936 elapsed 70.5
+square128-full 192513 / 232936 elapsed 71.0
+square128-full 193537 / 232936 elapsed 71.5
+square128-full 194561 / 232936 elapsed 72.0
+square128-full 195585 / 232936 elapsed 72.5
+square128-full 196609 / 232936 elapsed 72.9
+square128-full 197633 / 232936 elapsed 73.4
+square128-full 198657 / 232936 elapsed 73.9
+square128-full 199681 / 232936 elapsed 74.4
+square128-full 200705 / 232936 elapsed 74.9
+square128-full 201729 / 232936 elapsed 75.4
+square128-full 202753 / 232936 elapsed 75.9
+square128-full 203777 / 232936 elapsed 76.3
+square128-full 204801 / 232936 elapsed 76.8
+square128-full 205825 / 232936 elapsed 77.3
+square128-full 206849 / 232936 elapsed 77.8
+square128-full 207873 / 232936 elapsed 78.3
+square128-full 208897 / 232936 elapsed 78.7
+square128-full 209921 / 232936 elapsed 79.2
+square128-full 210945 / 232936 elapsed 79.7
+square128-full 211969 / 232936 elapsed 80.2
+square128-full 212993 / 232936 elapsed 80.7
+square128-full 214017 / 232936 elapsed 81.1
+square128-full 215041 / 232936 elapsed 81.6
+square128-full 216065 / 232936 elapsed 82.1
+square128-full 217089 / 232936 elapsed 82.6
+square128-full 218113 / 232936 elapsed 83.0
+square128-full 219137 / 232936 elapsed 83.5
+square128-full 220161 / 232936 elapsed 84.0
+square128-full 221185 / 232936 elapsed 84.4
+square128-full 222209 / 232936 elapsed 84.9
+square128-full 223233 / 232936 elapsed 85.3
+square128-full 224257 / 232936 elapsed 86.3
+square128-full 225281 / 232936 elapsed 89.2
+square128-full 226305 / 232936 elapsed 97.3
+square128-full 227329 / 232936 elapsed 99.9
+square128-full 228353 / 232936 elapsed 101.8
+square128-full 229377 / 232936 elapsed 103.5
+square128-full 230401 / 232936 elapsed 105.3
+square128-full 231425 / 232936 elapsed 107.1
+square128-full 232449 / 232936 elapsed 108.8
+{
+  "status": "PASS_FULL_PARENT_POW_UNION_AFTER_EXACT_KERNEL_REPLACEMENT",
+  "candidate_ELF_sha256": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898",
+  "unique_pairs": 116468,
+  "profiled_states": 232936,
+  "reference_state_variants": 252450,
+  "fresh_candidate_ARM_calls": 232936,
+  "fresh_parent_Qfplib_or_MPFR_calls": 0,
+  "all_parent_raw_output_bits_identical": true,
+  "all_actual_costs_match_universal_kernel_delta": true,
+  "no_nominal_reference_domain_filter": true,
+  "wrong_Qfplib_state_variants_retained": 60686,
+  "correct_Qfplib_comparison": {
+    "slower": 18976,
+    "faster": 170094,
+    "equal": 2694
+  },
+  "parent_raw_loss_pairs": 10853,
+  "candidate_raw_loss_pairs": 10850,
+  "fixed_raw_pairs": 3,
+  "new_raw_losses": 0,
+  "candidate_wrong": 0,
+  "actual_kernel_calls": 756,
+  "kernel_class_counts": {
+    "(129, 94)": 162,
+    "(195, 154)": 232,
+    "(182, 149)": 204,
+    "(116, 89)": 158
+  },
+  "parent_cost_delta_histogram": {
+    "-199": 2,
+    "-158": 6,
+    "-150": 6,
+    "-142": 14,
+    "-140": 2,
+    "-134": 8,
+    "-126": 2,
+    "-117": 14,
+    "-109": 52,
+    "-105": 10,
+    "-101": 38,
+    "-93": 24,
+    "-81": 2,
+    "-76": 10,
+    "-70": 8,
+    "-68": 32,
+    "-62": 4,
+    "-60": 22,
+    "-35": 12,
+    "-27": 10,
+    "0": 232658
+  },
+  "observed_candidate_stack_bytes": 2284,
+  "record_sha256": "9b227e156c672ccf66bb7695ba91430b6953c2adad7157682f7d2605525ab41d",
+  "elapsed_seconds": 110.27784116700059,
+  "hardware_accessed": false
+}

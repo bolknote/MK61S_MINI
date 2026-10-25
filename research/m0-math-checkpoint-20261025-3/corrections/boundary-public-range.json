@@ -1,0 +1,37 @@
+{
+  "status": "AUTHOR_CORRIGENDUM_PUBLIC_REDUCTION_RANGE_ONLY",
+  "packet": ".build/m0-pow-boundary128-20261025",
+  "FROZEN_sha256": "61c98b938cf723f2f9b63ef06f22a3033c1b07af979dbe56ef9a2a2d56ed3393",
+  "result_sha256": "9100e2567699992f13dac767bf35851d642d80f449110f631c7d2b5a5648ce8f",
+  "qualification_sha256": "6a8c0af2a3eee6cebccc10272550d12630ebd1de1bb8a60c761cf3ae6705a7db",
+  "records_sha256": "419acb05b2ef711a4117a328c340c3414d0e7ff7d06b5416d79f2cf832d60836",
+  "original_reported_range": [
+    4,
+    169
+  ],
+  "correct_range": [
+    4,
+    180
+  ],
+  "reason": "Original153 pilot range was inadvertently reused for the full120980-pair report; two full-corpus state rows save180 instructions.",
+  "witnesses": [
+    {
+      "x": "37F31678F40ED67B",
+      "y": "3FAC000000000000",
+      "SIO": "READY",
+      "parent_boundary_instructions": 3728,
+      "candidate_instructions": 3548
+    },
+    {
+      "x": "37F31678F40ED67B",
+      "y": "3FAC000000000000",
+      "SIO": "DIRTY",
+      "parent_boundary_instructions": 3728,
+      "candidate_instructions": 3548
+    }
+  ],
+  "accelerated_states": 454,
+  "all_numerical_records_costs_counts_and_frozen_files_unchanged": true,
+  "actual_ARM_or_MPFR_calls": 0,
+  "goal_complete": false
+}

@@ -1,0 +1,65 @@
+{
+  "status": "COMPLETED_SQUARE128_CPU_ONLY_REVIEW",
+  "initial_metadata_assertion": {
+    "start": "71e373",
+    "completion": "d58896",
+    "exit": 1,
+    "cause": "Reviewer expected only HANDOFF to differ. Actual r2 also amplifies lineage metadata, retaining1516 old pins and adding69 historical producer/sealer pins; product/numerical bytes are unchanged."
+  },
+  "initial_rebuild": {
+    "tool": "7294a1",
+    "exit": 1,
+    "cause": "R2 path/cwd changes DWARF only; all allocated sections remain identical. Unmapped object retained for audit.",
+    "correction": "Authoritative r2 input paths and own output paths, with explicit fdebug-prefix-map to historical producer paths, reproduce entire objects/ELFs exactly."
+  },
+  "resume_directory_assertion": {
+    "tool": "9b10d0",
+    "exit": 1,
+    "cause": "Existing own rebuild directory before any compiler action; exist_ok enabled."
+  },
+  "completed_binding": {
+    "tool": "562f37",
+    "exit": 0,
+    "four_whole_byteexact_rebuilds": true,
+    "producer_outputs_not_touched": true
+  },
+  "static_proof_initial_filter": {
+    "tool": "42e4c8",
+    "exit": 1,
+    "cause": "Initial scan included an unwind reference to the function; restricting to actual THM_CALL relocations identifies the two callers."
+  },
+  "static_proof_completed": {
+    "tool": "6e2f69",
+    "exit": 0
+  },
+  "own_ARM": {
+    "bare_tool": "1bf682",
+    "public_tool": "d3b16a",
+    "all_exit0": true,
+    "qualified_calls": 764,
+    "MPFR_inputs": 15,
+    "sNaN_shortcuts_separate": 2,
+    "Unicorn": "Existing runtime; scoped CPU-only require_escalated JIT approved. No default/rejected runs or installations.",
+    "ROM_initializer_calls_excluded": true
+  },
+  "saved_accounting": {
+    "start": "9b13eb",
+    "completion": "836b00",
+    "exit": 0,
+    "ARM_calls": 0,
+    "MPFR_inputs": 0
+  },
+  "strict_fix_validation": {
+    "tool": "8609e2",
+    "exit": 0,
+    "ARM_calls": 0,
+    "MPFR_inputs": 0
+  },
+  "failed_harness_checks_not_qualified_numerical_runs": true,
+  "full_corpus_not_reexecuted": true,
+  "device_IO": 0,
+  "Git_operations": 0,
+  "canonical_access": 0,
+  "network_operations": 0,
+  "product_source_edits": 0
+}

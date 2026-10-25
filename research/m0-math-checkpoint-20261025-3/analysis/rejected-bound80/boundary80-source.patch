@@ -1,0 +1,57 @@
+--- a/code/native_eabi_m0_pow_root_prefix.inc
++++ b/code/native_eabi_m0_pow_root_prefix.inc
+@@ -620,12 +620,28 @@
+ 	.cantunwind
+ 	.fnend
+                                         @ -- End function
+-	.section	.m0_pow_boundary_exact,"ax",%progbits
+-	.p2align	2                               @ -- Begin function _ZL16root128_boundaryRK13PowInteger128jby
+-	.type	_ZL16root128_boundaryRK13PowInteger128jby,%function
++.section .m0_pow_boundary_exact,"ax",%progbits
++.p2align 2
++.type _ZL16root128_boundaryRK13PowInteger128jby,%function
++.thumb_func
++_ZL16root128_boundaryRK13PowInteger128jby:
++ .fnstart
++ ldr r3,.Lbound80_front_target
++ bx r3
++.p2align 2
++.Lbound80_front_target: .word mk61_m0_bound80_filter
++.size _ZL16root128_boundaryRK13PowInteger128jby,.-_ZL16root128_boundaryRK13PowInteger128jby
++.cantunwind
++.fnend
++.fill (532-(.-_ZL16root128_boundaryRK13PowInteger128jby))/2,2,0xbf00
++
++	.section	.m0_pow_bound80_fallback,"ax",%progbits
++	.p2align	2                               @ -- Begin function mk61_m0_bound80_old_boundary
++	.global mk61_m0_bound80_old_boundary
++	.type	mk61_m0_bound80_old_boundary,%function
+ 	.code	16
+ 	.thumb_func
+-_ZL16root128_boundaryRK13PowInteger128jby: @ @_ZL16root128_boundaryRK13PowInteger128jby
++mk61_m0_bound80_old_boundary: @ @mk61_m0_bound80_old_boundary
+ 	.fnstart
+ @ %bb.0:
+ 	.save	{r4, r5, r6, r7, lr}
+@@ -862,7 +878,7 @@
+ .Lpow_horner_BB4_18:
+ 	add	r1, sp, #56
+ 	ldr	r0, [sp, #8]                    @ 4-byte Reload
+-	bl	_ZL15root128_compareRK13PowInteger128S1_
++	bl	mk61_m0_bound80_old_compare
+ .Lpow_horner_BB4_19:
+ 	add	sp, #84
+ 	pop	{r4, r5, r6, r7, pc}
+@@ -924,10 +940,11 @@
+ .Lpow_horner_CPI4_2:
+ 	.long	4294966273                      @ 0xfffffc01
+ .Lpow_horner_func_end4:
+-	.size	_ZL16root128_boundaryRK13PowInteger128jby, .Lpow_horner_func_end4-_ZL16root128_boundaryRK13PowInteger128jby
++	.size	mk61_m0_bound80_old_boundary, .Lpow_horner_func_end4-mk61_m0_bound80_old_boundary
+ 	.cantunwind
+ 	.fnend
+                                         @ -- End function
++
+ 	.section	.m0_pow_root_prefix,"ax",%progbits
+ 	.globl	root64_distance                 @ -- Begin function root64_distance
+ 	.p2align	2

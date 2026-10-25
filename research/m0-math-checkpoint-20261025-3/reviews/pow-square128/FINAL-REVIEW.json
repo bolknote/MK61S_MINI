@@ -1,0 +1,237 @@
+{
+  "schema": "independent-private-pow-square128-component-v1",
+  "status": "TECH_GO_PRIVATE_EXACT_SQUARE128_COMPONENT_ONLY",
+  "reviewer": "/root/rtc_helper_review",
+  "scope": "Authoritative r2 single-function 24-byte transform replacement, based on accepted table-product. Not integrated firmware or whole math.",
+  "findings": [],
+  "blocking_component_findings": [],
+  "accepted_frozen_target": {
+    "FROZEN": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-r2-20261025/FROZEN.json",
+      "bytes": 10060,
+      "sha256": "31de9242e96642ed7de050a2a7a51a5baeacdd9c8842e4b0d7f3f2c74e2e681d"
+    },
+    "result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-r2-20261025/result.json",
+      "bytes": 3367,
+      "sha256": "e8cf0f97d32cc40dde177a2d6f6d5a9c22cb4afd56ff88abb694716418050152"
+    },
+    "HANDOFF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-r2-20261025/HANDOFF.md",
+      "bytes": 3757,
+      "sha256": "e9517967bfedbaa8edcd9ecc517511d27f5c8ea1c90091d915548f9fdaf191ee"
+    },
+    "ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-r2-20261025/candidate.elf",
+      "bytes": 11292,
+      "sha256": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898"
+    },
+    "parent_review": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/FINAL-REVIEW.json",
+      "bytes": 11006,
+      "sha256": "eabfbb18bc14d07c506c1daa49bfdae499f1cce7461682b5f44d589e4d169dc3"
+    },
+    "parent_ROOT": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-root-acceptance-20261025-001/RECEIPT.json",
+      "bytes": 12439,
+      "sha256": "09b8c7326b37b67e106ff517cc594dc02d09fa0643ed96dee47c48af747f6d4d"
+    }
+  },
+  "seal_reissue": {
+    "authoritative_r2_FROZEN31de9242": true,
+    "first_seal2f831075_rejected_not_accepted": true,
+    "independently_found_only_bad_original_pin": "finalize.log: claimed0B/emptySHA; completed376B/03b995e5",
+    "all_sources_binaries_raw_proofs_results_bytecopy": true,
+    "HANDOFF_append_and_lineage_metadata_amplification_only": true,
+    "old1516_external_pins_unchanged_plus69_historical_refs_equals1585": true,
+    "r2_copy_not_fresh_ARM_or_MPFR": true,
+    "original_frozen_producer_not_rewritten": true,
+    "historical7bf_WIP_not_rewritten": true
+  },
+  "provenance": {
+    "all69_local_and1585_external_hash_size_pins_verified": true,
+    "exact_one_root_prefix_function_patch": true,
+    "actual_parent_table_product_dd0ec366_ROOT09b8c732": true,
+    "near_one_separate_sibling": true,
+    "own_four_whole_source_object_helper_ELF_unit_rebuilds_byteexact": true,
+    "authoritative_r2_inputs_own_outputs_explicit_DWARF_prefix_mapping": true,
+    "author13_rebuilds_verified_as_saved_evidence_not_own_runs": true,
+    "all_other_RP_allocated_bytes_addresses_semantic_relocations_BSS_and_selected_M0_M4soft_hard_ASM_unchanged": true
+  },
+  "numeric_proof": {
+    "arbitrary_input_fields_all24_bytes_equivalent_to_old_transform": true,
+    "identity": "P=H^2+2*C mod2^128; C is the unchanged94-byte helper(L,H) for L!=0, otherwise0.",
+    "exact_square32_and_cross32_radix_carry_schedules": true,
+    "four_word_Hsquare_and_twiceC_add_chains": true,
+    "radius": "2*radius+(16 if L!=0 else bool(radius)), mod2^32",
+    "exponent_double_upper_increment_and_low_shift_exact": true,
+    "normalized_upper_branch_and_all_wrap_bits_preserved": true,
+    "old_interval_radius_policy_not_reinterpreted": true,
+    "fresh_two_actual_resident_callers_void_result_flags_unused": true,
+    "ordinary_void_PCS_no_extra_R12_return": true,
+    "unchanged_public_RNE_enclosures_and_fallbacks_inherited": true,
+    "general_pow_totality_not_established": true
+  },
+  "own_bounded_checks": {
+    "qualified_actual_ARM_calls": 764,
+    "bare_tests": 280,
+    "bare_calls": 560,
+    "all24_output_bytes_old_new_integer_model_equal": true,
+    "all16NZCV_and_noisy_volatile_registers": true,
+    "PCS_R4_R11_SP_PC_bounded_struct_stack_writes_and_activePC_ranges": true,
+    "independent_static_CFG_and_actual_cost_classes": {
+      "control": {
+        "(False, False)": 129,
+        "(False, True)": 116,
+        "(True, False)": 195,
+        "(True, True)": 182
+      },
+      "candidate": {
+        "(False, False)": 94,
+        "(False, True)": 89,
+        "(True, False)": 154,
+        "(True, True)": 149
+      }
+    },
+    "kernel_frames": {
+      "control": 48,
+      "candidate": 40
+    },
+    "unchanged_helper_frame20": true,
+    "including_helper": {
+      "control": 68,
+      "candidate": 60
+    },
+    "public_pairs17_bothSIO": true,
+    "public_calls204": true,
+    "actual_directed_MPFR_inputs": 15,
+    "sNaN_shortcuts_separate": 2,
+    "MPFR_version": "4.2.2",
+    "all3_actual_Qfplib_compositions_and_wrong_outputs_retained": true,
+    "strict_quietNaN_reference_policy": true,
+    "parent_control_candidate_rawbits_and_kernel_input_sequences_equal": true,
+    "all_four_kernel_cost_classes_seen_public": true,
+    "total_cost_change_exact_sum_of_kernel_deltas": true,
+    "old_three_fixes_checked_strict_bothSIO_in_own_actual_public": true,
+    "new_original153_fix_checked_strict_bothSIO": true,
+    "captured_ROM_initializer_calls_excluded_from_qualified_calls": true,
+    "no_other_math_qualification": true
+  },
+  "saved_raw_accounting": {
+    "ARM_or_MPFR_reexecutions": 0,
+    "all_parent232936_states252450variants_bound_to_accepted_parent_raw": true,
+    "all_parent_result_bits_identical": true,
+    "all756_old_kernel_call_cost_classes_independently_recomputed": true,
+    "old116468_losses": [
+      10853,
+      10850
+    ],
+    "old_three_fixes_strict_bothSIO_against_every_correct_reference": true,
+    "expanded120980_pairs241960_states279522_reference_variants": true,
+    "expanded_losses": [
+      11449,
+      11434
+    ],
+    "expanded15strict_bothSIO": true,
+    "additional596_loss_pairs_preexisting": true,
+    "new_loss_pairs": 0,
+    "parent_instruction_increase_states": 0,
+    "wrong_Qfplib_variants77106_retained": true,
+    "strict_quietNaN_and_no_nominal_domain_filter": true,
+    "correct_Qfplib_comparison": {
+      "slower": 21167,
+      "faster": 178544,
+      "equal": 2705
+    },
+    "original153_deficits": [
+      35,
+      34
+    ],
+    "author330880_ARM_and5051_MPFR_plus76sNaN_only_inherited_evidence": true,
+    "pilot918_and_route70_excluded": true
+  },
+  "resources": {
+    "old_function310_new232_bytes": true,
+    "retained_slot310_padding78_unused": true,
+    "allocated_code_delta_bytes": 0,
+    "no_new_tables_global_RAM_libgcc_or_ROM_math": true,
+    "other_resident_code_and_veneers_not_relinked": true,
+    "static_kernel_stack48_to40_with_helper68_to60": true,
+    "old_corpus_observed_full_stack2284_unchanged": true,
+    "fresh_controls_observed2148_same_parent_control_candidate": true,
+    "no_universal_full_stack_drop_or_physical_cycle_claim": true
+  },
+  "integration_requirements": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+    "bytes": 1434,
+    "sha256": "39c2d4d54640bea14c35cf41d284e946825fd7d66bba080c471640eb143d93c1"
+  },
+  "reviewed_whole507_preserved": {
+    "no_slower": 422,
+    "strict": 413,
+    "equal": 9
+  },
+  "author437_not_promoted": true,
+  "evidence": {
+    "binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/binding.json",
+      "bytes": 399053,
+      "sha256": "2fec5e71f9a9ffd20d0b02e39cf097e70774bba29bd74b303bd4c55597118f7f"
+    },
+    "seal-lineage.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/seal-lineage.json",
+      "bytes": 13770,
+      "sha256": "ed08253c596102fc9676c1db2b4d7b6cbb451a4eaaa805643a13bb53c8fbe56f"
+    },
+    "proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/proof.json",
+      "bytes": 2905,
+      "sha256": "4e0eb81f97937954da2505e6c0b63b15430dd9c2ed2eb27dd85a42417f0d9067"
+    },
+    "NUMERIC-REVIEW.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/NUMERIC-REVIEW.md",
+      "bytes": 3954,
+      "sha256": "0d3172f1f4d1a2ffd1b9304ae6254eb4da6d04c47f34c6b71b2afe7cfdb22fcb"
+    },
+    "bare-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/bare-arm.json",
+      "bytes": 852,
+      "sha256": "122f71ba6460a2a402c8d7028413e04a081e28a1fc0511c21111f38d684f9325"
+    },
+    "public-arm-mpfr.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/public-arm-mpfr.json",
+      "bytes": 43002,
+      "sha256": "61ed6044b4153e17804c731874ffbea9b03b528e60e52fed6b337448e58a5fa9"
+    },
+    "accounting.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/accounting.json",
+      "bytes": 1856,
+      "sha256": "9c1902f63e96b4dfc003c37c46bc756c13f7b626155c41b924047a8b7cc2ce35"
+    },
+    "strict-fixes.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/strict-fixes.json",
+      "bytes": 5826,
+      "sha256": "f7e52e9066ca6b0cf78b2d1ddfb07172049363992ff2c16d3e784ae3e6da4ade"
+    },
+    "INTEGRATION-REQUIREMENTS.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+      "bytes": 1434,
+      "sha256": "39c2d4d54640bea14c35cf41d284e946825fd7d66bba080c471640eb143d93c1"
+    },
+    "EXECUTION-NOTES.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/EXECUTION-NOTES.json",
+      "bytes": 2165,
+      "sha256": "d21123698c60795f9ed271f36b8438e2df257a14d1284e7515a31aec3d39a4fe"
+    }
+  },
+  "authority": {
+    "private_component_HOST_GO": true,
+    "integration_GO": false,
+    "hardware_GO": false,
+    "whole_math_or507_GO": false,
+    "main_release_or_publication_GO": false,
+    "goal_complete": false,
+    "device_USB_ports_Git_canonical_network_actions": 0
+  },
+  "remaining": "Expanded11434 pow losses, general-pow totality, other operations, source merge/relink with near-one, actual integrated R12 and loader/layout guards, physical measurements and release remain outside this component verdict."
+}

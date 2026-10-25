@@ -1,0 +1,75 @@
+{
+  "status": "PASS_INDEPENDENT_SQUARE32_CROSS32_MODULAR_TRANSFORM_AND_STATIC_CFG",
+  "exact_transform": "P=H^2+2*C mod2^128, C is the same unchanged helper(L,H) or0; exponent/radius follow the original24-byte rules.",
+  "radius_nonzero_L_increment": 16,
+  "radius_zero_L_increment": "bool(radius)",
+  "radius_and_exponent_wrap32": true,
+  "square32_cross32_Hsquare_identities_proved": true,
+  "HOST_square_cross_spot_checks": 42,
+  "HOST_transform_radius_exponent_spot_checks": 600,
+  "helper_treated_as_same_arbitrary64bit_value_for_equivalence": true,
+  "static_CFG_costs": {
+    "control": {
+      "(False, False)": 129,
+      "(False, True)": 116,
+      "(True, False)": 195,
+      "(True, True)": 182
+    },
+    "candidate": {
+      "(False, False)": 94,
+      "(False, True)": 89,
+      "(True, False)": 154,
+      "(True, True)": 149
+    }
+  },
+  "kernel_frames": {
+    "control": 48,
+    "candidate": 40
+  },
+  "helper_frame20": true,
+  "with_helper_peaks": {
+    "control": 68,
+    "candidate": 60
+  },
+  "all24_output_fields_and_normalization_branch_preserved": true,
+  "ordinary_void_PCS_no_R12_extra": true,
+  "source_callers": [
+    {
+      "line": 2074,
+      "following": [
+        "\tbl\tpow_integer128_square",
+        "\t.inst.n\t0x1e64 @ subs\tr4, r4, #1",
+        "\tmov\tr0, r6",
+        "\tlsrs\tr0, r4",
+        "\tlsls\tr0, r0, #31"
+      ]
+    },
+    {
+      "line": 3977,
+      "following": [
+        "\tbl\tpow_integer128_square",
+        "\t.inst.n\t0x1e64 @ subs\tr4, r4, #1",
+        "\tmov\tr0, r5",
+        "\tlsrs\tr0, r4",
+        "\tlsls\tr0, r0, #31"
+      ]
+    }
+  ],
+  "fresh_actual_resident_callers": [
+    {
+      "owner": "pow_root128",
+      "pc": "0x1014eec2",
+      "fresh_disassembly": "\n/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf:     file format elf32-littlearm\n\n\nDisassembly of section .m0_pow_exact_extension:\n\n1014eec2 <pow_root128+0x12a>:\n1014eec2:\tf7aa feeb \tbl\t100f9c9c <pow_integer128_square>\n1014eec6:\t1e64      \tsubs\tr4, r4, #1\n1014eec8:\t4630      \tmov\tr0, r6\n1014eeca:\t40e0      \tlsrs\tr0, r4\n1014eecc:\t07c0      \tlsls\tr0, r0, #31\n"
+    },
+    {
+      "owner": "_ZL13factor_decideyjjbyb",
+      "pc": "0x1015054c",
+      "fresh_disassembly": "\n/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf:     file format elf32-littlearm\n\n\nDisassembly of section .m0_pow_tail_fixed:\n\n1015054c <_ZL13factor_decideyjjbyb+0x6c>:\n1015054c:\tf7a9 fba6 \tbl\t100f9c9c <pow_integer128_square>\n10150550:\t1e64      \tsubs\tr4, r4, #1\n10150552:\t4628      \tmov\tr0, r5\n10150554:\t40e0      \tlsrs\tr0, r4\n10150556:\t07c0      \tlsls\tr0, r0, #31\n"
+    }
+  ],
+  "public_RNE_enclosures_unchanged": true,
+  "general_pow_totality_not_proved": true,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "device_IO": 0
+}

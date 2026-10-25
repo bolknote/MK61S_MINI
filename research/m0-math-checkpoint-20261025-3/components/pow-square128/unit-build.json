@@ -1,0 +1,48 @@
+{
+  "status": "BARE_UNIT_BUILT",
+  "images": {
+    "control": {
+      "ELF_sha256": "8a3e26704db9cf22689d613529f8521464c2349b2ce6650dd439bce3009cff1d",
+      "helper94bytes_exact_parent": true
+    },
+    "candidate": {
+      "ELF_sha256": "2635ebceecc2bcc2ec1fb521ed9da6e42e3f8bbc4db20ea1d6dfbeb3e45c6f04",
+      "helper94bytes_exact_parent": true
+    }
+  },
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/helper.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/helper.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "pow_integer128_square",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/RP-control.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/helper.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/unit-control.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "pow_integer128_square",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/RP-candidate.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/helper.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/unit-candidate.elf"
+    ]
+  ]
+}

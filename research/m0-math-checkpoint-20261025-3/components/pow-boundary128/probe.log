@@ -1,0 +1,45 @@
+boundary128-pilot 0 / 153
+boundary128-pilot 32 / 153
+boundary128-pilot 64 / 153
+boundary128-pilot 96 / 153
+boundary128-pilot 128 / 153
+{
+  "status": "EXPERIMENTAL_EXACT_BOUNDARY128_ORIGINAL153_PILOT",
+  "candidate_ELF_sha256": "63a80f08c546e7bd07db6056eb1f64aa0de573c7296e5572b090e9d9f6edbfa9",
+  "actual_ARM_calls": 1836,
+  "actual_MPFR_inputs": 153,
+  "candidate_wrong": 0,
+  "parent_remaining": 34,
+  "candidate_remaining": 34,
+  "fixed_pairs": [],
+  "new_raw_loss_pairs": [],
+  "all24_midpoint_operand_bytes_identical": true,
+  "boundary_calls": 56,
+  "cost_delta_histogram": {
+    "-169": 2,
+    "-128": 2,
+    "-124": 2,
+    "-113": 6,
+    "-102": 4,
+    "-96": 2,
+    "-91": 4,
+    "-85": 2,
+    "-72": 2,
+    "-68": 6,
+    "-63": 2,
+    "-61": 2,
+    "-58": 8,
+    "-46": 2,
+    "-29": 2,
+    "-23": 2,
+    "-12": 2,
+    "-4": 4,
+    "0": 250
+  },
+  "stacks": {
+    "parent": 968,
+    "control": 968,
+    "candidate": 968
+  },
+  "hardware_accessed": false
+}

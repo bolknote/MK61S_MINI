@@ -1,0 +1,44 @@
+{
+  "status": "PASS_EXACT_INTEGER_MODEL_AND_OLD_KERNEL",
+  "tests": 18210,
+  "actual_ARM_calls": 36420,
+  "class_counts": {
+    "(False, False)": 4638,
+    "(True, False)": 8188,
+    "(True, True)": 2748,
+    "(False, True)": 2636
+  },
+  "class_costs": {
+    "(False, False)": {
+      "control": 129,
+      "candidate": 94
+    },
+    "(True, False)": {
+      "control": 195,
+      "candidate": 154
+    },
+    "(True, True)": {
+      "control": 182,
+      "candidate": 149
+    },
+    "(False, True)": {
+      "control": 116,
+      "candidate": 89
+    }
+  },
+  "cost_delta_histogram": {
+    "-35": 4638,
+    "-41": 8188,
+    "-33": 2748,
+    "-27": 2636
+  },
+  "min_SP_frames": {
+    "control": 68,
+    "candidate": 60
+  },
+  "old_and_new_all24_output_bytes_identical": true,
+  "all16_NZCV_and_arbitrary_volatile_registers": true,
+  "PCS_SP_PC_and_bounded_struct_stack_writes_every_call": true,
+  "firmware_ROM_or_arithmetic_mocks_not_mapped": true,
+  "hardware_accessed": false
+}

@@ -1,0 +1,26 @@
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/boundary.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+{
+  "control": {
+    "ELF_sha256": "139080b9bcff725d965830b58958a289a4f68e27a6b23e663e5d2c08fcc647d3",
+    "allocated": {
+      ".front": {
+        "address": 269811712,
+        "bytes": 532
+      }
+    }
+  },
+  "candidate": {
+    "ELF_sha256": "63a80f08c546e7bd07db6056eb1f64aa0de573c7296e5572b090e9d9f6edbfa9",
+    "allocated": {
+      ".front": {
+        "address": 269811712,
+        "bytes": 532
+      },
+      ".boundary128": {
+        "address": 270401536,
+        "bytes": 228
+      }
+    }
+  }
+}

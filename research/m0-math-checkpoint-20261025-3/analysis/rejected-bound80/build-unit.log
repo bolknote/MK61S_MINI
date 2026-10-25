@@ -1,0 +1,11 @@
+{
+  "status": "EXPERIMENTAL_BOUND80_UNIT_BUILT_NOT_QUALIFIED",
+  "ELF_sha256": "b56350bace1ce46b27bab8a9e7f07ee89b6b5cf5e34970cb63df22943d2fca31",
+  "sizes": {
+    "mk61_m0_bound80_multiply": 310,
+    "mk61_m0_bound80_compare": 304,
+    "mk61_m0_bound80_wide32": 44,
+    "mk61_m0_bound80_square": 192
+  },
+  "hardware_accessed": false
+}
