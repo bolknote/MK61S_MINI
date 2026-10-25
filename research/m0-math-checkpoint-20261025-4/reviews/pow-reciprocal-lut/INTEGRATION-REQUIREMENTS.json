@@ -1,0 +1,23 @@
+{
+  "status": "MANDATORY_BEFORE_ANY_MERGED_FIRMWARE_QUALIFICATION",
+  "exact_supplier": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-20261025/FROZEN.json",
+    "bytes": 9584,
+    "sha256": "7384323f37dae2fb8a7cf350a64165392181e20276e83551ccf9ef320d811ffc"
+  },
+  "actual_parent": "soft13dc / independent211cf / later ROOTde2f; child remains separately qualified",
+  "source_merge": "Merge exact selected source and NEW128-u16 table; relink whole target. Do not mechanically combine private overlays or diagnostic fixed addresses with the separate near-one sibling.",
+  "selected_leaf": "Qualify actual56B code+256B table and D17 domain; old literal194B is the parent implementation, not a required child layout. Preserve exact quotient, aligned bounded lookup, signed/modular correction, R1/R12/PCS/SP/PC.",
+  "R3_contract": "Leaf may clobber R3 only where actual caller saves/pops original R0-R3. Keep quotient consumption before POP. Private continuation requires raw operands, guarded R6[0,2043], original20B frame and8-aligned seed BL; no generic scalar C/ddiv ABI.",
+  "RNE": "Retain common282B NR/exact-remainder/RNE semantics, IEEE/dyadic guards, selection and fallback. No relaxed precision.",
+  "integrated_R12": "Run actual integrated shared-product producer/consumer and veneer guards on fresh linked consumers after source merges; reciprocal private R12-tag proofs are not that contract. Keep the separate near-one guard if merged.",
+  "loader_layout": "Fresh final target/loader/table/address/Flash/RAM/stack/scratch4080 checks. Old168B exp overlay corrupts14B of the new table entry and cannot be loaded over the new bank.",
+  "exclusions": "Other3 studied variants are unqualified here. Failed24ARM/3MPFR calibration and parent/historical calls are not fresh. Public-report own key all48 is corrected additively to all9; carry its corrigendum.",
+  "limits": "Instruction counts in CPU emulation are not physical cycles/Flash-latency measurements. General pow totality and remaining math/speed work stay separate.",
+  "reviewed507": 422,
+  "author437_not_promoted": true,
+  "integration_GO": false,
+  "hardware_GO": false,
+  "main_GO": false,
+  "release_GO": false
+}

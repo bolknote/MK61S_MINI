@@ -1,0 +1,24 @@
+{
+  "status": "MANDATORY_BEFORE_ANY_MERGED_FIRMWARE_QUALIFICATION",
+  "exact_supplier": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/FROZEN.json",
+    "bytes": 11555,
+    "sha256": "3341f37fa8b5a5177af792be2417b1365c5b6595f66280151e5ed6f72d8c5469"
+  },
+  "actual_parent": "LUT7384/c191 and later ROOT19a0; child3341 sealed metadata not reissued",
+  "entry_contract": "Hidden mk61_m0_reciprocal1 requires R0=0,R1=3FF00000 and denominator R2:R3. It is not a one-argument C ABI, global ddiv or arbitrary numerator operation. Prove every fresh integrated incoming call/return and constant-loading source path.",
+  "private_software": "Retain guarded R6=2044-E for E1..2044, raw operands, original20B frame, savedR0-R3/R7 alignment slot, R3-clobber protection, R12 tag and8-aligned seed BL.",
+  "arithmetic": "Retain exact double(2^31*u1) identity, second-product dead-state overwrite and identical full R0-R7/R12/SP/NZCV/frame28 join. No relaxed precision; common186B RNE and312B exact seed/table supplier remain bound.",
+  "READY_latency": "Preserve the nine independent ALU instructions between SIO divisor issue and quotient read. Software-only dead instructions must not be removed from READY hardware.",
+  "source_merge_relink": "Merge source deliberately with siblings, then relink complete target. Do not mechanically layer private diagnostic overlays/fixed addresses into production.",
+  "actual_shared_R12": "Run actual integrated shared-product producer/consumer R12 and veneer guards after merge. The reciprocal private R12 tag is not that separate contract. Apply near-one guard when that sibling is integrated.",
+  "layout_loader": "Fresh final ELF, loader order, scratch4080, Flash/RAM/stack/veneer checks. Old168B exp overlay still corrupts14B of the new table entry.",
+  "unresolved_speed": "Keep all216 scalar deficits /18 unique denominators visible. Normal18 states lag READY2-5 /DIRTY15-21 /overall2-21; carry corrigendumcf6766bf with the original frozen HANDOFF.",
+  "limits": "General pow totality, remaining math/speed work, physical cycles, hardware and release stay separate. Instruction counts are CPU simulation, not physical cycle measurements.",
+  "reviewed507": 422,
+  "author437_not_promoted": true,
+  "integration_GO": false,
+  "hardware_GO": false,
+  "main_GO": false,
+  "release_GO": false
+}

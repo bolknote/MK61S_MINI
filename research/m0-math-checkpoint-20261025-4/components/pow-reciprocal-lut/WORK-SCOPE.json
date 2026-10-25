@@ -1,0 +1,14 @@
+{
+  "status": "AUTHOR_QUALIFICATION_COMPLETE_PENDING_REVIEW",
+  "previous_goal_turn_classification": "progress: full exact software reciprocal qualified,48 strict Qfplib fixes and377 faster DIRTY states",
+  "this_turn_classification": "progress: exact20-27 instruction seed with256B table qualified,9 new strict Qfplib fixes,377 states59-73instructions faster; +118B allocation, IEEE/READY preserved",
+  "selected": "lut128_floor",
+  "selected_table_bytes": 256,
+  "selected_function_bytes": 56,
+  "selected_allocated_bytes": 312,
+  "selected_bare_qualified_calls": 155680,
+  "other_variant_experimental_calls": 233520,
+  "parent_review_pending": false,
+  "canonical_runtime_M4_Git_device_USB_Flash_or_release_changed": false,
+  "goal_complete": false
+}

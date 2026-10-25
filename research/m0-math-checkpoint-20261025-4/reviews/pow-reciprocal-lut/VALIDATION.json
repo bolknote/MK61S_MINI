@@ -1,0 +1,20 @@
+{
+  "status": "PASS_FINAL_RECEIPT_MANIFEST_ALL_ARTIFACTS_AND_LABEL_CORRIGENDUM",
+  "final_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-independent-20261025/FINAL-REVIEW.json",
+    "bytes": 12628,
+    "sha256": "c1911a7d57fbdbea1ec6a2f595e99a1685d2592db18f48b3fcfb4b97997bfdde"
+  },
+  "manifest": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-independent-20261025/MANIFEST.json",
+    "bytes": 13726,
+    "sha256": "21b252cddf2ed2cd1381f4915c43e585395f72aa1d778f263c5ca6395e1357b0"
+  },
+  "verified_manifest_files": 51,
+  "own_ARM1578_MPFR50_plus4shortcuts": true,
+  "own_failed_preflights0_discarded0": true,
+  "all9_not48_fix_claim_correct": true,
+  "no_required_review_work_remaining": true,
+  "integration_hardware_main_release_all_false": true,
+  "device_IO": 0
+}

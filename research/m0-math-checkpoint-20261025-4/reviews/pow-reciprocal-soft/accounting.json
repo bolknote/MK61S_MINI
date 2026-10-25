@@ -1,0 +1,334 @@
+{
+  "status": "PASS_FULL_SAVED_RAW_CURRENT_PARENT_REFERENCE_AND_DIRECT_EXCLUSION_ACCOUNTING",
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "parent_raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/qualification-records.jsonl.gz",
+    "bytes": 3633218,
+    "sha256": "419acb05b2ef711a4117a328c340c3414d0e7ff7d06b5416d79f2cf832d60836"
+  },
+  "new_raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/qualification-records.jsonl.gz",
+    "bytes": 3852216,
+    "sha256": "0433412a4bde28daa6611118815eaf0bb48662c5d857bcd58e005931b67b6beb"
+  },
+  "every_parent_output_expected_reference_and_old_metadata_retained": true,
+  "inherited_boundary_midpoint_traces_historical_not_freshly_claimed": true,
+  "current_parent_field": "parent_reciprocal_instructions",
+  "pairs": 120980,
+  "states": 241960,
+  "reference_variants": 279522,
+  "wrong_Qfplib_variants_retained": 77106,
+  "strict_quietNaN_flags_recounted": true,
+  "no_nominal_filter": true,
+  "loss_pairs": [
+    11434,
+    11386
+  ],
+  "new_strict_fixed_pairs48": true,
+  "fixed_pairs_sorted": [
+    [
+      "3F569DB65D606A7D",
+      "BFF4000000000000"
+    ],
+    [
+      "3FAAE46EA0E2CCA5",
+      "BFF8000000000000"
+    ],
+    [
+      "3FCE1C93A6958ABE",
+      "BFF4000000000000"
+    ],
+    [
+      "3FD789A5EE5BFC5B",
+      "BFF8000000000000"
+    ],
+    [
+      "3FD789A5EE5BFC5D",
+      "BFF8000000000000"
+    ],
+    [
+      "3FD789A5EE5BFC5D",
+      "C004000000000000"
+    ],
+    [
+      "3FE2F9D0BA095F33",
+      "C004000000000000"
+    ],
+    [
+      "3FE80B1AC9886265",
+      "BFF4000000000000"
+    ],
+    [
+      "3FE80B1AC9886266",
+      "BFF4000000000000"
+    ],
+    [
+      "3FE80B1AC9886267",
+      "BFF4000000000000"
+    ],
+    [
+      "3FE83B1AF4197991",
+      "BFF8000000000000"
+    ],
+    [
+      "3FE83B1AF4197991",
+      "C004000000000000"
+    ],
+    [
+      "3FE83B1AF4197992",
+      "BFF8000000000000"
+    ],
+    [
+      "3FE83B1AF4197992",
+      "C004000000000000"
+    ],
+    [
+      "3FE83B1AF4197993",
+      "BFF8000000000000"
+    ],
+    [
+      "3FE83B1AF4197993",
+      "C004000000000000"
+    ],
+    [
+      "3FEB84F6C510641E",
+      "BFF8000000000000"
+    ],
+    [
+      "3FEB84F6C510641F",
+      "BFF8000000000000"
+    ],
+    [
+      "3FEB84F6C510641F",
+      "C004000000000000"
+    ],
+    [
+      "3FEB84F6C5106420",
+      "BFF8000000000000"
+    ],
+    [
+      "3FEB84F6C5106420",
+      "C004000000000000"
+    ],
+    [
+      "3FED31F2F7C53E34",
+      "BFF4000000000000"
+    ],
+    [
+      "3FED31F2F7C53E35",
+      "BFF4000000000000"
+    ],
+    [
+      "3FED31F2F7C53E36",
+      "BFF4000000000000"
+    ],
+    [
+      "3FF0B1957A030E6A",
+      "C010000000000000"
+    ],
+    [
+      "3FF363AD26D675E5",
+      "C010000000000000"
+    ],
+    [
+      "3FF6373805BC6B4C",
+      "BFF8000000000000"
+    ],
+    [
+      "3FF6373805BC6B4C",
+      "C004000000000000"
+    ],
+    [
+      "3FF6373805BC6B4D",
+      "BFF8000000000000"
+    ],
+    [
+      "3FF6373805BC6B4D",
+      "C004000000000000"
+    ],
+    [
+      "3FF6373805BC6B4E",
+      "C004000000000000"
+    ],
+    [
+      "3FFC445C9B44C7FC",
+      "C020000000000000"
+    ],
+    [
+      "3FFCD84FD272C703",
+      "C014000000000000"
+    ],
+    [
+      "4000063C1015B823",
+      "BFF8000000000000"
+    ],
+    [
+      "4000063C1015B824",
+      "C004000000000000"
+    ],
+    [
+      "4000063C1015B825",
+      "BFF8000000000000"
+    ],
+    [
+      "4001278DD28E631A",
+      "BFF8000000000000"
+    ],
+    [
+      "4001278DD28E631A",
+      "C004000000000000"
+    ],
+    [
+      "4001278DD28E631C",
+      "C004000000000000"
+    ],
+    [
+      "4006B335AFD468A3",
+      "BFF8000000000000"
+    ],
+    [
+      "4006B335AFD468A5",
+      "BFF8000000000000"
+    ],
+    [
+      "4012B2F6F3304D23",
+      "BFF4000000000000"
+    ],
+    [
+      "4027584363336331",
+      "C004000000000000"
+    ],
+    [
+      "402C3EABAB98563C",
+      "BFF8000000000000"
+    ],
+    [
+      "402D507BADD65812",
+      "C004000000000000"
+    ],
+    [
+      "402FFF54D295EA0D",
+      "C004000000000000"
+    ],
+    [
+      "40449B1CFD487AC7",
+      "BFF4000000000000"
+    ],
+    [
+      "40701C60DA918010",
+      "BFF8000000000000"
+    ]
+  ],
+  "new_loss_pairs": 0,
+  "candidate_wrong": 0,
+  "accelerated_DIRTY_states": 377,
+  "actual_reciprocal_calls": 778,
+  "software_seed_calls": 377,
+  "all_READY_costs_unchanged": true,
+  "instruction_reduction_range": [
+    311,
+    380
+  ],
+  "cost_delta_histogram": {
+    "-380": 1,
+    "-376": 3,
+    "-374": 2,
+    "-372": 1,
+    "-371": 3,
+    "-370": 6,
+    "-369": 3,
+    "-368": 2,
+    "-367": 5,
+    "-366": 5,
+    "-365": 7,
+    "-364": 6,
+    "-363": 2,
+    "-362": 5,
+    "-361": 14,
+    "-360": 19,
+    "-359": 14,
+    "-358": 11,
+    "-357": 4,
+    "-356": 4,
+    "-355": 11,
+    "-354": 7,
+    "-353": 6,
+    "-352": 7,
+    "-351": 6,
+    "-350": 12,
+    "-349": 10,
+    "-348": 2,
+    "-347": 2,
+    "-345": 4,
+    "-341": 2,
+    "-340": 1,
+    "-339": 1,
+    "-338": 5,
+    "-337": 6,
+    "-336": 10,
+    "-335": 7,
+    "-334": 4,
+    "-333": 11,
+    "-332": 6,
+    "-331": 5,
+    "-330": 12,
+    "-329": 8,
+    "-328": 8,
+    "-327": 10,
+    "-326": 5,
+    "-325": 7,
+    "-324": 9,
+    "-323": 3,
+    "-321": 2,
+    "-320": 12,
+    "-319": 5,
+    "-318": 8,
+    "-317": 9,
+    "-316": 3,
+    "-315": 16,
+    "-314": 6,
+    "-313": 7,
+    "-312": 3,
+    "-311": 2,
+    "0": 241583
+  },
+  "correct_Qfplib_comparison": {
+    "slower": 21064,
+    "faster": 178647,
+    "equal": 2705
+  },
+  "every10254_fresh_control_overlap_exact": true,
+  "fresh_control_loss_pairs": [
+    632,
+    588
+  ],
+  "original153": {
+    "parent": {
+      "slower": 34,
+      "strict": 119
+    },
+    "candidate": {
+      "slower": 34,
+      "strict": 119
+    }
+  },
+  "direct_saved_rows3636_recounted": true,
+  "direct_saved_wrong_Qfp936_retained": true,
+  "direct_saved_seed_join_rows": 1088,
+  "author_direct67354_is_jobs_not_asserted_unique": true,
+  "author_full_direct_seed_join_count66624": true,
+  "author_exhaustive65536_no_per_divisor_cost_rows_no_Qfp_speed_comparison_claim": true,
+  "author_qualified_ARM842693_partition": [
+    241960,
+    377,
+    61524,
+    538832
+  ],
+  "author_MPFR6761_plus184sNaN": true,
+  "author_exact_integer_oracle65536": true,
+  "inherited_seed66288_and_old_MPFR_Qfp_not_fresh": true,
+  "author_pilot1836_MPFR153_failed_import0_excluded": true,
+  "reviewed507_stays422_author437_not_promoted": true,
+  "device_IO": 0
+}

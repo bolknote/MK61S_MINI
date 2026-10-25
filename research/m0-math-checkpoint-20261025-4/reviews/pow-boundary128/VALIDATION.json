@@ -1,0 +1,19 @@
+{
+  "status": "PASS_FINAL_RECEIPT_MANIFEST_AND_ALL_OWN_ARTIFACT_BINDINGS",
+  "final_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/FINAL-REVIEW.json",
+    "bytes": 11674,
+    "sha256": "6c1a375bbc8a07a45d387f146347584527c74fc60b890263dc2e4d85f61d2c8b"
+  },
+  "manifest": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/MANIFEST.json",
+    "bytes": 10396,
+    "sha256": "b0d13ef2e0c9b1c49b96c7459c542cdfaa21ffd52ac035577c1b4b5ccb64eec0"
+  },
+  "verified_manifest_file_count": 39,
+  "own_qualified_ARM644": true,
+  "own_failed_ARM290_separate": true,
+  "no_required_review_work_remaining": true,
+  "integration_hardware_main_release_all_false": true,
+  "device_IO": 0
+}

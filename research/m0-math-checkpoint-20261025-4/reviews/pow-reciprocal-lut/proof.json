@@ -1,0 +1,75 @@
+{
+  "status": "PASS_SELECTED_TABLE_GENERATION_INDEX_ALIGNMENT_EXHAUSTIVE_SIGNED_MODULAR_AND_CORRECTION_PROOF",
+  "HOST_integer_domain_inputs": 65536,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "table_bytes": 256,
+  "table_values": 128,
+  "exact_formula": "floor(2^32/(65536+512*i+256)), i=0..127",
+  "code56_table256_blob312": true,
+  "actual_Thumb_ADR_decoded_base_and_LDRH_verified": true,
+  "lookup_index0to127_byte_offsets0to254_halfword_aligned": true,
+  "signed_fold_theorem": "For |p-2^31|<2^30, signed32(2p mod2^32)=2(p-2^31); ASR17 equals floor((p-2^31)/2^16).",
+  "signed_multiply_and_ASR15_match_exact_floor": true,
+  "exact_initial_quotient": "q0=u-floor(u*floor((ceil(D/2)*u-2^31)/2^16)/2^15)",
+  "ranges": {
+    "p": [
+      2139095040,
+      2155806720
+    ],
+    "e": [
+      -128,
+      127
+    ],
+    "ue": [
+      -8355840,
+      8290560
+    ],
+    "q0": [
+      32768,
+      65535
+    ],
+    "residual": [
+      -249015,
+      129026
+    ]
+  },
+  "error_histogram": {
+    "-1": 140,
+    "0": 5167,
+    "1": 35252,
+    "2": 23815,
+    "3": 1162
+  },
+  "max_down": 3,
+  "max_up": 1,
+  "correction_histogram": {
+    "(0, 0)": 5167,
+    "(1, 0)": 35252,
+    "(2, 0)": 23815,
+    "(0, 1)": 140,
+    "(3, 0)": 1162
+  },
+  "deliberate_product_wrap": "low32(q0*D), MVN gives (N-q0D) mod2^32; exact residual fits signed32, so BPL tests its true sign.",
+  "correction": "Negative residual: q--,r+=D with BMI on exact nonoverflowing signed sum; nonnegative residual: unsigned CMP, q++,r-=D until r<D. qD+r=N preserved; result unique floor.",
+  "final_quotient_range": [
+    32768,
+    65535
+  ],
+  "incoming_NZCV_not_consumed": true,
+  "deliberate_modular_operations_not_claimed_nonoverflowing": true,
+  "negative_table_binding_controls": [
+    "entry0_onebit",
+    "entry63_onebit",
+    "entry127_onebit",
+    "truncated_halfword",
+    "unaligned_base"
+  ],
+  "negative_controls_HOST_only_not_altered_ARM_qualification": true,
+  "new_R3_is_exact_residual_but_only_volatile_clobber_contract": true,
+  "private_caller_saves_pops_R0_R3_must_be_freshly_checked": true,
+  "old_R3_preservation_not_inherited": true,
+  "no_new_binary64_precision_RNE_policy": true,
+  "private_seed_only_no_generic_division_ABI": true,
+  "device_IO": 0
+}

@@ -1,0 +1,28 @@
+{
+  "status": "BUILT_PRODUCTION_INLINE_MACRO_UNIT_WRAPPER",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-20261025/unit.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-20261025/unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "unit_inline_seed",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-20261025/unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-20261025/unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-20261025/unit.elf"
+    ]
+  ],
+  "ELF_sha256": "8c2339150c8b05c7936096d284d2a90c813ae09cde7732e133e13124d9e5704f",
+  "hardware_accessed": false
+}

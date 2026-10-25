@@ -1,0 +1,640 @@
+{
+  "status": "ALL_REMAINING_UNIQUE_DENOMINATORS_FOR_BOUNDED_CHECK",
+  "all_denominators": [
+    "0000000000000001",
+    "0000000000000002",
+    "0000000000080000",
+    "00025C93CD5861E9",
+    "3FF1380CD1170204",
+    "3FF27D0DF6735E90",
+    "3FF501040B2C1A76",
+    "3FF8C80F4F1E6B85",
+    "3FFA330BD0CB1C68",
+    "3FFE1D0D3BAD1CDE",
+    "77B21A396CC53B71",
+    "8000000000000001",
+    "8000000000000002",
+    "8000000000080000",
+    "80021CC7DF27D031",
+    "800306AC480D7371",
+    "8A279E4CB42CFDE4",
+    "B8C2F64DF5EE6639"
+  ],
+  "normal_denominators": [
+    "3FF1380CD1170204",
+    "3FF27D0DF6735E90",
+    "3FF501040B2C1A76",
+    "3FF8C80F4F1E6B85",
+    "3FFA330BD0CB1C68",
+    "3FFE1D0D3BAD1CDE",
+    "77B21A396CC53B71",
+    "8A279E4CB42CFDE4",
+    "B8C2F64DF5EE6639"
+  ],
+  "normal_lag_ranges": {
+    "READY": [
+      2,
+      5
+    ],
+    "DIRTY": [
+      15,
+      21
+    ]
+  },
+  "all_normal_rows": [
+    {
+      "denominator": "B8C2F64DF5EE6639",
+      "NZCV": 6,
+      "group": "all_exponents_signs",
+      "SIO": "READY",
+      "expected": "C71B004E0037637E",
+      "results": {
+        "parent": {
+          "output": "C71B004E0037637E",
+          "instructions": 174,
+          "correct": true
+        },
+        "control": {
+          "output": "C71B004E0037637E",
+          "instructions": 174,
+          "correct": true
+        },
+        "candidate": {
+          "output": "C71B004E0037637E",
+          "instructions": 148,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "C71B004E0037637E",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [],
+      "lag_instructions": 2
+    },
+    {
+      "denominator": "B8C2F64DF5EE6639",
+      "NZCV": 6,
+      "group": "all_exponents_signs",
+      "SIO": "DIRTY",
+      "expected": "C71B004E0037637E",
+      "results": {
+        "parent": {
+          "output": "C71B004E0037637E",
+          "instructions": 195,
+          "correct": true
+        },
+        "control": {
+          "output": "C71B004E0037637E",
+          "instructions": 195,
+          "correct": true
+        },
+        "candidate": {
+          "output": "C71B004E0037637E",
+          "instructions": 161,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "C71B004E0037637E",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [
+        77668
+      ],
+      "lag_instructions": 15
+    },
+    {
+      "denominator": "77B21A396CC53B71",
+      "NZCV": 2,
+      "group": "random_bits",
+      "SIO": "READY",
+      "expected": "082C489246A88070",
+      "results": {
+        "parent": {
+          "output": "082C489246A88070",
+          "instructions": 177,
+          "correct": true
+        },
+        "control": {
+          "output": "082C489246A88070",
+          "instructions": 177,
+          "correct": true
+        },
+        "candidate": {
+          "output": "082C489246A88070",
+          "instructions": 151,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "082C489246A88070",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [],
+      "lag_instructions": 5
+    },
+    {
+      "denominator": "77B21A396CC53B71",
+      "NZCV": 2,
+      "group": "random_bits",
+      "SIO": "DIRTY",
+      "expected": "082C489246A88070",
+      "results": {
+        "parent": {
+          "output": "082C489246A88070",
+          "instructions": 197,
+          "correct": true
+        },
+        "control": {
+          "output": "082C489246A88070",
+          "instructions": 197,
+          "correct": true
+        },
+        "candidate": {
+          "output": "082C489246A88070",
+          "instructions": 163,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "082C489246A88070",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [
+        74147
+      ],
+      "lag_instructions": 17
+    },
+    {
+      "denominator": "8A279E4CB42CFDE4",
+      "NZCV": 3,
+      "group": "random_bits",
+      "SIO": "READY",
+      "expected": "F5B5AD94D75983B5",
+      "results": {
+        "parent": {
+          "output": "F5B5AD94D75983B5",
+          "instructions": 174,
+          "correct": true
+        },
+        "control": {
+          "output": "F5B5AD94D75983B5",
+          "instructions": 174,
+          "correct": true
+        },
+        "candidate": {
+          "output": "F5B5AD94D75983B5",
+          "instructions": 148,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "F5B5AD94D75983B5",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [],
+      "lag_instructions": 2
+    },
+    {
+      "denominator": "8A279E4CB42CFDE4",
+      "NZCV": 3,
+      "group": "random_bits",
+      "SIO": "DIRTY",
+      "expected": "F5B5AD94D75983B5",
+      "results": {
+        "parent": {
+          "output": "F5B5AD94D75983B5",
+          "instructions": 195,
+          "correct": true
+        },
+        "control": {
+          "output": "F5B5AD94D75983B5",
+          "instructions": 195,
+          "correct": true
+        },
+        "candidate": {
+          "output": "F5B5AD94D75983B5",
+          "instructions": 161,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "F5B5AD94D75983B5",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [
+        96740
+      ],
+      "lag_instructions": 15
+    },
+    {
+      "denominator": "3FF1380CD1170204",
+      "NZCV": 8,
+      "group": "normal_seed_samples",
+      "SIO": "READY",
+      "expected": "3FEDBC149C7246EB",
+      "results": {
+        "parent": {
+          "output": "3FEDBC149C7246EB",
+          "instructions": 174,
+          "correct": true
+        },
+        "control": {
+          "output": "3FEDBC149C7246EB",
+          "instructions": 174,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEDBC149C7246EB",
+          "instructions": 148,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEDBC149C7246EB",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [],
+      "lag_instructions": 2
+    },
+    {
+      "denominator": "3FF1380CD1170204",
+      "NZCV": 8,
+      "group": "normal_seed_samples",
+      "SIO": "DIRTY",
+      "expected": "3FEDBC149C7246EB",
+      "results": {
+        "parent": {
+          "output": "3FEDBC149C7246EB",
+          "instructions": 198,
+          "correct": true
+        },
+        "control": {
+          "output": "3FEDBC149C7246EB",
+          "instructions": 198,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEDBC149C7246EB",
+          "instructions": 164,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEDBC149C7246EB",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [
+        70528
+      ],
+      "lag_instructions": 18
+    },
+    {
+      "denominator": "3FF27D0DF6735E90",
+      "NZCV": 13,
+      "group": "normal_seed_samples",
+      "SIO": "READY",
+      "expected": "3FEBB161CF4596AC",
+      "results": {
+        "parent": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 177,
+          "correct": true
+        },
+        "control": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 177,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 151,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [],
+      "lag_instructions": 5
+    },
+    {
+      "denominator": "3FF27D0DF6735E90",
+      "NZCV": 13,
+      "group": "normal_seed_samples",
+      "SIO": "DIRTY",
+      "expected": "3FEBB161CF4596AC",
+      "results": {
+        "parent": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 201,
+          "correct": true
+        },
+        "control": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 201,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 167,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEBB161CF4596AC",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [
+        75728
+      ],
+      "lag_instructions": 21
+    },
+    {
+      "denominator": "3FF501040B2C1A76",
+      "NZCV": 1,
+      "group": "normal_seed_samples",
+      "SIO": "READY",
+      "expected": "3FE860583E007BD7",
+      "results": {
+        "parent": {
+          "output": "3FE860583E007BD7",
+          "instructions": 174,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE860583E007BD7",
+          "instructions": 174,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE860583E007BD7",
+          "instructions": 148,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE860583E007BD7",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [],
+      "lag_instructions": 2
+    },
+    {
+      "denominator": "3FF501040B2C1A76",
+      "NZCV": 1,
+      "group": "normal_seed_samples",
+      "SIO": "DIRTY",
+      "expected": "3FE860583E007BD7",
+      "results": {
+        "parent": {
+          "output": "3FE860583E007BD7",
+          "instructions": 198,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE860583E007BD7",
+          "instructions": 198,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE860583E007BD7",
+          "instructions": 164,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE860583E007BD7",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [
+        86032
+      ],
+      "lag_instructions": 18
+    },
+    {
+      "denominator": "3FF8C80F4F1E6B85",
+      "NZCV": 8,
+      "group": "normal_seed_samples",
+      "SIO": "READY",
+      "expected": "3FE4A91C3C3C37A7",
+      "results": {
+        "parent": {
+          "output": "3FE4A91C3C3C37A7",
+          "instructions": 174,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE4A91C3C3C37A7",
+          "instructions": 174,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE4A91C3C3C37A7",
+          "instructions": 148,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE4A91C3C3C37A7",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [],
+      "lag_instructions": 2
+    },
+    {
+      "denominator": "3FF8C80F4F1E6B85",
+      "NZCV": 8,
+      "group": "normal_seed_samples",
+      "SIO": "DIRTY",
+      "expected": "3FE4A91C3C3C37A7",
+      "results": {
+        "parent": {
+          "output": "3FE4A91C3C3C37A7",
+          "instructions": 198,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE4A91C3C3C37A7",
+          "instructions": 198,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE4A91C3C3C37A7",
+          "instructions": 164,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE4A91C3C3C37A7",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [
+        101504
+      ],
+      "lag_instructions": 18
+    },
+    {
+      "denominator": "3FFA330BD0CB1C68",
+      "NZCV": 3,
+      "group": "normal_seed_samples",
+      "SIO": "READY",
+      "expected": "3FE38ADCE3578073",
+      "results": {
+        "parent": {
+          "output": "3FE38ADCE3578073",
+          "instructions": 177,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE38ADCE3578073",
+          "instructions": 177,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE38ADCE3578073",
+          "instructions": 151,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE38ADCE3578073",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [],
+      "lag_instructions": 5
+    },
+    {
+      "denominator": "3FFA330BD0CB1C68",
+      "NZCV": 3,
+      "group": "normal_seed_samples",
+      "SIO": "DIRTY",
+      "expected": "3FE38ADCE3578073",
+      "results": {
+        "parent": {
+          "output": "3FE38ADCE3578073",
+          "instructions": 198,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE38ADCE3578073",
+          "instructions": 198,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE38ADCE3578073",
+          "instructions": 164,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE38ADCE3578073",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [
+        107312
+      ],
+      "lag_instructions": 18
+    },
+    {
+      "denominator": "3FFE1D0D3BAD1CDE",
+      "NZCV": 13,
+      "group": "normal_seed_samples",
+      "SIO": "READY",
+      "expected": "3FE1009A0D449748",
+      "results": {
+        "parent": {
+          "output": "3FE1009A0D449748",
+          "instructions": 177,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE1009A0D449748",
+          "instructions": 177,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE1009A0D449748",
+          "instructions": 151,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE1009A0D449748",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [],
+      "lag_instructions": 5
+    },
+    {
+      "denominator": "3FFE1D0D3BAD1CDE",
+      "NZCV": 13,
+      "group": "normal_seed_samples",
+      "SIO": "DIRTY",
+      "expected": "3FE1009A0D449748",
+      "results": {
+        "parent": {
+          "output": "3FE1009A0D449748",
+          "instructions": 198,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE1009A0D449748",
+          "instructions": 198,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE1009A0D449748",
+          "instructions": 164,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE1009A0D449748",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "first_product_calls": 1,
+      "software_seed_divisors": [
+        123344
+      ],
+      "lag_instructions": 18
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "status": "MANDATORY_BEFORE_ANY_MERGED_FIRMWARE_OR_RELEASE_QUALIFICATION",
+  "source_parent": "Actual Square128 r2 /31de and prior table-product chain; near-one is a separate sibling.",
+  "exact_supplier": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/FROZEN.json",
+    "bytes": 9751,
+    "sha256": "61c98b938cf723f2f9b63ef06f22a3033c1b07af979dbe56ef9a2a2d56ed3393"
+  },
+  "source_merge_relink": "Merge source deliberately with accepted Square128/table product and separate near-one; rebuild the actual complete firmware. This private overlay is not a combined firmware.",
+  "new_CPP_and_alias": "Build the RP2040-guarded boundary TU and bind mk61_m0_boundary128_compare to the actual retained root128 compare in the merged image. Do not carry frozen diagnostic absolute addresses as a production binding.",
+  "boundary_ABI": "Fresh linked tail/body/caller check: R0-R2 pointer/denominator/bool, incoming aligned uint64 cell at SP, ordinary int32 R0 return, R3 volatile; all24 midpoint bytes and retained endpoint policies.",
+  "target_R12": "Run required shared-product R12 producer/consumer and veneer checks against fresh actual linked consumers after all merges. Boundary ordinary PCS checks are not that guard. The separate near-one88-instruction/16-byte-veneer guard remains required if that sibling is merged.",
+  "loader_layout": "Fresh final ELF and loader ordering/layout checks, table/veneer targets, scratch4080 and Flash/RAM/stack bounds. Old168-byte exp overlay must not be loaded over the new bank: it corrupts14 bytes of the new table entry.",
+  "selected_contexts": "Retain defaultM0 and M4soft/hard selected assembly and compile-time exclusion of the extra TU; validate in actual complete build contexts.",
+  "report_correction": "Carry additive corrigendum729a5e18 with frozen result/HANDOFF: full public range4-180, old4-169 pilot upper bound is inaccurate for the full corpus.",
+  "performance": "Instruction counts only, no physical cycle or universal speed proof. Invalid cells still return0 but additional own guard cases cost+4/+7; general invalid-argument speed is outside the public claim.",
+  "remaining_work": "General pow totality, remaining loss cases, whole math, integrated correctness/performance and physical qualification remain separate work.",
+  "reviewed_whole507": 422,
+  "author437_separate_union_not_promoted": true,
+  "main_GO": false,
+  "hardware_GO": false,
+  "release_GO": false
+}

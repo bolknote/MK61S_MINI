@@ -1,0 +1,98 @@
+reciprocal1-direct 0 / 20994 0.0
+reciprocal1-direct 1024 / 20994 2.4
+reciprocal1-direct 2048 / 20994 4.6
+reciprocal1-direct 3072 / 20994 6.9
+reciprocal1-direct 4096 / 20994 9.1
+reciprocal1-direct 5120 / 20994 11.3
+reciprocal1-direct 6144 / 20994 13.6
+reciprocal1-direct 7168 / 20994 15.8
+reciprocal1-direct 8192 / 20994 18.0
+reciprocal1-direct 9216 / 20994 20.3
+reciprocal1-direct 10240 / 20994 22.5
+reciprocal1-direct 11264 / 20994 24.7
+reciprocal1-direct 12288 / 20994 27.0
+reciprocal1-direct 13312 / 20994 30.5
+reciprocal1-direct 14336 / 20994 35.2
+reciprocal1-direct 15360 / 20994 40.9
+reciprocal1-direct 16384 / 20994 47.6
+reciprocal1-direct 17408 / 20994 53.2
+reciprocal1-direct 18432 / 20994 58.8
+reciprocal1-direct 19456 / 20994 65.2
+reciprocal1-direct 20480 / 20994 71.3
+{
+  "status": "PASS_PRIVATE_INLINE_SEED_TINY_OVERFLOW_ALL_DENOMINATOR_CLASSES",
+  "pairs": 20994,
+  "states": 41988,
+  "actual_ARM_calls": 167952,
+  "actual_directed_MPFR_inputs": 20960,
+  "sNaN_policy_shortcuts": 34,
+  "MPFR_version": "4.2.2",
+  "numerator_contract": "exact positive1 only; denominator any binary64",
+  "all_parent_return_bits_equal": true,
+  "all_after_second_product_R0_R7_R12_SP_NZCV_frame28B_identical": true,
+  "direct_first_product_calls": 24728,
+  "all_actual_costs_match_special_guard_sign_and_inline_model": true,
+  "instruction_delta_histogram": {
+    "-613": 2,
+    "-611": 6154,
+    "-608": 8,
+    "-607": 2,
+    "-606": 86,
+    "-605": 2,
+    "-604": 8,
+    "-603": 2,
+    "-602": 56,
+    "-601": 2,
+    "-600": 6,
+    "-599": 22,
+    "-598": 18,
+    "-597": 210,
+    "-596": 94,
+    "-595": 28,
+    "-594": 8,
+    "-593": 62,
+    "-592": 68,
+    "-590": 2,
+    "-589": 28,
+    "-588": 10,
+    "-587": 196,
+    "-585": 30,
+    "-584": 2,
+    "-583": 38,
+    "-259": 128,
+    "-258": 68,
+    "-255": 64,
+    "-44": 64,
+    "-7": 20,
+    "-6": 12344,
+    "-2": 12364,
+    "0": 128,
+    "2": 352,
+    "8": 3168,
+    "11": 6144
+  },
+  "correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 24966,
+      "slower": 7422
+    },
+    "candidate": {
+      "faster": 32370,
+      "equal": 5,
+      "slower": 13
+    }
+  },
+  "all_Qfplib_raw_outputs_costs_and_flags_retained": true,
+  "DIRTY_SIO_preserved_no_writes": true,
+  "old_seed_call_SP8aligned_new_inline_live_SP20_checked": true,
+  "observed_stacks": {
+    "parent": 176,
+    "control": 176,
+    "candidate": 176
+  },
+  "candidate_ELF_sha256": "c1287a067ecfbe363d34b8e4afd1b8526b6214250bf1e7cdf3e6b833d502e8aa",
+  "records_sha256": "5d9b12d0f044ba082815b95dfe187e0517fa011cdfa4ddf4b83f74d611ba3999",
+  "elapsed_seconds": 74.31031512503978,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

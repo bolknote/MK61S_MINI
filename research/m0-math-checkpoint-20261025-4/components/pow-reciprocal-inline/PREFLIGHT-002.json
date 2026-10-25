@@ -1,0 +1,11 @@
+{
+  "status": "FAILED_DRIVER_ABSOLUTE_STACK_ASSERTION_ONLY",
+  "reason": "Inline stack depth is20B relative to its own entry, not the outer Machine SP during nested pow",
+  "full_completed_candidate_calls": 45,
+  "full_completed_parent_calls": 1,
+  "full_partial_abort": 1,
+  "fresh_completed_ARM_calls": 272,
+  "fresh_partial_abort": 1,
+  "fresh_MPFR_evaluations": 23,
+  "all_excluded_from_qualified_counts": true
+}

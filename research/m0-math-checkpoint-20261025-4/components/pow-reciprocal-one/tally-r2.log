@@ -1,0 +1,68 @@
+{
+  "status": "PASS_ALL_PUBLIC_SCALAR_ACCOUNTING_AND_FRESH_OVERLAPS",
+  "unique_pairs": 120980,
+  "states": 241960,
+  "reference_state_variants": 279522,
+  "parent_loss_pairs": 11377,
+  "candidate_loss_pairs": 11372,
+  "fixed_pairs": 5,
+  "strict_fixed_pairs": 5,
+  "equal_fixed_pairs": 0,
+  "new_raw_losses": 0,
+  "candidate_wrong": 0,
+  "correct_Qfplib_comparison": {
+    "slower": 21030,
+    "faster": 178682,
+    "equal": 2704
+  },
+  "wrong_public_Qfplib_variants_retained": 77106,
+  "accelerated_states_by_SIO": {
+    "READY": 389,
+    "DIRTY": 389
+  },
+  "public_instruction_reduction_range": [
+    11,
+    34
+  ],
+  "instruction_delta_histogram": {
+    "-34": 377,
+    "-26": 377,
+    "-11": 24,
+    "0": 241182
+  },
+  "all10254_fresh_public_controls_match_full_records": true,
+  "original153": {
+    "parent": {
+      "slower": 34,
+      "strict": 119
+    },
+    "candidate": {
+      "slower": 34,
+      "strict": 119
+    }
+  },
+  "total_qualified_fresh_ARM_calls": 406406,
+  "fresh_full_public_calls": 242738,
+  "fresh_public_MPFR_control_reference_calls": 61524,
+  "fresh_scalar_calls": 102144,
+  "actual_directed_MPFR_inputs": 17785,
+  "sNaN_policy_shortcuts": 110,
+  "direct_correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 12622,
+      "slower": 12560
+    },
+    "candidate": {
+      "faster": 24966,
+      "slower": 216
+    }
+  },
+  "wrong_direct_Qfplib_variants_retained": 354,
+  "direct_remaining_loss_states": 216,
+  "v1_superseded102144_ARM12734_MPFR34sNaN_excluded": true,
+  "failed_trace308_completed_ARM2partial23_oracles_excluded": true,
+  "parent_qualification_and_seed_units_not_fresh": true,
+  "numerator_one_private_contract_not_general_ddiv": true,
+  "no_nominal_reference_domain_filter": true,
+  "goal_complete": false
+}

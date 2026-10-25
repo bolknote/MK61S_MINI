@@ -1,0 +1,19 @@
+reciprocal1-full 1 /241960 0.0
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-20261025/qualify.py", line 18, in <module>
+    candidate.uc.mem_write(0xd0000060,state);got,_,cost=candidate.call('_ZN12compact_math3powEdd',x,y,count=True);state_after(candidate,state)
+                                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/support/native_eabi_m0_arm_self_test.py", line 181, in call
+    try:uc.emu_start(self.elf.symbols[name]|1,STOP,count=self.instruction_budget)
+        ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/lib/python3.13/site-packages/unicorn/unicorn_py3/unicorn.py", line 769, in emu_start
+    raise self._hook_exception
+  File "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/lib/python3.13/site-packages/unicorn/unicorn_py3/unicorn.py", line 363, in wrapper
+    return func(uc, *args, **kwargs)
+  File "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/lib/python3.13/site-packages/unicorn/unicorn_py3/unicorn.py", line 1063, in __hook_code_cb
+    callback(uc, address, size, user_data)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-20261025/trace.py", line 22, in seed
+    assert uc.reg_read(UC_ARM_REG_SP)%8==0 if label!='candidate'else uc.reg_read(UC_ARM_REG_SP)==SP-20
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

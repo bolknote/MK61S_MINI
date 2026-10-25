@@ -1,0 +1,85 @@
+{
+  "status": "PASS_FULL_PUBLIC_SCALAR_COUNTS_IMMEDIATE_PARENT_COSTS_AND_ADDITIVE_CORRIGENDUM",
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "pairs120980_states241960_refs279522": true,
+  "wrong_public77106_retained": true,
+  "loss_pairs": [
+    11377,
+    11372
+  ],
+  "new_strict5_newloss0_wrong0_increase0": true,
+  "changed_READY389_DIRTY389": true,
+  "public_saved_instructions": [
+    11,
+    34
+  ],
+  "all_costs_equal_guard11_12_5_plus15product_plus8seed": true,
+  "callcount778_firstproducts754_software377": true,
+  "all10254_fresh_overlap_exact": true,
+  "current_parent_field": "parent_reciprocal_instructions overwritten with immediate LUT candidate cost; older history not compared",
+  "original153": {
+    "parent": {
+      "slower": 34,
+      "strict": 119
+    },
+    "candidate": {
+      "slower": 34,
+      "strict": 119
+    }
+  },
+  "correct_Qfp_public": {
+    "slower": 21030,
+    "faster": 178682,
+    "equal": 2704
+  },
+  "scalar25536_rows_all_output_cost_flags_recounted": true,
+  "direct_correct_comparisons": {
+    "parent": {
+      "faster": 12622,
+      "slower": 12560
+    },
+    "candidate": {
+      "faster": 24966,
+      "slower": 216
+    }
+  },
+  "wrong_direct354_retained": true,
+  "remaining_scalar216states18denoms": true,
+  "remaining_subnormal198_normal18states9denoms": true,
+  "correct_normal_lag_ranges": {
+    "READY": [
+      2,
+      5
+    ],
+    "DIRTY": [
+      15,
+      21
+    ]
+  },
+  "overall_normal_lag": [
+    2,
+    21
+  ],
+  "corrigendum": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-report-corrigendum-20261025.json",
+    "bytes": 1268,
+    "sha256": "cf6766bfefe1b7ecd5051476e697c969fba1318ef933c0a9eafba4e57680194a"
+  },
+  "old_HANDOFF_range2to5_was_READY_only_not_all_normal": true,
+  "no_universal_reciprocal_speed_claim": true,
+  "no_nominal_filter_strict_quietNaN": true,
+  "author406406_partition": [
+    241960,
+    778,
+    61524,
+    102144
+  ],
+  "author17785MPFR_plus110sNaN": true,
+  "superseded_v1_102144ARM12734MPFR34shortcuts_excluded": true,
+  "failed_trace308complete2partial23oracles_excluded": true,
+  "static_import0_excluded": true,
+  "parent_seed_units_not_fresh": true,
+  "reviewed507_stays422_author437_not_promoted": true,
+  "device_IO": 0
+}

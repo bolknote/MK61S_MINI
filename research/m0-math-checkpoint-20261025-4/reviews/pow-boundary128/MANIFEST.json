@@ -1,0 +1,207 @@
+{
+  "status": "IMMUTABLE_COMPLETED_INDEPENDENT_COMPONENT_EVIDENCE",
+  "files": {
+    "ARM-PREFLIGHT-001.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/ARM-PREFLIGHT-001.json",
+      "bytes": 464,
+      "sha256": "5ace3d03bd55bb8110f3b0698688396ba2b4201a28ec2634ecd3c49dc61ce924"
+    },
+    "HOST-PREFLIGHT-001.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/HOST-PREFLIGHT-001.json",
+      "bytes": 397,
+      "sha256": "6ab09977a01d69a2e349474ca96ec4044df55503bb511dbde6368ced3b291f90"
+    },
+    "HOST-PREFLIGHT-002.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/HOST-PREFLIGHT-002.json",
+      "bytes": 311,
+      "sha256": "b091679df6e853ec2b32fd3cc8567f78d36e3b2fc32831a536117ff531ae31b5"
+    },
+    "HOST-PREFLIGHT-003.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/HOST-PREFLIGHT-003.json",
+      "bytes": 363,
+      "sha256": "af9f0328bb680835641b2cac54cfa357df8f51953f21fdbc38ab46662c0f00d7"
+    },
+    "INTEGRATION-REQUIREMENTS.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+      "bytes": 2467,
+      "sha256": "1e6b8d244546f4259114256b51fc9e9146e95ba6bfe7aebfc689f9585c59cdf4"
+    },
+    "NOTES.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/NOTES.md",
+      "bytes": 5487,
+      "sha256": "5280de46038c92e8354e9d62809b8a8adef381c5ea4a45f68ecb2ccfad0e5fa3"
+    },
+    "PREFLIGHT-RECONCILIATION.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/PREFLIGHT-RECONCILIATION.json",
+      "bytes": 1199,
+      "sha256": "8b4092ce6484fe53f4e7cbdb933b11f6779664d788607b08796505c7ae0f6643"
+    },
+    "accounting.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/accounting.json",
+      "bytes": 5256,
+      "sha256": "8a564dac130f7b3479788c18dcd3c5d9d3af5a1949faf96dd3bd00a4cf72dfaf"
+    },
+    "accounting.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/accounting.py",
+      "bytes": 8925,
+      "sha256": "f4ee7b4d6bbad7aa50be11a32a0ed6de2ac5d617c682d4beb96acd2e7e866d56"
+    },
+    "arm-preflight-001.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/arm-preflight-001.py",
+      "bytes": 12335,
+      "sha256": "6be7819329ec6664f2603e776872207c442f098db481f6f266768172603c0187"
+    },
+    "arm.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/arm.py",
+      "bytes": 12883,
+      "sha256": "6eba46290a069e67db2608771a96312a8b7704fa50c878cb1086622df94e9064"
+    },
+    "bare-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/bare-arm.json",
+      "bytes": 86393,
+      "sha256": "945a1cd8750fcdf8079c5ef1218a17101fdb54af273e88678a03a7afc7988873"
+    },
+    "binding-preflight-001.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/binding-preflight-001.py",
+      "bytes": 9049,
+      "sha256": "1c1200d089fe34c1fe153551b095a5f554a458534d56799bb144ebc0d55fcfed"
+    },
+    "binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/binding.json",
+      "bytes": 425173,
+      "sha256": "7850e82ce95609201f224936d88ce1431a11a106e898c29efc8b688604f6f294"
+    },
+    "binding.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/binding.py",
+      "bytes": 8968,
+      "sha256": "fef5f625a993f44493344db63acaf3c2a23d0c04a2149ccbf806a50c78c624f1"
+    },
+    "candidate.elf.actual.dis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/candidate.elf.actual.dis",
+      "bytes": 9925,
+      "sha256": "5289107856b063503f2df46fea739250b9868ae2fbdb584da49fd15bbdad9dac"
+    },
+    "finalize.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/finalize.py",
+      "bytes": 10206,
+      "sha256": "67d57b25a21b60f4c61d9ca375b3b496701b4bf66fa5f171008d3c499eb81145"
+    },
+    "proof-preflight-001.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/proof-preflight-001.py",
+      "bytes": 7529,
+      "sha256": "590f26999cc6c84b9ccf57421a16cb8abd2188736557ec5e35d01b6852a4b654"
+    },
+    "proof-preflight-002.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/proof-preflight-002.py",
+      "bytes": 7555,
+      "sha256": "b533a78d8deb4f51fc6d46919436c009f11ec74a4827ec8d1bfae2a18efeed9c"
+    },
+    "proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/proof.json",
+      "bytes": 5705,
+      "sha256": "9209955434414ed6154c51494486358e121c37a74748ad0d47fe98631b91939c"
+    },
+    "proof.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/proof.py",
+      "bytes": 7545,
+      "sha256": "564c629f327e3d3672f10dd004491f1e2a7787f4b7001e7051d23e5741381426"
+    },
+    "public-arm-mpfr.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/public-arm-mpfr.json",
+      "bytes": 69613,
+      "sha256": "b67bee40e18b21e0d3c595cf390a25a47dd078f1a07e655ecedb45b878656eb3"
+    },
+    "rebuild/RP-candidate.o": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/RP-candidate.o",
+      "bytes": 25276,
+      "sha256": "986a189c94f55730876864429b3d721c1c7be259d22601cde0a3f99267a21984"
+    },
+    "rebuild/RP-candidate.o.stderr": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/RP-candidate.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/RP-candidate.o.stdout": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/RP-candidate.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/boundary.o": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/boundary.o",
+      "bytes": 1288,
+      "sha256": "067d50aed453c27d92efbdaf84de62e62b8012a1ef96e341fec8c502f70b0767"
+    },
+    "rebuild/boundary.o.stderr": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/boundary.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/boundary.o.stdout": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/boundary.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/candidate.elf": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/candidate.elf",
+      "bytes": 16236,
+      "sha256": "63a80f08c546e7bd07db6056eb1f64aa0de573c7296e5572b090e9d9f6edbfa9"
+    },
+    "rebuild/candidate.elf.stderr": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/candidate.elf.stderr",
+      "bytes": 496,
+      "sha256": "7d53aa92a2e3237c29ff443926bb9df82df1abf89278a30952df023f8e3fd929"
+    },
+    "rebuild/candidate.elf.stdout": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/candidate.elf.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/unit-helpers.elf": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/unit-helpers.elf",
+      "bytes": 2740,
+      "sha256": "91ad9c3fd6861a5b676fa92f0a67cbb0cfbdab8d0594ea65d0d34b695854dab6"
+    },
+    "rebuild/unit-helpers.elf.stderr": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/unit-helpers.elf.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/unit-helpers.elf.stdout": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/unit-helpers.elf.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/unit-helpers.o": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/unit-helpers.o",
+      "bytes": 2260,
+      "sha256": "3324945fbb35cda04260031f5bdd7a013c1e371681847fdb22879f9970d9590f"
+    },
+    "rebuild/unit-helpers.o.stderr": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/unit-helpers.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/unit-helpers.o.stdout": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/rebuild/unit-helpers.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "selected-public-jobs.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/selected-public-jobs.json",
+      "bytes": 3369,
+      "sha256": "e150f62d6fdfd451d4af22722105c2f886949d788c88803f26ccaef12ba569d2"
+    },
+    "unit-helpers.elf.actual.dis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/unit-helpers.elf.actual.dis",
+      "bytes": 17986,
+      "sha256": "c700ed7a55bece4bb2fbe82fb8c176e3b73f75c71e7be42164b02c6d9ffb31f6"
+    }
+  },
+  "file_count": 39,
+  "no_running_logs_in_manifest": true,
+  "all_generated_outputs_own_directory": true,
+  "device_IO": 0,
+  "Git": 0,
+  "network": 0,
+  "canonical": 0
+}

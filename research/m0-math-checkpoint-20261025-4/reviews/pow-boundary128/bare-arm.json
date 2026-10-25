@@ -1,0 +1,3376 @@
+{
+  "status": "PASS_BOUNDED_BARE_BOUNDARY_ABI_AND_EXACT_DYADIC_ENDPOINTS",
+  "cases": 160,
+  "actual_ARM_calls": 320,
+  "all24bytes_and_returned_sides_identical": true,
+  "all_nonzero_sides_exact_integer_endpoint_proved": 58,
+  "decisions": {
+    "-1": 30,
+    "0": 102,
+    "1": 28
+  },
+  "denominator_set": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    64,
+    128
+  ],
+  "both_inverse_modes": true,
+  "normal_cell_extremes_and_invalid_guards": true,
+  "all16NZCV_noisy_R3_R12_PCS_SP_PC_boundedwrites_input_and_cell_preserved": true,
+  "actual_helpers490_372_square232_helper94": true,
+  "multiply_alignment_and_all_literal_pools_excluded_from_PC": true,
+  "no_firmware_ROM_or_arithmetic_models": true,
+  "observed_stack_bytes": {
+    "control": 212,
+    "candidate": 156
+  },
+  "valid_cost_delta_histogram": {
+    "-3": 7,
+    "-1": 1,
+    "-23": 6,
+    "-12": 1,
+    "-10": 1,
+    "-51": 4,
+    "-29": 2,
+    "-27": 2,
+    "-40": 1,
+    "-79": 6,
+    "-46": 1,
+    "-44": 2,
+    "-57": 1,
+    "-68": 1,
+    "-107": 4,
+    "-63": 2,
+    "-61": 1,
+    "-74": 1,
+    "-135": 4,
+    "-80": 1,
+    "-78": 5,
+    "-113": 3,
+    "-124": 1,
+    "-163": 4,
+    "-97": 1,
+    "-95": 1,
+    "-119": 1,
+    "-141": 1,
+    "-191": 12,
+    "-114": 3,
+    "-112": 4,
+    "-147": 3,
+    "-125": 3,
+    "-2": 4,
+    "-8": 2,
+    "-7": 2,
+    "-22": 4,
+    "-11": 2,
+    "-28": 3,
+    "-50": 4,
+    "-56": 1,
+    "-55": 1,
+    "-45": 2,
+    "-84": 1,
+    "-67": 1,
+    "-106": 4,
+    "-62": 2,
+    "-100": 1,
+    "-134": 3,
+    "-140": 1,
+    "-128": 1,
+    "-162": 3,
+    "-96": 2,
+    "-168": 1,
+    "-145": 2,
+    "-190": 3,
+    "-196": 1,
+    "-151": 1,
+    "-157": 1
+  },
+  "invalid_guard_cost_delta_histogram": {
+    "4": 14,
+    "7": 2
+  },
+  "invalid_guard_speed_not_qualified": true,
+  "prior_overbroad_speed_assertion_reconstruction": {
+    "index": 144,
+    "valid": false,
+    "cell": "0000000000000000",
+    "instructions": {
+      "control": 16,
+      "candidate": 20
+    },
+    "prior_failed_attempt_calls_reconstructed": 290
+  },
+  "rows": [
+    {
+      "index": 0,
+      "flags": 0,
+      "input": "ff03000000000080ffffffffffffffff02fcffff00000000",
+      "cell": "0010000000000000",
+      "denominator": 1,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 150,
+        "candidate": 147
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "ff03000000000080ffffffffffffffff02fcffff00000000",
+          "b": "0004000000000080000000000000000002fcffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "flags": 1,
+      "input": "ff0b000000000080ffffffffffffffff02fcffff01000000",
+      "cell": "0010000000000001",
+      "denominator": 1,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 148,
+        "candidate": 145
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "ff0b000000000080ffffffffffffffff02fcffff01000000",
+          "b": "000c000000000080000000000000000002fcffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "flags": 2,
+      "input": "00fcffffffffffff0000000000000000ffffffff10000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 1,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 114,
+        "candidate": 111
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00fcffffffffffff0000000000000000ffffffff10000000",
+          "b": "00fcffffffffffff0000000000000000ffffffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "flags": 3,
+      "input": "0004000000000080010000000000000000000000ff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 1,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 114,
+        "candidate": 111
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0004000000000080010000000000000000000000ff000000",
+          "b": "000400000000008000000000000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "flags": 4,
+      "input": "000c000000000080000001000000000000000000ffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 1,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 116,
+        "candidate": 113
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "000c000000000080000001000000000000000000ffff0000",
+          "b": "000c00000000008000000000000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "flags": 5,
+      "input": "fff3ffffffffffff000000c0ffffffffff03000000001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 1,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 150,
+        "candidate": 149
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "fff3ffffffffffff000000c0ffffffffff03000000001000",
+          "b": "00f4ffffffffffff0000000000000000ff03000000000000"
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "flags": 6,
+      "input": "00240f38d11dbef30000004000000000e8ffffff00000000",
+      "cell": "3E7E77C3BA2701E4",
+      "denominator": 1,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 116,
+        "candidate": 113
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00240f38d11dbef30000004000000000e8ffffff00000000",
+          "b": "00240f38d11dbef30000000000000000e8ffffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "flags": 7,
+      "input": "829820a229b24d80cbd9b76627f822a9ffffffff10000000",
+      "cell": "6B56C5130E583DB3",
+      "denominator": 1,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 67,
+        "candidate": 64
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "829820a229b24d80cbd9b76627f822a9ffffffff10000000",
+          "b": "009cedc1729828b60000000000000000b602000000000000"
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "flags": 8,
+      "input": "0008000000000080ffff1f000000000004f8ffff00000000",
+      "cell": "0010000000000000",
+      "denominator": 2,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 236,
+        "candidate": 213
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0008000000000080ffff1f000000000004f8ffff00000000",
+          "b": "0008000000000080000020000000000004f8ffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "flags": 9,
+      "input": "0018000000000080ffff1f010000000004f8ffff01000000",
+      "cell": "0010000000000001",
+      "denominator": 2,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 234,
+        "candidate": 211
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0018000000000080ffff1f010000000004f8ffff01000000",
+          "b": "0018000000000080000020010000000004f8ffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "flags": 10,
+      "input": "00f8ffffffffffff0000100000000000ffffffff10000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 2,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 218,
+        "candidate": 206
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00f8ffffffffffff0000100000000000ffffffff10000000",
+          "b": "00f8ffffffffffff0000100000000000ffffffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "flags": 11,
+      "input": "0008000000000080010020000000000000000000ff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 2,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 234,
+        "candidate": 211
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0008000000000080010020000000000000000000ff000000",
+          "b": "000800000000008000002000000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "flags": 12,
+      "input": "0018000000000080000021010000000000000000ffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 2,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 236,
+        "candidate": 213
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0018000000000080000021010000000000000000ffff0000",
+          "b": "001800000000008000002001000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "flags": 13,
+      "input": "ffe7ffffffffffff000090c0ffffffffff07000000001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 2,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 254,
+        "candidate": 244
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "ffe7ffffffffffff000090c0ffffffffff07000000001000",
+          "b": "00e8ffffffffffff0000900000000000ff07000000000000"
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "flags": 14,
+      "input": "44b79ffa6ea816f70000208841e20df71a06000000000000",
+      "cell": "70C63AE758901190",
+      "denominator": 2,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 236,
+        "candidate": 213
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "44b79ffa6ea816f70000208841e20df71a06000000000000",
+          "b": "44b79ffa6ea816f70000204841e20df71a06000000000000"
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "flags": 15,
+      "input": "31132215c9955ae67f6b50737fef11a80000000010000000",
+      "cell": "1322C253803417AF",
+      "denominator": 2,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 183,
+        "candidate": 160
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "31132215c9955ae67f6b50737fef11a80000000010000000",
+          "b": "be47556f58a0f3af000020a880be100b66faffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 16,
+      "flags": 0,
+      "input": "0010000000000080ffffbf000000000008f0ffff00000000",
+      "cell": "0010000000000000",
+      "denominator": 4,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 422,
+        "candidate": 371
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0010000000000080ffffbf000000000008f0ffff00000000",
+          "b": "00100000000000800000c0000000000008f0ffff20000000"
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "flags": 1,
+      "input": "0030000000000080ffffbf060000000008f0ffff01000000",
+      "cell": "0010000000000001",
+      "denominator": 4,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 422,
+        "candidate": 371
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0030000000000080ffffbf060000000008f0ffff01000000",
+          "b": "00300000000000800000c0060000000008f0ffff20000000"
+        }
+      ]
+    },
+    {
+      "index": 18,
+      "flags": 2,
+      "input": "00f0ffffffffffffffff5f0000000000ffffffff10000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 4,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 390,
+        "candidate": 361
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00f0ffffffffffffffff5f0000000000ffffffff10000000",
+          "b": "00f0fffffffffffffeff5f0000000000ffffffff10000000"
+        }
+      ]
+    },
+    {
+      "index": 19,
+      "flags": 3,
+      "input": "00100000000000800100c0000000000000000000ff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 4,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 422,
+        "candidate": 371
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00100000000000800100c0000000000000000000ff000000",
+          "b": "00100000000000800000c000000000000000000020000000"
+        }
+      ]
+    },
+    {
+      "index": 20,
+      "flags": 4,
+      "input": "00300000000000800000c1060000000000000000ffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 4,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 422,
+        "candidate": 371
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00300000000000800000c1060000000000000000ffff0000",
+          "b": "00300000000000800000c006000000000000000020000000"
+        }
+      ]
+    },
+    {
+      "index": 21,
+      "flags": 5,
+      "input": "ffcfffffffffffffffff5fc3ffffffffff0f000000001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 4,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 426,
+        "candidate": 399
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "ffcfffffffffffffffff5fc3ffffffffff0f000000001000",
+          "b": "00d0fffffffffffffeff5f0300000000ff0f000010000000"
+        }
+      ]
+    },
+    {
+      "index": 22,
+      "flags": 6,
+      "input": "6399749c3ab49089d8a68693ffe831821bfcffff00000000",
+      "cell": "305B65DC587A4843",
+      "denominator": 4,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 392,
+        "candidate": 363
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "6399749c3ab49089d8a68693ffe831821bfcffff00000000",
+          "b": "6399749c3ab49089d4a68653ffe831821bfcffff10000000"
+        }
+      ]
+    },
+    {
+      "index": 23,
+      "flags": 7,
+      "input": "7142c1e9c73cef9157890efef427654f0000000010000000",
+      "cell": "48092C47D0C6FD4B",
+      "denominator": 4,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 359,
+        "candidate": 319
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "7142c1e9c73cef9157890efef427654f0000000010000000",
+          "b": "3f7df8607e8c11c4e88619a7f2ab99840602000020000000"
+        }
+      ]
+    },
+    {
+      "index": 24,
+      "flags": 8,
+      "input": "0020000000000080ffff7f030000000010e0ffff00000000",
+      "cell": "0010000000000000",
+      "denominator": 8,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 610,
+        "candidate": 531
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0020000000000080ffff7f030000000010e0ffff00000000",
+          "b": "0020000000000080000080030000000010e0ffffa0000000"
+        }
+      ]
+    },
+    {
+      "index": 25,
+      "flags": 9,
+      "input": "0060000000000080ffff7f1f0000000010e0ffff01000000",
+      "cell": "0010000000000001",
+      "denominator": 8,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 610,
+        "candidate": 531
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0060000000000080ffff7f1f0000000010e0ffff01000000",
+          "b": "00600000000000800000801f0000000010e0ffffa0000000"
+        }
+      ]
+    },
+    {
+      "index": 26,
+      "flags": 10,
+      "input": "00e0ffffffffffffffffbf0100000000ffffffff10000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 8,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 562,
+        "candidate": 516
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00e0ffffffffffffffffbf0100000000ffffffff10000000",
+          "b": "00e0fffffffffffff8ffbf0100000000ffffffff30000000"
+        }
+      ]
+    },
+    {
+      "index": 27,
+      "flags": 11,
+      "input": "0020000000000080010080030000000000000000ff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 8,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 610,
+        "candidate": 531
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0020000000000080010080030000000000000000ff000000",
+          "b": "0020000000000080000080030000000000000000a0000000"
+        }
+      ]
+    },
+    {
+      "index": 28,
+      "flags": 12,
+      "input": "00600000000000800000811f0000000000000000ffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 8,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 610,
+        "candidate": 531
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00600000000000800000811f0000000000000000ffff0000",
+          "b": "00600000000000800000801f0000000000000000a0000000"
+        }
+      ]
+    },
+    {
+      "index": 29,
+      "flags": 13,
+      "input": "ff9fffffffffffffffffbfcfffffffffff1f000000001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 8,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 598,
+        "candidate": 554
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "ff9fffffffffffffffffbfcfffffffffff1f000000001000",
+          "b": "00a0fffffffffffff8ffbf0f00000000ff1f000030000000"
+        }
+      ]
+    },
+    {
+      "index": 30,
+      "flags": 14,
+      "input": "b7ef175f13e633ee2c0dde02e47cac258ee4ffff00000000",
+      "cell": "090D14BD7669DC79",
+      "denominator": 8,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 630,
+        "candidate": 573
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "b7ef175f13e633ee2c0dde02e47cac258ee4ffff00000000",
+          "b": "b7ef175f13e633ee180ddec2e37cac258ee4ffff60000000"
+        }
+      ]
+    },
+    {
+      "index": 31,
+      "flags": 15,
+      "input": "f5712a0918d647b872153cd3153794b9feffffff10000000",
+      "cell": "0192365407CEFF3A",
+      "denominator": 8,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 543,
+        "candidate": 475
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "f5712a0918d647b872153cd3153794b9feffffff10000000",
+          "b": "1dea4c4272585ab4a20b33c7ffd7dd0cd1e0ffff50000000"
+        }
+      ]
+    },
+    {
+      "index": 32,
+      "flags": 0,
+      "input": "0040000000000080ffffff0e0000000020c0ffff00000000",
+      "cell": "0010000000000000",
+      "denominator": 16,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 798,
+        "candidate": 691
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0040000000000080ffffff0e0000000020c0ffff00000000",
+          "b": "00400000000000800000000f0000000020c0ffffa0020000"
+        }
+      ]
+    },
+    {
+      "index": 33,
+      "flags": 1,
+      "input": "00c0000000000080ffffff860000000020c0ffff01000000",
+      "cell": "0010000000000001",
+      "denominator": 16,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 798,
+        "candidate": 691
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00c0000000000080ffffff860000000020c0ffff01000000",
+          "b": "00c0000000000080000000870000000020c0ffffa0020000"
+        }
+      ]
+    },
+    {
+      "index": 34,
+      "flags": 2,
+      "input": "00c0ffffffffffffffff7f0700000000ffffffff10000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 16,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 734,
+        "candidate": 671
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00c0ffffffffffffffff7f0700000000ffffffff10000000",
+          "b": "00c0ffffffffffffecff7f0700000000ffffffff70000000"
+        }
+      ]
+    },
+    {
+      "index": 35,
+      "flags": 3,
+      "input": "00400000000000800100000f0000000000000000ff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 16,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 798,
+        "candidate": 691
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00400000000000800100000f0000000000000000ff000000",
+          "b": "00400000000000800000000f0000000000000000a0020000"
+        }
+      ]
+    },
+    {
+      "index": 36,
+      "flags": 4,
+      "input": "00c0000000000080000001870000000000000000ffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 16,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 798,
+        "candidate": 691
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00c0000000000080000001870000000000000000ffff0000",
+          "b": "00c0000000000080000000870000000000000000a0020000"
+        }
+      ]
+    },
+    {
+      "index": 37,
+      "flags": 5,
+      "input": "0040ffffffffffffffff7f0300000000ff3f000000001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 16,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 736,
+        "candidate": 675
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0040ffffffffffffffff7f0300000000ff3f000000001000",
+          "b": "0040ffffffffffffecff7f4300000000ff3f000070000000"
+        }
+      ]
+    },
+    {
+      "index": 38,
+      "flags": 6,
+      "input": "6c9add31c258468b4d61f41ec8b3ba0a6b1e000000000000",
+      "cell": "5E59E77707AEB094",
+      "denominator": 16,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 802,
+        "candidate": 728
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "6c9add31c258468b4d61f41ec8b3ba0a6b1e000000000000",
+          "b": "6c9add31c258468b3261f4dec7b3ba0a6b1e0000b0000000"
+        }
+      ]
+    },
+    {
+      "index": 39,
+      "flags": 7,
+      "input": "94ab1aca081daace228624ff5016bb8600f8ffff10000000",
+      "cell": "24BF53EA8A931530",
+      "denominator": 16,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 683,
+        "candidate": 620
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "94ab1aca081daace228624ff5016bb8600f8ffff10000000",
+          "b": "21f8bdf4926f45b6a1938925783fb0bbcfe4ffff70000000"
+        }
+      ]
+    },
+    {
+      "index": 40,
+      "flags": 8,
+      "input": "0080000000000080ffffff3d000000004080ffff00000000",
+      "cell": "0010000000000000",
+      "denominator": 32,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 986,
+        "candidate": 851
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0080000000000080ffffff3d000000004080ffff00000000",
+          "b": "00800000000000800000003e000000004080ffffa00a0000"
+        }
+      ]
+    },
+    {
+      "index": 41,
+      "flags": 9,
+      "input": "0080010000000080ffffff2d020000004080ffff01000000",
+      "cell": "0010000000000001",
+      "denominator": 32,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 986,
+        "candidate": 851
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0080010000000080ffffff2d020000004080ffff01000000",
+          "b": "00800100000000800000002e020000004080ffffa00a0000"
+        }
+      ]
+    },
+    {
+      "index": 42,
+      "flags": 10,
+      "input": "0080ffffffffffffffffff1e00000000ffffffff10000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 32,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 906,
+        "candidate": 826
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0080ffffffffffffffffff1e00000000ffffffff10000000",
+          "b": "0080ffffffffffffd4ffff1e00000000fffffffff0000000"
+        }
+      ]
+    },
+    {
+      "index": 43,
+      "flags": 11,
+      "input": "00800000000000800100003e0000000000000000ff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 32,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 986,
+        "candidate": 851
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00800000000000800100003e0000000000000000ff000000",
+          "b": "00800000000000800000003e0000000000000000a00a0000"
+        }
+      ]
+    },
+    {
+      "index": 44,
+      "flags": 12,
+      "input": "00800100000000800000012e0200000000000000ffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 32,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 986,
+        "candidate": 851
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "00800100000000800000012e0200000000000000ffff0000",
+          "b": "00800100000000800000002e0200000000000000a00a0000"
+        }
+      ]
+    },
+    {
+      "index": 45,
+      "flags": 13,
+      "input": "0080feffffffffffffffffd600000000ff7f000000001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 32,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 956,
+        "candidate": 878
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0080feffffffffffffffffd600000000ff7f000000001000",
+          "b": "0080feffffffffffd4ffff1601000000ff7f0000f0000000"
+        }
+      ]
+    },
+    {
+      "index": 46,
+      "flags": 14,
+      "input": "dc2dd634636c58ac26eb8fcc5cb83ac18362000000000000",
+      "cell": "71313BD4457C8214",
+      "denominator": 32,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 956,
+        "candidate": 843
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "dc2dd634636c58ac26eb8fcc5cb83ac18362000000000000",
+          "b": "dc2dd634636c58aca9ea8f8c5cb83ac183620000b0020000"
+        }
+      ]
+    },
+    {
+      "index": 47,
+      "flags": 15,
+      "input": "54e7da778a97e0f763151ecf7f73607ffeffffff10000000",
+      "cell": "67070B5A408B7D1D",
+      "denominator": 32,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 923,
+        "candidate": 799
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "54e7da778a97e0f763151ecf7f73607ffeffffff10000000",
+          "b": "8f40723b53c396e586743b18ba96d86f304e0000a00a0000"
+        }
+      ]
+    },
+    {
+      "index": 48,
+      "flags": 0,
+      "input": "0000010000000080fffffffb000000008000ffff00000000",
+      "cell": "0010000000000000",
+      "denominator": 64,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1174,
+        "candidate": 1011
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000010000000080fffffffb000000008000ffff00000000",
+          "b": "0000010000000080000000fc000000008000ffffa02a0000"
+        }
+      ]
+    },
+    {
+      "index": 49,
+      "flags": 1,
+      "input": "0000030000000080ffffffdb080000008000ffff01000000",
+      "cell": "0010000000000001",
+      "denominator": 64,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1174,
+        "candidate": 1011
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000030000000080ffffffdb080000008000ffff01000000",
+          "b": "0000030000000080000000dc080000008000ffffa02a0000"
+        }
+      ]
+    },
+    {
+      "index": 50,
+      "flags": 2,
+      "input": "0000ffffffffffffffffff7d00000000ffffffff10000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 64,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1078,
+        "candidate": 981
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000ffffffffffffffffff7d00000000ffffffff10000000",
+          "b": "0000ffffffffffffa4ffff7d00000000fffffffff0010000"
+        }
+      ]
+    },
+    {
+      "index": 51,
+      "flags": 3,
+      "input": "0000010000000080010000fc0000000000000000ff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 64,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1174,
+        "candidate": 1011
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000010000000080010000fc0000000000000000ff000000",
+          "b": "0000010000000080000000fc0000000000000000a02a0000"
+        }
+      ]
+    },
+    {
+      "index": 52,
+      "flags": 4,
+      "input": "0000030000000080000001dc0800000000000000ffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 64,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1174,
+        "candidate": 1011
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000030000000080000001dc0800000000000000ffff0000",
+          "b": "0000030000000080000000dc0800000000000000a02a0000"
+        }
+      ]
+    },
+    {
+      "index": 53,
+      "flags": 5,
+      "input": "0000fdffffffffffffffff2d04000000ffff000000001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 64,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1080,
+        "candidate": 985
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000fdffffffffffffffff2d04000000ffff000000001000",
+          "b": "0000fdffffffffffa2ffff6d04000000ffff0000f0010000"
+        }
+      ]
+    },
+    {
+      "index": 54,
+      "flags": 6,
+      "input": "90187a5b905e7fb17205c78fcead24c4b35bffff00000000",
+      "cell": "16DBF09029CE56CD",
+      "denominator": 64,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 1112,
+        "candidate": 993
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "90187a5b905e7fb17205c78fcead24c4b35bffff00000000",
+          "b": "90187a5b905e7fb1a704c74fcead24c4b35bffffb0060000"
+        }
+      ]
+    },
+    {
+      "index": 55,
+      "flags": 7,
+      "input": "4b096310872e15afb6930a3b87131ee9feffffff10000000",
+      "cell": "62774F530C4177E4",
+      "denominator": 64,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1095,
+        "candidate": 954
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "4b096310872e15afb6930a3b87131ee9feffffff10000000",
+          "b": "0e15cec1306f50d6f859f74bac83b38f228a000060150000"
+        }
+      ]
+    },
+    {
+      "index": 56,
+      "flags": 8,
+      "input": "0000020000000080fffffff7030000000001feff00000000",
+      "cell": "0010000000000000",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000020000000080fffffff7030000000001feff00000000",
+          "b": "0000020000000080000000f8030000000001feffa0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 57,
+      "flags": 9,
+      "input": "0000060000000080ffffffb7230000000001feff01000000",
+      "cell": "0010000000000001",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000060000000080ffffffb7230000000001feff01000000",
+          "b": "0000060000000080000000b8230000000001feffa0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 58,
+      "flags": 10,
+      "input": "0000fefffffffffffffffffb01000000ffffffff10000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1250,
+        "candidate": 1136
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000fefffffffffffffffffb01000000ffffffff10000000",
+          "b": "0000feffffffffff44fffffb01000000fffffffff0030000"
+        }
+      ]
+    },
+    {
+      "index": 59,
+      "flags": 11,
+      "input": "0000020000000080010000f80300000000000000ff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000020000000080010000f80300000000000000ff000000",
+          "b": "0000020000000080000000f80300000000000000a0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 60,
+      "flags": 12,
+      "input": "0000060000000080000001b82300000000000000ffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000060000000080000001b82300000000000000ffff0000",
+          "b": "0000060000000080000000b82300000000000000a0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 61,
+      "flags": 13,
+      "input": "0000faffffffffffffffff9b11000000ffff010000001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1252,
+        "candidate": 1140
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000faffffffffffffffff9b11000000ffff010000001000",
+          "b": "0000faffffffffff3effffdb11000000ffff0100f0030000"
+        }
+      ]
+    },
+    {
+      "index": 62,
+      "flags": 14,
+      "input": "f9e9b53920545cf660721e1496836bb8f29bffff00000000",
+      "cell": "336DD0D7F3634797",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 1350,
+        "candidate": 1203
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "f9e9b53920545cf660721e1496836bb8f29bffff00000000",
+          "b": "f9e9b53920545cf664701ed495836bb8f29bffff601d0000"
+        }
+      ]
+    },
+    {
+      "index": 63,
+      "flags": 15,
+      "input": "5dd7666676c3a0ea8a1f7790017e26bc0000000010000000",
+      "cell": "78BD444DA88CF892",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1219,
+        "candidate": 1094
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "5dd7666676c3a0ea8a1f7790017e26bc0000000010000000",
+          "b": "8ba2a43cb44ca1b6bc19cc93e5e0725e6fc60100f0060000"
+        }
+      ]
+    },
+    {
+      "index": 64,
+      "flags": 0,
+      "input": "00f8fffffffffffffeff3f0000000000fd03000000000000",
+      "cell": "0010000000000000",
+      "denominator": 1,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 341,
+        "candidate": 339
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0004000000000080000000000000000002fcffff00000000",
+          "b": "00f8fffffffffffffeff3f0000000000fd03000000000000"
+        }
+      ]
+    },
+    {
+      "index": 65,
+      "flags": 1,
+      "input": "00e8fffffffffffffeff3f0200000000fd03000001000000",
+      "cell": "0010000000000001",
+      "denominator": 1,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 341,
+        "candidate": 339
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "000c000000000080000000000000000002fcffff00000000",
+          "b": "00e8fffffffffffffeff3f0200000000fd03000001000000"
+        }
+      ]
+    },
+    {
+      "index": 66,
+      "flags": 2,
+      "input": "000200000000008000000800000000000000000010000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 1,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 341,
+        "candidate": 339
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00fcffffffffffff0000000000000000ffffffff00000000",
+          "b": "000200000000008000000800000000000000000010000000"
+        }
+      ]
+    },
+    {
+      "index": 67,
+      "flags": 3,
+      "input": "00f8ffffffffffff0000400000000000ffffffffff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 1,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 335,
+        "candidate": 327
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "000400000000008000000000000000000000000000000000",
+          "b": "00f8ffffffffffff0000400000000000ffffffffff000000"
+        }
+      ]
+    },
+    {
+      "index": 68,
+      "flags": 4,
+      "input": "00e8ffffffffffffffff400200000000ffffffffffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 1,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 335,
+        "candidate": 327
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "000c00000000008000000000000000000000000000000000",
+          "b": "00e8ffffffffffffffff400200000000ffffffffffff0000"
+        }
+      ]
+    },
+    {
+      "index": 69,
+      "flags": 5,
+      "input": "ff05000000000080000048c0ffffffff00fcffff00001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 1,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 341,
+        "candidate": 339
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00f4ffffffffffff0000000000000000ff03000000000000",
+          "b": "ff05000000000080000048c0ffffffff00fcffff00001000"
+        }
+      ]
+    },
+    {
+      "index": 70,
+      "flags": 6,
+      "input": "c7a1bd3572d91fd0fa8f6a0f5d70eb4c9ffeffff00000000",
+      "cell": "55F3AE379D4DA86C",
+      "denominator": 1,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 334,
+        "candidate": 327
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0064436deabc719d00000000000000006001000000000000",
+          "b": "c7a1bd3572d91fd0fa8f6a0f5d70eb4c9ffeffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 71,
+      "flags": 7,
+      "input": "7e115802f09ea4802217b081602ae78affffffff10000000",
+      "cell": "19AF332E6992E9CE",
+      "denominator": 1,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 324,
+        "candidate": 317
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00744e974c7399f900000000000000009bfdffff00000000",
+          "b": "7e115802f09ea4802217b081602ae78affffffff10000000"
+        }
+      ]
+    },
+    {
+      "index": 72,
+      "flags": 8,
+      "input": "00f0fffffffffffffeffbf0000000000fb07000000000000",
+      "cell": "0010000000000000",
+      "denominator": 2,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 513,
+        "candidate": 491
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0008000000000080000020000000000004f8ffff00000000",
+          "b": "00f0fffffffffffffeffbf0000000000fb07000000000000"
+        }
+      ]
+    },
+    {
+      "index": 73,
+      "flags": 9,
+      "input": "00d0fffffffffffffeffbf0600000000fb07000001000000",
+      "cell": "0010000000000001",
+      "denominator": 2,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 513,
+        "candidate": 491
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0018000000000080000020010000000004f8ffff00000000",
+          "b": "00d0fffffffffffffeffbf0600000000fb07000001000000"
+        }
+      ]
+    },
+    {
+      "index": 74,
+      "flags": 10,
+      "input": "000400000000008000001800000000000000000010000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 2,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 497,
+        "candidate": 486
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00f8ffffffffffff0000100000000000ffffffff00000000",
+          "b": "000400000000008000001800000000000000000010000000"
+        }
+      ]
+    },
+    {
+      "index": 75,
+      "flags": 11,
+      "input": "00f0ffffffffffff0000c00000000000ffffffffff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 2,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 513,
+        "candidate": 491
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "000800000000008000002000000000000000000000000000",
+          "b": "00f0ffffffffffff0000c00000000000ffffffffff000000"
+        }
+      ]
+    },
+    {
+      "index": 76,
+      "flags": 12,
+      "input": "00d0ffffffffffffffffc00600000000ffffffffffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 2,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 507,
+        "candidate": 479
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "001800000000008000002001000000000000000000000000",
+          "b": "00d0ffffffffffffffffc00600000000ffffffffffff0000"
+        }
+      ]
+    },
+    {
+      "index": 77,
+      "flags": 13,
+      "input": "ff0b0000000000800000d8c0ffffffff00f8ffff00001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 2,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 497,
+        "candidate": 486
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00e8ffffffffffff0000900000000000ff07000000000000",
+          "b": "ff0b0000000000800000d8c0ffffffff00f8ffff00001000"
+        }
+      ]
+    },
+    {
+      "index": 78,
+      "flags": 14,
+      "input": "e732d628344b98b26ce70d63762e5650d1fdffff00000000",
+      "cell": "516327F163B2D48A",
+      "denominator": 2,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 506,
+        "candidate": 479
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "966c73441e087ab700002077d707308a2e02000000000000",
+          "b": "e732d628344b98b26ce70d63762e5650d1fdffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 79,
+      "flags": 15,
+      "input": "a71dc401fa6eaaa5969e8955abecc82d0008000010000000",
+      "cell": "60A2E97D1DB68CAE",
+      "denominator": 2,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 491,
+        "candidate": 469
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "f22b0e749546d5b200002079a9366fba1604000000000000",
+          "b": "a71dc401fa6eaaa5969e8955abecc82d0008000010000000"
+        }
+      ]
+    },
+    {
+      "index": 80,
+      "flags": 0,
+      "input": "00e0fffffffffffffeff7f0200000000f70f000000000000",
+      "cell": "0010000000000000",
+      "denominator": 4,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 701,
+        "candidate": 651
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00100000000000800000c0000000000008f0ffff20000000",
+          "b": "00e0fffffffffffffeff7f0200000000f70f000000000000"
+        }
+      ]
+    },
+    {
+      "index": 81,
+      "flags": 1,
+      "input": "00a0fffffffffffffeff7f1600000000f70f000001000000",
+      "cell": "0010000000000001",
+      "denominator": 4,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 701,
+        "candidate": 651
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00300000000000800000c0060000000008f0ffff20000000",
+          "b": "00a0fffffffffffffeff7f1600000000f70f000001000000"
+        }
+      ]
+    },
+    {
+      "index": 82,
+      "flags": 2,
+      "input": "000800000000008000005000000000000000000010000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 4,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 669,
+        "candidate": 641
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00f0fffffffffffffeff5f0000000000ffffffff10000000",
+          "b": "000800000000008000005000000000000000000010000000"
+        }
+      ]
+    },
+    {
+      "index": 83,
+      "flags": 3,
+      "input": "00e0ffffffffffff0000800200000000ffffffffff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 4,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 701,
+        "candidate": 651
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00100000000000800000c000000000000000000020000000",
+          "b": "00e0ffffffffffff0000800200000000ffffffffff000000"
+        }
+      ]
+    },
+    {
+      "index": 84,
+      "flags": 4,
+      "input": "00a0ffffffffffffffff801600000000ffffffffffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 4,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 695,
+        "candidate": 639
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00300000000000800000c006000000000000000020000000",
+          "b": "00a0ffffffffffffffff801600000000ffffffffffff0000"
+        }
+      ]
+    },
+    {
+      "index": 85,
+      "flags": 5,
+      "input": "ff170000000000800000d0c2ffffffff00f0ffff00001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 4,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 669,
+        "candidate": 641
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00d0fffffffffffffeff5f0300000000ff0f000010000000",
+          "b": "ff170000000000800000d0c2ffffffff00f0ffff00001000"
+        }
+      ]
+    },
+    {
+      "index": 86,
+      "flags": 6,
+      "input": "777211ca1a231e855d7105456078685dd90a000000000000",
+      "cell": "148AA57040670FAF",
+      "denominator": 4,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 678,
+        "candidate": 634
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "6af962d9617628f64a1c9027060ba56f26f5ffff20000000",
+          "b": "777211ca1a231e855d7105456078685dd90a000000000000"
+        }
+      ]
+    },
+    {
+      "index": 87,
+      "flags": 7,
+      "input": "ade46fe69d65e2920f5215b23295358b00f8ffff10000000",
+      "cell": "5FE0BF4F896CF872",
+      "denominator": 4,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 684,
+        "candidate": 629
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "720155045a5ba4993cdea157d2147f41fc07000020000000",
+          "b": "ade46fe69d65e2920f5215b23295358b00f8ffff10000000"
+        }
+      ]
+    },
+    {
+      "index": 88,
+      "flags": 8,
+      "input": "00c0fffffffffffffeffff0800000000ef1f000000000000",
+      "cell": "0010000000000000",
+      "denominator": 8,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 889,
+        "candidate": 811
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0020000000000080000080030000000010e0ffffa0000000",
+          "b": "00c0fffffffffffffeffff0800000000ef1f000000000000"
+        }
+      ]
+    },
+    {
+      "index": 89,
+      "flags": 9,
+      "input": "0040fffffffffffffeffff5000000000ef1f000001000000",
+      "cell": "0010000000000001",
+      "denominator": 8,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 889,
+        "candidate": 811
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00600000000000800000801f0000000010e0ffffa0000000",
+          "b": "0040fffffffffffffeffff5000000000ef1f000001000000"
+        }
+      ]
+    },
+    {
+      "index": 90,
+      "flags": 10,
+      "input": "001000000000008000002001000000000000000010000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 8,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 841,
+        "candidate": 796
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00e0fffffffffffff8ffbf0100000000ffffffff30000000",
+          "b": "001000000000008000002001000000000000000010000000"
+        }
+      ]
+    },
+    {
+      "index": 91,
+      "flags": 11,
+      "input": "00c0ffffffffffff0000000900000000ffffffffff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 8,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 889,
+        "candidate": 811
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0020000000000080000080030000000000000000a0000000",
+          "b": "00c0ffffffffffff0000000900000000ffffffffff000000"
+        }
+      ]
+    },
+    {
+      "index": 92,
+      "flags": 12,
+      "input": "0040ffffffffffffffff005100000000ffffffffffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 8,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 883,
+        "candidate": 799
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00600000000000800000801f0000000000000000a0000000",
+          "b": "0040ffffffffffffffff005100000000ffffffffffff0000"
+        }
+      ]
+    },
+    {
+      "index": 93,
+      "flags": 13,
+      "input": "ff2f000000000080000020caffffffff00e0ffff00001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 8,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 841,
+        "candidate": 796
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00a0fffffffffffff8ffbf0f00000000ff1f000030000000",
+          "b": "ff2f000000000080000020caffffffff00e0ffff00001000"
+        }
+      ]
+    },
+    {
+      "index": 94,
+      "flags": 14,
+      "input": "94a7640883f32a948b9c66cc167b0e9190f0ffff00000000",
+      "cell": "5ECF6B89055BCE15",
+      "denominator": 8,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 834,
+        "candidate": 784
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "baf6b08e2e9a27dd9781cbb5cba5423b6f0f000030000000",
+          "b": "94a7640883f32a948b9c66cc167b0e9190f0ffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 95,
+      "flags": 15,
+      "input": "423aebb6c403aae241fddde91d55d73afeffffff10000000",
+      "cell": "7D889D7E9DECD9CB",
+      "denominator": 8,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 842,
+        "candidate": 775
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "c96ed789709c0cfb70df71fdc18356d0cc1e0000a0000000",
+          "b": "423aebb6c403aae241fddde91d55d73afeffffff10000000"
+        }
+      ]
+    },
+    {
+      "index": 96,
+      "flags": 0,
+      "input": "0080fffffffffffffeffff2100000000df3f000000000000",
+      "cell": "0010000000000000",
+      "denominator": 16,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1077,
+        "candidate": 971
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00400000000000800000000f0000000020c0ffffa0020000",
+          "b": "0080fffffffffffffeffff2100000000df3f000000000000"
+        }
+      ]
+    },
+    {
+      "index": 97,
+      "flags": 1,
+      "input": "0080fefffffffffffeffff3101000000df3f000001000000",
+      "cell": "0010000000000001",
+      "denominator": 16,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1077,
+        "candidate": 971
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00c0000000000080000000870000000020c0ffffa0020000",
+          "b": "0080fefffffffffffeffff3101000000df3f000001000000"
+        }
+      ]
+    },
+    {
+      "index": 98,
+      "flags": 2,
+      "input": "002000000000008000004004000000000000000010000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 16,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1013,
+        "candidate": 951
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00c0ffffffffffffecff7f0700000000ffffffff70000000",
+          "b": "002000000000008000004004000000000000000010000000"
+        }
+      ]
+    },
+    {
+      "index": 99,
+      "flags": 3,
+      "input": "0080ffffffffffff0000002200000000ffffffffff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 16,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1077,
+        "candidate": 971
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00400000000000800000000f0000000000000000a0020000",
+          "b": "0080ffffffffffff0000002200000000ffffffffff000000"
+        }
+      ]
+    },
+    {
+      "index": 100,
+      "flags": 4,
+      "input": "0080feffffffffffffff003201000000ffffffffffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 16,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1071,
+        "candidate": 959
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00c0000000000080000000870000000000000000a0020000",
+          "b": "0080feffffffffffffff003201000000ffffffffffff0000"
+        }
+      ]
+    },
+    {
+      "index": 101,
+      "flags": 5,
+      "input": "ff5f000000000080000040e6ffffffff00c0ffff00001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 16,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 1013,
+        "candidate": 951
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0040ffffffffffffecff7f4300000000ff3f000070000000",
+          "b": "ff5f000000000080000040e6ffffffff00c0ffff00001000"
+        }
+      ]
+    },
+    {
+      "index": 102,
+      "flags": 6,
+      "input": "2322fd67308c2ad86e3fa3d76200a1d212d5ffff00000000",
+      "cell": "6ADC660D951809D6",
+      "denominator": 16,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1022,
+        "candidate": 944
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "7cfc6608e0499697b7edbc1c77481edfed2a0000d0000000",
+          "b": "2322fd67308c2ad86e3fa3d76200a1d212d5ffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 103,
+      "flags": 7,
+      "input": "c6def8ba681ac3d351e453356d5e1c3400f8ffff10000000",
+      "cell": "2B41A7FAE1A10BF8",
+      "denominator": 16,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 1044,
+        "candidate": 944
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "5f462a9d0bedba9a666735a7c78aaa0b52ebffff60010000",
+          "b": "c6def8ba681ac3d351e453356d5e1c3400f8ffff10000000"
+        }
+      ]
+    },
+    {
+      "index": 104,
+      "flags": 8,
+      "input": "0000fffffffffffffeffff8300000000bf7f000000000000",
+      "cell": "0010000000000000",
+      "denominator": 32,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1265,
+        "candidate": 1131
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00800000000000800000003e000000004080ffffa00a0000",
+          "b": "0000fffffffffffffeffff8300000000bf7f000000000000"
+        }
+      ]
+    },
+    {
+      "index": 105,
+      "flags": 9,
+      "input": "0000fdfffffffffffeffffa304000000bf7f000001000000",
+      "cell": "0010000000000001",
+      "denominator": 32,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1265,
+        "candidate": 1131
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00800100000000800000002e020000004080ffffa00a0000",
+          "b": "0000fdfffffffffffeffffa304000000bf7f000001000000"
+        }
+      ]
+    },
+    {
+      "index": 106,
+      "flags": 10,
+      "input": "004000000000008000008010000000000000000010000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 32,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1185,
+        "candidate": 1106
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0080ffffffffffffd4ffff1e00000000fffffffff0000000",
+          "b": "004000000000008000008010000000000000000010000000"
+        }
+      ]
+    },
+    {
+      "index": 107,
+      "flags": 11,
+      "input": "0000ffffffffffff0000008400000000ffffffffff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 32,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1265,
+        "candidate": 1131
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00800000000000800000003e0000000000000000a00a0000",
+          "b": "0000ffffffffffff0000008400000000ffffffffff000000"
+        }
+      ]
+    },
+    {
+      "index": 108,
+      "flags": 12,
+      "input": "0000fdffffffffffffff00a404000000ffffffffffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 32,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1259,
+        "candidate": 1119
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "00800100000000800000002e0200000000000000a00a0000",
+          "b": "0000fdffffffffffffff00a404000000ffffffffffff0000"
+        }
+      ]
+    },
+    {
+      "index": 109,
+      "flags": 13,
+      "input": "00c000000000008000008054000000000080ffff00001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 32,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 1185,
+        "candidate": 1106
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0080feffffffffffd4ffff1601000000ff7f0000f0000000",
+          "b": "00c000000000008000008054000000000080ffff00001000"
+        }
+      ]
+    },
+    {
+      "index": 110,
+      "flags": 14,
+      "input": "5ac053dc866f4a83fde97051c68f04868fb3ffff00000000",
+      "cell": "66271AC44D3324F7",
+      "denominator": 32,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1242,
+        "candidate": 1114
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "dbf5cd1e085c95f93863a97a0b9484ad704c0000a00a0000",
+          "b": "5ac053dc866f4a83fde97051c68f04868fb3ffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 111,
+      "flags": 15,
+      "input": "c09ea3415c0bc5e351eb197aa432ba91ffffffff10000000",
+      "cell": "1B598D7931B2EFA8",
+      "denominator": 32,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 1191,
+        "candidate": 1085
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "6cdf305d0886bdc3ea82cb74a6b9b1a9d5b6ffffd0020000",
+          "b": "c09ea3415c0bc5e351eb197aa432ba91ffffffff10000000"
+        }
+      ]
+    },
+    {
+      "index": 112,
+      "flags": 0,
+      "input": "0000fefffffffffffeffff07020000007fff000000000000",
+      "cell": "0010000000000000",
+      "denominator": 64,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1453,
+        "candidate": 1291
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000010000000080000000fc000000008000ffffa02a0000",
+          "b": "0000fefffffffffffeffff07020000007fff000000000000"
+        }
+      ]
+    },
+    {
+      "index": 113,
+      "flags": 1,
+      "input": "0000fafffffffffffeffff47120000007fff000001000000",
+      "cell": "0010000000000001",
+      "denominator": 64,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1453,
+        "candidate": 1291
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000030000000080000000dc080000008000ffffa02a0000",
+          "b": "0000fafffffffffffeffff47120000007fff000001000000"
+        }
+      ]
+    },
+    {
+      "index": 114,
+      "flags": 2,
+      "input": "008000000000008000000041000000000000000010000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 64,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1357,
+        "candidate": 1261
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000ffffffffffffa4ffff7d00000000fffffffff0010000",
+          "b": "008000000000008000000041000000000000000010000000"
+        }
+      ]
+    },
+    {
+      "index": 115,
+      "flags": 3,
+      "input": "0000feffffffffff0000000802000000ffffffffff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 64,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1453,
+        "candidate": 1291
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000010000000080000000fc0000000000000000a02a0000",
+          "b": "0000feffffffffff0000000802000000ffffffffff000000"
+        }
+      ]
+    },
+    {
+      "index": 116,
+      "flags": 4,
+      "input": "0000faffffffffffffff004812000000ffffffffffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 64,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1447,
+        "candidate": 1279
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000030000000080000000dc0800000000000000a02a0000",
+          "b": "0000faffffffffffffff004812000000ffffffffffff0000"
+        }
+      ]
+    },
+    {
+      "index": 117,
+      "flags": 5,
+      "input": "008001000000008000000009020000000000ffff00001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 64,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 1357,
+        "candidate": 1261
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000fdffffffffffa2ffff6d04000000ffff0000f0010000",
+          "b": "008001000000008000000009020000000000ffff00001000"
+        }
+      ]
+    },
+    {
+      "index": 118,
+      "flags": 6,
+      "input": "ed15b4f4b02c469e59441a656a04581c7c1affff00000000",
+      "cell": "7950A72E270E3482",
+      "denominator": 64,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1414,
+        "candidate": 1269
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "cf645fabdc8008cf9ddf5fb4bc5abe1f83e50000b00a0000",
+          "b": "ed15b4f4b02c469e59441a656a04581c7c1affff00000000"
+        }
+      ]
+    },
+    {
+      "index": 119,
+      "flags": 7,
+      "input": "369b710f4b62f5a6f5a0ea30de60e3760100000010000000",
+      "cell": "08A7B281E6B714FB",
+      "denominator": 64,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 1404,
+        "candidate": 1259
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "c9aef934c964e09950dfae8ca77b2ba5e422ffffa0150000",
+          "b": "369b710f4b62f5a6f5a0ea30de60e3760100000010000000"
+        }
+      ]
+    },
+    {
+      "index": 120,
+      "flags": 8,
+      "input": "0000fcfffffffffffeffff0f08000000fffe010000000000",
+      "cell": "0010000000000000",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1641,
+        "candidate": 1451
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000020000000080000000f8030000000001feffa0aa0000",
+          "b": "0000fcfffffffffffeffff0f08000000fffe010000000000"
+        }
+      ]
+    },
+    {
+      "index": 121,
+      "flags": 9,
+      "input": "0000f4fffffffffffeffff8f48000000fffe010001000000",
+      "cell": "0010000000000001",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1641,
+        "candidate": 1451
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000060000000080000000b8230000000001feffa0aa0000",
+          "b": "0000f4fffffffffffeffff8f48000000fffe010001000000"
+        }
+      ]
+    },
+    {
+      "index": 122,
+      "flags": 10,
+      "input": "000001000000008000000002010000000000000010000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1529,
+        "candidate": 1416
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000feffffffffff44fffffb01000000fffffffff0030000",
+          "b": "000001000000008000000002010000000000000010000000"
+        }
+      ]
+    },
+    {
+      "index": 123,
+      "flags": 11,
+      "input": "0000fcffffffffff0000001008000000ffffffffff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1641,
+        "candidate": 1451
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000020000000080000000f80300000000000000a0aa0000",
+          "b": "0000fcffffffffff0000001008000000ffffffffff000000"
+        }
+      ]
+    },
+    {
+      "index": 124,
+      "flags": 12,
+      "input": "0000f4ffffffffffffff009048000000ffffffffffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1635,
+        "candidate": 1439
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000060000000080000000b82300000000000000a0aa0000",
+          "b": "0000f4ffffffffffffff009048000000ffffffffffff0000"
+        }
+      ]
+    },
+    {
+      "index": 125,
+      "flags": 13,
+      "input": "0000030000000080000000d2080000000000feff00001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 1529,
+        "candidate": 1416
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0000faffffffffff3effffdb11000000ffff0100f0030000",
+          "b": "0000030000000080000000d2080000000000feff00001000"
+        }
+      ]
+    },
+    {
+      "index": 126,
+      "flags": 14,
+      "input": "fc5f3689ac0231b3cdfa123404b0d4a45496ffff00000000",
+      "cell": "4D2440637A3F6E46",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1570,
+        "candidate": 1419
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "8ae9faf8b4a9ddb67446c86b95d0c745ab690000b00d0000",
+          "b": "fc5f3689ac0231b3cdfa123404b0d4a45496ffff00000000"
+        }
+      ]
+    },
+    {
+      "index": 127,
+      "flags": 15,
+      "input": "d896b0bfa052d19721d058315df6438d00f8ffff10000000",
+      "cell": "62B82A32CDD5D5A8",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1571,
+        "candidate": 1414
+      },
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "ee8ad19047e4f68c869a7c6e6e27a6894c160100a02b0000",
+          "b": "d896b0bfa052d19721d058315df6438d00f8ffff10000000"
+        }
+      ]
+    },
+    {
+      "index": 128,
+      "flags": 0,
+      "input": "0000020000000080fffffff7030000000001feff00000000",
+      "cell": "0010000000000000",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000020000000080fffffff7030000000001feff00000000",
+          "b": "0000020000000080000000f8030000000001feffa0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 129,
+      "flags": 1,
+      "input": "0000060000000080ffffffb7230000000001feff01000000",
+      "cell": "0010000000000001",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000060000000080ffffffb7230000000001feff01000000",
+          "b": "0000060000000080000000b8230000000001feffa0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 130,
+      "flags": 2,
+      "input": "0000fefffffffffffffffffb01000000ffffffff10000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1250,
+        "candidate": 1136
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000fefffffffffffffffffb01000000ffffffff10000000",
+          "b": "0000feffffffffff44fffffb01000000fffffffff0030000"
+        }
+      ]
+    },
+    {
+      "index": 131,
+      "flags": 3,
+      "input": "0000020000000080010000f80300000000000000ff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000020000000080010000f80300000000000000ff000000",
+          "b": "0000020000000080000000f80300000000000000a0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 132,
+      "flags": 4,
+      "input": "0000060000000080000001b82300000000000000ffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000060000000080000001b82300000000000000ffff0000",
+          "b": "0000060000000080000000b82300000000000000a0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 133,
+      "flags": 5,
+      "input": "0000faffffffffffffffff9b11000000ffff010000001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1252,
+        "candidate": 1140
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000faffffffffffffffff9b11000000ffff010000001000",
+          "b": "0000faffffffffff3effffdb11000000ffff0100f0030000"
+        }
+      ]
+    },
+    {
+      "index": 134,
+      "flags": 6,
+      "input": "f9e9b53920545cf660721e1496836bb8f29bffff00000000",
+      "cell": "336DD0D7F3634797",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 1350,
+        "candidate": 1203
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "f9e9b53920545cf660721e1496836bb8f29bffff00000000",
+          "b": "f9e9b53920545cf664701ed495836bb8f29bffff601d0000"
+        }
+      ]
+    },
+    {
+      "index": 135,
+      "flags": 7,
+      "input": "5dd7666676c3a0ea8a1f7790017e26bc0000000010000000",
+      "cell": "78BD444DA88CF892",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1219,
+        "candidate": 1094
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "5dd7666676c3a0ea8a1f7790017e26bc0000000010000000",
+          "b": "8ba2a43cb44ca1b6bc19cc93e5e0725e6fc60100f0060000"
+        }
+      ]
+    },
+    {
+      "index": 136,
+      "flags": 8,
+      "input": "0000020000000080fffffff7030000000001feff00000000",
+      "cell": "0010000000000000",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000020000000080fffffff7030000000001feff00000000",
+          "b": "0000020000000080000000f8030000000001feffa0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 137,
+      "flags": 9,
+      "input": "0000060000000080ffffffb7230000000001feff01000000",
+      "cell": "0010000000000001",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000060000000080ffffffb7230000000001feff01000000",
+          "b": "0000060000000080000000b8230000000001feffa0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 138,
+      "flags": 10,
+      "input": "0000fefffffffffffffffffb01000000ffffffff10000000",
+      "cell": "3FEFFFFFFFFFFFFF",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1250,
+        "candidate": 1136
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000fefffffffffffffffffb01000000ffffffff10000000",
+          "b": "0000feffffffffff44fffffb01000000fffffffff0030000"
+        }
+      ]
+    },
+    {
+      "index": 139,
+      "flags": 11,
+      "input": "0000020000000080010000f80300000000000000ff000000",
+      "cell": "3FF0000000000000",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000020000000080010000f80300000000000000ff000000",
+          "b": "0000020000000080000000f80300000000000000a0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 140,
+      "flags": 12,
+      "input": "0000060000000080000001b82300000000000000ffff0000",
+      "cell": "3FF0000000000001",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 0,
+      "instructions": {
+        "control": 1362,
+        "candidate": 1171
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000060000000080000001b82300000000000000ffff0000",
+          "b": "0000060000000080000000b82300000000000000a0aa0000"
+        }
+      ]
+    },
+    {
+      "index": 141,
+      "flags": 13,
+      "input": "0000faffffffffffffffff9b11000000ffff010000001000",
+      "cell": "7FEFFFFFFFFFFFFE",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1252,
+        "candidate": 1140
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "0000faffffffffffffffff9b11000000ffff010000001000",
+          "b": "0000faffffffffff3effffdb11000000ffff0100f0030000"
+        }
+      ]
+    },
+    {
+      "index": 142,
+      "flags": 14,
+      "input": "f9e9b53920545cf660721e1496836bb8f29bffff00000000",
+      "cell": "336DD0D7F3634797",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": 1,
+      "instructions": {
+        "control": 1350,
+        "candidate": 1203
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "f9e9b53920545cf660721e1496836bb8f29bffff00000000",
+          "b": "f9e9b53920545cf664701ed495836bb8f29bffff601d0000"
+        }
+      ]
+    },
+    {
+      "index": 143,
+      "flags": 15,
+      "input": "5dd7666676c3a0ea8a1f7790017e26bc0000000010000000",
+      "cell": "78BD444DA88CF892",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": true,
+      "returned_side": -1,
+      "instructions": {
+        "control": 1219,
+        "candidate": 1094
+      },
+      "midpoint_operands": [
+        {
+          "kind": "compare",
+          "a": "5dd7666676c3a0ea8a1f7790017e26bc0000000010000000",
+          "b": "8ba2a43cb44ca1b6bc19cc93e5e0725e6fc60100f0060000"
+        }
+      ]
+    },
+    {
+      "index": 144,
+      "flags": 0,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "0000000000000000",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 145,
+      "flags": 1,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "0000000000000000",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 146,
+      "flags": 2,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "0000000000000001",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 147,
+      "flags": 3,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "0000000000000001",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 148,
+      "flags": 4,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "000FFFFFFFFFFFFF",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 149,
+      "flags": 5,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "000FFFFFFFFFFFFF",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 150,
+      "flags": 6,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "7FEFFFFFFFFFFFFF",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 23
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 151,
+      "flags": 7,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "7FEFFFFFFFFFFFFF",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 23
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 152,
+      "flags": 8,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "7FF0000000000000",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 153,
+      "flags": 9,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "7FF0000000000000",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 154,
+      "flags": 10,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "7FF0000000000001",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 155,
+      "flags": 11,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "7FF0000000000001",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 156,
+      "flags": 12,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "8000000000000000",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 157,
+      "flags": 13,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "8000000000000000",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 158,
+      "flags": 14,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "FFFFFFFFFFFFFFFF",
+      "denominator": 128,
+      "inverse": 0,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    },
+    {
+      "index": 159,
+      "flags": 15,
+      "input": "00000000000000807b000000000000000000000000000000",
+      "cell": "FFFFFFFFFFFFFFFF",
+      "denominator": 128,
+      "inverse": 1,
+      "valid": false,
+      "returned_side": 0,
+      "instructions": {
+        "control": 16,
+        "candidate": 20
+      },
+      "midpoint_operands": []
+    }
+  ],
+  "MPFR_inputs": 0,
+  "device_IO": 0
+}

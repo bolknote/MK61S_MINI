@@ -1,0 +1,285 @@
+{
+  "status": "BOUNDED_OWN_SELECTION_ALL48_SAVED_STRICT_FIXES_PLUS_CONTROLS",
+  "jobs": [
+    {
+      "x": "3F569DB65D606A7D",
+      "y": "BFF4000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FAAE46EA0E2CCA5",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FCE1C93A6958ABE",
+      "y": "BFF4000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FD789A5EE5BFC5B",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FD789A5EE5BFC5D",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FD789A5EE5BFC5D",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FE2F9D0BA095F33",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FE80B1AC9886265",
+      "y": "BFF4000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FE80B1AC9886266",
+      "y": "BFF4000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FE80B1AC9886267",
+      "y": "BFF4000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FE83B1AF4197991",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FE83B1AF4197991",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FE83B1AF4197992",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FE83B1AF4197992",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FE83B1AF4197993",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FE83B1AF4197993",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FEB84F6C510641E",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FEB84F6C510641F",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FEB84F6C510641F",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FEB84F6C5106420",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FEB84F6C5106420",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FED31F2F7C53E34",
+      "y": "BFF4000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FED31F2F7C53E35",
+      "y": "BFF4000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FED31F2F7C53E36",
+      "y": "BFF4000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FF0B1957A030E6A",
+      "y": "C010000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FF363AD26D675E5",
+      "y": "C010000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FF6373805BC6B4C",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FF6373805BC6B4C",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FF6373805BC6B4D",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FF6373805BC6B4D",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FF6373805BC6B4E",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FFC445C9B44C7FC",
+      "y": "C020000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "3FFCD84FD272C703",
+      "y": "C014000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "4000063C1015B823",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "4000063C1015B825",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "4001278DD28E631A",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "4001278DD28E631A",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "4001278DD28E631C",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "4006B335AFD468A3",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "4006B335AFD468A5",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "4012B2F6F3304D23",
+      "y": "BFF4000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "4027584363336331",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "402C3EABAB98563C",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "402D507BADD65812",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "402FFF54D295EA0D",
+      "y": "C004000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "40449B1CFD487AC7",
+      "y": "BFF4000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "40701C60DA918010",
+      "y": "BFF8000000000000",
+      "group": "all48_full_union_strict_fixes"
+    },
+    {
+      "x": "402FFF54D295EA0B",
+      "y": "BFF8000000000000",
+      "group": "public_reduction_endpoint"
+    },
+    {
+      "x": "40108FC436BAF117",
+      "y": "BFF4000000000000",
+      "group": "public_reduction_endpoint"
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "original153_unchanged_control"
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "original153_unchanged_control"
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "original153_unchanged_control"
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "group": "original153_unchanged_control"
+    },
+    {
+      "x": "3FF654E7580FA958",
+      "y": "3FE5000000000000",
+      "group": "original153_unchanged_control"
+    },
+    {
+      "x": "401FB34C9D8CF59F",
+      "y": "3FE5000000000000",
+      "group": "original153_unchanged_control"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "status": "PASS_COMPLETED_FINAL_RECEIPT_AND_ALL_MANIFEST_ARTIFACT_BINDINGS",
+  "final_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/FINAL-REVIEW.json",
+    "bytes": 11007,
+    "sha256": "211cf956001390c4f0b894a9979ca8aa640cfe7a5d33082fdfe6cc497268c3e0"
+  },
+  "manifest": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/MANIFEST.json",
+    "bytes": 12065,
+    "sha256": "8f6106fb4324de96230a8292231bc136d061919679accdbb08d0059425e0fd4d"
+  },
+  "verified_manifest_files": 45,
+  "own_qualified_CPU_ARM1280_MPFR89_plus4shortcuts": true,
+  "own_failed_preflights0": true,
+  "no_required_review_work_remaining": true,
+  "hardware_integration_main_release_all_false": true,
+  "device_IO": 0
+}

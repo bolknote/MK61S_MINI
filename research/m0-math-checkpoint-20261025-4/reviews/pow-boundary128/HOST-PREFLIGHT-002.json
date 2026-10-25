@@ -1,0 +1,9 @@
+{
+  "status": "FAILED_REVIEWER_CALLER_DISASSEMBLY_ASSERTION",
+  "command": "python3 -B own/proof.py",
+  "tool_chunk": "497ffa",
+  "exit_code": 1,
+  "error": "proof.py line73 callerCMP/R12 disassembly assertion; inspect exact instructions rather than infer",
+  "actual_ARM_calls": 0,
+  "actual_MPFR_inputs": 0
+}

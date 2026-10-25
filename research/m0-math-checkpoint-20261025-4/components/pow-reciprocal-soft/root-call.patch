@@ -1,0 +1,11 @@
+--- parent/root-prefix.inc
++++ candidate/root-prefix.inc
+@@ -2086,7 +2086,7 @@
+ 	adcs	r3, r7
+ 	ldr	r1, .Lpow_horner_CPI10_7
+ 	mov	r0, r7
+-	bl	__aeabi_ddiv
++	bl	mk61_m0_hint_ddiv
+ 	mov	r5, r0
+ 	ldr	r0, .Lpow_horner_CPI10_8
+ 	.inst.n	0x1cab @ adds	r3, r5, #2

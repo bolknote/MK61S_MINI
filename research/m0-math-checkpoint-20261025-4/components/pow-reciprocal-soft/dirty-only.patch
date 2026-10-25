@@ -1,0 +1,25 @@
+--- control/ddiv.S
++++ candidate/ddiv.S
+@@ -22,6 +22,13 @@
+  lsrs r5,r0,#21
+  orrs r4,r5
+  b .Lrp2040_quotient_refine
++
++.Lrp2040_div_dirty_bridge:
++ ldr r7,.Lrp2040_sw_target
++ bx r7
++.p2align 2
++.Lrp2040_sw_target: .word mk61_m0_ddiv_sw_from_guard
++.fill (12-(.-.Lrp2040_div_dirty_bridge))/2,2,0xbf00
+ 
+ .Lrp2040_div_slow:
+  sub sp,#4
+@@ -73,7 +80,7 @@
+  ldr r7, =0xd0000078
+  ldr r7, [r7]
+  lsrs r7, r7, #2
+- bcs .Lrp2040_div_slow
++ bcs .Lrp2040_div_dirty_bridge
+ .Lrp2040_general_divisor:
+  lsls r6,#2
+  mov r12,r6

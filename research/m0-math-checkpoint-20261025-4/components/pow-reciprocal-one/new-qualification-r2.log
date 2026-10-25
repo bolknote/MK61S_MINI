@@ -1,0 +1,120 @@
+reciprocal1-new 0 / 5127 0.0
+reciprocal1-new 64 / 5127 1.0
+reciprocal1-new 128 / 5127 1.5
+reciprocal1-new 192 / 5127 1.9
+reciprocal1-new 256 / 5127 2.4
+reciprocal1-new 320 / 5127 2.9
+reciprocal1-new 384 / 5127 3.3
+reciprocal1-new 448 / 5127 3.8
+reciprocal1-new 512 / 5127 4.1
+reciprocal1-new 576 / 5127 4.7
+reciprocal1-new 640 / 5127 5.6
+reciprocal1-new 704 / 5127 6.5
+reciprocal1-new 768 / 5127 7.4
+reciprocal1-new 832 / 5127 8.3
+reciprocal1-new 896 / 5127 9.2
+reciprocal1-new 960 / 5127 10.1
+reciprocal1-new 1024 / 5127 11.0
+reciprocal1-new 1088 / 5127 12.0
+reciprocal1-new 1152 / 5127 13.0
+reciprocal1-new 1216 / 5127 13.9
+reciprocal1-new 1280 / 5127 14.9
+reciprocal1-new 1344 / 5127 15.9
+reciprocal1-new 1408 / 5127 16.9
+reciprocal1-new 1472 / 5127 17.8
+reciprocal1-new 1536 / 5127 18.8
+reciprocal1-new 1600 / 5127 19.7
+reciprocal1-new 1664 / 5127 20.7
+reciprocal1-new 1728 / 5127 21.7
+reciprocal1-new 1792 / 5127 22.7
+reciprocal1-new 1856 / 5127 23.6
+reciprocal1-new 1920 / 5127 24.5
+reciprocal1-new 1984 / 5127 25.5
+reciprocal1-new 2048 / 5127 26.5
+reciprocal1-new 2112 / 5127 27.6
+reciprocal1-new 2176 / 5127 28.5
+reciprocal1-new 2240 / 5127 29.5
+reciprocal1-new 2304 / 5127 30.5
+reciprocal1-new 2368 / 5127 31.5
+reciprocal1-new 2432 / 5127 32.5
+reciprocal1-new 2496 / 5127 33.5
+reciprocal1-new 2560 / 5127 34.5
+reciprocal1-new 2624 / 5127 35.6
+reciprocal1-new 2688 / 5127 36.7
+reciprocal1-new 2752 / 5127 37.7
+reciprocal1-new 2816 / 5127 38.7
+reciprocal1-new 2880 / 5127 39.8
+reciprocal1-new 2944 / 5127 40.8
+reciprocal1-new 3008 / 5127 41.9
+reciprocal1-new 3072 / 5127 42.9
+reciprocal1-new 3136 / 5127 44.0
+reciprocal1-new 3200 / 5127 45.0
+reciprocal1-new 3264 / 5127 46.1
+reciprocal1-new 3328 / 5127 47.1
+reciprocal1-new 3392 / 5127 48.2
+reciprocal1-new 3456 / 5127 49.2
+reciprocal1-new 3520 / 5127 50.3
+reciprocal1-new 3584 / 5127 51.4
+reciprocal1-new 3648 / 5127 52.5
+reciprocal1-new 3712 / 5127 53.5
+reciprocal1-new 3776 / 5127 54.6
+reciprocal1-new 3840 / 5127 55.6
+reciprocal1-new 3904 / 5127 56.7
+reciprocal1-new 3968 / 5127 57.8
+reciprocal1-new 4032 / 5127 58.8
+reciprocal1-new 4096 / 5127 60.0
+reciprocal1-new 4160 / 5127 61.1
+reciprocal1-new 4224 / 5127 62.2
+reciprocal1-new 4288 / 5127 63.2
+reciprocal1-new 4352 / 5127 64.4
+reciprocal1-new 4416 / 5127 65.5
+reciprocal1-new 4480 / 5127 66.6
+reciprocal1-new 4544 / 5127 67.7
+reciprocal1-new 4608 / 5127 68.8
+reciprocal1-new 4672 / 5127 69.8
+reciprocal1-new 4736 / 5127 70.8
+reciprocal1-new 4800 / 5127 71.9
+reciprocal1-new 4864 / 5127 73.0
+reciprocal1-new 4928 / 5127 74.1
+reciprocal1-new 4992 / 5127 77.4
+reciprocal1-new 5056 / 5127 81.2
+reciprocal1-new 5120 / 5127 85.1
+{
+  "status": "PASS_FRESH_MPFR_PRIVATE_RECIPROCAL1_PUBLIC_CONTROLS",
+  "candidate_ELF_sha256": "90dbb82bf4a67fc0b81f3b1c73f19a6f251fb56b34d1867d587b37c2a445b3fd",
+  "unique_pairs": 5127,
+  "state_rows": 10254,
+  "fresh_ARM_calls": 61524,
+  "fresh_candidate_calls": 10254,
+  "fresh_parent_calls": 10254,
+  "fresh_layout_control_calls": 10254,
+  "fresh_Qfplib_calls": 30762,
+  "oracle_evaluations": 5127,
+  "actual_directed_MPFR_inputs": 5051,
+  "sNaN_policy_shortcuts": 76,
+  "MPFR_version": "4.2.2",
+  "all_parent_control_candidate_return_bits_and_reciprocal_product_seed_sequences_equal": true,
+  "all_actual_costs_match_exact_savings_formula": true,
+  "parent_raw_loss_pairs": 579,
+  "candidate_raw_loss_pairs": 574,
+  "fixed_raw_pairs": 5,
+  "new_raw_losses": 0,
+  "candidate_wrong": 0,
+  "wrong_Qfplib_state_variants_retained": 18534,
+  "strict_quiet_NaN_reference_policy": true,
+  "no_nominal_reference_domain_filter": true,
+  "instruction_delta_histogram": {
+    "-34": 339,
+    "-26": 339,
+    "-11": 6,
+    "0": 9570
+  },
+  "observed_stacks": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148
+  },
+  "elapsed_seconds": 85.49370220897254,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

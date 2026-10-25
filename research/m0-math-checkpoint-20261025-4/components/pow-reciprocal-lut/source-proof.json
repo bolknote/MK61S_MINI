@@ -1,0 +1,86 @@
+{
+  "status": "PASS_EXACT_TABLE_MODEL_BOUND_SUFFIX_AND_INACTIVE_CONTROLS",
+  "candidate_ELF_sha256": "e5247764b40a409598f1ebbe7f8a46d9e52544a611ba7ec2d40d183e6c4e96e5",
+  "selected_unit_blob312B_identical_to_integrated_seed_suffix": true,
+  "function_bytes": 56,
+  "table_bytes": 256,
+  "all1050B_parent_code_except194B_seed_suffix_unchanged": true,
+  "all_other_allocated_bytes_addresses_identical": true,
+  "candidate_ddiv_bytes": 1168,
+  "parent_ddiv_bytes": 1050,
+  "allocated_delta_bytes": 118,
+  "exact_table_formula": "floor(2^32/(65536+512*i+256)), 0<=i<128",
+  "exhaustive_model_divisors": 65536,
+  "half_divisor_product_range": [
+    2139095040,
+    2155806720
+  ],
+  "signed_folded_high_range": [
+    -128,
+    127
+  ],
+  "signed_correction_product_range": [
+    -8355840,
+    8290560
+  ],
+  "signed_exact_initial_residual_range": [
+    -249015,
+    129026
+  ],
+  "initial_quotient_error_histogram": {
+    "-1": 140,
+    "0": 5167,
+    "1": 35252,
+    "2": 23815,
+    "3": 1162
+  },
+  "max_downward_corrections": 3,
+  "max_upward_corrections": 1,
+  "exact_modular_residual_and_euclidean_invariant_proved_for_every_divisor": true,
+  "normal_RNE_guards_tail_and_calls_unchanged": true,
+  "other_resident_ddiv_callers_unchanged": true,
+  "default_M0_M4_selected_root_objects_equal_and3_new_seed_objects_empty": true,
+  "new_global_RAM_or_libgcc_dependencies": false,
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-20261025/candidate-seed17.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-20261025/generic_M0-seed-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-20261025/candidate-seed17.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-20261025/M4_soft-seed-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-mfloat-abi=hard",
+      "-mfpu=fpv4-sp-d16",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-20261025/candidate-seed17.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-20261025/M4_hard-seed-disabled.o"
+    ]
+  ],
+  "disabled_outputs": {
+    "generic_M0-seed-disabled.o": "178cb1e699c72dfbee438d4d2cbc007a8a92f1660a6ce60a20adcb21c93a6ee3",
+    "M4_soft-seed-disabled.o": "2294654d4c4ceb027fa76143fcbf8ede25f66133061c065f045221fd5e862b5d",
+    "M4_hard-seed-disabled.o": "43e2ef436152dc5d121cef52bc8c23b3c5d47f9ad3ac2cf2af8d756b10a1f05d"
+  },
+  "actual_ARM_or_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

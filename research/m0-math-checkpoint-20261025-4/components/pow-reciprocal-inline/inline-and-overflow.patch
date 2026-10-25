@@ -1,0 +1,107 @@
+--- parent/hardware.S
++++ candidate/hardware.S
+@@ -78,9 +78,7 @@
+  // R7 is index<<29; R6 is the guarded biased exponent addend.
+  lsls r6,#2
+  mov r12,r6
+- mov r6,r1
+- eors r6,r3
+- lsrs r6,#31
++ lsrs r6,r3,#31
+  add r12,r6
+  lsls r1,#12
+  lsrs r1,#12
+@@ -106,6 +104,27 @@
+ .Lrp2040_sw_target: .word mk61_m0_reciprocal1_sw_from_guard
+ .fill (12-(.-.Lrp2040_div_dirty_bridge))/2,2,0xbf00
+ 
++// Called only with the existing20B saved frame and raw positive-one args.
++.Lreciprocal1_special:
++ cmp r5,#0
++ bne .Lrp2040_div_slow
++ lsls r7,r3,#1
++ lsrs r7,#1
++ movs r6,#1
++ lsls r6,#18
++ cmp r7,r6
++ bhi .Lrp2040_div_slow
++ bne .Lreciprocal1_overflow
++ cmp r2,#0
++ bne .Lrp2040_div_slow
++.Lreciprocal1_overflow:
++ movs r0,#0
++ lsrs r1,r3,#31
++ lsls r1,#31
++ ldr r7,=0x7ff00000
++ orrs r1,r7
++ pop {r4-r7,pc}
++
+ .Lrp2040_div_slow:
+  sub sp,#4
+  bl mk61_m0_ddiv_slow
+@@ -125,7 +144,7 @@
+  subs r6,r5,#1
+  ldr r7,=2043
+  cmp r6,r7
+- bhi .Lrp2040_div_slow
++ bhi .Lreciprocal1_special
+  subs r6,r7,r6                 @ 2044-E, same guarded exponent addend
+  // Dyadic mantissas with at most three fraction bits use an exact
+  // rational reciprocal seed. Powers of two reduce to exponent scaling.
+@@ -150,9 +169,7 @@
+ .Lrp2040_general_divisor:
+  lsls r6,#2
+  mov r12,r6
+- mov r7,r1
+- eors r7,r3
+- lsrs r7,#31                  @ result sign
++ lsrs r7,r3,#31               @ positive numerator: sign is divisor sign
+  add r12,r7                   @ guarded biased exponent and sign
+  movs r4,#1
+  lsls r4,#20
+--- parent/software.S
++++ candidate/software.S
+@@ -72,6 +72,7 @@
+  adds \rzl,\rt0                @                  ZL
+  adcs \rzh,\rt2                @                      ¯ZH
+ .endm
++#include "inline-seed.inc"
+ .section .m0_ddiv_hint_sw,"ax",%progbits
+ .p2align 2
+ .global mk61_m0_reciprocal1_sw_from_guard
+@@ -81,9 +82,7 @@
+ mk61_m0_reciprocal1_sw_from_guard:
+  lsls r6,#2
+  mov r12,r6
+- mov r7,r1
+- eors r7,r3
+- lsrs r7,#31                  @ result sign
++ lsrs r7,r3,#31               @ positive numerator: sign is divisor sign
+  add r12,r7                   @ guarded biased exponent and sign
+  movs r4,#1
+  lsls r4,#20
+@@ -123,13 +122,11 @@
+ .else
+ 
+ @ this is not beautiful; could be replaced by better code that uses knowledge of divisor range
+- push {r0-r3,r7}
+- // Seed takes D only; R0 is overwritten before use.
+- lsrs r1,r3,#4                 @ x0=(q16)x
+- bl mk61_m0_ddiv_seed17        @ exact quotient, explicitly preserves R12
+- adds r6,r0,#1
++ lsrs r1,r3,#4                 @ D17; R0/R2/R3/R5/R12 stay live
++ reciprocal_seed_inline
++ adds r6,#1
+  lsrs r6,#1
+- pop {r0-r3,r7}
++
+ 
+ .endif
+ 
+@@ -276,5 +273,6 @@
+ 
+ .size mk61_m0_reciprocal1_sw_from_guard,.-mk61_m0_reciprocal1_sw_from_guard
+ .ltorg
++#include "inline-seed-table.inc"
+ 
+ #endif

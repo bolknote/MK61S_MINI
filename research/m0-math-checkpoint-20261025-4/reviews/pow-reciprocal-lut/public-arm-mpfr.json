@@ -1,0 +1,4762 @@
+{
+  "status": "PASS_BOUNDED_ACTUAL_PUBLIC_POW_ALL9_SAVED_STRICT_FIXES",
+  "unique_pairs": 23,
+  "actual_ARM_calls": 276,
+  "directed_MPFR_inputs": 21,
+  "sNaN_shortcuts": 2,
+  "MPFR_version": "4.2.2",
+  "all48_fixes_actual_bothSIO_strict_against_all_correct_refs": true,
+  "READY_costs_unchanged": true,
+  "DIRTY_guard_and_saved20_raw_operands_seed_alignment_checked": true,
+  "private_JOIN_equal_READYhardware_and_first_ADDS_flags": true,
+  "actual_DIRTY_join_checks": 11,
+  "all3_real_Qfplib_compositions_wrong_outputs_and_costs_retained": true,
+  "strict_quietNaN": true,
+  "no_new_raw_loss_or_candidate_wrong": true,
+  "SIO7words_PCS_SP_PC_checked": true,
+  "no_generic_private_continuation_call": true,
+  "near_one_sibling_not_loaded": true,
+  "ROM_initializers_excluded": true,
+  "observed_stack_bytes": {
+    "parent": 968,
+    "control": 968,
+    "candidate": 968,
+    "Qfplib": 88
+  },
+  "rows": [
+    {
+      "x": "3FA0092F95A0C764",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "group": "all9_new_strict_fixes",
+      "expected": "4106736124E06FB3",
+      "outputs": {
+        "parent": "4106736124E06FB3",
+        "control": "4106736124E06FB3",
+        "candidate": "4106736124E06FB3",
+        "qfp_composed_pow": "4106736124E06FB3",
+        "qfp_composed_pow_exact": "4106736124E06FB3",
+        "qfp_composed_pow_integer": "C106736124E06FB3"
+      },
+      "instructions": {
+        "parent": 1550,
+        "control": 1550,
+        "candidate": 1550,
+        "qfp_composed_pow": 1609,
+        "qfp_composed_pow_exact": 1630,
+        "qfp_composed_pow_integer": 1667
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3505205440,
+              1054264886
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              4294967278,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3505205440,
+                1494582,
+                2147483648,
+                1530452803,
+                22990,
+                4156,
+                537132836
+              ],
+              "frame": "00000000fe030000eeffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3505205440,
+              1054264886
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              4294967278,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3505205440,
+                1494582,
+                2147483648,
+                1530452803,
+                22990,
+                4156,
+                537132836
+              ],
+              "frame": "00000000fe030000eeffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FA0092F95A0C764",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "group": "all9_new_strict_fixes",
+      "expected": "4106736124E06FB3",
+      "outputs": {
+        "parent": "4106736124E06FB3",
+        "control": "4106736124E06FB3",
+        "candidate": "4106736124E06FB3",
+        "qfp_composed_pow": "4106736124E06FB3",
+        "qfp_composed_pow_exact": "4106736124E06FB3",
+        "qfp_composed_pow_integer": "C106736124E06FB3"
+      },
+      "instructions": {
+        "parent": 1641,
+        "control": 1641,
+        "candidate": 1571,
+        "qfp_composed_pow": 1609,
+        "qfp_composed_pow_exact": 1630,
+        "qfp_composed_pow_integer": 1667
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3505205440,
+              1054264886
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              4294967278,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "D0ED30C0",
+                "3ED6CE36"
+              ],
+              "R6": 1039,
+              "SP": 537132836,
+              "frame": "00000000fe030000eeffffff0000000019f11410"
+            }
+          ],
+          "seeds": [
+            93411
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3505205440,
+                1494582,
+                2147483648,
+                1530452803,
+                22990,
+                4156,
+                537132836
+              ],
+              "frame": "00000000fe030000eeffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3505205440,
+              1054264886
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              4294967278,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "D0ED30C0",
+                "3ED6CE36"
+              ],
+              "R6": 1039,
+              "SP": 537132836,
+              "frame": "00000000fe030000eeffffff0000000019f11410"
+            }
+          ],
+          "seeds": [
+            93411
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3505205440,
+                1494582,
+                2147483648,
+                1530452803,
+                22990,
+                4156,
+                537132836
+              ],
+              "frame": "00000000fe030000eeffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": [
+            {
+              "D": 93411,
+              "saved_R3": 1494582,
+              "leaf_R3": 22926,
+              "join_R3": 1494582
+            }
+          ]
+        }
+      }
+    },
+    {
+      "x": "3FE83B1AF4197991",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "group": "all9_new_strict_fixes",
+      "expected": "40052CCAAE063399",
+      "outputs": {
+        "parent": "40052CCAAE063399",
+        "control": "40052CCAAE063399",
+        "candidate": "40052CCAAE063399",
+        "qfp_composed_pow": "40052CCAAE063399",
+        "qfp_composed_pow_exact": "40052CCAAE063399",
+        "qfp_composed_pow_integer": "C0052CCAAE063399"
+      },
+      "instructions": {
+        "parent": 1526,
+        "control": 1526,
+        "candidate": 1526,
+        "qfp_composed_pow": 1569,
+        "qfp_composed_pow_exact": 1590,
+        "qfp_composed_pow_integer": 1627
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1326682436,
+              1071132147
+            ],
+            "sp": 537132856,
+            "saved": [
+              1282371,
+              1022,
+              4294967294,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                1326682436,
+                1584627,
+                2147483648,
+                1622658364,
+                21683,
+                4092,
+                537132836
+              ],
+              "frame": "43911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1326682436,
+              1071132147
+            ],
+            "sp": 537132856,
+            "saved": [
+              1282371,
+              1022,
+              4294967294,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                1326682436,
+                1584627,
+                2147483648,
+                1622658364,
+                21683,
+                4092,
+                537132836
+              ],
+              "frame": "43911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FE83B1AF4197991",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "group": "all9_new_strict_fixes",
+      "expected": "40052CCAAE063399",
+      "outputs": {
+        "parent": "40052CCAAE063399",
+        "control": "40052CCAAE063399",
+        "candidate": "40052CCAAE063399",
+        "qfp_composed_pow": "40052CCAAE063399",
+        "qfp_composed_pow_exact": "40052CCAAE063399",
+        "qfp_composed_pow_integer": "C0052CCAAE063399"
+      },
+      "instructions": {
+        "parent": 1615,
+        "control": 1615,
+        "candidate": 1547,
+        "qfp_composed_pow": 1569,
+        "qfp_composed_pow_exact": 1590,
+        "qfp_composed_pow_integer": 1627
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1326682436,
+              1071132147
+            ],
+            "sp": 537132856,
+            "saved": [
+              1282371,
+              1022,
+              4294967294,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "4F139144",
+                "3FD82DF3"
+              ],
+              "R6": 1023,
+              "SP": 537132836,
+              "frame": "43911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "seeds": [
+            99039
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                1326682436,
+                1584627,
+                2147483648,
+                1622658364,
+                21683,
+                4092,
+                537132836
+              ],
+              "frame": "43911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1326682436,
+              1071132147
+            ],
+            "sp": 537132856,
+            "saved": [
+              1282371,
+              1022,
+              4294967294,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "4F139144",
+                "3FD82DF3"
+              ],
+              "R6": 1023,
+              "SP": 537132836,
+              "frame": "43911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "seeds": [
+            99039
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                1326682436,
+                1584627,
+                2147483648,
+                1622658364,
+                21683,
+                4092,
+                537132836
+              ],
+              "frame": "43911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": [
+            {
+              "D": 99039,
+              "saved_R3": 1584627,
+              "leaf_R3": 42021,
+              "join_R3": 1584627
+            }
+          ]
+        }
+      }
+    },
+    {
+      "x": "3FE83B1AF4197993",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "group": "all9_new_strict_fixes",
+      "expected": "40052CCAAE063393",
+      "outputs": {
+        "parent": "40052CCAAE063393",
+        "control": "40052CCAAE063393",
+        "candidate": "40052CCAAE063393",
+        "qfp_composed_pow": "40052CCAAE063393",
+        "qfp_composed_pow_exact": "40052CCAAE063393",
+        "qfp_composed_pow_integer": "C0052CCAAE063393"
+      },
+      "instructions": {
+        "parent": 1524,
+        "control": 1524,
+        "candidate": 1524,
+        "qfp_composed_pow": 1567,
+        "qfp_composed_pow_exact": 1588,
+        "qfp_composed_pow_integer": 1625
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1326682443,
+              1071132147
+            ],
+            "sp": 537132856,
+            "saved": [
+              1282378,
+              1022,
+              4294967294,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                1326682443,
+                1584627,
+                2147483648,
+                1622658364,
+                21683,
+                4092,
+                537132836
+              ],
+              "frame": "4a911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1326682443,
+              1071132147
+            ],
+            "sp": 537132856,
+            "saved": [
+              1282378,
+              1022,
+              4294967294,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                1326682443,
+                1584627,
+                2147483648,
+                1622658364,
+                21683,
+                4092,
+                537132836
+              ],
+              "frame": "4a911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FE83B1AF4197993",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "group": "all9_new_strict_fixes",
+      "expected": "40052CCAAE063393",
+      "outputs": {
+        "parent": "40052CCAAE063393",
+        "control": "40052CCAAE063393",
+        "candidate": "40052CCAAE063393",
+        "qfp_composed_pow": "40052CCAAE063393",
+        "qfp_composed_pow_exact": "40052CCAAE063393",
+        "qfp_composed_pow_integer": "C0052CCAAE063393"
+      },
+      "instructions": {
+        "parent": 1613,
+        "control": 1613,
+        "candidate": 1545,
+        "qfp_composed_pow": 1567,
+        "qfp_composed_pow_exact": 1588,
+        "qfp_composed_pow_integer": 1625
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1326682443,
+              1071132147
+            ],
+            "sp": 537132856,
+            "saved": [
+              1282378,
+              1022,
+              4294967294,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "4F13914B",
+                "3FD82DF3"
+              ],
+              "R6": 1023,
+              "SP": 537132836,
+              "frame": "4a911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "seeds": [
+            99039
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                1326682443,
+                1584627,
+                2147483648,
+                1622658364,
+                21683,
+                4092,
+                537132836
+              ],
+              "frame": "4a911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1326682443,
+              1071132147
+            ],
+            "sp": 537132856,
+            "saved": [
+              1282378,
+              1022,
+              4294967294,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "4F13914B",
+                "3FD82DF3"
+              ],
+              "R6": 1023,
+              "SP": 537132836,
+              "frame": "4a911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "seeds": [
+            99039
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                1326682443,
+                1584627,
+                2147483648,
+                1622658364,
+                21683,
+                4092,
+                537132836
+              ],
+              "frame": "4a911300fe030000feffffff0000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": [
+            {
+              "D": 99039,
+              "saved_R3": 1584627,
+              "leaf_R3": 42021,
+              "join_R3": 1584627
+            }
+          ]
+        }
+      }
+    },
+    {
+      "x": "3FF6373805BC6B4D",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3FD44A55CCA71D98",
+      "outputs": {
+        "parent": "3FD44A55CCA71D98",
+        "control": "3FD44A55CCA71D98",
+        "candidate": "3FD44A55CCA71D98",
+        "qfp_composed_pow": "3FD44A55CCA71D98",
+        "qfp_composed_pow_exact": "3FD44A55CCA71D98",
+        "qfp_composed_pow_integer": "BFD44A55CCA71D98"
+      },
+      "instructions": {
+        "parent": 1525,
+        "control": 1525,
+        "candidate": 1525,
+        "qfp_composed_pow": 1572,
+        "qfp_composed_pow_exact": 1593,
+        "qfp_composed_pow_integer": 1630
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              178437192,
+              1074346960
+            ],
+            "sp": 537132856,
+            "saved": [
+              179271,
+              1022,
+              1,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                178437192,
+                1653712,
+                2147483648,
+                1693401130,
+                20777,
+                4080,
+                537132836
+              ],
+              "frame": "47bc0200fe030000010000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              178437192,
+              1074346960
+            ],
+            "sp": 537132856,
+            "saved": [
+              179271,
+              1022,
+              1,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                178437192,
+                1653712,
+                2147483648,
+                1693401130,
+                20777,
+                4080,
+                537132836
+              ],
+              "frame": "47bc0200fe030000010000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FF6373805BC6B4D",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3FD44A55CCA71D98",
+      "outputs": {
+        "parent": "3FD44A55CCA71D98",
+        "control": "3FD44A55CCA71D98",
+        "candidate": "3FD44A55CCA71D98",
+        "qfp_composed_pow": "3FD44A55CCA71D98",
+        "qfp_composed_pow_exact": "3FD44A55CCA71D98",
+        "qfp_composed_pow_integer": "BFD44A55CCA71D98"
+      },
+      "instructions": {
+        "parent": 1612,
+        "control": 1612,
+        "candidate": 1549,
+        "qfp_composed_pow": 1572,
+        "qfp_composed_pow_exact": 1593,
+        "qfp_composed_pow_integer": 1630
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              178437192,
+              1074346960
+            ],
+            "sp": 537132856,
+            "saved": [
+              179271,
+              1022,
+              1,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "0AA2BC48",
+                "40093BD0"
+              ],
+              "R6": 1020,
+              "SP": 537132836,
+              "frame": "47bc0200fe030000010000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            103357
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                178437192,
+                1653712,
+                2147483648,
+                1693401130,
+                20777,
+                4080,
+                537132836
+              ],
+              "frame": "47bc0200fe030000010000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              178437192,
+              1074346960
+            ],
+            "sp": 537132856,
+            "saved": [
+              179271,
+              1022,
+              1,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "0AA2BC48",
+                "40093BD0"
+              ],
+              "R6": 1020,
+              "SP": 537132836,
+              "frame": "47bc0200fe030000010000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            103357
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                178437192,
+                1653712,
+                2147483648,
+                1693401130,
+                20777,
+                4080,
+                537132836
+              ],
+              "frame": "47bc0200fe030000010000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": [
+            {
+              "D": 103357,
+              "saved_R3": 1653712,
+              "leaf_R3": 70517,
+              "join_R3": 1653712
+            }
+          ]
+        }
+      }
+    },
+    {
+      "x": "40108FC436BAF116",
+      "y": "BFF4000000000000",
+      "SIO": "READY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3FC5AC240180415D",
+      "outputs": {
+        "parent": "3FC5AC240180415D",
+        "control": "3FC5AC240180415D",
+        "candidate": "3FC5AC240180415D",
+        "qfp_composed_pow": "3FC5AC240180415D",
+        "qfp_composed_pow_exact": "3FC5AC240180415D",
+        "qfp_composed_pow_integer": "BFC5AC240180415D"
+      },
+      "instructions": {
+        "parent": 1469,
+        "control": 1469,
+        "candidate": 1469,
+        "qfp_composed_pow": 1536,
+        "qfp_composed_pow_exact": 1557,
+        "qfp_composed_pow_integer": 1594
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2818846071,
+              1075290078
+            ],
+            "sp": 537132856,
+            "saved": [
+              273782,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2818846071,
+                1548254,
+                2147483648,
+                1585412768,
+                22193,
+                4076,
+                537132836
+              ],
+              "frame": "762d0400fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2818846071,
+              1075290078
+            ],
+            "sp": 537132856,
+            "saved": [
+              273782,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2818846071,
+                1548254,
+                2147483648,
+                1585412768,
+                22193,
+                4076,
+                537132836
+              ],
+              "frame": "762d0400fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "40108FC436BAF116",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3FC5AC240180415D",
+      "outputs": {
+        "parent": "3FC5AC240180415D",
+        "control": "3FC5AC240180415D",
+        "candidate": "3FC5AC240180415D",
+        "qfp_composed_pow": "3FC5AC240180415D",
+        "qfp_composed_pow_exact": "3FC5AC240180415D",
+        "qfp_composed_pow_integer": "BFC5AC240180415D"
+      },
+      "instructions": {
+        "parent": 1558,
+        "control": 1558,
+        "candidate": 1490,
+        "qfp_composed_pow": 1536,
+        "qfp_composed_pow_exact": 1557,
+        "qfp_composed_pow_integer": 1594
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2818846071,
+              1075290078
+            ],
+            "sp": 537132856,
+            "saved": [
+              273782,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "A8042D77",
+                "40179FDE"
+              ],
+              "R6": 1019,
+              "SP": 537132836,
+              "frame": "762d0400fe030000020000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            96765
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2818846071,
+                1548254,
+                2147483648,
+                1585412768,
+                22193,
+                4076,
+                537132836
+              ],
+              "frame": "762d0400fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2818846071,
+              1075290078
+            ],
+            "sp": 537132856,
+            "saved": [
+              273782,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "A8042D77",
+                "40179FDE"
+              ],
+              "R6": 1019,
+              "SP": 537132836,
+              "frame": "762d0400fe030000020000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            96765
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2818846071,
+                1548254,
+                2147483648,
+                1585412768,
+                22193,
+                4076,
+                537132836
+              ],
+              "frame": "762d0400fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": [
+            {
+              "D": 96765,
+              "saved_R3": 1548254,
+              "leaf_R3": 52770,
+              "join_R3": 1548254
+            }
+          ]
+        }
+      }
+    },
+    {
+      "x": "40108FC436BAF118",
+      "y": "BFF4000000000000",
+      "SIO": "READY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3FC5AC2401804159",
+      "outputs": {
+        "parent": "3FC5AC2401804159",
+        "control": "3FC5AC2401804159",
+        "candidate": "3FC5AC2401804159",
+        "qfp_composed_pow": "3FC5AC2401804159",
+        "qfp_composed_pow_exact": "3FC5AC2401804159",
+        "qfp_composed_pow_integer": "BFC5AC2401804159"
+      },
+      "instructions": {
+        "parent": 1490,
+        "control": 1490,
+        "candidate": 1490,
+        "qfp_composed_pow": 1544,
+        "qfp_composed_pow_exact": 1565,
+        "qfp_composed_pow_integer": 1602
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2818846074,
+              1075290078
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2818846074,
+                1548254,
+                2147483648,
+                1585412768,
+                22193,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2818846074,
+              1075290078
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2818846074,
+                1548254,
+                2147483648,
+                1585412768,
+                22193,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "40108FC436BAF118",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3FC5AC2401804159",
+      "outputs": {
+        "parent": "3FC5AC2401804159",
+        "control": "3FC5AC2401804159",
+        "candidate": "3FC5AC2401804159",
+        "qfp_composed_pow": "3FC5AC2401804159",
+        "qfp_composed_pow_exact": "3FC5AC2401804159",
+        "qfp_composed_pow_integer": "BFC5AC2401804159"
+      },
+      "instructions": {
+        "parent": 1579,
+        "control": 1579,
+        "candidate": 1511,
+        "qfp_composed_pow": 1544,
+        "qfp_composed_pow_exact": 1565,
+        "qfp_composed_pow_integer": 1602
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2818846074,
+              1075290078
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "A8042D7A",
+                "40179FDE"
+              ],
+              "R6": 1019,
+              "SP": 537132836,
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            96765
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2818846074,
+                1548254,
+                2147483648,
+                1585412768,
+                22193,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2818846074,
+              1075290078
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "A8042D7A",
+                "40179FDE"
+              ],
+              "R6": 1019,
+              "SP": 537132836,
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            96765
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2818846074,
+                1548254,
+                2147483648,
+                1585412768,
+                22193,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": [
+            {
+              "D": 96765,
+              "saved_R3": 1548254,
+              "leaf_R3": 52770,
+              "join_R3": 1548254
+            }
+          ]
+        }
+      }
+    },
+    {
+      "x": "401160A32D94245E",
+      "y": "BFF4000000000000",
+      "SIO": "READY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3FC46874DDBA4A5D",
+      "outputs": {
+        "parent": "3FC46874DDBA4A5D",
+        "control": "3FC46874DDBA4A5D",
+        "candidate": "3FC46874DDBA4A5D",
+        "qfp_composed_pow": "3FC46874DDBA4A5D",
+        "qfp_composed_pow_exact": "3FC46874DDBA4A5D",
+        "qfp_composed_pow_integer": "BFC46874DDBA4A5D"
+      },
+      "instructions": {
+        "parent": 1474,
+        "control": 1474,
+        "candidate": 1474,
+        "qfp_composed_pow": 1516,
+        "qfp_composed_pow_exact": 1537,
+        "qfp_composed_pow_integer": 1574
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2765144373,
+              1075386001
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2765144373,
+                1644177,
+                2147483648,
+                1683637907,
+                20898,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2765144373,
+              1075386001
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2765144373,
+                1644177,
+                2147483648,
+                1683637907,
+                20898,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "401160A32D94245E",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3FC46874DDBA4A5D",
+      "outputs": {
+        "parent": "3FC46874DDBA4A5D",
+        "control": "3FC46874DDBA4A5D",
+        "candidate": "3FC46874DDBA4A5D",
+        "qfp_composed_pow": "3FC46874DDBA4A5D",
+        "qfp_composed_pow_exact": "3FC46874DDBA4A5D",
+        "qfp_composed_pow_integer": "BFC46874DDBA4A5D"
+      },
+      "instructions": {
+        "parent": 1562,
+        "control": 1562,
+        "candidate": 1495,
+        "qfp_composed_pow": 1516,
+        "qfp_composed_pow_exact": 1537,
+        "qfp_composed_pow_integer": 1574
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2765144373,
+              1075386001
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "A4D0C135",
+                "40191691"
+              ],
+              "R6": 1019,
+              "SP": 537132836,
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            102761
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2765144373,
+                1644177,
+                2147483648,
+                1683637907,
+                20898,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2765144373,
+              1075386001
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "A4D0C135",
+                "40191691"
+              ],
+              "R6": 1019,
+              "SP": 537132836,
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            102761
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2765144373,
+                1644177,
+                2147483648,
+                1683637907,
+                20898,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": [
+            {
+              "D": 102761,
+              "saved_R3": 1644177,
+              "leaf_R3": 71300,
+              "join_R3": 1644177
+            }
+          ]
+        }
+      }
+    },
+    {
+      "x": "401160A32D94245F",
+      "y": "BFF4000000000000",
+      "SIO": "READY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3FC46874DDBA4A5C",
+      "outputs": {
+        "parent": "3FC46874DDBA4A5C",
+        "control": "3FC46874DDBA4A5C",
+        "candidate": "3FC46874DDBA4A5C",
+        "qfp_composed_pow": "3FC46874DDBA4A5C",
+        "qfp_composed_pow_exact": "3FC46874DDBA4A5C",
+        "qfp_composed_pow_integer": "BFC46874DDBA4A5C"
+      },
+      "instructions": {
+        "parent": 1442,
+        "control": 1442,
+        "candidate": 1442,
+        "qfp_composed_pow": 1524,
+        "qfp_composed_pow_exact": 1545,
+        "qfp_composed_pow_integer": 1582
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2765144375,
+              1075386001
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2765144375,
+                1644177,
+                2147483648,
+                1683637907,
+                20898,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2765144375,
+              1075386001
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2765144375,
+                1644177,
+                2147483648,
+                1683637907,
+                20898,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "401160A32D94245F",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3FC46874DDBA4A5C",
+      "outputs": {
+        "parent": "3FC46874DDBA4A5C",
+        "control": "3FC46874DDBA4A5C",
+        "candidate": "3FC46874DDBA4A5C",
+        "qfp_composed_pow": "3FC46874DDBA4A5C",
+        "qfp_composed_pow_exact": "3FC46874DDBA4A5C",
+        "qfp_composed_pow_integer": "BFC46874DDBA4A5C"
+      },
+      "instructions": {
+        "parent": 1530,
+        "control": 1530,
+        "candidate": 1463,
+        "qfp_composed_pow": 1524,
+        "qfp_composed_pow_exact": 1545,
+        "qfp_composed_pow_integer": 1582
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2765144375,
+              1075386001
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "A4D0C137",
+                "40191691"
+              ],
+              "R6": 1019,
+              "SP": 537132836,
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            102761
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2765144375,
+                1644177,
+                2147483648,
+                1683637907,
+                20898,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2765144375,
+              1075386001
+            ],
+            "sp": 537132856,
+            "saved": [
+              0,
+              1022,
+              2,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "A4D0C137",
+                "40191691"
+              ],
+              "R6": 1019,
+              "SP": 537132836,
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            102761
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2765144375,
+                1644177,
+                2147483648,
+                1683637907,
+                20898,
+                4076,
+                537132836
+              ],
+              "frame": "00000000fe030000020000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": [
+            {
+              "D": 102761,
+              "saved_R3": 1644177,
+              "leaf_R3": 71300,
+              "join_R3": 1644177
+            }
+          ]
+        }
+      }
+    },
+    {
+      "x": "40722140DA997522",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3E24A9A46AED0A9C",
+      "outputs": {
+        "parent": "3E24A9A46AED0A9C",
+        "control": "3E24A9A46AED0A9C",
+        "candidate": "3E24A9A46AED0A9C",
+        "qfp_composed_pow": "3E24A9A46AED0A9C",
+        "qfp_composed_pow_exact": "3E24A9A46AED0A9C",
+        "qfp_composed_pow_integer": "BE24A9A46AED0A9C"
+      },
+      "instructions": {
+        "parent": 1507,
+        "control": 1507,
+        "candidate": 1507,
+        "qfp_composed_pow": 1554,
+        "qfp_composed_pow_exact": 1575,
+        "qfp_composed_pow_integer": 1612
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              4211575510,
+              1102628715
+            ],
+            "sp": 537132856,
+            "saved": [
+              494293,
+              1022,
+              28,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                4211575510,
+                1623915,
+                2147483648,
+                1662889964,
+                21159,
+                3972,
+                537132836
+              ],
+              "frame": "d58a0700fe0300001c0000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              4211575510,
+              1102628715
+            ],
+            "sp": 537132856,
+            "saved": [
+              494293,
+              1022,
+              28,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                4211575510,
+                1623915,
+                2147483648,
+                1662889964,
+                21159,
+                3972,
+                537132836
+              ],
+              "frame": "d58a0700fe0300001c0000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "40722140DA997522",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "group": "all9_new_strict_fixes",
+      "expected": "3E24A9A46AED0A9C",
+      "outputs": {
+        "parent": "3E24A9A46AED0A9C",
+        "control": "3E24A9A46AED0A9C",
+        "candidate": "3E24A9A46AED0A9C",
+        "qfp_composed_pow": "3E24A9A46AED0A9C",
+        "qfp_composed_pow_exact": "3E24A9A46AED0A9C",
+        "qfp_composed_pow_integer": "BE24A9A46AED0A9C"
+      },
+      "instructions": {
+        "parent": 1596,
+        "control": 1596,
+        "candidate": 1531,
+        "qfp_composed_pow": 1554,
+        "qfp_composed_pow_exact": 1575,
+        "qfp_composed_pow_integer": 1612
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              4211575510,
+              1102628715
+            ],
+            "sp": 537132856,
+            "saved": [
+              494293,
+              1022,
+              28,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "FB078AD6",
+                "41B8C76B"
+              ],
+              "R6": 993,
+              "SP": 537132836,
+              "frame": "d58a0700fe0300001c0000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            101494
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                4211575510,
+                1623915,
+                2147483648,
+                1662889964,
+                21159,
+                3972,
+                537132836
+              ],
+              "frame": "d58a0700fe0300001c0000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              4211575510,
+              1102628715
+            ],
+            "sp": 537132856,
+            "saved": [
+              494293,
+              1022,
+              28,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "FB078AD6",
+                "41B8C76B"
+              ],
+              "R6": 993,
+              "SP": 537132836,
+              "frame": "d58a0700fe0300001c0000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            101494
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                4211575510,
+                1623915,
+                2147483648,
+                1662889964,
+                21159,
+                3972,
+                537132836
+              ],
+              "frame": "d58a0700fe0300001c0000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": [
+            {
+              "D": 101494,
+              "saved_R3": 1623915,
+              "leaf_R3": 45697,
+              "join_R3": 1623915
+            }
+          ]
+        }
+      }
+    },
+    {
+      "x": "40701C60DA91800E",
+      "y": "C004000000000000",
+      "SIO": "READY",
+      "group": "public_seed_delta_endpoint",
+      "expected": "3EAF73CF9CB27BCB",
+      "outputs": {
+        "parent": "3EAF73CF9CB27BCB",
+        "control": "3EAF73CF9CB27BCB",
+        "candidate": "3EAF73CF9CB27BCB",
+        "qfp_composed_pow": "3EAF73CF9CB27BD5",
+        "qfp_composed_pow_exact": "3EAF73CF9CB27BD5",
+        "qfp_composed_pow_integer": "3EAF73CF9CB27BD5"
+      },
+      "instructions": {
+        "parent": 1317,
+        "control": 1317,
+        "candidate": 1317,
+        "qfp_composed_pow": 1595,
+        "qfp_composed_pow_exact": 1616,
+        "qfp_composed_pow_integer": 1653
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2654016583,
+              1093683024
+            ],
+            "sp": 537132856,
+            "saved": [
+              1119302,
+              1022,
+              20,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2654016583,
+                1066832,
+                2147483648,
+                1092436600,
+                32207,
+                4004,
+                537132836
+              ],
+              "frame": "46141100fe030000140000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2654016583,
+              1093683024
+            ],
+            "sp": 537132856,
+            "saved": [
+              1119302,
+              1022,
+              20,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2654016583,
+                1066832,
+                2147483648,
+                1092436600,
+                32207,
+                4004,
+                537132836
+              ],
+              "frame": "46141100fe030000140000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "40701C60DA91800E",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "group": "public_seed_delta_endpoint",
+      "expected": "3EAF73CF9CB27BCB",
+      "outputs": {
+        "parent": "3EAF73CF9CB27BCB",
+        "control": "3EAF73CF9CB27BCB",
+        "candidate": "3EAF73CF9CB27BCB",
+        "qfp_composed_pow": "3EAF73CF9CB27BD5",
+        "qfp_composed_pow_exact": "3EAF73CF9CB27BD5",
+        "qfp_composed_pow_integer": "3EAF73CF9CB27BD5"
+      },
+      "instructions": {
+        "parent": 1410,
+        "control": 1410,
+        "candidate": 1337,
+        "qfp_composed_pow": 1595,
+        "qfp_composed_pow_exact": 1616,
+        "qfp_composed_pow_integer": 1653
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2654016583,
+              1093683024
+            ],
+            "sp": 537132856,
+            "saved": [
+              1119302,
+              1022,
+              20,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "9E311447",
+                "41304750"
+              ],
+              "R6": 1001,
+              "SP": 537132836,
+              "frame": "46141100fe030000140000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            66677
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2654016583,
+                1066832,
+                2147483648,
+                1092436600,
+                32207,
+                4004,
+                537132836
+              ],
+              "frame": "46141100fe030000140000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              2654016583,
+              1093683024
+            ],
+            "sp": 537132856,
+            "saved": [
+              1119302,
+              1022,
+              20,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "9E311447",
+                "41304750"
+              ],
+              "R6": 1001,
+              "SP": 537132836,
+              "frame": "46141100fe030000140000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            66677
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                2654016583,
+                1066832,
+                2147483648,
+                1092436600,
+                32207,
+                4004,
+                537132836
+              ],
+              "frame": "46141100fe030000140000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": [
+            {
+              "D": 66677,
+              "saved_R3": 1066832,
+              "leaf_R3": 35017,
+              "join_R3": 1066832
+            }
+          ]
+        }
+      }
+    },
+    {
+      "x": "400B1FE7CB6FA4C6",
+      "y": "BFFF000000000000",
+      "SIO": "READY",
+      "group": "public_seed_delta_endpoint",
+      "expected": "3FB808D2709F1050",
+      "outputs": {
+        "parent": "3FB808D2709F1050",
+        "control": "3FB808D2709F1050",
+        "candidate": "3FB808D2709F1050",
+        "qfp_composed_pow": "3FB808D2709F1051",
+        "qfp_composed_pow_exact": "3FB808D2709F1051",
+        "qfp_composed_pow_integer": "BFB808D2709F1051"
+      },
+      "instructions": {
+        "parent": 2704,
+        "control": 2704,
+        "candidate": 2704,
+        "qfp_composed_pow": 1515,
+        "qfp_composed_pow_exact": 1536,
+        "qfp_composed_pow_integer": 1573
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3047579612,
+              1076186496
+            ],
+            "sp": 537132856,
+            "saved": [
+              417755,
+              1022,
+              3,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3047579612,
+                1396096,
+                2147483648,
+                1429603030,
+                24611,
+                4072,
+                537132836
+              ],
+              "frame": "db5f0600fe030000030000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3047579612,
+              1076186496
+            ],
+            "sp": 537132856,
+            "saved": [
+              417755,
+              1022,
+              3,
+              0,
+              269807897
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3047579612,
+                1396096,
+                2147483648,
+                1429603030,
+                24611,
+                4072,
+                537132836
+              ],
+              "frame": "db5f0600fe030000030000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "400B1FE7CB6FA4C6",
+      "y": "BFFF000000000000",
+      "SIO": "DIRTY",
+      "group": "public_seed_delta_endpoint",
+      "expected": "3FB808D2709F1050",
+      "outputs": {
+        "parent": "3FB808D2709F1050",
+        "control": "3FB808D2709F1050",
+        "candidate": "3FB808D2709F1050",
+        "qfp_composed_pow": "3FB808D2709F1051",
+        "qfp_composed_pow_exact": "3FB808D2709F1051",
+        "qfp_composed_pow_integer": "BFB808D2709F1051"
+      },
+      "instructions": {
+        "parent": 2790,
+        "control": 2790,
+        "candidate": 2731,
+        "qfp_composed_pow": 1515,
+        "qfp_composed_pow_exact": 1536,
+        "qfp_composed_pow_integer": 1573
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3047579612,
+              1076186496
+            ],
+            "sp": 537132856,
+            "saved": [
+              417755,
+              1022,
+              3,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "B5A65FDC",
+                "40254D80"
+              ],
+              "R6": 1018,
+              "SP": 537132836,
+              "frame": "db5f0600fe030000030000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            87256
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3047579612,
+                1396096,
+                2147483648,
+                1429603030,
+                24611,
+                4072,
+                537132836
+              ],
+              "frame": "db5f0600fe030000030000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3047579612,
+              1076186496
+            ],
+            "sp": 537132856,
+            "saved": [
+              417755,
+              1022,
+              3,
+              0,
+              269807897
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "B5A65FDC",
+                "40254D80"
+              ],
+              "R6": 1018,
+              "SP": 537132836,
+              "frame": "db5f0600fe030000030000000000000019f11410"
+            }
+          ],
+          "seeds": [
+            87256
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3047579612,
+                1396096,
+                2147483648,
+                1429603030,
+                24611,
+                4072,
+                537132836
+              ],
+              "frame": "db5f0600fe030000030000000000000019f11410"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ],
+          "R3_save_clobber_pop_join": [
+            {
+              "D": 87256,
+              "saved_R3": 1396096,
+              "leaf_R3": 52463,
+              "join_R3": 1396096
+            }
+          ]
+        }
+      }
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "SIO": "READY",
+      "group": "unchanged_original153_control",
+      "expected": "3FB0E1D596EB463B",
+      "outputs": {
+        "parent": "3FB0E1D596EB463B",
+        "control": "3FB0E1D596EB463B",
+        "candidate": "3FB0E1D596EB463B",
+        "qfp_composed_pow": "3FB0E1D596EB463B",
+        "qfp_composed_pow_exact": "3FB0E1D596EB463B",
+        "qfp_composed_pow_integer": "3FB0E1D596EB463B"
+      },
+      "instructions": {
+        "parent": 5045,
+        "control": 5045,
+        "candidate": 5045,
+        "qfp_composed_pow": 1585,
+        "qfp_composed_pow_exact": 1606,
+        "qfp_composed_pow_integer": 1643
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "SIO": "DIRTY",
+      "group": "unchanged_original153_control",
+      "expected": "3FB0E1D596EB463B",
+      "outputs": {
+        "parent": "3FB0E1D596EB463B",
+        "control": "3FB0E1D596EB463B",
+        "candidate": "3FB0E1D596EB463B",
+        "qfp_composed_pow": "3FB0E1D596EB463B",
+        "qfp_composed_pow_exact": "3FB0E1D596EB463B",
+        "qfp_composed_pow_integer": "3FB0E1D596EB463B"
+      },
+      "instructions": {
+        "parent": 5691,
+        "control": 5691,
+        "candidate": 5691,
+        "qfp_composed_pow": 1585,
+        "qfp_composed_pow_exact": 1606,
+        "qfp_composed_pow_integer": 1643
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "SIO": "READY",
+      "group": "unchanged_original153_control",
+      "expected": "3FE51503CA80F09C",
+      "outputs": {
+        "parent": "3FE51503CA80F09C",
+        "control": "3FE51503CA80F09C",
+        "candidate": "3FE51503CA80F09C",
+        "qfp_composed_pow": "3FE51503CA80F09C",
+        "qfp_composed_pow_exact": "3FE51503CA80F09C",
+        "qfp_composed_pow_integer": "3FE51503CA80F09C"
+      },
+      "instructions": {
+        "parent": 3537,
+        "control": 3537,
+        "candidate": 3537,
+        "qfp_composed_pow": 1568,
+        "qfp_composed_pow_exact": 1589,
+        "qfp_composed_pow_integer": 1598
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "SIO": "DIRTY",
+      "group": "unchanged_original153_control",
+      "expected": "3FE51503CA80F09C",
+      "outputs": {
+        "parent": "3FE51503CA80F09C",
+        "control": "3FE51503CA80F09C",
+        "candidate": "3FE51503CA80F09C",
+        "qfp_composed_pow": "3FE51503CA80F09C",
+        "qfp_composed_pow_exact": "3FE51503CA80F09C",
+        "qfp_composed_pow_integer": "3FE51503CA80F09C"
+      },
+      "instructions": {
+        "parent": 3537,
+        "control": 3537,
+        "candidate": 3537,
+        "qfp_composed_pow": 1568,
+        "qfp_composed_pow_exact": 1589,
+        "qfp_composed_pow_integer": 1598
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "SIO": "READY",
+      "group": "unchanged_original153_control",
+      "expected": "4004374E30A30829",
+      "outputs": {
+        "parent": "4004374E30A30829",
+        "control": "4004374E30A30829",
+        "candidate": "4004374E30A30829",
+        "qfp_composed_pow": "4004374E30A30829",
+        "qfp_composed_pow_exact": "4004374E30A30829",
+        "qfp_composed_pow_integer": "4004374E30A30829"
+      },
+      "instructions": {
+        "parent": 3230,
+        "control": 3230,
+        "candidate": 3230,
+        "qfp_composed_pow": 1503,
+        "qfp_composed_pow_exact": 1524,
+        "qfp_composed_pow_integer": 1533
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "SIO": "DIRTY",
+      "group": "unchanged_original153_control",
+      "expected": "4004374E30A30829",
+      "outputs": {
+        "parent": "4004374E30A30829",
+        "control": "4004374E30A30829",
+        "candidate": "4004374E30A30829",
+        "qfp_composed_pow": "4004374E30A30829",
+        "qfp_composed_pow_exact": "4004374E30A30829",
+        "qfp_composed_pow_integer": "4004374E30A30829"
+      },
+      "instructions": {
+        "parent": 3230,
+        "control": 3230,
+        "candidate": 3230,
+        "qfp_composed_pow": 1503,
+        "qfp_composed_pow_exact": 1524,
+        "qfp_composed_pow_integer": 1533
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "SIO": "READY",
+      "group": "unchanged_original153_control",
+      "expected": "3FE9F5FE54731716",
+      "outputs": {
+        "parent": "3FE9F5FE54731716",
+        "control": "3FE9F5FE54731716",
+        "candidate": "3FE9F5FE54731716",
+        "qfp_composed_pow": "3FE9F5FE54731716",
+        "qfp_composed_pow_exact": "3FE9F5FE54731716",
+        "qfp_composed_pow_integer": "3FE9F5FE54731716"
+      },
+      "instructions": {
+        "parent": 3213,
+        "control": 3213,
+        "candidate": 3213,
+        "qfp_composed_pow": 1522,
+        "qfp_composed_pow_exact": 1543,
+        "qfp_composed_pow_integer": 1552
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "SIO": "DIRTY",
+      "group": "unchanged_original153_control",
+      "expected": "3FE9F5FE54731716",
+      "outputs": {
+        "parent": "3FE9F5FE54731716",
+        "control": "3FE9F5FE54731716",
+        "candidate": "3FE9F5FE54731716",
+        "qfp_composed_pow": "3FE9F5FE54731716",
+        "qfp_composed_pow_exact": "3FE9F5FE54731716",
+        "qfp_composed_pow_integer": "3FE9F5FE54731716"
+      },
+      "instructions": {
+        "parent": 3213,
+        "control": 3213,
+        "candidate": 3213,
+        "qfp_composed_pow": 1522,
+        "qfp_composed_pow_exact": 1543,
+        "qfp_composed_pow_integer": 1552
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FF654E7580FA958",
+      "y": "3FE5000000000000",
+      "SIO": "READY",
+      "group": "unchanged_original153_control",
+      "expected": "3FF3E9D51AF35305",
+      "outputs": {
+        "parent": "3FF3E9D51AF35305",
+        "control": "3FF3E9D51AF35305",
+        "candidate": "3FF3E9D51AF35305",
+        "qfp_composed_pow": "3FF3E9D51AF35305",
+        "qfp_composed_pow_exact": "3FF3E9D51AF35305",
+        "qfp_composed_pow_integer": "3FF3E9D51AF35305"
+      },
+      "instructions": {
+        "parent": 3194,
+        "control": 3194,
+        "candidate": 3194,
+        "qfp_composed_pow": 1534,
+        "qfp_composed_pow_exact": 1555,
+        "qfp_composed_pow_integer": 1564
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FF654E7580FA958",
+      "y": "3FE5000000000000",
+      "SIO": "DIRTY",
+      "group": "unchanged_original153_control",
+      "expected": "3FF3E9D51AF35305",
+      "outputs": {
+        "parent": "3FF3E9D51AF35305",
+        "control": "3FF3E9D51AF35305",
+        "candidate": "3FF3E9D51AF35305",
+        "qfp_composed_pow": "3FF3E9D51AF35305",
+        "qfp_composed_pow_exact": "3FF3E9D51AF35305",
+        "qfp_composed_pow_integer": "3FF3E9D51AF35305"
+      },
+      "instructions": {
+        "parent": 3194,
+        "control": 3194,
+        "candidate": 3194,
+        "qfp_composed_pow": 1534,
+        "qfp_composed_pow_exact": 1555,
+        "qfp_composed_pow_integer": 1564
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "401FB34C9D8CF59F",
+      "y": "3FE5000000000000",
+      "SIO": "READY",
+      "group": "unchanged_original153_control",
+      "expected": "400F1F205F79242E",
+      "outputs": {
+        "parent": "400F1F205F79242E",
+        "control": "400F1F205F79242E",
+        "candidate": "400F1F205F79242E",
+        "qfp_composed_pow": "400F1F205F79242E",
+        "qfp_composed_pow_exact": "400F1F205F79242E",
+        "qfp_composed_pow_integer": "400F1F205F79242E"
+      },
+      "instructions": {
+        "parent": 3184,
+        "control": 3184,
+        "candidate": 3184,
+        "qfp_composed_pow": 1559,
+        "qfp_composed_pow_exact": 1580,
+        "qfp_composed_pow_integer": 1589
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "401FB34C9D8CF59F",
+      "y": "3FE5000000000000",
+      "SIO": "DIRTY",
+      "group": "unchanged_original153_control",
+      "expected": "400F1F205F79242E",
+      "outputs": {
+        "parent": "400F1F205F79242E",
+        "control": "400F1F205F79242E",
+        "candidate": "400F1F205F79242E",
+        "qfp_composed_pow": "400F1F205F79242E",
+        "qfp_composed_pow_exact": "400F1F205F79242E",
+        "qfp_composed_pow_integer": "400F1F205F79242E"
+      },
+      "instructions": {
+        "parent": 3184,
+        "control": 3184,
+        "candidate": 3184,
+        "qfp_composed_pow": 1559,
+        "qfp_composed_pow_exact": 1580,
+        "qfp_composed_pow_integer": 1589
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 779,
+        "qfp_composed_pow_exact": 800,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 779,
+        "qfp_composed_pow_exact": 800,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "0000000000000001",
+      "y": "3FE0000000000000",
+      "SIO": "READY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "1E60000000000000",
+      "outputs": {
+        "parent": "1E60000000000000",
+        "control": "1E60000000000000",
+        "candidate": "1E60000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 221,
+        "control": 221,
+        "candidate": 221,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 28,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "0000000000000001",
+      "y": "3FE0000000000000",
+      "SIO": "DIRTY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "1E60000000000000",
+      "outputs": {
+        "parent": "1E60000000000000",
+        "control": "1E60000000000000",
+        "candidate": "1E60000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 221,
+        "control": 221,
+        "candidate": 221,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 28,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "C000000000000000",
+      "y": "3FE0000000000000",
+      "SIO": "READY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "parent": "7FF8000000000000",
+        "control": "7FF8000000000000",
+        "candidate": "7FF8000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "FFF0000000000000",
+        "qfp_composed_pow_integer": "3FF6A09E667F3BCC"
+      },
+      "instructions": {
+        "parent": 71,
+        "control": 71,
+        "candidate": 71,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 26,
+        "qfp_composed_pow_integer": 1515
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "C000000000000000",
+      "y": "3FE0000000000000",
+      "SIO": "DIRTY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "parent": "7FF8000000000000",
+        "control": "7FF8000000000000",
+        "candidate": "7FF8000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "FFF0000000000000",
+        "qfp_composed_pow_integer": "3FF6A09E667F3BCC"
+      },
+      "instructions": {
+        "parent": 71,
+        "control": 71,
+        "candidate": 71,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 26,
+        "qfp_composed_pow_integer": 1515
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "y": "BFE0000000000000",
+      "SIO": "READY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "1FF0000000000000",
+      "outputs": {
+        "parent": "1FF0000000000000",
+        "control": "1FF0000000000000",
+        "candidate": "1FF0000000000000",
+        "qfp_composed_pow": "1FF0000000000036",
+        "qfp_composed_pow_exact": "1FF0000000000001",
+        "qfp_composed_pow_integer": "1FF0000000000036"
+      },
+      "instructions": {
+        "parent": 302,
+        "control": 302,
+        "candidate": 302,
+        "qfp_composed_pow": 1345,
+        "qfp_composed_pow_exact": 367,
+        "qfp_composed_pow_integer": 1377
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "y": "BFE0000000000000",
+      "SIO": "DIRTY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "1FF0000000000000",
+      "outputs": {
+        "parent": "1FF0000000000000",
+        "control": "1FF0000000000000",
+        "candidate": "1FF0000000000000",
+        "qfp_composed_pow": "1FF0000000000036",
+        "qfp_composed_pow_exact": "1FF0000000000001",
+        "qfp_composed_pow_integer": "1FF0000000000036"
+      },
+      "instructions": {
+        "parent": 302,
+        "control": 302,
+        "candidate": 302,
+        "qfp_composed_pow": 1345,
+        "qfp_composed_pow_exact": 367,
+        "qfp_composed_pow_integer": 1377
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FF0000000000000",
+      "y": "7FF0000000000001",
+      "SIO": "READY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "parent": "7FF8000000000001",
+        "control": "7FF8000000000001",
+        "candidate": "7FF8000000000001",
+        "qfp_composed_pow": "7FF0000000000000",
+        "qfp_composed_pow_exact": "7FF0000000000000",
+        "qfp_composed_pow_integer": "7FF0000000000000"
+      },
+      "instructions": {
+        "parent": 46,
+        "control": 46,
+        "candidate": 46,
+        "qfp_composed_pow": 1465,
+        "qfp_composed_pow_exact": 1475,
+        "qfp_composed_pow_integer": 1485
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "3FF0000000000000",
+      "y": "7FF0000000000001",
+      "SIO": "DIRTY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "parent": "7FF8000000000001",
+        "control": "7FF8000000000001",
+        "candidate": "7FF8000000000001",
+        "qfp_composed_pow": "7FF0000000000000",
+        "qfp_composed_pow_exact": "7FF0000000000000",
+        "qfp_composed_pow_integer": "7FF0000000000000"
+      },
+      "instructions": {
+        "parent": 46,
+        "control": 46,
+        "candidate": 46,
+        "qfp_composed_pow": 1465,
+        "qfp_composed_pow_exact": 1475,
+        "qfp_composed_pow_integer": 1485
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "FFF0000000000001",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "parent": "FFF8000000000001",
+        "control": "FFF8000000000001",
+        "candidate": "FFF8000000000001",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 15,
+        "control": 15,
+        "candidate": 15,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    },
+    {
+      "x": "FFF0000000000001",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "group": "IEEE_and_sNaN_controls",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "parent": "FFF8000000000001",
+        "control": "FFF8000000000001",
+        "candidate": "FFF8000000000001",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 15,
+        "control": 15,
+        "candidate": 15,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        },
+        "candidate": {
+          "entry": null,
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [],
+          "R3_save_clobber_pop_join": []
+        }
+      }
+    }
+  ],
+  "device_IO": 0
+}

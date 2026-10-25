@@ -1,0 +1,60 @@
+{
+  "status": "PASS_EXACT_SEED_AND_PRIVATE_GUARDED_JOIN_PROOF",
+  "source_and_tail_binding": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/binding.json",
+    "bytes": 472061,
+    "sha256": "a687370b61c41fa702898a675a8ae9bd8dc04a656a0c60775dab9940ee2f1802"
+  },
+  "actual_root_BL": "0x1014f114",
+  "actual_private_entry": "0x101e1040",
+  "actual_sw": "0x101e1204",
+  "actual_seed": "0x101e1358",
+  "actual_common_join": "0x101e123e",
+  "HOST_integer_seed_invariant_checks": 65536,
+  "not_ARM_or_MPFR_calls": true,
+  "exact_quotient_domain": [
+    65536,
+    131071
+  ],
+  "quotient_range": [
+    32768,
+    65535
+  ],
+  "invariant": "prefix=Q*D+R; initial17 one bits Q=1,R=131071-D; fifteen steps T=2R+1,bit=(T>=D),R=T-bit*D,Q=2Q+bit give prefixFFFFFFFF.",
+  "carry_reason": "CMP gives C=(T>=D); BCC preserves it; selected SUBS cannot borrow and retains C=1; ADCS appends that bit. Incoming flags are replaced before they can affect a quotient bit.",
+  "Tmax_observed": 261119,
+  "T_less_2pow18_proved": true,
+  "Q_fits_unsigned16_all_steps": true,
+  "no_32bit_overflow": true,
+  "seed_rounding": "q=floor(FFFFFFFF/D); u0=(q+1)>>1 is identical hardware sequence, range16384..32768, q+1<=65536.",
+  "normal_guard_and_result_exponent_HOST_boundary_checks": 81,
+  "R6_guard_range": [
+    0,
+    2043
+  ],
+  "R12_tag_max8173": true,
+  "private_state_preconditions": "Entry normal raw R0:R1 and R2:R3, guarded R6=Ea-Eb+1021, unchanged saved20B R4-R7/LR frame. No standalone C ABI at sw_from_guard.",
+  "software_seed_save_pop_preserves_four_raw_unpacked_words_and_R7": true,
+  "seed_call_SP_8aligned": true,
+  "seed_only_writes_R0_R2_flags_no_memory_and_R12_unchanged": true,
+  "at_join_R0_R6_R12_SP_and_saved20_equal_to_hardware": true,
+  "dead_R7_first_common_use_is_write": {
+    "pc": "0x101e1256",
+    "instruction": "lsrs r7, r4, #16"
+  },
+  "common_first_ASRS_sets_carry_first_ADDS_sets_all_flags_before_branch": true,
+  "common_NR_exact_remainder_RNE_tail282_byte_equal": true,
+  "no_new_approximation_precision_or_RNE_policy": true,
+  "fallback_and_dyadic_paths_preserve_existing_IEEE_bits": true,
+  "private_symbols_hidden": {
+    "mk61_m0_ddiv_seed17": 2,
+    "mk61_m0_hint_ddiv": 2,
+    "mk61_m0_ddiv_sw_from_guard": 2
+  },
+  "no_generic_ddiv_continuation_export_or_reuse": true,
+  "source_merge_actual_R12_loader_layout_required": true,
+  "existing_common_kernel_contract_reused_not_new_general_pow_totality": true,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "device_IO": 0
+}

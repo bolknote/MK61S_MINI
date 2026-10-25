@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-20261025/verify-direct.py", line 16, in <module>
+    address=image.symbols[tag+'_first_product']&~1
+            ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'mk61_m0_hint_first_product'

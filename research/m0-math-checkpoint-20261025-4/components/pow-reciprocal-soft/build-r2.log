@@ -1,0 +1,65 @@
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/seed17.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/seed17.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+{
+  "status": "BUILT_PRIVATE_DIRTY_DIVIDER_SEED_CONTINUATION_NOT_QUALIFIED",
+  "images": {
+    "control": {
+      "ELF_sha256": "d536fbf42fca9d8df1772c563b2e17413dba381cf557b9ca29bf0c985dd2b5e0",
+      "entry": 270405685,
+      "software": 270406137,
+      "seed": 270406477,
+      "allocated": {
+        ".rootprefix": {
+          "address": 269805160,
+          "bytes": 4652
+        },
+        ".front": {
+          "address": 269811712,
+          "bytes": 532
+        },
+        ".tail": {
+          "address": 269812352,
+          "bytes": 768
+        },
+        ".ddiv": {
+          "address": 270405632,
+          "bytes": 1038
+        }
+      }
+    },
+    "candidate": {
+      "ELF_sha256": "285307160c39afa066f18e2784ad7704931f53e84c51dfe4c74febb352f976ae",
+      "entry": 270405697,
+      "software": 270406149,
+      "seed": 270406489,
+      "allocated": {
+        ".rootprefix": {
+          "address": 269805160,
+          "bytes": 4652
+        },
+        ".front": {
+          "address": 269811712,
+          "bytes": 532
+        },
+        ".tail": {
+          "address": 269812352,
+          "bytes": 768
+        },
+        ".ddiv": {
+          "address": 270405632,
+          "bytes": 1050
+        }
+      }
+    }
+  },
+  "source_parent": ".build/m0-pow-boundary128-20261025",
+  "source_parent_FROZEN_sha256": "61c98b938cf723f2f9b63ef06f22a3033c1b07af979dbe56ef9a2a2d56ed3393",
+  "exact_seed_proof_sha256": "39bdc872ffb93d4973cbe2845fe0e2c606db16abb53e4ba89920ceeaeff0896d",
+  "root_call_relocation_offset": 2732,
+  "only_root_call_changed_in_existing_resident_code": true,
+  "default_M0_M4_source_controls_equal": true,
+  "BSD_existing_kernel_own_seed_no_Qfplib_source_or_new_table_values": true,
+  "hardware_accessed": false
+}

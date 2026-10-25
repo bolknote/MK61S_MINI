@@ -1,0 +1,38 @@
+{
+  "lut128_ceil_inner": {
+    "bins": 128,
+    "table_bytes": 256,
+    "input_round": "ceil",
+    "inner_round": "ceil",
+    "outer_round": "floor",
+    "ELF_sha256": "b67e53424e7edf26d2a619c901c586ddc3096b41af4c629a0bdf652fbd6681a7",
+    "source_sha256": "561825ffd8ef0ec02077037e8eda45e8de746643c4f9b3e00a5bcde5ad4d347c"
+  },
+  "lut128_floor": {
+    "bins": 128,
+    "table_bytes": 256,
+    "input_round": "ceil",
+    "inner_round": "floor",
+    "outer_round": "floor",
+    "ELF_sha256": "745ab30902b7b2a225c90d5cfbef5acc3dd9eb5def3e5125832506f822c71434",
+    "source_sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f"
+  },
+  "lut64_ceil_outer": {
+    "bins": 64,
+    "table_bytes": 128,
+    "input_round": "ceil",
+    "inner_round": "floor",
+    "outer_round": "ceil",
+    "ELF_sha256": "5ed32cefc3ea79c7ee2d60e9ba1882a8ab265736d88d0526d4b8540f272abc8e",
+    "source_sha256": "96b670a43fd559028a3ae4f34e0be66c5bfe14c4e7f11506ce60e068d587a45f"
+  },
+  "lut32_ceil_outer": {
+    "bins": 32,
+    "table_bytes": 64,
+    "input_round": "ceil",
+    "inner_round": "floor",
+    "outer_round": "ceil",
+    "ELF_sha256": "1f6bd0b6c2149d070679f58a2e28d85f87bda5d5669b1b0fcf0fef8714960287",
+    "source_sha256": "1ad1496413218ebd0405e15fb329f8b30179142da6c25cd858fd94ff11e67c24"
+  }
+}

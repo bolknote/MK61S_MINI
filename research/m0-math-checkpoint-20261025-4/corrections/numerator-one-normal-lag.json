@@ -1,0 +1,37 @@
+{
+  "status": "AUTHOR_CORRIGENDUM_DIRECT_NORMAL_LAG_RANGE_ONLY",
+  "packet": ".build/m0-pow-reciprocal-one-20261025",
+  "FROZEN_sha256": "3341f37fa8b5a5177af792be2417b1365c5b6595f66280151e5ed6f72d8c5469",
+  "HANDOFF_sha256": "f07ad6e465e704a8468cee74df5ef21712e7a47846bd56d8bda6ad9c4c25df70",
+  "result_sha256": "7989f332e186e1be2860f6048dc4e418d34c97e3cc668d82dcfa6ee6360f9e75",
+  "direct_remaining_sha256": "a80a04a39f6935b209f3e10e973705621606a80e3c10e07ea1cc364a6e012bef",
+  "original_HANDOFF_claim": "18 normal states lagging2-5 instructions",
+  "correct_all_normal_states": 18,
+  "correct_all_normal_denominators": 9,
+  "correct_all_normal_lag_range": [
+    2,
+    21
+  ],
+  "correct_lag_ranges_by_SIO": {
+    "READY": [
+      2,
+      5
+    ],
+    "DIRTY": [
+      15,
+      21
+    ]
+  },
+  "reason": "The handoff accidentally used the first READY observation of each unique denominator; the corresponding DIRTY rows lag15-21 instructions. All raw records were already correct.",
+  "witnesses": [
+    {
+      "denominator": "3FF27D0DF6735E90",
+      "SIO": "DIRTY",
+      "candidate": 167,
+      "Qfplib": 146
+    }
+  ],
+  "all_numerical_counts_results_cost_records_and_frozen_files_unchanged": true,
+  "actual_ARM_or_MPFR_calls": 0,
+  "goal_complete": false
+}

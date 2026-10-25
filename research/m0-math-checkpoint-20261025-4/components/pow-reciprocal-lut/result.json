@@ -1,0 +1,100 @@
+{
+  "status": "FROZEN_AUTHOR_EXACT_SMALL_TABLE_SEED_CALLER_PENDING_REVIEW",
+  "source_parent": ".build/m0-pow-reciprocal-soft-20261025",
+  "source_parent_FROZEN_sha256": "13dc7f8186d4678fac6b7a0da0b27e00dbb678316e292d320d3eefdd35dbba0c",
+  "parent_independent_review": {
+    "path": ".build/m0-pow-reciprocal-soft-independent-20261025/FINAL-REVIEW.json",
+    "sha256": "211cf956001390c4f0b894a9979ca8aa640cfe7a5d33082fdfe6cc497268c3e0",
+    "status": "TECH_GO_PRIVATE_DIRTY_ROOT_RECIPROCAL_COMPONENT_ONLY"
+  },
+  "parent_ROOT_receipt": null,
+  "seed_comparison_FROZEN_sha256": "ebddb871e62fbdaeedd2f24a7ebeff506eb4d2ea6ee4a9d30bb1fff27fc9e955",
+  "candidate_ELF_sha256": "e5247764b40a409598f1ebbe7f8a46d9e52544a611ba7ec2d40d183e6c4e96e5",
+  "source_proof_sha256": "759f611459e7349b1154fc36311a35b72900bf89f3165d80ea65b85c420ff210",
+  "numeric_proof_sha256": "7290c8f94b6c253d817cecf5d0ec5936f2babdd84041556d2942e75a0182a4d7",
+  "same_corpus_pairs": 120980,
+  "states": 241960,
+  "reference_state_variants": 279522,
+  "loss_pairs": [
+    11386,
+    11377
+  ],
+  "new_strict_fixes": 9,
+  "new_raw_losses": 0,
+  "candidate_wrong": 0,
+  "accelerated_DIRTY_states": 377,
+  "public_instruction_reduction_range": [
+    59,
+    73
+  ],
+  "parent_cost_increase_states": 0,
+  "READY_instructions_unchanged": true,
+  "all_parent_return_bits_reciprocal_operands_and_common_RNE_code_identical": true,
+  "all_actual_public_cost_deltas_match_measured_seed_cost_deltas": true,
+  "exact_seed_function_bytes": 56,
+  "exact_seed_table_bytes": 256,
+  "exact_seed_total_bytes": 312,
+  "parent_seed_bytes": 194,
+  "seed_instruction_range": [
+    20,
+    27
+  ],
+  "parent_seed_instruction_range": [
+    82,
+    97
+  ],
+  "private_ddiv_allocation_bytes": [
+    1050,
+    1168
+  ],
+  "allocated_code_delta_bytes": 118,
+  "new_mathematical_table_values": true,
+  "new_global_RAM_or_libgcc_dependencies": false,
+  "complete_divisor_domain_65536_and_all16_NZCV_table_edges_bare_qualified": true,
+  "selected_bare_tests": 77840,
+  "selected_bare_qualified_ARM_calls": 155680,
+  "other_variant_experimental_calls_excluded": 233520,
+  "total_qualified_fresh_ARM_calls": 476133,
+  "fresh_full_candidate_calls": 241960,
+  "fresh_changed_parent_calls": 377,
+  "fresh_public_MPFR_control_Qfplib_calls": 61524,
+  "fresh_direct_operator_calls": 16592,
+  "actual_directed_MPFR_inputs": 6761,
+  "sNaN_policy_shortcuts": 184,
+  "fresh_exact_dyadic_operator_oracle_inputs": 256,
+  "failed_direct_preflight24_ARM3_MPFR_excluded": true,
+  "parent_qualification_pilot_and_old_seed66288_not_fresh": true,
+  "new_original153_pilot_not_run": true,
+  "all_direct_and_public_Qfplib_raw_output_cost_rows_retained": true,
+  "wrong_direct_Qfplib_variants_retained": 936,
+  "wrong_public_Qfplib_variants_retained": 77106,
+  "correct_Qfplib_comparison": {
+    "slower": 21044,
+    "faster": 178667,
+    "equal": 2705
+  },
+  "no_nominal_reference_domain_filter": true,
+  "all10254_fresh_control_rows_match_full_records": true,
+  "all377_changed_paths_fresh_parent_replayed": true,
+  "DIRTY_all7_SIO_words_preserved_no_writes_seed_R1_R12_PCS_SP_PC_and_alignment_preserved": true,
+  "default_M0_M4_selected_controls_unchanged_and3_new_seed_disabled_objects_empty": true,
+  "eighteen_original_path_object_ELF_rebuilds_exact": true,
+  "full_observed_stack_bytes": 2284,
+  "fresh_parent_control_candidate_stack_bytes": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148
+  },
+  "changed_parent388_is_subset_not_comparator": true,
+  "original_pow153_remaining": [
+    34,
+    34
+  ],
+  "author_separate507_no_slower": 437,
+  "reviewed_separate507_no_slower": 422,
+  "private_root_caller_only_other_ddiv_callers_unchanged": true,
+  "independent_review_pending": true,
+  "source_merge_actual_integrated_R12_loader_layout_14B_overlay_hazard_general_pow_totality_other_needed_math_physical_cycles_release_pending": true,
+  "canonical_runtime_M4_Git_device_USB_Flash_or_release_changed": false,
+  "goal_complete": false
+}

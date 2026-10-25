@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/verify-direct.py", line 6, in <module>
+    from harness import *
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/harness.py", line 16, in <module>
+    for image in base.resident_images+[base.boundary_images['candidate']]:
+                 ^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'square128_parent_harness' has no attribute 'resident_images'

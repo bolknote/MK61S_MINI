@@ -1,0 +1,10 @@
+{
+  "status": "FAILED_REVIEWER_REGISTER_SUBSTRING_TEST",
+  "command": "python3 -B own/proof.py",
+  "tool_chunk": "099247",
+  "exit_code": 1,
+  "error": "proof.py line80: 'r12' in disassembly args falsely matches symbol pow_integer128...; require register word tokens",
+  "actual_ARM_calls": 0,
+  "actual_MPFR_inputs": 0,
+  "arithmetic_or_binary_failure": false
+}

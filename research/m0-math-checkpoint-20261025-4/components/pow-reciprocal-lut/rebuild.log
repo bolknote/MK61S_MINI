@@ -1,0 +1,22 @@
+rebuild 1 / 18 RP-control.o
+rebuild 2 / 18 RP-candidate.o
+rebuild 3 / 18 generic_M0-control.o
+rebuild 4 / 18 generic_M0-candidate.o
+rebuild 5 / 18 M4_soft-control.o
+rebuild 6 / 18 M4_soft-candidate.o
+rebuild 7 / 18 M4_hard-control.o
+rebuild 8 / 18 M4_hard-candidate.o
+rebuild 9 / 18 control-ddiv.o
+rebuild 10 / 18 candidate-ddiv.o
+rebuild 11 / 18 software.o
+rebuild 12 / 18 control-seed17.o
+rebuild 13 / 18 candidate-seed17.o
+rebuild 14 / 18 control.elf
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-20261025/control-seed17.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+rebuild 15 / 18 candidate.elf
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-20261025/software.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+rebuild 16 / 18 generic_M0-seed-disabled.o
+rebuild 17 / 18 M4_soft-seed-disabled.o
+rebuild 18 / 18 M4_hard-seed-disabled.o

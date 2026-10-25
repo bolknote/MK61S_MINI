@@ -1,0 +1,72 @@
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/software.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/candidate-software.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+{
+  "status": "BUILT_PRIVATE_RECIPROCAL1_EXACT_PRODUCT_NOT_QUALIFIED",
+  "images": {
+    "control": {
+      "ELF_sha256": "7d751f39a3196c08a1d06d5f81518b3a34f83cdc6ba215e3b1d74862887fb50a",
+      "entry_symbol": "mk61_m0_hint_ddiv",
+      "entry": 270405697,
+      "software_symbol": "mk61_m0_ddiv_sw_from_guard",
+      "software": 270406149,
+      "seed": 270406489,
+      "allocated": {
+        ".rootprefix": {
+          "address": 269805160,
+          "bytes": 4652
+        },
+        ".front": {
+          "address": 269811712,
+          "bytes": 532
+        },
+        ".tail": {
+          "address": 269812352,
+          "bytes": 768
+        },
+        ".ddiv": {
+          "address": 270405632,
+          "bytes": 1168
+        }
+      }
+    },
+    "candidate": {
+      "ELF_sha256": "f5aac41609ad35a12c3b2a3af490cc7999172764f7ddc4d7bee52cb65c246dbf",
+      "entry_symbol": "mk61_m0_reciprocal1",
+      "entry": 270405697,
+      "software_symbol": "mk61_m0_reciprocal1_sw_from_guard",
+      "software": 270406113,
+      "seed": 270406413,
+      "allocated": {
+        ".rootprefix": {
+          "address": 269805160,
+          "bytes": 4652
+        },
+        ".front": {
+          "address": 269811712,
+          "bytes": 532
+        },
+        ".tail": {
+          "address": 269812352,
+          "bytes": 768
+        },
+        ".ddiv": {
+          "address": 270405632,
+          "bytes": 1092
+        }
+      }
+    }
+  },
+  "source_parent": ".build/m0-pow-reciprocal-lut-20261025",
+  "source_parent_FROZEN_sha256": "7384323f37dae2fb8a7cf350a64165392181e20276e83551ccf9ef320d811ffc",
+  "root_call_relocation_offset": 2732,
+  "control_all_allocated_bytes_addresses_equal_parent": true,
+  "only_candidate_ddiv_section_changed": true,
+  "root_call_bytes_address_unchanged_but_private_symbol_renamed": true,
+  "private_candidate_precondition": "R0=0,R1=0x3ff00000; denominator R2:R3 any binary64",
+  "seed_source_bytes_unchanged": true,
+  "normal_NR_exact_remainder_RNE_suffix_unchanged": true,
+  "private_allocated_code_delta": -76,
+  "hardware_accessed": false
+}

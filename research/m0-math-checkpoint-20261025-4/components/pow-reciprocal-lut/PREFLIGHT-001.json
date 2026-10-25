@@ -1,0 +1,8 @@
+{
+  "status": "FAILED_DIRECT_CALIBRATION_WRONG_PARENT_SYMBOL",
+  "reason": "The parent now has a private hint alias; the inherited direct driver invoked original __aeabi_ddiv instead of that alias",
+  "actual_ARM_calls": 24,
+  "actual_directed_MPFR_inputs": 3,
+  "candidate_wrong": 0,
+  "excluded_from_qualified_calls": true
+}

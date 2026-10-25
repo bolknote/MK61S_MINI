@@ -1,0 +1,16 @@
+{
+  "status": "PASS_EXACT_INTEGER_CERTIFICATE_MODEL_AND_BOUNDARIES",
+  "analytic_bound": 131071,
+  "proof": "hi32(u*v)-uh*vh<=uh+vh<=131070; add borrow<=1. The selected modular interval excludes both signed discontinuities.",
+  "structured_cases": 38416,
+  "random_cases": 300000,
+  "classification": {
+    "fallback": 19223,
+    "certified": 319193
+  },
+  "observed_max_omitted": 131070,
+  "uncertain_band_includes_zero_and_INT32_MIN": true,
+  "all_certified_signs_identical": true,
+  "actual_ARM_or_MPFR_calls": 0,
+  "hardware_accessed": false
+}

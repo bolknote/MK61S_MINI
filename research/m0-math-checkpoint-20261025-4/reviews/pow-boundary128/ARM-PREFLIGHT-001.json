@@ -1,0 +1,11 @@
+{
+  "status": "FAILED_REVIEWER_UNRESTRICTED_SPEED_ASSERTION",
+  "command": "existing Unicorn Python arm.py bare",
+  "tool_chunk": "be7a95",
+  "exit_code": 1,
+  "error": "arm.py line78: assert costs['candidate']<=costs['control']",
+  "completed_report": false,
+  "calls_not_claimed_as_qualified": true,
+  "reason_pending": "Determine valid vs invalid cell path; report already proved bit/operand equality before speed assertion",
+  "auto_review_rejection": false
+}

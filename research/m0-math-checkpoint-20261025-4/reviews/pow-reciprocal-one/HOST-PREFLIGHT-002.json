@@ -1,0 +1,9 @@
+{
+  "status": "REVIEWER_EXACT_DISASSEMBLY_OPERAND_SPELLING_ASSUMPTION",
+  "tool_chunk": "885b03",
+  "exit_code": 1,
+  "error": "Second product instruction operands differ from expected textual form; inspect actual disassembly",
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "guard_proof_completed": true
+}

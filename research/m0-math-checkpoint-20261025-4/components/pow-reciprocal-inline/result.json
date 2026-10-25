@@ -1,0 +1,140 @@
+{
+  "status": "FROZEN_AUTHOR_PRIVATE_INLINE_SEED_TINY_OVERFLOW_PENDING_REVIEW",
+  "source_parent": ".build/m0-pow-reciprocal-one-20261025",
+  "source_parent_FROZEN_sha256": "3341f37fa8b5a5177af792be2417b1365c5b6595f66280151e5ed6f72d8c5469",
+  "parent_independent_review": {
+    "path": ".build/m0-pow-reciprocal-one-independent-20261025/FINAL-REVIEW.json",
+    "sha256": "f9945c0cf8c6e38dcfdce1239f0a47ee2a6d20a11e4cd01a13e15d8665f8d1b7",
+    "status": "TECH_GO_PRIVATE_EXACT_NUMERATOR_ONE_RECIPROCAL_COMPONENT_ONLY"
+  },
+  "ROOT_receipts_present_at_seal": {
+    "soft": {
+      "path": ".build/m0-pow-reciprocal-soft-root-acceptance-20261025-001/RECEIPT.json",
+      "bytes": 15734,
+      "sha256": "de2f15995d64baa1e7e68aec9d45cc90efa43264ce1cf5985fb3fc7d6849372c"
+    },
+    "lut": {
+      "path": ".build/m0-pow-reciprocal-lut-root-acceptance-20261025-001/RECEIPT.json",
+      "bytes": 17315,
+      "sha256": "19a0b7fc1f415cd90fcf3ec20e523939c79ec8518c988774547c2cc991cdb198"
+    }
+  },
+  "candidate_ELF_sha256": "c1287a067ecfbe363d34b8e4afd1b8526b6214250bf1e7cdf3e6b833d502e8aa",
+  "source_proof_sha256": "b343ee096d9e74e3be726b729c329abcc2780000d3068411df03df759a0282ae",
+  "numeric_proof_sha256": "71afa9d31fbd185af354036632b9c5d4e9e2b034e6a9f53023ff8026d627232e",
+  "private_contract": "exact positive numerator1, denominator any binary64; not general division",
+  "other_resident_ddiv_callers_unchanged": true,
+  "exact_subnormal_integer_overflow_threshold": 1125899906842624,
+  "exact_endpoint_products_prove_all_integer_magnitudes": true,
+  "inline_seed_exhaustive_divisors": 65536,
+  "bare_context_tests": 71696,
+  "bare_context_ARM_calls": 143392,
+  "all16_NZCV_table_edges_checked": true,
+  "inline_R0_R1_R2_R3_R5_R12_and_SP_unchanged": true,
+  "no_inline_memory_writes_or_C_ABI_calls": true,
+  "inline_SP_is_own_entry_minus20": true,
+  "unchanged256B_table_relocated_into_software_body": true,
+  "old312B_standalone_seed_not_allocated": true,
+  "unchanged4_after_second_product_186B_RNE_suffixes": true,
+  "hardware_nine_ALU_latency_gap_preserved": true,
+  "DIRTY_all7_SIO_words_unchanged_no_writes": true,
+  "same_corpus_pairs": 120980,
+  "states": 241960,
+  "reference_state_variants": 279522,
+  "loss_pairs": [
+    11372,
+    11371
+  ],
+  "new_strict_fixes": 1,
+  "new_raw_losses": 0,
+  "candidate_wrong": 0,
+  "accelerated_public_states": 754,
+  "accelerated_public_states_by_SIO": {
+    "READY": 377,
+    "DIRTY": 377
+  },
+  "public_instruction_reduction_range": [
+    2,
+    7
+  ],
+  "public_parent_cost_increases": 0,
+  "fresh_parent_reciprocal_path_calls": 778,
+  "fresh_parent_changed_subset_calls": 754,
+  "unchanged_power_of_two_parent_controls": 24,
+  "all_public_costs_match_exact_model": true,
+  "all10254_fresh_controls_match_full_records": true,
+  "direct_expanded_pairs": 20994,
+  "direct_states": 41988,
+  "direct_loss_states": [
+    7422,
+    13
+  ],
+  "new_direct_Qfplib_loss_states": 0,
+  "direct_correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 24966,
+      "slower": 7422
+    },
+    "candidate": {
+      "faster": 32370,
+      "equal": 5,
+      "slower": 13
+    }
+  },
+  "direct_parent_cost_increase_states": 9664,
+  "direct_parent_increase_histogram": {
+    "8": 3168,
+    "2": 352,
+    "11": 6144
+  },
+  "all_correct_incorrect_Qfplib_outputs_costs_and_parent_increases_retained": true,
+  "no_nominal_reference_domain_filter": true,
+  "wrong_direct_Qfplib_variants": 9600,
+  "wrong_public_Qfplib_variants": 77106,
+  "public_correct_Qfplib_comparison": {
+    "slower": 21028,
+    "faster": 178683,
+    "equal": 2705
+  },
+  "total_qualified_fresh_ARM_calls": 615606,
+  "fresh_full_candidate_ARM_calls": 241960,
+  "fresh_parent_reciprocal_path_ARM_calls": 778,
+  "fresh_public_MPFR_control_reference_ARM_calls": 61524,
+  "fresh_scalar_ARM_calls": 167952,
+  "fresh_bare_context_ARM_calls": 143392,
+  "actual_directed_MPFR_inputs": 26011,
+  "sNaN_policy_shortcuts": 110,
+  "failed_symbol_lookup0_scalar0_MPFR_excluded": true,
+  "failed_relative_stack_trace318_completed_ARM2partial23_MPFR_excluded": true,
+  "parent_campaigns_not_fresh": true,
+  "private_code_bytes": [
+    1060,
+    1072
+  ],
+  "allocated_code_delta_bytes": 12,
+  "no_new_table_values_RAM_or_libgcc": true,
+  "default_M0_M4_selected_controls_and6_disabled_objects_empty": true,
+  "twenty_four_original_path_source_object_ELF_rebuilds_exact": true,
+  "full_observed_stack_bytes": 2284,
+  "fresh_public_controls_stack_bytes": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148
+  },
+  "direct_stack_bytes": {
+    "parent": 176,
+    "control": 176,
+    "candidate": 176
+  },
+  "parent_changed_subset_not_complete_comparator": true,
+  "original_pow153_remaining": [
+    34,
+    34
+  ],
+  "author_separate507_no_slower": 437,
+  "reviewed_separate507_no_slower": 422,
+  "independent_review_pending": true,
+  "remaining_scalar_deficits_other_needed_math_general_totality_source_merge_actual_R12_loader_layout_14B_overlay_cycles_release_pending": true,
+  "canonical_runtime_M4_Git_device_USB_Flash_or_release_changed": false,
+  "goal_complete": false
+}

@@ -1,0 +1,7 @@
+{
+  "status": "FAILED_IMPORT_BEFORE_MACHINE_CREATION",
+  "actual_ARM_calls": 0,
+  "actual_MPFR_calls": 0,
+  "reason": "Imported public base name overwrote the boundary module handle",
+  "qualified": false
+}

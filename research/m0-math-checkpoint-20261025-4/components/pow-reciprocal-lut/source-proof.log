@@ -1,0 +1,47 @@
+{
+  "status": "PASS_EXACT_TABLE_MODEL_BOUND_SUFFIX_AND_INACTIVE_CONTROLS",
+  "candidate_ELF_sha256": "e5247764b40a409598f1ebbe7f8a46d9e52544a611ba7ec2d40d183e6c4e96e5",
+  "selected_unit_blob312B_identical_to_integrated_seed_suffix": true,
+  "function_bytes": 56,
+  "table_bytes": 256,
+  "all1050B_parent_code_except194B_seed_suffix_unchanged": true,
+  "all_other_allocated_bytes_addresses_identical": true,
+  "candidate_ddiv_bytes": 1168,
+  "parent_ddiv_bytes": 1050,
+  "allocated_delta_bytes": 118,
+  "exact_table_formula": "floor(2^32/(65536+512*i+256)), 0<=i<128",
+  "exhaustive_model_divisors": 65536,
+  "half_divisor_product_range": [
+    2139095040,
+    2155806720
+  ],
+  "signed_folded_high_range": [
+    -128,
+    127
+  ],
+  "signed_correction_product_range": [
+    -8355840,
+    8290560
+  ],
+  "signed_exact_initial_residual_range": [
+    -249015,
+    129026
+  ],
+  "initial_quotient_error_histogram": {
+    "-1": 140,
+    "0": 5167,
+    "1": 35252,
+    "2": 23815,
+    "3": 1162
+  },
+  "max_downward_corrections": 3,
+  "max_upward_corrections": 1,
+  "exact_modular_residual_and_euclidean_invariant_proved_for_every_divisor": true,
+  "normal_RNE_guards_tail_and_calls_unchanged": true,
+  "other_resident_ddiv_callers_unchanged": true,
+  "default_M0_M4_selected_root_objects_equal_and3_new_seed_objects_empty": true,
+  "new_global_RAM_or_libgcc_dependencies": false,
+  "actual_ARM_or_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}
