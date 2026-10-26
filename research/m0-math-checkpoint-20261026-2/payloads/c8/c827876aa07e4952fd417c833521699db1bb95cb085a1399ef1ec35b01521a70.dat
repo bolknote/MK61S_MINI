@@ -1,0 +1,17 @@
+{
+  "status": "ALL_R47_QUALIFICATION_PRODUCERS_TERMINAL_BEFORE_SEAL",
+  "all_producers_terminal": true,
+  "handles": {
+    "full73397": "exit0_consumed",
+    "admission37994": "exit0_consumed",
+    "matrix54355": "exit0_consumed",
+    "exp7204": "exit0_consumed",
+    "ln16788": "exit0_consumed",
+    "audit55623": "exit0_consumed"
+  },
+  "host_matrix_comparison_metadata_and_liveness_exit0": true,
+  "source_producers_terminal_previously_frozen": true,
+  "first_metadata_host_alias_attempt_preserved_zero_ARM": true,
+  "no_timeout_restart": true,
+  "goal_complete": false
+}

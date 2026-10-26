@@ -1,0 +1,30 @@
+"""Retain all candidate and zero-control deltas, including already-slower rows."""
+from pathlib import Path
+from collections import Counter
+from itertools import zip_longest
+import gzip,hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+P=ROOT/'.build/m0-math-unified-ddiv-normalized-r47-qualification-20261026'
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+assert sha(P/'FROZEN.json')=='2acca11ddee077b7919173f6ff97d96e3db632a81313aed123e481531a1d0358'
+assert not(W/'matrix-comparison.json').exists();reports={}
+for name in ['original507','broad']:
+    totals=Counter();hist={n:Counter()for n in ['candidate','zero-control']};increased={n:[]for n in hist};newloss=[]
+    with gzip.open(P/(name+'-records.jsonl.gz'),'rt')as old,gzip.open(W/(name+'-records.jsonl.gz'),'rt')as new:
+        for i,(a,b)in enumerate(zip_longest(old,new)):
+            assert a is not None and b is not None;a,b=json.loads(a),json.loads(b)
+            for k in set(a)-{'outputs','instructions','correct'}:assert a[k]==b[k],(name,i,k)
+            assert a['outputs']==b['outputs']and a['correct']==b['correct'];totals[b['operation']]+=1
+            for n in a['instructions']:
+                if n not in hist:assert a['instructions'][n]==b['instructions'][n];continue
+                d=b['instructions'][n]-a['instructions'][n];hist[n][d]+=1
+                if d>0:increased[n].append(dict(index=i,operation=b['operation'],x=b['x'],y=b['y'],SIO=b['SIO'],parent=a['instructions'][n],candidate=b['instructions'][n],delta=d))
+            for ref in a['instructions']:
+                if ref in hist or not b['correct'][ref]:continue
+                if a['instructions']['candidate']<=a['instructions'][ref]and b['instructions']['candidate']>b['instructions'][ref]:newloss.append(dict(index=i,reference=ref,record=b))
+    reports[name]=dict(state_rows=sum(totals.values()),operation_rows=dict(totals),all_outputs_correctness_and_reference_costs_exact_R47=True,candidate_and_zero_control_delta_histograms={n:dict(v)for n,v in hist.items()},all_candidate_and_zero_control_increase_rows=increased,new_correct_Qfplib_loss_rows=newloss,parent_records_sha256=sha(P/(name+'-records.jsonl.gz')),candidate_records_sha256=sha(W/(name+'-records.jsonl.gz')))
+out=dict(status='R48_FRESH_PRIMARY_COMPARISON_ALL_ADVERSE_CHANGES_RETAINED',parent_R47_qualification_FROZEN_sha256=sha(P/'FROZEN.json'),matrices=reports,no_new_ARM_MPFR_calls=True,hardware_accessed=False,integration_GO=False,goal_complete=False)
+(W/'matrix-comparison.json').write_text(json.dumps(out,indent=2)+'\n')
+assert all(not r['new_correct_Qfplib_loss_rows']for r in reports.values())
+print('R48 primary PASS',[(n,r['candidate_and_zero_control_delta_histograms'],{k:len(v)for k,v in r['all_candidate_and_zero_control_increase_rows'].items()})for n,r in reports.items()],flush=True)

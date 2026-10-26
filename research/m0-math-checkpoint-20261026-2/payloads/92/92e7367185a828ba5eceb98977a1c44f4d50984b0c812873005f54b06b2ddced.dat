@@ -1,0 +1,80 @@
+R48 boundary 0 / 231846 losses 0
+R48 boundary 8192 / 231846 losses 0
+R48 boundary 16384 / 231846 losses 0
+R48 boundary 24576 / 231846 losses 0
+R48 boundary 32768 / 231846 losses 0
+R48 boundary 40960 / 231846 losses 0
+R48 boundary 49152 / 231846 losses 0
+R48 boundary 57344 / 231846 losses 0
+R48 boundary 65536 / 231846 losses 0
+R48 boundary 73728 / 231846 losses 0
+R48 boundary 81920 / 231846 losses 0
+R48 boundary 90112 / 231846 losses 0
+R48 boundary 98304 / 231846 losses 0
+R48 boundary 106496 / 231846 losses 0
+R48 boundary 114688 / 231846 losses 0
+R48 boundary 122880 / 231846 losses 0
+R48 boundary 131072 / 231846 losses 0
+R48 boundary 139264 / 231846 losses 0
+R48 boundary 147456 / 231846 losses 0
+R48 boundary 155648 / 231846 losses 0
+R48 boundary 163840 / 231846 losses 0
+R48 boundary 172032 / 231846 losses 0
+R48 boundary 180224 / 231846 losses 0
+R48 boundary 188416 / 231846 losses 0
+R48 boundary 196608 / 231846 losses 0
+R48 boundary 204800 / 231846 losses 0
+R48 boundary 212992 / 231846 losses 0
+R48 boundary 221184 / 231846 losses 0
+R48 boundary 229376 / 231846 losses 0
+{
+  "status": "PASS_R48_FRESH_BOUNDARY_EXPLICIT_CACHED_REFERENCES_AND_ALL_ROUTE_EQUATIONS",
+  "input_pairs": 77282,
+  "state_rows": 231846,
+  "actual_diagnostic_ARM_calls": 231846,
+  "actual_directed_MPFR_inputs": 0,
+  "sNaN_policy_shortcuts": 0,
+  "parent_Qfp_gold_cached_frozen_R47_source_not_fresh": true,
+  "all_parent_child_instruction_deltas_match_actual_route_equation": true,
+  "actual_R48_route_counts": {
+    "PR": 48780,
+    "GR": 64752,
+    "SR": 2100,
+    "PN": 25644,
+    "GN": 32904,
+    "SN": 804
+  },
+  "route_instruction_delta_coefficients": {
+    "GN": -1,
+    "GR": 3,
+    "PN": -10,
+    "PR": 12,
+    "SN": 2,
+    "SR": 5
+  },
+  "candidate_wrong": 0,
+  "parent_losing_pairs": 0,
+  "candidate_losing_pairs": 0,
+  "parent_instruction_delta_histogram": {
+    "0": 56862,
+    "12": 48780,
+    "3": 64752,
+    "5": 2100,
+    "-10": 25644,
+    "-1": 32904,
+    "2": 804
+  },
+  "wrong_reference_state_variants_retained": 65340,
+  "all_wrong_reference_outputs_costs_retained": true,
+  "no_nominal_reference_filter": true,
+  "candidate_ELF_sha256": "d5c8d35cd5e183dfc352f531f8f8bd3cb09856c173f811f41ba74f07906ec863",
+  "parent_source_FROZEN_sha256": "0fc886823e57e22c97a082e457bf7795376c9b78b5a1795d9bcb4a07ac600894",
+  "input_records_sha256": "c10cb11a2b9b8f3b923f73c8a5a8cdda4407f75a5d28541ed6302709ecb94e1b",
+  "records_sha256": "ccacfb88b54137ac991ea85670e67897d5578d50e3da869e05149571881b9358",
+  "observed_stack_bytes": 176,
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 74.38729937502649
+}

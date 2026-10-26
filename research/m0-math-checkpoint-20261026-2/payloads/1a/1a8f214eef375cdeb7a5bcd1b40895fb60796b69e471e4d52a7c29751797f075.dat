@@ -1,0 +1,36 @@
+{
+  "status": "PASS_R47_REMOVED_R2_DEFINITION_AND_NZCV_LIVENESS",
+  "candidate_ELF_sha256": "64753f7bc086b6bde36f6cb0e3559885fd6b644ba050d49669bc26af79c64dfa",
+  "metadata_proof_sha256": "d74ac8a621ea4c3901d50e1d1c9747a7c4a1648d55a021686f45bf46564c60b2",
+  "actual_upper_binade_entry": 268574092,
+  "all_paths_instructions_checked": [
+    268574092,
+    268574094,
+    268574096,
+    268574098,
+    268574100,
+    268574102,
+    268574104,
+    268574106,
+    268574108,
+    268574110,
+    268574112,
+    268574184,
+    268574186
+  ],
+  "actual_R2_definition_frontiers": [
+    268574112,
+    268574186
+  ],
+  "old_R2_never_read_before_identical_stack_load_or_R12_move": true,
+  "old_metadata_flags_dead_before_first_ADDS": true,
+  "negative_controls_rejected": [
+    "old-carry-read",
+    "old-R2-read",
+    "write-frontier-reads-old-R2"
+  ],
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

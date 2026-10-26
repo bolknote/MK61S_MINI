@@ -1,0 +1,40 @@
+{
+  "status": "PASS_R47_UNIVERSAL_NORMAL_DIVISION_METADATA_COMPOSITION",
+  "candidate_ELF_sha256": "64753f7bc086b6bde36f6cb0e3559885fd6b644ba050d49669bc26af79c64dfa",
+  "source_FROZEN_sha256": "0fc886823e57e22c97a082e457bf7795376c9b78b5a1795d9bcb4a07ac600894",
+  "parent_source_FROZEN_sha256": "dbc455078837507acaeb750df1e3fb6800b923e2a9a880c9c6bcc2150ba3527a",
+  "inherited_seed_certificate_sha256": "2903b6f04ea60595fc11b9d43741a384f195838709d169a8faf09dfb54dd7bef",
+  "certificate_records_sha256": "39e96da61c73bfd7f9bbf587bd6e97c496fa880242f8f4cfff49f0df997a5654",
+  "fresh_host_all1048576_high_words_and16517_boxes": true,
+  "all_remaining32_divisor_and53_numerator_bits_covered": true,
+  "actual_seed_refinement_midpoint_graph_retained_instructions": 159,
+  "actual_graph_and_literals_exact_parent_except3removed_metadata_instructions": true,
+  "actual_small_dyadic_seed_route_and_table_bound": true,
+  "small_dyadic_error_strict_between": [
+    -138,
+    38
+  ],
+  "full_seed_quotient_error_strict_between": [
+    -256,
+    128
+  ],
+  "exact_unequal_mantissa_Q62_binade_gap": [
+    4611686018427387904,
+    9007199254740991
+  ],
+  "actual_binade_selection_equals_Ma_ge_Mb_for_every53bit_pair": true,
+  "packed_signed_high_ASR20_is_exact_normalized_exponent_for_all_signs_and_borrows": true,
+  "normal_R12_metadata_equivalent_for_all_admitted_inputs": true,
+  "metadata_exponent_sign_cases": 8184,
+  "normal_rounding_cannot_cross_upper_significand2": true,
+  "certain_overflow_and_zero_and_half_min_subnormal_tie_proved": true,
+  "all53_subnormal_numerator_zero_threshold_shifts_exact": true,
+  "other_gradual_underflow_and_IEEE_paths_keep_existing_exact_fallback": true,
+  "whole_division_new_transform_returned_value_proof_not_global_math_CR": true,
+  "actual_new_ARM_MPFR_calls": 0,
+  "independent_acceptance": false,
+  "physical_cycles_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

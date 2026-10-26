@@ -1,0 +1,26 @@
+"""Observe actual R48 paths without changing guest registers or flags."""
+from pathlib import Path
+from collections import Counter
+import ast,re,sys
+sys.dont_write_bytecode=True
+from unicorn import UC_HOOK_CODE
+W=Path(__file__).resolve().parent
+COEFFICIENTS={'GN':-1,'GR':3,'PN':-10,'PR':12,'SN':2,'SR':5}
+class RouteObserver:
+    def __init__(self,m):
+        self.m=m;self.counts=Counter();self.route=None;self.hooks=[]
+        fn=next(n for n in ast.parse((W/'verify-private-return.py').read_text()).body if isinstance(n,ast.FunctionDef)and n.name=='parse');env={'re':re};exec(compile(ast.Module(body=[fn],type_ignores=[]),'parser','exec'),env)
+        code=env['parse']((W/'candidate.dis').read_text());sym=lambda n:m.elf.symbols[n]&~1
+        start,stop=sym('mk61_m0_ddiv_dyadic_body_begin'),sym('mk61_m0_ddiv_small_normalize_begin')
+        branches=[r for a,r in code.items()if start<=a<stop and r['mnemonic']=='bls'];assert len(branches)==1;scale=int(branches[0]['operands'].split()[0],16)
+        sites=[('G',sym('mk61_m0_ddiv_coarse_dispatch_begin')),('P',start),('S',stop),('GN',sym('mk61_m0_ddiv_normal_range_join')),('SN',sym('mk61_m0_ddiv_small_range_join')),('PN',scale),('reject',sym('mk61_m0_ddiv_range_guard_begin'))]
+        def observe(uc,a,size,tag):
+            if tag in('G','P','S'):self.route=tag
+            elif tag=='reject':assert self.route in('G','P','S');self.counts[self.route+'R']+=1
+            else:assert self.route==tag[0];self.counts[tag]+=1
+        for tag,a in sites:self.hooks.append(m.uc.hook_add(UC_HOOK_CODE,observe,user_data=tag,begin=a,end=a))
+    def snapshot(self):return dict(self.counts)
+    def delta(self,before):return{k:self.counts[k]-before.get(k,0)for k in COEFFICIENTS if self.counts[k]-before.get(k,0)}
+    def expected(self,profile):return sum(COEFFICIENTS[k]*v for k,v in profile.items())
+    def close(self):
+        for h in self.hooks:self.m.uc.hook_del(h)

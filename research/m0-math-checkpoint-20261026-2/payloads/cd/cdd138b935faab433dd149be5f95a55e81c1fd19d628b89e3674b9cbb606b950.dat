@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-normalized-r47-20261026/pow-probe.py", line 14, in <module>
+    old={tuple(p)for p in json.loads((Q/'joined-audit.json').read_bytes())['remaining_losing_argument_pairs']};assert len(old)==2047
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'remaining_losing_argument_pairs'
