@@ -1,0 +1,11 @@
+{
+  "status": "PLANNING_MUL_ESTIMATE_CORRECTION_NO_MODEL_CHANGE",
+  "original_model_source_sha256": "c8e6f6f01acb6455666591f1b32a8048ab70cec5a537aea8412ae9c586f19f9a",
+  "original_result_sha256": "f4c9d641ca3ba9a66c95b2c4fe7757c42e14da18b89e8b8f76d7b47596972c8b",
+  "original_estimate": 36,
+  "actual_tested_polynomial_MULS": 24,
+  "proposed_unimplemented_root_product_MULS": 14,
+  "correct_proposed_sum": 38,
+  "model_math_and_raw_records_unchanged": true,
+  "no_new_ARM_MPFR_calls": true
+}

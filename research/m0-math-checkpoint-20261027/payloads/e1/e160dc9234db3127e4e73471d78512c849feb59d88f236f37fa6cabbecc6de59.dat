@@ -1,0 +1,89 @@
+R48 public probe 0 / 16740 elapsed 0.0 loss 0
+R48 public probe 512 / 16740 elapsed 19.9 loss 512
+R48 public probe 1024 / 16740 elapsed 36.3 loss 1024
+R48 public probe 1536 / 16740 elapsed 46.5 loss 1536
+R48 public probe 2048 / 16740 elapsed 54.8 loss 2045
+R48 public probe 2560 / 16740 elapsed 58.8 loss 2045
+R48 public probe 3072 / 16740 elapsed 64.4 loss 2045
+R48 public probe 3584 / 16740 elapsed 69.9 loss 2045
+R48 public probe 4096 / 16740 elapsed 75.6 loss 2045
+R48 public probe 4608 / 16740 elapsed 81.3 loss 2045
+R48 public probe 5120 / 16740 elapsed 86.9 loss 2045
+R48 public probe 5632 / 16740 elapsed 92.6 loss 2045
+R48 public probe 6144 / 16740 elapsed 98.3 loss 2045
+R48 public probe 6656 / 16740 elapsed 103.7 loss 2045
+R48 public probe 7168 / 16740 elapsed 109.2 loss 2045
+R48 public probe 7680 / 16740 elapsed 114.9 loss 2045
+R48 public probe 8192 / 16740 elapsed 120.4 loss 2045
+R48 public probe 8704 / 16740 elapsed 125.9 loss 2045
+R48 public probe 9216 / 16740 elapsed 131.4 loss 2045
+R48 public probe 9728 / 16740 elapsed 136.9 loss 2045
+R48 public probe 10240 / 16740 elapsed 142.3 loss 2045
+R48 public probe 10752 / 16740 elapsed 147.6 loss 2045
+R48 public probe 11264 / 16740 elapsed 153.2 loss 2045
+R48 public probe 11776 / 16740 elapsed 159.0 loss 2045
+R48 public probe 12288 / 16740 elapsed 164.6 loss 2045
+R48 public probe 12800 / 16740 elapsed 170.5 loss 2045
+R48 public probe 13312 / 16740 elapsed 176.4 loss 2045
+R48 public probe 13824 / 16740 elapsed 182.2 loss 2045
+R48 public probe 14336 / 16740 elapsed 188.1 loss 2045
+R48 public probe 14848 / 16740 elapsed 193.9 loss 2045
+R48 public probe 15360 / 16740 elapsed 199.7 loss 2045
+R48 public probe 15872 / 16740 elapsed 205.7 loss 2045
+R48 public probe 16384 / 16740 elapsed 211.6 loss 2045
+{
+  "status": "PASS_R48_FRESH_PUBLIC_DIAGNOSTIC_NOT_FULLQUALIFICATION",
+  "input_pairs": 16740,
+  "state_rows": 50220,
+  "actual_diagnostic_ARM_calls": 251100,
+  "completed_ARM_calls": {
+    "candidate": 50220,
+    "parent": 50220,
+    "qfp_composed_pow": 50220,
+    "qfp_composed_pow_exact": 50220,
+    "qfp_composed_pow_integer": 50220
+  },
+  "actual_directed_MPFR_inputs": 16726,
+  "exact_sNaN_policy_shortcuts": 14,
+  "candidate_ELF_sha256": "d5c8d35cd5e183dfc352f531f8f8bd3cb09856c173f811f41ba74f07906ec863",
+  "parent_FROZEN_sha256": "0fc886823e57e22c97a082e457bf7795376c9b78b5a1795d9bcb4a07ac600894",
+  "parent_qualification_FROZEN_sha256": "2acca11ddee077b7919173f6ff97d96e3db632a81313aed123e481531a1d0358",
+  "input_sha256": "dc916e725b23a205513e2934ccdc5a40aba808845e30ea16536638590d1568d8",
+  "records_sha256": "1c02ebcfb470b0f05f6ec8c7aa298b58ef7768d72041eb90fe41c4c0508ccb3f",
+  "candidate_wrong": 0,
+  "parent_losing_pairs": 2045,
+  "candidate_losing_pairs": 2045,
+  "parent_instruction_delta_histogram": {
+    "0": 50184,
+    "-10": 30,
+    "3": 6
+  },
+  "old2045_fixed": 0,
+  "all3_Qfplib_compositions_allinputs_allstates": true,
+  "no_nominal_reference_filter": true,
+  "all_wrong_reference_outputs_and_costs_retained": true,
+  "wrong_reference_state_variants": 55296,
+  "native_call_state_histogram": {
+    "0": 4506,
+    "1": 45714
+  },
+  "Q8_call_state_histogram": {
+    "0": 46557,
+    "1": 3663
+  },
+  "all16_public_incoming_NZCV_and5R12_patterns_checked": true,
+  "actual_private_C_contract_asserted_every_Q8_call": true,
+  "all_actual_native_q_and_live_frame_and_Bh_R5_exact_parent": true,
+  "Q8_source_code_and_runtime_metadata_unchanged_from_R43": true,
+  "non_native_public_count_changes_recorded": true,
+  "observed_stacks": {
+    "candidate": 2148,
+    "parent": 2148,
+    "Qfplib": 88
+  },
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 215.69752491702093
+}

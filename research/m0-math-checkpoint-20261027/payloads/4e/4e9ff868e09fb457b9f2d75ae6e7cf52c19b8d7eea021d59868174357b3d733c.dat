@@ -1,0 +1,29 @@
+{
+  "status": "LINKED_PRIVATE_COMPLETE_Q73_EXP_PROTOTYPE_WITH_R48_FALLBACK",
+  "ELF_sha256": "b7dd035db2bfdabf611aa0b130a73a490379807e85a7a826d3c853d17e76a5d5",
+  "source_R48_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "core_parent_FROZEN_sha256": "6ac8536c323f232674d5496e27e38f18dcd4253f3a107c17b001796084d89c13",
+  "modified_core_exact_edit_log_sha256": "a60490c07c417b22fe333f4fafdf24589c7032c8bc65286dc1d13a600f6be110",
+  "inherited_v2_model_proof_sha256": "14a9169e1dbaa06d7118d2c0a13970c39c641bc4873230830b18f6773abe35ef",
+  "strict_bounds_proof_sha256": "6905de7756651a00e8dda339c21b744d30e6e2080ecafa1147880fc9f9a9d25b",
+  "entry_source_sha256": "ad35cc066153d3239a852d7204453a4f3d0d759ad2fa00e224ef9072a31a0660",
+  "core_source_sha256": "b87feb6d7a14dd5575a96005646e0820e274221ce660a53d329eeb6310a78e91",
+  "export_only_CPP_allocated_bytes_identical": true,
+  "existing_root_table_symbol": "_ZN7m0_eabiL16refine_exp_tableE",
+  "existing_root_table_sha256": "b4769f705c76d7190d0ed816f2fe95c4dc786ea4f48148d2150d085bc3314e52",
+  "root_table_bytes": 6144,
+  "root_table_allocated_occurrences": 1,
+  "new_lookup_table_bytes": 0,
+  "new_bss_bytes": 0,
+  "scratch_y_bytes": 4080,
+  "undefined_symbols": [],
+  "new_objects": [
+    "core.o",
+    "entry.o"
+  ],
+  "all_M4_default_source_objects_untouched": true,
+  "full_exp_correctness_and_speed_pending": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

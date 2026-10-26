@@ -1,0 +1,54 @@
+R48 admission rows 0 elapsed 0.0 loss 0 new 0
+R48 admission rows 8192 elapsed 19.2 loss 2045 new 0
+R48 admission rows 16384 elapsed 22.9 loss 2045 new 0
+R48 admission rows 24576 elapsed 26.6 loss 2045 new 0
+R48 admission rows 32768 elapsed 30.3 loss 2045 new 0
+R48 admission rows 40960 elapsed 33.9 loss 2045 new 0
+R48 admission rows 49152 elapsed 37.6 loss 2045 new 0
+{
+  "status": "PASS_R48_FRESH_ADMISSION_CACHED_GOLD_R47_ALL_QFP",
+  "source_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "parent_R47_qualification_FROZEN_sha256": "2acca11ddee077b7919173f6ff97d96e3db632a81313aed123e481531a1d0358",
+  "input_source_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "input_records_sha256": "1c02ebcfb470b0f05f6ec8c7aa298b58ef7768d72041eb90fe41c4c0508ccb3f",
+  "records_sha256": "c4dee4291a5e0d844c67a9a7ba7e1151531bbf00786342d37f3b8fbe4e82285d",
+  "unique_input_pairs": 16740,
+  "state_rows": 50220,
+  "actual_qualified_public_ARM_calls": 50220,
+  "actual_fresh_R47_Qfp_MPFR_calls": 0,
+  "oracles_R47_allQfp_from_frozen_R47_qualification_or_R48_diagnostic_not_fresh": true,
+  "candidate_wrong": 0,
+  "all_candidate_bits_exact_frozen_correct_parent": true,
+  "parent_losing_pairs": 2045,
+  "candidate_losing_pairs": 2045,
+  "parent_instruction_delta_histogram": {
+    "0": 50184,
+    "-10": 30,
+    "3": 6
+  },
+  "wrong_reference_state_variants_retained": 55296,
+  "all3_Qfplib_references_retained_eachinput_eachstate": true,
+  "no_nominal_reference_filter": true,
+  "all_parent_cost_deltas_match_actual_R48_route_equation": true,
+  "actual_R48_route_counts": {
+    "PN": 30,
+    "GR": 6
+  },
+  "route_instruction_delta_coefficients": {
+    "GN": -1,
+    "GR": 3,
+    "PN": -10,
+    "PR": 12,
+    "SN": 2,
+    "SR": 5
+  },
+  "observed_stack": 2148,
+  "not_universal_stack_bound": true,
+  "diagnostic_source_ARM251100_not_fresh_qualified_pool": true,
+  "source_loader_initialization_excluded": true,
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 38.13228079199325
+}

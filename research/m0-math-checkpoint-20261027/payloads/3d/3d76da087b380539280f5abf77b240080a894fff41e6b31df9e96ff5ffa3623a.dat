@@ -1,0 +1,40 @@
+"""One complete prototype/fallback ELF, exact private BootROM, whole-bank init."""
+from pathlib import Path
+import hashlib,json,struct,sys
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',None)
+W=Path(__file__).resolve().parent
+ROOT=W.parents[1]
+sys.path.insert(0,str(ROOT/'.build/m0-float-fma-qualification-20261023/support'))
+from native_eabi_m0_arm_self_test import Machine,SP
+ROM=ROOT/'.build/m0-fixed-tails-v73-20261021/source/research/rp2040-memset-2026-10-21/capture/bootrom.bin'
+assert hashlib.sha256(ROM.read_bytes()).hexdigest()=='ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe'
+def machine():
+    build=json.loads((W/'build-result.json').read_text())
+    image=W/'candidate.elf'
+    assert hashlib.sha256(image.read_bytes()).hexdigest()==build['ELF_sha256']
+    m=Machine(image,True,bootrom=ROM)
+    assert not m.rom_models
+    hot=m.elf.named_sections['.scratch_y']
+    expected=m.elf.bytes_at(hot)
+    m.uc.mem_write(hot[3],bytes([0xa5])*4096)
+    symbols=m.elf.symbols
+    ranges=[(hot[3],hot[3]+hot[5])]
+    for start,end in [('__data_start__','__data_end__'),('__bss_start__','__bss_end__')]:
+        a,b=symbols[start],symbols[end]
+        if b>a:
+            m.uc.mem_write(a,bytes([0x5a])*(b-a))
+            ranges.append((a,b))
+    m.rom_init_write_ranges=ranges
+    try:value,_,cost=m.call('unified_math_init',0,count=True)
+    finally:m.rom_init_write_ranges=[]
+    assert value&0xffffffff==1
+    assert bytes(m.uc.mem_read(hot[3],hot[5]))==expected
+    assert bytes(m.uc.mem_read(hot[3]+hot[5],4096-hot[5]))==bytes([0xa5])*(4096-hot[5])
+    assert bytes(m.uc.mem_read(symbols['__scratch_y_source__'],hot[5]))==expected
+    pointers=struct.unpack('<4I',m.uc.mem_read(symbols['aeabi_mem_funcs'],16))
+    assert all(0<x<0x4000 and x&1 for x in pointers)
+    m.unified_loader_report=dict(actual_ARM_calls=1,instructions=cost,whole_scratch_y_bytes=hot[5],reserved_tail_untouched=True,actual_ROM_pointers=list(pointers),no_old_firmware_overlay_loaded=True)
+    m.calls=0
+    m.stack_lowest=SP
+    return m

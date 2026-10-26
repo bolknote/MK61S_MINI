@@ -1,0 +1,38 @@
+"""Check exact private-fixture loading and all six frozen R48 dispatch routes."""
+from pathlib import Path
+import gzip, importlib.util, json, struct, sys
+sys.dont_write_bytecode = True
+assert getattr(sys, 'mk61_private_fixture', None)
+import sitecustomize as fixture
+W = Path(__file__).resolve().parent
+ROOT = W.parents[1]
+S = ROOT / '.build/m0-math-unified-ddiv-power-dispatch-r48-20261026'
+spec = importlib.util.spec_from_file_location('r48_offline_fixture_smoke', S / 'harness.py')
+h = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(h)
+m = h.machine()
+assert not m.rom_models and m.bootrom_sha256 == fixture.ROM_SHA
+picked = {}
+with gzip.open(S / 'boundary-replay-records.jsonl.gz', 'rt') as stream:
+    for line in stream:
+        row = json.loads(line)
+        profile = row['actual_R48_route_profile']
+        if len(profile) == 1:
+            route, visits = next(iter(profile.items()))
+            assert visits == 1
+            picked.setdefault((route, row['SIO']), row)
+        if len(picked) == 18:
+            break
+assert len(picked) == 18
+states = dict(READY=(0,0,0,0,0,0,1), DIRTY=(17,3,17,3,5,2,3), PENDING=(0x80000001,7,0x80000001,7,0x11223344,0x55667788,2))
+for key, row in picked.items():
+    before = struct.pack('<7I', *states[row['SIO']])
+    m.uc.mem_write(0xd0000060, before)
+    value, _, cost = m.call('__aeabi_ddiv', int(row['a'],16), int(row['b'],16), count=True)
+    assert f'{value:016X}' == row['outputs']['candidate'] and cost == row['instructions']['candidate'], (key, value, cost, row)
+    after = bytes(m.uc.mem_read(0xd0000060,28))
+    assert after == before if row['SIO'] != 'READY' else not struct.unpack('<7I',after)[6] & 2
+assert not fixture.denied and fixture.redirected >= 2
+report = dict(status='PASS_IDENTICAL_PRIVATE_FIXTURE_IO', guest_math_ARM_calls=18, guest_loader_ARM_calls_excluded=1, all6_routes_all3_SIO_states=True, all_values_instruction_counts_exact_frozen_R48=True, actual_BootROM_SHA256=m.bootrom_sha256, private_ELF_reader_SHA256=fixture.READER_SHA, primary_tree_file_opens=0, ROM_models=[], loader=m.unified_loader_report, source_or_guest_register_mutations=False, hardware_accessed=False, no_qualified_call_pool_increment=True)
+(W / 'smoke-result.json').write_text(json.dumps(report, indent=2)+'\n')
+print(json.dumps(report, indent=2))

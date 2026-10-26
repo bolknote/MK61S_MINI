@@ -1,0 +1,13 @@
+# R48 dispatch transform
+
+The first two exponent checks are unchanged. For normal operands, (b.high<<15)|b.low equals zero iff b.low is zero and the lower17 high-word fraction bits are zero. The admitted divisors therefore have exactly three fraction bits. Testing b.high<<12 then distinguishes the exact power-of-two case. The dispatch stub changes no arguments, exponent registers or flags.
+
+For a power-of-two divisor, e=Ea-Eb. The unsigned guard0<=e+1022<=2045 is exactly the finite normal result interval. Subtracting its packed high word and restoring the bias scales the complete numerator exactly, including both signs; no rounding or R12 metadata is required. Rejected powers retain all arguments and R7=2045 and enter the existing normalized header. R4/R5 scratch values are overwritten before use there.
+
+For a nonzero three-bit fraction, b.low=0. Hence a.low>=b.low and the full packed subtraction has no borrow from its low word. SUBS of the high words equals the old CMP low;SBC high sequence for every admitted numerator. The cloned masked subtraction/ASR20 therefore computes the same normalized exponent and R12 sign/exponent word proved for R47. Its rejection path receives identical arguments/metadata/flags. The original dyadic seed table and refinement entry are unchanged.
+
+On the general route, R7 is overwritten by the seed-table load before use. The removed LSRS R5,R3,#4 has no live result: R5 is overwritten by LSLS R5,R3,#8 before read. Its NZC flags are replaced by the immediately following LSRS R6,R3,#15, while both preserve V. The complete current159-instruction seed/refinement/midpoint graph, internal branch edges and actual literal targets equal R47. The small seed route and table also equal R47. The existing whole-mantissa RNE proof therefore composes with both new entries.
+
+For every normal-operand division, the pointwise executed-instruction delta to R47 is GN=-1 (general normal), GR=+3 (general rejected), PN=-10 (power normal), PR=+12 (power rejected), SN=+2 (small normal), SR=+5 (small rejected). Non-normal operands retain the old path and cost. Actual ARM route observations validate this equation for every expanded state, including wrong-reference cases; none is filtered. These are instruction counts, not physical cycles. Every increased parent row remains in the records.
+
+Source reversal returns exactly R47, with only one allocated RP-ASM section changed; the other18 objects including all CPP/M4/default M0 objects are exact. No new stack frame, SIO operation, call, lookup table, global RAM or libgcc dependency is introduced. Universal correctness of all math functions, general pow totality, FMA/resource acceptance, device cycles and integration remain open.

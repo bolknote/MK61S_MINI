@@ -1,0 +1,58 @@
+{
+  "status": "V2_FULL_FALLBACK_DEFICIT_CLASSIFICATION",
+  "all_correct_reference_loss_rows_by_legacy_visits": {
+    "1": 1736
+  },
+  "fast_correct_reference_min_margin": 12,
+  "fast_low_margins": [
+    [
+      12,
+      72
+    ],
+    [
+      15,
+      69
+    ],
+    [
+      21,
+      3
+    ],
+    [
+      29,
+      42
+    ],
+    [
+      30,
+      42
+    ],
+    [
+      31,
+      3
+    ],
+    [
+      32,
+      12
+    ],
+    [
+      33,
+      96
+    ],
+    [
+      34,
+      12
+    ],
+    [
+      35,
+      27
+    ],
+    [
+      37,
+      3
+    ],
+    [
+      39,
+      69
+    ]
+  ],
+  "all_new_losses_are_fallback": true
+}

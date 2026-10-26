@@ -1,0 +1,27 @@
+{
+  "status": "FROZEN_PRIVATE_Q73_FULL_HOST_MODEL",
+  "files": {
+    "model_full.log": {
+      "bytes": 1920,
+      "sha256": "dcdc8923fc6e7a190a11635e878535593ab4c8f86fc7afc28e82fa7aab314d5f"
+    },
+    "model_full.py": {
+      "bytes": 7305,
+      "sha256": "9acc1be0505de770590587ded1632198b0d1f3a6acd56d9a9c659cfe234d3ab6"
+    },
+    "records.jsonl.gz": {
+      "bytes": 10220430,
+      "sha256": "3f6722a7609d51628a574ff2f2ad76c7b8c4aebf4d44326d5836bfd2c29e97aa"
+    },
+    "result.json": {
+      "bytes": 103281,
+      "sha256": "2020d00cf18743d17aff919cac8e6d8546f06b5671dddd57f6774dbdd37502df"
+    }
+  },
+  "all_producers_terminal": true,
+  "not_complete_exp_implementation": true,
+  "no_complete_exp_speed_claim": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

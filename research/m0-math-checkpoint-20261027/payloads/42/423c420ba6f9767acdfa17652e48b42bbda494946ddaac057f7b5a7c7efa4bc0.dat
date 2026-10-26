@@ -1,0 +1,24 @@
+{
+  "status": "HOST_Q73_EXP_INTERVAL_STUDY_NOT_ARM_IMPLEMENTED",
+  "parent_R47_qualification_FROZEN_sha256": "2acca11ddee077b7919173f6ff97d96e3db632a81313aed123e481531a1d0358",
+  "source_R48_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "MPFR_version": "4.2.2",
+  "remaining512_model_classification": {
+    "accepted": 482,
+    "ambiguous": 30
+  },
+  "accepted_wrong": 0,
+  "fresh_directed_MPFR_reference_inputs": 512,
+  "MPFR_ln2_endpoint_evaluations": 2,
+  "MPFR_root_endpoint_evaluations": 1024,
+  "new_ARM_calls": 0,
+  "no_runtime_or_table_modified": true,
+  "records_sha256": "b3006cd4585b013a24606223889d436784f8c6e39dd25e77e30df5dbca554874",
+  "model_source_sha256": "40db9464e58e9b5f9b5a70c19c63f8be516a2f5629355762614b22af997a60a0",
+  "hardware_accessed": false,
+  "performance_measured": false,
+  "full_domain_MPFR_corpus_replay_pending": true,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 3.1818645410239697
+}

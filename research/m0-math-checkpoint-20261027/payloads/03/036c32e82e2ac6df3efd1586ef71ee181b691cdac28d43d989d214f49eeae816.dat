@@ -1,0 +1,27 @@
+{
+  "status": "PASS_IDENTICAL_PRIVATE_FIXTURE_IO",
+  "guest_math_ARM_calls": 18,
+  "guest_loader_ARM_calls_excluded": 1,
+  "all6_routes_all3_SIO_states": true,
+  "all_values_instruction_counts_exact_frozen_R48": true,
+  "actual_BootROM_SHA256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "private_ELF_reader_SHA256": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708",
+  "primary_tree_file_opens": 0,
+  "ROM_models": [],
+  "loader": {
+    "actual_ARM_calls": 1,
+    "instructions": 1024,
+    "whole_scratch_y_bytes": 4080,
+    "reserved_tail_untouched": true,
+    "actual_ROM_pointers": [
+      9913,
+      9757,
+      9901,
+      9733
+    ],
+    "no_old_firmware_overlay_loaded": true
+  },
+  "source_or_guest_register_mutations": false,
+  "hardware_accessed": false,
+  "no_qualified_call_pool_increment": true
+}

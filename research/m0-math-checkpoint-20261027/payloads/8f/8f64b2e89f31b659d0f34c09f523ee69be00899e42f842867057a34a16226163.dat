@@ -1,0 +1,35 @@
+{
+  "status": "FROZEN_PRIVATE_Q73_HORNER_FULL_HOST_MODEL",
+  "files": {
+    "ESTIMATE-ERRATUM.json": {
+      "bytes": 492,
+      "sha256": "75433a22fd90933cd5adb0f42153f0f897ebd3535c505d551052ef66ea8f62c6"
+    },
+    "HANDOFF.txt": {
+      "bytes": 568,
+      "sha256": "90cd8a62317b4c916a4ad636e00c39cdbb66e51f58c4ae66c3c469dd201a67dc"
+    },
+    "model_horner.log": {
+      "bytes": 2474,
+      "sha256": "e68fcb66a3f987c5b9bbcc4476606ea1e247694ca216c883ac28678d7b87251f"
+    },
+    "model_horner.py": {
+      "bytes": 8570,
+      "sha256": "c8e6f6f01acb6455666591f1b32a8048ab70cec5a537aea8412ae9c586f19f9a"
+    },
+    "records.jsonl.gz": {
+      "bytes": 10220016,
+      "sha256": "d3592a6ed39beb2747bc91fd9484db9848e319d039b3ec576dbe984a1047918a"
+    },
+    "result.json": {
+      "bytes": 103763,
+      "sha256": "f4c9d641ca3ba9a66c95b2c4fe7757c42e14da18b89e8b8f76d7b47596972c8b"
+    }
+  },
+  "all_producers_terminal": true,
+  "not_complete_exp_implementation": true,
+  "no_complete_exp_speed_claim": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

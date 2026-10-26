@@ -1,0 +1,26 @@
+{
+  "status": "PINNED_PRIVATE_FIXTURE_INPUTS",
+  "files": {
+    ".build/m0-math-offline-io-20261026/sitecustomize.py": {
+      "sha256": "41f94e7c6c23d7e43ce8c58411a7fc44c847563b0a450f59a2d1a3d43946021b",
+      "bytes": 2897
+    },
+    ".build/m0-fixed-tails-v73-20261021/source/research/rp2040-memset-2026-10-21/capture/bootrom.bin": {
+      "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "bytes": 16384
+    },
+    ".build/m0-float-fma-qualification-20261023/support/check_stm32_vectors.py": {
+      "sha256": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708",
+      "bytes": 3952
+    }
+  },
+  "smoke_receipts": [
+    {
+      "path": ".build/m0-math-offline-io-20261026/receipts/85143.json",
+      "sha256": "0c0ce6e67a3236358668f647c93539e0bd3c5ff02e13d193048ec2d5c2a8d09a",
+      "redirects": 2
+    }
+  ],
+  "no_guest_semantics_change": true,
+  "primary_source_opens_prohibited": true
+}

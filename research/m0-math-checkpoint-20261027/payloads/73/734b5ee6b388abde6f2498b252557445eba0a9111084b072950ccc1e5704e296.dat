@@ -1,0 +1,50 @@
+Q73 Thumb polynomial 32768 elapsed 15.4
+Q73 Thumb polynomial 65536 elapsed 29.6
+Q73 Thumb polynomial 98304 elapsed 43.3
+Q73 Thumb polynomial 131072 elapsed 57.2
+Q73 Thumb polynomial 163840 elapsed 71.1
+{
+  "status": "PASS_Q73_INTEGER_THUMB_POLYNOMIAL_PROTOTYPE",
+  "source_sha256": "40229bdbdc6da7c6961b5e4dcfbbeeeef694356bdb5744c85dd4f06a76e4fd67",
+  "ELF_sha256": "73a0935396d69887e8f4e1d50dfe499b61837f1c1616f5d2c8997ded889f9ee4",
+  "model_source_sha256": "c8e6f6f01acb6455666591f1b32a8048ab70cec5a537aea8412ae9c586f19f9a",
+  "model_records_sha256": "d3592a6ed39beb2747bc91fd9484db9848e319d039b3ec576dbe984a1047918a",
+  "actual_ARM_calls": 180528,
+  "ARM_calls_by_kind": {
+    "square": 4284,
+    "product52": 4159,
+    "poly_negative": 92679,
+    "poly_positive": 79406
+  },
+  "frozen_exp_supported_inputs_checked": 171710,
+  "instruction_histograms": {
+    "square": {
+      "54": 4284
+    },
+    "product52": {
+      "67": 4159
+    },
+    "poly_positive": {
+      "226": 79406
+    },
+    "poly_negative": {
+      "226": 92679
+    }
+  },
+  "candidate_wrong": 0,
+  "all_AAPCS_and_bounded_stack_write_checks": true,
+  "observed_stack_bytes": 88,
+  "not_universal_stack_bound": true,
+  "static_MULS_count": 24,
+  "added_runtime_tables": 0,
+  "undefined_symbols_or_libgcc": 0,
+  "complete_exp_implemented": false,
+  "Qfplib_full_exp_speed_comparison_pending": true,
+  "private_fixture_only": true,
+  "primary_tree_source_accesses": 0,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "records_sha256": "10f9d7b2677f56d46a9df7bdbf1795c1c6569d53b1a62ca9ba73caa5539a4a42",
+  "elapsed_seconds": 74.40343666699482
+}

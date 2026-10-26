@@ -1,0 +1,81 @@
+{
+  "status": "PASS_R48_FULL_LN_FRESH_CANDIDATE_CACHED_R18_GOLD_QFP",
+  "source_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "inherited_R18_qualification_FROZEN_sha256": "2e0d945318df0f86b2125ac1a3b9d9c0f387616ef3e38ee19de9c99a9bb5ceb1",
+  "source_rows_by_phase": {
+    "ln": 183146,
+    "admission": 184320
+  },
+  "fresh_R48_rows_by_phase": {
+    "ln": 183146,
+    "admission": 177444
+  },
+  "duplicate_state_rows_checked": 6876,
+  "unique_inputs": 180295,
+  "state_rows": 360590,
+  "actual_qualified_public_ARM_calls": 360590,
+  "actual_fresh_parent_Qfp_MPFR_calls": 0,
+  "parent_R18_gold_Qfp_cached_as_inherited_R43_not_fresh": true,
+  "candidate_wrong": 0,
+  "parent_losing_inputs": 0,
+  "candidate_losing_inputs": 0,
+  "remaining_losing_arguments": [],
+  "new_correct_reference_loss_rows": [],
+  "all_parent_instruction_increase_rows": [],
+  "parent_instruction_delta_histogram": {
+    "0": 360590
+  },
+  "all10_shared_division_entry_visits": {},
+  "wrong_reference_state_rows_retained": 21680,
+  "all_correct_reference_results_compared_no_nominalfilter": true,
+  "records_sha256": "15e0f083e63107592c47280b508dc187372a4430cb45602408f27419ca9c7cfa",
+  "actual_watched_division_sites": [
+    [
+      "__aeabi_ddiv",
+      268573856
+    ],
+    [
+      "mk61_m0_ddiv_slow",
+      268565140
+    ],
+    [
+      "_ZN7m0_eabi6BinaryILj52ELj11EE3divEyy",
+      268564756
+    ],
+    [
+      "mk61_m0_ddiv_denominator_guard_begin",
+      268573670
+    ],
+    [
+      "mk61_m0_ddiv_numerator_guard_body",
+      268573586
+    ],
+    [
+      "mk61_m0_ddiv_range_guard_begin",
+      268573776
+    ],
+    [
+      "mk61_m0_ddiv_coarse_dispatch_begin",
+      268573880
+    ],
+    [
+      "mk61_m0_ddiv_dyadic_body_begin",
+      268573528
+    ],
+    [
+      "mk61_m0_ddiv_small_normalize_begin",
+      268573552
+    ],
+    [
+      "actual_ddiv0_after_public_push",
+      268573858
+    ]
+  ],
+  "observed_stack": 664,
+  "not_universal_stack_bound": true,
+  "physical_cycles_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 360.67691929097055
+}

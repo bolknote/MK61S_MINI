@@ -1,0 +1,133 @@
+--- v1/core.S
++++ v2/core.S
+@@ -4,8 +4,8 @@
+ .section .text.q73,"ax",%progbits
+ .balign 4
+ 
+-/* Rounded square / 2^73, omitting only product columns 0, 1 and 2.
+- * Input 0 <= a <= CAP < .0007 * 2^73; output matches multiply73(a,a).
++/* Truncated square / 2^73, omitting only product columns 0, 1 and 2.
++ * Input 0 <= a <= CAP < .0007 * 2^73; output matches the explicitly truncated multiply73(a,a).
+  */
+ .global mk61_q73_square
+ .type mk61_q73_square,%function
+@@ -21,7 +21,6 @@
+  mov r0,r4
+  muls r0,r7
+  lsls r0,r0,#1
+- adcs r1,r3
+  mov r2,r5
+  muls r2,r6
+  adds r0,r2
+@@ -31,16 +30,12 @@
+  lsrs r0,r0,#16
+  lsls r1,r1,#16
+  orrs r0,r1
+- /* Carry into column 4 is below 2^18; add the rounding bit safely. */
+- adds r0,#255
+- adds r0,#1
++ /* Carry into column 4 is below 2^18; no rounding bit is added. */
+  movs r1,#0
+  mov r2,r5
+  muls r2,r7
+  adds r0,r2
+- adcs r1,r3
+- adds r0,r2
+- adcs r1,r3
++ adds r0,r2
+  mov r2,r6
+  muls r2,r6
+  adds r0,r2
+@@ -68,7 +63,7 @@
+  pop {r4-r7,pc}
+ .size mk61_q73_square,.-mk61_q73_square
+ 
+-/* Rounded a*b / 2^52, omitting only columns 0 and 1.
++/* Truncated a*b / 2^52, omitting only columns 0 and 1.
+  * a is Q73 square (<2^53), b is the Q52 tail (<2^40).
+  */
+ .balign 4
+@@ -87,14 +82,11 @@
+  lsrs r5,r0,#16
+  uxth r6,r1
+  lsrs r7,r1,#16
+- movs r0,#0
+  movs r1,#0
+  movs r3,#0
+  /* column 2 */
+- ldr r2,[sp,#8]
+- muls r2,r4
+- adds r0,r2
+- adcs r1,r3
++ ldr r0,[sp,#8]
++ muls r0,r4
+  ldr r2,[sp,#4]
+  muls r2,r5
+  adds r0,r2
+@@ -106,13 +98,11 @@
+  lsrs r0,r0,#16
+  lsls r1,r1,#16
+  orrs r0,r1
+- adds r0,#8
+  movs r1,#0
+  /* column 3 */
+  ldr r2,[sp,#8]
+  muls r2,r5
+  adds r0,r2
+- adcs r1,r3
+  ldr r2,[sp,#4]
+  muls r2,r6
+  adds r0,r2
+@@ -180,15 +170,14 @@
+  uxth r4,r0
+  lsrs r5,r0,#16
+  mov r6,r1
+- adds r4,r5
+- adds r4,r6
+  ldr r7,=21845
+  muls r4,r7
+- lsrs r4,r4,#16
+  muls r5,r7
+  muls r6,r7
+- adds r4,r5
+- adds r4,r6
++ adds r5,r6
++ adds r4,r5
++ lsrs r4,r4,#16
++ adds r4,r5
+  lsls r0,r6,#16
+  lsrs r1,r6,#16
+  adds r0,r4
+@@ -210,26 +199,17 @@
+  muls r5,r7
+  adds r4,r5
+  str r4,[sp,#28]
+- /* cubic coefficient: b=floor(|r|/2^47), b^2 fits one word. */
++ /* Cubic coefficient from square>>37 and |r|>>47; one wide-term MUL. */
+  ldr r0,[sp,#4]
+  lsrs r0,r0,#15
+- mov r1,r0
+- muls r1,r0
+- uxth r2,r1
+- muls r2,r0
+- lsrs r1,r1,#16
+- muls r1,r0
+- lsls r0,r1,#16
+- lsrs r1,r1,#16
+- adds r0,r2
+- movs r3,#0
+- adcs r1,r3
+- lsrs r0,r0,#29
+- lsls r1,r1,#3
+- orrs r0,r1
++ ldr r1,[sp,#16]
++ lsrs r1,r1,#5
++ muls r0,r1
++ lsrs r0,r0,#13
+  ldr r1,=4369
+  muls r0,r1
+  lsrs r0,r0,#16
++ movs r3,#0
+  /* tail = linear +/- quartic + cubic. */
+  ldr r4,[sp,#20]
+  ldr r5,[sp,#24]

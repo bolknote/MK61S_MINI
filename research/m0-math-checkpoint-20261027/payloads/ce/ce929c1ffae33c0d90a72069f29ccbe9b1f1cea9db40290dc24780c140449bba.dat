@@ -1,0 +1,7 @@
+{
+  "status": "UNEXECUTED_HOST_AUDIT_FILTER_REFINED",
+  "actual_guest_producers_plus_comparison": 8,
+  "preparation_and_audit_host_receipts_excluded": true,
+  "audit_sha256": "07e8de64d84ee85b70f9cd6c6cc46a6ac67a3dbb5ac979432fe0c1e9f21be8a8",
+  "new_ARM_MPFR_calls": 0
+}

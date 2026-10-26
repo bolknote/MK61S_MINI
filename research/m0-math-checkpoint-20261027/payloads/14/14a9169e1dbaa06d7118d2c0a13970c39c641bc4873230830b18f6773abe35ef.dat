@@ -1,0 +1,48 @@
+{
+  "status": "PASS_V2_UNIFORM_ERROR_AND_WORD_BOUNDS",
+  "model_source_sha256": "6288f93df955d47f6ea1338e28879796da3201921574cd055f0038bb807d9475",
+  "MPFR_version": "4.2.2",
+  "new_directed_MPFR_constant_endpoint_evaluations": 1026,
+  "new_MPFR_input_evaluations": 0,
+  "new_ARM_calls": 0,
+  "ln2_directed_bounds": [
+    [
+      80260960185991308862233904206310070533990667611589946606122867505419956976171,
+      115792089237316195423570985008687907853269984665640564039457584007913129639936
+    ],
+    [
+      20065240046497827215558476051577517633497666902897486651530716876354989244043,
+      28948022309329048855892746252171976963317496166410141009864396001978282409984
+    ]
+  ],
+  "all512_existing_root94_errors_less1": true,
+  "root73_is_floor_existing_root94": true,
+  "estimate_upper_product_underestimate_at_most1": true,
+  "estimate_error_bound": [
+    47,
+    70656
+  ],
+  "uniform_signed_R73_no_alias": true,
+  "global_polynomial_error_upper": [
+    496120747101404407152540990476191076686659548738745257,
+    45298453634390431664641998323712000000000000000000000
+  ],
+  "small_exact_input_polynomial_error_upper": [
+    14325639955316539770451010326298713054181,
+    6699279892086146741029777099771084800000
+  ],
+  "final_result_error_upper": [
+    541574571086786981211168638022780260686659548738745257,
+    22649226817195215832320999161856000000000000000000000
+  ],
+  "radius_general": 24,
+  "radius_exact_root1": 12,
+  "radius_n0_e_less_minus15": 3,
+  "all_removed_carries_proved_zero": true,
+  "exact_combined_step_product_constants_verified": true,
+  "root_one_negative_delta_nonzero": "truncated square <= r^2/Q <2*abs(r), so abs(delta)>0 for negative nonzero r",
+  "no_new_lookup_tables": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

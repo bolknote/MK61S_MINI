@@ -1,0 +1,59 @@
+{
+  "status": "FROZEN_PRIVATE_Q73_INTEGER_THUMB_POLYNOMIAL_PROTOTYPE",
+  "files": {
+    "DERIVATION.md": {
+      "bytes": 2268,
+      "sha256": "ce5cb4cde255049394ff982a1f713e9bab730586fb5f1f0e614a127a1174deef"
+    },
+    "build-result.json": {
+      "bytes": 897,
+      "sha256": "e6a325ddf87e4e7fa75855e3a96c0e56bf5c7d960258475b6a5f1569c017507f"
+    },
+    "build.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "check-result.json": {
+      "bytes": 1446,
+      "sha256": "64595895b5806e94e0cd9439a4a5aab9caf71fb602307df99781c9d930e7330c"
+    },
+    "check.log": {
+      "bytes": 1648,
+      "sha256": "734b5ee6b388abde6f2498b252557445eba0a9111084b072950ccc1e5704e296"
+    },
+    "check.py": {
+      "bytes": 5458,
+      "sha256": "9dce45898528049655782e0ca7460f3b06686f3d8e2847a0879aa1de9a6315a3"
+    },
+    "core.S": {
+      "bytes": 4516,
+      "sha256": "40229bdbdc6da7c6961b5e4dcfbbeeeef694356bdb5744c85dd4f06a76e4fd67"
+    },
+    "core.dis": {
+      "bytes": 8840,
+      "sha256": "0d9c9896d287734233acf0141ed8fdb52c507ec0b3b79f28d1c5a31f7b234cbd"
+    },
+    "core.elf": {
+      "bytes": 5112,
+      "sha256": "73a0935396d69887e8f4e1d50dfe499b61837f1c1616f5d2c8997ded889f9ee4"
+    },
+    "core.ld": {
+      "bytes": 132,
+      "sha256": "0ac324b8a68948827b9462c533566e9ab129588b181edb442d7f16c2725c4e61"
+    },
+    "integer-range-derivation.json": {
+      "bytes": 1012,
+      "sha256": "f6ebac0a8952e555d5c6758ba0d76cb93743f62cde6c5bbcf2d415d0717864a4"
+    },
+    "records.jsonl.gz": {
+      "bytes": 3310200,
+      "sha256": "10f9d7b2677f56d46a9df7bdbf1795c1c6569d53b1a62ca9ba73caa5539a4a42"
+    }
+  },
+  "all_producers_terminal": true,
+  "not_complete_exp_implementation": true,
+  "no_complete_exp_speed_claim": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}
