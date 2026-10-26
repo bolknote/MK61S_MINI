@@ -1,0 +1,9 @@
+{
+  "status": "FAILED_REPORT_FIELD_ALIAS_ONLY",
+  "error": "KeyError default_M0_M4_objects_exact",
+  "binary_or_numeric_changes": 0,
+  "extra_public_math_ARM_MPFR_calls": 0,
+  "first3guards_passed": true,
+  "loader_initialization_excluded_pool": true,
+  "correction": "Add missing alias for already-proved17unchanged objects; first report/logs preserved; source/binaries not rebuilt."
+}

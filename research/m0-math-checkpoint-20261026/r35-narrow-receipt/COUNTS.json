@@ -1,0 +1,202 @@
+{
+  "status": "PASS_FROZEN_RECORDS_ONLY",
+  "per_campaign": {
+    "full": {
+      "rows": 989922,
+      "parent_losses": 401,
+      "candidate_losses": 377,
+      "fixed": 24,
+      "new_losses": 0,
+      "wrong_Qfp_rows": 408412,
+      "delta_histogram": {
+        "-64": 48,
+        "0": 989548,
+        "2": 150,
+        "7": 4,
+        "9": 166,
+        "11": 6
+      },
+      "net_parent_instruction_delta": -1184,
+      "increase_partition": {
+        "wrong_reference": 152,
+        "parent_already_slower": 174
+      },
+      "routes": {
+        "no_bridge": 989066,
+        "fallback": 716,
+        "helper_decline": 58,
+        "helper_accept": 34,
+        "fast21": 48
+      },
+      "overlap_rows": 0
+    },
+    "boundary": {
+      "rows": 176952,
+      "parent_losses": 584,
+      "candidate_losses": 559,
+      "fixed": 25,
+      "new_losses": 0,
+      "wrong_Qfp_rows": 1704,
+      "delta_histogram": {
+        "-64": 90,
+        "0": 176130,
+        "2": 462,
+        "7": 21,
+        "9": 204,
+        "11": 45
+      },
+      "net_parent_instruction_delta": -2358,
+      "increase_partition": {
+        "parent_already_slower": 519,
+        "wrong_reference": 213
+      },
+      "routes": {
+        "no_bridge": 175341,
+        "fallback": 1131,
+        "helper_accept": 204,
+        "helper_decline": 186,
+        "fast21": 90
+      },
+      "overlap_rows": 15568
+    }
+  },
+  "union": {
+    "inputs": 546161,
+    "parent_losses": 584,
+    "candidate_losses": 559,
+    "fixed": 25,
+    "new_losses": 0,
+    "new_inputs_this_round": 0
+  },
+  "exact_tie642_retained": [
+    {
+      "phase": "full",
+      "SIO": "READY",
+      "candidate": 642,
+      "Qfp": 642,
+      "parent": 642
+    },
+    {
+      "phase": "full",
+      "SIO": "DIRTY",
+      "candidate": 642,
+      "Qfp": 642,
+      "parent": 642
+    },
+    {
+      "phase": "boundary",
+      "SIO": "READY",
+      "candidate": 642,
+      "Qfp": 642,
+      "parent": 642
+    },
+    {
+      "phase": "boundary",
+      "SIO": "DIRTY",
+      "candidate": 642,
+      "Qfp": 642,
+      "parent": 642
+    },
+    {
+      "phase": "boundary",
+      "SIO": "PENDING",
+      "candidate": 642,
+      "Qfp": 642,
+      "parent": 642
+    }
+  ],
+  "primary": {
+    "original507": {
+      "rows": 1014,
+      "net_vs_R29": 22,
+      "increases_vs_R29": 18,
+      "histogram": {
+        "-3": 4,
+        "0": 992,
+        "1": 2,
+        "2": 16
+      },
+      "all_current_records_exact_R33": true,
+      "ARM": 3654
+    },
+    "broad": {
+      "rows": 60272,
+      "net_vs_R29": 4350,
+      "increases_vs_R29": 2080,
+      "histogram": {
+        "-3": 6,
+        "0": 58186,
+        "1": 2,
+        "2": 1868,
+        "3": 210
+      },
+      "all_current_records_exact_R33": true,
+      "ARM": 193060
+    }
+  },
+  "cumulative_R29_full": {
+    "rows": 989922,
+    "net": 222314,
+    "increased": 166432,
+    "decreased": 564,
+    "same": 822926,
+    "histogram": {
+      "-1674": 24,
+      "-1672": 24,
+      "-1626": 2,
+      "-1622": 2,
+      "-1619": 2,
+      "-1613": 2,
+      "-1609": 2,
+      "-1606": 4,
+      "-1603": 2,
+      "-1601": 6,
+      "-1600": 6,
+      "-1598": 2,
+      "-1595": 2,
+      "-1594": 2,
+      "-5": 16,
+      "-3": 466,
+      "0": 822926,
+      "1": 80,
+      "2": 151150,
+      "3": 14466,
+      "6": 24,
+      "7": 356,
+      "10": 34,
+      "12": 32,
+      "19": 166,
+      "21": 20,
+      "27": 40,
+      "36": 6,
+      "80": 54,
+      "89": 4
+    },
+    "all_saved_cumulative_rows_independently_matched": true
+  },
+  "new51200_inputs_have_no_R29_baseline": true,
+  "primary_2098_R30_regressions_retained": true,
+  "fresh_author_ARM": {
+    "full_candidate": 989922,
+    "boundary_candidate": 176952,
+    "boundary_poison": 8880,
+    "primary": 196714,
+    "public": 1372468,
+    "bridge_marker_controls": 23376,
+    "total": 1395844
+  },
+  "full_boundary_fresh_MPFR_Qfp_parent": 0,
+  "inherited_real_helper_ARM_not_fresh": 921901,
+  "diagnostic_ARM": 70056,
+  "diagnostic_MPFR": 7784,
+  "failed_syntax_ARM_MPFR": 0,
+  "loader_ARM": 2,
+  "not_pooled": true,
+  "finite_losses": {
+    "ln_inherited": 0,
+    "pow_inherited": 2501,
+    "exp_current": 559,
+    "total": 3060
+  },
+  "new_numeric_runs_in_review": 0
+}

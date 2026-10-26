@@ -1,0 +1,84 @@
+#ifndef MK61_LOADABLE_MODULE_RUNTIME_HPP
+#define MK61_LOADABLE_MODULE_RUNTIME_HPP
+
+#include "config.h"
+#include "loadable_module_abi.hpp"
+#include "loadable_module_format.hpp"
+#include "app_flow.hpp"
+
+namespace loadable_module {
+
+struct ModuleSource {
+  void* context;
+  u32 size;
+  bool (*read)(void* context, u32 offset, u8* output, usize size);
+};
+
+struct FileHandler {
+  Kind kind;
+  u16 module_file_id;
+  u16 type_magic;
+};
+
+enum class StoreStatus : u8 {
+  OK = 0,
+  UNAVAILABLE,
+  IO_ERROR,
+  INVALID_HEADER,
+  WRONG_FILE_SIZE,
+  BAD_STORED_CRC,
+  INCOMPATIBLE_FIRMWARE
+};
+
+enum class RuntimeStatus : u8 {
+  OK = 0,
+  DISABLED,
+  UNAVAILABLE,
+  INVALID_MODULE,
+  INCOMPATIBLE_FIRMWARE,
+  CORRUPT_MODULE,
+  BUSY,
+  IO_ERROR
+};
+
+bool enabled(Kind kind);
+RuntimeStatus status(Kind kind);
+const char* status_text(RuntimeStatus status);
+
+RuntimeStatus invoke(Kind kind, Command command,
+                     u32 argument0, u32 argument1,
+                     u32 argument2, u32 argument3,
+                     u32& result);
+// A phase is an APP-defined continuation, not a native return address.
+// Host actions are local to this invocation and run after APP has returned.
+using FlowHost = RuntimeStatus (*)(void* context, u32 operation, u32& result);
+using FlowService = RuntimeStatus (*)(void* binding, app_flow::Step& step);
+RuntimeStatus run_flow(app_flow::Target first, void* context, u32 context_size,
+                       u32& result, FlowHost host = nullptr);
+// A scoped native service may also select the next APP after a memory handoff.
+// Its binding is resident-owned and never exposed to APP code.
+RuntimeStatus run_flow_service(app_flow::Target first, void* context, u32 context_size,
+                               u32& result, FlowService service, void* binding);
+// A pinned System APP cannot be replaced or evicted until the matching
+// unpin(). This is used by long-lived hardware sessions such as MSC.
+RuntimeStatus pin(Kind kind);
+bool unpin(Kind kind);
+bool pinned(Kind kind);
+RuntimeStatus run_app(u16 file_id, u32& result);
+// A resident executor may release an idle compiler after its entry returned.
+// Never evict live/pinned APP code or a callback still on its native stack.
+RuntimeStatus evict_cached(void);
+bool find_file_handler(u16 type_magic, FileHandler& handler);
+RuntimeStatus open_file(const FileHandler& handler, u16 file_id, u32& result);
+
+inline RuntimeStatus invoke(Kind kind, Command command, u32& result) {
+  return invoke(kind, command, 0, 0, 0, 0, result);
+}
+
+// Проверяет любой C6-файл .APP до атомарной замены: заголовок, привязку к
+// ABI, CRC сжатого потока, корректность распаковки и CRC SRAM-образа.
+StoreStatus validate_app(const ModuleSource& source, Header& header);
+
+} // namespace loadable_module
+
+#endif

@@ -1,0 +1,201 @@
+unified-broad 0 / 30136 0.0
+unified-broad 256 / 30136 1.8
+unified-broad 512 / 30136 3.9
+unified-broad 768 / 30136 6.3
+unified-broad 1024 / 30136 8.8
+unified-broad 1280 / 30136 11.3
+unified-broad 1536 / 30136 12.9
+unified-broad 1792 / 30136 14.8
+unified-broad 2048 / 30136 16.9
+unified-broad 2304 / 30136 17.2
+unified-broad 2560 / 30136 17.3
+unified-broad 2816 / 30136 17.5
+unified-broad 3072 / 30136 18.0
+unified-broad 3328 / 30136 18.4
+unified-broad 3584 / 30136 19.4
+unified-broad 3840 / 30136 20.6
+unified-broad 4096 / 30136 21.1
+unified-broad 4352 / 30136 21.5
+unified-broad 4608 / 30136 21.9
+unified-broad 4864 / 30136 22.3
+unified-broad 5120 / 30136 22.7
+unified-broad 5376 / 30136 23.1
+unified-broad 5632 / 30136 23.3
+unified-broad 5888 / 30136 23.5
+unified-broad 6144 / 30136 23.6
+unified-broad 6400 / 30136 23.8
+unified-broad 6656 / 30136 23.9
+unified-broad 6912 / 30136 24.1
+unified-broad 7168 / 30136 24.3
+unified-broad 7424 / 30136 24.4
+unified-broad 7680 / 30136 24.6
+unified-broad 7936 / 30136 24.8
+unified-broad 8192 / 30136 25.0
+unified-broad 8448 / 30136 25.1
+unified-broad 8704 / 30136 25.3
+unified-broad 8960 / 30136 25.5
+unified-broad 9216 / 30136 25.6
+unified-broad 9472 / 30136 25.8
+unified-broad 9728 / 30136 26.0
+unified-broad 9984 / 30136 26.1
+unified-broad 10240 / 30136 26.3
+unified-broad 10496 / 30136 26.5
+unified-broad 10752 / 30136 26.6
+unified-broad 11008 / 30136 26.8
+unified-broad 11264 / 30136 27.0
+unified-broad 11520 / 30136 27.1
+unified-broad 11776 / 30136 27.3
+unified-broad 12032 / 30136 27.5
+unified-broad 12288 / 30136 27.6
+unified-broad 12544 / 30136 27.8
+unified-broad 12800 / 30136 27.9
+unified-broad 13056 / 30136 28.1
+unified-broad 13312 / 30136 28.2
+unified-broad 13568 / 30136 28.3
+unified-broad 13824 / 30136 28.5
+unified-broad 14080 / 30136 28.6
+unified-broad 14336 / 30136 28.8
+unified-broad 14592 / 30136 28.9
+unified-broad 14848 / 30136 29.1
+unified-broad 15104 / 30136 29.3
+unified-broad 15360 / 30136 29.4
+unified-broad 15616 / 30136 29.6
+unified-broad 15872 / 30136 29.8
+unified-broad 16128 / 30136 30.0
+unified-broad 16384 / 30136 31.1
+unified-broad 16640 / 30136 32.4
+unified-broad 16896 / 30136 33.7
+unified-broad 17152 / 30136 34.9
+unified-broad 17408 / 30136 35.9
+unified-broad 17664 / 30136 37.0
+unified-broad 17920 / 30136 38.3
+unified-broad 18176 / 30136 39.6
+unified-broad 18432 / 30136 41.9
+unified-broad 18688 / 30136 44.3
+unified-broad 18944 / 30136 46.7
+unified-broad 19200 / 30136 49.1
+unified-broad 19456 / 30136 49.7
+unified-broad 19712 / 30136 50.1
+unified-broad 19968 / 30136 50.5
+unified-broad 20224 / 30136 50.8
+unified-broad 20480 / 30136 51.6
+unified-broad 20736 / 30136 55.6
+unified-broad 20992 / 30136 59.4
+unified-broad 21248 / 30136 61.6
+unified-broad 21504 / 30136 63.0
+unified-broad 21760 / 30136 65.2
+unified-broad 22016 / 30136 69.1
+unified-broad 22272 / 30136 72.8
+unified-broad 22528 / 30136 75.3
+unified-broad 22784 / 30136 77.2
+unified-broad 23040 / 30136 78.8
+unified-broad 23296 / 30136 82.0
+unified-broad 23552 / 30136 84.2
+unified-broad 23808 / 30136 86.3
+unified-broad 24064 / 30136 88.7
+unified-broad 24320 / 30136 90.5
+unified-broad 24576 / 30136 92.6
+unified-broad 24832 / 30136 95.0
+unified-broad 25088 / 30136 96.9
+unified-broad 25344 / 30136 99.6
+unified-broad 25600 / 30136 102.5
+unified-broad 25856 / 30136 104.0
+unified-broad 26112 / 30136 105.2
+unified-broad 26368 / 30136 106.6
+unified-broad 26624 / 30136 107.2
+unified-broad 26880 / 30136 108.6
+unified-broad 27136 / 30136 111.1
+unified-broad 27392 / 30136 114.3
+unified-broad 27648 / 30136 117.3
+unified-broad 27904 / 30136 118.9
+unified-broad 28160 / 30136 120.1
+unified-broad 28416 / 30136 121.3
+unified-broad 28672 / 30136 122.2
+unified-broad 28928 / 30136 125.2
+unified-broad 29184 / 30136 127.9
+unified-broad 29440 / 30136 131.3
+unified-broad 29696 / 30136 134.3
+unified-broad 29952 / 30136 137.5
+{
+  "status": "PASS_SINGLE_ELF_ORIGINAL119_AND_INDEPENDENT53_RNE_AND_INSTRUCTIONS",
+  "candidate_ELF_sha256": "6a0728833c0a3afa306b3e57f8110fd56c9d24a726c8ae8bf16e7b02b9a78c79",
+  "zero_control_ELF_sha256": "9e5344e14c4db6bdc6ef3263fa1ba4a183ffa9b2aa4ff7999533fcd855291ada",
+  "reference_ELF_sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+  "raw_records_sha256": "f7f40051502806fa6f2d3392756a7d2d2298591f783deb1c0813f032016192ff",
+  "case_evaluations": 30136,
+  "case_overlap_not_deduplicated": true,
+  "original119_cases": 23352,
+  "independent53_cases": 6784,
+  "state_rows": 60272,
+  "candidate_wrong": 0,
+  "zero_control_wrong": 0,
+  "actual_qualified_math_ARM_calls": 193060,
+  "completed_ARM_calls": {
+    "candidate": 60272,
+    "zero-control": 60272,
+    "qfp_dsin": 2886,
+    "qfp_dcos": 2886,
+    "qfp_dtan": 2886,
+    "qfp_int2double": 2626,
+    "qfp_dsqrt": 4888,
+    "qfp_dexp": 2342,
+    "qfp_uint2double": 1024,
+    "qfp_int642double": 3072,
+    "qfp_uint642double": 3072,
+    "qfp_double2int": 2048,
+    "qfp_double2uint": 1024,
+    "qfp_double2int64": 2048,
+    "qfp_double2uint64": 1024,
+    "qfp_float2double": 1024,
+    "qfp_double2float": 1024,
+    "audit_dcmpeq": 1024,
+    "audit_dcmplt": 1024,
+    "audit_dcmple": 1024,
+    "audit_dcmpge": 1024,
+    "audit_dcmpgt": 1024,
+    "qfp_dln": 4864,
+    "audit_atan": 3072,
+    "qfp_dmul": 792,
+    "qfp_ddiv": 792,
+    "qfp_dadd": 792,
+    "qfp_dsub": 24,
+    "qfp_composed_asin": 1392,
+    "qfp_composed_acos": 1392,
+    "qfp_composed_log10": 2036,
+    "qfp_composed_pow": 6122,
+    "qfp_composed_pow_exact": 6122,
+    "qfp_composed_pow_integer": 6122
+  },
+  "oracle_input_evaluations": {
+    "binary64_directed_MPFR_inputs": 18583,
+    "integer_to_double_MPFR_and_exact": 4897,
+    "double_to_integer_MPFR_and_exact": 3072,
+    "float_cast_directed_MPFR_and_exact": 1024,
+    "comparison_exact_MPFR_inputs": 2560
+  },
+  "automatic_ROM_lookup_initializations_excluded": 2,
+  "explicit_source_loader_calls_excluded": 2,
+  "MPFR_version": "4.2.2",
+  "all_case_classification": {
+    "strict": 23939,
+    "no_correct_reference": 5888,
+    "equal": 274,
+    "slower": 35
+  },
+  "observed_stacks": {
+    "candidate": 1016,
+    "zero-control": 1016,
+    "Qfplib": 100
+  },
+  "no_old_firmware_or_component_overlays_loaded": true,
+  "all_correct_references_compared": true,
+  "all_incorrect_reference_outputs_and_costs_retained": true,
+  "no_nominal_reference_domain_filter": true,
+  "PCS_SP_bounded_writes_and_SIO_checked_every_call": true,
+  "instructions_are_not_physical_cycles": true,
+  "expanded_component_regressions_and_totality_pending": true,
+  "integration_GO": false,
+  "hardware_accessed": false,
+  "goal_complete": false,
+  "elapsed_seconds": 139.97034658299526
+}

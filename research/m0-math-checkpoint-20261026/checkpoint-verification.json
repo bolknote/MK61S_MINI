@@ -1,0 +1,52 @@
+{
+  "status": "PASS_INTERMEDIATE_R45_R47_ARCHIVE",
+  "stored_payloads": 840,
+  "preserved_original_files": 2088,
+  "local_original_files_checked": 2088,
+  "R47_campaigns": {
+    "direct": {
+      "inputs": 2862,
+      "state_rows": 8586,
+      "fresh_ARM_calls": 25758,
+      "parent_losses": 148,
+      "candidate_losses": 0,
+      "all_parent_increase_rows": 2568,
+      "incorrect_reference_rows_retained": 1257
+    },
+    "expanded": {
+      "inputs": 77282,
+      "state_rows": 231846,
+      "fresh_ARM_calls": 231846,
+      "parent_losses": 36914,
+      "candidate_losses": 0,
+      "all_parent_increase_rows": 48426,
+      "incorrect_reference_rows_retained": 65340
+    },
+    "pow": {
+      "inputs": 16740,
+      "state_rows": 50220,
+      "fresh_ARM_calls": 251100,
+      "parent_losses": 2047,
+      "candidate_losses": 2045,
+      "all_parent_increase_rows": 36,
+      "incorrect_reference_rows_retained": 55296
+    }
+  },
+  "R47_division_unique_input_union": 79846,
+  "R45_losing_division_union": 36936,
+  "R47_fresh_diagnostic_ARM_calls": 508704,
+  "R47_full_public_qualification_pending": true,
+  "actual_new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false,
+  "code_rebuild": {
+    "allocated_bytes_symbols_semantic_relocations_exact": {
+      "r45": 21,
+      "r47": 21
+    },
+    "debug_path_bytes_compared": false,
+    "unified_debug_metadata_retained_for_exact_linker_veneers": true,
+    "actual_ARM_calls": 0,
+    "hardware_accessed": false
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "products": [
+    {
+      "arch": "m4",
+      "placement": "flash",
+      "elf": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-strncmp-20261026-host-final-v1/m4-flash.elf",
+        "bytes": 8908,
+        "sha256": "fc5d3d8427b0609fca7820d44eb8ba0da91c8cc3ca5f1d45b2628c677d025e9d"
+      }
+    },
+    {
+      "arch": "m4",
+      "placement": "sram",
+      "elf": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-strncmp-20261026-host-final-v1/m4-sram.elf",
+        "bytes": 8908,
+        "sha256": "4af56972ecb81304ef23229a56ed928201a8b83c913b2087ca461f76d7675dcf"
+      }
+    },
+    {
+      "arch": "m4",
+      "placement": "runtime",
+      "elf": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-strncmp-20261026-host-final-v1/m4-runtime.elf",
+        "bytes": 5356,
+        "sha256": "1d4137c45b634f7689ea4a72a1876829a324b98f1b65e4bc7611cc742a755d02"
+      }
+    },
+    {
+      "arch": "m0",
+      "placement": "flash",
+      "elf": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-strncmp-20261026-host-final-v1/m0-flash.elf",
+        "bytes": 7168,
+        "sha256": "ac9c15caf266a656087a4388ca4531bf96bc0f49723c6ba02c11ba6a755d8a4c"
+      }
+    },
+    {
+      "arch": "m0",
+      "placement": "sram",
+      "elf": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-strncmp-20261026-host-final-v1/m0-sram.elf",
+        "bytes": 7168,
+        "sha256": "e76bcf035a951f9eae17ef2f3dd6dc9acdb291eee6612046ca14b3c24a5dd40f"
+      }
+    },
+    {
+      "arch": "m0",
+      "placement": "runtime",
+      "elf": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-strncmp-20261026-host-final-v1/m0-runtime.elf",
+        "bytes": 5364,
+        "sha256": "5724ee601e87dfee0af8d024384e78d284d4920550bd2c9ab4b0e72dba0eb885"
+      }
+    }
+  ],
+  "status": "QUALIFIED_ORIGINAL_CORE_ELF_IDENTITIES",
+  "source_base": "6e814dd7bb8b12c8700bbb9ad3817a20ceb8800e",
+  "note": "Historical expected SHA values; rebuild current fixture sources to verify. Original absolute paths are provenance and are not opened by this check."
+}

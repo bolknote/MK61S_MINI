@@ -1,0 +1,54 @@
+{
+  "status": "ALL_R38_QUALIFICATION_PRODUCERS_TERMINAL_EXIT0_CONSUMED",
+  "all_producers_terminal": true,
+  "source_build": {
+    "session": 87793,
+    "exit_code": 0
+  },
+  "source_probe": {
+    "session": 97985,
+    "exit_code": 0
+  },
+  "source_bridge_controls": {
+    "session": 14035,
+    "exit_code": 0
+  },
+  "source_R12_17loader9disabled": {
+    "exit_code": 0,
+    "observed_tool_output": true
+  },
+  "full": {
+    "session": 81414,
+    "exit_code": 0
+  },
+  "boundary": {
+    "session": 90276,
+    "exit_code": 0
+  },
+  "primary": {
+    "session": 91916,
+    "exit_code": 0
+  },
+  "aux_power_edge_admission": {
+    "session": 15022,
+    "exit_code": 0
+  },
+  "fresh_prepare": {
+    "session": 18803,
+    "exit_code": 0
+  },
+  "fresh_edges": {
+    "session": 77816,
+    "exit_code": 0
+  },
+  "admissions_join": {
+    "session": 94281,
+    "exit_code": 0
+  },
+  "final_joined_audit": {
+    "session": 28296,
+    "exit_code": 0
+  },
+  "no_producer_restarted_due_to_observation_timeout": true,
+  "goal_complete": false
+}

@@ -1,0 +1,13 @@
+{
+  "status": "R43_SOURCE_PRODUCERS_TERMINAL",
+  "all_source_producers_terminal": true,
+  "build_session": 3604,
+  "helper_controls_session": 1959,
+  "public_diagnostic_session": 85437,
+  "all3_exit0_consumed": true,
+  "static_controls_attempt1": "first3PASS; disabled report KeyError; preserved controls-attempt1; no binary/numeric change",
+  "static_controls_after_report_alias_fix": "all4PASS direct terminal0",
+  "native_guard12negative_and_current_exp_guards_and_bankmap_and_proof": "direct terminal0",
+  "no_process_live": true,
+  "no_timeout_restart": true
+}

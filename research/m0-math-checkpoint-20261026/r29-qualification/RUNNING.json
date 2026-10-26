@@ -1,0 +1,19 @@
+{
+  "status": "RUNNING_R29_FRESH_CANDIDATE_FULL_AND_PRIMARY_MATRICES",
+  "utc": "2026-10-25T23:29:11.000178+00:00",
+  "source_FROZEN_sha256": "c176067a6ba6afda1ff3f158be5c8e148c6bdc8f98dfc0f63dfa86f03f262018",
+  "candidate_ELF_sha256": "6a0728833c0a3afa306b3e57f8110fd56c9d24a726c8ae8bf16e7b02b9a78c79",
+  "parent_R28_qualification_FROZEN_sha256": "0ba57f4e189ef444dc849d8dc42836f2a56ab8780282c36854d320317b42a70b",
+  "exec_sessions": {
+    "full": 73028,
+    "matrix": 11605
+  },
+  "planned_full_fresh_R29_ARM_calls": 989922,
+  "full_fresh_MPFR_calls": 0,
+  "full_fresh_Qfplib_calls": 0,
+  "full_oracles_and_references_explicitly_inherited_from_frozen_R28": true,
+  "selected_private_source_remains": "R28",
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

@@ -1,0 +1,9 @@
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-cold-overflow-r45-20261026/source/code/native_eabi_m0.cpp:620:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-cold-overflow-r45-20261026/source/code/native_eabi_m0_trig_checked.inc:201:51: warning: 'm0_eabi::U checked_trig_fast_table(CheckedTrigArgument, unsigned int, m0_eabi::U)' defined but not used [-Wunused-function]
+  201 | __attribute__((optimize("Os"),noinline)) static U checked_trig_fast_table(CheckedTrigArgument a,unsigned op,U sign) {
+      |                                                   ^~~~~~~~~~~~~~~~~~~~~~~
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-cold-overflow-r45-20261026/source/code/native_eabi_m0.cpp:380:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-cold-overflow-r45-20261026/source/code/native_eabi_m0_log70.inc:249:56: warning: 'double ln_near_interval(double, m0_eabi::U)' defined but not used [-Wunused-function]
+  249 | __attribute__((optimize("Os"),noinline)) static double ln_near_interval(double x,U b) {
+      |                                                        ^~~~~~~~~~~~~~~~
+R45 built {'ELF_sha256': '724e202d93cff5184ca3788649a6a82727791fce7b97262525100c7d1c45abb7', 'scratch_y_bytes': 4080, 'all_undefined_symbols_resolved': True} changed {'RP-unified-native_eabi_m0_rp2040.S.o': ['.text.mk61_rp2040_arithmetic']} unchanged 18

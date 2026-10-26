@@ -1,0 +1,76 @@
+{
+  "status": "PASS_R45_EXACT_OVERFLOW_SOURCE_COMPOSITION_AND_LINKED_GUARD_PROOF",
+  "candidate_ELF_sha256": "724e202d93cff5184ca3788649a6a82727791fce7b97262525100c7d1c45abb7",
+  "parent_R43_source_FROZEN_sha256": "170cd77a62244459c526ea2817f964652f4355c31e7824defc7b0195a6a5b22b",
+  "unselected_R44_parent_source_FROZEN_sha256": "ac14437a770763e7c46d8782a7f02506ecfcc3b0c2b598c5476e1d29324dfb3a",
+  "both_source_edits_reversed_exactly_to_R43": true,
+  "only2objects_changed": {
+    "RP-merged-cpp.o": [
+      ".text._ZN7m0_eabi6BinaryILj52ELj11EE3divEyy"
+    ],
+    "RP-unified-native_eabi_m0_rp2040.S.o": [
+      ".text.mk61_rp2040_arithmetic"
+    ]
+  },
+  "other17_objects_including_M4default_exact": true,
+  "finite_CPP_quotient_normalization_exact_ratio1to2_e_integer_range_minus2098_to2097": true,
+  "CPP_e_greater1023_implies_true_magnitude_atleast2pow1024": true,
+  "ASM_entry_normal_numerator_Ea1to2046_and_Eb0or2047_N_checked": true,
+  "ASM_subnormal_overflow_equivalence": "For normal numerator M*2^(Ea-1075) and subnormal denominator N*2^-1074: |a/b|=(M/N)*2^(Ea-1). For k=1025-Ea, N<=floor(M/2^k) implies |a/b|>=2^1024. k<=0 always true for N<2^52,M>=2^52; k>=53 false for nonzero N because M<2^53. Zero denominator with normal numerator returns exact signed infinity.",
+  "all52_threshold_shift_formulas_exact": true,
+  "mathematical_proof_uses_integer_identity_for_all_M_not_just_test_endpoints": true,
+  "overflow_midpoint_2pow1024_minus2pow970_strictly_below2pow1024": true,
+  "other_division_values_execute_existing_exact_RNE_body": true,
+  "NaN_zero_infinity_policy_and_callee_SP_SIO_preserved": true,
+  "actual_ASM_caller_body_literals_and_all_declines_bound": true,
+  "mandatory_current_new_div_guard6negatives_and_native_Q8_guard12negatives": true,
+  "mandatory_exp_R12_17negative_normalized_ROMloader9disabled_PASS": true,
+  "new_calls_tables_RAM_libgcc_bytes": 0,
+  "code_Flash_delta_bytes_vs_R43": 104,
+  "bank6bytes_symbolically_mapped_not_identity": true,
+  "source_diagnostics": {
+    "direct": {
+      "inputs": 2862,
+      "ARM": 25758,
+      "MPFR": 2828,
+      "sNaN": 34,
+      "parent_losses": 1533,
+      "candidate_losses": 148,
+      "all_parent_increase_rows": 1212
+    },
+    "grid": {
+      "inputs": 17442,
+      "ARM": 156978,
+      "MPFR": 17442,
+      "sNaN": 0,
+      "parent_losses": 7608,
+      "candidate_losses": 0,
+      "all_parent_increase_rows": 17046
+    },
+    "pow": {
+      "inputs": 16740,
+      "ARM": 251100,
+      "MPFR": 16726,
+      "sNaN": 14,
+      "parent_losses": 2343,
+      "candidate_losses": 2047,
+      "all_parent_increase_rows": 30
+    }
+  },
+  "total_source_diagnostic_ARM_calls": 433836,
+  "all_source_diagnostics_not_yet_full_qualification_pool": true,
+  "all_parent_increases_including_already_slower_cases_retained": true,
+  "inherited_R43_Q8_controls573536_not_fresh": true,
+  "inherited_R43_generic_helper143384_increases_retained": true,
+  "host_alias_binder_first_attempt_preserved_no_numeric_change": true,
+  "new_ARM_MPFR_calls_in_this_host_proof": 0,
+  "selected": false,
+  "full_public_qualification_pending": true,
+  "universal_CR_generalpowtotality_floatFMA_stack_cycles_not_proved": true,
+  "independent_acceptance": false,
+  "performance_or_adoption_GO": false,
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

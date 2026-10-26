@@ -1,0 +1,39 @@
+{
+  "status": "PASS_R45_FULL_LN_FRESH_CANDIDATE_CACHED_R18_GOLD_QFP",
+  "source_FROZEN_sha256": "dbc455078837507acaeb750df1e3fb6800b923e2a9a880c9c6bcc2150ba3527a",
+  "inherited_R18_qualification_FROZEN_sha256": "2e0d945318df0f86b2125ac1a3b9d9c0f387616ef3e38ee19de9c99a9bb5ceb1",
+  "source_rows_by_phase": {
+    "ln": 183146,
+    "admission": 184320
+  },
+  "fresh_R45_rows_by_phase": {
+    "ln": 183146,
+    "admission": 177444
+  },
+  "duplicate_state_rows_checked": 6876,
+  "unique_inputs": 180295,
+  "state_rows": 360590,
+  "actual_qualified_public_ARM_calls": 360590,
+  "actual_fresh_parent_Qfp_MPFR_calls": 0,
+  "parent_R18_gold_Qfp_cached_as_inherited_R43_not_fresh": true,
+  "candidate_wrong": 0,
+  "parent_losing_inputs": 0,
+  "candidate_losing_inputs": 0,
+  "remaining_losing_arguments": [],
+  "new_correct_reference_loss_rows": [],
+  "all_parent_instruction_increase_rows": [],
+  "parent_instruction_delta_histogram": {
+    "0": 360590
+  },
+  "all4_shared_division_entry_visits": {},
+  "wrong_reference_state_rows_retained": 21680,
+  "all_correct_reference_results_compared_no_nominalfilter": true,
+  "records_sha256": "15e0f083e63107592c47280b508dc187372a4430cb45602408f27419ca9c7cfa",
+  "observed_stack": 664,
+  "not_universal_stack_bound": true,
+  "physical_cycles_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 390.8757898329641
+}

@@ -1,0 +1,118 @@
+{
+  "status": "PASS_R33_NARROW_SOURCE_FINITE_RECEIPT_DIRECT_PINS_ONLY",
+  "review_path": ".build/m0-math-unified-exp-positive-bridge-r33-independent-20261026/FINAL-REVIEW.json",
+  "review_sha256": "cb914841a63f96fc90f3833b3f522e54ef4b5fcf5694d3bc66a78beb31fddea1",
+  "pins": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/FROZEN.json": {
+      "bytes": 73714,
+      "sha256": "ebdf17a90f34a7d2e5e7d49ac8fd49de47442f1509459bb10b3eb22633b89dd1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/candidate.elf": {
+      "bytes": 2343832,
+      "sha256": "a273d8c709ec9b78ad81b7a17271db748dc8e24f4b24088d15df4bfa8b11f4d0"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/RP-merged-cpp.o": {
+      "bytes": 1949980,
+      "sha256": "14912ae1caf1e75955dd54b487902d3223e98dd48de8d15a150c93b07300807a"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/source-binding-proof.json": {
+      "bytes": 2688,
+      "sha256": "64256c0d53759083efb705c3c5e35c36095941f3d2bdc469cb80dcf995212f7e"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/private-caller-proof.json": {
+      "bytes": 1767,
+      "sha256": "5747fcab5cdc099d73977b2fc13171ff0d2a1eaf93e86f5664844f057ed56611"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/private-return-proof.json": {
+      "bytes": 2159,
+      "sha256": "0450883169983a72364724ebf3ca9d8c26360ba0f4e7d9474cfa299df48367cf"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/private-guard-controls.json": {
+      "bytes": 809,
+      "sha256": "62f3b956209cd60feec539a8d5bebfb2a2f21469c55a36b1946407a1abb5ff49"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/loader-layout-proof.json": {
+      "bytes": 2641,
+      "sha256": "0a7d890160a5709b4d929903583b9c3575a086861a9f26d27243fbc0c334dc75"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/disabled-isolation.json": {
+      "bytes": 18185,
+      "sha256": "3a38a6b4ae0c25747d8e47c06b06a2b2ee54e4b533110b2fcfc67c53c4e9d55a"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/upper-unit-result.json": {
+      "bytes": 1598,
+      "sha256": "24dbf538a417b81ca8cc3916b2f79d09703a735726d335d2648353de0799c3e5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/bridge-control-result.json": {
+      "bytes": 1612,
+      "sha256": "1ec609814f0b0016f46c859b74ddeb8de6e27bbe4780a2e2d0e94f2aab033dc0"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/bank-map.json": {
+      "bytes": 25341,
+      "sha256": "2cccc287545fb475009fb12381b9bd0b3e5022b8ede6514b0a4b661be1769751"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-20261026/bridge-control-attempt1/audit.json": {
+      "bytes": 972,
+      "sha256": "eabfa0406356fb3244aef26090075b2f14d67c182f640f16ced3fb29074dd8a9"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-qualification-20261026/FROZEN.json": {
+      "bytes": 5323,
+      "sha256": "6cc6994839b641b9496508dcf0181918089835a8327b3f71862ee5cd759c9fde"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-qualification-20261026/author-result.json": {
+      "bytes": 25991,
+      "sha256": "04a0dc47dede2d113f873050a1bff2907649eea5181ac7eb8f9fb29272bd6034"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-qualification-20261026/exp-records.jsonl.gz": {
+      "bytes": 10782110,
+      "sha256": "2d841d9409ded349ef2d8563b583fa15e78b81165e0a684158800385b3a295be"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-qualification-20261026/boundary-records.jsonl.gz": {
+      "bytes": 1762214,
+      "sha256": "71cc78c5db374382538e51df464a2dd39875d3bd3afd6013fd93a97859eb6ea7"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-qualification-20261026/boundary-inputs.json": {
+      "bytes": 3128293,
+      "sha256": "e33f7ac503271e2456d8b4f25fb7e6feb0d47fa142f995e104c3209fa447dcf1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-qualification-20261026/joined-audit.json": {
+      "bytes": 22941,
+      "sha256": "7b5b339dd8b8401b0187bbe7ba5b496190a021776abd5208aefc549ea235dc0d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-qualification-20261026/TERMINAL.json": {
+      "bytes": 318,
+      "sha256": "718be184a34334308f0e1a2e37ffd02d6668d98a209a3b40e467917dcd5f87fc"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-r33-postseal-20261026.json": {
+      "bytes": 1385,
+      "sha256": "e9c0b288f28a0c0ea1324f69c0d87c815583b93ae058ef839e6f574f8991573b"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-independent-20261026/STATIC.json": {
+      "bytes": 4306,
+      "sha256": "797ef8bd22dd840e8436c4ba7b389d1c91dfc47df7785b9b9129cc862cdc2218"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-independent-20261026/PROOF.json": {
+      "bytes": 1555,
+      "sha256": "0c85d4aabd776ad8ed6cdb433c03ae56d7275d28844c04410ab8200829c1c749"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-independent-20261026/COUNTS.json": {
+      "bytes": 3719,
+      "sha256": "4d958a8b66dce82bf9e0a974220a037acc630dcaf014e537d732f03ede9ece50"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-independent-20261026/SUPPLEMENT.json": {
+      "bytes": 3268,
+      "sha256": "1a4cdd1fe627b1a826a292d21828c2d7dab50193355c8a5632605f4096f39506"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-independent-20261026/review.py": {
+      "bytes": 23551,
+      "sha256": "39028431fe43f6a82dd527348395324a8b1572ddf22d92c3a43018b3a9996914"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-positive-bridge-r33-independent-20261026/review-attempt-001.log": {
+      "bytes": 948,
+      "sha256": "9340ae20d5476b3aa916f264592009a2ee4d22390581cb3282e2a6e8dde2134c"
+    }
+  },
+  "new_ARM_MPFR_calls": 0,
+  "no_performance_or_adoption_GO": true,
+  "no_whole_R33_R35_GO": true
+}

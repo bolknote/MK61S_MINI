@@ -1,0 +1,9 @@
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-nativeq8-r43-20261026/source/code/native_eabi_m0.cpp:614:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-nativeq8-r43-20261026/source/code/native_eabi_m0_trig_checked.inc:201:51: warning: 'm0_eabi::U checked_trig_fast_table(CheckedTrigArgument, unsigned int, m0_eabi::U)' defined but not used [-Wunused-function]
+  201 | __attribute__((optimize("Os"),noinline)) static U checked_trig_fast_table(CheckedTrigArgument a,unsigned op,U sign) {
+      |                                                   ^~~~~~~~~~~~~~~~~~~~~~~
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-nativeq8-r43-20261026/source/code/native_eabi_m0.cpp:374:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-nativeq8-r43-20261026/source/code/native_eabi_m0_log70.inc:249:56: warning: 'double ln_near_interval(double, m0_eabi::U)' defined but not used [-Wunused-function]
+  249 | __attribute__((optimize("Os"),noinline)) static double ln_near_interval(double x,U b) {
+      |                                                        ^~~~~~~~~~~~~~~~
+R43 built {'ELF_sha256': 'd0a3a9bd38aa755ad6b21b2fb8d3551bdd7b9f27197aaf718b0714fa8c72799d', 'scratch_y_bytes': 4080, 'all_undefined_symbols_resolved': True} changed {'RP-merged-cpp.o': ['.m0_rsqrt_local_q8']} reloconly ['RP-merged-asm.o'] unchanged 17

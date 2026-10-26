@@ -1,0 +1,384 @@
+#ifndef PROGRAM_STORE_HPP
+#define PROGRAM_STORE_HPP
+
+#include "rust_types.h"
+#include "mk61emu_core.h"
+#include "storage_geometry.hpp"
+
+namespace program_store {
+
+static constexpr usize NAME_SIZE = 32;
+// Логический размер файла, предоставляемый хранилищем и виртуальной FAT.
+static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
+// Language source positions and C9 inode lengths use unsigned 16-bit offsets.
+// Files are streamed through bounded windows; 65535 is reserved as invalid.
+static constexpr u16 MAX_LANGUAGE_SOURCE_SIZE = 65534;
+static constexpr u16 MAX_TINYBASIC_TEXT_SIZE = MAX_LANGUAGE_SOURCE_SIZE;
+static constexpr u16 MAX_FOCAL_TEXT_SIZE = MAX_LANGUAGE_SOURCE_SIZE;
+// F401 keeps the established compact limit. F411 already owns an 8 KiB
+// exclusive BULK arena, so the prepared runtime font may use it without
+// adding another persistent RAM allocation.
+#if defined(STM32F401xC) || defined(STM32F401xE) || \
+    defined(ARDUINO_BLACKPILL_F401CC)
+static constexpr u16 MAX_FONT_SIZE = 1536;
+#else
+static constexpr u16 MAX_FONT_SIZE = 8192;
+#endif
+// 1600 байт вмещают полный WBMP Type 0 192x64 с заголовком и по-прежнему
+// независимо отображаются в цепочку из 512-байтных FAT-кластеров.
+#if defined(MK61_CORE_STANDALONE)
+static constexpr u16 MAX_IMAGE1_SIZE = 16384; // Native PicoCalc 320x320 WBMP.
+#else
+static constexpr u16 MAX_IMAGE1_SIZE = 1600;
+#endif
+// CHIP-8 загружает программы с адреса 0x200 в 4-КиБ память, поэтому
+// классический ROM занимает не более 4096 - 0x200 = 3584 байт.
+static constexpr u16 MAX_CHIP8_SIZE = 3584;
+// CRC32 followed by ZX0: enough for an incompressible 32-bank image.
+static constexpr u16 MAX_MK61_BINARY_SIZE = 4096;
+// S1 sheets are bounded binary documents; fit even the smallest FAT cluster.
+static constexpr u16 MAX_SHEET_SIZE = 2048;
+// Контейнер APP: 64-байтовый заголовок и не более 20 КиБ образа SRAM.
+// Хранилище читает его блоками и не требует такого же буфера в ОЗУ.
+static constexpr u16 MAX_APP_FILE_SIZE = 20U * 1024U + 64U;
+// A maximal language source can expand to three UTF-8 bytes per M8 byte.
+// Bound the independent FAT cluster chain at the smallest supported cluster;
+// physical C9 data blocks and native APP image limits remain separate.
+static constexpr u16 MIN_FAT_CLUSTER_SIZE =
+    (u16) storage_geometry::MIN_SECTORS_PER_CLUSTER *
+    storage_geometry::LOGICAL_SECTOR_SIZE;
+static constexpr u16 MAX_FAT_EXTENTS_PER_FILE =
+    (u16) (((u32) MAX_LANGUAGE_SOURCE_SIZE * 3U + MIN_FAT_CLUSTER_SIZE - 1U) /
+          MIN_FAT_CLUSTER_SIZE - 1U);
+
+enum class ProgramType : u8 {
+  MK61 = 0,
+  FOCAL = 2,
+  TINYBASIC = 3,
+  TEXT = 4,
+  MK61_STATE = 5,
+  FONT = 6,
+  IMAGE1 = 7,
+  APP = 8,
+  // Значение 1 принадлежало удалённому BASIC и намеренно не используется
+  // повторно: старые каталоги должны оставаться однозначными.
+  CHIP8 = 9,
+  // T2: Markdown в M8. Тип сканируется по inode и не расширяет сохранённый
+  // массив счётчиков каталога.
+  MARKDOWN = 10,
+  MK61_BINARY = 11,
+  SHEET = 12
+};
+
+constexpr bool text_content(ProgramType type) {
+  switch(type) {
+    case ProgramType::MK61:
+    case ProgramType::FOCAL:
+    case ProgramType::TINYBASIC:
+    case ProgramType::TEXT:
+    case ProgramType::MK61_STATE:
+    case ProgramType::MARKDOWN:
+      return true;
+    case ProgramType::FONT:
+    case ProgramType::IMAGE1:
+    case ProgramType::APP:
+    case ProgramType::CHIP8:
+    case ProgramType::MK61_BINARY:
+    case ProgramType::SHEET:
+      return false;
+  }
+  return false;
+}
+
+// Единая политика прозрачного C9 ZX0. FONT включится здесь только вместе с
+// переходом на raw-only FMK2; APP имеет собственное сжатие контейнера.
+constexpr bool transparent_compression_enabled(ProgramType type) {
+  switch(type) {
+    case ProgramType::FOCAL:
+    case ProgramType::TINYBASIC:
+    case ProgramType::TEXT:
+    case ProgramType::MK61_STATE:
+    case ProgramType::IMAGE1:
+    case ProgramType::CHIP8:
+    case ProgramType::MARKDOWN:
+      return true;
+    case ProgramType::MK61:
+    case ProgramType::FONT:
+    case ProgramType::APP:
+    case ProgramType::MK61_BINARY:
+    case ProgramType::SHEET:
+      return false;
+  }
+  return false;
+}
+
+using TypeMagic = u16;
+
+constexpr TypeMagic make_type_magic(char family, char subtype) {
+  return (TypeMagic) (u8) family | ((TypeMagic) (u8) subtype << 8);
+}
+
+static constexpr TypeMagic TYPE_MAGIC_NONE = 0;
+static constexpr TypeMagic TYPE_MAGIC_IMAGE1 = make_type_magic('I', '1');
+static constexpr TypeMagic TYPE_MAGIC_CHIP8 = make_type_magic('C', '1');
+static constexpr TypeMagic TYPE_MAGIC_MARKDOWN = make_type_magic('T', '2');
+static constexpr TypeMagic TYPE_MAGIC_MK61_BINARY = make_type_magic('M', '3');
+static constexpr TypeMagic TYPE_MAGIC_SHEET = make_type_magic('S', '1');
+
+enum class NodeKind : u8 {
+  FILE = 0,
+  DIRECTORY = 1,
+  DIRECTORY_EXTENT = 2,
+  FILE_EXTENT = 3
+};
+
+static constexpr u16 ROOT_ID = 0xFFFF;
+static constexpr u16 INVALID_ID = 0xFFFF;
+// Синхронизировано с обходчиком виртуальной FAT. Это ограничивает обход
+// предков без стека и не позволяет создать дерево, непредставимое через USB.
+static constexpr u8 MAX_DIRECTORY_DEPTH = 32;
+
+struct Entry {
+  ProgramType type;
+  char name[NAME_SIZE];
+  u16 data_len;
+  u16 id;
+  u16 parent_id;
+  NodeKind kind;
+};
+
+struct FileSource {
+  void* context;
+  bool (*read)(void* context, u32 offset, u8* output, usize size);
+};
+
+// Last broad phase in which write_file_from_source() failed.  This is
+// diagnostic state only; callers must still use the boolean return value.
+// Keeping the phase in the resident storage layer lets loadable importers
+// report an actionable C9 failure without widening the stable APP ABI.
+enum class WriteFailure : u8 {
+  NONE = 0,
+  ARGUMENTS = 1,
+  VISIBLE_SIZE = 2,
+  EXTENT_SHAPE = 3,
+  PREFERRED_ID = 4,
+  NAME_COLLISION = 5,
+  EXTENT_SELECTION = 6,
+  COMPRESSION = 7,
+  RECORD = 8,
+  CATALOG = 9,
+  COMMIT = 10
+};
+
+// Fine-grained reason inside the broad write phase.  Values are transported
+// in spare bits of the existing USBDISK request result, so this does not widen
+// the stable resident/APP ABI.
+enum class WriteFailureDetail : u8 {
+  NONE = 0,
+  TARGET_VISIBLE_NAME = 1,
+  PARENT = 2,
+  CHILD_CATALOG = 3,
+  CHILD_NAME = 4,
+  CHILD_VISIBLE_NAME = 5,
+  ROOT_EXISTING_CAPACITY = 6,
+  COLLISION = 7,
+  CHAIN = 8,
+  ROOT_TARGET_CAPACITY = 9,
+  REPLACED_NAME = 10,
+  REPLACED_EXTENTS = 11
+};
+
+enum class MountStatus : u8 {
+  UNAVAILABLE = 0,
+  READY,
+  FORMAT_REQUIRED,
+  REPAIR_REQUIRED
+};
+
+void init(void);
+bool format(void);
+bool refresh(void);
+bool ready(void);
+MountStatus mount_status(void);
+const storage_geometry::Geometry& geometry(void);
+// Persistent revision of the logical USB view. It changes both when the C9
+// catalog commits and when a host write reaches the staging journal, including
+// a write later rejected or discarded. Hosts may use it to invalidate stale
+// FAT metadata after a disconnected transaction.
+u32 media_revision(void);
+u32 catalog_revision(void);
+u16 max_nodes(void);
+bool node_id_available(u16 id);
+// Catalog-only, case-insensitive lookup. Never builds the writable FAT
+// projection/index. True plus INVALID_ID means absent; false is a bad parent,
+// invalid name, I/O failure or corrupt sibling chain.
+bool find_child(u16 parent, bool directory, ProgramType type, const char* name, u16& output);
+bool fat_find_child(u16 parent, bool directory, ProgramType type, const char* name, u16& output);
+u8 format_version(void);
+u16 max_fat_clusters(void);
+enum class FatClusterStatus : u8 { FREE = 0, USED = 1, ERROR = 2 };
+struct FatClusterInfo { u16 owner, index, next; };
+bool fat_first_cluster(u16 id, u16& cluster);
+bool fat_chain_count(u16 id, u16& count);
+bool fat_chain_cluster(u16 id, u16 index, u16& cluster);
+FatClusterStatus fat_cluster_info(u16 cluster, FatClusterInfo& output);
+bool fat_projection_begin(void);
+bool import_plan_begin(void);
+bool import_plan_put(u16 cluster, u16 empty_index, u16 target, u16 source);
+bool import_plan_get(u16 cluster, u16 empty_index, u16& target, u16& source);
+bool import_name_get(u16 slot, u16& hash, u32& location);
+bool import_name_put(u16 slot, u16 hash, u32 location);
+bool prepare_import_mapping(u16 id);
+void import_plan_end(void);
+bool create_directory_from_fat(u16 parent, const char* name, u16 preferred, u16 first, u16* output);
+bool set_directory_chain(u16 id, u16 count, const FileSource& source);
+bool ensure_directory_chain(u16 id);
+u16 used_nodes(void);
+bool basename_valid(const char* name);
+u32 settings_address(void);
+u16 settings_size(void);
+bool erase_settings(void);
+const char* file_extension(ProgramType type);
+TypeMagic type_magic(ProgramType type);
+const char* type_magic_text(ProgramType type);
+bool type_from_magic(TypeMagic magic, ProgramType& type);
+
+int count(ProgramType type);
+bool entry(ProgramType type, int index, Entry& out);
+int total_count(void);
+bool entry_at(int index, Entry& out);
+bool entry_by_id(u16 id, Entry& out);
+int child_count(u16 parent_id);
+bool child(u16 parent_id, int index, Entry& out);
+bool exists(ProgramType type, const char* name);
+
+bool write(ProgramType type, const char* name, const u8* data, u16 data_len);
+// Совместимый вход для прежних обработчиков; политика сжатия та же, что у
+// write_file().
+bool write_from_usb(ProgramType type, const char* name, const u8* data, u16 data_len);
+bool read(ProgramType type, const char* name, u8* data, u16 capacity, u16* out_len);
+bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 len, u16* out_len);
+bool remove(ProgramType type, const char* name);
+u16 purge_empty(void);
+bool rename(ProgramType type, const char* old_name, const char* new_name);
+
+bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
+                      u16* out_id = nullptr);
+bool write_file(u16 parent_id, u16 preferred_id, ProgramType type,
+                const char* name, const u8* data, u16 data_len,
+                u16* out_id = nullptr);
+// Для RAW большой файл пишется потоково. Для ZX0 вызывающий может передать
+// свободный compression_buffer и непрерывный contiguous_data; иначе C9
+// использует доступные shared/exclusive buffers либо безопасно оставляет RAW.
+// fat_extents supplies the entire FAT cluster sequence, including the first
+// cluster. A null sequence allocates clusters independently of the node ID.
+bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
+                            const char* name, u16 data_len,
+                            const FileSource& source,
+                            const u16* fat_extents = nullptr,
+                            u16 fat_extent_count = 0,
+                            u16* out_id = nullptr,
+                            u8* compression_buffer = nullptr,
+                            usize compression_buffer_size = 0,
+                            const u8* contiguous_data = nullptr);
+static constexpr u8 IMPORT_BATCH_COUNT = 4;
+static constexpr u8 IMPORT_BATCH_BYTES = 64;
+struct ImportFile {
+  u16 id, cluster;
+  u8 size;
+  char name[NAME_SIZE];
+  u8 data[IMPORT_BATCH_BYTES];
+};
+// Available with MK61_C9_BULK_IMPORT. Fully checked small TXT files under one
+// non-root parent. Payload and mappings stay pinned until one existing WAL
+// record publishes the whole bounded batch.
+// Requires an active import plan; a failed attempt remains retryable.
+bool write_import_batch(u16 parent, const ImportFile* files, u8 count);
+
+WriteFailure last_write_failure(void);
+WriteFailureDetail last_write_failure_detail(void);
+bool read_id(u16 id, u8* data, u16 capacity, u16* out_len);
+bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len);
+// Language readers never materialize a complete file in the optional cache.
+bool read_source_range_id(u16 id,u16 offset,u8* data,u16 len,u16* out_len);
+// Content identity survives catalog commits and garbage collection.
+bool content_stamp(u16 id,u32& stamp);
+// Exact USB-visible byte length, persisted in the CRC-protected catalog.
+bool exported_size_id(u16 id, u32& size);
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+// USB-visible text range. Full CRC is checked before publishing a decoded cache;
+// no space or an active APP uses the CRC-checked streaming fallback.
+bool read_utf8_range_id(u16 id, u32 offset, u8* data, u16 capacity, u16& copied);
+#endif
+struct FileSink {
+  void* context;
+  bool (*next)(void* context, u8 value);
+};
+// Consume the entire logical file in one pass, checking its stored CRC and
+// compressed end marker. On failure discard all output already received.
+// The callback must not mutate the store or reenter a storage operation.
+bool stream_file_id(u16 id, const FileSink& sink);
+bool remove_id(u16 id);
+bool remove_tree(u16 id, u16* removed = nullptr);
+bool move_rename(u16 id, u16 new_parent_id, const char* new_name);
+static constexpr u16 VFAT_STAGE_BLOCK_SIZE = 512;
+static constexpr u32 VFAT_STAGE_KEY_MAX = 0x007FFFFFUL;
+
+bool vfat_stage_write(u32 block, const u8* data);
+bool vfat_stage_read(u32 block, u8* data);
+bool vfat_stage_exists(u32 block);
+u16 vfat_stage_count(void);
+#if defined(STM32F411xE)
+u32 vfat_stage_borrow_diagnostic(void);
+#endif
+bool vfat_stage_snapshot(u32* keys, u16 capacity, u16& count);
+void vfat_stage_forget(u32 start_block, u16 blocks);
+bool vfat_stage_discard_all(void);
+void vfat_stage_clear(void);
+// Полный staging-индекс живёт в нижней части общей динамической APP/USB SRAM.
+// USB-сеанс
+// блокирует её от вытеснения; терминальный upload перед проверкой APP сужает
+// индекс до собственного малого буфера и освобождает окно декодеру модуля.
+bool vfat_stage_lock(bool exclusive = false);
+using VfatStageKeyFilter = bool (*)(void* context, u32 key);
+bool vfat_stage_narrow(u32 start_block, u16 blocks,
+                       u32* index_storage, u16 index_capacity);
+bool vfat_stage_discard_unmatched(VfatStageKeyFilter include, void* context);
+bool vfat_stage_narrow_matching(VfatStageKeyFilter include,
+                                void* context,
+                                u32* index_storage, u16 index_capacity);
+bool vfat_stage_restore_full(void);
+void vfat_stage_unlock(void);
+// Drop only an unlocked RAM cache; journal records remain in SPI Flash and
+// rebuild on demand. A live USB/terminal index must never yield to an APP.
+bool vfat_stage_release_cache(void);
+// Release verified read data to make room for a larger APP; false if absent.
+bool read_cache_release(void);
+
+#if defined(PROGRAM_STORE_HOST_TEST)
+struct StageIndexStats {
+  u64 lookups;
+  u64 probes;
+};
+void test_reset_stage_index_stats(void);
+StageIndexStats test_stage_index_stats(void);
+u32 test_catalog_root(void);
+u32 test_catalog_page(u8 page);
+u32 test_catalog_wal_address(u8 record);
+u8 test_catalog_wal_records(void);
+u8 test_catalog_wal_capacity(void);
+bool test_catalog_checkpoint(void);
+bool test_catalog_protects(u32 sector);
+bool test_file_storage_info(u16 id, u16& stored_len,
+                            bool& large, bool& zx0);
+bool test_file_record_location(u16 id, u32& sector, u16& record_len);
+u16 test_current_record_space(void);
+bool test_relocate_fat_chain(u16 id, u32 sector);
+#endif
+
+bool write_mk61(const char* name, const u8* code, u16 code_len);
+bool read_mk61(const char* name, u8* code, u16 capacity, u16* out_len);
+
+} // пространство имён program_store
+
+#endif

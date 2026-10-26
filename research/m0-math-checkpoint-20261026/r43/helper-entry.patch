@@ -1,0 +1,53 @@
+--- R42/native_eabi_m0_pow_fast.inc
++++ R43/native_eabi_m0_pow_fast.inc
+@@ -86,17 +86,30 @@
+ .global mk61_m0_pow_rsqrt_local_q8
+ .hidden mk61_m0_pow_rsqrt_local_q8
+ .type mk61_m0_pow_rsqrt_local_q8,%function
++.global mk61_m0_pow_rsqrt_local_q8_native
++.hidden mk61_m0_pow_rsqrt_local_q8_native
++.type mk61_m0_pow_rsqrt_local_q8_native,%function
+ .thumb_func
+ @ Same Q8 formula and frame; early predicates imply the original branch.
+ @ Ordinary AAPCS: preserve R4-R11/SP. No calls, context writes or new tables.
+ mk61_m0_pow_rsqrt_local_q8:
+  push {r4-r7,lr}
+  mov r4,r0
+- ldr r5,[r4,#24]             @ seed
+- ldr r6,[r4,#20]             @ Flow
+  ldr r0,[r4,#28]
+  asrs r0,r0,#31
+  mvns r0,r0
++ b .Lrq8_mask_ready
++@ Private native entry: incoming C=(Fhigh==0x80000000), established by
++@ the unique CMP-delta,1/BHI caller guard. PUSH/MOV preserve that C.
++@ This is NOT the ordinary entry's arbitrary-NZCV contract.
++.thumb_func
++mk61_m0_pow_rsqrt_local_q8_native:
++ push {r4-r7,lr}
++ mov r4,r0
++ sbcs r0,r0
++.Lrq8_mask_ready:
++ ldr r5,[r4,#24]             @ seed
++ ldr r6,[r4,#20]             @ Flow
+  eors r0,r6
+  lsrs r0,r0,#24              @ u: Flow if Fhigh80000000, else ~Flow
+  mov r12,r0
+@@ -105,7 +118,8 @@
+  ldr r0,[r4,#36]
+  lsls r0,r0,#22
+  lsrs r0,r0,#22
+- ldr r1,=512
++ movs r1,#128
++ lsls r1,r1,#2
+  subs r1,r1,r0
+  lsls r1,r1,#8               @ signed target, safe in int32
+  mov lr,r1                   @ return address remains on the stack
+@@ -208,6 +222,7 @@
+  b .Lrq8_upper_build
+  .ltorg
+ .size mk61_m0_pow_rsqrt_local_q8,.-mk61_m0_pow_rsqrt_local_q8
++.size mk61_m0_pow_rsqrt_local_q8_native,.-mk61_m0_pow_rsqrt_local_q8_native
+ .popsection
+ )ASM");
+ #endif

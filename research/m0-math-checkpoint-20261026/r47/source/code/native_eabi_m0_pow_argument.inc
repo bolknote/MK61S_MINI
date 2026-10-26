@@ -1,0 +1,190 @@
+// Exact same truncated80x53 product, accumulated in32-bit words.
+// The44-byte frame stores inputs only; result words remain in registers.
+// AAPCS sret: r0=Product*, r2:r3=low; stack high,+8 sy,+16 shift.
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+.syntax unified
+.cpu cortex-m0plus
+.thumb
+.section .scratch_y.m0_pow_hot,"ax",%progbits
+.align 2
+.global mk61_m0_pow_argument
+.type mk61_m0_pow_argument,%function
+.thumb_func
+mk61_m0_pow_argument:
+ push {r4-r7,lr}
+ sub sp,#24
+ mov r12,r0
+ str r2,[sp,#0]
+ str r3,[sp,#4]
+ ldr r0,[sp,#44]
+ str r0,[sp,#8]
+ ldr r0,[sp,#52]
+ str r0,[sp,#12]
+ ldr r0,[sp,#56]
+ str r0,[sp,#16]
+ mov r3,sp
+ movs r2,#0
+ movs r5,#0
+ movs r6,#0
+ movs r7,#0
+ // Column2; p1:p2:p3:p4 stay in r4:r5:r6:r7.
+ ldrh r0,[r3,#0]
+ ldrh r1,[r3,#16]
+ muls r0,r1
+ mov r4,r0
+ ldrh r0,[r3,#2]
+ ldrh r1,[r3,#14]
+ muls r0,r1
+ adds r4,r0
+ adcs r5,r2
+ ldrh r0,[r3,#4]
+ ldrh r1,[r3,#12]
+ muls r0,r1
+ adds r4,r0
+ adcs r5,r2
+ // Column3; p1:p2:p3:p4 stay in r4:r5:r6:r7.
+ ldrh r0,[r3,#0]
+ ldrh r1,[r3,#18]
+ muls r0,r1
+ mov r1,r0
+ lsrs r1,#16
+ lsls r0,#16
+ adds r4,r0
+ adcs r5,r1
+ ldrh r0,[r3,#2]
+ ldrh r1,[r3,#16]
+ muls r0,r1
+ mov r1,r0
+ lsrs r1,#16
+ lsls r0,#16
+ adds r4,r0
+ adcs r5,r1
+ ldrh r0,[r3,#4]
+ ldrh r1,[r3,#14]
+ muls r0,r1
+ mov r1,r0
+ lsrs r1,#16
+ lsls r0,#16
+ adds r4,r0
+ adcs r5,r1
+ ldrh r0,[r3,#6]
+ ldrh r1,[r3,#12]
+ muls r0,r1
+ mov r1,r0
+ lsrs r1,#16
+ lsls r0,#16
+ adds r4,r0
+ adcs r5,r1
+ // Column4; p1:p2:p3:p4 stay in r4:r5:r6:r7.
+ ldrh r0,[r3,#2]
+ ldrh r1,[r3,#18]
+ muls r0,r1
+ adds r5,r0
+ ldrh r0,[r3,#4]
+ ldrh r1,[r3,#16]
+ muls r0,r1
+ adds r5,r0
+ adcs r6,r2
+ ldrh r0,[r3,#6]
+ ldrh r1,[r3,#14]
+ muls r0,r1
+ adds r5,r0
+ adcs r6,r2
+ ldrh r0,[r3,#8]
+ ldrh r1,[r3,#12]
+ muls r0,r1
+ adds r5,r0
+ adcs r6,r2
+ // Column5; p1:p2:p3:p4 stay in r4:r5:r6:r7.
+ ldrh r0,[r3,#4]
+ ldrh r1,[r3,#18]
+ muls r0,r1
+ mov r1,r0
+ lsrs r1,#16
+ lsls r0,#16
+ adds r5,r0
+ adcs r6,r1
+ ldrh r0,[r3,#6]
+ ldrh r1,[r3,#16]
+ muls r0,r1
+ mov r1,r0
+ lsrs r1,#16
+ lsls r0,#16
+ adds r5,r0
+ adcs r6,r1
+ ldrh r0,[r3,#8]
+ ldrh r1,[r3,#14]
+ muls r0,r1
+ mov r1,r0
+ lsrs r1,#16
+ lsls r0,#16
+ adds r5,r0
+ adcs r6,r1
+ // Column6; p1:p2:p3:p4 stay in r4:r5:r6:r7.
+ ldrh r0,[r3,#6]
+ ldrh r1,[r3,#18]
+ muls r0,r1
+ adds r6,r0
+ ldrh r0,[r3,#8]
+ ldrh r1,[r3,#16]
+ muls r0,r1
+ adds r6,r0
+ adcs r7,r2
+ // Column7; p1:p2:p3:p4 stay in r4:r5:r6:r7.
+ ldrh r0,[r3,#8]
+ ldrh r1,[r3,#18]
+ muls r0,r1
+ mov r1,r0
+ lsrs r1,#16
+ lsls r0,#16
+ adds r6,r0
+ adcs r7,r1
+ ldr r2,[sp,#60]
+ subs r2,#32
+ cmp r2,#32
+ bhs 2f
+ movs r3,#32
+ subs r3,r2
+ mov r0,r4
+ lsrs r0,r2
+ mov r4,r5
+ lsls r4,r3
+ orrs r0,r4
+ mov r1,r5
+ lsrs r1,r2
+ mov r4,r6
+ lsls r4,r3
+ orrs r1,r4
+ lsrs r6,r2
+ lsls r7,r3
+ orrs r6,r7
+ mov r2,r6
+ b 3f
+2:
+ subs r2,#32
+ movs r3,#32
+ subs r3,r2
+ mov r0,r5
+ lsrs r0,r2
+ mov r4,r6
+ lsls r4,r3
+ orrs r0,r4
+ mov r1,r6
+ lsrs r1,r2
+ mov r4,r7
+ lsls r4,r3
+ orrs r1,r4
+ lsrs r7,r2
+ mov r2,r7
+3:
+ mov r4,r12
+ movs r3,#0
+ str r2,[r4,#0]
+ str r3,[r4,#4]
+ str r0,[r4,#8]
+ str r1,[r4,#12]
+ mov r0,r4
+ add sp,#24
+ pop {r4-r7,pc}
+.size mk61_m0_pow_argument,.-mk61_m0_pow_argument
+#endif

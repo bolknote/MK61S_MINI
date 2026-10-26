@@ -1,0 +1,30 @@
+{
+  "status": "PASS_ACTUAL_LINKED_PRIVATE_GUARD_POSITIVE_AND_REJECTION_CONTROLS",
+  "candidate_ELF_sha256": "d8d475200a0562f2e0fd8b8dda2c8d8482c9708d5db73e5a117a15a67c1bd547",
+  "actual_fresh_disassembly_sha256": "aa4ac39867a715e90c7cfec1c4b84d62ecfe89c040ae373acbe11ce1d1cce3b8",
+  "exact_production_AST_used": true,
+  "postcall_negative_controls": [
+    "R12_write",
+    "R12_read",
+    "call",
+    "indirect_call",
+    "return",
+    "tail_return",
+    "PC_write",
+    "outside",
+    "cycle",
+    "conditional_escape"
+  ],
+  "marker_to_consumer_negative_controls": [
+    "R12_write",
+    "R12_read",
+    "call",
+    "indirect_call",
+    "PC_write",
+    "self_cycle",
+    "escape"
+  ],
+  "positive_postcall_instructions": 2,
+  "positive_live_instructions": 126,
+  "no_firmware_execution_or_hardware": true
+}

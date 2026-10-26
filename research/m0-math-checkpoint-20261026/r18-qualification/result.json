@@ -1,0 +1,2131 @@
+{
+  "status": "PASS_PRIVATE_AUTHOR_R18_SMALL_POSITIVE_LN_ZERO_OBSERVED_QFPLIB_DEFICITS",
+  "source_FROZEN_sha256": "eb8d9ec8d61ad1eded286d52046d7b1d54053712d4fca4c88b288d7ddf7c5479",
+  "candidate_ELF_sha256": "19dd878b65200b1ec187d28123b09d29c7b446484011af3b50ab7508a33a1583",
+  "parent_source_FROZEN_sha256": "2d48d6bac94d6635ca15acf686565ffc77840fa9e585403affea4e1b1b701058",
+  "parent_qualification_FROZEN_sha256": "4fcb2be11c6c8dcffe1365f942566100cd3f5a33c7c8f6385fd0163f8d20155a",
+  "source_snapshot_pending_flag_superseded_by_this_completed_qualification": true,
+  "actual_fresh_public_math_ARM_calls": 1115966,
+  "actual_fresh_gate_unit_ARM_calls": 113664,
+  "actual_fresh_router_unit_ARM_calls": 100800,
+  "actual_fresh_qualified_ARM_calls": 1330430,
+  "inherited_R12_point151536_and_R15_bias17760_calls_not_fresh": true,
+  "diagnostic_probe_ARM_calls_not_pooled": 28566,
+  "diagnostic_probe_MPFR_inputs_not_pooled": 3174,
+  "rejected_R16_R17_diagnostic_calls_not_pooled": true,
+  "campaigns": {
+    "ln_union": {
+      "inputs": 91573,
+      "ARM_calls": 366292,
+      "directed_MPFR_inputs": 91528,
+      "sNaN_shortcuts": 45,
+      "losing_inputs": 0,
+      "parent_increase_rows": 912
+    },
+    "ln_family": {
+      "inputs": 92160,
+      "ARM_calls": 552960,
+      "directed_MPFR_inputs": 92160,
+      "losing_inputs": 0,
+      "parent_increase_rows": 0
+    },
+    "original507_ARM_calls": 3654,
+    "broad30136_ARM_calls": 193060
+  },
+  "candidate_wrong": 0,
+  "new_correct_reference_loss_rows": [],
+  "all_wrong_references_outputs_costs_and_parent_increases_retained": true,
+  "no_nominal_reference_domain_filter": true,
+  "all_nonln_primary_bits_instruction_counts_exact_R15": true,
+  "all_fresh_parent_admission_outputs_and_costs_match_current_R15": true,
+  "original507_no_slower": 474,
+  "original507_strict": 468,
+  "original507_equal": 6,
+  "original507_pow_losing_cases": 33,
+  "known_current_ln_losing_inputs": [],
+  "known_current_ln_losing_input_count": 0,
+  "fixed_last_ln_input": "3FF0E23E6966260F",
+  "fixed_input_instructions": {
+    "READY": 700,
+    "DIRTY": 776,
+    "Qfplib": 781,
+    "saving_vs_R15": 130
+  },
+  "known_other_operations_unchanged_in_prior_replayed_campaigns": {
+    "exp": 214,
+    "pow": 41
+  },
+  "known_measured_remaining_operation_input_tuples_before_large_pow_replay": 255,
+  "large120980_pow_replay_in_separate_packet_pending": true,
+  "whole_remaining_library_count": false,
+  "primary_instruction_changed_rows": {
+    "original507/ln": 4,
+    "broad/ln": 2108
+  },
+  "primary_all_parent_increase_rows": [
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007926A17BF5E5B",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007926A17BF5E5B",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003C978434A5B97",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003C978434A5B97",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0008A4BF672B6BA1",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0008A4BF672B6BA1",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000228FD5654867E",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000228FD5654867E",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F5774B9CE9519",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F5774B9CE9519",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007BB08DB61B0B6",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007BB08DB61B0B6",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0002B78BD4898570",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0002B78BD4898570",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D8121554E3E5F",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D8121554E3E5F",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003AA131F03146F",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003AA131F03146F",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000DD397CCBF20FC",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000DD397CCBF20FC",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000B47619141D04F",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000B47619141D04F",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007E9BBC5951FC7",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007E9BBC5951FC7",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00021F09567DBF96",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00021F09567DBF96",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00096F35A77A7F9B",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00096F35A77A7F9B",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000FB348FDA89117",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000FB348FDA89117",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F00F1932CAE08",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F00F1932CAE08",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000C44D29A619F93",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000C44D29A619F93",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000516287A52AF95",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000516287A52AF95",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003E53437F0399E",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003E53437F0399E",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000409CE7E35FD1A",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000409CE7E35FD1A",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000CA8482C8EA18A",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000CA8482C8EA18A",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E69CFB9C9D03D",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E69CFB9C9D03D",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000EF751391A9770",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000EF751391A9770",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00085ECF5A58D397",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00085ECF5A58D397",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0006F9E95BF3CBE1",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0006F9E95BF3CBE1",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000AE99B525671C7",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000AE99B525671C7",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0009446279FBEE3E",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0009446279FBEE3E",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00008FF385E082F7",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00008FF385E082F7",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D592351E110FE",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D592351E110FE",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001729464F0EB5B",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001729464F0EB5B",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004F6553C7CB86C",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004F6553C7CB86C",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E60857D16A2C9",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E60857D16A2C9",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00030E51DADBF166",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00030E51DADBF166",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001577C4A135FF2",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001577C4A135FF2",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0008DD1A39F406A9",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0008DD1A39F406A9",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000DA7421E0B347E",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000DA7421E0B347E",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00064078956F4C56",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00064078956F4C56",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000A09665C94914A",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000A09665C94914A",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0005A9F65FDFC7B2",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0005A9F65FDFC7B2",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007433E28E6D44F",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007433E28E6D44F",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000922CC5AC1818C",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000922CC5AC1818C",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000664ABBD005B1C",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000664ABBD005B1C",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F3D8B978EE096",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F3D8B978EE096",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D14B53F6A98CD",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D14B53F6A98CD",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001FC6DDD5BA51B",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001FC6DDD5BA51B",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0009B4342608CC30",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0009B4342608CC30",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E31E5DEB1DFC2",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E31E5DEB1DFC2",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000AC29677CE9BAA",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000AC29677CE9BAA",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00070911C2A15044",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00070911C2A15044",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000413CB10C81E0E",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000413CB10C81E0E",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0002A563F0B38A98",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0002A563F0B38A98",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00047933B7512560",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00047933B7512560",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E0B3C3036EF11",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E0B3C3036EF11",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000581B03E268590",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000581B03E268590",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000C29216EC340F9",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000C29216EC340F9",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000B3BA957CFAD3C",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000B3BA957CFAD3C",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F51910FC4D5D2",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F51910FC4D5D2",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00092631454D37CF",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00092631454D37CF",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00077F40081D10D7",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00077F40081D10D7",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E4237AC5588D1",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E4237AC5588D1",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F2A018F02B514",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F2A018F02B514",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004AE2EDE5B8A48",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004AE2EDE5B8A48",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0009900C19434523",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0009900C19434523",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000A3EDA6693331F",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000A3EDA6693331F",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000FB475957A494F",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000FB475957A494F",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000BF5661CD0AFE3",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000BF5661CD0AFE3",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000C97FFBD7C2784",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000C97FFBD7C2784",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000405EA83CE564D",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000405EA83CE564D",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007176150BE61AD",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007176150BE61AD",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004A32DD0B1E821",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004A32DD0B1E821",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D29A79A76A2E2",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D29A79A76A2E2",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E5CCFB55FB4F5",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E5CCFB55FB4F5",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E04A10296D427",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E04A10296D427",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000357292AF8CA19",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000357292AF8CA19",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003017FB34CEBE2",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003017FB34CEBE2",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000940330227F253",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000940330227F253",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0005960D525550DA",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0005960D525550DA",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00094486B439AA9A",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00094486B439AA9A",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000814FA6E0B48CB",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000814FA6E0B48CB",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001179D714E0ED2",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001179D714E0ED2",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004C085CAF684D1",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004C085CAF684D1",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E3DBA0B2C98BE",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E3DBA0B2C98BE",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F6BB2754D59C1",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F6BB2754D59C1",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00098F077713F648",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00098F077713F648",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F012D8C07CE4F",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F012D8C07CE4F",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004FB922344A5BB",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004FB922344A5BB",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003994F552BC2F2",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003994F552BC2F2",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000842B22CD04DD3",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000842B22CD04DD3",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000FB2CF79344495",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000FB2CF79344495",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000537F3BFDF1D43",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000537F3BFDF1D43",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000217DC2558455B",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000217DC2558455B",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D2BC0FACC3B07",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D2BC0FACC3B07",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000882CF8E3C88E3",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000882CF8E3C88E3",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00099BFFA80BA085",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00099BFFA80BA085",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00080B9D483B857F",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00080B9D483B857F",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007461CC35D3004",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0007461CC35D3004",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000A2F76AAF09519",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000A2F76AAF09519",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00057A19972E6214",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00057A19972E6214",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000DF929BB9FE481",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000DF929BB9FE481",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D0BC6EBB7D913",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000D0BC6EBB7D913",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000EA5B7199145F2",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000EA5B7199145F2",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000EC0787BC9759C",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000EC0787BC9759C",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000530BE5E22C70F",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000530BE5E22C70F",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000383BC29BC28A2",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000383BC29BC28A2",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004A0878AC9130D",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004A0878AC9130D",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0002AE57CFCFC755",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0002AE57CFCFC755",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000118B8F77943D8",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000118B8F77943D8",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00028E5589F4A46F",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00028E5589F4A46F",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004293850D1440D",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0004293850D1440D",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001892D7BAD013E",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001892D7BAD013E",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E686B06902E44",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E686B06902E44",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00055F4EE87B5A9E",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00055F4EE87B5A9E",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0000FCE52B43319C",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0000FCE52B43319C",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000DBDF65BA39D10",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000DBDF65BA39D10",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E30E118F89081",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E30E118F89081",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E09368948C5F3",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000E09368948C5F3",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0002225BDC8F208A",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0002225BDC8F208A",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000BF92D26AD3B7E",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000BF92D26AD3B7E",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003B2027A823837",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0003B2027A823837",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000336E41212D185",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000336E41212D185",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000DF93A48D90390",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000DF93A48D90390",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00045E89E614A983",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00045E89E614A983",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000595CD47A519C5",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000595CD47A519C5",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0005F6C12501A4E4",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0005F6C12501A4E4",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00045CA7E8F7C230",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00045CA7E8F7C230",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F1967EDC8C395",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "000F1967EDC8C395",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001F67EAE5FB897",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "0001F67EAE5FB897",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00041073626B15FF",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "delta": 1
+    },
+    {
+      "campaign": "broad",
+      "operation": "ln",
+      "x": "00041073626B15FF",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "delta": 1
+    }
+  ],
+  "ln_all_parent_increases_in_result_and_raw": true,
+  "admission_all_parent_increases_in_complete_raw": true,
+  "CPP_code_delta_bytes_vs_R15": 328,
+  "linked_flash_load_bytes_delta_vs_R15": 328,
+  "new_table_RAM_libgcc_bytes": 0,
+  "linked_hotbank_literal_byte_identity": false,
+  "linked_hotbank_changed_bytes": 17,
+  "linked_hotbank_address_size_named_targets_preserved": true,
+  "M4_default_M0_exact": true,
+  "source_R12_negative_ROM_loader_disabled_checks_passed": true,
+  "selected_private_author_candidate": true,
+  "whole_independent_runtime_acceptance": false,
+  "universal_rounding_totality_stack_or_physical_cycles_GO": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

@@ -1,0 +1,25 @@
+{
+  "status": "ROOT_CLASSIC_STATIC54_AND_ORIGINAL_RETURN_ACCEPTED_CLOSED",
+  "parent_sha256": "35d369511eaab4e17330a21da0c62e3d33648130a84c0bcfc90d81339f8d62ca",
+  "canonical_sha256": "2c772e6c4484d6fc34e8aea8c000485e7051671f00d2be29ed459048962b3e92",
+  "CLOSED": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-static-close-root-20261026-001/root-CLOSED.json",
+    "bytes": 4039,
+    "sha256": "2c772e6c4484d6fc34e8aea8c000485e7051671f00d2be29ed459048962b3e92"
+  },
+  "Root_artifact_verification": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-static-close-root-20261026-001/ROOT-ARTIFACT-VERIFICATION.json",
+    "bytes": 2173,
+    "sha256": "b3b00de417b28596665bb50e7951588ed7a71e7ee2da15bb46f4e740b418f847"
+  },
+  "independent_actual_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-static-independent-20261026-v2/actual-001/FINAL-REVIEW.json",
+    "bytes": 6193,
+    "sha256": "b44ef1af8864a4b3dcd30b3f347d82728f34a316e7ee22947fed2d8f85bde53c"
+  },
+  "Root_device_IO": 0,
+  "static_actual_tests_accepted": true,
+  "restoration_complete": true,
+  "production_adoption": false,
+  "main_or_release_GO": false
+}

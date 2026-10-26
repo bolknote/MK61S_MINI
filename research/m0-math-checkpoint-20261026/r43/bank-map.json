@@ -1,0 +1,1065 @@
+{
+  "status": "PASS_STATIC_LINKED_BANK_SYMBOLIC_TARGET_MAPPING_NOT_LITERAL_IDENTITY",
+  "parent_FROZEN_sha256": "b5e0bf1e6316a2bc0924127f0b9564c025cb042842f4d3527ce1eef8fd48a676",
+  "candidate_ELF_sha256": "d0a3a9bd38aa755ad6b21b2fb8d3551bdd7b9f27197aaf718b0714fa8c72799d",
+  "candidate_link_manifest_sha256": "39cd29597352e904a39c52436a436c46bfde853a7db20c24ec24122f5bb6a44e",
+  "bank_address": 537100288,
+  "bank_bytes": 4080,
+  "bank_bytes_identical": false,
+  "changed_bytes": 13,
+  "parent_bank_SHA256": "d602f8d2bf7ec8977ac4b2fff5a3903fd7f22cac8717294fe5ac4614c74fae30",
+  "candidate_bank_SHA256": "c94330d27254e32aa26b562a5ea5338cba091772be557916dbdc9eb604315c63",
+  "changed_intervals": [
+    {
+      "offset": 672,
+      "address": 537100960,
+      "bytes": 1,
+      "old_hex": "9f",
+      "new_hex": "8f",
+      "kind": "Thumb BL displacement"
+    },
+    {
+      "offset": 2052,
+      "address": 537102340,
+      "bytes": 1,
+      "old_hex": "40",
+      "new_hex": "48",
+      "kind": "Flash pointer"
+    },
+    {
+      "offset": 2088,
+      "address": 537102376,
+      "bytes": 1,
+      "old_hex": "c3",
+      "new_hex": "db",
+      "kind": "Thumb BL displacement"
+    },
+    {
+      "offset": 2170,
+      "address": 537102458,
+      "bytes": 1,
+      "old_hex": "a2",
+      "new_hex": "9a",
+      "kind": "Thumb BL displacement"
+    },
+    {
+      "offset": 2976,
+      "address": 537103264,
+      "bytes": 1,
+      "old_hex": "cd",
+      "new_hex": "d5",
+      "kind": "Flash pointer"
+    },
+    {
+      "offset": 4012,
+      "address": 537104300,
+      "bytes": 1,
+      "old_hex": "55",
+      "new_hex": "5d",
+      "kind": "permuted linker veneer Flash target literal"
+    },
+    {
+      "offset": 4028,
+      "address": 537104316,
+      "bytes": 2,
+      "old_hex": "392f",
+      "new_hex": "1123",
+      "kind": "permuted linker veneer Flash target literal"
+    },
+    {
+      "offset": 4044,
+      "address": 537104332,
+      "bytes": 2,
+      "old_hex": "1123",
+      "new_hex": "89eb",
+      "kind": "permuted linker veneer Flash target literal"
+    },
+    {
+      "offset": 4060,
+      "address": 537104348,
+      "bytes": 1,
+      "old_hex": "91",
+      "new_hex": "99",
+      "kind": "permuted linker veneer Flash target literal"
+    },
+    {
+      "offset": 4076,
+      "address": 537104364,
+      "bytes": 2,
+      "old_hex": "89eb",
+      "new_hex": "392f",
+      "kind": "permuted linker veneer Flash target literal"
+    }
+  ],
+  "all_changed_bytes_explained": true,
+  "veneer_mapping": [
+    {
+      "target_symbol": "pow_refine_checked",
+      "old": {
+        "offset": 4000,
+        "entry": 537104288,
+        "body_hex": "01b40248844601bc604700bf",
+        "literal_address": 537104300,
+        "literal_target": 268665429,
+        "target_symbol": "pow_refine_checked"
+      },
+      "new": {
+        "offset": 4000,
+        "entry": 537104288,
+        "body_hex": "01b40248844601bc604700bf",
+        "literal_address": 537104300,
+        "literal_target": 268665437,
+        "target_symbol": "pow_refine_checked"
+      }
+    },
+    {
+      "target_symbol": "pow_small_integer",
+      "old": {
+        "offset": 4016,
+        "entry": 537104304,
+        "body_hex": "01b40248844601bc604700bf",
+        "literal_address": 537104316,
+        "literal_target": 268513081,
+        "target_symbol": "pow_small_integer"
+      },
+      "new": {
+        "offset": 4064,
+        "entry": 537104352,
+        "body_hex": "01b40248844601bc604700bf",
+        "literal_address": 537104364,
+        "literal_target": 268513081,
+        "target_symbol": "pow_small_integer"
+      }
+    },
+    {
+      "target_symbol": "mk61_m0_pow_log_select",
+      "old": {
+        "offset": 4032,
+        "entry": 537104320,
+        "body_hex": "01b40248844601bc604700bf",
+        "literal_address": 537104332,
+        "literal_target": 268509969,
+        "target_symbol": "mk61_m0_pow_log_select"
+      },
+      "new": {
+        "offset": 4016,
+        "entry": 537104304,
+        "body_hex": "01b40248844601bc604700bf",
+        "literal_address": 537104316,
+        "literal_target": 268509969,
+        "target_symbol": "mk61_m0_pow_log_select"
+      }
+    },
+    {
+      "target_symbol": "pow_first_cell",
+      "old": {
+        "offset": 4048,
+        "entry": 537104336,
+        "body_hex": "01b40248844601bc604700bf",
+        "literal_address": 537104348,
+        "literal_target": 268646801,
+        "target_symbol": "pow_first_cell"
+      },
+      "new": {
+        "offset": 4048,
+        "entry": 537104336,
+        "body_hex": "01b40248844601bc604700bf",
+        "literal_address": 537104348,
+        "literal_target": 268646809,
+        "target_symbol": "pow_first_cell"
+      }
+    },
+    {
+      "target_symbol": "__aeabi_lmul",
+      "old": {
+        "offset": 4064,
+        "entry": 537104352,
+        "body_hex": "01b40248844601bc604700bf",
+        "literal_address": 537104364,
+        "literal_target": 268561289,
+        "target_symbol": "__aeabi_lmul"
+      },
+      "new": {
+        "offset": 4032,
+        "entry": 537104320,
+        "body_hex": "01b40248844601bc604700bf",
+        "literal_address": 537104332,
+        "literal_target": 268561289,
+        "target_symbol": "__aeabi_lmul"
+      }
+    }
+  ],
+  "all_BL_calls_to_veneer_mapping": [
+    {
+      "callsite": 537100958,
+      "old": {
+        "instruction": "00f09ffe",
+        "veneer": 537104352,
+        "target_symbol": "__aeabi_lmul",
+        "Flash_target": 268561289
+      },
+      "new": {
+        "instruction": "00f08ffe",
+        "veneer": 537104320,
+        "target_symbol": "__aeabi_lmul",
+        "Flash_target": 268561289
+      },
+      "same_named_ultimate_target": true
+    },
+    {
+      "callsite": 537102374,
+      "old": {
+        "instruction": "00f0c3fb",
+        "veneer": 537104304,
+        "target_symbol": "pow_small_integer",
+        "Flash_target": 268513081
+      },
+      "new": {
+        "instruction": "00f0dbfb",
+        "veneer": 537104352,
+        "target_symbol": "pow_small_integer",
+        "Flash_target": 268513081
+      },
+      "same_named_ultimate_target": true
+    },
+    {
+      "callsite": 537102440,
+      "old": {
+        "instruction": "00f09afb",
+        "veneer": 537104288,
+        "target_symbol": "pow_refine_checked",
+        "Flash_target": 268665429
+      },
+      "new": {
+        "instruction": "00f09afb",
+        "veneer": 537104288,
+        "target_symbol": "pow_refine_checked",
+        "Flash_target": 268665437
+      },
+      "same_named_ultimate_target": true
+    },
+    {
+      "callsite": 537102456,
+      "old": {
+        "instruction": "00f0a2fb",
+        "veneer": 537104320,
+        "target_symbol": "mk61_m0_pow_log_select",
+        "Flash_target": 268509969
+      },
+      "new": {
+        "instruction": "00f09afb",
+        "veneer": 537104304,
+        "target_symbol": "mk61_m0_pow_log_select",
+        "Flash_target": 268509969
+      },
+      "same_named_ultimate_target": true
+    },
+    {
+      "callsite": 537103588,
+      "old": {
+        "instruction": "00f074f9",
+        "veneer": 537104336,
+        "target_symbol": "pow_first_cell",
+        "Flash_target": 268646801
+      },
+      "new": {
+        "instruction": "00f074f9",
+        "veneer": 537104336,
+        "target_symbol": "pow_first_cell",
+        "Flash_target": 268646809
+      },
+      "same_named_ultimate_target": true
+    }
+  ],
+  "relocated_pointer_fields": [
+    {
+      "offset": 2052,
+      "address": 537102340,
+      "old_pointer": 268859200,
+      "new_pointer": 268859208,
+      "target_symbol": "_ZN7m0_eabiL9exp_tableE",
+      "meaning": "relocated Flash table"
+    },
+    {
+      "offset": 2976,
+      "address": 537103264,
+      "old_pointer": 268741069,
+      "new_pointer": 268741077,
+      "target_symbol": "mk61_m0_pow_argument_select",
+      "meaning": "relocated Flash function"
+    }
+  ],
+  "unchanged_target_origin_evidence": [
+    {
+      "symbol": "pow_refine_checked",
+      "unchanged_object_symbol_section_and_semantic_relocations": {
+        "object": "RP-merged-cpp.o",
+        "symbol": [
+          "pow_refine_checked",
+          4825,
+          6456,
+          2,
+          0,
+          ".m0_pow_refine_extension"
+        ],
+        "section": [
+          ".m0_pow_refine_extension",
+          1,
+          6,
+          0,
+          11280,
+          4,
+          "906c80a01b49c7744cc19fbad046a9fef092248ec34955393b4a5d64a41c61c2"
+        ],
+        "semantic_relocations": [
+          [
+            ".m0_pow_refine_extension",
+            10002,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            10018,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            10042,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            10140,
+            10,
+            "pow_dyadic128"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            10188,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            10202,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            108,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            11088,
+            10,
+            "mk61_m0_pow_exp_table_product"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            11276,
+            2,
+            ".rodata._ZN7m0_eabiL9exp_tableE"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            1618,
+            10,
+            "__aeabi_uidiv"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            2692,
+            2,
+            ".rodata._ZN7m0_eabiL16refine_log_tableE"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            2842,
+            10,
+            "_ZN7m0_eabi11low_productEyy"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            4602,
+            10,
+            "__aeabi_lmul"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            4908,
+            10,
+            "mk61_m0_pow_tiny_or_cr"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            4928,
+            10,
+            "pow_integer128"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            4978,
+            10,
+            "pow_near_one_refined_argument"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            5118,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            5138,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            5198,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            7050,
+            10,
+            "_ZN7m0_eabi11low_productEyy"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            8584,
+            2,
+            ".rodata._ZN7m0_eabiL16refine_exp_tableE"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9294,
+            10,
+            "_ZN7m0_eabi5clz64Ey"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9316,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9416,
+            10,
+            "mk61_m0_cr_pow_refined"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9436,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9460,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9474,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9492,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9506,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9550,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9566,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9580,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            96,
+            10,
+            "_ZN7m0_eabi5clz64Ey"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9752,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9824,
+            10,
+            "_ZN7m0_eabi5clz64Ey"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9868,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_refine_extension",
+            9968,
+            10,
+            "_ZN7m0_eabi5clz32Em"
+          ]
+        ]
+      }
+    },
+    {
+      "symbol": "pow_small_integer",
+      "unchanged_object_symbol_section_and_semantic_relocations": {
+        "object": "RP-merged-cpp.o",
+        "symbol": [
+          "pow_small_integer",
+          3077,
+          936,
+          2,
+          0,
+          ".m0_pow_extension"
+        ],
+        "section": [
+          ".m0_pow_extension",
+          1,
+          6,
+          0,
+          4012,
+          4,
+          "8900c921231f00166e90bff41381b392d843cbf8b0355789f62a87b547eac03b"
+        ],
+        "semantic_relocations": [
+          [
+            ".m0_pow_extension",
+            1202,
+            10,
+            "mk61_m0_log_product46"
+          ],
+          [
+            ".m0_pow_extension",
+            1280,
+            2,
+            ".m0_math_extension_data"
+          ],
+          [
+            ".m0_pow_extension",
+            1378,
+            10,
+            "_ZN7m0_eabi5clz64Ey"
+          ],
+          [
+            ".m0_pow_extension",
+            1398,
+            10,
+            "memset"
+          ],
+          [
+            ".m0_pow_extension",
+            1448,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_extension",
+            2410,
+            10,
+            "mk61_m0_log_ratio70"
+          ],
+          [
+            ".m0_pow_extension",
+            2560,
+            10,
+            "mk61_m0_log_cube70"
+          ],
+          [
+            ".m0_pow_extension",
+            3052,
+            2,
+            ".rodata._ZN7m0_eabiL9log70_lowE"
+          ],
+          [
+            ".m0_pow_extension",
+            3056,
+            2,
+            ".rodata._ZN7m0_eabiL10log70_highE"
+          ],
+          [
+            ".m0_pow_extension",
+            3148,
+            10,
+            "pow_short_integer"
+          ],
+          [
+            ".m0_pow_extension",
+            3220,
+            10,
+            "mk61_m0_product62"
+          ],
+          [
+            ".m0_pow_extension",
+            3240,
+            10,
+            "pow_integer128"
+          ],
+          [
+            ".m0_pow_extension",
+            3338,
+            10,
+            "mk61_m0_product62"
+          ],
+          [
+            ".m0_pow_extension",
+            3470,
+            10,
+            "mk61_m0_product62"
+          ],
+          [
+            ".m0_pow_extension",
+            3534,
+            10,
+            "mk61_m0_product62"
+          ],
+          [
+            ".m0_pow_extension",
+            3578,
+            10,
+            "mk61_m0_product62"
+          ],
+          [
+            ".m0_pow_extension",
+            3652,
+            10,
+            "mk61_m0_product62"
+          ],
+          [
+            ".m0_pow_extension",
+            3698,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_extension",
+            3714,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_extension",
+            3774,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_extension",
+            790,
+            10,
+            "__aeabi_llsl"
+          ]
+        ]
+      }
+    },
+    {
+      "symbol": "mk61_m0_pow_log_select",
+      "unchanged_object_symbol_section_and_semantic_relocations": {
+        "object": "RP-unified-native_eabi_m0_rp2040.S.o",
+        "symbol": [
+          "mk61_m0_pow_log_select",
+          1,
+          36,
+          18,
+          2,
+          ".m0_pow_log_selector"
+        ],
+        "section": [
+          ".m0_pow_log_selector",
+          1,
+          6,
+          0,
+          36,
+          4,
+          "e87bf9b68fa0ab1285a690d446763f066f93ab46841acd6ad804e92eff30eea5"
+        ],
+        "semantic_relocations": [
+          [
+            ".m0_pow_log_selector",
+            26,
+            102,
+            "pow_fast_log"
+          ],
+          [
+            ".m0_pow_log_selector",
+            32,
+            2,
+            "mk61_m0_pow_log_ordinary"
+          ]
+        ]
+      }
+    },
+    {
+      "symbol": "pow_first_cell",
+      "unchanged_object_symbol_section_and_semantic_relocations": {
+        "object": "RP-merged-cpp.o",
+        "symbol": [
+          "pow_first_cell",
+          3557,
+          80,
+          2,
+          0,
+          ".m0_pow_near_one_refine"
+        ],
+        "section": [
+          ".m0_pow_near_one_refine",
+          1,
+          6,
+          0,
+          3636,
+          4,
+          "224cf53da7e4a3bd26cacbca56d9df69ada0f7b60f52e17e54c68a715324f302"
+        ],
+        "semantic_relocations": [
+          [
+            ".m0_pow_near_one_refine",
+            1498,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            1514,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            1680,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            1696,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            1858,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            218,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            2336,
+            10,
+            "memset"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            236,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            2420,
+            10,
+            "memcpy"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            2428,
+            10,
+            "pow_integer128_multiply"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            2602,
+            10,
+            "memset"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            2698,
+            10,
+            "pow_integer128_square"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            2710,
+            10,
+            "pow_integer128_multiply"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            2978,
+            10,
+            "_ZN7m0_eabi5clz64Ey"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            2992,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            3102,
+            10,
+            "mk61_m0_sqrt"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            3132,
+            10,
+            "memset"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            3174,
+            10,
+            "pow_integer128_square"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            3224,
+            10,
+            "__aeabi_dmul"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            324,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            3248,
+            10,
+            "memset"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            3320,
+            10,
+            "memcpy"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            3326,
+            10,
+            "_ZN7m0_eabi5clz32Em"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            3342,
+            10,
+            "pow_integer128_square"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            3360,
+            10,
+            "pow_integer128_multiply"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            3622,
+            10,
+            "mk61_m0_pow_midpoint"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            702,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            718,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            740,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            754,
+            10,
+            "__aeabi_llsl"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            848,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            966,
+            10,
+            "__aeabi_llsr"
+          ],
+          [
+            ".m0_pow_near_one_refine",
+            982,
+            10,
+            "__aeabi_llsl"
+          ]
+        ]
+      }
+    },
+    {
+      "symbol": "__aeabi_lmul",
+      "unchanged_object_symbol_section_and_semantic_relocations": {
+        "object": "RP-merged-cpp.o",
+        "symbol": [
+          "__aeabi_lmul",
+          1,
+          8,
+          18,
+          0,
+          ".text.__aeabi_lmul"
+        ],
+        "section": [
+          ".text.__aeabi_lmul",
+          1,
+          6,
+          0,
+          8,
+          2,
+          "8f49ff916c1e6dab18220198d3614b5747552016de7f1e0834a706deeef7423e"
+        ],
+        "semantic_relocations": [
+          [
+            ".text.__aeabi_lmul",
+            2,
+            10,
+            "_ZN7m0_eabi11low_productEyy"
+          ]
+        ]
+      }
+    },
+    {
+      "symbol": "_ZN7m0_eabiL9exp_tableE",
+      "unchanged_object_symbol_section_and_semantic_relocations": {
+        "object": "RP-merged-cpp.o",
+        "symbol": [
+          "_ZN7m0_eabiL9exp_tableE",
+          0,
+          4096,
+          1,
+          0,
+          ".rodata._ZN7m0_eabiL9exp_tableE"
+        ],
+        "section": [
+          ".rodata._ZN7m0_eabiL9exp_tableE",
+          1,
+          2,
+          0,
+          4096,
+          8,
+          "9185ad8a13121c810de407f5eac695df9f3b394ee836d4829d0aa37f2fa5719e"
+        ],
+        "semantic_relocations": []
+      },
+      "linked_table_bytes": 4096,
+      "linked_table_SHA256": "9185ad8a13121c810de407f5eac695df9f3b394ee836d4829d0aa37f2fa5719e"
+    },
+    {
+      "symbol": "mk61_m0_pow_argument_select",
+      "unchanged_object_symbol_section_and_semantic_relocations": {
+        "object": "RP-unified-native_eabi_m0_rp2040.S.o",
+        "symbol": [
+          "mk61_m0_pow_argument_select",
+          1,
+          128,
+          18,
+          2,
+          ".m0_pow_argument_select"
+        ],
+        "section": [
+          ".m0_pow_argument_select",
+          1,
+          6,
+          0,
+          128,
+          4,
+          "746172e255663a13564d0caec04055f4c0466eb8596fe620272f8af5d191f531"
+        ],
+        "semantic_relocations": [
+          [
+            ".m0_pow_argument_select",
+            124,
+            2,
+            "mk61_m0_pow_argument"
+          ]
+        ]
+      }
+    }
+  ],
+  "other_RAM_regions": {
+    ".data": {
+      "type": 1,
+      "address": 536870912,
+      "bytes": 16,
+      "same_region_shape": true,
+      "stored_bytes_identical": true,
+      "SHA256": "c1292dbff446f8780d7c3da658022fece94cb978e203e04cfffd61070fb218d7"
+    },
+    ".bss": {
+      "type": 8,
+      "address": 536870928,
+      "bytes": 0,
+      "same_region_shape": true,
+      "initialization": "same ELF NOBITS zero-initialized region; no stored bytes claimed"
+    }
+  },
+  "no_new_RAM_allocation": true,
+  "source_R14_additive_correction_sha256": "1b1a7076c2ea90e3413999e1fd0c516b9b990177ae656f6cd8e1c77780e5084c",
+  "new_ARM_calls": 0,
+  "new_MPFR_calls": 0,
+  "new_builds": 0,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

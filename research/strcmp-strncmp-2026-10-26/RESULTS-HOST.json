@@ -1,0 +1,182 @@
+{
+  "status": "HOST_READY_NO_HARDWARE_SPEED_SELECTION",
+  "date": "2026-10-26",
+  "source_base": "6e814dd7bb8b12c8700bbb9ad3817a20ceb8800e",
+  "hardware_IO": 0,
+  "hardware_winner": null,
+  "default_strcmp_variant": 0,
+  "default_strncmp_variant": 0,
+  "runtime_count": 26,
+  "runtime_strncmp_slot": 19,
+  "runtime_strcmp": "optional bridge to strncmp19/SIZE_MAX; no new ABI slot",
+  "variants": {
+    "M4": [
+      "byte1",
+      "byte4",
+      "word1",
+      "word2",
+      "dsp1",
+      "dsp2"
+    ],
+    "M0": [
+      "byte1",
+      "byte4",
+      "word1",
+      "word2"
+    ]
+  },
+  "tests": {
+    "ARM_core_calls": 410464,
+    "packed_APP_comparison_checks": 1580320,
+    "resident_public_entry_calls": 12960,
+    "total_comparisons": 2003744,
+    "packed_APP_count": 26,
+    "load_addresses_per_APP": 3,
+    "positive_APP_runs": 166,
+    "positive_initializations": 78,
+    "negative_checks": 48,
+    "maximum_smoke_APP_bytes": 1436,
+    "maximum_smoke_APP_memory_bytes": 2664,
+    "Unicorn_CPU_models": [
+      "Cortex-M4",
+      "Cortex-M0 (ARMv6-M ISA for M0+)"
+    ],
+    "timing_modeled": false,
+    "API_query_and_capabilities_only": "modeled; real SDK startup/bind/tails execute",
+    "candidate_read_contract": "aligned 4-byte containing NUL word; no reads before input or beyond n",
+    "newlib_baseline_contract": "strcmp: align down to 8-byte group, up to 7 prefix/tail bytes; strncmp: 4-byte NUL group, no prefix or beyond-n reads"
+  },
+  "evidence": {
+    "core": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-strncmp-20261026-host-v1/RESULTS.json",
+      "bytes": 6883,
+      "sha256": "05fd43a2ab90cbeac9b132508f7897dd93d48ecc541d33ef8ee5371c83ce6f66"
+    },
+    "packed_APPS": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-strncmp-20261026-apps-v2/RESULTS.json",
+      "bytes": 36977,
+      "sha256": "bf99617b200e9fef20b964d1887b12d1d0322f0d5365df449a8c52fba8483578"
+    },
+    "unchanged_defaults_and_final_ELF_identity": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-strncmp-20261026-default-proof-v2/PROOF.json",
+      "bytes": 34501,
+      "sha256": "48c216ba716664923217795158eb37514cb2630d50d474f07480eb6b4d2d2f54"
+    },
+    "hardware_case_plan_unbound": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-strncmp-20261026-plan-v3/PLAN.json",
+      "bytes": 617538,
+      "sha256": "9d67f641e577f5a5250cece0ef9b47c3d9a8dc58d9fb26440af228b8dff8a9e0"
+    },
+    "OS_visibility_only": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-strncmp-20261026-host-v1/CLASSIC-OS-VISIBILITY.json",
+      "bytes": 356,
+      "sha256": "c7af649770b1fc84d2332d5e10222ef8e32c83486e1dc202602d5865f5e1e8d5"
+    }
+  },
+  "resident_body_bytes": [
+    {
+      "arch": "m4",
+      "variant": 0,
+      "comparison_sizes": {
+        "strcmp": 24,
+        "strncmp": 42
+      }
+    },
+    {
+      "arch": "m4",
+      "variant": 1,
+      "comparison_sizes": {
+        "strcmp": 20,
+        "strncmp": 42
+      }
+    },
+    {
+      "arch": "m4",
+      "variant": 2,
+      "comparison_sizes": {
+        "strcmp": 76,
+        "strncmp": 92
+      }
+    },
+    {
+      "arch": "m4",
+      "variant": 3,
+      "comparison_sizes": {
+        "strcmp": 164,
+        "strncmp": 224
+      }
+    },
+    {
+      "arch": "m4",
+      "variant": 4,
+      "comparison_sizes": {
+        "strcmp": 212,
+        "strncmp": 338
+      }
+    },
+    {
+      "arch": "m4",
+      "variant": 5,
+      "comparison_sizes": {
+        "strcmp": 162,
+        "strncmp": 220
+      }
+    },
+    {
+      "arch": "m4",
+      "variant": 6,
+      "comparison_sizes": {
+        "strcmp": 200,
+        "strncmp": 320
+      }
+    },
+    {
+      "arch": "m0",
+      "variant": 0,
+      "comparison_sizes": {
+        "strcmp": 132,
+        "strncmp": 104
+      }
+    },
+    {
+      "arch": "m0",
+      "variant": 1,
+      "comparison_sizes": {
+        "strcmp": 22,
+        "strncmp": 30
+      }
+    },
+    {
+      "arch": "m0",
+      "variant": 2,
+      "comparison_sizes": {
+        "strcmp": 58,
+        "strncmp": 94
+      }
+    },
+    {
+      "arch": "m0",
+      "variant": 3,
+      "comparison_sizes": {
+        "strcmp": 148,
+        "strncmp": 224
+      }
+    },
+    {
+      "arch": "m0",
+      "variant": 4,
+      "comparison_sizes": {
+        "strcmp": 192,
+        "strncmp": 340
+      }
+    }
+  ],
+  "limitations": [
+    "No actual hardware timing, instruction-cache/Flash wait-state/IRQ model or winner claim",
+    "Native entry ELFs are isolated source/link checks, not full firmware builds",
+    "Exact firmware, clock, data, qualified timer/carrier and backup/return wrapper must be rebound to actual connected boards",
+    "Current standalone v0 SDK has no strncmp: its baseline APP explicitly links newlib; opt-in candidates provide local strncmp",
+    "Newlib references use this pinned ARM GCC library, not an assertion about the future installed Pico libc",
+    "No changes to accepted strlen worktree, primary checkout WIP, public runtime table or production math"
+  ]
+}

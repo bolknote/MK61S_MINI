@@ -1,0 +1,221 @@
+#ifndef MK61_USB_SCREEN_SURFACE_HPP
+#define MK61_USB_SCREEN_SURFACE_HPP
+
+#include "ui_build_config.hpp"
+#include "builtin_font.hpp"
+#include "prepared_font.hpp"
+#include "rust_types.h"
+#include "text_screen.hpp"
+#if !defined(MK61_CORE_STANDALONE)
+#include "disk_activity.hpp"
+#endif
+#if MK61_PROPORTIONAL_UI_FONTS
+#include "ui_font.hpp"
+#endif
+
+namespace usb_screen {
+
+static constexpr u16 WIDTH = 192;
+static constexpr u8 HEIGHT = 64;
+static constexpr u8 PAGE_HEIGHT = 8;
+static constexpr u8 PAGE_COUNT = HEIGHT / PAGE_HEIGHT;
+static constexpr usize FRAME_BYTES = (usize) WIDTH * HEIGHT / 8U;
+static constexpr u8 COLS = 16;
+static constexpr u8 CELL_WIDTH = WIDTH / COLS;
+
+struct TextProfile {
+  u8 rows;
+  u8 glyph_width;
+  u8 glyph_height;
+  u8 line_gap;
+};
+
+constexpr TextProfile profile5x8(void) { return {6, 5, 8, 2}; }
+constexpr TextProfile profile3x5(void) { return {10, 3, 5, 1}; }
+
+TextProfile normalizeProfile(TextProfile profile);
+
+// Программная реализация графического дисплея для USB-экрана. Кадровый буфер
+// организован по страницам: один байт на координату x и восемь пикселей по
+// вертикали на страницу. Установленный бит означает передний план; таков же
+// формат передачи.
+class Surface {
+  public:
+    static constexpr u8 CUSTOM_GLYPHS = 8;
+    static constexpr u8 OVERLAY_MAX_WIDTH = 32;
+    static constexpr u8 OVERLAY_MAX_HEIGHT = 16;
+
+#if MK61_SHARED_SCREEN_GRID
+    // Both backing buffers must outlive the surface; sharing is not copying.
+    Surface(u8* framebuffer, text_screen::Grid& grid);
+    Surface(const Surface&) = delete;
+    Surface& operator=(const Surface&) = delete;
+#else
+    explicit Surface(u8* framebuffer);
+#endif
+
+    // The caller owns the backing storage. Rebinding is allowed only while
+    // inactive, so an attached frame remains stable for the whole session.
+    bool setFramebuffer(u8* pixels);
+    void begin(TextProfile profile = profile5x8(), bool preserve_text = false,
+               u8 cols = COLS);
+    void end(void);
+    bool active(void) const { return active_; }
+
+    void clear(void);
+    void beginUpdate(void);
+    void endUpdate(void);
+    void flush(t_time_ms now);
+
+    void setTextProfile(TextProfile profile);
+    void setTextLayout(TextProfile profile, u8 cols);
+    TextProfile textProfile(void) const { return profile_; }
+    u8 rows(void) const { return grid_.rows(); }
+    u8 cols(void) const { return grid_.cols(); }
+    u8 cursorX(void) const { return grid_.cursorX(); }
+    u8 cursorY(void) const { return grid_.cursorY(); }
+    bool cursorUnderline(void) const { return cursor_underline_; }
+    bool cursorBlink(void) const { return cursor_blink_; }
+    void setCursor(u8 x, u8 y);
+    void cursorOn(void);
+    void cursorOff(void);
+    void blinkOn(t_time_ms now);
+    void blinkOff(void);
+    void writeByte(u8 value);
+    void writeCodepoint(u16 codepoint);
+
+#if MK61_FIXED_CALCULATOR_FACE
+    // Mirrors the physical UC1609 calculator face pixel-for-pixel.  It is a
+    // normal renderer role, not a modal fullscreen owner.
+    void beginCalculatorFace(void);
+    void invalidateCalculatorFace(void);
+    bool calculatorFaceActive(void) const { return calculator_face_active_; }
+    // During a bitmap the renderer is suspended, but detach still needs the
+    // role to which graphics_end() would return.
+    bool calculatorFaceSelected(void) const {
+      return calculator_face_active_ || (fullscreen_bitmap_active_ & 2U) != 0;
+    }
+#endif
+
+    // Восстанавливает только что запущенную USB-поверхность из логического
+    // состояния графического дисплея. Благодаря этому смена подсистемы проходит
+    // без потерь, даже если владелец переднего плана заблокирован ожиданием
+    // клавиши общего вида и не может перерисоваться.
+    void seedText(const text_screen::Grid& source,
+                  const u8 custom_glyphs[CUSTOM_GLYPHS][8],
+                  const bool custom_valid[CUSTOM_GLYPHS],
+                  bool cursor_underline, bool cursor_blink,
+                  t_time_ms now);
+
+    void createChar(u8 slot, const u8 glyph[8]);
+    void clearCustomChar(u8 slot);
+    void clearCustomChars(void);
+    bool copyCustomChar(u8 slot, u8 glyph[8]) const;
+    bool readCell(u8 x, u8 y, u16& value, bool& custom) const;
+
+    void setFont(const prepared_font::Face* font);
+#if MK61_PROPORTIONAL_UI_FONTS
+    // The UC1609 menu is laid out by per-glyph advances.  USB Screen receives
+    // the finished bitmap, so its firmware-side surface must use the same
+    // layout instead of falling back to fixed character cells.
+    void setUiTextStyle(bool active, bool font_enabled, bool classic_10x16,
+                        bool compact_3x5, ui_font::Face face);
+    void setUiLineDecorations(u8 row, bool leading_gutter,
+                              bool trailing_gutter);
+    bool setUiTextLayout(TextProfile profile,u8 cols);
+    u16 measureUiText(const char* text,u16 length) const;
+    u16 uiTextWidth() const;
+    void printUiLine(u8 row,const char* text,char marker=0,u16 trailing=0);
+    bool uiTextActive(void) const { return ui_text_active_; }
+#endif
+
+    bool beginFullscreenBitmap(void);
+    bool showFullscreenBitmap(const u8* bitmap, usize size);
+    bool copyTextBitmap(u8* bitmap, usize size, u8 first_row, u8 count);
+    void endFullscreenBitmap(void);
+
+    bool showTopRightOverlay(const u32* rows, u8 width, u8 height,
+                             u8 clear_border);
+    void hideTopRightOverlay(void);
+#if MK61_DISK_ACTIVITY_SUPPORTED
+    void setDiskActivity(u8 state);
+#endif
+    bool copyTopRightOverlay(u32 rows[OVERLAY_MAX_HEIGHT], u8& width,
+                             u8& height, u8& clear_border) const;
+
+    const u8* framebuffer(void) const { return framebuffer_; }
+    u32 revision(void) const { return revision_; }
+#if defined(MK61_USB_SCREEN_SURFACE_TEST)
+    void forceFullRasterForTest() { markDirty(); }
+#endif
+
+  private:
+#if MK61_DISK_ACTIVITY_SUPPORTED
+    disk_activity::Overlay disk_overlay_;
+#endif
+    static constexpr t_time_ms CURSOR_BLINK_MS = 500;
+
+    u8* framebuffer_;
+#if MK61_SHARED_SCREEN_GRID
+    text_screen::Grid& grid_;
+#else
+    text_screen::Grid grid_;
+#endif
+    u8 custom_glyphs_[CUSTOM_GLYPHS][8];
+    bool custom_valid_[CUSTOM_GLYPHS];
+    const prepared_font::Face* font_;
+    TextProfile profile_;
+    bool active_;
+    bool dirty_;
+    // Bit 0: bitmap active; bit 1: restore calculator renderer on exit.
+    u8 fullscreen_bitmap_active_;
+#if MK61_FIXED_CALCULATOR_FACE
+    bool calculator_face_active_;
+#endif
+    usize update_depth_;
+    bool cursor_underline_;
+    bool cursor_blink_;
+    bool cursor_blink_phase_;
+    t_time_ms cursor_next_blink_ms_;
+    u32 revision_;
+    u32 overlay_rows_[OVERLAY_MAX_HEIGHT];
+    u8 overlay_width_;
+    u8 overlay_height_;
+    u8 overlay_clear_border_;
+    bool overlay_visible_;
+#if MK61_PROPORTIONAL_UI_FONTS
+    bool ui_text_active_;
+    bool ui_font_enabled_;
+    bool ui_classic_10x16_;
+    bool ui_compact_3x5_;
+    ui_font::Face ui_face_;
+    u16 ui_row_gutters_;
+    u16 ui_row_tails_;
+#endif
+
+    void markDirty(void);
+    void applyTextLayout(TextProfile profile,u8 cols);
+    bool cursorVisible(void) const;
+    void updateCursorBlink(t_time_ms now);
+    void render(void);
+    void clearPixels(void);
+    void setPixel(i16 x, i16 y, bool foreground);
+    void fillRect(i16 x, i16 y, i16 width, i16 height, bool foreground);
+    u8 rowTop(u8 row) const;
+    u8 rowPitch(u8 row) const;
+    u8 glyphHeight(u8 row) const;
+    u8 textTop(void) const;
+    bool resolveToken(u16 value, bool custom,
+                      builtin_font::Raster& raster) const;
+    void drawGlyph(u8 cell_x, u8 cell_width, u8 row,
+                   const builtin_font::Raster& raster);
+    void drawCursor(u8 cell_x, u8 cell_width, u8 row, bool block);
+    void drawOverlay(void);
+#if MK61_PROPORTIONAL_UI_FONTS
+    void renderUi(bool full);
+#endif
+};
+
+} // пространство имён usb_screen
+
+#endif

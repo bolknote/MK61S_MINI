@@ -1,0 +1,13 @@
+--- R42/native_eabi_m0_pow_rsqrt.inc
++++ R43/native_eabi_m0_pow_rsqrt.inc
+@@ -343,7 +343,9 @@
+ .hidden mk61_m0_pow_rsqrt_q8_frame_ready
+ mk61_m0_pow_rsqrt_q8_frame_ready:
+  mov r0,sp
+- bl mk61_m0_pow_rsqrt_local_q8
++ // CMP r2,#1 above leaves C=0 for Fhigh7fffffff, C=1 for80000000.
++ // BHI, three STR, MOV sp and BL preserve C until the private entry SBC.
++ bl mk61_m0_pow_rsqrt_local_q8_native
+  mov r2,r0
+  orrs r2,r1
+  beq .Lir_local_q8_decline

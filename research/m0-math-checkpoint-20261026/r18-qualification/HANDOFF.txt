@@ -1,0 +1,10 @@
+Private author-qualified R18; no canonical adoption.
+Full91573lnunion and92160family inputs:0wrong/0correctQfpliblosses. Knownln1->0.
+Oldlastinput3FF0E23E6966260F700/776vsQfp781, -130vsR15; allparentincreases retained.
+Freshpublic1115966+gate113664+router100800=1330430ARM; inheritedR12point151536/R15bias17760notfresh.
+Diagnostic28566ARM/3174MPFR and rejectedR16/R17diagnostics separate.
+Nonlnprimarybits/counts exactR15; original474/507 remains, knownpriorpow41/exp214.
+Large120980powcurrentreplay separate/live, must not extrapolate knownprior41.
+CPP/Flash+328BvsR15; no newtables/RAM/libgcc; M4/default/18others exact.
+Linkedbank17changedbytes semanticallymapped, no literalidentity claim.
+No universalbinary64/allstack/generalpowtotality/cycles/independentwholemath/integration/releaseGO.

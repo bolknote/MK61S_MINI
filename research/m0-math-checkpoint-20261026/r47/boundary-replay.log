@@ -1,0 +1,257 @@
+R47 cached-oracle boundary replay 0 / 231846 losses 0
+R47 cached-oracle boundary replay 3072 / 231846 losses 0
+R47 cached-oracle boundary replay 6144 / 231846 losses 0
+R47 cached-oracle boundary replay 9216 / 231846 losses 0
+R47 cached-oracle boundary replay 12288 / 231846 losses 0
+R47 cached-oracle boundary replay 15360 / 231846 losses 0
+R47 cached-oracle boundary replay 18432 / 231846 losses 0
+R47 cached-oracle boundary replay 21504 / 231846 losses 0
+R47 cached-oracle boundary replay 24576 / 231846 losses 0
+R47 cached-oracle boundary replay 27648 / 231846 losses 0
+R47 cached-oracle boundary replay 30720 / 231846 losses 0
+R47 cached-oracle boundary replay 33792 / 231846 losses 0
+R47 cached-oracle boundary replay 36864 / 231846 losses 0
+R47 cached-oracle boundary replay 39936 / 231846 losses 0
+R47 cached-oracle boundary replay 43008 / 231846 losses 0
+R47 cached-oracle boundary replay 46080 / 231846 losses 0
+R47 cached-oracle boundary replay 49152 / 231846 losses 0
+R47 cached-oracle boundary replay 52224 / 231846 losses 0
+R47 cached-oracle boundary replay 55296 / 231846 losses 0
+R47 cached-oracle boundary replay 58368 / 231846 losses 0
+R47 cached-oracle boundary replay 61440 / 231846 losses 0
+R47 cached-oracle boundary replay 64512 / 231846 losses 0
+R47 cached-oracle boundary replay 67584 / 231846 losses 0
+R47 cached-oracle boundary replay 70656 / 231846 losses 0
+R47 cached-oracle boundary replay 73728 / 231846 losses 0
+R47 cached-oracle boundary replay 76800 / 231846 losses 0
+R47 cached-oracle boundary replay 79872 / 231846 losses 0
+R47 cached-oracle boundary replay 82944 / 231846 losses 0
+R47 cached-oracle boundary replay 86016 / 231846 losses 0
+R47 cached-oracle boundary replay 89088 / 231846 losses 0
+R47 cached-oracle boundary replay 92160 / 231846 losses 0
+R47 cached-oracle boundary replay 95232 / 231846 losses 0
+R47 cached-oracle boundary replay 98304 / 231846 losses 0
+R47 cached-oracle boundary replay 101376 / 231846 losses 0
+R47 cached-oracle boundary replay 104448 / 231846 losses 0
+R47 cached-oracle boundary replay 107520 / 231846 losses 0
+R47 cached-oracle boundary replay 110592 / 231846 losses 0
+R47 cached-oracle boundary replay 113664 / 231846 losses 0
+R47 cached-oracle boundary replay 116736 / 231846 losses 0
+R47 cached-oracle boundary replay 119808 / 231846 losses 0
+R47 cached-oracle boundary replay 122880 / 231846 losses 0
+R47 cached-oracle boundary replay 125952 / 231846 losses 0
+R47 cached-oracle boundary replay 129024 / 231846 losses 0
+R47 cached-oracle boundary replay 132096 / 231846 losses 0
+R47 cached-oracle boundary replay 135168 / 231846 losses 0
+R47 cached-oracle boundary replay 138240 / 231846 losses 0
+R47 cached-oracle boundary replay 141312 / 231846 losses 0
+R47 cached-oracle boundary replay 144384 / 231846 losses 0
+R47 cached-oracle boundary replay 147456 / 231846 losses 0
+R47 cached-oracle boundary replay 150528 / 231846 losses 0
+R47 cached-oracle boundary replay 153600 / 231846 losses 0
+R47 cached-oracle boundary replay 156672 / 231846 losses 0
+R47 cached-oracle boundary replay 159744 / 231846 losses 0
+R47 cached-oracle boundary replay 162816 / 231846 losses 0
+R47 cached-oracle boundary replay 165888 / 231846 losses 0
+R47 cached-oracle boundary replay 168960 / 231846 losses 0
+R47 cached-oracle boundary replay 172032 / 231846 losses 0
+R47 cached-oracle boundary replay 175104 / 231846 losses 0
+R47 cached-oracle boundary replay 178176 / 231846 losses 0
+R47 cached-oracle boundary replay 181248 / 231846 losses 0
+R47 cached-oracle boundary replay 184320 / 231846 losses 0
+R47 cached-oracle boundary replay 187392 / 231846 losses 0
+R47 cached-oracle boundary replay 190464 / 231846 losses 0
+R47 cached-oracle boundary replay 193536 / 231846 losses 0
+R47 cached-oracle boundary replay 196608 / 231846 losses 0
+R47 cached-oracle boundary replay 199680 / 231846 losses 0
+R47 cached-oracle boundary replay 202752 / 231846 losses 0
+R47 cached-oracle boundary replay 205824 / 231846 losses 0
+R47 cached-oracle boundary replay 208896 / 231846 losses 0
+R47 cached-oracle boundary replay 211968 / 231846 losses 0
+R47 cached-oracle boundary replay 215040 / 231846 losses 0
+R47 cached-oracle boundary replay 218112 / 231846 losses 0
+R47 cached-oracle boundary replay 221184 / 231846 losses 0
+R47 cached-oracle boundary replay 224256 / 231846 losses 0
+R47 cached-oracle boundary replay 227328 / 231846 losses 0
+R47 cached-oracle boundary replay 230400 / 231846 losses 0
+{
+  "status": "PASS_R47_FRESH_BOUNDARY_REPLAY_WITH_EXPLICIT_CACHED_REFERENCES",
+  "input_pairs": 77282,
+  "state_rows": 231846,
+  "actual_diagnostic_ARM_calls": 231846,
+  "actual_directed_MPFR_inputs": 0,
+  "sNaN_policy_shortcuts": 0,
+  "all_parent_Qfplib_and_gold_cached_frozen_R46": true,
+  "cached_parent_is_selected_R45": true,
+  "candidate_wrong": 0,
+  "parent_losing_pairs": 36914,
+  "candidate_losing_pairs": 0,
+  "parent_instruction_delta_histogram": {
+    "0": 35280,
+    "5": 17694,
+    "-268": 5862,
+    "-608": 11880,
+    "-262": 5982,
+    "-615": 5958,
+    "-602": 468,
+    "-593": 420,
+    "-598": 396,
+    "-603": 132,
+    "-611": 264,
+    "-620": 228,
+    "-601": 780,
+    "-614": 492,
+    "-619": 216,
+    "-587": 492,
+    "-606": 600,
+    "-592": 612,
+    "-595": 6612,
+    "-596": 468,
+    "-622": 204,
+    "-612": 300,
+    "-604": 168,
+    "-613": 420,
+    "-266": 72,
+    "-591": 156,
+    "-605": 84,
+    "-599": 156,
+    "-260": 6006,
+    "-626": 312,
+    "-585": 240,
+    "-580": 228,
+    "-588": 396,
+    "-609": 228,
+    "-600": 132,
+    "-586": 84,
+    "-594": 240,
+    "-618": 324,
+    "-607": 6030,
+    "-249": 6042,
+    "-583": 240,
+    "-579": 528,
+    "-582": 336,
+    "-574": 240,
+    "-253": 144,
+    "-578": 144,
+    "-247": 144,
+    "-572": 96,
+    "-567": 240,
+    "-575": 48,
+    "-573": 96,
+    "-581": 192,
+    "-589": 360,
+    "18": 30660,
+    "-590": 96,
+    "-215": 12336,
+    "-209": 12768,
+    "-453": 12552,
+    "-455": 516,
+    "-432": 432,
+    "-428": 1056,
+    "-431": 108,
+    "-445": 108,
+    "-442": 564,
+    "-213": 216,
+    "-446": 108,
+    "-435": 444,
+    "-461": 228,
+    "-207": 324,
+    "-422": 216,
+    "-467": 540,
+    "-393": 228,
+    "-416": 168,
+    "-390": 168,
+    "-424": 108,
+    "-400": 108,
+    "-399": 276,
+    "-396": 288,
+    "-430": 108,
+    "-394": 108,
+    "-488": 108,
+    "-413": 216,
+    "-427": 216,
+    "-410": 216,
+    "-438": 180,
+    "-480": 108,
+    "-429": 288,
+    "-404": 168,
+    "-449": 12420,
+    "-434": 180,
+    "-444": 72,
+    "-441": 60,
+    "-402": 120,
+    "-460": 60,
+    "-423": 120,
+    "-437": 180,
+    "-420": 240,
+    "-484": 120,
+    "-447": 60,
+    "-454": 60,
+    "-426": 60,
+    "-407": 60,
+    "-108": 6192,
+    "-102": 6240,
+    "-99": 6576,
+    "-106": 72,
+    "-103": 264,
+    "-100": 192,
+    "-97": 408,
+    "-22": 144,
+    "-255": 24,
+    "35": 72,
+    "-448": 24,
+    "-451": 12,
+    "-300": 12,
+    "-640": 12,
+    "-634": 120,
+    "-630": 36,
+    "-645": 36,
+    "-635": 12,
+    "-110": 12,
+    "-479": 12,
+    "-433": 12,
+    "-452": 12,
+    "-468": 12,
+    "-45": 288,
+    "-283": 96,
+    "-623": 96,
+    "-617": 120,
+    "-616": 96,
+    "-276": 96,
+    "-642": 96,
+    "-624": 96,
+    "-278": 48,
+    "-621": 168,
+    "-291": 48,
+    "-631": 48,
+    "-625": 48,
+    "-325": 24,
+    "-665": 24,
+    "-659": 72,
+    "-655": 24,
+    "-668": 24,
+    "-658": 24,
+    "-317": 24,
+    "-683": 24,
+    "-637": 48,
+    "-675": 24,
+    "-287": 24,
+    "-627": 24,
+    "-279": 24
+  },
+  "wrong_reference_state_variants_retained": 65340,
+  "all_wrong_reference_outputs_costs_retained": true,
+  "no_nominal_reference_filter": true,
+  "candidate_ELF_sha256": "64753f7bc086b6bde36f6cb0e3559885fd6b644ba050d49669bc26af79c64dfa",
+  "R46_diagnostic_FROZEN_sha256": "dc397afb030b14a77db3430e949b64c5c0c19811e6c0690042dd102c19bf3a9f",
+  "source_records_sha256": "126eb2560f40518d2c15106c7357d90c8d326987809e0d185551ae5ae10b17d9",
+  "records_sha256": "c10cb11a2b9b8f3b923f73c8a5a8cdda4407f75a5d28541ed6302709ecb94e1b",
+  "observed_stack_bytes": 176,
+  "all_fresh_calls_public": true,
+  "no_new_primitive_controls_in_pool": true,
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 69.07798004202778
+}

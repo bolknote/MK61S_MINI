@@ -1,0 +1,3 @@
+R47 INTERMEDIATE ONLY, NOT SELECTED OR FULLY QUALIFIED. Qualified selection remains R45.
+Fresh direct2862:148->0; fresh R47 expanded77282 with cached R46 gold/R45/Qfp:36914->0. Fresh pow16740:2047->2045. 0wrong/0new correct-Qfp loss. All parent increases retained. All source producers terminal; exact current instructions/16new+6den+12Q8+17exp negatives and ROMloader/9disabled pass. Two RP objects change,17M4default exact; no new tables/RAM/libgcc.
+Full primary/pow/exp/ln replay, formal metadata composition, independent acceptance, universalCR/generalpowtotality/FMA/stack/physicalcycles/integration/release OPEN. No device/Git/canonical edits by these math producers. Human requested intermediate Git preservation after these tests.

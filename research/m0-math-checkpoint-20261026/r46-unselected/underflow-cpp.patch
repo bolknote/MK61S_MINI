@@ -1,0 +1,13 @@
+--- R45/native_eabi_m0.cpp
++++ R46/native_eabi_m0.cpp
+@@ -211,6 +211,10 @@
+       // exponent above1023 is already beyond the RNE overflow midpoint.
+       // Preserve the exact significand division for the boundary exponent.
+       if(e>Bias) return sign|Infinity;
++      // Below the least-subnormal binade, only the exact half-way case
++      // needs distinction: half rounds to zero; any greater ratio to one.
++      if(e<Min-int(F))
++        return sign|U(e==Min-int(F)-1 && remainder!=denominator);
+ #endif
+       U residual;const U q=divide_significands(remainder,denominator,residual);
+       const U twice=residual+residual;

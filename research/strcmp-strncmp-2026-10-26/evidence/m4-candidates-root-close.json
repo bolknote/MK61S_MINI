@@ -1,0 +1,25 @@
+{
+  "status": "ROOT_ACTUAL_CLASSIC_FULL804_AND_ORIGINAL_RETURN_ACCEPTED_CLOSED",
+  "parent_sha256": "3ac8d59fed7e02b41ef032fcb1d21db245eb4a5cdab5540542a07c000e84112c",
+  "canonical_sha256": "b72ef4cf1928ac5ab733b7b35debebfdf91ba42ae40118cfe805128fb18756db",
+  "CLOSED": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-full-close-root-20261026-001/root-CLOSED.json",
+    "bytes": 4134,
+    "sha256": "b72ef4cf1928ac5ab733b7b35debebfdf91ba42ae40118cfe805128fb18756db"
+  },
+  "root_artifact_verification": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-full-close-root-20261026-001/ROOT-ARTIFACT-VERIFICATION.json",
+    "bytes": 2174,
+    "sha256": "f6e01b9ad9e6582cc74a393489638f5c530a55dcb04e421710ffda124dda2135"
+  },
+  "independent_actual_checks": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-full-independent-20261026-v2/actual-001/ACTUAL-CHECKS.json",
+    "bytes": 2574,
+    "sha256": "bbf7e3522cc0db96b057cead18a734bb8b9903e21df09c1f5f91d933aa25f9c2"
+  },
+  "Root_device_IO": 0,
+  "full_hardware_measurement_window_complete": true,
+  "hardware_grant_consumed": true,
+  "static_winner_analysis_and_final_static_validation_pending": true,
+  "main_or_release_GO": false
+}

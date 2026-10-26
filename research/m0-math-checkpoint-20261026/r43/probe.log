@@ -1,0 +1,88 @@
+R43 public probe 0 / 16740 elapsed 0.0 loss 0
+R43 public probe 512 / 16740 elapsed 17.4 loss 512
+R43 public probe 1024 / 16740 elapsed 33.8 loss 1023
+R43 public probe 1536 / 16740 elapsed 44.2 loss 1535
+R43 public probe 2048 / 16740 elapsed 51.1 loss 2038
+R43 public probe 2560 / 16740 elapsed 57.9 loss 2343
+R43 public probe 3072 / 16740 elapsed 63.2 loss 2343
+R43 public probe 3584 / 16740 elapsed 68.5 loss 2343
+R43 public probe 4096 / 16740 elapsed 73.9 loss 2343
+R43 public probe 4608 / 16740 elapsed 79.4 loss 2343
+R43 public probe 5120 / 16740 elapsed 84.9 loss 2343
+R43 public probe 5632 / 16740 elapsed 90.3 loss 2343
+R43 public probe 6144 / 16740 elapsed 95.7 loss 2343
+R43 public probe 6656 / 16740 elapsed 101.1 loss 2343
+R43 public probe 7168 / 16740 elapsed 106.4 loss 2343
+R43 public probe 7680 / 16740 elapsed 111.7 loss 2343
+R43 public probe 8192 / 16740 elapsed 116.9 loss 2343
+R43 public probe 8704 / 16740 elapsed 122.2 loss 2343
+R43 public probe 9216 / 16740 elapsed 127.5 loss 2343
+R43 public probe 9728 / 16740 elapsed 132.7 loss 2343
+R43 public probe 10240 / 16740 elapsed 138.0 loss 2343
+R43 public probe 10752 / 16740 elapsed 143.0 loss 2343
+R43 public probe 11264 / 16740 elapsed 148.6 loss 2343
+R43 public probe 11776 / 16740 elapsed 154.6 loss 2343
+R43 public probe 12288 / 16740 elapsed 160.3 loss 2343
+R43 public probe 12800 / 16740 elapsed 165.8 loss 2343
+R43 public probe 13312 / 16740 elapsed 171.5 loss 2343
+R43 public probe 13824 / 16740 elapsed 177.3 loss 2343
+R43 public probe 14336 / 16740 elapsed 183.0 loss 2343
+R43 public probe 14848 / 16740 elapsed 188.6 loss 2343
+R43 public probe 15360 / 16740 elapsed 194.5 loss 2343
+R43 public probe 15872 / 16740 elapsed 200.0 loss 2343
+R43 public probe 16384 / 16740 elapsed 205.6 loss 2343
+{
+  "status": "PASS_R43_FRESH_PUBLIC_DIAGNOSTIC_NOT_FULLQUALIFICATION",
+  "input_pairs": 16740,
+  "state_rows": 50220,
+  "actual_diagnostic_ARM_calls": 251100,
+  "completed_ARM_calls": {
+    "candidate": 50220,
+    "parent": 50220,
+    "qfp_composed_pow": 50220,
+    "qfp_composed_pow_exact": 50220,
+    "qfp_composed_pow_integer": 50220
+  },
+  "actual_directed_MPFR_inputs": 16726,
+  "exact_sNaN_policy_shortcuts": 14,
+  "candidate_ELF_sha256": "d0a3a9bd38aa755ad6b21b2fb8d3551bdd7b9f27197aaf718b0714fa8c72799d",
+  "parent_FROZEN_sha256": "b5e0bf1e6316a2bc0924127f0b9564c025cb042842f4d3527ce1eef8fd48a676",
+  "parent_qualification_FROZEN_sha256": "c9e7ebb1dcd34a4536e12fcb77af95ecbfc51f44176fe5b7e57e85b7cbe39515",
+  "input_sha256": "36d26af0b681390c08db07d2c5d3caefb9ef29687142814cdfcb1a062d052dba",
+  "records_sha256": "71c229cd5aed152c9ac33a4157aa056ceb4dff739110790af8fd2c4aa76649bb",
+  "candidate_wrong": 0,
+  "parent_losing_pairs": 2353,
+  "candidate_losing_pairs": 2343,
+  "parent_instruction_delta_histogram": {
+    "0": 46557,
+    "-1": 3663
+  },
+  "old2353_fixed": 10,
+  "all3_Qfplib_compositions_allinputs_allstates": true,
+  "no_nominal_reference_filter": true,
+  "all_wrong_reference_outputs_and_costs_retained": true,
+  "wrong_reference_state_variants": 55296,
+  "native_call_state_histogram": {
+    "0": 4506,
+    "1": 45714
+  },
+  "Q8_call_state_histogram": {
+    "0": 46557,
+    "1": 3663
+  },
+  "all16_public_incoming_NZCV_and5R12_patterns_checked": true,
+  "actual_private_C_contract_asserted_every_Q8_call": true,
+  "all_actual_native_q_and_live_frame_and_Bh_R5_exact_parent": true,
+  "every_actual_Q8_native_entry_saves_exactly1instruction": true,
+  "non_native_public_counts_exact": true,
+  "observed_stacks": {
+    "candidate": 2148,
+    "parent": 2148,
+    "Qfplib": 88
+  },
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 209.5086057499866
+}

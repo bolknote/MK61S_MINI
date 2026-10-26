@@ -1,0 +1,30 @@
+"""Actual linked layouts, source loader execution, and the old overlay hazard."""
+from pathlib import Path
+import hashlib,json,sys
+sys.dont_write_bytecode=True
+from harness import *
+old=ElfImage(ROOT/'.build/m0-exp-near-one-20261024/candidate.elf')
+results={}
+for label in ['candidate','zero-control']:
+ m=machine(label);e=m.elf;hot=e.named_sections['.scratch_y'];s=e.symbols
+ assert hot[5]==4080 and hot[3]==0x20038000 and hot[3]+hot[5]<=s['__StackBottom']
+ assert s['__StackBottom']==0x20039000 and s['__StackTop']==0x20041000
+ assert s['__bss_end__']<=0x20038000
+ loads=[segment for segment in e.segments if segment[0]==1 and segment[4]]
+ flash=[(segment[3],segment[3]+segment[4])for segment in loads]
+ assert all(0x10010000<=a<b<=0x10200000 for a,b in flash)
+ assert all(max(a,c)>=min(b,d)for i,(a,b)in enumerate(flash)for c,d in flash[i+1:])
+ generic=s['mk61_m0_pow_exp_product']&~1;table=s['mk61_m0_pow_exp_table_product']&~1
+ overlap=max(0,min(generic+168,table+e.sizes['mk61_m0_pow_exp_table_product'])-max(generic,table));assert overlap==14
+ os=next(v for v in old.named_sections.values()if v[2]&2 and v[3]<=old.symbols['mk61_m0_pow_exp_product']&~1<v[3]+v[5])
+ oa=(old.symbols['mk61_m0_pow_exp_product']&~1)-os[3];old_slot=old.bytes_at(os)[oa:oa+168];assert len(old_slot)==168
+ expected=e.bytes_at(hot);damaged=bytearray(expected);at=generic-hot[3];damaged[at:at+168]=old_slot
+ assert damaged!=expected and damaged[table-hot[3]:table-hot[3]+14]!=expected[table-hot[3]:table-hot[3]+14]
+ # The simulated old overlay is host-only negative input; never loaded/executed.
+ results[label]=dict(ELF_sha256=sha(HERE/(label+'.elf')),loader=m.unified_loader_report,flash_load_intervals=flash,
+  scratch_y_address=hot[3],scratch_y_bytes=hot[5],stack_bottom=s['__StackBottom'],stack_top=s['__StackTop'],main_RAM_data_end=s['__bss_end__'],
+  actual_generic_product=generic,actual_new_table_entry=table,old_overlay_intersects_new_entry_bytes=overlap,host_negative_old_overlay_detected=True,
+  actual_bank_sha256=hashlib.sha256(expected).hexdigest(),real_BootROM_without_models=True)
+out=dict(status='PASS_ACTUAL_SOURCE_LOADER_AND_LINKED_MATH_LAYOUT',images=results,actual_loader_ARM_calls=2,actual_MPFR_calls=0,
+  whole_library_math_only_not_bootable_firmware=True,full_device_loader_and_hardware_acceptance_not_implied=True,hardware_accessed=False,goal_complete=False)
+(HERE/'loader-layout-proof.json').write_text(json.dumps(out,indent=2)+'\n');print(json.dumps(out,indent=2))

@@ -1,0 +1,10 @@
+{
+  "status": "UNSELECTED_FIRST_R46_BOUNDARY_NUMERIC_PROTOTYPE",
+  "actual_diagnostic_ARM_calls": 25758,
+  "actual_MPFR_evaluations": 2828,
+  "sNaN_policy_shortcuts": 34,
+  "parent_losses148_child18": true,
+  "new_correct_Qfp_losses": 0,
+  "excluded_from_later_selected_qualification_pool": true,
+  "goal_complete": false
+}

@@ -1,0 +1,14 @@
+{
+  "selected": false,
+  "goal_complete": false,
+  "source_FROZEN_sha256": "da406f31b39e0a01ee415a1ee9d2658d1fbed5ac5ceb04784dc8a25e146a60a2",
+  "full_session": 81414,
+  "boundary_session": 90276,
+  "primary_session": 91916,
+  "all_three_confirmed_live_on_launch": true,
+  "source_build_terminal_session": 87793,
+  "source_probe_terminal_session": 97985,
+  "source_control_terminal_session": 14035,
+  "source_static_and_control_proofs_passed": true,
+  "admissions_terminal_session": 94281
+}

@@ -1,0 +1,21 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-nativeq8-r43-20261026/candidate-native-fixture.elf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+101e0000 <r43_native_test_entry>:
+101e0000:	b510      	push	{r4, lr}
+101e0002:	69c2      	ldr	r2, [r0, #28]
+101e0004:	4b03      	ldr	r3, [pc, #12]	@ (101e0014 <reject+0x2>)
+101e0006:	1ad2      	subs	r2, r2, r3
+101e0008:	2a01      	cmp	r2, #1
+101e000a:	d802      	bhi.n	101e0012 <reject>
+101e000c:	4b02      	ldr	r3, [pc, #8]	@ (101e0018 <reject+0x6>)
+101e000e:	4798      	blx	r3
+101e0010:	bd10      	pop	{r4, pc}
+
+101e0012 <reject>:
+101e0012:	be00      	bkpt	0x0000
+101e0014:	7fffffff 	.word	0x7fffffff
+101e0018:	100305f9 	.word	0x100305f9

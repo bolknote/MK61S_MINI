@@ -1,0 +1,119 @@
+R45 full exp 0 phase full elapsed 0.0 loss 0 division visits 0
+R45 full exp 16384 phase full elapsed 11.0 loss 4 division visits 0
+R45 full exp 32768 phase full elapsed 24.2 loss 25 division visits 0
+R45 full exp 49152 phase full elapsed 36.7 loss 43 division visits 0
+R45 full exp 65536 phase full elapsed 49.3 loss 54 division visits 0
+R45 full exp 81920 phase full elapsed 61.8 loss 61 division visits 0
+R45 full exp 98304 phase full elapsed 69.2 loss 66 division visits 0
+R45 full exp 114688 phase full elapsed 73.0 loss 66 division visits 0
+R45 full exp 131072 phase full elapsed 76.9 loss 66 division visits 0
+R45 full exp 147456 phase full elapsed 80.7 loss 66 division visits 0
+R45 full exp 163840 phase full elapsed 84.6 loss 66 division visits 0
+R45 full exp 180224 phase full elapsed 88.3 loss 66 division visits 0
+R45 full exp 196608 phase full elapsed 92.1 loss 66 division visits 0
+R45 full exp 212992 phase full elapsed 96.0 loss 66 division visits 0
+R45 full exp 229376 phase full elapsed 99.9 loss 66 division visits 0
+R45 full exp 245760 phase full elapsed 103.7 loss 66 division visits 0
+R45 full exp 262144 phase full elapsed 107.4 loss 66 division visits 0
+R45 full exp 278528 phase full elapsed 111.2 loss 66 division visits 0
+R45 full exp 294912 phase full elapsed 114.9 loss 66 division visits 0
+R45 full exp 311296 phase full elapsed 118.1 loss 66 division visits 0
+R45 full exp 327680 phase full elapsed 121.8 loss 67 division visits 0
+R45 full exp 344064 phase full elapsed 125.5 loss 67 division visits 0
+R45 full exp 360448 phase full elapsed 129.1 loss 67 division visits 0
+R45 full exp 376832 phase full elapsed 132.8 loss 67 division visits 0
+R45 full exp 393216 phase full elapsed 137.7 loss 67 division visits 0
+R45 full exp 409600 phase full elapsed 142.6 loss 67 division visits 0
+R45 full exp 425984 phase full elapsed 147.5 loss 67 division visits 0
+R45 full exp 442368 phase full elapsed 152.4 loss 67 division visits 0
+R45 full exp 458752 phase full elapsed 157.4 loss 67 division visits 0
+R45 full exp 475136 phase full elapsed 162.4 loss 67 division visits 0
+R45 full exp 491520 phase full elapsed 167.4 loss 67 division visits 0
+R45 full exp 507904 phase full elapsed 172.4 loss 67 division visits 0
+R45 full exp 524288 phase full elapsed 177.4 loss 67 division visits 0
+R45 full exp 540672 phase full elapsed 182.4 loss 67 division visits 0
+R45 full exp 557056 phase full elapsed 187.5 loss 67 division visits 0
+R45 full exp 573440 phase full elapsed 192.6 loss 67 division visits 0
+R45 full exp 589824 phase full elapsed 197.6 loss 67 division visits 0
+R45 full exp 606208 phase full elapsed 202.7 loss 67 division visits 0
+R45 full exp 622592 phase full elapsed 207.7 loss 67 division visits 0
+R45 full exp 638976 phase full elapsed 212.8 loss 67 division visits 0
+R45 full exp 655360 phase full elapsed 218.0 loss 67 division visits 0
+R45 full exp 671744 phase full elapsed 223.1 loss 67 division visits 0
+R45 full exp 688128 phase full elapsed 228.1 loss 67 division visits 0
+R45 full exp 704512 phase full elapsed 233.1 loss 67 division visits 0
+R45 full exp 720896 phase full elapsed 238.2 loss 67 division visits 0
+R45 full exp 737280 phase full elapsed 243.3 loss 67 division visits 0
+R45 full exp 753664 phase full elapsed 248.3 loss 67 division visits 0
+R45 full exp 770048 phase full elapsed 253.4 loss 67 division visits 0
+R45 full exp 786432 phase full elapsed 258.4 loss 67 division visits 0
+R45 full exp 802816 phase full elapsed 263.3 loss 67 division visits 0
+R45 full exp 819200 phase full elapsed 268.1 loss 67 division visits 0
+R45 full exp 835584 phase full elapsed 272.1 loss 67 division visits 0
+R45 full exp 851968 phase full elapsed 275.8 loss 67 division visits 0
+R45 full exp 868352 phase full elapsed 286.2 loss 78 division visits 0
+R45 full exp 884736 phase full elapsed 299.0 loss 97 division visits 0
+R45 full exp 901120 phase full elapsed 310.0 loss 111 division visits 0
+R45 full exp 917504 phase full elapsed 321.3 loss 116 division visits 0
+R45 full exp 933888 phase full elapsed 333.9 loss 131 division visits 0
+R45 full exp 950272 phase full elapsed 344.8 loss 132 division visits 0
+R45 full exp 966656 phase full elapsed 355.8 loss 135 division visits 0
+R45 full exp 983040 phase full elapsed 367.3 loss 172 division visits 0
+R45 full exp 999424 phase boundary elapsed 379.6 loss 252 division visits 0
+R45 full exp 1015808 phase boundary elapsed 392.2 loss 274 division visits 0
+R45 full exp 1032192 phase boundary elapsed 404.8 loss 305 division visits 0
+R45 full exp 1048576 phase boundary elapsed 417.4 loss 328 division visits 0
+R45 full exp 1064960 phase boundary elapsed 429.9 loss 347 division visits 0
+R45 full exp 1081344 phase boundary elapsed 442.5 loss 367 division visits 0
+R45 full exp 1097728 phase boundary elapsed 455.1 loss 392 division visits 0
+R45 full exp 1114112 phase boundary elapsed 467.7 loss 415 division visits 0
+R45 full exp 1130496 phase boundary elapsed 479.1 loss 427 division visits 0
+R45 full exp 1146880 phase boundary elapsed 489.8 loss 430 division visits 0
+R45 full exp 1163264 phase edge elapsed 500.9 loss 432 division visits 0
+R45 full exp 1179648 phase edge elapsed 512.0 loss 444 division visits 0
+R45 full exp 1196032 phase fresh-edge elapsed 523.4 loss 491 division visits 0
+R45 full exp 1212416 phase fresh-edge elapsed 534.6 loss 497 division visits 0
+{
+  "status": "PASS_R45_FULL_EXP_FRESH_CANDIDATE_CACHED_R38_GOLD_QFP",
+  "source_FROZEN_sha256": "dbc455078837507acaeb750df1e3fb6800b923e2a9a880c9c6bcc2150ba3527a",
+  "inherited_R38_qualification_FROZEN_sha256": "aff1d6e8bdedba0bb05cf65d5f3a6f3964da1def390bfed69d28078577797f7a",
+  "source_rows_by_phase": {
+    "full": 989922,
+    "boundary": 176952,
+    "power": 31842,
+    "edge": 30939,
+    "admission": 26007,
+    "fresh-edge": 36933
+  },
+  "fresh_R45_rows_by_phase": {
+    "full": 989922,
+    "boundary": 161384,
+    "power": 5565,
+    "edge": 30728,
+    "admission": 468,
+    "fresh-edge": 36840
+  },
+  "duplicate_state_rows_checked": 67688,
+  "unique_inputs": 568856,
+  "state_rows": 1224907,
+  "actual_qualified_public_ARM_calls": 1224907,
+  "actual_fresh_parent_Qfp_MPFR_calls": 0,
+  "parent_R38_gold_Qfp_cached_as_inherited_R43_not_fresh": true,
+  "candidate_wrong": 0,
+  "parent_losing_inputs": 512,
+  "candidate_losing_inputs": 512,
+  "parent_instruction_delta_histogram": {
+    "0": 1224907
+  },
+  "all4_shared_division_entry_visits": {},
+  "wrong_reference_state_rows_retained": 414230,
+  "all_correct_reference_results_compared_no_nominalfilter": true,
+  "records_sha256": "e0c6de17de9be68c9cc2d76f7f8bbfad7ec30779ae89dcf8e33ef80ff34552bc",
+  "observed_stack": 816,
+  "not_universal_stack_bound": true,
+  "physical_cycles_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 543.1965386670199
+}

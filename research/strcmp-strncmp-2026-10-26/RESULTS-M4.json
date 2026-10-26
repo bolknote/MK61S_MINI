@@ -1,0 +1,77 @@
+{
+  "status": "M4_HARDWARE_MEASURED_AND_INDEPENDENTLY_CLOSED_M0_HOST_ONLY",
+  "source_date": "2026-10-26",
+  "M4": {
+    "platform": "Classic / STM32F411 Cortex-M4 /96MHz",
+    "full_candidate_campaign": {
+      "APP_launches": 316,
+      "cases_per_APP": 804,
+      "groups": 17688,
+      "raw_duration_values": 123816,
+      "IRQ_enabled": true
+    },
+    "final_static_campaign": {
+      "build": "F1C6EDF4",
+      "APP_launches": 54,
+      "cases_per_APP": 384,
+      "groups": 2592,
+      "raw_duration_values": 18144,
+      "IRQ_enabled": true,
+      "extra_diagnostic_runtime_dispatch": false
+    },
+    "selected_strcmp": {
+      "variant": "byte1",
+      "body_bytes": 20,
+      "body_sha256": "13a952e2a2fe15d6063fab526a4300904fa25a335e889da5f037ecca9e1e1fbd",
+      "native_latency_ratio": 0.9204294192542647,
+      "standalone_latency_ratio": 0.9777986217475195,
+      "shared_local_latency_ratio": 0.9778194434936744,
+      "shared_bridge_latency_ratio_vs_local": 1.3007721815775284,
+      "native_all288_medians_faster": true,
+      "SDK_worst_case_latency_ratios": [
+        1.012812527804965,
+        1.0141694100898657
+      ],
+      "SDK_decisive_prefix64plus_latency_ratio": 1.0034105157455893
+    },
+    "strncmp": {
+      "resident_runtime_body_bytes": 42,
+      "resident_runtime_body_sha256": "08730e4007562fd6d0503c38eb4da5df28acfb853952185d03b5df255a094750",
+      "standalone_newlib_body_bytes": 120,
+      "runtime_count": 26,
+      "slot": 19,
+      "new_variant_selected": false
+    },
+    "original_firmware_return": "Full512KiB independently byte-equal fresh originals; files/typed state/RTC_UNSET trajectory and own FD/EX/namednoholder accepted; no raw external storage backup claim"
+  },
+  "M0": {
+    "HOST_prepared": true,
+    "hardware_measured": false,
+    "winner": null,
+    "defaults_changed": false
+  },
+  "archives": [
+    {
+      "name": "m4-candidates",
+      "path": "m4-candidates-groups.csv.gz",
+      "bytes": 216785,
+      "sha256": "02dc9a768fa7f2dc52be5a7b713c1e6b9f4c72e9f9a068c81b451cf280f01626",
+      "uncompressed_bytes": 2225510,
+      "uncompressed_sha256": "16b8d3245f763f2b29e5b8f7e14bc64b6c3aa86808cfd06a847471ee862d2056"
+    },
+    {
+      "name": "m4-final-static",
+      "path": "m4-final-static-groups.csv.gz",
+      "bytes": 31097,
+      "sha256": "4f453e47deb5a7dd5babdb567b04c4c207dbbf3516b3e8040c12686952cb588a",
+      "uncompressed_bytes": 328041,
+      "uncompressed_sha256": "02e08ac001a530d2927e22c2efa71b00da1862f13cd0a1003fae3328dc24a394"
+    }
+  ],
+  "limits": [
+    "Synthetic per-case median7/64 timings including real call/bridge costs; no overhead subtraction or cold-cache promise",
+    "Standalone newlib strcmp734B wins full-matrix GM but short+26.29%,worst2.575x; byte20 chosen for general short-safe SDK path",
+    "Code integration does not assert a new production image has been built/installed; actual combined shipping CI and budgets remain required",
+    "Original source provenance paths inside archived analyses describe the original local qualification, not portable filesystem prerequisites"
+  ]
+}
