@@ -25,10 +25,13 @@ char* strchr(const char* s,int c) {
     if(!value)return NULL;
   }
 }
+#include "memory_string_compare_arm.h"
+#ifndef MK61_ARM_STRCMP
 int strcmp(const char* a,const char* b) {
   while((unsigned char)*a==(unsigned char)*b && *a) {++a;++b;}
   return (int)(unsigned char)*a-(int)(unsigned char)*b;
 }
+#endif
 int strncmp(const char* a,const char* b,size_t n) {
   while(n--) {
     const unsigned char x=(unsigned char)*a++,y=(unsigned char)*b++;

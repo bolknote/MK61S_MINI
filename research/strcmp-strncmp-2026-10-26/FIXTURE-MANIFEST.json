@@ -1,0 +1,112 @@
+{
+  "origin": "comparison preparation1fdc92e67 based on accepted6e",
+  "purpose": "Explicit research compiler fixtures only; no production source includes this tree",
+  "controlled_difference": "Shared strcmp bridge requires a true flag, so defined(flag=0) remains local; tested flag=1 bytes unchanged",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 363,
+      "sha256": "533a72da708d652bb4b570dc6dea38cf294eccd744818fa74f88e960f826a5c7"
+    },
+    {
+      "path": "code/memchr_arm.inc",
+      "bytes": 4276,
+      "sha256": "d77177ae098fab0646dec97088df4ebc2b22fa3fdd1702cbb807bf93536ac13a"
+    },
+    {
+      "path": "code/memcmp_m4.inc",
+      "bytes": 5848,
+      "sha256": "718fa7bb0c1dbb130669d96516ca5ebc0deb9d64a4fd7c5fcbc5a9018785f123"
+    },
+    {
+      "path": "code/memcmp_m4_flash.inc",
+      "bytes": 5846,
+      "sha256": "b4431884e78a6a2aa70701b26f293d49dcee092274c70c2dd8c69b9b53779acd"
+    },
+    {
+      "path": "code/memcpy_m0.inc",
+      "bytes": 5036,
+      "sha256": "bb062c308799908bb20b2fd7a954c19e53818691e88c16c90e28f3674910e175"
+    },
+    {
+      "path": "code/memcpy_m4.inc",
+      "bytes": 3355,
+      "sha256": "4dc278442328680058e7c6103ca31e5e30eb5c0d0868706461cc9ae466247c60"
+    },
+    {
+      "path": "code/memmove_m0.inc",
+      "bytes": 8665,
+      "sha256": "8f1dc4564d3b56b6e5b403f0382bfd8afb1deafd04661d39c74d37f81129fc45"
+    },
+    {
+      "path": "code/memmove_m4.inc",
+      "bytes": 4475,
+      "sha256": "264ad693a4088e64ad4645e1e6a953d29d64fa7a59ad4b539f676c332f079f3b"
+    },
+    {
+      "path": "code/memory_compare_arm.h",
+      "bytes": 1104,
+      "sha256": "3967a985c71dd37eb85ec5d9ae7aa307c90a9d7083972c231bb801469a647bc0"
+    },
+    {
+      "path": "code/memory_copy_arm.h",
+      "bytes": 1011,
+      "sha256": "c4a3493c80755735016414062d4dd342b672838d7ad6f58c5d040f88c061e167"
+    },
+    {
+      "path": "code/memory_length_arm.h",
+      "bytes": 796,
+      "sha256": "94747a0af82a30fc73dfac688cbc65f60bcf8e836b34c2efc5dcd9647fd37708"
+    },
+    {
+      "path": "code/memory_move_arm.h",
+      "bytes": 1028,
+      "sha256": "f55dc6ad283a489fcf2731267ef1765eb0b74dcf81f3102fd5ca9c51ba799f90"
+    },
+    {
+      "path": "code/memory_search_arm.h",
+      "bytes": 1439,
+      "sha256": "9ce86a97c1fded4f53b83dd9429a0bd41dc13bf0686d69a9602345b05b5c9b20"
+    },
+    {
+      "path": "code/memory_word_ops.h",
+      "bytes": 10664,
+      "sha256": "62053fb50449bac6cc503de51c3861cd73985bd2ac440f04c1dc2e81c6b2ca61"
+    },
+    {
+      "path": "code/native_libc.h",
+      "bytes": 228,
+      "sha256": "59c22e6f28e46ddda27b28e27569dcd461e2d96d60e1a01385862a31ed5c5126"
+    },
+    {
+      "path": "code/string_compare_arm.h",
+      "bytes": 4362,
+      "sha256": "099151cbd387805d5967227bec2f85ebb74fa2286061f0abea6cf97053c98970"
+    },
+    {
+      "path": "code/strlen_m4.inc",
+      "bytes": 653,
+      "sha256": "b12b77de2cdcdc3cf3e9d8769cf85cd883fbbb735ff053e87d1b302ab6093716"
+    },
+    {
+      "path": "code/system_strings.c",
+      "bytes": 1764,
+      "sha256": "4140a0f4bc5a3ada74a31d8a615752e570a3a8b34fbdb6d47aa8a1f744dce2ea"
+    },
+    {
+      "path": "ports/picocalc/memory.c",
+      "bytes": 1767,
+      "sha256": "eff0ef5b10808f96d94b9fafedd5771edd4daac5c42aae23c2edfd86d1868022"
+    },
+    {
+      "path": "sdk/portable/memory.c",
+      "bytes": 2883,
+      "sha256": "855c1aaaf30e11cb0258041306b69abb683f4af437ef23309902dfd9b79e3ba0"
+    },
+    {
+      "path": "sdk/portable/memset_m0.inc",
+      "bytes": 1904,
+      "sha256": "0a2ece3041483a295715f9694755783f8dc275766b87d8b8c03f50762ec5bcf1"
+    }
+  ]
+}

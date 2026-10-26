@@ -1,0 +1,10 @@
+#ifndef MK61_NATIVE_LIBC_H
+#define MK61_NATIVE_LIBC_H
+#ifndef MK61_USE_NATIVE_LIBC
+#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#define MK61_USE_NATIVE_LIBC 1
+#else
+#define MK61_USE_NATIVE_LIBC 0
+#endif
+#endif
+#endif

@@ -62,12 +62,15 @@ void* memchr(const void* data, int value, size_t size) {
   return NULL;
 }
 
+#include "memory_string_compare_arm.h"
+#ifndef MK61_ARM_STRCMP
 int strcmp(const char* left, const char* right) {
   const unsigned char* a = (const unsigned char*) left;
   const unsigned char* b = (const unsigned char*) right;
   while(*a != 0 && *a == *b) { ++a; ++b; }
   return (int) *a - (int) *b;
 }
+#endif
 
 #ifndef MK61_APP_SHARED_RUNTIME
 char* strchr(const char* text, int character) {

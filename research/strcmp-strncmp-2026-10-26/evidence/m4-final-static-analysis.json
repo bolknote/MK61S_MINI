@@ -1,0 +1,1390 @@
+{
+  "status": "ACTUAL_FINAL_STATIC_M4_ANALYSIS_ROOT_CLOSED_ADOPTION_REVIEW_PENDING",
+  "packet": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-static-20261026-v2/runner/packet.json",
+    "bytes": 53886,
+    "sha256": "3e6d85ce37ef538a1b2a31a381d38c826f884d8be138a0e090b51a80537b0c03"
+  },
+  "actual_EXIT": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-static-20261026-v2/ACTUAL-EXIT.json",
+    "bytes": 3927,
+    "sha256": "361b52db4cc1031b20130dcba3c4debb067546d8bc69fb4f6fe1dc5067080d98"
+  },
+  "Root_CLOSE": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-static-close-root-20261026-001/ROOT-CLOSE.json",
+    "bytes": 1185,
+    "sha256": "14a0d41f263e886b892ab4d891dfe796a176e13ffddd237a7cb5e8d0258b6d74"
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-static-20261026-v2/runner/hardware-window/result.json",
+    "bytes": 139763,
+    "sha256": "aa81e04528ae69d1d7bf78259e512ff935b1ae4d6770fc53c3d06369699c0e68"
+  },
+  "body": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-static-20261026-v2/runner/hardware-window/comparison/body/body-result.json",
+    "bytes": 35699,
+    "sha256": "8551c00ef3288c0a3cd6596422b703653f40df80f9268f6ebf4b909aa17bf2a7"
+  },
+  "groups": 2592,
+  "raw_values": 18144,
+  "CSV": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-static-analysis-20261026-v1/final/groups.csv",
+    "bytes": 328041,
+    "sha256": "02e08ac001a530d2927e22c2efa71b00da1862f13cd0a1003fae3328dc24a394"
+  },
+  "comparisons": [
+    {
+      "name": "native_cmp_vs_original",
+      "kind": 2,
+      "operation": "strcmp",
+      "route": 2,
+      "baseline_route": 3,
+      "cases": 288,
+      "geomean_cycles_per_call": 169.87599191842048,
+      "baseline_geomean_cycles_per_call": 184.56167128605537,
+      "latency_ratio": 0.9204294192542647,
+      "speedup": 1.0864494105481806,
+      "worst_case_ratio": 0.9505409582689336,
+      "cases_over5pct_slower": 0,
+      "subsets": {
+        "short<=16": {
+          "cases": 144,
+          "latency_ratio": 0.9315755954393656,
+          "worst_case_ratio": 0.9505409582689336
+        },
+        "large>=64": {
+          "cases": 144,
+          "latency_ratio": 0.909416605561867,
+          "worst_case_ratio": 0.9492868462757528
+        },
+        "decisive<=4": {
+          "cases": 132,
+          "latency_ratio": 0.9438557412655786,
+          "worst_case_ratio": 0.9505409582689336
+        },
+        "decisive>=64": {
+          "cases": 96,
+          "latency_ratio": 0.896499428319097,
+          "worst_case_ratio": 0.9035876518030963
+        },
+        "SRAM_SRAM": {
+          "cases": 96,
+          "latency_ratio": 0.9177435443536405,
+          "worst_case_ratio": 0.9492868462757528
+        },
+        "SRAM_FLASH": {
+          "cases": 96,
+          "latency_ratio": 0.9242295903900414,
+          "worst_case_ratio": 0.9505409582689336
+        },
+        "FLASH_FLASH": {
+          "cases": 96,
+          "latency_ratio": 0.9193275328713965,
+          "worst_case_ratio": 0.9492868462757528
+        }
+      },
+      "worst_cases": [
+        {
+          "index": 1,
+          "source_index": 1,
+          "bank": "SRAM_FLASH",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 0.9505409582689336
+        },
+        {
+          "index": 4,
+          "source_index": 4,
+          "bank": "SRAM_FLASH",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 0.9505409582689336
+        },
+        {
+          "index": 7,
+          "source_index": 7,
+          "bank": "SRAM_FLASH",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 0.9505409582689336
+        },
+        {
+          "index": 10,
+          "source_index": 10,
+          "bank": "SRAM_FLASH",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 0.9505409582689336
+        },
+        {
+          "index": 0,
+          "source_index": 0,
+          "bank": "SRAM_SRAM",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 0.9492868462757528
+        },
+        {
+          "index": 2,
+          "source_index": 2,
+          "bank": "FLASH_FLASH",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 0.9492868462757528
+        },
+        {
+          "index": 3,
+          "source_index": 3,
+          "bank": "SRAM_SRAM",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 0.9492868462757528
+        },
+        {
+          "index": 5,
+          "source_index": 5,
+          "bank": "FLASH_FLASH",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 0.9492868462757528
+        },
+        {
+          "index": 6,
+          "source_index": 6,
+          "bank": "SRAM_SRAM",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 0.9492868462757528
+        },
+        {
+          "index": 8,
+          "source_index": 8,
+          "bank": "FLASH_FLASH",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 0.9492868462757528
+        },
+        {
+          "index": 9,
+          "source_index": 9,
+          "bank": "SRAM_SRAM",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 0.9492868462757528
+        },
+        {
+          "index": 11,
+          "source_index": 11,
+          "bank": "FLASH_FLASH",
+          "length": 0,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 0.9492868462757528
+        }
+      ]
+    },
+    {
+      "name": "standalone_cmp_vs_SDK",
+      "kind": 1,
+      "operation": "strcmp",
+      "route": 0,
+      "baseline_route": 1,
+      "cases": 288,
+      "geomean_cycles_per_call": 189.49331089636476,
+      "baseline_geomean_cycles_per_call": 193.7958457721108,
+      "latency_ratio": 0.9777986217475195,
+      "speedup": 1.0227054710026102,
+      "worst_case_ratio": 1.012812527804965,
+      "cases_over5pct_slower": 0,
+      "subsets": {
+        "short<=16": {
+          "cases": 144,
+          "latency_ratio": 0.9673529586846643,
+          "worst_case_ratio": 1.0
+        },
+        "large>=64": {
+          "cases": 144,
+          "latency_ratio": 0.9883570790865933,
+          "worst_case_ratio": 1.012812527804965
+        },
+        "decisive<=4": {
+          "cases": 132,
+          "latency_ratio": 0.954666287791553,
+          "worst_case_ratio": 1.0
+        },
+        "decisive>=64": {
+          "cases": 96,
+          "latency_ratio": 1.003346417058561,
+          "worst_case_ratio": 1.012812527804965
+        },
+        "SRAM_SRAM": {
+          "cases": 96,
+          "latency_ratio": 0.9761292250787839,
+          "worst_case_ratio": 1.0012152618545354
+        },
+        "SRAM_FLASH": {
+          "cases": 96,
+          "latency_ratio": 0.977552161764224,
+          "worst_case_ratio": 1.0067376961275734
+        },
+        "FLASH_FLASH": {
+          "cases": 96,
+          "latency_ratio": 0.9797178171814115,
+          "worst_case_ratio": 1.012812527804965
+        }
+      },
+      "worst_cases": [
+        {
+          "index": 170,
+          "source_index": 170,
+          "bank": "FLASH_FLASH",
+          "length": 64,
+          "decisive_bytes": 65,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 1.012812527804965
+        },
+        {
+          "index": 182,
+          "source_index": 182,
+          "bank": "FLASH_FLASH",
+          "length": 64,
+          "decisive_bytes": 65,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 1.012812527804965
+        },
+        {
+          "index": 230,
+          "source_index": 230,
+          "bank": "FLASH_FLASH",
+          "length": 128,
+          "decisive_bytes": 129,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 1.0125400857461408
+        },
+        {
+          "index": 218,
+          "source_index": 218,
+          "bank": "FLASH_FLASH",
+          "length": 128,
+          "decisive_bytes": 129,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 1.0125053159086468
+        },
+        {
+          "index": 278,
+          "source_index": 278,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 513,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 1.0124619872519032
+        },
+        {
+          "index": 266,
+          "source_index": 266,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 513,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 1.0122888816144529
+        },
+        {
+          "index": 260,
+          "source_index": 260,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 512,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "last",
+          "ratio": 1.0119294283864828
+        },
+        {
+          "index": 284,
+          "source_index": 284,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 512,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "last",
+          "ratio": 1.0119241609170249
+        },
+        {
+          "index": 248,
+          "source_index": 248,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 512,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "last",
+          "ratio": 1.0119153592500036
+        },
+        {
+          "index": 272,
+          "source_index": 272,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 512,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "last",
+          "ratio": 1.0117639756326093
+        },
+        {
+          "index": 200,
+          "source_index": 200,
+          "bank": "FLASH_FLASH",
+          "length": 128,
+          "decisive_bytes": 128,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "last",
+          "ratio": 1.0111558220170933
+        },
+        {
+          "index": 224,
+          "source_index": 224,
+          "bank": "FLASH_FLASH",
+          "length": 128,
+          "decisive_bytes": 128,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "last",
+          "ratio": 1.0111558220170933
+        }
+      ]
+    },
+    {
+      "name": "standalone_newlib_cmp_vs_SDK",
+      "kind": 1,
+      "operation": "strcmp",
+      "route": 2,
+      "baseline_route": 1,
+      "cases": 288,
+      "geomean_cycles_per_call": 174.61699462345837,
+      "baseline_geomean_cycles_per_call": 193.7958457721108,
+      "latency_ratio": 0.9010357984081596,
+      "speedup": 1.1098338176648235,
+      "worst_case_ratio": 2.574726609963548,
+      "cases_over5pct_slower": 143,
+      "subsets": {
+        "short<=16": {
+          "cases": 144,
+          "latency_ratio": 1.262887541521991,
+          "worst_case_ratio": 2.574726609963548
+        },
+        "large>=64": {
+          "cases": 144,
+          "latency_ratio": 0.6428644541338938,
+          "worst_case_ratio": 1.0507131537242471
+        },
+        "decisive<=4": {
+          "cases": 132,
+          "latency_ratio": 1.2305030052627473,
+          "worst_case_ratio": 2.574726609963548
+        },
+        "decisive>=64": {
+          "cases": 96,
+          "latency_ratio": 0.5258090590013731,
+          "worst_case_ratio": 0.855597519466592
+        },
+        "SRAM_SRAM": {
+          "cases": 96,
+          "latency_ratio": 0.8821564310840468,
+          "worst_case_ratio": 2.2831105710814095
+        },
+        "SRAM_FLASH": {
+          "cases": 96,
+          "latency_ratio": 0.9090526514344003,
+          "worst_case_ratio": 2.399756986634265
+        },
+        "FLASH_FLASH": {
+          "cases": 96,
+          "latency_ratio": 0.9122029985074966,
+          "worst_case_ratio": 2.574726609963548
+        }
+      },
+      "worst_cases": [
+        {
+          "index": 14,
+          "source_index": 14,
+          "bank": "FLASH_FLASH",
+          "length": 1,
+          "decisive_bytes": 2,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 2.574726609963548
+        },
+        {
+          "index": 23,
+          "source_index": 23,
+          "bank": "FLASH_FLASH",
+          "length": 1,
+          "decisive_bytes": 2,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 2.574726609963548
+        },
+        {
+          "index": 22,
+          "source_index": 22,
+          "bank": "SRAM_FLASH",
+          "length": 1,
+          "decisive_bytes": 2,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 2.399756986634265
+        },
+        {
+          "index": 21,
+          "source_index": 21,
+          "bank": "SRAM_SRAM",
+          "length": 1,
+          "decisive_bytes": 2,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 2.2831105710814095
+        },
+        {
+          "index": 90,
+          "source_index": 90,
+          "bank": "SRAM_SRAM",
+          "length": 4,
+          "decisive_bytes": 4,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "last",
+          "ratio": 2.2097209720972097
+        },
+        {
+          "index": 91,
+          "source_index": 91,
+          "bank": "SRAM_FLASH",
+          "length": 4,
+          "decisive_bytes": 4,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "last",
+          "ratio": 2.2097209720972097
+        },
+        {
+          "index": 92,
+          "source_index": 92,
+          "bank": "FLASH_FLASH",
+          "length": 4,
+          "decisive_bytes": 4,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "last",
+          "ratio": 2.2097209720972097
+        },
+        {
+          "index": 59,
+          "source_index": 59,
+          "bank": "FLASH_FLASH",
+          "length": 4,
+          "decisive_bytes": 3,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "prefix_left",
+          "ratio": 2.155645981688708
+        },
+        {
+          "index": 30,
+          "source_index": 30,
+          "bank": "SRAM_SRAM",
+          "length": 1,
+          "decisive_bytes": 2,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 2.1081409477521262
+        },
+        {
+          "index": 31,
+          "source_index": 31,
+          "bank": "SRAM_FLASH",
+          "length": 1,
+          "decisive_bytes": 2,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 2.1081409477521262
+        },
+        {
+          "index": 32,
+          "source_index": 32,
+          "bank": "FLASH_FLASH",
+          "length": 1,
+          "decisive_bytes": 2,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 2.1081409477521262
+        },
+        {
+          "index": 13,
+          "source_index": 13,
+          "bank": "SRAM_FLASH",
+          "length": 1,
+          "decisive_bytes": 2,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 2.01093560145808
+        }
+      ]
+    },
+    {
+      "name": "shared_local_cmp_vs_SDK",
+      "kind": 2,
+      "operation": "strcmp",
+      "route": 0,
+      "baseline_route": 1,
+      "cases": 288,
+      "geomean_cycles_per_call": 189.49261607951576,
+      "baseline_geomean_cycles_per_call": 193.79100849383104,
+      "latency_ratio": 0.9778194434936744,
+      "speedup": 1.0226836934506804,
+      "worst_case_ratio": 1.0141694100898657,
+      "cases_over5pct_slower": 0,
+      "subsets": {
+        "short<=16": {
+          "cases": 144,
+          "latency_ratio": 0.9673529586846643,
+          "worst_case_ratio": 1.0
+        },
+        "large>=64": {
+          "cases": 144,
+          "latency_ratio": 0.9883991727015091,
+          "worst_case_ratio": 1.0141694100898657
+        },
+        "decisive<=4": {
+          "cases": 132,
+          "latency_ratio": 0.954666287791553,
+          "worst_case_ratio": 1.0
+        },
+        "decisive>=64": {
+          "cases": 96,
+          "latency_ratio": 1.0034105157455893,
+          "worst_case_ratio": 1.0141694100898657
+        },
+        "SRAM_SRAM": {
+          "cases": 96,
+          "latency_ratio": 0.9761617386824258,
+          "worst_case_ratio": 1.000127077490038
+        },
+        "SRAM_FLASH": {
+          "cases": 96,
+          "latency_ratio": 0.9775326523620901,
+          "worst_case_ratio": 1.0067376961275734
+        },
+        "FLASH_FLASH": {
+          "cases": 96,
+          "latency_ratio": 0.9797673258359458,
+          "worst_case_ratio": 1.0141694100898657
+        }
+      },
+      "worst_cases": [
+        {
+          "index": 170,
+          "source_index": 170,
+          "bank": "FLASH_FLASH",
+          "length": 64,
+          "decisive_bytes": 65,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 1.0141694100898657
+        },
+        {
+          "index": 182,
+          "source_index": 182,
+          "bank": "FLASH_FLASH",
+          "length": 64,
+          "decisive_bytes": 65,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 1.0141694100898657
+        },
+        {
+          "index": 230,
+          "source_index": 230,
+          "bank": "FLASH_FLASH",
+          "length": 128,
+          "decisive_bytes": 129,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 1.0125285916253837
+        },
+        {
+          "index": 218,
+          "source_index": 218,
+          "bank": "FLASH_FLASH",
+          "length": 128,
+          "decisive_bytes": 129,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 1.0125284476218936
+        },
+        {
+          "index": 278,
+          "source_index": 278,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 513,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 1.0122888816144529
+        },
+        {
+          "index": 266,
+          "source_index": 266,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 513,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 1.0122651441648407
+        },
+        {
+          "index": 272,
+          "source_index": 272,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 512,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "last",
+          "ratio": 1.0121119132506755
+        },
+        {
+          "index": 260,
+          "source_index": 260,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 512,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "last",
+          "ratio": 1.0119286233747804
+        },
+        {
+          "index": 284,
+          "source_index": 284,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 512,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "last",
+          "ratio": 1.011771767864641
+        },
+        {
+          "index": 248,
+          "source_index": 248,
+          "bank": "FLASH_FLASH",
+          "length": 512,
+          "decisive_bytes": 512,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "last",
+          "ratio": 1.0117528413543864
+        },
+        {
+          "index": 176,
+          "source_index": 176,
+          "bank": "FLASH_FLASH",
+          "length": 64,
+          "decisive_bytes": 64,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "last",
+          "ratio": 1.0115415950031683
+        },
+        {
+          "index": 200,
+          "source_index": 200,
+          "bank": "FLASH_FLASH",
+          "length": 128,
+          "decisive_bytes": 128,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "last",
+          "ratio": 1.0111674185056765
+        }
+      ]
+    },
+    {
+      "name": "shared_bridge_cmp_vs_local",
+      "kind": 2,
+      "operation": "strcmp",
+      "route": 4,
+      "baseline_route": 0,
+      "cases": 288,
+      "geomean_cycles_per_call": 246.48672361058496,
+      "baseline_geomean_cycles_per_call": 189.49261607951576,
+      "latency_ratio": 1.3007721815775284,
+      "speedup": 0.7687741282929629,
+      "worst_case_ratio": 1.667779632721202,
+      "cases_over5pct_slower": 224,
+      "subsets": {
+        "short<=16": {
+          "cases": 144,
+          "latency_ratio": 1.4315910350972068,
+          "worst_case_ratio": 1.667779632721202
+        },
+        "large>=64": {
+          "cases": 144,
+          "latency_ratio": 1.1819075608077367,
+          "worst_case_ratio": 1.667779632721202
+        },
+        "decisive<=4": {
+          "cases": 132,
+          "latency_ratio": 1.5811457266792497,
+          "worst_case_ratio": 1.667779632721202
+        },
+        "decisive>=64": {
+          "cases": 96,
+          "latency_ratio": 1.0535576524819374,
+          "worst_case_ratio": 1.133793451343667
+        },
+        "SRAM_SRAM": {
+          "cases": 96,
+          "latency_ratio": 1.276394290446245,
+          "worst_case_ratio": 1.641068447412354
+        },
+        "SRAM_FLASH": {
+          "cases": 96,
+          "latency_ratio": 1.3478826747193686,
+          "worst_case_ratio": 1.667779632721202
+        },
+        "FLASH_FLASH": {
+          "cases": 96,
+          "latency_ratio": 1.2792834384720675,
+          "worst_case_ratio": 1.641068447412354
+        }
+      },
+      "worst_cases": [
+        {
+          "index": 16,
+          "source_index": 16,
+          "bank": "SRAM_FLASH",
+          "length": 1,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "first",
+          "ratio": 1.667779632721202
+        },
+        {
+          "index": 19,
+          "source_index": 19,
+          "bank": "SRAM_FLASH",
+          "length": 1,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "prefix_left",
+          "ratio": 1.667779632721202
+        },
+        {
+          "index": 25,
+          "source_index": 25,
+          "bank": "SRAM_FLASH",
+          "length": 1,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "first",
+          "ratio": 1.667779632721202
+        },
+        {
+          "index": 28,
+          "source_index": 28,
+          "bank": "SRAM_FLASH",
+          "length": 1,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "prefix_left",
+          "ratio": 1.667779632721202
+        },
+        {
+          "index": 34,
+          "source_index": 34,
+          "bank": "SRAM_FLASH",
+          "length": 1,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "first",
+          "ratio": 1.667779632721202
+        },
+        {
+          "index": 37,
+          "source_index": 37,
+          "bank": "SRAM_FLASH",
+          "length": 1,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "prefix_left",
+          "ratio": 1.667779632721202
+        },
+        {
+          "index": 43,
+          "source_index": 43,
+          "bank": "SRAM_FLASH",
+          "length": 1,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "first",
+          "ratio": 1.667779632721202
+        },
+        {
+          "index": 46,
+          "source_index": 46,
+          "bank": "SRAM_FLASH",
+          "length": 1,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "prefix_left",
+          "ratio": 1.667779632721202
+        },
+        {
+          "index": 52,
+          "source_index": 52,
+          "bank": "SRAM_FLASH",
+          "length": 4,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "first",
+          "ratio": 1.667779632721202
+        },
+        {
+          "index": 64,
+          "source_index": 64,
+          "bank": "SRAM_FLASH",
+          "length": 4,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "first",
+          "ratio": 1.667779632721202
+        },
+        {
+          "index": 76,
+          "source_index": 76,
+          "bank": "SRAM_FLASH",
+          "length": 4,
+          "decisive_bytes": 1,
+          "alignment": [
+            0,
+            1
+          ],
+          "mode": "first",
+          "ratio": 1.667779632721202
+        },
+        {
+          "index": 88,
+          "source_index": 88,
+          "bank": "SRAM_FLASH",
+          "length": 4,
+          "decisive_bytes": 1,
+          "alignment": [
+            1,
+            0
+          ],
+          "mode": "first",
+          "ratio": 1.667779632721202
+        }
+      ]
+    },
+    {
+      "name": "runtime_ncmp_vs_direct",
+      "kind": 2,
+      "operation": "strncmp",
+      "route": 1,
+      "baseline_route": 0,
+      "cases": 96,
+      "geomean_cycles_per_call": 193.9884770512299,
+      "baseline_geomean_cycles_per_call": 172.10512836778116,
+      "latency_ratio": 1.127151055235756,
+      "speedup": 0.8871925332056217,
+      "worst_case_ratio": 1.2408026755852843,
+      "cases_over5pct_slower": 72,
+      "subsets": {
+        "short<=16": {
+          "cases": 72,
+          "latency_ratio": 1.1722389230085644,
+          "worst_case_ratio": 1.2408026755852843
+        },
+        "large>=64": {
+          "cases": 24,
+          "latency_ratio": 1.0020285022935678,
+          "worst_case_ratio": 1.0022871483620637
+        },
+        "decisive<=4": {
+          "cases": 72,
+          "latency_ratio": 1.1722389230085644,
+          "worst_case_ratio": 1.2408026755852843
+        },
+        "decisive>=64": {
+          "cases": 24,
+          "latency_ratio": 1.0020285022935678,
+          "worst_case_ratio": 1.0022871483620637
+        },
+        "SRAM_SRAM": {
+          "cases": 32,
+          "latency_ratio": 1.1273160278906684,
+          "worst_case_ratio": 1.2408026755852843
+        },
+        "SRAM_FLASH": {
+          "cases": 32,
+          "latency_ratio": 1.1260792068203502,
+          "worst_case_ratio": 1.2408026755852843
+        },
+        "FLASH_FLASH": {
+          "cases": 32,
+          "latency_ratio": 1.1280588183630835,
+          "worst_case_ratio": 1.2408026755852843
+        }
+      },
+      "worst_cases": [
+        {
+          "index": 288,
+          "source_index": 288,
+          "bank": "SRAM_SRAM",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 1.2408026755852843
+        },
+        {
+          "index": 289,
+          "source_index": 289,
+          "bank": "SRAM_FLASH",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 1.2408026755852843
+        },
+        {
+          "index": 290,
+          "source_index": 290,
+          "bank": "FLASH_FLASH",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "equal",
+          "ratio": 1.2408026755852843
+        },
+        {
+          "index": 291,
+          "source_index": 291,
+          "bank": "SRAM_SRAM",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "outside_n",
+          "ratio": 1.2408026755852843
+        },
+        {
+          "index": 292,
+          "source_index": 292,
+          "bank": "SRAM_FLASH",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "outside_n",
+          "ratio": 1.2408026755852843
+        },
+        {
+          "index": 293,
+          "source_index": 293,
+          "bank": "FLASH_FLASH",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            0,
+            0
+          ],
+          "mode": "outside_n",
+          "ratio": 1.2408026755852843
+        },
+        {
+          "index": 294,
+          "source_index": 294,
+          "bank": "SRAM_SRAM",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 1.2408026755852843
+        },
+        {
+          "index": 295,
+          "source_index": 295,
+          "bank": "SRAM_FLASH",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 1.2408026755852843
+        },
+        {
+          "index": 296,
+          "source_index": 296,
+          "bank": "FLASH_FLASH",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "equal",
+          "ratio": 1.2408026755852843
+        },
+        {
+          "index": 297,
+          "source_index": 297,
+          "bank": "SRAM_SRAM",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "outside_n",
+          "ratio": 1.2408026755852843
+        },
+        {
+          "index": 298,
+          "source_index": 298,
+          "bank": "SRAM_FLASH",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "outside_n",
+          "ratio": 1.2408026755852843
+        },
+        {
+          "index": 299,
+          "source_index": 299,
+          "bank": "FLASH_FLASH",
+          "length": 0,
+          "decisive_bytes": 0,
+          "alignment": [
+            1,
+            1
+          ],
+          "mode": "outside_n",
+          "ratio": 1.2408026755852843
+        }
+      ]
+    }
+  ],
+  "route_means": [
+    {
+      "kind": "standalone",
+      "operation": "strcmp",
+      "route": 0,
+      "label": "SDK public byte1",
+      "cases": 288,
+      "geomean_cycles_per_call": 189.49331089636476
+    },
+    {
+      "kind": "standalone",
+      "operation": "strcmp",
+      "route": 1,
+      "label": "SDK original byte",
+      "cases": 288,
+      "geomean_cycles_per_call": 193.7958457721108
+    },
+    {
+      "kind": "standalone",
+      "operation": "strcmp",
+      "route": 2,
+      "label": "newlib",
+      "cases": 288,
+      "geomean_cycles_per_call": 174.61699462345837
+    },
+    {
+      "kind": "standalone",
+      "operation": "strncmp",
+      "route": 0,
+      "label": "newlib",
+      "cases": 96,
+      "geomean_cycles_per_call": 194.15383725474334
+    },
+    {
+      "kind": "shared",
+      "operation": "strcmp",
+      "route": 0,
+      "label": "SDK public byte1",
+      "cases": 288,
+      "geomean_cycles_per_call": 189.49261607951576
+    },
+    {
+      "kind": "shared",
+      "operation": "strcmp",
+      "route": 1,
+      "label": "SDK original byte",
+      "cases": 288,
+      "geomean_cycles_per_call": 193.79100849383104
+    },
+    {
+      "kind": "shared",
+      "operation": "strcmp",
+      "route": 2,
+      "label": "native public byte1",
+      "cases": 288,
+      "geomean_cycles_per_call": 169.87599191842048
+    },
+    {
+      "kind": "shared",
+      "operation": "strcmp",
+      "route": 3,
+      "label": "native original byte",
+      "cases": 288,
+      "geomean_cycles_per_call": 184.56167128605537
+    },
+    {
+      "kind": "shared",
+      "operation": "strcmp",
+      "route": 4,
+      "label": "SDK SIZE_MAX bridge to original runtime19",
+      "cases": 288,
+      "geomean_cycles_per_call": 246.48672361058496
+    },
+    {
+      "kind": "shared",
+      "operation": "strncmp",
+      "route": 0,
+      "label": "native public original",
+      "cases": 96,
+      "geomean_cycles_per_call": 172.10512836778116
+    },
+    {
+      "kind": "shared",
+      "operation": "strncmp",
+      "route": 1,
+      "label": "SDK runtime19 original",
+      "cases": 96,
+      "geomean_cycles_per_call": 193.9884770512299
+    }
+  ],
+  "metric": "Unweighted GM of per-case median7/64, no estimated empty-call/dispatch subtraction",
+  "diagnostic_dispatch_included": false,
+  "limits": [
+    "Synthetic benchmark context; no guaranteed-cold or real application workload claim",
+    "Native strcmp versus Flash reference; local/bridge choices evaluated separately",
+    "Baseline strncmp unchanged;96-case regression control does not reselect12 candidate bodies",
+    "M0+ hardware not measured by this campaign"
+  ],
+  "production_adoption": false
+}

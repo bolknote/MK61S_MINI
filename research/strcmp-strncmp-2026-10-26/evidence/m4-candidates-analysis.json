@@ -1,0 +1,888 @@
+{
+  "status": "PHYSICAL_DIAGNOSTIC_ANALYSIS_FINAL_STATIC_INTEGRATION_PENDING",
+  "packet": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-full-20261026-v2/runner/packet.json",
+    "bytes": 101441,
+    "sha256": "6702ab42caf99b3906527575561a8c587b36238067f97c91f151ad8839308fb4"
+  },
+  "actual_EXIT": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-full-20261026-v2/ACTUAL-EXIT.json",
+    "bytes": 3474,
+    "sha256": "999a940d8deb14d270bdc14a339553cec027ec5470b3eb5aff0ee113902e6a77"
+  },
+  "Root_CLOSE": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-full-close-root-20261026-001/ROOT-CLOSE.json",
+    "bytes": 1240,
+    "sha256": "9615e8e47a40683bdba134af58249ac63ca7f34bb570bfe2a660ea9fb799d5c5"
+  },
+  "Root_CLOSED": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-full-close-root-20261026-001/root-CLOSED.json",
+    "bytes": 4134,
+    "sha256": "b72ef4cf1928ac5ab733b7b35debebfdf91ba42ae40118cfe805128fb18756db"
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-full-20261026-v2/runner/hardware-window/result.json",
+    "bytes": 314126,
+    "sha256": "325f1ddd47e11df7e17bac20daa9dc91aeb83384b7c498078a38160c3d8c717b"
+  },
+  "body": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-full-20261026-v2/runner/hardware-window/comparison/body/body-result.json",
+    "bytes": 129732,
+    "sha256": "f9e9043f57c4a94131920e32abcd073fc592bb6c10c2aa9ca183b84df55dad1b"
+  },
+  "groups": 17688,
+  "raw_samples": 123816,
+  "rankings": [
+    {
+      "family": "standalone",
+      "operation": "strcmp",
+      "cases": 288,
+      "best_measured_diagnostic_route": 1,
+      "ranking": [
+        {
+          "route": 1,
+          "geomean_cycles_per_call": 174.61571053149808,
+          "geomean_latency_ratio_to_baseline": 0.9010417648577204,
+          "speedup_to_baseline": 1.1098264686519894,
+          "short_geomean_latency_ratio": 1.262887541521991,
+          "large_geomean_latency_ratio": 0.6428729679599726,
+          "worst_case_latency_ratio": 2.574726609963548,
+          "cases_slower_than_baseline": 143,
+          "cases_over5pct_slower": 143,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.8822198330687303,
+            "SRAM_FLASH": 0.9089987920004013,
+            "FLASH_FLASH": 0.9122096082230671
+          }
+        },
+        {
+          "route": 2,
+          "geomean_cycles_per_call": 189.49750462155913,
+          "geomean_latency_ratio_to_baseline": 0.9778339273174602,
+          "speedup_to_baseline": 1.0226685453053865,
+          "short_geomean_latency_ratio": 0.9673529586846643,
+          "large_geomean_latency_ratio": 0.9884284539876772,
+          "worst_case_latency_ratio": 1.0141916540617493,
+          "cases_slower_than_baseline": 55,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.976219889219865,
+            "SRAM_FLASH": 0.9775125625022546,
+            "FLASH_FLASH": 0.9797726359643155
+          }
+        },
+        {
+          "route": 0,
+          "geomean_cycles_per_call": 193.7931373903305,
+          "geomean_latency_ratio_to_baseline": 1.0,
+          "speedup_to_baseline": 1.0,
+          "short_geomean_latency_ratio": 1.0,
+          "large_geomean_latency_ratio": 1.0,
+          "worst_case_latency_ratio": 1.0,
+          "cases_slower_than_baseline": 0,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.0,
+            "SRAM_FLASH": 1.0,
+            "FLASH_FLASH": 1.0
+          }
+        },
+        {
+          "route": 3,
+          "geomean_cycles_per_call": 220.7270504022095,
+          "geomean_latency_ratio_to_baseline": 1.138982800808006,
+          "speedup_to_baseline": 0.8779763832171915,
+          "short_geomean_latency_ratio": 1.0894105433755812,
+          "large_geomean_latency_ratio": 1.1908107815046212,
+          "worst_case_latency_ratio": 1.2541469632310973,
+          "cases_slower_than_baseline": 264,
+          "cases_over5pct_slower": 264,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.1382982685978693,
+            "SRAM_FLASH": 1.138857761419638,
+            "FLASH_FLASH": 1.1397928729909503
+          }
+        },
+        {
+          "route": 4,
+          "geomean_cycles_per_call": 226.43607140350844,
+          "geomean_latency_ratio_to_baseline": 1.1684421566870542,
+          "speedup_to_baseline": 0.8558403976413799,
+          "short_geomean_latency_ratio": 1.4032149169222283,
+          "large_geomean_latency_ratio": 0.9729493729428209,
+          "worst_case_latency_ratio": 2.06184012066365,
+          "cases_slower_than_baseline": 219,
+          "cases_over5pct_slower": 219,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.1654469013239808,
+            "SRAM_FLASH": 1.168387959240123,
+            "FLASH_FLASH": 1.1714994492599626
+          }
+        },
+        {
+          "route": 6,
+          "geomean_cycles_per_call": 228.40675473464498,
+          "geomean_latency_ratio_to_baseline": 1.1786111614189776,
+          "speedup_to_baseline": 0.8484562447177741,
+          "short_geomean_latency_ratio": 1.4502625661561734,
+          "large_geomean_latency_ratio": 0.9578432914414767,
+          "worst_case_latency_ratio": 2.115689381933439,
+          "cases_slower_than_baseline": 219,
+          "cases_over5pct_slower": 219,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.1751123008682338,
+            "SRAM_FLASH": 1.1785779953324316,
+            "FLASH_FLASH": 1.182153705492496
+          }
+        },
+        {
+          "route": 7,
+          "geomean_cycles_per_call": 231.7819781676956,
+          "geomean_latency_ratio_to_baseline": 1.1960277917419206,
+          "speedup_to_baseline": 0.8361009726568129,
+          "short_geomean_latency_ratio": 1.468890323474312,
+          "large_geomean_latency_ratio": 0.9738524760892887,
+          "worst_case_latency_ratio": 2.0649762282091917,
+          "cases_slower_than_baseline": 219,
+          "cases_over5pct_slower": 219,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.1958545989028533,
+            "SRAM_FLASH": 1.1990922057941396,
+            "FLASH_FLASH": 1.1931439843864975
+          }
+        },
+        {
+          "route": 5,
+          "geomean_cycles_per_call": 234.47221631198835,
+          "geomean_latency_ratio_to_baseline": 1.2099098010871439,
+          "speedup_to_baseline": 0.8265078926556897,
+          "short_geomean_latency_ratio": 1.4479637593083297,
+          "large_geomean_latency_ratio": 1.0109933465917724,
+          "worst_case_latency_ratio": 2.06184012066365,
+          "cases_slower_than_baseline": 222,
+          "cases_over5pct_slower": 221,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.209596471094383,
+            "SRAM_FLASH": 1.2172002468469845,
+            "FLASH_FLASH": 1.202974555575437
+          }
+        }
+      ]
+    },
+    {
+      "family": "standalone",
+      "operation": "strncmp",
+      "cases": 516,
+      "best_measured_diagnostic_route": 7,
+      "ranking": [
+        {
+          "route": 7,
+          "geomean_cycles_per_call": 295.24295704402033,
+          "geomean_latency_ratio_to_baseline": 0.9962525302530475,
+          "speedup_to_baseline": 1.0037615661021213,
+          "short_geomean_latency_ratio": 1.1537797840238775,
+          "large_geomean_latency_ratio": 0.8542403260331506,
+          "worst_case_latency_ratio": 2.015873015873016,
+          "cases_slower_than_baseline": 306,
+          "cases_over5pct_slower": 282,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9935450576543475,
+            "SRAM_FLASH": 0.9951205658462174,
+            "FLASH_FLASH": 1.0001037211004014
+          }
+        },
+        {
+          "route": 0,
+          "geomean_cycles_per_call": 296.3535329431274,
+          "geomean_latency_ratio_to_baseline": 1.0,
+          "speedup_to_baseline": 1.0,
+          "short_geomean_latency_ratio": 1.0,
+          "large_geomean_latency_ratio": 1.0,
+          "worst_case_latency_ratio": 1.0,
+          "cases_slower_than_baseline": 0,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.0,
+            "SRAM_FLASH": 1.0,
+            "FLASH_FLASH": 1.0
+          }
+        },
+        {
+          "route": 1,
+          "geomean_cycles_per_call": 296.35361871193885,
+          "geomean_latency_ratio_to_baseline": 1.000000289413832,
+          "speedup_to_baseline": 0.9999997105862517,
+          "short_geomean_latency_ratio": 1.0,
+          "large_geomean_latency_ratio": 1.000000592609365,
+          "worst_case_latency_ratio": 1.001118164766989,
+          "cases_slower_than_baseline": 62,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.999996024621333,
+            "SRAM_FLASH": 0.9999967779093499,
+            "FLASH_FLASH": 1.0000080657563084
+          }
+        },
+        {
+          "route": 5,
+          "geomean_cycles_per_call": 297.0036408631174,
+          "geomean_latency_ratio_to_baseline": 1.0021936904667001,
+          "speedup_to_baseline": 0.9978111112776228,
+          "short_geomean_latency_ratio": 1.1573499421249176,
+          "large_geomean_latency_ratio": 0.8619098089436912,
+          "worst_case_latency_ratio": 2.015873015873016,
+          "cases_slower_than_baseline": 321,
+          "cases_over5pct_slower": 300,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.0013845746677728,
+            "SRAM_FLASH": 1.0011727136148014,
+            "FLASH_FLASH": 1.004026303841019
+          }
+        },
+        {
+          "route": 3,
+          "geomean_cycles_per_call": 301.18119671148673,
+          "geomean_latency_ratio_to_baseline": 1.016290218376732,
+          "speedup_to_baseline": 0.9839708991760725,
+          "short_geomean_latency_ratio": 0.9412309483819152,
+          "large_geomean_latency_ratio": 1.1013517160889739,
+          "worst_case_latency_ratio": 1.8453164469953431,
+          "cases_slower_than_baseline": 222,
+          "cases_over5pct_slower": 180,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.0328524946753255,
+            "SRAM_FLASH": 1.031937083845246,
+            "FLASH_FLASH": 0.9848310084052925
+          }
+        },
+        {
+          "route": 4,
+          "geomean_cycles_per_call": 306.76622788587696,
+          "geomean_latency_ratio_to_baseline": 1.035136058070035,
+          "speedup_to_baseline": 0.9660565799093651,
+          "short_geomean_latency_ratio": 1.1351433189164777,
+          "large_geomean_latency_ratio": 0.9398031119546221,
+          "worst_case_latency_ratio": 2.015873015873016,
+          "cases_slower_than_baseline": 348,
+          "cases_over5pct_slower": 268,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.0414106151218117,
+            "SRAM_FLASH": 1.0418620400497274,
+            "FLASH_FLASH": 1.0222570075329516
+          }
+        },
+        {
+          "route": 6,
+          "geomean_cycles_per_call": 307.14724655346055,
+          "geomean_latency_ratio_to_baseline": 1.0364217477117263,
+          "speedup_to_baseline": 0.9648581788329506,
+          "short_geomean_latency_ratio": 1.15903897777647,
+          "large_geomean_latency_ratio": 0.9218548396520062,
+          "worst_case_latency_ratio": 2.1174603174603175,
+          "cases_slower_than_baseline": 305,
+          "cases_over5pct_slower": 268,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.0424289002772558,
+            "SRAM_FLASH": 1.0430882088263331,
+            "FLASH_FLASH": 1.023863527996752
+          }
+        },
+        {
+          "route": 2,
+          "geomean_cycles_per_call": 318.7632277722136,
+          "geomean_latency_ratio_to_baseline": 1.0756181126188462,
+          "speedup_to_baseline": 0.9296979925015059,
+          "short_geomean_latency_ratio": 0.9710160055610766,
+          "large_geomean_latency_ratio": 1.197307274475406,
+          "worst_case_latency_ratio": 1.9855523860258106,
+          "cases_slower_than_baseline": 309,
+          "cases_over5pct_slower": 303,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.080000052557089,
+            "SRAM_FLASH": 1.0787583369702158,
+            "FLASH_FLASH": 1.0681355723792303
+          }
+        }
+      ]
+    },
+    {
+      "family": "native_Flash",
+      "operation": "strcmp",
+      "cases": 288,
+      "best_measured_diagnostic_route": 2,
+      "ranking": [
+        {
+          "route": 2,
+          "geomean_cycles_per_call": 169.875380560726,
+          "geomean_latency_ratio_to_baseline": 0.9204152828786905,
+          "speedup_to_baseline": 1.0864660969909152,
+          "short_geomean_latency_ratio": 0.9315755954393656,
+          "large_geomean_latency_ratio": 0.9093886713048828,
+          "worst_case_latency_ratio": 0.9505409582689336,
+          "cases_slower_than_baseline": 0,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9177422344121066,
+            "SRAM_FLASH": 0.9241920662829631,
+            "FLASH_FLASH": 0.919323812239345
+          }
+        },
+        {
+          "route": 4,
+          "geomean_cycles_per_call": 179.56781067790993,
+          "geomean_latency_ratio_to_baseline": 0.9729306078106674,
+          "speedup_to_baseline": 1.027822531198032,
+          "short_geomean_latency_ratio": 0.9783584449456659,
+          "large_geomean_latency_ratio": 0.9675328837861717,
+          "worst_case_latency_ratio": 1.0206451612903227,
+          "cases_slower_than_baseline": 12,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9813097321080444,
+            "SRAM_FLASH": 0.9568602582758866,
+            "FLASH_FLASH": 0.9808237548014308
+          }
+        },
+        {
+          "route": 10,
+          "geomean_cycles_per_call": 183.71750722864627,
+          "geomean_latency_ratio_to_baseline": 0.9954144080647092,
+          "speedup_to_baseline": 1.0046067164571248,
+          "short_geomean_latency_ratio": 1.2690350921106477,
+          "large_geomean_latency_ratio": 0.7807899481604111,
+          "worst_case_latency_ratio": 1.786053882725832,
+          "cases_slower_than_baseline": 165,
+          "cases_over5pct_slower": 152,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9946819058702884,
+            "SRAM_FLASH": 0.9876894644260741,
+            "FLASH_FLASH": 1.0039385451497798
+          }
+        },
+        {
+          "route": 12,
+          "geomean_cycles_per_call": 184.14737409690989,
+          "geomean_latency_ratio_to_baseline": 0.9977435038633298,
+          "speedup_to_baseline": 1.00226159942704,
+          "short_geomean_latency_ratio": 1.2735469085445787,
+          "large_geomean_latency_ratio": 0.7816689694132524,
+          "worst_case_latency_ratio": 1.7353407290015848,
+          "cases_slower_than_baseline": 165,
+          "cases_over5pct_slower": 152,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9966841899762964,
+            "SRAM_FLASH": 0.990420991273612,
+            "FLASH_FLASH": 1.0061884341807932
+          }
+        },
+        {
+          "route": 8,
+          "geomean_cycles_per_call": 184.14991738091388,
+          "geomean_latency_ratio_to_baseline": 0.9977572838322595,
+          "speedup_to_baseline": 1.0022477572492645,
+          "short_geomean_latency_ratio": 1.245782629348628,
+          "large_geomean_latency_ratio": 0.7991117984690853,
+          "worst_case_latency_ratio": 1.7353407290015848,
+          "cases_slower_than_baseline": 153,
+          "cases_over5pct_slower": 152,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9978324364624245,
+            "SRAM_FLASH": 0.9895640234601067,
+            "FLASH_FLASH": 1.0059426125082898
+          }
+        },
+        {
+          "route": 0,
+          "geomean_cycles_per_call": 184.56384169265843,
+          "geomean_latency_ratio_to_baseline": 1.0,
+          "speedup_to_baseline": 1.0,
+          "short_geomean_latency_ratio": 1.0,
+          "large_geomean_latency_ratio": 1.0,
+          "worst_case_latency_ratio": 1.0,
+          "cases_slower_than_baseline": 0,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.0,
+            "SRAM_FLASH": 1.0,
+            "FLASH_FLASH": 1.0
+          }
+        },
+        {
+          "route": 6,
+          "geomean_cycles_per_call": 184.9180392765194,
+          "geomean_latency_ratio_to_baseline": 1.0019191060427257,
+          "speedup_to_baseline": 0.9980845698708096,
+          "short_geomean_latency_ratio": 1.2404438463913223,
+          "large_geomean_latency_ratio": 0.8092602482359955,
+          "worst_case_latency_ratio": 1.741885625965997,
+          "cases_slower_than_baseline": 169,
+          "cases_over5pct_slower": 158,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.006208874001762,
+            "SRAM_FLASH": 0.9915088267394766,
+            "FLASH_FLASH": 1.008122359855621
+          }
+        }
+      ]
+    },
+    {
+      "family": "native_Flash",
+      "operation": "strncmp",
+      "cases": 516,
+      "best_measured_diagnostic_route": 12,
+      "ranking": [
+        {
+          "route": 12,
+          "geomean_cycles_per_call": 228.51573800627344,
+          "geomean_latency_ratio_to_baseline": 0.8907453919550419,
+          "speedup_to_baseline": 1.1226552604500843,
+          "short_geomean_latency_ratio": 1.1422282618162685,
+          "large_geomean_latency_ratio": 0.686454003792508,
+          "worst_case_latency_ratio": 1.7224080267558528,
+          "cases_slower_than_baseline": 216,
+          "cases_over5pct_slower": 204,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.8895661187379903,
+            "SRAM_FLASH": 0.8841083107576108,
+            "FLASH_FLASH": 0.898621999516319
+          }
+        },
+        {
+          "route": 8,
+          "geomean_cycles_per_call": 233.2541730235478,
+          "geomean_latency_ratio_to_baseline": 0.9092156259684194,
+          "speedup_to_baseline": 1.0998491132781454,
+          "short_geomean_latency_ratio": 1.1802208481556,
+          "large_geomean_latency_ratio": 0.6917918379594179,
+          "worst_case_latency_ratio": 1.8294314381270902,
+          "cases_slower_than_baseline": 232,
+          "cases_over5pct_slower": 210,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9084634691202199,
+            "SRAM_FLASH": 0.9019243665949792,
+            "FLASH_FLASH": 0.9173246938615729
+          }
+        },
+        {
+          "route": 10,
+          "geomean_cycles_per_call": 246.4616554934818,
+          "geomean_latency_ratio_to_baseline": 0.960697875077659,
+          "speedup_to_baseline": 1.0409099738241474,
+          "short_geomean_latency_ratio": 1.1885676127369296,
+          "large_geomean_latency_ratio": 0.7686842866468209,
+          "worst_case_latency_ratio": 1.8026755852842808,
+          "cases_slower_than_baseline": 246,
+          "cases_over5pct_slower": 218,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9621338516538709,
+            "SRAM_FLASH": 0.9516178367514091,
+            "FLASH_FLASH": 0.9684170376949419
+          }
+        },
+        {
+          "route": 6,
+          "geomean_cycles_per_call": 246.67779629219368,
+          "geomean_latency_ratio_to_baseline": 0.9615403834411791,
+          "speedup_to_baseline": 1.0399979212741757,
+          "short_geomean_latency_ratio": 1.1605600267155358,
+          "large_geomean_latency_ratio": 0.7895451489210106,
+          "worst_case_latency_ratio": 1.7224080267558528,
+          "cases_slower_than_baseline": 228,
+          "cases_over5pct_slower": 210,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.963346978186311,
+            "SRAM_FLASH": 0.9526418651557083,
+            "FLASH_FLASH": 0.9687019714353132
+          }
+        },
+        {
+          "route": 4,
+          "geomean_cycles_per_call": 248.67797248827554,
+          "geomean_latency_ratio_to_baseline": 0.9693369918730627,
+          "speedup_to_baseline": 1.031632970147654,
+          "short_geomean_latency_ratio": 0.998721447883925,
+          "large_geomean_latency_ratio": 0.939480125459411,
+          "worst_case_latency_ratio": 1.294314381270903,
+          "cases_slower_than_baseline": 84,
+          "cases_over5pct_slower": 72,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9689123201362755,
+            "SRAM_FLASH": 0.9717119338018197,
+            "FLASH_FLASH": 0.9673916739755055
+          }
+        },
+        {
+          "route": 0,
+          "geomean_cycles_per_call": 256.5443953683761,
+          "geomean_latency_ratio_to_baseline": 1.0,
+          "speedup_to_baseline": 1.0,
+          "short_geomean_latency_ratio": 1.0,
+          "large_geomean_latency_ratio": 1.0,
+          "worst_case_latency_ratio": 1.0,
+          "cases_slower_than_baseline": 0,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.0,
+            "SRAM_FLASH": 1.0,
+            "FLASH_FLASH": 1.0
+          }
+        },
+        {
+          "route": 2,
+          "geomean_cycles_per_call": 258.2418429950069,
+          "geomean_latency_ratio_to_baseline": 1.0066165843311183,
+          "speedup_to_baseline": 0.993426907092421,
+          "short_geomean_latency_ratio": 1.013771736038807,
+          "large_geomean_latency_ratio": 0.9991748701994659,
+          "worst_case_latency_ratio": 1.2408026755852843,
+          "cases_slower_than_baseline": 191,
+          "cases_over5pct_slower": 24,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.006587079150368,
+            "SRAM_FLASH": 1.006700221668449,
+            "FLASH_FLASH": 1.006562457536661
+          }
+        }
+      ]
+    },
+    {
+      "family": "runtime19_diagnostic",
+      "operation": "strcmp",
+      "cases": 288,
+      "best_measured_diagnostic_route": 13,
+      "ranking": [
+        {
+          "route": 13,
+          "geomean_cycles_per_call": 231.91490820033144,
+          "geomean_latency_ratio_to_baseline": 0.893592164525242,
+          "speedup_to_baseline": 1.1190787472171844,
+          "short_geomean_latency_ratio": 1.0814552888835836,
+          "large_geomean_latency_ratio": 0.7383633560340976,
+          "worst_case_latency_ratio": 1.4926234765875561,
+          "cases_slower_than_baseline": 138,
+          "cases_over5pct_slower": 114,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.891723456323732,
+            "SRAM_FLASH": 0.889072193658783,
+            "FLASH_FLASH": 0.9000172591192702
+          }
+        },
+        {
+          "route": 9,
+          "geomean_cycles_per_call": 234.36443609357482,
+          "geomean_latency_ratio_to_baseline": 0.9030304492356735,
+          "speedup_to_baseline": 1.1073823710445219,
+          "short_geomean_latency_ratio": 1.0973723743588386,
+          "large_geomean_latency_ratio": 0.7431059969258231,
+          "worst_case_latency_ratio": 1.482360487491982,
+          "cases_slower_than_baseline": 144,
+          "cases_over5pct_slower": 114,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9016351076916924,
+            "SRAM_FLASH": 0.89821005680287,
+            "FLASH_FLASH": 0.9092817119486256
+          }
+        },
+        {
+          "route": 5,
+          "geomean_cycles_per_call": 246.55020417755287,
+          "geomean_latency_ratio_to_baseline": 0.9499834759430307,
+          "speedup_to_baseline": 1.0526498884702378,
+          "short_geomean_latency_ratio": 0.9526898065875399,
+          "large_geomean_latency_ratio": 0.9472848332421803,
+          "worst_case_latency_ratio": 1.0,
+          "cases_slower_than_baseline": 0,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9483747340123018,
+            "SRAM_FLASH": 0.9521365916468391,
+            "FLASH_FLASH": 0.9494430559518984
+          }
+        },
+        {
+          "route": 11,
+          "geomean_cycles_per_call": 249.2202277740605,
+          "geomean_latency_ratio_to_baseline": 0.9602713534384949,
+          "speedup_to_baseline": 1.0413723125439978,
+          "short_geomean_latency_ratio": 1.1285462812326696,
+          "large_geomean_latency_ratio": 0.8170875112249714,
+          "worst_case_latency_ratio": 1.4529680365296804,
+          "cases_slower_than_baseline": 153,
+          "cases_over5pct_slower": 132,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9607943709892378,
+            "SRAM_FLASH": 0.9535879783544419,
+            "FLASH_FLASH": 0.9664751735357613
+          }
+        },
+        {
+          "route": 7,
+          "geomean_cycles_per_call": 249.29142030649533,
+          "geomean_latency_ratio_to_baseline": 0.9605456656405446,
+          "speedup_to_baseline": 1.0410749179042365,
+          "short_geomean_latency_ratio": 1.1074949867234027,
+          "large_geomean_latency_ratio": 0.8330944941886842,
+          "worst_case_latency_ratio": 1.4091324200913242,
+          "cases_slower_than_baseline": 147,
+          "cases_over5pct_slower": 116,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9616067172235311,
+            "SRAM_FLASH": 0.9537464182419972,
+            "FLASH_FLASH": 0.9663259481160463
+          }
+        },
+        {
+          "route": 3,
+          "geomean_cycles_per_call": 257.2892791884935,
+          "geomean_latency_ratio_to_baseline": 0.9913622443822547,
+          "speedup_to_baseline": 1.0087130165251832,
+          "short_geomean_latency_ratio": 0.9837114391413648,
+          "large_geomean_latency_ratio": 0.9990725536794206,
+          "worst_case_latency_ratio": 1.0016005909874415,
+          "cases_slower_than_baseline": 26,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9912339857773041,
+            "SRAM_FLASH": 0.9916049182202681,
+            "FLASH_FLASH": 0.9912478737415303
+          }
+        },
+        {
+          "route": 1,
+          "geomean_cycles_per_call": 259.53104492981527,
+          "geomean_latency_ratio_to_baseline": 1.0,
+          "speedup_to_baseline": 1.0,
+          "short_geomean_latency_ratio": 1.0,
+          "large_geomean_latency_ratio": 1.0,
+          "worst_case_latency_ratio": 1.0,
+          "cases_slower_than_baseline": 0,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.0,
+            "SRAM_FLASH": 1.0,
+            "FLASH_FLASH": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "family": "runtime19_diagnostic",
+      "operation": "strncmp",
+      "cases": 516,
+      "best_measured_diagnostic_route": 13,
+      "ranking": [
+        {
+          "route": 13,
+          "geomean_cycles_per_call": 256.6037585764458,
+          "geomean_latency_ratio_to_baseline": 0.8773641463697867,
+          "speedup_to_baseline": 1.1397775987742784,
+          "short_geomean_latency_ratio": 1.1065475287784987,
+          "large_geomean_latency_ratio": 0.6880027281766862,
+          "worst_case_latency_ratio": 1.505854800936768,
+          "cases_slower_than_baseline": 216,
+          "cases_over5pct_slower": 204,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.8756629642248589,
+            "SRAM_FLASH": 0.8713076850940195,
+            "FLASH_FLASH": 0.8851790411046051
+          }
+        },
+        {
+          "route": 9,
+          "geomean_cycles_per_call": 261.0686507969481,
+          "geomean_latency_ratio_to_baseline": 0.8926302374567069,
+          "speedup_to_baseline": 1.1202847024869025,
+          "short_geomean_latency_ratio": 1.1370574745219881,
+          "large_geomean_latency_ratio": 0.6927164386643061,
+          "worst_case_latency_ratio": 1.5807962529274004,
+          "cases_slower_than_baseline": 232,
+          "cases_over5pct_slower": 204,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.8912853133937929,
+            "SRAM_FLASH": 0.886066505286608,
+            "FLASH_FLASH": 0.9005995232826591
+          }
+        },
+        {
+          "route": 11,
+          "geomean_cycles_per_call": 275.15011939403564,
+          "geomean_latency_ratio_to_baseline": 0.9407767484191957,
+          "speedup_to_baseline": 1.0629514405838774,
+          "short_geomean_latency_ratio": 1.1439488200188432,
+          "large_geomean_latency_ratio": 0.7665186837595319,
+          "worst_case_latency_ratio": 1.5620608899297423,
+          "cases_slower_than_baseline": 246,
+          "cases_over5pct_slower": 210,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9415931114848504,
+            "SRAM_FLASH": 0.9325207547058545,
+            "FLASH_FLASH": 0.948282959262965
+          }
+        },
+        {
+          "route": 7,
+          "geomean_cycles_per_call": 276.0738954902568,
+          "geomean_latency_ratio_to_baseline": 0.943935268117403,
+          "speedup_to_baseline": 1.0593946786143644,
+          "short_geomean_latency_ratio": 1.1220123933070207,
+          "large_geomean_latency_ratio": 0.7876126868562308,
+          "worst_case_latency_ratio": 1.505854800936768,
+          "cases_slower_than_baseline": 228,
+          "cases_over5pct_slower": 204,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.945191756546979,
+            "SRAM_FLASH": 0.9358089402354252,
+            "FLASH_FLASH": 0.9508664483305813
+          }
+        },
+        {
+          "route": 5,
+          "geomean_cycles_per_call": 283.0391651606145,
+          "geomean_latency_ratio_to_baseline": 0.96775049947828,
+          "speedup_to_baseline": 1.0333241889713372,
+          "short_geomean_latency_ratio": 0.9944503706693489,
+          "large_geomean_latency_ratio": 0.9405477546509146,
+          "worst_case_latency_ratio": 1.2060889929742389,
+          "cases_slower_than_baseline": 84,
+          "cases_over5pct_slower": 36,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 0.9670713693409833,
+            "SRAM_FLASH": 0.9699218017761687,
+            "FLASH_FLASH": 0.9662621436031554
+          }
+        },
+        {
+          "route": 1,
+          "geomean_cycles_per_call": 292.47121578671613,
+          "geomean_latency_ratio_to_baseline": 1.0,
+          "speedup_to_baseline": 1.0,
+          "short_geomean_latency_ratio": 1.0,
+          "large_geomean_latency_ratio": 1.0,
+          "worst_case_latency_ratio": 1.0,
+          "cases_slower_than_baseline": 0,
+          "cases_over5pct_slower": 0,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.0,
+            "SRAM_FLASH": 1.0,
+            "FLASH_FLASH": 1.0
+          }
+        },
+        {
+          "route": 3,
+          "geomean_cycles_per_call": 293.7686985257686,
+          "geomean_latency_ratio_to_baseline": 1.0044362749871376,
+          "speedup_to_baseline": 0.9955833186259682,
+          "short_geomean_latency_ratio": 1.0094373888761574,
+          "large_geomean_latency_ratio": 0.9992235859322082,
+          "worst_case_latency_ratio": 1.1686182669789227,
+          "cases_slower_than_baseline": 192,
+          "cases_over5pct_slower": 24,
+          "bank_latency_ratios": {
+            "SRAM_SRAM": 1.0044419211415352,
+            "SRAM_FLASH": 1.0045011383331834,
+            "FLASH_FLASH": 1.0043657700714184
+          }
+        }
+      ]
+    }
+  ],
+  "details": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-analysis-20261026-v1/final/details.json",
+    "bytes": 317105,
+    "sha256": "be519d542dac62aa9bd16d66892f0b2b36f2df91d8094c352614cd0f1041581b"
+  },
+  "CSV": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-analysis-20261026-v1/final/groups.csv",
+    "bytes": 2225510,
+    "sha256": "16b8d3245f763f2b29e5b8f7e14bc64b6c3aa86808cfd06a847471ee862d2056"
+  },
+  "body_bytes": {
+    "native": [
+      {
+        "v": 0,
+        "strcmp": 24,
+        "strncmp": 42
+      },
+      {
+        "v": 1,
+        "strcmp": 20,
+        "strncmp": 32
+      },
+      {
+        "v": 2,
+        "strcmp": 76,
+        "strncmp": 92
+      },
+      {
+        "v": 3,
+        "strcmp": 164,
+        "strncmp": 222
+      },
+      {
+        "v": 4,
+        "strcmp": 212,
+        "strncmp": 336
+      },
+      {
+        "v": 5,
+        "strcmp": 162,
+        "strncmp": 218
+      },
+      {
+        "v": 6,
+        "strcmp": 200,
+        "strncmp": 318
+      }
+    ],
+    "standalone": {
+      "SDK_strcmp": 22,
+      "newlib_strcmp": 734,
+      "newlib_strncmp": 120,
+      "candidates": [
+        {
+          "v": 1,
+          "strcmp": 20,
+          "strncmp": 32
+        },
+        {
+          "v": 2,
+          "strcmp": 76,
+          "strncmp": 92
+        },
+        {
+          "v": 3,
+          "strcmp": 164,
+          "strncmp": 222
+        },
+        {
+          "v": 4,
+          "strcmp": 212,
+          "strncmp": 336
+        },
+        {
+          "v": 5,
+          "strcmp": 162,
+          "strncmp": 218
+        },
+        {
+          "v": 6,
+          "strcmp": 200,
+          "strncmp": 318
+        }
+      ]
+    }
+  },
+  "body_bytes_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strcmp-classic-analysis-20261026-v1/LENGTH-FOOTPRINT.json",
+    "bytes": 16979,
+    "sha256": "81ec8d21a6415c3ebb7bae28bdc921639679c0a881ea9e1f2bb8d54c0dd382ae"
+  },
+  "selection_rule": "Predeclared unweighted geometric mean of per-case median whole aggregate/64; retain short strings/banks/regressions. Descriptive ranks are not uncertainty claims.",
+  "length_definition": "strncmp uses n; strcmp uses max input length excluding final NUL. Separate decisive_bytes groups count bytes through first unequal/NUL, bounded by n; 0 denotes n==0.",
+  "limits": [
+    "Runtime includes common diagnostic dispatch; no subtraction or final static-runtime speed claim",
+    "Synthetic microbenchmark context, no guaranteed-cold or real APP workload claim",
+    "Actual final static native/runtime/APP hardware verification and Root CLOSED still required before adoption"
+  ],
+  "production_adoption": false
+}

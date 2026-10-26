@@ -1,0 +1,91 @@
+/* Freestanding support required by GCC. The SDK links only used functions.
+ * Compile with -fno-builtin so these loops cannot become recursive calls. */
+#include <stddef.h>
+#include <stdint.h>
+#include "memory_word_ops.h"
+
+#ifndef MK61_APP_SHARED_RUNTIME
+#include "memory_copy_arm.h"
+#ifndef MK61_ARM_MEMCPY
+void* memcpy(void* dst, const void* src, size_t size) {
+  return mk61_memory_copy(dst, src, size);
+}
+#endif
+
+#if defined(__ARM_ARCH_6M__) && defined(__GNUC__) && !defined(__clang__)
+/* Keep the measured M0+ function at the public entry: a C forwarding wrapper
+ * would add a saved LR and a BL/return on this Thumb-1 target. */
+__attribute__((naked, noipa, aligned(4)))
+void* memset(void* dst __attribute__((unused)),
+             int value __attribute__((unused)), size_t size __attribute__((unused))) {
+  __asm__(
+#include "memset_m0.inc"
+  );
+}
+#else
+void* memset(void* dst, int value, size_t size) {
+  return mk61_memory_fill(dst, value, size);
+}
+#endif
+
+#include "memory_move_arm.h"
+#ifndef MK61_ARM_MEMMOVE
+void* memmove(void* dst, const void* src, size_t size) {
+  return mk61_memory_move(dst, src, size);
+}
+#endif
+
+#include "memory_compare_arm.h"
+#ifndef MK61_ARM_MEMCMP
+int memcmp(const void* left, const void* right, size_t size) {
+  return mk61_memory_compare(left, right, size);
+}
+#endif
+
+/* Standalone M4 APPs use the measured SRAM body. Other targets retain their
+ * byte loop until their own physical strlen selection is complete. */
+#include "memory_length_arm.h"
+#ifndef MK61_ARM_STRLEN
+size_t strlen(const char* text) {
+  const char* end = text;
+  while(*end != 0) ++end;
+  return (size_t) (end - text);
+}
+#endif
+#endif
+
+/* The 26-slot runtime has no memchr. Keep the measured target body local to both
+ * standalone and shared APPs; the optional public extension is separate. */
+#include "memory_search_arm.h"
+
+#if defined(MK61_APP_SHARED_RUNTIME) && defined(MK61_APP_STRCMP_USE_STRNCMP_RUNTIME) && MK61_APP_STRCMP_USE_STRNCMP_RUNTIME
+/* Comparison only: use the existing slot 19 without extending the ABI.
+ * Hardware measurements decide whether this beats the local APP body. */
+extern int strncmp(const char*,const char*,size_t);
+__attribute__((noipa,aligned(4)))
+int strcmp(const char* left,const char* right) {
+  return strncmp(left,right,(size_t)-1);
+}
+#define MK61_ARM_STRCMP 1
+#else
+#include "string_compare_arm.h"
+#endif
+
+#ifndef MK61_ARM_STRCMP
+int strcmp(const char* left, const char* right) {
+  const unsigned char* a = (const unsigned char*) left;
+  const unsigned char* b = (const unsigned char*) right;
+  while(*a != 0 && *a == *b) { ++a; ++b; }
+  return (int) *a - (int) *b;
+}
+#endif
+
+#ifndef MK61_APP_SHARED_RUNTIME
+char* strchr(const char* text, int character) {
+  const unsigned char wanted = (unsigned char) character;
+  do {
+    if((unsigned char) *text == wanted) return (char*) text;
+  } while(*text++ != 0);
+  return NULL;
+}
+#endif
