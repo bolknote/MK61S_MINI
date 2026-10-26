@@ -1,0 +1,6 @@
+{
+  "status": "SCRIPT_PARSE_ERROR_BEFORE_EXECUTION_FIXED",
+  "new_ARM_MPFR_calls": 0,
+  "both_processes_terminal_exit1_consumed": true,
+  "no_measurement_restart_due_timeout": true
+}

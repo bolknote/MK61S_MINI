@@ -1,0 +1,24 @@
+{
+  "status": "PASS_R48_POSTSEAL",
+  "qualification_FROZEN_sha256": "849b995c8433e0dc6831c7af4411ef190c13bbd3204571553db490061af63ec9",
+  "source_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "qualification_files": 56,
+  "source_files": 493,
+  "author_result_sha256": "7d17b54ad1e843d05fb1bd00a32c7efd65cc7e3a5608cdaf1296430932dde00c",
+  "ELF_sha256": "d5c8d35cd5e183dfc352f531f8f8bd3cb09856c173f811f41ba74f07906ec863",
+  "all_handles_terminal_consumed": true,
+  "qualified_public_ARM_calls": 2371465,
+  "all_parent_increases": {
+    "pow_full": 84,
+    "pow_admission": 6,
+    "ddiv_direct": 1578,
+    "ddiv_expanded": 116436,
+    "exp": 0,
+    "ln": 0,
+    "original507_candidate": 0,
+    "broad_candidate": 62,
+    "original507_zero_control": 0,
+    "broad_zero_control": 62
+  },
+  "goal_complete": false
+}

@@ -1,0 +1,93 @@
+{
+  "status": "INTERMEDIATE_PRIVATE_RESEARCH_CHECKPOINT_NOT_PRODUCTION",
+  "selected_private_author_source": "R48",
+  "R48": {
+    "qualified_public_ARM_calls": 2371465,
+    "qualification_stage_ARM_calls": 2113861,
+    "source_division_ARM_calls_included_once": 257604,
+    "division_tested_unique_pairs": 79846,
+    "division_losing_unique_pairs": 0,
+    "pow_tested_unique_pairs": 151409,
+    "pow_losing_unique_pairs": 2045,
+    "exp_tested_unique_inputs": 568856,
+    "exp_losing_unique_inputs": 512,
+    "ln_tested_unique_inputs": 180295,
+    "ln_losing_unique_inputs": 0,
+    "known_finite_losing_operation_arguments": 2557,
+    "whole_library_remaining_count": null,
+    "candidate_wrong": 0,
+    "new_correct_Qfplib_loss_rows": 0,
+    "independent_acceptance": false
+  },
+  "exp_Q73_public_prototypes": {
+    "q73-public-v1": {
+      "path": ".build/m0-exp-q73-public-prototype-20261027",
+      "FROZEN_sha256": "fcceab75978b57bf3e65eff4990d11ee374e8d046726db70e8729927aa7eed84",
+      "selected": false,
+      "candidate_wrong": 0,
+      "targeted": {
+        "state_rows": 1536,
+        "losing_unique_inputs": 126,
+        "all_parent_increase_rows": 369,
+        "new_correct_Qfplib_loss_rows": 0
+      },
+      "full": {
+        "state_rows": 1224907,
+        "losing_unique_inputs": 2382,
+        "all_parent_increase_rows": 1048498,
+        "new_correct_Qfplib_loss_rows": 4664
+      }
+    },
+    "q73-public-v2": {
+      "path": ".build/m0-exp-q73-public-v2-20261027",
+      "FROZEN_sha256": "835b73e93108afa8f08de42c7609175a1a46eae6f39f173b9d75ce7a3c8a5d72",
+      "selected": false,
+      "candidate_wrong": 0,
+      "targeted": {
+        "state_rows": 1536,
+        "losing_unique_inputs": 24,
+        "all_parent_increase_rows": 72,
+        "new_correct_Qfplib_loss_rows": 0
+      },
+      "full": {
+        "state_rows": 1224907,
+        "losing_unique_inputs": 856,
+        "all_parent_increase_rows": 798300,
+        "new_correct_Qfplib_loss_rows": 1664
+      }
+    },
+    "q73-public-v3": {
+      "path": ".build/m0-exp-q73-public-v3-20261027",
+      "FROZEN_sha256": "2731f20f84226b6c85137b213c6ff2d46808b5f6f9826afe3dd35236865f8d7c",
+      "selected": false,
+      "candidate_wrong": 0,
+      "targeted": {
+        "state_rows": 1536,
+        "losing_unique_inputs": 12,
+        "all_parent_increase_rows": 36,
+        "new_correct_Qfplib_loss_rows": 0
+      },
+      "full": {
+        "state_rows": 1224907,
+        "losing_unique_inputs": 399,
+        "all_parent_increase_rows": 796110,
+        "new_correct_Qfplib_loss_rows": 774
+      }
+    }
+  },
+  "exp_Q73_uses_existing_tables": true,
+  "new_lookup_table_global_RAM_libgcc_bytes": 0,
+  "metrics": "executed Thumb instructions, not physical cycles",
+  "M4_default_object_changes": 0,
+  "universal_correct_rounding_closed": false,
+  "general_pow_totality_closed": false,
+  "FMA_acceptance_closed": false,
+  "universal_stack_closed": false,
+  "physical_cycles_measured": false,
+  "independent_acceptance": false,
+  "hardware_accessed": false,
+  "canonical_runtime_integrated": false,
+  "integration_GO": false,
+  "release_GO": false,
+  "goal_complete": false
+}

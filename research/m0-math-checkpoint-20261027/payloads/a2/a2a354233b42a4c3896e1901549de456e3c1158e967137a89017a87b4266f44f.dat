@@ -1,0 +1,5 @@
+{
+  "parent_audit_sha256": "0893cc6bb2ecf8b282b00d26e8d83b8beeda84d32ae429f436a5383774186535",
+  "audit_sha256": "9d5f3269b576cc1c1acf87e96f09c5b6f02ddf0b17ce5dd8831d30180a668e4a",
+  "no_new_ARM_MPFR_calls": true
+}

@@ -1,0 +1,14 @@
+{
+  "status": "TERMINAL_DIAGNOSTIC_NOT_SELECTED",
+  "all_handles_terminal": true,
+  "handles": {
+    "targeted44131": "exit0_consumed",
+    "full4983": "exit0_consumed",
+    "smoke": "exit0_direct"
+  },
+  "total_diagnostic_ARM_calls": 1234088,
+  "all_calls_excluded_unified_qualified_pool": true,
+  "new_full_exp_wrong": 0,
+  "performance_GO": false,
+  "goal_complete": false
+}

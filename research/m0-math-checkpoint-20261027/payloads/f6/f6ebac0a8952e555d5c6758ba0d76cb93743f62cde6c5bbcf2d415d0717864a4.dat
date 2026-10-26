@@ -1,0 +1,29 @@
+{
+  "status": "CHECKED_INTEGER_COMBA_RANGE_DERIVATION_NOT_GLOBAL_EXP_PROOF",
+  "square63_column_maxima": {
+    "c3": 12884443140,
+    "c4": 8589803772,
+    "c5": 4294901760,
+    "c6": 1073741824
+  },
+  "product52_column_maxima": {
+    "c2": 8606383875,
+    "c3": 4313710565,
+    "c4": 18808831,
+    "c5": 8191
+  },
+  "square73_truncated_product_terms": "(2*p03+2*p12)*2^48+(2*p13+p22)*2^64+2*p23*2^80+p33*2^96",
+  "square73_rounding": 4722366482869645213696,
+  "product52_truncated_product_terms": "(p02+p11+p20)*2^32+(p12+p21+p30)*2^48+(p22+p31)*2^64+p32*2^80",
+  "product52_rounding": 2251799813685248,
+  "all_omitted_columns_explicit": true,
+  "all_single_word_suffix_columns_bounded": true,
+  "poly_stack_frame": 56,
+  "square_stack_frame": 20,
+  "product52_stack_frame": 32,
+  "straight_line_polynomial_max_stack": 88,
+  "no_recursion_or_dynamic_allocations": true,
+  "poly_actual_static_MULS_count": 24,
+  "poly_actual_instructions_both_signs": 226,
+  "whole_library_universal_stack_or_CR_closed": false
+}

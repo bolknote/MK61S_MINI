@@ -1,0 +1,100 @@
+{
+  "status": "PASS_DIRECTED_N0_AND_STRICT_OPEN_RNE_BOUNDS",
+  "parent_v2_FROZEN_sha256": "835b73e93108afa8f08de42c7609175a1a46eae6f39f173b9d75ce7a3c8a5d72",
+  "inherited_v2_model_proof_sha256": "14a9169e1dbaa06d7118d2c0a13970c39c641bc4873230830b18f6773abe35ef",
+  "model_source_sha256": "2995fff6ac5c9f8cb239a198f371810efbd196f7553ff09d5fff3f8165d58688",
+  "classes": [
+    {
+      "input_class": "e_le_minus13",
+      "U": [
+        1,
+        4096
+      ],
+      "positive_error_upper": [
+        294994663197132488027199611156307590117,
+        104673053834333467690498495491845652480
+      ],
+      "positive_open_error_interval": [
+        0,
+        3
+      ],
+      "negative_below_bound": [
+        3298621022829059,
+        2111062325329920
+      ],
+      "negative_above_bound": [
+        111332947997725139,
+        88661525287403520
+      ],
+      "negative_open_error_interval": [
+        -2,
+        2
+      ]
+    },
+    {
+      "input_class": "e_eq_minus12",
+      "U": [
+        1,
+        2048
+      ],
+      "positive_error_upper": [
+        135349781835766624495743881215552621541,
+        26167350750151202597455546246653542400
+      ],
+      "positive_open_error_interval": [
+        0,
+        6
+      ],
+      "negative_below_bound": [
+        157894163565671,
+        52776558133248
+      ],
+      "negative_above_bound": [
+        24167400863283667,
+        11082304113868800
+      ],
+      "negative_open_error_interval": [
+        -3,
+        3
+      ]
+    },
+    {
+      "input_class": "e_eq_minus11_n0",
+      "U": [
+        7,
+        10000
+      ],
+      "positive_error_upper": [
+        133630828352510879033760126735572223562491608747747,
+        13599055429117511757622935552000000000000000000000
+      ],
+      "positive_open_error_interval": [
+        0,
+        10
+      ],
+      "negative_below_bound": [
+        100318141288208918573,
+        19200000000000000000
+      ],
+      "negative_above_bound": [
+        207050190230518498669436963,
+        44995500000000000000000000
+      ],
+      "negative_open_error_interval": [
+        -6,
+        6
+      ]
+    }
+  ],
+  "positive_n0_approximation_strictly_below_exp": "All square/coefficient/products truncate downward and the positive degree6 Taylor remainder is strictly positive.",
+  "negative_error_identity": "H - (Ptrue-Papprox) + positive alternating Taylor remainder; H>=0, all component underestimates bounded separately.",
+  "packed_guard": "low byte is upper error B, high byte is total width A+B; one left normalization doubles both fields without byte carry",
+  "strict_guard_equivalence": "Unsafe exactly when 0<((rounded_centre+B) mod2^S)<A+B; equality endpoints are safe because error bounds are strict.",
+  "integer_midpoints_and_open_endpoint_half_unit_evaluations": true,
+  "old_arithmetic_and_fixed_frames_unchanged": true,
+  "new_MPFR_or_ARM_calls": 0,
+  "no_new_lookup_tables": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

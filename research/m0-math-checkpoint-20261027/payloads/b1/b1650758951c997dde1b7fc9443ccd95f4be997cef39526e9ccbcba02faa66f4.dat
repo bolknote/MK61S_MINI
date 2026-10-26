@@ -1,0 +1,4 @@
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-public-prototype-20261027/benchmark.py", line 54
+    assert len(inputs)==(512 if phase=='targeted'else568856)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: expected 'else' after 'if' expression

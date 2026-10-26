@@ -1,0 +1,16 @@
+{
+  "status": "TERMINAL_DIAGNOSTIC_NOT_SELECTED",
+  "all_handles_terminal": true,
+  "handles": {
+    "targeted60170": "exit0_consumed",
+    "full30495": "exit0_consumed",
+    "caller72817": "exit0_consumed",
+    "classifier47207": "exit0_consumed",
+    "smoke": "exit0_direct"
+  },
+  "total_diagnostic_ARM_calls": 1235975,
+  "all_calls_excluded_unified_qualified_pool": true,
+  "new_full_exp_wrong": 0,
+  "performance_GO": false,
+  "goal_complete": false
+}

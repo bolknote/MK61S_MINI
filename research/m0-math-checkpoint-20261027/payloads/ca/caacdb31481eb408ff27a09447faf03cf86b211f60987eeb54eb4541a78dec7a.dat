@@ -1,0 +1,26 @@
+{
+  "status": "LINKED_PRIVATE_COMPLETE_Q73_EXP_PROTOTYPE_WITH_R48_FALLBACK",
+  "ELF_sha256": "68198d88debb1edc17a0a530bde196500bc077f154231cda7479c0ab63a7740c",
+  "source_R48_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "core_FROZEN_sha256": "6ac8536c323f232674d5496e27e38f18dcd4253f3a107c17b001796084d89c13",
+  "entry_source_sha256": "987aed38bbbf0c6b60da3742a632e5016b125760e9ff6171a79996fbcd7ac7ba",
+  "core_source_sha256": "40229bdbdc6da7c6961b5e4dcfbbeeeef694356bdb5744c85dd4f06a76e4fd67",
+  "export_only_CPP_allocated_bytes_identical": true,
+  "existing_root_table_symbol": "_ZN7m0_eabiL16refine_exp_tableE",
+  "existing_root_table_sha256": "b4769f705c76d7190d0ed816f2fe95c4dc786ea4f48148d2150d085bc3314e52",
+  "root_table_bytes": 6144,
+  "root_table_allocated_occurrences": 1,
+  "new_lookup_table_bytes": 0,
+  "new_bss_bytes": 0,
+  "scratch_y_bytes": 4080,
+  "undefined_symbols": [],
+  "new_objects": [
+    "core.o",
+    "entry.o"
+  ],
+  "all_M4_default_source_objects_untouched": true,
+  "full_exp_correctness_and_speed_pending": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

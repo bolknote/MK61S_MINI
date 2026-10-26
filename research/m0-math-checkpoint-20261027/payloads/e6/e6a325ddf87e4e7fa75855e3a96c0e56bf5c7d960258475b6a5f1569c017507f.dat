@@ -1,0 +1,22 @@
+{
+  "status": "BUILD_PASS_PRIVATE_Q73_POLYNOMIAL_PROTOTYPE",
+  "command": [
+    "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+    "-mcpu=cortex-m0plus",
+    "-mthumb",
+    "-nostdlib",
+    "-Wl,--build-id=none",
+    "-Wl,-T,/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-core-arm-20261026/core.ld",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-core-arm-20261026/core.S",
+    "-o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-core-arm-20261026/core.elf"
+  ],
+  "ELF_sha256": "73a0935396d69887e8f4e1d50dfe499b61837f1c1616f5d2c8997ded889f9ee4",
+  "source_sha256": "40229bdbdc6da7c6961b5e4dcfbbeeeef694356bdb5744c85dd4f06a76e4fd67",
+  "undefined_symbols": [],
+  "disassembled_MULS_count": 24,
+  "no_new_tables": true,
+  "no_libgcc": true,
+  "full_exp_implemented": false,
+  "goal_complete": false
+}

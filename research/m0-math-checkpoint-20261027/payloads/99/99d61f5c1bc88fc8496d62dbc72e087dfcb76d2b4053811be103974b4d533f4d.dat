@@ -1,0 +1,7 @@
+{
+  "status": "TERMINAL_R48_PRIVATE_AUTHOR_PASS",
+  "all_producers_terminal": true,
+  "selected_private_source": "R48",
+  "author_result_sha256": "7d17b54ad1e843d05fb1bd00a32c7efd65cc7e3a5608cdaf1296430932dde00c",
+  "goal_complete": false
+}

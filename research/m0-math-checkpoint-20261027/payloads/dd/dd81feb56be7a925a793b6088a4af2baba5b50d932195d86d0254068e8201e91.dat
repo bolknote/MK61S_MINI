@@ -1,0 +1,51 @@
+R48 direct division 0 / 2862 loss 0
+R48 direct division 512 / 2862 loss 0
+R48 direct division 1024 / 2862 loss 0
+R48 direct division 1536 / 2862 loss 0
+R48 direct division 2048 / 2862 loss 0
+R48 direct division 2560 / 2862 loss 0
+{
+  "status": "PASS_R48_FRESH_DIVISION_DIAGNOSTIC",
+  "input_pairs": 2862,
+  "state_rows": 8586,
+  "actual_diagnostic_ARM_calls": 25758,
+  "completed_ARM_calls": {
+    "candidate": 8586,
+    "parent": 8586,
+    "Qfplib": 8586
+  },
+  "actual_directed_MPFR_inputs": 2828,
+  "sNaN_policy_shortcuts": 34,
+  "candidate_wrong": 0,
+  "parent_losing_pairs": 0,
+  "candidate_losing_pairs": 0,
+  "parent_instruction_delta_histogram": {
+    "0": 4788,
+    "-10": 402,
+    "3": 768,
+    "12": 210,
+    "-1": 1818,
+    "2": 408,
+    "5": 192
+  },
+  "known296_parent_losses": 0,
+  "known296_candidate_losses": 0,
+  "actual_proven_overflow_shortcut_state_rows": 0,
+  "significand_division_visits_recorded_for_all_rows": true,
+  "wrong_reference_state_variants_retained": 1257,
+  "all_wrong_reference_outputs_costs_retained": true,
+  "no_nominal_reference_filter": true,
+  "candidate_ELF_sha256": "d5c8d35cd5e183dfc352f531f8f8bd3cb09856c173f811f41ba74f07906ec863",
+  "baseline_FROZEN_sha256": "06aed184b8178826326a19a26dbb700875e4826c7e0b915f1fb8f52c0625e9da",
+  "records_sha256": "77fc664e3959e0c06518aa7c3aaae25bc21ed046b91e37f7ad9c893aba741a55",
+  "observed_stack": {
+    "candidate": 176,
+    "parent": 176,
+    "Qfplib": 28
+  },
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 6.988158125022892
+}

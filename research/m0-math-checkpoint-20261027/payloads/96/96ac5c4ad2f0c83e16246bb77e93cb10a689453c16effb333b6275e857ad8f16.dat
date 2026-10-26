@@ -1,0 +1,52 @@
+{
+  "status": "PASS_INITIAL_COMPLETE_Q73_EXP_AND_WIDE_HELPERS",
+  "calls": {
+    "mk61_q73_estimate_high32": 1029,
+    "mk61_q73_reduce_step96": 1029,
+    "mk61_q73_root_product": 1030,
+    "mk61_q73_exp": 456
+  },
+  "exp_inputs": 152,
+  "all3_SIO_states": true,
+  "candidate_wrong": 0,
+  "instruction_histogram": {
+    "515": 15,
+    "516": 9,
+    "412": 75,
+    "22": 78,
+    "19": 81,
+    "521": 27,
+    "520": 27,
+    "549": 3,
+    "540": 9,
+    "430": 45,
+    "34": 9,
+    "17": 6,
+    "16": 3,
+    "13": 3,
+    "504": 6,
+    "510": 33,
+    "306": 3,
+    "317": 3,
+    "509": 18,
+    "505": 3
+  },
+  "all_AAPCS_SP_bounded_writes_checks": true,
+  "actual_ROM_models": [],
+  "loader": {
+    "actual_ARM_calls": 1,
+    "instructions": 1024,
+    "whole_scratch_y_bytes": 4080,
+    "reserved_tail_untouched": true,
+    "actual_ROM_pointers": [
+      9913,
+      9757,
+      9901,
+      9733
+    ],
+    "no_old_firmware_overlay_loaded": true
+  },
+  "no_full_corpus_or_speed_claim": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

@@ -1,0 +1,72 @@
+{
+  "r48-source": {
+    "original_directory": ".build/m0-math-unified-ddiv-power-dispatch-r48-20261026",
+    "scope": "selected private author source",
+    "FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+    "frozen_pinned_files": 493,
+    "archived_files": 464
+  },
+  "r48-qualification": {
+    "original_directory": ".build/m0-math-unified-ddiv-power-dispatch-r48-qualification-20261026",
+    "scope": "completed private author qualification, not independent acceptance",
+    "FROZEN_sha256": "849b995c8433e0dc6831c7af4411ef190c13bbd3204571553db490061af63ec9",
+    "frozen_pinned_files": 56,
+    "archived_files": 57
+  },
+  "q73-host-512": {
+    "original_directory": ".build/m0-exp-q73-host-study-20261026",
+    "scope": "initial host model",
+    "FROZEN_sha256": null,
+    "frozen_pinned_files": 0,
+    "archived_files": 4
+  },
+  "q73-host-full": {
+    "original_directory": ".build/m0-exp-q73-full-host-study-20261026",
+    "scope": "full host model, cached input gold",
+    "FROZEN_sha256": "40ca0faad241780c68e2c5a68b7fc6b59267b3cf8f6483dfed1ee09f14cf3871",
+    "frozen_pinned_files": 4,
+    "archived_files": 5
+  },
+  "q73-horner": {
+    "original_directory": ".build/m0-exp-q73-horner-host-study-20261026",
+    "scope": "Horner host model, cached input gold",
+    "FROZEN_sha256": "8f64b2e89f31b659d0f34c09f523ee69be00899e42f842867057a34a16226163",
+    "frozen_pinned_files": 6,
+    "archived_files": 7
+  },
+  "q73-thumb-core": {
+    "original_directory": ".build/m0-exp-q73-core-arm-20261026",
+    "scope": "standalone polynomial, not complete exp speed",
+    "FROZEN_sha256": "6ac8536c323f232674d5496e27e38f18dcd4253f3a107c17b001796084d89c13",
+    "frozen_pinned_files": 12,
+    "archived_files": 12
+  },
+  "q73-public-v1": {
+    "original_directory": ".build/m0-exp-q73-public-prototype-20261027",
+    "scope": "complete exp diagnostic, rejected performance",
+    "FROZEN_sha256": "fcceab75978b57bf3e65eff4990d11ee374e8d046726db70e8729927aa7eed84",
+    "frozen_pinned_files": 31,
+    "archived_files": 28
+  },
+  "q73-public-v2": {
+    "original_directory": ".build/m0-exp-q73-public-v2-20261027",
+    "scope": "complete exp diagnostic, rejected performance",
+    "FROZEN_sha256": "835b73e93108afa8f08de42c7609175a1a46eae6f39f173b9d75ce7a3c8a5d72",
+    "frozen_pinned_files": 49,
+    "archived_files": 46
+  },
+  "q73-public-v3": {
+    "original_directory": ".build/m0-exp-q73-public-v3-20261027",
+    "scope": "complete exp diagnostic, not selected",
+    "FROZEN_sha256": "2731f20f84226b6c85137b213c6ff2d46808b5f6f9826afe3dd35236865f8d7c",
+    "frozen_pinned_files": 46,
+    "archived_files": 43
+  },
+  "private-io-fixture": {
+    "original_directory": ".build/m0-math-offline-io-20261026",
+    "scope": "pinned private read-only execution fixture and receipts",
+    "FROZEN_sha256": null,
+    "frozen_pinned_files": 0,
+    "archived_files": 41
+  }
+}

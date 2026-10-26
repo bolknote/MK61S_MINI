@@ -1,0 +1,7 @@
+ENTRY(mk61_q73_poly_mag)
+SECTIONS
+{
+  . = 0x10000000;
+  .text : { *(.text*) *(.rodata*) }
+  /DISCARD/ : { *(.comment) *(.note*) }
+}

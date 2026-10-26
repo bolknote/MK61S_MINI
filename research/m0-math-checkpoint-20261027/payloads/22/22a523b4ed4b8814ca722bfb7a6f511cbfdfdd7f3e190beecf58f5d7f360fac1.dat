@@ -1,0 +1,16 @@
+{
+  "status": "PASS_ALL16_NZCV_5_R12_3_SIO_PUBLIC_CALLERS",
+  "inputs": 12,
+  "caller_variation_ARM_calls": 2880,
+  "baseline_ARM_calls": 36,
+  "total_ARM_calls": 2916,
+  "all_outputs_and_counts_exact_baseline": true,
+  "all_AAPCS_SP_bounded_writes_SIO_checks": true,
+  "entry_only_legal_caller_flags_R12_injected": true,
+  "guest_body_or_instruction_counts_not_modified": true,
+  "no_fresh_MPFR_Qfplib_calls": true,
+  "records_sha256": "3808bfb4deae762fa1769574f346433bd168e0fed88d0931cfbee929e2565537",
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

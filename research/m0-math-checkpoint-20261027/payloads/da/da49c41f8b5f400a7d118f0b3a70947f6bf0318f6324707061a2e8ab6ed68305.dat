@@ -1,0 +1,13 @@
+{
+  "status": "ALL_ORIGINAL_V3_JOBS_CONSUMED_TERMINAL_ZERO",
+  "all_consumed_terminal": true,
+  "jobs": [
+    {"phase": "targeted", "exec_session_id": 74085, "exit_code": 0},
+    {"phase": "full", "exec_session_id": 51818, "exit_code": 0},
+    {"phase": "caller", "exec_session_id": 52491, "exit_code": 0}
+  ],
+  "no_benchmark_restarted": true,
+  "source": "Original functions.exec store q73_v3_sessions_20261027, resumed via write_stdin to terminal results",
+  "hardware_accessed": false,
+  "goal_complete": false
+}

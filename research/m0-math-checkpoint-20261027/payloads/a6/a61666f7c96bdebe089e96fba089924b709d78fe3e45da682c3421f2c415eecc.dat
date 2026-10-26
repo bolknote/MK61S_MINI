@@ -1,0 +1,66 @@
+"""Directed constants and rational full-domain bounds for the actual v2 graph."""
+from pathlib import Path
+from fractions import Fraction as F
+import ctypes as C,hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+sys.path[:0]=[str(W),str(ROOT/'.build/m0-float-fma-qualification-20261023/support')]
+import model as m
+from m0_mpfr_oracle import Oracle,_Number
+assert not(W/'model-proof.json').exists()
+o=Oracle();lib=o.lib;pointer=C.POINTER(_Number)
+lib.mpfr_set_ui.argtypes=[pointer,C.c_ulong,C.c_int]
+lib.mpfr_div_2ui.argtypes=[pointer,pointer,C.c_ulong,C.c_int]
+lib.mpfr_exp2.argtypes=[pointer,pointer,C.c_int]
+numbers=[_Number(),_Number()]
+for n in numbers:lib.mpfr_init2(C.byref(n),256)
+def exact(n):
+    count=(n.precision+63)//64;v=sum(int(n.limbs[i])<<(64*i)for i in range(count));e=int(n.exponent)-64*count
+    return F(v<<e)if e>=0 else F(v,1<<(-e))
+lib.mpfr_set_ui(C.byref(numbers[0]),2,0);ln2=[]
+for direction in (3,2):
+    lib.mpfr_log(C.byref(numbers[1]),C.byref(numbers[0]),direction);ln2.append(exact(numbers[1]))
+assert F(69,100)<ln2[0]<ln2[1]<F(7,10)
+assert all(abs(v*(1<<87)-m.STEP)<1 for v in ln2)
+assert all(abs(F(1<<31)/v-0xb8aa3b29)<1 for v in ln2)
+for i,root in enumerate(m.roots94):
+    lib.mpfr_set_ui(C.byref(numbers[0]),i,0);lib.mpfr_div_2ui(C.byref(numbers[0]),C.byref(numbers[0]),9,0)
+    for direction in (3,2):
+        lib.mpfr_exp2(C.byref(numbers[1]),C.byref(numbers[0]),direction)
+        assert abs(exact(numbers[1])*(1<<94)-root)<1
+for n in numbers:lib.mpfr_clear(C.byref(n))
+U=F(7,10000)
+estimate_error=F(1,4096)+F(1,8192)/F(69,100)+F(1,4096)
+assert (F(1,2)+estimate_error)*F(7,10)/512*m.Q+F(9,8)<m.CAP
+assert m.CAP<1<<63
+ES=1+F(3,512);EP=1+F(1,8);ER=ES
+def error(u,input_error):
+    cubic=u*(1<<16)/120+ES*u/F(120*(1<<21))+u*u*(1<<26)/120+F(1,15)+1+F((1<<18)-1,15*(1<<16))
+    tail=4+ES/F(3*(1<<24))+cubic
+    product=(u*u*(1<<21)+ES/F(1<<52))*tail+ES*(u/6+u*u/24+u*u*u/120)
+    remainder=u**6*m.Q/(720*(1-u/7))
+    return input_error/(1-u)+ES/2+F(1,2)+product+EP+remainder
+global_poly=error(U,F(9,8));small_poly=error(F(1,1<<15),F(0))
+assert global_poly<12 and small_poly<3
+table_error=1+F(1,1<<21)
+result_error=table_error*F(1001,1000)+2*global_poly+ER
+assert result_error<24
+B=(1<<16)-1
+square3=2*B*((1<<15)-1)+2*B*B
+square4_prefix=(square3>>16)+2*B*((1<<15)-1)
+assert square4_prefix==(1<<32)-5
+assert B*((1<<15)-1)<1<<31
+product52col2=B*255+2*B*B
+assert (product52col2>>16)+B*255<1<<32
+root3=B*((1<<15)-1)+3*B*B
+root4=(root3>>16)+B*((1<<15)-1)+2*B*B+1023*B
+assert (root3>>16)+B*((1<<15)-1)<1<<32
+assert (root4>>16)+B*((1<<15)-1)<1<<32
+for constant in (0xd5e4f1da,0xfbe8e7bc):
+    assert B*(constant>>16)+15*(constant&B)+(B*(constant&B)>>16)<1<<32
+assert (U**2*(1<<36))*(U*(1<<26))<1<<32
+assert (2*65535+511)*21845<1<<32
+def pair(v):return[v.numerator,v.denominator]
+report=dict(status='PASS_V2_UNIFORM_ERROR_AND_WORD_BOUNDS',model_source_sha256=hashlib.sha256((W/'model.py').read_bytes()).hexdigest(),MPFR_version=o.version,new_directed_MPFR_constant_endpoint_evaluations=1026,new_MPFR_input_evaluations=0,new_ARM_calls=0,ln2_directed_bounds=[pair(v)for v in ln2],all512_existing_root94_errors_less1=True,root73_is_floor_existing_root94=True,estimate_upper_product_underestimate_at_most1=True,estimate_error_bound=pair(estimate_error),uniform_signed_R73_no_alias=True,global_polynomial_error_upper=pair(global_poly),small_exact_input_polynomial_error_upper=pair(small_poly),final_result_error_upper=pair(result_error),radius_general=24,radius_exact_root1=12,radius_n0_e_less_minus15=3,all_removed_carries_proved_zero=True,exact_combined_step_product_constants_verified=True,root_one_negative_delta_nonzero='truncated square <= r^2/Q <2*abs(r), so abs(delta)>0 for negative nonzero r',no_new_lookup_tables=True,hardware_accessed=False,integration_GO=False,goal_complete=False)
+(W/'model-proof.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps(report,indent=2))

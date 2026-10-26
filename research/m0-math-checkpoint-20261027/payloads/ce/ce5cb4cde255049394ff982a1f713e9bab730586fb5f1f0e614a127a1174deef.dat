@@ -1,0 +1,11 @@
+Private Q73 integer Thumb polynomial prototype, not a complete exp implementation.
+
+For a=|r73|<2^63, square keeps exactly columns3..6 of the 16-bit product and adds2^72 before >>73. Its independent integer reference explicitly subtracts omitted columns0..2. Column3 propagates floor(c3/2^16); the discarded low16bits cannot change a later floor at bit73. Column4 includes the rounding bit256. Decomposing c4 into low16+carry, then c5, gives low7 result bits, the next16bits, and c6<<23. The checked bounds make the c5 and c6 one-word additions exact. Returned low/high words have nonoverlapping fields.
+
+Product52 keeps columns2..5 and adds2^51 before >>52. Column3 receives rounding8. The same floor decomposition yields low12 result bits, the next16bits, and c5<<28. Bounds hold for all a<2^53,b<2^40. Columns4/5 fit32bits. Each retained 16x16 product fits32bits; carries of earlier columns are kept in the second accumulator word.
+
+The coefficient uses 65536=3*21845+1 and 2^32=3*0x55555555+1. For s<3*65536, floor(s*21845/65536) is at most one below floor(s/3). All intermediary coefficient products fit32bits. The cubic coefficient uses b=|r73|>>47; b^2 fits32bits under the proved .0007 residual bound. Its 32x16 product is assembled from two exact partial products and a carry. The rational Horner error derivation is in the host study; the complete polynomial bound remains less than12 Q73 units, and table/result enclosure remains32.
+
+The Thumb functions match the integer model on180528 calls:171710 supported corpus inputs plus coefficient/helper/carry boundaries. Both polynomial signs cost226 executed instructions; helpers cost54 and67. The polynomial contains24MULS. These are executed Thumb instructions, not physical cycles. Stack frames are fixed56+max(20,32)=88bytes for this standalone call graph; the whole-library universal stack requirement remains open. No lookup data, global RAM, libgcc or FPU is used in this prototype.
+
+Full argument reduction, existing-table multiplication, endpoint handling and final rounding are still to be implemented and measured as one public exp operation. The 226-instruction number is not a comparison of complete exp against Qfplib. All data remains private; M4/default/canonical/SDK/Git/device are unchanged.

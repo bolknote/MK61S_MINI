@@ -1,0 +1,55 @@
+"""Initial whole-exp and exact wide-helper checks of the complete prototype."""
+from pathlib import Path
+from collections import Counter
+import ast,gzip,hashlib,importlib.util,json,random,struct,sys
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',None)
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+sys.path[:0]=[str(W),str(ROOT/'.build/m0-float-fma-qualification-20261023/support'),str(ROOT/'.build/m0-float-fma-qualification-20261023')]
+from harness import machine
+from m0_mpfr_oracle import Oracle
+from oracles import equal
+m=machine();oracle=Oracle();counts=Counter();hist=Counter();rng=random.Random(0x735227)
+assert not(W/'smoke-result.json').exists()
+record=[]
+def call(name,a,b=0):
+    value,secondary,cost=m.call(name,a,b,count=True);counts[name]+=1
+    return value,secondary,cost
+for a in [0,1,65535,65536,0xffffffff]+[rng.randrange(1<<32)for _ in range(1024)]:
+    b=0xb8aa3b29;v,_,cost=call('mk61_q73_estimate_high32',a|(b<<32));v&=0xffffffff
+    assert (a*b>>32)-1<=v<=(a*b>>32),(a,v,a*b>>32)
+import model as reference_model
+for a in [0,1,65535,65536,(1<<20)-1]+[rng.randrange(1<<20)for _ in range(1024)]:
+    v,secondary,cost=call('mk61_q73_reduce_step96',a)
+    product=v|((secondary&0xffffffff)<<64)
+    assert product==(a*reference_model.STEP)&((1<<96)-1),(a,product,a*reference_model.STEP)
+pointer=0x20030000
+assert m.elf.symbols['__bss_end__']<pointer and pointer+12<m.elf.named_sections['.scratch_y'][3]
+multiply73=reference_model.multiply73
+for i in range(1030):
+    a=(1<<73)if i==0 else(1<<74)-1 if i==1 else rng.randrange(1<<73,1<<74)
+    b=0 if i==0 else(1<<63)-1 if i==1 else rng.randrange(1<<63)
+    m.uc.mem_write(pointer,struct.pack('<3I',a&0xffffffff,(a>>32)&0xffffffff,a>>64))
+    v,_,cost=call('mk61_q73_root_product',pointer,b);assert v==multiply73(a,b),(i,a,b,v,multiply73(a,b))
+states=dict(READY=(0,0,0,0,0,0,1),DIRTY=(17,3,17,3,5,2,3),PENDING=(0x80000001,7,0x80000001,7,0x11223344,0x55667788,2))
+jobs={int(r['x'],16):int(r['expected'],16)for r in json.loads((W/'endpoint-input-boundaries.json').read_text())['records']}
+for x in (0,1,0x8000000000000000,0x7ff0000000000000,0xfff0000000000000,0x7ff0000000000001,0xfff8000000001234,0x3ff0000000000000,0xbff0000000000000,0x3ea0000000000000,0xbea0000000000000,0x3f88f40b5ed9812c,0x40862e42fefa39ef,0xc0874910d52d3051):jobs.setdefault(x,oracle.reference('exp',x))
+q=ROOT/'.build/m0-math-unified-ddiv-power-dispatch-r48-qualification-20261026'
+loss=set(json.loads((q/'exp-result.json').read_text())['remaining_losing_arguments']);added=set()
+for line in gzip.open(q/'exp-records.jsonl.gz'):
+    row=json.loads(line)
+    if row['x']in loss and row['x']not in added:
+        added.add(row['x']);jobs[int(row['x'],16)]=int(row['expected'],16)
+        if len(added)==32:break
+for i,(x,gold)in enumerate(jobs.items()):
+    for state,words in states.items():
+        before=struct.pack('<7I',*words);m.uc.mem_write(0xd0000060,before)
+        value,_,cost=call('mk61_q73_exp',x)
+        assert equal(value,gold,64),(f'{x:016X}',state,f'{value:016X}',f'{gold:016X}',cost)
+        after=bytes(m.uc.mem_read(0xd0000060,28))
+        assert after==before if state!='READY'else not struct.unpack('<7I',after)[6]&2
+        hist[cost]+=1;record.append(dict(x=f'{x:016X}',SIO=state,expected=f'{gold:016X}',actual=f'{value:016X}',instructions=cost))
+with gzip.GzipFile(filename=str(W/'smoke-records.jsonl.gz'),mode='wb',mtime=0)as out:
+    for row in record:out.write((json.dumps(row,separators=(',',':'))+'\n').encode())
+report=dict(status='PASS_INITIAL_COMPLETE_Q73_EXP_AND_WIDE_HELPERS',calls=dict(counts),exp_inputs=len(jobs),all3_SIO_states=True,candidate_wrong=0,instruction_histogram=dict(hist),all_AAPCS_SP_bounded_writes_checks=True,actual_ROM_models=m.rom_models,loader=m.unified_loader_report,no_full_corpus_or_speed_claim=True,hardware_accessed=False,goal_complete=False)
+(W/'smoke-result.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))

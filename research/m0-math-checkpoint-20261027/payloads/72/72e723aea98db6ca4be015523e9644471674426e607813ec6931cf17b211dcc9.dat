@@ -1,0 +1,90 @@
+R48 full rows 0 elapsed 0.0 loss 0 new 0
+R48 full rows 8192 elapsed 5.3 loss 35 new 0
+R48 full rows 16384 elapsed 12.2 loss 36 new 0
+R48 full rows 24576 elapsed 14.1 loss 36 new 0
+R48 full rows 32768 elapsed 15.9 loss 36 new 0
+R48 full rows 40960 elapsed 17.7 loss 36 new 0
+R48 full rows 49152 elapsed 19.7 loss 36 new 0
+R48 full rows 57344 elapsed 21.7 loss 36 new 0
+R48 full rows 65536 elapsed 23.7 loss 36 new 0
+R48 full rows 73728 elapsed 25.7 loss 36 new 0
+R48 full rows 81920 elapsed 27.7 loss 36 new 0
+R48 full rows 90112 elapsed 29.6 loss 36 new 0
+R48 full rows 98304 elapsed 31.6 loss 36 new 0
+R48 full rows 106496 elapsed 33.4 loss 36 new 0
+R48 full rows 114688 elapsed 35.2 loss 36 new 0
+R48 full rows 122880 elapsed 37.1 loss 36 new 0
+R48 full rows 131072 elapsed 47.0 loss 221 new 0
+R48 full rows 139264 elapsed 51.1 loss 319 new 0
+R48 full rows 147456 elapsed 55.2 loss 417 new 0
+R48 full rows 155648 elapsed 59.3 loss 504 new 0
+R48 full rows 163840 elapsed 63.3 loss 590 new 0
+R48 full rows 172032 elapsed 67.4 loss 686 new 0
+R48 full rows 180224 elapsed 71.5 loss 769 new 0
+R48 full rows 188416 elapsed 75.6 loss 859 new 0
+R48 full rows 196608 elapsed 79.7 loss 947 new 0
+R48 full rows 204800 elapsed 83.8 loss 1011 new 0
+R48 full rows 212992 elapsed 87.9 loss 1068 new 0
+R48 full rows 221184 elapsed 92.0 loss 1111 new 0
+R48 full rows 229376 elapsed 115.2 loss 1201 new 0
+R48 full rows 237568 elapsed 130.8 loss 1305 new 0
+R48 full rows 245760 elapsed 155.4 loss 1696 new 0
+R48 full rows 253952 elapsed 186.6 loss 1829 new 0
+R48 full rows 262144 elapsed 217.0 loss 1995 new 0
+R48 full rows 270336 elapsed 221.2 loss 1995 new 0
+R48 full rows 278528 elapsed 225.4 loss 1995 new 0
+{
+  "status": "PASS_R48_FRESH_FULL_CACHED_GOLD_R47_ALL_QFP",
+  "source_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "parent_R47_qualification_FROZEN_sha256": "2acca11ddee077b7919173f6ff97d96e3db632a81313aed123e481531a1d0358",
+  "input_source_FROZEN_sha256": "2acca11ddee077b7919173f6ff97d96e3db632a81313aed123e481531a1d0358",
+  "input_records_sha256": "5b43647e3fd83ff0179f42e2c96d3bed645d1715d4325152a13934525c9cc9b8",
+  "records_sha256": "8b97ecdfc8fcd143c9e28c183f69055209944ebff2d8b9271c4a8f5cdf02e7f2",
+  "unique_input_pairs": 140715,
+  "state_rows": 281430,
+  "actual_qualified_public_ARM_calls": 281430,
+  "actual_fresh_R47_Qfp_MPFR_calls": 0,
+  "oracles_R47_allQfp_from_frozen_R47_qualification_or_R48_diagnostic_not_fresh": true,
+  "candidate_wrong": 0,
+  "all_candidate_bits_exact_frozen_correct_parent": true,
+  "parent_losing_pairs": 1995,
+  "candidate_losing_pairs": 1995,
+  "parent_instruction_delta_histogram": {
+    "0": 264288,
+    "-10": 8180,
+    "3": 16,
+    "-1": 8878,
+    "2": 56,
+    "5": 8,
+    "12": 4
+  },
+  "wrong_reference_state_variants_retained": 335278,
+  "all3_Qfplib_references_retained_eachinput_eachstate": true,
+  "no_nominal_reference_filter": true,
+  "all_parent_cost_deltas_match_actual_R48_route_equation": true,
+  "actual_R48_route_counts": {
+    "PN": 8180,
+    "GR": 16,
+    "GN": 8878,
+    "SN": 56,
+    "SR": 8,
+    "PR": 4
+  },
+  "route_instruction_delta_coefficients": {
+    "GN": -1,
+    "GR": 3,
+    "PN": -10,
+    "PR": 12,
+    "SN": 2,
+    "SR": 5
+  },
+  "observed_stack": 2284,
+  "not_universal_stack_bound": true,
+  "diagnostic_source_ARM251100_not_fresh_qualified_pool": true,
+  "source_loader_initialization_excluded": true,
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 226.9761985000223
+}

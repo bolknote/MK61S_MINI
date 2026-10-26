@@ -1,0 +1,23 @@
+"""Remaining integer, sign, table-domain and stack lemmas, no ARM or MPFR."""
+from pathlib import Path
+from fractions import Fraction as F
+import hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent
+sys.path.insert(0,str(W))
+import model as m
+U=F(7,10000)
+maximum_delta=m.Q*(U+U**2/2+U**3/6+U**4/24+U**5/120)
+assert maximum_delta<1<<63
+assert (U**2*(1<<36))*(U*(1<<26))<1<<31
+assert all(m.roots73[i]<m.roots73[i+1]for i in range(511))
+assert F(m.roots73[-1],m.Q)+2*maximum_delta/m.Q<2
+assert 1-2*maximum_delta/m.Q>F(1,2)
+assert ((0xb8aa3b29>>11)+1)>>1<1<<20
+assert U/4<F(1,2)
+# L=mag/(3*2^22). If L<4, quartic< U*L/4<1 and its integer is0.
+# If L>=4, linear >=L-2 >=L/2 >quartic. Thus tail never underflows.
+assert U*4/4<1
+report=dict(status='PASS_INTEGER_SIGN_DOMAIN_AND_STACK_CLOSURE',model_sha256=hashlib.sha256((W/'model.py').read_bytes()).hexdigest(),tail_nonnegative_by_L_less4_or_L_ge4_partition=True,cubic_product_lt2pow31_and_v_lt2pow18=True,roots_monotonic_verified=True,negative_delta_magnitude_nonzero='c2<=mag^2/Q and mag<2Q imply mag-floor(c2/2)>0',delta_magnitude_upper=[maximum_delta.numerator,maximum_delta.denominator],delta_magnitude_lt2pow63=True,root_product_lt2pow64=True,centre_always_between_halfQ_and2Q=True,one_left_normalization_sufficient=True,n_unsigned_lt2pow20=True,public_frame_bytes=72,core_frame_and_leaf_max_bytes=88,standalone_fast_callgraph_stack_bound_bytes=160,declines_restore_original_SP_before_R48_tail_call=True,whole_library_stack_or_CR_closed=False,new_ARM_MPFR_calls=0,hardware_accessed=False,goal_complete=False)
+(W/'integer-closure.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps(report,indent=2))

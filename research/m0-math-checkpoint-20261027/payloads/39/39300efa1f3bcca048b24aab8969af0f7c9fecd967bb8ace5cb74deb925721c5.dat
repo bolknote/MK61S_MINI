@@ -1,0 +1,112 @@
+--- frozen-v2/entry.S
++++ v3/entry.S
+@@ -142,12 +142,40 @@
+  ldr r6,=511
+ .Lroot_one_normalize:
+  ldr r7,[sp,#28]
+- movs r2,#12
+  ldr r3,[sp,#8]
+- ldr r0,=1008
++ ldr r0,=1013
+  cmp r3,r0
+- bhs .Lnormalize_with_radius
+- movs r2,#3
++ bhs .Lroot_one_other_n
++ ldr r0,[sp,#20]
++ cmp r0,#0
++ bne .Lroot_one_negative_bounds
++ ldr r0,=1011
++ cmp r3,r0
++ blo .Lroot_one_positive_small
++ beq .Lroot_one_positive_mid
++ ldr r2,=0x0a0a
++ b .Lnormalize_with_radius
++.Lroot_one_positive_small:
++ ldr r2,=0x0303
++ b .Lnormalize_with_radius
++.Lroot_one_positive_mid:
++ ldr r2,=0x0606
++ b .Lnormalize_with_radius
++.Lroot_one_negative_bounds:
++ ldr r0,=1011
++ cmp r3,r0
++ blo .Lroot_one_negative_small
++ beq .Lroot_one_negative_mid
++ ldr r2,=0x0c06
++ b .Lnormalize_with_radius
++.Lroot_one_negative_small:
++ ldr r2,=0x0402
++ b .Lnormalize_with_radius
++.Lroot_one_negative_mid:
++ ldr r2,=0x0603
++ b .Lnormalize_with_radius
++.Lroot_one_other_n:
++ ldr r2,=0x180c
+  b .Lnormalize_with_radius
+ .Lcombine:
+  ldr r4,[sp,#32]
+@@ -167,7 +195,7 @@
+  sbcs r6,r3
+ .Lnormalize:
+  ldr r7,[sp,#28]
+- movs r2,#24
++ ldr r2,=0x3018
+ .Lnormalize_with_radius:
+  ldr r3,=512
+  cmp r6,r3
+@@ -189,13 +217,16 @@
+  movs r1,#0
+  adcs r5,r1
+  adcs r6,r1
++ uxtb r3,r2
+  mov r0,r4
+- adds r0,r2
++ adds r0,r3
+  lsls r0,r0,#11
+  lsrs r0,r0,#11
+- lsls r2,r2,#1
++ lsrs r2,r2,#8
+  cmp r0,r2
+- bhi .Lnormal_safe
++ bhs .Lnormal_safe
++ cmp r0,#0
++ beq .Lnormal_safe
+  b .Lfallback_frame
+ .Lnormal_safe:
+  lsrs r0,r4,#21
+@@ -249,6 +280,7 @@
+  adds r6,r1
+ .Lsub_guard:
+  ldr r2,[sp,#44]
++ uxtb r2,r2
+  mov r0,r4
+  adds r0,r2
+  movs r3,#0
+@@ -257,7 +289,7 @@
+  mov r2,r6
+  adcs r2,r3
+  ldr r3,[sp,#44]
+- lsls r3,r3,#1
++ lsrs r3,r3,#8
+  cmp r7,#32
+  bhi .Lguard_wide
+  movs r2,#32
+@@ -265,11 +297,15 @@
+  lsls r0,r2
+  lsrs r0,r2
+  cmp r0,r3
+- bls .Lsub_unsafe
+- b .Lsub_floor
++ bhs .Lsub_floor
++ cmp r0,#0
++ beq .Lsub_floor
++ b .Lsub_unsafe
+ .Lguard_wide:
+  cmp r0,r3
+- bhi .Lsub_floor
++ bhs .Lsub_floor
++ cmp r0,#0
++ beq .Lsub_floor
+  cmp r7,#64
+  bhs .Lguard_high
+  movs r3,#64

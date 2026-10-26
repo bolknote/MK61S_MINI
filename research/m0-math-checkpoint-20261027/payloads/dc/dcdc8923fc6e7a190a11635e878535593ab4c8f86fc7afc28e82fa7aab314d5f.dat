@@ -1,0 +1,41 @@
+Q73 full host 65536 {'accepted': 42083, 'unsupported': 23451, 'ambiguous': 2}
+Q73 full host 131072 {'accepted': 42083, 'unsupported': 88987, 'ambiguous': 2}
+Q73 full host 196608 {'accepted': 42595, 'unsupported': 154011, 'ambiguous': 2}
+Q73 full host 262144 {'accepted': 42595, 'unsupported': 219547, 'ambiguous': 2}
+Q73 full host 327680 {'accepted': 42595, 'unsupported': 285083, 'ambiguous': 2}
+Q73 full host 393216 {'accepted': 42595, 'unsupported': 350619, 'ambiguous': 2}
+Q73 full host 458752 {'accepted': 73069, 'unsupported': 385137, 'ambiguous': 546}
+Q73 full host 524288 {'accepted': 122895, 'unsupported': 397146, 'ambiguous': 4247}
+{
+  "status": "PASS_Q73_FULL_CACHED_GOLD_HOST_STUDY_NOT_ARM_IMPLEMENTED",
+  "parent_R47_qualification_FROZEN_sha256": "2acca11ddee077b7919173f6ff97d96e3db632a81313aed123e481531a1d0358",
+  "source_R48_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "MPFR_version": "4.2.2",
+  "unique_inputs": 568856,
+  "inherited_state_rows_scanned": 1224907,
+  "classifications": {
+    "accepted": 167461,
+    "unsupported": 397146,
+    "ambiguous": 4249
+  },
+  "old512_losing_input_classifications": {
+    "accepted": 482,
+    "ambiguous": 30
+  },
+  "accepted_wrong": 0,
+  "gold": "cached pinned R47 qualification; originally directed MPFR",
+  "new_MPFR_input_evaluations": 0,
+  "new_MPFR_constant_endpoint_evaluations": 1026,
+  "new_ARM_calls": 0,
+  "table_root_error_verified_less1_Q94": true,
+  "final_error_enclosure_Q73_units": 32,
+  "no_runtime_or_table_modified": true,
+  "records_sha256": "3f6722a7609d51628a574ff2f2ad76c7b8c4aebf4d44326d5836bfd2c29e97aa",
+  "model_source_sha256": "9acc1be0505de770590587ded1632198b0d1f3a6acd56d9a9c659cfe234d3ab6",
+  "hardware_accessed": false,
+  "performance_measured": false,
+  "ARM_implementation_pending": true,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 7.9535219999961555
+}

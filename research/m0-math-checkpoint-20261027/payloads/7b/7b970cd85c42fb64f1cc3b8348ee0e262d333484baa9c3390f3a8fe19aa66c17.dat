@@ -1,0 +1,17 @@
+{
+  "status": "ALL_R48_QUALIFICATION_PRODUCERS_TERMINAL_BEFORE_SEAL",
+  "all_producers_terminal": true,
+  "handles": {
+    "full43855": "exit0_consumed",
+    "admission5003": "exit0_consumed",
+    "matrix23156": "exit0_consumed",
+    "exp71684": "exit0_consumed",
+    "ln48387": "exit0_consumed",
+    "audit74709": "exit0_consumed"
+  },
+  "matrix_comparison_exit0_direct": true,
+  "source_producers_terminal_previously_frozen": true,
+  "private_fixture_smoke18_ARM_and_Q73_core180528_ARM_excluded": true,
+  "no_timeout_restarts": true,
+  "goal_complete": false
+}

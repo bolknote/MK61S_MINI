@@ -1,0 +1,25 @@
+{
+  "status": "PASS_INTEGER_SIGN_DOMAIN_AND_STACK_CLOSURE",
+  "model_sha256": "6288f93df955d47f6ea1338e28879796da3201921574cd055f0038bb807d9475",
+  "tail_nonnegative_by_L_less4_or_L_ge4_partition": true,
+  "cubic_product_lt2pow31_and_v_lt2pow18": true,
+  "roots_monotonic_verified": true,
+  "negative_delta_magnitude_nonzero": "c2<=mag^2/Q and mag<2Q imply mag-floor(c2/2)>0",
+  "delta_magnitude_upper": [
+    9460870135706678215416255315181568,
+    1430511474609375
+  ],
+  "delta_magnitude_lt2pow63": true,
+  "root_product_lt2pow64": true,
+  "centre_always_between_halfQ_and2Q": true,
+  "one_left_normalization_sufficient": true,
+  "n_unsigned_lt2pow20": true,
+  "public_frame_bytes": 72,
+  "core_frame_and_leaf_max_bytes": 88,
+  "standalone_fast_callgraph_stack_bound_bytes": 160,
+  "declines_restore_original_SP_before_R48_tail_call": true,
+  "whole_library_stack_or_CR_closed": false,
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

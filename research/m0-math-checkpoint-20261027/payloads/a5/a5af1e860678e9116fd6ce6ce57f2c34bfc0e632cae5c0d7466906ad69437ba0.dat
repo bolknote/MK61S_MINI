@@ -1,0 +1,17 @@
+{
+  "status": "ALL_R48_SOURCE_PRODUCERS_TERMINAL",
+  "all_producers_terminal": true,
+  "handles": {
+    "build91732": "exit0",
+    "div3776": "exit0",
+    "pow80751": "exit0",
+    "expanded42431": "exit0",
+    "den19087": "exit0",
+    "Q8native5205": "exit0",
+    "proof45502": "exit0",
+    "proof_refactor73346": "exit0"
+  },
+  "direct_host_controls_normalized_private_bank_exit0": true,
+  "proof_table_refactor_zero_ARM_no_binary_change": true,
+  "goal_complete": false
+}
