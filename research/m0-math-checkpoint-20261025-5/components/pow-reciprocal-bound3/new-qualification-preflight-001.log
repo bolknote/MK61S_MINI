@@ -1,0 +1,27 @@
+reciprocal-bound3-new 0 / 5127 0.0
+reciprocal-bound3-new 64 / 5127 1.1
+reciprocal-bound3-new 128 / 5127 1.6
+reciprocal-bound3-new 192 / 5127 2.1
+reciprocal-bound3-new 256 / 5127 2.6
+reciprocal-bound3-new 320 / 5127 3.1
+reciprocal-bound3-new 384 / 5127 3.6
+reciprocal-bound3-new 448 / 5127 4.1
+reciprocal-bound3-new 512 / 5127 4.5
+reciprocal-bound3-new 576 / 5127 5.1
+reciprocal-bound3-new 640 / 5127 6.0
+reciprocal-bound3-new 704 / 5127 7.0
+reciprocal-bound3-new 768 / 5127 7.9
+reciprocal-bound3-new 832 / 5127 8.9
+reciprocal-bound3-new 896 / 5127 9.8
+reciprocal-bound3-new 960 / 5127 10.8
+reciprocal-bound3-new 1024 / 5127 11.8
+reciprocal-bound3-new 1088 / 5127 12.8
+reciprocal-bound3-new 1152 / 5127 13.8
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-20261025/qualify-new.py", line 25, in <module>
+    equivalent(args['parent'],args['control']);equivalent(args['control'],args['candidate'])
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-20261025/trace.py", line 78, in equivalent
+    assert c['registers'][7]==(p['registers'][7]-delta)&MASK,(D,p,c)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (73620, {'registers': [0, 73620, 1766071654, 1177935, 0, 955824824, 955824824, 50115, 4104, 537132828, 1610612736], 'frame28': '661d44694ff91100651d0400fe030000fbffffff0000000019f11410'}, {'registers': [0, 73620, 1766071654, 1177935, 0, 955824824, 955824824, 50115, 4104, 537132828, 1610612736], 'frame28': '661d44694ff91100651d0400fe030000fbffffff0000000019f11410'})

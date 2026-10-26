@@ -1,0 +1,108 @@
+{
+  "status": "PASS_INDEPENDENT_LOG_MIDPOINT_SEALED_EVIDENCE_AND_LOSS_ACCOUNTING",
+  "streamed_state_rows": 856462,
+  "unique_inputs": 428231,
+  "author_fresh_candidate_ARM": 856462,
+  "author_fresh_Qfplib_ARM": 529112,
+  "author_fresh_parent_remaining_audit_ARM": 1028,
+  "author_total_qualified_fresh_ARM": 1386602,
+  "author_oracle_evaluations": 428231,
+  "author_actual_directed_MPFR_input_conversions": 428229,
+  "author_sNaN_shortcuts_without_MPFR": 2,
+  "old327350_state_parent_and_Qfplib_measurements_inherited_not_fresh": true,
+  "all_old163675_raw_bits_identical_every_state": true,
+  "remaining_known_parent_state_rows314": {
+    "from_old_corpus310": true,
+    "from_excluded_final_probe4": true
+  },
+  "remaining_fresh_parent_audit_rows1028": true,
+  "excluded_final_probe_ARM": 24898,
+  "excluded_superseded_trial_ARM": 24854,
+  "excluded_diagnostic_ARM": 2,
+  "same_old163675_losses_before669_after155_fixed514": true,
+  "same_older48763_losses_remain154": true,
+  "expanded428231_losses": 671,
+  "expanded_loss_partition": {
+    "old155": true,
+    "new_dense_boundary514": true,
+    "new_ordinary_preexisting2": [
+      "407BED9F64CDD660",
+      "4081358A5B33F3E0"
+    ]
+  },
+  "all_remaining671_preexisting_parent_losses": true,
+  "new_raw_speed_losses": 0,
+  "correct_Qfplib_comparison": {
+    "faster": 469786,
+    "slower": 1342
+  },
+  "wrong_Qfplib_states_retained": 385334,
+  "tiny_correct_Qfplib_state_rows_all_faster": 395494,
+  "all_tiny_rows_match_independent_exact_word_model": true,
+  "tiny_observed_instruction_histogram": {
+    "83": 9922,
+    "84": 15332,
+    "85": 15078,
+    "86": 21336,
+    "88": 57080,
+    "90": 22002,
+    "91": 26402,
+    "93": 2,
+    "111": 138190,
+    "114": 524,
+    "116": 102348,
+    "189": 34138,
+    "199": 162644,
+    "200": 163076
+  },
+  "known_parent_cost_increases": 239986,
+  "known_parent_cost_increase_histogram": {
+    "6": 24,
+    "7": 9362,
+    "8": 19348,
+    "11": 9370,
+    "18": 134164,
+    "23": 67322,
+    "27": 262,
+    "33": 134
+  },
+  "all_known_increases_still_faster_Qfplib": true,
+  "all154_cubic_changed_cells_bound308actual_inputs616states": true,
+  "quadratic_only_wrong_inputs154": true,
+  "original_exp16_remaining2": {
+    "4085F424184F6DC5": [
+      {
+        "SIO": "READY",
+        "candidate_instructions": 2268,
+        "Qfplib_instructions": 649,
+        "parent_instructions": 2268
+      },
+      {
+        "SIO": "DIRTY",
+        "candidate_instructions": 2268,
+        "Qfplib_instructions": 649,
+        "parent_instructions": 2268
+      }
+    ],
+    "C041265824E2113C": [
+      {
+        "SIO": "READY",
+        "candidate_instructions": 2248,
+        "Qfplib_instructions": 622,
+        "parent_instructions": 2248
+      },
+      {
+        "SIO": "DIRTY",
+        "candidate_instructions": 2248,
+        "Qfplib_instructions": 622,
+        "parent_instructions": 2248
+      }
+    ]
+  },
+  "old_author_observed_stack376": 376,
+  "new_author_observed_stack376": 376,
+  "observed_stack_not_universal_bound": true,
+  "own_fresh_ARM_or_MPFR_in_this_file": 0,
+  "records_sha256": "ac9b1a4f19b4352ef3170732b484a6017c25f53e7ae28ad0e38d835f2789c1ec",
+  "original507_unchanged418": true
+}

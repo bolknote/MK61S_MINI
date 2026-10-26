@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/tally.py", line 15, in <module>
+    assert r['candidate']==r['expected']
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

@@ -1,0 +1,365 @@
+{
+  "jobs": [
+    {
+      "x": "3FF4B1DD264786A5",
+      "y": "C02A000000000000",
+      "group": "actual_public_fast_down_nocross"
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "group": "actual_public_full_up_nocross"
+    },
+    {
+      "x": "3FF2A4269F8149D1",
+      "y": "C02A000000000000",
+      "group": "actual_public_fast_down_cross"
+    },
+    {
+      "x": "3FF60E08AA312590",
+      "y": "C008000000000000",
+      "group": "actual_public_fast_up_nocross"
+    },
+    {
+      "x": "3FF837884FE59E7B",
+      "y": "C020000000000000",
+      "group": "actual_public_full_up_cross"
+    },
+    {
+      "x": "3FD789A5EE5BFC5C",
+      "y": "BFF8000000000000",
+      "group": "actual_public_fast_up_cross"
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "C00C000000000000",
+      "group": "actual_public_full_down_nocross"
+    },
+    {
+      "x": "3FE4F79E13C3C1C2",
+      "y": "C00C000000000000",
+      "group": "reference_equality_to_faster_not_new_pair_fix"
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "original153_control"
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "original153_control"
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "original153_control"
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "group": "original153_control"
+    }
+  ],
+  "equal_to_faster_transition": [
+    {
+      "x": "3FE4F79E13C3C1C2",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "reference": "qfp_composed_pow",
+      "parent": 1505,
+      "candidate": 1503,
+      "Qfplib": 1505
+    }
+  ],
+  "ancestry32": [
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "READY",
+      "Inline": 1697,
+      "Certificate": 1705,
+      "Zero": 1703,
+      "has_correct_Qfp": true
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1706,
+      "Certificate": 1714,
+      "Zero": 1712,
+      "has_correct_Qfp": true
+    },
+    {
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "C008000000000000",
+      "SIO": "READY",
+      "Inline": 1359,
+      "Certificate": 1367,
+      "Zero": 1365,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "C008000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1367,
+      "Certificate": 1375,
+      "Zero": 1373,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3FF837884FE59E7B",
+      "y": "C020000000000000",
+      "SIO": "READY",
+      "Inline": 1463,
+      "Certificate": 1471,
+      "Zero": 1469,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3FF837884FE59E7B",
+      "y": "C020000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1472,
+      "Certificate": 1480,
+      "Zero": 1478,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3FA337A37C73FD4E",
+      "y": "BFF8000000000000",
+      "SIO": "READY",
+      "Inline": 1146,
+      "Certificate": 1154,
+      "Zero": 1152,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3FA337A37C73FD4E",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1155,
+      "Certificate": 1163,
+      "Zero": 1161,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3FA0092F95A0C764",
+      "y": "C004000000000000",
+      "SIO": "READY",
+      "Inline": 1310,
+      "Certificate": 1318,
+      "Zero": 1316,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3FA0092F95A0C764",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1322,
+      "Certificate": 1330,
+      "Zero": 1328,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3FAAE46EA0E2CCA4",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "Inline": 1490,
+      "Certificate": 1498,
+      "Zero": 1496,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3FAAE46EA0E2CCA4",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1498,
+      "Certificate": 1506,
+      "Zero": 1504,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "Inline": 1517,
+      "Certificate": 1524,
+      "Zero": 1522,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1526,
+      "Certificate": 1533,
+      "Zero": 1531,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "4006B335AFD468A5",
+      "y": "C004000000000000",
+      "SIO": "READY",
+      "Inline": 1305,
+      "Certificate": 1313,
+      "Zero": 1311,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "4006B335AFD468A5",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1314,
+      "Certificate": 1322,
+      "Zero": 1320,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "402D507BADD65812",
+      "y": "BFF8000000000000",
+      "SIO": "READY",
+      "Inline": 1109,
+      "Certificate": 1116,
+      "Zero": 1114,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "402D507BADD65812",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1118,
+      "Certificate": 1125,
+      "Zero": 1123,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "402D507BADD65813",
+      "y": "C004000000000000",
+      "SIO": "READY",
+      "Inline": 1268,
+      "Certificate": 1275,
+      "Zero": 1273,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "402D507BADD65813",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1280,
+      "Certificate": 1287,
+      "Zero": 1285,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "40704CC83B93F25D",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "Inline": 1517,
+      "Certificate": 1525,
+      "Zero": 1523,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "40704CC83B93F25D",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1526,
+      "Certificate": 1534,
+      "Zero": 1532,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3F5BDF4A3B05FF8E",
+      "y": "BFF4000000000000",
+      "SIO": "READY",
+      "Inline": 1441,
+      "Certificate": 1449,
+      "Zero": 1447,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3F5BDF4A3B05FF8E",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1453,
+      "Certificate": 1461,
+      "Zero": 1459,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3F5BDF4A3B05FF8F",
+      "y": "BFF4000000000000",
+      "SIO": "READY",
+      "Inline": 1441,
+      "Certificate": 1449,
+      "Zero": 1447,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3F5BDF4A3B05FF8F",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1453,
+      "Certificate": 1461,
+      "Zero": 1459,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3F5BDF4A3B05FF90",
+      "y": "BFF4000000000000",
+      "SIO": "READY",
+      "Inline": 1441,
+      "Certificate": 1449,
+      "Zero": 1447,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "3F5BDF4A3B05FF90",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1453,
+      "Certificate": 1461,
+      "Zero": 1459,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "40F2F9C0159690A6",
+      "y": "BFFC000000000000",
+      "SIO": "READY",
+      "Inline": 1685,
+      "Certificate": 1693,
+      "Zero": 1691,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "40F2F9C0159690A6",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1694,
+      "Certificate": 1702,
+      "Zero": 1700,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "40F0970E3C07A09C",
+      "y": "BFFC000000000000",
+      "SIO": "READY",
+      "Inline": 2361,
+      "Certificate": 2369,
+      "Zero": 2367,
+      "has_correct_Qfp": false
+    },
+    {
+      "x": "40F0970E3C07A09C",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "Inline": 2373,
+      "Certificate": 2381,
+      "Zero": 2379,
+      "has_correct_Qfp": false
+    }
+  ]
+}

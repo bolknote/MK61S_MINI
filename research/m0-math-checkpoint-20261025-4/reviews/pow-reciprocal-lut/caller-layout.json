@@ -1,0 +1,319 @@
+{
+  "status": "PASS_FRESH_LINKED_PRIVATE_CALLER_NEW_R3_CLOBBER_SAVE_POP_JOIN_AND_LAYOUT",
+  "actual_seed_BL": "0x101e1234",
+  "actual_push_R0_R3_R7": [
+    2,
+    "push",
+    "{r0, r1, r2, r3, r7}"
+  ],
+  "actual_pop_R0_R3_R7": [
+    2,
+    "pop",
+    "{r0, r1, r2, r3, r7}"
+  ],
+  "quotient_consumed_in_R6_before_POP_restores_R0": true,
+  "original_R3_must_be_saved_by_this_actual_caller": true,
+  "seed856prefix_guards_R6_frame_R12_common282_all_fresh_bound": true,
+  "new_R3_contract_not_inherited_from_old_leaf": true,
+  "actual_R3_save_clobber_pop_join_chains": [
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 120249,
+        "saved_R3": 1923985,
+        "leaf_R3": 33762,
+        "join_R3": 1923985
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 112080,
+        "saved_R3": 1793294,
+        "leaf_R3": 61695,
+        "join_R3": 1793294
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 119405,
+        "saved_R3": 1910489,
+        "leaf_R3": 88850,
+        "join_R3": 1910489
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 116142,
+        "saved_R3": 1858279,
+        "leaf_R3": 36135,
+        "join_R3": 1858279
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 65536,
+        "saved_R3": 1048576,
+        "leaf_R3": 65535,
+        "join_R3": 1048576
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 65537,
+        "saved_R3": 1048592,
+        "leaf_R3": 0,
+        "join_R3": 1048592
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 70000,
+        "saved_R3": 1120000,
+        "leaf_R3": 47295,
+        "join_R3": 1120000
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 87380,
+        "saved_R3": 1398080,
+        "leaf_R3": 65535,
+        "join_R3": 1398080
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 98304,
+        "saved_R3": 1572864,
+        "leaf_R3": 65535,
+        "join_R3": 1572864
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 100000,
+        "saved_R3": 1600000,
+        "leaf_R3": 67295,
+        "join_R3": 1600000
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 131070,
+        "saved_R3": 2097120,
+        "leaf_R3": 65535,
+        "join_R3": 2097120
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 131071,
+        "saved_R3": 2097136,
+        "leaf_R3": 32767,
+        "join_R3": 2097136
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 65536,
+        "saved_R3": 1048576,
+        "leaf_R3": 65535,
+        "join_R3": 1048576
+      }
+    },
+    {
+      "source": "ddiv-arm-mpfr.json",
+      "record": {
+        "D": 65536,
+        "saved_R3": 1048576,
+        "leaf_R3": 65535,
+        "join_R3": 1048576
+      }
+    },
+    {
+      "source": "public-arm-mpfr.json",
+      "record": {
+        "D": 93411,
+        "saved_R3": 1494582,
+        "leaf_R3": 22926,
+        "join_R3": 1494582
+      }
+    },
+    {
+      "source": "public-arm-mpfr.json",
+      "record": {
+        "D": 99039,
+        "saved_R3": 1584627,
+        "leaf_R3": 42021,
+        "join_R3": 1584627
+      }
+    },
+    {
+      "source": "public-arm-mpfr.json",
+      "record": {
+        "D": 99039,
+        "saved_R3": 1584627,
+        "leaf_R3": 42021,
+        "join_R3": 1584627
+      }
+    },
+    {
+      "source": "public-arm-mpfr.json",
+      "record": {
+        "D": 103357,
+        "saved_R3": 1653712,
+        "leaf_R3": 70517,
+        "join_R3": 1653712
+      }
+    },
+    {
+      "source": "public-arm-mpfr.json",
+      "record": {
+        "D": 96765,
+        "saved_R3": 1548254,
+        "leaf_R3": 52770,
+        "join_R3": 1548254
+      }
+    },
+    {
+      "source": "public-arm-mpfr.json",
+      "record": {
+        "D": 96765,
+        "saved_R3": 1548254,
+        "leaf_R3": 52770,
+        "join_R3": 1548254
+      }
+    },
+    {
+      "source": "public-arm-mpfr.json",
+      "record": {
+        "D": 102761,
+        "saved_R3": 1644177,
+        "leaf_R3": 71300,
+        "join_R3": 1644177
+      }
+    },
+    {
+      "source": "public-arm-mpfr.json",
+      "record": {
+        "D": 102761,
+        "saved_R3": 1644177,
+        "leaf_R3": 71300,
+        "join_R3": 1644177
+      }
+    },
+    {
+      "source": "public-arm-mpfr.json",
+      "record": {
+        "D": 101494,
+        "saved_R3": 1623915,
+        "leaf_R3": 45697,
+        "join_R3": 1623915
+      }
+    },
+    {
+      "source": "public-arm-mpfr.json",
+      "record": {
+        "D": 66677,
+        "saved_R3": 1066832,
+        "leaf_R3": 35017,
+        "join_R3": 1066832
+      }
+    },
+    {
+      "source": "public-arm-mpfr.json",
+      "record": {
+        "D": 87256,
+        "saved_R3": 1396096,
+        "leaf_R3": 52463,
+        "join_R3": 1396096
+      }
+    }
+  ],
+  "count": 25,
+  "R1_R12_PCS_SP_PC_and_SIO_checks_preserved": true,
+  "reused_guard_driver_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/arm.py",
+    "bytes": 14817,
+    "sha256": "5f92f3b381e920d43a1c714806a781cd899625047ece26284e54d33c3fce41ff"
+  },
+  "explicit_driver_changes": [
+    {
+      "function": "ddiv",
+      "edits": [
+        "parent entry __aeabi_ddiv -> mk61_m0_hint_ddiv"
+      ]
+    },
+    {
+      "function": "public",
+      "edits": [
+        "fixed count48 ->9",
+        "report48 ->9"
+      ]
+    }
+  ],
+  "parent_uses_private_hint_alias_not_original_resident_ddiv": true,
+  "own_report_keyword_metadata_correction": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-independent-20261025/PUBLIC-REPORT-CORRIGENDUM.json",
+    "bytes": 1090,
+    "sha256": "ef84d98d79b34499409042a1697b35fb88a2a17d674225dbab61c3a75e6035f4"
+  },
+  "own_failed_preflights": 0,
+  "own_discarded_ARM_calls": 0,
+  "allocation1168_free_Flash_below2MiB_no_new_writable_allocations": true,
+  "no_overlap_checks": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf",
+      "bytes": 9015184,
+      "sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate.elf",
+      "bytes": 1116772,
+      "sha256": "5ddab388a96bef9c343e0c11e82797741f7ccb724a812d0532d76aa25c2e794e"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square-ordinary-20261024/candidate.elf",
+      "bytes": 1101716,
+      "sha256": "6e1cf7ded4ee258b49ddffcd1e893f4ec170700b181265048ad06ce0b9c1b8ae"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/candidate.elf",
+      "bytes": 3752,
+      "sha256": "e55be65b73b9b7bbbb72896904f61f8a1a5b5c5fb7bb052a78a5c580f351867c"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/candidate.elf",
+      "bytes": 1203168,
+      "sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-r2-20261025/candidate.elf",
+      "bytes": 11292,
+      "sha256": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/candidate.elf",
+      "bytes": 16236,
+      "sha256": "63a80f08c546e7bd07db6056eb1f64aa0de573c7296e5572b090e9d9f6edbfa9"
+    }
+  ],
+  "old168_exp_overlay14B_table_hazard_persists": true,
+  "no_fresh_actual_integrated_shared_R12_guard_claim": true,
+  "private_continuation_raw_operands_guardedR6_original20B_frame_not_CABI": true,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "device_IO": 0
+}

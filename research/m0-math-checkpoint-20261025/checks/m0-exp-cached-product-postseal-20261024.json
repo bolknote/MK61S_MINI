@@ -1,0 +1,8 @@
+{
+  "status": "PASS_POSTSEAL_ALL_ARTIFACT_AND_LINEAGE_PINS",
+  "packet": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024",
+  "FROZEN_sha256": "765df6f87358d53a2d10d3b4c673fe8e4e85771c56e7d39b79bfe9df2ce5381c",
+  "verified_artifacts": 91,
+  "verified_external_lineage_pins": 68,
+  "hardware_accessed": false
+}

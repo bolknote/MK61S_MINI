@@ -1,0 +1,197 @@
+{
+  "status": "PASS_SOURCE_DERIVED_RAW_MAIN_RESIDUAL_PROOF_AND_WHOLE_PRIVATE_ELF_BINDING",
+  "target": {
+    "HANDOFF.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/HANDOFF.md",
+      "bytes": 1992,
+      "sha256": "a9222d24f1dd4491667b697ade1f0a378d8bf5750ce293eaaac73efda157dc2b"
+    },
+    "result.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/result.json",
+      "bytes": 7936,
+      "sha256": "406533549b8d7bf94fcd95e7fe396497561f91590df6096d74bec1dde1caad82"
+    },
+    "native_eabi_m0_log70.inc": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/native_eabi_m0_log70.inc",
+      "bytes": 11767,
+      "sha256": "8294798875f17de019d15a57208f04daf2d74c431873036ecc87111df583e42f"
+    },
+    "candidate.elf": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/candidate.elf",
+      "bytes": 111732,
+      "sha256": "b82a9f1f09b5edd41c099abc82208b6254e52d0a817080f78625a0c818ac836a"
+    }
+  },
+  "accepted_parent_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 14554,
+    "sha256": "cd842f0284cda419305b6f2610e0a80ab91578406b8ec185435e745512483f63"
+  },
+  "sealed_artifacts": 59,
+  "input_pins": 582,
+  "same_parent_control_ELF": true,
+  "source_isolation_exact": true,
+  "exact_polynomial_retained": true,
+  "exact_inline_pack_unit": true,
+  "changed_allocated_sections": {
+    ".text.ln_main_raw": [
+      0,
+      1356
+    ],
+    ".text.mk61_m0_ln": [
+      1272,
+      1300
+    ]
+  },
+  "other_allocated_code_data_BSS_same": true,
+  "ratio_ASM_same": true,
+  "new_tables_RAM_dependencies": false,
+  "contexts": {
+    "generic_M0": {
+      "allocated_bytes": 247584,
+      "identical": true,
+      "whole_platform_qualification": false
+    },
+    "M4_soft": {
+      "allocated_bytes": 0,
+      "identical": true,
+      "whole_platform_qualification": false
+    },
+    "M4_hard": {
+      "allocated_bytes": 0,
+      "identical": true,
+      "whole_platform_qualification": false
+    }
+  },
+  "actual_resident_bindings_verified": 39,
+  "memcpy_memset_actual_wrap_aliases": true,
+  "actual_reciprocal_rows_checked": 1024,
+  "seed_product_bound": "73729/16384",
+  "total_argument_bound": "106497/16384",
+  "nonlinear_and_rounding_base": "6253190396598039312191897/906251642853202851790848",
+  "full_generic_bound": "12143881388354481213264281/906251642853202851790848",
+  "base_float": 6.900059653310828,
+  "full_float": 13.400120688467078,
+  "independent_extreme_gate_checks": 4200,
+  "gate_algebra_all_residuals": "Upper/lower predicate substitutes to distance-error>(7-B)+nonnegative/den>0, for all integer residuals, all den2049..4095, extra0..512.",
+  "signed_low32_exact_residual_bound": 32768,
+  "maximum_integer_gate_abs_below": 4194304,
+  "valid_pack_widths": [
+    64,
+    80
+  ],
+  "valid_pack_shifts": [
+    11,
+    27
+  ],
+  "lowest_binade_half_cell_correlation": true,
+  "full_rebuild_byteexact": true,
+  "rebuild_hashes": {
+    "candidate-full.o": "591c95cd8c26af0a8be5dd6af5a016ac3bd94b5d854d665835d0703e115c1efa",
+    "candidate-ratio.o": "c80865dd3f89454cd4790770059a806133b87f39f1ac5090c12f10e308584fea",
+    "candidate.elf": "b82a9f1f09b5edd41c099abc82208b6254e52d0a817080f78625a0c818ac836a",
+    "pack-unit.o": "4470820c83787adf42043aba7a5574d78b3c182b3571bf8ff479d2b3f2932fc5",
+    "pack-unit.elf": "c49aa90232643b3f52cbd6eb8b6723ac5d7f3a31b753f3564f40b57f26858c06"
+  },
+  "rebuild_commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-fno-use-cxa-atexit",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-fno-lto",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/native_eabi_m0.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/rebuild/candidate-full.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/ratio.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/rebuild/candidate-ratio.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_ln",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/rebuild/candidate-full.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/rebuild/candidate-ratio.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/rebuild/candidate.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/pack-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/rebuild/pack-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-20261024/pack-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/rebuild/pack-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/rebuild/pack-unit.elf"
+    ]
+  ],
+  "saved_accounting": {
+    "retained_parent_rows": 68876,
+    "all_rows": 97536,
+    "groups": {
+      "READY": {
+        "slower": 28431,
+        "equal": 20337
+      },
+      "DIRTY": {
+        "faster": 12096,
+        "equal": 20337,
+        "slower": 16335
+      }
+    },
+    "regression_histogram": {
+      "8": 12096,
+      "4": 32670
+    },
+    "expanded_parent_raw_losses": 73,
+    "expanded_child_raw_losses": 49,
+    "fixed_raw": 24,
+    "new_raw_losses": 0
+  },
+  "hardware_accessed": false,
+  "whole_ln_speed_GO": false
+}

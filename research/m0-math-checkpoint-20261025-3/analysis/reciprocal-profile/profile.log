@@ -1,0 +1,88 @@
+reciprocal-public-profile 0 / 306
+reciprocal-public-profile 64 / 306
+reciprocal-public-profile 128 / 306
+reciprocal-public-profile 192 / 306
+reciprocal-public-profile 256 / 306
+{
+  "status": "MEASURED_REAL_POW_RECIPROCAL_HINT_AND_UINT32_SEED_COSTS",
+  "source_parent": ".build/m0-pow-boundary128-20261025",
+  "source_parent_FROZEN_sha256": "61c98b938cf723f2f9b63ef06f22a3033c1b07af979dbe56ef9a2a2d56ed3393",
+  "public_profile_calls": 306,
+  "all_actual_division_calls": 10,
+  "target_root_reciprocal_calls": 10,
+  "target_normalized_denominators": 5,
+  "fresh_direct_profile_ARM_calls": 30,
+  "actual_directed_MPFR_inputs": 5,
+  "summary": {
+    "READY": {
+      "native_instructions": {
+        "min": 29,
+        "max": 177,
+        "mean": 139.8,
+        "histogram": {
+          "29": 1,
+          "142": 1,
+          "177": 2,
+          "174": 1
+        }
+      },
+      "Qfplib_instructions": {
+        "min": 146,
+        "max": 181,
+        "mean": 166.8,
+        "histogram": {
+          "148": 1,
+          "146": 1,
+          "181": 2,
+          "178": 1
+        }
+      },
+      "seed_instructions": {
+        "min": 15,
+        "max": 15,
+        "mean": 15.0,
+        "histogram": {
+          "15": 5
+        }
+      }
+    },
+    "DIRTY": {
+      "native_instructions": {
+        "min": 29,
+        "max": 600,
+        "mean": 479.2,
+        "histogram": {
+          "29": 1,
+          "600": 1,
+          "583": 1,
+          "591": 1,
+          "593": 1
+        }
+      },
+      "Qfplib_instructions": {
+        "min": 146,
+        "max": 181,
+        "mean": 166.8,
+        "histogram": {
+          "148": 1,
+          "146": 1,
+          "181": 2,
+          "178": 1
+        }
+      },
+      "seed_instructions": {
+        "min": 170,
+        "max": 194,
+        "mean": 186.8,
+        "histogram": {
+          "170": 1,
+          "194": 2,
+          "186": 1,
+          "190": 1
+        }
+      }
+    }
+  },
+  "no_implementation_or_qualification_claim": true,
+  "hardware_accessed": false
+}

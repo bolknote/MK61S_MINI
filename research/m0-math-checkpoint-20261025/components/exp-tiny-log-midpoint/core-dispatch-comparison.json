@@ -1,0 +1,15 @@
+{
+  "status": "PASS_ONLY_ADDS_R6_EXPONENT_CUTOFF_IMMEDIATE_CHANGED",
+  "core_bytes": 5012,
+  "changes": [
+    [
+      3916,
+      38,
+      32
+    ]
+  ],
+  "old_Thumb_instruction": "adds r6,#38",
+  "new_Thumb_instruction": "adds r6,#32",
+  "all_core_relocations_equal": true,
+  "ordinary_outside_new_domain_instruction_paths_unchanged": true
+}

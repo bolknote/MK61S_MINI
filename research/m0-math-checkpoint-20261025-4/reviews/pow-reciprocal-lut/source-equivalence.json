@@ -1,0 +1,13 @@
+{
+  "status": "PASS_ALL_SELECTED_ALLOCATED_SEMANTIC_RELOCATIONS_TO_SOFT_PARENT",
+  "contexts": [
+    "RP",
+    "generic_M0",
+    "M4_soft",
+    "M4_hard"
+  ],
+  "both_labels": true,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "device_IO": 0
+}

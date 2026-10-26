@@ -1,0 +1,341 @@
+#ifndef MK61_SHARED_MEMORY_HPP
+#define MK61_SHARED_MEMORY_HPP
+
+#include "rust_types.h"
+#include "portable_app_config.h"
+
+#ifndef MK61_SCOPED_RESIDENT_BUFFERS
+#if (defined(STM32F411xE) && defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME) || \
+    defined(STM32F401xC) || defined(STM32F401xE)
+#define MK61_SCOPED_RESIDENT_BUFFERS 1
+#else
+#define MK61_SCOPED_RESIDENT_BUFFERS 0
+#endif
+#endif
+
+// Один диспетчер управляет рабочими аренами прошивки. WORKSPACE/SCRATCH/BULK
+// остаются раздельными, поскольку используются одновременно. В ABI 6 APP и
+// OVERLAY разделяют свободную RAM с системной кучей. Общими являются правила
+// владения, проверка контекста, поколение lease, вытеснение и диагностика.
+namespace shared_memory {
+// Foreground-only, zeroed storage retained for the firmware lifetime.
+// Failure leaves the caller without a buffer; IRQ/eviction callbacks cannot allocate.
+void* allocate_retained_buffer(usize size);
+// Materialize lazy WORKSPACE/BULK before a long-lived OVERLAY pins the heap.
+// Does not acquire/change owners or clear existing contents. Foreground-only;
+// failure leaves already allocated buffers usable and the caller must not pin.
+bool prepare_retained_buffers(void);
+
+static constexpr usize WORKSPACE_SIZE = 8192;
+static constexpr usize SCRATCH_SIZE = 1600;
+static constexpr usize STAGE_INDEX_SIZE = 640U * sizeof(u32);
+static constexpr usize APP_MAX_SIZE = 20U * 1024U;
+
+// The current ABI always uses the free linker range shared with the C heap and
+// staging. There is no fixed-address compatibility window or reserved array.
+#define MK61_SHARED_MEMORY_APP_ENABLED 1
+#define MK61_SHARED_MEMORY_DYNAMIC 1
+
+#if defined(STM32F401xC) || defined(STM32F401xE)
+static constexpr usize BULK_SIZE = 1536;
+#else
+static constexpr usize BULK_SIZE = 8192;
+#endif
+
+#if defined(MK61_DISPLAY_UC1609) || defined(DISPLAY_UC1609) || \
+    defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3) || \
+    defined(MK61_BOARD_40TH) || \
+    (defined(MK61_ENABLE_USB_SCREEN) && MK61_ENABLE_USB_SCREEN)
+  #define MK61_SHARED_MEMORY_BULK_ENABLED 1
+static constexpr bool BULK_ENABLED = true;
+#else
+  #define MK61_SHARED_MEMORY_BULK_ENABLED 0
+static constexpr bool BULK_ENABLED = false;
+#endif
+
+enum class Arena : u8 {
+  WORKSPACE = 0,
+  SCRATCH,
+  BULK,
+  OVERLAY,
+  APP, // top of free RAM; OVERLAY buffers and the C heap occupy its bottom
+  COUNT
+};
+
+constexpr u8 arena_mask(Arena arena) {
+  return arena < Arena::COUNT ? (u8) (1U << (u8) arena) : 0;
+}
+
+namespace snapshot_schema {
+#if defined(MK61_OVERLAY_LANGUAGE_VM) && MK61_OVERLAY_LANGUAGE_VM
+static constexpr u8 FOCAL_RUNTIME = 11;
+static constexpr u8 TINYBASIC_RUNTIME = 10;
+static constexpr u8 LANGUAGE_VM = 9;
+#else
+static constexpr u8 FOCAL_RUNTIME = 11;
+static constexpr u8 TINYBASIC_RUNTIME = 9;
+static constexpr u8 LANGUAGE_VM = 9;
+#endif
+} // namespace snapshot_schema
+
+// Owner един для всех арен. Один логический компонент может одновременно
+// владеть несколькими аренами (например, Markdown: WORKSPACE + SCRATCH).
+enum class Owner : u8 {
+#define MK61_SHARED_MEMORY_OWNER(name, text, allowed, persistent, cache, evictable, schema) name,
+#include "shared_memory_owner_catalog.inc"
+#undef MK61_SHARED_MEMORY_OWNER
+  COUNT
+};
+
+struct OwnerPolicy {
+  u8 allowed_arenas;
+  u8 persistent_arenas;
+  u8 cache_arenas;
+  u8 evictable_arenas;
+  u8 snapshot_schema;
+};
+
+static_assert(sizeof(OwnerPolicy) == 5,
+              "shared-memory owner policy must remain a packed byte table");
+
+enum class EvictionDecision : u8 {
+  KEEP = 0,
+  RELEASE
+};
+
+// Callback лишь переводит клиента на безопасный fallback. Lease отзывает сам
+// менеджер после RELEASE, поэтому callback не получает ни Lease, ни context.
+using EvictionPrepare = EvictionDecision (*)(void);
+
+class ResidentToken {
+  public:
+    constexpr ResidentToken(void)
+      : arena_(Arena::COUNT), owner_(Owner::NONE), size_(0), epoch_(0) {}
+
+    bool valid(void) const {
+      return arena_ < Arena::COUNT && owner_ != Owner::NONE && epoch_ != 0;
+    }
+    Arena arena(void) const { return arena_; }
+    Owner owner(void) const { return owner_; }
+    usize size(void) const { return size_; }
+    u32 epoch(void) const { return epoch_; }
+
+  private:
+    Arena arena_;
+    Owner owner_;
+    usize size_;
+    u32 epoch_;
+
+    constexpr ResidentToken(Arena arena, Owner owner, usize size, u32 epoch)
+      : arena_(arena), owner_(owner), size_(size), epoch_(epoch) {}
+
+    friend ResidentToken resident_token(Arena arena);
+    friend bool commit_resident_handoff(const ResidentToken& token);
+};
+
+struct Snapshot {
+  Arena arena;
+  usize capacity;
+  usize resident_size;
+  u32 resident_epoch;
+  usize high_water;
+  Owner active_owner;
+  Owner resident_owner;
+  u16 active_depth;
+  u16 max_depth;
+  u32 acquisitions;
+  u32 nested_acquisitions;
+  u32 releases;
+  u32 busy_failures;
+  u32 cache_deferrals;
+  u32 invalid_failures;
+  u32 owner_switches;
+  u32 clears;
+  u32 cleared_bytes;
+  u32 reclaim_attempts;
+  u32 reclaims;
+  u32 reclaim_failures;
+  bool enabled;
+  bool reclaimable;
+};
+
+// Foreground-only partition of the existing fixed WORKSPACE. The retained
+// owner's upper bytes remain private while compiler/runtime leases use the
+// lower prefix. No second backing array; unrelated owners are refused. Close
+// requires every prefix lease to have returned and republishes one full,
+// pointer-free resident image, so ordinary snapshot exchange works afterwards.
+class [[nodiscard]] WorkspacePartition {
+ public:
+  constexpr WorkspacePartition() : owner_(Owner::NONE), tail_(nullptr) {}
+  ~WorkspacePartition();
+  WorkspacePartition(const WorkspacePartition&) = delete;
+  WorkspacePartition& operator=(const WorkspacePartition&) = delete;
+  bool open(Owner retained_owner, usize tail_size);
+  // Optional transient scratch for the retained owner. The caller must
+  // initialise every byte it reads; other owners still get fresh zeroed
+  // storage. close() always scrubs the prefix before publishing a snapshot.
+  bool reuse_prefix();
+  bool close();
+  bool ok() const { return tail_ != nullptr; }
+  Owner owner() const { return owner_; }
+  u8* tail() const { return tail_; }
+ private:
+  Owner owner_;
+  u8* tail_;
+};
+bool workspace_partitioned();
+
+class [[nodiscard]] Lease {
+  public:
+    constexpr Lease(void)
+      : arena_(Arena::COUNT), owner_(Owner::NONE), memory_(nullptr),
+        requested_(0), token_(0), fresh_(false), nested_(false) {}
+    Lease(Arena arena, Owner owner, usize required);
+    ~Lease(void);
+
+    Lease(const Lease&) = delete;
+    Lease& operator=(const Lease&) = delete;
+
+    bool acquire(Arena arena, Owner owner, usize required);
+    // Opportunistic cache may evict another reclaimable cache, but never
+    // overwrites an inactive persistent owner such as FOCAL/TinyBASIC.
+    bool acquire_cache(Arena arena, Owner owner, usize required);
+    void reset(void);
+    // Release an unused tail of a live, non-nested OVERLAY without changing
+    // its address/token or invoking an eviction callback.
+    bool shrink_to(usize required);
+    // Stable-address OVERLAY resize within its current free capacity. Never
+    // moves memory or evicts an APP; refuses if its tail would overlap one.
+    bool resize_to(usize required);
+
+    bool ok(void) const { return memory_ != nullptr; }
+    bool fresh(void) const { return fresh_; }
+    bool nested(void) const { return nested_; }
+    Arena arena(void) const { return arena_; }
+    Owner owner(void) const { return owner_; }
+    usize size(void) const { return requested_; }
+    u8* data(void) const { return memory_; }
+
+    template<typename T>
+    T* as(void) const {
+      static_assert(alignof(T) <= 8,
+                    "shared-memory types require alignment above arena guarantee");
+      return memory_ != nullptr && sizeof(T) <= requested_
+          ? reinterpret_cast<T*>(memory_) : nullptr;
+    }
+
+    // Разрешает синхронное вытеснение opportunistic cache. Callback только
+    // готовит fallback; после RELEASE менеджер сам отзывает именно этот Lease.
+    bool set_evictable(EvictionPrepare prepare);
+
+    // A validated snapshot has replaced the zeroed bytes of a newly acquired
+    // persistent arena. Only the snapshot layer should call this.
+    bool mark_restored(void);
+
+  private:
+    Arena arena_;
+    Owner owner_;
+    u8* memory_;
+    usize requested_;
+    u32 token_;
+    bool fresh_;
+    bool nested_;
+
+    bool acquire_impl(Arena arena, Owner owner, usize required,
+                      bool opportunistic);
+    void release_impl(bool from_manager);
+    void revoke_from_manager(void);
+
+    friend bool detail_try_reclaim(Arena arena);
+};
+
+// Scoped, non-moving buffers immediately after a live OVERLAY allocation.
+// Nested buffers release in LIFO order; one buffer per owner can be live.
+// It uses only the existing free linker range, never evicts an APP, and can
+// outlive the earlier lease (USB may exit during INPUT). The manager fences
+// both APP/OVERLAY growth and _sbrk until reset; no frame storage is borrowed.
+class [[nodiscard]] OverlayBuffer {
+ public:
+  constexpr OverlayBuffer() : memory_(nullptr), size_(0), owner_(Owner::NONE), previous_(nullptr) {}
+  ~OverlayBuffer();
+  OverlayBuffer(const OverlayBuffer&) = delete;
+  OverlayBuffer& operator=(const OverlayBuffer&) = delete;
+  bool acquire(Owner owner, usize required);
+  void reset();
+  bool ok() const { return memory_ != nullptr; }
+  u8* data() const { return memory_; }
+  usize size() const { return size_; }
+  Owner owner() const { return owner_; }
+  const OverlayBuffer* previous() const { return previous_; }
+ private:
+  u8* memory_;
+  usize size_;
+  Owner owner_;
+  OverlayBuffer* previous_;
+};
+
+#if MK61_SCOPED_RESIDENT_BUFFERS
+// Stable foreground storage allocated from the high free gaps. Unlike short
+// OverlayBuffer phases, these owners may finish in any order (M61, USB Screen,
+// APP). Live APPs and buffers never move; a released gap becomes reusable.
+class [[nodiscard]] LifetimeBuffer {
+ public:
+  constexpr LifetimeBuffer() : memory_(nullptr), size_(0), owner_(Owner::NONE), next_(nullptr) {}
+  ~LifetimeBuffer();
+  LifetimeBuffer(const LifetimeBuffer&) = delete;
+  LifetimeBuffer& operator=(const LifetimeBuffer&) = delete;
+  bool acquire(Owner owner, usize required);
+  void reset();
+  bool ok() const { return memory_ != nullptr; }
+  u8* data() const { return memory_; }
+  usize size() const { return size_; }
+  Owner owner() const { return owner_; }
+  const LifetimeBuffer* next() const { return next_; }
+ private:
+  u8* memory_;
+  usize size_;
+  Owner owner_;
+  LifetimeBuffer* next_;
+};
+#endif
+
+usize capacity(Arena arena);
+bool enabled(Arena arena);
+Owner active_owner(Arena arena);
+Owner resident_owner(Arena arena);
+OwnerPolicy owner_policy(Owner owner);
+bool owner_allowed(Arena arena, Owner owner);
+bool owner_persistent(Arena arena, Owner owner);
+bool owner_cache_allowed(Arena arena, Owner owner);
+bool owner_evictable(Arena arena, Owner owner);
+u8 owner_snapshot_schema(Owner owner);
+ResidentToken resident_token(Arena arena);
+// Commit succeeds only if no acquisition has changed the resident state since
+// token creation. On success the caller's validated backing image is the sole
+// retained copy and the in-arena resident marker is forgotten.
+bool commit_resident_handoff(const ResidentToken& token);
+// Idempotently forget retained state once the current outer lease, if any,
+// is released.
+// This is used by multi-command clients such as fsput: their bytes must
+// survive between chunks, but become disposable after end/cancel/error.
+bool discard_resident(Arena arena, Owner owner);
+void* data(Arena arena, Owner owner);
+bool contains(Arena arena, const void* pointer, usize size = 1);
+Snapshot snapshot(Arena arena);
+bool validate_invariants(void);
+void reset_statistics(void);
+const char* arena_name(Arena arena);
+const char* owner_name(Owner owner);
+
+#if MK61_SHARED_MEMORY_DYNAMIC
+// Backend for newlib _sbrk. No eviction/callbacks inside libc. A live OVERLAY
+// lease or OverlayBuffer pins the lower boundary; APP pins the upper boundary.
+// nullptr = OOM.
+void* adjust_heap(i32 increment);
+#endif
+
+} // namespace shared_memory
+
+#include "shared_memory_buffer.hpp"
+
+#endif

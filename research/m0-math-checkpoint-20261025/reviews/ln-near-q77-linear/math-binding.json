@@ -1,0 +1,102 @@
+{
+  "status": "PASS_BOUNDED_SOURCE_DERIVED_Q77_MATH_AND_FULL_ELF_BINDING_WITH_PARENT_SCOPE_OPEN",
+  "source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/native_eabi_m0_log70.inc",
+    "sha256": "84213d8eb6c7841b48a834cd2304eb8c0ccd6bedc150ee84fd01cf39a8a7e06b"
+  },
+  "ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/candidate.elf",
+    "sha256": "1164948d280c23bc66601af789dbd2a4af44c0982fb8c813b35fa2b7a396052e"
+  },
+  "sealed_files": 74,
+  "input_pins": 606,
+  "changed_allocated_sections": {
+    ".text.ln_near_interval": [
+      1160,
+      0
+    ],
+    ".text.ln_near_interval77": [
+      0,
+      1356
+    ],
+    ".rodata._ZL17ln_near_q77_delta": [
+      0,
+      256
+    ]
+  },
+  "only_near_source_delta_vs_private_parent": true,
+  "shared_tables_and_generic_M0_M4_controls_equal": true,
+  "own_whole_object_ASM_ELF_rebuild_exact": true,
+  "build_commands": [
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-mfloat-abi=soft",
+        "-Os",
+        "-std=gnu++17",
+        "-fno-exceptions",
+        "-fno-rtti",
+        "-fno-unwind-tables",
+        "-fno-use-cxa-atexit",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-fno-lto",
+        "-DMK61_USE_M0_EABI=1",
+        "-DMK61_M0_RP2040_EABI=1",
+        "-I",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+        "-c",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/native_eabi_m0.cpp",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/rebuild/candidate-full.o"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-mfloat-abi=soft",
+        "-DMK61_USE_M0_EABI=1",
+        "-DMK61_M0_RP2040_EABI=1",
+        "-I",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+        "-c",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/ratio.S",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/rebuild/candidate-ratio.o"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+        "--gc-sections",
+        "-e",
+        "mk61_m0_ln",
+        "-T",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/candidate.ld",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/rebuild/candidate-full.o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/rebuild/candidate-ratio.o",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/rebuild/candidate.elf"
+      ],
+      "exit": 0
+    }
+  ],
+  "own_table_rows_exact_Fraction": 256,
+  "source_bound_seed_error": "2228225/4194304",
+  "corrected_argument_error": "9030828227/17179869184",
+  "symmetric_base": "2664208190109730510997254426793835367344678308873/1901357058098572705738664492138496000000000000000",
+  "full_error": "6959367548926793078665407153143249767344678308873/1901357058098572705738664492138496000000000000000",
+  "linear_base": "66902235595596033547255950351574840625697929/89202980793960233289313349430306741944320000",
+  "coarse_cube_truncation_bound": "122881/67108864",
+  "pack_gate_extreme_checks": 622080,
+  "unchanged_seed_lemma": "Nine retained16bit digit products; three omitted products <2^49+2^32, then half-up54bit rounding. Reciprocal RNE contributes<=1/128.",
+  "parent_main_raw_split_and_cold_entry_independently_accepted": false,
+  "public_ln_global_correctness_and_totality_not_conferred": true,
+  "hardware_accessed": false
+}

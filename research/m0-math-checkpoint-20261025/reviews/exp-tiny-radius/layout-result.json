@@ -1,0 +1,24 @@
+{
+  "status": "PASS_FINAL_OUTLINING_RESTORES_HISTORICAL_TRIAL_NEW_LOSS",
+  "rows": [
+    {
+      "x": "40861E1EFFBB4B16",
+      "SIO": "READY",
+      "parent": 556,
+      "rejected_inline": 561,
+      "final_outlined": 556,
+      "Qfplib": 559,
+      "returned_bits_unchanged": true
+    },
+    {
+      "x": "40861E1EFFBB4B16",
+      "SIO": "DIRTY",
+      "parent": 556,
+      "rejected_inline": 561,
+      "final_outlined": 556,
+      "Qfplib": 559,
+      "returned_bits_unchanged": true
+    }
+  ],
+  "extra_rejected_trial_ARM_calls2_excluded": true
+}

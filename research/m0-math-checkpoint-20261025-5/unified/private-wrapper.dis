@@ -1,0 +1,14 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/candidate.elf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+100480d4 <mk61_m0_pow_exp_product_flash>:
+100480d4:	b401      	push	{r0}
+100480d6:	4802      	ldr	r0, [pc, #8]	@ (100480e0 <mk61_m0_pow_exp_product_flash+0xc>)
+100480d8:	4684      	mov	ip, r0
+100480da:	bc01      	pop	{r0}
+100480dc:	4760      	bx	ip
+100480de:	46c0      	nop			@ (mov r8, r8)
+100480e0:	20038ee5 	.word	0x20038ee5

@@ -1,0 +1,40 @@
+{
+  "status": "PASS_BOUNDED_ACTUAL_24BYTE_TRANSFORM_AND_PCS",
+  "tests": 280,
+  "qualified_calls": 560,
+  "exact_all24_output_bytes_match_old_and_integer_model": true,
+  "radius16_boolean_wrap_and_normalization_checked": true,
+  "all16NZCV_noisy_R1_R2_R3_R12_checked": true,
+  "PCS_R4_R11_SP_PC_and_bounded_struct_stack_writes": true,
+  "actual_four_class_costs": {
+    "(False, False)": [
+      129,
+      94
+    ],
+    "(False, True)": [
+      116,
+      89
+    ],
+    "(True, False)": [
+      195,
+      154
+    ],
+    "(True, True)": [
+      182,
+      149
+    ]
+  },
+  "class_counts": {
+    "(False, False)": 80,
+    "(True, False)": 117,
+    "(True, True)": 59,
+    "(False, True)": 24
+  },
+  "peak_with_helper": {
+    "control": 68,
+    "candidate": 60
+  },
+  "no_firmware_ROM_or_arithmetic_models": true,
+  "MPFR_inputs": 0,
+  "device_IO": 0
+}

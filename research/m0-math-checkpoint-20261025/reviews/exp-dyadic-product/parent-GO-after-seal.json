@@ -1,0 +1,312 @@
+{
+  "status": "PASS_ADDITIVE_PARENT_GO_BINDING_AFTER_CHILD_PENDING_AT_SEAL",
+  "recorded_pending_at_child_seal_preserved": true,
+  "frozen": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-dyadic-product-20261024/FROZEN.json",
+    "bytes": 19217,
+    "sha256": "acdaac6247165b8b53d3e48dadff2629577e1abd073d2604105cf2f05254031b"
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-dyadic-product-20261024/result.json",
+    "bytes": 6657,
+    "sha256": "d93a322369fcc1c11cfa80f645184db2b2c11a684622f5b764016ab13e5a8783"
+  },
+  "certificate": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-dyadic-product-20261024/certificate.json",
+    "bytes": 14585,
+    "sha256": "24699e064714d826322125b4bb43651daf9aabc1dae589b359ac3b95b09d6c59"
+  },
+  "work_scope": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-dyadic-product-20261024/WORK-SCOPE.json",
+    "bytes": 500,
+    "sha256": "e254b1af4acc5216474a992a41ddad2098c0eb0dc489b636fed6e860ca7c8cd1"
+  },
+  "postseal": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-dyadic-product-postseal-20261024.json",
+    "bytes": 794,
+    "sha256": "82f7ae3ee6f46534e0412a6d41a2f4131576d5b94b08bccae84fff41f2c45755"
+  },
+  "accepted_parent_receipt": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 24465,
+    "sha256": "83b3d4a9eb32b17d69e9081f33f63ed9d01f9a466f61cfc3b64788312d8e8d16"
+  },
+  "accepted_parent_status": "GO_PRIVATE_RP_ADAPTIVE_EXP_ENCLOSURE_AND_SHARED_PRODUCT_COMPONENT_ONLY",
+  "accepted_parent_ref_count54": true,
+  "parent_receipt_plus_referenced_files55": true,
+  "verified_parent_refs": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-log-midpoint-independent-20261024/FINAL-REVIEW.json",
+      "bytes": 21790,
+      "sha256": "bdaba8cf9bbe58c8e36dafe9b8f904eb8428fdd42db0abb070b5f4a42e472554"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/FROZEN.json",
+      "bytes": 21046,
+      "sha256": "de974c59adb91f98123723c014d0e41e44fa4fb966bc76ff87cf11bec994f5f8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/result.json",
+      "bytes": 6237,
+      "sha256": "f1b729a9ed7bbf468643ce41fe9193f1d1ee1ace98c139589ba82482bab7a5a7"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/HANDOFF.md",
+      "bytes": 4842,
+      "sha256": "043a91b67fa57e004046a77d9bc6e1cae57b98ec8de939c91943e652fd462722"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/candidate/native_eabi_m0.cpp",
+      "bytes": 41373,
+      "sha256": "421e6b5e38b97b1e97b3dd428383f8d4d04f2144b7720cc4b6c8eb0aac24a0e8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/candidate/native_eabi_m0.S",
+      "bytes": 22804,
+      "sha256": "f048a1c3fa398cf1d4d22d85ffbff41b062907a3a3d3f813105b5f359803b659"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/candidate/native_eabi_m0_pow_exp_product.inc",
+      "bytes": 2328,
+      "sha256": "2f7781d2d73abd28cfe752205fe0a9cb20192d99fe841364049da53cf4e38e1b"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/candidate.elf",
+      "bytes": 1126920,
+      "sha256": "c1d7a59ffe62a886b3fdfaaf3d215a24e1c52c902c3b1a31b75286960261eb6c"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/control.elf",
+      "bytes": 1126616,
+      "sha256": "486dd1dd4a4960c9f39ab4e857147ed3c68347a077ed5d92a9c5205ef14500fc"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/qualified-log-midpoint-to-adaptive-exp.patch",
+      "bytes": 2042,
+      "sha256": "6690fd9246384e647f0a7706ac046f77188321227508c742a140674b3dd94439"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/qualification-records.jsonl.gz",
+      "bytes": 7139877,
+      "sha256": "b338a0be1e02a58752f993e6528219aecb29feed6c76ae7a24a5f48479d1afaf"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/remaining-parent-audit.json",
+      "bytes": 1140852,
+      "sha256": "ad4d777c63da31ca89f6044642f2c255427376838c6b8827325d07e2f408a6bb"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/same-corpus-fixed29.json",
+      "bytes": 27079,
+      "sha256": "d6f15e6010c346f2028abad8f4f1ee1c1eee514de588711e900c0c1e0735e02c"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/pow-loss-replay.json",
+      "bytes": 13042000,
+      "sha256": "6ce4d76be694ef88cfcde6934a51cc2ad0d3de4ed9c53d88e8de26076e25e141"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/unit-proof.json",
+      "bytes": 1202,
+      "sha256": "a7986fdeea40eb11eacc85fda4317960e8353a6d0171421a68fbb57c7722c743"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/caller-proof.json",
+      "bytes": 238064,
+      "sha256": "c1537cbb7652661655b61f55a90a88035322f1c58271c658e2bee8e58aed9e0f"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-20261024/logs/VALIDATION-NOTES.json",
+      "bytes": 653,
+      "sha256": "5b3b1eccef28ee085c087133b4398baa297354d6a0b06bfe8f508f19c5484647"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-postseal-20261024.json",
+      "bytes": 799,
+      "sha256": "41785dc9275aec416bb67a156ae9acb4fda6f429ae2c992ccbb6458c8b2c25b1"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/original507-component-delta.json",
+      "bytes": 1772,
+      "sha256": "aa5c8dbcfb71182d9d019bd1760d01e3281f50ad2cbf61f6b3c2b02eabb07a90"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf",
+      "bytes": 9015184,
+      "sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/research/rp2040-memset-2026-10-21/capture/bootrom.bin",
+      "bytes": 16384,
+      "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/reference.elf",
+      "bytes": 17268,
+      "sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/sources/qfplib-linked.S",
+      "bytes": 87161,
+      "sha256": "c445325c849eb73adbef75176a5a0836cb945ad366ceca6bf9517030e2054f48"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/support/native_eabi_m0_arm_self_test.py",
+      "bytes": 25185,
+      "sha256": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/support/m0_mpfr_oracle.py",
+      "bytes": 5027,
+      "sha256": "fb880de9b8fe7d4b0fc9225121b90d7c41d976fec01b67bf4f7d6e2a89c7000a"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tests/check_stm32_vectors.py",
+      "bytes": 3952,
+      "sha256": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/build/compile_commands.json",
+      "bytes": 1805962,
+      "sha256": "74464b896e58b118dc331ae4b64e141012e19c93abdfae4654585e4ee4f06db7"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code/native_eabi_m0_exp_table.inc",
+      "bytes": 17117,
+      "sha256": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/binding.py",
+      "bytes": 9127,
+      "sha256": "618b568a73e23b84ba245246ad9bb407e8f1ea77ede6de022b9f702b8292e95a"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/binding.json",
+      "bytes": 456688,
+      "sha256": "a66c765eacc42e3603a02f99a76245a8e7f0511511552a438487ae5e94cd12f5"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/proof.py",
+      "bytes": 6879,
+      "sha256": "91d0df093f12b2ba7805c547fac59993052f5031623f6f4e22785dff07e3e8cd"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/proof.json",
+      "bytes": 1552,
+      "sha256": "2eef4c719ee1c100f476ef0b94d05952adada0abbf824fcf84b9bbf4dc5d12ea"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/arm.py",
+      "bytes": 13842,
+      "sha256": "156921835717c316e8c14e2867dba1b9e8f7190fb14f7e7467a08ee3ac743aab"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/arm-result.json",
+      "bytes": 1762,
+      "sha256": "7c3be672c6d57b2180f39e7baea80b2f16bb7d825fe5f109db909f3225552b7c"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/callers.py",
+      "bytes": 5082,
+      "sha256": "801fc8ac8b2966c3ee4c2863b19e5af2b27bfaf3655667bf25cff8e1d72dd29f"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/callers.json",
+      "bytes": 1001,
+      "sha256": "bbee4f0e8dee51287d5fe6232c5d6fbb128bfb8345ba0f14a1be91d4f2441704"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/caller-results.json",
+      "bytes": 192165,
+      "sha256": "5b9e86f1e77a06a78507aefb964af009235e8981686f464d7e0f4f2b2acbdb34"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/evidence.py",
+      "bytes": 11918,
+      "sha256": "3d21952d29ad6cd27e9aa87707db0c03d1132464cfe2390e44ff8228399f2433"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/evidence.json",
+      "bytes": 2405,
+      "sha256": "32469e55250891678802f5871ee122d9e5cfce8314ed9b127e3e52b757d5dada"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/INDEPENDENT-PROOF.md",
+      "bytes": 14145,
+      "sha256": "ab57f0281a67b68098335d905afac79bc0a71bf66f35e271b897dfbddb1930e3"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/table-rows.json",
+      "bytes": 42391,
+      "sha256": "04c53aff9d626030a95313da8022b41b22adf5450a8c235f04d907838ad8e7de"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/own-gate-inputs.bin",
+      "bytes": 66464,
+      "sha256": "57ba0cd8a21628c4606eeaffdd3dea3759a145b51d3be59d26ff9a4833288e25"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/public-results.json",
+      "bytes": 1242635,
+      "sha256": "dbea19bdd746415abf4b598df034c64ff1820664294734801d1385fc898ac769"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/actual-public-gate-events.json",
+      "bytes": 31243,
+      "sha256": "b2663e63de8e898ef253d79434e2f0a3b656dfd397990988980bd468bf68c72b"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/product-results.json",
+      "bytes": 79294,
+      "sha256": "92a307388102326655b6d9b25f22bfebcb007cc9f2f5190d91fcb6b84ae6ab66"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/candidate.dis",
+      "bytes": 120712,
+      "sha256": "7851413bd6aa3f30ccb20bdba64674100f425c39fe0030ba48b5c53dd798dc8c"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/control.dis",
+      "bytes": 119762,
+      "sha256": "f2146b57c1cd90ae633876c6d8683dd46de8c6b7b9d634c5f832c157d395086c"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/unit.dis",
+      "bytes": 1627,
+      "sha256": "44dddcd18cd56bf2c6acfab20939f30739f6c8dffd9338ead71382683330b23d"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/product-old.dis",
+      "bytes": 3269,
+      "sha256": "2f2fd114c334cc06672cd7bc924134dc6cb0a9eeea6fcc4ff17224ed87986a54"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/product-new.dis",
+      "bytes": 3236,
+      "sha256": "d13afdf31349dbfcc686a5674f00e1c46d46c6b9a692e2e083a3b3337adb189d"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/postread.json",
+      "bytes": 212396,
+      "sha256": "dbe5343641c60093d922c2471b8b292cc4a6755de64324ce3b2ee8f5023a3acc"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/execution.json",
+      "bytes": 1408,
+      "sha256": "0c570b4737cca0e3176e4edafa6e35b2b532ba9baa5dd029e021782f58bf2184"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/expanded-component-ledger.json",
+      "bytes": 1632,
+      "sha256": "6835a5855fda419ce3ff8b8b622ba00d846c2180ed91eee5f5e49aa3ece545f4"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/finalize.py",
+      "bytes": 16552,
+      "sha256": "eec705c3903780b9b779c67582e8ca946e7a831111caef76f954ef323f5e525b"
+    }
+  ],
+  "control_source_objects_and_ELF_exact_accepted_parent": true,
+  "no_frozen_metadata_rewritten": true,
+  "scope": "The same immutable source parent now has an independent component GO. This receipt adds that acceptance without asserting it existed at the child seal."
+}

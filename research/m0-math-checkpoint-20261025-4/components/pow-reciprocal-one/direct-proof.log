@@ -1,0 +1,56 @@
+reciprocal1-direct 0 / 12768 0.0
+reciprocal1-direct 1024 / 12768 2.6
+reciprocal1-direct 2048 / 12768 5.1
+reciprocal1-direct 3072 / 12768 7.5
+reciprocal1-direct 4096 / 12768 10.0
+reciprocal1-direct 5120 / 12768 12.4
+reciprocal1-direct 6144 / 12768 14.9
+reciprocal1-direct 7168 / 12768 17.4
+reciprocal1-direct 8192 / 12768 19.9
+reciprocal1-direct 9216 / 12768 22.3
+reciprocal1-direct 10240 / 12768 24.8
+reciprocal1-direct 11264 / 12768 27.2
+reciprocal1-direct 12288 / 12768 29.7
+{
+  "status": "PASS_PRIVATE_NUMERATOR1_RNE_EXACT_PRODUCT_JOINS_AND_ALL_DENOMINATOR_CLASSES",
+  "pairs": 12768,
+  "states": 25536,
+  "actual_ARM_calls": 102144,
+  "actual_directed_MPFR_inputs": 12734,
+  "sNaN_policy_shortcuts": 34,
+  "MPFR_version": "4.2.2",
+  "numerator_contract": "exact positive1 only; denominator any binary64",
+  "all_parent_return_bits_equal": true,
+  "all_first_R4_equals2pow31_and_all_after_second_product_R0_R7_R12_SP_NZCV_frame28B_identical": true,
+  "direct_first_product_calls": 24728,
+  "all_actual_deltas_equal15_per_first_product_plus2_per_software_seed": true,
+  "instruction_delta_histogram": {
+    "-17": 12364,
+    "-15": 12364,
+    "0": 808
+  },
+  "correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 12622,
+      "slower": 12560
+    },
+    "candidate": {
+      "faster": 13421,
+      "slower": 5640,
+      "equal": 6121
+    }
+  },
+  "all_Qfplib_raw_outputs_costs_and_flags_retained": true,
+  "DIRTY_SIO_preserved_no_writes": true,
+  "seed_call_SP8aligned": true,
+  "observed_stacks": {
+    "parent": 176,
+    "control": 176,
+    "candidate": 176
+  },
+  "candidate_ELF_sha256": "f5aac41609ad35a12c3b2a3af490cc7999172764f7ddc4d7bee52cb65c246dbf",
+  "records_sha256": "b0a516a7b46ed6085875fe07938abd72a5da5ea845bf633b3253a788221881d0",
+  "elapsed_seconds": 30.86381008301396,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

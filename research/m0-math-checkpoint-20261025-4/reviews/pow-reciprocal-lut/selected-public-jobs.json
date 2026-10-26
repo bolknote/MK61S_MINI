@@ -1,0 +1,90 @@
+{
+  "status": "BOUNDED_ALL9_SAVED_NEW_STRICT_FIXES_PLUS_ENDPOINTS_AND_CONTROLS",
+  "jobs": [
+    {
+      "x": "3FA0092F95A0C764",
+      "y": "C00C000000000000",
+      "group": "all9_new_strict_fixes"
+    },
+    {
+      "x": "3FE83B1AF4197991",
+      "y": "C00C000000000000",
+      "group": "all9_new_strict_fixes"
+    },
+    {
+      "x": "3FE83B1AF4197993",
+      "y": "C00C000000000000",
+      "group": "all9_new_strict_fixes"
+    },
+    {
+      "x": "3FF6373805BC6B4D",
+      "y": "C00C000000000000",
+      "group": "all9_new_strict_fixes"
+    },
+    {
+      "x": "40108FC436BAF116",
+      "y": "BFF4000000000000",
+      "group": "all9_new_strict_fixes"
+    },
+    {
+      "x": "40108FC436BAF118",
+      "y": "BFF4000000000000",
+      "group": "all9_new_strict_fixes"
+    },
+    {
+      "x": "401160A32D94245E",
+      "y": "BFF4000000000000",
+      "group": "all9_new_strict_fixes"
+    },
+    {
+      "x": "401160A32D94245F",
+      "y": "BFF4000000000000",
+      "group": "all9_new_strict_fixes"
+    },
+    {
+      "x": "40722140DA997522",
+      "y": "C00C000000000000",
+      "group": "all9_new_strict_fixes"
+    },
+    {
+      "x": "40701C60DA91800E",
+      "y": "C004000000000000",
+      "group": "public_seed_delta_endpoint"
+    },
+    {
+      "x": "400B1FE7CB6FA4C6",
+      "y": "BFFF000000000000",
+      "group": "public_seed_delta_endpoint"
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "3FF654E7580FA958",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "401FB34C9D8CF59F",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "status": "PASS_POSTSEAL_POW_COMPONENT_ALL_ARTIFACT_LINEAGE_AND_CORPUS_PINS",
+  "FROZEN_sha256": "f1d64d6955b8a9b96af272a6191196a39709c6896617f8557d555a78e35e478e",
+  "artifacts": 102,
+  "external_lineage_pins": 105,
+  "original_corpus_pins": 12,
+  "hardware_accessed": false
+}

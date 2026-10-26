@@ -1,0 +1,22 @@
+{
+  "status": "PASS_ALL16_INCOMING_NZCV_VARIANTS_AND_PRIVATE_FRACTION",
+  "raw_pairs": 64,
+  "initial_NZCV_variants": 16,
+  "fresh_ARM_calls": 2048,
+  "new_exact_retained_fraction_checks": 1024,
+  "all_return_bits_ABI_SP_word_alignment_active_PC_and_bounded_writes_checked": true,
+  "stack_frame_bytes": {
+    "old": 36,
+    "new": 36
+  },
+  "instruction_counts": {
+    "old": 79,
+    "new": 77
+  },
+  "bare_ELF_sha256": {
+    "old": "11d096ce8d7bc5dbe7b8382695bc5c960cfe2aeebb2cb78262f7f52795253c5e",
+    "new": "ed75eb5ea457d5cc6552a7863b1039256646efb84cf8aace2be7cd86cc0e6b94"
+  },
+  "no_ROM_firmware_arithmetic_mocks_or_SIO": true,
+  "hardware_accessed": false
+}

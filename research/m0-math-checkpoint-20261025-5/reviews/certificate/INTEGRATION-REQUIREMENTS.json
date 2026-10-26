@@ -1,0 +1,30 @@
+{
+  "status": "MANDATORY_BEFORE_ANY_SOURCE_MERGED_OR_PERFORMANCE_ADOPTION_DECISION",
+  "exact_supplier": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/FROZEN.json",
+    "bytes": 11505,
+    "sha256": "99110367092d4c7397967d9f3b06fb282843431bd7af5b71ea1038a77b4ac329"
+  },
+  "parent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-20261025/FROZEN.json",
+    "bytes": 13435,
+    "sha256": "0be351d573878a48f13f5d41edd2812a23ab269556b929db9aa8324e6a0bf219"
+  },
+  "private_entry": "HIDDEN mk61_m0_reciprocal1: R0=0,R1=0x3ff00000, denominator R2:R3 any binary64. Sole reviewed root caller only; not generic ddiv or one-argument C ABI.",
+  "private_continuation": "20B original callee frame/raw operands/guarded R6/R12 sign+exponent. Inline seed ownentrySP-20 and preserved R0/R2/R3/R5/R12. Preserve current PCS, SP/PC and DIRTY7 words.",
+  "certificate": "Exact E in[0,131071]. Accept only (A&0x7fffffff)>=131072. Both inclusive discontinuity bands use complete original product/borrow/CMP; no zero/INTMIN shortcut. R0/R1/R12/SP live; no missing limb or flag may leak into RNE.",
+  "zero_shift": "Only proven positive-one dataflow: R0=0 through both products, R4=R0<<5=0 and both normalization branches preserve it; flags reset before any consumer.",
+  "READY": "Retain nine independent ALU instructions between divider issue and quotient read; instruction count is not a physical cycle measurement.",
+  "performance": "Explicit tradeoff:32 public +7/+8 states, including two already-losing correct-Qfp states that worsen, and1132 scalar parent increases. 1 strict plus1 equality pair fix. No universal speed or automatic adoption GO.",
+  "source_merge": "Near-one exp is a separate sibling. Merge source and relink, then inspect/test the actual combined ELF; no binary overlay substitution or inherited integration verdict.",
+  "shared_R12": "Fresh actual integrated linked consumer/veneer/entry R12 guards and loader/layout verification are mandatory. Unit/private ELF evidence cannot satisfy this.",
+  "loader_layout": "The old168B exp overlay overwrites14 bytes of the newer table-product entry. Preserve current whole-bank loader ordering; validate actual integrated bytes/addresses/relocations and free Flash.",
+  "limits": "General pow totality, other functions, physical device cycles, hardware qualification, main/release and next known-zero optimization are outside this review.",
+  "reviewed507": 422,
+  "author438_not_promoted": true,
+  "integration_GO": false,
+  "performance_adoption_GO": false,
+  "hardware_GO": false,
+  "main_GO": false,
+  "release_GO": false
+}

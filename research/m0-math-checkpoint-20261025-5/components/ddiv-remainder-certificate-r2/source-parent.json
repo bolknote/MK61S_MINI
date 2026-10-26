@@ -1,0 +1,12 @@
+{
+  "source": ".build/m0-ddiv-remainder-certificate-20261025",
+  "files": {
+    "remainder-certificate.inc": "6d31628badd689b4bce884760056ff868d3def9241d4a17bb548846e184913c5",
+    "build.py": "74cdafbf85d72ea1a0f69f10846b3b93a47a74e06cbb00a1edc89a8c1e7a6045",
+    "study.py": "ee8ae2cbcfe25cf11614466dc1ca4b9d45d9c88a1494a2e69e4657c850ae2ed4",
+    "verify-unit.py": "07f29ef1205e84733595374a3b04476ce5d52b9c6e21885caa67ef9172c5c401"
+  },
+  "only_driver_change": "Assert live R1 preservation, already declared in the unit summary.",
+  "archived_sources_modified": false,
+  "hardware_accessed": false
+}

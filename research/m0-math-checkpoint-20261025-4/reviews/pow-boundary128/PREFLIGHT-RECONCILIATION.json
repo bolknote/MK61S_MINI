@@ -1,0 +1,36 @@
+{
+  "status": "HISTORICAL_REVIEWER_PREFLIGHTS_RETAINED_AND_CLASSIFIED",
+  "author_syntax_preflight": "Frozen probe-preflight-failed.log: SyntaxError before any ARM calls; retained, not qualified.",
+  "own_static_preflights": [
+    "HOST-PREFLIGHT-001.json",
+    "HOST-PREFLIGHT-002.json",
+    "HOST-PREFLIGHT-003.json"
+  ],
+  "own_ARM_preflight": "ARM-PREFLIGHT-001.json",
+  "old_and_new_case_generators_and_all_actual_call_statements_AST_identical": true,
+  "first_failing_case_reconstructed_from_identical_deterministic_prefix": {
+    "index": 144,
+    "valid": false,
+    "cell": "0000000000000000",
+    "instructions": {
+      "control": 16,
+      "candidate": 20
+    },
+    "prior_failed_attempt_calls_reconstructed": 290
+  },
+  "prior_failed_ARM_calls": 290,
+  "prior_failed_calls_not_added_to_qualified644": true,
+  "qualified_bare": 320,
+  "qualified_public": 324,
+  "own_actual_ARM_including_failed_attempt": 934,
+  "qualified_directed_MPFR_inputs": 25,
+  "qualified_sNaN_shortcuts": 2,
+  "invalid_guard_histogram": {
+    "4": 14,
+    "7": 2
+  },
+  "invalid_guard_speed_not_qualified": true,
+  "arithmetic_or_returned_side_failure": false,
+  "auto_review_rejections": 0,
+  "device_IO": 0
+}

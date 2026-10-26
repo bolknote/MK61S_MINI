@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/probe.py", line 5, in <module>
+    from harness import *
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/harness.py", line 31
+    size=image.sizes['mk61_m0_boundary128']if label=='candidate'else532
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: expected 'else' after 'if' expression

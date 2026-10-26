@@ -1,0 +1,11 @@
+{
+  "initial_bounded_replay_exit": 132,
+  "narrow_constructor_probe_exit": 132,
+  "Python": "3.13",
+  "Unicorn": "2.1.4",
+  "failure": "Fatal Python error: Illegal instruction",
+  "native_stack": "unicorn_py3/unicorn.py:831 mem_map; native_eabi_m0_arm_self_test.py:49 __init__",
+  "ARM_instructions_started": false,
+  "numeric_mismatch_observed": false,
+  "source_or_frozen_inputs_changed": false
+}

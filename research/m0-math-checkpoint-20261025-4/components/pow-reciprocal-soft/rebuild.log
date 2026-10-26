@@ -1,0 +1,30 @@
+rebuild 1 / 26 RP-control.o
+rebuild 2 / 26 RP-candidate.o
+rebuild 3 / 26 generic_M0-control.o
+rebuild 4 / 26 generic_M0-candidate.o
+rebuild 5 / 26 M4_soft-control.o
+rebuild 6 / 26 M4_soft-candidate.o
+rebuild 7 / 26 M4_hard-control.o
+rebuild 8 / 26 M4_hard-candidate.o
+rebuild 9 / 26 control-ddiv.o
+rebuild 10 / 26 candidate-ddiv.o
+rebuild 11 / 26 software.o
+rebuild 12 / 26 seed17.o
+rebuild 13 / 26 control.elf
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/seed17.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+rebuild 14 / 26 candidate.elf
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/seed17.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+rebuild 15 / 26 generic_M0-control-ddiv-disabled.o
+rebuild 16 / 26 generic_M0-candidate-ddiv-disabled.o
+rebuild 17 / 26 generic_M0-software-disabled.o
+rebuild 18 / 26 generic_M0-seed17-disabled.o
+rebuild 19 / 26 M4_soft-control-ddiv-disabled.o
+rebuild 20 / 26 M4_soft-candidate-ddiv-disabled.o
+rebuild 21 / 26 M4_soft-software-disabled.o
+rebuild 22 / 26 M4_soft-seed17-disabled.o
+rebuild 23 / 26 M4_hard-control-ddiv-disabled.o
+rebuild 24 / 26 M4_hard-candidate-ddiv-disabled.o
+rebuild 25 / 26 M4_hard-software-disabled.o
+rebuild 26 / 26 M4_hard-seed17-disabled.o

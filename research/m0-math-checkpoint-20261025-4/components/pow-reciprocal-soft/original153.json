@@ -1,0 +1,3064 @@
+{
+  "rows": [
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "stream": "medium_integer_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 5045,
+          "candidate": 5045,
+          "Qfplib": 1585
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 5691,
+          "candidate": 5691,
+          "Qfplib": 1585
+        }
+      ]
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 3537,
+          "candidate": 3537,
+          "Qfplib": 1568
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 3537,
+          "candidate": 3537,
+          "Qfplib": 1568
+        }
+      ]
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 3230,
+          "candidate": 3230,
+          "Qfplib": 1503
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 3230,
+          "candidate": 3230,
+          "Qfplib": 1503
+        }
+      ]
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 3213,
+          "candidate": 3213,
+          "Qfplib": 1522
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 3213,
+          "candidate": 3213,
+          "Qfplib": 1522
+        }
+      ]
+    },
+    {
+      "x": "3FF654E7580FA958",
+      "y": "3FE5000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 3194,
+          "candidate": 3194,
+          "Qfplib": 1534
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 3194,
+          "candidate": 3194,
+          "Qfplib": 1534
+        }
+      ]
+    },
+    {
+      "x": "401FB34C9D8CF59F",
+      "y": "3FE5000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 3184,
+          "candidate": 3184,
+          "Qfplib": 1559
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 3184,
+          "candidate": 3184,
+          "Qfplib": 1559
+        }
+      ]
+    },
+    {
+      "x": "401B94299C61C1D6",
+      "y": "3FE6668585168060",
+      "stream": "independent_full_fractional",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 3219,
+          "candidate": 3219,
+          "Qfplib": 1514
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 4507,
+          "candidate": 4507,
+          "Qfplib": 1514
+        }
+      ]
+    },
+    {
+      "x": "4014956EEA60254C",
+      "y": "3FF91FF40073E410",
+      "stream": "independent_full_fractional",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 3231,
+          "candidate": 3231,
+          "Qfplib": 1610
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 4503,
+          "candidate": 4503,
+          "Qfplib": 1610
+        }
+      ]
+    },
+    {
+      "x": "3FE324306A0A992A",
+      "y": "3FDA000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 3057,
+          "candidate": 3057,
+          "Qfplib": 1580
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 3057,
+          "candidate": 3057,
+          "Qfplib": 1580
+        }
+      ]
+    },
+    {
+      "x": "40157AE1D94B6C89",
+      "y": "3FCC000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 2947,
+          "candidate": 2947,
+          "Qfplib": 1585
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2947,
+          "candidate": 2947,
+          "Qfplib": 1585
+        }
+      ]
+    },
+    {
+      "x": "4026C3C0B5F88F2C",
+      "y": "3FFE000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 2754,
+          "candidate": 2754,
+          "Qfplib": 1588
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2754,
+          "candidate": 2754,
+          "Qfplib": 1588
+        }
+      ]
+    },
+    {
+      "x": "40504A28B5F48AA3",
+      "y": "3F80000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 2581,
+          "candidate": 2581,
+          "Qfplib": 1562
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2581,
+          "candidate": 2581,
+          "Qfplib": 1562
+        }
+      ]
+    },
+    {
+      "x": "4037AB22F2CD1735",
+      "y": "3FDC000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 2570,
+          "candidate": 2570,
+          "Qfplib": 1556
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2570,
+          "candidate": 2570,
+          "Qfplib": 1556
+        }
+      ]
+    },
+    {
+      "x": "40323AF181A4771B",
+      "y": "3FE2000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 2428,
+          "candidate": 2428,
+          "Qfplib": 1513
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2428,
+          "candidate": 2428,
+          "Qfplib": 1513
+        }
+      ]
+    },
+    {
+      "x": "404F04390B0A9B1B",
+      "y": "3FF6000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 2411,
+          "candidate": 2411,
+          "Qfplib": 1585
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2411,
+          "candidate": 2411,
+          "Qfplib": 1585
+        }
+      ]
+    },
+    {
+      "x": "3FA2595E2B9CE616",
+      "y": "BFA0000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 2366,
+          "candidate": 2366,
+          "Qfplib": 1518
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2595,
+          "candidate": 2595,
+          "Qfplib": 1518
+        }
+      ]
+    },
+    {
+      "x": "3FE84FD5844E80E0",
+      "y": "3FB8000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 2250,
+          "candidate": 2250,
+          "Qfplib": 1570
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2250,
+          "candidate": 2250,
+          "Qfplib": 1570
+        }
+      ]
+    },
+    {
+      "x": "3FED6D1B8CD8CE06",
+      "y": "402F000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 2142,
+          "candidate": 2142,
+          "Qfplib": 1558
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2142,
+          "candidate": 2142,
+          "Qfplib": 1558
+        }
+      ]
+    },
+    {
+      "x": "402D2286C7D961B9",
+      "y": "3FF2000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 2108,
+          "candidate": 2108,
+          "Qfplib": 1565
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2108,
+          "candidate": 2108,
+          "Qfplib": 1565
+        }
+      ]
+    },
+    {
+      "x": "3FEAEC61B8FD832B",
+      "y": "4013000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 2023,
+          "candidate": 2023,
+          "Qfplib": 1538
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2023,
+          "candidate": 2023,
+          "Qfplib": 1538
+        }
+      ]
+    },
+    {
+      "x": "3FED782226040405",
+      "y": "4027000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1918,
+          "candidate": 1918,
+          "Qfplib": 1551
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1918,
+          "candidate": 1918,
+          "Qfplib": 1551
+        }
+      ]
+    },
+    {
+      "x": "4020FD2CAEB72B72",
+      "y": "3FE4000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1957,
+          "candidate": 1957,
+          "Qfplib": 1566
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1957,
+          "candidate": 1957,
+          "Qfplib": 1566
+        }
+      ]
+    },
+    {
+      "x": "3FF4B1DD264786A5",
+      "y": "C02A000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1921,
+          "candidate": 1921,
+          "Qfplib": 1568
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2340,
+          "candidate": 2008,
+          "Qfplib": 1568
+        }
+      ]
+    },
+    {
+      "x": "3FE0CD882E24AF80",
+      "y": "4009000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1796,
+          "candidate": 1796,
+          "Qfplib": 1482
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1796,
+          "candidate": 1796,
+          "Qfplib": 1482
+        }
+      ]
+    },
+    {
+      "x": "5B27CF4AC334ECB8",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 341
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 341
+        }
+      ]
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1725,
+          "candidate": 1725,
+          "Qfplib": 1526
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2131,
+          "candidate": 1813,
+          "Qfplib": 1526
+        }
+      ]
+    },
+    {
+      "x": "3FF0A92423EB2AA1",
+      "y": "C02E000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1755,
+          "candidate": 1755,
+          "Qfplib": 1568
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 2213,
+          "candidate": 1843,
+          "Qfplib": 1568
+        }
+      ]
+    },
+    {
+      "x": "3FBFBF0990BF0A68",
+      "y": "BFC0000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1730,
+          "candidate": 1730,
+          "Qfplib": 1505
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1955,
+          "candidate": 1955,
+          "Qfplib": 1505
+        }
+      ]
+    },
+    {
+      "x": "3F9246CF13876B3A",
+      "y": "BFC0000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1727,
+          "candidate": 1727,
+          "Qfplib": 1518
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1952,
+          "candidate": 1952,
+          "Qfplib": 1518
+        }
+      ]
+    },
+    {
+      "x": "3F968EBD5B980468",
+      "y": "BFC0000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1721,
+          "candidate": 1721,
+          "Qfplib": 1516
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1942,
+          "candidate": 1942,
+          "Qfplib": 1516
+        }
+      ]
+    },
+    {
+      "x": "3FC6017DB8B8B448",
+      "y": "BFC0000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1723,
+          "candidate": 1723,
+          "Qfplib": 1544
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1960,
+          "candidate": 1960,
+          "Qfplib": 1544
+        }
+      ]
+    },
+    {
+      "x": "400350B8DE465A94",
+      "y": "3FB0000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1648,
+          "candidate": 1648,
+          "Qfplib": 1496
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1648,
+          "candidate": 1648,
+          "Qfplib": 1496
+        }
+      ]
+    },
+    {
+      "x": "3F89C1A2900EDC2E",
+      "y": "BFC0000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1729,
+          "candidate": 1729,
+          "Qfplib": 1592
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1970,
+          "candidate": 1970,
+          "Qfplib": 1592
+        }
+      ]
+    },
+    {
+      "x": "3F9CB40EE7C5CAF4",
+      "y": "BFC0000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1727,
+          "candidate": 1727,
+          "Qfplib": 1638
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1947,
+          "candidate": 1947,
+          "Qfplib": 1638
+        }
+      ]
+    },
+    {
+      "x": "3FF2A4269F8149D1",
+      "y": "C02A000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1557,
+          "candidate": 1557,
+          "Qfplib": 1536
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1971,
+          "candidate": 1643,
+          "Qfplib": 1536
+        }
+      ]
+    },
+    {
+      "x": "3FD0000000000000",
+      "y": "C016000000000000",
+      "stream": "hard_pow_moderate",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1316,
+          "candidate": 1316,
+          "Qfplib": 1327
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1316,
+          "candidate": 1316,
+          "Qfplib": 1327
+        }
+      ]
+    },
+    {
+      "x": "72FB4FE9F28F6BD6",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 307
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 307
+        }
+      ]
+    },
+    {
+      "x": "19B6B177AF096BE8",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 302,
+          "candidate": 302,
+          "Qfplib": 307
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 302,
+          "candidate": 302,
+          "Qfplib": 307
+        }
+      ]
+    },
+    {
+      "x": "3276C286F5A8F9BA",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 307
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 307
+        }
+      ]
+    },
+    {
+      "x": "529EC474818132A0",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 307
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 307
+        }
+      ]
+    },
+    {
+      "x": "569F13D9C2FF829F",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 307
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 307
+        }
+      ]
+    },
+    {
+      "x": "3A6BCBE314B57C0C",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 298,
+          "candidate": 298,
+          "Qfplib": 309
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 298,
+          "candidate": 298,
+          "Qfplib": 309
+        }
+      ]
+    },
+    {
+      "x": "4366C81E0156F410",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 309
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 309
+        }
+      ]
+    },
+    {
+      "x": "3887F6F598CD6E08",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 309
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 309
+        }
+      ]
+    },
+    {
+      "x": "6047E3690796C6A8",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 309
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 309
+        }
+      ]
+    },
+    {
+      "x": "65463153542F884C",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 309
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 309
+        }
+      ]
+    },
+    {
+      "x": "4AB8C73B7E4F810F",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 330
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 330
+        }
+      ]
+    },
+    {
+      "x": "4F4A6FFE630FC84C",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 332
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 332
+        }
+      ]
+    },
+    {
+      "x": "1031585153525BB5",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 333
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 333
+        }
+      ]
+    },
+    {
+      "x": "37EE24C59D5D378E",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 332
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 332
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFE2D",
+      "y": "C0A30A8C16DA169E",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1245,
+          "candidate": 1245,
+          "Qfplib": 1275
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1245,
+          "candidate": 1245,
+          "Qfplib": 1275
+        }
+      ]
+    },
+    {
+      "x": "62E312FA88406AC4",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 309,
+          "candidate": 309,
+          "Qfplib": 332
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 309,
+          "candidate": 309,
+          "Qfplib": 332
+        }
+      ]
+    },
+    {
+      "x": "0B4669E5B883DC86",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 335
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 335
+        }
+      ]
+    },
+    {
+      "x": "11DCE8415CBFF990",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 339
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 339
+        }
+      ]
+    },
+    {
+      "x": "20C1FFC4CDFE675C",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 341
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 341
+        }
+      ]
+    },
+    {
+      "x": "6102FD9B29BEBADF",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 307,
+          "candidate": 307,
+          "Qfplib": 341
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 307,
+          "candidate": 307,
+          "Qfplib": 341
+        }
+      ]
+    },
+    {
+      "x": "429F5D2FAD14B60C",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 342
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 342
+        }
+      ]
+    },
+    {
+      "x": "4B9ACC82A9453294",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 342
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 342
+        }
+      ]
+    },
+    {
+      "x": "673D6E227DDA98A9",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 302,
+          "candidate": 302,
+          "Qfplib": 342
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 302,
+          "candidate": 302,
+          "Qfplib": 342
+        }
+      ]
+    },
+    {
+      "x": "089BB2F70E88F1EC",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 342
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 342
+        }
+      ]
+    },
+    {
+      "x": "B7B45700D2E0D2B0",
+      "y": "0000000000000000",
+      "stream": "composed_negative_wide",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "BF705B3F27F11045",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "BF75F439653E2025",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "BF7769E42E624B5D",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "BF78C6958C0B51DB",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "BF78DE1FF841A403",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "BF8E0D9AF5682BC5",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "BFA4BC154ED12FAF",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "BFB18E4E71739CB1",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "BFC1C91BBF64C701",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "BFE02454B52EF796",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "BFEEADCA06C1FC7D",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "C000C1D4F3C6269E",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "C03199457691A72D",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "C039C427654C2A9F",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "C04E943E5C1DB60C",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "C05DA6CF1E6580CE",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "C06379781E090222",
+      "y": "0000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "D8AB6884EAE94FF3",
+      "y": "0000000000000000",
+      "stream": "composed_negative_wide",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 11,
+          "candidate": 11,
+          "Qfplib": 17
+        }
+      ]
+    },
+    {
+      "x": "6AE355A57FFF3634",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 344
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 344
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFE18",
+      "y": "C0BB7E66C4EEBBAC",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1245,
+          "candidate": 1245,
+          "Qfplib": 1291
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1245,
+          "candidate": 1245,
+          "Qfplib": 1291
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF52",
+      "y": "C03E59016FD35648",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1238,
+          "candidate": 1238,
+          "Qfplib": 1291
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1238,
+          "candidate": 1238,
+          "Qfplib": 1291
+        }
+      ]
+    },
+    {
+      "x": "255EC914C99C8D08",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 298,
+          "candidate": 298,
+          "Qfplib": 362
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 298,
+          "candidate": 298,
+          "Qfplib": 362
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF59",
+      "y": "BFFBC37C64A1F798",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1226,
+          "candidate": 1226,
+          "Qfplib": 1285
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1226,
+          "candidate": 1226,
+          "Qfplib": 1285
+        }
+      ]
+    },
+    {
+      "x": "6F585803A21A358D",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 362
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 362
+        }
+      ]
+    },
+    {
+      "x": "0DF453943ECB24B0",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 362
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 300,
+          "candidate": 300,
+          "Qfplib": 362
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF10",
+      "y": "BFA5555555555502",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1227,
+          "candidate": 1227,
+          "Qfplib": 1288
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1227,
+          "candidate": 1227,
+          "Qfplib": 1288
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF7D",
+      "y": "C1238B628A4F9B68",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1243,
+          "candidate": 1243,
+          "Qfplib": 1304
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1243,
+          "candidate": 1243,
+          "Qfplib": 1304
+        }
+      ]
+    },
+    {
+      "x": "62428C918C25B7B4",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 364
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 304,
+          "candidate": 304,
+          "Qfplib": 364
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFEEE",
+      "y": "BF658C4622118A1A",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1227,
+          "candidate": 1227,
+          "Qfplib": 1290
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1227,
+          "candidate": 1227,
+          "Qfplib": 1290
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFEFD",
+      "y": "BFBC5942D363FEDA",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1227,
+          "candidate": 1227,
+          "Qfplib": 1290
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1227,
+          "candidate": 1227,
+          "Qfplib": 1290
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF4B",
+      "y": "C015FEA6F207F1DD",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1232,
+          "candidate": 1232,
+          "Qfplib": 1295
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1232,
+          "candidate": 1232,
+          "Qfplib": 1295
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF0D",
+      "y": "BF41E45265E52958",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1227,
+          "candidate": 1227,
+          "Qfplib": 1291
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1227,
+          "candidate": 1227,
+          "Qfplib": 1291
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF77",
+      "y": "BF8F422AA7F3B50B",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1227,
+          "candidate": 1227,
+          "Qfplib": 1291
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1227,
+          "candidate": 1227,
+          "Qfplib": 1291
+        }
+      ]
+    },
+    {
+      "x": "3FF0000000000092",
+      "y": "40EF09820FE9DE17",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1251,
+          "candidate": 1251,
+          "Qfplib": 1315
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1251,
+          "candidate": 1251,
+          "Qfplib": 1315
+        }
+      ]
+    },
+    {
+      "x": "451D6C8D70CB011B",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 368
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 303,
+          "candidate": 303,
+          "Qfplib": 368
+        }
+      ]
+    },
+    {
+      "x": "3FF00000000000D4",
+      "y": "403FB67F25E59355",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1244,
+          "candidate": 1244,
+          "Qfplib": 1310
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1244,
+          "candidate": 1244,
+          "Qfplib": 1310
+        }
+      ]
+    },
+    {
+      "x": "54D4E6275301F04E",
+      "y": "BFE0000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 302,
+          "candidate": 302,
+          "Qfplib": 368
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 302,
+          "candidate": 302,
+          "Qfplib": 368
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF2B",
+      "y": "40BA76B89D3E311A",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1275,
+          "candidate": 1275,
+          "Qfplib": 1344
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1275,
+          "candidate": 1275,
+          "Qfplib": 1344
+        }
+      ]
+    },
+    {
+      "x": "3FF000000000004F",
+      "y": "40EAAD0A6A243E3E",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1251,
+          "candidate": 1251,
+          "Qfplib": 1320
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1251,
+          "candidate": 1251,
+          "Qfplib": 1320
+        }
+      ]
+    },
+    {
+      "x": "3FF000000000017C",
+      "y": "4055D6591BBBC2B4",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1242,
+          "candidate": 1242,
+          "Qfplib": 1311
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1242,
+          "candidate": 1242,
+          "Qfplib": 1311
+        }
+      ]
+    },
+    {
+      "x": "2190BE2EB93B3A22",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        }
+      ]
+    },
+    {
+      "x": "26920DAF08DEC36A",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        }
+      ]
+    },
+    {
+      "x": "2AD48E57A9A94FF0",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        }
+      ]
+    },
+    {
+      "x": "2B105B7E6AD56EF3",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        }
+      ]
+    },
+    {
+      "x": "2C04F935009E33F2",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        }
+      ]
+    },
+    {
+      "x": "3F75A6FAEF308585",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        }
+      ]
+    },
+    {
+      "x": "41B6951DF6181EEC",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        }
+      ]
+    },
+    {
+      "x": "42D25CFC5112C5FC",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        }
+      ]
+    },
+    {
+      "x": "438464D70894D142",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        }
+      ]
+    },
+    {
+      "x": "442310D4E775D0E3",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 140
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 140
+        }
+      ]
+    },
+    {
+      "x": "48A0A3EFDA983D3E",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        }
+      ]
+    },
+    {
+      "x": "49F5CE1A31D44F2D",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        }
+      ]
+    },
+    {
+      "x": "50F1190A587D6B3A",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 143
+        }
+      ]
+    },
+    {
+      "x": "52D3609EFA4B5774",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        }
+      ]
+    },
+    {
+      "x": "53E48BE592104F8A",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        }
+      ]
+    },
+    {
+      "x": "5B445AB06E2B52A0",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 137
+        }
+      ]
+    },
+    {
+      "x": "22E9D906C06CA40A",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        }
+      ]
+    },
+    {
+      "x": "24BABED19D113556",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "259E8A0BDCB6D29A",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 136
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 136
+        }
+      ]
+    },
+    {
+      "x": "264947ED01EDEE84",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        }
+      ]
+    },
+    {
+      "x": "27B8F78DA8992D09",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "2E48EBF871C3002E",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "3B9F36D6718AF254",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "40ED7FEDCCD8CD04",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 136
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 136
+        }
+      ]
+    },
+    {
+      "x": "41AAE4705B9EA031",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        }
+      ]
+    },
+    {
+      "x": "42C7C018C94E695A",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "486B8AA68D9B5D28",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "4CEE467AA1B7C624",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "508CDF6B0F1F4F10",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        }
+      ]
+    },
+    {
+      "x": "51F6B208D711B364",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 142
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 142
+        }
+      ]
+    },
+    {
+      "x": "533789EC9C391D80",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "540A422E25706B38",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        }
+      ]
+    },
+    {
+      "x": "55CD98B346E99440",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "56F85923D3F928C4",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "588CF40BE4782276",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "58BF0DA92DD845AC",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "5B8B056AA68CD14E",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 142
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 142
+        }
+      ]
+    },
+    {
+      "x": "5BAA1FDF149E6A66",
+      "y": "4000000000000000",
+      "stream": "composed_exact_exponents",
+      "reference": "qfp_composed_pow_exact",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 133
+        }
+      ]
+    },
+    {
+      "x": "BF90BFAACB84B7E9",
+      "y": "4000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 148
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 148
+        }
+      ]
+    },
+    {
+      "x": "BFA005E250D2D24E",
+      "y": "4000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "BFB1F053D8659BC6",
+      "y": "4000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 148
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 148
+        }
+      ]
+    },
+    {
+      "x": "BFE39031A246986D",
+      "y": "4000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 145
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 145
+        }
+      ]
+    },
+    {
+      "x": "BFE644E58BB494E6",
+      "y": "4000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 139
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 139
+        }
+      ]
+    },
+    {
+      "x": "BFF0F58A4BA90CC3",
+      "y": "4000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 145
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 145
+        }
+      ]
+    },
+    {
+      "x": "DAB34D5E81AC9C74",
+      "y": "4000000000000000",
+      "stream": "composed_negative_wide",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 145
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 115,
+          "candidate": 115,
+          "Qfplib": 145
+        }
+      ]
+    },
+    {
+      "x": "BFB8096D1C06122E",
+      "y": "4000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 135
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 135
+        }
+      ]
+    },
+    {
+      "x": "BFE817B387F680F3",
+      "y": "4000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 135
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 135
+        }
+      ]
+    },
+    {
+      "x": "C02EB851D11AD784",
+      "y": "4000000000000000",
+      "stream": "composed_negative_integer",
+      "reference": "qfp_composed_pow_integer",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 138
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 110,
+          "candidate": 110,
+          "Qfplib": 138
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFEA4",
+      "y": "4019B38C2AB9FD86",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1262,
+          "candidate": 1262,
+          "Qfplib": 1338
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1262,
+          "candidate": 1262,
+          "Qfplib": 1338
+        }
+      ]
+    },
+    {
+      "x": "3FF00000000000AB",
+      "y": "40325FB10EAD6D2C",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1244,
+          "candidate": 1244,
+          "Qfplib": 1320
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1244,
+          "candidate": 1244,
+          "Qfplib": 1320
+        }
+      ]
+    },
+    {
+      "x": "3FF000000000012C",
+      "y": "3F4A0FFAC02621CE",
+      "stream": "near_one_variable_exponent",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1231,
+          "candidate": 1231,
+          "Qfplib": 1309
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1231,
+          "candidate": 1231,
+          "Qfplib": 1309
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFFFC",
+      "y": "3FF8000000000000",
+      "stream": "hard_pow_regular_exponents",
+      "reference": "qfp_composed_pow",
+      "states": [
+        {
+          "SIO": "READY",
+          "parent": 1286,
+          "candidate": 1286,
+          "Qfplib": 1373
+        },
+        {
+          "SIO": "DIRTY",
+          "parent": 1286,
+          "candidate": 1286,
+          "Qfplib": 1373
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "status": "MANDATORY_BEFORE_ANY_MERGED_FIRMWARE_QUALIFICATION",
+  "exact_supplier": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-inline-20261025/FROZEN.json",
+    "bytes": 13435,
+    "sha256": "0be351d573878a48f13f5d41edd2812a23ab269556b929db9aa8324e6a0bf219"
+  },
+  "parent": "Numerator-one3341/f994; later ROOT78a3 additive, child seal not reissued",
+  "entry": "Keep hidden positive numeratorone R0:R1, denominator R2:R3 and sole proven root caller/return. No generic division or one-argument C ABI.",
+  "overflow": "Preserve exact integer threshold T=2^50 and strict RNE endpoint proof, signed-zero/Inf bits, raw IEEE fallback for every other class. Never replace with a rounded floating heuristic.",
+  "inline_contract": "Exact same macro/table; quotientR6,D17R1,tempR4,residualR7. Preserve liveR0/R1/R2/R3/R5/R12/SP and original20B frame. No inline BL or writes. InlineSP is its OWN entrySP-20, not outer Machine SP; old312B/seedBL requirements apply only to control, not this inlined child.",
+  "live_join": "Keep source dead-state conditions and fresh after-second R0-R7/R12/SP/NZCV/frame28 equivalence to the unchanged186B RNE suffix. No wrapper stack/speed inference.",
+  "READY": "Retain the nine independent ALUs between hardware divisor issue and quotient read and all7 DIRTY SIO words/no writes.",
+  "source_merge": "Deliberately source-merge/relink complete target with separate siblings; do not layer diagnostic images or stale fixed addresses.",
+  "actual_shared_R12": "Run fresh actual integrated shared-product producer/consumer/veneer guards after merge. Reciprocal private R12-tag checks are not that separate contract; include near-one guard when merged.",
+  "loader_layout": "Fresh final ELF/loader/Flash/RAM/stack/scratch4080 guards. Old168B exp overlay corrupts14B of the new table entry.",
+  "performance": "Keep all9664 cold parent cost increases (+8:3168,+2:352,+11:6144), all13 scalar deficits and5 equal states. No-new-correct-Qfp-deficit is not a universal parent-speed win; instruction counts are not physical cycles.",
+  "limits": "General pow totality, other needed math, remaining performance, hardware and release remain separate.",
+  "reviewed507": 422,
+  "author437_not_promoted": true,
+  "integration_GO": false,
+  "hardware_GO": false,
+  "main_GO": false,
+  "release_GO": false
+}

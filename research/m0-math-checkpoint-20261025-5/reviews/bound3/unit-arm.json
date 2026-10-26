@@ -1,0 +1,2902 @@
+{
+  "status": "PASS_BOUNDED_ACTUAL_THUMB_ALL5_ERRORS_ALL16_FLAGS_PRIVATE_ZERO_AND_BORROW",
+  "tests": 240,
+  "actual_ARM_calls": 480,
+  "all16flags_each_selected_D": true,
+  "R0zero_precondition_and_R0_R1_R2_R3_R5_R12_SP_frame20_preserved": true,
+  "quotient_exact_all5classes_and_only_error3_R7_minusD": true,
+  "actual_BPL_error1_exit_and_second_ADDcarry_error2_3_immediate_SBC_checked": true,
+  "one_aligned_table_read_no_macro_stackwrites_calls": true,
+  "Machine_PCS_SP_PC_checked": true,
+  "instruction_nonincrease_NOT_cycle_nonregression": true,
+  "classes": {
+    "0": 64,
+    "1": 48,
+    "2": 64,
+    "-1": 32,
+    "3": 32
+  },
+  "rows": [
+    {
+      "D": 65536,
+      "NZCV": 0,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 1,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 2,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 3,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 4,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 5,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 6,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 7,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 8,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 9,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 10,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 11,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 12,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 13,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 14,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65536,
+      "NZCV": 15,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 0,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 1,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 2,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 3,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 4,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 5,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 6,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 7,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 8,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 9,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 10,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 11,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 12,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 13,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 14,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65537,
+      "NZCV": 15,
+      "error": 0,
+      "quotient": 65535,
+      "old_residue": 0,
+      "new_residue": 0,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 0,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 1,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 2,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 3,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 4,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 5,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 6,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 7,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 8,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 9,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 10,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 11,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 12,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 13,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 14,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65538,
+      "NZCV": 15,
+      "error": 1,
+      "quotient": 65534,
+      "old_residue": 3,
+      "new_residue": 3,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 0,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 1,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 2,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 3,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 4,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 5,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 6,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 7,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 8,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 9,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 10,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 11,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 12,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 13,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 14,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65540,
+      "NZCV": 15,
+      "error": 2,
+      "quotient": 65532,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 0,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 1,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 2,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 3,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 4,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 5,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 6,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 7,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 8,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 9,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 10,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 11,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 12,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 13,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 14,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65791,
+      "NZCV": 15,
+      "error": 1,
+      "quotient": 65281,
+      "old_residue": 65024,
+      "new_residue": 65024,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 0,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 1,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 2,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 3,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 4,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 5,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 6,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 7,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 8,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 9,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 10,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 11,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 12,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 13,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 14,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65792,
+      "NZCV": 15,
+      "error": 2,
+      "quotient": 65280,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 0,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 1,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 2,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 3,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 4,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 5,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 6,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 7,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 8,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 9,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 10,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 11,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 12,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 13,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 14,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 65981,
+      "NZCV": 15,
+      "error": -1,
+      "quotient": 65094,
+      "old_residue": 81,
+      "new_residue": 81,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 0,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 1,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 2,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 3,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 4,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 5,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 6,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 7,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 8,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 9,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 10,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 11,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 12,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 13,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 14,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 66226,
+      "NZCV": 15,
+      "error": 3,
+      "quotient": 64853,
+      "old_residue": 12517,
+      "new_residue": 4294913587,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 0,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 1,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 2,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 3,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 4,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 5,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 6,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 7,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 8,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 9,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 10,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 11,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 12,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 13,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 14,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 81915,
+      "NZCV": 15,
+      "error": -1,
+      "quotient": 52432,
+      "old_residue": 15,
+      "new_residue": 15,
+      "instructions": {
+        "control": 25,
+        "candidate": 25
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 0,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 1,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 2,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 3,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 4,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 5,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 6,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 7,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 8,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 9,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 10,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 11,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 12,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 13,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 14,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98303,
+      "NZCV": 15,
+      "error": 0,
+      "quotient": 43691,
+      "old_residue": 10922,
+      "new_residue": 10922,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 0,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 1,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 2,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 3,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 4,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 5,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 6,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 7,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 8,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 9,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 10,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 11,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 12,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 13,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 14,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 98304,
+      "NZCV": 15,
+      "error": 2,
+      "quotient": 43690,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 0,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 1,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 2,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 3,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 4,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 5,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 6,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 7,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 8,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 9,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 10,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 11,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 12,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 13,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 14,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 122738,
+      "NZCV": 15,
+      "error": 3,
+      "quotient": 34992,
+      "old_residue": 119199,
+      "new_residue": 4294963757,
+      "instructions": {
+        "control": 29,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 0,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 1,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 2,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 3,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 4,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 5,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 6,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 7,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 8,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 9,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 10,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 11,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 12,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 13,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 14,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 130816,
+      "NZCV": 15,
+      "error": 2,
+      "quotient": 32832,
+      "old_residue": 16383,
+      "new_residue": 16383,
+      "instructions": {
+        "control": 26,
+        "candidate": 26
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 0,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 1,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 2,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 3,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 4,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 5,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 6,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 7,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 8,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 9,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 10,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 11,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 12,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 13,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 14,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131070,
+      "NZCV": 15,
+      "error": 1,
+      "quotient": 32768,
+      "old_residue": 65535,
+      "new_residue": 65535,
+      "instructions": {
+        "control": 23,
+        "candidate": 23
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 0,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 1,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 2,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 3,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 4,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 5,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 6,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 7,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 8,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 9,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 10,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 11,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 12,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 13,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 14,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    },
+    {
+      "D": 131071,
+      "NZCV": 15,
+      "error": 0,
+      "quotient": 32768,
+      "old_residue": 32767,
+      "new_residue": 32767,
+      "instructions": {
+        "control": 22,
+        "candidate": 22
+      }
+    }
+  ],
+  "devices": 0
+}

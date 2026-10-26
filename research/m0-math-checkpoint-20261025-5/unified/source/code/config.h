@@ -1,0 +1,1456 @@
+#ifndef CONFIG
+#define CONFIG
+
+#include "firmware_optimization.hpp"
+#include "Arduino.h"
+#include "mk61_io.hpp"
+#if MK61_NARROW_USB_SERIAL_SUPPORTED
+  #undef Serial
+  #define Serial mk61_io::serial
+#endif
+#include "rust_types.h"
+#include "portable_app_config.h"
+
+//#define DEBUG_CORE61        // Полная отладочная информация по ядру mk61s (почти не слушает клавиатуру)
+//#define DEBUG_TRACE         // Отладочная трассировочная информация по значению
+//#define DEBUG_MINI          // Отладочная информация по оболочке MK61S-MINI
+//#define DEBUG_SPIFLASH      // Отладочная информация по обработке внешней флеш памяти
+//#define DEBUG_DISASMBLER    // Отладочная информация по встроенному дисассемблеру МК61 инструкций
+//#define DEBUG_KBD           // Отладочная информация по клавиатурному драйверу
+//#define DEBUG_MENU          // Отладочная информация по системе меню
+//#define DEBUG_LIBRARY       // Отладочная информация по библиотеке программ МК61
+//#define DEBUG_MK61E         // Отладочная информация расширяющая представление вывода терминала по МК61
+//#define DEBUG_PARSE         // Отладочная информация по парсеру ассемблера
+// Расширение памяти программы 105/112 теперь переключается из меню.
+//#define DEBUG_MEASURE       // Вывод времени исполнения от С/П до С/П для вычисления производительности ядра
+//#define DEBUG_RUN_STOP      // Отладочный вывод по расширению команды С/П
+//#define MK61_EXTENDED
+//#define B3_34
+#define TERMINAL
+#define SPI_FLASH
+//#define DEBUG
+//#define DEBUG_M61
+
+// DWT CYCCNT-профилировщик не собирает данные до команды `prof start`.
+// Значение 0 полностью удаляет точки измерения и терминальную команду.
+#ifndef MK61_ENABLE_DWT_PROFILER
+  #if MK61_F401_PRODUCT_BUILD
+    #define MK61_ENABLE_DWT_PROFILER 0
+  #else
+    #define MK61_ENABLE_DWT_PROFILER 1
+  #endif
+#endif
+#if MK61_ENABLE_DWT_PROFILER != 0 && MK61_ENABLE_DWT_PROFILER != 1
+  #error "MK61_ENABLE_DWT_PROFILER must be 0 or 1"
+#endif
+
+// Аппаратные faults сохраняют компактную запись в .noinit и перезагружают
+// MCU. Преднамеренные faults никогда не входят в release по умолчанию и
+// включаются отдельным флагом только для стендовой проверки.
+#ifndef MK61_ENABLE_CRASH_DUMP
+  #define MK61_ENABLE_CRASH_DUMP 1
+#endif
+#if MK61_ENABLE_CRASH_DUMP != 0 && MK61_ENABLE_CRASH_DUMP != 1
+  #error "MK61_ENABLE_CRASH_DUMP must be 0 or 1"
+#endif
+
+// Release builders set this to 1 and seal the resident BIN after linking.
+// Generic Arduino development builds remain bootable but report "unsealed";
+// they must never be labelled as CRC-verified release artifacts.
+#ifndef MK61_REQUIRE_RESIDENT_CRC
+  #define MK61_REQUIRE_RESIDENT_CRC 0
+#endif
+#if MK61_REQUIRE_RESIDENT_CRC != 0 && MK61_REQUIRE_RESIDENT_CRC != 1
+  #error "MK61_REQUIRE_RESIDENT_CRC must be 0 or 1"
+#endif
+#ifndef MK61_ENABLE_FAULT_INJECTION
+  #define MK61_ENABLE_FAULT_INJECTION 0
+#endif
+#if MK61_ENABLE_FAULT_INJECTION != 0 && MK61_ENABLE_FAULT_INJECTION != 1
+  #error "MK61_ENABLE_FAULT_INJECTION must be 0 or 1"
+#endif
+
+// Cortex-M4 MPU guards catch null access, stack/heap collision and (where no
+// System APP executes from SRAM) accidental code execution from data memory.
+#ifndef MK61_ENABLE_MPU_GUARDS
+  #define MK61_ENABLE_MPU_GUARDS 1
+#endif
+#if MK61_ENABLE_MPU_GUARDS != 0 && MK61_ENABLE_MPU_GUARDS != 1
+  #error "MK61_ENABLE_MPU_GUARDS must be 0 or 1"
+#endif
+#ifndef MK61_ENABLE_MPU_TEST
+  #define MK61_ENABLE_MPU_TEST 0
+#endif
+#if MK61_ENABLE_MPU_TEST != 0 && MK61_ENABLE_MPU_TEST != 1
+  #error "MK61_ENABLE_MPU_TEST must be 0 or 1"
+#endif
+
+// IWDG стартует только в конце setup и кормится после завершённого foreground
+// service epoch. Стендовые starvation/hang действия отсутствуют в release.
+#ifndef MK61_ENABLE_INDEPENDENT_WATCHDOG
+  #define MK61_ENABLE_INDEPENDENT_WATCHDOG 1
+#endif
+#if MK61_ENABLE_INDEPENDENT_WATCHDOG != 0 && \
+    MK61_ENABLE_INDEPENDENT_WATCHDOG != 1
+  #error "MK61_ENABLE_INDEPENDENT_WATCHDOG must be 0 or 1"
+#endif
+#ifndef MK61_ENABLE_WATCHDOG_TEST
+  #define MK61_ENABLE_WATCHDOG_TEST 0
+#endif
+#if MK61_ENABLE_WATCHDOG_TEST != 0 && MK61_ENABLE_WATCHDOG_TEST != 1
+  #error "MK61_ENABLE_WATCHDOG_TEST must be 0 or 1"
+#endif
+
+// Shallow Cortex-M Sleep is the conservative fallback whenever the qualified
+// profile below cannot enter STOP. SysTick remains its periodic wake source.
+#ifndef MK61_ENABLE_IDLE_WFI
+  #define MK61_ENABLE_IDLE_WFI 1
+#endif
+#if MK61_ENABLE_IDLE_WFI != 0 && MK61_ENABLE_IDLE_WFI != 1
+  #error "MK61_ENABLE_IDLE_WFI must be 0 or 1"
+#endif
+
+// Observe the STM32 USB device state through linker wrappers.  This exposes
+// exact reset/setup/suspend/resume telemetry but does not alter descriptors or
+// power behaviour in a normal release.
+#ifndef MK61_ENABLE_USB_POWER_OBSERVER
+  #define MK61_ENABLE_USB_POWER_OBSERVER 1
+#endif
+#if MK61_ENABLE_USB_POWER_OBSERVER != 0 && \
+    MK61_ENABLE_USB_POWER_OBSERVER != 1
+  #error "MK61_ENABLE_USB_POWER_OBSERVER must be 0 or 1"
+#endif
+
+// PVD (programmable voltage detector) blocks the start of new NOR program /
+// erase commands and USB MSC writes before VDD reaches the W25Q128 minimum.
+// Level 6 is the conservative common F401/F411 threshold: falling edge
+// 2.85..2.99 V, rising edge 2.96..3.10 V.  The fitted W25Q128JV is specified
+// down to 2.7 V; a 100 ms stable interval prevents write-enable chatter.
+#ifndef MK61_ENABLE_PVD
+  #define MK61_ENABLE_PVD 1
+#endif
+#if MK61_ENABLE_PVD != 0 && MK61_ENABLE_PVD != 1
+  #error "MK61_ENABLE_PVD must be 0 or 1"
+#endif
+#ifndef MK61_PVD_LEVEL
+  #define MK61_PVD_LEVEL 6
+#endif
+#if MK61_PVD_LEVEL < 0 || MK61_PVD_LEVEL > 7
+  #error "MK61_PVD_LEVEL must be in the range 0..7"
+#endif
+#ifndef MK61_PVD_RECOVERY_STABLE_MS
+  #define MK61_PVD_RECOVERY_STABLE_MS 100UL
+#endif
+#if MK61_PVD_RECOVERY_STABLE_MS < 10UL || \
+    MK61_PVD_RECOVERY_STABLE_MS > 5000UL
+  #error "MK61_PVD_RECOVERY_STABLE_MS must be 10..5000"
+#endif
+
+// Старый резервный вариант хранения через EEPROM Arduino требует 8-КиБ буфер
+// ОЗУ на STM32F4. Штатная конфигурация A00 хранит программы и настройки
+// во внешней SPI-флеш-памяти.
+#ifndef MK61_USE_ARDUINO_EEPROM_FALLBACK
+  #define MK61_USE_ARDUINO_EEPROM_FALLBACK 0
+#endif
+
+// Дисплей: по умолчанию старый LCD1602. Для готовой платы Classic выбирайте
+// полный профиль MK61_BOARD_CLASSIC_V2 или MK61_BOARD_CLASSIC_V3 ниже.
+// Один MK61_DISPLAY_UC1609 сохранён как совместимый способ выбрать Classic V2.
+//#define MK61_DISPLAY_UC1609
+// Символьный дисплей: по умолчанию LCD1602 с японской A00. Для европейской
+// A02 включить MK61_LCD1602_A02, для OLED WEH001602A/WS0010 —
+// MK61_OLED1602_WS0010. Контроллер WS0010 выбирает English/Russian FT=10.
+//#define MK61_LCD1602_A02
+//#define MK61_OLED1602_WS0010
+
+//#define CDU
+//#define LK432
+//#define SERIAL_OUTPUT
+// Ревизию платы можно выбрать при сборке (`-DREVISION_V2`). В релизных
+// сборках по умолчанию используется V3, но нельзя неявно определять V3 поверх
+// явно заданного профиля V2: различаются выводы данных LCD и зуммер.
+#if defined(REVISION_V2) && defined(REVISION_V3)
+  #error "Select only one MK61s-mini board revision"
+#endif
+#if !defined(REVISION_V2) && !defined(REVISION_V3)
+  #define REVISION_V3
+#endif
+
+// В Mini V2 линия LCD DB7 подключена к PC15/OSC32_OUT, поэтому включение LSE
+// отбирает сигнал у LCD, а электрическая нагрузка дисплея мешает генератору.
+// Штатный источник здесь LSI. В CDU оба вывода LSE также заняты. На остальных
+// поддерживаемых платах можно попробовать запустить LSE и перейти на LSI, если
+// запуск не удался.
+#if defined(REVISION_V2) || defined(CDU)
+  static constexpr bool MK61_RTC_LSE_AVAILABLE = false;
+#else
+  static constexpr bool MK61_RTC_LSE_AVAILABLE = true;
+#endif
+#define MK61s
+//#define MK52s
+
+// Встроенный FOCAL включен по умолчанию. Поставьте 0, чтобы убрать его
+// редактор, рантайм и меню из прошивки.
+#ifndef MK61_ENABLE_FOCAL
+  #define MK61_ENABLE_FOCAL 1
+#endif
+#if MK61_ENABLE_FOCAL != 0 && MK61_ENABLE_FOCAL != 1
+  #error "MK61_ENABLE_FOCAL must be 0 or 1"
+#endif
+
+// TinyBASIC включен по умолчанию. Поставьте 0, чтобы убрать его
+// редактор, рантайм и меню из прошивки.
+#ifndef MK61_ENABLE_TINYBASIC
+  #define MK61_ENABLE_TINYBASIC 1
+#endif
+#if MK61_ENABLE_TINYBASIC != 0 && MK61_ENABLE_TINYBASIC != 1
+  #error "MK61_ENABLE_TINYBASIC must be 0 or 1"
+#endif
+
+// USB-экран хранит собственный монохромный кадровый буфер 192x64 за обычным
+// API дисплея. По умолчанию он выключен, поскольку статические буферы расходуют
+// ОЗУ. Этот ключ также разрешает сборку графических файловых модулей для
+// LCD1602; их запуск всё равно требует активной сессии виртуального экрана.
+#ifndef MK61_ENABLE_USB_SCREEN
+  #define MK61_ENABLE_USB_SCREEN 0
+#endif
+#if MK61_ENABLE_USB_SCREEN != 0 && MK61_ENABLE_USB_SCREEN != 1
+  #error "MK61_ENABLE_USB_SCREEN must be 0 or 1"
+#endif
+
+// WS0010 exposes 100x16 controller GDRAM, of which the qualified WEH001602A
+// panel connects 80x16 pixels to the visible 16x2 OLED window.  The exact
+// F411 mini V3 profile has passed the physical geometry/mode-isolation tests;
+// other MCUs and board revisions keep graphics laboratory-only even when an
+// explicit build flag compiles the same controller API.
+#ifndef MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED
+  #if defined(STM32F411xE) && defined(REVISION_V3) && \
+      defined(MK61_OLED1602_WS0010)
+    #define MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED 1
+  #else
+    #define MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED 0
+  #endif
+#endif
+#if MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED != 0 && \
+    MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED != 1
+  #error "MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED must be 0 or 1"
+#endif
+#if MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED && \
+    (!defined(STM32F411xE) || !defined(REVISION_V3) || \
+     !defined(MK61_OLED1602_WS0010))
+  #error "qualified WS0010 graphics requires F411 mini V3/WS0010"
+#endif
+
+// Preserve the established build flag name because it describes the full
+// controller address space.  Production defaults it on only for the qualified
+// profile above; an explicit 0 remains a supported feature opt-out.
+#ifndef MK61_WS0010_GRAPHICS_100X16
+  #define MK61_WS0010_GRAPHICS_100X16 \
+    MK61_WS0010_GRAPHICS_PROFILE_QUALIFIED
+#endif
+#if MK61_WS0010_GRAPHICS_100X16 != 0 && MK61_WS0010_GRAPHICS_100X16 != 1
+  #error "MK61_WS0010_GRAPHICS_100X16 must be 0 or 1"
+#endif
+#if MK61_WS0010_GRAPHICS_100X16 && !defined(MK61_OLED1602_WS0010)
+  #error "WS0010 100x16 graphics requires MK61_OLED1602_WS0010"
+#endif
+
+// На момент объявления файловых модулей полные профили ещё не раскрыты в
+// MK61_DISPLAY_UC1609, поэтому учитываем и сами флаги готовых плат.
+#if defined(MK61_DISPLAY_UC1609) || defined(DISPLAY_UC1609) || \
+    defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3) || \
+    defined(MK61_BOARD_40TH) || MK61_ENABLE_USB_SCREEN
+  #define MK61_HAS_COMPILED_GRAPHICS 1
+#else
+  #define MK61_HAS_COMPILED_GRAPHICS 0
+#endif
+
+// WBMP needs only a modal, page-major fullscreen bitmap target.  The hybrid
+// WS0010 provides that target when its separately qualified G/C mode is built,
+// while it deliberately remains outside MK61_HAS_COMPILED_GRAPHICS.
+#if MK61_HAS_COMPILED_GRAPHICS || \
+    (defined(MK61_OLED1602_WS0010) && MK61_WS0010_GRAPHICS_100X16)
+  #define MK61_HAS_FULLSCREEN_BITMAP 1
+#else
+  #define MK61_HAS_FULLSCREEN_BITMAP 0
+#endif
+
+// T2/.md доступен на любом экране: LCD1602 получает семантический plain text,
+// UC1609 и USB-экран — форматированный монохромный документ с WBMP-блоками.
+#ifndef MK61_ENABLE_MARKDOWN_VIEWER
+  #define MK61_ENABLE_MARKDOWN_VIEWER 1
+#endif
+#if MK61_ENABLE_MARKDOWN_VIEWER != 0 && MK61_ENABLE_MARKDOWN_VIEWER != 1
+  #error "MK61_ENABLE_MARKDOWN_VIEWER must be 0 or 1"
+#endif
+
+// Графический Markdown сам открывает WBMP на любом fullscreen bitmap backend,
+// включая квалификационную GDRAM WS0010 100x16. Отдельный viewer нужен только
+// без Markdown.
+#ifndef MK61_ENABLE_WBMP_VIEWER
+  #define MK61_ENABLE_WBMP_VIEWER \
+    (MK61_HAS_FULLSCREEN_BITMAP && !MK61_ENABLE_MARKDOWN_VIEWER)
+#endif
+#if MK61_ENABLE_WBMP_VIEWER != 0 && MK61_ENABLE_WBMP_VIEWER != 1
+  #error "MK61_ENABLE_WBMP_VIEWER must be 0 or 1"
+#endif
+
+#define MK61_MARKDOWN_USES_WBMP \
+  (MK61_ENABLE_MARKDOWN_VIEWER && MK61_HAS_FULLSCREEN_BITMAP)
+#define MK61_STANDALONE_WBMP_VIEWER_ENABLED \
+  (MK61_ENABLE_WBMP_VIEWER && !MK61_MARKDOWN_USES_WBMP)
+#if MK61_STANDALONE_WBMP_VIEWER_ENABLED && !MK61_HAS_FULLSCREEN_BITMAP
+  #error "MK61_ENABLE_WBMP_VIEWER requires UC1609, USB Screen, or WS0010 100x16 graphics"
+#endif
+
+// Консоль CHIP-8 выключена по умолчанию. C1 — двухбайтовый magic типа C6;
+// .ch8 хранит стандартный сырой ROM без дополнительного заголовка.
+#ifndef MK61_ENABLE_CHIP8
+  #define MK61_ENABLE_CHIP8 0
+#endif
+#if MK61_ENABLE_CHIP8 != 0 && MK61_ENABLE_CHIP8 != 1
+  #error "MK61_ENABLE_CHIP8 must be 0 or 1"
+#endif
+#if MK61_ENABLE_CHIP8 && !MK61_HAS_COMPILED_GRAPHICS
+  #error "MK61_ENABLE_CHIP8 requires UC1609 or MK61_ENABLE_USB_SCREEN=1"
+#endif
+
+// Все внешние APP используют один runtime и ABI: FOCAL, TinyBASIC,
+// просмотрщики, CHIP-8 и обычные APPLICATION отличаются только Kind и
+// способом поиска файла. Каждый опциональный компонент имеет два
+// ортогональных ключа: MK61_ENABLE_* включает функцию, *_AS_APP
+// выбирает APP вместо resident. Так получаются три режима: выключен,
+// встроен или APP. F411 по умолчанию встраивает включённые функции; другие
+// MCU, в том числе F401, по умолчанию выносят их в APP. Языки с общей VM
+// всегда используют compiler APP на обоих MCU.
+#ifndef MK61_ENABLE_LOADABLE_MODULES
+  #define MK61_ENABLE_LOADABLE_MODULES 1
+#endif
+#if MK61_ENABLE_LOADABLE_MODULES != 1
+  #error "the unified APP loader is mandatory"
+#endif
+
+// Канонические System APP используют тот же загрузчик, startup, API и кэш,
+// что APPLICATION. SETUP на F411 встроен в resident: обычная сборка Arduino
+// IDE не запускает post-build для /System, а запаса Flash на F411 достаточно.
+// На F401 он остаётся внешним, чтобы сохранить запас Flash.
+#ifdef MK61_EXTERNALIZE_SYSTEM_APPS
+  #error "MK61_EXTERNALIZE_SYSTEM_APPS was removed; use per-component *_AS_APP flags"
+#endif
+
+#if defined(STM32F411xE)
+  #define MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP 0
+#else
+  #define MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP 1
+#endif
+
+#ifndef MK61_FOCAL_AS_APP
+  #define MK61_FOCAL_AS_APP 1
+#endif
+#ifndef MK61_TINYBASIC_AS_APP
+  #if MK61_ENABLE_FOCAL
+    #define MK61_TINYBASIC_AS_APP 1
+  #else
+    #define MK61_TINYBASIC_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+  #endif
+#endif
+#ifndef MK61_WBMP_VIEWER_AS_APP
+  #define MK61_WBMP_VIEWER_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+#endif
+#ifndef MK61_MARKDOWN_VIEWER_AS_APP
+  #define MK61_MARKDOWN_VIEWER_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+#endif
+#ifndef MK61_CHIP8_AS_APP
+  #define MK61_CHIP8_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+#endif
+#ifndef MK61_ENABLE_SETUP
+  #define MK61_ENABLE_SETUP 1
+#endif
+#ifndef MK61_SETUP_AS_APP
+  #define MK61_SETUP_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+#endif
+#ifndef MK61_EXPLORER_AS_APP
+  #define MK61_EXPLORER_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+#endif
+
+#if MK61_FOCAL_AS_APP != 0 && MK61_FOCAL_AS_APP != 1
+  #error "MK61_FOCAL_AS_APP must be 0 or 1"
+#endif
+#if MK61_TINYBASIC_AS_APP != 0 && MK61_TINYBASIC_AS_APP != 1
+  #error "MK61_TINYBASIC_AS_APP must be 0 or 1"
+#endif
+#if MK61_WBMP_VIEWER_AS_APP != 0 && MK61_WBMP_VIEWER_AS_APP != 1
+  #error "MK61_WBMP_VIEWER_AS_APP must be 0 or 1"
+#endif
+#if MK61_MARKDOWN_VIEWER_AS_APP != 0 && MK61_MARKDOWN_VIEWER_AS_APP != 1
+  #error "MK61_MARKDOWN_VIEWER_AS_APP must be 0 or 1"
+#endif
+#if MK61_CHIP8_AS_APP != 0 && MK61_CHIP8_AS_APP != 1
+  #error "MK61_CHIP8_AS_APP must be 0 or 1"
+#endif
+#if MK61_ENABLE_SETUP != 0 && MK61_ENABLE_SETUP != 1
+  #error "MK61_ENABLE_SETUP must be 0 or 1"
+#endif
+#if MK61_SETUP_AS_APP != 0 && MK61_SETUP_AS_APP != 1
+  #error "MK61_SETUP_AS_APP must be 0 or 1"
+#endif
+#if MK61_EXPLORER_AS_APP != 0 && MK61_EXPLORER_AS_APP != 1
+  #error "MK61_EXPLORER_AS_APP must be 0 or 1"
+#endif
+
+// FAT/LFN USB-диска по умолчанию встроен в F411, но лабораторная или
+// специализированная сборка может явно вынести только его в USBDISK.APP.
+// F401 по умолчанию оставляет этот крупный компонент внешним. Отдельный ключ
+// нужен в том числе упаковщику: наличие файла в /System должно точно совпадать
+// с тем, какую реализацию ожидает resident.
+#ifndef MK61_EXTERNALIZE_USBDISK
+  #if defined(STM32F411xE)
+    #define MK61_EXTERNALIZE_USBDISK 0
+  #else
+    #define MK61_EXTERNALIZE_USBDISK 1
+  #endif
+#endif
+#if MK61_EXTERNALIZE_USBDISK != 0 && MK61_EXTERNALIZE_USBDISK != 1
+  #error "MK61_EXTERNALIZE_USBDISK must be 0 or 1"
+#endif
+
+// Выключенный компонент не занимает ни resident Flash, ни место в /System.
+#define MK61_FOCAL_IS_LOADABLE \
+  (MK61_ENABLE_FOCAL && MK61_FOCAL_AS_APP)
+#define MK61_TINYBASIC_IS_LOADABLE \
+  (MK61_ENABLE_TINYBASIC && MK61_TINYBASIC_AS_APP)
+// NUMBER_IO нужен языковым APP и внешним командам терминала. Без этих
+// потребителей номера ABI-операций сохраняются, а реализация не занимает Flash.
+#define MK61_NUMBER_IO_SERVICE_ENABLED \
+  (MK61_ENABLE_FOCAL || MK61_ENABLE_TINYBASIC || MK61_TERMINAL_COMMANDS_AS_APP)
+#define MK61_WBMP_VIEWER_IS_LOADABLE \
+  (MK61_STANDALONE_WBMP_VIEWER_ENABLED && MK61_WBMP_VIEWER_AS_APP)
+#define MK61_MARKDOWN_VIEWER_IS_LOADABLE \
+  (MK61_ENABLE_MARKDOWN_VIEWER && MK61_MARKDOWN_VIEWER_AS_APP)
+#define MK61_CHIP8_IS_LOADABLE \
+  (MK61_ENABLE_CHIP8 && MK61_CHIP8_AS_APP)
+#define MK61_SETUP_IS_LOADABLE \
+  (MK61_ENABLE_SETUP && MK61_SETUP_AS_APP)
+#define MK61_EXPLORER_IS_LOADABLE (MK61_EXPLORER_AS_APP)
+#define MK61_USBDISK_IS_LOADABLE (MK61_EXTERNALIZE_USBDISK)
+// Терминальная справка остаётся отдельным ресурсом на обеих платформах.
+#define MK61_TERMINAL_HELP_IS_EXTERNAL 1
+#define MK61_ANY_LOADABLE_MODULE 1
+#define MK61_APP_RUNTIME_AVAILABLE 1
+
+#define MK61_USBDISK_IS_BUILTIN (!MK61_USBDISK_IS_LOADABLE)
+#define MK61_SETUP_IS_BUILTIN \
+  (MK61_ENABLE_SETUP && !MK61_SETUP_AS_APP)
+#define MK61_EXPLORER_IS_BUILTIN (!MK61_EXPLORER_AS_APP)
+
+#define MK61_FOCAL_IS_BUILTIN \
+  (MK61_ENABLE_FOCAL && !MK61_FOCAL_AS_APP)
+#define MK61_TINYBASIC_IS_BUILTIN \
+  (MK61_ENABLE_TINYBASIC && !MK61_TINYBASIC_AS_APP)
+#define MK61_WBMP_VIEWER_IS_BUILTIN \
+  (MK61_STANDALONE_WBMP_VIEWER_ENABLED && !MK61_WBMP_VIEWER_AS_APP)
+#define MK61_MARKDOWN_VIEWER_IS_BUILTIN \
+  (MK61_ENABLE_MARKDOWN_VIEWER && !MK61_MARKDOWN_VIEWER_AS_APP)
+#define MK61_CHIP8_IS_BUILTIN \
+  (MK61_ENABLE_CHIP8 && !MK61_CHIP8_AS_APP)
+
+// Графический Markdown владеет полным I1-viewer и WBMP-декодером: он показывает
+// как локальные блоки изображений, так и самостоятельные .wbmp. Это правило
+// одинаково для UC1609, USB Screen и квалификационной GDRAM WS0010 100x16.
+#define MK61_IMAGE1_VIEWER_IS_BUILTIN \
+  (MK61_WBMP_VIEWER_IS_BUILTIN || \
+   (MK61_MARKDOWN_VIEWER_IS_BUILTIN && MK61_MARKDOWN_USES_WBMP))
+#define MK61_WBMP_DECODER_IS_BUILTIN \
+  (MK61_IMAGE1_VIEWER_IS_BUILTIN)
+
+#define MK61_ANY_FULLSCREEN_FILE \
+  (MK61_STANDALONE_WBMP_VIEWER_ENABLED || MK61_ENABLE_CHIP8 || \
+   MK61_MARKDOWN_USES_WBMP || MK61_ANY_LOADABLE_MODULE || MK61_ENABLE_TINYBASIC)
+
+// Расширенная ручная настройка строк, высоты, ширины и межстрочного интервала
+// графического шрифта. По умолчанию в меню остается только выбор пресета шрифта.
+#ifndef MK61_ENABLE_EXTENDED_FONT_SETTINGS
+  #define MK61_ENABLE_EXTENDED_FONT_SETTINGS 0
+#endif
+
+// Математический бэкенд языков (FOCAL/TinyBASIC).
+//  BINARY64 — double-точность; своё compact_math в native runtime,
+//             <math.h> в Arduino и контрольных сборках (кроме F401+FOCAL по умолчанию).
+//  CORE     — вычисление на ядре МК-61: ~8 значащих цифр и меньшая скорость.
+#define MK61_MATH_BACKEND_BINARY64 0
+#define MK61_MATH_BACKEND_CORE 1
+#ifndef MK61_MATH_BACKEND
+  #if MK61_ENABLE_FOCAL && (defined(STM32F401xC) || defined(STM32F401xE) || defined(ARDUINO_BLACKPILL_F401CC))
+    #define MK61_MATH_BACKEND MK61_MATH_BACKEND_CORE
+  #else
+    #define MK61_MATH_BACKEND MK61_MATH_BACKEND_BINARY64
+  #endif
+#endif
+
+// FOCAL/BASIC APP may carry a bounded single-precision libm subset while the
+// resident keeps CORE math. Only that matched build needs the ABI conversion
+// bridge; ordinary CORE builds must not pay for it in the tight F401 Flash.
+#ifndef MK61_APP_LOCAL_FLOAT_MATH
+  #define MK61_APP_LOCAL_FLOAT_MATH 0
+#endif
+#if MK61_APP_LOCAL_FLOAT_MATH != 0 && MK61_APP_LOCAL_FLOAT_MATH != 1
+  #error "MK61_APP_LOCAL_FLOAT_MATH must be 0 or 1"
+#endif
+
+// Experimental shared bytecode executor in resident Flash. Compiler-only
+// BASIC/FOCAL APPs must be installed with the matched bundle. New FOCAL
+// always uses this executor or the external split executor selected below.
+#ifndef MK61_RESIDENT_LANGUAGE_VM
+  #define MK61_RESIDENT_LANGUAGE_VM 0
+#endif
+#if MK61_RESIDENT_LANGUAGE_VM != 0 && MK61_RESIDENT_LANGUAGE_VM != 1
+  #error "MK61_RESIDENT_LANGUAGE_VM must be 0 or 1"
+#endif
+// External LANGVM.APP + cold LANGIN.APP; only orchestration stays resident.
+#ifndef MK61_OVERLAY_LANGUAGE_VM
+  #define MK61_OVERLAY_LANGUAGE_VM (MK61_ENABLE_FOCAL && !MK61_RESIDENT_LANGUAGE_VM)
+#endif
+#if MK61_OVERLAY_LANGUAGE_VM != 0 && MK61_OVERLAY_LANGUAGE_VM != 1
+  #error "MK61_OVERLAY_LANGUAGE_VM must be 0 or 1"
+#endif
+// Verified decoded C9 data is an evictable lease, not a permanent buffer.
+// F401 retains its compact resident budget and uses the streaming fallback.
+#ifndef MK61_PROGRAM_STORE_READ_CACHE_BYTES
+  #if defined(STM32F411xE) || (defined(PROGRAM_STORE_HOST_TEST) && !defined(ARDUINO_BLACKPILL_F401CC))
+    #define MK61_PROGRAM_STORE_READ_CACHE_BYTES 4096
+  #else
+    #define MK61_PROGRAM_STORE_READ_CACHE_BYTES 0
+  #endif
+#endif
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES < 0 || MK61_PROGRAM_STORE_READ_CACHE_BYTES > 4096
+  #error "C9 read cache must fit in 4 KiB"
+#endif
+
+// Precheck evicted FAT metadata before a whole-tree sidecar scan. The builtin
+// F411 path has room for this foreground validation; the 20-KiB external
+// USBDISK keeps its conservative path and the qualified image budget.
+// Volatile allocation proofs: FAT ownership and live physical sectors.
+#ifndef MK61_C9_ALLOCATION_CACHE
+  #if defined(STM32F411xE) || \
+      (!defined(ARDUINO_ARCH_STM32) && !defined(ARDUINO_BLACKPILL_F401CC))
+    #define MK61_C9_ALLOCATION_CACHE 1
+  #else
+    #define MK61_C9_ALLOCATION_CACHE 0
+  #endif
+#endif
+#if MK61_C9_ALLOCATION_CACHE != 0 && MK61_C9_ALLOCATION_CACHE != 1
+  #error "MK61_C9_ALLOCATION_CACHE must be 0 or 1"
+#endif
+
+#ifndef MK61_C9_METADATA_PRECHECK
+  #if !defined(MK61_BUILD_USBDISK_MODULE) && (defined(STM32F411xE) || \
+      (defined(PROGRAM_STORE_HOST_TEST) && !defined(ARDUINO_BLACKPILL_F401CC)))
+    #define MK61_C9_METADATA_PRECHECK 1
+  #else
+    #define MK61_C9_METADATA_PRECHECK 0
+  #endif
+#endif
+#if MK61_C9_METADATA_PRECHECK != 0 && MK61_C9_METADATA_PRECHECK != 1
+  #error "C9 metadata precheck must be 0 or 1"
+#endif
+
+// Qualified reuse/byte policy is the default for an enabled image cache.
+// Retain the original LRU as an explicit A/B and compatibility override.
+#ifndef MK61_LANGUAGE_VM_CACHE_DENSITY
+  #define MK61_LANGUAGE_VM_CACHE_DENSITY 1
+#endif
+#if MK61_LANGUAGE_VM_CACHE_DENSITY != 0 && MK61_LANGUAGE_VM_CACHE_DENSITY != 1
+  #error "MK61_LANGUAGE_VM_CACHE_DENSITY must be 0 or 1"
+#endif
+#if MK61_RESIDENT_LANGUAGE_VM && MK61_OVERLAY_LANGUAGE_VM
+  #error "Choose one language VM placement"
+#endif
+#if (MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM) && \
+    ((MK61_ENABLE_TINYBASIC && !MK61_TINYBASIC_IS_LOADABLE) || \
+     (MK61_ENABLE_FOCAL && !MK61_FOCAL_IS_LOADABLE))
+  #error "Language VM requires compiler-only loadable languages"
+#endif
+
+// Короткое нажатие [USER] открывает Проводник. Поставьте 0, чтобы оставить
+// [USER] только для удержания стека и функций режима ПРГ.
+#ifndef MK61_USER_EXPLORER_SHORTCUT
+  #define MK61_USER_EXPLORER_SHORTCUT 1
+#endif
+
+#if defined(DISPLAY_UC1609) && !defined(MK61_DISPLAY_UC1609)
+  #define MK61_DISPLAY_UC1609
+#endif
+
+#if defined(DISPLAY_LCD1602) && !defined(MK61_DISPLAY_LCD1602)
+  #define MK61_DISPLAY_LCD1602
+#endif
+
+// Полные профили плат с UC1609. Classic V2 и V3 используют одинаковые дисплей
+// и клавиатуру, но отличаются выводом буззера и полярностью LED.
+//#define MK61_BOARD_CLASSIC_V2
+//#define MK61_BOARD_CLASSIC_V3
+//#define MK61_BOARD_40TH
+
+#if (defined(MK61_BOARD_CLASSIC_V2) + defined(MK61_BOARD_CLASSIC_V3) + defined(MK61_BOARD_40TH)) > 1
+  #error "Select only one UC1609 board profile"
+#endif
+
+#if defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)
+  #if !defined(MK61_DISPLAY_UC1609)
+    #define MK61_DISPLAY_UC1609
+  #endif
+  #if !defined(MK61_KEYBOARD_CLASSIC)
+    #define MK61_KEYBOARD_CLASSIC
+  #endif
+#endif
+
+// Профиль 40TH включает UC1609 и отдельную раскладку старой 40-клавишной версии.
+#if defined(MK61_BOARD_40TH)
+  #if !defined(MK61_DISPLAY_UC1609)
+    #define MK61_DISPLAY_UC1609
+  #endif
+  #if !defined(MK61_KEYBOARD_40TH)
+    #define MK61_KEYBOARD_40TH
+  #endif
+#endif
+
+#if !defined(MK61_DISPLAY_UC1609)
+  #define MK61_DISPLAY_LCD1602
+#endif
+
+// The bounded builtin TXT import batch has a ROM cost. Character-display
+// F411 profiles have this headroom; compact F401/Classic keep the per-file
+// path and their existing resident/APP reserves. No on-disk format changes.
+#ifndef MK61_C9_BULK_IMPORT
+  #if MK61_C9_ALLOCATION_CACHE && !defined(MK61_BUILD_USBDISK_MODULE) && \
+      !defined(MK61_DISPLAY_UC1609)
+    #define MK61_C9_BULK_IMPORT 1
+  #else
+    #define MK61_C9_BULK_IMPORT 0
+  #endif
+#endif
+#if MK61_C9_BULK_IMPORT != 0 && MK61_C9_BULK_IMPORT != 1
+  #error "MK61_C9_BULK_IMPORT must be 0 or 1"
+#endif
+
+// Proportional UI fonts belong to the UC1609 display profile, independently
+// of whether it is driven by an F401 or F411.  Numeric overrides remain
+// available for focused host/size tests.
+#ifndef MK61_PROPORTIONAL_UI_FONTS
+  #if defined(MK61_DISPLAY_UC1609)
+    #define MK61_PROPORTIONAL_UI_FONTS 1
+  #else
+    #define MK61_PROPORTIONAL_UI_FONTS 0
+  #endif
+#endif
+#if MK61_PROPORTIONAL_UI_FONTS != 0 && MK61_PROPORTIONAL_UI_FONTS != 1
+  #error "MK61_PROPORTIONAL_UI_FONTS must be 0 or 1"
+#endif
+#if MK61_PROPORTIONAL_UI_FONTS && !defined(MK61_DISPLAY_UC1609)
+  #error "proportional UI fonts require UC1609"
+#endif
+
+// UC1609 and USB Screen hand off the same canonical text grid. Only the
+// active renderer consumes its damage flags; character panels retain their
+// independent surface because their DDRAM is the physical source of truth.
+#ifndef MK61_SHARED_SCREEN_GRID
+  #if defined(MK61_DISPLAY_UC1609) && MK61_ENABLE_USB_SCREEN
+    #define MK61_SHARED_SCREEN_GRID 1
+  #else
+    #define MK61_SHARED_SCREEN_GRID 0
+  #endif
+#endif
+#if MK61_SHARED_SCREEN_GRID != 0 && MK61_SHARED_SCREEN_GRID != 1
+  #error "MK61_SHARED_SCREEN_GRID must be 0 or 1"
+#endif
+#if MK61_SHARED_SCREEN_GRID && (!defined(MK61_DISPLAY_UC1609) || !MK61_ENABLE_USB_SCREEN)
+  #error "shared screen grid requires UC1609 and USB Screen"
+#endif
+
+#ifndef MK61_SCREEN_BUFFER_LOAN
+  #define MK61_SCREEN_BUFFER_LOAN 0
+#endif
+#if MK61_SCREEN_BUFFER_LOAN != 0 && MK61_SCREEN_BUFFER_LOAN != 1
+  #error "MK61_SCREEN_BUFFER_LOAN must be 0 or 1"
+#endif
+#if MK61_SCREEN_BUFFER_LOAN && !defined(MK61_DISPLAY_UC1609) && !MK61_ENABLE_USB_SCREEN
+  #error "screen buffer loan requires UC1609 or a USB framebuffer"
+#endif
+
+// Portable system modules are board-neutral by default, so their optional UI
+// client needs an explicit build switch. UC1609 release bundles enable it and
+// obtain glyphs from the resident service; character-display bundles omit it.
+#ifndef MK61_PORTABLE_UI_FONTS
+  #define MK61_PORTABLE_UI_FONTS 1
+#endif
+#if MK61_PORTABLE_UI_FONTS != 0 && MK61_PORTABLE_UI_FONTS != 1
+  #error "MK61_PORTABLE_UI_FONTS must be 0 or 1"
+#endif
+
+#if MK61_PROPORTIONAL_UI_FONTS || \
+    (defined(MK61_BUILD_PORTABLE_SYSTEM) && MK61_PORTABLE_UI_FONTS)
+  #define MK61_UI_FONT_CLIENT 1
+#else
+  #define MK61_UI_FONT_CLIENT 0
+#endif
+
+// The dedicated calculator face is a property of the 192x64 UC1609 display,
+// not of the STM32 model. It streams one page through the existing render
+// buffer and has no proportional-font tables or second framebuffer, so the
+// F401 build can use the same presentation without a RAM penalty.
+#ifndef MK61_FIXED_CALCULATOR_FACE
+  #if defined(MK61_DISPLAY_UC1609)
+    #define MK61_FIXED_CALCULATOR_FACE 1
+  #else
+    #define MK61_FIXED_CALCULATOR_FACE 0
+  #endif
+#endif
+#if MK61_FIXED_CALCULATOR_FACE != 0 && MK61_FIXED_CALCULATOR_FACE != 1
+  #error "MK61_FIXED_CALCULATOR_FACE must be 0 or 1"
+#endif
+#if MK61_FIXED_CALCULATOR_FACE && !defined(MK61_DISPLAY_UC1609)
+  #error "fixed calculator face requires UC1609"
+#endif
+
+// Read benchmarks are service diagnostics, not calculator functionality.
+// Product F401 artifacts omit them; qualification and developer builds keep
+// them. An explicit feature flag always wins.
+#ifndef MK61_ENABLE_READ_BENCHMARKS
+  #if MK61_F401_PRODUCT_BUILD
+    #define MK61_ENABLE_READ_BENCHMARKS 0
+  #else
+    #define MK61_ENABLE_READ_BENCHMARKS 1
+  #endif
+#endif
+#if MK61_ENABLE_READ_BENCHMARKS != 0 && MK61_ENABLE_READ_BENCHMARKS != 1
+  #error "MK61_ENABLE_READ_BENCHMARKS must be 0 or 1"
+#endif
+
+// Raw ADC fields duplicate the user-facing Hardware report. Product F401
+// artifacts omit only this terminal formatter; qualification images retain it.
+#ifndef MK61_ENABLE_ANALOG_REPORT
+  #if MK61_F401_PRODUCT_BUILD
+    #define MK61_ENABLE_ANALOG_REPORT 0
+  #else
+    #define MK61_ENABLE_ANALOG_REPORT 1
+  #endif
+#endif
+#if MK61_ENABLE_ANALOG_REPORT != 0 && MK61_ENABLE_ANALOG_REPORT != 1
+  #error "MK61_ENABLE_ANALOG_REPORT must be 0 or 1"
+#endif
+
+// The file-oriented `prof save` formatter duplicates the interactive profiler
+// output and costs meaningful Flash.  Keep it on the roomier F411
+// qualification image.  F401 qualification builds retain interactive `prof`
+// but omit only this duplicate save-to-file formatter; product F401 already
+// omits the profiler itself.
+#ifndef MK61_ENABLE_PROFILE_SAVE
+  #if defined(STM32F401xC) || defined(STM32F401xE)
+    #define MK61_ENABLE_PROFILE_SAVE 0
+  #else
+    #define MK61_ENABLE_PROFILE_SAVE 1
+  #endif
+#endif
+#if MK61_ENABLE_PROFILE_SAVE != 0 && MK61_ENABLE_PROFILE_SAVE != 1
+  #error "MK61_ENABLE_PROFILE_SAVE must be 0 or 1"
+#endif
+
+// Alarm scheduling is user-visible functionality, not a laboratory report.
+// Keep the same command/API on F401 and F411; the constrained F401 release is
+// built with size-LTO and retains its sealed-image reserve that way.
+#ifndef MK61_ENABLE_RTC_ALARM_TERMINAL
+  #define MK61_ENABLE_RTC_ALARM_TERMINAL 1
+#endif
+#if MK61_ENABLE_RTC_ALARM_TERMINAL != 0 && \
+    MK61_ENABLE_RTC_ALARM_TERMINAL != 1
+  #error "MK61_ENABLE_RTC_ALARM_TERMINAL must be 0 or 1"
+#endif
+
+#if defined(DISPLAY_LCD1602_A00) && !defined(MK61_LCD1602_A00)
+  #define MK61_LCD1602_A00
+#endif
+
+#if defined(DISPLAY_LCD1602_A02) && !defined(MK61_LCD1602_A02)
+  #define MK61_LCD1602_A02
+#endif
+
+#if defined(DISPLAY_OLED1602_WS0010) && !defined(MK61_OLED1602_WS0010)
+  #define MK61_OLED1602_WS0010
+#endif
+
+#if (defined(MK61_LCD1602_A00) + defined(MK61_LCD1602_A02) + \
+     defined(MK61_OLED1602_WS0010)) > 1
+  #error "Select only one character-display controller/CGROM profile"
+#endif
+
+#if defined(MK61_OLED1602_WS0010) && !defined(MK61_DISPLAY_LCD1602)
+  #error "MK61_OLED1602_WS0010 requires the 16x2 character-display backend"
+#endif
+
+#if defined(MK61_DISPLAY_LCD1602) && !defined(MK61_LCD1602_A00) && \
+    !defined(MK61_LCD1602_A02) && !defined(MK61_OLED1602_WS0010)
+  #define MK61_LCD1602_A00
+#endif
+
+// На mini V2/V3 линия RW подключена к PB1. У mini V3 все четыре линии данных
+// (PB10/PA3/PA2/PA1) являются FT GPIO у STM32F401CC и STM32F411CE, поэтому
+// после инициализации можно завершать каждый 4-битный обмен обязательным для
+// WS0010 двухполубайтным чтением BF/AC. Остальные профили сохраняют прежнюю
+// политику: обычный HD44780 mini читает DB7, а платы без RW только пишут.
+#ifndef MK61_LCD1602_BUSY_FLAG
+  #if defined(MK61_DISPLAY_LCD1602) && !defined(CDU) && !defined(LK432) && \
+      (!defined(MK61_OLED1602_WS0010) || defined(REVISION_V3))
+    #define MK61_LCD1602_BUSY_FLAG 1
+  #else
+    #define MK61_LCD1602_BUSY_FLAG 0
+  #endif
+#endif
+
+#if MK61_LCD1602_BUSY_FLAG && (!defined(MK61_DISPLAY_LCD1602) || defined(CDU) || defined(LK432))
+  #error "MK61_LCD1602_BUSY_FLAG requires a mini V2/V3 LCD1602 profile with RW"
+#endif
+
+#if defined(MK61_OLED1602_WS0010) && MK61_LCD1602_BUSY_FLAG && \
+    !defined(REVISION_V3)
+  #error "WS0010 busy-flag reads are qualified only on mini V3 FT data pins"
+#endif
+#if defined(MK61_OLED1602_WS0010) && defined(REVISION_V3) && \
+    !MK61_LCD1602_BUSY_FLAG
+  #error "mini V3 WS0010 requires the datasheet busy-flag read after every byte"
+#endif
+
+// The module can route analogue brightness to connector pin 3 after a
+// revision-specific solder-jumper modification, but mini V3 connects that pin
+// only to its manual potentiometer, not to an MCU GPIO. No software
+// brightness/current command is enabled without an official, qualified
+// controller command. Display-off OLED protection remains independent.
+#ifndef MK61_WS0010_BRIGHTNESS_CONTROL
+  #define MK61_WS0010_BRIGHTNESS_CONTROL 0
+#endif
+#if MK61_WS0010_BRIGHTNESS_CONTROL != 0 && MK61_WS0010_BRIGHTNESS_CONTROL != 1
+  #error "MK61_WS0010_BRIGHTNESS_CONTROL must be 0 or 1"
+#endif
+#if MK61_WS0010_BRIGHTNESS_CONTROL
+  #error "WS0010 brightness control is not qualified for WEH001602A"
+#endif
+
+// Клавиатура: у classic-платформы с UC1609 другая физическая матрица и коды.
+// Если вариант не задан явно, LCD1602 остается mk61s-mini, UC1609 выбирает classic.
+#if defined(MK61_DISPLAY_UC1609) && !defined(MK61_KEYBOARD_MINI) && !defined(MK61_KEYBOARD_CLASSIC) && !defined(MK61_KEYBOARD_40TH)
+  #define MK61_KEYBOARD_CLASSIC
+#endif
+
+#if !defined(MK61_KEYBOARD_CLASSIC) && !defined(MK61_KEYBOARD_MINI) && !defined(MK61_KEYBOARD_40TH)
+  #define MK61_KEYBOARD_MINI
+#endif
+
+#if (defined(MK61_KEYBOARD_CLASSIC) + defined(MK61_KEYBOARD_MINI) + defined(MK61_KEYBOARD_40TH)) > 1
+  #error "Select only one keyboard layout"
+#endif
+
+// Обратная совместимость: прежние флаги UC1609 + classic-клавиатура означают
+// Classic V2. Новые сборки должны задавать полный профиль явно.
+#if defined(MK61_DISPLAY_UC1609) && defined(MK61_KEYBOARD_CLASSIC) && \
+    !defined(MK61_BOARD_CLASSIC_V2) && !defined(MK61_BOARD_CLASSIC_V3)
+  #define MK61_BOARD_CLASSIC_V2
+#endif
+
+// REVISION_V2 относится только к параллельному LCD платы mini V2 и не является
+// ревизией Classic. Такая комбинация дала бы неверную распиновку буззера.
+#if defined(REVISION_V2) && (defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3) || defined(MK61_BOARD_40TH))
+  #error "REVISION_V2 cannot be combined with a UC1609 board profile"
+#endif
+
+// Shipping language APPs stream index/bytecode from C9. Host legacy-ABI
+// probes may retain their original RAM transfer/cache fixtures.
+#ifndef MK61_FLASH_LANGUAGE_VM
+  #if defined(LANGUAGE_VM_HOST_TEST)
+    #define MK61_FLASH_LANGUAGE_VM 0
+  #else
+    #define MK61_FLASH_LANGUAGE_VM (MK61_OVERLAY_LANGUAGE_VM || MK61_RESIDENT_LANGUAGE_VM)
+  #endif
+#endif
+// Bounded Flash pages reuse the former split-VM image-cache allowance:
+// Classic F411 32 KiB, other F411 boards 24 KiB. F401 and the resident-VM
+// experiment keep their existing single resident page.
+#ifndef MK61_FLASH_VM_PAGE_CACHE_BYTES
+  #if MK61_FLASH_LANGUAGE_VM && MK61_OVERLAY_LANGUAGE_VM && defined(STM32F411xE)
+    #if defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)
+      #define MK61_FLASH_VM_PAGE_CACHE_BYTES 32768
+    #else
+      #define MK61_FLASH_VM_PAGE_CACHE_BYTES 24576
+    #endif
+  #else
+    #define MK61_FLASH_VM_PAGE_CACHE_BYTES 0
+  #endif
+#endif
+#if MK61_FLASH_VM_PAGE_CACHE_BYTES < 0 || MK61_FLASH_VM_PAGE_CACHE_BYTES > 32768
+  #error "Flash page cache must fit in 32 KiB"
+#endif
+// Select the cache budget after complete board profiles and legacy aliases.
+// Classic F411 retains 32 KiB raw images; other F411 boards keep 24 KiB.
+// F401/no-overlay profiles keep zero; explicit qualification overrides remain.
+#ifndef MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+  #if MK61_OVERLAY_LANGUAGE_VM && !MK61_FLASH_LANGUAGE_VM && defined(STM32F411xE)
+    #if defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)
+      #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 32768
+    #else
+      #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 24576
+    #endif
+  #else
+    #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 0
+  #endif
+#endif
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES < 0 || MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES > 32768
+  #error "language image cache must fit in 32 KiB"
+#endif
+// Persistence is useful only when verified images can be pinned in RAM.
+// F401/no-cache profiles retain their existing compile/execute path.
+#ifndef MK61_VM_FILE_CACHE
+  #define MK61_VM_FILE_CACHE (MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES != 0)
+#endif
+#if MK61_VM_FILE_CACHE != 0 && MK61_VM_FILE_CACHE != 1
+  #error "MK61_VM_FILE_CACHE must be 0 or 1"
+#endif
+
+// Qualified raw/packed entries, still inside the existing cache budget.
+// Resolve this after full/legacy board aliases: Classic keeps its separately
+// selected raw policy. Explicit 0/1 controls remain available on every board.
+// Workspace is borrowed only before warm VM state setup; cold reserve never
+// touches the compiler's live prefix. No-cache profiles retain their old path.
+#ifndef MK61_LANGUAGE_VM_CACHE_MIXED
+  #if defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)
+    #define MK61_LANGUAGE_VM_CACHE_MIXED 0
+  #else
+    #define MK61_LANGUAGE_VM_CACHE_MIXED (MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES != 0)
+  #endif
+#endif
+#if MK61_LANGUAGE_VM_CACHE_MIXED != 0 && MK61_LANGUAGE_VM_CACHE_MIXED != 1
+  #error "MK61_LANGUAGE_VM_CACHE_MIXED must be 0 or 1"
+#endif
+
+// Production STOP is enabled only on exact F411 hardware combinations that
+// passed physical display, keyboard, RTC and FNB58 qualification. Mini V3
+// WS0010 and Classic V3 UC1609 use different display sleep commands but share
+// the proven STOP/clock/USB core. F401, A00/A02, Classic V2 and 40th retain
+// shallow WFI.
+#if defined(STM32F411xE) && defined(REVISION_V3) && \
+    ((defined(MK61_KEYBOARD_MINI) && defined(MK61_OLED1602_WS0010)) || \
+     (defined(MK61_BOARD_CLASSIC_V3) && \
+      defined(MK61_KEYBOARD_CLASSIC) && defined(MK61_DISPLAY_UC1609)))
+  #define MK61_DEEP_IDLE_PRODUCTION_PROFILE 1
+#else
+  #define MK61_DEEP_IDLE_PRODUCTION_PROFILE 0
+#endif
+#ifndef MK61_ENABLE_DEEP_IDLE
+  #if MK61_DEEP_IDLE_PRODUCTION_PROFILE
+    #define MK61_ENABLE_DEEP_IDLE 1
+  #else
+    #define MK61_ENABLE_DEEP_IDLE 0
+  #endif
+#endif
+#if MK61_ENABLE_DEEP_IDLE != 0 && MK61_ENABLE_DEEP_IDLE != 1
+  #error "MK61_ENABLE_DEEP_IDLE must be 0 or 1"
+#endif
+#if MK61_ENABLE_DEEP_IDLE && !MK61_DEEP_IDLE_PRODUCTION_PROFILE
+  #error "production deep idle is qualified only for exact F411 WS0010/Classic-V3-UC1609 profiles"
+#endif
+
+// Backward-compatible laboratory override for bounded STOP experiments on
+// otherwise unsupported profiles. It never changes the production default.
+#ifndef MK61_ENABLE_DEEP_IDLE_QUALIFICATION
+  #define MK61_ENABLE_DEEP_IDLE_QUALIFICATION 0
+#endif
+#if MK61_ENABLE_DEEP_IDLE_QUALIFICATION != 0 && \
+    MK61_ENABLE_DEEP_IDLE_QUALIFICATION != 1
+  #error "MK61_ENABLE_DEEP_IDLE_QUALIFICATION must be 0 or 1"
+#endif
+#define MK61_DEEP_IDLE_ENABLED \
+  (MK61_ENABLE_DEEP_IDLE || MK61_ENABLE_DEEP_IDLE_QUALIFICATION)
+
+// A suspended USB connection is preserved across STOP. No Remote Wake bit is
+// advertised and no resume signal is sent: a key wakes only the calculator;
+// the host remains asleep until it wakes for an independent reason.
+#ifndef MK61_ENABLE_USB_SUSPEND
+  #define MK61_ENABLE_USB_SUSPEND MK61_ENABLE_DEEP_IDLE
+#endif
+#if MK61_ENABLE_USB_SUSPEND != 0 && MK61_ENABLE_USB_SUSPEND != 1
+  #error "MK61_ENABLE_USB_SUSPEND must be 0 or 1"
+#endif
+#ifndef MK61_ENABLE_USB_SUSPEND_QUALIFICATION
+  #define MK61_ENABLE_USB_SUSPEND_QUALIFICATION 0
+#endif
+#if MK61_ENABLE_USB_SUSPEND_QUALIFICATION != 0 && \
+    MK61_ENABLE_USB_SUSPEND_QUALIFICATION != 1
+  #error "MK61_ENABLE_USB_SUSPEND_QUALIFICATION must be 0 or 1"
+#endif
+#define MK61_USB_SUSPEND_ENABLED \
+  (MK61_ENABLE_USB_SUSPEND || MK61_ENABLE_USB_SUSPEND_QUALIFICATION)
+#if MK61_USB_SUSPEND_ENABLED && !MK61_DEEP_IDLE_ENABLED
+  #error "USB suspend preservation requires deep idle"
+#endif
+#if MK61_USB_SUSPEND_ENABLED && !MK61_ENABLE_USB_POWER_OBSERVER
+  #error "USB suspend preservation requires the USB power observer"
+#endif
+
+// Once the host suspends USB, production firmware enters repeated bounded
+// five-second STOP cycles automatically. The same state machine is also used
+// by the explicit `prof deep` diagnostic command.
+#ifndef MK61_ENABLE_USB_AUTO_DEEP_IDLE
+  #define MK61_ENABLE_USB_AUTO_DEEP_IDLE MK61_ENABLE_USB_SUSPEND
+#endif
+#if MK61_ENABLE_USB_AUTO_DEEP_IDLE != 0 && \
+    MK61_ENABLE_USB_AUTO_DEEP_IDLE != 1
+  #error "MK61_ENABLE_USB_AUTO_DEEP_IDLE must be 0 or 1"
+#endif
+#ifndef MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION
+  #define MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION 0
+#endif
+#if MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION != 0 && \
+    MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION != 1
+  #error "MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION must be 0 or 1"
+#endif
+#define MK61_USB_AUTO_DEEP_IDLE_ENABLED \
+  (MK61_ENABLE_USB_AUTO_DEEP_IDLE || \
+   MK61_ENABLE_USB_AUTO_DEEP_IDLE_QUALIFICATION)
+#if MK61_USB_AUTO_DEEP_IDLE_ENABLED && !MK61_USB_SUSPEND_ENABLED
+  #error "automatic USB deep idle requires USB suspend preservation"
+#endif
+
+// Mini/LCD1602 has only the NOR client on SPI1, so its measured arbiter and DMA
+// backend are enabled by default. UC1609 shares SPI1 with NOR and is enabled
+// only on the exact F411 Classic V3 profile qualified on physical hardware;
+// F401, Classic V2 and 40th retain the original polling path until their own
+// hardware acceptance. Explicit laboratory overrides still take precedence.
+#ifndef MK61_ENABLE_SPI1_ARBITER
+  #if !defined(MK61_DISPLAY_UC1609) || \
+      (defined(STM32F411xE) && defined(MK61_BOARD_CLASSIC_V3))
+    #define MK61_ENABLE_SPI1_ARBITER 1
+  #else
+    #define MK61_ENABLE_SPI1_ARBITER 0
+  #endif
+#endif
+#if MK61_ENABLE_SPI1_ARBITER != 0 && MK61_ENABLE_SPI1_ARBITER != 1
+  #error "MK61_ENABLE_SPI1_ARBITER must be 0 or 1"
+#endif
+
+// Long SPI1 buffers can use DMA2 S2/S3 after the polling arbiter has granted
+// exclusive ownership. The measured threshold is deliberately configurable;
+// short command/address transfers remain on the cheaper polling path.
+#ifndef MK61_ENABLE_SPI1_DMA
+  #define MK61_ENABLE_SPI1_DMA MK61_ENABLE_SPI1_ARBITER
+#endif
+#if MK61_ENABLE_SPI1_DMA != 0 && MK61_ENABLE_SPI1_DMA != 1
+  #error "MK61_ENABLE_SPI1_DMA must be 0 or 1"
+#endif
+#if MK61_ENABLE_SPI1_DMA && !MK61_ENABLE_SPI1_ARBITER
+  #error "MK61_ENABLE_SPI1_DMA requires MK61_ENABLE_SPI1_ARBITER=1"
+#endif
+#ifndef MK61_SPI1_DMA_THRESHOLD
+  // HIL A/B on F411/W25Q128: 64-byte transfers amortize DMA setup and reduce
+  // latency for small C6 records; shorter command/address traffic stays polling.
+  #define MK61_SPI1_DMA_THRESHOLD 64
+#endif
+#if MK61_SPI1_DMA_THRESHOLD < 1 || MK61_SPI1_DMA_THRESHOLD > 65535
+  #error "MK61_SPI1_DMA_THRESHOLD must be in 1..65535"
+#endif
+
+// Small C6 records and ZX0 input are consumed incrementally. 512 bytes won the
+// 64/128/256/512 HIL matrix and remains a stack-local buffer, so static RAM is
+// unchanged. Keep the compile-time tuning point for repeatable qualification.
+#ifndef MK61_PROGRAM_STORE_READ_CHUNK
+  #define MK61_PROGRAM_STORE_READ_CHUNK 512
+#endif
+#if MK61_PROGRAM_STORE_READ_CHUNK < 32 || MK61_PROGRAM_STORE_READ_CHUNK > 512
+  #error "MK61_PROGRAM_STORE_READ_CHUNK must be in 32..512"
+#endif
+// Электрическая полярность PC13 задаётся полной платой, а не типом клавиатуры:
+// mini V2/V3 и Classic V3 — active HIGH; Classic V2 и 40th — active LOW.
+// Храним полярность в профиле платы, чтобы все вызовы led::on/off/blink
+// использовали один и тот же аппаратно правильный уровень.
+#if defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_40TH)
+  static constexpr u8 MK61_STATUS_LED_ACTIVE_LOW = 1;
+#else
+  static constexpr u8 MK61_STATUS_LED_ACTIVE_LOW = 0;
+#endif
+
+#define IS_CORTEX_M4() (__ARM_ARCH == 7)
+//defined(__ARM_ARCH_7EM__)
+//defined(__ARM_FEATURE_SIMD32)
+
+// На STM32F4 горячие таблицы размещаются не в отдельном BSS, а в вытесняемом
+// общем workspace: обычный калькулятор получает SRAM-ускорение, а Markdown,
+// USB и System APP могут мгновенно вернуть все 8 КиБ и переключить ядро на
+// Flash fallback. 0 = только Flash, 1 = микрокоманды/DCW (~1.1 КиБ),
+// 2 = также AND_AMK (~7.1 КиБ суммарно).
+#ifndef MK61_CORE_HOT_TABLES_IN_SRAM
+  #if defined(STM32F401xC) || defined(STM32F401xE) || defined(STM32F411xE)
+    #define MK61_CORE_HOT_TABLES_IN_SRAM 2
+  #else
+    #define MK61_CORE_HOT_TABLES_IN_SRAM 0
+  #endif
+#endif
+#if MK61_CORE_HOT_TABLES_IN_SRAM < 0 || MK61_CORE_HOT_TABLES_IN_SRAM > 2
+  #error "MK61_CORE_HOT_TABLES_IN_SRAM must be 0, 1, or 2"
+#endif
+
+// Три последовательных Tick объединяются в один внешний вызов на микротакт.
+// Тела остаются раздельными в исходнике, но встраиваются в общий wrapper:
+// порядок эмуляции не меняется, а F411 тратит меньше времени на ABI-обвязку.
+#ifndef MK61_CORE_MERGED_TICK
+  #define MK61_CORE_MERGED_TICK 1
+#endif
+#if MK61_CORE_MERGED_TICK != 0 && MK61_CORE_MERGED_TICK != 1
+  #error "MK61_CORE_MERGED_TICK must be 0 or 1"
+#endif
+#if MK61_CORE_MERGED_TICK && MK61_DWT_CORE_DETAIL
+  #error "MK61_CORE_MERGED_TICK is incompatible with per-chip DWT detail"
+#endif
+
+// Research switch for a three-byte Cortex-M4 DSP selector in the merged Tick.
+// It stays off until the same-device DWT A/B clears the >=3% full-step gate.
+#ifndef MK61_CORE_PACKED_AMK
+  #define MK61_CORE_PACKED_AMK 0
+#endif
+#if MK61_CORE_PACKED_AMK != 0 && MK61_CORE_PACKED_AMK != 1
+  #error "MK61_CORE_PACKED_AMK must be 0 or 1"
+#endif
+#if MK61_CORE_PACKED_AMK && !MK61_CORE_MERGED_TICK
+  #error "MK61_CORE_PACKED_AMK requires MK61_CORE_MERGED_TICK"
+#endif
+
+// Полное разворачивание расписания уменьшает цену внутреннего цикла.
+// На F411 оно оказалось на 5.1% быстрее компактных циклов (+112 байт Flash).
+#ifndef MK61_CORE_UNROLL_SCHEDULE
+  #define MK61_CORE_UNROLL_SCHEDULE 1
+#endif
+#if MK61_CORE_UNROLL_SCHEDULE != 0 && MK61_CORE_UNROLL_SCHEDULE != 1
+  #error "MK61_CORE_UNROLL_SCHEDULE must be 0 or 1"
+#endif
+
+// Host-only research counter for the three microprogram regions selected by
+// every IK1302/03/06 command.  Firmware builds keep it at zero: the complete
+// histogram needs 9 KiB and exists only to choose native hot paths from
+// measured workloads rather than intuition.
+#ifndef MK61_CORE_BODY_PROFILE
+  #define MK61_CORE_BODY_PROFILE 0
+#endif
+#if MK61_CORE_BODY_PROFILE != 0 && MK61_CORE_BODY_PROFILE != 1
+  #error "MK61_CORE_BODY_PROFILE must be 0 or 1"
+#endif
+
+#if defined(TERMINAL) || defined(DEBUG)
+ //#warning Serial module included!
+#endif
+
+// Терминал использует Serial независимо от включенных отладочных категорий.
+// Раньше SERIAL_OUTPUT появлялся только как побочный эффект DEBUG_* и сборка
+// ломалась при отключении отладки с оставленным TERMINAL.
+#if defined(TERMINAL) && !defined(SERIAL_OUTPUT)
+  #define SERIAL_OUTPUT
+#endif
+
+#ifdef DEBUG_TRACE
+  constexpr bool DBG_TRACE = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_TRACE = false;
+#endif
+
+#ifdef DEBUG_PARSE
+  constexpr bool DBG_PARSE = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_PARSE = false;
+#endif
+
+#ifdef DEBUG_MEASURE
+  constexpr bool DBG_MEASURE = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_MEASURE = false;
+#endif
+
+#ifdef DEBUG_MINI
+  constexpr bool DBG_MINI = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_MINI = false;
+#endif
+
+#ifdef DEBUG_SPIFLASH
+  constexpr bool DBG_SPIROM = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_SPIROM = false;
+#endif
+
+#ifdef DEBUG_DISASMBLER
+  constexpr bool DBG_DISASM = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_DISASM = false;
+#endif
+
+#ifdef DEBUG_KBD
+  constexpr bool DBG_KBD = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_KBD = false;
+#endif
+
+#ifdef DEBUG_MENU
+  constexpr bool DBG_MENU = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_MENU = false;
+#endif
+
+#ifdef DEBUG_CORE61
+  constexpr bool DBG_CORE61 = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_CORE61 = false;
+#endif
+
+#ifdef DEBUG_LIBRARY
+  constexpr bool DBG_LIB61 = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_LIB61 = false;
+#endif
+
+#ifdef DEBUG_MK61E
+  constexpr bool DBG_MK61E = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_MK61E = false;
+#endif
+
+#ifdef DEBUG_RUN_STOP
+  constexpr bool DBG_EXT_RUN = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_EXT_RUN = false;
+#endif
+
+#ifdef MK61_FOCAL_TRACE
+  constexpr bool DBG_FOCAL = true;
+  #define SERIAL_OUTPUT
+#else
+  constexpr bool DBG_FOCAL = false;
+#endif
+
+#ifdef MK61s
+  #if defined(MK61_BOARD_CLASSIC_V2)
+    constexpr char MODEL[] = "MK61s-Classic-V2";
+    //                       0123456789ABCDEF
+    constexpr char FULL_MODEL_NAME[] = "MK61s Classic V2";
+  #elif defined(MK61_BOARD_CLASSIC_V3)
+    constexpr char MODEL[] = "MK61s-Classic-V3";
+    //                       0123456789ABCDEF
+    constexpr char FULL_MODEL_NAME[] = "MK61s Classic V3";
+  #elif defined(MK61_BOARD_40TH)
+    constexpr char MODEL[] = "MK61s-40th";
+    //                       0123456789ABCDEF
+    constexpr char FULL_MODEL_NAME[] = "MK61s-40thUC1609";
+  #else
+    constexpr char MODEL[] = "MK61s";
+    //                       0123456789ABCDEF
+    constexpr char FULL_MODEL_NAME[] = "MK61s *firmware*";
+  #endif
+#else
+  #ifdef MK52s
+    constexpr char MODEL[] = "MK52s";
+    constexpr char FULL_MODEL_NAME[] = "MK52s *firmware*";
+  #endif
+#endif
+
+// Отображается как "HHMMSS Mmm DD YY" (16 символов и завершающий ноль).
+constexpr char FIRMWARE_VER[] = {
+  __TIME__[0], __TIME__[1], __TIME__[3], __TIME__[4], __TIME__[6], __TIME__[7], ' ',
+  __DATE__[0], __DATE__[1], __DATE__[2], __DATE__[3],
+  (__DATE__[4] == ' ' ? '0' : __DATE__[4]), __DATE__[5], __DATE__[6],
+  __DATE__[9], __DATE__[10], '\0'
+};
+class class_calc_config {
+  public:
+    bool disassm;
+    bool output_IP;
+    constexpr class_calc_config(void) : disassm(false), output_IP(false) {}
+};
+
+namespace cfg {
+
+// Измеренная совместимая скорость прежнего loop-счётчика: 13 шагов за 15 с.
+// Таймер задаётся в микросекундах; округление даёт ошибку меньше 1 ppm от
+// целевого периода 15/13 с ещё до аппаратного квантования PSC/ARR.
+static constexpr u32    CLASSIC_MK61_PERIOD_NUMERATOR = 15;
+static constexpr u32    CLASSIC_MK61_PERIOD_DENOMINATOR = 13;
+static constexpr u32    CLASSIC_MK61_PERIOD_US =  1153846;
+static constexpr usize  MAXIMUM_MK61_BATCH_STEPS =     16;   // Сколько шагов ядра делать за один проход RUN-обвязки в режиме MAXIMUM
+static constexpr t_time_ms MAXIMUM_LCD_UPDATE_MS =    120;   // Минимальная пауза между обновлениями LCD в MAXIMUM RUN
+static constexpr usize  MAXIMUM_SERIAL_POLL_LOOPS =     4;   // Как часто опрашивать терминал в MAXIMUM RUN
+
+}
+
+// Конфигурация подключения микроконтроллера на макетной или печтаной плате 
+#ifdef CDU
+ /* Описание выводов STM32F401CDU6 (BlackPill) */
+  static const u8   PIN_LCD_RS      =   PC14;
+  static const u8   PIN_LCD_E       =   PC15;
+  static const u8   PIN_LCD_DB4     =   PB0;
+  static const u8   PIN_LCD_DB5     =   PB1;
+  static const u8   PIN_LCD_DB6     =   PB2;
+  static const u8   PIN_LCD_DB7     =   PB3;
+  static const u8   PIN_KBD_COL0    =   PA0;
+  static const u8   PIN_KBD_COL1    =   PA1;
+  static const u8   PIN_KBD_COL2    =   PA2;
+  static const u8   PIN_KBD_COL3    =   PA3;
+  static const u8   PIN_KBD_COL4    =   PA4;
+  static const u8   PIN_KBD_COL5    =   PA5;
+  static const u8   PIN_KBD_COL6    =   PA6;
+  static const u8   PIN_KBD_COL7    =   PA7;
+  static const u8   PIN_KBD_ROW4    =   PB8;
+  static const u8   PIN_KBD_ROW3    =   PB7;
+  static const u8   PIN_KBD_ROW2    =   PB6;
+  static const u8   PIN_KBD_ROW1    =   PB5;
+  static const u8   PIN_KBD_ROW0    =   PB4;
+  static const u8   PIN_SPIFLASH_CS =   PA4;
+#else
+ #ifdef LK432
+ /* Описание выводов STM32L432, также известного как LK432, для платы расширения Arduino (Wokwi) */
+  static const u8   PIN_LCD_RS      =   D12;
+  static const u8   PIN_LCD_E       =   D11;
+  static const u8   PIN_LCD_DB4     =   D10;
+  static const u8   PIN_LCD_DB5     =   D9;
+  static const u8   PIN_LCD_DB6     =   D8;
+  static const u8   PIN_LCD_DB7     =   D8;
+  static const u8   PIN_KBD_COL0    =   A0;
+  static const u8   PIN_KBD_COL1    =   A1;
+  static const u8   PIN_KBD_COL2    =   A2;
+  static const u8   PIN_KBD_COL3    =   A3;
+  static const u8   PIN_KBD_COL4    =   A4;
+  static const u8   PIN_KBD_COL5    =   A5;
+  static const u8   PIN_KBD_COL6    =   A6;
+  static const u8   PIN_KBD_COL7    =   A7;
+  static const u8   PIN_KBD_ROW4    =   D2;
+  static const u8   PIN_KBD_ROW3    =   D4;
+  static const u8   PIN_KBD_ROW2    =   D5;
+  static const u8   PIN_KBD_ROW1    =   D6;
+  static const u8   PIN_KBD_ROW0    =   D13;
+  static const u8   PIN_SPIFLASH_CS =   PA4;
+ #else
+  #ifdef REVISION_V2
+ /* Описание выводов STM32F411CEU6 (BlackPill MK61s-mini_v2) */
+    static const u8   PIN_LCD_RS      =   PB2;
+    static const u8   PIN_LCD_RW      =   PB1;
+    static const u8   PIN_LCD_E       =   PB0;
+    static const u8   PIN_LCD_DB4     =   PA3;
+    static const u8   PIN_LCD_DB5     =   PA2;
+    static const u8   PIN_LCD_DB6     =   PA1;
+    static const u8   PIN_LCD_DB7     =   PC15;
+    static const u8   PIN_KBD_COL0    =   PB12;
+    static const u8   PIN_KBD_COL1    =   PB13;
+    static const u8   PIN_KBD_COL2    =   PB14;
+    static const u8   PIN_KBD_COL3    =   PB15;
+    static const u8   PIN_KBD_COL4    =   PA8;
+    static const u8   PIN_KBD_COL5    =   PA9;
+    static const u8   PIN_KBD_COL6    =   PA10;
+    static const u8   PIN_KBD_COL7    =   PA15;
+    static const u8   PIN_KBD_ROW4    =   PB8;
+    static const u8   PIN_KBD_ROW3    =   PB7;
+    static const u8   PIN_KBD_ROW2    =   PB6;
+    static const u8   PIN_KBD_ROW1    =   PB5;
+    static const u8   PIN_KBD_ROW0    =   PB4;
+    static const u8   PIN_J2          =   PB3;
+    static const u8   PIN_BUZZER      =   PB10;
+    static const u8   PIN_SPIFLASH_CS =   PA4;
+    static const u8   PIN_LED         =   PC13;
+    static constexpr u8 PIN_LED_ACTIVE_LOW = MK61_STATUS_LED_ACTIVE_LOW;
+  #else
+    #ifdef REVISION_V3
+ /* REVISION_V3: описание выводов STM32F411CEU6 (BlackPill MK61s-mini_v3) */
+      static const u8   PIN_LCD_RS      =   PB2;
+      static const u8   PIN_LCD_E       =   PB0;
+      static const u8   PIN_LCD_RW      =   PB1;
+      static const u8   PIN_LCD_DB4     =   PB10;
+      static const u8   PIN_LCD_DB5     =   PA3;
+      static const u8   PIN_LCD_DB6     =   PA2;
+      static const u8   PIN_LCD_DB7     =   PA1;
+      static const u8   PIN_KBD_COL0    =   PB12;
+      static const u8   PIN_KBD_COL1    =   PB13;
+      static const u8   PIN_KBD_COL2    =   PB14;
+      static const u8   PIN_KBD_COL3    =   PB15;
+      static const u8   PIN_KBD_COL4    =   PA8;
+      static const u8   PIN_KBD_COL5    =   PA9;
+      static const u8   PIN_KBD_COL6    =   PA10;
+      static const u8   PIN_KBD_COL7    =   PA15;
+      static const u8   PIN_KBD_ROW4    =   PB8;
+      static const u8   PIN_KBD_ROW3    =   PB7;
+      static const u8   PIN_KBD_ROW2    =   PB6;
+      static const u8   PIN_KBD_ROW1    =   PB5;
+      static const u8   PIN_KBD_ROW0    =   PB4;
+      #ifdef MK61_BOARD_CLASSIC_V3
+        static const u8 PIN_BUZZER      =   PB9;
+      #else
+        static const u8 PIN_BUZZER      =   PA0;
+      #endif
+      static const u8   PIN_LED         =   PC13;
+      static constexpr u8 PIN_LED_ACTIVE_LOW = MK61_STATUS_LED_ACTIVE_LOW;
+      #ifndef MK61_BOARD_CLASSIC_V3
+        static const u8 PIN_OUT_PWR     =   PB9;
+      #endif
+      static const u8   PIN_SPIFLASH_CS =   PA4;
+    #else 
+ /* REVISION_V1: описание выводов STM32F411CEU6 (BlackPill MK61s-mini_v1) */
+      static constexpr usize   PIN_LCD_RS      =   PB1;
+      static constexpr usize   PIN_LCD_E       =   PB0;
+      static constexpr usize   PIN_LCD_DB4     =   PA3;
+      static constexpr usize   PIN_LCD_DB5     =   PA2;
+      static constexpr usize   PIN_LCD_DB6     =   PA1;
+      static constexpr usize   PIN_LCD_DB7     =   PA0;
+      static constexpr usize   PIN_KBD_COL0    =   PB12;
+      static constexpr usize   PIN_KBD_COL1    =   PB13;
+      static constexpr usize   PIN_KBD_COL2    =   PB14;
+      static constexpr usize   PIN_KBD_COL3    =   PB15;
+      static constexpr usize   PIN_KBD_COL4    =   PA8;
+      static constexpr usize   PIN_KBD_COL5    =   PA11;
+      static constexpr usize   PIN_KBD_COL6    =   PA12;
+      static constexpr usize   PIN_KBD_COL7    =   PA15;
+      static constexpr usize   PIN_KBD_ROW4    =   PB8;
+      static constexpr usize   PIN_KBD_ROW3    =   PB7;
+      static constexpr usize   PIN_KBD_ROW2    =   PB6;
+      static constexpr usize   PIN_KBD_ROW1    =   PB5;
+      static constexpr usize   PIN_KBD_ROW0    =   PB4;
+      static constexpr usize   PIN_SPIFLASH_CS =   PA4;
+      static constexpr usize   PIN_BUZZER      =   PB10;
+      static constexpr usize   PIN_LED         =   PC13;
+      static constexpr u8      PIN_LED_ACTIVE_LOW = 1;
+    #endif
+  #endif
+ #endif
+#endif
+
+#ifdef MK61_DISPLAY_UC1609
+  static constexpr u8 PIN_GLCD_CD = PA2;
+  static constexpr u8 PIN_GLCD_RST = PA3;
+  static constexpr u8 PIN_GLCD_CS = PA1;
+  static constexpr u8 GLCD_UC1609_BIAS = 0x1F;
+  static constexpr u8 GLCD_UC1609_ADDRESS_SET = 0x02;
+#endif
+
+// F401 keeps the interactive bootstrap and M61 executor resident. Cold
+// programmer and diagnostic commands use the same 20-KiB System APP arena.
+#ifndef MK61_TERMINAL_COMMANDS_AS_APP
+  #define MK61_TERMINAL_COMMANDS_AS_APP \
+    (MK61_F401_PRODUCT_BUILD && MK61_ANY_LOADABLE_MODULE && \
+     !MK61_ENABLE_DWT_PROFILER && !MK61_ENABLE_READ_BENCHMARKS && \
+     !MK61_ENABLE_ANALOG_REPORT && !MK61_ENABLE_FAULT_INJECTION && \
+     !MK61_ENABLE_MPU_TEST && !MK61_ENABLE_WATCHDOG_TEST)
+#endif
+#if MK61_TERMINAL_COMMANDS_AS_APP != 0 && MK61_TERMINAL_COMMANDS_AS_APP != 1
+  #error "MK61_TERMINAL_COMMANDS_AS_APP must be 0 or 1"
+#endif
+
+#endif

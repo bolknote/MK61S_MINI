@@ -1,0 +1,5908 @@
+{
+  "status": "PASS_EXACT_ENDPOINT_LOWWORD_WRAP_ARM",
+  "actual_ARM_calls": 840,
+  "state_rows": 420,
+  "rows": [
+    {
+      "den": 2049,
+      "delta": "0",
+      "SIO": "READY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1",
+      "SIO": "READY",
+      "exact_floor": "262016",
+      "outputs": {
+        "parent": "262016",
+        "candidate": "262016"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "exact_floor": "262016",
+      "outputs": {
+        "parent": "262016",
+        "candidate": "262016"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2",
+      "SIO": "READY",
+      "exact_floor": "524032",
+      "outputs": {
+        "parent": "524032",
+        "candidate": "524032"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2",
+      "SIO": "DIRTY",
+      "exact_floor": "524032",
+      "outputs": {
+        "parent": "524032",
+        "candidate": "524032"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2048",
+      "SIO": "READY",
+      "exact_floor": "536608895",
+      "outputs": {
+        "parent": "536608895",
+        "candidate": "536608895"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2048",
+      "SIO": "DIRTY",
+      "exact_floor": "536608895",
+      "outputs": {
+        "parent": "536608895",
+        "candidate": "536608895"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2049",
+      "SIO": "READY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2049",
+      "SIO": "DIRTY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2050",
+      "SIO": "READY",
+      "exact_floor": "537132928",
+      "outputs": {
+        "parent": "537132928",
+        "candidate": "537132928"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2050",
+      "SIO": "DIRTY",
+      "exact_floor": "537132928",
+      "outputs": {
+        "parent": "537132928",
+        "candidate": "537132928"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2147483647",
+      "SIO": "READY",
+      "exact_floor": "562675209404575",
+      "outputs": {
+        "parent": "562675209404575",
+        "candidate": "562675209404575"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2147483647",
+      "SIO": "DIRTY",
+      "exact_floor": "562675209404575",
+      "outputs": {
+        "parent": "562675209404575",
+        "candidate": "562675209404575"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2147483648",
+      "SIO": "READY",
+      "exact_floor": "562675209666591",
+      "outputs": {
+        "parent": "562675209666591",
+        "candidate": "562675209666591"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2147483648",
+      "SIO": "DIRTY",
+      "exact_floor": "562675209666591",
+      "outputs": {
+        "parent": "562675209666591",
+        "candidate": "562675209666591"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "4294967294",
+      "SIO": "READY",
+      "exact_floor": "1125350418809151",
+      "outputs": {
+        "parent": "1125350418809151",
+        "candidate": "1125350418809151"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "4294967294",
+      "SIO": "DIRTY",
+      "exact_floor": "1125350418809151",
+      "outputs": {
+        "parent": "1125350418809151",
+        "candidate": "1125350418809151"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "exact_floor": "1125350419071167",
+      "outputs": {
+        "parent": "1125350419071167",
+        "candidate": "1125350419071167"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "exact_floor": "1125350419071167",
+      "outputs": {
+        "parent": "1125350419071167",
+        "candidate": "1125350419071167"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "exact_floor": "1125350419333183",
+      "outputs": {
+        "parent": "1125350419333183",
+        "candidate": "1125350419333183"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "exact_floor": "1125350419333183",
+      "outputs": {
+        "parent": "1125350419333183",
+        "candidate": "1125350419333183"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "exact_floor": "1125350419595200",
+      "outputs": {
+        "parent": "1125350419595200",
+        "candidate": "1125350419595200"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "exact_floor": "1125350419595200",
+      "outputs": {
+        "parent": "1125350419595200",
+        "candidate": "1125350419595200"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "6442450943",
+      "SIO": "READY",
+      "exact_floor": "1688025628737759",
+      "outputs": {
+        "parent": "1688025628737759",
+        "candidate": "1688025628737759"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "6442450943",
+      "SIO": "DIRTY",
+      "exact_floor": "1688025628737759",
+      "outputs": {
+        "parent": "1688025628737759",
+        "candidate": "1688025628737759"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "6442450944",
+      "SIO": "READY",
+      "exact_floor": "1688025628999775",
+      "outputs": {
+        "parent": "1688025628999775",
+        "candidate": "1688025628999775"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "6442450944",
+      "SIO": "DIRTY",
+      "exact_floor": "1688025628999775",
+      "outputs": {
+        "parent": "1688025628999775",
+        "candidate": "1688025628999775"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "8589934590",
+      "SIO": "READY",
+      "exact_floor": "2250700838142335",
+      "outputs": {
+        "parent": "2250700838142335",
+        "candidate": "2250700838142335"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "8589934590",
+      "SIO": "DIRTY",
+      "exact_floor": "2250700838142335",
+      "outputs": {
+        "parent": "2250700838142335",
+        "candidate": "2250700838142335"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "8589934591",
+      "SIO": "READY",
+      "exact_floor": "2250700838404351",
+      "outputs": {
+        "parent": "2250700838404351",
+        "candidate": "2250700838404351"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "8589934591",
+      "SIO": "DIRTY",
+      "exact_floor": "2250700838404351",
+      "outputs": {
+        "parent": "2250700838404351",
+        "candidate": "2250700838404351"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1095216660480",
+      "SIO": "READY",
+      "exact_floor": "286964356929961912",
+      "outputs": {
+        "parent": "286964356929961912",
+        "candidate": "286964356929961912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1095216660480",
+      "SIO": "DIRTY",
+      "exact_floor": "286964356929961912",
+      "outputs": {
+        "parent": "286964356929961912",
+        "candidate": "286964356929961912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1095216660481",
+      "SIO": "READY",
+      "exact_floor": "286964356930223928",
+      "outputs": {
+        "parent": "286964356930223928",
+        "candidate": "286964356930223928"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1095216660481",
+      "SIO": "DIRTY",
+      "exact_floor": "286964356930223928",
+      "outputs": {
+        "parent": "286964356930223928",
+        "candidate": "286964356930223928"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1097364144127",
+      "SIO": "READY",
+      "exact_floor": "287527032139366487",
+      "outputs": {
+        "parent": "287527032139366487",
+        "candidate": "287527032139366487"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1097364144127",
+      "SIO": "DIRTY",
+      "exact_floor": "287527032139366487",
+      "outputs": {
+        "parent": "287527032139366487",
+        "candidate": "287527032139366487"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1097364144128",
+      "SIO": "READY",
+      "exact_floor": "287527032139628504",
+      "outputs": {
+        "parent": "287527032139628504",
+        "candidate": "287527032139628504"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1097364144128",
+      "SIO": "DIRTY",
+      "exact_floor": "287527032139628504",
+      "outputs": {
+        "parent": "287527032139628504",
+        "candidate": "287527032139628504"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1099511627774",
+      "SIO": "READY",
+      "exact_floor": "288089707348771063",
+      "outputs": {
+        "parent": "288089707348771063",
+        "candidate": "288089707348771063"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1099511627774",
+      "SIO": "DIRTY",
+      "exact_floor": "288089707348771063",
+      "outputs": {
+        "parent": "288089707348771063",
+        "candidate": "288089707348771063"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1099511627775",
+      "SIO": "READY",
+      "exact_floor": "288089707349033079",
+      "outputs": {
+        "parent": "288089707349033079",
+        "candidate": "288089707349033079"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "1099511627775",
+      "SIO": "DIRTY",
+      "exact_floor": "288089707349033079",
+      "outputs": {
+        "parent": "288089707349033079",
+        "candidate": "288089707349033079"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2190433320960",
+      "SIO": "READY",
+      "exact_floor": "573928713859923824",
+      "outputs": {
+        "parent": "573928713859923824",
+        "candidate": "573928713859923824"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2190433320960",
+      "SIO": "DIRTY",
+      "exact_floor": "573928713859923824",
+      "outputs": {
+        "parent": "573928713859923824",
+        "candidate": "573928713859923824"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2190433320961",
+      "SIO": "READY",
+      "exact_floor": "573928713860185840",
+      "outputs": {
+        "parent": "573928713860185840",
+        "candidate": "573928713860185840"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2190433320961",
+      "SIO": "DIRTY",
+      "exact_floor": "573928713860185840",
+      "outputs": {
+        "parent": "573928713860185840",
+        "candidate": "573928713860185840"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2192580804607",
+      "SIO": "READY",
+      "exact_floor": "574491389069328399",
+      "outputs": {
+        "parent": "574491389069328399",
+        "candidate": "574491389069328399"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2192580804607",
+      "SIO": "DIRTY",
+      "exact_floor": "574491389069328399",
+      "outputs": {
+        "parent": "574491389069328399",
+        "candidate": "574491389069328399"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2192580804608",
+      "SIO": "READY",
+      "exact_floor": "574491389069590416",
+      "outputs": {
+        "parent": "574491389069590416",
+        "candidate": "574491389069590416"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2192580804608",
+      "SIO": "DIRTY",
+      "exact_floor": "574491389069590416",
+      "outputs": {
+        "parent": "574491389069590416",
+        "candidate": "574491389069590416"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2194728288254",
+      "SIO": "READY",
+      "exact_floor": "575054064278732975",
+      "outputs": {
+        "parent": "575054064278732975",
+        "candidate": "575054064278732975"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2194728288254",
+      "SIO": "DIRTY",
+      "exact_floor": "575054064278732975",
+      "outputs": {
+        "parent": "575054064278732975",
+        "candidate": "575054064278732975"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2194728288255",
+      "SIO": "READY",
+      "exact_floor": "575054064278994991",
+      "outputs": {
+        "parent": "575054064278994991",
+        "candidate": "575054064278994991"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2194728288255",
+      "SIO": "DIRTY",
+      "exact_floor": "575054064278994991",
+      "outputs": {
+        "parent": "575054064278994991",
+        "candidate": "575054064278994991"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2194728288256",
+      "SIO": "READY",
+      "exact_floor": "575054064279257008",
+      "outputs": {
+        "parent": "575054064279257008",
+        "candidate": "575054064279257008"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2194728288256",
+      "SIO": "DIRTY",
+      "exact_floor": "575054064279257008",
+      "outputs": {
+        "parent": "575054064279257008",
+        "candidate": "575054064279257008"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2194728288257",
+      "SIO": "READY",
+      "exact_floor": "575054064279519024",
+      "outputs": {
+        "parent": "575054064279519024",
+        "candidate": "575054064279519024"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2194728288257",
+      "SIO": "DIRTY",
+      "exact_floor": "575054064279519024",
+      "outputs": {
+        "parent": "575054064279519024",
+        "candidate": "575054064279519024"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2196875771903",
+      "SIO": "READY",
+      "exact_floor": "575616739488661583",
+      "outputs": {
+        "parent": "575616739488661583",
+        "candidate": "575616739488661583"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2196875771903",
+      "SIO": "DIRTY",
+      "exact_floor": "575616739488661583",
+      "outputs": {
+        "parent": "575616739488661583",
+        "candidate": "575616739488661583"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2196875771904",
+      "SIO": "READY",
+      "exact_floor": "575616739488923600",
+      "outputs": {
+        "parent": "575616739488923600",
+        "candidate": "575616739488923600"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2196875771904",
+      "SIO": "DIRTY",
+      "exact_floor": "575616739488923600",
+      "outputs": {
+        "parent": "575616739488923600",
+        "candidate": "575616739488923600"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "exact_floor": "576179414698066159",
+      "outputs": {
+        "parent": "576179414698066159",
+        "candidate": "576179414698066159"
+      },
+      "instructions": {
+        "parent": 150,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "exact_floor": "576179414698066159",
+      "outputs": {
+        "parent": "576179414698066159",
+        "candidate": "576179414698066159"
+      },
+      "instructions": {
+        "parent": 150,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "exact_floor": "576179414698328175",
+      "outputs": {
+        "parent": "576179414698328175",
+        "candidate": "576179414698328175"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "exact_floor": "576179414698328175",
+      "outputs": {
+        "parent": "576179414698328175",
+        "candidate": "576179414698328175"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "exact_floor": "576179414698590192",
+      "outputs": {
+        "parent": "576179414698590192",
+        "candidate": "576179414698590192"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    },
+    {
+      "den": 2049,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "exact_floor": "576179414698590192",
+      "outputs": {
+        "parent": "576179414698590192",
+        "candidate": "576179414698590192"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "0",
+      "SIO": "READY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1",
+      "SIO": "READY",
+      "exact_floor": "261760",
+      "outputs": {
+        "parent": "261760",
+        "candidate": "261760"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "exact_floor": "261760",
+      "outputs": {
+        "parent": "261760",
+        "candidate": "261760"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2",
+      "SIO": "READY",
+      "exact_floor": "523521",
+      "outputs": {
+        "parent": "523521",
+        "candidate": "523521"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2",
+      "SIO": "DIRTY",
+      "exact_floor": "523521",
+      "outputs": {
+        "parent": "523521",
+        "candidate": "523521"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2050",
+      "SIO": "READY",
+      "exact_floor": "536609151",
+      "outputs": {
+        "parent": "536609151",
+        "candidate": "536609151"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2050",
+      "SIO": "DIRTY",
+      "exact_floor": "536609151",
+      "outputs": {
+        "parent": "536609151",
+        "candidate": "536609151"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2051",
+      "SIO": "READY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2051",
+      "SIO": "DIRTY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2052",
+      "SIO": "READY",
+      "exact_floor": "537132672",
+      "outputs": {
+        "parent": "537132672",
+        "candidate": "537132672"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2052",
+      "SIO": "DIRTY",
+      "exact_floor": "537132672",
+      "outputs": {
+        "parent": "537132672",
+        "candidate": "537132672"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2147483647",
+      "SIO": "READY",
+      "exact_floor": "562126525631387",
+      "outputs": {
+        "parent": "562126525631387",
+        "candidate": "562126525631387"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2147483647",
+      "SIO": "DIRTY",
+      "exact_floor": "562126525631387",
+      "outputs": {
+        "parent": "562126525631387",
+        "candidate": "562126525631387"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2147483648",
+      "SIO": "READY",
+      "exact_floor": "562126525893148",
+      "outputs": {
+        "parent": "562126525893148",
+        "candidate": "562126525893148"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2147483648",
+      "SIO": "DIRTY",
+      "exact_floor": "562126525893148",
+      "outputs": {
+        "parent": "562126525893148",
+        "candidate": "562126525893148"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "4294967294",
+      "SIO": "READY",
+      "exact_floor": "1124253051262775",
+      "outputs": {
+        "parent": "1124253051262775",
+        "candidate": "1124253051262775"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "4294967294",
+      "SIO": "DIRTY",
+      "exact_floor": "1124253051262775",
+      "outputs": {
+        "parent": "1124253051262775",
+        "candidate": "1124253051262775"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "exact_floor": "1124253051524535",
+      "outputs": {
+        "parent": "1124253051524535",
+        "candidate": "1124253051524535"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "exact_floor": "1124253051524535",
+      "outputs": {
+        "parent": "1124253051524535",
+        "candidate": "1124253051524535"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "exact_floor": "1124253051786296",
+      "outputs": {
+        "parent": "1124253051786296",
+        "candidate": "1124253051786296"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "exact_floor": "1124253051786296",
+      "outputs": {
+        "parent": "1124253051786296",
+        "candidate": "1124253051786296"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "exact_floor": "1124253052048056",
+      "outputs": {
+        "parent": "1124253052048056",
+        "candidate": "1124253052048056"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "exact_floor": "1124253052048056",
+      "outputs": {
+        "parent": "1124253052048056",
+        "candidate": "1124253052048056"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "6442450943",
+      "SIO": "READY",
+      "exact_floor": "1686379577417684",
+      "outputs": {
+        "parent": "1686379577417684",
+        "candidate": "1686379577417684"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "6442450943",
+      "SIO": "DIRTY",
+      "exact_floor": "1686379577417684",
+      "outputs": {
+        "parent": "1686379577417684",
+        "candidate": "1686379577417684"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "6442450944",
+      "SIO": "READY",
+      "exact_floor": "1686379577679444",
+      "outputs": {
+        "parent": "1686379577679444",
+        "candidate": "1686379577679444"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "6442450944",
+      "SIO": "DIRTY",
+      "exact_floor": "1686379577679444",
+      "outputs": {
+        "parent": "1686379577679444",
+        "candidate": "1686379577679444"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "8589934590",
+      "SIO": "READY",
+      "exact_floor": "2248506103049071",
+      "outputs": {
+        "parent": "2248506103049071",
+        "candidate": "2248506103049071"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "8589934590",
+      "SIO": "DIRTY",
+      "exact_floor": "2248506103049071",
+      "outputs": {
+        "parent": "2248506103049071",
+        "candidate": "2248506103049071"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "8589934591",
+      "SIO": "READY",
+      "exact_floor": "2248506103310832",
+      "outputs": {
+        "parent": "2248506103310832",
+        "candidate": "2248506103310832"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "8589934591",
+      "SIO": "DIRTY",
+      "exact_floor": "2248506103310832",
+      "outputs": {
+        "parent": "2248506103310832",
+        "candidate": "2248506103310832"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1095216660480",
+      "SIO": "READY",
+      "exact_floor": "286684528205505586",
+      "outputs": {
+        "parent": "286684528205505586",
+        "candidate": "286684528205505586"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1095216660480",
+      "SIO": "DIRTY",
+      "exact_floor": "286684528205505586",
+      "outputs": {
+        "parent": "286684528205505586",
+        "candidate": "286684528205505586"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1095216660481",
+      "SIO": "READY",
+      "exact_floor": "286684528205767346",
+      "outputs": {
+        "parent": "286684528205767346",
+        "candidate": "286684528205767346"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1095216660481",
+      "SIO": "DIRTY",
+      "exact_floor": "286684528205767346",
+      "outputs": {
+        "parent": "286684528205767346",
+        "candidate": "286684528205767346"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1097364144127",
+      "SIO": "READY",
+      "exact_floor": "287246654731136974",
+      "outputs": {
+        "parent": "287246654731136974",
+        "candidate": "287246654731136974"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1097364144127",
+      "SIO": "DIRTY",
+      "exact_floor": "287246654731136974",
+      "outputs": {
+        "parent": "287246654731136974",
+        "candidate": "287246654731136974"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1097364144128",
+      "SIO": "READY",
+      "exact_floor": "287246654731398734",
+      "outputs": {
+        "parent": "287246654731398734",
+        "candidate": "287246654731398734"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1097364144128",
+      "SIO": "DIRTY",
+      "exact_floor": "287246654731398734",
+      "outputs": {
+        "parent": "287246654731398734",
+        "candidate": "287246654731398734"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1099511627774",
+      "SIO": "READY",
+      "exact_floor": "287808781256768361",
+      "outputs": {
+        "parent": "287808781256768361",
+        "candidate": "287808781256768361"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1099511627774",
+      "SIO": "DIRTY",
+      "exact_floor": "287808781256768361",
+      "outputs": {
+        "parent": "287808781256768361",
+        "candidate": "287808781256768361"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1099511627775",
+      "SIO": "READY",
+      "exact_floor": "287808781257030122",
+      "outputs": {
+        "parent": "287808781257030122",
+        "candidate": "287808781257030122"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "1099511627775",
+      "SIO": "DIRTY",
+      "exact_floor": "287808781257030122",
+      "outputs": {
+        "parent": "287808781257030122",
+        "candidate": "287808781257030122"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2190433320960",
+      "SIO": "READY",
+      "exact_floor": "573369056411011172",
+      "outputs": {
+        "parent": "573369056411011172",
+        "candidate": "573369056411011172"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2190433320960",
+      "SIO": "DIRTY",
+      "exact_floor": "573369056411011172",
+      "outputs": {
+        "parent": "573369056411011172",
+        "candidate": "573369056411011172"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2190433320961",
+      "SIO": "READY",
+      "exact_floor": "573369056411272933",
+      "outputs": {
+        "parent": "573369056411272933",
+        "candidate": "573369056411272933"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2190433320961",
+      "SIO": "DIRTY",
+      "exact_floor": "573369056411272933",
+      "outputs": {
+        "parent": "573369056411272933",
+        "candidate": "573369056411272933"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2192580804607",
+      "SIO": "READY",
+      "exact_floor": "573931182936642560",
+      "outputs": {
+        "parent": "573931182936642560",
+        "candidate": "573931182936642560"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2192580804607",
+      "SIO": "DIRTY",
+      "exact_floor": "573931182936642560",
+      "outputs": {
+        "parent": "573931182936642560",
+        "candidate": "573931182936642560"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2192580804608",
+      "SIO": "READY",
+      "exact_floor": "573931182936904321",
+      "outputs": {
+        "parent": "573931182936904321",
+        "candidate": "573931182936904321"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2192580804608",
+      "SIO": "DIRTY",
+      "exact_floor": "573931182936904321",
+      "outputs": {
+        "parent": "573931182936904321",
+        "candidate": "573931182936904321"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2194728288254",
+      "SIO": "READY",
+      "exact_floor": "574493309462273948",
+      "outputs": {
+        "parent": "574493309462273948",
+        "candidate": "574493309462273948"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2194728288254",
+      "SIO": "DIRTY",
+      "exact_floor": "574493309462273948",
+      "outputs": {
+        "parent": "574493309462273948",
+        "candidate": "574493309462273948"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2194728288255",
+      "SIO": "READY",
+      "exact_floor": "574493309462535708",
+      "outputs": {
+        "parent": "574493309462535708",
+        "candidate": "574493309462535708"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2194728288255",
+      "SIO": "DIRTY",
+      "exact_floor": "574493309462535708",
+      "outputs": {
+        "parent": "574493309462535708",
+        "candidate": "574493309462535708"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2194728288256",
+      "SIO": "READY",
+      "exact_floor": "574493309462797469",
+      "outputs": {
+        "parent": "574493309462797469",
+        "candidate": "574493309462797469"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2194728288256",
+      "SIO": "DIRTY",
+      "exact_floor": "574493309462797469",
+      "outputs": {
+        "parent": "574493309462797469",
+        "candidate": "574493309462797469"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2194728288257",
+      "SIO": "READY",
+      "exact_floor": "574493309463059229",
+      "outputs": {
+        "parent": "574493309463059229",
+        "candidate": "574493309463059229"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2194728288257",
+      "SIO": "DIRTY",
+      "exact_floor": "574493309463059229",
+      "outputs": {
+        "parent": "574493309463059229",
+        "candidate": "574493309463059229"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2196875771903",
+      "SIO": "READY",
+      "exact_floor": "575055435988428856",
+      "outputs": {
+        "parent": "575055435988428856",
+        "candidate": "575055435988428856"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2196875771903",
+      "SIO": "DIRTY",
+      "exact_floor": "575055435988428856",
+      "outputs": {
+        "parent": "575055435988428856",
+        "candidate": "575055435988428856"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2196875771904",
+      "SIO": "READY",
+      "exact_floor": "575055435988690617",
+      "outputs": {
+        "parent": "575055435988690617",
+        "candidate": "575055435988690617"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2196875771904",
+      "SIO": "DIRTY",
+      "exact_floor": "575055435988690617",
+      "outputs": {
+        "parent": "575055435988690617",
+        "candidate": "575055435988690617"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "exact_floor": "575617562514060244",
+      "outputs": {
+        "parent": "575617562514060244",
+        "candidate": "575617562514060244"
+      },
+      "instructions": {
+        "parent": 149,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "exact_floor": "575617562514060244",
+      "outputs": {
+        "parent": "575617562514060244",
+        "candidate": "575617562514060244"
+      },
+      "instructions": {
+        "parent": 149,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "exact_floor": "575617562514322005",
+      "outputs": {
+        "parent": "575617562514322005",
+        "candidate": "575617562514322005"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "exact_floor": "575617562514322005",
+      "outputs": {
+        "parent": "575617562514322005",
+        "candidate": "575617562514322005"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "exact_floor": "575617562514583765",
+      "outputs": {
+        "parent": "575617562514583765",
+        "candidate": "575617562514583765"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    },
+    {
+      "den": 2051,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "exact_floor": "575617562514583765",
+      "outputs": {
+        "parent": "575617562514583765",
+        "candidate": "575617562514583765"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "0",
+      "SIO": "READY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1",
+      "SIO": "READY",
+      "exact_floor": "174819",
+      "outputs": {
+        "parent": "174819",
+        "candidate": "174819"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "exact_floor": "174819",
+      "outputs": {
+        "parent": "174819",
+        "candidate": "174819"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2",
+      "SIO": "READY",
+      "exact_floor": "349639",
+      "outputs": {
+        "parent": "349639",
+        "candidate": "349639"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2",
+      "SIO": "DIRTY",
+      "exact_floor": "349639",
+      "outputs": {
+        "parent": "349639",
+        "candidate": "349639"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "3070",
+      "SIO": "READY",
+      "exact_floor": "536696092",
+      "outputs": {
+        "parent": "536696092",
+        "candidate": "536696092"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "3070",
+      "SIO": "DIRTY",
+      "exact_floor": "536696092",
+      "outputs": {
+        "parent": "536696092",
+        "candidate": "536696092"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "3071",
+      "SIO": "READY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "3071",
+      "SIO": "DIRTY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "3072",
+      "SIO": "READY",
+      "exact_floor": "537045731",
+      "outputs": {
+        "parent": "537045731",
+        "candidate": "537045731"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "3072",
+      "SIO": "DIRTY",
+      "exact_floor": "537045731",
+      "outputs": {
+        "parent": "537045731",
+        "candidate": "537045731"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2147483647",
+      "SIO": "READY",
+      "exact_floor": "375422176512528",
+      "outputs": {
+        "parent": "375422176512528",
+        "candidate": "375422176512528"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2147483647",
+      "SIO": "DIRTY",
+      "exact_floor": "375422176512528",
+      "outputs": {
+        "parent": "375422176512528",
+        "candidate": "375422176512528"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2147483648",
+      "SIO": "READY",
+      "exact_floor": "375422176687348",
+      "outputs": {
+        "parent": "375422176687348",
+        "candidate": "375422176687348"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2147483648",
+      "SIO": "DIRTY",
+      "exact_floor": "375422176687348",
+      "outputs": {
+        "parent": "375422176687348",
+        "candidate": "375422176687348"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "4294967294",
+      "SIO": "READY",
+      "exact_floor": "750844353025057",
+      "outputs": {
+        "parent": "750844353025057",
+        "candidate": "750844353025057"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "4294967294",
+      "SIO": "DIRTY",
+      "exact_floor": "750844353025057",
+      "outputs": {
+        "parent": "750844353025057",
+        "candidate": "750844353025057"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "exact_floor": "750844353199877",
+      "outputs": {
+        "parent": "750844353199877",
+        "candidate": "750844353199877"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "exact_floor": "750844353199877",
+      "outputs": {
+        "parent": "750844353199877",
+        "candidate": "750844353199877"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "exact_floor": "750844353374696",
+      "outputs": {
+        "parent": "750844353374696",
+        "candidate": "750844353374696"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "exact_floor": "750844353374696",
+      "outputs": {
+        "parent": "750844353374696",
+        "candidate": "750844353374696"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "exact_floor": "750844353549516",
+      "outputs": {
+        "parent": "750844353549516",
+        "candidate": "750844353549516"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "exact_floor": "750844353549516",
+      "outputs": {
+        "parent": "750844353549516",
+        "candidate": "750844353549516"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "6442450943",
+      "SIO": "READY",
+      "exact_floor": "1126266529887225",
+      "outputs": {
+        "parent": "1126266529887225",
+        "candidate": "1126266529887225"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "6442450943",
+      "SIO": "DIRTY",
+      "exact_floor": "1126266529887225",
+      "outputs": {
+        "parent": "1126266529887225",
+        "candidate": "1126266529887225"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "6442450944",
+      "SIO": "READY",
+      "exact_floor": "1126266530062045",
+      "outputs": {
+        "parent": "1126266530062045",
+        "candidate": "1126266530062045"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "6442450944",
+      "SIO": "DIRTY",
+      "exact_floor": "1126266530062045",
+      "outputs": {
+        "parent": "1126266530062045",
+        "candidate": "1126266530062045"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "8589934590",
+      "SIO": "READY",
+      "exact_floor": "1501688706399754",
+      "outputs": {
+        "parent": "1501688706399754",
+        "candidate": "1501688706399754"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "8589934590",
+      "SIO": "DIRTY",
+      "exact_floor": "1501688706399754",
+      "outputs": {
+        "parent": "1501688706399754",
+        "candidate": "1501688706399754"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "8589934591",
+      "SIO": "READY",
+      "exact_floor": "1501688706574574",
+      "outputs": {
+        "parent": "1501688706574574",
+        "candidate": "1501688706574574"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 148
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "8589934591",
+      "SIO": "DIRTY",
+      "exact_floor": "1501688706574574",
+      "outputs": {
+        "parent": "1501688706574574",
+        "candidate": "1501688706574574"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 148
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1095216660480",
+      "SIO": "READY",
+      "exact_floor": "191465310110547690",
+      "outputs": {
+        "parent": "191465310110547690",
+        "candidate": "191465310110547690"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1095216660480",
+      "SIO": "DIRTY",
+      "exact_floor": "191465310110547690",
+      "outputs": {
+        "parent": "191465310110547690",
+        "candidate": "191465310110547690"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1095216660481",
+      "SIO": "READY",
+      "exact_floor": "191465310110722510",
+      "outputs": {
+        "parent": "191465310110722510",
+        "candidate": "191465310110722510"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1095216660481",
+      "SIO": "DIRTY",
+      "exact_floor": "191465310110722510",
+      "outputs": {
+        "parent": "191465310110722510",
+        "candidate": "191465310110722510"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1097364144127",
+      "SIO": "READY",
+      "exact_floor": "191840732287060219",
+      "outputs": {
+        "parent": "191840732287060219",
+        "candidate": "191840732287060219"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1097364144127",
+      "SIO": "DIRTY",
+      "exact_floor": "191840732287060219",
+      "outputs": {
+        "parent": "191840732287060219",
+        "candidate": "191840732287060219"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1097364144128",
+      "SIO": "READY",
+      "exact_floor": "191840732287235038",
+      "outputs": {
+        "parent": "191840732287235038",
+        "candidate": "191840732287235038"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1097364144128",
+      "SIO": "DIRTY",
+      "exact_floor": "191840732287235038",
+      "outputs": {
+        "parent": "191840732287235038",
+        "candidate": "191840732287235038"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1099511627774",
+      "SIO": "READY",
+      "exact_floor": "192216154463572748",
+      "outputs": {
+        "parent": "192216154463572748",
+        "candidate": "192216154463572748"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1099511627774",
+      "SIO": "DIRTY",
+      "exact_floor": "192216154463572748",
+      "outputs": {
+        "parent": "192216154463572748",
+        "candidate": "192216154463572748"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1099511627775",
+      "SIO": "READY",
+      "exact_floor": "192216154463747567",
+      "outputs": {
+        "parent": "192216154463747567",
+        "candidate": "192216154463747567"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "1099511627775",
+      "SIO": "DIRTY",
+      "exact_floor": "192216154463747567",
+      "outputs": {
+        "parent": "192216154463747567",
+        "candidate": "192216154463747567"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2190433320960",
+      "SIO": "READY",
+      "exact_floor": "382930620221095381",
+      "outputs": {
+        "parent": "382930620221095381",
+        "candidate": "382930620221095381"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2190433320960",
+      "SIO": "DIRTY",
+      "exact_floor": "382930620221095381",
+      "outputs": {
+        "parent": "382930620221095381",
+        "candidate": "382930620221095381"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2190433320961",
+      "SIO": "READY",
+      "exact_floor": "382930620221270200",
+      "outputs": {
+        "parent": "382930620221270200",
+        "candidate": "382930620221270200"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2190433320961",
+      "SIO": "DIRTY",
+      "exact_floor": "382930620221270200",
+      "outputs": {
+        "parent": "382930620221270200",
+        "candidate": "382930620221270200"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2192580804607",
+      "SIO": "READY",
+      "exact_floor": "383306042397607909",
+      "outputs": {
+        "parent": "383306042397607909",
+        "candidate": "383306042397607909"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2192580804607",
+      "SIO": "DIRTY",
+      "exact_floor": "383306042397607909",
+      "outputs": {
+        "parent": "383306042397607909",
+        "candidate": "383306042397607909"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2192580804608",
+      "SIO": "READY",
+      "exact_floor": "383306042397782729",
+      "outputs": {
+        "parent": "383306042397782729",
+        "candidate": "383306042397782729"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2192580804608",
+      "SIO": "DIRTY",
+      "exact_floor": "383306042397782729",
+      "outputs": {
+        "parent": "383306042397782729",
+        "candidate": "383306042397782729"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2194728288254",
+      "SIO": "READY",
+      "exact_floor": "383681464574120438",
+      "outputs": {
+        "parent": "383681464574120438",
+        "candidate": "383681464574120438"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2194728288254",
+      "SIO": "DIRTY",
+      "exact_floor": "383681464574120438",
+      "outputs": {
+        "parent": "383681464574120438",
+        "candidate": "383681464574120438"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2194728288255",
+      "SIO": "READY",
+      "exact_floor": "383681464574295258",
+      "outputs": {
+        "parent": "383681464574295258",
+        "candidate": "383681464574295258"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 148
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2194728288255",
+      "SIO": "DIRTY",
+      "exact_floor": "383681464574295258",
+      "outputs": {
+        "parent": "383681464574295258",
+        "candidate": "383681464574295258"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 148
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2194728288256",
+      "SIO": "READY",
+      "exact_floor": "383681464574470077",
+      "outputs": {
+        "parent": "383681464574470077",
+        "candidate": "383681464574470077"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2194728288256",
+      "SIO": "DIRTY",
+      "exact_floor": "383681464574470077",
+      "outputs": {
+        "parent": "383681464574470077",
+        "candidate": "383681464574470077"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2194728288257",
+      "SIO": "READY",
+      "exact_floor": "383681464574644897",
+      "outputs": {
+        "parent": "383681464574644897",
+        "candidate": "383681464574644897"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2194728288257",
+      "SIO": "DIRTY",
+      "exact_floor": "383681464574644897",
+      "outputs": {
+        "parent": "383681464574644897",
+        "candidate": "383681464574644897"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2196875771903",
+      "SIO": "READY",
+      "exact_floor": "384056886750982606",
+      "outputs": {
+        "parent": "384056886750982606",
+        "candidate": "384056886750982606"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2196875771903",
+      "SIO": "DIRTY",
+      "exact_floor": "384056886750982606",
+      "outputs": {
+        "parent": "384056886750982606",
+        "candidate": "384056886750982606"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2196875771904",
+      "SIO": "READY",
+      "exact_floor": "384056886751157426",
+      "outputs": {
+        "parent": "384056886751157426",
+        "candidate": "384056886751157426"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2196875771904",
+      "SIO": "DIRTY",
+      "exact_floor": "384056886751157426",
+      "outputs": {
+        "parent": "384056886751157426",
+        "candidate": "384056886751157426"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "exact_floor": "384432308927495135",
+      "outputs": {
+        "parent": "384432308927495135",
+        "candidate": "384432308927495135"
+      },
+      "instructions": {
+        "parent": 149,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "exact_floor": "384432308927495135",
+      "outputs": {
+        "parent": "384432308927495135",
+        "candidate": "384432308927495135"
+      },
+      "instructions": {
+        "parent": 149,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "exact_floor": "384432308927669955",
+      "outputs": {
+        "parent": "384432308927669955",
+        "candidate": "384432308927669955"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "exact_floor": "384432308927669955",
+      "outputs": {
+        "parent": "384432308927669955",
+        "candidate": "384432308927669955"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "exact_floor": "384432308927844774",
+      "outputs": {
+        "parent": "384432308927844774",
+        "candidate": "384432308927844774"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    },
+    {
+      "den": 3071,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "exact_floor": "384432308927844774",
+      "outputs": {
+        "parent": "384432308927844774",
+        "candidate": "384432308927844774"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "0",
+      "SIO": "READY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1",
+      "SIO": "READY",
+      "exact_floor": "174705",
+      "outputs": {
+        "parent": "174705",
+        "candidate": "174705"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "exact_floor": "174705",
+      "outputs": {
+        "parent": "174705",
+        "candidate": "174705"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2",
+      "SIO": "READY",
+      "exact_floor": "349411",
+      "outputs": {
+        "parent": "349411",
+        "candidate": "349411"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2",
+      "SIO": "DIRTY",
+      "exact_floor": "349411",
+      "outputs": {
+        "parent": "349411",
+        "candidate": "349411"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "3072",
+      "SIO": "READY",
+      "exact_floor": "536696206",
+      "outputs": {
+        "parent": "536696206",
+        "candidate": "536696206"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "3072",
+      "SIO": "DIRTY",
+      "exact_floor": "536696206",
+      "outputs": {
+        "parent": "536696206",
+        "candidate": "536696206"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "3073",
+      "SIO": "READY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "3073",
+      "SIO": "DIRTY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "3074",
+      "SIO": "READY",
+      "exact_floor": "537045617",
+      "outputs": {
+        "parent": "537045617",
+        "candidate": "537045617"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "3074",
+      "SIO": "DIRTY",
+      "exact_floor": "537045617",
+      "outputs": {
+        "parent": "537045617",
+        "candidate": "537045617"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2147483647",
+      "SIO": "READY",
+      "exact_floor": "375177840569468",
+      "outputs": {
+        "parent": "375177840569468",
+        "candidate": "375177840569468"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2147483647",
+      "SIO": "DIRTY",
+      "exact_floor": "375177840569468",
+      "outputs": {
+        "parent": "375177840569468",
+        "candidate": "375177840569468"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2147483648",
+      "SIO": "READY",
+      "exact_floor": "375177840744174",
+      "outputs": {
+        "parent": "375177840744174",
+        "candidate": "375177840744174"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2147483648",
+      "SIO": "DIRTY",
+      "exact_floor": "375177840744174",
+      "outputs": {
+        "parent": "375177840744174",
+        "candidate": "375177840744174"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "4294967294",
+      "SIO": "READY",
+      "exact_floor": "750355681138936",
+      "outputs": {
+        "parent": "750355681138936",
+        "candidate": "750355681138936"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "4294967294",
+      "SIO": "DIRTY",
+      "exact_floor": "750355681138936",
+      "outputs": {
+        "parent": "750355681138936",
+        "candidate": "750355681138936"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "exact_floor": "750355681313642",
+      "outputs": {
+        "parent": "750355681313642",
+        "candidate": "750355681313642"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 159
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "exact_floor": "750355681313642",
+      "outputs": {
+        "parent": "750355681313642",
+        "candidate": "750355681313642"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 159
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "exact_floor": "750355681488348",
+      "outputs": {
+        "parent": "750355681488348",
+        "candidate": "750355681488348"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "exact_floor": "750355681488348",
+      "outputs": {
+        "parent": "750355681488348",
+        "candidate": "750355681488348"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "exact_floor": "750355681663053",
+      "outputs": {
+        "parent": "750355681663053",
+        "candidate": "750355681663053"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "exact_floor": "750355681663053",
+      "outputs": {
+        "parent": "750355681663053",
+        "candidate": "750355681663053"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "6442450943",
+      "SIO": "READY",
+      "exact_floor": "1125533522057816",
+      "outputs": {
+        "parent": "1125533522057816",
+        "candidate": "1125533522057816"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "6442450943",
+      "SIO": "DIRTY",
+      "exact_floor": "1125533522057816",
+      "outputs": {
+        "parent": "1125533522057816",
+        "candidate": "1125533522057816"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "6442450944",
+      "SIO": "READY",
+      "exact_floor": "1125533522232522",
+      "outputs": {
+        "parent": "1125533522232522",
+        "candidate": "1125533522232522"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "6442450944",
+      "SIO": "DIRTY",
+      "exact_floor": "1125533522232522",
+      "outputs": {
+        "parent": "1125533522232522",
+        "candidate": "1125533522232522"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "8589934590",
+      "SIO": "READY",
+      "exact_floor": "1500711362627284",
+      "outputs": {
+        "parent": "1500711362627284",
+        "candidate": "1500711362627284"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "8589934590",
+      "SIO": "DIRTY",
+      "exact_floor": "1500711362627284",
+      "outputs": {
+        "parent": "1500711362627284",
+        "candidate": "1500711362627284"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "8589934591",
+      "SIO": "READY",
+      "exact_floor": "1500711362801990",
+      "outputs": {
+        "parent": "1500711362801990",
+        "candidate": "1500711362801990"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 159
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "8589934591",
+      "SIO": "DIRTY",
+      "exact_floor": "1500711362801990",
+      "outputs": {
+        "parent": "1500711362801990",
+        "candidate": "1500711362801990"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 159
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1095216660480",
+      "SIO": "READY",
+      "exact_floor": "191340698779528785",
+      "outputs": {
+        "parent": "191340698779528785",
+        "candidate": "191340698779528785"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1095216660480",
+      "SIO": "DIRTY",
+      "exact_floor": "191340698779528785",
+      "outputs": {
+        "parent": "191340698779528785",
+        "candidate": "191340698779528785"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1095216660481",
+      "SIO": "READY",
+      "exact_floor": "191340698779703491",
+      "outputs": {
+        "parent": "191340698779703491",
+        "candidate": "191340698779703491"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1095216660481",
+      "SIO": "DIRTY",
+      "exact_floor": "191340698779703491",
+      "outputs": {
+        "parent": "191340698779703491",
+        "candidate": "191340698779703491"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1097364144127",
+      "SIO": "READY",
+      "exact_floor": "191715876620098253",
+      "outputs": {
+        "parent": "191715876620098253",
+        "candidate": "191715876620098253"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1097364144127",
+      "SIO": "DIRTY",
+      "exact_floor": "191715876620098253",
+      "outputs": {
+        "parent": "191715876620098253",
+        "candidate": "191715876620098253"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1097364144128",
+      "SIO": "READY",
+      "exact_floor": "191715876620272959",
+      "outputs": {
+        "parent": "191715876620272959",
+        "candidate": "191715876620272959"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1097364144128",
+      "SIO": "DIRTY",
+      "exact_floor": "191715876620272959",
+      "outputs": {
+        "parent": "191715876620272959",
+        "candidate": "191715876620272959"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1099511627774",
+      "SIO": "READY",
+      "exact_floor": "192091054460667722",
+      "outputs": {
+        "parent": "192091054460667722",
+        "candidate": "192091054460667722"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1099511627774",
+      "SIO": "DIRTY",
+      "exact_floor": "192091054460667722",
+      "outputs": {
+        "parent": "192091054460667722",
+        "candidate": "192091054460667722"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1099511627775",
+      "SIO": "READY",
+      "exact_floor": "192091054460842427",
+      "outputs": {
+        "parent": "192091054460842427",
+        "candidate": "192091054460842427"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "1099511627775",
+      "SIO": "DIRTY",
+      "exact_floor": "192091054460842427",
+      "outputs": {
+        "parent": "192091054460842427",
+        "candidate": "192091054460842427"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2190433320960",
+      "SIO": "READY",
+      "exact_floor": "382681397559057570",
+      "outputs": {
+        "parent": "382681397559057570",
+        "candidate": "382681397559057570"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2190433320960",
+      "SIO": "DIRTY",
+      "exact_floor": "382681397559057570",
+      "outputs": {
+        "parent": "382681397559057570",
+        "candidate": "382681397559057570"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2190433320961",
+      "SIO": "READY",
+      "exact_floor": "382681397559232276",
+      "outputs": {
+        "parent": "382681397559232276",
+        "candidate": "382681397559232276"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2190433320961",
+      "SIO": "DIRTY",
+      "exact_floor": "382681397559232276",
+      "outputs": {
+        "parent": "382681397559232276",
+        "candidate": "382681397559232276"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2192580804607",
+      "SIO": "READY",
+      "exact_floor": "383056575399627039",
+      "outputs": {
+        "parent": "383056575399627039",
+        "candidate": "383056575399627039"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2192580804607",
+      "SIO": "DIRTY",
+      "exact_floor": "383056575399627039",
+      "outputs": {
+        "parent": "383056575399627039",
+        "candidate": "383056575399627039"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2192580804608",
+      "SIO": "READY",
+      "exact_floor": "383056575399801745",
+      "outputs": {
+        "parent": "383056575399801745",
+        "candidate": "383056575399801745"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2192580804608",
+      "SIO": "DIRTY",
+      "exact_floor": "383056575399801745",
+      "outputs": {
+        "parent": "383056575399801745",
+        "candidate": "383056575399801745"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2194728288254",
+      "SIO": "READY",
+      "exact_floor": "383431753240196507",
+      "outputs": {
+        "parent": "383431753240196507",
+        "candidate": "383431753240196507"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2194728288254",
+      "SIO": "DIRTY",
+      "exact_floor": "383431753240196507",
+      "outputs": {
+        "parent": "383431753240196507",
+        "candidate": "383431753240196507"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2194728288255",
+      "SIO": "READY",
+      "exact_floor": "383431753240371213",
+      "outputs": {
+        "parent": "383431753240371213",
+        "candidate": "383431753240371213"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2194728288255",
+      "SIO": "DIRTY",
+      "exact_floor": "383431753240371213",
+      "outputs": {
+        "parent": "383431753240371213",
+        "candidate": "383431753240371213"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2194728288256",
+      "SIO": "READY",
+      "exact_floor": "383431753240545919",
+      "outputs": {
+        "parent": "383431753240545919",
+        "candidate": "383431753240545919"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2194728288256",
+      "SIO": "DIRTY",
+      "exact_floor": "383431753240545919",
+      "outputs": {
+        "parent": "383431753240545919",
+        "candidate": "383431753240545919"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2194728288257",
+      "SIO": "READY",
+      "exact_floor": "383431753240720624",
+      "outputs": {
+        "parent": "383431753240720624",
+        "candidate": "383431753240720624"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2194728288257",
+      "SIO": "DIRTY",
+      "exact_floor": "383431753240720624",
+      "outputs": {
+        "parent": "383431753240720624",
+        "candidate": "383431753240720624"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2196875771903",
+      "SIO": "READY",
+      "exact_floor": "383806931081115387",
+      "outputs": {
+        "parent": "383806931081115387",
+        "candidate": "383806931081115387"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2196875771903",
+      "SIO": "DIRTY",
+      "exact_floor": "383806931081115387",
+      "outputs": {
+        "parent": "383806931081115387",
+        "candidate": "383806931081115387"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2196875771904",
+      "SIO": "READY",
+      "exact_floor": "383806931081290093",
+      "outputs": {
+        "parent": "383806931081290093",
+        "candidate": "383806931081290093"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2196875771904",
+      "SIO": "DIRTY",
+      "exact_floor": "383806931081290093",
+      "outputs": {
+        "parent": "383806931081290093",
+        "candidate": "383806931081290093"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "exact_floor": "384182108921684855",
+      "outputs": {
+        "parent": "384182108921684855",
+        "candidate": "384182108921684855"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "exact_floor": "384182108921684855",
+      "outputs": {
+        "parent": "384182108921684855",
+        "candidate": "384182108921684855"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "exact_floor": "384182108921859561",
+      "outputs": {
+        "parent": "384182108921859561",
+        "candidate": "384182108921859561"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "exact_floor": "384182108921859561",
+      "outputs": {
+        "parent": "384182108921859561",
+        "candidate": "384182108921859561"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "exact_floor": "384182108922034267",
+      "outputs": {
+        "parent": "384182108922034267",
+        "candidate": "384182108922034267"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    },
+    {
+      "den": 3073,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "exact_floor": "384182108922034267",
+      "outputs": {
+        "parent": "384182108922034267",
+        "candidate": "384182108922034267"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "0",
+      "SIO": "READY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1",
+      "SIO": "READY",
+      "exact_floor": "131168",
+      "outputs": {
+        "parent": "131168",
+        "candidate": "131168"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "exact_floor": "131168",
+      "outputs": {
+        "parent": "131168",
+        "candidate": "131168"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2",
+      "SIO": "READY",
+      "exact_floor": "262336",
+      "outputs": {
+        "parent": "262336",
+        "candidate": "262336"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2",
+      "SIO": "DIRTY",
+      "exact_floor": "262336",
+      "outputs": {
+        "parent": "262336",
+        "candidate": "262336"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4092",
+      "SIO": "READY",
+      "exact_floor": "536739743",
+      "outputs": {
+        "parent": "536739743",
+        "candidate": "536739743"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4092",
+      "SIO": "DIRTY",
+      "exact_floor": "536739743",
+      "outputs": {
+        "parent": "536739743",
+        "candidate": "536739743"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4093",
+      "SIO": "READY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4093",
+      "SIO": "DIRTY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4094",
+      "SIO": "READY",
+      "exact_floor": "537002080",
+      "outputs": {
+        "parent": "537002080",
+        "candidate": "537002080"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4094",
+      "SIO": "DIRTY",
+      "exact_floor": "537002080",
+      "outputs": {
+        "parent": "537002080",
+        "candidate": "537002080"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2147483647",
+      "SIO": "READY",
+      "exact_floor": "281681286115312",
+      "outputs": {
+        "parent": "281681286115312",
+        "candidate": "281681286115312"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2147483647",
+      "SIO": "DIRTY",
+      "exact_floor": "281681286115312",
+      "outputs": {
+        "parent": "281681286115312",
+        "candidate": "281681286115312"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2147483648",
+      "SIO": "READY",
+      "exact_floor": "281681286246481",
+      "outputs": {
+        "parent": "281681286246481",
+        "candidate": "281681286246481"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2147483648",
+      "SIO": "DIRTY",
+      "exact_floor": "281681286246481",
+      "outputs": {
+        "parent": "281681286246481",
+        "candidate": "281681286246481"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4294967294",
+      "SIO": "READY",
+      "exact_floor": "563362572230625",
+      "outputs": {
+        "parent": "563362572230625",
+        "candidate": "563362572230625"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4294967294",
+      "SIO": "DIRTY",
+      "exact_floor": "563362572230625",
+      "outputs": {
+        "parent": "563362572230625",
+        "candidate": "563362572230625"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "exact_floor": "563362572361794",
+      "outputs": {
+        "parent": "563362572361794",
+        "candidate": "563362572361794"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "exact_floor": "563362572361794",
+      "outputs": {
+        "parent": "563362572361794",
+        "candidate": "563362572361794"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "exact_floor": "563362572492962",
+      "outputs": {
+        "parent": "563362572492962",
+        "candidate": "563362572492962"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "exact_floor": "563362572492962",
+      "outputs": {
+        "parent": "563362572492962",
+        "candidate": "563362572492962"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "exact_floor": "563362572624130",
+      "outputs": {
+        "parent": "563362572624130",
+        "candidate": "563362572624130"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "exact_floor": "563362572624130",
+      "outputs": {
+        "parent": "563362572624130",
+        "candidate": "563362572624130"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "6442450943",
+      "SIO": "READY",
+      "exact_floor": "845043858608275",
+      "outputs": {
+        "parent": "845043858608275",
+        "candidate": "845043858608275"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "6442450943",
+      "SIO": "DIRTY",
+      "exact_floor": "845043858608275",
+      "outputs": {
+        "parent": "845043858608275",
+        "candidate": "845043858608275"
+      },
+      "instructions": {
+        "parent": 147,
+        "candidate": 145
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "6442450944",
+      "SIO": "READY",
+      "exact_floor": "845043858739443",
+      "outputs": {
+        "parent": "845043858739443",
+        "candidate": "845043858739443"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "6442450944",
+      "SIO": "DIRTY",
+      "exact_floor": "845043858739443",
+      "outputs": {
+        "parent": "845043858739443",
+        "candidate": "845043858739443"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "8589934590",
+      "SIO": "READY",
+      "exact_floor": "1126725144723588",
+      "outputs": {
+        "parent": "1126725144723588",
+        "candidate": "1126725144723588"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "8589934590",
+      "SIO": "DIRTY",
+      "exact_floor": "1126725144723588",
+      "outputs": {
+        "parent": "1126725144723588",
+        "candidate": "1126725144723588"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "8589934591",
+      "SIO": "READY",
+      "exact_floor": "1126725144854756",
+      "outputs": {
+        "parent": "1126725144854756",
+        "candidate": "1126725144854756"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "8589934591",
+      "SIO": "DIRTY",
+      "exact_floor": "1126725144854756",
+      "outputs": {
+        "parent": "1126725144854756",
+        "candidate": "1126725144854756"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1095216660480",
+      "SIO": "READY",
+      "exact_floor": "143657455985705340",
+      "outputs": {
+        "parent": "143657455985705340",
+        "candidate": "143657455985705340"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1095216660480",
+      "SIO": "DIRTY",
+      "exact_floor": "143657455985705340",
+      "outputs": {
+        "parent": "143657455985705340",
+        "candidate": "143657455985705340"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1095216660481",
+      "SIO": "READY",
+      "exact_floor": "143657455985836508",
+      "outputs": {
+        "parent": "143657455985836508",
+        "candidate": "143657455985836508"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1095216660481",
+      "SIO": "DIRTY",
+      "exact_floor": "143657455985836508",
+      "outputs": {
+        "parent": "143657455985836508",
+        "candidate": "143657455985836508"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1097364144127",
+      "SIO": "READY",
+      "exact_floor": "143939137271820653",
+      "outputs": {
+        "parent": "143939137271820653",
+        "candidate": "143939137271820653"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1097364144127",
+      "SIO": "DIRTY",
+      "exact_floor": "143939137271820653",
+      "outputs": {
+        "parent": "143939137271820653",
+        "candidate": "143939137271820653"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1097364144128",
+      "SIO": "READY",
+      "exact_floor": "143939137271951821",
+      "outputs": {
+        "parent": "143939137271951821",
+        "candidate": "143939137271951821"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1097364144128",
+      "SIO": "DIRTY",
+      "exact_floor": "143939137271951821",
+      "outputs": {
+        "parent": "143939137271951821",
+        "candidate": "143939137271951821"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1099511627774",
+      "SIO": "READY",
+      "exact_floor": "144220818557935966",
+      "outputs": {
+        "parent": "144220818557935966",
+        "candidate": "144220818557935966"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1099511627774",
+      "SIO": "DIRTY",
+      "exact_floor": "144220818557935966",
+      "outputs": {
+        "parent": "144220818557935966",
+        "candidate": "144220818557935966"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1099511627775",
+      "SIO": "READY",
+      "exact_floor": "144220818558067134",
+      "outputs": {
+        "parent": "144220818558067134",
+        "candidate": "144220818558067134"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "1099511627775",
+      "SIO": "DIRTY",
+      "exact_floor": "144220818558067134",
+      "outputs": {
+        "parent": "144220818558067134",
+        "candidate": "144220818558067134"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2190433320960",
+      "SIO": "READY",
+      "exact_floor": "287314911971410680",
+      "outputs": {
+        "parent": "287314911971410680",
+        "candidate": "287314911971410680"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2190433320960",
+      "SIO": "DIRTY",
+      "exact_floor": "287314911971410680",
+      "outputs": {
+        "parent": "287314911971410680",
+        "candidate": "287314911971410680"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2190433320961",
+      "SIO": "READY",
+      "exact_floor": "287314911971541848",
+      "outputs": {
+        "parent": "287314911971541848",
+        "candidate": "287314911971541848"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2190433320961",
+      "SIO": "DIRTY",
+      "exact_floor": "287314911971541848",
+      "outputs": {
+        "parent": "287314911971541848",
+        "candidate": "287314911971541848"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2192580804607",
+      "SIO": "READY",
+      "exact_floor": "287596593257525993",
+      "outputs": {
+        "parent": "287596593257525993",
+        "candidate": "287596593257525993"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2192580804607",
+      "SIO": "DIRTY",
+      "exact_floor": "287596593257525993",
+      "outputs": {
+        "parent": "287596593257525993",
+        "candidate": "287596593257525993"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2192580804608",
+      "SIO": "READY",
+      "exact_floor": "287596593257657161",
+      "outputs": {
+        "parent": "287596593257657161",
+        "candidate": "287596593257657161"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2192580804608",
+      "SIO": "DIRTY",
+      "exact_floor": "287596593257657161",
+      "outputs": {
+        "parent": "287596593257657161",
+        "candidate": "287596593257657161"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2194728288254",
+      "SIO": "READY",
+      "exact_floor": "287878274543641306",
+      "outputs": {
+        "parent": "287878274543641306",
+        "candidate": "287878274543641306"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2194728288254",
+      "SIO": "DIRTY",
+      "exact_floor": "287878274543641306",
+      "outputs": {
+        "parent": "287878274543641306",
+        "candidate": "287878274543641306"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2194728288255",
+      "SIO": "READY",
+      "exact_floor": "287878274543772474",
+      "outputs": {
+        "parent": "287878274543772474",
+        "candidate": "287878274543772474"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2194728288255",
+      "SIO": "DIRTY",
+      "exact_floor": "287878274543772474",
+      "outputs": {
+        "parent": "287878274543772474",
+        "candidate": "287878274543772474"
+      },
+      "instructions": {
+        "parent": 148,
+        "candidate": 149
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2194728288256",
+      "SIO": "READY",
+      "exact_floor": "287878274543903642",
+      "outputs": {
+        "parent": "287878274543903642",
+        "candidate": "287878274543903642"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2194728288256",
+      "SIO": "DIRTY",
+      "exact_floor": "287878274543903642",
+      "outputs": {
+        "parent": "287878274543903642",
+        "candidate": "287878274543903642"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2194728288257",
+      "SIO": "READY",
+      "exact_floor": "287878274544034810",
+      "outputs": {
+        "parent": "287878274544034810",
+        "candidate": "287878274544034810"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2194728288257",
+      "SIO": "DIRTY",
+      "exact_floor": "287878274544034810",
+      "outputs": {
+        "parent": "287878274544034810",
+        "candidate": "287878274544034810"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2196875771903",
+      "SIO": "READY",
+      "exact_floor": "288159955830018955",
+      "outputs": {
+        "parent": "288159955830018955",
+        "candidate": "288159955830018955"
+      },
+      "instructions": {
+        "parent": 150,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2196875771903",
+      "SIO": "DIRTY",
+      "exact_floor": "288159955830018955",
+      "outputs": {
+        "parent": "288159955830018955",
+        "candidate": "288159955830018955"
+      },
+      "instructions": {
+        "parent": 150,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2196875771904",
+      "SIO": "READY",
+      "exact_floor": "288159955830150123",
+      "outputs": {
+        "parent": "288159955830150123",
+        "candidate": "288159955830150123"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2196875771904",
+      "SIO": "DIRTY",
+      "exact_floor": "288159955830150123",
+      "outputs": {
+        "parent": "288159955830150123",
+        "candidate": "288159955830150123"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "exact_floor": "288441637116134268",
+      "outputs": {
+        "parent": "288441637116134268",
+        "candidate": "288441637116134268"
+      },
+      "instructions": {
+        "parent": 150,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "exact_floor": "288441637116134268",
+      "outputs": {
+        "parent": "288441637116134268",
+        "candidate": "288441637116134268"
+      },
+      "instructions": {
+        "parent": 150,
+        "candidate": 146
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "exact_floor": "288441637116265436",
+      "outputs": {
+        "parent": "288441637116265436",
+        "candidate": "288441637116265436"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "exact_floor": "288441637116265436",
+      "outputs": {
+        "parent": "288441637116265436",
+        "candidate": "288441637116265436"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "exact_floor": "288441637116396604",
+      "outputs": {
+        "parent": "288441637116396604",
+        "candidate": "288441637116396604"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    },
+    {
+      "den": 4093,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "exact_floor": "288441637116396604",
+      "outputs": {
+        "parent": "288441637116396604",
+        "candidate": "288441637116396604"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "0",
+      "SIO": "READY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "0",
+      "SIO": "DIRTY",
+      "exact_floor": "0",
+      "outputs": {
+        "parent": "0",
+        "candidate": "0"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1",
+      "SIO": "READY",
+      "exact_floor": "131104",
+      "outputs": {
+        "parent": "131104",
+        "candidate": "131104"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1",
+      "SIO": "DIRTY",
+      "exact_floor": "131104",
+      "outputs": {
+        "parent": "131104",
+        "candidate": "131104"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2",
+      "SIO": "READY",
+      "exact_floor": "262208",
+      "outputs": {
+        "parent": "262208",
+        "candidate": "262208"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2",
+      "SIO": "DIRTY",
+      "exact_floor": "262208",
+      "outputs": {
+        "parent": "262208",
+        "candidate": "262208"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4094",
+      "SIO": "READY",
+      "exact_floor": "536739807",
+      "outputs": {
+        "parent": "536739807",
+        "candidate": "536739807"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4094",
+      "SIO": "DIRTY",
+      "exact_floor": "536739807",
+      "outputs": {
+        "parent": "536739807",
+        "candidate": "536739807"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4095",
+      "SIO": "READY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4095",
+      "SIO": "DIRTY",
+      "exact_floor": "536870912",
+      "outputs": {
+        "parent": "536870912",
+        "candidate": "536870912"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4096",
+      "SIO": "READY",
+      "exact_floor": "537002016",
+      "outputs": {
+        "parent": "537002016",
+        "candidate": "537002016"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4096",
+      "SIO": "DIRTY",
+      "exact_floor": "537002016",
+      "outputs": {
+        "parent": "537002016",
+        "candidate": "537002016"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2147483647",
+      "SIO": "READY",
+      "exact_floor": "281543712837600",
+      "outputs": {
+        "parent": "281543712837600",
+        "candidate": "281543712837600"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2147483647",
+      "SIO": "DIRTY",
+      "exact_floor": "281543712837600",
+      "outputs": {
+        "parent": "281543712837600",
+        "candidate": "281543712837600"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2147483648",
+      "SIO": "READY",
+      "exact_floor": "281543712968705",
+      "outputs": {
+        "parent": "281543712968705",
+        "candidate": "281543712968705"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2147483648",
+      "SIO": "DIRTY",
+      "exact_floor": "281543712968705",
+      "outputs": {
+        "parent": "281543712968705",
+        "candidate": "281543712968705"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4294967294",
+      "SIO": "READY",
+      "exact_floor": "563087425675201",
+      "outputs": {
+        "parent": "563087425675201",
+        "candidate": "563087425675201"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4294967294",
+      "SIO": "DIRTY",
+      "exact_floor": "563087425675201",
+      "outputs": {
+        "parent": "563087425675201",
+        "candidate": "563087425675201"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4294967295",
+      "SIO": "READY",
+      "exact_floor": "563087425806305",
+      "outputs": {
+        "parent": "563087425806305",
+        "candidate": "563087425806305"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 159
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4294967295",
+      "SIO": "DIRTY",
+      "exact_floor": "563087425806305",
+      "outputs": {
+        "parent": "563087425806305",
+        "candidate": "563087425806305"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 159
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4294967296",
+      "SIO": "READY",
+      "exact_floor": "563087425937410",
+      "outputs": {
+        "parent": "563087425937410",
+        "candidate": "563087425937410"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4294967296",
+      "SIO": "DIRTY",
+      "exact_floor": "563087425937410",
+      "outputs": {
+        "parent": "563087425937410",
+        "candidate": "563087425937410"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4294967297",
+      "SIO": "READY",
+      "exact_floor": "563087426068514",
+      "outputs": {
+        "parent": "563087426068514",
+        "candidate": "563087426068514"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "4294967297",
+      "SIO": "DIRTY",
+      "exact_floor": "563087426068514",
+      "outputs": {
+        "parent": "563087426068514",
+        "candidate": "563087426068514"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "6442450943",
+      "SIO": "READY",
+      "exact_floor": "844631138775010",
+      "outputs": {
+        "parent": "844631138775010",
+        "candidate": "844631138775010"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "6442450943",
+      "SIO": "DIRTY",
+      "exact_floor": "844631138775010",
+      "outputs": {
+        "parent": "844631138775010",
+        "candidate": "844631138775010"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "6442450944",
+      "SIO": "READY",
+      "exact_floor": "844631138906115",
+      "outputs": {
+        "parent": "844631138906115",
+        "candidate": "844631138906115"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "6442450944",
+      "SIO": "DIRTY",
+      "exact_floor": "844631138906115",
+      "outputs": {
+        "parent": "844631138906115",
+        "candidate": "844631138906115"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "8589934590",
+      "SIO": "READY",
+      "exact_floor": "1126174851612611",
+      "outputs": {
+        "parent": "1126174851612611",
+        "candidate": "1126174851612611"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "8589934590",
+      "SIO": "DIRTY",
+      "exact_floor": "1126174851612611",
+      "outputs": {
+        "parent": "1126174851612611",
+        "candidate": "1126174851612611"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "8589934591",
+      "SIO": "READY",
+      "exact_floor": "1126174851743715",
+      "outputs": {
+        "parent": "1126174851743715",
+        "candidate": "1126174851743715"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 159
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "8589934591",
+      "SIO": "DIRTY",
+      "exact_floor": "1126174851743715",
+      "outputs": {
+        "parent": "1126174851743715",
+        "candidate": "1126174851743715"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 159
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1095216660480",
+      "SIO": "READY",
+      "exact_floor": "143587293614039550",
+      "outputs": {
+        "parent": "143587293614039550",
+        "candidate": "143587293614039550"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1095216660480",
+      "SIO": "DIRTY",
+      "exact_floor": "143587293614039550",
+      "outputs": {
+        "parent": "143587293614039550",
+        "candidate": "143587293614039550"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1095216660481",
+      "SIO": "READY",
+      "exact_floor": "143587293614170654",
+      "outputs": {
+        "parent": "143587293614170654",
+        "candidate": "143587293614170654"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1095216660481",
+      "SIO": "DIRTY",
+      "exact_floor": "143587293614170654",
+      "outputs": {
+        "parent": "143587293614170654",
+        "candidate": "143587293614170654"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1097364144127",
+      "SIO": "READY",
+      "exact_floor": "143868837326877151",
+      "outputs": {
+        "parent": "143868837326877151",
+        "candidate": "143868837326877151"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1097364144127",
+      "SIO": "DIRTY",
+      "exact_floor": "143868837326877151",
+      "outputs": {
+        "parent": "143868837326877151",
+        "candidate": "143868837326877151"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1097364144128",
+      "SIO": "READY",
+      "exact_floor": "143868837327008255",
+      "outputs": {
+        "parent": "143868837327008255",
+        "candidate": "143868837327008255"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1097364144128",
+      "SIO": "DIRTY",
+      "exact_floor": "143868837327008255",
+      "outputs": {
+        "parent": "143868837327008255",
+        "candidate": "143868837327008255"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1099511627774",
+      "SIO": "READY",
+      "exact_floor": "144150381039714752",
+      "outputs": {
+        "parent": "144150381039714752",
+        "candidate": "144150381039714752"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1099511627774",
+      "SIO": "DIRTY",
+      "exact_floor": "144150381039714752",
+      "outputs": {
+        "parent": "144150381039714752",
+        "candidate": "144150381039714752"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1099511627775",
+      "SIO": "READY",
+      "exact_floor": "144150381039845856",
+      "outputs": {
+        "parent": "144150381039845856",
+        "candidate": "144150381039845856"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "1099511627775",
+      "SIO": "DIRTY",
+      "exact_floor": "144150381039845856",
+      "outputs": {
+        "parent": "144150381039845856",
+        "candidate": "144150381039845856"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2190433320960",
+      "SIO": "READY",
+      "exact_floor": "287174587228079100",
+      "outputs": {
+        "parent": "287174587228079100",
+        "candidate": "287174587228079100"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2190433320960",
+      "SIO": "DIRTY",
+      "exact_floor": "287174587228079100",
+      "outputs": {
+        "parent": "287174587228079100",
+        "candidate": "287174587228079100"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2190433320961",
+      "SIO": "READY",
+      "exact_floor": "287174587228210204",
+      "outputs": {
+        "parent": "287174587228210204",
+        "candidate": "287174587228210204"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2190433320961",
+      "SIO": "DIRTY",
+      "exact_floor": "287174587228210204",
+      "outputs": {
+        "parent": "287174587228210204",
+        "candidate": "287174587228210204"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2192580804607",
+      "SIO": "READY",
+      "exact_floor": "287456130940916701",
+      "outputs": {
+        "parent": "287456130940916701",
+        "candidate": "287456130940916701"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2192580804607",
+      "SIO": "DIRTY",
+      "exact_floor": "287456130940916701",
+      "outputs": {
+        "parent": "287456130940916701",
+        "candidate": "287456130940916701"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2192580804608",
+      "SIO": "READY",
+      "exact_floor": "287456130941047805",
+      "outputs": {
+        "parent": "287456130941047805",
+        "candidate": "287456130941047805"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2192580804608",
+      "SIO": "DIRTY",
+      "exact_floor": "287456130941047805",
+      "outputs": {
+        "parent": "287456130941047805",
+        "candidate": "287456130941047805"
+      },
+      "instructions": {
+        "parent": 158,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2194728288254",
+      "SIO": "READY",
+      "exact_floor": "287737674653754302",
+      "outputs": {
+        "parent": "287737674653754302",
+        "candidate": "287737674653754302"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2194728288254",
+      "SIO": "DIRTY",
+      "exact_floor": "287737674653754302",
+      "outputs": {
+        "parent": "287737674653754302",
+        "candidate": "287737674653754302"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2194728288255",
+      "SIO": "READY",
+      "exact_floor": "287737674653885406",
+      "outputs": {
+        "parent": "287737674653885406",
+        "candidate": "287737674653885406"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2194728288255",
+      "SIO": "DIRTY",
+      "exact_floor": "287737674653885406",
+      "outputs": {
+        "parent": "287737674653885406",
+        "candidate": "287737674653885406"
+      },
+      "instructions": {
+        "parent": 157,
+        "candidate": 158
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2194728288256",
+      "SIO": "READY",
+      "exact_floor": "287737674654016510",
+      "outputs": {
+        "parent": "287737674654016510",
+        "candidate": "287737674654016510"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2194728288256",
+      "SIO": "DIRTY",
+      "exact_floor": "287737674654016510",
+      "outputs": {
+        "parent": "287737674654016510",
+        "candidate": "287737674654016510"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2194728288257",
+      "SIO": "READY",
+      "exact_floor": "287737674654147614",
+      "outputs": {
+        "parent": "287737674654147614",
+        "candidate": "287737674654147614"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2194728288257",
+      "SIO": "DIRTY",
+      "exact_floor": "287737674654147614",
+      "outputs": {
+        "parent": "287737674654147614",
+        "candidate": "287737674654147614"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2196875771903",
+      "SIO": "READY",
+      "exact_floor": "288019218366854111",
+      "outputs": {
+        "parent": "288019218366854111",
+        "candidate": "288019218366854111"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2196875771903",
+      "SIO": "DIRTY",
+      "exact_floor": "288019218366854111",
+      "outputs": {
+        "parent": "288019218366854111",
+        "candidate": "288019218366854111"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2196875771904",
+      "SIO": "READY",
+      "exact_floor": "288019218366985215",
+      "outputs": {
+        "parent": "288019218366985215",
+        "candidate": "288019218366985215"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2196875771904",
+      "SIO": "DIRTY",
+      "exact_floor": "288019218366985215",
+      "outputs": {
+        "parent": "288019218366985215",
+        "candidate": "288019218366985215"
+      },
+      "instructions": {
+        "parent": 160,
+        "candidate": 156
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255550",
+      "SIO": "READY",
+      "exact_floor": "288300762079691712",
+      "outputs": {
+        "parent": "288300762079691712",
+        "candidate": "288300762079691712"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255550",
+      "SIO": "DIRTY",
+      "exact_floor": "288300762079691712",
+      "outputs": {
+        "parent": "288300762079691712",
+        "candidate": "288300762079691712"
+      },
+      "instructions": {
+        "parent": 159,
+        "candidate": 155
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255551",
+      "SIO": "READY",
+      "exact_floor": "288300762079822816",
+      "outputs": {
+        "parent": "288300762079822816",
+        "candidate": "288300762079822816"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255551",
+      "SIO": "DIRTY",
+      "exact_floor": "288300762079822816",
+      "outputs": {
+        "parent": "288300762079822816",
+        "candidate": "288300762079822816"
+      },
+      "instructions": {
+        "parent": 64,
+        "candidate": 61
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255552",
+      "SIO": "READY",
+      "exact_floor": "288300762079953920",
+      "outputs": {
+        "parent": "288300762079953920",
+        "candidate": "288300762079953920"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    },
+    {
+      "den": 4095,
+      "delta": "2199023255552",
+      "SIO": "DIRTY",
+      "exact_floor": "288300762079953920",
+      "outputs": {
+        "parent": "288300762079953920",
+        "candidate": "288300762079953920"
+      },
+      "instructions": {
+        "parent": 47,
+        "candidate": 44
+      }
+    }
+  ],
+  "pure_integer_oracle": "unbounded integer floor((delta<<29)/den)",
+  "all513_high_classes_proved_in_static_certificate": true,
+  "representative_denominators": [
+    2049,
+    2051,
+    3071,
+    3073,
+    4093,
+    4095
+  ],
+  "firmware_or_ROM_mapped": false,
+  "only_extra_seed_capsule_bytes": 184,
+  "seed_capsule_sha256": "75729579767fb4b3269141b6c62b1ae4fad49ed8817158b0e7d4bedcc717ecc8",
+  "SIO_accesses": 0,
+  "all28bytes_preserved_both_states": true,
+  "PCS_R4_R11_SP_return_bounded_writes_checked_every_call": true,
+  "all_code_and_data_accesses_in_component_capsule_or_bounded_stack": true,
+  "observed_stack_bytes": {
+    "parent": 68,
+    "candidate": 68
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "status": "PASS_ALL_LOCAL_AND_EXTERNAL_PINS_AFTER_SEAL",
+  "local_files": 80,
+  "external_files": 2142,
+  "FROZEN_sha256": "3341f37fa8b5a5177af792be2417b1365c5b6595f66280151e5ed6f72d8c5469",
+  "corrigendum_sha256": "cf6766bfefe1b7ecd5051476e697c969fba1318ef933c0a9eafba4e57680194a",
+  "actual_ARM_or_MPFR_calls": 0,
+  "hardware_accessed": false
+}

@@ -1,0 +1,15 @@
+{
+  "status": "PASS_FROZEN_RAW_MAIN_LN_ARTIFACTS_INPUTS_AND_LINKED_SIZE",
+  "artifacts": 59,
+  "input_pins": 582,
+  "allocated_linked_bytes": [
+    100800,
+    102184
+  ],
+  "linked_delta": 1384,
+  "result_sha256": "406533549b8d7bf94fcd95e7fe396497561f91590df6096d74bec1dde1caad82",
+  "HANDOFF_sha256": "a9222d24f1dd4491667b697ade1f0a378d8bf5750ce293eaaac73efda157dc2b",
+  "HEAD": "d0b9cbd6c47648b136104f7a66a714af3db9f7e5",
+  "hardware_accessed": false,
+  "canonical_math_diff_empty": true
+}

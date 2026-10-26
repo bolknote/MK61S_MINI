@@ -1,0 +1,31 @@
+{
+  "status": "PASS_OWN_HOST_JIT_RUNS_EXIT0",
+  "python": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+  "Unicorn": "2.1.4",
+  "MPFR": "4.2.2",
+  "main_run": {
+    "session_id": 75646,
+    "completion_chunk": "4b12a6",
+    "returncode": 0,
+    "public_calls": 2576,
+    "quotient_calls": 5120
+  },
+  "focused_stack_run": {
+    "completion_chunk": "466bdc",
+    "returncode": 0,
+    "fresh_calls": 8,
+    "new_MPFR": 0
+  },
+  "own_total_ARM_calls": 7704,
+  "own_fresh_MPFR_references": 322,
+  "ROM_initializers_not_counted_as_qualified_calls": true,
+  "inherited149484_unit_calls_excluded_from_own_totals": true,
+  "author443784_public_calls_excluded_from_own_totals": true,
+  "strictly_HOST_no_device_or_network": true,
+  "reproduction": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/binding.py",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/proof.py",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python -u -X faulthandler /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/arm.py",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python -u -X faulthandler /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/stack.py"
+  ]
+}

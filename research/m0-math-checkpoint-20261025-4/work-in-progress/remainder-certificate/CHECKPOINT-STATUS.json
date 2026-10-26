@@ -1,0 +1,12 @@
+{
+  "status": "MODEL_PASS_AND_ASSEMBLED_UNIT_ONLY",
+  "integer_model_cases": 338416,
+  "ARM_execution_performed": false,
+  "actual_ARM_calls": 0,
+  "actual_MPFR_calls": 0,
+  "connected_to_binary64_division": false,
+  "public_divider_qualified": false,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

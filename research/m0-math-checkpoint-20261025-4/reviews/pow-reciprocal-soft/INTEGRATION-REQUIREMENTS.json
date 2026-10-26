@@ -1,0 +1,23 @@
+{
+  "status": "MANDATORY_BEFORE_MERGED_FIRMWARE_OR_RELEASE_QUALIFICATION",
+  "exact_supplier": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/FROZEN.json",
+    "bytes": 11593,
+    "sha256": "13dc7f8186d4678fac6b7a0da0b27e00dbb678316e292d320d3eefdd35dbba0c"
+  },
+  "actual_parent": "Boundary128/61c98 accepted6c1a375b and ROOT260cb67e; near-one separate sibling",
+  "source_merge_relink": "Merge exact source deliberately; private diagnostic fixed addresses are not production bindings. Relink the complete target and verify the real root BL and every retained other ddiv caller.",
+  "private_continuation": "Never export or call sw_from_guard as generic scalar C ddiv. It requires original raw operands R0-R3, guarded R6 in[0,2043], saved20B R4-R7/LR frame and DIRTY selection after normal/exponent/dyadic guards.",
+  "seed_and_join": "Retain exact D17 domain, exact194B leaf/R12 preservation, 20B transient operand save, 8-byte seed BL alignment and all live join state. No relaxed precision or altered IEEE/RNE/fallback policy.",
+  "integrated_R12": "Run shared-product actual linked producer/consumer R12 and veneer guards after all source merges. Boundary/reciprocal ordinary PCS and private R12 tag proofs do not substitute for that independent contract. Near-one88-instruction/16B-veneer guard is required if merged.",
+  "loader_layout": "Check actual final ELF, scratch4080, Flash/RAM/stack/veneer placement and loader order. Old168B exp overlay overwrites14B of the table entry and must not be mechanically layered after the new bank.",
+  "source_contexts": "Retain defaultM0/M4soft/hard selected code and compile-time exclusion of private additions in nonRP2040 contexts.",
+  "limits": "General pow totality, remaining mathematical/speed work, physical cycles, hardware and release remain open. Instructions measured in CPU simulation are not cycle measurements.",
+  "direct_evidence_limit": "No per-divisor Qfplib speed claim from the exhaustive direct portion without retained per-divisor timing rows.",
+  "reviewed507": 422,
+  "author437_not_integrated_or_promoted": true,
+  "integration_GO": false,
+  "main_GO": false,
+  "hardware_GO": false,
+  "release_GO": false
+}

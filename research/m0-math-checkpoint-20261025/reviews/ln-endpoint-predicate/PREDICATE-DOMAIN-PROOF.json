@@ -1,0 +1,4631 @@
+{
+  "status": "PASS_UNSIGNED_DOMAIN_ENDPOINT_EQUIVALENCE",
+  "highword_classes": 513,
+  "classes": [
+    {
+      "high": 0,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 1,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 2,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 3,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 4,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 5,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 6,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 7,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 8,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 9,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 10,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 11,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 12,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 13,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 14,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 15,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 16,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 17,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 18,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 19,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 20,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 21,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 22,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 23,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 24,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 25,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 26,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 27,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 28,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 29,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 30,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 31,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 32,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 33,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 34,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 35,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 36,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 37,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 38,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 39,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 40,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 41,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 42,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 43,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 44,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 45,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 46,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 47,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 48,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 49,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 50,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 51,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 52,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 53,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 54,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 55,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 56,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 57,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 58,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 59,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 60,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 61,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 62,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 63,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 64,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 65,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 66,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 67,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 68,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 69,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 70,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 71,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 72,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 73,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 74,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 75,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 76,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 77,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 78,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 79,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 80,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 81,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 82,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 83,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 84,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 85,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 86,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 87,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 88,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 89,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 90,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 91,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 92,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 93,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 94,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 95,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 96,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 97,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 98,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 99,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 100,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 101,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 102,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 103,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 104,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 105,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 106,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 107,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 108,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 109,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 110,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 111,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 112,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 113,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 114,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 115,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 116,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 117,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 118,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 119,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 120,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 121,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 122,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 123,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 124,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 125,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 126,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 127,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 128,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 129,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 130,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 131,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 132,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 133,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 134,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 135,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 136,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 137,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 138,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 139,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 140,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 141,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 142,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 143,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 144,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 145,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 146,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 147,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 148,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 149,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 150,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 151,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 152,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 153,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 154,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 155,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 156,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 157,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 158,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 159,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 160,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 161,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 162,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 163,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 164,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 165,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 166,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 167,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 168,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 169,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 170,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 171,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 172,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 173,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 174,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 175,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 176,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 177,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 178,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 179,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 180,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 181,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 182,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 183,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 184,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 185,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 186,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 187,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 188,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 189,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 190,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 191,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 192,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 193,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 194,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 195,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 196,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 197,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 198,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 199,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 200,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 201,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 202,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 203,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 204,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 205,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 206,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 207,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 208,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 209,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 210,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 211,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 212,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 213,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 214,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 215,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 216,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 217,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 218,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 219,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 220,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 221,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 222,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 223,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 224,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 225,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 226,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 227,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 228,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 229,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 230,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 231,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 232,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 233,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 234,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 235,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 236,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 237,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 238,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 239,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 240,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 241,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 242,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 243,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 244,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 245,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 246,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 247,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 248,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 249,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 250,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 251,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 252,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 253,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 254,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 255,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 256,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 257,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 258,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 259,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 260,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 261,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 262,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 263,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 264,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 265,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 266,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 267,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 268,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 269,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 270,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 271,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 272,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 273,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 274,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 275,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 276,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 277,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 278,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 279,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 280,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 281,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 282,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 283,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 284,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 285,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 286,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 287,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 288,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 289,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 290,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 291,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 292,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 293,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 294,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 295,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 296,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 297,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 298,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 299,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 300,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 301,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 302,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 303,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 304,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 305,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 306,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 307,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 308,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 309,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 310,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 311,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 312,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 313,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 314,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 315,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 316,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 317,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 318,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 319,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 320,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 321,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 322,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 323,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 324,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 325,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 326,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 327,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 328,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 329,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 330,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 331,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 332,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 333,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 334,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 335,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 336,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 337,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 338,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 339,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 340,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 341,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 342,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 343,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 344,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 345,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 346,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 347,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 348,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 349,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 350,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 351,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 352,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 353,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 354,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 355,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 356,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 357,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 358,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 359,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 360,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 361,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 362,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 363,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 364,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 365,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 366,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 367,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 368,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 369,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 370,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 371,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 372,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 373,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 374,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 375,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 376,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 377,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 378,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 379,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 380,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 381,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 382,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 383,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 384,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 385,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 386,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 387,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 388,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 389,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 390,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 391,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 392,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 393,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 394,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 395,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 396,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 397,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 398,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 399,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 400,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 401,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 402,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 403,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 404,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 405,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 406,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 407,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 408,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 409,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 410,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 411,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 412,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 413,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 414,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 415,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 416,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 417,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 418,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 419,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 420,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 421,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 422,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 423,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 424,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 425,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 426,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 427,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 428,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 429,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 430,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 431,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 432,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 433,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 434,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 435,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 436,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 437,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 438,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 439,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 440,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 441,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 442,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 443,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 444,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 445,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 446,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 447,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 448,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 449,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 450,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 451,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 452,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 453,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 454,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 455,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 456,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 457,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 458,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 459,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 460,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 461,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 462,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 463,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 464,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 465,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 466,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 467,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 468,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 469,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 470,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 471,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 472,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 473,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 474,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 475,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 476,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 477,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 478,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 479,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 480,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 481,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 482,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 483,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 484,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 485,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 486,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 487,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 488,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 489,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 490,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 491,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 492,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 493,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 494,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 495,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 496,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 497,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 498,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 499,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 500,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 501,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 502,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 503,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 504,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 505,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 506,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 507,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 508,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 509,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 510,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "none",
+      "reason": "both high tests false and full delta below threshold"
+    },
+    {
+      "high": 511,
+      "low_domain": [
+        0,
+        4294967295
+      ],
+      "selected": "exactly low0xffffffff",
+      "reason": "only unsigned increment wrap equals0"
+    },
+    {
+      "high": 512,
+      "low_domain": [
+        0,
+        0
+      ],
+      "selected": "low0 only",
+      "reason": "domain excludes every other low word"
+    }
+  ],
+  "point_boundary_checks": 4097,
+  "source_sha256": "79067df1532a771c3cef484271292d7a592f73e1a0e0d51af86b5359c3de33a7",
+  "complete_old_header_reconstructed": true,
+  "domain": "0<=delta<=2^41; index0..1023; oddden2049+2index in2049..4095",
+  "caller_bound": "offset in[0,2^42-1]; small branch half-offset in[1,2^41], other branch offset-half in[0,2^41-1]. Both unsigned differences nonnegative.",
+  "unsigned_operations": "U64 shift32 loses no relevant bits because high<=512; uint32_t low+1U is modular32 addition, with zero iff low==0xffffffff.",
+  "not_a_claim_outside_domain": true,
+  "reciprocal_seed_correction_rounding_unchanged": true
+}

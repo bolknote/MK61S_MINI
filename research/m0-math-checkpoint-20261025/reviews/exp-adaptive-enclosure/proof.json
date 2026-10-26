@@ -1,0 +1,32 @@
+{
+  "status": "PASS_INDEPENDENT_ALL_NORMAL_ERROR4_ENCLOSURE_AND_TABLE_RECERTIFICATION",
+  "recomputed_delta": "16002083185666403208005253442412405258030774305560488006981254418822166648269455792397475483696979759/3732692613936344822560249276504192336042393930314220012699100441572677279188030925483797647877734400",
+  "recomputed_delta_strict275over64": true,
+  "max_abs_D_less2pow54": true,
+  "max_correction_strict23times2pow48": true,
+  "recomputed_residual": "751665119407/1502164811776",
+  "residual_strict129over256": true,
+  "ln2_160term_split_inverse_and_segment_recertification": true,
+  "actual_ELF_Q62_Q94_roots512_strict": true,
+  "signed_Q94_bias_exact": true,
+  "source_normal_error4_only": true,
+  "head_bounds": [
+    16384,
+    32800
+  ],
+  "all_head_certificates": 16417,
+  "strict_uint32_bound_and_signed_floor_predicates_for_all_biases": true,
+  "distances0and1_and_doubled_error6_cannot_new_accept": true,
+  "unchanged_old_distance3_predicate_preserved": true,
+  "old_distance3_margin85over32_independently_certified": true,
+  "actual_unnormalized_q_strict_below2pow63": true,
+  "argument_prologue_all_raw_bits_ABI_equivalence": true,
+  "source_first_ADCS_common_ADDS_sets_carry": true,
+  "product_unchanged148byte_arithmetic_proof_inherited": true,
+  "product_cost_all_raw84to81": true,
+  "no_calls_or_argument_writes_in_common_suffix": true,
+  "stack_frame40_touched36_not_same_measure": true,
+  "own_bounded_gate_inputs": 4154,
+  "own_ARM_or_MPFR_in_this_file": 0,
+  "source_proof_not_exhaustive_raw_binary64_execution": true
+}

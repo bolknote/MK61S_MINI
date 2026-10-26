@@ -1,0 +1,9 @@
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-candidate-cpp.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+{
+  "status": "PASS_TWENTY_COMPLETE_OBJECT_AND_ELF_REBUILDS_BYTE_EXACT",
+  "outputs": 20,
+  "candidate_ELF_sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98"
+}

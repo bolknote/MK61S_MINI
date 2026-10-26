@@ -1,0 +1,74 @@
+{
+  "status": "PASS_SOURCE_BOUND_TABLE_ONLY_PRODUCT_EQUIVALENCE",
+  "CPP_sha256": "575da3303b57fec5afd30b8f8737b58d6519987b9f2344c83c9ec47c83cdb274",
+  "ASM_sha256": "182834b1b91ba5b422f868eed27199bfe3a70dd2b2ed7c1a2805b1e1e460e193",
+  "fast_include_sha256": "b06976348f2e7d69c1c43cef349ca6a3b1d3af171a675a0ae954d8e08591a0aa",
+  "body_include_sha256": "2aabe86966659531b31865977fb53aa5b67de7600f070cd372371c96dad7451f",
+  "product_include_sha256": "0204bc708e5e743b0f274da99a2b62cefe2a6d0a271fc0cefee8d09160747dfe",
+  "wrapper_include_sha256": "d43f750eb676b398878d74af752282ba877901489e9b55b98db6bfbc621ce12b",
+  "candidate_ELF_sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98",
+  "CPP_allocated_bytes_and_all_tables_unchanged": true,
+  "changed_CPP_call_relocations": [
+    ".m0_pow_refine_extension",
+    ".m0_pow_small_y_cold",
+    ".scratch_y.m0_pow_hot"
+  ],
+  "one_call_relocation_per_section": true,
+  "general154byte_body_and_original_Flash_wrapper_unchanged": true,
+  "table_roots": 512,
+  "actual_table_sha256": "9185ad8a13121c810de407f5eac695df9f3b394ee836d4829d0aa37f2fa5719e",
+  "exact_low32zero_identity_index": 0,
+  "negative_table_controls": 3,
+  "exact_dyadic_expression": "(B >> 2) + ((B >> 1) & 1)",
+  "dyadic_B_domain": "all unsigned64",
+  "old_internal_rounding": "half-up; public RNE enclosure/packing unchanged",
+  "original_R12_extra_contract_untouched": true,
+  "new_table_callers_scalar_C_ABI_only": true,
+  "required_actual_integrated_release_R12_guard_still_pending": true,
+  "contexts": [
+    {
+      "context": "generic_M0",
+      "kind": "cpp",
+      "allocated_and_semantic_relocations_equal": true
+    },
+    {
+      "context": "generic_M0",
+      "kind": "asm",
+      "allocated_and_semantic_relocations_equal": true
+    },
+    {
+      "context": "M4_soft",
+      "kind": "cpp",
+      "allocated_and_semantic_relocations_equal": true
+    },
+    {
+      "context": "M4_soft",
+      "kind": "asm",
+      "allocated_and_semantic_relocations_equal": true
+    },
+    {
+      "context": "M4_hard",
+      "kind": "cpp",
+      "allocated_and_semantic_relocations_equal": true
+    },
+    {
+      "context": "M4_hard",
+      "kind": "asm",
+      "allocated_and_semantic_relocations_equal": true
+    }
+  ],
+  "source_ASM_allocated_code_delta": 32,
+  "private_RAM_slot_restored_from168_to182": true,
+  "two_implicit_input_alignment_bytes_within_original_padding": true,
+  "actual_reserved_RAM_bytes": 4080,
+  "old_and_new_CPP_static_frames_identical": true,
+  "new_tables_global_RAM_libgcc_or_ROM_math_dependencies": false,
+  "private_diagnostic_Flash_load_bytes": {
+    "control": 58256,
+    "candidate": 58272
+  },
+  "private_diagnostic_contains_relocated_existing_code_and_tables": true,
+  "whole_firmware_GC_size_or_physical_cycles_not_measured": true,
+  "full_general_pow_totality_not_proved": true,
+  "hardware_accessed": false
+}

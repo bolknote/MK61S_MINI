@@ -1,0 +1,183 @@
+boundary128-new 0 / 5127 elapsed 0.0
+boundary128-new 64 / 5127 elapsed 1.1
+boundary128-new 128 / 5127 elapsed 1.5
+boundary128-new 192 / 5127 elapsed 2.0
+boundary128-new 256 / 5127 elapsed 2.5
+boundary128-new 320 / 5127 elapsed 2.9
+boundary128-new 384 / 5127 elapsed 3.4
+boundary128-new 448 / 5127 elapsed 3.8
+boundary128-new 512 / 5127 elapsed 4.2
+boundary128-new 576 / 5127 elapsed 4.8
+boundary128-new 640 / 5127 elapsed 5.8
+boundary128-new 704 / 5127 elapsed 6.7
+boundary128-new 768 / 5127 elapsed 7.7
+boundary128-new 832 / 5127 elapsed 8.6
+boundary128-new 896 / 5127 elapsed 9.6
+boundary128-new 960 / 5127 elapsed 10.5
+boundary128-new 1024 / 5127 elapsed 11.5
+boundary128-new 1088 / 5127 elapsed 12.5
+boundary128-new 1152 / 5127 elapsed 13.5
+boundary128-new 1216 / 5127 elapsed 14.5
+boundary128-new 1280 / 5127 elapsed 15.5
+boundary128-new 1344 / 5127 elapsed 16.5
+boundary128-new 1408 / 5127 elapsed 17.5
+boundary128-new 1472 / 5127 elapsed 18.5
+boundary128-new 1536 / 5127 elapsed 19.5
+boundary128-new 1600 / 5127 elapsed 20.4
+boundary128-new 1664 / 5127 elapsed 21.4
+boundary128-new 1728 / 5127 elapsed 22.4
+boundary128-new 1792 / 5127 elapsed 23.3
+boundary128-new 1856 / 5127 elapsed 24.3
+boundary128-new 1920 / 5127 elapsed 25.2
+boundary128-new 1984 / 5127 elapsed 26.2
+boundary128-new 2048 / 5127 elapsed 27.2
+boundary128-new 2112 / 5127 elapsed 28.3
+boundary128-new 2176 / 5127 elapsed 29.3
+boundary128-new 2240 / 5127 elapsed 30.2
+boundary128-new 2304 / 5127 elapsed 31.3
+boundary128-new 2368 / 5127 elapsed 32.3
+boundary128-new 2432 / 5127 elapsed 33.4
+boundary128-new 2496 / 5127 elapsed 34.4
+boundary128-new 2560 / 5127 elapsed 35.4
+boundary128-new 2624 / 5127 elapsed 36.5
+boundary128-new 2688 / 5127 elapsed 37.6
+boundary128-new 2752 / 5127 elapsed 38.6
+boundary128-new 2816 / 5127 elapsed 39.6
+boundary128-new 2880 / 5127 elapsed 40.7
+boundary128-new 2944 / 5127 elapsed 41.8
+boundary128-new 3008 / 5127 elapsed 42.9
+boundary128-new 3072 / 5127 elapsed 43.9
+boundary128-new 3136 / 5127 elapsed 45.0
+boundary128-new 3200 / 5127 elapsed 46.1
+boundary128-new 3264 / 5127 elapsed 47.1
+boundary128-new 3328 / 5127 elapsed 48.2
+boundary128-new 3392 / 5127 elapsed 49.2
+boundary128-new 3456 / 5127 elapsed 50.3
+boundary128-new 3520 / 5127 elapsed 51.4
+boundary128-new 3584 / 5127 elapsed 52.4
+boundary128-new 3648 / 5127 elapsed 53.5
+boundary128-new 3712 / 5127 elapsed 54.7
+boundary128-new 3776 / 5127 elapsed 55.8
+boundary128-new 3840 / 5127 elapsed 56.9
+boundary128-new 3904 / 5127 elapsed 57.9
+boundary128-new 3968 / 5127 elapsed 59.0
+boundary128-new 4032 / 5127 elapsed 60.1
+boundary128-new 4096 / 5127 elapsed 61.2
+boundary128-new 4160 / 5127 elapsed 62.3
+boundary128-new 4224 / 5127 elapsed 63.5
+boundary128-new 4288 / 5127 elapsed 64.6
+boundary128-new 4352 / 5127 elapsed 65.7
+boundary128-new 4416 / 5127 elapsed 66.9
+boundary128-new 4480 / 5127 elapsed 68.0
+boundary128-new 4544 / 5127 elapsed 69.1
+boundary128-new 4608 / 5127 elapsed 70.2
+boundary128-new 4672 / 5127 elapsed 71.3
+boundary128-new 4736 / 5127 elapsed 72.3
+boundary128-new 4800 / 5127 elapsed 73.4
+boundary128-new 4864 / 5127 elapsed 74.5
+boundary128-new 4928 / 5127 elapsed 75.6
+boundary128-new 4992 / 5127 elapsed 78.8
+boundary128-new 5056 / 5127 elapsed 82.7
+boundary128-new 5120 / 5127 elapsed 86.4
+{
+  "status": "PASS_FRESH_MPFR_POW_CONTROLS_AFTER_EXACT_BOUNDARY128",
+  "candidate_ELF_sha256": "63a80f08c546e7bd07db6056eb1f64aa0de573c7296e5572b090e9d9f6edbfa9",
+  "unique_pairs": 5127,
+  "state_rows": 10254,
+  "fresh_ARM_calls": 61524,
+  "fresh_candidate_calls": 10254,
+  "fresh_parent_calls": 10254,
+  "fresh_layout_control_calls": 10254,
+  "fresh_Qfplib_calls": 30762,
+  "oracle_evaluations": 5127,
+  "actual_directed_MPFR_inputs": 5051,
+  "sNaN_policy_shortcuts": 76,
+  "MPFR_version": "4.2.2",
+  "all_actual_parent_control_candidate_bits_identical": true,
+  "all_kernel_argument_sequences_identical": true,
+  "all_midpoint_operand_bytes_identical": true,
+  "no_parent_cost_increases": true,
+  "candidate_wrong": 0,
+  "new_raw_losses": 0,
+  "parent_raw_loss_pairs": 632,
+  "candidate_raw_loss_pairs": 632,
+  "fixed_raw_pairs": 0,
+  "actual_candidate_boundary_calls": 316,
+  "wrong_Qfplib_state_variants_retained": 18534,
+  "strict_quiet_NaN_reference_classification": true,
+  "no_nominal_reference_domain_filter": true,
+  "pilot1836_not_added_to_qualification": true,
+  "cost_delta_histogram": {
+    "-180": 2,
+    "-169": 2,
+    "-166": 4,
+    "-158": 2,
+    "-149": 8,
+    "-144": 10,
+    "-143": 4,
+    "-141": 2,
+    "-138": 6,
+    "-137": 2,
+    "-136": 4,
+    "-133": 6,
+    "-132": 6,
+    "-130": 4,
+    "-128": 2,
+    "-127": 6,
+    "-126": 4,
+    "-124": 4,
+    "-122": 4,
+    "-121": 8,
+    "-119": 6,
+    "-116": 10,
+    "-115": 12,
+    "-113": 12,
+    "-110": 12,
+    "-104": 4,
+    "-102": 4,
+    "-99": 10,
+    "-98": 8,
+    "-96": 4,
+    "-93": 8,
+    "-91": 4,
+    "-88": 2,
+    "-87": 8,
+    "-85": 8,
+    "-82": 8,
+    "-81": 6,
+    "-76": 4,
+    "-72": 2,
+    "-71": 4,
+    "-70": 10,
+    "-68": 10,
+    "-65": 8,
+    "-63": 4,
+    "-61": 2,
+    "-59": 4,
+    "-58": 8,
+    "-57": 6,
+    "-54": 2,
+    "-53": 6,
+    "-48": 2,
+    "-46": 2,
+    "-43": 2,
+    "-42": 2,
+    "-37": 2,
+    "-31": 2,
+    "-29": 2,
+    "-26": 2,
+    "-23": 4,
+    "-20": 2,
+    "-14": 2,
+    "-12": 2,
+    "-4": 4,
+    "0": 9938
+  },
+  "observed_stacks": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148
+  },
+  "elapsed_seconds": 86.83241350000026,
+  "hardware_accessed": false
+}

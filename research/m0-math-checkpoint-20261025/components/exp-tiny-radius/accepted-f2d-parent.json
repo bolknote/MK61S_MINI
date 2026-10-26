@@ -1,0 +1,8 @@
+{
+  "status": "GO_PRIVATE_RP_F2D_LEAF_COMPONENT_ONLY",
+  "path": ".build/m0-f2d-leaf-independent-20261024/FINAL-REVIEW.json",
+  "sha256": "7561feddf77fd13a7760b930414e68f997898526abaed866c909d39a7efcaeb2",
+  "receipt_and_direct_refs_verified": 28,
+  "own_ARM_calls": 26928,
+  "own_direct_MPFR_conversions": 3366
+}

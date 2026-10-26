@@ -1,0 +1,9 @@
+{
+  "status": "PASS_POSTSEAL_EXP_TINY_COMPONENT_ALL_ARTIFACT_LINEAGE_PINS",
+  "FROZEN_sha256": "6e3c05ec0e45d04cfd5978fc03048e296ff220582a1eb718352cbc70bfddd999",
+  "artifacts": 80,
+  "external_lineage_pins": 513,
+  "retained_parent_cost_increase_rows13234_all_still_faster_Qfplib": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

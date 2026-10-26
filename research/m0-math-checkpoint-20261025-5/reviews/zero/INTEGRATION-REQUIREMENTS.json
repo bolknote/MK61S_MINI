@@ -1,0 +1,28 @@
+{
+  "status": "MANDATORY_PRIVATE_CONTRACT_AND_INTEGRATION_LIMITS",
+  "exact_supplier": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-zero-20261025/FROZEN.json",
+    "bytes": 11398,
+    "sha256": "98efecf01b96bf8cd1d690682cd9d5b255cbeee997b213ba23e692b926f82544"
+  },
+  "parent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/FROZEN.json",
+    "bytes": 11505,
+    "sha256": "99110367092d4c7397967d9f3b06fb282843431bd7af5b71ea1038a77b4ac329"
+  },
+  "entry": "HIDDEN positive numerator1 only: R0=0,R1=3ff00000, any binary64 denominator R2:R3. Sole actual root caller; not generic ddiv or a one-argument C ABI.",
+  "dataflow": "Second product may permute R0/R4 only from equal zeros. R1 xH temporary must remain dead before original shift. Full after-y-residual R0-R7/R12/SP/NZCV/frame28 join must remain exact.",
+  "certificate": "Shared R3 macro preserves ARBITRARY R6 only on decisive exits; private R6=0 comes from earlier MOVS. Full product clobbers R6 and must explicitly restore0 before positive ADC. No full-path generic R6 preservation claim.",
+  "RNE": "Preserve both sign-discontinuity uncertainty bands and original full-product/borrow/zero tie behavior. ADDS resets carry before ADCS. No dead product limb, stale R2 or changed flag may leak into packing. No unchanged186B suffix assumption.",
+  "PCS_SIO": "Original20B saved frame/raw operands/guarded R6/R12 sign+exponent; inline ownentrySP-20; READY9ALU gap and all7 DIRTY words/no writes must remain.",
+  "performance": "Both expanded DIRTY losses149/147vs146 remain. Certificate32 ancestral public regressions remain vsInline (26\u00d7+6,6\u00d7+5), including2 already-losing states. No current-parent increase is not regression-free ancestry or adoption GO.",
+  "merge": "Near-one exp is separate. Source merge/relink and freshly inspect/test actual integrated ELF sharedR12/consumer/veneer, loader ordering/layout/addresses. Old168B overlay overwrites14B of newer table entry; do not mix overlays mechanically.",
+  "limits": "General pow totality, other math, physical cycles, hardware, main/release and next high-loop study outside; scalar sets and stack corpora must not be mixed.",
+  "reviewed507": 422,
+  "author438_not_promoted": true,
+  "integration_GO": false,
+  "performance_adoption_GO": false,
+  "hardware_GO": false,
+  "main_GO": false,
+  "release_GO": false
+}

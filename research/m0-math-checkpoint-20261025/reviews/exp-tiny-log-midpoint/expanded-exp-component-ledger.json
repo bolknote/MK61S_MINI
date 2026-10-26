@@ -1,0 +1,58 @@
+{
+  "status": "ACCEPTED_PRIVATE_RP_EXP_LOG_MIDPOINT_COMPONENT_ONLY",
+  "accepted_parent_expanded_ledger": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-independent-20261024/expanded-exp-component-ledger.json",
+    "bytes": 2417,
+    "sha256": "8b6fdd60383e359298413b70c9be3ae47bbc945ca9ccc168821f9f6bbe568062"
+  },
+  "same_old163675": {
+    "before_raw_speed_losses": 669,
+    "after_raw_speed_losses": 155,
+    "fixed": 514
+  },
+  "older48763_raw_speed_losses": 154,
+  "expanded428231": {
+    "raw_speed_losses": 671,
+    "old155": true,
+    "new_dense_endpoint514": true,
+    "new_ordinary_preexisting2": [
+      "407BED9F64CDD660",
+      "4081358A5B33F3E0"
+    ]
+  },
+  "all671_losses_parent_cost_bound": true,
+  "new_raw_speed_losses": 0,
+  "known_parent_cost_increase_states": 239986,
+  "known_parent_cost_increase_instruction_histogram": {
+    "6": 24,
+    "7": 9362,
+    "8": 19348,
+    "11": 9370,
+    "18": 134164,
+    "23": 67322,
+    "27": 262,
+    "33": 134
+  },
+  "wrong_Qfplib_state_rows_retained": 385334,
+  "original507_separate_union": {
+    "no_slower": 418,
+    "strictly_faster": 412,
+    "equal": 6,
+    "remaining": 89,
+    "remaining_by_operation": {
+      "pow": 51,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    },
+    "unchanged_by_this_component": true,
+    "not_one_integrated_binary": true,
+    "parent_ledger": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-independent-20261024/original507-component-delta.json",
+      "bytes": 12700,
+      "sha256": "409ba1978b5cef6a8f688f3c529ec3184af5fa82c3cf12aa3a65168d7eba4edd"
+    }
+  },
+  "not_an_integrated_binary": true,
+  "physical_timing_or_hardware_or_release_acceptance": false
+}

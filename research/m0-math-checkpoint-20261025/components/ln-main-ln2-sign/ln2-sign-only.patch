@@ -1,0 +1,62 @@
+--- parent/native_eabi_m0_log70.inc
++++ candidate/native_eabi_m0_log70.inc
+@@ -1,5 +1,7 @@
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ enum : uint32_t {ln_main_radius=8U,ln_near_radius=4U};
++static_assert(refine_log_two_high==((log70_two_high<<24)|uint32_t(log70_two_low>>40)) &&
++    refine_log_two_low>(log70_two_low<<24),"Q70 ln2 must be a strict lower bound");
+ // The first negative near-center has65 log bits and is deliberately
+ // excluded. Its entire half-cell uses the certified general kernel.
+ enum : U {ln_near_lower=UINT64_C(0x3FEF808000000001)};
+@@ -21,7 +23,15 @@
+ #else
+   const uint32_t guard=error;
+ #endif
+-  if(uint32_t(tail-(half-guard))<=2*guard) return ln_refine(x);
++  if(uint32_t(tail-(half-guard))<=2*guard) {
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++    // Q70 ln2 rounds down. Its exponent contribution cannot move a
++    // point from above the midpoint to below it.
++    if(error<=ln_main_radius || tail<half+ln_main_radius) return ln_refine(x);
++#else
++    return ln_refine(x);
++#endif
++  }
+   const uint32_t lo=uint32_t(low),hi=uint32_t(low>>32);
+   const U retained=(U((hi>>shift)|(high<<(32-shift)))<<32)|uint32_t((lo>>shift)|(hi<<(32-shift)));
+   const U q=retained+U(tail>half || (tail==half && (retained&1)));
+@@ -246,18 +256,22 @@
+   const uint32_t tail=uint32_t(low)&((1U<<shift)-1),half=1U<<(shift-1);
+   const uint32_t guard=15U+exponent_error;
+   if(uint32_t(tail-(half-guard))<=2U*guard) {
+-    const uint32_t distance=tail>half?tail-half:half-tail;
+-    if(!distance) return ln_refine(x);
+-    const U b=bits(x);
+-    const uint32_t den=2049U+2U*unsigned((b&D::Fraction)>>42);
+-    const bool negative=(b&(U(1)<<41))==0;
+-    uint32_t delta_low=uint32_t(b)<<29;
+-    if(negative) delta_low=0U-delta_low;
+-    const int32_t residue=int32_t(delta_low-h_low*den);
+-    const int32_t oriented=(negative!=(sign!=0))?-residue:residue;
+-    const int32_t directed=tail>half?oriented:-oriented;
+-    if((int32_t(distance)-int32_t(7U+exponent_error))*int32_t(den)+directed<0)
+-      return ln_refine(x);
++    // The generic polynomial bound is13.400121<14; the ln2 error
++    // on exponent paths is nonpositive in the final magnitude.
++    if(!exponent_error || tail<half+14U) {
++      const uint32_t distance=tail>half?tail-half:half-tail;
++      if(!distance) return ln_refine(x);
++      const U b=bits(x);
++      const uint32_t den=2049U+2U*unsigned((b&D::Fraction)>>42);
++      const bool negative=(b&(U(1)<<41))==0;
++      uint32_t delta_low=uint32_t(b)<<29;
++      if(negative) delta_low=0U-delta_low;
++      const int32_t residue=int32_t(delta_low-h_low*den);
++      const int32_t oriented=(negative!=(sign!=0))?-residue:residue;
++      const int32_t directed=tail>half?oriented:-oriented;
++      if((int32_t(distance)-int32_t(7U+exponent_error))*int32_t(den)+directed<0)
++        return ln_refine(x);
++    }
+   }
+   const uint32_t lo=uint32_t(low),hi=uint32_t(low>>32);
+   const U retained=(U((hi>>shift)|(high<<(32-shift)))<<32)|uint32_t((lo>>shift)|(hi<<(32-shift)));

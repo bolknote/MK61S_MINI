@@ -1,0 +1,40 @@
+{
+  "status": "PASS_COMPLETED_OWN_REVIEW_STEPS",
+  "successful_steps": [
+    {
+      "script": "binding.py",
+      "session": 81742,
+      "exit_code": 0,
+      "own_complete_byte_exact_rebuilds": 12,
+      "additional_isolated_helper_object_and_link": 2
+    },
+    {
+      "script": "proof.py",
+      "session": 16787,
+      "exit_code": 0
+    },
+    {
+      "script": "arm.py",
+      "session": 7824,
+      "exit_code": 0,
+      "qualified_ARM": 13636,
+      "qualified_directed_MPFR_inputs": 1374,
+      "sNaN_shortcuts": 2
+    },
+    {
+      "script": "evidence.py",
+      "session": 97876,
+      "exit_code": 0,
+      "new_ARM_or_MPFR": 0
+    }
+  ],
+  "excluded_initial_reviewer_harness": {
+    "ARM_calls": 5,
+    "actual_directed_MPFR_inputs": 1,
+    "first_input": "3DBFFFF7FFFE0003",
+    "reason": "Harness incorrectly equated lowest stack write with allocated SP frame; corrected by measuring SP separately. The candidate returned the correct value and preserved SIO. Successful final run repeats the input and is counted once in qualification."
+  },
+  "initial_proof_qset_assertion": "Canonical odd classes start at q=2; positive z=1 has separate e=-54 q=1 boundary occurrence. Fixed own enumeration assertion before successful proof, no ARM or MPFR calls.",
+  "hardware": false,
+  "producer_or_canonical_changes": false
+}

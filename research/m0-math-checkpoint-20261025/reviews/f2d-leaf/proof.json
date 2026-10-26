@@ -1,0 +1,465 @@
+{
+  "status": "PASS_INDEPENDENT_ALL_RAW32_EXACT_WIDENING_AND_FULL_COST_PARTITION",
+  "checks": {
+    "normal_sign_exponent_affine_payload_certificates": 32512,
+    "special_range_and_sign_cases": 4,
+    "subnormal_interval_packing_controls": 132,
+    "subnormal_complete_width_interval_certificates": 23,
+    "NaN_payload_bit_controls": 138,
+    "own_raw32_integer_model_checks": 16384
+  },
+  "raw32_partition_cardinalities": {
+    "zero": 2,
+    "normal": 4261412864,
+    "infinity": 2,
+    "NaN": 16777214,
+    "subnormal": 16777214
+  },
+  "partition_sum_2pow32": 4294967296,
+  "subnormal_all23_width_intervals": [
+    {
+      "width": 1,
+      "normalizing_shift": 22,
+      "branch_choices": [
+        1,
+        0,
+        1,
+        1,
+        0
+      ],
+      "double_exponent": 874,
+      "raw32_inputs": 2,
+      "candidate_instructions": 36,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 2,
+      "normalizing_shift": 21,
+      "branch_choices": [
+        1,
+        0,
+        1,
+        0,
+        1
+      ],
+      "double_exponent": 875,
+      "raw32_inputs": 4,
+      "candidate_instructions": 36,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 3,
+      "normalizing_shift": 20,
+      "branch_choices": [
+        1,
+        0,
+        1,
+        0,
+        0
+      ],
+      "double_exponent": 876,
+      "raw32_inputs": 8,
+      "candidate_instructions": 34,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 4,
+      "normalizing_shift": 19,
+      "branch_choices": [
+        1,
+        0,
+        0,
+        1,
+        1
+      ],
+      "double_exponent": 877,
+      "raw32_inputs": 16,
+      "candidate_instructions": 36,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 5,
+      "normalizing_shift": 18,
+      "branch_choices": [
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "double_exponent": 878,
+      "raw32_inputs": 32,
+      "candidate_instructions": 34,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 6,
+      "normalizing_shift": 17,
+      "branch_choices": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "double_exponent": 879,
+      "raw32_inputs": 64,
+      "candidate_instructions": 34,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 7,
+      "normalizing_shift": 16,
+      "branch_choices": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "double_exponent": 880,
+      "raw32_inputs": 128,
+      "candidate_instructions": 32,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 8,
+      "normalizing_shift": 15,
+      "branch_choices": [
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "double_exponent": 881,
+      "raw32_inputs": 256,
+      "candidate_instructions": 38,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 9,
+      "normalizing_shift": 14,
+      "branch_choices": [
+        0,
+        1,
+        1,
+        1,
+        0
+      ],
+      "double_exponent": 882,
+      "raw32_inputs": 512,
+      "candidate_instructions": 36,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 10,
+      "normalizing_shift": 13,
+      "branch_choices": [
+        0,
+        1,
+        1,
+        0,
+        1
+      ],
+      "double_exponent": 883,
+      "raw32_inputs": 1024,
+      "candidate_instructions": 36,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 11,
+      "normalizing_shift": 12,
+      "branch_choices": [
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "double_exponent": 884,
+      "raw32_inputs": 2048,
+      "candidate_instructions": 34,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 12,
+      "normalizing_shift": 11,
+      "branch_choices": [
+        0,
+        1,
+        0,
+        1,
+        1
+      ],
+      "double_exponent": 885,
+      "raw32_inputs": 4096,
+      "candidate_instructions": 36,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 13,
+      "normalizing_shift": 10,
+      "branch_choices": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "double_exponent": 886,
+      "raw32_inputs": 8192,
+      "candidate_instructions": 34,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 14,
+      "normalizing_shift": 9,
+      "branch_choices": [
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      "double_exponent": 887,
+      "raw32_inputs": 16384,
+      "candidate_instructions": 34,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 15,
+      "normalizing_shift": 8,
+      "branch_choices": [
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "double_exponent": 888,
+      "raw32_inputs": 32768,
+      "candidate_instructions": 32,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 16,
+      "normalizing_shift": 7,
+      "branch_choices": [
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "double_exponent": 889,
+      "raw32_inputs": 65536,
+      "candidate_instructions": 36,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 17,
+      "normalizing_shift": 6,
+      "branch_choices": [
+        0,
+        0,
+        1,
+        1,
+        0
+      ],
+      "double_exponent": 890,
+      "raw32_inputs": 131072,
+      "candidate_instructions": 34,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 18,
+      "normalizing_shift": 5,
+      "branch_choices": [
+        0,
+        0,
+        1,
+        0,
+        1
+      ],
+      "double_exponent": 891,
+      "raw32_inputs": 262144,
+      "candidate_instructions": 34,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 19,
+      "normalizing_shift": 4,
+      "branch_choices": [
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "double_exponent": 892,
+      "raw32_inputs": 524288,
+      "candidate_instructions": 32,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 20,
+      "normalizing_shift": 3,
+      "branch_choices": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "double_exponent": 893,
+      "raw32_inputs": 1048576,
+      "candidate_instructions": 34,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 21,
+      "normalizing_shift": 2,
+      "branch_choices": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "double_exponent": 894,
+      "raw32_inputs": 2097152,
+      "candidate_instructions": 32,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 22,
+      "normalizing_shift": 1,
+      "branch_choices": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "double_exponent": 895,
+      "raw32_inputs": 4194304,
+      "candidate_instructions": 32,
+      "Qfplib_instructions_wrong": 8
+    },
+    {
+      "width": 23,
+      "normalizing_shift": 0,
+      "branch_choices": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "double_exponent": 896,
+      "raw32_inputs": 8388608,
+      "candidate_instructions": 30,
+      "Qfplib_instructions_wrong": 8
+    }
+  ],
+  "all_correct_reference_classes_candidate_no_slower": true,
+  "wrong_reference_rows_retained": true,
+  "all_author265918_states_match_independent_exact_and_cost_models": true,
+  "author_unique_inputs": 132959,
+  "author_qualified_ARM_calls": 797754,
+  "author_oracle_evaluations": 132959,
+  "author_actual_directed_MPFR_input_conversions": 124373,
+  "author_NaN_preMPFR_category_shortcuts": 8586,
+  "smoke41490_not_added": true,
+  "author_observed_classes": {
+    "zero": 4,
+    "normal": 205226,
+    "NaN": 17172,
+    "subnormal": 43512,
+    "infinity": 4
+  },
+  "author_observed_cost_pairs": {
+    "zero": [
+      [
+        5,
+        8
+      ]
+    ],
+    "normal": [
+      [
+        12,
+        13
+      ]
+    ],
+    "NaN": [
+      [
+        19,
+        12
+      ]
+    ],
+    "subnormal": [
+      [
+        30,
+        8
+      ],
+      [
+        32,
+        8
+      ],
+      [
+        34,
+        8
+      ],
+      [
+        36,
+        8
+      ],
+      [
+        38,
+        8
+      ]
+    ],
+    "infinity": [
+      [
+        12,
+        12
+      ]
+    ]
+  },
+  "author_correct_reference_states": 205234,
+  "author_vs_correct_reference": {
+    "faster": 205230,
+    "equal": 4,
+    "slower": 0
+  },
+  "author_wrong_reference_states": 60684,
+  "author_parent_cost_increases": 0,
+  "author_all_states_strictly_faster_parent": true,
+  "author_parent_delta_distribution": {
+    "-130": 19424,
+    "-128": 17726,
+    "-126": 2800,
+    "-124": 3562,
+    "-25": 4,
+    "-23": 4,
+    "-18": 17172,
+    "-1": 205226
+  },
+  "old9122_raw_records_all_in_new_qualified_inputs_and_parent_bits_exact": true,
+  "old_raw_speed_deficits_fixed": [
+    "00000000",
+    "80000000",
+    "7F800000",
+    "FF800000"
+  ],
+  "old256_reconciliation": {
+    "rows": 256,
+    "correct": 249,
+    "before_slower": 1,
+    "after_slower": 0
+  },
+  "author_qualification_sha256": "8b763ced9350014385ff9481f2786f8fe1798a649fc8eddc414cdc26bb4311c6",
+  "own_fresh_ARM_or_MPFR_in_this_file": 0,
+  "original507_unchanged418": true
+}

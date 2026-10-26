@@ -1,0 +1,54 @@
+{
+  "status": "BUILT_EXACT_AND_CERTIFIED_SIGN_UNIT",
+  "images": {
+    "control": {
+      "ELF_sha256": "778574cbd391b88f00f8f5fb5e4d8a64440125aeadd2ea59ca88880c70089222"
+    },
+    "candidate": {
+      "ELF_sha256": "27373ed6731ce56fb64ac9e6c9b6d4841b608f6dacd49c319aa0c0d95dabfafa"
+    }
+  },
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-remainder-certificate-r2-20261025/control.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-remainder-certificate-r2-20261025/control.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "unit_remainder_sign",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-remainder-certificate-r2-20261025/control.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-remainder-certificate-r2-20261025/control.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-remainder-certificate-r2-20261025/control.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-remainder-certificate-r2-20261025/candidate.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-remainder-certificate-r2-20261025/candidate.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "unit_remainder_sign",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-remainder-certificate-r2-20261025/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-remainder-certificate-r2-20261025/candidate.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-remainder-certificate-r2-20261025/candidate.elf"
+    ]
+  ],
+  "hardware_accessed": false
+}

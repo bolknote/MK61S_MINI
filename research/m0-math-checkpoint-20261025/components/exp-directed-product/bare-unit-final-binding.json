@@ -1,0 +1,9 @@
+{
+  "status": "PASS_TESTED_R1_77_INSTRUCTION_PRODUCT_IDENTICAL_TO_FINAL_R9_SOURCE_SLOT",
+  "candidate_ELF_sha256": "b4049e5a39c2bc9d663acab44a7683f1811daedd1c43497cd5ad7588b1b408ac",
+  "bare_unit_ELF_sha256": "ed75eb5ea457d5cc6552a7863b1039256646efb84cf8aace2be7cd86cc0e6b94",
+  "slot_bytes": 168,
+  "active_function_bytes": 154,
+  "qualified_bare_calls141320_reused_by_actual_byte_identity_not_fresh_rerun": true,
+  "R1_rejection_applies_to_CPP_register_layout_not_this_bare_numerical_unit": true
+}

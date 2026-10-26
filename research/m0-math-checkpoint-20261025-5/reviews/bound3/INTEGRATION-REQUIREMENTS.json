@@ -1,0 +1,29 @@
+{
+  "status": "MANDATORY_PRIVATE_SEED_AND_PHYSICAL_TIMING_LIMITS",
+  "exact_supplier": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-20261025/FROZEN.json",
+    "bytes": 12135,
+    "sha256": "0a5480ab5d386448b05bc3ffe0993ccda2c417025cd31779cb732929e30c56a0"
+  },
+  "parent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-zero-20261025/FROZEN.json",
+    "bytes": 11398,
+    "sha256": "98efecf01b96bf8cd1d690682cd9d5b255cbeee997b213ba23e692b926f82544"
+  },
+  "private_entry": "Positive numerator1 only: R0=0,R1=3ff00000; any binary64 divisor R2:R3. Sole actual root caller. NEW inline seed requires rawR0=0; not generic ddiv or C seed ABI.",
+  "integer_seed": "Exact existing128-entry table, D65536..131071 and initial error[-1,3]. First BPL exits error1; immediate second ADD carry distinguishes error2/3; SBC q,R0 must see zero and fresh carry.",
+  "R7": "Only error3 yields old_residue-D modulo2^32. No exact remainder guarantee. R7 must remain dead before second-product overwrite under actual Zero scratch/R3 certificate; all full downstream registers/NZCV/frame28 must rejoin.",
+  "PCS_SIO": "Original20B saved frame/raw operands/guarded R6/R12 sign+exponent; inline ownentrySP-20; READY9ALU gap and all7 DIRTY words/no writes unchanged.",
+  "timing": "Error1 changes branch direction. Zero instruction increases does NOT imply cycle nonregression; keep exact old-loop control and measure actual physical timing before any performance-adoption conclusion.",
+  "ancestry": "All32 Certificate regressions vsInline remain (26\u00d7+6,6\u00d7+5), including2 already-losing correctQfp states. Existing corrigendum and adoptionfalse stay binding.",
+  "integration": "Near-one is separate. Source merge/relink and fresh actual integrated sharedR12/consumer/veneer/loader/layout guards; old168B overlay overwrites14B of new table entry. Do not combine binary overlays mechanically.",
+  "limits": "Finite two-pattern scalar scans are not universal speed/totality or physical cycles. General pow totality, other math, hardware, main/release and further micro-optimizations outside.",
+  "reviewed507": 422,
+  "author438_not_promoted": true,
+  "integration_GO": false,
+  "physical_cycles_GO": false,
+  "performance_adoption_GO": false,
+  "hardware_GO": false,
+  "main_GO": false,
+  "release_GO": false
+}

@@ -1,0 +1,28 @@
+{
+  "status": "PASS_STRICT_QUIET_NAN_SAVED_RAW_PUBLIC_RECLASSIFICATION",
+  "raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/public-arm-mpfr.json",
+    "bytes": 114404,
+    "sha256": "af65c0ddd69feccb3063137dd181df602367f8f433962a8eebc7777ee3b6cd51"
+  },
+  "executed_harness": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/arm-executed-policy-001.py",
+    "bytes": 9154,
+    "sha256": "a2546f3ceb25600004b549f8418265fcd587ee1310fdacf437ae856b5f51ffd5"
+  },
+  "future_corrected_harness": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/arm.py",
+    "bytes": 9172,
+    "sha256": "2af78bb16a62de51ed76f3261127a0b7a62544fb1bf975b0ecc3c4cbb7e38d67"
+  },
+  "policy": "If expected is NaN, got must be a quiet NaN. sNaN output is wrong, rather than accepted by any-NaN equivalence.",
+  "candidate_parent_control_wrong": 0,
+  "derived_reference_flag_corrections": [],
+  "ARM_calls": 0,
+  "MPFR_evaluations": 0,
+  "original_raw_outputs_costs_and_counts_unchanged": true,
+  "full_public_qualified_calls": 636,
+  "inputs": 53,
+  "MPFR_inputs": 51,
+  "sNaN_shortcuts": 2
+}

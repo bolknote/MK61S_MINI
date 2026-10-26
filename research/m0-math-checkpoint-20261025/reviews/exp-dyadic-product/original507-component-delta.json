@@ -1,0 +1,109 @@
+{
+  "status": "ACCEPTED_ADDITIVE_ORIGINAL507_SEPARATE_COMPONENT_UNION_422",
+  "accepted_parent_ledger": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/original507-component-delta.json",
+    "bytes": 1772,
+    "sha256": "aa5c8dbcfb71182d9d019bd1760d01e3281f50ad2cbf61f6b3c2b02eabb07a90"
+  },
+  "new_strict": 0,
+  "new_equal": 3,
+  "new_pow_ties": [
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFF2B",
+      "y": "40BA76B89D3E311A",
+      "stream": "near_one_variable_exponent",
+      "SIO": "READY",
+      "expected": "3FEFFFFFFFE9FB38",
+      "outputs": {
+        "parent": "3FEFFFFFFFE9FB38",
+        "candidate": "3FEFFFFFFFE9FB38",
+        "Qfplib": "3FEFFFFFFFE9FB38"
+      },
+      "instructions": {
+        "parent": 1346,
+        "candidate": 1344,
+        "Qfplib": 1344
+      },
+      "product_arguments": [
+        [
+          "4000000000000000",
+          "00000000B0263CD6"
+        ]
+      ],
+      "product_calls": 1,
+      "Qfplib_correct": true
+    },
+    {
+      "operation": "pow",
+      "x": "3FF000000000004F",
+      "y": "40EAAD0A6A243E3E",
+      "stream": "near_one_variable_exponent",
+      "SIO": "READY",
+      "expected": "3FF000000041DB32",
+      "outputs": {
+        "parent": "3FF000000041DB32",
+        "candidate": "3FF000000041DB32",
+        "Qfplib": "3FF000000041DB32"
+      },
+      "instructions": {
+        "parent": 1322,
+        "candidate": 1320,
+        "Qfplib": 1320
+      },
+      "product_arguments": [
+        [
+          "4000000000000000",
+          "000000041DB31B68"
+        ]
+      ],
+      "product_calls": 1,
+      "Qfplib_correct": true
+    },
+    {
+      "operation": "pow",
+      "x": "3FF000000000017C",
+      "y": "4055D6591BBBC2B4",
+      "stream": "near_one_variable_exponent",
+      "SIO": "READY",
+      "expected": "3FF00000000081A9",
+      "outputs": {
+        "parent": "3FF00000000081A9",
+        "candidate": "3FF00000000081A9",
+        "Qfplib": "3FF00000000081A9"
+      },
+      "instructions": {
+        "parent": 1313,
+        "candidate": 1311,
+        "Qfplib": 1311
+      },
+      "product_arguments": [
+        [
+          "4000000000000000",
+          "00000000081A8B11"
+        ]
+      ],
+      "product_calls": 1,
+      "Qfplib_correct": true
+    }
+  ],
+  "current": {
+    "no_slower": 422,
+    "strictly_faster": 413,
+    "equal": 9,
+    "remaining": 85,
+    "remaining_by_operation": {
+      "pow": 48,
+      "exp": 1,
+      "sin": 22,
+      "cos": 14
+    }
+  },
+  "all189_original_other_jobs_and16_exp_own_fresh": true,
+  "unaffected_other302_components_inherited_strict296_equal6": true,
+  "positive_hard_exp_regression2264to2266_retained": true,
+  "parent_pending_at_seal_preserved": true,
+  "parent_GO_added_in_separate_receipt": true,
+  "not_one_integrated_binary": true,
+  "whole_math_hardware_release_GO": false
+}

@@ -1,0 +1,100 @@
+{
+  "status": "PASS_INDEPENDENT_SEALED_EXP_TINY_EVIDENCE_ACCOUNTING_AND_LOSS_AUDIT",
+  "streamed_state_rows": 327350,
+  "unique_inputs": 163675,
+  "author_fresh_candidate_ARM": 327350,
+  "author_fresh_Qfplib_ARM": 229824,
+  "author_fresh_parent_remaining_audit_ARM": 960,
+  "author_total_qualified_fresh_ARM": 558134,
+  "author_oracle_evaluations": 163675,
+  "author_actual_directed_MPFR_input_conversions": 163673,
+  "author_sNaN_shortcuts_without_MPFR": 2,
+  "old97526_state_rows_parent_and_Qfplib_inherited_not_fresh": true,
+  "old48763_bits_identical_every_state": true,
+  "known_remaining_parent_costs_from_excluded_probe_state_rows": 70,
+  "remaining_fresh_parent_audit_rows": 960,
+  "final_smoke10446_excluded": true,
+  "rejected_inline_trial_not_a_parent_or_qualified_run": true,
+  "same_old48763_losses_before395_after154_fixed241": true,
+  "expanded163675_losses": 669,
+  "expanded_loss_partition": {
+    "old154": true,
+    "new_dense_boundary514": true,
+    "new_ordinary_preexisting1": "C08357D5691B8C00"
+  },
+  "all_remaining669_preexisting_parent_losses": true,
+  "new_raw_speed_losses": 0,
+  "correct_Qfplib_comparison": {
+    "faster": 210984,
+    "slower": 1338
+  },
+  "wrong_Qfplib_states_retained": 115028,
+  "tiny_correct_Qfplib_state_rows_all_faster": 137640,
+  "all_tiny_costs_match_independent_model": {
+    "74": 9370,
+    "77": 8996,
+    "79": 366,
+    "80": 18824,
+    "83": 658,
+    "84": 284,
+    "87": 2,
+    "93": 200966,
+    "96": 520
+  },
+  "known_parent_cost_increases": 13234,
+  "known_parent_cost_increase_histogram": {
+    "1": 20,
+    "2": 114,
+    "5": 3052,
+    "7": 4,
+    "8": 3182,
+    "9": 6418,
+    "16": 232,
+    "19": 212
+  },
+  "all_known_increases_still_faster_Qfplib": true,
+  "valid_transition_neighbor_locations_in_fresh_ARM_and_MPFR_corpus": 98303,
+  "three_excluded_cell_locations": {
+    "outside_this_binade": 2,
+    "caller_domain_endpoint": 1
+  },
+  "adjacent_binade_and_caller_endpoints_separately_acquired": true,
+  "all49153_midpoint_cells_independently_bound_to_acquisition": true,
+  "original_exp16_remaining2": {
+    "4085F424184F6DC5": [
+      {
+        "SIO": "READY",
+        "candidate_instructions": 2268,
+        "Qfplib_instructions": 649,
+        "parent_instructions": 2268
+      },
+      {
+        "SIO": "DIRTY",
+        "candidate_instructions": 2268,
+        "Qfplib_instructions": 649,
+        "parent_instructions": 2268
+      }
+    ],
+    "C041265824E2113C": [
+      {
+        "SIO": "READY",
+        "candidate_instructions": 2248,
+        "Qfplib_instructions": 622,
+        "parent_instructions": 2248
+      },
+      {
+        "SIO": "DIRTY",
+        "candidate_instructions": 2248,
+        "Qfplib_instructions": 622,
+        "parent_instructions": 2248
+      }
+    ]
+  },
+  "old_candidate_observed_stack736": 736,
+  "new_author_observed_stack376": 376,
+  "observed_stack_not_universal_bound": true,
+  "author442299_model_controls_inherited_not_counted_own": true,
+  "own_fresh_ARM_or_MPFR_in_this_file": 0,
+  "records_sha256": "caef4b3ba9411ce3386bfa614369f2ed002238a0f1e78975541a9913d0452fa0",
+  "original507_unchanged418": true
+}

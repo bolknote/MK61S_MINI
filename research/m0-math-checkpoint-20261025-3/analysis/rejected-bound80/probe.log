@@ -1,0 +1,44 @@
+bound80-pilot 0 / 153 elapsed 0.0
+bound80-pilot 32 / 153 elapsed 0.8
+bound80-pilot 64 / 153 elapsed 1.0
+bound80-pilot 96 / 153 elapsed 1.3
+bound80-pilot 128 / 153 elapsed 1.5
+{
+  "status": "EXPERIMENTAL_BOUND80_ORIGINAL153_PILOT",
+  "candidate_ELF_sha256": "ea7caefc333752f0210b6d951813c14e16ebb7d7604443d09db50dd1588572e1",
+  "actual_ARM_calls": 1836,
+  "actual_MPFR_inputs": 153,
+  "candidate_wrong": 0,
+  "parent_remaining": 34,
+  "candidate_remaining": 34,
+  "fixed_pairs": [],
+  "new_raw_loss_pairs": [],
+  "boundary_calls": 56,
+  "fallback_calls": 56,
+  "cost_delta_histogram": {
+    "0": 250,
+    "262": 2,
+    "266": 2,
+    "359": 2,
+    "403": 4,
+    "456": 2,
+    "464": 6,
+    "553": 2,
+    "561": 2,
+    "563": 2,
+    "654": 4,
+    "658": 4,
+    "662": 6,
+    "666": 2,
+    "698": 10,
+    "702": 2,
+    "862": 2,
+    "904": 2
+  },
+  "stacks": {
+    "parent": 968,
+    "control": 968,
+    "candidate": 968
+  },
+  "hardware_accessed": false
+}

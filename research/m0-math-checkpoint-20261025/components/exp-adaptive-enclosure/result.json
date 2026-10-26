@@ -1,0 +1,171 @@
+{
+  "status": "FROZEN_AUTHOR_ADAPTIVE_EXP_ENCLOSURE_AND_SHARED_81_INSTRUCTION_PRODUCT",
+  "accepted_source_parent": ".build/m0-exp-tiny-log-midpoint-20261024",
+  "accepted_parent_review": {
+    "status": "GO_PRIVATE_RP_EXP_TINY_LOG_MIDPOINT_COMPONENT_ONLY",
+    "path": ".build/m0-exp-tiny-log-midpoint-independent-20261024/FINAL-REVIEW.json",
+    "sha256": "bdaba8cf9bbe58c8e36dafe9b8f904eb8428fdd42db0abb070b5f4a42e472554",
+    "unique_direct_refs_verified": 48,
+    "receipt_plus_refs_verified": 49,
+    "own_ARM_calls": 13636,
+    "own_direct_MPFR_inputs": 1374,
+    "sNaN_shortcuts": 2
+  },
+  "source_sha256": "421e6b5e38b97b1e97b3dd428383f8d4d04f2144b7720cc4b6c8eb0aac24a0e8",
+  "product_include_sha256": "2f7781d2d73abd28cfe752205fe0a9cb20192d99fe841364049da53cf4e38e1b",
+  "candidate_ELF_sha256": "c1d7a59ffe62a886b3fdfaaf3d215a24e1c52c902c3b1a31b75286960261eb6c",
+  "public_exp_unique_inputs": 440007,
+  "public_exp_state_rows": 880014,
+  "fresh_public_exp_candidate_ARM_calls": 880014,
+  "fresh_new_Qfplib_ARM_calls": 23552,
+  "fresh_exp_parent_audit_ARM_calls": 2762,
+  "fresh_bare_gate_and_product_ARM_calls": 736324,
+  "fresh_original_pow_sin_cos_ARM_calls": 1134,
+  "fresh_expanded_pow_loss_state_ARM_calls": 10081,
+  "total_qualified_fresh_ARM_calls": 1653867,
+  "actual_directed_MPFR_exp_inputs": 440005,
+  "actual_directed_MPFR_other_caller_inputs": 189,
+  "total_actual_directed_MPFR_validation_inputs": 440194,
+  "validation_oracle_evaluations": 440196,
+  "sNaN_shortcuts_without_MPFR": 2,
+  "MPFR_version": "4.2.2",
+  "separate_MPFR_log_preimage_generation_inputs1536_not_pooled_with_validation": true,
+  "inherited856462_exp_parent_Qfplib_rows_not_fresh": true,
+  "inherited_pow_full111912_pair_references_not_fresh": true,
+  "final_probe32208_margin336_stack640_and_rejected_or_failed_trials_not_added": true,
+  "wrong": 0,
+  "all_old428231_public_raw_bits_identical": true,
+  "same_old428231_exp_losses": [
+    671,
+    642
+  ],
+  "same_old_corpus_fixed": 29,
+  "same_older48763_exp_losses": [
+    154,
+    126
+  ],
+  "expanded440007_exp_losses": 2023,
+  "expanded_exp_count_scope": "Same428231:671->642. Expanded440007:2023=642old+1381new control inputs (1353small true-midpoint preimages,15uniform,13normal/endpoints), every loss preexisting in parent; not an increase on a fixed corpus.",
+  "all2023_exp_losses_parent_bound": true,
+  "new_exp_raw_speed_losses": 0,
+  "original_exp16_losses": [
+    2,
+    1
+  ],
+  "new_original_exp_fixed": {
+    "x": "C041265824E2113C",
+    "parent": 2248,
+    "candidate": 599,
+    "Qfplib": 622
+  },
+  "remaining_original_exp": {
+    "x": "4085F424184F6DC5",
+    "parent": 2268,
+    "candidate": 2264,
+    "Qfplib": 649
+  },
+  "correct_Qfplib_comparison": {
+    "faster": 485398,
+    "slower": 4046,
+    "equal": 2
+  },
+  "wrong_Qfplib_state_rows_retained": 390568,
+  "no_nominal_domain_filter": true,
+  "adaptive_all_normal_error4_cells_source_enclosure_proof": true,
+  "literal_gate_unit_cases": 595004,
+  "literal_gate_unit_unsafe_admissions": 0,
+  "all512_Q62_Q94_tables_recertified": true,
+  "old_distance3_safe_predicate_retained": true,
+  "shared_product_instructions": [
+    84,
+    81
+  ],
+  "shared_product_body_bytes": [
+    168,
+    162
+  ],
+  "shared_product_RAM_slot_bytes": [
+    168,
+    168
+  ],
+  "outside_function_padding_bytes": 6,
+  "shared_product_all_raw64_ABI_value_equivalence_source_proof": true,
+  "product_unit_raw_pairs": 70660,
+  "product_valid63x54_integer_oracles": 36781,
+  "product_stack_frame_bytes": [
+    40,
+    40
+  ],
+  "product_stack_written_bytes": [
+    40,
+    36
+  ],
+  "shared_product_argument_trace_and_minus3_per_call_verified": true,
+  "original_other_callers_summary": {
+    "pow": {
+      "jobs": 153,
+      "parent_slower_raw": 51,
+      "candidate_slower_raw": 51,
+      "new_raw_losses": 0,
+      "state_cases_faster": 46,
+      "product_calls": 66
+    },
+    "sin": {
+      "jobs": 22,
+      "parent_slower_raw": 22,
+      "candidate_slower_raw": 22,
+      "new_raw_losses": 0,
+      "state_cases_faster": 0,
+      "product_calls": 0
+    },
+    "cos": {
+      "jobs": 14,
+      "parent_slower_raw": 14,
+      "candidate_slower_raw": 14,
+      "new_raw_losses": 0,
+      "state_cases_faster": 0,
+      "product_calls": 0
+    }
+  },
+  "expanded_pow_losses_unchanged": 7904,
+  "pow_loss_replay_scope": "All10085prior losing reference-state variants,10081distinct candidate state calls on the accepted111912-pair union. Old expected bits/Qfplib counts inherited, no freshMPFR or full111912-pair rerun claim. All other old states cannot regress under value/ABI equivalence and constant minus3 per product call.",
+  "retained_exp_parent_cost_increase_state_rows": 200,
+  "retained_increase_deltas": [
+    2,
+    29
+  ],
+  "no_new_correct_Qfplib_losses_after_full_parent_audit": true,
+  "selected_CPP_allocated_delta_bytes": 52,
+  "selected_ASM_allocated_delta_bytes": 0,
+  "private_Flash_overlay_load_delta_bytes": 48,
+  "whole_firmware_size_and_GC_delta_not_measured": true,
+  "no_new_tables_global_RAM_libgcc_ROM_math_or_external_calls": true,
+  "static_exp_core_frame96_unchanged": true,
+  "observed_candidate_stack744_on_new_corpus": true,
+  "focused_same_input_parent_and_candidate_peak744": true,
+  "old376_peak_on_smaller_corpus_not_a_comparator": true,
+  "all_other_CPP_allocated_bytes_semantic_relocations_equal": true,
+  "preexisting_refine3736bytes_identical": true,
+  "all_RP_ASM_outside_product168byte_slot_bytes_relocations_symbol_addresses_equal": true,
+  "generic_M0_M4_CPP_and_ASM_selected_bytes_semantic_relocations_equal": true,
+  "eleven_complete_object_ELF_rebuilds_byte_exact": true,
+  "direct_public_ABI_and_original_RAM_address_wrapper_preserved": true,
+  "original507_author_separate_union": {
+    "no_slower": 419,
+    "strictly_faster": 413,
+    "equal": 6,
+    "remaining": 88,
+    "by_operation": {
+      "pow": 51,
+      "exp": 1,
+      "sin": 22,
+      "cos": 14
+    },
+    "not_one_integrated_binary": true
+  },
+  "original507_independently_reviewed_union_unchanged": 418,
+  "independent_review_pending": true,
+  "combined_math_platform_integration_physical_cycles_and_release_pending": true,
+  "no_canonical_Git_USB_device_Flash_lease_EA9_or_release_changes": true,
+  "goal_complete": false
+}

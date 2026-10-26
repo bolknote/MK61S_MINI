@@ -1,0 +1,124 @@
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_asin.inc:126:81:m0_eabi::U asin_small(m0_eabi::U, int&)	120	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_tan.inc:39:63:uint32_t checked_trig_tan_sixth(const m0_eabi::TrigTanRow&, m0_eabi::U)	24	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_pow_fast.inc:61:82:int pow_rsqrt_boundary(m0_eabi::U, unsigned int, m0_eabi::U)	104	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_pow_fast.inc:125:87:bool pow_tiny_integer(m0_eabi::U, m0_eabi::U, m0_eabi::U&)	40	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_pow_fast.inc:474:87:bool pow_near_one_argument(m0_eabi::U, m0_eabi::U, m0_eabi::Product&, unsigned int&, bool&)	88	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_pow_integer.inc:35:80:m0_eabi::U pow_small_integer(m0_eabi::U, uint32_t)	80	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_refine.inc:100:61:double checked_trig_backend(double, unsigned int)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_atan.inc:12:56:m0_eabi::U atan_inverse_correction(m0_eabi::U, m0_eabi::U, m0_eabi::U, unsigned int, unsigned int, unsigned int)	88	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_checked.inc:235:51:m0_eabi::U checked_trig_table(CheckedTrigArgument, unsigned int, m0_eabi::U)	144	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_refine.inc:77:85:bool checked_trig_ratio_midpoint(Refine96, Refine96, unsigned int, m0_eabi::U, uint32_t, bool&)	120	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:32:36:unsigned int m0_eabi::clz32(uint32_t)	0	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:41:36:unsigned int m0_eabi::clz64(U)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_checked.inc:60:54:void checked_trig_argument(m0_eabi::U, CheckedTrigArgument*)	144	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_pow_fast.inc:515:89:PowFastLog pow_fast_log(m0_eabi::U)	96	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_asin.inc:62:81:m0_eabi::U asin_root_estimate(m0_eabi::U, unsigned int&)	120	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_asin.inc:7:93:m0_eabi::U asin_root_normalized(m0_eabi::U, unsigned int&)	128	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:55:3:m0_eabi::U m0_eabi::jam(U, unsigned int)	24	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:60:3:m0_eabi::U m0_eabi::jam_product(Product, unsigned int)	48	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:81:42:m0_eabi::U m0_eabi::low_product(U, U)	32	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_atan_fast.inc:5:51:m0_eabi::U atan_fast_reciprocal(m0_eabi::U)	48	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_atan_fast.inc:31:51:m0_eabi::U atan_fast_ratio(m0_eabi::U, m0_eabi::U)	32	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_asin.inc:149:84:bool asin_geometry(m0_eabi::U, m0_eabi::U, Refine96&)	104	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_pow_fast.inc:241:104:PowRefinedLog pow_refined_log(m0_eabi::U)	208	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_atan_refine.inc:22:82:m0_eabi::U atan_ratio_words(m0_eabi::U, m0_eabi::U, m0_eabi::U)	80	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_asin.inc:136:81:m0_eabi::U asin_atan_small(m0_eabi::U, m0_eabi::U, unsigned int, int&)	96	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_asin.inc:189:96:bool asin_geometry_refined(m0_eabi::U, m0_eabi::U, Refine96&)	168	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_asin.inc:233:98:double asin_refine(double, bool)	80	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_asin.inc:247:86:double asin_checked(double, bool)	128	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_refine.inc:20:86:void checked_trig_refine_values(Trig192, unsigned int, Refine96*, int*, uint32_t&)	488	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_refine.inc:103:81:double checked_trig_refine(double, unsigned int)	272	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_refine.inc:98:61:double ln_refine(double)	264	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_log70.inc:22:56:double ln_near_one(double, m0_eabi::U)	112	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_log70.inc:41:56:double ln_near_interval(double, m0_eabi::U)	88	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_log10.inc:137:91:double log10_refine(double)	264	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_log10.inc:25:86:double log10_near_one(double, m0_eabi::U)	120	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_log10.inc:44:86:double log10_near_interval(double, m0_eabi::U)	112	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_atan_refine.inc:33:61:double atan_refine(double, unsigned int)	176	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_atan_fast.inc:36:56:double atan_fast(double)	136	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_refine.inc:56:78:double exp_refine(double, uint32_t)	248	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_pow_fast.inc:358:97:double pow_refine_checked(double, double)	304	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_pow_fast.inc:594:89:double pow_positive_checked(double, double)	192	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_pow_fast.inc:577:94:double pow_negative_integer(double, double)	48	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_tan.inc:22:56:m0_eabi::U checked_trig_tan_midpoint(Refine96, unsigned int, m0_eabi::U, int, m0_eabi::U)	104	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:105:3:m0_eabi::U m0_eabi::divide_significands(U, U, U&)	48	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:258:3:m0_eabi::U m0_eabi::integer_magnitude(int64_t)	12	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:303:22:double __aeabi_drsub(double, double)	16	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_kernels.inc:71:38:void math62_sincos_small(m0_eabi::U, int, m0_eabi::U, double*, unsigned int)	88	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_kernels.inc:98:38:void mk61_m0_sincos_small(double, double, double*, unsigned int)	88	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_kernels.inc:107:40:double math62_tan_small(m0_eabi::U, int, m0_eabi::U)	96	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:401:44:int trig_small_relative(m0_eabi::U, int, unsigned int, double*)	48	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:416:44:int trig_small_result(const Trig192*, unsigned int, double*)	64	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_kernels.inc:122:40:double mk61_m0_tan_small(double, double)	80	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_kernels.inc:127:35:m0_eabi::U mk61_m0_atan_reduced(double, int*)	112	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_kernels.inc:228:40:double mk61_m0_ln_approx(double)	104	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_log70.inc:72:54:double mk61_m0_ln(double)	96	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_log10.inc:86:84:double mk61_m0_log10(double)	96	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_atan.inc:31:54:double mk61_m0_atan(double)	104	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_asin.inc:300:84:double mk61_m0_asin(double)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_asin.inc:301:84:double mk61_m0_acos(double)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:472:37:int mk61_m0_reduce_pio2(double, double*)	176	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:478:3:m0_eabi::U trig_fixed(m0_eabi::U)	48	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:612:62:m0_eabi::U mk61_m0_mul_q62(m0_eabi::U, m0_eabi::U)	64	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:510:38:void trig_sincos_fixed(m0_eabi::U, m0_eabi::U, double*, unsigned int)	120	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:544:38:void mk61_m0_sincos_reduced(double, double, double*, unsigned int)	48	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:551:37:int mk61_m0_trig_medium(double, double*, unsigned int)	208	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_checked.inc:11:51:m0_eabi::U checked_trig_inverse(m0_eabi::U)	64	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_tan.inc:59:51:m0_eabi::U checked_trig_tan_table(CheckedTrigArgument, m0_eabi::U)	168	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_checked.inc:201:51:m0_eabi::U checked_trig_fast_table(CheckedTrigArgument, unsigned int, m0_eabi::U)	120	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_tan.inc:2:66:CheckedTrigValue checked_trig_tan_small(CheckedTrigArgument)	104	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_checked.inc:166:25:CheckedTrigValue checked_trig_small(CheckedTrigArgument, unsigned int)	80	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_trig_checked.inc:282:54:double mk61_m0_trig(double, unsigned int)	152	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:664:71:double mk61_m0_exp(double)	80	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_pow_fast.inc:82:87:double pow_rsqrt(double)	88	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_pow_fast.inc:648:101:double mk61_m0_pow_dispatch(double, double)	32	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:830:17:m0_eabi::U __aeabi_lmul(m0_eabi::U, m0_eabi::U)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:833:5:int __clzsi2(uint32_t)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:834:5:int __clzdi2(m0_eabi::U)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:835:6:void mk61_m0_divmod64(m0_eabi::U, m0_eabi::U, mk61_eabi_divmod*)	48	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:849:3:m0_eabi::U mk61_m0_udiv32(uint32_t, uint32_t)	24	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:858:3:m0_eabi::U mk61_m0_sdiv32(int32_t, int32_t)	16	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:867:6:void mk61_m0_sdivmod64(m0_eabi::U, m0_eabi::U, mk61_eabi_divmod*)	48	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:149:12:static m0_eabi::U m0_eabi::Binary<F, E>::normalize(m0_eabi::U, int&) [with unsigned int F = 52; unsigned int E = 11]	24	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:817:22:double mk61_m0_sqrt_slow(double)	24	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:157:12:static m0_eabi::U m0_eabi::Binary<F, E>::pack(m0_eabi::U, int, m0_eabi::U) [with unsigned int F = 52; unsigned int E = 11]	32	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/ports/picocalc/../../code/native_eabi_m0_fma.inc:19:3:m0_eabi::U m0_eabi::fused(U, U, U)	112	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:296:22:double mk61_m0_fma(double, double, double)	24	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:149:12:static m0_eabi::U m0_eabi::Binary<F, E>::normalize(m0_eabi::U, int&) [with unsigned int F = 23; unsigned int E = 8]	24	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:259:3:m0_eabi::U m0_eabi::extend(U)	32	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:359:22:double mk61_m0_f2d_slow(float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:157:12:static m0_eabi::U m0_eabi::Binary<F, E>::pack(m0_eabi::U, int, m0_eabi::U) [with unsigned int F = 23; unsigned int E = 8]	24	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:265:3:m0_eabi::U m0_eabi::narrow(U)	32	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:358:21:float mk61_m0_d2f_slow(double)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:166:12:static m0_eabi::U m0_eabi::Binary<F, E>::add(m0_eabi::U, m0_eabi::U) [with unsigned int F = 52; unsigned int E = 11]	64	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:298:22:double mk61_m0_dadd_slow(double, double)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:189:12:static m0_eabi::U m0_eabi::Binary<F, E>::mul(m0_eabi::U, m0_eabi::U) [with unsigned int F = 52; unsigned int E = 11]	80	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:305:22:double mk61_m0_dmul_slow(double, double)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:199:12:static m0_eabi::U m0_eabi::Binary<F, E>::div(m0_eabi::U, m0_eabi::U) [with unsigned int F = 52; unsigned int E = 11]	64	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:312:22:double __aeabi_ddiv(double, double)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:166:12:static m0_eabi::U m0_eabi::Binary<F, E>::add(m0_eabi::U, m0_eabi::U) [with unsigned int F = 23; unsigned int E = 8]	64	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:314:21:float __aeabi_fadd(float, float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:315:21:float __aeabi_fsub(float, float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:316:21:float __aeabi_frsub(float, float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:189:12:static m0_eabi::U m0_eabi::Binary<F, E>::mul(m0_eabi::U, m0_eabi::U) [with unsigned int F = 23; unsigned int E = 8]	72	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:317:21:float __aeabi_fmul(float, float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:199:12:static m0_eabi::U m0_eabi::Binary<F, E>::div(m0_eabi::U, m0_eabi::U) [with unsigned int F = 23; unsigned int E = 8]	64	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:318:21:float __aeabi_fdiv(float, float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:223:14:static int m0_eabi::Binary<F, E>::compare(m0_eabi::U, m0_eabi::U) [with unsigned int F = 23; unsigned int E = 8]	16	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:329:1:int __aeabi_fcmpeq(float, float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:329:1:int __aeabi_fcmplt(float, float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:329:1:int __aeabi_fcmple(float, float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:329:1:int __aeabi_fcmpge(float, float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:329:1:int __aeabi_fcmpgt(float, float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:329:1:int __aeabi_fcmpun(float, float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:229:12:static m0_eabi::U m0_eabi::Binary<F, E>::from_integer(m0_eabi::U, m0_eabi::U) [with unsigned int F = 23; unsigned int E = 8]	40	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:337:21:float __aeabi_i2f(int32_t)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:338:21:float __aeabi_ui2f(uint32_t)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:234:12:static m0_eabi::U m0_eabi::Binary<F, E>::magnitude_integer(m0_eabi::U) [with unsigned int F = 52; unsigned int E = 11]	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:344:24:uint32_t __aeabi_d2uiz(double)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:353:17:m0_eabi::U mk61_m0_d2ulz_slow(double)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:348:23:int64_t mk61_m0_d2lz_slow(double)	16	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:340:23:int32_t mk61_m0_d2iz_slow(double)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:234:12:static m0_eabi::U m0_eabi::Binary<F, E>::magnitude_integer(m0_eabi::U) [with unsigned int F = 23; unsigned int E = 8]	16	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:345:23:int32_t __aeabi_f2iz(float)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-radius-20261024/candidate/native_eabi_m0.cpp:346:24:uint32_t __aeabi_f2uiz(float)	8	static

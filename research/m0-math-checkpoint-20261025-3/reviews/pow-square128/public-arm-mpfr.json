@@ -1,0 +1,1517 @@
+{
+  "status": "PASS_BOUNDED_PUBLIC_EXACT_KERNEL_COST_AND_BITS",
+  "unique_pairs": 17,
+  "qualified_calls": 204,
+  "directed_MPFR_inputs": 15,
+  "sNaN_shortcuts": 2,
+  "strict_quietNaN_policy": true,
+  "MPFR_version": "4.2.2",
+  "all3_Qfplib_compositions_and_wrong_outputs_retained": true,
+  "exact_parent_control_candidate_bits": true,
+  "all_actual_kernel_input_sequences_equal": true,
+  "all_four_cost_classes_actual": true,
+  "cost_delta_is_sum_of_kernel_deltas": true,
+  "original_newfix_strict_bothSIO": true,
+  "observed_stack_bytes": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148,
+    "Qfplib": 88
+  },
+  "parent_loader": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/arm.py",
+    "bytes": 9172,
+    "sha256": "2af78bb16a62de51ed76f3261127a0b7a62544fb1bf975b0ecc3c4cbb7e38d67"
+  },
+  "ROM_initializer_calls_excluded": true,
+  "no_general_pow_totality_or_other_math_qualification": true,
+  "device_IO": 0,
+  "rows": [
+    {
+      "x": "3FD0000000000000",
+      "y": "C016000000000000",
+      "group": "all3old_corpus_fixes",
+      "SIO": "READY",
+      "expected": "40A0000000000000",
+      "outputs": {
+        "parent": "40A0000000000000",
+        "control": "40A0000000000000",
+        "candidate": "40A0000000000000",
+        "qfp_composed_pow": "40A0000000000000",
+        "qfp_composed_pow_exact": "40A0000000000000",
+        "qfp_composed_pow_integer": "C0A0000000000000"
+      },
+      "instructions": {
+        "parent": 1421,
+        "control": 1421,
+        "candidate": 1316,
+        "qfp_composed_pow": 1327,
+        "qfp_composed_pow_exact": 1348,
+        "qfp_composed_pow_integer": 1385
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": [
+        {
+          "high": "8000000000000000",
+          "low": "0000000000000000",
+          "exponent": 4294967294,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "8000000000000000",
+          "low": "0000000000000000",
+          "exponent": 4294967292,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "8000000000000000",
+          "low": "0000000000000000",
+          "exponent": 4294967286,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        }
+      ]
+    },
+    {
+      "x": "3FD0000000000000",
+      "y": "C016000000000000",
+      "group": "all3old_corpus_fixes",
+      "SIO": "DIRTY",
+      "expected": "40A0000000000000",
+      "outputs": {
+        "parent": "40A0000000000000",
+        "control": "40A0000000000000",
+        "candidate": "40A0000000000000",
+        "qfp_composed_pow": "40A0000000000000",
+        "qfp_composed_pow_exact": "40A0000000000000",
+        "qfp_composed_pow_integer": "C0A0000000000000"
+      },
+      "instructions": {
+        "parent": 1421,
+        "control": 1421,
+        "candidate": 1316,
+        "qfp_composed_pow": 1327,
+        "qfp_composed_pow_exact": 1348,
+        "qfp_composed_pow_integer": 1385
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": [
+        {
+          "high": "8000000000000000",
+          "low": "0000000000000000",
+          "exponent": 4294967294,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "8000000000000000",
+          "low": "0000000000000000",
+          "exponent": 4294967292,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "8000000000000000",
+          "low": "0000000000000000",
+          "exponent": 4294967286,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        }
+      ]
+    },
+    {
+      "x": "3FE6666666666666",
+      "y": "400A000000000000",
+      "group": "all3old_corpus_fixes",
+      "SIO": "READY",
+      "expected": "3FD4144D1CD1AEA1",
+      "outputs": {
+        "parent": "3FD4144D1CD1AEA1",
+        "control": "3FD4144D1CD1AEA1",
+        "candidate": "3FD4144D1CD1AEA1",
+        "qfp_composed_pow": "3FD4144D1CD1AEA1",
+        "qfp_composed_pow_exact": "3FD4144D1CD1AEA1",
+        "qfp_composed_pow_integer": "BFD4144D1CD1AEA1"
+      },
+      "instructions": {
+        "parent": 1564,
+        "control": 1564,
+        "candidate": 1455,
+        "qfp_composed_pow": 1468,
+        "qfp_composed_pow_exact": 1489,
+        "qfp_composed_pow_integer": 1526
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": [
+        {
+          "high": "B333333333333000",
+          "low": "0000000000000000",
+          "exponent": 4294967295,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "AF9DB22D0E55FAB0",
+          "low": "20C49BA5E37EF9D9",
+          "exponent": 4294967294,
+          "radius": 8,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "F0F1F57B41BFA41F",
+          "low": "C8F32378AC33917C",
+          "exponent": 4294967292,
+          "radius": 64,
+          "old_cost": 182,
+          "new_cost": 149
+        }
+      ]
+    },
+    {
+      "x": "3FE6666666666666",
+      "y": "400A000000000000",
+      "group": "all3old_corpus_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FD4144D1CD1AEA1",
+      "outputs": {
+        "parent": "3FD4144D1CD1AEA1",
+        "control": "3FD4144D1CD1AEA1",
+        "candidate": "3FD4144D1CD1AEA1",
+        "qfp_composed_pow": "3FD4144D1CD1AEA1",
+        "qfp_composed_pow_exact": "3FD4144D1CD1AEA1",
+        "qfp_composed_pow_integer": "BFD4144D1CD1AEA1"
+      },
+      "instructions": {
+        "parent": 1564,
+        "control": 1564,
+        "candidate": 1455,
+        "qfp_composed_pow": 1468,
+        "qfp_composed_pow_exact": 1489,
+        "qfp_composed_pow_integer": 1526
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": [
+        {
+          "high": "B333333333333000",
+          "low": "0000000000000000",
+          "exponent": 4294967295,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "AF9DB22D0E55FAB0",
+          "low": "20C49BA5E37EF9D9",
+          "exponent": 4294967294,
+          "radius": 8,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "F0F1F57B41BFA41F",
+          "low": "C8F32378AC33917C",
+          "exponent": 4294967292,
+          "radius": 64,
+          "old_cost": 182,
+          "new_cost": 149
+        }
+      ]
+    },
+    {
+      "x": "3FF3385D057CA34E",
+      "y": "C018000000000000",
+      "group": "all3old_corpus_fixes",
+      "SIO": "READY",
+      "expected": "3FD54C82E0A66159",
+      "outputs": {
+        "parent": "3FD54C82E0A66159",
+        "control": "3FD54C82E0A66159",
+        "candidate": "3FD54C82E0A66159",
+        "qfp_composed_pow": "3FD54C82E0A66159",
+        "qfp_composed_pow_exact": "3FD54C82E0A66159",
+        "qfp_composed_pow_integer": "3FD54C82E0A66159"
+      },
+      "instructions": {
+        "parent": 1226,
+        "control": 1226,
+        "candidate": 1158,
+        "qfp_composed_pow": 1582,
+        "qfp_composed_pow_exact": 1603,
+        "qfp_composed_pow_integer": 1640
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": [
+        {
+          "high": "99C2E82BE51A7000",
+          "low": "0000000000000000",
+          "exponent": 0,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "DDE1BCC7341DC272",
+          "low": "A7BBA8088FC9B462",
+          "exponent": 0,
+          "radius": 16,
+          "old_cost": 182,
+          "new_cost": 149
+        }
+      ]
+    },
+    {
+      "x": "3FF3385D057CA34E",
+      "y": "C018000000000000",
+      "group": "all3old_corpus_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FD54C82E0A66159",
+      "outputs": {
+        "parent": "3FD54C82E0A66159",
+        "control": "3FD54C82E0A66159",
+        "candidate": "3FD54C82E0A66159",
+        "qfp_composed_pow": "3FD54C82E0A66159",
+        "qfp_composed_pow_exact": "3FD54C82E0A66159",
+        "qfp_composed_pow_integer": "3FD54C82E0A66159"
+      },
+      "instructions": {
+        "parent": 1630,
+        "control": 1630,
+        "candidate": 1562,
+        "qfp_composed_pow": 1582,
+        "qfp_composed_pow_exact": 1603,
+        "qfp_composed_pow_integer": 1640
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": [
+        {
+          "high": "99C2E82BE51A7000",
+          "low": "0000000000000000",
+          "exponent": 0,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "DDE1BCC7341DC272",
+          "low": "A7BBA8088FC9B462",
+          "exponent": 0,
+          "radius": 16,
+          "old_cost": 182,
+          "new_cost": 149
+        }
+      ]
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "each_kernel_cost_class",
+      "SIO": "READY",
+      "expected": "3FE51503CA80F09C",
+      "outputs": {
+        "parent": "3FE51503CA80F09C",
+        "control": "3FE51503CA80F09C",
+        "candidate": "3FE51503CA80F09C",
+        "qfp_composed_pow": "3FE51503CA80F09C",
+        "qfp_composed_pow_exact": "3FE51503CA80F09C",
+        "qfp_composed_pow_integer": "3FE51503CA80F09C"
+      },
+      "instructions": {
+        "parent": 3800,
+        "control": 3800,
+        "candidate": 3650,
+        "qfp_composed_pow": 1568,
+        "qfp_composed_pow_exact": 1589,
+        "qfp_composed_pow_integer": 1598
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": [
+        {
+          "high": "A187DB397046A800",
+          "low": "0000000000000000",
+          "exponent": 4294967295,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "809F3A44996BCB71",
+          "low": "8B80FCFD323BDFB6",
+          "exponent": 4294967294,
+          "radius": 8,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "A31AB5C44A43D867",
+          "low": "BBDE6FB7CEC7B8C4",
+          "exponent": 4294967291,
+          "radius": 144,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "CFD60C82C70145C3",
+          "low": "97818A13DE2AEF8A",
+          "exponent": 4294967286,
+          "radius": 608,
+          "old_cost": 182,
+          "new_cost": 149
+        }
+      ]
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "each_kernel_cost_class",
+      "SIO": "DIRTY",
+      "expected": "3FE51503CA80F09C",
+      "outputs": {
+        "parent": "3FE51503CA80F09C",
+        "control": "3FE51503CA80F09C",
+        "candidate": "3FE51503CA80F09C",
+        "qfp_composed_pow": "3FE51503CA80F09C",
+        "qfp_composed_pow_exact": "3FE51503CA80F09C",
+        "qfp_composed_pow_integer": "3FE51503CA80F09C"
+      },
+      "instructions": {
+        "parent": 3800,
+        "control": 3800,
+        "candidate": 3650,
+        "qfp_composed_pow": 1568,
+        "qfp_composed_pow_exact": 1589,
+        "qfp_composed_pow_integer": 1598
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": [
+        {
+          "high": "A187DB397046A800",
+          "low": "0000000000000000",
+          "exponent": 4294967295,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "809F3A44996BCB71",
+          "low": "8B80FCFD323BDFB6",
+          "exponent": 4294967294,
+          "radius": 8,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "A31AB5C44A43D867",
+          "low": "BBDE6FB7CEC7B8C4",
+          "exponent": 4294967291,
+          "radius": 144,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "CFD60C82C70145C3",
+          "low": "97818A13DE2AEF8A",
+          "exponent": 4294967286,
+          "radius": 608,
+          "old_cost": 182,
+          "new_cost": 149
+        }
+      ]
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "group": "each_kernel_cost_class",
+      "SIO": "READY",
+      "expected": "3FE9F5FE54731716",
+      "outputs": {
+        "parent": "3FE9F5FE54731716",
+        "control": "3FE9F5FE54731716",
+        "candidate": "3FE9F5FE54731716",
+        "qfp_composed_pow": "3FE9F5FE54731716",
+        "qfp_composed_pow_exact": "3FE9F5FE54731716",
+        "qfp_composed_pow_integer": "3FE9F5FE54731716"
+      },
+      "instructions": {
+        "parent": 3457,
+        "control": 3457,
+        "candidate": 3315,
+        "qfp_composed_pow": 1522,
+        "qfp_composed_pow_exact": 1543,
+        "qfp_composed_pow_integer": 1552
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": [
+        {
+          "high": "BA2306CD2C11E000",
+          "low": "0000000000000000",
+          "exponent": 4294967295,
+          "radius": 0,
+          "old_cost": 116,
+          "new_cost": 89
+        },
+        {
+          "high": "8756EAAD005248E3",
+          "low": "B2B6E63F84000000",
+          "exponent": 4294967295,
+          "radius": 0,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "D01850CEF77C033A",
+          "low": "E240B0CF74854F9C",
+          "exponent": 4294967293,
+          "radius": 80,
+          "old_cost": 182,
+          "new_cost": 149
+        },
+        {
+          "high": "A927859F9279EE81",
+          "low": "078E15ED948B23C0",
+          "exponent": 4294967291,
+          "radius": 176,
+          "old_cost": 195,
+          "new_cost": 154
+        }
+      ]
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "group": "each_kernel_cost_class",
+      "SIO": "DIRTY",
+      "expected": "3FE9F5FE54731716",
+      "outputs": {
+        "parent": "3FE9F5FE54731716",
+        "control": "3FE9F5FE54731716",
+        "candidate": "3FE9F5FE54731716",
+        "qfp_composed_pow": "3FE9F5FE54731716",
+        "qfp_composed_pow_exact": "3FE9F5FE54731716",
+        "qfp_composed_pow_integer": "3FE9F5FE54731716"
+      },
+      "instructions": {
+        "parent": 3457,
+        "control": 3457,
+        "candidate": 3315,
+        "qfp_composed_pow": 1522,
+        "qfp_composed_pow_exact": 1543,
+        "qfp_composed_pow_integer": 1552
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": [
+        {
+          "high": "BA2306CD2C11E000",
+          "low": "0000000000000000",
+          "exponent": 4294967295,
+          "radius": 0,
+          "old_cost": 116,
+          "new_cost": 89
+        },
+        {
+          "high": "8756EAAD005248E3",
+          "low": "B2B6E63F84000000",
+          "exponent": 4294967295,
+          "radius": 0,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "D01850CEF77C033A",
+          "low": "E240B0CF74854F9C",
+          "exponent": 4294967293,
+          "radius": 80,
+          "old_cost": 182,
+          "new_cost": 149
+        },
+        {
+          "high": "A927859F9279EE81",
+          "low": "078E15ED948B23C0",
+          "exponent": 4294967291,
+          "radius": 176,
+          "old_cost": 195,
+          "new_cost": 154
+        }
+      ]
+    },
+    {
+      "x": "0000000000000011",
+      "y": "3FEFC00000000000",
+      "group": "deep_refinement_control",
+      "SIO": "READY",
+      "expected": "00000000000015CC",
+      "outputs": {
+        "parent": "00000000000015CC",
+        "control": "00000000000015CC",
+        "candidate": "00000000000015CC",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 38217,
+        "control": 38217,
+        "candidate": 38217,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "0000000000000011",
+      "y": "3FEFC00000000000",
+      "group": "deep_refinement_control",
+      "SIO": "DIRTY",
+      "expected": "00000000000015CC",
+      "outputs": {
+        "parent": "00000000000015CC",
+        "control": "00000000000015CC",
+        "candidate": "00000000000015CC",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 38217,
+        "control": 38217,
+        "candidate": 38217,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "0000000000000009",
+      "y": "3FEFC00000000000",
+      "group": "deep_refinement_control",
+      "SIO": "READY",
+      "expected": "0000000000000B99",
+      "outputs": {
+        "parent": "0000000000000B99",
+        "control": "0000000000000B99",
+        "candidate": "0000000000000B99",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 37952,
+        "control": 37952,
+        "candidate": 37952,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "0000000000000009",
+      "y": "3FEFC00000000000",
+      "group": "deep_refinement_control",
+      "SIO": "DIRTY",
+      "expected": "0000000000000B99",
+      "outputs": {
+        "parent": "0000000000000B99",
+        "control": "0000000000000B99",
+        "candidate": "0000000000000B99",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 37952,
+        "control": 37952,
+        "candidate": 37952,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "unchanged_original_control",
+      "SIO": "READY",
+      "expected": "3FB0E1D596EB463B",
+      "outputs": {
+        "parent": "3FB0E1D596EB463B",
+        "control": "3FB0E1D596EB463B",
+        "candidate": "3FB0E1D596EB463B",
+        "qfp_composed_pow": "3FB0E1D596EB463B",
+        "qfp_composed_pow_exact": "3FB0E1D596EB463B",
+        "qfp_composed_pow_integer": "3FB0E1D596EB463B"
+      },
+      "instructions": {
+        "parent": 5045,
+        "control": 5045,
+        "candidate": 5045,
+        "qfp_composed_pow": 1585,
+        "qfp_composed_pow_exact": 1606,
+        "qfp_composed_pow_integer": 1643
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": []
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "unchanged_original_control",
+      "SIO": "DIRTY",
+      "expected": "3FB0E1D596EB463B",
+      "outputs": {
+        "parent": "3FB0E1D596EB463B",
+        "control": "3FB0E1D596EB463B",
+        "candidate": "3FB0E1D596EB463B",
+        "qfp_composed_pow": "3FB0E1D596EB463B",
+        "qfp_composed_pow_exact": "3FB0E1D596EB463B",
+        "qfp_composed_pow_integer": "3FB0E1D596EB463B"
+      },
+      "instructions": {
+        "parent": 5691,
+        "control": 5691,
+        "candidate": 5691,
+        "qfp_composed_pow": 1585,
+        "qfp_composed_pow_exact": 1606,
+        "qfp_composed_pow_integer": 1643
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": []
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original_control",
+      "SIO": "READY",
+      "expected": "4004374E30A30829",
+      "outputs": {
+        "parent": "4004374E30A30829",
+        "control": "4004374E30A30829",
+        "candidate": "4004374E30A30829",
+        "qfp_composed_pow": "4004374E30A30829",
+        "qfp_composed_pow_exact": "4004374E30A30829",
+        "qfp_composed_pow_integer": "4004374E30A30829"
+      },
+      "instructions": {
+        "parent": 3501,
+        "control": 3501,
+        "candidate": 3343,
+        "qfp_composed_pow": 1503,
+        "qfp_composed_pow_exact": 1524,
+        "qfp_composed_pow_integer": 1533
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": [
+        {
+          "high": "836A3C620EC44000",
+          "low": "0000000000000000",
+          "exponent": 2,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "86EBCBC4D51E6100",
+          "low": "9A361AE420000000",
+          "exponent": 4,
+          "radius": 0,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "9202BA584017E326",
+          "low": "26C1BC133D9DB750",
+          "exponent": 10,
+          "radius": 80,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "A68E39283441360B",
+          "low": "CEB247CD75B54320",
+          "exponent": 20,
+          "radius": 352,
+          "old_cost": 195,
+          "new_cost": 154
+        }
+      ]
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original_control",
+      "SIO": "DIRTY",
+      "expected": "4004374E30A30829",
+      "outputs": {
+        "parent": "4004374E30A30829",
+        "control": "4004374E30A30829",
+        "candidate": "4004374E30A30829",
+        "qfp_composed_pow": "4004374E30A30829",
+        "qfp_composed_pow_exact": "4004374E30A30829",
+        "qfp_composed_pow_integer": "4004374E30A30829"
+      },
+      "instructions": {
+        "parent": 3501,
+        "control": 3501,
+        "candidate": 3343,
+        "qfp_composed_pow": 1503,
+        "qfp_composed_pow_exact": 1524,
+        "qfp_composed_pow_integer": 1533
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": [
+        {
+          "high": "836A3C620EC44000",
+          "low": "0000000000000000",
+          "exponent": 2,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "86EBCBC4D51E6100",
+          "low": "9A361AE420000000",
+          "exponent": 4,
+          "radius": 0,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "9202BA584017E326",
+          "low": "26C1BC133D9DB750",
+          "exponent": 10,
+          "radius": 80,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "A68E39283441360B",
+          "low": "CEB247CD75B54320",
+          "exponent": 20,
+          "radius": 352,
+          "old_cost": 195,
+          "new_cost": 154
+        }
+      ]
+    },
+    {
+      "x": "3FF654E7580FA958",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original_control",
+      "SIO": "READY",
+      "expected": "3FF3E9D51AF35305",
+      "outputs": {
+        "parent": "3FF3E9D51AF35305",
+        "control": "3FF3E9D51AF35305",
+        "candidate": "3FF3E9D51AF35305",
+        "qfp_composed_pow": "3FF3E9D51AF35305",
+        "qfp_composed_pow_exact": "3FF3E9D51AF35305",
+        "qfp_composed_pow_integer": "3FF3E9D51AF35305"
+      },
+      "instructions": {
+        "parent": 3449,
+        "control": 3449,
+        "candidate": 3307,
+        "qfp_composed_pow": 1534,
+        "qfp_composed_pow_exact": 1555,
+        "qfp_composed_pow_integer": 1564
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": [
+        {
+          "high": "B2A73AC07D4AC000",
+          "low": "0000000000000000",
+          "exponent": 0,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "F959F5E2C5B66811",
+          "low": "18E42AA720000000",
+          "exponent": 0,
+          "radius": 0,
+          "old_cost": 182,
+          "new_cost": 149
+        },
+        {
+          "high": "A97E7E2721AA5C62",
+          "low": "6B0438096A866C40",
+          "exponent": 2,
+          "radius": 24,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "E07082202E453997",
+          "low": "B6E69D511C019388",
+          "exponent": 4,
+          "radius": 128,
+          "old_cost": 182,
+          "new_cost": 149
+        }
+      ]
+    },
+    {
+      "x": "3FF654E7580FA958",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original_control",
+      "SIO": "DIRTY",
+      "expected": "3FF3E9D51AF35305",
+      "outputs": {
+        "parent": "3FF3E9D51AF35305",
+        "control": "3FF3E9D51AF35305",
+        "candidate": "3FF3E9D51AF35305",
+        "qfp_composed_pow": "3FF3E9D51AF35305",
+        "qfp_composed_pow_exact": "3FF3E9D51AF35305",
+        "qfp_composed_pow_integer": "3FF3E9D51AF35305"
+      },
+      "instructions": {
+        "parent": 3449,
+        "control": 3449,
+        "candidate": 3307,
+        "qfp_composed_pow": 1534,
+        "qfp_composed_pow_exact": 1555,
+        "qfp_composed_pow_integer": 1564
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": [
+        {
+          "high": "B2A73AC07D4AC000",
+          "low": "0000000000000000",
+          "exponent": 0,
+          "radius": 0,
+          "old_cost": 129,
+          "new_cost": 94
+        },
+        {
+          "high": "F959F5E2C5B66811",
+          "low": "18E42AA720000000",
+          "exponent": 0,
+          "radius": 0,
+          "old_cost": 182,
+          "new_cost": 149
+        },
+        {
+          "high": "A97E7E2721AA5C62",
+          "low": "6B0438096A866C40",
+          "exponent": 2,
+          "radius": 24,
+          "old_cost": 195,
+          "new_cost": 154
+        },
+        {
+          "high": "E07082202E453997",
+          "low": "B6E69D511C019388",
+          "exponent": 4,
+          "radius": 128,
+          "old_cost": 182,
+          "new_cost": 149
+        }
+      ]
+    },
+    {
+      "x": "3FF0000000000000",
+      "y": "7FF0000000000001",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "READY",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "parent": "7FF8000000000001",
+        "control": "7FF8000000000001",
+        "candidate": "7FF8000000000001",
+        "qfp_composed_pow": "7FF0000000000000",
+        "qfp_composed_pow_exact": "7FF0000000000000",
+        "qfp_composed_pow_integer": "7FF0000000000000"
+      },
+      "instructions": {
+        "parent": 46,
+        "control": 46,
+        "candidate": 46,
+        "qfp_composed_pow": 1465,
+        "qfp_composed_pow_exact": 1475,
+        "qfp_composed_pow_integer": 1485
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "3FF0000000000000",
+      "y": "7FF0000000000001",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "parent": "7FF8000000000001",
+        "control": "7FF8000000000001",
+        "candidate": "7FF8000000000001",
+        "qfp_composed_pow": "7FF0000000000000",
+        "qfp_composed_pow_exact": "7FF0000000000000",
+        "qfp_composed_pow_integer": "7FF0000000000000"
+      },
+      "instructions": {
+        "parent": 46,
+        "control": 46,
+        "candidate": 46,
+        "qfp_composed_pow": 1465,
+        "qfp_composed_pow_exact": 1475,
+        "qfp_composed_pow_integer": 1485
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "FFF0000000000001",
+      "y": "0000000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "READY",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "parent": "FFF8000000000001",
+        "control": "FFF8000000000001",
+        "candidate": "FFF8000000000001",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 15,
+        "control": 15,
+        "candidate": 15,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "FFF0000000000001",
+      "y": "0000000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "DIRTY",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "parent": "FFF8000000000001",
+        "control": "FFF8000000000001",
+        "candidate": "FFF8000000000001",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 15,
+        "control": 15,
+        "candidate": 15,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "C000000000000000",
+      "y": "3FE0000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "parent": "7FF8000000000000",
+        "control": "7FF8000000000000",
+        "candidate": "7FF8000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "FFF0000000000000",
+        "qfp_composed_pow_integer": "3FF6A09E667F3BCC"
+      },
+      "instructions": {
+        "parent": 71,
+        "control": 71,
+        "candidate": 71,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 26,
+        "qfp_composed_pow_integer": 1515
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "C000000000000000",
+      "y": "3FE0000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "parent": "7FF8000000000000",
+        "control": "7FF8000000000000",
+        "candidate": "7FF8000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "FFF0000000000000",
+        "qfp_composed_pow_integer": "3FF6A09E667F3BCC"
+      },
+      "instructions": {
+        "parent": 71,
+        "control": 71,
+        "candidate": 71,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 26,
+        "qfp_composed_pow_integer": 1515
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "C000000000000000",
+      "y": "4008000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "READY",
+      "expected": "C020000000000000",
+      "outputs": {
+        "parent": "C020000000000000",
+        "control": "C020000000000000",
+        "candidate": "C020000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "C01FFFFFFFFFFFFE"
+      },
+      "instructions": {
+        "parent": 467,
+        "control": 467,
+        "candidate": 467,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 796,
+        "qfp_composed_pow_integer": 1434
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "C000000000000000",
+      "y": "4008000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "DIRTY",
+      "expected": "C020000000000000",
+      "outputs": {
+        "parent": "C020000000000000",
+        "control": "C020000000000000",
+        "candidate": "C020000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "C01FFFFFFFFFFFFE"
+      },
+      "instructions": {
+        "parent": 467,
+        "control": 467,
+        "candidate": 467,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 796,
+        "qfp_composed_pow_integer": 1434
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "0000000000000001",
+      "y": "3FE0000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "READY",
+      "expected": "1E60000000000000",
+      "outputs": {
+        "parent": "1E60000000000000",
+        "control": "1E60000000000000",
+        "candidate": "1E60000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 221,
+        "control": 221,
+        "candidate": 221,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 28,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "0000000000000001",
+      "y": "3FE0000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "DIRTY",
+      "expected": "1E60000000000000",
+      "outputs": {
+        "parent": "1E60000000000000",
+        "control": "1E60000000000000",
+        "candidate": "1E60000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 221,
+        "control": 221,
+        "candidate": 221,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 28,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "square_calls": []
+    },
+    {
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "READY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 779,
+        "qfp_composed_pow_exact": 800,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": []
+    },
+    {
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 779,
+        "qfp_composed_pow_exact": 800,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": []
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FC0000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "READY",
+      "expected": "3FF0D4F2F29E5142",
+      "outputs": {
+        "parent": "3FF0D4F2F29E5142",
+        "control": "3FF0D4F2F29E5142",
+        "candidate": "3FF0D4F2F29E5142",
+        "qfp_composed_pow": "3FF0D4F2F29E5142",
+        "qfp_composed_pow_exact": "3FF0D4F2F29E5142",
+        "qfp_composed_pow_integer": "3FF0D4F2F29E5142"
+      },
+      "instructions": {
+        "parent": 734,
+        "control": 734,
+        "candidate": 734,
+        "qfp_composed_pow": 1458,
+        "qfp_composed_pow_exact": 1479,
+        "qfp_composed_pow_integer": 1488
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": []
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FC0000000000000",
+      "group": "IEEE_or_nonroute_control",
+      "SIO": "DIRTY",
+      "expected": "3FF0D4F2F29E5142",
+      "outputs": {
+        "parent": "3FF0D4F2F29E5142",
+        "control": "3FF0D4F2F29E5142",
+        "candidate": "3FF0D4F2F29E5142",
+        "qfp_composed_pow": "3FF0D4F2F29E5142",
+        "qfp_composed_pow_exact": "3FF0D4F2F29E5142",
+        "qfp_composed_pow_integer": "3FF0D4F2F29E5142"
+      },
+      "instructions": {
+        "parent": 734,
+        "control": 734,
+        "candidate": 734,
+        "qfp_composed_pow": 1458,
+        "qfp_composed_pow_exact": 1479,
+        "qfp_composed_pow_integer": 1488
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "square_calls": []
+    }
+  ]
+}

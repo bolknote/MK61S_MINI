@@ -1,0 +1,50 @@
+{
+  "status": "ACCEPTED_PRIVATE_ADAPTIVE_EXP_SHARED_PRODUCT_COMPONENT_ONLY",
+  "accepted_parent_expanded_ledger": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-log-midpoint-independent-20261024/expanded-exp-component-ledger.json",
+    "bytes": 1719,
+    "sha256": "35e17e198c5bbb01ec74f65ed43d0c742bd84af2d21955b118879af67c09237c"
+  },
+  "same_old428231_exp_losses": {
+    "before671": true,
+    "after642": true,
+    "fixed29": {
+      "strict28": true,
+      "equal1": "C0861FF4680382C9"
+    }
+  },
+  "same_older48763_exp_losses": {
+    "before154": true,
+    "after126": true
+  },
+  "expanded440007_exp_losses": {
+    "total2023": true,
+    "old642": true,
+    "new_preexisting1381": {
+      "small_true_midpoint_preimages": 1353,
+      "uniform15": true,
+      "normal_endpoints13": true
+    }
+  },
+  "all2023_parent_bound_no_new_raw_losses": true,
+  "expanded_pow_remaining7904": true,
+  "pow_replay_reference_variants10085_distinct_candidate_states10081": true,
+  "pow_references_inherited_not_fresh": true,
+  "known_exp_parent_cost_increase_states": 200,
+  "known_increase_deltas": {
+    "2": 126,
+    "29": 74
+  },
+  "known_increase_Qfplib_partition": {
+    "no_slower_correct_Qfplib": 86,
+    "wrong_Qfplib": 70,
+    "already_slower_correct_Qfplib": 44
+  },
+  "original507_delta": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/original507-component-delta.json",
+    "bytes": 1772,
+    "sha256": "aa5c8dbcfb71182d9d019bd1760d01e3281f50ad2cbf61f6b3c2b02eabb07a90"
+  },
+  "not_one_integrated_binary": true,
+  "whole_math_hardware_release_GO": false
+}

@@ -1,0 +1,16 @@
+{
+  "status": "PASS_LITERAL_DIRECTIONAL_GATE_AGAINST_INDEPENDENT_RATIONAL_ENCLOSURE",
+  "unit_ELF_sha256": "150e5216ef74398922c32febc3dae6066bcdeed07dd06dedd8b657e00349fafc",
+  "actual_ARM_calls": 275672,
+  "accepted": 215856,
+  "rejected": 59816,
+  "unsafe_admissions": 0,
+  "all_source_g_bins_and_all_qhead_bins_included": true,
+  "instruction_counts": {
+    "42": 275672
+  },
+  "stack_bytes_touched": 20,
+  "no_ROM_firmware_external_calls_mocks_or_SIO": true,
+  "new_MPFR_calls": 0,
+  "hardware_accessed": false
+}

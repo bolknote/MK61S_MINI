@@ -1,0 +1,24 @@
+{
+  "status": "PASS_OWN_HOST_RUN_EXIT0",
+  "python": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+  "Unicorn": "2.1.4",
+  "MPFR": "4.2.2",
+  "exec_session": 96766,
+  "completion_chunk": "08885e",
+  "returncode": 0,
+  "own_public_ARM_calls": 2216,
+  "own_bare_ARM_calls": 1476,
+  "own_total_ARM_calls": 3692,
+  "own_fresh_directed_MPFR_references": 277,
+  "initialisers_not_counted_as_qualified_public_or_unit_calls": true,
+  "inherited_unit_calls_not_added": 572776,
+  "author_127590_current_candidate_calls_not_our_fresh_calls": true,
+  "author_3264_focused_repeats_not_added_to_own_totals": true,
+  "JIT_host_only_authorised_execution": true,
+  "hardware": false,
+  "reproduction": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square-ordinary-independent-20261024/bind.py",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square-ordinary-independent-20261024/proof.py",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python -u -X faulthandler /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square-ordinary-independent-20261024/arm.py"
+  ]
+}

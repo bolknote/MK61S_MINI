@@ -1,0 +1,10 @@
+{
+  "status": "IDENTICAL_LINKED_NEAR_CODE_AND_TABLE_INHERIT_PARENT_PROOF",
+  "linked_addresses_and_bytes_identical": true,
+  "source_header_byte_identical": true,
+  "parent_result_sha256": "607c0e11a53050cb4e24aa9f3616fad32fd80dc5eca91eb8e8a47a82f871293e",
+  "parent_certificate_sha256": "4fa3d072fd028d2987145fa5a92bbc166987017088a00ba0d29d8ba15df817b6",
+  "parent_packer_proof_sha256": "09010cc9bbc2262281f4b0a7d85295942f5990a99cf505a69bcf4a3e698b096a",
+  "inherited_packer_ARM_calls": 16896,
+  "fresh_packer_ARM_calls_claimed": 0
+}

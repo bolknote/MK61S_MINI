@@ -1,0 +1,32 @@
+{
+  "status": "PASS_LITERAL_SMALL_EXP_PACK_AGAINST_INTEGER_INTERVAL_ORACLE",
+  "unit_ELF_sha256": "2358077699ecf2c34e514cdce881073e3e6853def5d7da5a9cb1f39b5fa2ac2a",
+  "qualified_fresh_ARM_calls": 74088,
+  "accepted": 16464,
+  "rejected": 57624,
+  "unsafe_admissions": 0,
+  "all21binades_both_signs_all_pack_branches_midpoint_edges": true,
+  "instruction_counts": {
+    "96": 2885,
+    "83": 21874,
+    "100": 4577,
+    "93": 5872,
+    "80": 1778,
+    "97": 364,
+    "104": 390,
+    "102": 2703,
+    "85": 18908,
+    "106": 4510,
+    "90": 433,
+    "70": 1421,
+    "92": 351,
+    "72": 1225,
+    "86": 364,
+    "67": 98,
+    "95": 6335
+  },
+  "stack_bytes_touched": 48,
+  "no_ROM_firmware_external_calls_mocks_or_SIO": true,
+  "actual_MPFR_calls": 0,
+  "hardware_accessed": false
+}

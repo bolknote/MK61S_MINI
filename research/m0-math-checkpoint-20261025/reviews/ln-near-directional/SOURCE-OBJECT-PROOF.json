@@ -1,0 +1,111 @@
+{
+  "status": "PASS_FULL_PUBLIC_AND_EXACT_INLINE_UNIT_BINDING",
+  "whole_object_sha256": "7795f4498c00ee28ac73dcd61b11a1952979a71b0f9113f72eb4ab6623e59f22",
+  "entire_ELF_sha256": "272ecb817c396bd655cb19132f4df97c4d5d9da6046dc999a94a164de55e4425",
+  "no_excluded_bytes": true,
+  "changed_sections": {
+    ".text.ln_near_interval": [
+      912,
+      1160
+    ]
+  },
+  "allocated_code_growth_bytes": 248,
+  "all_other_bodies_tables_global_RAM_deps_unchanged": true,
+  "ratio_ASM_byteexact_parent": true,
+  "existing_near_table_bytes_identical": true,
+  "off_target_controls": {
+    "generic_M0": {
+      "exact": true,
+      "allocated_bytes": 247584
+    },
+    "M4_soft": {
+      "exact": true,
+      "allocated_bytes": 0
+    },
+    "M4_hard": {
+      "exact": true,
+      "allocated_bytes": 0
+    }
+  },
+  "M4_controls_M0_TU_disabled_not_whole_firmware": true,
+  "bare_unit_ELF_sha256": "b3f0b7a9f3a0b24314d9b7d1c6a8008e70a1507d0f74c1ce337daa9c8a554821",
+  "bare_fragment_sha256": "ad7b575da57f64b69bc53543a04c5a3cc0c64aeec002720458b2b8433591d5d3",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-fno-use-cxa-atexit",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-fno-lto",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-20261024/native_eabi_m0.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/candidate-full.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-I",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/source/code",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-20261024/ratio.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/candidate-ratio.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_ln",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-20261024/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/candidate-full.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/candidate-ratio.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/candidate.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/pack-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/pack-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/pack-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/pack-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/pack-unit.elf"
+    ]
+  ],
+  "author_files": 53,
+  "input_pins": 557
+}

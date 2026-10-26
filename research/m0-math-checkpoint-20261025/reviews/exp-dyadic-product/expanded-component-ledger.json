@@ -1,0 +1,51 @@
+{
+  "status": "ACCEPTED_PRIVATE_DYADIC_EXP_SHARED79_PRODUCT_COMPONENT_ONLY",
+  "accepted_parent_expanded_ledger": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/expanded-component-ledger.json",
+    "bytes": 1632,
+    "sha256": "6835a5855fda419ce3ff8b8b622ba00d846c2180ed91eee5f5e49aa3ece545f4"
+  },
+  "same_old440007_exp_losses": {
+    "before2023": true,
+    "after1476": true,
+    "fixed547": {
+      "strict542": true,
+      "equal5": true
+    }
+  },
+  "same_older48763_exp_losses_before126_after96": true,
+  "expanded456750_exp_losses": {
+    "total1541": true,
+    "old1476": true,
+    "new_preexisting65": {
+      "dyadic_midpoints40": true,
+      "dyadic_interiors13": true,
+      "uniform12": true
+    }
+  },
+  "all1541_parent_cost_bound_no_new_measured_losses": true,
+  "expanded_pow_before7904_after7901": true,
+  "fixed_expanded_pow_pairs_match_three_original_ties": true,
+  "pow_replay_reference_variants10085_distinct_fresh_states10081": true,
+  "pow_old_MPFR_Qfplib_references_inherited": true,
+  "known_exp_parent_cost_increase_states": 13222,
+  "known_delta": 2,
+  "known_increase_Qfplib_partition": {
+    "already_losing_correct_Qfplib": 200,
+    "wrong_Qfplib": 11950,
+    "still_no_slower_correct_Qfplib": 1072
+  },
+  "positive_hard_exp_regression2264_to2266_Q649_retained": true,
+  "original507_delta": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-dyadic-product-independent-20261024/original507-component-delta.json",
+    "bytes": 2865,
+    "sha256": "d53f7c3e7f3722e79057b83e017c07501bcfd65bde6284e2084a99f13f173df3"
+  },
+  "parent_GO_additive_receipt": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-dyadic-product-independent-20261024/parent-GO-after-seal.json",
+    "bytes": 14647,
+    "sha256": "7c1b736fb21dd1b349faff16cf0486be408de0251b10cc12262a471b14fd39c1"
+  },
+  "not_one_integrated_binary": true,
+  "whole_math_hardware_release_GO": false
+}

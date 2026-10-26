@@ -1,0 +1,8 @@
+{
+  "status": "COPIED_SAVED_UNQUALIFIED_PROTOTYPE_FOR_PRIVATE_QUALIFICATION",
+  "snapshot_commit": "d0b9cbd6c47648b136104f7a66a714af3db9f7e5",
+  "parent_result_sha256": "9c40ecbe12d871cff65e65cf40672c0b9325314ec0828c797f7d19913a89ad02",
+  "source_sha256": "ba084abda5a2c3d71071ae800224c552efce2652d2838735782cd16e764b090e",
+  "original_prototype_unchanged": true,
+  "canonical_or_device_changed": false
+}

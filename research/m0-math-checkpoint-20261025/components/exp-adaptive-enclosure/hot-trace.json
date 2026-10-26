@@ -1,0 +1,1056 @@
+{
+  "status": "DIAGNOSTIC_NORMAL_PATH_TRACE_NOT_QUALIFICATION",
+  "parent_instructions": 543,
+  "candidate_instructions": 546,
+  "changes": [
+    {
+      "op": "replace",
+      "parent": [
+        {
+          "offset": 756,
+          "text": "adcs",
+          "normalized": "adcs"
+        },
+        {
+          "offset": 758,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 760,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 762,
+          "text": "muls",
+          "normalized": "muls"
+        },
+        {
+          "offset": 764,
+          "text": "ldr",
+          "normalized": "ldr"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 756,
+          "text": "adcs",
+          "normalized": "adcs"
+        },
+        {
+          "offset": 758,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 760,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 762,
+          "text": "muls",
+          "normalized": "muls"
+        },
+        {
+          "offset": 764,
+          "text": "ldr",
+          "normalized": "ldr"
+        }
+      ]
+    },
+    {
+      "op": "replace",
+      "parent": [
+        {
+          "offset": 768,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 770,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 772,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 774,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 776,
+          "text": "adds",
+          "normalized": "adds"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 768,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 770,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 772,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 774,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 776,
+          "text": "adds",
+          "normalized": "adds"
+        }
+      ]
+    },
+    {
+      "op": "delete",
+      "parent": [
+        {
+          "offset": 786,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 788,
+          "text": "asrs",
+          "normalized": "asrs"
+        },
+        {
+          "offset": 790,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 792,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 794,
+          "text": "eors",
+          "normalized": "eors"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 786,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 788,
+          "text": "asrs",
+          "normalized": "asrs"
+        },
+        {
+          "offset": 790,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 792,
+          "text": "eors",
+          "normalized": "eors"
+        }
+      ]
+    },
+    {
+      "op": "insert",
+      "parent": [
+        {
+          "offset": 794,
+          "text": "eors",
+          "normalized": "eors"
+        },
+        {
+          "offset": 796,
+          "text": "mov",
+          "normalized": "mov"
+        },
+        {
+          "offset": 798,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 800,
+          "text": "uxth",
+          "normalized": "uxth"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 792,
+          "text": "eors",
+          "normalized": "eors"
+        },
+        {
+          "offset": 794,
+          "text": "mov",
+          "normalized": "mov"
+        },
+        {
+          "offset": 796,
+          "text": "ldrh",
+          "normalized": "ldrh"
+        },
+        {
+          "offset": 798,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 800,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 802,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 804,
+          "text": "uxth",
+          "normalized": "uxth"
+        }
+      ]
+    },
+    {
+      "op": "delete",
+      "parent": [
+        {
+          "offset": 802,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 804,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 806,
+          "text": "ldrh",
+          "normalized": "ldrh"
+        },
+        {
+          "offset": 808,
+          "text": "muls",
+          "normalized": "muls"
+        },
+        {
+          "offset": 810,
+          "text": "muls",
+          "normalized": "muls"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 806,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 808,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 810,
+          "text": "muls",
+          "normalized": "muls"
+        },
+        {
+          "offset": 812,
+          "text": "muls",
+          "normalized": "muls"
+        }
+      ]
+    },
+    {
+      "op": "delete",
+      "parent": [
+        {
+          "offset": 822,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 824,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 826,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 828,
+          "text": "muls",
+          "normalized": "muls"
+        },
+        {
+          "offset": 830,
+          "text": "muls",
+          "normalized": "muls"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 824,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 826,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 828,
+          "text": "muls",
+          "normalized": "muls"
+        },
+        {
+          "offset": 830,
+          "text": "muls",
+          "normalized": "muls"
+        }
+      ]
+    },
+    {
+      "op": "insert",
+      "parent": [
+        {
+          "offset": 836,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 838,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 840,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 842,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 836,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 838,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 840,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 842,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 844,
+          "text": "adds",
+          "normalized": "adds"
+        }
+      ]
+    },
+    {
+      "op": "delete",
+      "parent": [
+        {
+          "offset": 838,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 840,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 842,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 844,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 846,
+          "text": "uxth",
+          "normalized": "uxth"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 840,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 842,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 844,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 846,
+          "text": "uxth",
+          "normalized": "uxth"
+        }
+      ]
+    },
+    {
+      "op": "insert",
+      "parent": [
+        {
+          "offset": 894,
+          "text": "bge.n",
+          "normalized": "bge.n"
+        },
+        {
+          "offset": 906,
+          "text": "mov",
+          "normalized": "mov"
+        },
+        {
+          "offset": 908,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 910,
+          "text": "adcs",
+          "normalized": "adcs"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 894,
+          "text": "bge.n",
+          "normalized": "bge.n"
+        },
+        {
+          "offset": 906,
+          "text": "mov",
+          "normalized": "mov"
+        },
+        {
+          "offset": 908,
+          "text": "mov",
+          "normalized": "mov"
+        },
+        {
+          "offset": 910,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 912,
+          "text": "adcs",
+          "normalized": "adcs"
+        }
+      ]
+    },
+    {
+      "op": "insert",
+      "parent": [
+        {
+          "offset": 922,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 924,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 926,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 928,
+          "text": "lsls",
+          "normalized": "lsls"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 924,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 926,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 928,
+          "text": "asrs",
+          "normalized": "asrs"
+        },
+        {
+          "offset": 930,
+          "text": "str",
+          "normalized": "str"
+        },
+        {
+          "offset": 932,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 934,
+          "text": "lsls",
+          "normalized": "lsls"
+        }
+      ]
+    },
+    {
+      "op": "delete",
+      "parent": [
+        {
+          "offset": 926,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 928,
+          "text": "lsls",
+          "normalized": "lsls"
+        },
+        {
+          "offset": 930,
+          "text": "asrs",
+          "normalized": "asrs"
+        },
+        {
+          "offset": 932,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 934,
+          "text": "str",
+          "normalized": "str"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 932,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 934,
+          "text": "lsls",
+          "normalized": "lsls"
+        },
+        {
+          "offset": 936,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 938,
+          "text": "ldr",
+          "normalized": "ldr"
+        }
+      ]
+    },
+    {
+      "op": "delete",
+      "parent": [
+        {
+          "offset": 930,
+          "text": "asrs",
+          "normalized": "asrs"
+        },
+        {
+          "offset": 932,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 934,
+          "text": "str",
+          "normalized": "str"
+        },
+        {
+          "offset": 936,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 938,
+          "text": "ldr",
+          "normalized": "ldr"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 934,
+          "text": "lsls",
+          "normalized": "lsls"
+        },
+        {
+          "offset": 936,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 938,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 940,
+          "text": "ldr",
+          "normalized": "ldr"
+        }
+      ]
+    },
+    {
+      "op": "delete",
+      "parent": [
+        {
+          "offset": 936,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 938,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 940,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 942,
+          "text": "asrs",
+          "normalized": "asrs"
+        },
+        {
+          "offset": 944,
+          "text": "str",
+          "normalized": "str"
+        },
+        {
+          "offset": 946,
+          "text": "str",
+          "normalized": "str"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 938,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 940,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 942,
+          "text": "str",
+          "normalized": "str"
+        },
+        {
+          "offset": 944,
+          "text": "str",
+          "normalized": "str"
+        }
+      ]
+    },
+    {
+      "op": "insert",
+      "parent": [
+        {
+          "offset": 944,
+          "text": "str",
+          "normalized": "str"
+        },
+        {
+          "offset": 946,
+          "text": "str",
+          "normalized": "str"
+        },
+        {
+          "offset": 948,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 950,
+          "text": "eors",
+          "normalized": "eors"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 942,
+          "text": "str",
+          "normalized": "str"
+        },
+        {
+          "offset": 944,
+          "text": "str",
+          "normalized": "str"
+        },
+        {
+          "offset": 946,
+          "text": "asrs",
+          "normalized": "asrs"
+        },
+        {
+          "offset": 948,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 950,
+          "text": "eors",
+          "normalized": "eors"
+        }
+      ]
+    },
+    {
+      "op": "delete",
+      "parent": [
+        {
+          "offset": 948,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 950,
+          "text": "eors",
+          "normalized": "eors"
+        },
+        {
+          "offset": 952,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 954,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 956,
+          "text": "movs",
+          "normalized": "movs"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 948,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 950,
+          "text": "eors",
+          "normalized": "eors"
+        },
+        {
+          "offset": 952,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 954,
+          "text": "movs",
+          "normalized": "movs"
+        }
+      ]
+    },
+    {
+      "op": "delete",
+      "parent": [
+        {
+          "offset": 1154,
+          "text": "add",
+          "normalized": "add"
+        },
+        {
+          "offset": 1156,
+          "text": "lsls",
+          "normalized": "lsls"
+        },
+        {
+          "offset": 1158,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 1160,
+          "text": "lsls",
+          "normalized": "lsls"
+        },
+        {
+          "offset": 1162,
+          "text": "orrs",
+          "normalized": "orrs"
+        },
+        {
+          "offset": 1164,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 1166,
+          "text": "movs",
+          "normalized": "movs"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 1196,
+          "text": "add",
+          "normalized": "add"
+        },
+        {
+          "offset": 1198,
+          "text": "lsls",
+          "normalized": "lsls"
+        },
+        {
+          "offset": 1200,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 1202,
+          "text": "str",
+          "normalized": "str"
+        }
+      ]
+    },
+    {
+      "op": "insert",
+      "parent": [
+        {
+          "offset": 1162,
+          "text": "orrs",
+          "normalized": "orrs"
+        },
+        {
+          "offset": 1164,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 1166,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 1168,
+          "text": "lsls",
+          "normalized": "lsls"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 1198,
+          "text": "lsls",
+          "normalized": "lsls"
+        },
+        {
+          "offset": 1200,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 1202,
+          "text": "str",
+          "normalized": "str"
+        },
+        {
+          "offset": 1204,
+          "text": "movs",
+          "normalized": "movs"
+        },
+        {
+          "offset": 1206,
+          "text": "lsls",
+          "normalized": "lsls"
+        }
+      ]
+    },
+    {
+      "op": "insert",
+      "parent": [
+        {
+          "offset": 1168,
+          "text": "lsls",
+          "normalized": "lsls"
+        },
+        {
+          "offset": 1170,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 1172,
+          "text": "cmp",
+          "normalized": "cmp"
+        },
+        {
+          "offset": 1174,
+          "text": "sbcs",
+          "normalized": "sbcs"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 1206,
+          "text": "lsls",
+          "normalized": "lsls"
+        },
+        {
+          "offset": 1208,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 1210,
+          "text": "lsls",
+          "normalized": "lsls"
+        },
+        {
+          "offset": 1212,
+          "text": "str",
+          "normalized": "str"
+        },
+        {
+          "offset": 1214,
+          "text": "cmp",
+          "normalized": "cmp"
+        },
+        {
+          "offset": 1216,
+          "text": "sbcs",
+          "normalized": "sbcs"
+        }
+      ]
+    },
+    {
+      "op": "insert",
+      "parent": [
+        {
+          "offset": 1172,
+          "text": "cmp",
+          "normalized": "cmp"
+        },
+        {
+          "offset": 1174,
+          "text": "sbcs",
+          "normalized": "sbcs"
+        },
+        {
+          "offset": 1176,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 1178,
+          "text": "adcs",
+          "normalized": "adcs"
+        }
+      ],
+      "candidate": [
+        {
+          "offset": 1214,
+          "text": "cmp",
+          "normalized": "cmp"
+        },
+        {
+          "offset": 1216,
+          "text": "sbcs",
+          "normalized": "sbcs"
+        },
+        {
+          "offset": 1218,
+          "text": "lsrs",
+          "normalized": "lsrs"
+        },
+        {
+          "offset": 1220,
+          "text": "orrs",
+          "normalized": "orrs"
+        },
+        {
+          "offset": 1222,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 1224,
+          "text": "ldr",
+          "normalized": "ldr"
+        },
+        {
+          "offset": 1226,
+          "text": "adds",
+          "normalized": "adds"
+        },
+        {
+          "offset": 1228,
+          "text": "adcs",
+          "normalized": "adcs"
+        }
+      ]
+    }
+  ],
+  "hardware_accessed": false
+}

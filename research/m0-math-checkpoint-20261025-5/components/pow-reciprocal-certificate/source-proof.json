@@ -1,0 +1,93 @@
+{
+  "status": "PASS_EXACT_SOURCE_TRANSFORM_AND_RESIDENT_TARGET_CONTROLS",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/candidate-ddiv.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/generic_M0-candidate-ddiv-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/candidate-software.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/generic_M0-candidate-software-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/candidate-ddiv.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/M4_soft-candidate-ddiv-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/candidate-software.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/M4_soft-candidate-software-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mfloat-abi=hard",
+      "-mfpu=fpv4-sp-d16",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/candidate-ddiv.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/M4_hard-candidate-ddiv-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mfloat-abi=hard",
+      "-mfpu=fpv4-sp-d16",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/candidate-software.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-20261025/M4_hard-candidate-software-disabled.o"
+    ]
+  ],
+  "default_M0_M4_selected_controls_equal": true,
+  "six_added_disabled_objects_empty": true,
+  "all_refinement_instructions_before_dd1_unchanged": true,
+  "only_known_zero_yL_shift_removed_before_certificate": true,
+  "yL_zero_proof": "Positive-one raw lowword R0=0 survives the first two products. The existing lsls r4,r0,#5 sets yL=0. The signed product leaves R4 untouched; optional doubling preserves zero. Shift flags are dead before the later SUBS.",
+  "universal_omitted_product_bound": 131071,
+  "certificate_preserves_R0_R1_R12_SP": true,
+  "complete_old_product_and_signed_sign_test_retained_on_uncertain_interval": true,
+  "uncertainty_excludes_both_zero_and_INT32_MIN": true,
+  "zero_uses_complete_parent_sign_test": true,
+  "positive_ADDS_resets_carry_before_ADCS": true,
+  "negative_pack_shifts_reset_dead_flags": true,
+  "same256B_seed_table_and_inline_seed_bytes": true,
+  "READY_nine_ALU_gap_unchanged": true,
+  "resident_ddiv_and_all_other_callers_bytes_addresses_unchanged": true,
+  "new_tables_RAM_libgcc_or_external_calls": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

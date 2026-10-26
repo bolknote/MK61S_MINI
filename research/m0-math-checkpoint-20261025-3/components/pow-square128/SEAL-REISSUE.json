@@ -1,0 +1,18 @@
+{
+  "status": "FIRST_SEAL_REJECTED_ONLY_LATE_PRODUCER_LOG_PIN",
+  "producer_directory": ".build/m0-pow-square128-20261025",
+  "rejected_seal_sha256": "2f8310755224d63b246743976692f13b396d40bedfc31a619711f6926791d80c",
+  "failed_pin": "finalize.log",
+  "claimed": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "completed_producer_log": {
+    "bytes": 376,
+    "sha256": "03b995e502337c8c5b0cc71f1e88777c67491d4da3882951251d8950d1980f16"
+  },
+  "numerical_evidence_binary_or_source_changes": 0,
+  "original_packet_not_rewritten": true,
+  "fresh_ARM_or_MPFR_calls": 0,
+  "next_seal_is_independent_reissue_over_byte_copies": true
+}

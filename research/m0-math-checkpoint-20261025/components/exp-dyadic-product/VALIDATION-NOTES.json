@@ -1,0 +1,6 @@
+{
+  "initial_units": "70660 old/new raw pair comparisons completed; final legacy counter assertion incorrectly expected40 touched bytes for parent81-instruction kernel, whose touched bytes are36. Initial run excluded from qualified counts. Fixed counter expects old/new36 writes; frame depth separately observed40/36. No source or ELF change needed.",
+  "initial_log": ".build/m0-exp-dyadic-units-initial-counter-error-20261024.log",
+  "rerun": "verify-units.py final clean full repeat required",
+  "metadata_clarification": "Before seal, producer/report field source_body_unchanged_after_prologue renamed source_arithmetic_unchanged_except_stack_frame_management: the SP epilogue changes20->16. Numerical counts/results unchanged, actual144 arithmetic bytes plus finalPOP independently bound in isolation-rebuild.json."
+}

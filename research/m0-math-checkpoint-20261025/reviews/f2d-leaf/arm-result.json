@@ -1,0 +1,145 @@
+{
+  "status": "PASS_OWN_F2D_ADVERSARIAL_REBUILT_ARM_AND_INTEGER_POWER_MPFR",
+  "unique_inputs": 3366,
+  "fresh_ARM_calls": 26928,
+  "state_rows": 6732,
+  "machine_calls": {
+    "candidate": 6732,
+    "intended_source": 6732,
+    "parent": 6732,
+    "Qfplib": 6732
+  },
+  "fresh_direct_MPFR_conversions": 3366,
+  "MPFR_version": "4.2.2",
+  "MPFR_input_finite_built_from_integer_times_power_of_two": true,
+  "MPFR_NaN_category_conversions": 264,
+  "exact_integer_widening_every_input": true,
+  "all_parent_raw_bits_exact_including_NaN_payload_sign_quiet": true,
+  "groups": {
+    "every_normal_exponent_both_signs": 1524,
+    "normal_high_low_split_and_carry": 352,
+    "every_subnormal_width_and_lower_bit_controls": 1094,
+    "every_NaN_payload_bit": 136,
+    "mixed_NaN_payload": 128,
+    "both_signed_zero_old_deficits": 2,
+    "both_infinity_old_deficits": 2,
+    "independent_uniform_raw": 128
+  },
+  "classes": {
+    "normal": 4008,
+    "subnormal": 2188,
+    "NaN": 528,
+    "zero": 4,
+    "infinity": 4
+  },
+  "actual_path_counts": {
+    "candidate": 53,
+    "intended_source": 53,
+    "Qfplib": 3
+  },
+  "all23_subnormal_widths_each_sign_and_state": true,
+  "all_complete_source_costs_match_actual_ARM": true,
+  "all_correct_Qfplib_classes_no_slower": true,
+  "all_own_states_strictly_faster_parent": true,
+  "old_four_deficits_fixed": [
+    "00000000",
+    "7F800000",
+    "80000000",
+    "FF800000"
+  ],
+  "parent_cost_delta_distribution": {
+    "-130": 1132,
+    "-128": 768,
+    "-126": 96,
+    "-124": 192,
+    "-25": 4,
+    "-23": 4,
+    "-18": 528,
+    "-1": 4008
+  },
+  "stack_bytes_candidate": 0,
+  "stack_bytes_intended_source": 0,
+  "SIO_accesses": 0,
+  "all28_SIO_bytes_READY_DIRTY_preserved": true,
+  "leaf_memory_only_six_in_section_literals": {
+    "candidate": [
+      [
+        269893780,
+        4
+      ],
+      [
+        269893784,
+        4
+      ],
+      [
+        269893788,
+        4
+      ],
+      [
+        269893792,
+        4
+      ],
+      [
+        269893796,
+        4
+      ],
+      [
+        269893800,
+        4
+      ]
+    ],
+    "intended_source": [
+      [
+        269893780,
+        4
+      ],
+      [
+        269893784,
+        4
+      ],
+      [
+        269893788,
+        4
+      ],
+      [
+        269893792,
+        4
+      ],
+      [
+        269893796,
+        4
+      ],
+      [
+        269893800,
+        4
+      ]
+    ]
+  },
+  "every_leaf_instruction_PC_and_SP_checked": true,
+  "no_leaf_external_ROM_mock_firmware_or_veneer": true,
+  "parent_real_ROM_initializers_excluded": [
+    {
+      "name": "__aeabi_bits_init",
+      "table": "aeabi_bits_funcs",
+      "pointers": [
+        "0x309",
+        "0x357",
+        "0x38f",
+        "0x32d"
+      ]
+    },
+    {
+      "name": "__aeabi_mem_init",
+      "table": "aeabi_mem_funcs",
+      "pointers": [
+        "0x26b9",
+        "0x261d",
+        "0x26ad",
+        "0x2605"
+      ]
+    }
+  ],
+  "inputs_sha256": "e0730695590ec7f32da5f2c4b8c700e6668ac28936064a196894aa3e05e22d07",
+  "rows_sha256": "46de980f1e4e7bfde1484230872f1dbb11950d0802d8ad603d3d7ba2901980a4",
+  "hardware": false
+}

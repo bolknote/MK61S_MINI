@@ -1,0 +1,9 @@
+{
+  "status": "FAILED_HOST_SYMBOL_LABEL_ASSUMPTION",
+  "command": "python3 -B .build/m0-pow-boundary128-independent-20261025/binding.py",
+  "exit_code": 1,
+  "error": "KeyError: mk61_m0_boundary128_compare at binding.py line72; helper symbol name must be inspected independently from linked alias",
+  "actual_ARM_calls": 0,
+  "actual_MPFR_inputs": 0,
+  "no_builds_executed_before_failure": true
+}

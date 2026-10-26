@@ -1,0 +1,131 @@
+--- parent/native_eabi_m0_log70.inc
++++ candidate/native_eabi_m0_log70.inc
+@@ -78,6 +78,116 @@
+   }
+   return ln_pack_relative(math62_product(q,factor),2-int(leading),negative?D::Sign:0,error,x);
+ }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++static constexpr int8_t ln_near_q77_delta[256]={
++  -15,-39,-55,19,13,-4,-51,5,-7,-57,11,-33,18,42,32,-30,
++  19,15,47,-52,8,-45,52,-46,62,-5,-49,-54,22,3,-41,-39,
++  36,55,63,46,11,-4,34,33,-11,5,-14,41,54,-47,54,47,
++  -25,-1,-44,23,26,-36,-38,25,-9,52,63,64,-33,-45,35,51,
++  6,-61,-3,46,0,-54,-51,53,-45,23,-50,18,6,-54,42,21,
++  -58,55,-55,49,28,25,58,-8,-47,36,-45,18,8,28,10,51,
++  41,-8,52,54,38,54,34,-22,-55,-23,-40,49,14,46,-38,6,
++  55,21,-51,31,54,50,-11,44,15,-26,-63,-8,-42,22,9,0,
++  8,12,-35,-51,21,6,-9,1,-8,39,-39,30,-41,8,-19,-44,
++  60,57,26,-42,64,-8,47,29,-50,38,54,-52,-52,-46,20,8,
++  -39,19,33,11,-8,-9,18,30,-39,-59,-44,-50,6,-50,53,11,
++  43,5,-8,-21,46,34,38,-50,-42,-18,52,11,46,4,-56,-17,
++  -45,44,-54,25,-25,-7,-35,11,-51,-28,-1,-7,-45,1,-6,13,
++  3,0,52,-51,53,23,37,49,2,-6,-2,41,-61,6,34,20,
++  59,58,32,-33,-5,23,54,-49,45,9,-5,43,-50,-25,-37,62,
++  -8,39,-47,-37,-51,-44,31,-14,14,-31,-12,54,-6,-47,28,-5,
++};
++__attribute__((always_inline)) inline U ln_near_argument77(U delta,U reciprocal,uint32_t den,int32_t& residue) {
++  U h=mk61_m0_log_product54(delta,reciprocal)<<7;
++  const int32_t r=int32_t((uint32_t(delta)<<28)-uint32_t(h)*den);
++  const bool negative=r<0;
++  const uint32_t magnitude=negative?0U-uint32_t(r):uint32_t(r);
++  // 4096-floor(den/4) approximates2^24/den within3/4 throughout
++  // den8065..8320. The final captured residue certifies its rounding.
++  const uint32_t correction=(magnitude*(4096U-(den>>2))+(1U<<23))>>24;
++  const int32_t signed_correction=negative?-int32_t(correction):int32_t(correction);
++  h+=U(int64_t(signed_correction));
++  residue=int32_t((uint32_t(delta)<<28)-uint32_t(h)*den);
++  return h;
++}
++__attribute__((always_inline)) inline U ln_near_third77(U a) {
++  const uint32_t hi=uint32_t(a>>32),lo=uint32_t(a);
++  const uint32_t qh=(hi*171U)>>9;
++  const uint32_t ql=uint32_t(wide32(lo,0xAAAAAAABU)>>33);
++  const uint32_t rh=hi-3*qh,tail=rh+lo-3*ql,carry=tail>=3;
++  const U q=(U(qh)<<32)|uint32_t(ql+rh*0x55555555U+carry);
++  return q+U(tail-3*carry>=2);
++}
++__attribute__((always_inline)) inline double ln_near_round_pack77(U low,uint32_t high,U sign,
++    int32_t bias60,int32_t residue,uint32_t den,bool add,bool exact_center,double x) {
++  unsigned width,shift;int bias;
++  if(high) {width=32-clz32(high);shift=width+11;bias=int(width)+1023;}
++  else {width=64-clz64(low);shift=width-53;bias=int(width)+959;}
++  const uint32_t tail=uint32_t(low)&((1U<<shift)-1),half=1U<<(shift-1);
++  const uint32_t distance=tail>half?tail-half:half-tail;
++  bool safe=distance>=4;
++  if(!safe && distance) {
++    if(exact_center) safe=true;
++    else if(bool(tail>half)==add)
++      safe=int32_t(den)*(int32_t(60*distance)-bias60)+60*residue>=90*int32_t(den);
++    else safe=int32_t(den)*(int32_t(60*distance)+bias60)-60*residue>=90*int32_t(den);
++  }
++  if(!safe) return ln_refine(x);
++  const uint32_t lo=uint32_t(low),hi=uint32_t(low>>32);
++  const U retained=(U((hi>>shift)|(high<<(32-shift)))<<32)|uint32_t((lo>>shift)|(hi<<(32-shift)));
++  const U q=retained+U(tail>half || (tail==half && (retained&1)));
++  return real(sign+(U(bias-15)<<52)+q);
++}
++__attribute__((optimize("Os"),noinline)) static double ln_near_interval77(double x,U b) {
++  const bool negative=b<UINT64_C(0x3FF0000000000000);
++  const U s=(b&D::Fraction)|D::Hidden;
++  const U a=negative?((D::Hidden<<1)-s)<<9:(s-D::Hidden)<<10;
++  unsigned n=unsigned((a+(U(1)<<48))>>49);
++  if(!n) return ln_near_one(x,b);
++  // The outer negative center has a 65-bit log value. Clamping to the
++  // preceding center would need a 49-bit distance and invalidate the
++  // short product and quartic remainder bounds below.
++  if(negative && n==128) return ln_refine(x);
++  const unsigned index=negative?128-n:128+n;
++  const U center=U(n)<<49;
++  const bool small=a<center,subtract=negative^small;
++  const U delta=small?center-a:a-center;
++  const U base=log_near_table[index-1][1];
++  U low=(base<<7)+U(int64_t(ln_near_q77_delta[index-1]));
++  uint32_t high=uint32_t(base>>57);
++  int32_t bias60=0,residue=0;
++  const uint32_t den=8064U+index;
++  if(delta) {
++    const U h=ln_near_argument77(delta,log_near_table[index-1][0],den,residue);
++    U correction=h;
++    if(h>(U(1)<<38)) {
++      const uint32_t t=uint32_t(h>>32);
++      const U z=(wide32(t,t)>>13)+(wide32(t,uint32_t(h))>>44)+1;
++      const uint32_t zc=uint32_t(z>>18);
++      U cp=wide32(t,zc);
++      cp+=uint32_t((uint32_t(h)>>16)*(zc>>16));
++      cp+=uint32_t((t>>16)*((uint32_t(z)>>2)&65535U));
++      const U cube=(cp+(U(1)<<26))>>27;
++      const U third=ln_near_third77(cube);
++      const uint32_t zr=uint32_t(z>>19);
++      const uint32_t fourth=uint32_t((wide32(zr,zr)+(U(1)<<38))>>39);
++      const uint32_t fifth=(((t>>16)*(fourth>>6))+(1U<<22))>>23;
++      const uint32_t fifth_term=((fifth+2U)*205U)>>10;
++      const U even=((z+1)>>1)+((fourth+2)>>2),odd=h+third+fifth_term;
++      correction=subtract?odd+even:odd-even;
++      const int32_t r2=-int32_t(z&1U);
++      const int32_t r3=int32_t(uint32_t(cube)-3U*uint32_t(third));
++      const int32_t r4=int32_t((fourth+2)&3U)-2;
++      const int32_t r5=int32_t(fifth)-5*int32_t(fifth_term);
++      const int32_t even_bias=6*r2+3*r4;
++      bias60=5*(-4*r3+(subtract?-even_bias:even_bias))-12*r5;
++    }
++    if(subtract==negative) {const U before=low;low+=correction;high+=uint32_t(low<before);}
++    else {const U before=low;low-=correction;high-=uint32_t(before<correction);}
++  }
++  return ln_near_round_pack77(low,high,negative?D::Sign:0,bias60,residue,den,subtract==negative,!delta,x);
++}
++#endif
+ __attribute__((optimize("Os"),noinline)) static double ln_near_interval(double x,U b) {
+   const bool negative=b<UINT64_C(0x3FF0000000000000);
+   const U s=(b&D::Fraction)|D::Hidden;
+@@ -215,7 +325,11 @@
+     return mk61_m0_cr_ln(x);
+ #endif
+   if(b>=ln_near_lower && b<=UINT64_C(0x3FF0400000000000))
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++    return ln_near_interval77(x,b);
++#else
+     return ln_near_interval(x,b);
++#endif
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+   if(uint32_t(uint32_t(b)+64U)>128U &&
+       (*reinterpret_cast<volatile uint32_t*>(UINT32_C(0xD0000078))&2U)) return ln_main_raw(b);

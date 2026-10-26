@@ -1,0 +1,70 @@
+{
+  "status": "PASS_EXACT_SOURCE_BARE_UNITS_REBUILD_WHOLE_BYTE_EXACT",
+  "source_sha256": "84213d8eb6c7841b48a834cd2304eb8c0ccd6bedc150ee84fd01cf39a8a7e06b",
+  "candidate_ELF_sha256": "1164948d280c23bc66601af789dbd2a4af44c0982fb8c813b35fa2b7a396052e",
+  "units": [
+    {
+      "unit": "core-unit",
+      "object_and_whole_ELF_byte_exact": true,
+      "ELF_sha256": "19fe194acb5c6beb0ea5e496dd8a7f6b55ee0e1a62622a8ff5c02699cc7c5aca"
+    },
+    {
+      "unit": "pack-unit",
+      "object_and_whole_ELF_byte_exact": true,
+      "ELF_sha256": "f24714316c0c6b6292ca1bf797cf75f5c73a7692dae046b0167e1d8553543e79"
+    }
+  ],
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/core-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/unit-rebuild/core-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/core-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/unit-rebuild/core-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/unit-rebuild/core-unit.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/pack-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/unit-rebuild/pack-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/pack-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/unit-rebuild/pack-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/unit-rebuild/pack-unit.elf"
+    ]
+  ],
+  "hardware_accessed": false
+}

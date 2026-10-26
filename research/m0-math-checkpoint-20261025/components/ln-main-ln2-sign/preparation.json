@@ -1,0 +1,4 @@
+{
+  "parent": ".build/m0-ln-near-q77-linear-20261024",
+  "trial": "Use downward Q70 ln2 rounding sign only after the original midpoint guard. Exact main accepts above-distance>=8 with n>0; raw main above-distance>=14. No new table or lower radius on other paths."
+}

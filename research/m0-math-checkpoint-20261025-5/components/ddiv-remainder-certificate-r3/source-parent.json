@@ -1,0 +1,7 @@
+{
+  "source": ".build/m0-ddiv-remainder-certificate-r2-20261025",
+  "FROZEN_sha256": "904e63f0ecb510f8db9953ce686510167d598e1a4905a04ce31f2fb3d3ec3cf3",
+  "change": "Use dead R3 instead of R6 as certificate scratch, preserving R6 for the rounding add.",
+  "archived_sources_modified": false,
+  "hardware_accessed": false
+}

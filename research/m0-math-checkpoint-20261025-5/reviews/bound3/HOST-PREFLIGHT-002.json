@@ -1,0 +1,8 @@
+{
+  "status": "EXCLUDED_OWN_CLOSURE_PYTHON_SYNTAX_PREFLIGHT",
+  "cause": "An output metadata keyword started with numeric58; corrected before any closure read or runtime.",
+  "source_sha256": "cda0933b0d0c595976ebbd183ecb2546be92ecd0084f8ecb9db5eeb1f07c2a82",
+  "actual_ARM_calls": 0,
+  "actual_MPFR_calls": 0,
+  "supplier_modified": false
+}

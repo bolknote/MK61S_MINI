@@ -1,0 +1,38 @@
+{
+  "status": "PASS_SOURCE_BOUND_MAIN_LN_LN2_DIRECTIONAL_UPPER_GATE",
+  "source_sha256": "661ae2b62f0f2e3b9da08b689de0a7876f83fa2f80f57380113b78cbbd74e79b",
+  "candidate_ELF_sha256": "9f872b40e65543d712459854dd261677ce6b504bc3b829112f09126c940395aa",
+  "exact_parent_source_transformation_verified": true,
+  "L70": "818323753292969962226",
+  "L94": "13729194366926868337785367782",
+  "Q94_minus_shifted_Q70": 7924966,
+  "actual_ln2_Q70_error_approx": "-3962483/8388608",
+  "ln2_Q70_is_strictly_below_exact_ln2": true,
+  "rational_100term_log2_lower_and_upper_checked": true,
+  "compile_time_sign_contract_present": true,
+  "exact_polynomial_bound": "7157007042211914738946457/906251642853202851790848",
+  "exact_polynomial_bound_float": 7.897372764676165,
+  "raw_polynomial_bound": "12143881388354481213264281/906251642853202851790848",
+  "raw_polynomial_bound_float": 13.400120688467078,
+  "exact_new_accept": "original guard active && n>0 && tail>=half+8",
+  "raw_new_accept": "original guard active && n>0 && tail>=half+14",
+  "magnitude_ln2_error": "n*(L70-2^70*ln2)<0 for either exponent sign; the main product forms n*L70 exactly",
+  "n_domain": [
+    1,
+    1023
+  ],
+  "all1023_integer_exponents_checked": true,
+  "integer_endpoint_checks": 4092,
+  "inherited_main_pack_shifts": [
+    11,
+    27
+  ],
+  "smallest_half_gap": 1024,
+  "next_midpoint_offset_at_least": 2048,
+  "upper_neighbor_not_skipped": true,
+  "new_tables_RAM_or_dependencies": false,
+  "other_source_paths_unchanged": true,
+  "source_only_new_runtime_changes_are_two_guard_predicates": true,
+  "helper_unit_required": true,
+  "hardware_accessed": false
+}

@@ -1,0 +1,234 @@
+{
+  "schema": "independent-private-pow-exp-table-product-component-v1",
+  "status": "TECH_GO_PRIVATE_TABLE_ONLY_POW_PRODUCT_COMPONENT",
+  "reviewer": "/root/rtc_helper_review",
+  "scope": "Five-file private RP2040 table-only scalar product delta; actual source base directed e6ce/CPP575da330, with independently accepted near-one as separate sibling.",
+  "findings": [],
+  "blocking_component_findings": [],
+  "accepted_frozen_target": {
+    "FROZEN": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/FROZEN.json",
+      "bytes": 18788,
+      "sha256": "dd0ec3663009cd390c710611e57ccc23d18c733201911471feae6e52e58e7d1c"
+    },
+    "result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/result.json",
+      "bytes": 4399,
+      "sha256": "60e4347619b46d4b07bc2b81181f03ea233bd80cc890a88a80c98c1dea8d219d"
+    },
+    "HANDOFF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/HANDOFF.md",
+      "bytes": 2572,
+      "sha256": "60e70ca8781ffdd290aa766a49ef9011a44dc46781a265cbe26000250782aaf6"
+    },
+    "ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/candidate.elf",
+      "bytes": 1203168,
+      "sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98"
+    },
+    "directed_review": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/FINAL-REVIEW.json",
+      "bytes": 16279,
+      "sha256": "0d6073f3534d2abb71ad3348096bca930d2513e3813b06dbcfb8911ca485839b"
+    },
+    "near_one_review": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/FINAL-REVIEW.json",
+      "bytes": 11301,
+      "sha256": "6c504f888e1ce0489379d1769b2d1e331b64bda0354eed746fbe98359748634b"
+    },
+    "near_one_clarification": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/INTERVAL-CLARIFICATION.json",
+      "bytes": 1133,
+      "sha256": "03ceff8e6e0f9e8ca790567f2045f1791c301f1544d2c0f8aaa234a19496c179"
+    },
+    "near_one_ROOT": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-root-acceptance-20261025-001/RECEIPT.json",
+      "bytes": 13206,
+      "sha256": "0831d62fc51c2be190afc220525bb52974d83c5b236bba07359f6946d02c74a5"
+    }
+  },
+  "provenance": {
+    "all123_local_and1349_external_hash_size_pins_verified": true,
+    "exact_five_file_patch": true,
+    "CPP_source_matches_directed_parent575da330": true,
+    "near_one_source_not_in_this_pow_ELF": true,
+    "own_four_full_source_object_fixture_ELF_rebuilds_byteexact": true,
+    "author20_rebuilds_verified_as_saved_evidence_not_own_runs": true,
+    "CPP_allocated_bytes_tables_and_public_enclosures_unchanged": true,
+    "only_three_literal_table_call_relocations_changed": true,
+    "other_semantic_relocations_BSS_defaultM0_M4soft_hard_selected_objects_unchanged": true
+  },
+  "numeric_proof": {
+    "all512_actual_linked_table_constants_byteexact_parent": true,
+    "only_low32zero_row_is_index0_A2pow62": true,
+    "domain_requires_literal_table_A": true,
+    "universal_B64_scalar_identity": "(B>>2)+bit1(B)",
+    "exact_internal_half_up_not_a_new_public_IEEE_rounding_rule": true,
+    "generic_table_selector_preserves_all_arguments_into_old77_body": true,
+    "dyadic_carry_identity_full64_and_no_overflow": true,
+    "existing_public_RNE_enclosures_and_packing_unchanged": true,
+    "general_pow_totality_not_established": true
+  },
+  "fresh_linked_checks": {
+    "actual_callers": 3,
+    "actual_routes": "Direct RAM / real GNU tail veneer / new explicit Flash wrapper",
+    "all_scalar_R0_R1_return_captures_verified": true,
+    "tail_wrappers_restore_R0_SP_and_preserve_LR": true,
+    "general154bytes_same_address_and_R12_fraction_capture": true,
+    "original16byte_wrapper_still_targets_general": true,
+    "new_dyadic_R12_extra_not_promised": true,
+    "exp_consumer_absent_in_this_pow_ELF": true,
+    "fresh_integrated_exp_consumer_guard_claim": false,
+    "old168overlay_destructive_overlap14bytes_negative_preflight_rejected": true
+  },
+  "independent_bounded_actual_checks": {
+    "qualified_ARM_calls": 1966,
+    "bare_calls": 1330,
+    "all512_roots_actual": true,
+    "all16NZCV_on4roots2Bvalues_and_arbitraryR12": true,
+    "dyadic_B64_carry_edges": true,
+    "generic_extra_R12_matches_old": true,
+    "gate_instructions": {
+      "dyadic": 10,
+      "generic": 79,
+      "old_general": 77
+    },
+    "new_Flash_wrapper_instructions": 5,
+    "PCS_R4_R11_SP_PC_boundedwrites_and_activePCs_checked": true,
+    "public_pairs53_bothSIO": true,
+    "public_ARM_calls636": true,
+    "actual_directed_MPFR_inputs": 51,
+    "sNaN_shortcuts_separate": 2,
+    "MPFR_version": "4.2.2",
+    "three_actual_Qfplib_compositions_retained": true,
+    "strict_quiet_NaN_saved_output_policy_rechecked": true,
+    "candidate_parent_control_bits_and_layout_control_costs_equal": true,
+    "all13_original_fixes_strict_bothSIO": true,
+    "actual_cost_law_candidate_minus_parent": "2*g-67*d",
+    "public_table_roots_seen": 11,
+    "no_other_math_qualification": true,
+    "captured_ROM_initializers_excluded_from_qualified_calls": true
+  },
+  "saved_raw_accounting": {
+    "ARM_and_MPFR_calls": 0,
+    "old111912_pairs223824states": true,
+    "old_reference_variants223976": true,
+    "old7901_to7888": true,
+    "expanded116468_pairs232936states": true,
+    "expanded_reference_variants252450": true,
+    "expanded10866_to10853": true,
+    "additional2965loss_pairs_preexisting": true,
+    "new_raw_speed_losses": 0,
+    "original153_parent48_to_candidate35_and13newstrict": true,
+    "all10081_C77_sensitive_state_costs_bound_to_saved_actual_replay": true,
+    "all_saved_actual_costs_match_R_minus7n_plus2g_minus67d": true,
+    "all8024_plus2_cost_increase_states_retained": true,
+    "increase_scopes": {
+      "already_slower_than_a_correct_reference": 2293,
+      "still_no_slower_than_all_correct_references": 2343,
+      "wrong_Qfplib_only": 3388
+    },
+    "all60686_wrongQfplib_reference_variants_retained": true,
+    "correct_Qfplib_variant_comparison": {
+      "slower": 18984,
+      "faster": 170087,
+      "equal": 2693
+    },
+    "all3_reference_symbols_and_all512_roots_in_saved_public_calls_verified": true,
+    "no_nominal_domain_filter": true,
+    "producer_fresh314546_ARM_and4785_MPFR_plus76shortcuts_not_own_runs": true,
+    "pilot3096_and_failed_pre_execution_launcher_excluded": true
+  },
+  "lineage_correction": {
+    "R_qualification_targeted_and_qualified_probe_reconstructed": true,
+    "without_probe223826_plus150qualified_probe_only_equals223976": true,
+    "lossless_focus_archive_verified": true,
+    "uncompressed_bytes": 547596,
+    "uncompressed_sha256": "340318b19b6d4bae44d5317019af900ef06c00e88f1a6e23fb64691a589fc6a2",
+    "R_qualified_probe_distinct_from_this_packet_unqualified_pilot": true,
+    "earlier_r5_archive_omission_not_rewritten": true,
+    "future_checkpoint_must_preserve_lossless_correction": true
+  },
+  "resources": {
+    "source_ASM_allocated_delta_bytes32_includes_RAM16_and_Flash16": true,
+    "reserved_scratch4080_unchanged": true,
+    "no_new_table_global_RAM_libgcc_or_ROM_math_dependency": true,
+    "CPP_static_frames_identical": true,
+    "general_leaf_frame36_dyadic0_wrapper_transient4": true,
+    "observed_same_corpus_parent_control_candidate_stack2284": true,
+    "old_smaller_corpus2236_not_a_frame_regression_comparator": true,
+    "private_diagnostic_relocated_existing_code_and_data_Flash_bytes": [
+      58256,
+      58272
+    ],
+    "whole_firmware_GC_size_universal_stack_or_physical_cycles_not_measured": true
+  },
+  "integration_requirements": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+    "bytes": 1514,
+    "sha256": "f8e986b6fbe41eacaa9e4d834c1ee83eb469e32034d4f1a98d6ee06b820069d9"
+  },
+  "reviewed_whole507_preserved": {
+    "no_slower": 422,
+    "strict": 413,
+    "equal": 9
+  },
+  "author436_separate_union_not_promoted": true,
+  "evidence": {
+    "binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/binding.json",
+      "bytes": 384981,
+      "sha256": "79949aae1ccddfe64019840f6dc92fd7c48343ae20abba6592b7514279304b0c"
+    },
+    "linked-proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/linked-proof.json",
+      "bytes": 4797,
+      "sha256": "ad8a4437a1ef3900d280956fe0f0f36dbb5128d32893470da544aca0ffe07621"
+    },
+    "NUMERIC-REVIEW.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/NUMERIC-REVIEW.md",
+      "bytes": 3480,
+      "sha256": "4e2ef70de8ee9aa74330ee0404c9a779a8de4638f98f86b460d0965478bd0c75"
+    },
+    "bare-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/bare-arm.json",
+      "bytes": 525,
+      "sha256": "c1e68dadd13effa3b306186dc2d06f8e9f8dbb6079b52d42390d791ddd4cf940"
+    },
+    "public-arm-mpfr.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/public-arm-mpfr.json",
+      "bytes": 114404,
+      "sha256": "af65c0ddd69feccb3063137dd181df602367f8f433962a8eebc7777ee3b6cd51"
+    },
+    "public-reference-policy.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/public-reference-policy.json",
+      "bytes": 1223,
+      "sha256": "4044fc2eb0b1c9f1888086df0a9660d4530c3d899687d01fb25f7e5fdb2bc8a3"
+    },
+    "accounting.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/accounting.json",
+      "bytes": 3878,
+      "sha256": "da7e4e6f3079578390d0e0e64494e4d8ddd376793cc75ca18005d20b986c0833"
+    },
+    "INTEGRATION-REQUIREMENTS.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+      "bytes": 1514,
+      "sha256": "f8e986b6fbe41eacaa9e4d834c1ee83eb469e32034d4f1a98d6ee06b820069d9"
+    },
+    "EXECUTION-NOTES.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/EXECUTION-NOTES.json",
+      "bytes": 1346,
+      "sha256": "e199a47349e3436e802fb50d4268eb225bb375cc94b62062d18664ffe442ccb1"
+    }
+  },
+  "authority": {
+    "private_component_HOST_GO": true,
+    "integration_GO": false,
+    "hardware_GO": false,
+    "whole_math_or507_GO": false,
+    "main_release_or_publication_GO": false,
+    "goal_complete": false,
+    "devices_ports_USB_Git_canonical_network_actions": 0
+  },
+  "remaining": "Expanded10853 pow losses, general-pow totality, other operation work, source merge/relink, actual integrated R12 and overlay/loader guards, physical measurement and release remain outside this component acceptance."
+}

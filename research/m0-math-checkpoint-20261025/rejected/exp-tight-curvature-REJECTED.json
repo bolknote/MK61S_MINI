@@ -1,0 +1,23 @@
+{
+  "status": "REJECTED_NO_MEASURED_SPEED_BENEFIT_KEEP_DIRECTED_PARENT",
+  "source_parent": ".build/m0-exp-directed-product-20261024",
+  "source_parent_FROZEN_sha256": "e6ce76786eeb9443af86b04596cac95fc56aba312ba6bdd1b0d2226da8b69b10",
+  "exact_curvature_coefficient": "903191847641328960925952973737199131582698902155496917130415702423246928496469242989147/361436488048288183060562219352307397732091617771227818640490021458835354739484301197312",
+  "coefficient_strict_below_5_over_2": true,
+  "literal_ARM_unit_calls": 272714,
+  "unit_unsafe_admissions": 0,
+  "probe_unique_inputs": 7180,
+  "probe_fresh_ARM_calls": 43080,
+  "probe_wrong": 0,
+  "probe_parent_losses": 1896,
+  "probe_candidate_losses": 1896,
+  "probe_new_losses": 0,
+  "probe_parent_instruction_deltas": {
+    "0": 14334,
+    "1": 26
+  },
+  "CPP_code_delta_bytes": 8,
+  "full_public_qualification_not_run": true,
+  "excluded_from_latest_qualified_candidate_and_completed_goal_counts": true,
+  "hardware_accessed": false
+}

@@ -1,0 +1,20 @@
+{
+  "status": "PASS_FINAL_RECEIPT_ALL_CONTEXTS_MANIFEST_AND_ANCESTRAL_TRADEOFF",
+  "final_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-zero-independent-20261025/FINAL-REVIEW.json",
+    "bytes": 16901,
+    "sha256": "8c97aa51a42f432aed76da04a4ca44756b0327f812269946f98b9e1f18a0471b"
+  },
+  "manifest": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-zero-independent-20261025/MANIFEST.json",
+    "bytes": 16839,
+    "sha256": "b22375fd90128ea8572bee45b9cbbf1db6e8467dbbdb40558de008273b55dc3c"
+  },
+  "verified_manifest_files": 62,
+  "qualified_ARM6024_MPFR69_plus6sNaN": true,
+  "own_HOST_preflight1_numerical_failures0": true,
+  "both_expanded_losses_and_all_ancestral_regressions_preserved": true,
+  "no_required_finite_review_work_remaining": true,
+  "integration_hardware_main_release_performanceadoption_all_false": true,
+  "devices": 0
+}

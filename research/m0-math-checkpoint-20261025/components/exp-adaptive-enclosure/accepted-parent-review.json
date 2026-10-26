@@ -1,0 +1,10 @@
+{
+  "status": "GO_PRIVATE_RP_EXP_TINY_LOG_MIDPOINT_COMPONENT_ONLY",
+  "path": ".build/m0-exp-tiny-log-midpoint-independent-20261024/FINAL-REVIEW.json",
+  "sha256": "bdaba8cf9bbe58c8e36dafe9b8f904eb8428fdd42db0abb070b5f4a42e472554",
+  "unique_direct_refs_verified": 48,
+  "receipt_plus_refs_verified": 49,
+  "own_ARM_calls": 13636,
+  "own_direct_MPFR_inputs": 1374,
+  "sNaN_shortcuts": 2
+}

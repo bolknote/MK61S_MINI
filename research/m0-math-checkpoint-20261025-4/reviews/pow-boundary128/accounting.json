@@ -1,0 +1,220 @@
+{
+  "status": "PASS_INDEPENDENT_SAME_CORPUS_RAW_LINEAGE_AND_REPORT_CORRECTION",
+  "zero_new_ARM_calls": true,
+  "zero_new_MPFR_inputs": true,
+  "parent_raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-r2-20261025/union-records.jsonl.gz",
+    "bytes": 3452969,
+    "sha256": "d3490f89775fed6e2e3e42097174e872fbd0c42ef8c421623ccdd9d2bdfb03e8"
+  },
+  "current_raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/qualification-records.jsonl.gz",
+    "bytes": 3633218,
+    "sha256": "419acb05b2ef711a4117a328c340c3414d0e7ff7d06b5416d79f2cf832d60836"
+  },
+  "every_parent_row_same_output_expected_references_and_correct_current_parent_cost": true,
+  "parent_instructions_field_is_inherited_preSquare_history_not_current_comparator": true,
+  "current_comparator": "parent_boundary_instructions",
+  "unique_pairs": 120980,
+  "states": 241960,
+  "reference_variants": 279522,
+  "wrong_Qfplib_variants_retained": 77106,
+  "strict_quietNaN_flags_independently_recounted": true,
+  "no_nominal_filter": true,
+  "loss_pairs_parent_candidate": [
+    11434,
+    11434
+  ],
+  "new_raw_loss_pairs": 0,
+  "candidate_wrong": 0,
+  "all10254_fresh_control_rows_overlap_exact": true,
+  "all_three_real_Qfplib_reference_outputs_and_costs_bound": true,
+  "fresh_control_loss_pairs": [
+    632,
+    632
+  ],
+  "original153": {
+    "parent": {
+      "slower": 34,
+      "strict": 119
+    },
+    "candidate": {
+      "slower": 34,
+      "strict": 119
+    }
+  },
+  "cost_comparisons": {
+    "slower": 21167,
+    "faster": 178544,
+    "equal": 2705
+  },
+  "cost_delta_histogram": {
+    "-180": 2,
+    "-169": 2,
+    "-166": 4,
+    "-158": 2,
+    "-149": 8,
+    "-144": 10,
+    "-143": 4,
+    "-141": 2,
+    "-138": 6,
+    "-137": 2,
+    "-136": 4,
+    "-133": 6,
+    "-132": 6,
+    "-130": 4,
+    "-128": 2,
+    "-127": 6,
+    "-126": 4,
+    "-124": 10,
+    "-122": 4,
+    "-121": 8,
+    "-119": 6,
+    "-116": 10,
+    "-115": 12,
+    "-113": 18,
+    "-110": 12,
+    "-104": 4,
+    "-102": 10,
+    "-99": 10,
+    "-98": 8,
+    "-96": 10,
+    "-93": 8,
+    "-91": 6,
+    "-88": 2,
+    "-87": 8,
+    "-85": 10,
+    "-82": 8,
+    "-81": 6,
+    "-76": 4,
+    "-74": 4,
+    "-72": 2,
+    "-71": 4,
+    "-70": 10,
+    "-68": 16,
+    "-65": 8,
+    "-63": 4,
+    "-61": 2,
+    "-59": 4,
+    "-58": 12,
+    "-57": 22,
+    "-54": 2,
+    "-53": 6,
+    "-51": 6,
+    "-48": 2,
+    "-46": 2,
+    "-43": 2,
+    "-42": 2,
+    "-41": 2,
+    "-40": 10,
+    "-37": 2,
+    "-31": 2,
+    "-29": 10,
+    "-26": 2,
+    "-23": 8,
+    "-20": 2,
+    "-14": 2,
+    "-12": 6,
+    "-7": 30,
+    "-4": 20,
+    "0": 241506
+  },
+  "accelerated_public_states": 454,
+  "corrected_public_instruction_reduction_range": [
+    4,
+    180
+  ],
+  "corrigendum": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-report-corrigendum-20261025.json",
+    "bytes": 1246,
+    "sha256": "729a5e184850786b02c03c2dc40d97d4eed43e1bc0c65753f0af9f2fe6385997"
+  },
+  "witnesses": [
+    {
+      "x": "37F31678F40ED67B",
+      "y": "3FAC000000000000",
+      "SIO": "READY",
+      "parent_boundary_instructions": 3728,
+      "candidate_instructions": 3548
+    },
+    {
+      "x": "37F31678F40ED67B",
+      "y": "3FAC000000000000",
+      "SIO": "DIRTY",
+      "parent_boundary_instructions": 3728,
+      "candidate_instructions": 3548
+    }
+  ],
+  "original169_upper_bound_only_historical_pilot": true,
+  "no_frozen_source_or_raw_rewritten": true,
+  "actual_boundary_mode_counts": {
+    "(32, 0)": 44,
+    "(8, 0)": 40,
+    "(128, 0)": 10,
+    "(16, 0)": 28,
+    "(32, 1)": 50,
+    "(2, 0)": 14,
+    "(4, 0)": 26,
+    "(1, 1)": 50,
+    "(8, 1)": 52,
+    "(4, 1)": 16,
+    "(2, 1)": 4,
+    "(16, 1)": 34,
+    "(64, 1)": 36,
+    "(64, 0)": 12,
+    "(128, 1)": 38
+  },
+  "midpoint_and_input_operand_byte_shapes_checked": true,
+  "author_qualified_fresh_ARM": 309938,
+  "author_counts_partition": [
+    241960,
+    454,
+    61524,
+    6000
+  ],
+  "author_MPFR5051_plus76sNaN": true,
+  "rejected_bound80": {
+    "status": "REJECTED_AS_INSUFFICIENT_PRECISION_AND_SLOWER_PUBLIC_PATH",
+    "candidate_ELF_sha256": "ea7caefc333752f0210b6d951813c14e16ebb7d7604443d09db50dd1588572e1",
+    "bare_ARM_calls": 19221,
+    "pilot_ARM_calls": 1836,
+    "pilot_MPFR_inputs": 153,
+    "candidate_wrong_in_pilot": 0,
+    "all56_public_boundary_calls_fell_back": true,
+    "public_instruction_increase_range": [
+      262,
+      904
+    ],
+    "exact_relative_gap_bits_histogram": {
+      "101": 8,
+      "97": 2,
+      "98": 3,
+      "104": 3,
+      "100": 4,
+      "102": 5,
+      "99": 2,
+      "108": 1
+    },
+    "ideal96_model_decisions": 0,
+    "full_corpus_not_run": true,
+    "all_calls_excluded_from_qualified_boundary128_totals": true,
+    "no_canonical_or_device_changes": true
+  },
+  "rejected_bound80_not_candidate_or_in_qualified_counts": true,
+  "author_pilot1836_syntax_preflight0_and_rejected_bare19221_excluded": true,
+  "stack_limits": {
+    "author_bare": [
+      212,
+      156
+    ],
+    "same_complete_corpus": [
+      2284,
+      2284
+    ],
+    "parent_changed716_subset_not_comparator": true,
+    "fresh_control2148_all3": true
+  },
+  "no_fresh_qualifications_for_inherited_MPFR_and_Qfplib": true,
+  "reviewed507_stays422": true,
+  "device_IO": 0
+}

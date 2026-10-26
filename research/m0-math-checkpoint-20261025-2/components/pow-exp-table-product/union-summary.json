@@ -1,0 +1,47 @@
+{
+  "status": "RECOUNTED_SAME_OLD_CORPUS_AND_EXPANDED_REFERENCE_UNION",
+  "union_unique_pairs": 116468,
+  "union_states": 232936,
+  "union_reference_state_variants": 252450,
+  "new_control_states_already_in_old_corpus": 610,
+  "parent_C77_raw_loss_pairs": 10866,
+  "candidate_raw_loss_pairs": 10853,
+  "fixed_raw_pairs": 13,
+  "new_raw_loss_pairs": 0,
+  "new_loss_state_variants": [],
+  "remaining_state_variants": 18984,
+  "wrong_Qfplib_state_variants_retained": 60686,
+  "correct_Qfplib_state_variant_comparison": {
+    "slower": 18984,
+    "faster": 170087,
+    "equal": 2693
+  },
+  "retained_parent_cost_increase_states": 8024,
+  "retained_increase_histogram": {
+    "2": 8024
+  },
+  "retained_increase_scopes": {
+    "already_slower_than_a_correct_reference": 2293,
+    "still_no_slower_than_all_correct_references": 2343,
+    "wrong_Qfplib_only": 3388
+  },
+  "original153": {
+    "parent": {
+      "slower": 48,
+      "strict": 105
+    },
+    "candidate": {
+      "slower": 35,
+      "strict": 118
+    }
+  },
+  "qualified_fresh_ARM_calls": 314546,
+  "fresh_public_ARM_calls": 282156,
+  "fresh_bare_ARM_calls": 32390,
+  "fresh_directed_MPFR_inputs": 4785,
+  "fresh_sNaN_policy_shortcuts": 76,
+  "pilot3096_calls_excluded": true,
+  "inherited_parent_R_C77_and_Qfplib_calls_not_fresh": true,
+  "expanded_observed_parent_and_candidate_stack_bytes": 2284,
+  "goal_complete": false
+}

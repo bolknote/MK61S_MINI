@@ -1,0 +1,50 @@
+{
+  "status": "FULL_INTENDED_OBJECTS_BUILT_NOT_PUBLIC_QUALIFIED",
+  "CPP_allocated_bytes_identical": true,
+  "control_CPP_matches_accepted_C77": true,
+  "changed_ASM_sections": {
+    ".scratch_y.m0_pow_hot": [
+      504,
+      520
+    ],
+    ".m0_pow_exp_table_transition": [
+      0,
+      16
+    ]
+  },
+  "generic_body154bytes_unchanged": true,
+  "contexts": [
+    {
+      "context": "generic_M0",
+      "kind": "cpp",
+      "allocated_bytes_and_semantic_relocations_equal": true
+    },
+    {
+      "context": "generic_M0",
+      "kind": "asm",
+      "allocated_bytes_and_semantic_relocations_equal": true
+    },
+    {
+      "context": "M4_soft",
+      "kind": "cpp",
+      "allocated_bytes_and_semantic_relocations_equal": true
+    },
+    {
+      "context": "M4_soft",
+      "kind": "asm",
+      "allocated_bytes_and_semantic_relocations_equal": true
+    },
+    {
+      "context": "M4_hard",
+      "kind": "cpp",
+      "allocated_bytes_and_semantic_relocations_equal": true
+    },
+    {
+      "context": "M4_hard",
+      "kind": "asm",
+      "allocated_bytes_and_semantic_relocations_equal": true
+    }
+  ],
+  "hardware_accessed": false
+}
+Changed CPP relocation sections: .m0_pow_refine_extension, .scratch_y.m0_pow_hot, .m0_pow_small_y_cold

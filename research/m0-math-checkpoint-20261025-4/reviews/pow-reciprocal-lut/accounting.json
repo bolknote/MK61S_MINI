@@ -1,0 +1,86 @@
+{
+  "status": "PASS_FULL_DOMAIN_SELECTION_RAW_SEED_COST_LAW_AND_FULL_PUBLIC_RECOUNT",
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "selected": "lut128_floor",
+  "full_domain65536_and_all77840_rows_quotients_flags_and_costs_checked": true,
+  "selected_cost_formula": "error>0:18+3*error; error==0:20; error==-1:24",
+  "measured_variant_metrics": {
+    "lut128_ceil_inner": {
+      "worst": 34,
+      "mean": 23.299820143884894,
+      "bytes": 316
+    },
+    "lut128_floor": {
+      "worst": 27,
+      "mean": 22.117857142857144,
+      "bytes": 312
+    },
+    "lut64_ceil_outer": {
+      "worst": 42,
+      "mean": 23.56946300102775,
+      "bytes": 188
+    },
+    "lut32_ceil_outer": {
+      "worst": 86,
+      "mean": 28.945465056526206,
+      "bytes": 124
+    }
+  },
+  "selected_unique_best_worst_latency27": true,
+  "historical_sample_only_smaller_seed_choice": "lut32_ceil_outer",
+  "current_public_forecast9_for_all_variants_not_selection_or_qualification": true,
+  "all_other3_variants233520_calls_excluded": true,
+  "selected_oldplusnew155680_only": true,
+  "pairs": 120980,
+  "states": 241960,
+  "reference_variants": 279522,
+  "wrong_public_Qfp77106_retained": true,
+  "loss_pairs": [
+    11386,
+    11377
+  ],
+  "new_strict9": true,
+  "new_loss0_wrong0_increase0": true,
+  "faster_DIRTY_states377": true,
+  "public_instruction_savings": [
+    59,
+    73
+  ],
+  "READY_unchanged": true,
+  "every_delta_equals_actual_saved_selected_seed_delta": true,
+  "current_parent_cost_field": "parent_reciprocal_instructions is overwritten with immediate soft parent candidate cost; old value retained only in parent stream",
+  "all10254_fresh_overlap_exact": true,
+  "strict_quietNaN_no_nominal_filter": true,
+  "correct_comparison": {
+    "slower": 21044,
+    "faster": 178667,
+    "equal": 2705
+  },
+  "original153": {
+    "parent": {
+      "slower": 34,
+      "strict": 119
+    },
+    "candidate": {
+      "slower": 34,
+      "strict": 119
+    }
+  },
+  "direct4148_rows_all_timing_and_outputs_retained_wrong936": true,
+  "direct_cost_law_also_matches": true,
+  "author476133_partition": [
+    155680,
+    241960,
+    377,
+    61524,
+    16592
+  ],
+  "author6761MPFR_plus184sNaN": true,
+  "author256exactdyadic_inputs_separate": true,
+  "author_failed24ARM3MPFR_wrong_parent_symbol_excluded": true,
+  "parent_qualification_old66288_seed_pilot_not_fresh": true,
+  "new_original153pilot_not_run": true,
+  "reviewed507_stays422_author437_not_promoted": true,
+  "device_IO": 0
+}

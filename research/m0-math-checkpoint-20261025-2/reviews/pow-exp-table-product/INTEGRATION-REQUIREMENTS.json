@@ -1,0 +1,29 @@
+{
+  "status": "REQUIREMENTS_ONLY_NO_ACTIVATION_AUTHORITY",
+  "requirements": [
+    "Merge source deltas and relink instead of mixing private overlay images.",
+    "On actual integrated ELF rerun general producer/real original wrapper/postcall capture/88-instruction consumer R12 guard with fresh disassembly.",
+    "Validate scratch bank layout, actual new table entry, loader order and bounds; reject stale168-byte overlays that overwrite this entry.",
+    "Do not upgrade whole507 ledger422 or claim hardware/physical cycles/general-pow totality/main/release GO."
+  ],
+  "actual_source_basis": "directed-product e6ce/CPP575da330",
+  "accepted_near_one_is_separate_sibling_not_in_this_ELF": true,
+  "table_domain": "Use new entry only when A is one of the exact certified512 literal roots; low32==0 is not a generic dyadic detector.",
+  "scalar_ABI": "New dyadic entry supplies only the standard U64 result. R12 extra is retained only by the unchanged general entry.",
+  "old_overlay_hazard": {
+    "old_bytes": 168,
+    "new_entry_offset": 154,
+    "destructive_overlap_bytes": 14,
+    "negative_preflight_rejected": true
+  },
+  "lineage": "Preserve qualified R/probe.json losslessly in future tracked/portable checkpoints. Keep the historical omitted r5 archive and old frozen evidence unchanged.",
+  "reviewed_whole507": {
+    "no_slower": 422,
+    "strict": 413,
+    "equal": 9
+  },
+  "author436_not_accepted_as_union": true,
+  "integration_GO": false,
+  "hardware_GO": false,
+  "main_or_release_GO": false
+}

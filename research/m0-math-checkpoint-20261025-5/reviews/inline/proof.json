@@ -1,0 +1,66 @@
+{
+  "status": "PASS_EXACT_RNE_INTEGER_OVERFLOW_AND_SHARED_REGISTER_INLINE_SEED_PROOF",
+  "exact_RNE_boundary": "H=2^1024-2^970",
+  "subnormal_d": "k*2^-1074",
+  "threshold_integer": 1125899906842624,
+  "exact_strict_endpoint_products": "T*H=2^1074-2^1020 <2^1074 <(T+1)*H; upper difference2^1024-2^1020-2^970>0",
+  "monotonicity_covers_all_integer_k1to2pow52minus1": true,
+  "no_rounded_threshold_or_unchecked_tie": true,
+  "k0_handled_by_IEEE_divide_by_signed_zero_not_inequality": true,
+  "sign_symmetric_Inf_raw_bits": true,
+  "ARM_high_low_comparison_exact_for_full52bits": true,
+  "predicate_boundary_spot_checks": 16,
+  "all_other_E_special_fallback_retains_raw_args": true,
+  "shared_macro_code50_only_ADR_relocation_differs_unit_production": true,
+  "shared_table256_exact": true,
+  "mapping": {
+    "production": {
+      "begin": "0x101e1202",
+      "done": "0x101e1234",
+      "table": "0x101e1330"
+    },
+    "unit": {
+      "begin": "0x101e1002",
+      "done": "0x101e1034",
+      "table": "0x101e1038"
+    }
+  },
+  "inline_written_registers": [
+    "r4",
+    "r6",
+    "r7"
+  ],
+  "preserves_R0_R1_R2_R3_R5_R12_SP": true,
+  "no_BL_stack_or_memory_writes": true,
+  "quotient_R6_D_R1_tempR4_residualR7_mapping": true,
+  "HOST_full_D_domain65536": true,
+  "error_histogram": {
+    "-1": 140,
+    "0": 5167,
+    "1": 35252,
+    "2": 23815,
+    "3": 1162
+  },
+  "max_down3_up1": true,
+  "one_up_optimization_Euclidean_invariant_exact": true,
+  "deliberate_signed_modular_multiply_proof_unchanged": true,
+  "production_inline_SP_must_be_own_entry_minus20_not_outer_MachineSP": true,
+  "wrapper_stack_or_speed_not_production_claim": true,
+  "dead_R1_R7_before_second_macro_and_R4_before_first_product": true,
+  "common186_RNE_suffix_fourcopies_bound": true,
+  "READY9ALU_bytes_preserved": true,
+  "private_root_positive1_BL_call_return_still_required": true,
+  "cold_parent_cost_increases_expected": {
+    "E0_high_gtT": 8,
+    "E0_high_eqT_low_nonzero": 11,
+    "Egreater2044": 2
+  },
+  "cold_Inf_fast_instruction_cost": {
+    "high_less2pow18": 22,
+    "exact_boundary": 24
+  },
+  "no_generic_CABI_or_new_global_division": true,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "device_IO": 0
+}

@@ -1,0 +1,264 @@
+{
+  "status": "PRIVATE_COMPONENT_TECHNICAL_GO_EXACT_SMALL_LOW_LIMB_RATIO_WITH_EXPLICIT_SPEED_REGRESSIONS",
+  "utc": "2026-10-24T04:34:22.968037+00:00",
+  "blockers": [],
+  "shipping_GO": false,
+  "canonical_math_GO": false,
+  "whole_math_GO": false,
+  "whole_ln_speed_GO": false,
+  "hardware_GO": false,
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "scope": "Only new signed-small-low-limb quotient seed/carry/bounds/three-bit correction and equivalent generic signed-return delta. Parent endpoint/near/polynomial/pack certificates inherited; prospective residual model not reviewed or implemented here.",
+  "target": {
+    "HANDOFF.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-20261024/HANDOFF.md",
+      "bytes": 2637,
+      "sha256": "d29bc02ce1313e96ff7f5a86ec720a202322ed4afb8b75f48d5568dd2b9caf63"
+    },
+    "result.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-20261024/result.json",
+      "bytes": 7789,
+      "sha256": "182efb16d9f7b70888d443d4a27eec8a2cd61fd357d0ae5bdfb451f432be0c89"
+    },
+    "native_eabi_m0_log70_center.inc": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-20261024/native_eabi_m0_log70_center.inc",
+      "bytes": 4334,
+      "sha256": "af83817a78b261621a638c5cc3436bfd63ef57371d999766dfad2a50733dcef7"
+    },
+    "candidate.elf": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-20261024/candidate.elf",
+      "bytes": 110256,
+      "sha256": "c0000b4a468cdb80228fab332978f276a21cf5e229fa1abe7622a287ef396297"
+    }
+  },
+  "parent": {
+    "accepted_review": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-independent-20261024/FINAL-REVIEW.json",
+      "bytes": 8233,
+      "sha256": "dc26bd1132de4d1ce006ea40bf175e0add99616e3f345bf3fc1a22b847da5fb0"
+    },
+    "expected_review_SHA256": "dc26bd1132de4d1ce006ea40bf175e0add99616e3f345bf3fc1a22b847da5fb0",
+    "result_sha256": "ed41028332a625ab5dfb38f2f9960d8d9e708168116c443757e46cf8f8e09592",
+    "ELF_sha256": "5187e1bbba29ec6b0d24cfc57aba9feb74598cc0b8df0df06fe6b13a53039e7e",
+    "scope_of_inheritance": "Existing exact retained-product capsule bound, endpoint handling, near/domain/polynomial and rounding/fallback contracts; no numerical version or guard expansion."
+  },
+  "seal": {
+    "result_artifacts_verified_before_and_after": 56,
+    "input_pins_verified_before_and_after": 573,
+    "postseal": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-postseal-20261024.json",
+      "bytes": 583,
+      "sha256": "e6d4dd73be43604be39e24a654f6ff58e00fe51b7ea8ec71f0b3e4d5142e457c"
+    },
+    "old_frozen_trial_and_inputs_not_changed": true
+  },
+  "independent_math_reasoning": {
+    "actual_domain": "Caller native_eabi_m0_log70.inc:140-146 takes index=(fraction>>42) in0..1023, offset=fraction mod2^42 in0..2^42-1 and delta=abs(offset-2^41) in0..2^41. log70_residual forms odd den=2049+2*index in2049..4095. The helper relies on this existing private domain; arbitrary out-of-domain direct calls are not admitted.",
+    "exact_guard": "For uint32 low, (low+64 mod2^32)<=128 iff low in[0,64] or[2^32-64,2^32-1]. Reinterpret signed ell accordingly. factor=high+(ell<0) is0..512. F=0/ell<0 and F=512/ell>0 are excluded by delta domain; negative ell has F>=1. Old endpoints delta=2^41 and2^41-1 both satisfy the new guard.",
+    "reciprocal": "All1024 actual ELF table rows independently checked R=floor(2^75/den)&~63. No new table. With P=delta*R/2^46 and H=delta*2^29/den, 0<=H-P<delta*64/2^46<=2.",
+    "small_products": "For1<=F<=511 write R in base2^16. Each ai=F*limb+previous_carry is<2^25, so every uint32 multiplication/add is exact; carries recover the full73bit F*R. Concatenation implements floor(F*R/2^14): low word uses w0[14:15],w1,w2[0:13], high uses w2[14:15] and a3<<2. These fields do not overlap. a3<<2<2^27; a2<<18 intentionally retains modulo2^32 low bits. F=0 and512 shortcuts yield the same base.",
+    "low_piece": "L=floor(abs(ell)*Rhi/2^14) is exactly (Rhi>>14)*m+floor((Rhi mod2^14)*m/2^14). m<=64, L<2^24 and all intermediate products are<2^32. For negative ell, base>=2^49 while L+2<=2^24+1, so subtracting L+2 cannot underflow.",
+    "one_sided_bound": "Let FR/2^14=A+alpha, |ell|Rhi/2^14=L+beta, alpha,beta in[0,1), eta=|ell|Rlo/2^46 in[0,1/256). Positive ell: seed=A+L and P-seed=alpha+beta+eta, hence0<=H-seed<4+1/256<5. Negative ell: seed=A-L-2 and P-seed=alpha-beta-eta+2>1-1/256>0, hence0<H-seed<5. Therefore seed<=floor(H) and integer correction is0..4 throughout the admitted family.",
+    "remainder_and_quotient_bits": "0<=delta*2^29-seed*den<5*den<=20475<2^15. Defined uint32 modular multiplication/subtraction recovers this exact small remainder. Greedy cmp/subs/adcs at4den,2den,den constructs the exact0..4 correction; CMP/no-borrow carry is preserved on both branch arms. Independent data includes3072 correction4 cases and the actual worst-den3493 witness, so omitting the high bit would be wrong.",
+    "generic_signed_return": "Existing generic correction is0..7. negative?-int32(c):int32(c) cannot overflow; int64 sign extension followed by uint64 conversion is modulo2^64. Thus q+U(int64(signed_c)) is exactly q-c or q+c modulo2^64, preserving the old generic result and all retained-product bounds. Grouping the endpoint bool sum0..2 is also equivalent. No new division/SIO operation, new fallback behavior or larger error interval is introduced.",
+    "target_integer_assumption": "uint32-to-int32 low-word sign test follows the actual GCC14.2.1 ARM target two-complement conversion, exercised on both wrap boundaries; M4/generic-M0 paths exclude this RP2040 block."
+  },
+  "source_object_execution_binding": {
+    "independent_rebuild_commands": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-independent-20261024/rebuild-commands.json",
+      "bytes": 2021,
+      "sha256": "c2eb0f4118dbd3975a3550de22c419dc311d54c18f3374bd5437d7fe36eff24c"
+    },
+    "whole_private_CPP_ASM_ELF_rebuilt_byteexact": true,
+    "rebuild_hashes": {
+      "candidate-full.o": "bd694a4bc008a9a3de0555f190f1b9aa451c6dffceba7dfa06bb11b8eb68f019",
+      "candidate-ratio.o": "c80865dd3f89454cd4790770059a806133b87f39f1ac5090c12f10e308584fea",
+      "candidate.elf": "c0000b4a468cdb80228fab332978f276a21cf5e229fa1abe7622a287ef396297"
+    },
+    "source_573dependencies_and_flags_frozen": true,
+    "direct_helper_size": 444,
+    "old_helper_size": 232,
+    "object_growth_bytes": 212,
+    "linked_growth_bytes": 216,
+    "executed_product_capsule": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-independent-20261024/product46-capsule.bin",
+      "bytes": 184,
+      "sha256": "75729579767fb4b3269141b6c62b1ae4fad49ed8817158b0e7d4bedcc717ecc8"
+    },
+    "capsule_bytes": 184,
+    "bare_executed_PC_restricted_to_actual444Bhelper_plus184Bcapsule": true,
+    "bare_firmware_ROM_not_loaded_or_executed": true,
+    "public_replay": "Actual frozen candidate/control/discarded-trial overlays on the pinned V164 resident and exact RP2040 ROM; Qfplib separate reference. Rebuilt wholeELF equals the executed frozen ELF.",
+    "other_allocated_object_code_data_BSS_unchanged": {
+      "generic_M0": "allocated code/data/BSS size identical (not whole-platform firmware)",
+      "M4_soft": "allocated code/data/BSS size identical (not whole-platform firmware)",
+      "M4_hard": "allocated code/data/BSS size identical (not whole-platform firmware)"
+    },
+    "only_changed_allocated_object_section": ".m0_pow_extension; source/helper+immediate alignment region only, all surrounding bytes exact.",
+    "near_entry_addresses": [
+      {
+        "symbol": "ln_near_one",
+        "parent": "0x101a198d",
+        "candidate": "0x101a198d",
+        "bytes": 1252
+      },
+      {
+        "symbol": "ln_near_interval",
+        "parent": "0x101a1e71",
+        "candidate": "0x101a1e71",
+        "bytes": 1160
+      }
+    ],
+    "near_table_relocation": [
+      {
+        "symbol": "_ZN7m0_eabiL14log_near_tableE",
+        "parent": "0x101b68e8",
+        "candidate": "0x101b69c0",
+        "bytes": 4096
+      }
+    ],
+    "linked_old_address_byte_identity_not_claimed": true,
+    "no_new_tables_global_RAM_or_libgcc_dependency": true,
+    "isolation_and_saved_profile_accounting": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-independent-20261024/binding-performance.json",
+      "bytes": 2364,
+      "sha256": "0f61892135badb2a5a6e6f02025248e0d34b6dda43013d00ec166b18c99974e2"
+    }
+  },
+  "own_bounded_execution": {
+    "script": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-independent-20261024/review-bounded.py",
+      "bytes": 9510,
+      "sha256": "ce55d0abac2060520a8f1dad52f383f4f246b32a9697e96e00d0fe53178c4a96"
+    },
+    "results": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-independent-20261024/bounded-results.json",
+      "bytes": 102061,
+      "sha256": "993425a5cb4fbc92f993100f282028ad3977d22caeda5e3abb80a553a0399c28"
+    },
+    "host_integer_pairs": 92647,
+    "host_pairs_are_not_ARM_calls": true,
+    "host_classes": "All1024den for selected F/ell boundary classes plus complete513F×129ell admitted domain at worst-den3493; distinct arbitrary-precision floor/seed oracle, not a replica of source limb operations. Not author67M sweep.",
+    "bare_helper_pairs": 145,
+    "bare_SIO_state_cases": 290,
+    "bare_ARM_calls_including_product_capsule": 580,
+    "bare_both_SIO_states_preserved": true,
+    "bare_SIO_accesses": 0,
+    "bare_stack_observed_bytes": 76,
+    "capsule_entry_SP8_checks": 362,
+    "generic_signed_correction_directions": {
+      "negative": 48,
+      "positive_or_zero": 24
+    },
+    "public_inputs": 56,
+    "public_state_cases": 112,
+    "public_ARM_calls_parent_candidate_trial_Qfp": 448,
+    "MPFR": "4.2.2",
+    "public_cases": "Independent IEEE/subnormal/rawNaN/power/general family+/-64/65 and near-boundary selections; directed MPFR RNE reference, exact candidate==parent==trial raw bits including NaNs, PCS/SP/bounded writes, DIRTY state exact and READY no dirty-bit leakage.",
+    "own_public_stack_observed_bytes": 344,
+    "own_subset_not_a_claim_of_full_public_max": true,
+    "producer_full_public_max640_inherited": true,
+    "total_own_math_ARM_calls": 1028,
+    "hardware_or_physical_cycles": false,
+    "runtime_sandbox_incident": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-independent-20261024/runtime-sandbox-failure.json",
+      "bytes": 399,
+      "sha256": "060a1f6f6d38a6ffe419c8de2801c77c69c202977bc0c403f738bb2a9853dc80"
+    },
+    "runtime_resolution": "Initial existing Unicorn2.1.4 sandbox trap localized to mem_map before any ARM. Exact constructor and exact bounded script completed with approved host-JIT sandbox escalation; no candidate change or fake numerical verdict.",
+    "own_metadata_assertion_correction": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-log-ratio-small-limb-independent-20261024/own-initial-read-model-correction.json",
+      "bytes": 396,
+      "sha256": "663b2415a6dd977cd52652affa669ceb8a4319c571d702451643645c0a33d264"
+    }
+  },
+  "truthful_saved_performance": {
+    "own_recount_not_fresh_full_profile": true,
+    "parent66172state_rows_retained_with_same_outputs_counts": true,
+    "expanded_parent_raw_losses": 223,
+    "expanded_candidate_raw_losses": 68,
+    "fixed_raw_losses": 155,
+    "new_correct_Qfp_deficits": 0,
+    "remaining_state_rows": 113,
+    "old73_subset_fixed": 28,
+    "old73_subset_remaining": 45,
+    "newly_exposed_parent_controls": 150,
+    "new_control_losses_remaining": 23,
+    "READY34438": {
+      "equal": 34438
+    },
+    "DIRTY34438": {
+      "slower": 6779,
+      "equal": 22863,
+      "faster": 4796
+    },
+    "DIRTY_regression_histogram": {
+      "3": 2682,
+      "4": 4097
+    },
+    "numeric_Qfp_eligibility_recomputed_from_raw_expected_and_outputs": true,
+    "candidate_raw_NaN_policy_equals_parent": true,
+    "ln2_DIRTY_own_replay": {
+      "x": "4000000000000000",
+      "SIO": "DIRTY",
+      "expected": "3FE62E42FEFA39EF",
+      "outputs": {
+        "Qfplib": "3FE62E42FEFA39EF",
+        "parent": "3FE62E42FEFA39EF",
+        "candidate": "3FE62E42FEFA39EF",
+        "trial": "3FE62E42FEFA39EF"
+      },
+      "instructions": {
+        "Qfplib": 711,
+        "parent": 610,
+        "candidate": 613,
+        "trial": 612
+      }
+    },
+    "withdrawn_guard_edge_own_replay": {
+      "x": "400FFE7EFFFFFFBF",
+      "SIO": "DIRTY",
+      "expected": "3FF62D827A741385",
+      "outputs": {
+        "Qfplib": "3FF62D827A741385",
+        "parent": "3FF62D827A741385",
+        "candidate": "3FF62D827A741385",
+        "trial": "3FF62D827A741385"
+      },
+      "instructions": {
+        "Qfplib": 713,
+        "parent": 713,
+        "candidate": 712,
+        "trial": 715
+      }
+    },
+    "no_all_input_or_whole_parent_speed_GO": true
+  },
+  "inherited_author_large_evidence_not_reexecuted": {
+    "host_full_admitted_family_pairs": 67634176,
+    "bare_ARM_calls": 790256,
+    "public34438_inputs_68876states_ARMcalls": 275504,
+    "public_full_stack_bytes": 640,
+    "new_helper_stack76_vs_parent68": true,
+    "public_source_trial_final_distinct": true
+  },
+  "limitations_and_open_scope": [
+    "Private component only; code growth212/216B and helper stack+8B remain real costs. No canonical/firmware/RAM integration or physical/cache/cold acceptance.",
+    "6779DIRTY states cost3or4more instructions;68expanded correct-reference raw deficits remain. ln2 slows3instructions. This is not a whole-ln/whole-math speed win.",
+    "Historical ln goal remains6of10fixed/4open. Other operations/general pow1024TRAP/totality/floatFMA/original full math goal remain open.",
+    "Prospective raw residual MODELONLY study is not implemented or qualified by this review.",
+    "Other object functions/table bytes retain source/object identity; linked table addresses/literal pointers relocate. No old linked byteidentity/wholeM4firmware proof inferred."
+  ],
+  "actions": {
+    "canonical_or_author_frozen_code_edits": false,
+    "Git_or_leases_modified": false,
+    "USB_serial_Flash_opened": false,
+    "hardware_accessed": false,
+    "normal_firmware_or_release_build": false,
+    "new_numeric_version": false,
+    "large_unchanged_sweeps_replayed": false,
+    "new_framework": false,
+    "own_private_rebuild_and_small_review_outputs_only": true
+  }
+}

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/compose.py", line 31, in <module>
+    assert parent.exists(),parent
+           ~~~~~~~~~~~~~^^
+AssertionError: /Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/RP-candidate-cpp.o

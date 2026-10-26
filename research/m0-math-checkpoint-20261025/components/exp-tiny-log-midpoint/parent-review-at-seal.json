@@ -1,0 +1,7 @@
+{
+  "independent_review_available_at_seal": true,
+  "path": ".build/m0-exp-tiny-radius-independent-20261024/FINAL-REVIEW.json",
+  "sha256": "ac32571a4dd0a31d806f94b6c9c85222ed34278d218115c726d4cb0c11ca4a9d",
+  "status": "GO_PRIVATE_RP_EXP_TINY_RADIUS_COMPONENT_ONLY",
+  "receipt_and_direct_refs_verified": 38
+}

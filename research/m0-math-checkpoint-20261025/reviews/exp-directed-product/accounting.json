@@ -1,0 +1,63 @@
+{
+  "status": "PASS_INDEPENDENT_ALL_FROZEN_ROW_ACCOUNTING_WITHOUT_NEW_EXECUTIONS",
+  "exp_unique": 467366,
+  "exp_states": 934732,
+  "old_same_corpus_inputs": 456750,
+  "old_parent_losses1541_to_candidate1530": true,
+  "same_corpus_fixed11": true,
+  "expanded_losses1896_old1530_plus_new366": true,
+  "new_loss_groups": {
+    "new_ordinary_uniform": 3,
+    "all_nonzero_table_row_lower_midpoint_preimages": 3,
+    "positive_normal_actual_midpoint_preimages": 11,
+    "small_actual_midpoint_preimages": 347,
+    "broad_endpoint_actual_midpoint_preimages": 2
+  },
+  "every_current_remaining_loss_bound_to_already_losing_parent": true,
+  "correct_Qfplib_state_comparison": {
+    "faster": 536584,
+    "slower": 3792
+  },
+  "wrong_Qfplib_states_retained": 394356,
+  "cost_regressions3448_retained": true,
+  "regression_delta_counts": {
+    "1": 3348,
+    "5": 22,
+    "2": 34,
+    "50": 4,
+    "7": 34,
+    "4": 6
+  },
+  "regression_classes": {
+    "wrong_Qfplib": 2022,
+    "already_losing_correct_Qfplib": 1392,
+    "still_no_slower_correct_Qfplib": 34
+  },
+  "pow_historical_reference_state_variants": 10085,
+  "pow_current_losing_variants": 10078,
+  "pow_fresh_distinct_candidate_states": 10081,
+  "pow_remaining_raw_pairs": 7901,
+  "old_full111912_pow_oracles_inherited_not_reacquired": true,
+  "author_total_fresh_ARM": 1386951,
+  "author_fresh_MPFR_validation": 467553,
+  "author_sNaN_shortcuts": 2,
+  "author_separate_log_preimage_MPFR_generations": 1919,
+  "author_bare141320_calls_reused_from_rejected_CPP_layout_by_exact_unchanged77instruction_kernel_binding": true,
+  "author_original507_separate_component_union": {
+    "no_slower": 423,
+    "strictly_faster": 417,
+    "equal": 6,
+    "remaining": 84,
+    "by_operation": {
+      "pow": 48,
+      "exp": 0,
+      "sin": 22,
+      "cos": 14
+    },
+    "not_one_integrated_binary": true
+  },
+  "prior_independent_count422_unchanged_here": true,
+  "no_counts_from_rejected_trials_initial_failed_pow_scope_or_own_failed_harness_attempts_added": true,
+  "own_new_ARM_or_MPFR_calls_in_this_accounting": 0,
+  "hardware": false
+}

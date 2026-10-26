@@ -1,0 +1,38 @@
+{
+  "status": "PASS_OWN_DYADIC_OTHER_CALLERS_THREE_ORIGINAL_POW_TIES",
+  "inputs": 189,
+  "own_fresh_ARM": 1134,
+  "own_directed_MPFR_inputs": 189,
+  "sNaN_shortcuts": 0,
+  "summary": {
+    "pow": {
+      "inputs": 153,
+      "parent_remaining": 51,
+      "candidate_remaining": 48,
+      "product_calls": 66,
+      "state_cost_improvements": 46
+    },
+    "sin": {
+      "inputs": 22,
+      "parent_remaining": 22,
+      "candidate_remaining": 22,
+      "product_calls": 0,
+      "state_cost_improvements": 0
+    },
+    "cos": {
+      "inputs": 14,
+      "parent_remaining": 14,
+      "candidate_remaining": 14,
+      "product_calls": 0,
+      "state_cost_improvements": 0
+    }
+  },
+  "new_original_pow_equal": 3,
+  "all_arguments_and_raw_outputs_identical": true,
+  "all_costs_parent_minus2_per_actual_product_call": true,
+  "all_product_arguments_in_accepted63x54_domain": true,
+  "both_SIO_states_and_ABI_checked": true,
+  "not_full_expanded_pow_requalification": true,
+  "hardware": false,
+  "canonical": false
+}

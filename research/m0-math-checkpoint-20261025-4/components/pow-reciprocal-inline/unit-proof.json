@@ -1,0 +1,15 @@
+{
+  "status": "PASS_COMPLETE_INLINE_QUOTIENT_AND_LIVE_CONTEXT_DOMAIN",
+  "tests": 71696,
+  "actual_ARM_calls": 143392,
+  "exhaustive_divisors": 65536,
+  "all16_NZCV_table_edge_calls": 6160,
+  "all_R0_R1_R2_R3_R5_R12_SP_preserved_during_macro": true,
+  "all_callee_saved_PCS_SP_PC_checked": true,
+  "no_inline_stack_or_memory_writes": true,
+  "isolated_wrapper_stack20B_not_production_seed_frame": true,
+  "no_unit_wrapper_speed_claim": true,
+  "ELF_sha256": "8c2339150c8b05c7936096d284d2a90c813ae09cde7732e133e13124d9e5704f",
+  "elapsed_seconds": 12.643892833031714,
+  "hardware_accessed": false
+}

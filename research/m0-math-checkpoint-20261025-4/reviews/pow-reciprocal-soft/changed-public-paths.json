@@ -1,0 +1,4906 @@
+{
+  "status": "SAVED_CHANGED_PATH_WITNESSES_NO_NEW_EXECUTION",
+  "rows": [
+    {
+      "x": "3FF4B1DD264786A5",
+      "y": "C02A000000000000",
+      "SIO": "DIRTY",
+      "parent": 2340,
+      "candidate": 2008,
+      "delta": -332,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "403C5AE710D09838"
+      },
+      "D": 116142
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "DIRTY",
+      "parent": 2131,
+      "candidate": 1813,
+      "delta": -318,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "401B5D0E724796ED"
+      },
+      "D": 112080
+    },
+    {
+      "x": "3FF0A92423EB2AA1",
+      "y": "C02E000000000000",
+      "SIO": "DIRTY",
+      "parent": 2213,
+      "candidate": 1843,
+      "delta": -370,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FFD5B91C16B40D8"
+      },
+      "D": 120249
+    },
+    {
+      "x": "3FF2A4269F8149D1",
+      "y": "C02A000000000000",
+      "SIO": "DIRTY",
+      "parent": 1971,
+      "candidate": 1643,
+      "delta": -328,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "401D26D9E973C57B"
+      },
+      "D": 119405
+    },
+    {
+      "x": "3FF60E08AA312590",
+      "y": "C008000000000000",
+      "SIO": "DIRTY",
+      "parent": 1411,
+      "candidate": 1098,
+      "delta": -313,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4004F3E5FB5D5123"
+      },
+      "D": 85822
+    },
+    {
+      "x": "3FFCF57AEF214AB9",
+      "y": "C008000000000000",
+      "SIO": "DIRTY",
+      "parent": 1787,
+      "candidate": 1433,
+      "delta": -354,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4017B75E0A8842B5"
+      },
+      "D": 97141
+    },
+    {
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "C008000000000000",
+      "SIO": "DIRTY",
+      "parent": 1794,
+      "candidate": 1469,
+      "delta": -325,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "401FFFFFFFFFFFFD"
+      },
+      "D": 131071
+    },
+    {
+      "x": "3FF003617E9EB44E",
+      "y": "C010000000000000",
+      "SIO": "DIRTY",
+      "parent": 1350,
+      "candidate": 991,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FF00D8A445EC434"
+      },
+      "D": 65752
+    },
+    {
+      "x": "3FF0B1957A030E6A",
+      "y": "C010000000000000",
+      "SIO": "DIRTY",
+      "parent": 1762,
+      "candidate": 1392,
+      "delta": -370,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FF2F5E170D18947"
+      },
+      "D": 77662
+    },
+    {
+      "x": "3FF363AD26D675E5",
+      "y": "C010000000000000",
+      "SIO": "DIRTY",
+      "parent": 1739,
+      "candidate": 1412,
+      "delta": -327,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "400140C30F948FEE"
+      },
+      "D": 70668
+    },
+    {
+      "x": "3FF5918393549F42",
+      "y": "C010000000000000",
+      "SIO": "DIRTY",
+      "parent": 1738,
+      "candidate": 1414,
+      "delta": -324,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "400A6ABE1DEF4D1C"
+      },
+      "D": 108203
+    },
+    {
+      "x": "3FFE922D5346C53F",
+      "y": "C010000000000000",
+      "SIO": "DIRTY",
+      "parent": 1345,
+      "candidate": 985,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402AA7D71346A703"
+      },
+      "D": 109181
+    },
+    {
+      "x": "3FF977F3F33E1473",
+      "y": "C014000000000000",
+      "SIO": "DIRTY",
+      "parent": 1961,
+      "candidate": 1594,
+      "delta": -367,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4024704C732AAACB"
+      },
+      "D": 83716
+    },
+    {
+      "x": "3FFDC3DEADA42106",
+      "y": "C014000000000000",
+      "SIO": "DIRTY",
+      "parent": 1571,
+      "candidate": 1205,
+      "delta": -366,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "403647FADD2D2C72"
+      },
+      "D": 91263
+    },
+    {
+      "x": "3FFCD84FD272C703",
+      "y": "C014000000000000",
+      "SIO": "DIRTY",
+      "parent": 1921,
+      "candidate": 1567,
+      "delta": -354,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40330B2D3A459EE8"
+      },
+      "D": 78002
+    },
+    {
+      "x": "3FF3385D057CA34E",
+      "y": "C018000000000000",
+      "SIO": "DIRTY",
+      "parent": 1562,
+      "candidate": 1246,
+      "delta": -316,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "400809F0DFAA2B46"
+      },
+      "D": 98463
+    },
+    {
+      "x": "3FFA11CB465D3CAF",
+      "y": "C018000000000000",
+      "SIO": "DIRTY",
+      "parent": 1974,
+      "candidate": 1608,
+      "delta": -366,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4032B5CBF20E34B0"
+      },
+      "D": 76636
+    },
+    {
+      "x": "3FF3B927815D8918",
+      "y": "C01C000000000000",
+      "SIO": "DIRTY",
+      "parent": 2159,
+      "candidate": 1798,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40114D0D72578B9E"
+      },
+      "D": 70864
+    },
+    {
+      "x": "3FF75D32952C7519",
+      "y": "C01C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1794,
+      "candidate": 1469,
+      "delta": -325,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402C50D229441221"
+      },
+      "D": 115981
+    },
+    {
+      "x": "3FF0ED5BDAE9D450",
+      "y": "C020000000000000",
+      "SIO": "DIRTY",
+      "parent": 1899,
+      "candidate": 1544,
+      "delta": -355,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FF91C0673845E9B"
+      },
+      "D": 102848
+    },
+    {
+      "x": "3FF837884FE59E7B",
+      "y": "C020000000000000",
+      "SIO": "DIRTY",
+      "parent": 1892,
+      "candidate": 1579,
+      "delta": -313,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "403B8AB1C5ACD888"
+      },
+      "D": 112811
+    },
+    {
+      "x": "3FFC1BF0B60A8ECE",
+      "y": "C020000000000000",
+      "SIO": "DIRTY",
+      "parent": 1896,
+      "candidate": 1572,
+      "delta": -324,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4056AFA79F3DCFC3"
+      },
+      "D": 92922
+    },
+    {
+      "x": "3FFC445C9B44C7FC",
+      "y": "C020000000000000",
+      "SIO": "DIRTY",
+      "parent": 1877,
+      "candidate": 1512,
+      "delta": -365,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4057B9D42879EAB7"
+      },
+      "D": 97181
+    },
+    {
+      "x": "3FF6A1B7E7455D42",
+      "y": "C022000000000000",
+      "SIO": "DIRTY",
+      "parent": 1748,
+      "candidate": 1416,
+      "delta": -332,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4036AA85DA2AA034"
+      },
+      "D": 92840
+    },
+    {
+      "x": "3FFB82D32C20BCBD",
+      "y": "C022000000000000",
+      "SIO": "DIRTY",
+      "parent": 1716,
+      "candidate": 1363,
+      "delta": -353,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40606BB50CD59061"
+      },
+      "D": 67259
+    },
+    {
+      "x": "3FFED2BEFBD7D007",
+      "y": "C022000000000000",
+      "SIO": "DIRTY",
+      "parent": 1731,
+      "candidate": 1362,
+      "delta": -369,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4076D722484E8977"
+      },
+      "D": 93554
+    },
+    {
+      "x": "3FFE2FA2BE501E2D",
+      "y": "C022000000000000",
+      "SIO": "DIRTY",
+      "parent": 1722,
+      "candidate": 1395,
+      "delta": -327,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4072ED1263FF27B5"
+      },
+      "D": 77521
+    },
+    {
+      "x": "3FFE32DBB34C7E4F",
+      "y": "C022000000000000",
+      "SIO": "DIRTY",
+      "parent": 2097,
+      "candidate": 1760,
+      "delta": -337,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4072FF493EDDC36B"
+      },
+      "D": 77812
+    },
+    {
+      "x": "3FF8833C93C0AD35",
+      "y": "C024000000000000",
+      "SIO": "DIRTY",
+      "parent": 2103,
+      "candidate": 1770,
+      "delta": -333,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4051CF202CBFF7AF"
+      },
+      "D": 72946
+    },
+    {
+      "x": "3FFBBB189214791C",
+      "y": "C024000000000000",
+      "SIO": "DIRTY",
+      "parent": 2119,
+      "candidate": 1761,
+      "delta": -358,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "406E92BDC32E08AE"
+      },
+      "D": 125227
+    },
+    {
+      "x": "3FFC3A5AE6386D07",
+      "y": "C024000000000000",
+      "SIO": "DIRTY",
+      "parent": 2088,
+      "candidate": 1736,
+      "delta": -352,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "407242443DE3D95B"
+      },
+      "D": 74788
+    },
+    {
+      "x": "3FFE2DFB91F93A5E",
+      "y": "C024000000000000",
+      "SIO": "DIRTY",
+      "parent": 2092,
+      "candidate": 1736,
+      "delta": -356,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4081D0A949B8B3D1"
+      },
+      "D": 72970
+    },
+    {
+      "x": "3FF99B5E84829AF3",
+      "y": "C028000000000000",
+      "SIO": "DIRTY",
+      "parent": 1730,
+      "candidate": 1400,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4071A635F76E31D5"
+      },
+      "D": 72291
+    },
+    {
+      "x": "3FF7F2C8D0A05041",
+      "y": "C02A000000000000",
+      "SIO": "DIRTY",
+      "parent": 2343,
+      "candidate": 2028,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4067A7E864319346"
+      },
+      "D": 96894
+    },
+    {
+      "x": "3FFB1ED88796A456",
+      "y": "C02A000000000000",
+      "SIO": "DIRTY",
+      "parent": 1948,
+      "candidate": 1590,
+      "delta": -358,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "408DCBC8EC5B062A"
+      },
+      "D": 122044
+    },
+    {
+      "x": "3FFE42674F60D224",
+      "y": "C02A000000000000",
+      "SIO": "DIRTY",
+      "parent": 2323,
+      "candidate": 1994,
+      "delta": -329,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40AEEEAB59518DA7"
+      },
+      "D": 126698
+    },
+    {
+      "x": "3FF584A3123085E5",
+      "y": "C02C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1958,
+      "candidate": 1597,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404FA9AB3F39DB89"
+      },
+      "D": 129690
+    },
+    {
+      "x": "3FFB5CA0A3C2FB99",
+      "y": "C02C000000000000",
+      "SIO": "DIRTY",
+      "parent": 2331,
+      "candidate": 1977,
+      "delta": -354,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "409C9651B55394F5"
+      },
+      "D": 117093
+    },
+    {
+      "x": "3FF1E16A89458F48",
+      "y": "C02E000000000000",
+      "SIO": "DIRTY",
+      "parent": 2562,
+      "candidate": 2198,
+      "delta": -364,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40152E96DA8F28EE"
+      },
+      "D": 86761
+    },
+    {
+      "x": "3FFBFAEF686F442B",
+      "y": "C02E000000000000",
+      "SIO": "DIRTY",
+      "parent": 2526,
+      "candidate": 2178,
+      "delta": -348,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B116E12C2A2AC9"
+      },
+      "D": 69998
+    },
+    {
+      "x": "3FF6D13DB1694B29",
+      "y": "C030000000000000",
+      "SIO": "DIRTY",
+      "parent": 1675,
+      "candidate": 1319,
+      "delta": -356,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40724A1F6F7CA844"
+      },
+      "D": 74913
+    },
+    {
+      "x": "3FFCCF092EEC84EA",
+      "y": "C030000000000000",
+      "SIO": "DIRTY",
+      "parent": 1658,
+      "candidate": 1301,
+      "delta": -357,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40C7D5817D7DEBA5"
+      },
+      "D": 97624
+    },
+    {
+      "x": "3FA337A37C73FD4E",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1587,
+      "candidate": 1261,
+      "delta": -326,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F7DC8E96E6B8159"
+      },
+      "D": 121998
+    },
+    {
+      "x": "3FA337A37C73FD4E",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1727,
+      "candidate": 1402,
+      "delta": -325,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F31E3141601265F"
+      },
+      "D": 73265
+    },
+    {
+      "x": "3FA337A37C73FD4E",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1949,
+      "candidate": 1630,
+      "delta": -319,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EE57BDB33AB28A9"
+      },
+      "D": 87997
+    },
+    {
+      "x": "3FA337A37C73FD4F",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1568,
+      "candidate": 1207,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F7DC8E96E6B815C"
+      },
+      "D": 121998
+    },
+    {
+      "x": "3FA337A37C73FD4F",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1732,
+      "candidate": 1375,
+      "delta": -357,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F31E31416012661"
+      },
+      "D": 73265
+    },
+    {
+      "x": "3FA337A37C73FD4F",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1959,
+      "candidate": 1595,
+      "delta": -364,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EE57BDB33AB28AD"
+      },
+      "D": 87997
+    },
+    {
+      "x": "3FA337A37C73FD50",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1568,
+      "candidate": 1242,
+      "delta": -326,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F7DC8E96E6B815E"
+      },
+      "D": 121998
+    },
+    {
+      "x": "3FA337A37C73FD50",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1735,
+      "candidate": 1388,
+      "delta": -347,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F31E31416012663"
+      },
+      "D": 73265
+    },
+    {
+      "x": "3FA337A37C73FD50",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1949,
+      "candidate": 1595,
+      "delta": -354,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EE57BDB33AB28B1"
+      },
+      "D": 87997
+    },
+    {
+      "x": "3FA0092F95A0C764",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1575,
+      "candidate": 1242,
+      "delta": -333,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F76B41DA90195FC"
+      },
+      "D": 92993
+    },
+    {
+      "x": "3FA0092F95A0C764",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1742,
+      "candidate": 1424,
+      "delta": -318,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F26C1267F193FA1"
+      },
+      "D": 93202
+    },
+    {
+      "x": "3FA0092F95A0C764",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1976,
+      "candidate": 1641,
+      "delta": -335,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3ED6CE36D0ED30C0"
+      },
+      "D": 93411
+    },
+    {
+      "x": "3FA0092F95A0C765",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1575,
+      "candidate": 1242,
+      "delta": -333,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F76B41DA90195FE"
+      },
+      "D": 92993
+    },
+    {
+      "x": "3FA0092F95A0C765",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1723,
+      "candidate": 1405,
+      "delta": -318,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F26C1267F193FA5"
+      },
+      "D": 93202
+    },
+    {
+      "x": "3FA0092F95A0C765",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1976,
+      "candidate": 1641,
+      "delta": -335,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3ED6CE36D0ED30C5"
+      },
+      "D": 93411
+    },
+    {
+      "x": "3FA0092F95A0C766",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1574,
+      "candidate": 1241,
+      "delta": -333,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F76B41DA9019600"
+      },
+      "D": 92993
+    },
+    {
+      "x": "3FA0092F95A0C766",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1742,
+      "candidate": 1424,
+      "delta": -318,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F26C1267F193FA8"
+      },
+      "D": 93202
+    },
+    {
+      "x": "3FA0092F95A0C766",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1976,
+      "candidate": 1641,
+      "delta": -335,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3ED6CE36D0ED30CA"
+      },
+      "D": 93411
+    },
+    {
+      "x": "3FAAE46EA0E2CCA3",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1558,
+      "candidate": 1198,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F88A7219AFDFD37"
+      },
+      "D": 100978
+    },
+    {
+      "x": "3FAAE46EA0E2CCA3",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1723,
+      "candidate": 1361,
+      "delta": -362,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F44B7C757D4963D"
+      },
+      "D": 84860
+    },
+    {
+      "x": "3FAAE46EA0E2CCA3",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1946,
+      "candidate": 1626,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F01693703957DCF"
+      },
+      "D": 71315
+    },
+    {
+      "x": "3FAAE46EA0E2CCA4",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1563,
+      "candidate": 1228,
+      "delta": -335,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F88A7219AFDFD39"
+      },
+      "D": 100978
+    },
+    {
+      "x": "3FAAE46EA0E2CCA4",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1726,
+      "candidate": 1374,
+      "delta": -352,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F44B7C757D4963F"
+      },
+      "D": 84860
+    },
+    {
+      "x": "3FAAE46EA0E2CCA4",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1927,
+      "candidate": 1607,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F01693703957DD2"
+      },
+      "D": 71315
+    },
+    {
+      "x": "3FAAE46EA0E2CCA5",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1562,
+      "candidate": 1227,
+      "delta": -335,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F88A7219AFDFD3A"
+      },
+      "D": 100978
+    },
+    {
+      "x": "3FAAE46EA0E2CCA5",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1723,
+      "candidate": 1393,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F44B7C757D49641"
+      },
+      "D": 84860
+    },
+    {
+      "x": "3FAAE46EA0E2CCA5",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1937,
+      "candidate": 1572,
+      "delta": -365,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F01693703957DD4"
+      },
+      "D": 71315
+    },
+    {
+      "x": "3F959A79B8A79F32",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1576,
+      "candidate": 1252,
+      "delta": -324,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F691A572A249CA7"
+      },
+      "D": 102821
+    },
+    {
+      "x": "3F959A79B8A79F32",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1711,
+      "candidate": 1392,
+      "delta": -319,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F10F277739761E6"
+      },
+      "D": 69415
+    },
+    {
+      "x": "3F959A79B8A79F32",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1929,
+      "candidate": 1612,
+      "delta": -317,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EB6E1DB72AC84C3"
+      },
+      "D": 93725
+    },
+    {
+      "x": "3F959A79B8A79F33",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1573,
+      "candidate": 1204,
+      "delta": -369,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F691A572A249CA9"
+      },
+      "D": 102821
+    },
+    {
+      "x": "3F959A79B8A79F33",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1721,
+      "candidate": 1357,
+      "delta": -364,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F10F277739761E8"
+      },
+      "D": 69415
+    },
+    {
+      "x": "3F959A79B8A79F33",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1929,
+      "candidate": 1612,
+      "delta": -317,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EB6E1DB72AC84C7"
+      },
+      "D": 93725
+    },
+    {
+      "x": "3F959A79B8A79F34",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1567,
+      "candidate": 1230,
+      "delta": -337,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F691A572A249CAB"
+      },
+      "D": 102821
+    },
+    {
+      "x": "3F959A79B8A79F34",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1726,
+      "candidate": 1394,
+      "delta": -332,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F10F277739761E9"
+      },
+      "D": 69415
+    },
+    {
+      "x": "3F959A79B8A79F34",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1948,
+      "candidate": 1631,
+      "delta": -317,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EB6E1DB72AC84CA"
+      },
+      "D": 93725
+    },
+    {
+      "x": "3FE2F9D0BA095F32",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1584,
+      "candidate": 1246,
+      "delta": -338,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FDD39A29A663D8C"
+      },
+      "D": 119706
+    },
+    {
+      "x": "3FE2F9D0BA095F32",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1722,
+      "candidate": 1399,
+      "delta": -323,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FD1549290A36A0E"
+      },
+      "D": 70985
+    },
+    {
+      "x": "3FE2F9D0BA095F32",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1950,
+      "candidate": 1599,
+      "delta": -351,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FC48DBB20956D3F"
+      },
+      "D": 84187
+    },
+    {
+      "x": "3FE2F9D0BA095F33",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1584,
+      "candidate": 1214,
+      "delta": -370,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FDD39A29A663D8E"
+      },
+      "D": 119706
+    },
+    {
+      "x": "3FE2F9D0BA095F33",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1717,
+      "candidate": 1394,
+      "delta": -323,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FD1549290A36A11"
+      },
+      "D": 70985
+    },
+    {
+      "x": "3FE2F9D0BA095F33",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1944,
+      "candidate": 1593,
+      "delta": -351,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FC48DBB20956D43"
+      },
+      "D": 84187
+    },
+    {
+      "x": "3FE2F9D0BA095F34",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1578,
+      "candidate": 1240,
+      "delta": -338,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FDD39A29A663D91"
+      },
+      "D": 119706
+    },
+    {
+      "x": "3FE2F9D0BA095F34",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1706,
+      "candidate": 1361,
+      "delta": -345,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FD1549290A36A13"
+      },
+      "D": 70985
+    },
+    {
+      "x": "3FE2F9D0BA095F34",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1955,
+      "candidate": 1594,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FC48DBB20956D47"
+      },
+      "D": 84187
+    },
+    {
+      "x": "3FD789A5EE5BFC5B",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1569,
+      "candidate": 1212,
+      "delta": -357,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FCC8C74ED67ECD1"
+      },
+      "D": 116935
+    },
+    {
+      "x": "3FD789A5EE5BFC5B",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1738,
+      "candidate": 1398,
+      "delta": -340,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FB4FFC1681CB57A"
+      },
+      "D": 86012
+    },
+    {
+      "x": "3FD789A5EE5BFC5B",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1960,
+      "candidate": 1590,
+      "delta": -370,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F9EE44DB4045315"
+      },
+      "D": 126532
+    },
+    {
+      "x": "3FD789A5EE5BFC5C",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1563,
+      "candidate": 1244,
+      "delta": -319,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FCC8C74ED67ECD3"
+      },
+      "D": 116935
+    },
+    {
+      "x": "3FD789A5EE5BFC5C",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1737,
+      "candidate": 1365,
+      "delta": -372,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FB4FFC1681CB57C"
+      },
+      "D": 86012
+    },
+    {
+      "x": "3FD789A5EE5BFC5C",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1956,
+      "candidate": 1596,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F9EE44DB4045319"
+      },
+      "D": 126532
+    },
+    {
+      "x": "3FD789A5EE5BFC5D",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1574,
+      "candidate": 1242,
+      "delta": -332,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FCC8C74ED67ECD5"
+      },
+      "D": 116935
+    },
+    {
+      "x": "3FD789A5EE5BFC5D",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1727,
+      "candidate": 1365,
+      "delta": -362,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FB4FFC1681CB57E"
+      },
+      "D": 86012
+    },
+    {
+      "x": "3FD789A5EE5BFC5D",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1966,
+      "candidate": 1596,
+      "delta": -370,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F9EE44DB404531E"
+      },
+      "D": 126532
+    },
+    {
+      "x": "3FEB84F6C510641E",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1543,
+      "candidate": 1188,
+      "delta": -355,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE985288F2E5022"
+      },
+      "D": 104530
+    },
+    {
+      "x": "3FEB84F6C510641E",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1726,
+      "candidate": 1393,
+      "delta": -333,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE5F2644CEE5379"
+      },
+      "D": 89894
+    },
+    {
+      "x": "3FEB84F6C510641E",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1946,
+      "candidate": 1628,
+      "delta": -318,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE2DFB5BD30F444"
+      },
+      "D": 77307
+    },
+    {
+      "x": "3FEB84F6C510641F",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1549,
+      "candidate": 1194,
+      "delta": -355,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE985288F2E5023"
+      },
+      "D": 104530
+    },
+    {
+      "x": "3FEB84F6C510641F",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1726,
+      "candidate": 1361,
+      "delta": -365,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE5F2644CEE537B"
+      },
+      "D": 89894
+    },
+    {
+      "x": "3FEB84F6C510641F",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1938,
+      "candidate": 1607,
+      "delta": -331,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE2DFB5BD30F447"
+      },
+      "D": 77307
+    },
+    {
+      "x": "3FEB84F6C5106420",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1554,
+      "candidate": 1221,
+      "delta": -333,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE985288F2E5025"
+      },
+      "D": 104530
+    },
+    {
+      "x": "3FEB84F6C5106420",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1726,
+      "candidate": 1361,
+      "delta": -365,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE5F2644CEE537D"
+      },
+      "D": 89894
+    },
+    {
+      "x": "3FEB84F6C5106420",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1943,
+      "candidate": 1612,
+      "delta": -331,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE2DFB5BD30F449"
+      },
+      "D": 77307
+    },
+    {
+      "x": "3FE83B1AF4197991",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1558,
+      "candidate": 1205,
+      "delta": -353,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE515D30FF29AC5"
+      },
+      "D": 86365
+    },
+    {
+      "x": "3FE83B1AF4197991",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1737,
+      "candidate": 1396,
+      "delta": -341,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FDFEEA0975C15AE"
+      },
+      "D": 130794
+    },
+    {
+      "x": "3FE83B1AF4197991",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1930,
+      "candidate": 1615,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FD82DF34F139144"
+      },
+      "D": 99039
+    },
+    {
+      "x": "3FE83B1AF4197992",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1571,
+      "candidate": 1218,
+      "delta": -353,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE515D30FF29AC6"
+      },
+      "D": 86365
+    },
+    {
+      "x": "3FE83B1AF4197992",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1733,
+      "candidate": 1370,
+      "delta": -363,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FDFEEA0975C15B1"
+      },
+      "D": 130794
+    },
+    {
+      "x": "3FE83B1AF4197992",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1936,
+      "candidate": 1586,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FD82DF34F139147"
+      },
+      "D": 99039
+    },
+    {
+      "x": "3FE83B1AF4197993",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1563,
+      "candidate": 1232,
+      "delta": -331,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE515D30FF29AC8"
+      },
+      "D": 86365
+    },
+    {
+      "x": "3FE83B1AF4197993",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1743,
+      "candidate": 1402,
+      "delta": -341,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FDFEEA0975C15B4"
+      },
+      "D": 130794
+    },
+    {
+      "x": "3FE83B1AF4197993",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1941,
+      "candidate": 1613,
+      "delta": -328,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FD82DF34F13914B"
+      },
+      "D": 99039
+    },
+    {
+      "x": "4000063C1015B823",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1555,
+      "candidate": 1210,
+      "delta": -345,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4006ADD972F13630"
+      },
+      "D": 92893
+    },
+    {
+      "x": "4000063C1015B823",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1733,
+      "candidate": 1373,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4016B6AFC738624E"
+      },
+      "D": 93034
+    },
+    {
+      "x": "4000063C1015B823",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1964,
+      "candidate": 1634,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4026BF898D0BC77B"
+      },
+      "D": 93176
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1555,
+      "candidate": 1210,
+      "delta": -345,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4006ADD972F13632"
+      },
+      "D": 92893
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1739,
+      "candidate": 1379,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4016B6AFC7386251"
+      },
+      "D": 93034
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1964,
+      "candidate": 1634,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4026BF898D0BC780"
+      },
+      "D": 93176
+    },
+    {
+      "x": "4000063C1015B825",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1561,
+      "candidate": 1216,
+      "delta": -345,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4006ADD972F13634"
+      },
+      "D": 92893
+    },
+    {
+      "x": "4000063C1015B825",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1733,
+      "candidate": 1373,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4016B6AFC7386255"
+      },
+      "D": 93034
+    },
+    {
+      "x": "4000063C1015B825",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1953,
+      "candidate": 1636,
+      "delta": -317,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4026BF898D0BC785"
+      },
+      "D": 93176
+    },
+    {
+      "x": "4006B335AFD468A3",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1554,
+      "candidate": 1204,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40131E75F449B1EC"
+      },
+      "D": 78311
+    },
+    {
+      "x": "4006B335AFD468A3",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1722,
+      "candidate": 1407,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402B20071E840112"
+      },
+      "D": 111104
+    },
+    {
+      "x": "4006B335AFD468A3",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1960,
+      "candidate": 1645,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40433DED8EE4717D"
+      },
+      "D": 78814
+    },
+    {
+      "x": "4006B335AFD468A4",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1565,
+      "candidate": 1240,
+      "delta": -325,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40131E75F449B1ED"
+      },
+      "D": 78311
+    },
+    {
+      "x": "4006B335AFD468A4",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1722,
+      "candidate": 1407,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402B20071E840115"
+      },
+      "D": 111104
+    },
+    {
+      "x": "4006B335AFD468A4",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1957,
+      "candidate": 1629,
+      "delta": -328,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40433DED8EE47180"
+      },
+      "D": 78814
+    },
+    {
+      "x": "4006B335AFD468A5",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1560,
+      "candidate": 1210,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40131E75F449B1EE"
+      },
+      "D": 78311
+    },
+    {
+      "x": "4006B335AFD468A5",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1735,
+      "candidate": 1420,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402B20071E840118"
+      },
+      "D": 111104
+    },
+    {
+      "x": "4006B335AFD468A5",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1957,
+      "candidate": 1629,
+      "delta": -328,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40433DED8EE47183"
+      },
+      "D": 78814
+    },
+    {
+      "x": "3FF6373805BC6B4C",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1567,
+      "candidate": 1255,
+      "delta": -312,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FFA2D77C227A6DA"
+      },
+      "D": 107223
+    },
+    {
+      "x": "3FF6373805BC6B4C",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1734,
+      "candidate": 1373,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40022C6E4F93C83E"
+      },
+      "D": 74438
+    },
+    {
+      "x": "3FF6373805BC6B4C",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1929,
+      "candidate": 1577,
+      "delta": -352,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40093BD00AA2BC44"
+      },
+      "D": 103357
+    },
+    {
+      "x": "3FF6373805BC6B4D",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1578,
+      "candidate": 1204,
+      "delta": -374,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FFA2D77C227A6DC"
+      },
+      "D": 107223
+    },
+    {
+      "x": "3FF6373805BC6B4D",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1716,
+      "candidate": 1387,
+      "delta": -329,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40022C6E4F93C841"
+      },
+      "D": 74438
+    },
+    {
+      "x": "3FF6373805BC6B4D",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1929,
+      "candidate": 1612,
+      "delta": -317,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40093BD00AA2BC48"
+      },
+      "D": 103357
+    },
+    {
+      "x": "3FF6373805BC6B4E",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1548,
+      "candidate": 1236,
+      "delta": -312,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FFA2D77C227A6DE"
+      },
+      "D": 107223
+    },
+    {
+      "x": "3FF6373805BC6B4E",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1716,
+      "candidate": 1387,
+      "delta": -329,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40022C6E4F93C843"
+      },
+      "D": 74438
+    },
+    {
+      "x": "3FF6373805BC6B4E",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1940,
+      "candidate": 1610,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40093BD00AA2BC4C"
+      },
+      "D": 103357
+    },
+    {
+      "x": "4001278DD28E631A",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1577,
+      "candidate": 1214,
+      "delta": -363,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40091EC2CBC53A58"
+      },
+      "D": 102892
+    },
+    {
+      "x": "4001278DD28E631A",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1742,
+      "candidate": 1371,
+      "delta": -371,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "401AEEC89CFA2BC1"
+      },
+      "D": 110316
+    },
+    {
+      "x": "4001278DD28E631A",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1961,
+      "candidate": 1634,
+      "delta": -327,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402CE049EA7E0EB6"
+      },
+      "D": 118276
+    },
+    {
+      "x": "4001278DD28E631B",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1561,
+      "candidate": 1243,
+      "delta": -318,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40091EC2CBC53A5B"
+      },
+      "D": 102892
+    },
+    {
+      "x": "4001278DD28E631B",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1743,
+      "candidate": 1404,
+      "delta": -339,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "401AEEC89CFA2BC5"
+      },
+      "D": 110316
+    },
+    {
+      "x": "4001278DD28E631B",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1951,
+      "candidate": 1637,
+      "delta": -314,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402CE049EA7E0EBC"
+      },
+      "D": 118276
+    },
+    {
+      "x": "4001278DD28E631C",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1561,
+      "candidate": 1208,
+      "delta": -353,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40091EC2CBC53A5D"
+      },
+      "D": 102892
+    },
+    {
+      "x": "4001278DD28E631C",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1748,
+      "candidate": 1377,
+      "delta": -371,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "401AEEC89CFA2BC8"
+      },
+      "D": 110316
+    },
+    {
+      "x": "4001278DD28E631C",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1961,
+      "candidate": 1602,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402CE049EA7E0EC2"
+      },
+      "D": 118276
+    },
+    {
+      "x": "402FFF54D295EA0B",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1567,
+      "candidate": 1187,
+      "delta": -380,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404FFEFF3D38415E"
+      },
+      "D": 131055
+    },
+    {
+      "x": "402FFF54D295EA0B",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1708,
+      "candidate": 1353,
+      "delta": -355,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "408FFE54152BA8A9"
+      },
+      "D": 131045
+    },
+    {
+      "x": "402FFF54D295EA0B",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1925,
+      "candidate": 1605,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40CFFDA8F0B2A0E0"
+      },
+      "D": 131034
+    },
+    {
+      "x": "402FFF54D295EA0C",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1562,
+      "candidate": 1241,
+      "delta": -321,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404FFEFF3D38415F"
+      },
+      "D": 131055
+    },
+    {
+      "x": "402FFF54D295EA0C",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1712,
+      "candidate": 1379,
+      "delta": -333,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "408FFE54152BA8AC"
+      },
+      "D": 131045
+    },
+    {
+      "x": "402FFF54D295EA0C",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1919,
+      "candidate": 1599,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40CFFDA8F0B2A0E4"
+      },
+      "D": 131034
+    },
+    {
+      "x": "402FFF54D295EA0D",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1543,
+      "candidate": 1222,
+      "delta": -321,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404FFEFF3D384161"
+      },
+      "D": 131055
+    },
+    {
+      "x": "402FFF54D295EA0D",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1718,
+      "candidate": 1385,
+      "delta": -333,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "408FFE54152BA8AE"
+      },
+      "D": 131045
+    },
+    {
+      "x": "402FFF54D295EA0D",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1935,
+      "candidate": 1570,
+      "delta": -365,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40CFFDA8F0B2A0E7"
+      },
+      "D": 131034
+    },
+    {
+      "x": "402D507BADD65811",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1549,
+      "candidate": 1200,
+      "delta": -349,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404C0EACC1D5540E"
+      },
+      "D": 114922
+    },
+    {
+      "x": "402D507BADD65811",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1718,
+      "candidate": 1392,
+      "delta": -326,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4089B3DDB06137DD"
+      },
+      "D": 105277
+    },
+    {
+      "x": "402D507BADD65811",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1938,
+      "candidate": 1626,
+      "delta": -312,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40C78BA5E90DBBBA"
+      },
+      "D": 96442
+    },
+    {
+      "x": "402D507BADD65812",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1554,
+      "candidate": 1227,
+      "delta": -327,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404C0EACC1D55410"
+      },
+      "D": 114922
+    },
+    {
+      "x": "402D507BADD65812",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1712,
+      "candidate": 1354,
+      "delta": -358,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4089B3DDB06137E0"
+      },
+      "D": 105277
+    },
+    {
+      "x": "402D507BADD65812",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1925,
+      "candidate": 1578,
+      "delta": -347,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40C78BA5E90DBBBD"
+      },
+      "D": 96442
+    },
+    {
+      "x": "402D507BADD65813",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1549,
+      "candidate": 1200,
+      "delta": -349,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404C0EACC1D55411"
+      },
+      "D": 114922
+    },
+    {
+      "x": "402D507BADD65813",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1713,
+      "candidate": 1387,
+      "delta": -326,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4089B3DDB06137E2"
+      },
+      "D": 105277
+    },
+    {
+      "x": "402D507BADD65813",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1935,
+      "candidate": 1578,
+      "delta": -357,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40C78BA5E90DBBC0"
+      },
+      "D": 96442
+    },
+    {
+      "x": "402758436333632F",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1563,
+      "candidate": 1236,
+      "delta": -327,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4043F075291181F8"
+      },
+      "D": 81671
+    },
+    {
+      "x": "402758436333632F",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1724,
+      "candidate": 1374,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "407D17A6E9F58616"
+      },
+      "D": 119162
+    },
+    {
+      "x": "402758436333632F",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1949,
+      "candidate": 1590,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B5393E46E139AD"
+      },
+      "D": 86931
+    },
+    {
+      "x": "4027584363336330",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1568,
+      "candidate": 1209,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4043F075291181F9"
+      },
+      "D": 81671
+    },
+    {
+      "x": "4027584363336330",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1718,
+      "candidate": 1403,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "407D17A6E9F5861A"
+      },
+      "D": 119162
+    },
+    {
+      "x": "4027584363336330",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1939,
+      "candidate": 1625,
+      "delta": -314,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B5393E46E139B0"
+      },
+      "D": 86931
+    },
+    {
+      "x": "4027584363336331",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1571,
+      "candidate": 1222,
+      "delta": -349,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4043F075291181FA"
+      },
+      "D": 81671
+    },
+    {
+      "x": "4027584363336331",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1718,
+      "candidate": 1403,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "407D17A6E9F5861D"
+      },
+      "D": 119162
+    },
+    {
+      "x": "4027584363336331",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1955,
+      "candidate": 1596,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B5393E46E139B3"
+      },
+      "D": 86931
+    },
+    {
+      "x": "402C3EABAB98563A",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1568,
+      "candidate": 1232,
+      "delta": -336,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404A892D295D1185"
+      },
+      "D": 108690
+    },
+    {
+      "x": "402C3EABAB98563A",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1713,
+      "candidate": 1359,
+      "delta": -354,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40876BFFA706451C"
+      },
+      "D": 95935
+    },
+    {
+      "x": "402C3EABAB98563A",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1946,
+      "candidate": 1570,
+      "delta": -376,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40C4AC5E982FDB68"
+      },
+      "D": 84677
+    },
+    {
+      "x": "402C3EABAB98563B",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1552,
+      "candidate": 1194,
+      "delta": -358,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404A892D295D1187"
+      },
+      "D": 108690
+    },
+    {
+      "x": "402C3EABAB98563B",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1713,
+      "candidate": 1359,
+      "delta": -354,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40876BFFA706451E"
+      },
+      "D": 95935
+    },
+    {
+      "x": "402C3EABAB98563B",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1941,
+      "candidate": 1624,
+      "delta": -317,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40C4AC5E982FDB6A"
+      },
+      "D": 84677
+    },
+    {
+      "x": "402C3EABAB98563C",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1568,
+      "candidate": 1232,
+      "delta": -336,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404A892D295D1188"
+      },
+      "D": 108690
+    },
+    {
+      "x": "402C3EABAB98563C",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1723,
+      "candidate": 1359,
+      "delta": -364,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40876BFFA7064520"
+      },
+      "D": 95935
+    },
+    {
+      "x": "402C3EABAB98563C",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1946,
+      "candidate": 1570,
+      "delta": -376,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40C4AC5E982FDB6D"
+      },
+      "D": 84677
+    },
+    {
+      "x": "40701C60DA91800E",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1573,
+      "candidate": 1249,
+      "delta": -324,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B02AA422444EFD"
+      },
+      "D": 66218
+    },
+    {
+      "x": "40701C60DA91800E",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1730,
+      "candidate": 1410,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "413047509E311447"
+      },
+      "D": 66677
+    },
+    {
+      "x": "40701C60DA91800E",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1960,
+      "candidate": 1634,
+      "delta": -326,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B0642FF5895250"
+      },
+      "D": 67138
+    },
+    {
+      "x": "40701C60DA91800F",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1568,
+      "candidate": 1244,
+      "delta": -324,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B02AA422444EFF"
+      },
+      "D": 66218
+    },
+    {
+      "x": "40701C60DA91800F",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1749,
+      "candidate": 1394,
+      "delta": -355,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "413047509E311449"
+      },
+      "D": 66677
+    },
+    {
+      "x": "40701C60DA91800F",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 2488,
+      "candidate": 2175,
+      "delta": -313,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B0642FF5895253"
+      },
+      "D": 67138
+    },
+    {
+      "x": "40701C60DA918010",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1573,
+      "candidate": 1249,
+      "delta": -324,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B02AA422444F00"
+      },
+      "D": 66218
+    },
+    {
+      "x": "40701C60DA918010",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1740,
+      "candidate": 1375,
+      "delta": -365,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "413047509E31144C"
+      },
+      "D": 66677
+    },
+    {
+      "x": "40701C60DA918010",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1960,
+      "candidate": 1602,
+      "delta": -358,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B0642FF5895257"
+      },
+      "D": 67138
+    },
+    {
+      "x": "40722140DA997520",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1582,
+      "candidate": 1214,
+      "delta": -368,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B34C85EC5A0F63"
+      },
+      "D": 79048
+    },
+    {
+      "x": "40722140DA997520",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1734,
+      "candidate": 1374,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4135DE32B7E03633"
+      },
+      "D": 89571
+    },
+    {
+      "x": "40722140DA997520",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1971,
+      "candidate": 1634,
+      "delta": -337,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B8C76BFB078ACC"
+      },
+      "D": 101494
+    },
+    {
+      "x": "40722140DA997521",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1577,
+      "candidate": 1241,
+      "delta": -336,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B34C85EC5A0F65"
+      },
+      "D": 79048
+    },
+    {
+      "x": "40722140DA997521",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1723,
+      "candidate": 1373,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4135DE32B7E03636"
+      },
+      "D": 89571
+    },
+    {
+      "x": "40722140DA997521",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1971,
+      "candidate": 1602,
+      "delta": -369,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B8C76BFB078AD1"
+      },
+      "D": 101494
+    },
+    {
+      "x": "40722140DA997522",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1572,
+      "candidate": 1214,
+      "delta": -358,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B34C85EC5A0F66"
+      },
+      "D": 79048
+    },
+    {
+      "x": "40722140DA997522",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1723,
+      "candidate": 1408,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4135DE32B7E03639"
+      },
+      "D": 89571
+    },
+    {
+      "x": "40722140DA997522",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1955,
+      "candidate": 1596,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B8C76BFB078AD6"
+      },
+      "D": 101494
+    },
+    {
+      "x": "408CAFE0E2A70C9E",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1562,
+      "candidate": 1226,
+      "delta": -336,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40DB295626FA2D17"
+      },
+      "D": 111253
+    },
+    {
+      "x": "408CAFE0E2A70C9E",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1723,
+      "candidate": 1358,
+      "delta": -365,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4178597452FCDB54"
+      },
+      "D": 99735
+    },
+    {
+      "x": "408CAFE0E2A70C9E",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1953,
+      "candidate": 1618,
+      "delta": -335,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4215D41A1B683D9E"
+      },
+      "D": 89409
+    },
+    {
+      "x": "408CAFE0E2A70C9F",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 2094,
+      "candidate": 1736,
+      "delta": -358,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40DB295626FA2D18"
+      },
+      "D": 111253
+    },
+    {
+      "x": "408CAFE0E2A70C9F",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1707,
+      "candidate": 1387,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4178597452FCDB57"
+      },
+      "D": 99735
+    },
+    {
+      "x": "408CAFE0E2A70C9F",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1947,
+      "candidate": 1612,
+      "delta": -335,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4215D41A1B683DA1"
+      },
+      "D": 89409
+    },
+    {
+      "x": "408CAFE0E2A70CA0",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1563,
+      "candidate": 1227,
+      "delta": -336,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40DB295626FA2D1A"
+      },
+      "D": 111253
+    },
+    {
+      "x": "408CAFE0E2A70CA0",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1707,
+      "candidate": 1352,
+      "delta": -355,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4178597452FCDB59"
+      },
+      "D": 99735
+    },
+    {
+      "x": "408CAFE0E2A70CA0",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1947,
+      "candidate": 1580,
+      "delta": -367,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4215D41A1B683DA4"
+      },
+      "D": 89409
+    },
+    {
+      "x": "40704CC83B93F25D",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1572,
+      "candidate": 1211,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B073B6189F0F70"
+      },
+      "D": 67387
+    },
+    {
+      "x": "40704CC83B93F25D",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1746,
+      "candidate": 1410,
+      "delta": -336,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4130C2A99D3B0687"
+      },
+      "D": 68650
+    },
+    {
+      "x": "40704CC83B93F25D",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1954,
+      "candidate": 1638,
+      "delta": -316,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B113180296D814"
+      },
+      "D": 69937
+    },
+    {
+      "x": "40704CC83B93F25E",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1591,
+      "candidate": 1262,
+      "delta": -329,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B073B6189F0F71"
+      },
+      "D": 67387
+    },
+    {
+      "x": "40704CC83B93F25E",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1731,
+      "candidate": 1373,
+      "delta": -358,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4130C2A99D3B068A"
+      },
+      "D": 68650
+    },
+    {
+      "x": "40704CC83B93F25E",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1970,
+      "candidate": 1641,
+      "delta": -329,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B113180296D817"
+      },
+      "D": 69937
+    },
+    {
+      "x": "40704CC83B93F25F",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "parent": 1573,
+      "candidate": 1244,
+      "delta": -329,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40B073B6189F0F73"
+      },
+      "D": 67387
+    },
+    {
+      "x": "40704CC83B93F25F",
+      "y": "C004000000000000",
+      "SIO": "DIRTY",
+      "parent": 1746,
+      "candidate": 1378,
+      "delta": -368,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4130C2A99D3B068C"
+      },
+      "D": 68650
+    },
+    {
+      "x": "40704CC83B93F25F",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1970,
+      "candidate": 1609,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B113180296D81B"
+      },
+      "D": 69937
+    },
+    {
+      "x": "3F569DB65D606A7B",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1866,
+      "candidate": 1510,
+      "delta": -356,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F316FEB1E701899"
+      },
+      "D": 71422
+    },
+    {
+      "x": "3F569DB65D606A7B",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2095,
+      "candidate": 1731,
+      "delta": -364,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EE4BB310FA33B87"
+      },
+      "D": 84915
+    },
+    {
+      "x": "3F569DB65D606A7C",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1876,
+      "candidate": 1510,
+      "delta": -366,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F316FEB1E70189A"
+      },
+      "D": 71422
+    },
+    {
+      "x": "3F569DB65D606A7C",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2086,
+      "candidate": 1766,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EE4BB310FA33B89"
+      },
+      "D": 84915
+    },
+    {
+      "x": "3F569DB65D606A7D",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1877,
+      "candidate": 1543,
+      "delta": -334,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F316FEB1E70189B"
+      },
+      "D": 71422
+    },
+    {
+      "x": "3F569DB65D606A7D",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2102,
+      "candidate": 1769,
+      "delta": -333,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EE4BB310FA33B8A"
+      },
+      "D": 84915
+    },
+    {
+      "x": "3F5BDF4A3B05FF8E",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1873,
+      "candidate": 1559,
+      "delta": -314,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F36A46A809E137D"
+      },
+      "D": 92742
+    },
+    {
+      "x": "3F5BDF4A3B05FF8E",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2093,
+      "candidate": 1733,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EEDE26C03B815A4"
+      },
+      "D": 122406
+    },
+    {
+      "x": "3F5BDF4A3B05FF8F",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1873,
+      "candidate": 1559,
+      "delta": -314,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F36A46A809E137E"
+      },
+      "D": 92742
+    },
+    {
+      "x": "3F5BDF4A3B05FF8F",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2087,
+      "candidate": 1727,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EEDE26C03B815A6"
+      },
+      "D": 122406
+    },
+    {
+      "x": "3F5BDF4A3B05FF90",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1873,
+      "candidate": 1559,
+      "delta": -314,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F36A46A809E137F"
+      },
+      "D": 92742
+    },
+    {
+      "x": "3F5BDF4A3B05FF90",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2087,
+      "candidate": 1762,
+      "delta": -325,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EEDE26C03B815A8"
+      },
+      "D": 122406
+    },
+    {
+      "x": "3F52509B0A2D11F2",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1894,
+      "candidate": 1557,
+      "delta": -337,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F2ACA82037AC060"
+      },
+      "D": 109736
+    },
+    {
+      "x": "3F52509B0A2D11F2",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2111,
+      "candidate": 1787,
+      "delta": -324,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EDCA9E53BA1F81E"
+      },
+      "D": 117406
+    },
+    {
+      "x": "3F52509B0A2D11F3",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1884,
+      "candidate": 1525,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F2ACA82037AC062"
+      },
+      "D": 109736
+    },
+    {
+      "x": "3F52509B0A2D11F3",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2116,
+      "candidate": 1757,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EDCA9E53BA1F820"
+      },
+      "D": 117406
+    },
+    {
+      "x": "3F52509B0A2D11F4",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1895,
+      "candidate": 1558,
+      "delta": -337,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F2ACA82037AC064"
+      },
+      "D": 109736
+    },
+    {
+      "x": "3F52509B0A2D11F4",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2116,
+      "candidate": 1792,
+      "delta": -324,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3EDCA9E53BA1F823"
+      },
+      "D": 117406
+    },
+    {
+      "x": "3F47F475BF7F4D8E",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1872,
+      "candidate": 1557,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F1F82FA8F62855E"
+      },
+      "D": 129071
+    },
+    {
+      "x": "3F47F475BF7F4D8E",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2103,
+      "candidate": 1770,
+      "delta": -333,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3ECB43A4FC83BCC0"
+      },
+      "D": 111674
+    },
+    {
+      "x": "3F47F475BF7F4D8F",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1902,
+      "candidate": 1528,
+      "delta": -374,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F1F82FA8F62855F"
+      },
+      "D": 129071
+    },
+    {
+      "x": "3F47F475BF7F4D8F",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2093,
+      "candidate": 1738,
+      "delta": -355,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3ECB43A4FC83BCC2"
+      },
+      "D": 111674
+    },
+    {
+      "x": "3F47F475BF7F4D90",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1872,
+      "candidate": 1522,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F1F82FA8F628561"
+      },
+      "D": 129071
+    },
+    {
+      "x": "3F47F475BF7F4D90",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2093,
+      "candidate": 1773,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3ECB43A4FC83BCC4"
+      },
+      "D": 111674
+    },
+    {
+      "x": "3FED31F2F7C53E34",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1865,
+      "candidate": 1542,
+      "delta": -323,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FEC887EAA46485F"
+      },
+      "D": 116871
+    },
+    {
+      "x": "3FED31F2F7C53E34",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2089,
+      "candidate": 1728,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FEB410666911C72"
+      },
+      "D": 111632
+    },
+    {
+      "x": "3FED31F2F7C53E35",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1871,
+      "candidate": 1513,
+      "delta": -358,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FEC887EAA464860"
+      },
+      "D": 116871
+    },
+    {
+      "x": "3FED31F2F7C53E35",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2073,
+      "candidate": 1722,
+      "delta": -351,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FEB410666911C74"
+      },
+      "D": 111632
+    },
+    {
+      "x": "3FED31F2F7C53E36",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1881,
+      "candidate": 1545,
+      "delta": -336,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FEC887EAA464861"
+      },
+      "D": 116871
+    },
+    {
+      "x": "3FED31F2F7C53E36",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2089,
+      "candidate": 1728,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FEB410666911C75"
+      },
+      "D": 111632
+    },
+    {
+      "x": "3FE80B1AC9886265",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1879,
+      "candidate": 1524,
+      "delta": -355,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE6628E84742364"
+      },
+      "D": 91688
+    },
+    {
+      "x": "3FE80B1AC9886265",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2092,
+      "candidate": 1732,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE3674A60E2149D"
+      },
+      "D": 79476
+    },
+    {
+      "x": "3FE80B1AC9886266",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1879,
+      "candidate": 1524,
+      "delta": -355,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE6628E84742365"
+      },
+      "D": 91688
+    },
+    {
+      "x": "3FE80B1AC9886266",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2101,
+      "candidate": 1786,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE3674A60E2149E"
+      },
+      "D": 79476
+    },
+    {
+      "x": "3FE80B1AC9886267",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1879,
+      "candidate": 1524,
+      "delta": -355,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE6628E84742366"
+      },
+      "D": 91688
+    },
+    {
+      "x": "3FE80B1AC9886267",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2756,
+      "candidate": 2406,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE3674A60E214A0"
+      },
+      "D": 79476
+    },
+    {
+      "x": "3FB18F7DDFA4B19A",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1886,
+      "candidate": 1558,
+      "delta": -328,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FA1F94F69441D66"
+      },
+      "D": 73620
+    },
+    {
+      "x": "3FB18F7DDFA4B19A",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2112,
+      "candidate": 1752,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F82D47A764D4FF3"
+      },
+      "D": 77127
+    },
+    {
+      "x": "3FB18F7DDFA4B19B",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1875,
+      "candidate": 1560,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FA1F94F69441D67"
+      },
+      "D": 73620
+    },
+    {
+      "x": "3FB18F7DDFA4B19B",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2112,
+      "candidate": 1752,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F82D47A764D4FF5"
+      },
+      "D": 77127
+    },
+    {
+      "x": "3FB18F7DDFA4B19C",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1891,
+      "candidate": 1531,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FA1F94F69441D68"
+      },
+      "D": 73620
+    },
+    {
+      "x": "3FB18F7DDFA4B19C",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2120,
+      "candidate": 1770,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3F82D47A764D4FF6"
+      },
+      "D": 77127
+    },
+    {
+      "x": "3FCE1C93A6958ABD",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1863,
+      "candidate": 1503,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FC4F8874FD3207B"
+      },
+      "D": 85896
+    },
+    {
+      "x": "3FCE1C93A6958ABD",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2076,
+      "candidate": 1721,
+      "delta": -355,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FB457B79E0B2DBF"
+      },
+      "D": 83323
+    },
+    {
+      "x": "3FCE1C93A6958ABE",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1882,
+      "candidate": 1522,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FC4F8874FD3207B"
+      },
+      "D": 85896
+    },
+    {
+      "x": "3FCE1C93A6958ABE",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2076,
+      "candidate": 1756,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FB457B79E0B2DC0"
+      },
+      "D": 83323
+    },
+    {
+      "x": "3FCE1C93A6958ABF",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1882,
+      "candidate": 1557,
+      "delta": -325,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FC4F8874FD3207C"
+      },
+      "D": 85896
+    },
+    {
+      "x": "3FCE1C93A6958ABF",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2087,
+      "candidate": 1754,
+      "delta": -333,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FB457B79E0B2DC1"
+      },
+      "D": 83323
+    },
+    {
+      "x": "4023CFEF1E0EFB91",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1888,
+      "candidate": 1550,
+      "delta": -338,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4031930954B70602"
+      },
+      "D": 71984
+    },
+    {
+      "x": "4023CFEF1E0EFB91",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2108,
+      "candidate": 1737,
+      "delta": -371,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404BA821B535FE57"
+      },
+      "D": 113282
+    },
+    {
+      "x": "4023CFEF1E0EFB92",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1877,
+      "candidate": 1552,
+      "delta": -325,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4031930954B70603"
+      },
+      "D": 71984
+    },
+    {
+      "x": "4023CFEF1E0EFB92",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2104,
+      "candidate": 1743,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404BA821B535FE59"
+      },
+      "D": 113282
+    },
+    {
+      "x": "4023CFEF1E0EFB93",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1893,
+      "candidate": 1523,
+      "delta": -370,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4031930954B70604"
+      },
+      "D": 71984
+    },
+    {
+      "x": "4023CFEF1E0EFB93",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2098,
+      "candidate": 1737,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "404BA821B535FE5C"
+      },
+      "D": 113282
+    },
+    {
+      "x": "40108FC436BAF116",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1882,
+      "candidate": 1558,
+      "delta": -324,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40179FDEA8042D77"
+      },
+      "D": 96765
+    },
+    {
+      "x": "40108FC436BAF116",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2114,
+      "candidate": 1786,
+      "delta": -328,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402809179AA00D74"
+      },
+      "D": 98449
+    },
+    {
+      "x": "40108FC436BAF117",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1871,
+      "candidate": 1560,
+      "delta": -311,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40179FDEA8042D79"
+      },
+      "D": 96765
+    },
+    {
+      "x": "40108FC436BAF117",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2122,
+      "candidate": 1807,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402809179AA00D76"
+      },
+      "D": 98449
+    },
+    {
+      "x": "40108FC436BAF118",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1890,
+      "candidate": 1579,
+      "delta": -311,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40179FDEA8042D7A"
+      },
+      "D": 96765
+    },
+    {
+      "x": "40108FC436BAF118",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2103,
+      "candidate": 1753,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402809179AA00D79"
+      },
+      "D": 98449
+    },
+    {
+      "x": "4012B2F6F3304D22",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1866,
+      "candidate": 1516,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "401B7ED3B0D0F9BF"
+      },
+      "D": 112621
+    },
+    {
+      "x": "4012B2F6F3304D22",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2106,
+      "candidate": 1755,
+      "delta": -351,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402DB9666FCD628C"
+      },
+      "D": 121750
+    },
+    {
+      "x": "4012B2F6F3304D23",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1866,
+      "candidate": 1551,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "401B7ED3B0D0F9C1"
+      },
+      "D": 112621
+    },
+    {
+      "x": "4012B2F6F3304D23",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2116,
+      "candidate": 1755,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402DB9666FCD628F"
+      },
+      "D": 121750
+    },
+    {
+      "x": "4012B2F6F3304D24",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1876,
+      "candidate": 1516,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "401B7ED3B0D0F9C3"
+      },
+      "D": 112621
+    },
+    {
+      "x": "4012B2F6F3304D24",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2110,
+      "candidate": 1781,
+      "delta": -329,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402DB9666FCD6292"
+      },
+      "D": 121750
+    },
+    {
+      "x": "401160A32D94245E",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1896,
+      "candidate": 1562,
+      "delta": -334,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40191691A4D0C135"
+      },
+      "D": 102761
+    },
+    {
+      "x": "401160A32D94245E",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2119,
+      "candidate": 1791,
+      "delta": -328,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402A2554BE8AAA4A"
+      },
+      "D": 107093
+    },
+    {
+      "x": "401160A32D94245F",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1886,
+      "candidate": 1530,
+      "delta": -356,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40191691A4D0C137"
+      },
+      "D": 102761
+    },
+    {
+      "x": "401160A32D94245F",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2113,
+      "candidate": 1753,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402A2554BE8AAA4D"
+      },
+      "D": 107093
+    },
+    {
+      "x": "401160A32D942460",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1890,
+      "candidate": 1524,
+      "delta": -366,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40191691A4D0C139"
+      },
+      "D": 102761
+    },
+    {
+      "x": "401160A32D942460",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2122,
+      "candidate": 1807,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402A2554BE8AAA4F"
+      },
+      "D": 107093
+    },
+    {
+      "x": "4032DEBE0C93EA0D",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1864,
+      "candidate": 1513,
+      "delta": -351,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4043AA29FC0A55E0"
+      },
+      "D": 80546
+    },
+    {
+      "x": "4032DEBE0C93EA0D",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2116,
+      "candidate": 1789,
+      "delta": -327,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40655B10EBB95B6C"
+      },
+      "D": 87473
+    },
+    {
+      "x": "4032DEBE0C93EA0E",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1870,
+      "candidate": 1554,
+      "delta": -316,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4043AA29FC0A55E1"
+      },
+      "D": 80546
+    },
+    {
+      "x": "4032DEBE0C93EA0E",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2116,
+      "candidate": 1757,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40655B10EBB95B6E"
+      },
+      "D": 87473
+    },
+    {
+      "x": "4032DEBE0C93EA0F",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1880,
+      "candidate": 1551,
+      "delta": -329,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4043AA29FC0A55E2"
+      },
+      "D": 80546
+    },
+    {
+      "x": "4032DEBE0C93EA0F",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2106,
+      "candidate": 1757,
+      "delta": -349,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40655B10EBB95B70"
+      },
+      "D": 87473
+    },
+    {
+      "x": "4040643C37FFEA27",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1893,
+      "candidate": 1563,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40539C72284CCBA8"
+      },
+      "D": 80327
+    },
+    {
+      "x": "4040643C37FFEA27",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2129,
+      "candidate": 1809,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "407C1254CB4CFB3F"
+      },
+      "D": 114981
+    },
+    {
+      "x": "4040643C37FFEA28",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1877,
+      "candidate": 1525,
+      "delta": -352,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40539C72284CCBAA"
+      },
+      "D": 80327
+    },
+    {
+      "x": "4040643C37FFEA28",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2129,
+      "candidate": 1809,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "407C1254CB4CFB42"
+      },
+      "D": 114981
+    },
+    {
+      "x": "4040643C37FFEA29",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1893,
+      "candidate": 1563,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40539C72284CCBAB"
+      },
+      "D": 80327
+    },
+    {
+      "x": "4040643C37FFEA29",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2129,
+      "candidate": 1809,
+      "delta": -320,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "407C1254CB4CFB45"
+      },
+      "D": 114981
+    },
+    {
+      "x": "4043F745007172C6",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1870,
+      "candidate": 1519,
+      "delta": -351,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40591856F12EE80D"
+      },
+      "D": 102789
+    },
+    {
+      "x": "4043F745007172C6",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2106,
+      "candidate": 1791,
+      "delta": -315,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4083D28DEC5D1187"
+      },
+      "D": 81192
+    },
+    {
+      "x": "4043F745007172C7",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1886,
+      "candidate": 1525,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40591856F12EE80E"
+      },
+      "D": 102789
+    },
+    {
+      "x": "4043F745007172C7",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2087,
+      "candidate": 1737,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4083D28DEC5D1189"
+      },
+      "D": 81192
+    },
+    {
+      "x": "4043F745007172C8",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1876,
+      "candidate": 1563,
+      "delta": -313,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40591856F12EE810"
+      },
+      "D": 102789
+    },
+    {
+      "x": "4043F745007172C8",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2098,
+      "candidate": 1770,
+      "delta": -328,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4083D28DEC5D118B"
+      },
+      "D": 81192
+    },
+    {
+      "x": "40449B1CFD487AC5",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1891,
+      "candidate": 1574,
+      "delta": -317,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "405A1AC80038E0D1"
+      },
+      "D": 106924
+    },
+    {
+      "x": "40449B1CFD487AC5",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2103,
+      "candidate": 1773,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4084F2A255E42FBE"
+      },
+      "D": 85802
+    },
+    {
+      "x": "40449B1CFD487AC6",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1888,
+      "candidate": 1526,
+      "delta": -362,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "405A1AC80038E0D3"
+      },
+      "D": 106924
+    },
+    {
+      "x": "40449B1CFD487AC6",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2108,
+      "candidate": 1778,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4084F2A255E42FBF"
+      },
+      "D": 85802
+    },
+    {
+      "x": "40449B1CFD487AC7",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1872,
+      "candidate": 1555,
+      "delta": -317,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "405A1AC80038E0D5"
+      },
+      "D": 106924
+    },
+    {
+      "x": "40449B1CFD487AC7",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2098,
+      "candidate": 1746,
+      "delta": -352,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4084F2A255E42FC1"
+      },
+      "D": 85802
+    },
+    {
+      "x": "40F2F9C0159690A5",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1883,
+      "candidate": 1570,
+      "delta": -313,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4133CD5EBFF51953"
+      },
+      "D": 81109
+    },
+    {
+      "x": "40F2F9C0159690A5",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2122,
+      "candidate": 1804,
+      "delta": -318,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B590AAFA702ECB"
+      },
+      "D": 88330
+    },
+    {
+      "x": "40F2F9C0159690A6",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1865,
+      "candidate": 1517,
+      "delta": -348,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4133CD5EBFF51955"
+      },
+      "D": 81109
+    },
+    {
+      "x": "40F2F9C0159690A6",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2122,
+      "candidate": 1804,
+      "delta": -318,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B590AAFA702ECD"
+      },
+      "D": 88330
+    },
+    {
+      "x": "40F2F9C0159690A7",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1864,
+      "candidate": 1551,
+      "delta": -313,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4133CD5EBFF51956"
+      },
+      "D": 81109
+    },
+    {
+      "x": "40F2F9C0159690A7",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2119,
+      "candidate": 1788,
+      "delta": -331,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B590AAFA702ECF"
+      },
+      "D": 88330
+    },
+    {
+      "x": "4111C874FFD3A116",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1886,
+      "candidate": 1534,
+      "delta": -352,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4159D27849098755"
+      },
+      "D": 105767
+    },
+    {
+      "x": "4111C874FFD3A116",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2100,
+      "candidate": 1751,
+      "delta": -349,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41EB3913CBA27D2B"
+      },
+      "D": 111505
+    },
+    {
+      "x": "4111C874FFD3A117",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1896,
+      "candidate": 1566,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4159D27849098757"
+      },
+      "D": 105767
+    },
+    {
+      "x": "4111C874FFD3A117",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2094,
+      "candidate": 1745,
+      "delta": -349,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41EB3913CBA27D2E"
+      },
+      "D": 111505
+    },
+    {
+      "x": "4111C874FFD3A118",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1880,
+      "candidate": 1528,
+      "delta": -352,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4159D27849098759"
+      },
+      "D": 105767
+    },
+    {
+      "x": "4111C874FFD3A118",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2094,
+      "candidate": 1745,
+      "delta": -349,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41EB3913CBA27D31"
+      },
+      "D": 111505
+    },
+    {
+      "x": "40F0970E3C07A09B",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1907,
+      "candidate": 1575,
+      "delta": -332,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4130BDAE99E8E935"
+      },
+      "D": 68570
+    },
+    {
+      "x": "40F0970E3C07A09B",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2117,
+      "candidate": 1755,
+      "delta": -362,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B10BFDF3F1C0A4"
+      },
+      "D": 69823
+    },
+    {
+      "x": "40F0970E3C07A09C",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1878,
+      "candidate": 1559,
+      "delta": -319,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4130BDAE99E8E937"
+      },
+      "D": 68570
+    },
+    {
+      "x": "40F0970E3C07A09C",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2793,
+      "candidate": 2476,
+      "delta": -317,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B10BFDF3F1C0A6"
+      },
+      "D": 69823
+    },
+    {
+      "x": "40F0970E3C07A09D",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1878,
+      "candidate": 1524,
+      "delta": -354,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4130BDAE99E8E938"
+      },
+      "D": 68570
+    },
+    {
+      "x": "40F0970E3C07A09D",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2125,
+      "candidate": 1749,
+      "delta": -376,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B10BFDF3F1C0A8"
+      },
+      "D": 69823
+    },
+    {
+      "x": "4121AACA9ADE8A5F",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1893,
+      "candidate": 1566,
+      "delta": -327,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "416E753C8E9874B6"
+      },
+      "D": 124755
+    },
+    {
+      "x": "4121AACA9ADE8A5F",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2112,
+      "candidate": 1778,
+      "delta": -334,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4206A19B581F6C3F"
+      },
+      "D": 92697
+    },
+    {
+      "x": "4121AACA9ADE8A60",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1893,
+      "candidate": 1534,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "416E753C8E9874B8"
+      },
+      "D": 124755
+    },
+    {
+      "x": "4121AACA9ADE8A60",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2111,
+      "candidate": 1745,
+      "delta": -366,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4206A19B581F6C41"
+      },
+      "D": 92697
+    },
+    {
+      "x": "4121AACA9ADE8A61",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "parent": 1893,
+      "candidate": 1534,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "416E753C8E9874BA"
+      },
+      "D": 124755
+    },
+    {
+      "x": "4121AACA9ADE8A61",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2117,
+      "candidate": 1783,
+      "delta": -334,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4206A19B581F6C43"
+      },
+      "D": 92697
+    },
+    {
+      "x": "3FF89CC6D5294A24",
+      "y": "C01F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2855,
+      "candidate": 2528,
+      "delta": -327,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "403C27001D1A60BF"
+      },
+      "D": 115312
+    },
+    {
+      "x": "400247BFB115400A",
+      "y": "C00F000000000000",
+      "SIO": "DIRTY",
+      "parent": 3053,
+      "candidate": 2717,
+      "delta": -336,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40389651A7F88E67"
+      },
+      "D": 100709
+    },
+    {
+      "x": "1FFA34A9A6AA3C55",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2103,
+      "candidate": 1744,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "0802F86227D6E3FC"
+      },
+      "D": 77702
+    },
+    {
+      "x": "3FFCB70687BCD59E",
+      "y": "C01F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2854,
+      "candidate": 2487,
+      "delta": -367,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40573EF510C09F92"
+      },
+      "D": 95215
+    },
+    {
+      "x": "400064DB10178BC5",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2105,
+      "candidate": 1792,
+      "delta": -313,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "400C1430DFFB2E94"
+      },
+      "D": 115011
+    },
+    {
+      "x": "1FFE2867860A8DDC",
+      "y": "BFFF000000000000",
+      "SIO": "DIRTY",
+      "parent": 3143,
+      "candidate": 2783,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "020B51591EFB5822"
+      },
+      "D": 111893
+    },
+    {
+      "x": "400648DB92A4E2AD",
+      "y": "C01F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2864,
+      "candidate": 2505,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40A5EC085F275FCB"
+      },
+      "D": 89792
+    },
+    {
+      "x": "4002C534574EEC4C",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2112,
+      "candidate": 1754,
+      "delta": -358,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4011CACA1F671A2D"
+      },
+      "D": 72876
+    },
+    {
+      "x": "400C97947C68B215",
+      "y": "C02F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2700,
+      "candidate": 2373,
+      "delta": -327,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41B65898C749DE46"
+      },
+      "D": 91529
+    },
+    {
+      "x": "3FFE54097EAE0C60",
+      "y": "C01F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2844,
+      "candidate": 2477,
+      "delta": -367,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4061C10E7ACA56CB"
+      },
+      "D": 72720
+    },
+    {
+      "x": "400B1FE7CB6FA4C6",
+      "y": "BFFF000000000000",
+      "SIO": "DIRTY",
+      "parent": 3143,
+      "candidate": 2790,
+      "delta": -353,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40254D80B5A65FDC"
+      },
+      "D": 87256
+    },
+    {
+      "x": "5FF73A644F3B8084",
+      "y": "BFFF000000000000",
+      "SIO": "DIRTY",
+      "parent": 3180,
+      "candidate": 2853,
+      "delta": -327,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "7E0078F3F408A0D3"
+      },
+      "D": 67471
+    },
+    {
+      "x": "3FEB6B60DAE7BD53",
+      "y": "C01F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2853,
+      "candidate": 2491,
+      "delta": -362,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FD3545F7906EDFE"
+      },
+      "D": 79173
+    },
+    {
+      "x": "400F749179F4DF4E",
+      "y": "C01F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2842,
+      "candidate": 2475,
+      "delta": -367,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40E3CF02F6371AB5"
+      },
+      "D": 81136
+    },
+    {
+      "x": "4006FDEC633ADBEF",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2101,
+      "candidate": 1743,
+      "delta": -358,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40196007F9998172"
+      },
+      "D": 103936
+    },
+    {
+      "x": "5FF7E8AE1D2A6436",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2096,
+      "candidate": 1764,
+      "delta": -332,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "7800282E39C1FF92"
+      },
+      "D": 66178
+    },
+    {
+      "x": "3FFA783C2731243B",
+      "y": "C00F000000000000",
+      "SIO": "DIRTY",
+      "parent": 3017,
+      "candidate": 2679,
+      "delta": -338,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "401C22892EDD4C94"
+      },
+      "D": 115240
+    },
+    {
+      "x": "3FE4F79E13C3C1C2",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1950,
+      "candidate": 1619,
+      "delta": -331,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FCD256792E0F1DF"
+      },
+      "D": 119382
+    },
+    {
+      "x": "3FF7E44C4C15924C",
+      "y": "C02F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2708,
+      "candidate": 2389,
+      "delta": -319,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "407F40748EE862E1"
+      },
+      "D": 128007
+    },
+    {
+      "x": "3FF7D6355D00C57E",
+      "y": "C00F000000000000",
+      "SIO": "DIRTY",
+      "parent": 3028,
+      "candidate": 2698,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4012BF2F32BAABC2"
+      },
+      "D": 76786
+    },
+    {
+      "x": "3FF7B6B73A9177AB",
+      "y": "C00F000000000000",
+      "SIO": "DIRTY",
+      "parent": 3009,
+      "candidate": 2660,
+      "delta": -349,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40125FEB0F14DA7E"
+      },
+      "D": 75262
+    },
+    {
+      "x": "3FFC9A82CF085E33",
+      "y": "C00F000000000000",
+      "SIO": "DIRTY",
+      "parent": 3001,
+      "candidate": 2648,
+      "delta": -353,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4022FF51BCEA9595"
+      },
+      "D": 77813
+    },
+    {
+      "x": "3FE81705FBC1DCB6",
+      "y": "BFFF000000000000",
+      "SIO": "DIRTY",
+      "parent": 3176,
+      "candidate": 2846,
+      "delta": -330,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FE275B9736B5417"
+      },
+      "D": 75611
+    },
+    {
+      "x": "3FE23CFAA8C74A72",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2114,
+      "candidate": 1753,
+      "delta": -361,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FD7ED47974AE41D"
+      },
+      "D": 98004
+    },
+    {
+      "x": "3FE82069BDF25DE3",
+      "y": "C00F000000000000",
+      "SIO": "DIRTY",
+      "parent": 3009,
+      "candidate": 2695,
+      "delta": -314,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FD56C807FB59770"
+      },
+      "D": 87752
+    },
+    {
+      "x": "3FFDC8AD179E3FD9",
+      "y": "C00F000000000000",
+      "SIO": "DIRTY",
+      "parent": 3005,
+      "candidate": 2656,
+      "delta": -349,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4026384ED10590B6"
+      },
+      "D": 91012
+    },
+    {
+      "x": "3FF253FB6E4E57F9",
+      "y": "C00F000000000000",
+      "SIO": "DIRTY",
+      "parent": 3046,
+      "candidate": 2708,
+      "delta": -338,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FFB15CB939CCD91"
+      },
+      "D": 110940
+    },
+    {
+      "x": "3FEE91AF19F54E84",
+      "y": "BFFC000000000000",
+      "SIO": "DIRTY",
+      "parent": 2098,
+      "candidate": 1761,
+      "delta": -337,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FED89BCB7FA833F"
+      },
+      "D": 120987
+    },
+    {
+      "x": "40081AADBF7D8EAF",
+      "y": "BFFF000000000000",
+      "SIO": "DIRTY",
+      "parent": 3168,
+      "candidate": 2804,
+      "delta": -364,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "4020F27C832DF285"
+      },
+      "D": 69415
+    },
+    {
+      "x": "40014BA745E17B63",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "parent": 1976,
+      "candidate": 1640,
+      "delta": -336,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402DB72A07E9CB1D"
+      },
+      "D": 121714
+    },
+    {
+      "x": "3FF105D046495804",
+      "y": "C01F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2896,
+      "candidate": 2537,
+      "delta": -359,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FF9DCAD2DFB2C1E"
+      },
+      "D": 105930
+    },
+    {
+      "x": "3FF0CE8D90142A4B",
+      "y": "C01F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2881,
+      "candidate": 2532,
+      "delta": -349,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "3FF76D33781AFAA1"
+      },
+      "D": 95955
+    },
+    {
+      "x": "4003A013641F14DA",
+      "y": "C01F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2857,
+      "candidate": 2507,
+      "delta": -350,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "40906029EF64A650"
+      },
+      "D": 67074
+    },
+    {
+      "x": "4008640D9784FA7C",
+      "y": "BFFF000000000000",
+      "SIO": "DIRTY",
+      "parent": 3174,
+      "candidate": 2814,
+      "delta": -360,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "402156FECFF30CA6"
+      },
+      "D": 71023
+    },
+    {
+      "x": "400D814614DC0825",
+      "y": "C02F000000000000",
+      "SIO": "DIRTY",
+      "parent": 2698,
+      "candidate": 2362,
+      "delta": -336,
+      "call": {
+        "numerator": "3FF0000000000000",
+        "denominator": "41C22F8F05560FFA"
+      },
+      "D": 74488
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "status": "FAILED_TRACE_REGISTER_IMPORT_ONLY",
+  "reason": "UC_ARM_REG_R6 missing in product hook; kernel results and completed calls had no numerical failures",
+  "full_completed_candidate_calls": 44,
+  "full_completed_parent_calls": 0,
+  "full_aborted_partial_calls": 1,
+  "new_completed_ARM_calls": 264,
+  "new_aborted_partial_calls": 1,
+  "new_oracle_evaluations": 23,
+  "excluded_from_final_qualification": true
+}

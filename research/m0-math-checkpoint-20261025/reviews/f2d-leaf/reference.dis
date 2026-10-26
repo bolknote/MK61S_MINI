@@ -1,0 +1,26 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/reference.elf:     file format elf32-littlearm
+
+
+Disassembly of section .m0_qfplib:
+
+10180f24 <qfp_float2double>:
+10180f24:	0fc3      	lsrs	r3, r0, #31
+10180f26:	07db      	lsls	r3, r3, #31
+10180f28:	0041      	lsls	r1, r0, #1
+10180f2a:	0e0a      	lsrs	r2, r1, #24
+10180f2c:	d007      	beq.n	10180f3e <qfp_float2double+0x1a>
+10180f2e:	2aff      	cmp	r2, #255	@ 0xff
+10180f30:	d008      	beq.n	10180f44 <qfp_float2double+0x20>
+10180f32:	0909      	lsrs	r1, r1, #4
+10180f34:	4a3d      	ldr	r2, [pc, #244]	@ (1018102c <uf2d+0x68>)
+10180f36:	1889      	adds	r1, r1, r2
+10180f38:	4319      	orrs	r1, r3
+10180f3a:	0740      	lsls	r0, r0, #29
+10180f3c:	4770      	bx	lr
+10180f3e:	0019      	movs	r1, r3
+10180f40:	2000      	movs	r0, #0
+10180f42:	4770      	bx	lr
+10180f44:	493a      	ldr	r1, [pc, #232]	@ (10181030 <uf2d+0x6c>)
+10180f46:	18c9      	adds	r1, r1, r3
+10180f48:	e7fa      	b.n	10180f40 <qfp_float2double+0x1c>

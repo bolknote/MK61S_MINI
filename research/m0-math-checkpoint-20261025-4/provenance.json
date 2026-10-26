@@ -1,0 +1,3088 @@
+{
+  "status": "LOSSLESS_EIGHTH_MATH_DELTA_ARCHIVE",
+  "original_producers_are_historical": true,
+  "binary_images_omitted": true,
+  "no_probe_filename_filter": true,
+  "archived_files": [
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/FROZEN.json",
+      "path": "components/pow-reciprocal-soft/FROZEN.json",
+      "encoding": "identity",
+      "sha256": "13dc7f8186d4678fac6b7a0da0b27e00dbb678316e292d320d3eefdd35dbba0c",
+      "uncompressed_sha256": "13dc7f8186d4678fac6b7a0da0b27e00dbb678316e292d320d3eefdd35dbba0c",
+      "uncompressed_bytes": 11593
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/HANDOFF.md",
+      "path": "components/pow-reciprocal-soft/HANDOFF.md",
+      "encoding": "identity",
+      "sha256": "307b7255d45f51e4a4f867975e41c8f864c1524330ed54e4b05f59bb150d1516",
+      "uncompressed_sha256": "307b7255d45f51e4a4f867975e41c8f864c1524330ed54e4b05f59bb150d1516",
+      "uncompressed_bytes": 3483
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/HOST-PREFLIGHT-001.json",
+      "path": "components/pow-reciprocal-soft/HOST-PREFLIGHT-001.json",
+      "encoding": "identity",
+      "sha256": "3c31e62b64f7edf24ec953310460df302f8fb621bdf500e5362551262e47d362",
+      "uncompressed_sha256": "3c31e62b64f7edf24ec953310460df302f8fb621bdf500e5362551262e47d362",
+      "uncompressed_bytes": 207
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/NUMERIC-PROOF.md",
+      "path": "components/pow-reciprocal-soft/NUMERIC-PROOF.md",
+      "encoding": "identity",
+      "sha256": "83da8b88822164fd5b8caed6c7714d140c6d5039ac3121d0403d98871c6c7aca",
+      "uncompressed_sha256": "83da8b88822164fd5b8caed6c7714d140c6d5039ac3121d0403d98871c6c7aca",
+      "uncompressed_bytes": 3757
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/WORK-SCOPE.json",
+      "path": "components/pow-reciprocal-soft/WORK-SCOPE.json",
+      "encoding": "identity",
+      "sha256": "c02be52033ab2b3c1657b9eea97fcde62e2cebfab04f855e4b452f82f39532c4",
+      "uncompressed_sha256": "c02be52033ab2b3c1657b9eea97fcde62e2cebfab04f855e4b452f82f39532c4",
+      "uncompressed_bytes": 829
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/build-r2.log",
+      "path": "components/pow-reciprocal-soft/build-r2.log",
+      "encoding": "identity",
+      "sha256": "357bcd490dbbbbeffd76df468a31c6e028cfd7cdf1649d20cc9da1c24c7a6924",
+      "uncompressed_sha256": "357bcd490dbbbbeffd76df468a31c6e028cfd7cdf1649d20cc9da1c24c7a6924",
+      "uncompressed_bytes": 2700
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/build.json",
+      "path": "components/pow-reciprocal-soft/build.json",
+      "encoding": "identity",
+      "sha256": "f4c6fde615f9da937c1453939fd77596f5b901e4f70735eec6a33e33f7bdc5f0",
+      "uncompressed_sha256": "f4c6fde615f9da937c1453939fd77596f5b901e4f70735eec6a33e33f7bdc5f0",
+      "uncompressed_bytes": 106644
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/build.log",
+      "path": "components/pow-reciprocal-soft/build.log",
+      "encoding": "identity",
+      "sha256": "71bb08635b0343b06790b7eb4133f0d0995a9071e40f68e9cda2236963f47e45",
+      "uncompressed_sha256": "71bb08635b0343b06790b7eb4133f0d0995a9071e40f68e9cda2236963f47e45",
+      "uncompressed_bytes": 2700
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/build.py",
+      "path": "components/pow-reciprocal-soft/build.py",
+      "encoding": "identity",
+      "sha256": "1ecd35ab190e8aa2cba2e2f7a3b2f94e7c3715dea56ef7e240a58e10ae95df7f",
+      "uncompressed_sha256": "1ecd35ab190e8aa2cba2e2f7a3b2f94e7c3715dea56ef7e240a58e10ae95df7f",
+      "uncompressed_bytes": 9897
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/candidate/native_eabi_m0_pow_root_prefix.inc",
+      "path": "components/pow-reciprocal-soft/candidate/native_eabi_m0_pow_root_prefix.inc",
+      "encoding": "identity",
+      "sha256": "5fa310606d997499a39aa1ee734b36cb6e32a5515645ac380775d9da43ca2866",
+      "uncompressed_sha256": "5fa310606d997499a39aa1ee734b36cb6e32a5515645ac380775d9da43ca2866",
+      "uncompressed_bytes": 92136
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/candidate/native_eabi_m0_rp2040.S",
+      "path": "components/pow-reciprocal-soft/candidate/native_eabi_m0_rp2040.S",
+      "encoding": "identity",
+      "sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_bytes": 31792
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/candidate-ddiv.S",
+      "path": "components/pow-reciprocal-soft/candidate-ddiv.S",
+      "encoding": "identity",
+      "sha256": "15361c2a3ef8573b53eb367f7741521df55ba77ebcb657e3f46e14ff8d94e591",
+      "uncompressed_sha256": "15361c2a3ef8573b53eb367f7741521df55ba77ebcb657e3f46e14ff8d94e591",
+      "uncompressed_bytes": 10852
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/candidate.dis",
+      "path": "components/pow-reciprocal-soft/candidate.dis",
+      "encoding": "identity",
+      "sha256": "01526d64e40905c6077362fd00077c19e3f2e96111a874b6be30096fd1b91455",
+      "uncompressed_sha256": "01526d64e40905c6077362fd00077c19e3f2e96111a874b6be30096fd1b91455",
+      "uncompressed_bytes": 132382
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/candidate.ld",
+      "path": "components/pow-reciprocal-soft/candidate.ld",
+      "encoding": "identity",
+      "sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_bytes": 133769
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/control/native_eabi_m0_pow_root_prefix.inc",
+      "path": "components/pow-reciprocal-soft/control/native_eabi_m0_pow_root_prefix.inc",
+      "encoding": "identity",
+      "sha256": "5fa310606d997499a39aa1ee734b36cb6e32a5515645ac380775d9da43ca2866",
+      "uncompressed_sha256": "5fa310606d997499a39aa1ee734b36cb6e32a5515645ac380775d9da43ca2866",
+      "uncompressed_bytes": 92136
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/control/native_eabi_m0_rp2040.S",
+      "path": "components/pow-reciprocal-soft/control/native_eabi_m0_rp2040.S",
+      "encoding": "identity",
+      "sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_bytes": 31792
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/control-ddiv.S",
+      "path": "components/pow-reciprocal-soft/control-ddiv.S",
+      "encoding": "identity",
+      "sha256": "51a043bf2548b89d5e906711635911ddaee7d3ac69a2b62660f0295561f38750",
+      "uncompressed_sha256": "51a043bf2548b89d5e906711635911ddaee7d3ac69a2b62660f0295561f38750",
+      "uncompressed_bytes": 10666
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/control.dis",
+      "path": "components/pow-reciprocal-soft/control.dis",
+      "encoding": "identity",
+      "sha256": "6ddf02826f1790a03fc2d8d53470d48b029aa5b7904ecb67a123757800bd827c",
+      "uncompressed_sha256": "6ddf02826f1790a03fc2d8d53470d48b029aa5b7904ecb67a123757800bd827c",
+      "uncompressed_bytes": 132159
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/control.ld",
+      "path": "components/pow-reciprocal-soft/control.ld",
+      "encoding": "identity",
+      "sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_bytes": 133769
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/direct-preflight-001.log",
+      "path": "components/pow-reciprocal-soft/direct-preflight-001.log",
+      "encoding": "identity",
+      "sha256": "aa1c9ffece8408de71025d329d73db7dafb2bf1be125b5c9618762c1dbe131a8",
+      "uncompressed_sha256": "aa1c9ffece8408de71025d329d73db7dafb2bf1be125b5c9618762c1dbe131a8",
+      "uncompressed_bytes": 490
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/direct-proof-r2.log",
+      "path": "components/pow-reciprocal-soft/direct-proof-r2.log",
+      "encoding": "identity",
+      "sha256": "c39f794c7d4330024adbc4ab96df58c7bc24c990ab63b16671a8eae346586ff5",
+      "uncompressed_sha256": "c39f794c7d4330024adbc4ab96df58c7bc24c990ab63b16671a8eae346586ff5",
+      "uncompressed_bytes": 3449
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/direct-proof.json",
+      "path": "components/pow-reciprocal-soft/direct-proof.json.gz",
+      "encoding": "gzip",
+      "sha256": "7a1dfed56a8ee4c753bcc3c868b7993b0e0cb7bded1b6e88616be802219f4c03",
+      "uncompressed_sha256": "4218fae55b8881e257d685c7b5446bf0a9e4159db7d1a6f535985ae5e4895300",
+      "uncompressed_bytes": 2694318
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/direct-proof.log",
+      "path": "components/pow-reciprocal-soft/direct-proof.log",
+      "encoding": "identity",
+      "sha256": "aa1c9ffece8408de71025d329d73db7dafb2bf1be125b5c9618762c1dbe131a8",
+      "uncompressed_sha256": "aa1c9ffece8408de71025d329d73db7dafb2bf1be125b5c9618762c1dbe131a8",
+      "uncompressed_bytes": 490
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/dirty-only.patch",
+      "path": "components/pow-reciprocal-soft/dirty-only.patch",
+      "encoding": "identity",
+      "sha256": "4993de365b1503edd8a12309884409b25a1a7d416b3525da7c88230301274ee9",
+      "uncompressed_sha256": "4993de365b1503edd8a12309884409b25a1a7d416b3525da7c88230301274ee9",
+      "uncompressed_bytes": 519
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/finalize.py",
+      "path": "components/pow-reciprocal-soft/finalize.py",
+      "encoding": "identity",
+      "sha256": "2bd96b9f87b999ed34cab49951ee870c71635072966b7c0274ecf6cc466d1f41",
+      "uncompressed_sha256": "2bd96b9f87b999ed34cab49951ee870c71635072966b7c0274ecf6cc466d1f41",
+      "uncompressed_bytes": 9927
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/harness-preflight-001.py",
+      "path": "components/pow-reciprocal-soft/harness-preflight-001.py",
+      "encoding": "identity",
+      "sha256": "644ec69c7cf9db1d6967b22ced508611a2a75ddcc51a15360af7dee42029f67b",
+      "uncompressed_sha256": "644ec69c7cf9db1d6967b22ced508611a2a75ddcc51a15360af7dee42029f67b",
+      "uncompressed_bytes": 1373
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/harness.py",
+      "path": "components/pow-reciprocal-soft/harness.py",
+      "encoding": "identity",
+      "sha256": "ce4e4ccd6f11d2e78f1bf340dff64b42471ff3fbb4c40734721ead6b2024f4d1",
+      "uncompressed_sha256": "ce4e4ccd6f11d2e78f1bf340dff64b42471ff3fbb4c40734721ead6b2024f4d1",
+      "uncompressed_bytes": 1457
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/new-qualification.json",
+      "path": "components/pow-reciprocal-soft/new-qualification.json.gz",
+      "encoding": "gzip",
+      "sha256": "c64a8d2e792b55b0bf32fcc7142968a5e230c5b7c176175d4a83da99648dc890",
+      "uncompressed_sha256": "703969105b94abebd334c99f81028eed504cbb32ac37a171562be320b70bf54d",
+      "uncompressed_bytes": 10266332
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/new-qualification.log",
+      "path": "components/pow-reciprocal-soft/new-qualification.log",
+      "encoding": "identity",
+      "sha256": "cbd61715bef0e7d60512f0fbe19b3c267a40c80893ea361a3edcc3ab15e01b54",
+      "uncompressed_sha256": "cbd61715bef0e7d60512f0fbe19b3c267a40c80893ea361a3edcc3ab15e01b54",
+      "uncompressed_bytes": 5091
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/original153.json",
+      "path": "components/pow-reciprocal-soft/original153.json",
+      "encoding": "identity",
+      "sha256": "a9f27001b8aec71a501d3f5bea925c7896b3275b04612453ab2e97ef91f77118",
+      "uncompressed_sha256": "a9f27001b8aec71a501d3f5bea925c7896b3275b04612453ab2e97ef91f77118",
+      "uncompressed_bytes": 66783
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/probe.json",
+      "path": "components/pow-reciprocal-soft/probe.json.gz",
+      "encoding": "gzip",
+      "sha256": "69dc76032068fd8daac9b2dacb2d6f7671fe56141df9a8b7ecc6b614dd54fd3f",
+      "uncompressed_sha256": "d0e4e7fd85eedb8b9f78cb613f81991baf0f8123dca3c9a3d37900a89613ac5e",
+      "uncompressed_bytes": 317411
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/probe.log",
+      "path": "components/pow-reciprocal-soft/probe.log",
+      "encoding": "identity",
+      "sha256": "3eb629b671a411187fcb0a843d96daf7685bba3b0e40446862513adde26f5cb6",
+      "uncompressed_sha256": "3eb629b671a411187fcb0a843d96daf7685bba3b0e40446862513adde26f5cb6",
+      "uncompressed_bytes": 1034
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/probe.py",
+      "path": "components/pow-reciprocal-soft/probe.py",
+      "encoding": "identity",
+      "sha256": "f8397aa3ac018fa5f8a05041463fc6bfc66becce92212508f9a008e087082142",
+      "uncompressed_sha256": "f8397aa3ac018fa5f8a05041463fc6bfc66becce92212508f9a008e087082142",
+      "uncompressed_bytes": 4019
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/progress.json",
+      "path": "components/pow-reciprocal-soft/progress.json",
+      "encoding": "identity",
+      "sha256": "466bdd9b6f680fec82aed00be09f2c3e8ed0b9839e289880d847dedef97e5420",
+      "uncompressed_sha256": "466bdd9b6f680fec82aed00be09f2c3e8ed0b9839e289880d847dedef97e5420",
+      "uncompressed_bytes": 119
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/qualification-records.jsonl.gz",
+      "path": "components/pow-reciprocal-soft/qualification-records.jsonl.gz",
+      "encoding": "identity",
+      "sha256": "0433412a4bde28daa6611118815eaf0bb48662c5d857bcd58e005931b67b6beb",
+      "uncompressed_sha256": "0433412a4bde28daa6611118815eaf0bb48662c5d857bcd58e005931b67b6beb",
+      "uncompressed_bytes": 3852216
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/qualification.json",
+      "path": "components/pow-reciprocal-soft/qualification.json.gz",
+      "encoding": "gzip",
+      "sha256": "f8f80067c8576600d7778ad7b61d93491c247e660dd5f0bf5600399c44c67aef",
+      "uncompressed_sha256": "00afd66a972e3ce680d188e2cef107fe18b608ac83ae8a85ddd2a02c9c54842a",
+      "uncompressed_bytes": 6784415
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/qualification.log",
+      "path": "components/pow-reciprocal-soft/qualification.log",
+      "encoding": "identity",
+      "sha256": "812fca496517b39413135bb4ea12eb45dc3a30e0eab7363560c03ecdbb1eb756",
+      "uncompressed_sha256": "812fca496517b39413135bb4ea12eb45dc3a30e0eab7363560c03ecdbb1eb756",
+      "uncompressed_bytes": 11798
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/qualify-new.py",
+      "path": "components/pow-reciprocal-soft/qualify-new.py",
+      "encoding": "identity",
+      "sha256": "3628db3f445a74e530720310d67cbe906c4dc7baf2ba996e639ef53021b5d93a",
+      "uncompressed_sha256": "3628db3f445a74e530720310d67cbe906c4dc7baf2ba996e639ef53021b5d93a",
+      "uncompressed_bytes": 3991
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/qualify.py",
+      "path": "components/pow-reciprocal-soft/qualify.py",
+      "encoding": "identity",
+      "sha256": "e9daf97ce9c536227b98de1f099d5bf81369b2951fcb837740a78241d7fb3f55",
+      "uncompressed_sha256": "e9daf97ce9c536227b98de1f099d5bf81369b2951fcb837740a78241d7fb3f55",
+      "uncompressed_bytes": 4654
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/rebuild-proof.json",
+      "path": "components/pow-reciprocal-soft/rebuild-proof.json",
+      "encoding": "identity",
+      "sha256": "bbd4fafe9774940c3f5a8aa2726356a60a290da8a8c28a070f9445fa3463639d",
+      "uncompressed_sha256": "bbd4fafe9774940c3f5a8aa2726356a60a290da8a8c28a070f9445fa3463639d",
+      "uncompressed_bytes": 115386
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/rebuild.log",
+      "path": "components/pow-reciprocal-soft/rebuild.log",
+      "encoding": "identity",
+      "sha256": "ceff269c740628c86fba734a635c9bbd254c02d7aea8160cb2425fc2ae865547",
+      "uncompressed_sha256": "ceff269c740628c86fba734a635c9bbd254c02d7aea8160cb2425fc2ae865547",
+      "uncompressed_bytes": 1961
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/rebuild.py",
+      "path": "components/pow-reciprocal-soft/rebuild.py",
+      "encoding": "identity",
+      "sha256": "ba1a93d083ce955fd0b073958319f9e2a6b81d7ca053c2dd322b4a854d5c794b",
+      "uncompressed_sha256": "ba1a93d083ce955fd0b073958319f9e2a6b81d7ca053c2dd322b4a854d5c794b",
+      "uncompressed_bytes": 933
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/result.json",
+      "path": "components/pow-reciprocal-soft/result.json",
+      "encoding": "identity",
+      "sha256": "f8bbd45f9481b2273aeb86e92c03de75132e925f40bdf699ac31da13af74fe38",
+      "uncompressed_sha256": "f8bbd45f9481b2273aeb86e92c03de75132e925f40bdf699ac31da13af74fe38",
+      "uncompressed_bytes": 3721
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/root-call.patch",
+      "path": "components/pow-reciprocal-soft/root-call.patch",
+      "encoding": "identity",
+      "sha256": "a58ecfbad747d4cb03bce4038d665969ffdaafb9f915baec265f61d7191ea2f6",
+      "uncompressed_sha256": "a58ecfbad747d4cb03bce4038d665969ffdaafb9f915baec265f61d7191ea2f6",
+      "uncompressed_bytes": 257
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/seed17.S",
+      "path": "components/pow-reciprocal-soft/seed17.S",
+      "encoding": "identity",
+      "sha256": "22b8233c6d961ad5588947c8c9a62a1de0070be7b7626a689fdeecac09a130ee",
+      "uncompressed_sha256": "22b8233c6d961ad5588947c8c9a62a1de0070be7b7626a689fdeecac09a130ee",
+      "uncompressed_bytes": 687
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/software.S",
+      "path": "components/pow-reciprocal-soft/software.S",
+      "encoding": "identity",
+      "sha256": "f24305ca1ee90461b7bbc01e1971309ac3e2850fd5d400116d3b87c13432d6c4",
+      "uncompressed_sha256": "f24305ca1ee90461b7bbc01e1971309ac3e2850fd5d400116d3b87c13432d6c4",
+      "uncompressed_bytes": 8935
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/source-lineage-pins.json",
+      "path": "components/pow-reciprocal-soft/source-lineage-pins.json.gz",
+      "encoding": "gzip",
+      "sha256": "83e4dc883e876d93612fc11f9d12877bb8cbd2e3464565f568d70ff84baec8ca",
+      "uncompressed_sha256": "d82f0515d9800168768af9c370575205dbfb54c576352f8aebc943cb7ed10cf5",
+      "uncompressed_bytes": 332969
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/source-proof.json",
+      "path": "components/pow-reciprocal-soft/source-proof.json",
+      "encoding": "identity",
+      "sha256": "3325f8a3815faf77888bd887801d3772f252e6d0111fd843b747ab835562fad1",
+      "uncompressed_sha256": "3325f8a3815faf77888bd887801d3772f252e6d0111fd843b747ab835562fad1",
+      "uncompressed_bytes": 8581
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/source-proof.log",
+      "path": "components/pow-reciprocal-soft/source-proof.log",
+      "encoding": "identity",
+      "sha256": "c5c9c1fe973c0d47d1b899028c473bc7fd44f43e8e13b276f098872b26d7eca9",
+      "uncompressed_sha256": "c5c9c1fe973c0d47d1b899028c473bc7fd44f43e8e13b276f098872b26d7eca9",
+      "uncompressed_bytes": 1333
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/source-proof.py",
+      "path": "components/pow-reciprocal-soft/source-proof.py",
+      "encoding": "identity",
+      "sha256": "7712e946146ac16ea523fd6679953ba4a266b40a68052469ab97aa7581ba6be2",
+      "uncompressed_sha256": "7712e946146ac16ea523fd6679953ba4a266b40a68052469ab97aa7581ba6be2",
+      "uncompressed_bytes": 4272
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/summary.json",
+      "path": "components/pow-reciprocal-soft/summary.json",
+      "encoding": "identity",
+      "sha256": "4b8af37302e0d133f7f60523b23b904bb4a6d773ad1118a0801af87269736756",
+      "uncompressed_sha256": "4b8af37302e0d133f7f60523b23b904bb4a6d773ad1118a0801af87269736756",
+      "uncompressed_bytes": 2364
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/tally.log",
+      "path": "components/pow-reciprocal-soft/tally.log",
+      "encoding": "identity",
+      "sha256": "4b8af37302e0d133f7f60523b23b904bb4a6d773ad1118a0801af87269736756",
+      "uncompressed_sha256": "4b8af37302e0d133f7f60523b23b904bb4a6d773ad1118a0801af87269736756",
+      "uncompressed_bytes": 2364
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/tally.py",
+      "path": "components/pow-reciprocal-soft/tally.py",
+      "encoding": "identity",
+      "sha256": "34774359c2edf0afd1a866220da3d24552a77e43eab9cfe039c384c049a493f7",
+      "uncompressed_sha256": "34774359c2edf0afd1a866220da3d24552a77e43eab9cfe039c384c049a493f7",
+      "uncompressed_bytes": 5442
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/trace.py",
+      "path": "components/pow-reciprocal-soft/trace.py",
+      "encoding": "identity",
+      "sha256": "063f8e8ba6cde3a0faf0e96b7b37974d822d1a83e174ae5994ccf54327c5e138",
+      "uncompressed_sha256": "063f8e8ba6cde3a0faf0e96b7b37974d822d1a83e174ae5994ccf54327c5e138",
+      "uncompressed_bytes": 1143
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-20261025/verify-direct.py",
+      "path": "components/pow-reciprocal-soft/verify-direct.py",
+      "encoding": "identity",
+      "sha256": "6d3b22fd1b8ad89a3f083ad780f8cdf252cb8e42f6111189408363a157844c88",
+      "uncompressed_sha256": "6d3b22fd1b8ad89a3f083ad780f8cdf252cb8e42f6111189408363a157844c88",
+      "uncompressed_bytes": 6495
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/FROZEN.json",
+      "path": "components/pow-reciprocal-lut/FROZEN.json",
+      "encoding": "identity",
+      "sha256": "7384323f37dae2fb8a7cf350a64165392181e20276e83551ccf9ef320d811ffc",
+      "uncompressed_sha256": "7384323f37dae2fb8a7cf350a64165392181e20276e83551ccf9ef320d811ffc",
+      "uncompressed_bytes": 9584
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/HANDOFF.md",
+      "path": "components/pow-reciprocal-lut/HANDOFF.md",
+      "encoding": "identity",
+      "sha256": "91e07f733a60856817e89fd8d31a008b11c6de9efd9c6abdba053940044243e0",
+      "uncompressed_sha256": "91e07f733a60856817e89fd8d31a008b11c6de9efd9c6abdba053940044243e0",
+      "uncompressed_bytes": 3583
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/NUMERIC-PROOF.md",
+      "path": "components/pow-reciprocal-lut/NUMERIC-PROOF.md",
+      "encoding": "identity",
+      "sha256": "7290c8f94b6c253d817cecf5d0ec5936f2babdd84041556d2942e75a0182a4d7",
+      "uncompressed_sha256": "7290c8f94b6c253d817cecf5d0ec5936f2babdd84041556d2942e75a0182a4d7",
+      "uncompressed_bytes": 3133
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/PREFLIGHT-001.json",
+      "path": "components/pow-reciprocal-lut/PREFLIGHT-001.json",
+      "encoding": "identity",
+      "sha256": "57fa7337f610e866e20ef8ea9a4f787d8cfbf6bf27a89db6b2bd26c568702316",
+      "uncompressed_sha256": "57fa7337f610e866e20ef8ea9a4f787d8cfbf6bf27a89db6b2bd26c568702316",
+      "uncompressed_bytes": 327
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/WORK-SCOPE.json",
+      "path": "components/pow-reciprocal-lut/WORK-SCOPE.json",
+      "encoding": "identity",
+      "sha256": "0b60f5f5b65462467c1911e4a89db8d97798479bc8d0633027f45f68cfb28816",
+      "uncompressed_sha256": "0b60f5f5b65462467c1911e4a89db8d97798479bc8d0633027f45f68cfb28816",
+      "uncompressed_bytes": 754
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/build.json",
+      "path": "components/pow-reciprocal-lut/build.json",
+      "encoding": "identity",
+      "sha256": "fb3def2b5217dd240fe74ac53e855b134d2d916bf74ad2955feb5d03b3bd3f10",
+      "uncompressed_sha256": "fb3def2b5217dd240fe74ac53e855b134d2d916bf74ad2955feb5d03b3bd3f10",
+      "uncompressed_bytes": 107248
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/build.log",
+      "path": "components/pow-reciprocal-lut/build.log",
+      "encoding": "identity",
+      "sha256": "72fdbe91c586739b0d22939b393953237f1d66b119861a8677b28809d72c7ccb",
+      "uncompressed_sha256": "72fdbe91c586739b0d22939b393953237f1d66b119861a8677b28809d72c7ccb",
+      "uncompressed_bytes": 2843
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/build.py",
+      "path": "components/pow-reciprocal-lut/build.py",
+      "encoding": "identity",
+      "sha256": "f8667c8ddc6ffdc91e50059a947aa0f4fb34d7f410ba48a566d0af825bc8daca",
+      "uncompressed_sha256": "f8667c8ddc6ffdc91e50059a947aa0f4fb34d7f410ba48a566d0af825bc8daca",
+      "uncompressed_bytes": 3557
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/candidate/native_eabi_m0_pow_root_prefix.inc",
+      "path": "components/pow-reciprocal-lut/candidate/native_eabi_m0_pow_root_prefix.inc",
+      "encoding": "identity",
+      "sha256": "5fa310606d997499a39aa1ee734b36cb6e32a5515645ac380775d9da43ca2866",
+      "uncompressed_sha256": "5fa310606d997499a39aa1ee734b36cb6e32a5515645ac380775d9da43ca2866",
+      "uncompressed_bytes": 92136
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/candidate/native_eabi_m0_rp2040.S",
+      "path": "components/pow-reciprocal-lut/candidate/native_eabi_m0_rp2040.S",
+      "encoding": "identity",
+      "sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_bytes": 31792
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/candidate-ddiv.S",
+      "path": "components/pow-reciprocal-lut/candidate-ddiv.S",
+      "encoding": "identity",
+      "sha256": "15361c2a3ef8573b53eb367f7741521df55ba77ebcb657e3f46e14ff8d94e591",
+      "uncompressed_sha256": "15361c2a3ef8573b53eb367f7741521df55ba77ebcb657e3f46e14ff8d94e591",
+      "uncompressed_bytes": 10852
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/candidate-seed17.S",
+      "path": "components/pow-reciprocal-lut/candidate-seed17.S",
+      "encoding": "identity",
+      "sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_bytes": 1988
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/candidate.ld",
+      "path": "components/pow-reciprocal-lut/candidate.ld",
+      "encoding": "identity",
+      "sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_bytes": 133769
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/control/native_eabi_m0_pow_root_prefix.inc",
+      "path": "components/pow-reciprocal-lut/control/native_eabi_m0_pow_root_prefix.inc",
+      "encoding": "identity",
+      "sha256": "5fa310606d997499a39aa1ee734b36cb6e32a5515645ac380775d9da43ca2866",
+      "uncompressed_sha256": "5fa310606d997499a39aa1ee734b36cb6e32a5515645ac380775d9da43ca2866",
+      "uncompressed_bytes": 92136
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/control/native_eabi_m0_rp2040.S",
+      "path": "components/pow-reciprocal-lut/control/native_eabi_m0_rp2040.S",
+      "encoding": "identity",
+      "sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_bytes": 31792
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/control-ddiv.S",
+      "path": "components/pow-reciprocal-lut/control-ddiv.S",
+      "encoding": "identity",
+      "sha256": "15361c2a3ef8573b53eb367f7741521df55ba77ebcb657e3f46e14ff8d94e591",
+      "uncompressed_sha256": "15361c2a3ef8573b53eb367f7741521df55ba77ebcb657e3f46e14ff8d94e591",
+      "uncompressed_bytes": 10852
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/control-seed17.S",
+      "path": "components/pow-reciprocal-lut/control-seed17.S",
+      "encoding": "identity",
+      "sha256": "22b8233c6d961ad5588947c8c9a62a1de0070be7b7626a689fdeecac09a130ee",
+      "uncompressed_sha256": "22b8233c6d961ad5588947c8c9a62a1de0070be7b7626a689fdeecac09a130ee",
+      "uncompressed_bytes": 687
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/control.ld",
+      "path": "components/pow-reciprocal-lut/control.ld",
+      "encoding": "identity",
+      "sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_bytes": 133769
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/direct-preflight-001.log",
+      "path": "components/pow-reciprocal-lut/direct-preflight-001.log",
+      "encoding": "identity",
+      "sha256": "fc54eaf78655d8bee4269342527a3abcc722ddc588f786fd48b401e203d6b41a",
+      "uncompressed_sha256": "fc54eaf78655d8bee4269342527a3abcc722ddc588f786fd48b401e203d6b41a",
+      "uncompressed_bytes": 625
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/direct-proof-r2.log",
+      "path": "components/pow-reciprocal-lut/direct-proof-r2.log",
+      "encoding": "identity",
+      "sha256": "ea2b1f968c93cfbf0c01d96c8569332aa904565692492d98d9255c80063214c3",
+      "uncompressed_sha256": "ea2b1f968c93cfbf0c01d96c8569332aa904565692492d98d9255c80063214c3",
+      "uncompressed_bytes": 1381
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/direct-proof.json",
+      "path": "components/pow-reciprocal-lut/direct-proof.json.gz",
+      "encoding": "gzip",
+      "sha256": "776c814b176aeb8eb2f0a34c57526566516dfe13be58e2ec07c71d6210daa358",
+      "uncompressed_sha256": "ada21779a802432905067cd4689a8d9ddcfd1d7fdced2f2ea4bf66cfe8b5d2f5",
+      "uncompressed_bytes": 3078498
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/direct-proof.log",
+      "path": "components/pow-reciprocal-lut/direct-proof.log",
+      "encoding": "identity",
+      "sha256": "fc54eaf78655d8bee4269342527a3abcc722ddc588f786fd48b401e203d6b41a",
+      "uncompressed_sha256": "fc54eaf78655d8bee4269342527a3abcc722ddc588f786fd48b401e203d6b41a",
+      "uncompressed_bytes": 625
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/finalize.py",
+      "path": "components/pow-reciprocal-lut/finalize.py",
+      "encoding": "identity",
+      "sha256": "d6b5a0c7dccf877224bd8eae08f6688473a68b183160e8c92de0916ad84ab3fa",
+      "uncompressed_sha256": "d6b5a0c7dccf877224bd8eae08f6688473a68b183160e8c92de0916ad84ab3fa",
+      "uncompressed_bytes": 10580
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/harness.py",
+      "path": "components/pow-reciprocal-lut/harness.py",
+      "encoding": "identity",
+      "sha256": "965ef829496ad3293bb1f66cbead5c523372625ab3076388fa79d835f67b2e21",
+      "uncompressed_sha256": "965ef829496ad3293bb1f66cbead5c523372625ab3076388fa79d835f67b2e21",
+      "uncompressed_bytes": 1701
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/new-qualification.json",
+      "path": "components/pow-reciprocal-lut/new-qualification.json.gz",
+      "encoding": "gzip",
+      "sha256": "5ed89f1ff1522c1fc029a00c9f9940aa6b5c9d850fb1b2dec41694dd8a4267ee",
+      "uncompressed_sha256": "f6f4e16b24feabcd3cc10b7f5d0cb979efe732b656890316c6baa176fbe205f6",
+      "uncompressed_bytes": 10265639
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/new-qualification.log",
+      "path": "components/pow-reciprocal-lut/new-qualification.log",
+      "encoding": "identity",
+      "sha256": "c568fae9217b55d616a84fdd1f6453ef8c05737641391d7d922d514cc10f2e61",
+      "uncompressed_sha256": "c568fae9217b55d616a84fdd1f6453ef8c05737641391d7d922d514cc10f2e61",
+      "uncompressed_bytes": 4398
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/original153.json",
+      "path": "components/pow-reciprocal-lut/original153.json",
+      "encoding": "identity",
+      "sha256": "69d077f201100057d686fade81853fb8d3bb08f890376dda5ab2ff8abcbfb788",
+      "uncompressed_sha256": "69d077f201100057d686fade81853fb8d3bb08f890376dda5ab2ff8abcbfb788",
+      "uncompressed_bytes": 66783
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/probe.py",
+      "path": "components/pow-reciprocal-lut/probe.py",
+      "encoding": "identity",
+      "sha256": "f8397aa3ac018fa5f8a05041463fc6bfc66becce92212508f9a008e087082142",
+      "uncompressed_sha256": "f8397aa3ac018fa5f8a05041463fc6bfc66becce92212508f9a008e087082142",
+      "uncompressed_bytes": 4019
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/progress.json",
+      "path": "components/pow-reciprocal-lut/progress.json",
+      "encoding": "identity",
+      "sha256": "466bdd9b6f680fec82aed00be09f2c3e8ed0b9839e289880d847dedef97e5420",
+      "uncompressed_sha256": "466bdd9b6f680fec82aed00be09f2c3e8ed0b9839e289880d847dedef97e5420",
+      "uncompressed_bytes": 119
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/qualification-records.jsonl.gz",
+      "path": "components/pow-reciprocal-lut/qualification-records.jsonl.gz",
+      "encoding": "identity",
+      "sha256": "b6aa04e574fcb204c5ba8d9ea282ea7ada650882f6c9bb660659ba281e10df36",
+      "uncompressed_sha256": "b6aa04e574fcb204c5ba8d9ea282ea7ada650882f6c9bb660659ba281e10df36",
+      "uncompressed_bytes": 3852033
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/qualification.json",
+      "path": "components/pow-reciprocal-lut/qualification.json.gz",
+      "encoding": "gzip",
+      "sha256": "b04bc8c3c0e729e614c24b92ecb1bdc6c85da8282afb7c7d1afbf428b41ac5db",
+      "uncompressed_sha256": "002aa8fe277d3d77fa8c8e074768ab8288a29b72a254d65690d2f427286eb9b4",
+      "uncompressed_bytes": 6774798
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/qualification.log",
+      "path": "components/pow-reciprocal-lut/qualification.log",
+      "encoding": "identity",
+      "sha256": "1eeb9907d948161f26fa8e18d3f37307f66889a85a3d7807de4296cb612132ac",
+      "uncompressed_sha256": "1eeb9907d948161f26fa8e18d3f37307f66889a85a3d7807de4296cb612132ac",
+      "uncompressed_bytes": 11100
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/qualify-new.py",
+      "path": "components/pow-reciprocal-lut/qualify-new.py",
+      "encoding": "identity",
+      "sha256": "3628db3f445a74e530720310d67cbe906c4dc7baf2ba996e639ef53021b5d93a",
+      "uncompressed_sha256": "3628db3f445a74e530720310d67cbe906c4dc7baf2ba996e639ef53021b5d93a",
+      "uncompressed_bytes": 3991
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/qualify.py",
+      "path": "components/pow-reciprocal-lut/qualify.py",
+      "encoding": "identity",
+      "sha256": "e895fbaac0b7ccad61955b91fb4bd7c0041c676a0ab4d10bcc7b468fc27272bf",
+      "uncompressed_sha256": "e895fbaac0b7ccad61955b91fb4bd7c0041c676a0ab4d10bcc7b468fc27272bf",
+      "uncompressed_bytes": 4651
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/rebuild-proof.json",
+      "path": "components/pow-reciprocal-lut/rebuild-proof.json",
+      "encoding": "identity",
+      "sha256": "7b66693674eccf38b5b6e0cac815129fdca5ed9bb077b35ded903d6666f75b8d",
+      "uncompressed_sha256": "7b66693674eccf38b5b6e0cac815129fdca5ed9bb077b35ded903d6666f75b8d",
+      "uncompressed_bytes": 109857
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/rebuild.log",
+      "path": "components/pow-reciprocal-lut/rebuild.log",
+      "encoding": "identity",
+      "sha256": "eb49fb2a27f711297861054e85b69bbd1f39767bee20868e3574658b9686c8e3",
+      "uncompressed_sha256": "eb49fb2a27f711297861054e85b69bbd1f39767bee20868e3574658b9686c8e3",
+      "uncompressed_bytes": 1571
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/rebuild.py",
+      "path": "components/pow-reciprocal-lut/rebuild.py",
+      "encoding": "identity",
+      "sha256": "1a160b1fc6ceae6bbe730f00d70dd8294b2557d334d2083515831831d51e01d6",
+      "uncompressed_sha256": "1a160b1fc6ceae6bbe730f00d70dd8294b2557d334d2083515831831d51e01d6",
+      "uncompressed_bytes": 933
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/result.json",
+      "path": "components/pow-reciprocal-lut/result.json",
+      "encoding": "identity",
+      "sha256": "42885850b0f63623ce4371ae3471b5fa262458e23bde5f7a798114c944ce0031",
+      "uncompressed_sha256": "42885850b0f63623ce4371ae3471b5fa262458e23bde5f7a798114c944ce0031",
+      "uncompressed_bytes": 3970
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/software.S",
+      "path": "components/pow-reciprocal-lut/software.S",
+      "encoding": "identity",
+      "sha256": "f24305ca1ee90461b7bbc01e1971309ac3e2850fd5d400116d3b87c13432d6c4",
+      "uncompressed_sha256": "f24305ca1ee90461b7bbc01e1971309ac3e2850fd5d400116d3b87c13432d6c4",
+      "uncompressed_bytes": 8935
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/source-lineage-pins.json",
+      "path": "components/pow-reciprocal-lut/source-lineage-pins.json.gz",
+      "encoding": "gzip",
+      "sha256": "9d58c390f60ca29c5e976d78cf51a4887b9248058b898132b8339530c0c9dcca",
+      "uncompressed_sha256": "13d37a35fb328b9f2fbb7be1ca083a6a253942d36c505eca6aa6680a4b0b63bc",
+      "uncompressed_bytes": 362491
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/source-proof.json",
+      "path": "components/pow-reciprocal-lut/source-proof.json",
+      "encoding": "identity",
+      "sha256": "759f611459e7349b1154fc36311a35b72900bf89f3165d80ea65b85c420ff210",
+      "uncompressed_sha256": "759f611459e7349b1154fc36311a35b72900bf89f3165d80ea65b85c420ff210",
+      "uncompressed_bytes": 3199
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/source-proof.log",
+      "path": "components/pow-reciprocal-lut/source-proof.log",
+      "encoding": "identity",
+      "sha256": "a66ae296aa6cbf1ba347493d6028c829e9e2286d775e8728d8e592d84454a508",
+      "uncompressed_sha256": "a66ae296aa6cbf1ba347493d6028c829e9e2286d775e8728d8e592d84454a508",
+      "uncompressed_bytes": 1465
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/source-proof.py",
+      "path": "components/pow-reciprocal-lut/source-proof.py",
+      "encoding": "identity",
+      "sha256": "155d3b294262756bc7aea999e3eec2a6096e5f25e8b25b0ced0ef91f614dd7f9",
+      "uncompressed_sha256": "155d3b294262756bc7aea999e3eec2a6096e5f25e8b25b0ced0ef91f614dd7f9",
+      "uncompressed_bytes": 4581
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/summary.json",
+      "path": "components/pow-reciprocal-lut/summary.json",
+      "encoding": "identity",
+      "sha256": "4c4261b5cfd6174ae98edf7b633f9aeab09a2ad8a0b6d30bc77e3b5859d12748",
+      "uncompressed_sha256": "4c4261b5cfd6174ae98edf7b633f9aeab09a2ad8a0b6d30bc77e3b5859d12748",
+      "uncompressed_bytes": 1885
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/tally.log",
+      "path": "components/pow-reciprocal-lut/tally.log",
+      "encoding": "identity",
+      "sha256": "4c4261b5cfd6174ae98edf7b633f9aeab09a2ad8a0b6d30bc77e3b5859d12748",
+      "uncompressed_sha256": "4c4261b5cfd6174ae98edf7b633f9aeab09a2ad8a0b6d30bc77e3b5859d12748",
+      "uncompressed_bytes": 1885
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/tally.py",
+      "path": "components/pow-reciprocal-lut/tally.py",
+      "encoding": "identity",
+      "sha256": "1aa190d73db6d1f219784f39af002ee607caaf1f9957363ddc0624c10b1618ae",
+      "uncompressed_sha256": "1aa190d73db6d1f219784f39af002ee607caaf1f9957363ddc0624c10b1618ae",
+      "uncompressed_bytes": 6330
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/trace.py",
+      "path": "components/pow-reciprocal-lut/trace.py",
+      "encoding": "identity",
+      "sha256": "8b1873359d829958989d80b90834e5cb41c98dc52332016aa7e42710856baaf2",
+      "uncompressed_sha256": "8b1873359d829958989d80b90834e5cb41c98dc52332016aa7e42710856baaf2",
+      "uncompressed_bytes": 1087
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/verify-direct-preflight-001.py",
+      "path": "components/pow-reciprocal-lut/verify-direct-preflight-001.py",
+      "encoding": "identity",
+      "sha256": "ae6e350089293789d81625bbfd08a0c49debca8fc094e2274df83515d6e972c1",
+      "uncompressed_sha256": "ae6e350089293789d81625bbfd08a0c49debca8fc094e2274df83515d6e972c1",
+      "uncompressed_bytes": 6521
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-20261025/verify-direct.py",
+      "path": "components/pow-reciprocal-lut/verify-direct.py",
+      "encoding": "identity",
+      "sha256": "1f31d87076f5c48a1cf0565c0fcbe163229ed4c6631e36356a61461903505709",
+      "uncompressed_sha256": "1f31d87076f5c48a1cf0565c0fcbe163229ed4c6631e36356a61461903505709",
+      "uncompressed_bytes": 6485
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/FROZEN.json",
+      "path": "components/pow-reciprocal-one/FROZEN.json",
+      "encoding": "identity",
+      "sha256": "3341f37fa8b5a5177af792be2417b1365c5b6595f66280151e5ed6f72d8c5469",
+      "uncompressed_sha256": "3341f37fa8b5a5177af792be2417b1365c5b6595f66280151e5ed6f72d8c5469",
+      "uncompressed_bytes": 11555
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/HANDOFF.md",
+      "path": "components/pow-reciprocal-one/HANDOFF.md",
+      "encoding": "identity",
+      "sha256": "f07ad6e465e704a8468cee74df5ef21712e7a47846bd56d8bda6ad9c4c25df70",
+      "uncompressed_sha256": "f07ad6e465e704a8468cee74df5ef21712e7a47846bd56d8bda6ad9c4c25df70",
+      "uncompressed_bytes": 3519
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/NUMERIC-PROOF.md",
+      "path": "components/pow-reciprocal-one/NUMERIC-PROOF.md",
+      "encoding": "identity",
+      "sha256": "0fe85e1813aa437cfa320a6dbdf924c0cd36a1e771406322c66056d48f7b0c14",
+      "uncompressed_sha256": "0fe85e1813aa437cfa320a6dbdf924c0cd36a1e771406322c66056d48f7b0c14",
+      "uncompressed_bytes": 3951
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/TRACE-PREFLIGHT-001.json",
+      "path": "components/pow-reciprocal-one/TRACE-PREFLIGHT-001.json",
+      "encoding": "identity",
+      "sha256": "e63fd17632fbad85519fcdf4651592df226c11eb28104d8ec3a5b9e25149dd6a",
+      "uncompressed_sha256": "e63fd17632fbad85519fcdf4651592df226c11eb28104d8ec3a5b9e25149dd6a",
+      "uncompressed_bytes": 423
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/WORK-SCOPE.json",
+      "path": "components/pow-reciprocal-one/WORK-SCOPE.json",
+      "encoding": "identity",
+      "sha256": "fe2c51f63c68aae4ecfcfa6540f24e10e69c61faf06019591b38e315279e1d45",
+      "uncompressed_sha256": "fe2c51f63c68aae4ecfcfa6540f24e10e69c61faf06019591b38e315279e1d45",
+      "uncompressed_bytes": 464
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/build-v2.log",
+      "path": "components/pow-reciprocal-one/build-v2.log",
+      "encoding": "identity",
+      "sha256": "b7edc8507a852093d7a04ef8b458e44d56ef43268d5bf8f64e6c38d114555556",
+      "uncompressed_sha256": "b7edc8507a852093d7a04ef8b458e44d56ef43268d5bf8f64e6c38d114555556",
+      "uncompressed_bytes": 3041
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/build.json",
+      "path": "components/pow-reciprocal-one/build.json",
+      "encoding": "identity",
+      "sha256": "6f43575d9d4090a27f9fda87f2806aead57d491664940abea695e085918f6865",
+      "uncompressed_sha256": "6f43575d9d4090a27f9fda87f2806aead57d491664940abea695e085918f6865",
+      "uncompressed_bytes": 107929
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/build.log",
+      "path": "components/pow-reciprocal-one/build.log",
+      "encoding": "identity",
+      "sha256": "ab45ded6e2ccef8e7645b7690b2837c0425134e35d54dfeaf896781e0b65f5aa",
+      "uncompressed_sha256": "ab45ded6e2ccef8e7645b7690b2837c0425134e35d54dfeaf896781e0b65f5aa",
+      "uncompressed_bytes": 3040
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/build.py",
+      "path": "components/pow-reciprocal-one/build.py",
+      "encoding": "identity",
+      "sha256": "6e43e918f20777b3988c2b3f15a1f5b8673ed3ae5ad3ab7f2db5688c238e8919",
+      "uncompressed_sha256": "6e43e918f20777b3988c2b3f15a1f5b8673ed3ae5ad3ab7f2db5688c238e8919",
+      "uncompressed_bytes": 6464
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/candidate/native_eabi_m0_pow_root_prefix.inc",
+      "path": "components/pow-reciprocal-one/candidate/native_eabi_m0_pow_root_prefix.inc",
+      "encoding": "identity",
+      "sha256": "3254978cb21ed37d0c9af0046e832da615eff4b515dc7880fc1013343e211bc1",
+      "uncompressed_sha256": "3254978cb21ed37d0c9af0046e832da615eff4b515dc7880fc1013343e211bc1",
+      "uncompressed_bytes": 92138
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/candidate/native_eabi_m0_rp2040.S",
+      "path": "components/pow-reciprocal-one/candidate/native_eabi_m0_rp2040.S",
+      "encoding": "identity",
+      "sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_bytes": 31792
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/candidate-ddiv.S",
+      "path": "components/pow-reciprocal-one/candidate-ddiv.S",
+      "encoding": "identity",
+      "sha256": "d4b17d36435e5d3ebe1a15e2562670dbe9274bfb344f42853c9fb6698413f650",
+      "uncompressed_sha256": "d4b17d36435e5d3ebe1a15e2562670dbe9274bfb344f42853c9fb6698413f650",
+      "uncompressed_bytes": 10891
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/candidate-seed17.S",
+      "path": "components/pow-reciprocal-one/candidate-seed17.S",
+      "encoding": "identity",
+      "sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_bytes": 1988
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/candidate-software.S",
+      "path": "components/pow-reciprocal-one/candidate-software.S",
+      "encoding": "identity",
+      "sha256": "740fe02cd594523ca5ec96a089990e713f6d5ee96f588f907bcd92c5cd04632f",
+      "uncompressed_sha256": "740fe02cd594523ca5ec96a089990e713f6d5ee96f588f907bcd92c5cd04632f",
+      "uncompressed_bytes": 9103
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/candidate.ld",
+      "path": "components/pow-reciprocal-one/candidate.ld",
+      "encoding": "identity",
+      "sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_bytes": 133769
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/control/native_eabi_m0_pow_root_prefix.inc",
+      "path": "components/pow-reciprocal-one/control/native_eabi_m0_pow_root_prefix.inc",
+      "encoding": "identity",
+      "sha256": "5fa310606d997499a39aa1ee734b36cb6e32a5515645ac380775d9da43ca2866",
+      "uncompressed_sha256": "5fa310606d997499a39aa1ee734b36cb6e32a5515645ac380775d9da43ca2866",
+      "uncompressed_bytes": 92136
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/control/native_eabi_m0_rp2040.S",
+      "path": "components/pow-reciprocal-one/control/native_eabi_m0_rp2040.S",
+      "encoding": "identity",
+      "sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_bytes": 31792
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/control-ddiv.S",
+      "path": "components/pow-reciprocal-one/control-ddiv.S",
+      "encoding": "identity",
+      "sha256": "1bb4740711ab3ae23b0de7b557e94a94d6e1d36bc64ee29e75e720ac76ae7485",
+      "uncompressed_sha256": "1bb4740711ab3ae23b0de7b557e94a94d6e1d36bc64ee29e75e720ac76ae7485",
+      "uncompressed_bytes": 10992
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/control-seed17.S",
+      "path": "components/pow-reciprocal-one/control-seed17.S",
+      "encoding": "identity",
+      "sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_bytes": 1988
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/control.ld",
+      "path": "components/pow-reciprocal-one/control.ld",
+      "encoding": "identity",
+      "sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_bytes": 133769
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/direct-proof-v2.log",
+      "path": "components/pow-reciprocal-one/direct-proof-v2.log",
+      "encoding": "identity",
+      "sha256": "88c59d5ddaeea1aae3da7af4f3901093950341f01f04bd9b9574d610ffff2036",
+      "uncompressed_sha256": "88c59d5ddaeea1aae3da7af4f3901093950341f01f04bd9b9574d610ffff2036",
+      "uncompressed_bytes": 1887
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/direct-proof.json",
+      "path": "components/pow-reciprocal-one/direct-proof.json.gz",
+      "encoding": "gzip",
+      "sha256": "e4b1ff334a3edad3259a8dc727500598a33cf894faa77be67f4f394140f6abfa",
+      "uncompressed_sha256": "97ebf3e2fd11c094a265135d55831af11efce95854b77e4160b18fe0148dd3a5",
+      "uncompressed_bytes": 753530
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/direct-proof.log",
+      "path": "components/pow-reciprocal-one/direct-proof.log",
+      "encoding": "identity",
+      "sha256": "533153c5c09807e67f782cf6aa750e065cfc8a55f767172f6d6694c70d1241f0",
+      "uncompressed_sha256": "533153c5c09807e67f782cf6aa750e065cfc8a55f767172f6d6694c70d1241f0",
+      "uncompressed_bytes": 1855
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/direct-records.jsonl.gz",
+      "path": "components/pow-reciprocal-one/direct-records.jsonl.gz",
+      "encoding": "identity",
+      "sha256": "da5be1d3f68eb6e1344f58a4c94e33b411920e4cab82091654b2b945ae823179",
+      "uncompressed_sha256": "da5be1d3f68eb6e1344f58a4c94e33b411920e4cab82091654b2b945ae823179",
+      "uncompressed_bytes": 808105
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/direct-remaining.json",
+      "path": "components/pow-reciprocal-one/direct-remaining.json",
+      "encoding": "identity",
+      "sha256": "a80a04a39f6935b209f3e10e973705621606a80e3c10e07ea1cc364a6e012bef",
+      "uncompressed_sha256": "a80a04a39f6935b209f3e10e973705621606a80e3c10e07ea1cc364a6e012bef",
+      "uncompressed_bytes": 175997
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/finalize.py",
+      "path": "components/pow-reciprocal-one/finalize.py",
+      "encoding": "identity",
+      "sha256": "6767ce8c2a8e0c550c0610fadd40b6b282cb848316b3b37a49e7b782565f9b62",
+      "uncompressed_sha256": "6767ce8c2a8e0c550c0610fadd40b6b282cb848316b3b37a49e7b782565f9b62",
+      "uncompressed_bytes": 10713
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/harness.py",
+      "path": "components/pow-reciprocal-one/harness.py",
+      "encoding": "identity",
+      "sha256": "22e93eb9d35c8c015915b6d5eb156ee0c8a04c3d3c90424b0c60f11e2778c07b",
+      "uncompressed_sha256": "22e93eb9d35c8c015915b6d5eb156ee0c8a04c3d3c90424b0c60f11e2778c07b",
+      "uncompressed_bytes": 1587
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/new-qualification-preflight-001.log",
+      "path": "components/pow-reciprocal-one/new-qualification-preflight-001.log",
+      "encoding": "identity",
+      "sha256": "126623d24c5e727acf05ad729b5c53e5931a35772a0aeec3a03be9d5969fec29",
+      "uncompressed_sha256": "126623d24c5e727acf05ad729b5c53e5931a35772a0aeec3a03be9d5969fec29",
+      "uncompressed_bytes": 1725
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/new-qualification-r2.log",
+      "path": "components/pow-reciprocal-one/new-qualification-r2.log",
+      "encoding": "identity",
+      "sha256": "049f356c9adfdecd30f0f5c594f37e0fc52f13d608ec0317af0eb00ef9ebc62f",
+      "uncompressed_sha256": "049f356c9adfdecd30f0f5c594f37e0fc52f13d608ec0317af0eb00ef9ebc62f",
+      "uncompressed_bytes": 3857
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/new-qualification.json",
+      "path": "components/pow-reciprocal-one/new-qualification.json.gz",
+      "encoding": "gzip",
+      "sha256": "854f439d1d781d43738a51f4ed7794741557efd8af0ce393feaff3cb61fae79e",
+      "uncompressed_sha256": "f7e3df9b3d202b441cefe67ce835c6051b7892753e49b3beb11a241592da74a2",
+      "uncompressed_bytes": 10682340
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/new-qualification.log",
+      "path": "components/pow-reciprocal-one/new-qualification.log",
+      "encoding": "identity",
+      "sha256": "126623d24c5e727acf05ad729b5c53e5931a35772a0aeec3a03be9d5969fec29",
+      "uncompressed_sha256": "126623d24c5e727acf05ad729b5c53e5931a35772a0aeec3a03be9d5969fec29",
+      "uncompressed_bytes": 1725
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/original153.json",
+      "path": "components/pow-reciprocal-one/original153.json",
+      "encoding": "identity",
+      "sha256": "0c01d416b04dd28812d066288325c8adf2fbc7436a66bae69cda23dad55cf60c",
+      "uncompressed_sha256": "0c01d416b04dd28812d066288325c8adf2fbc7436a66bae69cda23dad55cf60c",
+      "uncompressed_bytes": 66783
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/progress.json",
+      "path": "components/pow-reciprocal-one/progress.json",
+      "encoding": "identity",
+      "sha256": "466bdd9b6f680fec82aed00be09f2c3e8ed0b9839e289880d847dedef97e5420",
+      "uncompressed_sha256": "466bdd9b6f680fec82aed00be09f2c3e8ed0b9839e289880d847dedef97e5420",
+      "uncompressed_bytes": 119
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/qualification-preflight-001-records.jsonl.gz",
+      "path": "components/pow-reciprocal-one/qualification-preflight-001-records.jsonl.gz",
+      "encoding": "identity",
+      "sha256": "4d062263a67a1198b9733cc06743f8f3ab96e90ed132e0a683a0fc56a9252522",
+      "uncompressed_sha256": "4d062263a67a1198b9733cc06743f8f3ab96e90ed132e0a683a0fc56a9252522",
+      "uncompressed_bytes": 3191
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/qualification-preflight-001.log",
+      "path": "components/pow-reciprocal-one/qualification-preflight-001.log",
+      "encoding": "identity",
+      "sha256": "42248cc56e351d4ff1d2e68b8c93a91477c83786ba0ec23947a655c4810758ca",
+      "uncompressed_sha256": "42248cc56e351d4ff1d2e68b8c93a91477c83786ba0ec23947a655c4810758ca",
+      "uncompressed_bytes": 1709
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/qualification-r2.log",
+      "path": "components/pow-reciprocal-one/qualification-r2.log",
+      "encoding": "identity",
+      "sha256": "2ddf74107a48252427ce364eb66147e2c00eb2747a80efd5c8add8df0c9f584c",
+      "uncompressed_sha256": "2ddf74107a48252427ce364eb66147e2c00eb2747a80efd5c8add8df0c9f584c",
+      "uncompressed_bytes": 10127
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/qualification-records.jsonl.gz",
+      "path": "components/pow-reciprocal-one/qualification-records.jsonl.gz",
+      "encoding": "identity",
+      "sha256": "87770504812cf395e85eef39fc7383115d35f9756ebfb2b52f6b991b76f18548",
+      "uncompressed_sha256": "87770504812cf395e85eef39fc7383115d35f9756ebfb2b52f6b991b76f18548",
+      "uncompressed_bytes": 3873157
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/qualification.json",
+      "path": "components/pow-reciprocal-one/qualification.json.gz",
+      "encoding": "gzip",
+      "sha256": "d5cff9272443537c2a1abe5e068fcdfded56ca33253a09e8837ef94737d3dde6",
+      "uncompressed_sha256": "d54e627cfbebabc333bf07fa4dbf49c45766cf93ef3986e364fec46bc8f59cd8",
+      "uncompressed_bytes": 6244250
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/qualification.log",
+      "path": "components/pow-reciprocal-one/qualification.log",
+      "encoding": "identity",
+      "sha256": "42248cc56e351d4ff1d2e68b8c93a91477c83786ba0ec23947a655c4810758ca",
+      "uncompressed_sha256": "42248cc56e351d4ff1d2e68b8c93a91477c83786ba0ec23947a655c4810758ca",
+      "uncompressed_bytes": 1709
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/qualify-new.py",
+      "path": "components/pow-reciprocal-one/qualify-new.py",
+      "encoding": "identity",
+      "sha256": "435f142b10b2947254776c990de9c7d67b165d282197ebe2e3d0cad9df14e962",
+      "uncompressed_sha256": "435f142b10b2947254776c990de9c7d67b165d282197ebe2e3d0cad9df14e962",
+      "uncompressed_bytes": 3758
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/qualify.py",
+      "path": "components/pow-reciprocal-one/qualify.py",
+      "encoding": "identity",
+      "sha256": "6c327a6aded20ff40e312714c523bf9022636c72c27c3eb9d7875a5e31524a59",
+      "uncompressed_sha256": "6c327a6aded20ff40e312714c523bf9022636c72c27c3eb9d7875a5e31524a59",
+      "uncompressed_bytes": 4495
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/rebuild-proof.json",
+      "path": "components/pow-reciprocal-one/rebuild-proof.json",
+      "encoding": "identity",
+      "sha256": "11a9e3bfb87f121e7bf947a1e5149e0185ba3d2f77361abfce34e7726d2d4eee",
+      "uncompressed_sha256": "11a9e3bfb87f121e7bf947a1e5149e0185ba3d2f77361abfce34e7726d2d4eee",
+      "uncompressed_bytes": 112711
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/rebuild.log",
+      "path": "components/pow-reciprocal-one/rebuild.log",
+      "encoding": "identity",
+      "sha256": "e51fe27982c79230608708b008505fd32513a7077fab955f2f20c1999753f9d8",
+      "uncompressed_sha256": "e51fe27982c79230608708b008505fd32513a7077fab955f2f20c1999753f9d8",
+      "uncompressed_bytes": 1807
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/rebuild.py",
+      "path": "components/pow-reciprocal-one/rebuild.py",
+      "encoding": "identity",
+      "sha256": "5ea9d13b7d168e820fec1a6492245cdfb5d459b1b016171e540b88fccdc216e1",
+      "uncompressed_sha256": "5ea9d13b7d168e820fec1a6492245cdfb5d459b1b016171e540b88fccdc216e1",
+      "uncompressed_bytes": 902
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/reciprocal1.patch",
+      "path": "components/pow-reciprocal-one/reciprocal1.patch",
+      "encoding": "identity",
+      "sha256": "c6d8f1819a800c171209c103e99cb03b99b9a36e7f71f6b8156cf35a7e8b6d86",
+      "uncompressed_sha256": "c6d8f1819a800c171209c103e99cb03b99b9a36e7f71f6b8156cf35a7e8b6d86",
+      "uncompressed_bytes": 5561
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/result.json",
+      "path": "components/pow-reciprocal-one/result.json",
+      "encoding": "identity",
+      "sha256": "7989f332e186e1be2860f6048dc4e418d34c97e3cc668d82dcfa6ee6360f9e75",
+      "uncompressed_sha256": "7989f332e186e1be2860f6048dc4e418d34c97e3cc668d82dcfa6ee6360f9e75",
+      "uncompressed_bytes": 4459
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/software.S",
+      "path": "components/pow-reciprocal-one/software.S",
+      "encoding": "identity",
+      "sha256": "a0d8e8a8330217d1494e719c2e0e3669db68a8d37731da30c8d47a6efa0b865c",
+      "uncompressed_sha256": "a0d8e8a8330217d1494e719c2e0e3669db68a8d37731da30c8d47a6efa0b865c",
+      "uncompressed_bytes": 9067
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/source-lineage-pins.json",
+      "path": "components/pow-reciprocal-one/source-lineage-pins.json.gz",
+      "encoding": "gzip",
+      "sha256": "122eb229fc992f75ef14157830f77ee6d483ea2e9e6229749f27d823872e44f3",
+      "uncompressed_sha256": "5a85303507211c192f4d498c9c11eaba923f1c2f71f115c4067910d725cdc6ef",
+      "uncompressed_bytes": 392382
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/source-proof.json",
+      "path": "components/pow-reciprocal-one/source-proof.json",
+      "encoding": "identity",
+      "sha256": "8d29ad91156a83ac53f0b65742a4f0de5bafeca244587f70db53169e18b89e13",
+      "uncompressed_sha256": "8d29ad91156a83ac53f0b65742a4f0de5bafeca244587f70db53169e18b89e13",
+      "uncompressed_bytes": 5076
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/source-proof.log",
+      "path": "components/pow-reciprocal-one/source-proof.log",
+      "encoding": "identity",
+      "sha256": "85435949f3ed7a36345f34208213cfa0b74ce77642a62e9025a31531ebbf6dd7",
+      "uncompressed_sha256": "85435949f3ed7a36345f34208213cfa0b74ce77642a62e9025a31531ebbf6dd7",
+      "uncompressed_bytes": 1332
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/source-proof.py",
+      "path": "components/pow-reciprocal-one/source-proof.py",
+      "encoding": "identity",
+      "sha256": "d1e42d2741cd6bf1e026a6dae9ba29f67ed02f2d71df1ec9ec5a1372f35cd6fa",
+      "uncompressed_sha256": "d1e42d2741cd6bf1e026a6dae9ba29f67ed02f2d71df1ec9ec5a1372f35cd6fa",
+      "uncompressed_bytes": 5032
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/summary.json",
+      "path": "components/pow-reciprocal-one/summary.json",
+      "encoding": "identity",
+      "sha256": "3a01858c83f93d37d97f7599f06fc246c4c1513ecd31a96125ffe37d8fb93e28",
+      "uncompressed_sha256": "3a01858c83f93d37d97f7599f06fc246c4c1513ecd31a96125ffe37d8fb93e28",
+      "uncompressed_bytes": 1763
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/tally-r2.log",
+      "path": "components/pow-reciprocal-one/tally-r2.log",
+      "encoding": "identity",
+      "sha256": "3a01858c83f93d37d97f7599f06fc246c4c1513ecd31a96125ffe37d8fb93e28",
+      "uncompressed_sha256": "3a01858c83f93d37d97f7599f06fc246c4c1513ecd31a96125ffe37d8fb93e28",
+      "uncompressed_bytes": 1763
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/tally.log",
+      "path": "components/pow-reciprocal-one/tally.log",
+      "encoding": "identity",
+      "sha256": "f20e4e42363843883540cdf59283d4ed897d759a0213207350351b67060b00f7",
+      "uncompressed_sha256": "f20e4e42363843883540cdf59283d4ed897d759a0213207350351b67060b00f7",
+      "uncompressed_bytes": 2147
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/tally.py",
+      "path": "components/pow-reciprocal-one/tally.py",
+      "encoding": "identity",
+      "sha256": "0768e2eabfaf97df207c833d0a13fd605f9f6eab813e8820ef22801982e61c36",
+      "uncompressed_sha256": "0768e2eabfaf97df207c833d0a13fd605f9f6eab813e8820ef22801982e61c36",
+      "uncompressed_bytes": 6133
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/trace-preflight-001.py",
+      "path": "components/pow-reciprocal-one/trace-preflight-001.py",
+      "encoding": "identity",
+      "sha256": "a6fcbeb3866df99baa126cfbb3fe88d52711ecce2d49415a98cd54114d2b7942",
+      "uncompressed_sha256": "a6fcbeb3866df99baa126cfbb3fe88d52711ecce2d49415a98cd54114d2b7942",
+      "uncompressed_bytes": 1644
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/trace.py",
+      "path": "components/pow-reciprocal-one/trace.py",
+      "encoding": "identity",
+      "sha256": "0b56b7598829ddd7187ba0b4bf486e25bfc6d424f5f66675cd68da1554558069",
+      "uncompressed_sha256": "0b56b7598829ddd7187ba0b4bf486e25bfc6d424f5f66675cd68da1554558069",
+      "uncompressed_bytes": 1658
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-20261025/verify-direct.py",
+      "path": "components/pow-reciprocal-one/verify-direct.py",
+      "encoding": "identity",
+      "sha256": "d925bf5f2440b50ec5d6c82bbec2f6ee0491ac5e93a571f45abe53f267ec2021",
+      "uncompressed_sha256": "d925bf5f2440b50ec5d6c82bbec2f6ee0491ac5e93a571f45abe53f267ec2021",
+      "uncompressed_bytes": 6744
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/FROZEN.json",
+      "path": "components/pow-reciprocal-inline/FROZEN.json",
+      "encoding": "identity",
+      "sha256": "0be351d573878a48f13f5d41edd2812a23ab269556b929db9aa8324e6a0bf219",
+      "uncompressed_sha256": "0be351d573878a48f13f5d41edd2812a23ab269556b929db9aa8324e6a0bf219",
+      "uncompressed_bytes": 13435
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/HANDOFF.md",
+      "path": "components/pow-reciprocal-inline/HANDOFF.md",
+      "encoding": "identity",
+      "sha256": "6d8859182fc77735e315b7a02a631d97638dbf51c75bed2d90a189a88aff911c",
+      "uncompressed_sha256": "6d8859182fc77735e315b7a02a631d97638dbf51c75bed2d90a189a88aff911c",
+      "uncompressed_bytes": 3748
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/NUMERIC-PROOF.md",
+      "path": "components/pow-reciprocal-inline/NUMERIC-PROOF.md",
+      "encoding": "identity",
+      "sha256": "71afa9d31fbd185af354036632b9c5d4e9e2b034e6a9f53023ff8026d627232e",
+      "uncompressed_sha256": "71afa9d31fbd185af354036632b9c5d4e9e2b034e6a9f53023ff8026d627232e",
+      "uncompressed_bytes": 4090
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/PREFLIGHT-001.json",
+      "path": "components/pow-reciprocal-inline/PREFLIGHT-001.json",
+      "encoding": "identity",
+      "sha256": "af14bf498c91b5dfa327958dbed376b076e8ac16457856cd5a1e7c28b03d7986",
+      "uncompressed_sha256": "af14bf498c91b5dfa327958dbed376b076e8ac16457856cd5a1e7c28b03d7986",
+      "uncompressed_bytes": 287
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/PREFLIGHT-002.json",
+      "path": "components/pow-reciprocal-inline/PREFLIGHT-002.json",
+      "encoding": "identity",
+      "sha256": "bf438dad6d900c8f8e31a7df84b0b84f045d5d59e092762f34a24b8e3f7e9c90",
+      "uncompressed_sha256": "bf438dad6d900c8f8e31a7df84b0b84f045d5d59e092762f34a24b8e3f7e9c90",
+      "uncompressed_bytes": 417
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/WORK-SCOPE.json",
+      "path": "components/pow-reciprocal-inline/WORK-SCOPE.json",
+      "encoding": "identity",
+      "sha256": "17c56b33d25c04944f5a0cc1e84209a3cf0021d791c8d6e60175caa217cc4e49",
+      "uncompressed_sha256": "17c56b33d25c04944f5a0cc1e84209a3cf0021d791c8d6e60175caa217cc4e49",
+      "uncompressed_bytes": 500
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/build-unit.py",
+      "path": "components/pow-reciprocal-inline/build-unit.py",
+      "encoding": "identity",
+      "sha256": "33dbb2a98199400a0d8af08cd5282681e0d5087a16dca892a9ec06b59412eaf1",
+      "uncompressed_sha256": "33dbb2a98199400a0d8af08cd5282681e0d5087a16dca892a9ec06b59412eaf1",
+      "uncompressed_bytes": 1510
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/build.json",
+      "path": "components/pow-reciprocal-inline/build.json",
+      "encoding": "identity",
+      "sha256": "c943cbca70e4ba17e3bf0dfc12ffbc02a07ab56a9d1679c42dac26086a9fcc75",
+      "uncompressed_sha256": "c943cbca70e4ba17e3bf0dfc12ffbc02a07ab56a9d1679c42dac26086a9fcc75",
+      "uncompressed_bytes": 108069
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/build.log",
+      "path": "components/pow-reciprocal-inline/build.log",
+      "encoding": "identity",
+      "sha256": "3f62e121e56bba74112b8bbb19ebdb52915bd446906cec45fdca092c659e34d0",
+      "uncompressed_sha256": "3f62e121e56bba74112b8bbb19ebdb52915bd446906cec45fdca092c659e34d0",
+      "uncompressed_bytes": 3267
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/build.py",
+      "path": "components/pow-reciprocal-inline/build.py",
+      "encoding": "identity",
+      "sha256": "44caea9ff62d0280a3ac74fc27ce4ab2b7a5fa99b91f2f7bb20d2429db750bf8",
+      "uncompressed_sha256": "44caea9ff62d0280a3ac74fc27ce4ab2b7a5fa99b91f2f7bb20d2429db750bf8",
+      "uncompressed_bytes": 5992
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/candidate/native_eabi_m0_pow_root_prefix.inc",
+      "path": "components/pow-reciprocal-inline/candidate/native_eabi_m0_pow_root_prefix.inc",
+      "encoding": "identity",
+      "sha256": "3254978cb21ed37d0c9af0046e832da615eff4b515dc7880fc1013343e211bc1",
+      "uncompressed_sha256": "3254978cb21ed37d0c9af0046e832da615eff4b515dc7880fc1013343e211bc1",
+      "uncompressed_bytes": 92138
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/candidate/native_eabi_m0_rp2040.S",
+      "path": "components/pow-reciprocal-inline/candidate/native_eabi_m0_rp2040.S",
+      "encoding": "identity",
+      "sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_bytes": 31792
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/candidate-ddiv.S",
+      "path": "components/pow-reciprocal-inline/candidate-ddiv.S",
+      "encoding": "identity",
+      "sha256": "f6e9ccbd624b93aa6784c113084c4d835559d8ce02842778a337d934c8030f91",
+      "uncompressed_sha256": "f6e9ccbd624b93aa6784c113084c4d835559d8ce02842778a337d934c8030f91",
+      "uncompressed_bytes": 11275
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/candidate-seed17.S",
+      "path": "components/pow-reciprocal-inline/candidate-seed17.S",
+      "encoding": "identity",
+      "sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_bytes": 1988
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/candidate-software.S",
+      "path": "components/pow-reciprocal-inline/candidate-software.S",
+      "encoding": "identity",
+      "sha256": "024af21aa2b4572a898e72a3ada4ef0f43c88cddf101e99857eed31113a21918",
+      "uncompressed_sha256": "024af21aa2b4572a898e72a3ada4ef0f43c88cddf101e99857eed31113a21918",
+      "uncompressed_bytes": 9052
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/candidate.ld",
+      "path": "components/pow-reciprocal-inline/candidate.ld",
+      "encoding": "identity",
+      "sha256": "c17abe1dd41ba832a1e6bed152f00ed5c7aa1a80e0aadd2711566be12b31f41a",
+      "uncompressed_sha256": "c17abe1dd41ba832a1e6bed152f00ed5c7aa1a80e0aadd2711566be12b31f41a",
+      "uncompressed_bytes": 133744
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/control/native_eabi_m0_pow_root_prefix.inc",
+      "path": "components/pow-reciprocal-inline/control/native_eabi_m0_pow_root_prefix.inc",
+      "encoding": "identity",
+      "sha256": "3254978cb21ed37d0c9af0046e832da615eff4b515dc7880fc1013343e211bc1",
+      "uncompressed_sha256": "3254978cb21ed37d0c9af0046e832da615eff4b515dc7880fc1013343e211bc1",
+      "uncompressed_bytes": 92138
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/control/native_eabi_m0_rp2040.S",
+      "path": "components/pow-reciprocal-inline/control/native_eabi_m0_rp2040.S",
+      "encoding": "identity",
+      "sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_sha256": "8d158f7ca11db44245fa4bc9dbb24a5906c09a773037abba78247e06b8be2212",
+      "uncompressed_bytes": 31792
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/control-ddiv.S",
+      "path": "components/pow-reciprocal-inline/control-ddiv.S",
+      "encoding": "identity",
+      "sha256": "d4b17d36435e5d3ebe1a15e2562670dbe9274bfb344f42853c9fb6698413f650",
+      "uncompressed_sha256": "d4b17d36435e5d3ebe1a15e2562670dbe9274bfb344f42853c9fb6698413f650",
+      "uncompressed_bytes": 10891
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/control-seed17.S",
+      "path": "components/pow-reciprocal-inline/control-seed17.S",
+      "encoding": "identity",
+      "sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_bytes": 1988
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/control.ld",
+      "path": "components/pow-reciprocal-inline/control.ld",
+      "encoding": "identity",
+      "sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_sha256": "e7422a863d2b9fc09124b5c921ba1924f2f63900d8fd4e51e5363368383e8234",
+      "uncompressed_bytes": 133769
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/direct-loss-accounting.json",
+      "path": "components/pow-reciprocal-inline/direct-loss-accounting.json",
+      "encoding": "identity",
+      "sha256": "4b2073601d5d59c766773e496d7c79767958073434a0531e9339f24f4f391c31",
+      "uncompressed_sha256": "4b2073601d5d59c766773e496d7c79767958073434a0531e9339f24f4f391c31",
+      "uncompressed_bytes": 10628
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/direct-preflight-001.log",
+      "path": "components/pow-reciprocal-inline/direct-preflight-001.log",
+      "encoding": "identity",
+      "sha256": "390a77502e54d572ab0385783cfde097c346676c2df8887cadea413fcb5a3f99",
+      "uncompressed_sha256": "390a77502e54d572ab0385783cfde097c346676c2df8887cadea413fcb5a3f99",
+      "uncompressed_bytes": 294
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/direct-proof-r2.log",
+      "path": "components/pow-reciprocal-inline/direct-proof-r2.log",
+      "encoding": "identity",
+      "sha256": "e6d335eab21be0be2de9f75f6621348b7c7d42a7901d15d133373372d18fbb41",
+      "uncompressed_sha256": "e6d335eab21be0be2de9f75f6621348b7c7d42a7901d15d133373372d18fbb41",
+      "uncompressed_bytes": 2663
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/direct-proof.json",
+      "path": "components/pow-reciprocal-inline/direct-proof.json.gz",
+      "encoding": "gzip",
+      "sha256": "9b191658015d31abeea6b811f7fb1ef9feb76ea76b1bbe9dd730aa9aed997838",
+      "uncompressed_sha256": "50123f1176ca6419430c06d3657177a08a6808a822c67fcb29a8dd1c4a15cd4c",
+      "uncompressed_bytes": 753811
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/direct-proof.log",
+      "path": "components/pow-reciprocal-inline/direct-proof.log",
+      "encoding": "identity",
+      "sha256": "390a77502e54d572ab0385783cfde097c346676c2df8887cadea413fcb5a3f99",
+      "uncompressed_sha256": "390a77502e54d572ab0385783cfde097c346676c2df8887cadea413fcb5a3f99",
+      "uncompressed_bytes": 294
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/direct-records.jsonl.gz",
+      "path": "components/pow-reciprocal-inline/direct-records.jsonl.gz",
+      "encoding": "identity",
+      "sha256": "5d9b12d0f044ba082815b95dfe187e0517fa011cdfa4ddf4b83f74d611ba3999",
+      "uncompressed_sha256": "5d9b12d0f044ba082815b95dfe187e0517fa011cdfa4ddf4b83f74d611ba3999",
+      "uncompressed_bytes": 973317
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/finalize.py",
+      "path": "components/pow-reciprocal-inline/finalize.py",
+      "encoding": "identity",
+      "sha256": "72f5104713be85a7e2f3f2e8cac2960b90e8894df2bf30c01f1517d80f3a8b4e",
+      "uncompressed_sha256": "72f5104713be85a7e2f3f2e8cac2960b90e8894df2bf30c01f1517d80f3a8b4e",
+      "uncompressed_bytes": 11496
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/harness.py",
+      "path": "components/pow-reciprocal-inline/harness.py",
+      "encoding": "identity",
+      "sha256": "9a9979cb4cbb75c4116ba0b0c89e12e2091111bc917ea5440a00a5e827088739",
+      "uncompressed_sha256": "9a9979cb4cbb75c4116ba0b0c89e12e2091111bc917ea5440a00a5e827088739",
+      "uncompressed_bytes": 1648
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/inline-and-overflow.patch",
+      "path": "components/pow-reciprocal-inline/inline-and-overflow.patch",
+      "encoding": "identity",
+      "sha256": "3754f8b71032f9715fe461ef3c4867769d9c7dff8078e387a66f4b8aed29b7d1",
+      "uncompressed_sha256": "3754f8b71032f9715fe461ef3c4867769d9c7dff8078e387a66f4b8aed29b7d1",
+      "uncompressed_bytes": 2756
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/inline-seed-table.inc",
+      "path": "components/pow-reciprocal-inline/inline-seed-table.inc",
+      "encoding": "identity",
+      "sha256": "6808cd9e0b33ec8706637783925b074099317373404563818658b4ff409c800f",
+      "uncompressed_sha256": "6808cd9e0b33ec8706637783925b074099317373404563818658b4ff409c800f",
+      "uncompressed_bytes": 928
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/inline-seed.inc",
+      "path": "components/pow-reciprocal-inline/inline-seed.inc",
+      "encoding": "identity",
+      "sha256": "68044000ef21864dc29a16bd2bb922ea69f89a1083141e22f16ff7fd71d7f755",
+      "uncompressed_sha256": "68044000ef21864dc29a16bd2bb922ea69f89a1083141e22f16ff7fd71d7f755",
+      "uncompressed_bytes": 572
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/model.py",
+      "path": "components/pow-reciprocal-inline/model.py",
+      "encoding": "identity",
+      "sha256": "d3234f60ca396a6c5a5938524e60252da3d2e46da9497ed71f89569e46b6e43e",
+      "uncompressed_sha256": "d3234f60ca396a6c5a5938524e60252da3d2e46da9497ed71f89569e46b6e43e",
+      "uncompressed_bytes": 672
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/new-qualification-r2.log",
+      "path": "components/pow-reciprocal-inline/new-qualification-r2.log",
+      "encoding": "identity",
+      "sha256": "d64c5bccd62d5813310eab6a4aab97ea2a554ba34bc03f4d94af28c2775af0b4",
+      "uncompressed_sha256": "d64c5bccd62d5813310eab6a4aab97ea2a554ba34bc03f4d94af28c2775af0b4",
+      "uncompressed_bytes": 3854
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/new-qualification.json",
+      "path": "components/pow-reciprocal-inline/new-qualification.json.gz",
+      "encoding": "gzip",
+      "sha256": "0bd4e23fdfcd50cfdd16ad7c9301b9dc80f54417640d06b159f720cf058eee4d",
+      "uncompressed_sha256": "af4e505808d32b7331e37966c72e857bc7f56f150f8d3616e1b7b364470c2b36",
+      "uncompressed_bytes": 10682337
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/new-qualification.log",
+      "path": "components/pow-reciprocal-inline/new-qualification.log",
+      "encoding": "identity",
+      "sha256": "f4a7ae2b6628cd90327b5b23468f162432d9c6059472bc0cab6afec14795ba2e",
+      "uncompressed_sha256": "f4a7ae2b6628cd90327b5b23468f162432d9c6059472bc0cab6afec14795ba2e",
+      "uncompressed_bytes": 1714
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/original153.json",
+      "path": "components/pow-reciprocal-inline/original153.json",
+      "encoding": "identity",
+      "sha256": "2cbdf90dd881362a0b5b6c63bf8b7e1720f2b0e36fe5388c3866b6aeed9da09c",
+      "uncompressed_sha256": "2cbdf90dd881362a0b5b6c63bf8b7e1720f2b0e36fe5388c3866b6aeed9da09c",
+      "uncompressed_bytes": 66783
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/preflight-002-new-qualification.log",
+      "path": "components/pow-reciprocal-inline/preflight-002-new-qualification.log",
+      "encoding": "identity",
+      "sha256": "f4a7ae2b6628cd90327b5b23468f162432d9c6059472bc0cab6afec14795ba2e",
+      "uncompressed_sha256": "f4a7ae2b6628cd90327b5b23468f162432d9c6059472bc0cab6afec14795ba2e",
+      "uncompressed_bytes": 1714
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/preflight-002-qualification-records.jsonl.gz",
+      "path": "components/pow-reciprocal-inline/preflight-002-qualification-records.jsonl.gz",
+      "encoding": "identity",
+      "sha256": "028319b516e09dd26eb3eab09839ad0554f768af83e367831f8af88f01ddf078",
+      "uncompressed_sha256": "028319b516e09dd26eb3eab09839ad0554f768af83e367831f8af88f01ddf078",
+      "uncompressed_bytes": 3362
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/preflight-002-qualification.log",
+      "path": "components/pow-reciprocal-inline/preflight-002-qualification.log",
+      "encoding": "identity",
+      "sha256": "2db96c7c5c3063e49b2c2346292c7d690f28e3e8186f4e5fba93b1d077319daf",
+      "uncompressed_sha256": "2db96c7c5c3063e49b2c2346292c7d690f28e3e8186f4e5fba93b1d077319daf",
+      "uncompressed_bytes": 1698
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/progress.json",
+      "path": "components/pow-reciprocal-inline/progress.json",
+      "encoding": "identity",
+      "sha256": "466bdd9b6f680fec82aed00be09f2c3e8ed0b9839e289880d847dedef97e5420",
+      "uncompressed_sha256": "466bdd9b6f680fec82aed00be09f2c3e8ed0b9839e289880d847dedef97e5420",
+      "uncompressed_bytes": 119
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/qualification-r2.log",
+      "path": "components/pow-reciprocal-inline/qualification-r2.log",
+      "encoding": "identity",
+      "sha256": "4fbb38b2981965aae7655deb9e969d2ce5226bc57c2f78061750fc47a995c4a2",
+      "uncompressed_sha256": "4fbb38b2981965aae7655deb9e969d2ce5226bc57c2f78061750fc47a995c4a2",
+      "uncompressed_bytes": 10110
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/qualification-records.jsonl.gz",
+      "path": "components/pow-reciprocal-inline/qualification-records.jsonl.gz",
+      "encoding": "identity",
+      "sha256": "4a5ff1b34c050ac9204b0e35b635d8d206da1521adf000858115ec32f1658293",
+      "uncompressed_sha256": "4a5ff1b34c050ac9204b0e35b635d8d206da1521adf000858115ec32f1658293",
+      "uncompressed_bytes": 3873170
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/qualification.json",
+      "path": "components/pow-reciprocal-inline/qualification.json.gz",
+      "encoding": "gzip",
+      "sha256": "6fe7d188e251732141198df9bde07366895640b3f504e4d93a181ef85aef23cd",
+      "uncompressed_sha256": "f581e5e56b9795ff87644e1fdab17d56cd66862a3a9b498256b23a4e6629e86d",
+      "uncompressed_bytes": 6243543
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/qualification.log",
+      "path": "components/pow-reciprocal-inline/qualification.log",
+      "encoding": "identity",
+      "sha256": "2db96c7c5c3063e49b2c2346292c7d690f28e3e8186f4e5fba93b1d077319daf",
+      "uncompressed_sha256": "2db96c7c5c3063e49b2c2346292c7d690f28e3e8186f4e5fba93b1d077319daf",
+      "uncompressed_bytes": 1698
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/qualify-new.py",
+      "path": "components/pow-reciprocal-inline/qualify-new.py",
+      "encoding": "identity",
+      "sha256": "039ccb23b483470b26071e01f471b5e6974c0fcf064062562ea79e35a0f94706",
+      "uncompressed_sha256": "039ccb23b483470b26071e01f471b5e6974c0fcf064062562ea79e35a0f94706",
+      "uncompressed_bytes": 3758
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/qualify.py",
+      "path": "components/pow-reciprocal-inline/qualify.py",
+      "encoding": "identity",
+      "sha256": "32a6fc302958559228327c389c1f21a5fcb52ff7188b85f3587295cf852e7ea0",
+      "uncompressed_sha256": "32a6fc302958559228327c389c1f21a5fcb52ff7188b85f3587295cf852e7ea0",
+      "uncompressed_bytes": 4579
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/rebuild-proof.json",
+      "path": "components/pow-reciprocal-inline/rebuild-proof.json",
+      "encoding": "identity",
+      "sha256": "3fcbd941c95be17395bcc86d4a132f7ce547f7cebed300d200a6cb534ebbde37",
+      "uncompressed_sha256": "3fcbd941c95be17395bcc86d4a132f7ce547f7cebed300d200a6cb534ebbde37",
+      "uncompressed_bytes": 114164
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/rebuild.log",
+      "path": "components/pow-reciprocal-inline/rebuild.log",
+      "encoding": "identity",
+      "sha256": "2d09e0232657beed91fd642fc823d5ff83950d13fca039dc33428e9ea4d12238",
+      "uncompressed_sha256": "2d09e0232657beed91fd642fc823d5ff83950d13fca039dc33428e9ea4d12238",
+      "uncompressed_bytes": 2061
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/rebuild.py",
+      "path": "components/pow-reciprocal-inline/rebuild.py",
+      "encoding": "identity",
+      "sha256": "df22b4cba1c485c97c7d790cce0c60c6655619135d22aee752bbf344a04171d1",
+      "uncompressed_sha256": "df22b4cba1c485c97c7d790cce0c60c6655619135d22aee752bbf344a04171d1",
+      "uncompressed_bytes": 920
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/result.json",
+      "path": "components/pow-reciprocal-inline/result.json",
+      "encoding": "identity",
+      "sha256": "db3bb21b3d9c59fff2849b042f313e591dcd545f679f64eb6965aa60e7ac6384",
+      "uncompressed_sha256": "db3bb21b3d9c59fff2849b042f313e591dcd545f679f64eb6965aa60e7ac6384",
+      "uncompressed_bytes": 5074
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/software.S",
+      "path": "components/pow-reciprocal-inline/software.S",
+      "encoding": "identity",
+      "sha256": "740fe02cd594523ca5ec96a089990e713f6d5ee96f588f907bcd92c5cd04632f",
+      "uncompressed_sha256": "740fe02cd594523ca5ec96a089990e713f6d5ee96f588f907bcd92c5cd04632f",
+      "uncompressed_bytes": 9103
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/source-lineage-pins.json",
+      "path": "components/pow-reciprocal-inline/source-lineage-pins.json.gz",
+      "encoding": "gzip",
+      "sha256": "6d59614ac4908eb53f7907c235a4f1f494578fd2507c6e0dc44673714158b776",
+      "uncompressed_sha256": "a3922eeb1b25b79914a205658ca61811666d753241f0958dcf4ba788398b9bb5",
+      "uncompressed_bytes": 417970
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/source-proof.json",
+      "path": "components/pow-reciprocal-inline/source-proof.json",
+      "encoding": "identity",
+      "sha256": "b343ee096d9e74e3be726b729c329abcc2780000d3068411df03df759a0282ae",
+      "uncompressed_sha256": "b343ee096d9e74e3be726b729c329abcc2780000d3068411df03df759a0282ae",
+      "uncompressed_bytes": 5088
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/source-proof.log",
+      "path": "components/pow-reciprocal-inline/source-proof.log",
+      "encoding": "identity",
+      "sha256": "dfd2b76793c05585bcf7696b8a4f28aaa27eb7f56ce294f45c2dc309ecbf4027",
+      "uncompressed_sha256": "dfd2b76793c05585bcf7696b8a4f28aaa27eb7f56ce294f45c2dc309ecbf4027",
+      "uncompressed_bytes": 1308
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/source-proof.py",
+      "path": "components/pow-reciprocal-inline/source-proof.py",
+      "encoding": "identity",
+      "sha256": "f246661576881a0b456b541815cb6c6a4f62436beec4d81ebaeeb306ca4100bd",
+      "uncompressed_sha256": "f246661576881a0b456b541815cb6c6a4f62436beec4d81ebaeeb306ca4100bd",
+      "uncompressed_bytes": 5519
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/summary.json",
+      "path": "components/pow-reciprocal-inline/summary.json",
+      "encoding": "identity",
+      "sha256": "44c5d3b8c5ca65bb066869b4fa02730fbdc0bf31f6c285ada146b3fcd314b100",
+      "uncompressed_sha256": "44c5d3b8c5ca65bb066869b4fa02730fbdc0bf31f6c285ada146b3fcd314b100",
+      "uncompressed_bytes": 1813
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/tally.log",
+      "path": "components/pow-reciprocal-inline/tally.log",
+      "encoding": "identity",
+      "sha256": "44c5d3b8c5ca65bb066869b4fa02730fbdc0bf31f6c285ada146b3fcd314b100",
+      "uncompressed_sha256": "44c5d3b8c5ca65bb066869b4fa02730fbdc0bf31f6c285ada146b3fcd314b100",
+      "uncompressed_bytes": 1813
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/tally.py",
+      "path": "components/pow-reciprocal-inline/tally.py",
+      "encoding": "identity",
+      "sha256": "f72c60f75fa9d502213e9dfd58f6afbdd9acf8dc6182ccf2cbc5ec68b1c687ab",
+      "uncompressed_sha256": "f72c60f75fa9d502213e9dfd58f6afbdd9acf8dc6182ccf2cbc5ec68b1c687ab",
+      "uncompressed_bytes": 6261
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/trace-preflight-002.py",
+      "path": "components/pow-reciprocal-inline/trace-preflight-002.py",
+      "encoding": "identity",
+      "sha256": "1f553cd9f0e0cee5a70ff403b07a7f61a704291fd151a882a20fd47788f976dc",
+      "uncompressed_sha256": "1f553cd9f0e0cee5a70ff403b07a7f61a704291fd151a882a20fd47788f976dc",
+      "uncompressed_bytes": 1841
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/trace.py",
+      "path": "components/pow-reciprocal-inline/trace.py",
+      "encoding": "identity",
+      "sha256": "f7f7a02c96b9427871061f7db235f21287e09e609ff04f7aa36609bbe5eb65f1",
+      "uncompressed_sha256": "f7f7a02c96b9427871061f7db235f21287e09e609ff04f7aa36609bbe5eb65f1",
+      "uncompressed_bytes": 1948
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/unit-build.json",
+      "path": "components/pow-reciprocal-inline/unit-build.json",
+      "encoding": "identity",
+      "sha256": "8c06846f4886e2bfb2fc0338b78a5ffe96565a39857f183a230694639753c9c5",
+      "uncompressed_sha256": "8c06846f4886e2bfb2fc0338b78a5ffe96565a39857f183a230694639753c9c5",
+      "uncompressed_bytes": 1114
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/unit-build.log",
+      "path": "components/pow-reciprocal-inline/unit-build.log",
+      "encoding": "identity",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_bytes": 0
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/unit-proof.json",
+      "path": "components/pow-reciprocal-inline/unit-proof.json",
+      "encoding": "identity",
+      "sha256": "bb73ebeb57700b06d33d7d38aa1b26ffd24aa40d6946676f156bdd242d01dd86",
+      "uncompressed_sha256": "bb73ebeb57700b06d33d7d38aa1b26ffd24aa40d6946676f156bdd242d01dd86",
+      "uncompressed_bytes": 598
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/unit-proof.log",
+      "path": "components/pow-reciprocal-inline/unit-proof.log",
+      "encoding": "identity",
+      "sha256": "88e53e552c1c36b20f81d1b0a9a38ec37c860711d0be7c7aee5ab4468de291b5",
+      "uncompressed_sha256": "88e53e552c1c36b20f81d1b0a9a38ec37c860711d0be7c7aee5ab4468de291b5",
+      "uncompressed_bytes": 910
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/unit.S",
+      "path": "components/pow-reciprocal-inline/unit.S",
+      "encoding": "identity",
+      "sha256": "c60ceedf13a07ba706284bdb554d70fc5988fb2a527d65263016d58b50f3eb50",
+      "uncompressed_sha256": "c60ceedf13a07ba706284bdb554d70fc5988fb2a527d65263016d58b50f3eb50",
+      "uncompressed_bytes": 442
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/unit.ld",
+      "path": "components/pow-reciprocal-inline/unit.ld",
+      "encoding": "identity",
+      "sha256": "21c36656d5e3c439dd5372333586aa1b737636b18c56aea086f52a50cb2b8cdc",
+      "uncompressed_sha256": "21c36656d5e3c439dd5372333586aa1b737636b18c56aea086f52a50cb2b8cdc",
+      "uncompressed_bytes": 177
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/verify-direct-preflight-001.py",
+      "path": "components/pow-reciprocal-inline/verify-direct-preflight-001.py",
+      "encoding": "identity",
+      "sha256": "917f17a5d61e7478f44014a92600fc6619604ac57a76aac3dc356bfc98277aa4",
+      "uncompressed_sha256": "917f17a5d61e7478f44014a92600fc6619604ac57a76aac3dc356bfc98277aa4",
+      "uncompressed_bytes": 7308
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/verify-direct.py",
+      "path": "components/pow-reciprocal-inline/verify-direct.py",
+      "encoding": "identity",
+      "sha256": "ca01cd42e72abefa0ca84f54dc23a9a861b14cf860ceab40ec3435de04996247",
+      "uncompressed_sha256": "ca01cd42e72abefa0ca84f54dc23a9a861b14cf860ceab40ec3435de04996247",
+      "uncompressed_bytes": 7106
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-20261025/verify-unit.py",
+      "path": "components/pow-reciprocal-inline/verify-unit.py",
+      "encoding": "identity",
+      "sha256": "25ee52c5ede685024b61351fbd23fb03ef5f2488281627fbe1897f1c77cd1d04",
+      "uncompressed_sha256": "25ee52c5ede685024b61351fbd23fb03ef5f2488281627fbe1897f1c77cd1d04",
+      "uncompressed_bytes": 3272
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/FROZEN.json",
+      "path": "components/ddiv-seed-lut/FROZEN.json",
+      "encoding": "identity",
+      "sha256": "ebddb871e62fbdaeedd2f24a7ebeff506eb4d2ea6ee4a9d30bb1fff27fc9e955",
+      "uncompressed_sha256": "ebddb871e62fbdaeedd2f24a7ebeff506eb4d2ea6ee4a9d30bb1fff27fc9e955",
+      "uncompressed_bytes": 4864
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/HANDOFF.md",
+      "path": "components/ddiv-seed-lut/HANDOFF.md",
+      "encoding": "identity",
+      "sha256": "1198e24edf7b9ac1f164779aee1d35511918b6dd060a59bc173ae832ead9e48c",
+      "uncompressed_sha256": "1198e24edf7b9ac1f164779aee1d35511918b6dd060a59bc173ae832ead9e48c",
+      "uncompressed_bytes": 1547
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/build.json",
+      "path": "components/ddiv-seed-lut/build.json",
+      "encoding": "identity",
+      "sha256": "a5839591d7db338f26cfaa560bfd6644ad840324edea5684dc98b841d69bcdcb",
+      "uncompressed_sha256": "a5839591d7db338f26cfaa560bfd6644ad840324edea5684dc98b841d69bcdcb",
+      "uncompressed_bytes": 5266
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/build.log",
+      "path": "components/ddiv-seed-lut/build.log",
+      "encoding": "identity",
+      "sha256": "4eea85493692f4e53abbc5253b4c9cb4c77a5fb02031b017b3964ae04823e8cf",
+      "uncompressed_sha256": "4eea85493692f4e53abbc5253b4c9cb4c77a5fb02031b017b3964ae04823e8cf",
+      "uncompressed_bytes": 1302
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/build.py",
+      "path": "components/ddiv-seed-lut/build.py",
+      "encoding": "identity",
+      "sha256": "4094fab57fb99fdccccb5af251f6315b0af8cbf6a78758c31634a5443105f120",
+      "uncompressed_sha256": "4094fab57fb99fdccccb5af251f6315b0af8cbf6a78758c31634a5443105f120",
+      "uncompressed_bytes": 3173
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/lut128_ceil_inner.S",
+      "path": "components/ddiv-seed-lut/lut128_ceil_inner.S",
+      "encoding": "identity",
+      "sha256": "561825ffd8ef0ec02077037e8eda45e8de746643c4f9b3e00a5bcde5ad4d347c",
+      "uncompressed_sha256": "561825ffd8ef0ec02077037e8eda45e8de746643c4f9b3e00a5bcde5ad4d347c",
+      "uncompressed_bytes": 2012
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/lut128_ceil_inner.ld",
+      "path": "components/ddiv-seed-lut/lut128_ceil_inner.ld",
+      "encoding": "identity",
+      "sha256": "e4a20f78d77434e97237a120d2eb363524615014f855a8a6f00f4343cb9892ee",
+      "uncompressed_sha256": "e4a20f78d77434e97237a120d2eb363524615014f855a8a6f00f4343cb9892ee",
+      "uncompressed_bytes": 187
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/lut128_floor.S",
+      "path": "components/ddiv-seed-lut/lut128_floor.S",
+      "encoding": "identity",
+      "sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_sha256": "d681df60ee7bf8b614bf4d7cd02d3005a10d2cd25110b0c087fdf981dfd5541f",
+      "uncompressed_bytes": 1988
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/lut128_floor.ld",
+      "path": "components/ddiv-seed-lut/lut128_floor.ld",
+      "encoding": "identity",
+      "sha256": "e4a20f78d77434e97237a120d2eb363524615014f855a8a6f00f4343cb9892ee",
+      "uncompressed_sha256": "e4a20f78d77434e97237a120d2eb363524615014f855a8a6f00f4343cb9892ee",
+      "uncompressed_bytes": 187
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/lut32_ceil_outer.S",
+      "path": "components/ddiv-seed-lut/lut32_ceil_outer.S",
+      "encoding": "identity",
+      "sha256": "1ad1496413218ebd0405e15fb329f8b30179142da6c25cd858fd94ff11e67c24",
+      "uncompressed_sha256": "1ad1496413218ebd0405e15fb329f8b30179142da6c25cd858fd94ff11e67c24",
+      "uncompressed_bytes": 1340
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/lut32_ceil_outer.ld",
+      "path": "components/ddiv-seed-lut/lut32_ceil_outer.ld",
+      "encoding": "identity",
+      "sha256": "e4a20f78d77434e97237a120d2eb363524615014f855a8a6f00f4343cb9892ee",
+      "uncompressed_sha256": "e4a20f78d77434e97237a120d2eb363524615014f855a8a6f00f4343cb9892ee",
+      "uncompressed_bytes": 187
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/lut64_ceil_outer.S",
+      "path": "components/ddiv-seed-lut/lut64_ceil_outer.S",
+      "encoding": "identity",
+      "sha256": "96b670a43fd559028a3ae4f34e0be66c5bfe14c4e7f11506ce60e068d587a45f",
+      "uncompressed_sha256": "96b670a43fd559028a3ae4f34e0be66c5bfe14c4e7f11506ce60e068d587a45f",
+      "uncompressed_bytes": 1564
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/lut64_ceil_outer.ld",
+      "path": "components/ddiv-seed-lut/lut64_ceil_outer.ld",
+      "encoding": "identity",
+      "sha256": "e4a20f78d77434e97237a120d2eb363524615014f855a8a6f00f4343cb9892ee",
+      "uncompressed_sha256": "e4a20f78d77434e97237a120d2eb363524615014f855a8a6f00f4343cb9892ee",
+      "uncompressed_bytes": 187
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/seed-table.inc",
+      "path": "components/ddiv-seed-lut/seed-table.inc",
+      "encoding": "identity",
+      "sha256": "731733ff1d1ab0da18f8701b457cd52c3863aede5b139cd2ae3cfdbc3b895dbc",
+      "uncompressed_sha256": "731733ff1d1ab0da18f8701b457cd52c3863aede5b139cd2ae3cfdbc3b895dbc",
+      "uncompressed_bytes": 959
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/select-corpus-only.py",
+      "path": "components/ddiv-seed-lut/select-corpus-only.py",
+      "encoding": "identity",
+      "sha256": "2af4f485e3865a4e88dda8edf01049adf0d049222623d47cca6f1cf030198bb4",
+      "uncompressed_sha256": "2af4f485e3865a4e88dda8edf01049adf0d049222623d47cca6f1cf030198bb4",
+      "uncompressed_bytes": 2809
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/select.py",
+      "path": "components/ddiv-seed-lut/select.py",
+      "encoding": "identity",
+      "sha256": "a681387c06e613f19320795f8b28cb2ea718d3037d98599ebe2afc4fa955f4f2",
+      "uncompressed_sha256": "a681387c06e613f19320795f8b28cb2ea718d3037d98599ebe2afc4fa955f4f2",
+      "uncompressed_bytes": 3129
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/selection-corpus-only.json",
+      "path": "components/ddiv-seed-lut/selection-corpus-only.json",
+      "encoding": "identity",
+      "sha256": "5a0a8df898df83acdf45a19691c89b67294a58c98bb2e1c07161b68a4c6fb94d",
+      "uncompressed_sha256": "5a0a8df898df83acdf45a19691c89b67294a58c98bb2e1c07161b68a4c6fb94d",
+      "uncompressed_bytes": 1987
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/selection-domain.log",
+      "path": "components/ddiv-seed-lut/selection-domain.log",
+      "encoding": "identity",
+      "sha256": "9e16bad00a7ab56e1283fdf7e1c30e0837620da322c4ab5b8010176514ed2252",
+      "uncompressed_sha256": "9e16bad00a7ab56e1283fdf7e1c30e0837620da322c4ab5b8010176514ed2252",
+      "uncompressed_bytes": 2119
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/selection.json",
+      "path": "components/ddiv-seed-lut/selection.json",
+      "encoding": "identity",
+      "sha256": "9e16bad00a7ab56e1283fdf7e1c30e0837620da322c4ab5b8010176514ed2252",
+      "uncompressed_sha256": "9e16bad00a7ab56e1283fdf7e1c30e0837620da322c4ab5b8010176514ed2252",
+      "uncompressed_bytes": 2119
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/selection.log",
+      "path": "components/ddiv-seed-lut/selection.log",
+      "encoding": "identity",
+      "sha256": "5a0a8df898df83acdf45a19691c89b67294a58c98bb2e1c07161b68a4c6fb94d",
+      "uncompressed_sha256": "5a0a8df898df83acdf45a19691c89b67294a58c98bb2e1c07161b68a4c6fb94d",
+      "uncompressed_bytes": 1987
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/study.json",
+      "path": "components/ddiv-seed-lut/study.json",
+      "encoding": "identity",
+      "sha256": "992e305803937356a7b910b367f4a5f16e96b43fb501f4248eb6bed0a37f2b0c",
+      "uncompressed_sha256": "992e305803937356a7b910b367f4a5f16e96b43fb501f4248eb6bed0a37f2b0c",
+      "uncompressed_bytes": 50044
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/study.log",
+      "path": "components/ddiv-seed-lut/study.log",
+      "encoding": "identity",
+      "sha256": "62869f7c81ad8a0f445b3305e85f0a89591efa5551778460e511a4639283332f",
+      "uncompressed_sha256": "62869f7c81ad8a0f445b3305e85f0a89591efa5551778460e511a4639283332f",
+      "uncompressed_bytes": 7133
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/study.py",
+      "path": "components/ddiv-seed-lut/study.py",
+      "encoding": "identity",
+      "sha256": "7ef1e325f7d9edf6adce3a0e492290f8a59dafcd858b0434b8b593a009d641fd",
+      "uncompressed_sha256": "7ef1e325f7d9edf6adce3a0e492290f8a59dafcd858b0434b8b593a009d641fd",
+      "uncompressed_bytes": 2371
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/unit-proof.json",
+      "path": "components/ddiv-seed-lut/unit-proof.json",
+      "encoding": "identity",
+      "sha256": "b8afc3edaa4fe0fc62ff02baf275f9eca10c612c39106afc29472c121e513350",
+      "uncompressed_sha256": "b8afc3edaa4fe0fc62ff02baf275f9eca10c612c39106afc29472c121e513350",
+      "uncompressed_bytes": 4734
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/unit-proof.log",
+      "path": "components/ddiv-seed-lut/unit-proof.log",
+      "encoding": "identity",
+      "sha256": "40588bd39086ab805646504719559b4464533a4bb4d0044d6b572c411a8c44ba",
+      "uncompressed_sha256": "40588bd39086ab805646504719559b4464533a4bb4d0044d6b572c411a8c44ba",
+      "uncompressed_bytes": 5007
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/unit-records.jsonl.gz",
+      "path": "components/ddiv-seed-lut/unit-records.jsonl.gz",
+      "encoding": "identity",
+      "sha256": "b1eaac3dbddcde7288d58ad3383d2eddbcaff20263fb4fba0e250958efd712af",
+      "uncompressed_sha256": "b1eaac3dbddcde7288d58ad3383d2eddbcaff20263fb4fba0e250958efd712af",
+      "uncompressed_bytes": 490614
+    },
+    {
+      "source": ".build/m0-ddiv-seed-lut-20261025/verify-unit.py",
+      "path": "components/ddiv-seed-lut/verify-unit.py",
+      "encoding": "identity",
+      "sha256": "632dedf238716cadb89c1c48e76af123f9948498d04e86f64d22b5fd16da59c4",
+      "uncompressed_sha256": "632dedf238716cadb89c1c48e76af123f9948498d04e86f64d22b5fd16da59c4",
+      "uncompressed_bytes": 3460
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/ARM-PREFLIGHT-001.json",
+      "path": "reviews/pow-boundary128/ARM-PREFLIGHT-001.json",
+      "encoding": "identity",
+      "sha256": "5ace3d03bd55bb8110f3b0698688396ba2b4201a28ec2634ecd3c49dc61ce924",
+      "uncompressed_sha256": "5ace3d03bd55bb8110f3b0698688396ba2b4201a28ec2634ecd3c49dc61ce924",
+      "uncompressed_bytes": 464
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/FINAL-REVIEW.json",
+      "path": "reviews/pow-boundary128/FINAL-REVIEW.json",
+      "encoding": "identity",
+      "sha256": "6c1a375bbc8a07a45d387f146347584527c74fc60b890263dc2e4d85f61d2c8b",
+      "uncompressed_sha256": "6c1a375bbc8a07a45d387f146347584527c74fc60b890263dc2e4d85f61d2c8b",
+      "uncompressed_bytes": 11674
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/HOST-PREFLIGHT-001.json",
+      "path": "reviews/pow-boundary128/HOST-PREFLIGHT-001.json",
+      "encoding": "identity",
+      "sha256": "6ab09977a01d69a2e349474ca96ec4044df55503bb511dbde6368ced3b291f90",
+      "uncompressed_sha256": "6ab09977a01d69a2e349474ca96ec4044df55503bb511dbde6368ced3b291f90",
+      "uncompressed_bytes": 397
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/HOST-PREFLIGHT-002.json",
+      "path": "reviews/pow-boundary128/HOST-PREFLIGHT-002.json",
+      "encoding": "identity",
+      "sha256": "b091679df6e853ec2b32fd3cc8567f78d36e3b2fc32831a536117ff531ae31b5",
+      "uncompressed_sha256": "b091679df6e853ec2b32fd3cc8567f78d36e3b2fc32831a536117ff531ae31b5",
+      "uncompressed_bytes": 311
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/HOST-PREFLIGHT-003.json",
+      "path": "reviews/pow-boundary128/HOST-PREFLIGHT-003.json",
+      "encoding": "identity",
+      "sha256": "af9f0328bb680835641b2cac54cfa357df8f51953f21fdbc38ab46662c0f00d7",
+      "uncompressed_sha256": "af9f0328bb680835641b2cac54cfa357df8f51953f21fdbc38ab46662c0f00d7",
+      "uncompressed_bytes": 363
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+      "path": "reviews/pow-boundary128/INTEGRATION-REQUIREMENTS.json",
+      "encoding": "identity",
+      "sha256": "1e6b8d244546f4259114256b51fc9e9146e95ba6bfe7aebfc689f9585c59cdf4",
+      "uncompressed_sha256": "1e6b8d244546f4259114256b51fc9e9146e95ba6bfe7aebfc689f9585c59cdf4",
+      "uncompressed_bytes": 2467
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/MANIFEST.json",
+      "path": "reviews/pow-boundary128/MANIFEST.json",
+      "encoding": "identity",
+      "sha256": "b0d13ef2e0c9b1c49b96c7459c542cdfaa21ffd52ac035577c1b4b5ccb64eec0",
+      "uncompressed_sha256": "b0d13ef2e0c9b1c49b96c7459c542cdfaa21ffd52ac035577c1b4b5ccb64eec0",
+      "uncompressed_bytes": 10396
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/NOTES.md",
+      "path": "reviews/pow-boundary128/NOTES.md",
+      "encoding": "identity",
+      "sha256": "5280de46038c92e8354e9d62809b8a8adef381c5ea4a45f68ecb2ccfad0e5fa3",
+      "uncompressed_sha256": "5280de46038c92e8354e9d62809b8a8adef381c5ea4a45f68ecb2ccfad0e5fa3",
+      "uncompressed_bytes": 5487
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/PREFLIGHT-RECONCILIATION.json",
+      "path": "reviews/pow-boundary128/PREFLIGHT-RECONCILIATION.json",
+      "encoding": "identity",
+      "sha256": "8b4092ce6484fe53f4e7cbdb933b11f6779664d788607b08796505c7ae0f6643",
+      "uncompressed_sha256": "8b4092ce6484fe53f4e7cbdb933b11f6779664d788607b08796505c7ae0f6643",
+      "uncompressed_bytes": 1199
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/VALIDATION.json",
+      "path": "reviews/pow-boundary128/VALIDATION.json",
+      "encoding": "identity",
+      "sha256": "ce9bfa6503cb505e6aee118cc4a17dd9ff0164dc44a81b7836384a9e8fe5cd8f",
+      "uncompressed_sha256": "ce9bfa6503cb505e6aee118cc4a17dd9ff0164dc44a81b7836384a9e8fe5cd8f",
+      "uncompressed_bytes": 770
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/accounting.json",
+      "path": "reviews/pow-boundary128/accounting.json",
+      "encoding": "identity",
+      "sha256": "8a564dac130f7b3479788c18dcd3c5d9d3af5a1949faf96dd3bd00a4cf72dfaf",
+      "uncompressed_sha256": "8a564dac130f7b3479788c18dcd3c5d9d3af5a1949faf96dd3bd00a4cf72dfaf",
+      "uncompressed_bytes": 5256
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/accounting.py",
+      "path": "reviews/pow-boundary128/accounting.py",
+      "encoding": "identity",
+      "sha256": "f4ee7b4d6bbad7aa50be11a32a0ed6de2ac5d617c682d4beb96acd2e7e866d56",
+      "uncompressed_sha256": "f4ee7b4d6bbad7aa50be11a32a0ed6de2ac5d617c682d4beb96acd2e7e866d56",
+      "uncompressed_bytes": 8925
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/arm-preflight-001.py",
+      "path": "reviews/pow-boundary128/arm-preflight-001.py",
+      "encoding": "identity",
+      "sha256": "6be7819329ec6664f2603e776872207c442f098db481f6f266768172603c0187",
+      "uncompressed_sha256": "6be7819329ec6664f2603e776872207c442f098db481f6f266768172603c0187",
+      "uncompressed_bytes": 12335
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/arm.py",
+      "path": "reviews/pow-boundary128/arm.py",
+      "encoding": "identity",
+      "sha256": "6eba46290a069e67db2608771a96312a8b7704fa50c878cb1086622df94e9064",
+      "uncompressed_sha256": "6eba46290a069e67db2608771a96312a8b7704fa50c878cb1086622df94e9064",
+      "uncompressed_bytes": 12883
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/bare-arm.json",
+      "path": "reviews/pow-boundary128/bare-arm.json",
+      "encoding": "identity",
+      "sha256": "945a1cd8750fcdf8079c5ef1218a17101fdb54af273e88678a03a7afc7988873",
+      "uncompressed_sha256": "945a1cd8750fcdf8079c5ef1218a17101fdb54af273e88678a03a7afc7988873",
+      "uncompressed_bytes": 86393
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/binding-preflight-001.py",
+      "path": "reviews/pow-boundary128/binding-preflight-001.py",
+      "encoding": "identity",
+      "sha256": "1c1200d089fe34c1fe153551b095a5f554a458534d56799bb144ebc0d55fcfed",
+      "uncompressed_sha256": "1c1200d089fe34c1fe153551b095a5f554a458534d56799bb144ebc0d55fcfed",
+      "uncompressed_bytes": 9049
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/binding.json",
+      "path": "reviews/pow-boundary128/binding.json.gz",
+      "encoding": "gzip",
+      "sha256": "74853727ec5ee477d48c334cdc3b65bcbb010bc0faa41abf51e030b00737b8d2",
+      "uncompressed_sha256": "7850e82ce95609201f224936d88ce1431a11a106e898c29efc8b688604f6f294",
+      "uncompressed_bytes": 425173
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/binding.py",
+      "path": "reviews/pow-boundary128/binding.py",
+      "encoding": "identity",
+      "sha256": "fef5f625a993f44493344db63acaf3c2a23d0c04a2149ccbf806a50c78c624f1",
+      "uncompressed_sha256": "fef5f625a993f44493344db63acaf3c2a23d0c04a2149ccbf806a50c78c624f1",
+      "uncompressed_bytes": 8968
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/candidate.elf.actual.dis",
+      "path": "reviews/pow-boundary128/candidate.elf.actual.dis",
+      "encoding": "identity",
+      "sha256": "5289107856b063503f2df46fea739250b9868ae2fbdb584da49fd15bbdad9dac",
+      "uncompressed_sha256": "5289107856b063503f2df46fea739250b9868ae2fbdb584da49fd15bbdad9dac",
+      "uncompressed_bytes": 9925
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/finalize.py",
+      "path": "reviews/pow-boundary128/finalize.py",
+      "encoding": "identity",
+      "sha256": "67d57b25a21b60f4c61d9ca375b3b496701b4bf66fa5f171008d3c499eb81145",
+      "uncompressed_sha256": "67d57b25a21b60f4c61d9ca375b3b496701b4bf66fa5f171008d3c499eb81145",
+      "uncompressed_bytes": 10206
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/proof-preflight-001.py",
+      "path": "reviews/pow-boundary128/proof-preflight-001.py",
+      "encoding": "identity",
+      "sha256": "590f26999cc6c84b9ccf57421a16cb8abd2188736557ec5e35d01b6852a4b654",
+      "uncompressed_sha256": "590f26999cc6c84b9ccf57421a16cb8abd2188736557ec5e35d01b6852a4b654",
+      "uncompressed_bytes": 7529
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/proof-preflight-002.py",
+      "path": "reviews/pow-boundary128/proof-preflight-002.py",
+      "encoding": "identity",
+      "sha256": "b533a78d8deb4f51fc6d46919436c009f11ec74a4827ec8d1bfae2a18efeed9c",
+      "uncompressed_sha256": "b533a78d8deb4f51fc6d46919436c009f11ec74a4827ec8d1bfae2a18efeed9c",
+      "uncompressed_bytes": 7555
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/proof.json",
+      "path": "reviews/pow-boundary128/proof.json",
+      "encoding": "identity",
+      "sha256": "9209955434414ed6154c51494486358e121c37a74748ad0d47fe98631b91939c",
+      "uncompressed_sha256": "9209955434414ed6154c51494486358e121c37a74748ad0d47fe98631b91939c",
+      "uncompressed_bytes": 5705
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/proof.py",
+      "path": "reviews/pow-boundary128/proof.py",
+      "encoding": "identity",
+      "sha256": "564c629f327e3d3672f10dd004491f1e2a7787f4b7001e7051d23e5741381426",
+      "uncompressed_sha256": "564c629f327e3d3672f10dd004491f1e2a7787f4b7001e7051d23e5741381426",
+      "uncompressed_bytes": 7545
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/public-arm-mpfr.json",
+      "path": "reviews/pow-boundary128/public-arm-mpfr.json",
+      "encoding": "identity",
+      "sha256": "b67bee40e18b21e0d3c595cf390a25a47dd078f1a07e655ecedb45b878656eb3",
+      "uncompressed_sha256": "b67bee40e18b21e0d3c595cf390a25a47dd078f1a07e655ecedb45b878656eb3",
+      "uncompressed_bytes": 69613
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/selected-public-jobs.json",
+      "path": "reviews/pow-boundary128/selected-public-jobs.json",
+      "encoding": "identity",
+      "sha256": "e150f62d6fdfd451d4af22722105c2f886949d788c88803f26ccaef12ba569d2",
+      "uncompressed_sha256": "e150f62d6fdfd451d4af22722105c2f886949d788c88803f26ccaef12ba569d2",
+      "uncompressed_bytes": 3369
+    },
+    {
+      "source": ".build/m0-pow-boundary128-independent-20261025/unit-helpers.elf.actual.dis",
+      "path": "reviews/pow-boundary128/unit-helpers.elf.actual.dis",
+      "encoding": "identity",
+      "sha256": "c700ed7a55bece4bb2fbe82fb8c176e3b73f75c71e7be42164b02c6d9ffb31f6",
+      "uncompressed_sha256": "c700ed7a55bece4bb2fbe82fb8c176e3b73f75c71e7be42164b02c6d9ffb31f6",
+      "uncompressed_bytes": 17986
+    },
+    {
+      "source": ".build/m0-pow-boundary128-root-acceptance-20261025-001/RECEIPT.json",
+      "path": "receipts/pow-boundary128/RECEIPT.json",
+      "encoding": "identity",
+      "sha256": "260cb67e4cfd136f73affc5de7486a10ee0e732d9fed2d13e086d9e4e90005f3",
+      "uncompressed_sha256": "260cb67e4cfd136f73affc5de7486a10ee0e732d9fed2d13e086d9e4e90005f3",
+      "uncompressed_bytes": 13941
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/FINAL-REVIEW.json",
+      "path": "reviews/pow-reciprocal-soft/FINAL-REVIEW.json",
+      "encoding": "identity",
+      "sha256": "211cf956001390c4f0b894a9979ca8aa640cfe7a5d33082fdfe6cc497268c3e0",
+      "uncompressed_sha256": "211cf956001390c4f0b894a9979ca8aa640cfe7a5d33082fdfe6cc497268c3e0",
+      "uncompressed_bytes": 11007
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+      "path": "reviews/pow-reciprocal-soft/INTEGRATION-REQUIREMENTS.json",
+      "encoding": "identity",
+      "sha256": "f3e1c4bd7de842472a192a604facdfa727b6ae1a49186637d36cfafcfd093159",
+      "uncompressed_sha256": "f3e1c4bd7de842472a192a604facdfa727b6ae1a49186637d36cfafcfd093159",
+      "uncompressed_bytes": 2219
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/MANIFEST.json",
+      "path": "reviews/pow-reciprocal-soft/MANIFEST.json",
+      "encoding": "identity",
+      "sha256": "8f6106fb4324de96230a8292231bc136d061919679accdbb08d0059425e0fd4d",
+      "uncompressed_sha256": "8f6106fb4324de96230a8292231bc136d061919679accdbb08d0059425e0fd4d",
+      "uncompressed_bytes": 12065
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/NOTES.md",
+      "path": "reviews/pow-reciprocal-soft/NOTES.md",
+      "encoding": "identity",
+      "sha256": "0e293f39df2387a1a0054d911bfaa1dc3bfe47fa5a3eaa7c629ed7ad2b4535c7",
+      "uncompressed_sha256": "0e293f39df2387a1a0054d911bfaa1dc3bfe47fa5a3eaa7c629ed7ad2b4535c7",
+      "uncompressed_bytes": 6228
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/VALIDATION.json",
+      "path": "reviews/pow-reciprocal-soft/VALIDATION.json",
+      "encoding": "identity",
+      "sha256": "17e8024c6adc88e9f1685e1834f48cc90f79a034ca22d09b544ed5914a0e0a4d",
+      "uncompressed_sha256": "17e8024c6adc88e9f1685e1834f48cc90f79a034ca22d09b544ed5914a0e0a4d",
+      "uncompressed_bytes": 802
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/accounting.json",
+      "path": "reviews/pow-reciprocal-soft/accounting.json",
+      "encoding": "identity",
+      "sha256": "4b7f917301eb07ef57ea5c2bf7070a3a06779e9c134a60419e9c078b9a34c6ba",
+      "uncompressed_sha256": "4b7f917301eb07ef57ea5c2bf7070a3a06779e9c134a60419e9c078b9a34c6ba",
+      "uncompressed_bytes": 6442
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/accounting.py",
+      "path": "reviews/pow-reciprocal-soft/accounting.py",
+      "encoding": "identity",
+      "sha256": "98242cf58620ead31115816870c8f506a7ca1dbba6d13a375815728bece3bfc2",
+      "uncompressed_sha256": "98242cf58620ead31115816870c8f506a7ca1dbba6d13a375815728bece3bfc2",
+      "uncompressed_bytes": 8830
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/arm.py",
+      "path": "reviews/pow-reciprocal-soft/arm.py",
+      "encoding": "identity",
+      "sha256": "5f92f3b381e920d43a1c714806a781cd899625047ece26284e54d33c3fce41ff",
+      "uncompressed_sha256": "5f92f3b381e920d43a1c714806a781cd899625047ece26284e54d33c3fce41ff",
+      "uncompressed_bytes": 14817
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/binding.json",
+      "path": "reviews/pow-reciprocal-soft/binding.json.gz",
+      "encoding": "gzip",
+      "sha256": "cd326cba36b3a3d343da5965dc3615f678d918c92222e1746a007cb54bb5b329",
+      "uncompressed_sha256": "a687370b61c41fa702898a675a8ae9bd8dc04a656a0c60775dab9940ee2f1802",
+      "uncompressed_bytes": 472061
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/binding.py",
+      "path": "reviews/pow-reciprocal-soft/binding.py",
+      "encoding": "identity",
+      "sha256": "3f24abd196324639f2878a90980ae16e2ce61d3231127b056746781b21a036e9",
+      "uncompressed_sha256": "3f24abd196324639f2878a90980ae16e2ce61d3231127b056746781b21a036e9",
+      "uncompressed_bytes": 11874
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/candidate.elf.actual.dis",
+      "path": "reviews/pow-reciprocal-soft/candidate.elf.actual.dis",
+      "encoding": "identity",
+      "sha256": "f8d631beddf9bf3683afc9fde6097469247f1d1ecd375558510b5ee2ef4e5ab4",
+      "uncompressed_sha256": "f8d631beddf9bf3683afc9fde6097469247f1d1ecd375558510b5ee2ef4e5ab4",
+      "uncompressed_bytes": 132402
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/changed-public-paths.json",
+      "path": "reviews/pow-reciprocal-soft/changed-public-paths.json",
+      "encoding": "identity",
+      "sha256": "d02370d2258f666792c4643ee9c9689e9c397965c24c39776075528458a0cc61",
+      "uncompressed_sha256": "d02370d2258f666792c4643ee9c9689e9c397965c24c39776075528458a0cc61",
+      "uncompressed_bytes": 109558
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/control.elf.actual.dis",
+      "path": "reviews/pow-reciprocal-soft/control.elf.actual.dis",
+      "encoding": "identity",
+      "sha256": "ef8bf3235089c4e0df37aa56e7d522a4b6dfc2e017ab32d503b9e27dbd1e4ebb",
+      "uncompressed_sha256": "ef8bf3235089c4e0df37aa56e7d522a4b6dfc2e017ab32d503b9e27dbd1e4ebb",
+      "uncompressed_bytes": 132179
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/ddiv-arm-mpfr.json",
+      "path": "reviews/pow-reciprocal-soft/ddiv-arm-mpfr.json",
+      "encoding": "identity",
+      "sha256": "0f87365da68135c0fdfdb71e3c93e5172b53c50288be4a338c0eada78c9597ba",
+      "uncompressed_sha256": "0f87365da68135c0fdfdb71e3c93e5172b53c50288be4a338c0eada78c9597ba",
+      "uncompressed_bytes": 148854
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/finalize.py",
+      "path": "reviews/pow-reciprocal-soft/finalize.py",
+      "encoding": "identity",
+      "sha256": "976433c679de81cbd9878654f6bd352e38eb6316c3b0e42fe3afebd72f12536c",
+      "uncompressed_sha256": "976433c679de81cbd9878654f6bd352e38eb6316c3b0e42fe3afebd72f12536c",
+      "uncompressed_bytes": 10165
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/layout.json",
+      "path": "reviews/pow-reciprocal-soft/layout.json",
+      "encoding": "identity",
+      "sha256": "ea6b6a2a849397562554e171651b05870294beb572723c9d966627fb7dbd550a",
+      "uncompressed_sha256": "ea6b6a2a849397562554e171651b05870294beb572723c9d966627fb7dbd550a",
+      "uncompressed_bytes": 2461
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/layout_guard.py",
+      "path": "reviews/pow-reciprocal-soft/layout_guard.py",
+      "encoding": "identity",
+      "sha256": "34210a5f19b99b8b73d47513bffe28d2bdb8a65bc9adcc0adf1e1f243f1c480e",
+      "uncompressed_sha256": "34210a5f19b99b8b73d47513bffe28d2bdb8a65bc9adcc0adf1e1f243f1c480e",
+      "uncompressed_bytes": 2216
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/proof.json",
+      "path": "reviews/pow-reciprocal-soft/proof.json",
+      "encoding": "identity",
+      "sha256": "87feef4885cde710589ed196b09bf2ab1ec28deb5fc98d172d432002d96e63e3",
+      "uncompressed_sha256": "87feef4885cde710589ed196b09bf2ab1ec28deb5fc98d172d432002d96e63e3",
+      "uncompressed_bytes": 2532
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/proof.py",
+      "path": "reviews/pow-reciprocal-soft/proof.py",
+      "encoding": "identity",
+      "sha256": "d42e574521ad39161afd7f3a3d7beed38f7f2ed9b77f9bdf5d30dd03eec3c646",
+      "uncompressed_sha256": "d42e574521ad39161afd7f3a3d7beed38f7f2ed9b77f9bdf5d30dd03eec3c646",
+      "uncompressed_bytes": 6639
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/public-arm-mpfr.json",
+      "path": "reviews/pow-reciprocal-soft/public-arm-mpfr.json.gz",
+      "encoding": "gzip",
+      "sha256": "6e31ef86265e0757ee0e573f5bb26bf91400cfc3d5565b6695df8f11fef5c080",
+      "uncompressed_sha256": "584f8c0440d3f9746faf4afbfda1d1cdfbb17d37a57366120c40815506b12d66",
+      "uncompressed_bytes": 366188
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/seed-arm.json",
+      "path": "reviews/pow-reciprocal-soft/seed-arm.json",
+      "encoding": "identity",
+      "sha256": "fc0f653aee338b738cc45fa71d7675866affb6f7072af0f35dd430fd81fb6638",
+      "uncompressed_sha256": "fc0f653aee338b738cc45fa71d7675866affb6f7072af0f35dd430fd81fb6638",
+      "uncompressed_bytes": 34755
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/seed-only.ld",
+      "path": "reviews/pow-reciprocal-soft/seed-only.ld",
+      "encoding": "identity",
+      "sha256": "c3521fb1f6c75c41a871acb8c6ee01080db48d3078d78d6c4d2dacab0655e5fe",
+      "uncompressed_sha256": "c3521fb1f6c75c41a871acb8c6ee01080db48d3078d78d6c4d2dacab0655e5fe",
+      "uncompressed_bytes": 157
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-independent-20261025/selected-public-jobs.json",
+      "path": "reviews/pow-reciprocal-soft/selected-public-jobs.json",
+      "encoding": "identity",
+      "sha256": "138271da8c7dd09f58715ca0adc1ee20c76e6a050ca1f2602f8a0647cf5f25a6",
+      "uncompressed_sha256": "138271da8c7dd09f58715ca0adc1ee20c76e6a050ca1f2602f8a0647cf5f25a6",
+      "uncompressed_bytes": 6919
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-root-acceptance-20261025-001/RECEIPT.json",
+      "path": "receipts/pow-reciprocal-soft/RECEIPT.json",
+      "encoding": "identity",
+      "sha256": "de2f15995d64baa1e7e68aec9d45cc90efa43264ce1cf5985fb3fc7d6849372c",
+      "uncompressed_sha256": "de2f15995d64baa1e7e68aec9d45cc90efa43264ce1cf5985fb3fc7d6849372c",
+      "uncompressed_bytes": 15734
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/FINAL-REVIEW.json",
+      "path": "reviews/pow-reciprocal-lut/FINAL-REVIEW.json",
+      "encoding": "identity",
+      "sha256": "c1911a7d57fbdbea1ec6a2f595e99a1685d2592db18f48b3fcfb4b97997bfdde",
+      "uncompressed_sha256": "c1911a7d57fbdbea1ec6a2f595e99a1685d2592db18f48b3fcfb4b97997bfdde",
+      "uncompressed_bytes": 12628
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+      "path": "reviews/pow-reciprocal-lut/INTEGRATION-REQUIREMENTS.json",
+      "encoding": "identity",
+      "sha256": "adb811cf29e042f6e5c31f0e010ea40099d3319c26468078239ab9d7b754afe6",
+      "uncompressed_sha256": "adb811cf29e042f6e5c31f0e010ea40099d3319c26468078239ab9d7b754afe6",
+      "uncompressed_bytes": 2212
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/MANIFEST.json",
+      "path": "reviews/pow-reciprocal-lut/MANIFEST.json",
+      "encoding": "identity",
+      "sha256": "21b252cddf2ed2cd1381f4915c43e585395f72aa1d778f263c5ca6395e1357b0",
+      "uncompressed_sha256": "21b252cddf2ed2cd1381f4915c43e585395f72aa1d778f263c5ca6395e1357b0",
+      "uncompressed_bytes": 13726
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/NOTES.md",
+      "path": "reviews/pow-reciprocal-lut/NOTES.md",
+      "encoding": "identity",
+      "sha256": "599c4e0680390457d3c414dc6a4b5c97e468b0d608d42fb8f9056254e0f8d9f3",
+      "uncompressed_sha256": "599c4e0680390457d3c414dc6a4b5c97e468b0d608d42fb8f9056254e0f8d9f3",
+      "uncompressed_bytes": 5990
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/PUBLIC-REPORT-CORRIGENDUM.json",
+      "path": "reviews/pow-reciprocal-lut/PUBLIC-REPORT-CORRIGENDUM.json",
+      "encoding": "identity",
+      "sha256": "ef84d98d79b34499409042a1697b35fb88a2a17d674225dbab61c3a75e6035f4",
+      "uncompressed_sha256": "ef84d98d79b34499409042a1697b35fb88a2a17d674225dbab61c3a75e6035f4",
+      "uncompressed_bytes": 1090
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/VALIDATION.json",
+      "path": "reviews/pow-reciprocal-lut/VALIDATION.json",
+      "encoding": "identity",
+      "sha256": "391c66fde0d73a3b5333b103be074307c199b480847dd33ceaa6aa06fb1dd93a",
+      "uncompressed_sha256": "391c66fde0d73a3b5333b103be074307c199b480847dd33ceaa6aa06fb1dd93a",
+      "uncompressed_bytes": 837
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/accounting.json",
+      "path": "reviews/pow-reciprocal-lut/accounting.json",
+      "encoding": "identity",
+      "sha256": "b0089257bd5590278a953d8b0269a561a6e094790e0f41511f16022d1bd73783",
+      "uncompressed_sha256": "b0089257bd5590278a953d8b0269a561a6e094790e0f41511f16022d1bd73783",
+      "uncompressed_bytes": 2468
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/accounting.py",
+      "path": "reviews/pow-reciprocal-lut/accounting.py",
+      "encoding": "identity",
+      "sha256": "abb707d5ba2ce2e61dc1e37ef2be2551f920a0e0b06eb80f64bb39850fd34036",
+      "uncompressed_sha256": "abb707d5ba2ce2e61dc1e37ef2be2551f920a0e0b06eb80f64bb39850fd34036",
+      "uncompressed_bytes": 9024
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/adversarial-D.json",
+      "path": "reviews/pow-reciprocal-lut/adversarial-D.json",
+      "encoding": "identity",
+      "sha256": "6d251fe1f3e1a0e6a0700360affd4a6eced0c7cf495255eb142faee5cd8401f0",
+      "uncompressed_sha256": "6d251fe1f3e1a0e6a0700360affd4a6eced0c7cf495255eb142faee5cd8401f0",
+      "uncompressed_bytes": 420
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/arm.py",
+      "path": "reviews/pow-reciprocal-lut/arm.py",
+      "encoding": "identity",
+      "sha256": "b376b9ab61bef2aeec607c0af10b769f5b7991afb5cb9044fc733881b5f5719d",
+      "uncompressed_sha256": "b376b9ab61bef2aeec607c0af10b769f5b7991afb5cb9044fc733881b5f5719d",
+      "uncompressed_bytes": 8185
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/binding.json",
+      "path": "reviews/pow-reciprocal-lut/binding.json.gz",
+      "encoding": "gzip",
+      "sha256": "d822fca5ba2ae11191f3358e8c51318f00fc0c2918b6161d5680c4cc06a102d3",
+      "uncompressed_sha256": "0d1ae92d6411826c85b36e7be1b808938bcf45c66693ae33d5226928909bddae",
+      "uncompressed_bytes": 513568
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/binding.py",
+      "path": "reviews/pow-reciprocal-lut/binding.py",
+      "encoding": "identity",
+      "sha256": "403b0180ff10d46519c9018fc71e32d005eb5354449ee80f96930c9f341bbfef",
+      "uncompressed_sha256": "403b0180ff10d46519c9018fc71e32d005eb5354449ee80f96930c9f341bbfef",
+      "uncompressed_bytes": 7608
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/caller-layout.json",
+      "path": "reviews/pow-reciprocal-lut/caller-layout.json",
+      "encoding": "identity",
+      "sha256": "025256829f41927802ec1ea980220afa50e7e9242b765727f0276123eb5f78cb",
+      "uncompressed_sha256": "025256829f41927802ec1ea980220afa50e7e9242b765727f0276123eb5f78cb",
+      "uncompressed_bytes": 7992
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/caller_layout.py",
+      "path": "reviews/pow-reciprocal-lut/caller_layout.py",
+      "encoding": "identity",
+      "sha256": "af8e5fd6ee4a373c6f6e0af11bebfc3bd36606e4daef3eabb603144704651586",
+      "uncompressed_sha256": "af8e5fd6ee4a373c6f6e0af11bebfc3bd36606e4daef3eabb603144704651586",
+      "uncompressed_bytes": 6736
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/candidate.elf.actual.dis",
+      "path": "reviews/pow-reciprocal-lut/candidate.elf.actual.dis",
+      "encoding": "identity",
+      "sha256": "f70f22a1ce127739c69737e9bbefe67c72bd66d71bc2234df496ebaf97481594",
+      "uncompressed_sha256": "f70f22a1ce127739c69737e9bbefe67c72bd66d71bc2234df496ebaf97481594",
+      "uncompressed_bytes": 132150
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/control.elf.actual.dis",
+      "path": "reviews/pow-reciprocal-lut/control.elf.actual.dis",
+      "encoding": "identity",
+      "sha256": "9a2263446bc5b947fb4007aa44be96f6bc27c2b83097f140728492332d5668e3",
+      "uncompressed_sha256": "9a2263446bc5b947fb4007aa44be96f6bc27c2b83097f140728492332d5668e3",
+      "uncompressed_bytes": 132399
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/ddiv-arm-mpfr.json",
+      "path": "reviews/pow-reciprocal-lut/ddiv-arm-mpfr.json",
+      "encoding": "identity",
+      "sha256": "c549ae2ecb052328a5a44b262b3fee64ff4b7b3fc4483ed78aa0f962e423660c",
+      "uncompressed_sha256": "c549ae2ecb052328a5a44b262b3fee64ff4b7b3fc4483ed78aa0f962e423660c",
+      "uncompressed_bytes": 166760
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/finalize.py",
+      "path": "reviews/pow-reciprocal-lut/finalize.py",
+      "encoding": "identity",
+      "sha256": "1427f05e9b8f0065f2a984fbc4234d13c17642dfe2f9168623fa09b8b649cde3",
+      "uncompressed_sha256": "1427f05e9b8f0065f2a984fbc4234d13c17642dfe2f9168623fa09b8b649cde3",
+      "uncompressed_bytes": 11454
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/full-domain-unit-costs.json",
+      "path": "reviews/pow-reciprocal-lut/full-domain-unit-costs.json.gz",
+      "encoding": "gzip",
+      "sha256": "2676545f9945e799794096402053f0468b2cadd9d572621edd06c88677837280",
+      "uncompressed_sha256": "3f7707a53abaa8d07fd52c657844280f99669759654035e79a369689b7969b39",
+      "uncompressed_bytes": 2718147
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/proof.json",
+      "path": "reviews/pow-reciprocal-lut/proof.json",
+      "encoding": "identity",
+      "sha256": "834cd8723186c14408eaa3c68f44ae0d9df59e644cacb21dc6e4558304206241",
+      "uncompressed_sha256": "834cd8723186c14408eaa3c68f44ae0d9df59e644cacb21dc6e4558304206241",
+      "uncompressed_bytes": 2237
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/proof.py",
+      "path": "reviews/pow-reciprocal-lut/proof.py",
+      "encoding": "identity",
+      "sha256": "ddfcd770c0dea54c5597ee47884b25513c1d013d2048c9f07f78cdd37fb88568",
+      "uncompressed_sha256": "ddfcd770c0dea54c5597ee47884b25513c1d013d2048c9f07f78cdd37fb88568",
+      "uncompressed_bytes": 4871
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/public-arm-mpfr.json",
+      "path": "reviews/pow-reciprocal-lut/public-arm-mpfr.json",
+      "encoding": "identity",
+      "sha256": "e260f9cd0bc340394d6e56cdbc80a4a1d8613d95e4f05262e94873a394bc18c2",
+      "uncompressed_sha256": "e260f9cd0bc340394d6e56cdbc80a4a1d8613d95e4f05262e94873a394bc18c2",
+      "uncompressed_bytes": 119481
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/seed-arm.json",
+      "path": "reviews/pow-reciprocal-lut/seed-arm.json",
+      "encoding": "identity",
+      "sha256": "e1a08850ea274f1a4b3128d7f6c5f7cb76c0781c6ea2ba22edca7d0cfacecf28",
+      "uncompressed_sha256": "e1a08850ea274f1a4b3128d7f6c5f7cb76c0781c6ea2ba22edca7d0cfacecf28",
+      "uncompressed_bytes": 124827
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/seed-only.ld",
+      "path": "reviews/pow-reciprocal-lut/seed-only.ld",
+      "encoding": "identity",
+      "sha256": "c3521fb1f6c75c41a871acb8c6ee01080db48d3078d78d6c4d2dacab0655e5fe",
+      "uncompressed_sha256": "c3521fb1f6c75c41a871acb8c6ee01080db48d3078d78d6c4d2dacab0655e5fe",
+      "uncompressed_bytes": 157
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/selected-public-jobs.json",
+      "path": "reviews/pow-reciprocal-lut/selected-public-jobs.json",
+      "encoding": "identity",
+      "sha256": "55f722e94e58b08db06dadd0a7873448a4bc94f1338377379f99371fc9e572fb",
+      "uncompressed_sha256": "55f722e94e58b08db06dadd0a7873448a4bc94f1338377379f99371fc9e572fb",
+      "uncompressed_bytes": 2094
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-independent-20261025/source-equivalence.json",
+      "path": "reviews/pow-reciprocal-lut/source-equivalence.json",
+      "encoding": "identity",
+      "sha256": "cd68449eaea6c51bf88216813b95e59e6dacb9ad5f67863ea7ab743f47297ab0",
+      "uncompressed_sha256": "cd68449eaea6c51bf88216813b95e59e6dacb9ad5f67863ea7ab743f47297ab0",
+      "uncompressed_bytes": 239
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-root-acceptance-20261025-001/RECEIPT.json",
+      "path": "receipts/pow-reciprocal-lut/RECEIPT.json",
+      "encoding": "identity",
+      "sha256": "19a0b7fc1f415cd90fcf3ec20e523939c79ec8518c988774547c2cc991cdb198",
+      "uncompressed_sha256": "19a0b7fc1f415cd90fcf3ec20e523939c79ec8518c988774547c2cc991cdb198",
+      "uncompressed_bytes": 17315
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/FINAL-REVIEW.json",
+      "path": "reviews/pow-reciprocal-one/FINAL-REVIEW.json",
+      "encoding": "identity",
+      "sha256": "f9945c0cf8c6e38dcfdce1239f0a47ee2a6d20a11e4cd01a13e15d8665f8d1b7",
+      "uncompressed_sha256": "f9945c0cf8c6e38dcfdce1239f0a47ee2a6d20a11e4cd01a13e15d8665f8d1b7",
+      "uncompressed_bytes": 12241
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/HOST-PREFLIGHT-001.json",
+      "path": "reviews/pow-reciprocal-one/HOST-PREFLIGHT-001.json",
+      "encoding": "identity",
+      "sha256": "dde0397ec678945f6297dfa76ab8c7a9e1b7c710b7b03efda402e4beadeabce4",
+      "uncompressed_sha256": "dde0397ec678945f6297dfa76ab8c7a9e1b7c710b7b03efda402e4beadeabce4",
+      "uncompressed_bytes": 305
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/HOST-PREFLIGHT-002.json",
+      "path": "reviews/pow-reciprocal-one/HOST-PREFLIGHT-002.json",
+      "encoding": "identity",
+      "sha256": "990035cb51a30a4b10e89f0c2464fa907cd29d43f061cfb8d5e898a9943b83e7",
+      "uncompressed_sha256": "990035cb51a30a4b10e89f0c2464fa907cd29d43f061cfb8d5e898a9943b83e7",
+      "uncompressed_bytes": 300
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+      "path": "reviews/pow-reciprocal-one/INTEGRATION-REQUIREMENTS.json",
+      "encoding": "identity",
+      "sha256": "8eeaa3fd6dc9dde55c4b52d83e9c083e2bd5b94b281ac4de0545aafa7abed567",
+      "uncompressed_sha256": "8eeaa3fd6dc9dde55c4b52d83e9c083e2bd5b94b281ac4de0545aafa7abed567",
+      "uncompressed_bytes": 2362
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/MANIFEST.json",
+      "path": "reviews/pow-reciprocal-one/MANIFEST.json",
+      "encoding": "identity",
+      "sha256": "fdc9d7a92b360dba77e8bcbf9ce5bf2627b427ca0cf986f63aac60b71546c817",
+      "uncompressed_sha256": "fdc9d7a92b360dba77e8bcbf9ce5bf2627b427ca0cf986f63aac60b71546c817",
+      "uncompressed_bytes": 14353
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/NOTES.md",
+      "path": "reviews/pow-reciprocal-one/NOTES.md",
+      "encoding": "identity",
+      "sha256": "32d857a31ef87b59048db1b443f9e6dfe79e01ff05019e99ddff867f48674c25",
+      "uncompressed_sha256": "32d857a31ef87b59048db1b443f9e6dfe79e01ff05019e99ddff867f48674c25",
+      "uncompressed_bytes": 5891
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/VALIDATION.json",
+      "path": "reviews/pow-reciprocal-one/VALIDATION.json",
+      "encoding": "identity",
+      "sha256": "8f52671b66d4848f61c2d27eba8a7c6d9bbc3bf961223403c739e896429c2b11",
+      "uncompressed_sha256": "8f52671b66d4848f61c2d27eba8a7c6d9bbc3bf961223403c739e896429c2b11",
+      "uncompressed_bytes": 809
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/accounting.json",
+      "path": "reviews/pow-reciprocal-one/accounting.json",
+      "encoding": "identity",
+      "sha256": "996b3d92dc8b37d16df261c033681ec5129c0d0a744846ef1053f7ff6df9c138",
+      "uncompressed_sha256": "996b3d92dc8b37d16df261c033681ec5129c0d0a744846ef1053f7ff6df9c138",
+      "uncompressed_bytes": 2249
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/accounting.py",
+      "path": "reviews/pow-reciprocal-one/accounting.py",
+      "encoding": "identity",
+      "sha256": "fe68ba23b573ec2fa4e3f69a1eb03fac45c5d0bfeb4ff50554a33bb43f24093b",
+      "uncompressed_sha256": "fe68ba23b573ec2fa4e3f69a1eb03fac45c5d0bfeb4ff50554a33bb43f24093b",
+      "uncompressed_bytes": 9142
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/arm.py",
+      "path": "reviews/pow-reciprocal-one/arm.py",
+      "encoding": "identity",
+      "sha256": "9ea7873c34d42a6948e181c19ede4d77acf007f35dbcdf90591be82f7af0d68e",
+      "uncompressed_sha256": "9ea7873c34d42a6948e181c19ede4d77acf007f35dbcdf90591be82f7af0d68e",
+      "uncompressed_bytes": 15128
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/binding.json",
+      "path": "reviews/pow-reciprocal-one/binding.json.gz",
+      "encoding": "gzip",
+      "sha256": "eaeda66c5d867b4fcbd0697bedde3013f3cacdba96ffe069048f1528e52f2a00",
+      "uncompressed_sha256": "222064e9253a7d1dbaa9da928a853dd19cf8e9462349da9aef3709d69c53473c",
+      "uncompressed_bytes": 546565
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/binding.py",
+      "path": "reviews/pow-reciprocal-one/binding.py",
+      "encoding": "identity",
+      "sha256": "8653b260100d2bab85649d0a73da08a8e87b2369d5e946478c91c130b1316019",
+      "uncompressed_sha256": "8653b260100d2bab85649d0a73da08a8e87b2369d5e946478c91c130b1316019",
+      "uncompressed_bytes": 8343
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/candidate.elf.actual.dis",
+      "path": "reviews/pow-reciprocal-one/candidate.elf.actual.dis",
+      "encoding": "identity",
+      "sha256": "877c5f24de273bce7c2487819e86aff543c6955f9c30246f0ca6ac2a3e6abe12",
+      "uncompressed_sha256": "877c5f24de273bce7c2487819e86aff543c6955f9c30246f0ca6ac2a3e6abe12",
+      "uncompressed_bytes": 130385
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/closure.json",
+      "path": "reviews/pow-reciprocal-one/closure.json",
+      "encoding": "identity",
+      "sha256": "4a43f521b0bdb4520e80c1843aa77b5feb01bb511404cdbc5dcccc05c7935fe2",
+      "uncompressed_sha256": "4a43f521b0bdb4520e80c1843aa77b5feb01bb511404cdbc5dcccc05c7935fe2",
+      "uncompressed_bytes": 3007
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/closure.py",
+      "path": "reviews/pow-reciprocal-one/closure.py",
+      "encoding": "identity",
+      "sha256": "87458d073992f0bf6bb6e38fa5d6e6c15722f3ec1112aa401c2118d8a699b9a8",
+      "uncompressed_sha256": "87458d073992f0bf6bb6e38fa5d6e6c15722f3ec1112aa401c2118d8a699b9a8",
+      "uncompressed_bytes": 4968
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/control.elf.actual.dis",
+      "path": "reviews/pow-reciprocal-one/control.elf.actual.dis",
+      "encoding": "identity",
+      "sha256": "35d6bcb549b3c09b8af36ab3a8d4374aff7bbab98a287940f5e64506dea1a059",
+      "uncompressed_sha256": "35d6bcb549b3c09b8af36ab3a8d4374aff7bbab98a287940f5e64506dea1a059",
+      "uncompressed_bytes": 132322
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/finalize.py",
+      "path": "reviews/pow-reciprocal-one/finalize.py",
+      "encoding": "identity",
+      "sha256": "f926ec2ef3c82baa01ae6c8fb6d09c299112eae90028aefb7c91c2935c9e997e",
+      "uncompressed_sha256": "f926ec2ef3c82baa01ae6c8fb6d09c299112eae90028aefb7c91c2935c9e997e",
+      "uncompressed_bytes": 10225
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/guard-truth-table.json",
+      "path": "reviews/pow-reciprocal-one/guard-truth-table.json.gz",
+      "encoding": "gzip",
+      "sha256": "9ce88f6abc58acd4449c96ff04c90e565766d77dd7167f2b88feb1e5d44ff0dd",
+      "uncompressed_sha256": "8a3c6ebc7d91e881c26e92a4d5dcb7ca046c5c6b22eb57d07482aa2a2d512c6e",
+      "uncompressed_bytes": 204704
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/proof-preflight-001.py",
+      "path": "reviews/pow-reciprocal-one/proof-preflight-001.py",
+      "encoding": "identity",
+      "sha256": "a208e2b86d802671185d7f47e57c7c16323a956d476c2e5d579b8d6d988361d4",
+      "uncompressed_sha256": "a208e2b86d802671185d7f47e57c7c16323a956d476c2e5d579b8d6d988361d4",
+      "uncompressed_bytes": 6835
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/proof-preflight-002.py",
+      "path": "reviews/pow-reciprocal-one/proof-preflight-002.py",
+      "encoding": "identity",
+      "sha256": "f5ba8bd3ff3511f6b199cbd63f534a3c0e56e1f640e98082a0abeb6aae749079",
+      "uncompressed_sha256": "f5ba8bd3ff3511f6b199cbd63f534a3c0e56e1f640e98082a0abeb6aae749079",
+      "uncompressed_bytes": 6843
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/proof.json",
+      "path": "reviews/pow-reciprocal-one/proof.json",
+      "encoding": "identity",
+      "sha256": "1fb478b3dd0bc30fdcb01577866fadc4470df0efd7c85dc01b2d1ed78950fcff",
+      "uncompressed_sha256": "1fb478b3dd0bc30fdcb01577866fadc4470df0efd7c85dc01b2d1ed78950fcff",
+      "uncompressed_bytes": 5889
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/proof.py",
+      "path": "reviews/pow-reciprocal-one/proof.py",
+      "encoding": "identity",
+      "sha256": "c4166bc2397deda4b93c0319e896f3e6f6a305f15663506331a83611004a2735",
+      "uncompressed_sha256": "c4166bc2397deda4b93c0319e896f3e6f6a305f15663506331a83611004a2735",
+      "uncompressed_bytes": 6949
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/public-arm-mpfr.json",
+      "path": "reviews/pow-reciprocal-one/public-arm-mpfr.json",
+      "encoding": "identity",
+      "sha256": "fdaa23593ff62e9a411c0c9bd4424082d2dec8341e18dd5a59120354424f3cf0",
+      "uncompressed_sha256": "fdaa23593ff62e9a411c0c9bd4424082d2dec8341e18dd5a59120354424f3cf0",
+      "uncompressed_bytes": 67089
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/scalar-arm-mpfr.json",
+      "path": "reviews/pow-reciprocal-one/scalar-arm-mpfr.json.gz",
+      "encoding": "gzip",
+      "sha256": "90854b77d7053b61ab12e04ec10aa344addef68b78f9826df5822438b4c6e8d6",
+      "uncompressed_sha256": "25511fc0729556f6554d3df5c80aaa03309760d4a2bef3f5c3e3084a9fa3ac9e",
+      "uncompressed_bytes": 1869012
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/scalar-loss-selection.json",
+      "path": "reviews/pow-reciprocal-one/scalar-loss-selection.json",
+      "encoding": "identity",
+      "sha256": "36b01ffc1458a15ec5c19e461bc11f3f9b813716c922704da589dd208cec3eb3",
+      "uncompressed_sha256": "36b01ffc1458a15ec5c19e461bc11f3f9b813716c922704da589dd208cec3eb3",
+      "uncompressed_bytes": 15630
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-independent-20261025/selected-public-jobs.json",
+      "path": "reviews/pow-reciprocal-one/selected-public-jobs.json",
+      "encoding": "identity",
+      "sha256": "098e720e147cb6ac1f4be6e3384a522c6b30cb48b3f6af43e9b84cf1a96aac6a",
+      "uncompressed_sha256": "098e720e147cb6ac1f4be6e3384a522c6b30cb48b3f6af43e9b84cf1a96aac6a",
+      "uncompressed_bytes": 1420
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-root-acceptance-20261025-001/RECEIPT.json",
+      "path": "receipts/pow-reciprocal-one/RECEIPT.json",
+      "encoding": "identity",
+      "sha256": "78a3c26a8954dcbf8dd8d54719825989dbf6beca103cc93d80b9795a14c9290f",
+      "uncompressed_sha256": "78a3c26a8954dcbf8dd8d54719825989dbf6beca103cc93d80b9795a14c9290f",
+      "uncompressed_bytes": 18162
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-soft-postseal-20261025.json",
+      "path": "checks/soft-postseal.json",
+      "encoding": "identity",
+      "sha256": "5b10494fe10c9bcaf39b59185a3185e3a35d4021905626f6abde9903381c34db",
+      "uncompressed_sha256": "5b10494fe10c9bcaf39b59185a3185e3a35d4021905626f6abde9903381c34db",
+      "uncompressed_bytes": 259
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-lut-postseal-20261025.json",
+      "path": "checks/lut-postseal.json",
+      "encoding": "identity",
+      "sha256": "d3ce027e987713841ea3a7072479a3bc980d850e4e13825f050344d2638d8172",
+      "uncompressed_sha256": "d3ce027e987713841ea3a7072479a3bc980d850e4e13825f050344d2638d8172",
+      "uncompressed_bytes": 259
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-postseal-20261025.json",
+      "path": "checks/one-postseal.json",
+      "encoding": "identity",
+      "sha256": "f7ae5ba519787a9a0ca0e691ca25a1ca0ceac28b939b142b09144ec79a8b8b0e",
+      "uncompressed_sha256": "f7ae5ba519787a9a0ca0e691ca25a1ca0ceac28b939b142b09144ec79a8b8b0e",
+      "uncompressed_bytes": 351
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-inline-postseal-20261025.json",
+      "path": "checks/inline-postseal.json",
+      "encoding": "identity",
+      "sha256": "c521399b695008cbda9d7ac920401b77f868712207000823cc457feccc1676fc",
+      "uncompressed_sha256": "c521399b695008cbda9d7ac920401b77f868712207000823cc457feccc1676fc",
+      "uncompressed_bytes": 259
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-report-corrigendum-20261025.json",
+      "path": "corrections/numerator-one-normal-lag.json",
+      "encoding": "identity",
+      "sha256": "cf6766bfefe1b7ecd5051476e697c969fba1318ef933c0a9eafba4e57680194a",
+      "uncompressed_sha256": "cf6766bfefe1b7ecd5051476e697c969fba1318ef933c0a9eafba4e57680194a",
+      "uncompressed_bytes": 1268
+    },
+    {
+      "source": ".build/m0-pow-reciprocal-one-v1-20261025/FROZEN.json",
+      "path": "superseded/numerator-one-v1/FROZEN.json",
+      "encoding": "identity",
+      "sha256": "425589c409e50a6151e629d6edd9b3acb82501e3d6fde094afba2f8a3a71c18d",
+      "uncompressed_sha256": "425589c409e50a6151e629d6edd9b3acb82501e3d6fde094afba2f8a3a71c18d",
+      "uncompressed_bytes": 5567
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/build.json",
+      "path": "work-in-progress/remainder-certificate/build.json",
+      "encoding": "identity",
+      "sha256": "57178dd26df1189e94e273c5a9b4b52d6eb0248d53ec3baad7bcad315bcd932e",
+      "uncompressed_sha256": "57178dd26df1189e94e273c5a9b4b52d6eb0248d53ec3baad7bcad315bcd932e",
+      "uncompressed_bytes": 2214
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/build.log",
+      "path": "work-in-progress/remainder-certificate/build.log",
+      "encoding": "identity",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_bytes": 0
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/build.py",
+      "path": "work-in-progress/remainder-certificate/build.py",
+      "encoding": "identity",
+      "sha256": "74cdafbf85d72ea1a0f69f10846b3b93a47a74e06cbb00a1edc89a8c1e7a6045",
+      "uncompressed_sha256": "74cdafbf85d72ea1a0f69f10846b3b93a47a74e06cbb00a1edc89a8c1e7a6045",
+      "uncompressed_bytes": 2240
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/candidate.S",
+      "path": "work-in-progress/remainder-certificate/candidate.S",
+      "encoding": "identity",
+      "sha256": "e001daaa2e1bf17854e768a0bb30dad2c21bd1622892d6bb438211b13178f3f6",
+      "uncompressed_sha256": "e001daaa2e1bf17854e768a0bb30dad2c21bd1622892d6bb438211b13178f3f6",
+      "uncompressed_bytes": 2819
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/candidate.ld",
+      "path": "work-in-progress/remainder-certificate/candidate.ld",
+      "encoding": "identity",
+      "sha256": "21c36656d5e3c439dd5372333586aa1b737636b18c56aea086f52a50cb2b8cdc",
+      "uncompressed_sha256": "21c36656d5e3c439dd5372333586aa1b737636b18c56aea086f52a50cb2b8cdc",
+      "uncompressed_bytes": 177
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/control.S",
+      "path": "work-in-progress/remainder-certificate/control.S",
+      "encoding": "identity",
+      "sha256": "911d00a1bea5884b7c4653015bb1ed6a954ab1a7c68f632c5c952e9d45331ebd",
+      "uncompressed_sha256": "911d00a1bea5884b7c4653015bb1ed6a954ab1a7c68f632c5c952e9d45331ebd",
+      "uncompressed_bytes": 2730
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/control.ld",
+      "path": "work-in-progress/remainder-certificate/control.ld",
+      "encoding": "identity",
+      "sha256": "21c36656d5e3c439dd5372333586aa1b737636b18c56aea086f52a50cb2b8cdc",
+      "uncompressed_sha256": "21c36656d5e3c439dd5372333586aa1b737636b18c56aea086f52a50cb2b8cdc",
+      "uncompressed_bytes": 177
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/remainder-certificate.inc",
+      "path": "work-in-progress/remainder-certificate/remainder-certificate.inc",
+      "encoding": "identity",
+      "sha256": "6d31628badd689b4bce884760056ff868d3def9241d4a17bb548846e184913c5",
+      "uncompressed_sha256": "6d31628badd689b4bce884760056ff868d3def9241d4a17bb548846e184913c5",
+      "uncompressed_bytes": 413
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/study.json",
+      "path": "work-in-progress/remainder-certificate/study.json",
+      "encoding": "identity",
+      "sha256": "961232be9fd5fa2516c8864926aaf64b6c7957c874d19bae36570d4b00f5f99c",
+      "uncompressed_sha256": "961232be9fd5fa2516c8864926aaf64b6c7957c874d19bae36570d4b00f5f99c",
+      "uncompressed_bytes": 548
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/study.log",
+      "path": "work-in-progress/remainder-certificate/study.log",
+      "encoding": "identity",
+      "sha256": "961232be9fd5fa2516c8864926aaf64b6c7957c874d19bae36570d4b00f5f99c",
+      "uncompressed_sha256": "961232be9fd5fa2516c8864926aaf64b6c7957c874d19bae36570d4b00f5f99c",
+      "uncompressed_bytes": 548
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/study.py",
+      "path": "work-in-progress/remainder-certificate/study.py",
+      "encoding": "identity",
+      "sha256": "ee8ae2cbcfe25cf11614466dc1ca4b9d45d9c88a1494a2e69e4657c850ae2ed4",
+      "uncompressed_sha256": "ee8ae2cbcfe25cf11614466dc1ca4b9d45d9c88a1494a2e69e4657c850ae2ed4",
+      "uncompressed_bytes": 1985
+    },
+    {
+      "source": ".build/m0-ddiv-remainder-certificate-20261025/verify-unit.py",
+      "path": "work-in-progress/remainder-certificate/verify-unit.py",
+      "encoding": "identity",
+      "sha256": "07f29ef1205e84733595374a3b04476ce5d52b9c6e21885caa67ef9172c5c401",
+      "uncompressed_sha256": "07f29ef1205e84733595374a3b04476ce5d52b9c6e21885caa67ef9172c5c401",
+      "uncompressed_bytes": 3527
+    },
+    {
+      "source": ".build/m0-math-original-goal-status-20261023/status.json",
+      "path": "status/status.json",
+      "encoding": "identity",
+      "sha256": "73f96d428d3b122fa1c0521507d99f4452b4f37f08abfc1a1a1b72b9ed65edd2",
+      "uncompressed_sha256": "73f96d428d3b122fa1c0521507d99f4452b4f37f08abfc1a1a1b72b9ed65edd2",
+      "uncompressed_bytes": 134820
+    },
+    {
+      "source": ".build/m0-math-original-goal-status-20261023/HANDOFF.md",
+      "path": "status/HANDOFF.md",
+      "encoding": "identity",
+      "sha256": "bc86587a20d8d40205a48aebc91015c6fb890b5494f65a871cf3f4d4088c1ce4",
+      "uncompressed_sha256": "bc86587a20d8d40205a48aebc91015c6fb890b5494f65a871cf3f4d4088c1ce4",
+      "uncompressed_bytes": 19679
+    }
+  ]
+}

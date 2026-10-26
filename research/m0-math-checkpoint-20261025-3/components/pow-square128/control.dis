@@ -1,0 +1,161 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-20261025/control.elf:     file format elf32-littlearm
+
+
+Disassembly of section .square:
+
+100f9c9c <pow_integer128_square>:
+100f9c9c:	b5f0      	push	{r4, r5, r6, r7, lr}
+100f9c9e:	b087      	sub	sp, #28
+100f9ca0:	4607      	mov	r7, r0
+100f9ca2:	6800      	ldr	r0, [r0, #0]
+100f9ca4:	0c04      	lsrs	r4, r0, #16
+100f9ca6:	6879      	ldr	r1, [r7, #4]
+100f9ca8:	b28e      	uxth	r6, r1
+100f9caa:	4622      	mov	r2, r4
+100f9cac:	4372      	muls	r2, r6
+100f9cae:	9002      	str	r0, [sp, #8]
+100f9cb0:	b280      	uxth	r0, r0
+100f9cb2:	4603      	mov	r3, r0
+100f9cb4:	4373      	muls	r3, r6
+100f9cb6:	9306      	str	r3, [sp, #24]
+100f9cb8:	0c1b      	lsrs	r3, r3, #16
+100f9cba:	189a      	adds	r2, r3, r2
+100f9cbc:	0c15      	lsrs	r5, r2, #16
+100f9cbe:	9101      	str	r1, [sp, #4]
+100f9cc0:	0c0b      	lsrs	r3, r1, #16
+100f9cc2:	4621      	mov	r1, r4
+100f9cc4:	4359      	muls	r1, r3
+100f9cc6:	1869      	adds	r1, r5, r1
+100f9cc8:	b292      	uxth	r2, r2
+100f9cca:	4605      	mov	r5, r0
+100f9ccc:	435d      	muls	r5, r3
+100f9cce:	1952      	adds	r2, r2, r5
+100f9cd0:	9204      	str	r2, [sp, #16]
+100f9cd2:	0c15      	lsrs	r5, r2, #16
+100f9cd4:	1949      	adds	r1, r1, r5
+100f9cd6:	0fca      	lsrs	r2, r1, #31
+100f9cd8:	9203      	str	r2, [sp, #12]
+100f9cda:	0049      	lsls	r1, r1, #1
+100f9cdc:	9105      	str	r1, [sp, #20]
+100f9cde:	4631      	mov	r1, r6
+100f9ce0:	4359      	muls	r1, r3
+100f9ce2:	4376      	muls	r6, r6
+100f9ce4:	0c35      	lsrs	r5, r6, #16
+100f9ce6:	186d      	adds	r5, r5, r1
+100f9ce8:	b2aa      	uxth	r2, r5
+100f9cea:	1851      	adds	r1, r2, r1
+100f9cec:	0c0a      	lsrs	r2, r1, #16
+100f9cee:	0c2d      	lsrs	r5, r5, #16
+100f9cf0:	435b      	muls	r3, r3
+100f9cf2:	18eb      	adds	r3, r5, r3
+100f9cf4:	189d      	adds	r5, r3, r2
+100f9cf6:	0409      	lsls	r1, r1, #16
+100f9cf8:	b2b2      	uxth	r2, r6
+100f9cfa:	1889      	adds	r1, r1, r2
+100f9cfc:	9a05      	ldr	r2, [sp, #20]
+100f9cfe:	1889      	adds	r1, r1, r2
+100f9d00:	9105      	str	r1, [sp, #20]
+100f9d02:	9903      	ldr	r1, [sp, #12]
+100f9d04:	414d      	adcs	r5, r1
+100f9d06:	9904      	ldr	r1, [sp, #16]
+100f9d08:	040a      	lsls	r2, r1, #16
+100f9d0a:	0fd1      	lsrs	r1, r2, #31
+100f9d0c:	9103      	str	r1, [sp, #12]
+100f9d0e:	4601      	mov	r1, r0
+100f9d10:	4361      	muls	r1, r4
+100f9d12:	4340      	muls	r0, r0
+100f9d14:	0c03      	lsrs	r3, r0, #16
+100f9d16:	185b      	adds	r3, r3, r1
+100f9d18:	b29e      	uxth	r6, r3
+100f9d1a:	1871      	adds	r1, r6, r1
+100f9d1c:	0c0e      	lsrs	r6, r1, #16
+100f9d1e:	0c1b      	lsrs	r3, r3, #16
+100f9d20:	4364      	muls	r4, r4
+100f9d22:	191b      	adds	r3, r3, r4
+100f9d24:	199b      	adds	r3, r3, r6
+100f9d26:	9e03      	ldr	r6, [sp, #12]
+100f9d28:	9c06      	ldr	r4, [sp, #24]
+100f9d2a:	b2a4      	uxth	r4, r4
+100f9d2c:	1912      	adds	r2, r2, r4
+100f9d2e:	0052      	lsls	r2, r2, #1
+100f9d30:	2400      	movs	r4, #0
+100f9d32:	18d2      	adds	r2, r2, r3
+100f9d34:	9204      	str	r2, [sp, #16]
+100f9d36:	9a05      	ldr	r2, [sp, #20]
+100f9d38:	4156      	adcs	r6, r2
+100f9d3a:	4165      	adcs	r5, r4
+100f9d3c:	0409      	lsls	r1, r1, #16
+100f9d3e:	b280      	uxth	r0, r0
+100f9d40:	180b      	adds	r3, r1, r0
+100f9d42:	68f9      	ldr	r1, [r7, #12]
+100f9d44:	68b8      	ldr	r0, [r7, #8]
+100f9d46:	4602      	mov	r2, r0
+100f9d48:	430a      	orrs	r2, r1
+100f9d4a:	9205      	str	r2, [sp, #20]
+100f9d4c:	d014      	beq.n	100f9d78 <pow_integer128_square+0xdc>
+100f9d4e:	9a02      	ldr	r2, [sp, #8]
+100f9d50:	9403      	str	r4, [sp, #12]
+100f9d52:	461c      	mov	r4, r3
+100f9d54:	9b01      	ldr	r3, [sp, #4]
+100f9d56:	f054 fc87 	bl	1014e668 <pow_integer128_approx_high64>
+100f9d5a:	0fc2      	lsrs	r2, r0, #31
+100f9d5c:	004b      	lsls	r3, r1, #1
+100f9d5e:	189a      	adds	r2, r3, r2
+100f9d60:	0fc9      	lsrs	r1, r1, #31
+100f9d62:	198e      	adds	r6, r1, r6
+100f9d64:	9903      	ldr	r1, [sp, #12]
+100f9d66:	414d      	adcs	r5, r1
+100f9d68:	0040      	lsls	r0, r0, #1
+100f9d6a:	1904      	adds	r4, r0, r4
+100f9d6c:	9406      	str	r4, [sp, #24]
+100f9d6e:	9804      	ldr	r0, [sp, #16]
+100f9d70:	4142      	adcs	r2, r0
+100f9d72:	414e      	adcs	r6, r1
+100f9d74:	414d      	adcs	r5, r1
+100f9d76:	e001      	b.n	100f9d7c <pow_integer128_square+0xe0>
+100f9d78:	9306      	str	r3, [sp, #24]
+100f9d7a:	9a04      	ldr	r2, [sp, #16]
+100f9d7c:	6938      	ldr	r0, [r7, #16]
+100f9d7e:	0041      	lsls	r1, r0, #1
+100f9d80:	6139      	str	r1, [r7, #16]
+100f9d82:	6978      	ldr	r0, [r7, #20]
+100f9d84:	1e44      	subs	r4, r0, #1
+100f9d86:	4603      	mov	r3, r0
+100f9d88:	41a3      	sbcs	r3, r4
+100f9d8a:	9c05      	ldr	r4, [sp, #20]
+100f9d8c:	2c00      	cmp	r4, #0
+100f9d8e:	d000      	beq.n	100f9d92 <pow_integer128_square+0xf6>
+100f9d90:	2310      	movs	r3, #16
+100f9d92:	0040      	lsls	r0, r0, #1
+100f9d94:	1818      	adds	r0, r3, r0
+100f9d96:	2d00      	cmp	r5, #0
+100f9d98:	d410      	bmi.n	100f9dbc <pow_integer128_square+0x120>
+100f9d9a:	9005      	str	r0, [sp, #20]
+100f9d9c:	9806      	ldr	r0, [sp, #24]
+100f9d9e:	0fc1      	lsrs	r1, r0, #31
+100f9da0:	0053      	lsls	r3, r2, #1
+100f9da2:	1859      	adds	r1, r3, r1
+100f9da4:	0ff3      	lsrs	r3, r6, #31
+100f9da6:	006c      	lsls	r4, r5, #1
+100f9da8:	18e5      	adds	r5, r4, r3
+100f9daa:	0073      	lsls	r3, r6, #1
+100f9dac:	0fd2      	lsrs	r2, r2, #31
+100f9dae:	189e      	adds	r6, r3, r2
+100f9db0:	4603      	mov	r3, r0
+100f9db2:	9805      	ldr	r0, [sp, #20]
+100f9db4:	005b      	lsls	r3, r3, #1
+100f9db6:	0040      	lsls	r0, r0, #1
+100f9db8:	460a      	mov	r2, r1
+100f9dba:	e003      	b.n	100f9dc4 <pow_integer128_square+0x128>
+100f9dbc:	2301      	movs	r3, #1
+100f9dbe:	4319      	orrs	r1, r3
+100f9dc0:	6139      	str	r1, [r7, #16]
+100f9dc2:	9b06      	ldr	r3, [sp, #24]
+100f9dc4:	60bb      	str	r3, [r7, #8]
+100f9dc6:	603e      	str	r6, [r7, #0]
+100f9dc8:	6178      	str	r0, [r7, #20]
+100f9dca:	60fa      	str	r2, [r7, #12]
+100f9dcc:	607d      	str	r5, [r7, #4]
+100f9dce:	b007      	add	sp, #28
+100f9dd0:	bdf0      	pop	{r4, r5, r6, r7, pc}

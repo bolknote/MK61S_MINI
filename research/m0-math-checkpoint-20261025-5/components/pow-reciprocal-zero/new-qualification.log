@@ -1,0 +1,119 @@
+reciprocal-zero-new 0 / 5127 0.0
+reciprocal-zero-new 64 / 5127 1.0
+reciprocal-zero-new 128 / 5127 1.5
+reciprocal-zero-new 192 / 5127 2.0
+reciprocal-zero-new 256 / 5127 2.5
+reciprocal-zero-new 320 / 5127 3.0
+reciprocal-zero-new 384 / 5127 3.4
+reciprocal-zero-new 448 / 5127 3.9
+reciprocal-zero-new 512 / 5127 4.3
+reciprocal-zero-new 576 / 5127 4.9
+reciprocal-zero-new 640 / 5127 5.8
+reciprocal-zero-new 704 / 5127 6.8
+reciprocal-zero-new 768 / 5127 7.7
+reciprocal-zero-new 832 / 5127 8.6
+reciprocal-zero-new 896 / 5127 9.6
+reciprocal-zero-new 960 / 5127 10.5
+reciprocal-zero-new 1024 / 5127 11.4
+reciprocal-zero-new 1088 / 5127 12.4
+reciprocal-zero-new 1152 / 5127 13.4
+reciprocal-zero-new 1216 / 5127 14.4
+reciprocal-zero-new 1280 / 5127 15.4
+reciprocal-zero-new 1344 / 5127 16.4
+reciprocal-zero-new 1408 / 5127 17.4
+reciprocal-zero-new 1472 / 5127 18.4
+reciprocal-zero-new 1536 / 5127 19.4
+reciprocal-zero-new 1600 / 5127 20.3
+reciprocal-zero-new 1664 / 5127 21.4
+reciprocal-zero-new 1728 / 5127 22.3
+reciprocal-zero-new 1792 / 5127 23.3
+reciprocal-zero-new 1856 / 5127 24.3
+reciprocal-zero-new 1920 / 5127 25.3
+reciprocal-zero-new 1984 / 5127 26.3
+reciprocal-zero-new 2048 / 5127 27.3
+reciprocal-zero-new 2112 / 5127 28.4
+reciprocal-zero-new 2176 / 5127 29.4
+reciprocal-zero-new 2240 / 5127 30.4
+reciprocal-zero-new 2304 / 5127 31.4
+reciprocal-zero-new 2368 / 5127 32.4
+reciprocal-zero-new 2432 / 5127 33.4
+reciprocal-zero-new 2496 / 5127 34.5
+reciprocal-zero-new 2560 / 5127 35.5
+reciprocal-zero-new 2624 / 5127 36.6
+reciprocal-zero-new 2688 / 5127 37.7
+reciprocal-zero-new 2752 / 5127 38.8
+reciprocal-zero-new 2816 / 5127 39.9
+reciprocal-zero-new 2880 / 5127 40.9
+reciprocal-zero-new 2944 / 5127 42.0
+reciprocal-zero-new 3008 / 5127 43.1
+reciprocal-zero-new 3072 / 5127 44.2
+reciprocal-zero-new 3136 / 5127 45.3
+reciprocal-zero-new 3200 / 5127 46.3
+reciprocal-zero-new 3264 / 5127 47.4
+reciprocal-zero-new 3328 / 5127 48.5
+reciprocal-zero-new 3392 / 5127 49.6
+reciprocal-zero-new 3456 / 5127 50.7
+reciprocal-zero-new 3520 / 5127 51.8
+reciprocal-zero-new 3584 / 5127 52.9
+reciprocal-zero-new 3648 / 5127 54.0
+reciprocal-zero-new 3712 / 5127 55.1
+reciprocal-zero-new 3776 / 5127 56.2
+reciprocal-zero-new 3840 / 5127 57.3
+reciprocal-zero-new 3904 / 5127 58.4
+reciprocal-zero-new 3968 / 5127 59.5
+reciprocal-zero-new 4032 / 5127 60.6
+reciprocal-zero-new 4096 / 5127 61.8
+reciprocal-zero-new 4160 / 5127 62.9
+reciprocal-zero-new 4224 / 5127 64.0
+reciprocal-zero-new 4288 / 5127 65.1
+reciprocal-zero-new 4352 / 5127 66.3
+reciprocal-zero-new 4416 / 5127 67.5
+reciprocal-zero-new 4480 / 5127 68.6
+reciprocal-zero-new 4544 / 5127 69.7
+reciprocal-zero-new 4608 / 5127 70.8
+reciprocal-zero-new 4672 / 5127 71.9
+reciprocal-zero-new 4736 / 5127 73.0
+reciprocal-zero-new 4800 / 5127 74.1
+reciprocal-zero-new 4864 / 5127 75.2
+reciprocal-zero-new 4928 / 5127 76.4
+reciprocal-zero-new 4992 / 5127 79.8
+reciprocal-zero-new 5056 / 5127 84.0
+reciprocal-zero-new 5120 / 5127 88.1
+{
+  "status": "PASS_FRESH_MPFR_PRIVATE_KNOWN_ZERO_PUBLIC_CONTROLS",
+  "candidate_ELF_sha256": "a2957007576c1803479e122991316559b0a7b0cc63b9355c6874bfd29846404a",
+  "unique_pairs": 5127,
+  "state_rows": 10254,
+  "fresh_ARM_calls": 61524,
+  "fresh_candidate_calls": 10254,
+  "fresh_parent_calls": 10254,
+  "fresh_layout_control_calls": 10254,
+  "fresh_Qfplib_calls": 30762,
+  "oracle_evaluations": 5127,
+  "actual_directed_MPFR_inputs": 5051,
+  "sNaN_policy_shortcuts": 76,
+  "MPFR_version": "4.2.2",
+  "all_parent_control_candidate_return_bits_and_live_join_states_equal": true,
+  "all_actual_costs_match_removed_zero_operation_counts": true,
+  "parent_raw_loss_pairs": 571,
+  "candidate_raw_loss_pairs": 571,
+  "fixed_raw_pairs": 0,
+  "new_raw_loss_pairs": [],
+  "candidate_wrong": 0,
+  "wrong_Qfplib_state_variants_retained": 18534,
+  "strict_quiet_NaN_reference_policy": true,
+  "no_nominal_reference_domain_filter": true,
+  "instruction_delta_histogram": {
+    "-3": 130,
+    "-2": 548,
+    "0": 9576
+  },
+  "observed_stacks": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148
+  },
+  "elapsed_seconds": 88.61157758400077,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

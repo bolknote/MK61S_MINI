@@ -1,0 +1,21 @@
+{
+  "status": "QUALIFIED_DEDUPLICATED_PUBLIC_POW_UNION",
+  "unique_input_pairs": 111912,
+  "distinct_profiled_states": 223824,
+  "distinct_reference_state_variants": 223976,
+  "same_input_candidate_bits_and_counts_match_across_corpora": true,
+  "parent_raw_speed_losses": 42790,
+  "candidate_raw_speed_losses": 7904,
+  "new_raw_speed_losses": 0,
+  "correct_Qfplib_comparison_has_no_domain_filter": true,
+  "old63795_corpus": {
+    "parent": 8078,
+    "candidate": 5912
+  },
+  "new52215_targeted_corpus": {
+    "parent": 36760,
+    "candidate": 1992
+  },
+  "targeted1992_losses_are_outside_previous_remaining5912": true,
+  "all_wrong_reference_records_retained_in_raw_reports": true
+}

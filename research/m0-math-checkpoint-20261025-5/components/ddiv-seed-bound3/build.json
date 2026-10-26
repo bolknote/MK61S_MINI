@@ -1,0 +1,58 @@
+{
+  "status": "BUILT_BOUND3_PRIVATE_ZERO_SEED_NOT_ARM_QUALIFIED",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-seed-bound3-20261025/control.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-seed-bound3-20261025/control.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "unit_inline_seed",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-seed-bound3-20261025/control.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-seed-bound3-20261025/control.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-seed-bound3-20261025/control.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-seed-bound3-20261025/candidate.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-seed-bound3-20261025/candidate.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "unit_inline_seed",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-seed-bound3-20261025/candidate.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-seed-bound3-20261025/candidate.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-seed-bound3-20261025/candidate.elf"
+    ]
+  ],
+  "images": {
+    "control": {
+      "ELF_sha256": "df03a5eb5aba991f2cce2b61972b24b35b3750bcd3a93076446296bdcdd45ef6"
+    },
+    "candidate": {
+      "ELF_sha256": "a6ab04c6632d9ab541692033164147997e2b0c36800450019c24e73fccf8bbfa"
+    }
+  },
+  "source_parent_FROZEN_sha256": "98efecf01b96bf8cd1d690682cd9d5b255cbeee997b213ba23e692b926f82544",
+  "table_unchanged": true,
+  "hardware_accessed": false
+}

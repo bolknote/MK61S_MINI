@@ -1,0 +1,406 @@
+{
+  "status": "TECH_GO_PRIVATE_BOUND3_EXACT_SEED_CORRECTNESS_COMPONENT_ONLY_CYCLES_UNMEASURED",
+  "component_review_complete": true,
+  "exact_supplier": {
+    "FROZEN": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-20261025/FROZEN.json",
+      "bytes": 12135,
+      "sha256": "0a5480ab5d386448b05bc3ffe0993ccda2c417025cd31779cb732929e30c56a0"
+    },
+    "result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-20261025/result.json",
+      "bytes": 4438,
+      "sha256": "b141d6569b6f3b861b5a9be70c934bd04118f00453dee06ad7bcaeaa65e53a6f"
+    },
+    "HANDOFF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-20261025/HANDOFF.md",
+      "bytes": 3861,
+      "sha256": "a8129acd4bde1fcc6269143224771207ba2604277d276aad68619b770d01924b"
+    },
+    "ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-20261025/candidate.elf",
+      "bytes": 161940,
+      "sha256": "53e624741136a615814141b4f4d69eb563e32909562dd9068fe63bba3d0b0e67"
+    },
+    "unit_FROZEN": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ddiv-seed-bound3-20261025/FROZEN.json",
+      "bytes": 3044,
+      "sha256": "58764a6b8b12a221d8cc7061ba60a50541068bf366181aad277c3253757b078e"
+    }
+  },
+  "actual_parent": {
+    "FROZEN": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-zero-20261025/FROZEN.json",
+      "bytes": 11398,
+      "sha256": "98efecf01b96bf8cd1d690682cd9d5b255cbeee997b213ba23e692b926f82544"
+    },
+    "independent": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-zero-independent-20261025/FINAL-REVIEW.json",
+      "bytes": 16901,
+      "sha256": "8c97aa51a42f432aed76da04a4ca44756b0327f812269946f98b9e1f18a0471b"
+    },
+    "later_ROOT_additive": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-zero-root-acceptance-20261025-001/RECEIPT.json",
+      "bytes": 20786,
+      "sha256": "4ee40fcbbcba128c8258f35efb38f72d43eea1dfff584da4611252e433529d7f"
+    },
+    "child_missing_ROOT_at_seal_not_rewritten": true,
+    "correctness_only_performance_adoption_false": true,
+    "near_one_is_sibling": true
+  },
+  "new_child_correctness_NOT_inherited_parent_GO": true,
+  "integrity": {
+    "local_pins84": true,
+    "external_pins2742": true,
+    "unit_files": 21,
+    "own_byteexact_whole_rebuilds": 12,
+    "only_software_macro_changed": true,
+    "entire_hardware_source_and_resident_calls_unchanged": true,
+    "all_other_allocated_sections_addresses_semanticrelocs_unchanged": true,
+    "unit_production_shared_macro_except_decoded_ADR": true,
+    "all128table_constants_256B_unchanged": true,
+    "defaultM0_M4_and6disabled_unchanged": true
+  },
+  "independent_whole_domain_integer_proof": {
+    "actual_D": 65536,
+    "range": [
+      65536,
+      131071
+    ],
+    "exact_uint32_ASR_table_model": true,
+    "initial_error_histogram": {
+      "0": 5167,
+      "1": 35252,
+      "2": 23815,
+      "-1": 140,
+      "3": 1162
+    },
+    "exact_floor_quotient_everyD": true,
+    "k1_BPL_afterfirst_ADD": true,
+    "k2_secondADDcarry1_SBCsubtract0": true,
+    "k3_secondADDcarry0_SBCsubtract1": true,
+    "true_negative_residual_signed_safe_no_overflow": true,
+    "new_R0zero_precondition_freshly_bound_not_generic_contract": true,
+    "error3_only_R7_old_residue_minusD_modulo32_no_exact_remainder_claim": true,
+    "post_ADD1_LSR_flags_and_u0_identical": true,
+    "R7_no_use_until_first_second_product_overwrite": true,
+    "all_full_after_product_residual_R3certificate_pack_live_states_equal": true,
+    "decoded_mapping": {
+      "control": {
+        "begin": 270406162,
+        "done": 270406212,
+        "table": 270406476,
+        "bytes": 50,
+        "after_round": 270406216,
+        "before_second": 270406240,
+        "after_second": 270406276,
+        "sw": 270406136,
+        "R7_dead_before_first_overwrite": true
+      },
+      "candidate": {
+        "begin": 270406162,
+        "done": 270406218,
+        "table": 270406484,
+        "bytes": 56,
+        "after_round": 270406222,
+        "before_second": 270406246,
+        "after_second": 270406282,
+        "sw": 270406136,
+        "R7_dead_before_first_overwrite": true
+      },
+      "unit_control": {
+        "begin": 270405634,
+        "done": 270405684,
+        "after_round": null
+      },
+      "unit_candidate": {
+        "begin": 270405634,
+        "done": 270405690,
+        "after_round": null
+      }
+    }
+  },
+  "independent_CPU_checks": {
+    "qualified_actual_Thumb_calls": 2908,
+    "unit240cases480calls15D_all16flags": true,
+    "scalar272flagjobs47D2176calls": true,
+    "nestedpublic21pairs252calls_all3realQfp": true,
+    "directed_MPFR_invocations": 62,
+    "sNaN_shortcuts": 6,
+    "MPFR_version": "4.2.2",
+    "all5errorclasses_allflags_and_actual_ADDC_SBC_R0zero_checked": true,
+    "full_context_counts": {
+      "calls": 566,
+      "before": 514,
+      "after": 514,
+      "residual": 514,
+      "pre_cert": 368,
+      "certificates": 368,
+      "pack": 514,
+      "inline": 255,
+      "pops": 566,
+      "returns": 22,
+      "latency9": 255,
+      "classified": 368,
+      "restored": 130,
+      "zero_up": 166,
+      "rounded": 255,
+      "nested": 11,
+      "changed_R7_before": 58,
+      "changed_R7_rounded": 58
+    },
+    "allowed_R7differences58_then_full_live_state_rejoin": true,
+    "actual_positive_one_caller_return_originalframe20_PCS_R6guard_R12_inline_ownSP_READY9ALU_DIRTY7words": true,
+    "both_old_expanded149_147vs146_now146_144vs146_actually_reproduced": true,
+    "old_new_control_roles_explicit": true,
+    "own_numerical_failed_partial_discarded_calls": 0,
+    "own2HOSTpreflights0ARM0MPFR_retained": true,
+    "no_2M_3M_241960_262144_ARM_replay": true
+  },
+  "independent_saved_unit_recount": {
+    "all65536rows_all16flags1048576tests": true,
+    "author_paired_ARM2097152": true,
+    "exact_all_quotient_residue_and_cost_vectors_match_independent_integer_proof": true,
+    "saved_signed_residual_normalized_modulo32_explicit": true,
+    "delta_histogram": {
+      "0": 1029984,
+      "-3": 18592
+    },
+    "error1_branch_direction_changes_in564032_saved_flag_tests_NOT_cycles": true
+  },
+  "independent_saved_public_recount": {
+    "pairs": 120980,
+    "states": 241960,
+    "reference_variants": 279522,
+    "wrongQfp77106_retained": true,
+    "no_nominal_filter": true,
+    "loss_pairs": [
+      11369,
+      11369
+    ],
+    "no_new_pair_fix": true,
+    "delta": {
+      "0": 241950,
+      "-3": 10
+    },
+    "correctQfp": {
+      "slower": 21026,
+      "faster": 178686,
+      "equal": 2704
+    },
+    "faster10states_save3_only_error3": true,
+    "no_newloss_wrong_or_parent_instruction_increase": true,
+    "all10254fresh_overlap": true,
+    "parent778replays_include768unchanged10changed": true,
+    "original153": {
+      "parent": {
+        "slower": 33,
+        "strict": 120
+      },
+      "candidate": {
+        "slower": 33,
+        "strict": 120
+      }
+    }
+  },
+  "independent_saved_scalar_recount": {
+    "same20994cases41988states": true,
+    "correctQfp": {
+      "parent": {
+        "faster": 32387,
+        "equal": 1
+      },
+      "candidate": {
+        "faster": 32387,
+        "equal": 1
+      }
+    },
+    "wrong9600_retained": true,
+    "same_delta": {
+      "0": 41717,
+      "-3": 271
+    },
+    "expanded131072inputs262144states_all65536actualD_two_patterns": true,
+    "expanded_correctQfp": {
+      "parent": {
+        "faster": 262131,
+        "slower": 2,
+        "equal": 11
+      },
+      "candidate": {
+        "faster": 262132,
+        "equal": 12
+      }
+    },
+    "expanded_delta": {
+      "0": 259820,
+      "-3": 2324
+    },
+    "old_expanded2losses_to0_finite_NOT_allbinary64_or_cycles": true,
+    "newloss_or_instruction_increase": 0
+  },
+  "cumulative_tradeoff": {
+    "ancestral32_Certificate_regressions_vsInline_remain_hist": {
+      "6": 26,
+      "5": 6
+    },
+    "two_already_losing_Qfp_states": [
+      {
+        "x": "3FF2C7DE5B557A7D",
+        "y": "C028000000000000",
+        "SIO": "READY",
+        "Inline": 1697,
+        "Certificate": 1705,
+        "Zero": 1703,
+        "has_correct_Qfp": true,
+        "Bound3": 1703
+      },
+      {
+        "x": "3FF2C7DE5B557A7D",
+        "y": "C028000000000000",
+        "SIO": "DIRTY",
+        "Inline": 1706,
+        "Certificate": 1714,
+        "Zero": 1712,
+        "has_correct_Qfp": true,
+        "Bound3": 1712
+      }
+    ],
+    "corrigendum_and_prior_adoption_false_still_binding": true
+  },
+  "honest_evidence_accounting": {
+    "author3355798_ARM_additive_partition": [
+      2097152,
+      241960,
+      778,
+      61524,
+      167952,
+      786432
+    ],
+    "author157083MPFR_plus110sNaN": true,
+    "overlapping_campaigns_NOT_unique_union": true,
+    "rejected_author_trace14184completed_ARM1106MPFR76sNaN_0partial_excluded": true,
+    "corrected_only_parent_control_False_and_defaultTrue_oldnew_semantics_unchanged": true,
+    "only_terminal_publiccontrol_repeat_counted_not_double_full_expanded": true,
+    "parent_campaigns_not_fresh": true,
+    "own_HOST_representation_and_syntax_failures_retained": true
+  },
+  "physical_timing_and_adoption": {
+    "instruction_nonincrease_NOT_cycle_nonregression": true,
+    "error1_taken_branch_direction_changed": true,
+    "old_loop_control_retained": true,
+    "physical_cycles_unmeasured": true,
+    "performance_adoption_GO": false
+  },
+  "resources": {
+    "allocation": [
+      1100,
+      1108
+    ],
+    "delta": 8,
+    "same256B_table": true,
+    "new_RAM_libgcc_external_calls": false,
+    "author_full2284_public2148_same_scalar176_unchanged": true,
+    "expanded_normal28_different_corpus_not_stackdrop": true,
+    "own_scalar176_public968_equal_across_versions": true,
+    "no_universal_stack_bound": true,
+    "freeFlash_below2MiB_nooverlap_checked": true
+  },
+  "limits": {
+    "component_correctness_only": true,
+    "reviewed507_stays422": true,
+    "author438_not_promoted": true,
+    "near_one_separate_sibling": true,
+    "source_merge_relink_actual_R12_loader_layout_old168overlay14B_guard_required": true,
+    "general_pow_totality": false,
+    "other_math": false,
+    "physical_cycles": false,
+    "integration_GO": false,
+    "performance_adoption_GO": false,
+    "hardware_GO": false,
+    "main_GO": false,
+    "release_GO": false,
+    "overall_goal_complete": false,
+    "no_new_microoptimization_scope": true
+  },
+  "requirements": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+    "bytes": 2354,
+    "sha256": "369f8223a27e742daf7d6910f0d07df2464de365b05b65dc295db5fa7c52bc11"
+  },
+  "evidence_manifest": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/MANIFEST.json",
+    "bytes": 18032,
+    "sha256": "a9d768bcaa01f30ec01346cdbc7d37466cb371002c596621bf9937e764e1fe4c"
+  },
+  "evidence": {
+    "binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/binding.json",
+      "bytes": 692111,
+      "sha256": "b990f1125bc8e56be79154029247ea623a40c7b6505a5fd4ca11e2f83301c2ba"
+    },
+    "proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/proof.json",
+      "bytes": 2820,
+      "sha256": "0424a3eaeae38b28cb1a1750e2c9b10513acd6aba01cf8263f3ad37f03dc44f2"
+    },
+    "integer-domain.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/integer-domain.json",
+      "bytes": 11367411,
+      "sha256": "ff07f74649899e8b0416995ef8a4b72575cb563b0639f204e9622bb0924c5c41"
+    },
+    "unit-accounting.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/unit-accounting.json",
+      "bytes": 976,
+      "sha256": "8e7fcb9b02f8402a1e549e51e0953b134547f81d2608463d8b13919810cd7db5"
+    },
+    "accounting.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/accounting.json",
+      "bytes": 3361,
+      "sha256": "88bdd436928d8433adb69140994b2b361c36da557fd15462e8eaf7620b903fed"
+    },
+    "unit-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/unit-arm.json",
+      "bytes": 54729,
+      "sha256": "c1cc376e9fdea9c620ac2a696a38a39dfe4290b8d10a168ad74de5323081f0bb"
+    },
+    "scalar-arm-mpfr.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/scalar-arm-mpfr.json",
+      "bytes": 4375837,
+      "sha256": "fa9db0e5a654a1906371dd2f69b64079990723be0084b09c037c761bb56e49fc"
+    },
+    "public-arm-mpfr.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/public-arm-mpfr.json",
+      "bytes": 230745,
+      "sha256": "921f401f2ecaa861e31a5f4bbd72f6b6e8d5e1e7b000824140122344a0f2461b"
+    },
+    "closure.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/closure.json",
+      "bytes": 3734,
+      "sha256": "eae41caf3485e58905d776b33d2d2054fad1617e48dee9ed1dc0c784bc85a848"
+    },
+    "runtime-base-binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/runtime-base-binding.json",
+      "bytes": 569,
+      "sha256": "458dbad4ed25c74346c1bfc9158165a2b194db13c0dd3d53fbd73159a0ab1065"
+    },
+    "NOTES.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-bound3-independent-20261025/NOTES.md",
+      "bytes": 5930,
+      "sha256": "172d370b86b3f04b69b512554850cabc32b7441e73154964478581ae3dd12e50"
+    }
+  },
+  "scope": {
+    "CPU_HOST_only": true,
+    "devices": 0,
+    "USB": 0,
+    "ports": 0,
+    "Flash": 0,
+    "network": 0,
+    "install": 0,
+    "Git": 0,
+    "canonical": 0,
+    "product_source_edits": 0,
+    "own_outputs_only": true
+  }
+}

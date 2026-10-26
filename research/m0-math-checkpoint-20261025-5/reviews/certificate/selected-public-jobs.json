@@ -1,0 +1,217 @@
+{
+  "status": "STRICT_EQUALITY_FIXES_BOTH_SLOWING_WITNESSES_ACTUAL_CLASSES",
+  "jobs": [
+    {
+      "x": "3FE4F79E13C3C1C2",
+      "y": "C00C000000000000",
+      "group": "equality_pair_fix_not_strict"
+    },
+    {
+      "x": "3FF2A4269F8149D1",
+      "y": "C02A000000000000",
+      "group": "strict_pair_fix"
+    },
+    {
+      "x": "3FF4B1DD264786A5",
+      "y": "C02A000000000000",
+      "group": "actual_public_fast_down_nocross"
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "group": "actual_public_full_up_nocross"
+    },
+    {
+      "x": "3FF60E08AA312590",
+      "y": "C008000000000000",
+      "group": "actual_public_fast_up_nocross"
+    },
+    {
+      "x": "3FF837884FE59E7B",
+      "y": "C020000000000000",
+      "group": "actual_public_full_up_cross"
+    },
+    {
+      "x": "3FD789A5EE5BFC5C",
+      "y": "BFF8000000000000",
+      "group": "actual_public_fast_up_cross"
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "C00C000000000000",
+      "group": "actual_public_full_down_nocross"
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "original153_unchanged_control"
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "original153_unchanged_control"
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "original153_unchanged_control"
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "group": "original153_unchanged_control"
+    }
+  ],
+  "strict_fixed_pairs": [
+    [
+      "3FF2A4269F8149D1",
+      "C02A000000000000"
+    ]
+  ],
+  "equal_fixed_pairs": [
+    [
+      "3FE4F79E13C3C1C2",
+      "C00C000000000000"
+    ]
+  ],
+  "public_increase_witnesses": [
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "READY",
+      "candidate": "3FC2B607BC82DBE3",
+      "candidate_instructions": 1705,
+      "parent_instructions": 1838,
+      "expected": "3FC2B607BC82DBE3",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1526,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_exact": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1547,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_integer": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1584,
+          "correct_Qfplib": true
+        }
+      },
+      "parent_boundary_instructions": 1729,
+      "boundary_calls": [
+        {
+          "power": "3f68b73c9273e8dacc3abf490328d7d302000000e0000000",
+          "denominator": 1,
+          "inverse": 1,
+          "cell": "3FC2B607BC82DBE2"
+        }
+      ],
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0014df16e43db0950000000000000000fdffffff00000000",
+          "b": "3f68b73c9273e8dacc3abf490328d7d302000000e0000000"
+        }
+      ],
+      "parent_reciprocal_instructions": 1697,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "401B5D0E724796ED"
+        }
+      ],
+      "software_seed_divisors": [],
+      "first_product_reciprocals": [
+        627838841
+      ],
+      "remainder_certificates": [
+        {
+          "base": 906464855,
+          "u": 1917294317,
+          "v": 2030417861,
+          "estimate": 115700,
+          "exact": 76433,
+          "fast": false,
+          "negative": false,
+          "cross_overflow": false,
+          "expected_saving": -8,
+          "full": true,
+          "decision": "up"
+        }
+      ]
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "DIRTY",
+      "candidate": "3FC2B607BC82DBE3",
+      "candidate_instructions": 1714,
+      "parent_instructions": 2244,
+      "expected": "3FC2B607BC82DBE3",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1526,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_exact": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1547,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_integer": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1584,
+          "correct_Qfplib": true
+        }
+      },
+      "parent_boundary_instructions": 2135,
+      "boundary_calls": [
+        {
+          "power": "3f68b73c9273e8dacc3abf490328d7d302000000e0000000",
+          "denominator": 1,
+          "inverse": 1,
+          "cell": "3FC2B607BC82DBE2"
+        }
+      ],
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0014df16e43db0950000000000000000fdffffff00000000",
+          "b": "3f68b73c9273e8dacc3abf490328d7d302000000e0000000"
+        }
+      ],
+      "parent_reciprocal_instructions": 1706,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "401B5D0E724796ED"
+        }
+      ],
+      "software_seed_divisors": [
+        112080
+      ],
+      "first_product_reciprocals": [
+        627838841
+      ],
+      "remainder_certificates": [
+        {
+          "base": 906464855,
+          "u": 1917294317,
+          "v": 2030417861,
+          "estimate": 115700,
+          "exact": 76433,
+          "fast": false,
+          "negative": false,
+          "cross_overflow": false,
+          "expected_saving": -8,
+          "full": true,
+          "decision": "up"
+        }
+      ]
+    }
+  ]
+}

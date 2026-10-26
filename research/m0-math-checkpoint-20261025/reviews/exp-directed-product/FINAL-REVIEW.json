@@ -1,0 +1,332 @@
+{
+  "schema": "independent-private-exp-directed-product-component-v1",
+  "status": "TECH_GO_PRIVATE_DIRECTED_EXP_AND_SHARED_PRODUCT_COMPONENT_ONLY",
+  "reviewer": "/root/classic_acceptance",
+  "scope": "Frozen directed normal exp gate + 79-to77 shared private product delta against accepted dyadic parent. No EA9/main/release/canonical promotion.",
+  "findings": [],
+  "blocking_findings": [],
+  "accepted_parent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-dyadic-product-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 27357,
+    "sha256": "c6aef2f9683f8d234f850363cbfda7f687d65c7ba9581987b723a14db37c536a"
+  },
+  "accepted_frozen_target": {
+    "FROZEN": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/FROZEN.json",
+      "bytes": 46510,
+      "sha256": "e6ce76786eeb9443af86b04596cac95fc56aba312ba6bdd1b0d2226da8b69b10"
+    },
+    "HANDOFF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/HANDOFF.md",
+      "bytes": 5120,
+      "sha256": "9944b911c477e44fdc12bf41fd20c1b9a623edd1e1f6648e932a2dbd7a775308"
+    },
+    "result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/result.json",
+      "bytes": 11496,
+      "sha256": "69a3ec384e20e03f943d8b756335f17166bddd0f2990666cac39f8649b6687d9"
+    },
+    "CPP": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/candidate/native_eabi_m0.cpp",
+      "bytes": 42858,
+      "sha256": "575da3303b57fec5afd30b8f8737b58d6519987b9f2344c83c9ec47c83cdb274"
+    },
+    "ASM_include": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/candidate/native_eabi_m0_pow_exp_product.inc",
+      "bytes": 2317,
+      "sha256": "3f7295c25fb0aa69a52151f3ceffb50de41a45c78e51dd36efd58937a6f6f82c"
+    },
+    "ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/candidate.elf",
+      "bytes": 1127828,
+      "sha256": "b4049e5a39c2bc9d663acab44a7683f1811daedd1c43497cd5ad7588b1b408ac"
+    },
+    "control_ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/control.elf",
+      "bytes": 1127104,
+      "sha256": "7368111c27a1d0ce06ae383bd9d81f6cc4038de99d32777b1308cd58db39a67e"
+    }
+  },
+  "provenance": {
+    "all295_sealed_members_and1050_source_lineage_pins_verified": true,
+    "exact_two_path_patch_against_accepted_parent": true,
+    "producer_files_rechecked_unchanged": true,
+    "own_actual_CPP_object_product_object_entire_ELF_rebuilds": 3,
+    "own_literal_unit_object_entire_ELF_rebuilds": 2,
+    "all_complete_files_byteexact_without_exclusions": true,
+    "author11_rebuild_records_verified_not_claimed_as_own_runs": true
+  },
+  "numeric_proof": {
+    "new_predicate_domain": "normal error4, tail511, positive input, negative displacement; old guard and refinement retained",
+    "independent_proof": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/NUMERIC-REVIEW.md",
+      "bytes": 4148,
+      "sha256": "b15e0bd008e4901cfd9c245b448d3967ad069fefb8151ca5963bd6bea4af365c"
+    },
+    "exact_rationals": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/proof.json",
+      "bytes": 2036,
+      "sha256": "d9710c74015aba1e8bb095c519d835f1721de8b8b950a9ae4b005098feac814a"
+    },
+    "coefficient_strict5over2": true,
+    "negative_tail_T_nonpositive_entire_integer_domain": true,
+    "square_parity_upper_strict1": true,
+    "Taylor_plus_split_and_table_cross_each_strict1over256": true,
+    "curvature_ratio_strict6over5": true,
+    "all512_loaded_Q62_Q94_root_and_signed_bias_checked": true,
+    "all_source_integer_ranges_and_intentional_unsigned_wrap_checked": true,
+    "rounding_result": "Strict upper<=256 implies V<q+1. Unchanged radius4 excludes lower midpoint q-1023. Equality boundary safe; unresolved cases refine.",
+    "old_global_radius_inverse_square_tiny_IEEE_refinement_adaptive_proofs": "Reused accepted-parent proof only by exact source/allocated bytes/relocations/tables binding; not requalified by a new huge corpus."
+  },
+  "private_R12_contract": {
+    "ordinary_scalar_C_ABI_provides_extra_result": false,
+    "actual_linked_definition_marker": "0x101a14f0 GLOBAL HIDDEN, zero bytes",
+    "actual_product_entry": "0x20038ee5",
+    "actual_Flash_veneer": "0x1016b3b8,16 bytes, tail BX to actual producer preserving LR",
+    "actual_product_F_capture": "R12<-R4 immediately before LSLS rounding; no other R12 mention in leaf",
+    "actual_producer_to_marker_instructions": 2,
+    "actual_marker_to_consumer_live_instructions_before_MOV_from_R12": 88,
+    "actual_consumer": "0x101a164c",
+    "all_current_paths_to_consumer_no_R12_clobber_or_call": true,
+    "actual_guard_AST_positive_and11_rejection_controls": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/private-guard.json",
+      "bytes": 1043,
+      "sha256": "af38beedb97bb7c77dc24543866680e0bff0457e8a29a90209d7ef78b5adf415"
+    },
+    "kernel_arithmetic_bijection_all_raw_scalar_values_flags_PCS": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/kernel-equivalence.json",
+      "bytes": 1034,
+      "sha256": "76b4b5d8783498e20de2967fba9dbb991c9b613ac7d8c9608aded4093de1df0c"
+    },
+    "numeric_retained_product_oracle_domain": "a<2^63,b<2^54 only; unrestricted raw64 cases check parent/new value equivalence and exact retained F, not an unsupported integer product oracle.",
+    "mandatory_integration_requirement": "Install/adapt and rerun the required guard on the actual integrated ELF, fresh disassembly, actual Flash veneer and compiler/flags. Preserve both producer-to-definition and definition-to-consumer closure. A stale private-overlay guard/receipt or scalar prototype alone is insufficient.",
+    "integration_approval_here": false
+  },
+  "independent_bounded_fresh_checks": {
+    "ARM": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/arm.json",
+      "bytes": 1226,
+      "sha256": "367c551c2a33207e4bc75b87f478ac7594a706c2ce6585f1c3fa11fdd2c90b26"
+    },
+    "qualified_ARM_calls": 2106,
+    "fresh_directed_MPFR_inputs": 143,
+    "sNaN_shortcuts_separate": 2,
+    "MPFR_version": "4.2.2",
+    "leaf_raw_pairs": 185,
+    "all16_incoming_NZCV_variants_on8_pairs": true,
+    "leaf_calls": 996,
+    "leaf_fixed79_to77": true,
+    "private_F_exact_all_leaf_calls": true,
+    "leaf_frame36_and_bounded_stack_reads_writes_PCS": true,
+    "literal_current_predicate_calls": 240,
+    "accepted": 211,
+    "rejected": 29,
+    "admission_compared_to_unrounded_independent_Fraction_enclosure": true,
+    "public_exp_inputs": 140,
+    "public_exp_ARM": 840,
+    "actual_new_consumer_events": 24,
+    "all11_fixed_and_adjacent_plus_original16_and_IEEE_index0_regressions": true,
+    "all16_original_exp_examples_strictly_faster_than_correct_Qfplib_bothSIO": true,
+    "shared_caller_inputs": 5,
+    "shared_caller_ARM": 30,
+    "three_old_pow_ties_now_strict_and_two_unchanged_sin_cos_controls": true,
+    "all_DIRTY28bytes_preserved_and_READY_not_DIRTY": true,
+    "R4_R11_SP_checked_every_call": true,
+    "real_ROM_initializers_excluded_no_arithmetic_models": true,
+    "observed_public_stack_bytes": {
+      "candidate": 376,
+      "parent": 376,
+      "Qfplib": 32
+    },
+    "observed_only_not_universal": true
+  },
+  "all_frozen_corpus_accounting": {
+    "evidence": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/accounting.json",
+      "bytes": 2082,
+      "sha256": "b85484a713eb25cf05f3211a3323e4f76a15650d2ff9e09a70346b9ab90ea27b"
+    },
+    "ARM_or_MPFR_reexecution_for_recount": 0,
+    "same456750_parent1541_candidate1530_fixed11": true,
+    "expanded467366_losses1896_equals1530old_plus366new": true,
+    "all1896_currentlosses_already_lost_in_parent": true,
+    "profiled_exp_states934732": true,
+    "correct_Qfplib_faster536584_slower3792": true,
+    "wrong_Qfplib_states394356_retained": true,
+    "cost_increase_states_retained": 3448,
+    "increase_deltas": {
+      "1": 3348,
+      "5": 22,
+      "2": 34,
+      "50": 4,
+      "7": 34,
+      "4": 6
+    },
+    "increase_classes": {
+      "wrong_Qfplib": 2022,
+      "already_losing_correct_Qfplib": 1392,
+      "still_no_slower_correct_Qfplib": 34
+    },
+    "expanded_pow_remaining_raw_pairs": 7901,
+    "pow10085_historical_reference_variants_10078_currentlosing_10081_fresh_distinctstates": true,
+    "author_fresh_ARM1386951_and_MPFR467553_separate_from_own": true,
+    "author2sNaN_and1919_logpreimage_generations_not_validation": true,
+    "bare141320_reused_by_exact_final77kernel_binding_not_claimed_freshR9": true,
+    "author_original507_separate_union": {
+      "no_slower": 423,
+      "strictly_faster": 417,
+      "equal": 6,
+      "remaining": 84,
+      "by_operation": {
+        "pow": 48,
+        "exp": 0,
+        "sin": 22,
+        "cos": 14
+      },
+      "not_one_integrated_binary": true
+    },
+    "previous_independent422_ledger_not_modified": true,
+    "whole507_or_one_integrated_binary_accepted_here": false
+  },
+  "resources_and_isolation": {
+    "CPP_core5088_to5208_plus120_bytes": true,
+    "ASM_active158_to154": true,
+    "same168byte_slot14bytes_outside_function_padding": true,
+    "static_exp_frame96_unchanged": true,
+    "leaf_frame36_unchanged": true,
+    "no_new_tables_BSS_globalRAM_libgcc_ROMmath_dependencies": true,
+    "refinement3736bytes13relocations_tiny472bytes_unchanged": true,
+    "all_other_CPP_allocated_bytes_semantic_relocations_BSS_equal": true,
+    "all_RP_ASM_outside_slot_allocated_bytes_relocations_symbol_addresses_equal": true,
+    "generic_M0_and_M4soft_hard_selected_objects_equal": true,
+    "whole_firmware_GC_size_universal_stack_and_hardware_cycle_bounds_not_measured": true
+  },
+  "evidence": {
+    "binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/binding.json",
+      "bytes": 91293,
+      "sha256": "d72644855b6614e83b08b847fca68a227e1b01d56205efa8c70bcf5cc9b0d5ee"
+    },
+    "proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/proof.json",
+      "bytes": 2036,
+      "sha256": "d9710c74015aba1e8bb095c519d835f1721de8b8b950a9ae4b005098feac814a"
+    },
+    "private-guard.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/private-guard.json",
+      "bytes": 1043,
+      "sha256": "af38beedb97bb7c77dc24543866680e0bff0457e8a29a90209d7ef78b5adf415"
+    },
+    "kernel-equivalence.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/kernel-equivalence.json",
+      "bytes": 1034,
+      "sha256": "76b4b5d8783498e20de2967fba9dbb991c9b613ac7d8c9608aded4093de1df0c"
+    },
+    "unit-binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/unit-binding.json",
+      "bytes": 15147,
+      "sha256": "8c58dd32c94459081a2440797f7e85d253afcf8f3a723462021db11749886362"
+    },
+    "arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/arm.json",
+      "bytes": 1226,
+      "sha256": "367c551c2a33207e4bc75b87f478ac7594a706c2ce6585f1c3fa11fdd2c90b26"
+    },
+    "public-results.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/public-results.json",
+      "bytes": 148231,
+      "sha256": "e7d093a1238f583003497e1990691bf21607b8cae2a45b2bd9f027cd25cc1dd6"
+    },
+    "actual-private-F-events.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/actual-private-F-events.json",
+      "bytes": 6281,
+      "sha256": "b4078e760229744cadc1100a3418216575ae25e6b4fe66307dff5c8b60c480b9"
+    },
+    "caller-results.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/caller-results.json",
+      "bytes": 4013,
+      "sha256": "677b1a0ec2c8eb52ece6dbc3f6787ea6a8c930b970ca8c1f38026efa2a2fe0b2"
+    },
+    "accounting.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/accounting.json",
+      "bytes": 2082,
+      "sha256": "b85484a713eb25cf05f3211a3323e4f76a15650d2ff9e09a70346b9ab90ea27b"
+    },
+    "final-seal-recheck.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/final-seal-recheck.json",
+      "bytes": 160,
+      "sha256": "e7baf474e448e465513b6112d9458d1ce64c36d95ce5ea89da3f7447c5045db9"
+    },
+    "EXECUTION-NOTES.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/EXECUTION-NOTES.json",
+      "bytes": 1489,
+      "sha256": "15977e3f36b4e20dd70b0127827faa3f21a1aa9a89572ef2caf8602a01ce4fe9"
+    },
+    "sha256.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/sha256.json",
+      "bytes": 10405,
+      "sha256": "65ec52f493ae329f3f8ffc79cec5ea35e43299f3890fb7c0acd0ae2a44470b06"
+    }
+  },
+  "reused_producer_focused_evidence": {
+    "private-return-proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/private-return-proof.json",
+      "bytes": 1831,
+      "sha256": "fafd75ba29a83cb75973d95d1428a2386e19598afd2f3a9f4a410864c5e89c64"
+    },
+    "refine-and-frame-binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/refine-and-frame-binding.json",
+      "bytes": 405,
+      "sha256": "0b0d301ddf5f3b2d6454fe8901036bfdd5ca7536b108caffd95e6d11fb2ce49d"
+    },
+    "bare-unit-final-binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/bare-unit-final-binding.json",
+      "bytes": 500,
+      "sha256": "9d8b4c325dcb7a802f956262f4fd687a37edb7a1657263de68273f640872ee91"
+    },
+    "unit-proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/unit-proof.json",
+      "bytes": 895,
+      "sha256": "9955867c7e9548395252583f9bbee4adab2f7afb733761b572c3fba007644689"
+    },
+    "product-flags-proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/product-flags-proof.json",
+      "bytes": 667,
+      "sha256": "ab954df8c05b8e823f12f9a27952283aca9b5ba0999a4bf2b949a0f783fa84ff"
+    },
+    "direction-unit-proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/direction-unit-proof.json",
+      "bytes": 517,
+      "sha256": "d71f5c763bb8f7b95267599c1cca9b89aea326cfbace781159a106d33664e2a1"
+    },
+    "caller-proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/caller-proof.json",
+      "bytes": 238064,
+      "sha256": "06f098f561f6b7847bfb1797479deaf93c55d7649a57f60ce2da69e621427742"
+    },
+    "remaining-parent-audit.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/remaining-parent-audit.json",
+      "bytes": 295167,
+      "sha256": "e6c7711f5f39a3988cbd5989d839fb4d6c6079b866d6859ac4be740033f6bfb5"
+    },
+    "pow-loss-replay.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/pow-loss-replay.json",
+      "bytes": 13037672,
+      "sha256": "92433b438b3ae6f13a497d1da3354d8aaf09ac8a8b0edf636e7baf5fa72662eb"
+    },
+    "VALIDATION-NOTES.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/VALIDATION-NOTES.json",
+      "bytes": 1640,
+      "sha256": "d40167e2c908938617565673d1ad8ef00c0a91d7857133b62bdb7dc22f140ae9"
+    }
+  },
+  "authority": {
+    "private_component_HOST_GO": true,
+    "integration_GO": false,
+    "canonical_or_whole_math_GO": false,
+    "all507_goal_complete": false,
+    "hardware_GO": false,
+    "main_release_or_publication_GO": false,
+    "devices_ports_inventory_liveUUID_Git_canonical_mutations": false
+  }
+}

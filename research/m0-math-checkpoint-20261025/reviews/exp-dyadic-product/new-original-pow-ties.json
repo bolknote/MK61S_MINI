@@ -1,0 +1,80 @@
+[
+  {
+    "operation": "pow",
+    "x": "3FEFFFFFFFFFFF2B",
+    "y": "40BA76B89D3E311A",
+    "stream": "near_one_variable_exponent",
+    "SIO": "READY",
+    "expected": "3FEFFFFFFFE9FB38",
+    "outputs": {
+      "parent": "3FEFFFFFFFE9FB38",
+      "candidate": "3FEFFFFFFFE9FB38",
+      "Qfplib": "3FEFFFFFFFE9FB38"
+    },
+    "instructions": {
+      "parent": 1346,
+      "candidate": 1344,
+      "Qfplib": 1344
+    },
+    "product_arguments": [
+      [
+        "4000000000000000",
+        "00000000B0263CD6"
+      ]
+    ],
+    "product_calls": 1,
+    "Qfplib_correct": true
+  },
+  {
+    "operation": "pow",
+    "x": "3FF000000000004F",
+    "y": "40EAAD0A6A243E3E",
+    "stream": "near_one_variable_exponent",
+    "SIO": "READY",
+    "expected": "3FF000000041DB32",
+    "outputs": {
+      "parent": "3FF000000041DB32",
+      "candidate": "3FF000000041DB32",
+      "Qfplib": "3FF000000041DB32"
+    },
+    "instructions": {
+      "parent": 1322,
+      "candidate": 1320,
+      "Qfplib": 1320
+    },
+    "product_arguments": [
+      [
+        "4000000000000000",
+        "000000041DB31B68"
+      ]
+    ],
+    "product_calls": 1,
+    "Qfplib_correct": true
+  },
+  {
+    "operation": "pow",
+    "x": "3FF000000000017C",
+    "y": "4055D6591BBBC2B4",
+    "stream": "near_one_variable_exponent",
+    "SIO": "READY",
+    "expected": "3FF00000000081A9",
+    "outputs": {
+      "parent": "3FF00000000081A9",
+      "candidate": "3FF00000000081A9",
+      "Qfplib": "3FF00000000081A9"
+    },
+    "instructions": {
+      "parent": 1313,
+      "candidate": 1311,
+      "Qfplib": 1311
+    },
+    "product_arguments": [
+      [
+        "4000000000000000",
+        "00000000081A8B11"
+      ]
+    ],
+    "product_calls": 1,
+    "Qfplib_correct": true
+  }
+]

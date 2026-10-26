@@ -1,0 +1,109 @@
+{
+  "status": "PASS_PRIVATE_NUMERATOR_ONE_CALLER_GUARD_COMMON_TAIL_AND_INACTIVE_SOURCE_PROOFS",
+  "candidate_ELF_sha256": "90dbb82bf4a67fc0b81f3b1c73f19a6f251fb56b34d1867d587b37c2a445b3fd",
+  "all_calls_source_proven_R0zero_R1binary64positive_one": true,
+  "private_hidden_entry_named_reciprocal1_not_general_ddiv": true,
+  "all2048_exponent_guards_equivalent_and_R6_addends_identical": true,
+  "normal_guarded_exponents": [
+    1,
+    2044
+  ],
+  "guard_truth_table_sha256": "0ba86bbd3f180d2b9f9a1f5d1e86c9a978b506d0b6cedb8cfadb35ba31b20c06",
+  "exact_product_identity": "double_low_high(2^31*u1)=(0,u1) modulo2^64 for every uint32 u1",
+  "dead_R1_R2_R3_R4_R7_values_overwritten_before_next_use": true,
+  "common_after_second_product_tail_bytes": 186,
+  "common_tail_sha256": "66f0862a2bef98f3fad95c6fa9cf2e9202bf91e10b656750169d5553958390cb",
+  "all4_common_suffixes_byte_identical": true,
+  "seed312B_code_and_table_blob_unchanged": true,
+  "READY_nine_ALU_hardware_latency_block_unchanged": true,
+  "software_only_dead_numerator_unpacked_and_R0_setup_removed": true,
+  "no_new_table_values_RAM_or_libgcc": true,
+  "private_allocated_bytes": [
+    1168,
+    1060
+  ],
+  "default_M0_M4_selected_root_and6_new_disabled_objects_empty": true,
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/candidate-ddiv.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/generic_M0-candidate-ddiv-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/candidate-software.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/generic_M0-candidate-software-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/candidate-ddiv.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/M4_soft-candidate-ddiv-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/candidate-software.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/M4_soft-candidate-software-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-mfloat-abi=hard",
+      "-mfpu=fpv4-sp-d16",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/candidate-ddiv.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/M4_hard-candidate-ddiv-disabled.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=0",
+      "-DMK61_M0_RP2040_EABI=0",
+      "-mfloat-abi=hard",
+      "-mfpu=fpv4-sp-d16",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/candidate-software.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/M4_hard-candidate-software-disabled.o"
+    ]
+  ],
+  "disabled_outputs": {
+    "generic_M0-candidate-ddiv-disabled.o": "199c4debc85f37dac2b996a7da0007cf73e847566d928ec2e898fdaeb92e3fc4",
+    "generic_M0-candidate-software-disabled.o": "199c4debc85f37dac2b996a7da0007cf73e847566d928ec2e898fdaeb92e3fc4",
+    "M4_soft-candidate-ddiv-disabled.o": "ff20f202e576eae54ac16b6a33a1e35ccd28fc5d96cdc4ed999f247671ba6a84",
+    "M4_soft-candidate-software-disabled.o": "ff20f202e576eae54ac16b6a33a1e35ccd28fc5d96cdc4ed999f247671ba6a84",
+    "M4_hard-candidate-ddiv-disabled.o": "607c0964c415f74ffb89a4336373274ba50e660a1bac13fe59c2db5c89cbb1cc",
+    "M4_hard-candidate-software-disabled.o": "607c0964c415f74ffb89a4336373274ba50e660a1bac13fe59c2db5c89cbb1cc"
+  },
+  "actual_ARM_or_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

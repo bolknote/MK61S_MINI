@@ -1,0 +1,10 @@
+{
+  "status": "PASS_POSTSEAL_ALL_FILES_AND_INPUT_PINS",
+  "artifact_files_verified": 53,
+  "input_pins_verified": 557,
+  "result_sha256": "607c0e11a53050cb4e24aa9f3616fad32fd80dc5eca91eb8e8a47a82f871293e",
+  "HANDOFF_sha256": "d707166ed58c073c8d5aecad5c80446b406c4d62b36d27134ac65298cd5102fe",
+  "source_sha256": "ba084abda5a2c3d71071ae800224c552efce2652d2838735782cd16e764b090e",
+  "ELF_sha256": "272ecb817c396bd655cb19132f4df97c4d5d9da6046dc999a94a164de55e4425",
+  "no_frozen_or_canonical_overlay_written": true
+}

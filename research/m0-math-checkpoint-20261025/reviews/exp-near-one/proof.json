@@ -1,0 +1,308 @@
+{
+  "status": "PASS_INDEPENDENT_RATIONAL_AND_INTEGER_RANGE_PROOF",
+  "high_product_omission_max": 55339106321221812225,
+  "high_product_absolute_bound": "114689/32768",
+  "middle_omission_max": 562937068519425,
+  "middle_directed_error_strict3": true,
+  "first_non_ADC_column4_add_max": 67238907,
+  "constants_nearest_Q48": {
+    "6": 46912496118443,
+    "24": 11728124029611,
+    "120": 2345624805922
+  },
+  "horner_Q48_error": "115514267916403/32985348833280",
+  "horner_strict4": true,
+  "remaining_rounding_square_and_Taylor_error": "1186126790314176509/44329216455475200",
+  "remaining_strict27": true,
+  "coefficient_upper_bounds": {
+    "c2": "5765170472989622407/491520",
+    "c1": "47229429999173468321927/1006632960",
+    "tail": "47229430006389076293767/2061584302080"
+  },
+  "per_binade": [
+    {
+      "e": -32,
+      "x64_right": 20,
+      "square_shift": 58,
+      "Z_max": 274877906943,
+      "extra": 0,
+      "fifth_error": 1,
+      "error_max": 33,
+      "pack_shifts": [
+        48,
+        47
+      ]
+    },
+    {
+      "e": -31,
+      "x64_right": 19,
+      "square_shift": 57,
+      "Z_max": 549755813887,
+      "extra": 0,
+      "fifth_error": 1,
+      "error_max": 33,
+      "pack_shifts": [
+        47,
+        46
+      ]
+    },
+    {
+      "e": -30,
+      "x64_right": 18,
+      "square_shift": 56,
+      "Z_max": 1099511627775,
+      "extra": 0,
+      "fifth_error": 1,
+      "error_max": 33,
+      "pack_shifts": [
+        46,
+        45
+      ]
+    },
+    {
+      "e": -29,
+      "x64_right": 17,
+      "square_shift": 55,
+      "Z_max": 2199023255551,
+      "extra": 0,
+      "fifth_error": 1,
+      "error_max": 33,
+      "pack_shifts": [
+        45,
+        44
+      ]
+    },
+    {
+      "e": -28,
+      "x64_right": 16,
+      "square_shift": 54,
+      "Z_max": 4398046511103,
+      "extra": 0,
+      "fifth_error": 1,
+      "error_max": 33,
+      "pack_shifts": [
+        44,
+        43
+      ]
+    },
+    {
+      "e": -27,
+      "x64_right": 15,
+      "square_shift": 53,
+      "Z_max": 8796093022207,
+      "extra": 0,
+      "fifth_error": 1,
+      "error_max": 33,
+      "pack_shifts": [
+        43,
+        42
+      ]
+    },
+    {
+      "e": -26,
+      "x64_right": 14,
+      "square_shift": 52,
+      "Z_max": 17592186044415,
+      "extra": 0,
+      "fifth_error": 1,
+      "error_max": 33,
+      "pack_shifts": [
+        42,
+        41
+      ]
+    },
+    {
+      "e": -25,
+      "x64_right": 13,
+      "square_shift": 51,
+      "Z_max": 35184372088831,
+      "extra": 0,
+      "fifth_error": 1,
+      "error_max": 33,
+      "pack_shifts": [
+        41,
+        40
+      ]
+    },
+    {
+      "e": -24,
+      "x64_right": 12,
+      "square_shift": 50,
+      "Z_max": 70368744177663,
+      "extra": 0,
+      "fifth_error": 1,
+      "error_max": 33,
+      "pack_shifts": [
+        40,
+        39
+      ]
+    },
+    {
+      "e": -23,
+      "x64_right": 11,
+      "square_shift": 49,
+      "Z_max": 140737488355327,
+      "extra": 0,
+      "fifth_error": 1,
+      "error_max": 33,
+      "pack_shifts": [
+        39,
+        38
+      ]
+    },
+    {
+      "e": -22,
+      "x64_right": 10,
+      "square_shift": 48,
+      "Z_max": 281474976710654,
+      "extra": 1,
+      "fifth_error": 1,
+      "error_max": 34,
+      "pack_shifts": [
+        38,
+        37
+      ]
+    },
+    {
+      "e": -21,
+      "x64_right": 9,
+      "square_shift": 47,
+      "Z_max": 562949953421308,
+      "extra": 2,
+      "fifth_error": 1,
+      "error_max": 39,
+      "pack_shifts": [
+        37,
+        36
+      ]
+    },
+    {
+      "e": -20,
+      "x64_right": 8,
+      "square_shift": 46,
+      "Z_max": 1125899906842616,
+      "extra": 4,
+      "fifth_error": 1,
+      "error_max": 49,
+      "pack_shifts": [
+        36,
+        35
+      ]
+    },
+    {
+      "e": -19,
+      "x64_right": 7,
+      "square_shift": 45,
+      "Z_max": 2251799813685232,
+      "extra": 8,
+      "fifth_error": 1,
+      "error_max": 69,
+      "pack_shifts": [
+        35,
+        34
+      ]
+    },
+    {
+      "e": -18,
+      "x64_right": 6,
+      "square_shift": 44,
+      "Z_max": 4503599627370464,
+      "extra": 16,
+      "fifth_error": 1,
+      "error_max": 109,
+      "pack_shifts": [
+        34,
+        33
+      ]
+    },
+    {
+      "e": -17,
+      "x64_right": 5,
+      "square_shift": 43,
+      "Z_max": 9007199254740928,
+      "extra": 32,
+      "fifth_error": 1,
+      "error_max": 189,
+      "pack_shifts": [
+        33,
+        32
+      ]
+    },
+    {
+      "e": -16,
+      "x64_right": 4,
+      "square_shift": 42,
+      "Z_max": 18014398509481856,
+      "extra": 64,
+      "fifth_error": 5,
+      "error_max": 353,
+      "pack_shifts": [
+        32,
+        31
+      ]
+    },
+    {
+      "e": -15,
+      "x64_right": 3,
+      "square_shift": 41,
+      "Z_max": 36028797018963712,
+      "extra": 128,
+      "fifth_error": 69,
+      "error_max": 737,
+      "pack_shifts": [
+        31,
+        30
+      ]
+    },
+    {
+      "e": -14,
+      "x64_right": 2,
+      "square_shift": 40,
+      "Z_max": 72057594037927424,
+      "extra": 256,
+      "fifth_error": 84,
+      "error_max": 1392,
+      "pack_shifts": [
+        30,
+        29
+      ]
+    },
+    {
+      "e": -13,
+      "x64_right": 1,
+      "square_shift": 39,
+      "Z_max": 144115188075854848,
+      "extra": 512,
+      "fifth_error": 1325,
+      "error_max": 3913,
+      "pack_shifts": [
+        29,
+        28
+      ]
+    },
+    {
+      "e": -12,
+      "x64_right": 0,
+      "square_shift": 38,
+      "Z_max": 288230376151709696,
+      "extra": 1024,
+      "fifth_error": 0,
+      "error_max": 5148,
+      "pack_shifts": [
+        28,
+        27
+      ]
+    }
+  ],
+  "maximum_E": 5148,
+  "all_declared_shift_and_operand_ranges": true,
+  "coarse_fifth_32classes_times2_binades": 64,
+  "division_u_max": 242294,
+  "division_domain_values_proved_algebraically": 242295,
+  "division_boundary_spot_checks": 36,
+  "division_not_ARM_calls": true,
+  "HOST_packing_interval_identity_checks": 2688,
+  "HOST_checks_not_ARM_calls": true,
+  "RNE_proof": "The strict enclosure and modular veto exclude every midpoint for admitted inputs; integer half-up displacement then equals RNE. Unresolved inputs use unchanged refinement.",
+  "no_device_Git_canonical_network": true
+}

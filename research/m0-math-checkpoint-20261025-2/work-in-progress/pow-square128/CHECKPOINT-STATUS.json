@@ -1,0 +1,20 @@
+{
+  "status": "UNIT_AND_ORIGINAL153_PILOT_PASS_FULL_QUALIFICATION_NOT_RUN",
+  "parent_directory": ".build/m0-pow-exp-table-product-20261025",
+  "parent_FROZEN_sha256": "dd0ec3663009cd390c710611e57ccc23d18c733201911471feae6e52e58e7d1c",
+  "candidate_ELF_sha256": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898",
+  "unit_actual_ARM_calls": 36420,
+  "pilot_actual_ARM_calls": 918,
+  "pilot_oracle_evaluations": 153,
+  "pilot_original_losses": [
+    35,
+    34
+  ],
+  "full_corpus_prepared_states": 232936,
+  "full_qualification_executed": false,
+  "independent_review_complete": false,
+  "original507_score_not_promoted": true,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

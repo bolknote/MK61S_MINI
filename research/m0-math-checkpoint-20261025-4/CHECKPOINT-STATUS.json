@@ -1,0 +1,17 @@
+{
+  "status": "INTERMEDIATE_RECIPROCAL_COMPONENT_RESULTS_NOT_INTEGRATED",
+  "software_seed_lut_and_numerator_one_independently_reviewed": true,
+  "latest_inline_author_qualified": true,
+  "latest_inline_independent_review_complete": false,
+  "latest_inline_live_review_files_excluded": true,
+  "latest_pow_loss_pairs": 11371,
+  "latest_expanded_scalar_loss_states": 13,
+  "scalar_parent_cost_increase_states": 9664,
+  "remainder_certificate_model_only": true,
+  "original_pow153_remaining": 34,
+  "author_separate507_no_slower": 437,
+  "reviewed_separate507_no_slower": 422,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

@@ -1,0 +1,22 @@
+{
+  "status": "PROVISIONAL_SOURCE_MODEL_FOR9TERM_ARM_PRODUCTS_PRE_FULL_QUALIFICATION",
+  "domain_e": [
+    -32,
+    -12
+  ],
+  "rho": "1/2048",
+  "retained_high_product_absolute_error_bound": "16385/32768",
+  "retained_bit48_floor_absolute_error_strict3": true,
+  "Horner_tail_Q48_error_bound": "16509879441523/32985348833280",
+  "Horner_tail_error_strict513over1024": true,
+  "remaining_error_Q16_bound": "1186126790314176509/44329216455475200",
+  "remaining_error_strict27": true,
+  "input_scaled_full_square_Z": "floor(M^2/2^(36-e))",
+  "Z_strict_maximum": 288230376151711744,
+  "head": "floor(Z/2^48)<=1023",
+  "proof": "Z*T_error/2^48 <floor(head/2)+2; all remaining errors<27. Thus |correction error|<floor(Z/2^49)+29 Q16 input ulps. Distance greater than this guard excludes either side of output midpoint.",
+  "degree5_remainder_input_Q16_bound": "14680064/645075",
+  "degree4_remainder_input_Q16_bound": "65536/3932155",
+  "all_source_and_actual_integer_PCS_checks_still_required": true,
+  "hardware_accessed": false
+}

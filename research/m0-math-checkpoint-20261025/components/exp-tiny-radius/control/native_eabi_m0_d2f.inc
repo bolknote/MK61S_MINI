@@ -1,0 +1,140 @@
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+.syntax unified
+.cpu cortex-m0plus
+.thumb
+.macro df_normal lower
+ lsls r3,r0,#4
+ lsrs r0,#29
+ bcc .Ldf_pack\@
+ cmp r3,#0
+ beq .Ldf_tie\@
+ adds r0,#1
+.Ldf_pack\@:
+ asrs r2,r1,#30
+ .if \lower
+ adds r2,#1
+ .endif
+ lsls r2,#30
+ lsls r1,#3
+ adds r0,r1
+ adds r0,r2
+ bx lr
+.Ldf_tie\@:
+ // The final addition can include both exponent/sign bias and tie parity.
+ asrs r2,r1,#30
+ .if \lower
+ adds r2,#1
+ .endif
+ lsls r2,#30
+ lsls r1,#3
+ adds r0,r1
+ lsrs r3,r0,#1
+ adcs r0,r2
+ bx lr
+.endm
+.section .text.__aeabi_d2f,"ax",%progbits
+.align 2
+.global __aeabi_d2f
+.type __aeabi_d2f,%function
+.thumb_func
+__aeabi_d2f:
+ // C receives exponent bit10; the shifted word drops sign and bit10.
+ lsls r2,r1,#2
+ bcs .Ldf_upper
+ // Compare the entire64-bit input to the2^-150 midpoint. Borrow on
+ // low_word==0 includes its exact tie in the signed-zero return.
+ subs r3,r0,#1
+ ldr r3,=(873<<22)
+ sbcs r2,r3
+ bcc .Ldf_zero
+ // R2+borrow is a multiple of4. Subtracting one from the threshold
+ // classifies E>=897 identically for either low-word borrow state.
+ ldr r3,=((24<<22)-1)
+ cmp r2,r3
+ blo .Ldf_subnormal
+ df_normal 1
+.Ldf_upper:
+ ldr r3,=(127<<22)
+ cmp r2,r3
+ bhs .Ldf_overflow
+ df_normal 0
+.Ldf_zero:
+ lsrs r0,r1,#31
+ lsls r0,#31
+ bx lr
+.Ldf_overflow:
+ // This is also the binary32 quiet-NaN bit. Carry marks E==2047.
+ ldr r3,=(1<<22)
+ adds r2,r3
+ bcs .Ldf_special
+ asrs r0,r1,#31
+ lsls r0,#8
+ adds r0,#255
+ lsls r0,#23
+ bx lr
+.Ldf_special:
+ // After carry, R2 is only the high20 fraction bits shifted by2.
+ // OR keeps the top3 low-word payload bits intact while testing NaN.
+ orrs r0,r2
+ bne .Ldf_nan
+ lsrs r0,r1,#23
+ lsls r0,#23
+ bx lr
+.Ldf_nan:
+ lsrs r0,#29
+ lsls r2,r1,#12
+ lsrs r2,#9
+ orrs r0,r2
+ lsrs r1,#23
+ lsls r1,#23
+ orrs r0,r1
+ orrs r0,r3
+ bx lr
+.Ldf_subnormal:
+ // Catch every subnormal-range result which rounds to minimum normal.
+ ldr r3,=((24<<22)-4)
+ cmp r2,r3
+ bne .Ldf_subnormal_full
+ lsrs r3,r0,#29
+ cmp r3,#7
+ bne .Ldf_subnormal_full
+ lsrs r0,r1,#23
+ subs r0,#111
+ lsls r0,#23
+ bx lr
+.Ldf_subnormal_full:
+ mov r12,r1
+ lsls r2,r1,#1
+ lsrs r2,#21
+ ldr r3,=905
+ subs r2,r3,r2
+ // The top32 mantissa bits plus exact low21-bit sticky information.
+ lsls r1,#11
+ movs r3,#1
+ lsls r3,#31
+ orrs r1,r3
+ lsrs r3,r0,#21
+ orrs r1,r3
+ lsls r0,#11
+ mov r3,r1
+ lsrs r1,r2
+ bcc .Ldf_subnormal_pack
+ rsbs r2,r2,#0
+ adds r2,#33
+ lsls r3,r2
+ orrs r0,r3
+ beq .Ldf_subnormal_tie
+ adds r1,#1
+ b .Ldf_subnormal_pack
+.Ldf_subnormal_tie:
+ lsrs r2,r1,#1
+ adcs r1,r0
+.Ldf_subnormal_pack:
+ mov r0,r12
+ lsrs r0,#31
+ lsls r0,#31
+ orrs r0,r1
+ bx lr
+.ltorg
+.size __aeabi_d2f,.-__aeabi_d2f
+#endif

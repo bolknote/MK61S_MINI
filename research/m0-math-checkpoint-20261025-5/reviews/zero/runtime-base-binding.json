@@ -1,0 +1,27 @@
+{
+  "source": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/arm.py",
+  "copied_functions": [
+    "ref",
+    "save",
+    "memory",
+    "equal",
+    "call",
+    "expected",
+    "unit",
+    "loader",
+    "state"
+  ],
+  "unit_delta": "Noisy arbitrary R6 at macro entry; preserve R6 instead of now-dead R3. Same bounded sign-boundary inputs. Fresh production audit separately appended.",
+  "arithmetic_parent": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/accounting.py",
+  "whole_parent_harness_not_executed": true,
+  "copied_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/arm.py",
+    "bytes": 22170,
+    "sha256": "03d44c271999a5170a56ae092f062366edfba86862d970b708cc56cce8d5d935"
+  },
+  "bounded_unit_selection": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/unit-selection.json",
+    "bytes": 15561,
+    "sha256": "cd678b8f73bee141e5b9657fa2554844cf6d1d09aab2e6ed0f231ddca1aaff26"
+  }
+}

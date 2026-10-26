@@ -1,0 +1,16 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-dyadic-product-independent-20261024/rebuild/dyadic-unit.elf:     file format elf32-littlearm
+
+
+Disassembly of section .unit:
+
+10166000 <audit_dyadic_product>:
+10166000:	2202      	movs	r2, #2
+10166002:	2300      	movs	r3, #0
+10166004:	1812      	adds	r2, r2, r0
+10166006:	414b      	adcs	r3, r1
+10166008:	0799      	lsls	r1, r3, #30
+1016600a:	0890      	lsrs	r0, r2, #2
+1016600c:	4308      	orrs	r0, r1
+1016600e:	0899      	lsrs	r1, r3, #2
+10166010:	4770      	bx	lr

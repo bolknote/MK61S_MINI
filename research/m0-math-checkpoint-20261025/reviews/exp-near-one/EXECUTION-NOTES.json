@@ -1,0 +1,52 @@
+{
+  "status": "COMPLETED_CPU_ONLY_REVIEW_EXECUTION_RECORD",
+  "completed_before_restart": {
+    "binding_start": "174026",
+    "binding_completion": "a86bff",
+    "binding_exit": 0,
+    "proof": "f9d5e4",
+    "proof_exit": 0
+  },
+  "guard_and_initial_literal_wrapper": {
+    "tool": "ef541a",
+    "exit": 1,
+    "guard_controls_completed": true,
+    "cause": "Reviewer literal wrapper expected two indentation spaces; frozen producer wrapper contains one. The assertion failed before any unit rebuild or ARM execution.",
+    "correction": "literal_binding.py matches exact wrapper whitespace and resumes only literal binding. Completed guard controls were not rerun."
+  },
+  "resumed_literal_binding": {
+    "tool": "05f763",
+    "exit": 0,
+    "two_whole_exact_rebuilds": true
+  },
+  "initial_seal_aggregation": {
+    "tool": "0ce7d6",
+    "exit": 1,
+    "cause": "Reviewer initially compared all allocated sections against the producer Flash-only metric. The unchanged168-byte RAM product slot explains the exact difference.",
+    "correction": "Report both all allocated16648/17784 and Flash-only16480/17616; delta1136 is identical. No evidence had been written by the failed seal attempt and no test was rerun."
+  },
+  "own_ARM": {
+    "bare_tool": "891862",
+    "pack_tool": "55144a",
+    "public_tool": "e3b77e",
+    "all_exit0": true,
+    "Unicorn_runtime": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "Unicorn_JIT": "scoped require_escalated CPU-only approved; no rejected/default attempt or installation",
+    "qualified_calls": 1587,
+    "directed_MPFR_rounded_inputs": 176,
+    "sNaN_shortcuts_separate": 2,
+    "additional_correction_enclosures": 138
+  },
+  "raw_accounting": {
+    "start": "25e4cf",
+    "completion": "872945",
+    "exit": 0,
+    "ARM_calls": 0,
+    "MPFR_evaluations": 0
+  },
+  "no_completed_check_repeated_after_technical_restarts": true,
+  "physical_IO": 0,
+  "Git_operations": 0,
+  "canonical_access": 0,
+  "network_operations": 0
+}

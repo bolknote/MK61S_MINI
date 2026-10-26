@@ -1,0 +1,178 @@
+{
+  "status": "ALL_PARENT_REGRESSIONS_RETAINED",
+  "state_rows": 7,
+  "instruction_delta_histogram": {
+    "4": 2,
+    "3": 5
+  },
+  "rows": [
+    {
+      "x": "3FEDD3AEF365CBC8",
+      "group": "historical",
+      "SIO": "DIRTY",
+      "expected": "BFB200DC31BB7557",
+      "outputs": {
+        "resident": "BFB200DC31BB7557",
+        "Qfplib": "BFB200DC31BB7557",
+        "parent": "BFB200DC31BB7557",
+        "candidate": "BFB200DC31BB7557"
+      },
+      "instructions": {
+        "resident": 2904,
+        "Qfplib": 795,
+        "parent": 701,
+        "candidate": 705
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FE681010000003F",
+      "group": "all_main_denominators_low_limb_dispatch_boundaries",
+      "SIO": "READY",
+      "expected": "BFD687ED493A852A",
+      "outputs": {
+        "resident": "BFD687ED493A852A",
+        "Qfplib": "BFD687ED493A852B",
+        "parent": "BFD687ED493A852A",
+        "candidate": "BFD687ED493A852A"
+      },
+      "instructions": {
+        "resident": 2257,
+        "Qfplib": 781,
+        "parent": 2262,
+        "candidate": 2265
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FE681010000003F",
+      "group": "all_main_denominators_low_limb_dispatch_boundaries",
+      "SIO": "DIRTY",
+      "expected": "BFD687ED493A852A",
+      "outputs": {
+        "resident": "BFD687ED493A852A",
+        "Qfplib": "BFD687ED493A852B",
+        "parent": "BFD687ED493A852A",
+        "candidate": "BFD687ED493A852A"
+      },
+      "instructions": {
+        "resident": 2900,
+        "Qfplib": 781,
+        "parent": 2347,
+        "candidate": 2350
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FEC7001FFFFFFC1",
+      "group": "all_main_denominators_low_limb_dispatch_boundaries",
+      "SIO": "READY",
+      "expected": "BFBE36F5ED10DAC5",
+      "outputs": {
+        "resident": "BFBE36F5ED10DAC5",
+        "Qfplib": "BFBE36F5ED10DAC5",
+        "parent": "BFBE36F5ED10DAC5",
+        "candidate": "BFBE36F5ED10DAC5"
+      },
+      "instructions": {
+        "resident": 2255,
+        "Qfplib": 783,
+        "parent": 2260,
+        "candidate": 2263
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FEC7001FFFFFFC1",
+      "group": "all_main_denominators_low_limb_dispatch_boundaries",
+      "SIO": "DIRTY",
+      "expected": "BFBE36F5ED10DAC5",
+      "outputs": {
+        "resident": "BFBE36F5ED10DAC5",
+        "Qfplib": "BFBE36F5ED10DAC5",
+        "parent": "BFBE36F5ED10DAC5",
+        "candidate": "BFBE36F5ED10DAC5"
+      },
+      "instructions": {
+        "resident": 2906,
+        "Qfplib": 783,
+        "parent": 2341,
+        "candidate": 2344
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": true,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FEF6800FFFFFFBF",
+      "group": "all_main_denominators_low_limb_dispatch_boundaries",
+      "SIO": "READY",
+      "expected": "BF932D904F3414F6",
+      "outputs": {
+        "resident": "BF932D904F3414F6",
+        "Qfplib": "BF932D904F3414F5",
+        "parent": "BF932D904F3414F6",
+        "candidate": "BF932D904F3414F6"
+      },
+      "instructions": {
+        "resident": 2261,
+        "Qfplib": 797,
+        "parent": 2270,
+        "candidate": 2273
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      }
+    },
+    {
+      "x": "3FEF6800FFFFFFBF",
+      "group": "all_main_denominators_low_limb_dispatch_boundaries",
+      "SIO": "DIRTY",
+      "expected": "BF932D904F3414F6",
+      "outputs": {
+        "resident": "BF932D904F3414F6",
+        "Qfplib": "BF932D904F3414F5",
+        "parent": "BF932D904F3414F6",
+        "candidate": "BF932D904F3414F6"
+      },
+      "instructions": {
+        "resident": 2913,
+        "Qfplib": 797,
+        "parent": 2371,
+        "candidate": 2375
+      },
+      "correct": {
+        "resident": true,
+        "Qfplib": false,
+        "parent": true,
+        "candidate": true
+      }
+    }
+  ]
+}

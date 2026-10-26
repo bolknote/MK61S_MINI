@@ -1,0 +1,15 @@
+{
+  "source": "https://github.com/ARM-software/abi-aa/blob/2025Q4/aapcs32/aapcs32.rst",
+  "release": "2025Q4",
+  "issue_date": "2026-01-23",
+  "checked_on": "2026-10-24",
+  "sections": [
+    "6.2.1.1",
+    "6.2.1.2"
+  ],
+  "short_normative_excerpts": [
+    "SP mod 4 = 0",
+    "SP mod 8 = 0"
+  ],
+  "interpretation": "Word alignment holds throughout execution; double-word alignment is required at a public interface. The leaf has no calls while its internal SP is4mod8 and restores its incoming aligned SP. This does not qualify hardware exceptions or interrupt timing."
+}

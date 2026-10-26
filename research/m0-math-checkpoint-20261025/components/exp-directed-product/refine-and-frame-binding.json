@@ -1,0 +1,12 @@
+{
+  "status": "PASS_OLD_REFINE3736_BYTES_RELOCATIONS_AND_STATIC_CORE96_FRAME",
+  "core_bytes": [
+    5088,
+    5208
+  ],
+  "refine_prefix_sha256": "946899a53f67c3f78c746762e235f1fbd821c6579dd90d08ffcf863e755abbbf",
+  "refine_prefix_relocations": 13,
+  "public_prologue_hex": "f0b593b0",
+  "public_static_frame_bytes": 96,
+  "all_actual_rebuild_images_unchanged_by_enabling_required_builder_guard": true
+}

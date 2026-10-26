@@ -1,0 +1,64 @@
+reciprocal-zero-direct 0 / 20994 0.0
+reciprocal-zero-direct 1024 / 20994 2.3
+reciprocal-zero-direct 2048 / 20994 4.7
+reciprocal-zero-direct 3072 / 20994 7.2
+reciprocal-zero-direct 4096 / 20994 9.6
+reciprocal-zero-direct 5120 / 20994 12.0
+reciprocal-zero-direct 6144 / 20994 14.5
+reciprocal-zero-direct 7168 / 20994 17.0
+reciprocal-zero-direct 8192 / 20994 19.4
+reciprocal-zero-direct 9216 / 20994 21.9
+reciprocal-zero-direct 10240 / 20994 24.3
+reciprocal-zero-direct 11264 / 20994 26.7
+reciprocal-zero-direct 12288 / 20994 29.2
+reciprocal-zero-direct 13312 / 20994 30.9
+reciprocal-zero-direct 14336 / 20994 32.2
+reciprocal-zero-direct 15360 / 20994 36.4
+reciprocal-zero-direct 16384 / 20994 43.3
+reciprocal-zero-direct 17408 / 20994 47.2
+reciprocal-zero-direct 18432 / 20994 51.2
+reciprocal-zero-direct 19456 / 20994 57.4
+reciprocal-zero-direct 20480 / 20994 62.8
+{
+  "status": "PASS_PRIVATE_KNOWN_ZERO_RECIPROCAL_ALL_DENOMINATOR_CLASSES",
+  "pairs": 20994,
+  "states": 41988,
+  "actual_ARM_calls": 167952,
+  "actual_directed_MPFR_inputs": 20960,
+  "sNaN_policy_shortcuts": 34,
+  "MPFR_version": "4.2.2",
+  "numerator_contract": "exact positive1 only; denominator any binary64",
+  "all_parent_return_bits_equal": true,
+  "all_second_product_live_outputs_and_full_after_y_residual_R0_R7_R12_SP_NZCV_frame28B_identical": true,
+  "direct_first_product_calls": 24728,
+  "all_actual_costs_match_removed_zero_operation_counts": true,
+  "instruction_delta_histogram": {
+    "-3": 4974,
+    "-2": 19754,
+    "0": 17260
+  },
+  "correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 32382,
+      "equal": 5,
+      "slower": 1
+    },
+    "candidate": {
+      "faster": 32387,
+      "equal": 1
+    }
+  },
+  "all_Qfplib_raw_outputs_costs_and_flags_retained": true,
+  "DIRTY_SIO_preserved_no_writes": true,
+  "inline_live_SP_is_own_entry_minus20_checked": true,
+  "observed_stacks": {
+    "parent": 176,
+    "control": 176,
+    "candidate": 176
+  },
+  "candidate_ELF_sha256": "a2957007576c1803479e122991316559b0a7b0cc63b9355c6874bfd29846404a",
+  "records_sha256": "6afa5a055a878ee739c6931de78dbf51b79c37243e49cf342c7d77b875bda00b",
+  "elapsed_seconds": 65.50820133299567,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

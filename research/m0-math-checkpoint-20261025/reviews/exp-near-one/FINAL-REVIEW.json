@@ -1,0 +1,270 @@
+{
+  "schema": "independent-private-exp-near-one-component-v1",
+  "status": "TECH_GO_PRIVATE_NEAR_ONE_EXP_COMPONENT_ONLY",
+  "reviewer": "/root/rtc_helper_review",
+  "scope": "Frozen one-CPP-file RP2040 near-one exp helper/dispatch against independently accepted directed-product parent. No hardware or integrated binary qualification.",
+  "findings": [],
+  "blocking_component_findings": [],
+  "accepted_target": {
+    "FROZEN": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/FROZEN.json",
+      "bytes": 25478,
+      "sha256": "1e5a757a3116d4803330b0e554ad1dffbe0aea838c7a75126460f79dcf4d5de0"
+    },
+    "result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/result.json",
+      "bytes": 7013,
+      "sha256": "fe222980e2687df8ff95d21b73123c5c03b6b2b83624080f0eb44d89f4b9b701"
+    },
+    "HANDOFF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/HANDOFF.md",
+      "bytes": 3048,
+      "sha256": "a2c8a2753933c885e194e2884caa511e05c14978d5ccca50ee4fc5b84aeb6089"
+    },
+    "ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/candidate.elf",
+      "bytes": 1153444,
+      "sha256": "e6f2f7e0c55b7d7f2547badb00eacef444a1575eb59bdae7d530eec0ea340fcc"
+    },
+    "parent_review": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-independent-20261024/FINAL-REVIEW.json",
+      "bytes": 16279,
+      "sha256": "0d6073f3534d2abb71ad3348096bca930d2513e3813b06dbcfb8911ca485839b"
+    },
+    "parent_ROOT": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-root-acceptance-20261024-001/RECEIPT.json",
+      "bytes": 93063,
+      "sha256": "7ec53f3c616b08413d0e88dae6ce65a7d7b4b8d5adb41737ae802e10475bc573"
+    }
+  },
+  "accepted_CPP": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/candidate/native_eabi_m0.cpp",
+    "bytes": 49386,
+    "sha256": "b3c16d4f64405c2cbcc8869dc992ba7a95603151a9092bedabd17e0f172f9ede"
+  },
+  "accepted_parent_FROZEN": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/FROZEN.json",
+    "bytes": 46510,
+    "sha256": "e6ce76786eeb9443af86b04596cac95fc56aba312ba6bdd1b0d2226da8b69b10"
+  },
+  "provenance": {
+    "all167_local_and1389_external_hash_size_pins_verified": true,
+    "one_CPP_patch_byteexact": true,
+    "only_new_helper_and_dispatch_added": true,
+    "existing_ASM_source_count_unchanged": 8,
+    "own_entire_RP_object_product_object_ELF_rebuilds": 3,
+    "own_literal_pack_object_ELF_rebuilds": 2,
+    "all_five_complete_artifacts_byteexact": true,
+    "author_eleven_rebuilds_verified_as_saved_evidence_not_own_runs": true,
+    "all_other_CPP_allocated_bytes_semantic_relocations_BSS_unchanged": true
+  },
+  "numeric_proof": {
+    "new_domain_e": [
+      -32,
+      -12
+    ],
+    "new_magnitude_domain": "2^-32 <= |x| < 2^-11",
+    "exact_linear_significand_retained": true,
+    "source_Q16_nonlinear_correction_enclosure": true,
+    "high_product_six_retained_terms_error_bound": "114689/32768",
+    "middle_nine_terms_error_in_open_minus3_to0": true,
+    "square_six_MULS_exact_floor_Xsquare_shift38to58": true,
+    "first_non_ADC_add_strict32bit_bound": 67238907,
+    "Horner_Q48_strict4": "115514267916403/32985348833280",
+    "other_error_strict27": "1186126790314176509/44329216455475200",
+    "coarse_fifth_all64_class_binade_intervals": true,
+    "division_full242295_value_domain_proved_algebraically": true,
+    "error_guard": "E=4*floor(Z/2^48)+32+extra+fifth_error",
+    "maximum_E": 5148,
+    "all_product_domains_unsigned_carries_and_variable_shift_ranges_checked": true,
+    "all_three_actual_pack_branches_bound_to_literal_source": true,
+    "rounding": "Strict enclosure plus exact modular midpoint veto proves every admitted result RNE. Declines use unchanged accepted refinement.",
+    "exact_IEEE_tiny_endpoints_tables_and_refinement_inherited_by_source_object_relocation_binding": true
+  },
+  "fresh_bounded_checks": {
+    "qualified_actual_ARM_calls": 1587,
+    "bare_integer_calls": 267,
+    "bare_products_pairs30_square_pairs63": true,
+    "all16_incoming_NZCV_on3_adversarial_triples": true,
+    "actual_leaf_instruction_counts": [
+      45,
+      62,
+      47
+    ],
+    "actual_leaf_frame36": true,
+    "literal_pack_calls": 252,
+    "pack_accepted": 168,
+    "pack_declined": 84,
+    "unsafe_admissions": 0,
+    "all21binades_signs_and3branches": true,
+    "public_exp_inputs": 178,
+    "public_calls": 1068,
+    "public_candidate_parent_Qfplib_bothSIO": true,
+    "directed_MPFR_rounded_inputs": 176,
+    "sNaN_shortcuts_separate": 2,
+    "MPFR_version": "4.2.2",
+    "additional256bit_directed_correction_enclosures": 138,
+    "small_model_fast134_declined4": true,
+    "original16_exact_source_IDs_both_states_strict": true,
+    "old_new_bits_identical_on_bounded_inputs": true,
+    "DIRTY28byte_preservation_and_READY_not_DIRTY_checked": true,
+    "R4_R11_SP_checked_each_call": true,
+    "captured_ROM_initializers_executed_but_excluded_from_qualified_calls": true,
+    "no_arithmetic_ROM_models": true
+  },
+  "private_R12_contract": {
+    "shared77_product_168byte_slot_unchanged": true,
+    "scalar_C_ABI_does_not_supply_extra_result": true,
+    "fresh_actual_private_linked_ELF_guard_PASS": true,
+    "private_ELF_sha256": "e6f2f7e0c55b7d7f2547badb00eacef444a1575eb59bdae7d530eec0ea340fcc",
+    "real_Flash_tail_veneer_bytes16": true,
+    "two_postcall_stores_before_zero_byte_marker": true,
+    "marker_to_actual_consumer_live_instructions88": true,
+    "all17_negative_production_AST_controls_PASS": true,
+    "mandatory_integration_requirement": "Install/adapt and rerun the producer/veneer/postcall-marker/consumer guard on every changed actual integrated ELF, fresh linked disassembly, compiler and flags. A private unit ELF, scalar prototype or stale receipt cannot qualify integration.",
+    "integration_approval": false
+  },
+  "frozen_corpus_accounting": {
+    "read_only_saved_records_recount": true,
+    "fresh_ARM_or_MPFR_for_recount": 0,
+    "old467366_losses": [
+      1896,
+      196
+    ],
+    "same_inputs_fixed1700": true,
+    "union490031_remaining214_equals196old_plus18new_preexisting": true,
+    "all428_remaining_state_rows_parent_bound": true,
+    "new_measured_speed_losses": 0,
+    "all_old934732_candidate_raw_bits_expected_and_Qfp_cost_rows_preserved": true,
+    "correct_Qfplib_state_comparison": {
+      "faster": 571806,
+      "slower": 428,
+      "equal": 8
+    },
+    "wrong_Qfplib_state_rows_retained": 407820,
+    "all5712_parent_cost_increase_rows_retained": true,
+    "positive_instruction_deltas": {
+      "1": 2474,
+      "44": 186,
+      "38": 16,
+      "41": 4,
+      "40": 170,
+      "31": 8,
+      "36": 38,
+      "6": 970,
+      "3": 724,
+      "7": 196,
+      "39": 376,
+      "32": 24,
+      "34": 360,
+      "5": 8,
+      "2": 4,
+      "10": 154
+    },
+    "cost_increase_scopes": {
+      "still_no_slower_correct_Qfplib": 5662,
+      "wrong_Qfplib": 34,
+      "already_losing_correct_Qfplib": 16
+    },
+    "original16_both_states_strict_from_saved_raw": true,
+    "no_nominal_domain_filter": true,
+    "author_fresh_ARM1203570_and_MPFR490029_not_own_runs": true,
+    "probes_and_rejected_trials_not_pooled": true
+  },
+  "resources": {
+    "private_Flash_section_bytes": [
+      16480,
+      17616
+    ],
+    "all_allocated_section_bytes": [
+      16648,
+      17784
+    ],
+    "inherited_RAM_slot_bytes168": true,
+    "code_increase1136": true,
+    "static_public_frame": [
+      96,
+      88
+    ],
+    "new_helper_frame72": true,
+    "observed_peak_stack_parent744_candidate808": true,
+    "no_universal_stack_physical_cycle_or_whole_firmware_GC_size_claim": true
+  },
+  "whole507": {
+    "reviewed_ledger_preserved": {
+      "no_slower": 422,
+      "strictly_faster": 413,
+      "equal": 9
+    },
+    "author_separate423_union_not_promoted": true,
+    "not_one_integrated_binary": true,
+    "other_math_qualifications_inherited_not_fresh": true
+  },
+  "evidence": {
+    "binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/binding.json",
+      "bytes": 379036,
+      "sha256": "082f716b273bd7131610cd1c6d46d14ec5167e5fc71ac58b815b01c7c0cc179f"
+    },
+    "NUMERIC-REVIEW.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/NUMERIC-REVIEW.md",
+      "bytes": 4148,
+      "sha256": "1bb59cfabf1bd277b09d96fc0df990fb57d59b955a634dd15538bd1608fba647"
+    },
+    "proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/proof.json",
+      "bytes": 6227,
+      "sha256": "3679320e08c010723aa52e1a66b7696844daa804849762daa83a2197fdb7a48c"
+    },
+    "private-guard-controls.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/private-guard-controls.json",
+      "bytes": 1369,
+      "sha256": "628ca8f47ad2587801dfe0363a55e0bfda11100d3ed145c047b830e4a8d2dbf4"
+    },
+    "literal-unit-binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/literal-unit-binding.json",
+      "bytes": 14585,
+      "sha256": "f59d1c8d617f8f05ee5b0193f31f67a082a2ad450d388abbb34cf637bdff1870"
+    },
+    "bare-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/bare-arm.json",
+      "bytes": 1015,
+      "sha256": "b19941c57e4e74e4b06224683205ba3b58dea2652a7fe320a1b46fe77a25c8ca"
+    },
+    "pack-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/pack-arm.json",
+      "bytes": 44945,
+      "sha256": "e361f3389f8fce8088f05cd3205c3c1e49e11ea8d9f705c2587deae242524279"
+    },
+    "public-arm-mpfr.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/public-arm-mpfr.json",
+      "bytes": 225181,
+      "sha256": "dbba5e4aec030d002614923bb0b842ecb97c35905af49996bca3378e060e4a8a"
+    },
+    "accounting.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/accounting.json",
+      "bytes": 2208,
+      "sha256": "37a9ba440626290175e6773fb2c987ecde6491c5584bfb18a039b2bfef94f11d"
+    },
+    "resources.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/resources.json",
+      "bytes": 878,
+      "sha256": "1070aa6e23f6e6919d709651cd2a95a79d6b665392eab69bcf39d72f1cecfdf9"
+    },
+    "EXECUTION-NOTES.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/EXECUTION-NOTES.json",
+      "bytes": 2003,
+      "sha256": "ee9f616ad873a288613a9a174bb7eaa26838db780562595fa195158a472b51ca"
+    }
+  },
+  "authority": {
+    "private_component_HOST_GO": true,
+    "integration_GO": false,
+    "whole_math_or507_GO": false,
+    "hardware_GO": false,
+    "main_release_or_publication_GO": false,
+    "canonical_changes": false,
+    "goal_complete": false
+  },
+  "remaining": "214 expanded exp losses, separate other-operation work, combined integration, required actual linked R12 guard, general totality/FMA/regression, physical measurements and release remain outside this component acceptance."
+}

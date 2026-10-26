@@ -1,0 +1,14 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf:     file format elf32-littlearm
+
+
+Disassembly of section .m0_pow_small_y_cold:
+
+1016b3b8 <mk61_m0_pow_exp_product_flash>:
+1016b3b8:	b401      	push	{r0}
+1016b3ba:	4802      	ldr	r0, [pc, #8]	@ (1016b3c4 <mk61_m0_pow_exp_product_flash+0xc>)
+1016b3bc:	4684      	mov	ip, r0
+1016b3be:	bc01      	pop	{r0}
+1016b3c0:	4760      	bx	ip
+1016b3c2:	46c0      	nop			@ (mov r8, r8)
+1016b3c4:	20038ee5 	.word	0x20038ee5

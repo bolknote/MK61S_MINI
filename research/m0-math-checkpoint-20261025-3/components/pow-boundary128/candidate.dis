@@ -1,0 +1,252 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/candidate.elf:     file format elf32-littlearm
+
+
+Disassembly of section .front:
+
+10150000 <_ZL16root128_boundaryRK13PowInteger128jby>:
+10150000:	4b00      	ldr	r3, [pc, #0]	@ (10150004 <_ZL16root128_boundaryRK13PowInteger128jby+0x4>)
+10150002:	4718      	bx	r3
+10150004:	101e0001 	.word	0x101e0001
+10150008:	bf00bf00 	.word	0xbf00bf00
+1015000c:	bf00bf00 	.word	0xbf00bf00
+10150010:	bf00bf00 	.word	0xbf00bf00
+10150014:	bf00bf00 	.word	0xbf00bf00
+10150018:	bf00bf00 	.word	0xbf00bf00
+1015001c:	bf00bf00 	.word	0xbf00bf00
+10150020:	bf00bf00 	.word	0xbf00bf00
+10150024:	bf00bf00 	.word	0xbf00bf00
+10150028:	bf00bf00 	.word	0xbf00bf00
+1015002c:	bf00bf00 	.word	0xbf00bf00
+10150030:	bf00bf00 	.word	0xbf00bf00
+10150034:	bf00bf00 	.word	0xbf00bf00
+10150038:	bf00bf00 	.word	0xbf00bf00
+1015003c:	bf00bf00 	.word	0xbf00bf00
+10150040:	bf00bf00 	.word	0xbf00bf00
+10150044:	bf00bf00 	.word	0xbf00bf00
+10150048:	bf00bf00 	.word	0xbf00bf00
+1015004c:	bf00bf00 	.word	0xbf00bf00
+10150050:	bf00bf00 	.word	0xbf00bf00
+10150054:	bf00bf00 	.word	0xbf00bf00
+10150058:	bf00bf00 	.word	0xbf00bf00
+1015005c:	bf00bf00 	.word	0xbf00bf00
+10150060:	bf00bf00 	.word	0xbf00bf00
+10150064:	bf00bf00 	.word	0xbf00bf00
+10150068:	bf00bf00 	.word	0xbf00bf00
+1015006c:	bf00bf00 	.word	0xbf00bf00
+10150070:	bf00bf00 	.word	0xbf00bf00
+10150074:	bf00bf00 	.word	0xbf00bf00
+10150078:	bf00bf00 	.word	0xbf00bf00
+1015007c:	bf00bf00 	.word	0xbf00bf00
+10150080:	bf00bf00 	.word	0xbf00bf00
+10150084:	bf00bf00 	.word	0xbf00bf00
+10150088:	bf00bf00 	.word	0xbf00bf00
+1015008c:	bf00bf00 	.word	0xbf00bf00
+10150090:	bf00bf00 	.word	0xbf00bf00
+10150094:	bf00bf00 	.word	0xbf00bf00
+10150098:	bf00bf00 	.word	0xbf00bf00
+1015009c:	bf00bf00 	.word	0xbf00bf00
+101500a0:	bf00bf00 	.word	0xbf00bf00
+101500a4:	bf00bf00 	.word	0xbf00bf00
+101500a8:	bf00bf00 	.word	0xbf00bf00
+101500ac:	bf00bf00 	.word	0xbf00bf00
+101500b0:	bf00bf00 	.word	0xbf00bf00
+101500b4:	bf00bf00 	.word	0xbf00bf00
+101500b8:	bf00bf00 	.word	0xbf00bf00
+101500bc:	bf00bf00 	.word	0xbf00bf00
+101500c0:	bf00bf00 	.word	0xbf00bf00
+101500c4:	bf00bf00 	.word	0xbf00bf00
+101500c8:	bf00bf00 	.word	0xbf00bf00
+101500cc:	bf00bf00 	.word	0xbf00bf00
+101500d0:	bf00bf00 	.word	0xbf00bf00
+101500d4:	bf00bf00 	.word	0xbf00bf00
+101500d8:	bf00bf00 	.word	0xbf00bf00
+101500dc:	bf00bf00 	.word	0xbf00bf00
+101500e0:	bf00bf00 	.word	0xbf00bf00
+101500e4:	bf00bf00 	.word	0xbf00bf00
+101500e8:	bf00bf00 	.word	0xbf00bf00
+101500ec:	bf00bf00 	.word	0xbf00bf00
+101500f0:	bf00bf00 	.word	0xbf00bf00
+101500f4:	bf00bf00 	.word	0xbf00bf00
+101500f8:	bf00bf00 	.word	0xbf00bf00
+101500fc:	bf00bf00 	.word	0xbf00bf00
+10150100:	bf00bf00 	.word	0xbf00bf00
+10150104:	bf00bf00 	.word	0xbf00bf00
+10150108:	bf00bf00 	.word	0xbf00bf00
+1015010c:	bf00bf00 	.word	0xbf00bf00
+10150110:	bf00bf00 	.word	0xbf00bf00
+10150114:	bf00bf00 	.word	0xbf00bf00
+10150118:	bf00bf00 	.word	0xbf00bf00
+1015011c:	bf00bf00 	.word	0xbf00bf00
+10150120:	bf00bf00 	.word	0xbf00bf00
+10150124:	bf00bf00 	.word	0xbf00bf00
+10150128:	bf00bf00 	.word	0xbf00bf00
+1015012c:	bf00bf00 	.word	0xbf00bf00
+10150130:	bf00bf00 	.word	0xbf00bf00
+10150134:	bf00bf00 	.word	0xbf00bf00
+10150138:	bf00bf00 	.word	0xbf00bf00
+1015013c:	bf00bf00 	.word	0xbf00bf00
+10150140:	bf00bf00 	.word	0xbf00bf00
+10150144:	bf00bf00 	.word	0xbf00bf00
+10150148:	bf00bf00 	.word	0xbf00bf00
+1015014c:	bf00bf00 	.word	0xbf00bf00
+10150150:	bf00bf00 	.word	0xbf00bf00
+10150154:	bf00bf00 	.word	0xbf00bf00
+10150158:	bf00bf00 	.word	0xbf00bf00
+1015015c:	bf00bf00 	.word	0xbf00bf00
+10150160:	bf00bf00 	.word	0xbf00bf00
+10150164:	bf00bf00 	.word	0xbf00bf00
+10150168:	bf00bf00 	.word	0xbf00bf00
+1015016c:	bf00bf00 	.word	0xbf00bf00
+10150170:	bf00bf00 	.word	0xbf00bf00
+10150174:	bf00bf00 	.word	0xbf00bf00
+10150178:	bf00bf00 	.word	0xbf00bf00
+1015017c:	bf00bf00 	.word	0xbf00bf00
+10150180:	bf00bf00 	.word	0xbf00bf00
+10150184:	bf00bf00 	.word	0xbf00bf00
+10150188:	bf00bf00 	.word	0xbf00bf00
+1015018c:	bf00bf00 	.word	0xbf00bf00
+10150190:	bf00bf00 	.word	0xbf00bf00
+10150194:	bf00bf00 	.word	0xbf00bf00
+10150198:	bf00bf00 	.word	0xbf00bf00
+1015019c:	bf00bf00 	.word	0xbf00bf00
+101501a0:	bf00bf00 	.word	0xbf00bf00
+101501a4:	bf00bf00 	.word	0xbf00bf00
+101501a8:	bf00bf00 	.word	0xbf00bf00
+101501ac:	bf00bf00 	.word	0xbf00bf00
+101501b0:	bf00bf00 	.word	0xbf00bf00
+101501b4:	bf00bf00 	.word	0xbf00bf00
+101501b8:	bf00bf00 	.word	0xbf00bf00
+101501bc:	bf00bf00 	.word	0xbf00bf00
+101501c0:	bf00bf00 	.word	0xbf00bf00
+101501c4:	bf00bf00 	.word	0xbf00bf00
+101501c8:	bf00bf00 	.word	0xbf00bf00
+101501cc:	bf00bf00 	.word	0xbf00bf00
+101501d0:	bf00bf00 	.word	0xbf00bf00
+101501d4:	bf00bf00 	.word	0xbf00bf00
+101501d8:	bf00bf00 	.word	0xbf00bf00
+101501dc:	bf00bf00 	.word	0xbf00bf00
+101501e0:	bf00bf00 	.word	0xbf00bf00
+101501e4:	bf00bf00 	.word	0xbf00bf00
+101501e8:	bf00bf00 	.word	0xbf00bf00
+101501ec:	bf00bf00 	.word	0xbf00bf00
+101501f0:	bf00bf00 	.word	0xbf00bf00
+101501f4:	bf00bf00 	.word	0xbf00bf00
+101501f8:	bf00bf00 	.word	0xbf00bf00
+101501fc:	bf00bf00 	.word	0xbf00bf00
+10150200:	bf00bf00 	.word	0xbf00bf00
+10150204:	bf00bf00 	.word	0xbf00bf00
+10150208:	bf00bf00 	.word	0xbf00bf00
+1015020c:	bf00bf00 	.word	0xbf00bf00
+10150210:	bf00bf00 	.word	0xbf00bf00
+
+Disassembly of section .boundary128:
+
+101e0000 <mk61_m0_boundary128>:
+101e0000:	b5f0      	push	{r4, r5, r6, r7, lr}
+101e0002:	0017      	movs	r7, r2
+101e0004:	2200      	movs	r2, #0
+101e0006:	4b33      	ldr	r3, [pc, #204]	@ (101e00d4 <mk61_m0_boundary128+0xd4>)
+101e0008:	b087      	sub	sp, #28
+101e000a:	0006      	movs	r6, r0
+101e000c:	000d      	movs	r5, r1
+101e000e:	980c      	ldr	r0, [sp, #48]	@ 0x30
+101e0010:	990d      	ldr	r1, [sp, #52]	@ 0x34
+101e0012:	1812      	adds	r2, r2, r0
+101e0014:	414b      	adcs	r3, r1
+101e0016:	4c30      	ldr	r4, [pc, #192]	@ (101e00d8 <mk61_m0_boundary128+0xd8>)
+101e0018:	42a3      	cmp	r3, r4
+101e001a:	d856      	bhi.n	101e00ca <mk61_m0_boundary128+0xca>
+101e001c:	d101      	bne.n	101e0022 <mk61_m0_boundary128+0x22>
+101e001e:	3202      	adds	r2, #2
+101e0020:	d853      	bhi.n	101e00ca <mk61_m0_boundary128+0xca>
+101e0022:	2380      	movs	r3, #128	@ 0x80
+101e0024:	02c2      	lsls	r2, r0, #11
+101e0026:	00db      	lsls	r3, r3, #3
+101e0028:	4313      	orrs	r3, r2
+101e002a:	4a2c      	ldr	r2, [pc, #176]	@ (101e00dc <mk61_m0_boundary128+0xdc>)
+101e002c:	9300      	str	r3, [sp, #0]
+101e002e:	02cb      	lsls	r3, r1, #11
+101e0030:	4013      	ands	r3, r2
+101e0032:	0d42      	lsrs	r2, r0, #21
+101e0034:	4313      	orrs	r3, r2
+101e0036:	2280      	movs	r2, #128	@ 0x80
+101e0038:	0612      	lsls	r2, r2, #24
+101e003a:	4313      	orrs	r3, r2
+101e003c:	4a28      	ldr	r2, [pc, #160]	@ (101e00e0 <mk61_m0_boundary128+0xe0>)
+101e003e:	9301      	str	r3, [sp, #4]
+101e0040:	0d0b      	lsrs	r3, r1, #20
+101e0042:	189b      	adds	r3, r3, r2
+101e0044:	9304      	str	r3, [sp, #16]
+101e0046:	2300      	movs	r3, #0
+101e0048:	466c      	mov	r4, sp
+101e004a:	9302      	str	r3, [sp, #8]
+101e004c:	9303      	str	r3, [sp, #12]
+101e004e:	9305      	str	r3, [sp, #20]
+101e0050:	2d01      	cmp	r5, #1
+101e0052:	d807      	bhi.n	101e0064 <mk61_m0_boundary128+0x64>
+101e0054:	2f00      	cmp	r7, #0
+101e0056:	d10a      	bne.n	101e006e <mk61_m0_boundary128+0x6e>
+101e0058:	0021      	movs	r1, r4
+101e005a:	0030      	movs	r0, r6
+101e005c:	f76f fb60 	bl	1014f720 <pow_integer128_approx_high64+0x10b8>
+101e0060:	b007      	add	sp, #28
+101e0062:	bdf0      	pop	{r4, r5, r6, r7, pc}
+101e0064:	0020      	movs	r0, r4
+101e0066:	f719 fe19 	bl	100f9c9c <pow_integer128_square>
+101e006a:	086d      	lsrs	r5, r5, #1
+101e006c:	e7f0      	b.n	101e0050 <mk61_m0_boundary128+0x50>
+101e006e:	0020      	movs	r0, r4
+101e0070:	0031      	movs	r1, r6
+101e0072:	f719 f8f9 	bl	100f9268 <pow_integer128_multiply>
+101e0076:	6923      	ldr	r3, [r4, #16]
+101e0078:	2001      	movs	r0, #1
+101e007a:	2b00      	cmp	r3, #0
+101e007c:	dc28      	bgt.n	101e00d0 <mk61_m0_boundary128+0xd0>
+101e007e:	1c5a      	adds	r2, r3, #1
+101e0080:	dbee      	blt.n	101e0060 <mk61_m0_boundary128+0x60>
+101e0082:	6862      	ldr	r2, [r4, #4]
+101e0084:	2b00      	cmp	r3, #0
+101e0086:	d10f      	bne.n	101e00a8 <mk61_m0_boundary128+0xa8>
+101e0088:	2380      	movs	r3, #128	@ 0x80
+101e008a:	061b      	lsls	r3, r3, #24
+101e008c:	429a      	cmp	r2, r3
+101e008e:	d81e      	bhi.n	101e00ce <mk61_m0_boundary128+0xce>
+101e0090:	d102      	bne.n	101e0098 <mk61_m0_boundary128+0x98>
+101e0092:	9b00      	ldr	r3, [sp, #0]
+101e0094:	2b00      	cmp	r3, #0
+101e0096:	d11a      	bne.n	101e00ce <mk61_m0_boundary128+0xce>
+101e0098:	68e3      	ldr	r3, [r4, #12]
+101e009a:	2b00      	cmp	r3, #0
+101e009c:	d117      	bne.n	101e00ce <mk61_m0_boundary128+0xce>
+101e009e:	68a3      	ldr	r3, [r4, #8]
+101e00a0:	6960      	ldr	r0, [r4, #20]
+101e00a2:	4298      	cmp	r0, r3
+101e00a4:	4180      	sbcs	r0, r0
+101e00a6:	e7db      	b.n	101e0060 <mk61_m0_boundary128+0x60>
+101e00a8:	9b00      	ldr	r3, [sp, #0]
+101e00aa:	2001      	movs	r0, #1
+101e00ac:	4013      	ands	r3, r2
+101e00ae:	3301      	adds	r3, #1
+101e00b0:	d1d6      	bne.n	101e0060 <mk61_m0_boundary128+0x60>
+101e00b2:	2300      	movs	r3, #0
+101e00b4:	6962      	ldr	r2, [r4, #20]
+101e00b6:	2500      	movs	r5, #0
+101e00b8:	4254      	negs	r4, r2
+101e00ba:	419d      	sbcs	r5, r3
+101e00bc:	9b03      	ldr	r3, [sp, #12]
+101e00be:	42ab      	cmp	r3, r5
+101e00c0:	d3ce      	bcc.n	101e0060 <mk61_m0_boundary128+0x60>
+101e00c2:	d102      	bne.n	101e00ca <mk61_m0_boundary128+0xca>
+101e00c4:	9b02      	ldr	r3, [sp, #8]
+101e00c6:	42a3      	cmp	r3, r4
+101e00c8:	d3ca      	bcc.n	101e0060 <mk61_m0_boundary128+0x60>
+101e00ca:	2000      	movs	r0, #0
+101e00cc:	e7c8      	b.n	101e0060 <mk61_m0_boundary128+0x60>
+101e00ce:	2001      	movs	r0, #1
+101e00d0:	4240      	negs	r0, r0
+101e00d2:	e7c5      	b.n	101e0060 <mk61_m0_boundary128+0x60>
+101e00d4:	fff00000 	.word	0xfff00000
+101e00d8:	7fdfffff 	.word	0x7fdfffff
+101e00dc:	7ffff800 	.word	0x7ffff800
+101e00e0:	fffffc01 	.word	0xfffffc01

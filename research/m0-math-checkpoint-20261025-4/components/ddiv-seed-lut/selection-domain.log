@@ -1,0 +1,54 @@
+{
+  "status": "MEASURED_SEED_COSTS_PREDICTED_PUBLIC_EFFECT_NOT_PUBLIC_QUALIFICATION",
+  "selected": "lut128_floor",
+  "results": {
+    "lut128_ceil_inner": {
+      "predicted_loss_pairs": 11377,
+      "predicted_new_fixes": 9,
+      "measured_allocated_seed_bytes": 316,
+      "measured_seed_cost_min": 22,
+      "measured_seed_cost_max": 34,
+      "predicted_public_saving_min": 57,
+      "predicted_public_saving_max": 71,
+      "mean_measured_unit_instructions": 23.299820143884894
+    },
+    "lut128_floor": {
+      "predicted_loss_pairs": 11377,
+      "predicted_new_fixes": 9,
+      "measured_allocated_seed_bytes": 312,
+      "measured_seed_cost_min": 20,
+      "measured_seed_cost_max": 27,
+      "predicted_public_saving_min": 59,
+      "predicted_public_saving_max": 73,
+      "mean_measured_unit_instructions": 22.117857142857144
+    },
+    "lut64_ceil_outer": {
+      "predicted_loss_pairs": 11377,
+      "predicted_new_fixes": 9,
+      "measured_allocated_seed_bytes": 188,
+      "measured_seed_cost_min": 22,
+      "measured_seed_cost_max": 42,
+      "predicted_public_saving_min": 55,
+      "predicted_public_saving_max": 71,
+      "mean_measured_unit_instructions": 23.56946300102775
+    },
+    "lut32_ceil_outer": {
+      "predicted_loss_pairs": 11377,
+      "predicted_new_fixes": 9,
+      "measured_allocated_seed_bytes": 124,
+      "measured_seed_cost_min": 22,
+      "measured_seed_cost_max": 86,
+      "predicted_public_saving_min": 19,
+      "predicted_public_saving_max": 71,
+      "mean_measured_unit_instructions": 28.945465056526206
+    }
+  },
+  "selection_criterion": "complete-domain worst latency, then mean latency, then allocation; public predictions are not qualification",
+  "selected_bare_qualified_ARM_calls": 155680,
+  "other_variant_experimental_ARM_calls": 233520,
+  "unit_total_actual_ARM_calls": 389200,
+  "all_selected_seed_costs_no_greater_than_parent": true,
+  "parent_FROZEN_sha256": "13dc7f8186d4678fac6b7a0da0b27e00dbb678316e292d320d3eefdd35dbba0c",
+  "unit_proof_sha256": "b8afc3edaa4fe0fc62ff02baf275f9eca10c612c39106afc29472c121e513350",
+  "hardware_accessed": false
+}

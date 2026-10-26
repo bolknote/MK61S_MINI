@@ -1,0 +1,48 @@
+{
+  "status": "PASS_EXPANDED_ALL_SEED_DIVISORS_TWO_MANTISSA_PATTERNS",
+  "candidate_ELF_sha256": "53e624741136a615814141b4f4d69eb563e32909562dd9068fe63bba3d0b0e67",
+  "input_seed_divisors": 65536,
+  "patterns_per_divisor": 2,
+  "fresh_scalar_inputs": 131072,
+  "states": 262144,
+  "actual_ARM_calls": 786432,
+  "actual_directed_MPFR_inputs": 131072,
+  "sNaN_policy_shortcuts": 0,
+  "MPFR_version": "4.2.2",
+  "actual_software_seed_divisors_observed": 65536,
+  "correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 262131,
+      "slower": 2,
+      "equal": 11
+    },
+    "candidate": {
+      "faster": 262132,
+      "equal": 12
+    }
+  },
+  "parent_loss_states": 2,
+  "candidate_loss_states": 0,
+  "new_loss_states": 0,
+  "wrong_Qfplib_variants_retained": 0,
+  "parent_instruction_delta_histogram": {
+    "-3": 2324,
+    "0": 259820
+  },
+  "certificate_calls_by_class": {
+    "certified": 119532,
+    "full": 11516
+  },
+  "all_parent_costs_no_lower_than_candidate": true,
+  "all_live_joins_full_after_y_residual_and_certificate_decisions_checked": true,
+  "DIRTY_SIO_preserved_no_writes": true,
+  "observed_stacks": {
+    "parent": 28,
+    "candidate": 28
+  },
+  "records_sha256": "ab10b22e34ae1dfbe554574c7ae14e26fc1e1c9ac338cf78e6c2562f99db1b02",
+  "remaining": [],
+  "elapsed_seconds": 253.07126737496583,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

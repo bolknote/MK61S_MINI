@@ -1,0 +1,184 @@
+{
+  "status": "PRIVATE_ENDPOINT_PREDICATE_COMPONENT_TECHNICAL_GO",
+  "blockers": [],
+  "scope": "Only equivalent RP2040 exact-log quotient endpoint condition; no seed/quotient/correction/rounding/table/near-body change.",
+  "identity": {
+    "HANDOFF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-20261024/HANDOFF.md",
+      "sha256": "d0c613067eaf915a25f12f212e751e0a07527859bbe98e1afffeb240f1ccf956"
+    },
+    "result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-20261024/result.json",
+      "sha256": "ed41028332a625ab5dfb38f2f9960d8d9e708168116c443757e46cf8f8e09592"
+    },
+    "postseal": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-postseal-20261024.json",
+      "sha256": "ba7fb25d347d0dce96fadc9710ce7cb6e71fb476e481cb4a0cf616443394b53b"
+    },
+    "source_sha256": "79067df1532a771c3cef484271292d7a592f73e1a0e0d51af86b5359c3de33a7",
+    "entire_CPP_object_sha256": "dc71644b976e5c6108412aa2ee371c6e0c8a2621f94bcdea94d0dceadeb17bbc",
+    "entire_ELF_sha256": "5187e1bbba29ec6b0d24cfc57aba9feb74598cc0b8df0df06fe6b13a53039e7e",
+    "input_pins_before_after": {
+      "artifacts": 49,
+      "inputs": 565,
+      "parent_review_sha256": "00d4c9ec7d311fdae72ea3b33523da148aaef6279fbb27fe771ce4dcc0b64ae9"
+    }
+  },
+  "parent_gate": {
+    "status": "CLOSED_ACCEPTED_PARENT_REVIEW_REUSED",
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-directional-independent-20261024/FINAL-REVIEW.json",
+    "sha256": "00d4c9ec7d311fdae72ea3b33523da148aaef6279fbb27fe771ce4dcc0b64ae9",
+    "root_acceptance_received": true,
+    "near_directional_Fraction_table_1026ARM_proofs_not_repeated": true,
+    "helper_155k_or_16k_packer_qualification_not_repeated": true
+  },
+  "exact_predicate_proof": {
+    "entire_old_header_reconstructed_by_one_replacement": true,
+    "domain": "0<=delta<=2^41; odd2049<=den<=4095, derived from current public caller offset mask and exact distance subtraction.",
+    "classes": 513,
+    "independent_boundary_checks": 4097,
+    "partition": [
+      "high0..510: every low word lies below2^41-1, both tests false.",
+      "high511: original threshold and new unsigned low+1wrap predicate both select exactly low0xffffffff.",
+      "high512: caller domain forces low0; both tests true."
+    ],
+    "unsigned_semantics": "U64 shift32 then narrow loses no information in this domain; uint32_t(delta)+1U is defined modulo2^32. Other arithmetic and asm cc constraints are unchanged.",
+    "not_globally_equivalent_outside_caller_domain": true
+  },
+  "source_object_ELF": {
+    "own_entire_CPP_ASM_ELF_rebuild_byteexact_without_exclusions": true,
+    "shared_section_bytes": 3800,
+    "helper_bytes": 232,
+    "helper_address": "0x101a2be0",
+    "changed_helper_bytes": 113,
+    "every_other_allocated_byte_checked_equal": 100352,
+    "other_functions_literals_padding_all_equal": true,
+    "symbol_addresses_sizes_equal": true,
+    "allocated_code_data_delta": 0,
+    "new_tables_global_RAM_or_undefined_deps": false,
+    "generic_M0_M4_control_objects_equal": true,
+    "ratio_ASM_byteexact_parent": true,
+    "source_bound_seed_capsule": {
+      "bytes": 184,
+      "address": "0x1014d800",
+      "sha256": "75729579767fb4b3269141b6c62b1ae4fad49ed8817158b0e7d4bedcc717ecc8",
+      "resident_ELF_sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1"
+    }
+  },
+  "own_actual_execution": {
+    "total_ARM_calls": 1146,
+    "bare_helper_ARM_calls": 840,
+    "bare_helper_state_cases": 420,
+    "bare_expected": "Unbounded exact integer floor((delta<<29)/den).",
+    "bare_firmware_ROM_mapped": false,
+    "bare_only_existing_capsule_bytes": 184,
+    "bare_no_SIO_accesses": true,
+    "bare_all_code_read_data_accesses_and_writes_bounded": true,
+    "bare_stack_parent_child_bytes": {
+      "parent": 68,
+      "candidate": 68
+    },
+    "public_ARM_calls": 306,
+    "public_unique_inputs": 51,
+    "public_state_rows": 102,
+    "MPFR_version": "4.2.2",
+    "candidate_wrong": 0,
+    "raw_parent_candidate_NaN_policy_equal": true,
+    "dispatch_trace_parent_child_equal": true,
+    "selected_READY_counts_equal": true,
+    "DIRTY_all28_SIO_bytes_preserved": true,
+    "READY_no_DIRTY_left": true,
+    "PCS_SP_R4_R11_return_and_write_bounds_checked_every_call": true,
+    "public_observed_stack_subset": {
+      "Qfplib": 32,
+      "parent": 328,
+      "candidate": 328
+    },
+    "public_fixture": "Pinned resident bindings plus captured RP2040 ROM and exact Qfplib ELF, inherited from accepted parent; no bare-firmware or physical claim.",
+    "host_JIT_execution": "Own scoped host-only Unicorn execution accepted through standard require_escalated; no emulator failure occurred this run.",
+    "full_author_corpus_replayed": false
+  },
+  "performance_and_open_scope": {
+    "fresh_own_fixed_five_DIRTY_costs_parent_child_correctQfp": [
+      722,
+      718,
+      719
+    ],
+    "fresh_own_ln2_DIRTY_parent_child_correctQfp": [
+      613,
+      610,
+      711
+    ],
+    "author_sealed_corpus_not_reexecuted": true,
+    "author_raw_inputs": 33086,
+    "author_state_rows": 66172,
+    "retained_parent_states": 65880,
+    "all_READY_counts_equal": 33086,
+    "DIRTY_faster_equal_slower": [
+      10197,
+      22863,
+      26
+    ],
+    "each_child_regression_instructions": 1,
+    "new_correct_Qfplib_speed_deficits": 0,
+    "expanded_parent_speed_raw_losses": 78,
+    "expanded_child_speed_raw_losses": 73,
+    "remaining_state_rows": 118,
+    "old51_subset_fixed": 5,
+    "old51_subset_remaining": 46,
+    "additional_preexisting_wrap_speed_inputs": 27,
+    "author_public_stack_same_corpus_parent_child": [
+      640,
+      640
+    ],
+    "helper_stack_same_parent_child": [
+      68,
+      68
+    ],
+    "historical_ln10_fixed_open": [
+      6,
+      4
+    ],
+    "not_every_input_faster": true,
+    "costs_are_instructions_not_physical_cycles": true
+  },
+  "proofs": {
+    "PREDICATE-DOMAIN-PROOF.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-independent-20261024/PREDICATE-DOMAIN-PROOF.json",
+      "sha256": "090227ef5729c4c016b6a54cfc5e16faa6e13020df24469dad99040856d7730e"
+    },
+    "SOURCE-WHOLE-ELF-PROOF.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-independent-20261024/SOURCE-WHOLE-ELF-PROOF.json",
+      "sha256": "099a2ff75c8bb72cd775d1e6a44ec8a0b03d9a03defecb16dfb7c5094bb9703f"
+    },
+    "BARE-HELPER-ARM.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-independent-20261024/BARE-HELPER-ARM.json",
+      "sha256": "fdfbc7cf0eb8a3b4e1abdd76e2c6ebcb0415afdd573e140697c3d6c37b353709"
+    },
+    "SELECTED-PUBLIC-ARM.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-independent-20261024/SELECTED-PUBLIC-ARM.json",
+      "sha256": "e3661f1e72ac5b02ec73363b3cedd2ddfdd448a4a7df5ae20e48a58c0ae41f09"
+    },
+    "AUTHOR-ACCOUNTING.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-endpoint-predicate-independent-20261024/AUTHOR-ACCOUNTING.json",
+      "sha256": "f964c3f503d8611fa1cdfac5f1905a3e1f68e6eee3894a2f462657e92d2e894d"
+    }
+  },
+  "reproducers": {
+    "static_review.py": "1434a49b8110c22e148811e8662784a313c50118318555be009a615882455d72",
+    "arm_review.py": "5a5c7af130549f982bf8e494e53103853790440cda8efa2cd4bf270ced32ba1f",
+    "accounting.py": "538df037c65136d1229651c53d312e3a4cfc8386cddb78fd854c19446bc87145"
+  },
+  "limits": [
+    "Private helper-only component GO, not whole-ln/library/all-input speed certification or canonical integration.",
+    "Global helper input bound is essential: the new predicate is proved for every reachable caller input, not all uint64 arguments.",
+    "Parent near-directional tradeoffs, other open ln/math operations and general pow totality remain outside this delta.",
+    "Whole production/4098 firmware builds, USB/Flash/lease/hardware/Git/canonical operations were not performed."
+  ],
+  "hardware_GO": false,
+  "physical_cycles_measured": false,
+  "canonical_or_shipping_math_promotion": false,
+  "whole_original_goal_complete": false,
+  "frozen_files_or_sources_modified": false,
+  "Git_USB_Flash_lease_actions": 0
+}

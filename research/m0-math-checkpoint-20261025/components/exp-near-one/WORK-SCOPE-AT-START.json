@@ -1,0 +1,8 @@
+{
+  "status": "WORKING_NUMERIC_ERROR_BOUND_NOT_YET_CERTIFIED",
+  "source_parent": ".build/m0-exp-directed-product-20261024",
+  "source_parent_FROZEN_sha256": "e6ce76786eeb9443af86b04596cac95fc56aba312ba6bdd1b0d2226da8b69b10",
+  "source_parent_independent_review_pending": true,
+  "changes": "Provisional RP-only exp small-input direct input-ulp Q16 polynomial, e=-32..-12. Constant1024guard needs proof; no accuracy/speed claim before qualification. Shared77product unchanged.",
+  "no_canonical_Git_USB_device_Flash_changes": true
+}

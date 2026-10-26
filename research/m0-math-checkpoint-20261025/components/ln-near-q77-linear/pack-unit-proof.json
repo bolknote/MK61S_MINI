@@ -1,0 +1,28 @@
+{
+  "status": "PASS_EXACT_Q77_NEAR_PACK_BARE_ARM_AND_RATIONAL_ENDPOINTS",
+  "source_sha256": "84213d8eb6c7841b48a834cd2304eb8c0ccd6bedc150ee84fd01cf39a8a7e06b",
+  "unit_ELF_sha256": "f24714316c0c6b6292ca1bf797cf75f5c73a7692dae046b0167e1d8553543e79",
+  "actual_ARM_calls": 21504,
+  "configurations": 10752,
+  "accepted": 8197,
+  "declined": 2555,
+  "rational_RNE_endpoint_checks": 16394,
+  "all256_denominators": true,
+  "signed_bias_residue_and_both_magnitude_orientations": true,
+  "output_widths": [
+    63,
+    72
+  ],
+  "binade_boundaries_included": true,
+  "SIO_accesses": 0,
+  "both_SIO_states_preserved": true,
+  "PCS_SP_bounded_writes_every_call": true,
+  "observed_stack_bytes": 48,
+  "profiled_instruction_range": [
+    68,
+    142
+  ],
+  "transcript_sha256": "6a16160a40ce23f1d1dceac0210705c6bb5b76e68b2f779f8ef93cec9e09f6d7",
+  "firmware_or_ROM_mapped": false,
+  "hardware_accessed": false
+}

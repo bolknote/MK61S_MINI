@@ -1,0 +1,33 @@
+{
+  "status": "PASS_INDEPENDENT_ALL_VALID_INDEX0_IDENTITY_AND_LEAF_PCS_PROOF",
+  "maximum_displacement_bound": "34476755421845177728323973310503372828565746882052732830362717326306445545319699495909402221550495403378916311561/2668114806244706806690671391353961641202568928030178708148034625856095267468213670824730270105600",
+  "displacement_plus2_strict2pow54": true,
+  "A0_exact2pow62_actual_linked_table": true,
+  "table_bytes_identical_to_accepted_parent": true,
+  "all_dropped_partial_terms_identically_zero": true,
+  "universal_product_identity_for_b_less2pow54": true,
+  "integer_product_half_ties_round_up_as_parent_not_new_RNE_policy": true,
+  "only_CPP_change_exact_identity": true,
+  "all_gate_error_radius_refinement_endpoint_IEEE_policies_exact_source": true,
+  "all_raw_product_ABI_returns_equivalent": true,
+  "common144_arithmetic_bytes_and_final_POP_bound_by_binding": true,
+  "argument_base_and_saved_register_absolute_positions_equal": true,
+  "first_carry_consumption_common_ADDS_establishes_C": true,
+  "internal_no_BL_BLX_or_external_memory": true,
+  "frame_bytes_before40_after36": true,
+  "writes36_both": true,
+  "SP_word_aligned_every_instruction_public8_at_entry_return": true,
+  "leaf_no_nested_public_call_at_SP4_mod8": true,
+  "fixed_instructions_before81_after79": true,
+  "AAPCS_primary_source": "https://github.com/ARM-software/abi-aa/blob/2025Q4/aapcs32/aapcs32.rst",
+  "AAPCS_release": "2025Q4",
+  "AAPCS_sections": [
+    "6.2.1.1",
+    "6.2.1.2"
+  ],
+  "interrupt_hardware_and_cycles_not_qualified": true,
+  "own_bounded_dyadic_inputs": 668,
+  "own_ARM_MPFR_in_this_file": 0,
+  "parent_pending_at_seal_preserved": true,
+  "parent_GO_added_separately_after_seal": true
+}

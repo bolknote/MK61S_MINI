@@ -1,0 +1,51 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/reference.elf:     file format elf32-littlearm
+
+
+Disassembly of section .m0_qfplib:
+
+10180f4a <qfp_double2float>:
+10180f4a:	004a      	lsls	r2, r1, #1
+10180f4c:	0d52      	lsrs	r2, r2, #21
+10180f4e:	4b39      	ldr	r3, [pc, #228]	@ (10181034 <uf2d+0x70>)
+10180f50:	1ad2      	subs	r2, r2, r3
+10180f52:	dd13      	ble.n	10180f7c <qfp_double2float+0x32>
+10180f54:	2aff      	cmp	r2, #255	@ 0xff
+10180f56:	da1e      	bge.n	10180f96 <qfp_double2float+0x4c>
+10180f58:	05d2      	lsls	r2, r2, #23
+10180f5a:	0fcb      	lsrs	r3, r1, #31
+10180f5c:	07db      	lsls	r3, r3, #31
+10180f5e:	431a      	orrs	r2, r3
+10180f60:	00c3      	lsls	r3, r0, #3
+10180f62:	0f40      	lsrs	r0, r0, #29
+10180f64:	0309      	lsls	r1, r1, #12
+10180f66:	0a49      	lsrs	r1, r1, #9
+10180f68:	4308      	orrs	r0, r1
+10180f6a:	4310      	orrs	r0, r2
+10180f6c:	005b      	lsls	r3, r3, #1
+10180f6e:	d301      	bcc.n	10180f74 <qfp_double2float+0x2a>
+10180f70:	d001      	beq.n	10180f76 <qfp_double2float+0x2c>
+10180f72:	3001      	adds	r0, #1
+10180f74:	4770      	bx	lr
+10180f76:	0843      	lsrs	r3, r0, #1
+10180f78:	d2fb      	bcs.n	10180f72 <qfp_double2float+0x28>
+10180f7a:	4770      	bx	lr
+10180f7c:	d002      	beq.n	10180f84 <qfp_double2float+0x3a>
+10180f7e:	0fc8      	lsrs	r0, r1, #31
+10180f80:	07c0      	lsls	r0, r0, #31
+10180f82:	4770      	bx	lr
+10180f84:	030a      	lsls	r2, r1, #12
+10180f86:	1312      	asrs	r2, r2, #12
+10180f88:	3201      	adds	r2, #1
+10180f8a:	d1f8      	bne.n	10180f7e <qfp_double2float+0x34>
+10180f8c:	0f42      	lsrs	r2, r0, #29
+10180f8e:	2a07      	cmp	r2, #7
+10180f90:	d1f5      	bne.n	10180f7e <qfp_double2float+0x34>
+10180f92:	2201      	movs	r2, #1
+10180f94:	e000      	b.n	10180f98 <qfp_double2float+0x4e>
+10180f96:	22ff      	movs	r2, #255	@ 0xff
+10180f98:	0fc8      	lsrs	r0, r1, #31
+10180f9a:	0200      	lsls	r0, r0, #8
+10180f9c:	1880      	adds	r0, r0, r2
+10180f9e:	05c0      	lsls	r0, r0, #23
+10180fa0:	4770      	bx	lr

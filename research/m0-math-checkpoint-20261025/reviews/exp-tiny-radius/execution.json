@@ -1,0 +1,38 @@
+{
+  "status": "ALL_FINAL_REVIEW_PROGRAMS_COMPLETED_EXIT0",
+  "commands": [
+    {
+      "program": "binding.py",
+      "exit_code": 0,
+      "session_id": 76885,
+      "final_chunk": "0cc7de",
+      "HOST": true
+    },
+    {
+      "program": "proof.py",
+      "exit_code": 0,
+      "final_chunk": "58dad3",
+      "HOST": true
+    },
+    {
+      "program": "evidence.py",
+      "exit_code": 0,
+      "session_id": 53147,
+      "final_chunk": "21e497",
+      "HOST": true
+    },
+    {
+      "program": "arm.py",
+      "exit_code": 0,
+      "session_id": 78461,
+      "final_chunk": "e3eeb3",
+      "HOST": true,
+      "JIT_sandbox_override": true,
+      "hardware": false
+    }
+  ],
+  "own_qualified_ARM9598": true,
+  "own_rejected_trial2_excluded": true,
+  "own_actual_directed_MPFR970_and_sNaN_shortcut2": true,
+  "author_broad_corpus_not_reexecuted": true
+}

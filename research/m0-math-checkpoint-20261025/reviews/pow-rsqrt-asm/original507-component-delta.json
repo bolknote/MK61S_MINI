@@ -1,0 +1,470 @@
+{
+  "status": "PASS_ADDITIVE_INDEPENDENT_ORIGINAL507_SEPARATE_COMPONENT_418",
+  "accepted_baseline": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square-ordinary-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 11242,
+    "sha256": "4fb68e5ea8dbc4539befb483277ac2ce8e301bc23f1447c8b72de312fbbcdde1"
+  },
+  "original507_matrix": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/slower-inputs.json",
+    "bytes": 139956,
+    "sha256": "5dcc6280f81c729634a58fd41f9a6e40c842dec286ad03fbb705a9d5b171a192"
+  },
+  "new_strict": 31,
+  "new_equal": 0,
+  "previous71_pow_fixes_remain_strict": true,
+  "new_fixes": [
+    {
+      "operation": "pow",
+      "x": "5B27CF4AC334ECB8",
+      "y": "BFE0000000000000",
+      "expected": "32528C8368DDDFD3",
+      "instructions": {
+        "parent": 822,
+        "control": 822,
+        "candidate": 304,
+        "Qfplib": 341
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "72FB4FE9F28F6BD6",
+      "y": "BFE0000000000000",
+      "expected": "26687E100C7F0F43",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 300,
+        "Qfplib": 307
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "19B6B177AF096BE8",
+      "y": "BFE0000000000000",
+      "expected": "530ADEA07C9BE2B8",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 302,
+        "Qfplib": 307
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "3276C286F5A8F9BA",
+      "y": "BFE0000000000000",
+      "expected": "46AAD48CA87CC33F",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 304,
+        "Qfplib": 307
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "529EC474818132A0",
+      "y": "BFE0000000000000",
+      "expected": "36971382BD187F94",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 304,
+        "Qfplib": 307
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "569F13D9C2FF829F",
+      "y": "BFE0000000000000",
+      "expected": "3496F5F5B1993A10",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 303,
+        "Qfplib": 307
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "3A6BCBE314B57C0C",
+      "y": "BFE0000000000000",
+      "expected": "42B12AD01EA15F31",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 298,
+        "Qfplib": 309
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "4366C81E0156F410",
+      "y": "BFE0000000000000",
+      "expected": "3E32F67840BABDDF",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 300,
+        "Qfplib": 309
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "3887F6F598CD6E08",
+      "y": "BFE0000000000000",
+      "expected": "43A27D2311F9436D",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 300,
+        "Qfplib": 309
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "6047E3690796C6A8",
+      "y": "BFE0000000000000",
+      "expected": "2FC284B236E80BE8",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 300,
+        "Qfplib": 309
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "65463153542F884C",
+      "y": "BFE0000000000000",
+      "expected": "2D4336787C22EB0C",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 300,
+        "Qfplib": 309
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "4AB8C73B7E4F810F",
+      "y": "BFE0000000000000",
+      "expected": "3A89B6DC1C5391C0",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 300,
+        "Qfplib": 330
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "4F4A6FFE630FC84C",
+      "y": "BFE0000000000000",
+      "expected": "38419A59AC366895",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 304,
+        "Qfplib": 332
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "1031585153525BB5",
+      "y": "BFE0000000000000",
+      "expected": "57CEBBF940B706D9",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 303,
+        "Qfplib": 333
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "37EE24C59D5D378E",
+      "y": "BFE0000000000000",
+      "expected": "43F07C3D490CA505",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 303,
+        "Qfplib": 332
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "62E312FA88406AC4",
+      "y": "BFE0000000000000",
+      "expected": "2E74B954CE986B6C",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 309,
+        "Qfplib": 332
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "0B4669E5B883DC86",
+      "y": "BFE0000000000000",
+      "expected": "5A431E2A069975B0",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 300,
+        "Qfplib": 335
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "11DCE8415CBFF990",
+      "y": "BFE0000000000000",
+      "expected": "56F7CE9E7AD9A93B",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 300,
+        "Qfplib": 339
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "20C1FFC4CDFE675C",
+      "y": "BFE0000000000000",
+      "expected": "4F85557869D2BAC0",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 300,
+        "Qfplib": 341
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "6102FD9B29BEBADF",
+      "y": "BFE0000000000000",
+      "expected": "2F64C4FAE8413CE9",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 307,
+        "Qfplib": 341
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "429F5D2FAD14B60C",
+      "y": "BFE0000000000000",
+      "expected": "3E96DB0DFB400787",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 304,
+        "Qfplib": 342
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "4B9ACC82A9453294",
+      "y": "BFE0000000000000",
+      "expected": "3A18B9D3341DB7CA",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 303,
+        "Qfplib": 342
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "673D6E227DDA98A9",
+      "y": "BFE0000000000000",
+      "expected": "2C479839FDC4CF14",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 302,
+        "Qfplib": 342
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "089BB2F70E88F1EC",
+      "y": "BFE0000000000000",
+      "expected": "5B98521DD4D31CBA",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 300,
+        "Qfplib": 342
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "6AE355A57FFF3634",
+      "y": "BFE0000000000000",
+      "expected": "2A74957B17B1AC27",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 300,
+        "Qfplib": 344
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "255EC914C99C8D08",
+      "y": "BFE0000000000000",
+      "expected": "4D3711C6D0DA8E42",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 298,
+        "Qfplib": 362
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "6F585803A21A358D",
+      "y": "BFE0000000000000",
+      "expected": "2839F156FCB09432",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 303,
+        "Qfplib": 362
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "0DF453943ECB24B0",
+      "y": "BFE0000000000000",
+      "expected": "58EC6410CA94BA02",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 300,
+        "Qfplib": 362
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "62428C918C25B7B4",
+      "y": "BFE0000000000000",
+      "expected": "2EC503E45F8F4314",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 304,
+        "Qfplib": 364
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "451D6C8D70CB011B",
+      "y": "BFE0000000000000",
+      "expected": "3D5798DC627133B4",
+      "instructions": {
+        "parent": 386,
+        "control": 386,
+        "candidate": 303,
+        "Qfplib": 368
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    },
+    {
+      "operation": "pow",
+      "x": "54D4E6275301F04E",
+      "y": "BFE0000000000000",
+      "expected": "357BFFD0A85C465D",
+      "instructions": {
+        "parent": 385,
+        "control": 385,
+        "candidate": 302,
+        "Qfplib": 368
+      },
+      "reference": "qfp_composed_pow_exact",
+      "both_SIO_states_independently_replayed": true
+    }
+  ],
+  "current": {
+    "no_slower_than_correct_Qfplib": 418,
+    "strictly_faster": 412,
+    "equal": 6,
+    "remaining": 89,
+    "remaining_by_operation": {
+      "pow": 51,
+      "exp": 2,
+      "sin": 22,
+      "cos": 14
+    }
+  },
+  "definition": "Distinct immutable original507 operation/x/y union of independently accepted separate components; all153 original pow pairs freshly checked in READY+DIRTY. New31 inverse-root fixes are strict, previous71 pow fixes stay strict. This is not a run of one integrated507 binary and expanded7904 deficits are not added to original507.",
+  "historical_receipts_unchanged": true,
+  "whole_math_GO": false,
+  "canonical": false,
+  "integration": false,
+  "hardware": false
+}

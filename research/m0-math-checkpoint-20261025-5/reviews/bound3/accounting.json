@@ -1,0 +1,123 @@
+{
+  "status": "PASS_ALL_SAVED_RAW_CORPORA_AND_HONEST_REJECTED_TRACE_ACCOUNTING",
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "public120980pairs241960states279522refs_wrong77106": true,
+  "public_loss11369_unchanged_no_pair_fixes": true,
+  "public_delta": {
+    "0": 241950,
+    "-3": 10
+  },
+  "correctQfp": {
+    "slower": 21026,
+    "faster": 178686,
+    "equal": 2704
+  },
+  "all10254_fresh_overlap": true,
+  "parent778replays_include768unchanged10changed": true,
+  "all_correct_wrong_outputs_costs_and_saving3_only_error3_kept": true,
+  "original153": {
+    "parent": {
+      "slower": 33,
+      "strict": 120
+    },
+    "candidate": {
+      "slower": 33,
+      "strict": 120
+    }
+  },
+  "ancestral32_regressions_still_worse_than_Inline_hist": {
+    "6": 26,
+    "5": 6
+  },
+  "ancestral2_already_losing": [
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "READY",
+      "Inline": 1697,
+      "Certificate": 1705,
+      "Zero": 1703,
+      "has_correct_Qfp": true,
+      "Bound3": 1703
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "DIRTY",
+      "Inline": 1706,
+      "Certificate": 1714,
+      "Zero": 1712,
+      "has_correct_Qfp": true,
+      "Bound3": 1712
+    }
+  ],
+  "scalar20994cases41988states0loss_9600wrongkept": true,
+  "scalar_comparison": {
+    "parent": {
+      "faster": 32387,
+      "equal": 1
+    },
+    "candidate": {
+      "faster": 32387,
+      "equal": 1
+    }
+  },
+  "scalar_delta": {
+    "0": 41717,
+    "-3": 271
+  },
+  "expanded131072inputs262144states_all65536actualD_seen": true,
+  "expanded_comparison": {
+    "parent": {
+      "faster": 262131,
+      "slower": 2,
+      "equal": 11
+    },
+    "candidate": {
+      "faster": 262132,
+      "equal": 12
+    }
+  },
+  "expanded_delta": {
+    "0": 259820,
+    "-3": 2324
+  },
+  "expanded2loss_to0_finite_not_universal": true,
+  "additive_fresh_author3355798_partition": [
+    2097152,
+    241960,
+    778,
+    61524,
+    167952,
+    786432
+  ],
+  "author157083MPFR_plus110sNaN": true,
+  "overlapping_campaigns_not_unique": true,
+  "rejected_author_trace": {
+    "status": "EXCLUDED_HOST_TRACE_PARENT_CONTROL_MODE_ERROR",
+    "first_state_index": 2363,
+    "input": {
+      "x": "3FB18F7DDFA4B19A",
+      "y": "BFF4000000000000",
+      "SIO": "DIRTY",
+      "seed_D": 73620
+    },
+    "cause": "The verifier applied the old/new dead-R7 delta rule while comparing the unchanged parent with its byte-identical control. Parent/control outputs and costs matched; candidate precision matched, but the new-vs-old projection and cost checks were not reached for that final state.",
+    "completed_ARM_calls": 14184,
+    "partial_aborted_ARM_calls": 0,
+    "directed_MPFR_input_evaluations": 1106,
+    "sNaN_policy_shortcuts": 76,
+    "all_failed_run_calls_excluded_from_qualification": true,
+    "hardware_accessed": false,
+    "full_and_expanded_default_true_old_and_new_trace_semantics_identical": true
+  },
+  "rejected14184ARM1106MPFR76sNaN_0partial_excluded": true,
+  "corrected_trace_defaultTrue_semantics_exactly_unchanged": true,
+  "only_parent_control_role_False_in_repeated_terminal_publiccontrol": true,
+  "failed_run_NOT_fresh_qualified_or_doubled": true,
+  "cycle_effect_error1_branch_reversal_unmeasured": true,
+  "performance_adoption_GO": false,
+  "reviewed507422_not_author438": true,
+  "devices": 0
+}

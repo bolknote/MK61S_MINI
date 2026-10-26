@@ -1,0 +1,60 @@
+{
+  "status": "BOUNDED_ALL5_STRICT_FIXES_AND_UNCHANGED_CONTROLS",
+  "jobs": [
+    {
+      "x": "3FD789A5EE5BFC5C",
+      "y": "C00C000000000000",
+      "group": "all5_new_public_strict_fixes"
+    },
+    {
+      "x": "3FEB84F6C510641F",
+      "y": "C00C000000000000",
+      "group": "all5_new_public_strict_fixes"
+    },
+    {
+      "x": "3FEB84F6C5106420",
+      "y": "C00C000000000000",
+      "group": "all5_new_public_strict_fixes"
+    },
+    {
+      "x": "4001278DD28E631B",
+      "y": "C00C000000000000",
+      "group": "all5_new_public_strict_fixes"
+    },
+    {
+      "x": "40014BA745E17B63",
+      "y": "C00C000000000000",
+      "group": "all5_new_public_strict_fixes"
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "3FF654E7580FA958",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    },
+    {
+      "x": "401FB34C9D8CF59F",
+      "y": "3FE5000000000000",
+      "group": "unchanged_original153_control"
+    }
+  ]
+}

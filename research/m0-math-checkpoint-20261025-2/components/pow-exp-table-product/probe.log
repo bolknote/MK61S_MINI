@@ -1,0 +1,49 @@
+public-probe 0 / 387
+public-probe 32 / 387
+public-probe 64 / 387
+public-probe 96 / 387
+public-probe 128 / 387
+public-probe 160 / 387
+public-probe 192 / 387
+public-probe 224 / 387
+public-probe 256 / 387
+public-probe 288 / 387
+public-probe 320 / 387
+public-probe 352 / 387
+public-probe 384 / 387
+{
+  "status": "PILOT_ONLY_NOT_FULL_QUALIFICATION",
+  "jobs": 387,
+  "public_state_rows": 774,
+  "fresh_ARM_calls": 3096,
+  "fresh_MPFR_oracle_evaluations": 387,
+  "MPFR_version": "4.2.2",
+  "table_certificate": {
+    "address": 270259104,
+    "bytes_sha256": "9185ad8a13121c810de407f5eac695df9f3b394ee836d4829d0aa37f2fa5719e",
+    "roots": 512,
+    "only_low32zero_index": 0,
+    "identity": 4611686018427387904
+  },
+  "candidate_wrong": 0,
+  "parent_control_cost_deltas": {
+    "0": 774
+  },
+  "candidate_control_cost_deltas": {
+    "-67": 232,
+    "0": 454,
+    "2": 88
+  },
+  "raw_losses": {
+    "parent": 213,
+    "control": 213,
+    "candidate": 200
+  },
+  "new_raw_losses_vs_parent": 0,
+  "stack": {
+    "parent": 1208,
+    "control": 1208,
+    "candidate": 1208
+  },
+  "hardware_accessed": false
+}

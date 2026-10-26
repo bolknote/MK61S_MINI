@@ -1,0 +1,29 @@
+{
+  "status": "PASS_TWENTY_COMPLETE_OBJECT_AND_ELF_REBUILDS_BYTE_EXACT",
+  "outputs": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-cpp.o": "08db1e932a7cc16837da0dde324c4182bb2ef43ca9ffcc8438439c0dd1b8814a",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-candidate-cpp.o": "8d0be6bcfdccdd6ceaad35b672ea526d01b23669a1996a769c86aee49b879635",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-control-asm.o": "bb6c7491108d638b69aaa5234207f92bb584086d7b6863fc27396e6fe736f276",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/RP-candidate-asm.o": "ef1b5f619ecb407e1edd9216f7e059358d01ec00740e35a2e859c1053cfa992e",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/generic_M0-control-cpp.o": "7bf54735a8e0d64196ac3e356cad58d12cf39a55217cbd6cc47c2cf3761981f3",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/generic_M0-candidate-cpp.o": "b3b99b7e4c31edfd94e276e2aef94423e975c47829f0bb88bc24583a6367d0d3",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/generic_M0-control-asm.o": "00878b394c500d06f2c78f34276fe23f567b4ed6cd80a155163d28118c0fb9fa",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/generic_M0-candidate-asm.o": "c8a4cce485ceb88d17249620f2ad519037f6417689691feb3a14ca70d39b4d43",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/M4_soft-control-cpp.o": "09ed3e696b731e9738f26f983e0cb9872370357bc17e13cfc7821717acf753fa",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/M4_soft-candidate-cpp.o": "c0503b6a4bdd6c18e41a10bb9adf1539acb4a21b57f5481d3cfeeac078d903e5",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/M4_soft-control-asm.o": "ff20f202e576eae54ac16b6a33a1e35ccd28fc5d96cdc4ed999f247671ba6a84",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/M4_soft-candidate-asm.o": "ff20f202e576eae54ac16b6a33a1e35ccd28fc5d96cdc4ed999f247671ba6a84",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/M4_hard-control-cpp.o": "18dd23ae2e9b2491904c82a662bccc3dcafc115c1f99c7ffba85e8532dbc676c",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/M4_hard-candidate-cpp.o": "b899316a4dc17cade65ad5583ff41c4f750af33c04cd17293af101f2cd122e16",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/M4_hard-control-asm.o": "607c0964c415f74ffb89a4336373274ba50e660a1bac13fe59c2db5c89cbb1cc",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/M4_hard-candidate-asm.o": "607c0964c415f74ffb89a4336373274ba50e660a1bac13fe59c2db5c89cbb1cc",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/fixture-control.o": "0adf1a7b8a8aa9949dbf4a670aada74af90e6dbf2b47734109e13eeed5039fa1",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/control.elf": "25544ce13ab15996ff7fbefc5df9ae4527dfa1497a13aa20589c395791c66ab9",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/fixture-candidate.o": "2f1f9a8205bb47a19d69b945d4f128ce654db54d1a55d698dd77a27fdd97c529",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/candidate.elf": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98"
+  },
+  "candidate_ELF_sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98",
+  "source_proof_sha256": "8bbef5052e34bcd0373874325ebe8e0a2d0e7f87a2e2ab027fb07072ee88f293",
+  "fresh_ARM_or_MPFR_calls": 0,
+  "hardware_accessed": false
+}

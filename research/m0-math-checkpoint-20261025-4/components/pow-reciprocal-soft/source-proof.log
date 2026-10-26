@@ -1,0 +1,26 @@
+{
+  "status": "PASS_SOURCE_RELATIONAL_SEED_AND_COMMON_RNE_TAIL_BINDING",
+  "candidate_ELF_sha256": "285307160c39afa066f18e2784ad7704931f53e84c51dfe4c74febb352f976ae",
+  "common_tail_bytes": 282,
+  "common_tail_sha256": "115b08286e1feb105ba6e2e3f3b254b68720372e3cf963fa02192befb9cb0c0b",
+  "control_hardware_candidate_hardware_and_candidate_software_tail_byte_identical": true,
+  "exact_seed194B_byte_identical_to_exhaustively_checked_seed": true,
+  "dirty_branch_and12B_bridge_only_hardware_source_difference": true,
+  "original_RP_root_call_relocation_only_change": true,
+  "other_resident_calls_keep_original_ddiv": true,
+  "private_continuation_requires_existing20B_frame_and_guarded_R6": true,
+  "default_M0_M4_selected_root_source_controls_equal": true,
+  "all12_extra_disabled_objects_empty": true,
+  "new_diagnostic_code_and_literals_bytes": 1050,
+  "existing32B_dyadic_constants_duplicated_in_diagnostic_clone": true,
+  "new_mathematical_table_values": false,
+  "new_global_RAM_or_libgcc_dependencies": false,
+  "accepted_parent_ROOT_receipt": {
+    "path": ".build/m0-pow-boundary128-root-acceptance-20261025-001/RECEIPT.json",
+    "bytes": 13941,
+    "sha256": "260cb67e4cfd136f73affc5de7486a10ee0e732d9fed2d13e086d9e4e90005f3"
+  },
+  "actual_ARM_or_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

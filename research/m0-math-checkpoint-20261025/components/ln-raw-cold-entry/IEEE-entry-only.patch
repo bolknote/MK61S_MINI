@@ -1,0 +1,38 @@
+--- parent/native_eabi_m0_log70.inc
++++ candidate/native_eabi_m0_log70.inc
+@@ -190,15 +190,30 @@
+ }
+ 
+ #endif
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++// Avoid a C++ frame for IEEE zero and positive infinity. Every other
++// non-normal input still reaches the existing cold implementation.
++__attribute__((naked,noinline,optimize("Os"))) MK61_SOFT_PCS double mk61_m0_ln(double) {
++  asm volatile(
++    ".syntax unified\n"
++    "cmp r0,#0\nbne .Lln_classify\n"
++    "lsls r2,r1,#1\nbeq .Lln_zero\n"
++    "ldr r2,=0x7ff00000\ncmp r1,r2\nbeq .Lln_return\n"
++    ".Lln_classify:\nlsrs r2,r1,#20\nadds r3,r2,#1\nlsrs r3,r3,#11\n"
++    "bne .Lln_cold\ncmp r2,#0\nbeq .Lln_cold\nb mk61_m0_ln_positive\n"
++    ".Lln_zero:\nldr r1,=0xfff00000\n"
++    ".Lln_return:\nbx lr\n"
++    ".Lln_cold:\nldr r3,=mk61_m0_ln_special\nbx r3\n"
++    ".p2align 2\n.ltorg\n.syntax divided\n");
++}
++__attribute__((optimize("Os"),noinline)) MK61_SOFT_PCS double mk61_m0_ln_positive(double x) {
++  const U b=bits(x);
++#else
+ __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_ln(double x) {
+   const U b=bits(x);
+-  if(b<UINT64_C(0x0010000000000000) || b>=D::Infinity) {
+-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+-    return mk61_m0_ln_special(x);
+-#else
++  if(b<UINT64_C(0x0010000000000000) || b>=D::Infinity)
+     return mk61_m0_cr_ln(x);
+ #endif
+-  }
+   if(b>=ln_near_lower && b<=UINT64_C(0x3FF0400000000000))
+     return ln_near_interval(x,b);
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI

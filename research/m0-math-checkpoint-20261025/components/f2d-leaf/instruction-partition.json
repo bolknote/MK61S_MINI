@@ -1,0 +1,27 @@
+{
+  "status": "AUTHOR_WHOLE_BINARY32_RNE_AND_CORRECT_REFERENCE_INSTRUCTION_PARTITION_PENDING_REVIEW",
+  "classes": {
+    "zero": {
+      "candidate": 5,
+      "Qfplib": 8,
+      "state_rows": 4
+    },
+    "normal": {
+      "candidate": 12,
+      "Qfplib": 13,
+      "state_rows": 205226
+    },
+    "infinity": {
+      "candidate": 12,
+      "Qfplib": 12,
+      "state_rows": 4
+    }
+  },
+  "observed_correct_reference_state_rows": 205234,
+  "faster": 205230,
+  "equal": 4,
+  "slower": 0,
+  "wrong_reference_state_rows_retained": 60684,
+  "no_nominal_domain_filter": true,
+  "physical_cycles_not_measured": true
+}

@@ -1,0 +1,8 @@
+{
+  "status": "FROZEN_AUTHOR_QUALIFIED_PRIVATE_NEAR_ONE_EXP_PENDING_REVIEW",
+  "source_parent": ".build/m0-exp-directed-product-20261024",
+  "source_parent_independent_review_pending": false,
+  "current_independent_review_pending": true,
+  "no_canonical_Git_USB_device_Flash_changes": true,
+  "goal_complete": false
+}

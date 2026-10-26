@@ -1,0 +1,26 @@
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: warning: /Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/boundary.o: missing .note.GNU-stack section implies executable stack
+/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+{
+  "status": "PASS_SEVENTEEN_FULL_SOURCE_OBJECT_AND_ELF_REBUILDS_BYTE_EXACT",
+  "outputs": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/M4_soft-candidate.o": "2294654d4c4ceb027fa76143fcbf8ede25f66133061c065f045221fd5e862b5d",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/RP-control.o": "b8f05a0da4403e339aaff8cc4eb70c77c69c7b68a0e68070bec462b4c810fc39",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/RP-candidate.o": "986a189c94f55730876864429b3d721c1c7be259d22601cde0a3f99267a21984",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/unit-helpers.elf": "91ad9c3fd6861a5b676fa92f0a67cbb0cfbdab8d0594ea65d0d34b695854dab6",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/generic_M0-control.o": "178cb1e699c72dfbee438d4d2cbc007a8a92f1660a6ce60a20adcb21c93a6ee3",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/candidate.elf": "63a80f08c546e7bd07db6056eb1f64aa0de573c7296e5572b090e9d9f6edbfa9",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/M4_hard-control.o": "43e2ef436152dc5d121cef52bc8c23b3c5d47f9ad3ac2cf2af8d756b10a1f05d",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/M4_soft-control.o": "2294654d4c4ceb027fa76143fcbf8ede25f66133061c065f045221fd5e862b5d",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/control-slot.o": "8410c51df59c7da40fa47effff1a073b7c7c64f360ecd29fc1df2edcd891f9f0",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/generic_M0-candidate.o": "178cb1e699c72dfbee438d4d2cbc007a8a92f1660a6ce60a20adcb21c93a6ee3",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/boundary.o": "067d50aed453c27d92efbdaf84de62e62b8012a1ef96e341fec8c502f70b0767",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/M4_soft-boundary-disabled.o": "aa7ce5db1d4cbcce8898919bce5f0a805c3042ddcfe7afa82705f4f42ec4a6b3",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/generic_M0-boundary-disabled.o": "e209ddf67ad371857c2ce2f7917c6de3bb54f0d93c66aa94958d03f2f91aa8e7",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/M4_hard-boundary-disabled.o": "e98baedf07e1d2f8c80cb49d9e21167887683b3bf7dd7c746b2f7815fbe753b7",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/M4_hard-candidate.o": "43e2ef436152dc5d121cef52bc8c23b3c5d47f9ad3ac2cf2af8d756b10a1f05d",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/control.elf": "139080b9bcff725d965830b58958a289a4f68e27a6b23e663e5d2c08fcc647d3",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/unit-helpers.o": "3324945fbb35cda04260031f5bdd7a013c1e371681847fdb22879f9970d9590f"
+  },
+  "actual_ARM_or_MPFR_calls": 0,
+  "hardware_accessed": false
+}

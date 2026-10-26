@@ -1,0 +1,6468 @@
+{
+  "status": "PASS_BOUNDED_ACTUAL_GUARDED_CLONE_PRIVATE_JOIN_AND_IEEE_RNE",
+  "unique_pairs": 31,
+  "actual_ARM_calls": 248,
+  "directed_MPFR_inputs": 29,
+  "sNaN_shortcuts": 2,
+  "MPFR_version": "4.2.2",
+  "actual_private_software_READY_hardware_join_matches": 14,
+  "R0_R6_R12_SP_saved20B_equal": true,
+  "flags_after_first_common_ADDS_equal": true,
+  "raw_operands_guardedR6_saved_frame_not_scalar_C_prototype_checked": true,
+  "seed_call_8alignment_and_saved_four_operands_sign_word": true,
+  "DIRTY_read_CSR_only_no_divider_writes_all7words_preserved": true,
+  "READY_exact_parent_control_candidate_costs": true,
+  "old_control_bits_cost_calibrated": true,
+  "all_Qfp_outputs_including_wrong_retained": true,
+  "strict_quietNaN": true,
+  "ROM_initializers_excluded_from_call_count": true,
+  "observed_stack_bytes": {
+    "parent": 176,
+    "control": 176,
+    "candidate": 176,
+    "Qfplib": 28
+  },
+  "rows": [
+    {
+      "a": "3FF0000000000000",
+      "b": "3F40000000000000",
+      "group": "actual_root_reciprocal",
+      "SIO": "READY",
+      "expected": "40A0000000000000",
+      "results": {
+        "parent": {
+          "output": "40A0000000000000",
+          "instructions": 29,
+          "correct": true
+        },
+        "control": {
+          "output": "40A0000000000000",
+          "instructions": 29,
+          "correct": true
+        },
+        "candidate": {
+          "output": "40A0000000000000",
+          "instructions": 29,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "40A0000000000000",
+          "instructions": 148,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1061158912
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1061158912
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "3F40000000000000",
+      "group": "actual_root_reciprocal",
+      "SIO": "DIRTY",
+      "expected": "40A0000000000000",
+      "results": {
+        "parent": {
+          "output": "40A0000000000000",
+          "instructions": 29,
+          "correct": true
+        },
+        "control": {
+          "output": "40A0000000000000",
+          "instructions": 29,
+          "correct": true
+        },
+        "candidate": {
+          "output": "40A0000000000000",
+          "instructions": 29,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "40A0000000000000",
+          "instructions": 148,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1061158912
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1061158912
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "3FFD5B91C16B40D8",
+      "group": "actual_root_reciprocal",
+      "SIO": "READY",
+      "expected": "3FE170A7F1229EDD",
+      "results": {
+        "parent": {
+          "output": "3FE170A7F1229EDD",
+          "instructions": 142,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE170A7F1229EDD",
+          "instructions": 142,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE170A7F1229EDD",
+          "instructions": 142,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE170A7F1229EDD",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3245031640,
+              1073568657
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3245031640,
+                1923985,
+                2147483648,
+                1970161413,
+                17859,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3245031640,
+              1073568657
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3245031640,
+                1923985,
+                2147483648,
+                1970161413,
+                17859,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "3FFD5B91C16B40D8",
+      "group": "actual_root_reciprocal",
+      "SIO": "DIRTY",
+      "expected": "3FE170A7F1229EDD",
+      "results": {
+        "parent": {
+          "output": "3FE170A7F1229EDD",
+          "instructions": 600,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE170A7F1229EDD",
+          "instructions": 600,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE170A7F1229EDD",
+          "instructions": 230,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE170A7F1229EDD",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3245031640,
+              1073568657
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3245031640,
+              1073568657
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "C16B40D8",
+                "3FFD5B91"
+              ],
+              "R6": 1021,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            120249
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3245031640,
+                1923985,
+                2147483648,
+                1970161413,
+                17859,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "401B5D0E724796ED",
+      "group": "actual_root_reciprocal",
+      "SIO": "READY",
+      "expected": "3FC2B607BC82DBE3",
+      "results": {
+        "parent": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 177,
+          "correct": true
+        },
+        "control": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 177,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 177,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1917294317,
+              1075535118
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                1917294317,
+                1793294,
+                2147483648,
+                1836333513,
+                19160,
+                4076,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1917294317,
+              1075535118
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                1917294317,
+                1793294,
+                2147483648,
+                1836333513,
+                19160,
+                4076,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "401B5D0E724796ED",
+      "group": "actual_root_reciprocal",
+      "SIO": "DIRTY",
+      "expected": "3FC2B607BC82DBE3",
+      "results": {
+        "parent": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 583,
+          "correct": true
+        },
+        "control": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 583,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 265,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1917294317,
+              1075535118
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1917294317,
+              1075535118
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "724796ED",
+                "401B5D0E"
+              ],
+              "R6": 1019,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            112080
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                1917294317,
+                1793294,
+                2147483648,
+                1836333513,
+                19160,
+                4076,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "401D26D9E973C57B",
+      "group": "actual_root_reciprocal",
+      "SIO": "READY",
+      "expected": "3FC19031D705C3EA",
+      "results": {
+        "parent": {
+          "output": "3FC19031D705C3EA",
+          "instructions": 177,
+          "correct": true
+        },
+        "control": {
+          "output": "3FC19031D705C3EA",
+          "instructions": 177,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FC19031D705C3EA",
+          "instructions": 177,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FC19031D705C3EA",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3916678523,
+              1075652313
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3916678523,
+                1910489,
+                2147483648,
+                1956341669,
+                17985,
+                4076,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3916678523,
+              1075652313
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3916678523,
+                1910489,
+                2147483648,
+                1956341669,
+                17985,
+                4076,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "401D26D9E973C57B",
+      "group": "actual_root_reciprocal",
+      "SIO": "DIRTY",
+      "expected": "3FC19031D705C3EA",
+      "results": {
+        "parent": {
+          "output": "3FC19031D705C3EA",
+          "instructions": 591,
+          "correct": true
+        },
+        "control": {
+          "output": "3FC19031D705C3EA",
+          "instructions": 591,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FC19031D705C3EA",
+          "instructions": 263,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FC19031D705C3EA",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3916678523,
+              1075652313
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              3916678523,
+              1075652313
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "E973C57B",
+                "401D26D9"
+              ],
+              "R6": 1019,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            119405
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                3916678523,
+                1910489,
+                2147483648,
+                1956341669,
+                17985,
+                4076,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "403C5AE710D09838",
+      "group": "actual_root_reciprocal",
+      "SIO": "READY",
+      "expected": "3FA20E8574F55E65",
+      "results": {
+        "parent": {
+          "output": "3FA20E8574F55E65",
+          "instructions": 174,
+          "correct": true
+        },
+        "control": {
+          "output": "3FA20E8574F55E65",
+          "instructions": 174,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FA20E8574F55E65",
+          "instructions": 174,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FA20E8574F55E65",
+          "instructions": 178,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              282105912,
+              1077697255
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                282105912,
+                1858279,
+                2147483648,
+                1902877763,
+                18490,
+                4068,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              282105912,
+              1077697255
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                282105912,
+                1858279,
+                2147483648,
+                1902877763,
+                18490,
+                4068,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "403C5AE710D09838",
+      "group": "actual_root_reciprocal",
+      "SIO": "DIRTY",
+      "expected": "3FA20E8574F55E65",
+      "results": {
+        "parent": {
+          "output": "3FA20E8574F55E65",
+          "instructions": 593,
+          "correct": true
+        },
+        "control": {
+          "output": "3FA20E8574F55E65",
+          "instructions": 593,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FA20E8574F55E65",
+          "instructions": 261,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FA20E8574F55E65",
+          "instructions": 178,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              282105912,
+              1077697255
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              282105912,
+              1077697255
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF00000",
+                "10D09838",
+                "403C5AE7"
+              ],
+              "R6": 1017,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            116142
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1048576,
+                282105912,
+                1858279,
+                2147483648,
+                1902877763,
+                18490,
+                4068,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF1000000000000",
+      "b": "3FF000000000007B",
+      "group": "seed_D_edges_signs",
+      "SIO": "READY",
+      "expected": "3FF0FFFFFFFFFF7D",
+      "results": {
+        "parent": {
+          "output": "3FF0FFFFFFFFFF7D",
+          "instructions": 177,
+          "correct": true
+        },
+        "control": {
+          "output": "3FF0FFFFFFFFFF7D",
+          "instructions": 177,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FF0FFFFFFFFFF7D",
+          "instructions": 177,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FF0FFFFFFFFFF7D",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              123,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                123,
+                1048576,
+                2281701376,
+                1073741824,
+                32768,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              123,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                123,
+                1048576,
+                2281701376,
+                1073741824,
+                32768,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF1000000000000",
+      "b": "3FF000000000007B",
+      "group": "seed_D_edges_signs",
+      "SIO": "DIRTY",
+      "expected": "3FF0FFFFFFFFFF7D",
+      "results": {
+        "parent": {
+          "output": "3FF0FFFFFFFFFF7D",
+          "instructions": 589,
+          "correct": true
+        },
+        "control": {
+          "output": "3FF0FFFFFFFFFF7D",
+          "instructions": 589,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FF0FFFFFFFFFF7D",
+          "instructions": 274,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FF0FFFFFFFFFF7D",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              123,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              123,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF10000",
+                "0000007B",
+                "3FF00000"
+              ],
+              "R6": 1021,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            65536
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                123,
+                1048576,
+                2281701376,
+                1073741824,
+                32768,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "BFF1000000000000",
+      "b": "3FF000100000007C",
+      "group": "seed_D_edges_signs",
+      "SIO": "READY",
+      "expected": "BFF0FFEF0010FF6B",
+      "results": {
+        "parent": {
+          "output": "BFF0FFEF0010FF6B",
+          "instructions": 177,
+          "correct": true
+        },
+        "control": {
+          "output": "BFF0FFEF0010FF6B",
+          "instructions": 177,
+          "correct": true
+        },
+        "candidate": {
+          "output": "BFF0FFEF0010FF6B",
+          "instructions": 177,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "BFF0FFEF0010FF6B",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              124,
+              1072693264
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                124,
+                1048592,
+                2281701376,
+                1073758208,
+                32768,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              124,
+              1072693264
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                124,
+                1048592,
+                2281701376,
+                1073758208,
+                32768,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "BFF1000000000000",
+      "b": "3FF000100000007C",
+      "group": "seed_D_edges_signs",
+      "SIO": "DIRTY",
+      "expected": "BFF0FFEF0010FF6B",
+      "results": {
+        "parent": {
+          "output": "BFF0FFEF0010FF6B",
+          "instructions": 579,
+          "correct": true
+        },
+        "control": {
+          "output": "BFF0FFEF0010FF6B",
+          "instructions": 579,
+          "correct": true
+        },
+        "candidate": {
+          "output": "BFF0FFEF0010FF6B",
+          "instructions": 274,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "BFF0FFEF0010FF6B",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              124,
+              1072693264
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              124,
+              1072693264
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "BFF10000",
+                "0000007C",
+                "3FF00010"
+              ],
+              "R6": 1021,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            65537
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                124,
+                1048592,
+                2281701376,
+                1073758208,
+                32768,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF1000000000000",
+      "b": "BFF117000000007D",
+      "group": "seed_D_edges_signs",
+      "SIO": "READY",
+      "expected": "BFEFD4EEF8EB753B",
+      "results": {
+        "parent": {
+          "output": "BFEFD4EEF8EB753B",
+          "instructions": 142,
+          "correct": true
+        },
+        "control": {
+          "output": "BFEFD4EEF8EB753B",
+          "instructions": 142,
+          "correct": true
+        },
+        "candidate": {
+          "output": "BFEFD4EEF8EB753B",
+          "instructions": 142,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "BFEFD4EEF8EB753B",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              125,
+              3220248320
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                125,
+                1120000,
+                2281701376,
+                1146880000,
+                30678,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              125,
+              3220248320
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                125,
+                1120000,
+                2281701376,
+                1146880000,
+                30678,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF1000000000000",
+      "b": "BFF117000000007D",
+      "group": "seed_D_edges_signs",
+      "SIO": "DIRTY",
+      "expected": "BFEFD4EEF8EB753B",
+      "results": {
+        "parent": {
+          "output": "BFEFD4EEF8EB753B",
+          "instructions": 593,
+          "correct": true
+        },
+        "control": {
+          "output": "BFEFD4EEF8EB753B",
+          "instructions": 593,
+          "correct": true
+        },
+        "candidate": {
+          "output": "BFEFD4EEF8EB753B",
+          "instructions": 234,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "BFEFD4EEF8EB753B",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              125,
+              3220248320
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              125,
+              3220248320
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF10000",
+                "0000007D",
+                "BFF11700"
+              ],
+              "R6": 1021,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            70000
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                125,
+                1120000,
+                2281701376,
+                1146880000,
+                30678,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "BFF1000000000000",
+      "b": "BFF555400000007E",
+      "group": "seed_D_edges_signs",
+      "SIO": "READY",
+      "expected": "3FE9801980197F83",
+      "results": {
+        "parent": {
+          "output": "3FE9801980197F83",
+          "instructions": 142,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE9801980197F83",
+          "instructions": 142,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE9801980197F83",
+          "instructions": 142,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE9801980197F83",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              126,
+              3220526400
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                126,
+                1398080,
+                2281701376,
+                1431633920,
+                24576,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              126,
+              3220526400
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                126,
+                1398080,
+                2281701376,
+                1431633920,
+                24576,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "BFF1000000000000",
+      "b": "BFF555400000007E",
+      "group": "seed_D_edges_signs",
+      "SIO": "DIRTY",
+      "expected": "3FE9801980197F83",
+      "results": {
+        "parent": {
+          "output": "3FE9801980197F83",
+          "instructions": 581,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE9801980197F83",
+          "instructions": 581,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE9801980197F83",
+          "instructions": 225,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE9801980197F83",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              126,
+              3220526400
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              126,
+              3220526400
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "BFF10000",
+                "0000007E",
+                "BFF55540"
+              ],
+              "R6": 1021,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            87380
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                126,
+                1398080,
+                2281701376,
+                1431633920,
+                24576,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF1000000000000",
+      "b": "3FF800000000007F",
+      "group": "seed_D_edges_signs",
+      "SIO": "READY",
+      "expected": "3FE6AAAAAAAAAA33",
+      "results": {
+        "parent": {
+          "output": "3FE6AAAAAAAAAA33",
+          "instructions": 177,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE6AAAAAAAAAA33",
+          "instructions": 177,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE6AAAAAAAAAA33",
+          "instructions": 177,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE6AAAAAAAAAA33",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              127,
+              1073217536
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                127,
+                1572864,
+                2281701376,
+                1610612736,
+                21845,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              127,
+              1073217536
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                127,
+                1572864,
+                2281701376,
+                1610612736,
+                21845,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF1000000000000",
+      "b": "3FF800000000007F",
+      "group": "seed_D_edges_signs",
+      "SIO": "DIRTY",
+      "expected": "3FE6AAAAAAAAAA33",
+      "results": {
+        "parent": {
+          "output": "3FE6AAAAAAAAAA33",
+          "instructions": 579,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE6AAAAAAAAAA33",
+          "instructions": 579,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE6AAAAAAAAAA33",
+          "instructions": 266,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE6AAAAAAAAAA33",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              127,
+              1073217536
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              127,
+              1073217536
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF10000",
+                "0000007F",
+                "3FF80000"
+              ],
+              "R6": 1021,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            98304
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                127,
+                1572864,
+                2281701376,
+                1610612736,
+                21845,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "BFF1000000000000",
+      "b": "3FF86A0000000080",
+      "group": "seed_D_edges_signs",
+      "SIO": "READY",
+      "expected": "BFE64840E1719F0B",
+      "results": {
+        "parent": {
+          "output": "BFE64840E1719F0B",
+          "instructions": 177,
+          "correct": true
+        },
+        "control": {
+          "output": "BFE64840E1719F0B",
+          "instructions": 177,
+          "correct": true
+        },
+        "candidate": {
+          "output": "BFE64840E1719F0B",
+          "instructions": 177,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "BFE64840E1719F0B",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              128,
+              1073244672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                128,
+                1600000,
+                2281701376,
+                1638400000,
+                21475,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              128,
+              1073244672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                128,
+                1600000,
+                2281701376,
+                1638400000,
+                21475,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "BFF1000000000000",
+      "b": "3FF86A0000000080",
+      "group": "seed_D_edges_signs",
+      "SIO": "DIRTY",
+      "expected": "BFE64840E1719F0B",
+      "results": {
+        "parent": {
+          "output": "BFE64840E1719F0B",
+          "instructions": 590,
+          "correct": true
+        },
+        "control": {
+          "output": "BFE64840E1719F0B",
+          "instructions": 590,
+          "correct": true
+        },
+        "candidate": {
+          "output": "BFE64840E1719F0B",
+          "instructions": 267,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "BFE64840E1719F0B",
+          "instructions": 181,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              128,
+              1073244672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              128,
+              1073244672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "BFF10000",
+                "00000080",
+                "3FF86A00"
+              ],
+              "R6": 1021,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            100000
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                128,
+                1600000,
+                2281701376,
+                1638400000,
+                21475,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF1000000000000",
+      "b": "BFFFFFE000000081",
+      "group": "seed_D_edges_signs",
+      "SIO": "READY",
+      "expected": "BFE100110010FFCC",
+      "results": {
+        "parent": {
+          "output": "BFE100110010FFCC",
+          "instructions": 174,
+          "correct": true
+        },
+        "control": {
+          "output": "BFE100110010FFCC",
+          "instructions": 174,
+          "correct": true
+        },
+        "candidate": {
+          "output": "BFE100110010FFCC",
+          "instructions": 174,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "BFE100110010FFCC",
+          "instructions": 178,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              129,
+              3221225440
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                129,
+                2097120,
+                2281701376,
+                2147450880,
+                16384,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              129,
+              3221225440
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                129,
+                2097120,
+                2281701376,
+                2147450880,
+                16384,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "3FF1000000000000",
+      "b": "BFFFFFE000000081",
+      "group": "seed_D_edges_signs",
+      "SIO": "DIRTY",
+      "expected": "BFE100110010FFCC",
+      "results": {
+        "parent": {
+          "output": "BFE100110010FFCC",
+          "instructions": 605,
+          "correct": true
+        },
+        "control": {
+          "output": "BFE100110010FFCC",
+          "instructions": 605,
+          "correct": true
+        },
+        "candidate": {
+          "output": "BFE100110010FFCC",
+          "instructions": 256,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "BFE100110010FFCC",
+          "instructions": 178,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              129,
+              3221225440
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072758784,
+              129,
+              3221225440
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "3FF10000",
+                "00000081",
+                "BFFFFFE0"
+              ],
+              "R6": 1021,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            131070
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                129,
+                2097120,
+                2281701376,
+                2147450880,
+                16384,
+                4085,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "BFF1000000000000",
+      "b": "BFFFFFF000000082",
+      "group": "seed_D_edges_signs",
+      "SIO": "READY",
+      "expected": "3FE1000880043FBD",
+      "results": {
+        "parent": {
+          "output": "3FE1000880043FBD",
+          "instructions": 142,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE1000880043FBD",
+          "instructions": 142,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE1000880043FBD",
+          "instructions": 142,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE1000880043FBD",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              130,
+              3221225456
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                130,
+                2097136,
+                2281701376,
+                2147467264,
+                16384,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              130,
+              3221225456
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                130,
+                2097136,
+                2281701376,
+                2147467264,
+                16384,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "BFF1000000000000",
+      "b": "BFFFFFF000000082",
+      "group": "seed_D_edges_signs",
+      "SIO": "DIRTY",
+      "expected": "3FE1000880043FBD",
+      "results": {
+        "parent": {
+          "output": "3FE1000880043FBD",
+          "instructions": 605,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE1000880043FBD",
+          "instructions": 605,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE1000880043FBD",
+          "instructions": 224,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE1000880043FBD",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              130,
+              3221225456
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              3220242432,
+              130,
+              3221225456
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "00000000",
+                "BFF10000",
+                "00000082",
+                "BFFFFFF0"
+              ],
+              "R6": 1021,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            131071
+          ],
+          "joins": [
+            {
+              "registers": [
+                0,
+                1114112,
+                130,
+                2097136,
+                2281701376,
+                2147467264,
+                16384,
+                4084,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            2147483648
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "001000000000007B",
+      "b": "3FE00000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "READY",
+      "expected": "001FFFFFFFFFFD66",
+      "results": {
+        "parent": {
+          "output": "001FFFFFFFFFFD66",
+          "instructions": 142,
+          "correct": true
+        },
+        "control": {
+          "output": "001FFFFFFFFFFD66",
+          "instructions": 142,
+          "correct": true
+        },
+        "candidate": {
+          "output": "001FFFFFFFFFFD66",
+          "instructions": 142,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "001FFFFFFFFFFD66",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              1071644672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                123,
+                1048576,
+                456,
+                1048576,
+                2147483648,
+                1073741824,
+                32768,
+                0,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              1071644672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                123,
+                1048576,
+                456,
+                1048576,
+                2147483648,
+                1073741824,
+                32768,
+                0,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "001000000000007B",
+      "b": "3FE00000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "DIRTY",
+      "expected": "001FFFFFFFFFFD66",
+      "results": {
+        "parent": {
+          "output": "001FFFFFFFFFFD66",
+          "instructions": 609,
+          "correct": true
+        },
+        "control": {
+          "output": "001FFFFFFFFFFD66",
+          "instructions": 609,
+          "correct": true
+        },
+        "candidate": {
+          "output": "001FFFFFFFFFFD66",
+          "instructions": 239,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "001FFFFFFFFFFD66",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              1071644672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              1071644672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "0000007B",
+                "00100000",
+                "000001C8",
+                "3FE00000"
+              ],
+              "R6": 0,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            65536
+          ],
+          "joins": [
+            {
+              "registers": [
+                123,
+                1048576,
+                456,
+                1048576,
+                2147483648,
+                1073741824,
+                32768,
+                0,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "001000000000007B",
+      "b": "3FF00000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "READY",
+      "expected": "000FFFFFFFFFFEB3",
+      "results": {
+        "parent": {
+          "output": "000FFFFFFFFFFEB3",
+          "instructions": 653,
+          "correct": true
+        },
+        "control": {
+          "output": "000FFFFFFFFFFEB3",
+          "instructions": 653,
+          "correct": true
+        },
+        "candidate": {
+          "output": "000FFFFFFFFFFEB3",
+          "instructions": 653,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 147,
+          "correct": false
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "001000000000007B",
+      "b": "3FF00000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "DIRTY",
+      "expected": "000FFFFFFFFFFEB3",
+      "results": {
+        "parent": {
+          "output": "000FFFFFFFFFFEB3",
+          "instructions": 653,
+          "correct": true
+        },
+        "control": {
+          "output": "000FFFFFFFFFFEB3",
+          "instructions": 653,
+          "correct": true
+        },
+        "candidate": {
+          "output": "000FFFFFFFFFFEB3",
+          "instructions": 653,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 147,
+          "correct": false
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "7FE000000000007B",
+      "b": "40000000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "READY",
+      "expected": "7FCFFFFFFFFFFD66",
+      "results": {
+        "parent": {
+          "output": "7FCFFFFFFFFFFD66",
+          "instructions": 142,
+          "correct": true
+        },
+        "control": {
+          "output": "7FCFFFFFFFFFFD66",
+          "instructions": 142,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FCFFFFFFFFFFD66",
+          "instructions": 142,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FCFFFFFFFFFFD66",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                123,
+                1048576,
+                456,
+                1048576,
+                2147483648,
+                1073741824,
+                32768,
+                8172,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [
+            {
+              "registers": [
+                123,
+                1048576,
+                456,
+                1048576,
+                2147483648,
+                1073741824,
+                32768,
+                8172,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000060",
+              "bytes": 4
+            },
+            {
+              "kind": "write",
+              "address": "0xd0000064",
+              "bytes": 4
+            },
+            {
+              "kind": "read",
+              "address": "0xd0000070",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "7FE000000000007B",
+      "b": "40000000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "DIRTY",
+      "expected": "7FCFFFFFFFFFFD66",
+      "results": {
+        "parent": {
+          "output": "7FCFFFFFFFFFFD66",
+          "instructions": 609,
+          "correct": true
+        },
+        "control": {
+          "output": "7FCFFFFFFFFFFD66",
+          "instructions": 609,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FCFFFFFFFFFFD66",
+          "instructions": 239,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FCFFFFFFFFFFD66",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [
+            {
+              "raw": [
+                "0000007B",
+                "7FE00000",
+                "000001C8",
+                "40000000"
+              ],
+              "R6": 2043,
+              "SP": 537133020,
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "seeds": [
+            65536
+          ],
+          "joins": [
+            {
+              "registers": [
+                123,
+                1048576,
+                456,
+                1048576,
+                2147483648,
+                1073741824,
+                32768,
+                8172,
+                537133020
+              ],
+              "frame": "515362a7726662a7937962a7b48c62a701f01f08"
+            }
+          ],
+          "flags_after_add": [
+            0
+          ],
+          "MMIO": [
+            {
+              "kind": "read",
+              "address": "0xd0000078",
+              "bytes": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "a": "7FE000000000007B",
+      "b": "3FF00000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "READY",
+      "expected": "7FDFFFFFFFFFFD66",
+      "results": {
+        "parent": {
+          "output": "7FDFFFFFFFFFFD66",
+          "instructions": 603,
+          "correct": true
+        },
+        "control": {
+          "output": "7FDFFFFFFFFFFD66",
+          "instructions": 603,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FDFFFFFFFFFFD66",
+          "instructions": 603,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FDFFFFFFFFFFD66",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "7FE000000000007B",
+      "b": "3FF00000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "DIRTY",
+      "expected": "7FDFFFFFFFFFFD66",
+      "results": {
+        "parent": {
+          "output": "7FDFFFFFFFFFFD66",
+          "instructions": 603,
+          "correct": true
+        },
+        "control": {
+          "output": "7FDFFFFFFFFFFD66",
+          "instructions": 603,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FDFFFFFFFFFFD66",
+          "instructions": 603,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FDFFFFFFFFFFD66",
+          "instructions": 146,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "001000000000007B",
+      "b": "7FE00000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "READY",
+      "expected": "0000000000000000",
+      "results": {
+        "parent": {
+          "output": "0000000000000000",
+          "instructions": 615,
+          "correct": true
+        },
+        "control": {
+          "output": "0000000000000000",
+          "instructions": 615,
+          "correct": true
+        },
+        "candidate": {
+          "output": "0000000000000000",
+          "instructions": 615,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 147,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              2145386496
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              2145386496
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "001000000000007B",
+      "b": "7FE00000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "DIRTY",
+      "expected": "0000000000000000",
+      "results": {
+        "parent": {
+          "output": "0000000000000000",
+          "instructions": 615,
+          "correct": true
+        },
+        "control": {
+          "output": "0000000000000000",
+          "instructions": 615,
+          "correct": true
+        },
+        "candidate": {
+          "output": "0000000000000000",
+          "instructions": 615,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 147,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              2145386496
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              1048576,
+              456,
+              2145386496
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "7FE000000000007B",
+      "b": "00100000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "READY",
+      "expected": "7FF0000000000000",
+      "results": {
+        "parent": {
+          "output": "7FF0000000000000",
+          "instructions": 592,
+          "correct": true
+        },
+        "control": {
+          "output": "7FF0000000000000",
+          "instructions": 592,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FF0000000000000",
+          "instructions": 592,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FF0000000000000",
+          "instructions": 150,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1048576
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1048576
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "7FE000000000007B",
+      "b": "00100000000001C8",
+      "group": "result_exponent_guard_edges",
+      "SIO": "DIRTY",
+      "expected": "7FF0000000000000",
+      "results": {
+        "parent": {
+          "output": "7FF0000000000000",
+          "instructions": 592,
+          "correct": true
+        },
+        "control": {
+          "output": "7FF0000000000000",
+          "instructions": 592,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FF0000000000000",
+          "instructions": 592,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FF0000000000000",
+          "instructions": 150,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1048576
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              123,
+              2145386496,
+              456,
+              1048576
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "0000000000000000",
+      "b": "0000000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "results": {
+        "parent": {
+          "output": "7FF8000000000000",
+          "instructions": 55,
+          "correct": true
+        },
+        "control": {
+          "output": "7FF8000000000000",
+          "instructions": 55,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FF8000000000000",
+          "instructions": 55,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FF0000000000000",
+          "instructions": 155,
+          "correct": false
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "0000000000000000",
+      "b": "0000000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "results": {
+        "parent": {
+          "output": "7FF8000000000000",
+          "instructions": 55,
+          "correct": true
+        },
+        "control": {
+          "output": "7FF8000000000000",
+          "instructions": 55,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FF8000000000000",
+          "instructions": 55,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FF0000000000000",
+          "instructions": 155,
+          "correct": false
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "0000000000000000",
+      "b": "BFF0000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "8000000000000000",
+      "results": {
+        "parent": {
+          "output": "8000000000000000",
+          "instructions": 69,
+          "correct": true
+        },
+        "control": {
+          "output": "8000000000000000",
+          "instructions": 69,
+          "correct": true
+        },
+        "candidate": {
+          "output": "8000000000000000",
+          "instructions": 69,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "8000000000000000",
+          "instructions": 150,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              0,
+              0,
+              3220176896
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              0,
+              0,
+              3220176896
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "0000000000000000",
+      "b": "BFF0000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "8000000000000000",
+      "results": {
+        "parent": {
+          "output": "8000000000000000",
+          "instructions": 69,
+          "correct": true
+        },
+        "control": {
+          "output": "8000000000000000",
+          "instructions": 69,
+          "correct": true
+        },
+        "candidate": {
+          "output": "8000000000000000",
+          "instructions": 69,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "8000000000000000",
+          "instructions": 150,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              0,
+              0,
+              3220176896
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              0,
+              0,
+              3220176896
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "BFF0000000000000",
+      "b": "0000000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "FFF0000000000000",
+      "results": {
+        "parent": {
+          "output": "FFF0000000000000",
+          "instructions": 71,
+          "correct": true
+        },
+        "control": {
+          "output": "FFF0000000000000",
+          "instructions": 71,
+          "correct": true
+        },
+        "candidate": {
+          "output": "FFF0000000000000",
+          "instructions": 71,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "FFF0000000000000",
+          "instructions": 154,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              3220176896,
+              0,
+              0
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              3220176896,
+              0,
+              0
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "BFF0000000000000",
+      "b": "0000000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "FFF0000000000000",
+      "results": {
+        "parent": {
+          "output": "FFF0000000000000",
+          "instructions": 71,
+          "correct": true
+        },
+        "control": {
+          "output": "FFF0000000000000",
+          "instructions": 71,
+          "correct": true
+        },
+        "candidate": {
+          "output": "FFF0000000000000",
+          "instructions": 71,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "FFF0000000000000",
+          "instructions": 154,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              3220176896,
+              0,
+              0
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              3220176896,
+              0,
+              0
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "0000000000000001",
+      "b": "4000000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "0000000000000000",
+      "results": {
+        "parent": {
+          "output": "0000000000000000",
+          "instructions": 343,
+          "correct": true
+        },
+        "control": {
+          "output": "0000000000000000",
+          "instructions": 343,
+          "correct": true
+        },
+        "candidate": {
+          "output": "0000000000000000",
+          "instructions": 343,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 150,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              1,
+              0,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              1,
+              0,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "0000000000000001",
+      "b": "4000000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "0000000000000000",
+      "results": {
+        "parent": {
+          "output": "0000000000000000",
+          "instructions": 343,
+          "correct": true
+        },
+        "control": {
+          "output": "0000000000000000",
+          "instructions": 343,
+          "correct": true
+        },
+        "candidate": {
+          "output": "0000000000000000",
+          "instructions": 343,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 150,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              1,
+              0,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              1,
+              0,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "0010000000000000",
+      "b": "4000000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "0008000000000000",
+      "results": {
+        "parent": {
+          "output": "0008000000000000",
+          "instructions": 300,
+          "correct": true
+        },
+        "control": {
+          "output": "0008000000000000",
+          "instructions": 300,
+          "correct": true
+        },
+        "candidate": {
+          "output": "0008000000000000",
+          "instructions": 300,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 149,
+          "correct": false
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1048576,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1048576,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "0010000000000000",
+      "b": "4000000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "0008000000000000",
+      "results": {
+        "parent": {
+          "output": "0008000000000000",
+          "instructions": 300,
+          "correct": true
+        },
+        "control": {
+          "output": "0008000000000000",
+          "instructions": 300,
+          "correct": true
+        },
+        "candidate": {
+          "output": "0008000000000000",
+          "instructions": 300,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 149,
+          "correct": false
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1048576,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1048576,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "7FEFFFFFFFFFFFFF",
+      "b": "3FE0000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "7FF0000000000000",
+      "results": {
+        "parent": {
+          "output": "7FF0000000000000",
+          "instructions": 233,
+          "correct": true
+        },
+        "control": {
+          "output": "7FF0000000000000",
+          "instructions": 233,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FF0000000000000",
+          "instructions": 233,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FF0000000000000",
+          "instructions": 152,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              4294967295,
+              2146435071,
+              0,
+              1071644672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              4294967295,
+              2146435071,
+              0,
+              1071644672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "7FEFFFFFFFFFFFFF",
+      "b": "3FE0000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "7FF0000000000000",
+      "results": {
+        "parent": {
+          "output": "7FF0000000000000",
+          "instructions": 233,
+          "correct": true
+        },
+        "control": {
+          "output": "7FF0000000000000",
+          "instructions": 233,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FF0000000000000",
+          "instructions": 233,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FF0000000000000",
+          "instructions": 152,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              4294967295,
+              2146435071,
+              0,
+              1071644672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              4294967295,
+              2146435071,
+              0,
+              1071644672
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "3FF8000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "3FE5555555555555",
+      "results": {
+        "parent": {
+          "output": "3FE5555555555555",
+          "instructions": 156,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE5555555555555",
+          "instructions": 156,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE5555555555555",
+          "instructions": 156,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE5555555555555",
+          "instructions": 178,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1073217536
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1073217536
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "3FF8000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "3FE5555555555555",
+      "results": {
+        "parent": {
+          "output": "3FE5555555555555",
+          "instructions": 156,
+          "correct": true
+        },
+        "control": {
+          "output": "3FE5555555555555",
+          "instructions": 156,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FE5555555555555",
+          "instructions": 156,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FE5555555555555",
+          "instructions": 178,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1073217536
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1073217536
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "3FF2000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "3FEC71C71C71C71C",
+      "results": {
+        "parent": {
+          "output": "3FEC71C71C71C71C",
+          "instructions": 156,
+          "correct": true
+        },
+        "control": {
+          "output": "3FEC71C71C71C71C",
+          "instructions": 156,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEC71C71C71C71C",
+          "instructions": 156,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEC71C71C71C71C",
+          "instructions": 178,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1072824320
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1072824320
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "3FF2000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "3FEC71C71C71C71C",
+      "results": {
+        "parent": {
+          "output": "3FEC71C71C71C71C",
+          "instructions": 156,
+          "correct": true
+        },
+        "control": {
+          "output": "3FEC71C71C71C71C",
+          "instructions": 156,
+          "correct": true
+        },
+        "candidate": {
+          "output": "3FEC71C71C71C71C",
+          "instructions": 156,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "3FEC71C71C71C71C",
+          "instructions": 178,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1072824320
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              1072824320
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "7FF0000000000000",
+      "b": "4000000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "7FF0000000000000",
+      "results": {
+        "parent": {
+          "output": "7FF0000000000000",
+          "instructions": 72,
+          "correct": true
+        },
+        "control": {
+          "output": "7FF0000000000000",
+          "instructions": 72,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FF0000000000000",
+          "instructions": 72,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FF0000000000000",
+          "instructions": 156,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              2146435072,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              2146435072,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "7FF0000000000000",
+      "b": "4000000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "7FF0000000000000",
+      "results": {
+        "parent": {
+          "output": "7FF0000000000000",
+          "instructions": 72,
+          "correct": true
+        },
+        "control": {
+          "output": "7FF0000000000000",
+          "instructions": 72,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FF0000000000000",
+          "instructions": 72,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "7FF0000000000000",
+          "instructions": 156,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              2146435072,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              2146435072,
+              0,
+              1073741824
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "7FF0000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "0000000000000000",
+      "results": {
+        "parent": {
+          "output": "0000000000000000",
+          "instructions": 79,
+          "correct": true
+        },
+        "control": {
+          "output": "0000000000000000",
+          "instructions": 79,
+          "correct": true
+        },
+        "candidate": {
+          "output": "0000000000000000",
+          "instructions": 79,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 154,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              2146435072
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              2146435072
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "7FF0000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "0000000000000000",
+      "results": {
+        "parent": {
+          "output": "0000000000000000",
+          "instructions": 79,
+          "correct": true
+        },
+        "control": {
+          "output": "0000000000000000",
+          "instructions": 79,
+          "correct": true
+        },
+        "candidate": {
+          "output": "0000000000000000",
+          "instructions": 79,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 154,
+          "correct": true
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              2146435072
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              0,
+              2146435072
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "7FF0000000000001",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "7FF8000000000001",
+      "results": {
+        "parent": {
+          "output": "7FF8000000000001",
+          "instructions": 49,
+          "correct": true
+        },
+        "control": {
+          "output": "7FF8000000000001",
+          "instructions": 49,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FF8000000000001",
+          "instructions": 49,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 154,
+          "correct": false
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1,
+              2146435072
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1,
+              2146435072
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "3FF0000000000000",
+      "b": "7FF0000000000001",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000001",
+      "results": {
+        "parent": {
+          "output": "7FF8000000000001",
+          "instructions": 49,
+          "correct": true
+        },
+        "control": {
+          "output": "7FF8000000000001",
+          "instructions": 49,
+          "correct": true
+        },
+        "candidate": {
+          "output": "7FF8000000000001",
+          "instructions": 49,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "0000000000000000",
+          "instructions": 154,
+          "correct": false
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1,
+              2146435072
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              0,
+              1072693248,
+              1,
+              2146435072
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "FFF0000000000001",
+      "b": "3FF0000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "READY",
+      "expected": "FFF8000000000001",
+      "results": {
+        "parent": {
+          "output": "FFF8000000000001",
+          "instructions": 38,
+          "correct": true
+        },
+        "control": {
+          "output": "FFF8000000000001",
+          "instructions": 38,
+          "correct": true
+        },
+        "candidate": {
+          "output": "FFF8000000000001",
+          "instructions": 38,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "FFF0000000000000",
+          "instructions": 156,
+          "correct": false
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              1,
+              4293918720,
+              0,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              1,
+              4293918720,
+              0,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    },
+    {
+      "a": "FFF0000000000001",
+      "b": "3FF0000000000000",
+      "group": "IEEE_dyadic_and_sNaN",
+      "SIO": "DIRTY",
+      "expected": "FFF8000000000001",
+      "results": {
+        "parent": {
+          "output": "FFF8000000000001",
+          "instructions": 38,
+          "correct": true
+        },
+        "control": {
+          "output": "FFF8000000000001",
+          "instructions": 38,
+          "correct": true
+        },
+        "candidate": {
+          "output": "FFF8000000000001",
+          "instructions": 38,
+          "correct": true
+        },
+        "Qfplib": {
+          "output": "FFF0000000000000",
+          "instructions": 156,
+          "correct": false
+        }
+      },
+      "captures": {
+        "control": {
+          "entry": {
+            "raw": [
+              1,
+              4293918720,
+              0,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        },
+        "candidate": {
+          "entry": {
+            "raw": [
+              1,
+              4293918720,
+              0,
+              1072693248
+            ],
+            "sp": 537133040,
+            "saved": [
+              2808238929,
+              2808243826,
+              2808248723,
+              2808253620,
+              136310785
+            ]
+          },
+          "sw": [],
+          "seeds": [],
+          "joins": [],
+          "flags_after_add": [],
+          "MMIO": []
+        }
+      }
+    }
+  ],
+  "device_IO": 0
+}

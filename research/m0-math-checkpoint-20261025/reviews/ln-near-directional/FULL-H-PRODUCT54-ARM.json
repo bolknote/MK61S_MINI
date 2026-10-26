@@ -1,0 +1,338 @@
+{
+  "status": "PASS_FULL_H_BOUND_AND_SIGNED_REMAINDER_ACTUAL_ARM",
+  "actual_ARM_calls": 36,
+  "rows": [
+    {
+      "den": 8065,
+      "delta": "0",
+      "h": "0",
+      "residue": 0,
+      "error": "0",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8065,
+      "delta": "0",
+      "h": "0",
+      "residue": 0,
+      "error": "0",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8065,
+      "delta": "1",
+      "h": "260",
+      "residue": 252,
+      "error": "-252/8065",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8065,
+      "delta": "1",
+      "h": "260",
+      "residue": 252,
+      "error": "-252/8065",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8065,
+      "delta": "65535",
+      "h": "17041148",
+      "residue": -2300,
+      "error": "460/1613",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8065,
+      "delta": "65535",
+      "h": "17041148",
+      "residue": -2300,
+      "error": "460/1613",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8065,
+      "delta": "4294967295",
+      "h": "1116825697786",
+      "residue": -250,
+      "error": "50/1613",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8065,
+      "delta": "4294967295",
+      "h": "1116825697786",
+      "residue": -250,
+      "error": "50/1613",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8065,
+      "delta": "281474976710655",
+      "h": "73192288947142412",
+      "residue": 1780,
+      "error": "-356/1613",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8065,
+      "delta": "281474976710655",
+      "h": "73192288947142412",
+      "residue": 1780,
+      "error": "-356/1613",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8065,
+      "delta": "281474976710656",
+      "h": "73192288947142672",
+      "residue": 2032,
+      "error": "-2032/8065",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8065,
+      "delta": "281474976710656",
+      "h": "73192288947142672",
+      "residue": 2032,
+      "error": "-2032/8065",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "0",
+      "h": "0",
+      "residue": 0,
+      "error": "0",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "0",
+      "h": "0",
+      "residue": 0,
+      "error": "0",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "1",
+      "h": "256",
+      "residue": 0,
+      "error": "0",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "1",
+      "h": "256",
+      "residue": 0,
+      "error": "0",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "65535",
+      "h": "16776960",
+      "residue": 0,
+      "error": "0",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "65535",
+      "h": "16776960",
+      "residue": 0,
+      "error": "0",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "4294967295",
+      "h": "1099511627520",
+      "residue": 0,
+      "error": "0",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "4294967295",
+      "h": "1099511627520",
+      "residue": 0,
+      "error": "0",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "281474976710655",
+      "h": "72057594037927680",
+      "residue": 0,
+      "error": "0",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "281474976710655",
+      "h": "72057594037927680",
+      "residue": 0,
+      "error": "0",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "281474976710656",
+      "h": "72057594037927936",
+      "residue": 0,
+      "error": "0",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8192,
+      "delta": "281474976710656",
+      "h": "72057594037927936",
+      "residue": 0,
+      "error": "0",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "0",
+      "h": "0",
+      "residue": 0,
+      "error": "0",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "0",
+      "h": "0",
+      "residue": 0,
+      "error": "0",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "1",
+      "h": "252",
+      "residue": 512,
+      "error": "-4/65",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "1",
+      "h": "252",
+      "residue": 512,
+      "error": "-4/65",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "65535",
+      "h": "16518853",
+      "residue": -640,
+      "error": "1/13",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "65535",
+      "h": "16518853",
+      "residue": -640,
+      "error": "1/13",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "4294967295",
+      "h": "1082596064020",
+      "residue": -2560,
+      "error": "4/13",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "4294967295",
+      "h": "1082596064020",
+      "residue": -2560,
+      "error": "4/13",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "281474976710655",
+      "h": "70949015668113408",
+      "residue": 0,
+      "error": "0",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "281474976710655",
+      "h": "70949015668113408",
+      "residue": 0,
+      "error": "0",
+      "SIO": "DIRTY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "281474976710656",
+      "h": "70949015668113660",
+      "residue": 512,
+      "error": "-4/65",
+      "SIO": "READY",
+      "instructions": 92
+    },
+    {
+      "den": 8320,
+      "delta": "281474976710656",
+      "h": "70949015668113660",
+      "residue": 512,
+      "error": "-4/65",
+      "SIO": "DIRTY",
+      "instructions": 92
+    }
+  ],
+  "full_h_bound": "2260993/4194304",
+  "source_retained_limb_model_exact": true,
+  "loaded_capsule_bytes": 184,
+  "capsule_sha256": "81ad2d43fe44b6f9becccf332840205c0ff504dac4e944b7280f7f83afb4aa50",
+  "SIO_accesses": 0,
+  "no_firmware_or_ROM_loaded": true,
+  "PCS_SP_bounded_writes_every_call": true,
+  "stack_bytes_observed": 36
+}

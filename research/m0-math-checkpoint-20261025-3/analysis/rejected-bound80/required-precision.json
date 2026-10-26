@@ -1,0 +1,446 @@
+{
+  "status": "EXACT_DYADIC_GAP_AND_PARENT_POWER_ENCLOSURE_AUDIT",
+  "boundary_calls_ready": 28,
+  "actual_ARM_or_MPFR_calls": 0,
+  "relative_gap_bits_histogram": {
+    "101": 8,
+    "97": 2,
+    "98": 3,
+    "104": 3,
+    "100": 4,
+    "102": 5,
+    "99": 2,
+    "108": 1
+  },
+  "ideal_exact_truncation_filter_decisions": {
+    "80": 0,
+    "96": 0,
+    "112": 22,
+    "128": 28
+  },
+  "model_radii_use_same_conservative16_not_a_new_ARM_implementation": true,
+  "all_captured_actual_P128_power_enclosures_verified_against_exact_dyadic_powers": true,
+  "rows": [
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "cell": "3FE51503CA80F09C",
+      "denominator": 32,
+      "numerator": 29,
+      "inverse": 0,
+      "relative_gap_bits": 101,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 0,
+        "128": -1
+      }
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "cell": "4004374E30A30828",
+      "denominator": 32,
+      "numerator": 21,
+      "inverse": 0,
+      "relative_gap_bits": 97,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "cell": "3FE9F5FE54731716",
+      "denominator": 32,
+      "numerator": 21,
+      "inverse": 0,
+      "relative_gap_bits": 98,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": -1,
+        "128": -1
+      }
+    },
+    {
+      "x": "3FF654E7580FA958",
+      "y": "3FE5000000000000",
+      "cell": "3FF3E9D51AF35304",
+      "denominator": 32,
+      "numerator": 21,
+      "inverse": 0,
+      "relative_gap_bits": 98,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "401FB34C9D8CF59F",
+      "y": "3FE5000000000000",
+      "cell": "400F1F205F79242D",
+      "denominator": 32,
+      "numerator": 21,
+      "inverse": 0,
+      "relative_gap_bits": 104,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 0,
+        "128": 1
+      }
+    },
+    {
+      "x": "3FE324306A0A992A",
+      "y": "3FDA000000000000",
+      "cell": "3FE9F8823EAF8116",
+      "denominator": 32,
+      "numerator": 13,
+      "inverse": 0,
+      "relative_gap_bits": 98,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": -1,
+        "128": -1
+      }
+    },
+    {
+      "x": "40157AE1D94B6C89",
+      "y": "3FCC000000000000",
+      "cell": "3FF71C2FC32647FD",
+      "denominator": 32,
+      "numerator": 7,
+      "inverse": 0,
+      "relative_gap_bits": 97,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "4026C3C0B5F88F2C",
+      "y": "3FFE000000000000",
+      "cell": "4057E60E27239A60",
+      "denominator": 8,
+      "numerator": 15,
+      "inverse": 0,
+      "relative_gap_bits": 100,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": -1,
+        "128": -1
+      }
+    },
+    {
+      "x": "40504A28B5F48AA3",
+      "y": "3F80000000000000",
+      "cell": "3FF087DCF3B21862",
+      "denominator": 128,
+      "numerator": 1,
+      "inverse": 0,
+      "relative_gap_bits": 102,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 0,
+        "128": 1
+      }
+    },
+    {
+      "x": "4037AB22F2CD1735",
+      "y": "3FDC000000000000",
+      "cell": "400FEFC9F02A320D",
+      "denominator": 16,
+      "numerator": 7,
+      "inverse": 0,
+      "relative_gap_bits": 100,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "40323AF181A4771B",
+      "y": "3FE2000000000000",
+      "cell": "401479FC2A59DCD8",
+      "denominator": 16,
+      "numerator": 9,
+      "inverse": 0,
+      "relative_gap_bits": 99,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "404F04390B0A9B1B",
+      "y": "3FF6000000000000",
+      "cell": "40723A569C65AAC4",
+      "denominator": 8,
+      "numerator": 11,
+      "inverse": 0,
+      "relative_gap_bits": 101,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": -1,
+        "128": -1
+      }
+    },
+    {
+      "x": "3FA2595E2B9CE616",
+      "y": "BFA0000000000000",
+      "cell": "3FF1C10779B3E134",
+      "denominator": 32,
+      "numerator": 1,
+      "inverse": 1,
+      "relative_gap_bits": 101,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 0,
+        "128": -1
+      }
+    },
+    {
+      "x": "3FE84FD5844E80E0",
+      "y": "3FB8000000000000",
+      "cell": "3FEF2FAB81744864",
+      "denominator": 32,
+      "numerator": 3,
+      "inverse": 0,
+      "relative_gap_bits": 100,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": -1,
+        "128": -1
+      }
+    },
+    {
+      "x": "3FED6D1B8CD8CE06",
+      "y": "402F000000000000",
+      "cell": "3FD172956CDB5234",
+      "denominator": 2,
+      "numerator": 31,
+      "inverse": 0,
+      "relative_gap_bits": 104,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "402D2286C7D961B9",
+      "y": "3FF2000000000000",
+      "cell": "40345C7F8F9DC79A",
+      "denominator": 8,
+      "numerator": 9,
+      "inverse": 0,
+      "relative_gap_bits": 99,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "3FEAEC61B8FD832B",
+      "y": "4013000000000000",
+      "cell": "3FDC2C452BFA6FFE",
+      "denominator": 4,
+      "numerator": 19,
+      "inverse": 0,
+      "relative_gap_bits": 108,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 0,
+        "128": 1
+      }
+    },
+    {
+      "x": "3FED782226040405",
+      "y": "4027000000000000",
+      "cell": "3FD8D07A88CA7A61",
+      "denominator": 2,
+      "numerator": 23,
+      "inverse": 0,
+      "relative_gap_bits": 102,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": -1,
+        "128": -1
+      }
+    },
+    {
+      "x": "4020FD2CAEB72B72",
+      "y": "3FE4000000000000",
+      "cell": "400E770742F2F2CD",
+      "denominator": 8,
+      "numerator": 5,
+      "inverse": 0,
+      "relative_gap_bits": 104,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": -1,
+        "128": -1
+      }
+    },
+    {
+      "x": "3FF4B1DD264786A5",
+      "y": "C02A000000000000",
+      "cell": "3FA20E8574F55E65",
+      "denominator": 1,
+      "numerator": 13,
+      "inverse": 1,
+      "relative_gap_bits": 101,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "cell": "3FC2B607BC82DBE2",
+      "denominator": 1,
+      "numerator": 12,
+      "inverse": 1,
+      "relative_gap_bits": 102,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "3FBFBF0990BF0A68",
+      "y": "BFC0000000000000",
+      "cell": "3FF4C524D13C910B",
+      "denominator": 8,
+      "numerator": 1,
+      "inverse": 1,
+      "relative_gap_bits": 102,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "3F9246CF13876B3A",
+      "y": "BFC0000000000000",
+      "cell": "3FFA7704E4BEFF94",
+      "denominator": 8,
+      "numerator": 1,
+      "inverse": 1,
+      "relative_gap_bits": 101,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "3F968EBD5B980468",
+      "y": "BFC0000000000000",
+      "cell": "3FF9C71E2DF27264",
+      "denominator": 8,
+      "numerator": 1,
+      "inverse": 1,
+      "relative_gap_bits": 100,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": -1,
+        "128": -1
+      }
+    },
+    {
+      "x": "3FC6017DB8B8B448",
+      "y": "BFC0000000000000",
+      "cell": "3FF3F064422ED2DB",
+      "denominator": 8,
+      "numerator": 1,
+      "inverse": 1,
+      "relative_gap_bits": 102,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": -1,
+        "128": -1
+      }
+    },
+    {
+      "x": "400350B8DE465A94",
+      "y": "3FB0000000000000",
+      "cell": "3FF0E7FC068B4D7B",
+      "denominator": 16,
+      "numerator": 1,
+      "inverse": 0,
+      "relative_gap_bits": 101,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 0,
+        "128": 1
+      }
+    },
+    {
+      "x": "3F89C1A2900EDC2E",
+      "y": "BFC0000000000000",
+      "cell": "3FFBA614EE0D2C26",
+      "denominator": 8,
+      "numerator": 1,
+      "inverse": 1,
+      "relative_gap_bits": 101,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    },
+    {
+      "x": "3F9CB40EE7C5CAF4",
+      "y": "BFC0000000000000",
+      "cell": "3FF903546812BB1E",
+      "denominator": 8,
+      "numerator": 1,
+      "inverse": 1,
+      "relative_gap_bits": 101,
+      "ideal_truncation_model_decisions": {
+        "80": 0,
+        "96": 0,
+        "112": 1,
+        "128": 1
+      }
+    }
+  ],
+  "hardware_accessed": false
+}

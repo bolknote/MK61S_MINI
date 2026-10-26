@@ -1,0 +1,21 @@
+{
+  "status": "INTERMEDIATE_COMPONENT_RESULTS_NOT_INTEGRATED",
+  "square_full_qualification_complete": true,
+  "square_independent_review_complete": true,
+  "square_private_ROOT_acceptance": true,
+  "boundary_full_qualification_complete": true,
+  "boundary_independent_review_complete": false,
+  "boundary_review_live_files_excluded": true,
+  "boundary_corrected_public_saving_range": [
+    4,
+    180
+  ],
+  "software_division_seed_bare_proof_complete": true,
+  "software_divider_implementation_complete": false,
+  "original_pow153_remaining": 34,
+  "author_separate507_no_slower": 437,
+  "reviewed_separate507_no_slower": 422,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

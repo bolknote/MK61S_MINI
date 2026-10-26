@@ -1,0 +1,51 @@
+{
+  "status": "PASS_ONLY_HELPER_AND_IMMEDIATE_ALIGNMENT_REGION_CHANGES",
+  "old_members": {
+    "pow_rsqrt_boundary": [
+      0,
+      848
+    ],
+    "pow_small_integer": [
+      2864,
+      936
+    ],
+    "mk61_m0_log_ratio70_slow": [
+      848,
+      232
+    ],
+    "pow_fast_log": [
+      1080,
+      1784
+    ]
+  },
+  "new_members": {
+    "pow_rsqrt_boundary": [
+      0,
+      848
+    ],
+    "pow_small_integer": [
+      3076,
+      936
+    ],
+    "mk61_m0_log_ratio70_slow": [
+      848,
+      444
+    ],
+    "pow_fast_log": [
+      1292,
+      1784
+    ]
+  },
+  "changed_extent_parent": [
+    848,
+    1080
+  ],
+  "changed_extent_candidate": [
+    848,
+    1292
+  ],
+  "all_other_shared_bytes_identical": true,
+  "source_sha256": "af83817a78b261621a638c5cc3436bfd63ef57371d999766dfad2a50733dcef7",
+  "candidate_ELF_sha256": "c0000b4a468cdb80228fab332978f276a21cf5e229fa1abe7622a287ef396297",
+  "hardware_accessed": false
+}

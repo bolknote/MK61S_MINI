@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/tally.py", line 6, in <module>
+    from trace import expected_saving
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/trace.py", line 2, in <module>
+    from harness import *
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/harness.py", line 7, in <module>
+    _lut_parent=importlib.util.module_from_spec(spec);spec.loader.exec_module(_lut_parent)
+                                                      ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-20261025/harness.py", line 7, in <module>
+    _reciprocal_parent=importlib.util.module_from_spec(spec);spec.loader.exec_module(_reciprocal_parent)
+                                                             ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/harness.py", line 7, in <module>
+    _boundary_parent=importlib.util.module_from_spec(spec);spec.loader.exec_module(_boundary_parent)
+                                                           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/harness.py", line 8, in <module>
+    base=importlib.util.module_from_spec(spec);spec.loader.exec_module(base)
+                                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-r2-20261025/harness.py", line 5, in <module>
+    from parent_harness import *
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-r2-20261025/parent_harness.py", line 13, in <module>
+    from native_eabi_m0_arm_self_test import Machine,SP,STOP,bits
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/support/native_eabi_m0_arm_self_test.py", line 12, in <module>
+    from unicorn import Uc, UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB, UC_HOOK_MEM_WRITE, UC_HOOK_MEM_READ, UC_HOOK_CODE
+ModuleNotFoundError: No module named 'unicorn'

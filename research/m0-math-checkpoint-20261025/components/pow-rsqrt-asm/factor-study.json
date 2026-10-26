@@ -1,0 +1,11 @@
+{
+  "status": "MODEL_ONLY",
+  "samples": 134144,
+  "factor_high_delta_counts": {
+    "-2": 574,
+    "-1": 59241,
+    "0": 73095,
+    "1": 1234
+  },
+  "first_outside_2": []
+}

@@ -1,0 +1,106 @@
+{
+  "status": "FROZEN_AUTHOR_EXACT_SQUARE128_POW_COMPONENT_PENDING_REVIEW",
+  "candidate_ELF_sha256": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898",
+  "source_parent": ".build/m0-pow-exp-table-product-20261025",
+  "source_parent_FROZEN_sha256": "dd0ec3663009cd390c710611e57ccc23d18c733201911471feae6e52e58e7d1c",
+  "accepted_parent_ROOT_receipt_sha256": "09b8c7326b37b67e106ff517cc594dc02d09fa0643ed96dee47c48af747f6d4d",
+  "source_proof_sha256": "a758513b336fa209c301e8d7895e145a2cc896e5f973cee0692bcff159a8abcb",
+  "numeric_proof_sha256": "c9fe05577f99d5ff3f58d794100374982a861a9ec3c7015b24fdca95a8cb7bdb",
+  "original_pow153_remaining": [
+    35,
+    34
+  ],
+  "original_new_strict_fixes": 1,
+  "same_old116468_pairs_losses": [
+    10853,
+    10850
+  ],
+  "old_new_strict_fixes": 3,
+  "expanded_union_pairs": 120980,
+  "expanded_union_states": 241960,
+  "expanded_union_reference_state_variants": 279522,
+  "expanded_union_losses": [
+    11449,
+    11434
+  ],
+  "expanded_union_strict_fixes": 15,
+  "newly_measured_preexisting_loss_pairs": 596,
+  "candidate_wrong": 0,
+  "new_raw_losses": 0,
+  "parent_cost_increase_states": 0,
+  "all_parent_raw_bits_identical": true,
+  "exact_old24byte_transform_and_radius_rules_preserved": true,
+  "all_actual_public_costs_match_static_kernel_delta": true,
+  "kernel_cost_classes": {
+    "low_zero_lower": [
+      129,
+      94
+    ],
+    "low_zero_upper": [
+      116,
+      89
+    ],
+    "low_nonzero_lower": [
+      195,
+      154
+    ],
+    "low_nonzero_upper": [
+      182,
+      149
+    ]
+  },
+  "kernel_frame_bytes": [
+    48,
+    40
+  ],
+  "kernel_plus_helper_peak_bytes": [
+    68,
+    60
+  ],
+  "new_function_bytes": 232,
+  "old_function_and_retained_slot_bytes": 310,
+  "allocated_code_size_delta_bytes": 0,
+  "new_tables_RAM_or_libgcc_dependencies": false,
+  "full_old_corpus_candidate_observed_stack_bytes": 2284,
+  "fresh_controls_parent_control_candidate_observed_stack_bytes": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148
+  },
+  "qualified_fresh_ARM_calls": 330880,
+  "fresh_full_old_candidate_ARM_calls": 232936,
+  "fresh_new_public_ARM_calls": 61524,
+  "fresh_bare_ARM_calls": 36420,
+  "fresh_actual_directed_MPFR_inputs": 5051,
+  "sNaN_policy_shortcuts": 76,
+  "oracle_evaluations": 5127,
+  "pilot918_and_route70_excluded": true,
+  "inherited_parent_Qfplib_MPFR_not_fresh": true,
+  "wrong_Qfplib_reference_state_variants_retained": 77106,
+  "correct_Qfplib_comparison": {
+    "slower": 21167,
+    "faster": 178544,
+    "equal": 2705
+  },
+  "strict_quiet_NaN_reference_policy_and_no_nominal_domain_filter": true,
+  "thirteen_complete_source_object_ELF_rebuilds_byte_exact": true,
+  "generic_M0_M4_soft_hard_selected_assembly_bytes_relocations_equal": true,
+  "no_other_resident_code_layout_or_veneer_change": true,
+  "original507_author_separate_union": {
+    "no_slower": 437,
+    "strictly_faster": 431,
+    "equal": 6,
+    "remaining": 70,
+    "remaining_by_operation": {
+      "pow": 34,
+      "sin": 22,
+      "cos": 14
+    },
+    "not_one_integrated_binary": true
+  },
+  "original507_reviewed_union_kept422_per_root": true,
+  "independent_review_pending": true,
+  "general_pow_totality_other_math_speed_source_merge_R12_loader_guards_cycles_release_pending": true,
+  "canonical_runtime_Git_device_USB_Flash_or_release_changed": false,
+  "goal_complete": false
+}

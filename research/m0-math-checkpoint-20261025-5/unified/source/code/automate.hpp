@@ -1,0 +1,159 @@
+#include "program_execution.hpp"
+
+static constexpr usize hz_STOP_SIGNAL  =   200;  // Hz
+static constexpr usize ms_STOP_SIGNAL  =   850;  // ms
+
+inline  void  return_auto_mode(void) { // возвращение в режим АВТ
+    sound(PIN_BUZZER, hz_STOP_SIGNAL, ms_STOP_SIGNAL, library_mk61::sound_volume());
+    MnemoLabel.enable();
+    if(!config.disassm) disassembler.disable(); // если дизассемблер включен в конфигурации "ВСЕГДА" то выключение ненужно
+    #ifdef MK61_EXTENDED
+      disassembler.disable();
+      main_lcd().setCursor(0,0);
+      for(usize i = 0; i < 5; i++) {
+        const u8 byte = mk61s.byte_from_R(14, i);
+        const char letter = (byte == 0)? ' ' : ((char) byte);
+        main_lcd().write(letter);
+      }
+    #endif
+}
+
+/* СОБЫТИЯ автомата конечных состояний МК-61 */
+static constexpr i32 MK61_REQUEST_IDLE_LOOP  =   1;  // любое положительное число
+static constexpr i32 MK61_REQUEST_BASE_LOOP  =  -1;  // любое отрицательное число
+static i32 mk61_sending_keycode = MK61_REQUEST_BASE_LOOP;
+static t_time_ms runtime_started_at;
+static bool runtime_measurement_active;
+
+inline bool mk61_calculator_is_idle(void) {
+  return core_61::is_CALC() && mk61_sending_keycode == MK61_REQUEST_BASE_LOOP;
+}
+
+inline  void  event_stop_in_prg_mk61(void) {
+  classic_timer::synchronize(false);
+  if(runtime_measurement_active) {
+    runtime_ms = millis() - runtime_started_at;
+    runtime_measurement_active = false;
+  }
+  #ifdef DEBUG_MEASURE
+    char mk61_display[14];
+    core_61::update_indicator(&mk61_display[0], terminal_symbols);
+    dbgln(MEASURE, "time elapsed (ms): ", runtime_ms, " : ", mk61_display);
+  #endif
+
+  dbgln(MINI, "PRG: STOP dt = ", runtime_ms,
+        " classic_period_us = ",
+        classic_timer::configured_period_us());
+  
+  // >>>>>> Расширение системы команд МК-61 по режиму старт/стоп  <<<<<<<
+  const i32 back_step = core_61::get_IP() - 1;
+  if(back_step < 0 || back_step >= (i32) core_61::program_steps()) {
+      return_auto_mode();
+      return;
+  }
+  const i32 code = core_61::get_code(core_61::get_ring_address(back_step));
+  const u8 extended_code = ext61_program[back_step];
+  ext_command.code = 0;
+  dbgln(EXT_RUN, "IP = ", back_step, ". MK61 code = ", code);
+  if(code == 0x50 && runtime_safety::valid_extended_command(extended_code, COUNT_EXT_COMMAND)) {
+    // Есть код расширения режима старт/стоп!
+      ext_command.code  = extended_code;
+      ext_command.time  = millis();
+      dbgln(EXT_RUN, "Extended code = ", ext_command.code);
+  } else { 
+    // Если нет расширенного кода то обычная работа в режиме ОСТАНОВ
+      return_auto_mode();
+  }
+
+}
+
+void mk61_program_started(void) {
+  dbgln(MINI, "PRG: first step dt = ", runtime_ms,
+        " classic_period_us = ",
+        classic_timer::configured_period_us());
+  MnemoLabel.disable();
+  disassembler.disable("RUN");
+  runtime_ms = 0;
+  runtime_started_at = millis();
+  runtime_measurement_active = true;
+  classic_timer::synchronize(library_mk61::speed_is_classic());
+}
+
+inline void service_run_keypress(void) {
+  if(m61_text::calculator_suspended()) return;
+  const i32 keycode = kbd::get_key(PRESS);
+  if(keycode >= 0) key_press_handler(keycode);
+}
+
+inline void scan_m61_runtime_keyboard(void) {
+  if(m61_text::calculator_suspended()) {
+    (void) kbd::scan_m61_controls();
+  } else {
+    kbd::scan();
+  }
+}
+
+inline void run_program_steps(void) {
+  const usize step_count = library_mk61::speed_is_max()
+      ? cfg::MAXIMUM_MK61_BATCH_STEPS
+      : 1;
+
+  for(usize i = 0; i < step_count; i++) {
+      core_61::step();
+
+      // Во время M61 программа калькулятора может выполнять целый пакет MAXIMUM
+      // между проходами loop(). Пока калькулятор работает, опрашиваем всю
+      // матрицу: любая его клавиша должна штатно остановить программу. В
+      // замороженной trap-сцене остаются Р/Г/ГРД, ESC и отложенная привязка OK.
+      if(m61_text::active()) {
+        scan_m61_runtime_keyboard();
+        service_m61_controls();
+        if(!m61_text::active()) return;
+      }
+
+      if(core_61::is_CALC()) {
+          event_stop_in_prg_mk61();     // обработка события "ОСТАНОВ ПРОГРАММЫ"
+          break;
+      }
+
+      // Ловушка M61: ядро остановилось на стабильной границе команды. Нельзя
+      // делать следующий быстрый шаг или передавать клавишу до сохранения контекста скриптом.
+      // Запрос bind OK также прерывает пакет, не отправляя ядру С/П.
+      if(core_61::program_boundary_yielded() ||
+         m61_text::calculator_suspended()) return;
+  }
+
+  service_run_keypress();
+}
+
+/* АВТОМАТ конечных состояний МК-61 */
+inline void mk61_automate(void) {
+  if(core_61::is_RUN()) {
+  // === режим работы по программе ===
+      dbgln(MINI, "RUN: next steps");
+
+      run_program_steps();
+  } else {
+  // === обычный режим работы каклькулятора ===
+      if(mk61_sending_keycode >= 0) {
+        // в предыдущем цикле в ядро mk61 был передан код клавиши - запуск "холостых" циклов
+          dbgln(MINI, "CALC: extend loop");
+          core_61::step();
+
+          if(core_61::is_RUN()) {
+              mk61_program_started();                 // обработка события "СТАРТ ПРОГРАММЫ"
+              mk61_sending_keycode = MK61_REQUEST_IDLE_LOOP;    // планируем после останова программы дообработать нажатую кнопку в холостых циклах
+          } else if(core_61::is_displayed()) {
+              mk61_sending_keycode = MK61_REQUEST_BASE_LOOP;    // нет необходимости в "холостых" циклах - выход в основной цикл
+          }
+      } else {
+        // основной цикл в котором находится устройство пока не будет наэата кнопка калькулятора
+          dbgln(MINI, "CALC: base loop"); 
+          mk61_sending_keycode = kbd::get_key(PRESS);
+          if(mk61_sending_keycode >= 0) {
+              key_press_handler(mk61_sending_keycode);
+              core_61::step();
+          }
+      }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "status": "REVIEWER_SYNTAX_PREFLIGHT_FAILED_BEFORE_EXECUTION",
+  "tool_chunk": "40d4b7",
+  "exit_code": 1,
+  "error": "Missing whitespace else18/else6 in reviewer proof draft; SyntaxError before executing any statement",
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "source_or_arithmetic_failure": false
+}

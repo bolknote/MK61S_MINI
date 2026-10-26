@@ -1,0 +1,13 @@
+{
+  "status": "SEALED_ADDITIVE_CLARIFICATION",
+  "base_manifest": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/MANIFEST.json",
+    "bytes": 10322,
+    "sha256": "33b6ec2106211d2f6a0d8b31127e786e1f715a57e26096539c7af588ca2aba1e"
+  },
+  "clarification": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/INTERVAL-CLARIFICATION.json",
+    "bytes": 1133,
+    "sha256": "03ceff8e6e0f9e8ca790567f2045f1791c301f1544d2c0f8aaa234a19496c179"
+  }
+}

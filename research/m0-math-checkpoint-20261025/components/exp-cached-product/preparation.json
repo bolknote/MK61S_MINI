@@ -1,0 +1,12 @@
+{
+  "status": "PRIVATE_UNQUALIFIED_EXP_TIGHT_CPP_WITH_CACHED_RAM_PRODUCT",
+  "cpp_bytes_identical_to_tight_trial": true,
+  "shared_RAM_product_address": "0x20038ee4",
+  "Flash_wrapper_unchanged": true,
+  "parent_tight_trial": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tight-firstpass-20261024",
+  "tight_unit_test_failure": "Copied only16-byte Flash tailcall wrapper; missing RAM product body and wrapper literal relocation. Public full-firmware calls were not affected.",
+  "old_unit_failure_log_sha256": "22cef3d5716373d25e0aa8f80479def3d32afd17ca01befe2cbbc7a50ce8e697",
+  "intended_product_instruction_delta": -7,
+  "hardware_accessed": false,
+  "canonical_or_Git_changes": false
+}

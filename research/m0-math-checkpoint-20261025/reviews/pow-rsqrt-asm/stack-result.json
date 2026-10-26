@@ -1,0 +1,92 @@
+{
+  "status": "PASS_ISOLATED_RSQRT_FAST_AND_EXACT_BOUNDARY_STACK",
+  "fresh_ARM_calls": 8,
+  "new_MPFR_references": 0,
+  "expected_bits_reused_from_own_public_MPFR": true,
+  "old_boundary_stack": 196,
+  "new_boundary_stack": 172,
+  "new_fast_stack": 64,
+  "rows": [
+    {
+      "case": "fast",
+      "x": "72FB4FE9F28F6BD6",
+      "y": "BFE0000000000000",
+      "SIO": "READY",
+      "implementation": "parent",
+      "stack": 92,
+      "instructions": 386,
+      "output": "26687E100C7F0F43"
+    },
+    {
+      "case": "fast",
+      "x": "72FB4FE9F28F6BD6",
+      "y": "BFE0000000000000",
+      "SIO": "READY",
+      "implementation": "candidate",
+      "stack": 64,
+      "instructions": 300,
+      "output": "26687E100C7F0F43"
+    },
+    {
+      "case": "fast",
+      "x": "72FB4FE9F28F6BD6",
+      "y": "BFE0000000000000",
+      "SIO": "DIRTY",
+      "implementation": "parent",
+      "stack": 120,
+      "instructions": 615,
+      "output": "26687E100C7F0F43"
+    },
+    {
+      "case": "fast",
+      "x": "72FB4FE9F28F6BD6",
+      "y": "BFE0000000000000",
+      "SIO": "DIRTY",
+      "implementation": "candidate",
+      "stack": 64,
+      "instructions": 300,
+      "output": "26687E100C7F0F43"
+    },
+    {
+      "case": "exact_boundary",
+      "x": "3FF00320EA0A42A2",
+      "y": "BFE0000000000000",
+      "SIO": "READY",
+      "implementation": "parent",
+      "stack": 196,
+      "instructions": 818,
+      "output": "3FEFFCDF8B57381A"
+    },
+    {
+      "case": "exact_boundary",
+      "x": "3FF00320EA0A42A2",
+      "y": "BFE0000000000000",
+      "SIO": "READY",
+      "implementation": "candidate",
+      "stack": 172,
+      "instructions": 743,
+      "output": "3FEFFCDF8B57381A"
+    },
+    {
+      "case": "exact_boundary",
+      "x": "3FF00320EA0A42A2",
+      "y": "BFE0000000000000",
+      "SIO": "DIRTY",
+      "implementation": "parent",
+      "stack": 196,
+      "instructions": 1055,
+      "output": "3FEFFCDF8B57381A"
+    },
+    {
+      "case": "exact_boundary",
+      "x": "3FF00320EA0A42A2",
+      "y": "BFE0000000000000",
+      "SIO": "DIRTY",
+      "implementation": "candidate",
+      "stack": 172,
+      "instructions": 743,
+      "output": "3FEFFCDF8B57381A"
+    }
+  ],
+  "hardware": false
+}

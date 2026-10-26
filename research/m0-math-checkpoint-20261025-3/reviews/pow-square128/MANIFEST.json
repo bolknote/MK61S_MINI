@@ -1,0 +1,160 @@
+{
+  "status": "SEALED_PRIVATE_COMPONENT_ONLY_REVIEW",
+  "files": {
+    "EXECUTION-NOTES.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/EXECUTION-NOTES.json",
+      "bytes": 2165,
+      "sha256": "d21123698c60795f9ed271f36b8438e2df257a14d1284e7515a31aec3d39a4fe"
+    },
+    "FINAL-REVIEW.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/FINAL-REVIEW.json",
+      "bytes": 10389,
+      "sha256": "eaa55a85a694bb33517f01db27355edb8b39e3a529768c150bc5fc5c161bfd24"
+    },
+    "INTEGRATION-REQUIREMENTS.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+      "bytes": 1434,
+      "sha256": "39c2d4d54640bea14c35cf41d284e946825fd7d66bba080c471640eb143d93c1"
+    },
+    "NUMERIC-REVIEW.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/NUMERIC-REVIEW.md",
+      "bytes": 3954,
+      "sha256": "0d3172f1f4d1a2ffd1b9304ae6254eb4da6d04c47f34c6b71b2afe7cfdb22fcb"
+    },
+    "accounting.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/accounting.json",
+      "bytes": 1856,
+      "sha256": "9c1902f63e96b4dfc003c37c46bc756c13f7b626155c41b924047a8b7cc2ce35"
+    },
+    "accounting.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/accounting.py",
+      "bytes": 9476,
+      "sha256": "bc5f66d10a7aa6ff3e8a9d86177e4f42ffd153cf3bdddd42e36ee76c74f9714e"
+    },
+    "arm.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/arm.py",
+      "bytes": 9666,
+      "sha256": "3ddc551ab0634686416b2143749a8ee1b2d4c7bc832f7a3b12f1f6938ad4b98d"
+    },
+    "bare-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/bare-arm.json",
+      "bytes": 852,
+      "sha256": "122f71ba6460a2a402c8d7028413e04a081e28a1fc0511c21111f38d684f9325"
+    },
+    "binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/binding.json",
+      "bytes": 399053,
+      "sha256": "2fec5e71f9a9ffd20d0b02e39cf097e70774bba29bd74b303bd4c55597118f7f"
+    },
+    "binding.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/binding.py",
+      "bytes": 9369,
+      "sha256": "8718cf39b04615d0fb890a5b46652782a5e12c4f11ff6a26cf059e69572478bd"
+    },
+    "candidate.actual.dis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/candidate.actual.dis",
+      "bytes": 6961,
+      "sha256": "b4adf01bfac3602bebe4613a06e0069e2acee5c5dd1512d7508fbb851dda180a"
+    },
+    "control.actual.dis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/control.actual.dis",
+      "bytes": 7722,
+      "sha256": "bf4941b61364e5bb8d7d57195e1ed2ca2947b8ee79ce2b6d001d025fbc83e133"
+    },
+    "proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/proof.json",
+      "bytes": 2905,
+      "sha256": "4e0eb81f97937954da2505e6c0b63b15430dd9c2ed2eb27dd85a42417f0d9067"
+    },
+    "proof.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/proof.py",
+      "bytes": 5995,
+      "sha256": "fbffb9c23e3ce155910ce9b4fe8b9655752d4bc40aa145ea0840b05344986ae5"
+    },
+    "public-arm-mpfr.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/public-arm-mpfr.json",
+      "bytes": 43002,
+      "sha256": "61ed6044b4153e17804c731874ffbea9b03b528e60e52fed6b337448e58a5fa9"
+    },
+    "rebuild/RP-candidate-unmapped-r2path.o": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/RP-candidate-unmapped-r2path.o",
+      "bytes": 25540,
+      "sha256": "97d6cf50ad10b9ef429defe11ef3d735a5300e9da1842236085e569822bb01e9"
+    },
+    "rebuild/RP-candidate.o": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/RP-candidate.o",
+      "bytes": 25508,
+      "sha256": "c1acaf537686bfdb73bf3fd1c495beab8cd28566dc7f31c09020c5bf1e046495"
+    },
+    "rebuild/RP-candidate.o.stderr": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/RP-candidate.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/RP-candidate.o.stdout": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/RP-candidate.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/candidate.elf": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/candidate.elf",
+      "bytes": 11292,
+      "sha256": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898"
+    },
+    "rebuild/candidate.elf.stderr": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/candidate.elf.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/candidate.elf.stdout": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/candidate.elf.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/helper.o": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/helper.o",
+      "bytes": 1028,
+      "sha256": "dc7b7860d672e39d113ce9fb0bb9bb0910a0ee806645985200a0d2bd92c572f8"
+    },
+    "rebuild/helper.o.stderr": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/helper.o.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/helper.o.stdout": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/helper.o.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "rebuild/unit-candidate.elf": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/unit-candidate.elf",
+      "bytes": 13732,
+      "sha256": "2635ebceecc2bcc2ec1fb521ed9da6e42e3f8bbc4db20ea1d6dfbeb3e45c6f04"
+    },
+    "rebuild/unit-candidate.elf.stderr": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/unit-candidate.elf.stderr",
+      "bytes": 492,
+      "sha256": "6991632e5b545d25783463c4f336d461e8c5f64eca577d96c1d8977275f0fa6d"
+    },
+    "rebuild/unit-candidate.elf.stdout": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/rebuild/unit-candidate.elf.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "seal-lineage.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/seal-lineage.json",
+      "bytes": 13770,
+      "sha256": "ed08253c596102fc9676c1db2b4d7b6cbb451a4eaaa805643a13bb53c8fbe56f"
+    },
+    "seal.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/seal.py",
+      "bytes": 10126,
+      "sha256": "d95634c00be49a89f42245a4475c662d17e8e27234cd955703ed9d1c270748ce"
+    },
+    "strict-fixes.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/strict-fixes.json",
+      "bytes": 5826,
+      "sha256": "f7e52e9066ca6b0cf78b2d1ddfb07172049363992ff2c16d3e784ae3e6da4ade"
+    }
+  }
+}

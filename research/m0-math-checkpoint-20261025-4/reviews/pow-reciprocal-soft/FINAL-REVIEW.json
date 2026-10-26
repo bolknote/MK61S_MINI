@@ -1,0 +1,273 @@
+{
+  "status": "TECH_GO_PRIVATE_DIRTY_ROOT_RECIPROCAL_COMPONENT_ONLY",
+  "component_review_complete": true,
+  "exact_supplier": {
+    "FROZEN": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/FROZEN.json",
+      "bytes": 11593,
+      "sha256": "13dc7f8186d4678fac6b7a0da0b27e00dbb678316e292d320d3eefdd35dbba0c"
+    },
+    "result": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/result.json",
+      "bytes": 3721,
+      "sha256": "f8bbd45f9481b2273aeb86e92c03de75132e925f40bdf699ac31da13af74fe38"
+    },
+    "HANDOFF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/HANDOFF.md",
+      "bytes": 3483,
+      "sha256": "307b7255d45f51e4a4f867975e41c8f864c1524330ed54e4b05f59bb150d1516"
+    },
+    "ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-20261025/candidate.elf",
+      "bytes": 160656,
+      "sha256": "285307160c39afa066f18e2784ad7704931f53e84c51dfe4c74febb352f976ae"
+    },
+    "parent_FROZEN": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/FROZEN.json",
+      "bytes": 9751,
+      "sha256": "61c98b938cf723f2f9b63ef06f22a3033c1b07af979dbe56ef9a2a2d56ed3393"
+    },
+    "parent_review": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-independent-20261025/FINAL-REVIEW.json",
+      "bytes": 11674,
+      "sha256": "6c1a375bbc8a07a45d387f146347584527c74fc60b890263dc2e4d85f61d2c8b"
+    },
+    "parent_ROOT": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-root-acceptance-20261025-001/RECEIPT.json",
+      "bytes": 13941,
+      "sha256": "260cb67e4cfd136f73affc5de7486a10ee0e732d9fed2d13e086d9e4e90005f3"
+    },
+    "postseal": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-postseal-20261025.json",
+      "bytes": 259,
+      "sha256": "5b10494fe10c9bcaf39b59185a3185e3a35d4021905626f6abde9903381c34db"
+    }
+  },
+  "actual_parent": "Boundary128/61c98, own6c1a375b, ROOT260cb67e; near-one separate sibling not loaded",
+  "integrity": {
+    "local_pins": 81,
+    "external_pins": 1814,
+    "own_eight_full_original_source_object_ELF_rebuilds_byte_exact": true,
+    "own_additional_seed_only_ELF_actual194byte_leaf": true,
+    "one_root_BL_relocation_change": true,
+    "other_ddiv_callers_and_resident_allocated_bytes_addresses_veneers_unchanged": true,
+    "default_M0_M4_selected_controls_equal_and12_added_disabled_objects_empty": true,
+    "cloned_source_reversibly_exact_to_existing_BSD_kernel": true,
+    "license_retained": true,
+    "no_Qfplib_source_in_candidate": true
+  },
+  "mathematical_proof": {
+    "exact_17bit_D_domain": [
+      65536,
+      131071
+    ],
+    "HOST_integer_seed_invariant_checks": 65536,
+    "quotient_range": [
+      32768,
+      65535
+    ],
+    "exact_q_floor_FFFFFFFF_over_D": true,
+    "u0_floor_qplus1_over2_exact_hardware_sequence": true,
+    "T_less_2pow18_Q_fits16_qplus1_le65536_no_overflow": true,
+    "seed_does_not_consume_incoming_flags": true,
+    "leaf_writes_only_R0_R2_flags_preserves_R12_no_memory": true,
+    "common_NR_remainder_RNE_tail282_byte_equal_in_all4copies": true,
+    "all_live_join_state_same_and_R7_dead_until_overwritten_flags_reestablished_before_branch": true,
+    "retained_IEEE_guards_dyadic_paths_and_fallbacks_no_relaxed_precision": true,
+    "preservation_of_existing_normal_RNE_contract_not_new_general_pow_totality": true
+  },
+  "private_ABI": {
+    "continuation_is_not_scalar_C_ABI": true,
+    "symbols_hidden": true,
+    "preconditions": "Original packed R0:R1 / R2:R3 raw operands; R6=Ea-Eb+1021 in[0,2043]; original saved20B R4-R7/LR frame, only entered from guarded DIRTY bridge.",
+    "transient_save20B_preserves_four_unpacked_operand_words_and_R7_alignment_slot": true,
+    "seed_BL_SP8aligned": true,
+    "private_R12_sign_exponent_tag_preserved_by_seed": true,
+    "common_join_R0_R6_R12_SP_original_saved20_equal": true,
+    "does_not_replace_shared_product_extra_R12_consumer_contract": true
+  },
+  "independent_qualified_CPU_checks": {
+    "actual_Thumb_ARM_calls_in_Unicorn": 1280,
+    "seed_calls": 288,
+    "direct_calls": 248,
+    "public_calls": 744,
+    "seed16edge_divisors_each16NZCV_plus32samples": true,
+    "seed_no_firmware_ROM_arithmetic_models_or_memory_access": true,
+    "direct_pairs": 31,
+    "public_pairs": 62,
+    "both_SIO_modes": true,
+    "directed_MPFR_inputs": 89,
+    "sNaN_policy_shortcuts": 4,
+    "MPFR_version": "4.2.2",
+    "guarded_private_join_checks": 64,
+    "join_checks_direct": 14,
+    "join_checks_public": 50,
+    "actual_raw_operands_R6_original_frame_R12_SP_seed_alignment_and_flags_after_first_common_ADDS_checked": true,
+    "actual_root_full_path_not_direct_generic_continuation_call": true,
+    "DIRTY_no_divider_writes_CSR_only_reads_all7SIOwords_preserved": true,
+    "READY_costs_exactly_parent_control_candidate": true,
+    "old_clone_control_calibrated_against_original": true,
+    "all48_saved_public_fixes_actually_strict_bothSIO_against_all_correct_references": true,
+    "all3_real_Qfplib_compositions_and_wrong_outputs_costs_retained": true,
+    "strict_quietNaN": true,
+    "PCS_R4_R11_SP_PC_SIO_preserved": true,
+    "ROM_initializer_calls_excluded": true,
+    "own_failed_preflights": 0,
+    "own_discarded_ARM_calls": 0,
+    "no_repetition_of_complete842k_or241960_state_execution": true
+  },
+  "independent_saved_raw_accounting": {
+    "pairs": 120980,
+    "states": 241960,
+    "reference_variants": 279522,
+    "wrong_Qfplib_variants_retained": 77106,
+    "loss_pairs": [
+      11434,
+      11386
+    ],
+    "strict_fixes": 48,
+    "new_losses": 0,
+    "candidate_wrong": 0,
+    "cost_increases": 0,
+    "faster_DIRTY_states": 377,
+    "instruction_reduction_range": [
+      311,
+      380
+    ],
+    "READY_unchanged": true,
+    "actual_reciprocal_calls": 778,
+    "software_seed_calls": 377,
+    "every_changed_path_has_fresh_parent_author_replay": true,
+    "current_parent_comparator": "parent_reciprocal_instructions",
+    "older_inherited_boundary_fields_not_fresh_trace_claims": true,
+    "all10254_fresh_control_rows_exactly_match_full_records": true,
+    "no_nominal_filter_and_strict_quietNaN_recounted": true,
+    "original153": {
+      "parent_candidate_strict": 119,
+      "parent_candidate_slower": 34,
+      "unchanged": true
+    },
+    "correct_Qfplib_comparison": {
+      "slower": 21064,
+      "faster": 178647,
+      "equal": 2705
+    }
+  },
+  "author_evidence_separate": {
+    "qualified_ARM842693_partition": [
+      241960,
+      377,
+      61524,
+      538832
+    ],
+    "MPFR6761_plus184sNaN": true,
+    "direct67354jobs_not_asserted_unique": true,
+    "exact_integer_dyadic_oracle_inputs": 65536,
+    "direct3636_saved_rows_wrong_Qfplib936_independently_recounted": true,
+    "author66624_join_matches_not_own64": true,
+    "no_per_divisor_Qfp_speed_claim_for_unrecorded_exhaustive_timing_rows": true,
+    "author26rebuilds_not_own8": true,
+    "prior_seed66288_pilot1836_MPFR153_failed_import0_and_inherited_oracles_refs_excluded": true
+  },
+  "resources": {
+    "diagnostic_allocation_bytes": 1050,
+    "duplicates_existing_dyadic_constants_bytes": 32,
+    "new_math_table_values": false,
+    "new_global_RAM": false,
+    "new_libgcc": false,
+    "free_private_Flash_below2MiB_and_no_overlap_independently_checked": true,
+    "scratch4080_unchanged": true,
+    "same_complete_corpus_peak2284": true,
+    "author_fresh_controls2148_each": true,
+    "parent_changed388_subset_not_complete_comparator": true,
+    "own_selected_public_peaks": [
+      968,
+      968,
+      968
+    ],
+    "own_direct_peaks": [
+      176,
+      176,
+      176
+    ],
+    "no_universal_stack_drop_claim": true,
+    "physical_cycles_not_measured": true
+  },
+  "limits": {
+    "component_only": true,
+    "reviewed507_stays422": true,
+    "author437_separate_union_not_promoted": true,
+    "near_one_separate_sibling_not_combined": true,
+    "private_continuation_not_generic_export": true,
+    "source_merge_relink_actual_R12_loader_layout_required": true,
+    "old168overlay14B_hazard_persists": true,
+    "general_pow_totality": false,
+    "integration_GO": false,
+    "hardware_GO": false,
+    "main_GO": false,
+    "release_GO": false,
+    "overall_goal_complete": false
+  },
+  "requirements": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/INTEGRATION-REQUIREMENTS.json",
+    "bytes": 2219,
+    "sha256": "f3e1c4bd7de842472a192a604facdfa727b6ae1a49186637d36cfafcfd093159"
+  },
+  "evidence_manifest": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/MANIFEST.json",
+    "bytes": 12065,
+    "sha256": "8f6106fb4324de96230a8292231bc136d061919679accdbb08d0059425e0fd4d"
+  },
+  "evidence": {
+    "binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/binding.json",
+      "bytes": 472061,
+      "sha256": "a687370b61c41fa702898a675a8ae9bd8dc04a656a0c60775dab9940ee2f1802"
+    },
+    "proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/proof.json",
+      "bytes": 2532,
+      "sha256": "87feef4885cde710589ed196b09bf2ab1ec28deb5fc98d172d432002d96e63e3"
+    },
+    "accounting.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/accounting.json",
+      "bytes": 6442,
+      "sha256": "4b7f917301eb07ef57ea5c2bf7070a3a06779e9c134a60419e9c078b9a34c6ba"
+    },
+    "seed-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/seed-arm.json",
+      "bytes": 34755,
+      "sha256": "fc0f653aee338b738cc45fa71d7675866affb6f7072af0f35dd430fd81fb6638"
+    },
+    "ddiv-arm-mpfr.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/ddiv-arm-mpfr.json",
+      "bytes": 148854,
+      "sha256": "0f87365da68135c0fdfdb71e3c93e5172b53c50288be4a338c0eada78c9597ba"
+    },
+    "public-arm-mpfr.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/public-arm-mpfr.json",
+      "bytes": 366188,
+      "sha256": "584f8c0440d3f9746faf4afbfda1d1cdfbb17d37a57366120c40815506b12d66"
+    },
+    "layout.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/layout.json",
+      "bytes": 2461,
+      "sha256": "ea6b6a2a849397562554e171651b05870294beb572723c9d966627fb7dbd550a"
+    },
+    "NOTES.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-soft-independent-20261025/NOTES.md",
+      "bytes": 6228,
+      "sha256": "0e293f39df2387a1a0054d911bfaa1dc3bfe47fa5a3eaa7c629ed7ad2b4535c7"
+    }
+  },
+  "scope": {
+    "device_IO": 0,
+    "USB": 0,
+    "Flash": 0,
+    "network": 0,
+    "install": 0,
+    "Git": 0,
+    "canonical": 0,
+    "product_source_edits": 0
+  }
+}

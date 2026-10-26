@@ -1,0 +1,12 @@
+{
+  "status": "PASS_RECEIVED_NEAR_ONE_COMPONENT_REVIEW_AND_ROOT_PINS",
+  "review": ".build/m0-exp-near-one-independent-20261025/FINAL-REVIEW.json",
+  "review_sha256": "6c504f888e1ce0489379d1769b2d1e331b64bda0354eed746fbe98359748634b",
+  "clarification": ".build/m0-exp-near-one-independent-20261025/INTERVAL-CLARIFICATION.json",
+  "clarification_sha256": "03ceff8e6e0f9e8ca790567f2045f1791c301f1544d2c0f8aaa234a19496c179",
+  "root_receipt": ".build/m0-exp-near-one-root-acceptance-20261025-001/RECEIPT.json",
+  "root_receipt_sha256": "0831d62fc51c2be190afc220525bb52974d83c5b236bba07359f6946d02c74a5",
+  "unique_direct_root_pins_verified": 51,
+  "reviewed_whole507_kept422": true,
+  "whole_goal_complete": false
+}

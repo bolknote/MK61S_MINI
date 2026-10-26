@@ -1,0 +1,172 @@
+{
+  "status": "BOUNDED_SELECTION_FROM_SAVED_ACTUAL_RAW_NOT_NEW_CAMPAIGN",
+  "jobs": [
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "4026C3C0B5F88F2C",
+      "y": "3FFE000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "40504A28B5F48AA3",
+      "y": "3F80000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "4037AB22F2CD1735",
+      "y": "3FDC000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "3FA2595E2B9CE616",
+      "y": "BFA0000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "3FED6D1B8CD8CE06",
+      "y": "402F000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "3FEAEC61B8FD832B",
+      "y": "4013000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "3FF4B1DD264786A5",
+      "y": "C02A000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "3FBFBF0990BF0A68",
+      "y": "BFC0000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "3FC128311A80CBDD",
+      "y": "BFD0000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "40701C60DA91800F",
+      "y": "C00C000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "3DDBF171FC4578A7",
+      "y": "BFD4000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "37448CF9C4DB7CE7",
+      "y": "BFB4000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "3628452AF4C746A0",
+      "y": "3FA8000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "2A556CA2F91F6B3C",
+      "y": "BFAC000000000000",
+      "group": "each_actual_boundary_denominator_inverse_mode"
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "original153_bounded_control"
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "original153_bounded_control"
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "group": "original153_bounded_control"
+    },
+    {
+      "x": "3FF654E7580FA958",
+      "y": "3FE5000000000000",
+      "group": "original153_bounded_control"
+    },
+    {
+      "x": "401FB34C9D8CF59F",
+      "y": "3FE5000000000000",
+      "group": "original153_bounded_control"
+    },
+    {
+      "x": "37F31678F40ED67B",
+      "y": "3FAC000000000000",
+      "group": "full_corpus_reduction_endpoint"
+    }
+  ],
+  "mode_coverage": [
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      4,
+      1
+    ],
+    [
+      8,
+      0
+    ],
+    [
+      8,
+      1
+    ],
+    [
+      16,
+      0
+    ],
+    [
+      16,
+      1
+    ],
+    [
+      32,
+      0
+    ],
+    [
+      32,
+      1
+    ],
+    [
+      64,
+      0
+    ],
+    [
+      64,
+      1
+    ],
+    [
+      128,
+      0
+    ],
+    [
+      128,
+      1
+    ]
+  ]
+}

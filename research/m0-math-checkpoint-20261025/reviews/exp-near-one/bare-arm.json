@@ -1,0 +1,34 @@
+{
+  "status": "PASS_BOUNDED_ACTUAL_INTEGER_ARM",
+  "qualified_calls": 267,
+  "product_pairs": 30,
+  "square_pairs": 63,
+  "all16NZCV_on3_adversarial_triples": true,
+  "costs": {
+    "mk61_m0_exp_small_product64": {
+      "45": 78
+    },
+    "mk61_m0_exp_small_product48": {
+      "62": 78
+    },
+    "mk61_m0_exp_small_square48": {
+      "47": 111
+    }
+  },
+  "stack_frame": 36,
+  "bounded_stack_reads": 3318,
+  "Machine_checks_R4_R11_SP_and_bounded_stack_writes": true,
+  "literal_public_binding": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-independent-20261025/binding.json",
+    "bytes": 379036,
+    "sha256": "082f716b273bd7131610cd1c6d46d14ec5167e5fc71ac58b815b01c7c0cc179f"
+  },
+  "unit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-near-one-20261024/small-products-unit.elf",
+    "bytes": 4864,
+    "sha256": "d2de9888c4221bd39f9e294b350da06c1bdd2c27155ccb59f49f877fb33f40da"
+  },
+  "no_external_calls_models_or_SIO": true,
+  "device_IO": 0,
+  "MPFR_inputs": 0
+}

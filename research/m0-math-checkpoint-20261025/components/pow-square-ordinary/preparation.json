@@ -1,0 +1,11 @@
+{
+  "status": "PRIVATE_UNQUALIFIED_POW_EXACT_SQUARE_AND_ORDINARY_DISPATCH",
+  "accepted_component_parent": ".build/m0-exp-cached-product-20261024",
+  "unaccepted_numerical_square_trial": ".build/m0-pow-square-exact-20261024",
+  "inherited_square_source_sha256": "1f8bf735a0478b3e47caa5f1872d7437bd7d94a4b52f331cdcfb6bd719fa24e1",
+  "square_algorithm_unchanged": true,
+  "new_dispatcher_precondition": "low32(y)==0, nonzero, not any handled exact exponent; cold root fallbacks still use original dispatcher",
+  "ordinary_tail_byte_exact_frozen_source": true,
+  "hardware_accessed": false,
+  "canonical_or_Git_changes": false
+}

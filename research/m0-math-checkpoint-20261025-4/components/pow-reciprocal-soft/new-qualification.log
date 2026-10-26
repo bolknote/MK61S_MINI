@@ -1,0 +1,179 @@
+reciprocal-soft-new 0 / 5127 0.0
+reciprocal-soft-new 64 / 5127 1.0
+reciprocal-soft-new 128 / 5127 1.5
+reciprocal-soft-new 192 / 5127 1.9
+reciprocal-soft-new 256 / 5127 2.5
+reciprocal-soft-new 320 / 5127 3.0
+reciprocal-soft-new 384 / 5127 3.4
+reciprocal-soft-new 448 / 5127 3.9
+reciprocal-soft-new 512 / 5127 4.3
+reciprocal-soft-new 576 / 5127 4.9
+reciprocal-soft-new 640 / 5127 5.8
+reciprocal-soft-new 704 / 5127 6.7
+reciprocal-soft-new 768 / 5127 7.7
+reciprocal-soft-new 832 / 5127 8.6
+reciprocal-soft-new 896 / 5127 9.5
+reciprocal-soft-new 960 / 5127 10.5
+reciprocal-soft-new 1024 / 5127 11.4
+reciprocal-soft-new 1088 / 5127 12.4
+reciprocal-soft-new 1152 / 5127 13.4
+reciprocal-soft-new 1216 / 5127 14.3
+reciprocal-soft-new 1280 / 5127 15.3
+reciprocal-soft-new 1344 / 5127 16.3
+reciprocal-soft-new 1408 / 5127 17.3
+reciprocal-soft-new 1472 / 5127 18.3
+reciprocal-soft-new 1536 / 5127 19.2
+reciprocal-soft-new 1600 / 5127 20.2
+reciprocal-soft-new 1664 / 5127 21.2
+reciprocal-soft-new 1728 / 5127 22.1
+reciprocal-soft-new 1792 / 5127 23.1
+reciprocal-soft-new 1856 / 5127 24.0
+reciprocal-soft-new 1920 / 5127 25.0
+reciprocal-soft-new 1984 / 5127 26.0
+reciprocal-soft-new 2048 / 5127 27.0
+reciprocal-soft-new 2112 / 5127 28.0
+reciprocal-soft-new 2176 / 5127 28.9
+reciprocal-soft-new 2240 / 5127 29.9
+reciprocal-soft-new 2304 / 5127 30.9
+reciprocal-soft-new 2368 / 5127 31.8
+reciprocal-soft-new 2432 / 5127 32.8
+reciprocal-soft-new 2496 / 5127 33.8
+reciprocal-soft-new 2560 / 5127 34.8
+reciprocal-soft-new 2624 / 5127 35.9
+reciprocal-soft-new 2688 / 5127 36.9
+reciprocal-soft-new 2752 / 5127 38.0
+reciprocal-soft-new 2816 / 5127 39.0
+reciprocal-soft-new 2880 / 5127 40.0
+reciprocal-soft-new 2944 / 5127 41.1
+reciprocal-soft-new 3008 / 5127 42.1
+reciprocal-soft-new 3072 / 5127 43.1
+reciprocal-soft-new 3136 / 5127 44.2
+reciprocal-soft-new 3200 / 5127 45.3
+reciprocal-soft-new 3264 / 5127 46.3
+reciprocal-soft-new 3328 / 5127 47.3
+reciprocal-soft-new 3392 / 5127 48.3
+reciprocal-soft-new 3456 / 5127 49.4
+reciprocal-soft-new 3520 / 5127 50.5
+reciprocal-soft-new 3584 / 5127 51.5
+reciprocal-soft-new 3648 / 5127 52.6
+reciprocal-soft-new 3712 / 5127 53.6
+reciprocal-soft-new 3776 / 5127 54.7
+reciprocal-soft-new 3840 / 5127 55.8
+reciprocal-soft-new 3904 / 5127 56.8
+reciprocal-soft-new 3968 / 5127 57.9
+reciprocal-soft-new 4032 / 5127 59.0
+reciprocal-soft-new 4096 / 5127 60.1
+reciprocal-soft-new 4160 / 5127 61.2
+reciprocal-soft-new 4224 / 5127 62.3
+reciprocal-soft-new 4288 / 5127 63.3
+reciprocal-soft-new 4352 / 5127 64.4
+reciprocal-soft-new 4416 / 5127 65.6
+reciprocal-soft-new 4480 / 5127 66.6
+reciprocal-soft-new 4544 / 5127 67.7
+reciprocal-soft-new 4608 / 5127 68.8
+reciprocal-soft-new 4672 / 5127 69.8
+reciprocal-soft-new 4736 / 5127 70.8
+reciprocal-soft-new 4800 / 5127 71.9
+reciprocal-soft-new 4864 / 5127 73.0
+reciprocal-soft-new 4928 / 5127 74.1
+reciprocal-soft-new 4992 / 5127 77.4
+reciprocal-soft-new 5056 / 5127 81.2
+reciprocal-soft-new 5120 / 5127 85.0
+{
+  "status": "PASS_FRESH_MPFR_POW_CONTROLS_AFTER_DIRTY_RECIPROCAL",
+  "candidate_ELF_sha256": "285307160c39afa066f18e2784ad7704931f53e84c51dfe4c74febb352f976ae",
+  "unique_pairs": 5127,
+  "state_rows": 10254,
+  "fresh_ARM_calls": 61524,
+  "fresh_candidate_calls": 10254,
+  "fresh_parent_calls": 10254,
+  "fresh_layout_control_calls": 10254,
+  "fresh_Qfplib_calls": 30762,
+  "oracle_evaluations": 5127,
+  "actual_directed_MPFR_inputs": 5051,
+  "sNaN_policy_shortcuts": 76,
+  "MPFR_version": "4.2.2",
+  "all_parent_control_candidate_raw_bits_identical": true,
+  "all_reciprocal_argument_sequences_identical": true,
+  "READY_costs_unchanged": true,
+  "candidate_wrong": 0,
+  "new_raw_losses": 0,
+  "parent_raw_loss_pairs": 632,
+  "candidate_raw_loss_pairs": 588,
+  "fixed_raw_pairs": 44,
+  "wrong_Qfplib_state_variants_retained": 18534,
+  "strict_quiet_NaN_reference_classification": true,
+  "no_nominal_reference_domain_filter": true,
+  "pilot1836_not_added_to_qualification": true,
+  "cost_delta_histogram": {
+    "-380": 1,
+    "-376": 3,
+    "-374": 2,
+    "-372": 1,
+    "-371": 3,
+    "-370": 5,
+    "-369": 2,
+    "-368": 2,
+    "-367": 4,
+    "-366": 3,
+    "-365": 6,
+    "-364": 5,
+    "-363": 2,
+    "-362": 5,
+    "-361": 12,
+    "-360": 18,
+    "-359": 13,
+    "-358": 9,
+    "-357": 3,
+    "-356": 2,
+    "-355": 10,
+    "-354": 4,
+    "-353": 5,
+    "-352": 6,
+    "-351": 6,
+    "-350": 12,
+    "-349": 10,
+    "-348": 1,
+    "-347": 2,
+    "-345": 4,
+    "-341": 2,
+    "-340": 1,
+    "-339": 1,
+    "-338": 5,
+    "-337": 5,
+    "-336": 10,
+    "-335": 7,
+    "-334": 4,
+    "-333": 10,
+    "-332": 5,
+    "-331": 5,
+    "-330": 11,
+    "-329": 7,
+    "-328": 8,
+    "-327": 8,
+    "-326": 5,
+    "-325": 5,
+    "-324": 7,
+    "-323": 3,
+    "-321": 2,
+    "-320": 12,
+    "-319": 5,
+    "-318": 8,
+    "-317": 9,
+    "-316": 2,
+    "-315": 15,
+    "-314": 6,
+    "-313": 5,
+    "-312": 3,
+    "-311": 2,
+    "0": 9915
+  },
+  "observed_stacks": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148
+  },
+  "elapsed_seconds": 85.40352241700748,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

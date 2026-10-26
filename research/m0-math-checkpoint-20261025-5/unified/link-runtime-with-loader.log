@@ -1,0 +1,123 @@
+{
+  "status": "SOURCE_LINKED_MATH_ELFS_NOT_RUNTIME_QUALIFIED",
+  "images": {
+    "candidate": {
+      "ELF_sha256": "f1ed19f34028c2f4b3d86541693e4b192bdf19765576e01ed520d4169d799923",
+      "sections": {
+        ".sqrt_group": {
+          "address": 268500992,
+          "bytes": 9008,
+          "flags": 6,
+          "type": 1
+        },
+        ".pow_log_group": {
+          "address": 268510000,
+          "bytes": 3816,
+          "flags": 6,
+          "type": 1
+        },
+        ".pow_dispatch_group": {
+          "address": 268513816,
+          "bytes": 4896,
+          "flags": 6,
+          "type": 1
+        },
+        ".text": {
+          "address": 268518712,
+          "bytes": 223496,
+          "flags": 6,
+          "type": 1
+        },
+        ".rodata": {
+          "address": 268742208,
+          "bytes": 237136,
+          "flags": 2,
+          "type": 1
+        },
+        ".scratch_y": {
+          "address": 537100288,
+          "bytes": 4080,
+          "flags": 6,
+          "type": 1
+        },
+        ".data": {
+          "address": 536870912,
+          "bytes": 16,
+          "flags": 3,
+          "type": 1
+        }
+      },
+      "public_function_roots": 180,
+      "all_undefined_symbols_resolved": true,
+      "actual_source_objects": 12,
+      "old_firmware_address_bindings": false,
+      "scratch_y_bytes": 4080,
+      "scratch_y_address": 537100288,
+      "memory_initializer": 268622797
+    },
+    "zero-control": {
+      "ELF_sha256": "99f784128a4945e058f8cad158ec1eb8f65f369c0a0f8788c2f08bdd5a284b7a",
+      "sections": {
+        ".sqrt_group": {
+          "address": 268500992,
+          "bytes": 9008,
+          "flags": 6,
+          "type": 1
+        },
+        ".pow_log_group": {
+          "address": 268510000,
+          "bytes": 3816,
+          "flags": 6,
+          "type": 1
+        },
+        ".pow_dispatch_group": {
+          "address": 268513816,
+          "bytes": 4896,
+          "flags": 6,
+          "type": 1
+        },
+        ".text": {
+          "address": 268518712,
+          "bytes": 223488,
+          "flags": 6,
+          "type": 1
+        },
+        ".rodata": {
+          "address": 268742200,
+          "bytes": 237136,
+          "flags": 2,
+          "type": 1
+        },
+        ".scratch_y": {
+          "address": 537100288,
+          "bytes": 4080,
+          "flags": 6,
+          "type": 1
+        },
+        ".data": {
+          "address": 536870912,
+          "bytes": 16,
+          "flags": 3,
+          "type": 1
+        }
+      },
+      "public_function_roots": 180,
+      "all_undefined_symbols_resolved": true,
+      "actual_source_objects": 12,
+      "old_firmware_address_bindings": false,
+      "scratch_y_bytes": 4080,
+      "scratch_y_address": 537100288,
+      "memory_initializer": 268622797
+    }
+  },
+  "zero_control_is_previous_exact_seed_loop": true,
+  "no_libgcc_or_Qfplib_object_linked": true,
+  "ROM_memset_uses_real_SDK_lookup": true,
+  "actual_linked_R12_guard_passed": false,
+  "loader_layout_guard_passed": false,
+  "bootable_device_firmware": false,
+  "actual_ARM_or_MPFR_calls": 0,
+  "canonical_M4_Git_device_USB_Flash_changed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

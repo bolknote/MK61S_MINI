@@ -1,0 +1,7 @@
+{
+  "status": "FAILED_DRIVER_SYMBOL_LOOKUP_BEFORE_SCALAR_CAMPAIGN",
+  "actual_scalar_ARM_calls": 0,
+  "actual_MPFR_calls": 0,
+  "reason": "Inherited driver named old generic control labels; this parent already uses private reciprocal1 labels",
+  "excluded_from_qualified_counts": true
+}

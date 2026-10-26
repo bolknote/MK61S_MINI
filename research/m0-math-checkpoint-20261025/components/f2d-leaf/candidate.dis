@@ -1,0 +1,87 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-f2d-leaf-20261024/candidate.elf:     file format elf32-littlearm
+
+
+Disassembly of section .f2d:
+
+10164000 <__aeabi_f2d>:
+10164000:	0042      	lsls	r2, r0, #1
+10164002:	d012      	beq.n	1016402a <__aeabi_f2d+0x2a>
+10164004:	d208      	bcs.n	10164018 <__aeabi_f2d+0x18>
+10164006:	0dc3      	lsrs	r3, r0, #23
+10164008:	3b01      	subs	r3, #1
+1016400a:	2bfd      	cmp	r3, #253	@ 0xfd
+1016400c:	d810      	bhi.n	10164030 <__aeabi_f2d+0x30>
+1016400e:	4a21      	ldr	r2, [pc, #132]	@ (10164094 <__aeabi_f2d+0x94>)
+10164010:	08c1      	lsrs	r1, r0, #3
+10164012:	1889      	adds	r1, r1, r2
+10164014:	0740      	lsls	r0, r0, #29
+10164016:	4770      	bx	lr
+10164018:	15c3      	asrs	r3, r0, #23
+1016401a:	33ff      	adds	r3, #255	@ 0xff
+1016401c:	2bfd      	cmp	r3, #253	@ 0xfd
+1016401e:	d80c      	bhi.n	1016403a <__aeabi_f2d+0x3a>
+10164020:	4a1d      	ldr	r2, [pc, #116]	@ (10164098 <__aeabi_f2d+0x98>)
+10164022:	10c1      	asrs	r1, r0, #3
+10164024:	1889      	adds	r1, r1, r2
+10164026:	0740      	lsls	r0, r0, #29
+10164028:	4770      	bx	lr
+1016402a:	4601      	mov	r1, r0
+1016402c:	2000      	movs	r0, #0
+1016402e:	4770      	bx	lr
+10164030:	0242      	lsls	r2, r0, #9
+10164032:	d107      	bne.n	10164044 <__aeabi_f2d+0x44>
+10164034:	4919      	ldr	r1, [pc, #100]	@ (1016409c <__aeabi_f2d+0x9c>)
+10164036:	2000      	movs	r0, #0
+10164038:	4770      	bx	lr
+1016403a:	0242      	lsls	r2, r0, #9
+1016403c:	d102      	bne.n	10164044 <__aeabi_f2d+0x44>
+1016403e:	4918      	ldr	r1, [pc, #96]	@ (101640a0 <__aeabi_f2d+0xa0>)
+10164040:	2000      	movs	r0, #0
+10164042:	4770      	bx	lr
+10164044:	2b00      	cmp	r3, #0
+10164046:	d407      	bmi.n	10164058 <__aeabi_f2d+0x58>
+10164048:	0fc1      	lsrs	r1, r0, #31
+1016404a:	07c9      	lsls	r1, r1, #31
+1016404c:	4b15      	ldr	r3, [pc, #84]	@ (101640a4 <__aeabi_f2d+0xa4>)
+1016404e:	0b12      	lsrs	r2, r2, #12
+10164050:	4311      	orrs	r1, r2
+10164052:	4319      	orrs	r1, r3
+10164054:	0740      	lsls	r0, r0, #29
+10164056:	4770      	bx	lr
+10164058:	17c1      	asrs	r1, r0, #31
+1016405a:	07c9      	lsls	r1, r1, #31
+1016405c:	4b12      	ldr	r3, [pc, #72]	@ (101640a8 <__aeabi_f2d+0xa8>)
+1016405e:	0c10      	lsrs	r0, r2, #16
+10164060:	d101      	bne.n	10164066 <__aeabi_f2d+0x66>
+10164062:	0412      	lsls	r2, r2, #16
+10164064:	3b10      	subs	r3, #16
+10164066:	0e10      	lsrs	r0, r2, #24
+10164068:	d101      	bne.n	1016406e <__aeabi_f2d+0x6e>
+1016406a:	0212      	lsls	r2, r2, #8
+1016406c:	3b08      	subs	r3, #8
+1016406e:	0f10      	lsrs	r0, r2, #28
+10164070:	d101      	bne.n	10164076 <__aeabi_f2d+0x76>
+10164072:	0112      	lsls	r2, r2, #4
+10164074:	3b04      	subs	r3, #4
+10164076:	0f90      	lsrs	r0, r2, #30
+10164078:	d101      	bne.n	1016407e <__aeabi_f2d+0x7e>
+1016407a:	0092      	lsls	r2, r2, #2
+1016407c:	3b02      	subs	r3, #2
+1016407e:	2a00      	cmp	r2, #0
+10164080:	d401      	bmi.n	10164086 <__aeabi_f2d+0x86>
+10164082:	0052      	lsls	r2, r2, #1
+10164084:	3b01      	subs	r3, #1
+10164086:	0ad0      	lsrs	r0, r2, #11
+10164088:	1809      	adds	r1, r1, r0
+1016408a:	051b      	lsls	r3, r3, #20
+1016408c:	18c9      	adds	r1, r1, r3
+1016408e:	0550      	lsls	r0, r2, #21
+10164090:	4770      	bx	lr
+10164092:	0000      	.short	0x0000
+10164094:	38000000 	.word	0x38000000
+10164098:	c8000000 	.word	0xc8000000
+1016409c:	7ff00000 	.word	0x7ff00000
+101640a0:	fff00000 	.word	0xfff00000
+101640a4:	7ff80000 	.word	0x7ff80000
+101640a8:	0000037f 	.word	0x0000037f

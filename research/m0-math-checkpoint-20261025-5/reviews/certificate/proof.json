@@ -1,0 +1,74 @@
+{
+  "status": "PASS_UNIVERSAL_UINT32_SIGN_CERTIFICATE_AND_EXACT_THUMB_LIVENESS",
+  "theorem": {
+    "limbs": "u=65536*uh+ul; v=65536*vh+vl, all limbs 0..65535",
+    "exact_product_hi": "uh*vh + floor(((uh*vl+ul*vh)*65536+ul*vl)/2^32)",
+    "omitted_C": "0 <= C <= uh+vh <=131070; since numerator < (uh+vh+1)*2^32",
+    "exact_borrow": "NEGS lo sets C=(lo==0); SBCS subtracts hi+(lo!=0)",
+    "error_E": "C+borrow in[0,131071]",
+    "modular_A": "A=(B-uh*vh)mod2^32; H=(A-E)mod2^32",
+    "accept": "(A&0x7fffffff)>=131072, inclusive lower edge",
+    "positive": "A in[131072,2147483647] => H in[1,2147483647]",
+    "negative": "A in[2147614720,4294967295] => H in[2147483649,4294967295]",
+    "fallback": "Both closed bands[0,131071] and[2147483648,2147614719], including all exact H=0 and H=INT32_MIN cases",
+    "fallback_restore": "(A+d)mod2^32=B exactly; unchanged full product/NEGS/SBCS/CMP executes",
+    "source_domain": "Every uint32 B/u/v; no reciprocal approximation or numerator assumption needed for sign certificate"
+  },
+  "classifier_all32768_buckets_endpoints_and_extremeE": 131064,
+  "low17_and_E_interiors_covered_by_interval_proof": true,
+  "shared12B_nonbranch_prefix_in_unit_and2_production_paths": true,
+  "macro16B_eight_instructions_no_calls_or_memory": true,
+  "clobbers": [
+    "R4",
+    "R5",
+    "R6",
+    "NZCV"
+  ],
+  "preserves": [
+    "R0",
+    "R1",
+    "R2",
+    "R3",
+    "R7",
+    "R12",
+    "SP"
+  ],
+  "mapping": {
+    "mk61_m0_reciprocal1": {
+      "begin": "0x101e116c",
+      "full": "0x101e119a",
+      "up": "0x101e117c",
+      "down": "0x101e1182",
+      "full_product_core42B_byteequal": true,
+      "unchanged_final_round_pack_bytes": 30,
+      "removed_zero_shift": "0x101e115e"
+    },
+    "mk61_m0_reciprocal1_sw": {
+      "begin": "0x101e12f6",
+      "full": "0x101e1324",
+      "up": "0x101e1306",
+      "down": "0x101e130c",
+      "full_product_core42B_byteequal": true,
+      "unchanged_final_round_pack_bytes": 30,
+      "removed_zero_shift": "0x101e12e8"
+    },
+    "unit": {
+      "begin": "0x101e1008",
+      "up": "0x101e1018",
+      "full": "0x101e101c",
+      "down": "0x101e1050"
+    }
+  },
+  "live_skip_targets": {
+    "up": "MOVS R2,0; ADDS R0,1 resets carry; ADCS R1,R2 uses only fresh carry",
+    "down": "LSRS R0,1 / LSLS R2,R1,31 / ORRS / LSRS R1,1; no inherited flags consumed",
+    "pack": "SP+=8; R2=R12; fresh sign/exponent temporaries; R4-R7 restored from original frame; missing R2/R3/product limbs dead",
+    "no_exact_product_or_certificate_flag_leak_into_RNE": true
+  },
+  "zero_shift_private_proof": "Sole actual caller loads positive1. R0=raw low0 survives both seed paths and first/second unsigned products; R4=R0<<5=0. Signed product never writes R4. Either quotient normalization preserves R4=0. Removed LSLS R4,16 precedes no carry consumer before SUBS resets flags.",
+  "parent186B_suffix_not_blindly_inherited_new_split_full_fallback_freshly_checked": true,
+  "generic_division_or_integration_claim": false,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "device_IO": 0
+}

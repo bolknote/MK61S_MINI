@@ -1,0 +1,12 @@
+{
+  "status": "OWN_DISASSEMBLY_REPLAY_PARSER_STOP_NOT_PRODUCT_FAILURE",
+  "incident": "First own CFG/literal mapping stopped with KeyError880 because default objdump suppressed zero literal words under ellipsis.",
+  "resolution": "Use objdump -z to include actual zero literal bytes; map and check all branch/literal targets. Frozen producer artifacts remain untouched;62seals/593pins independently reverified.",
+  "retained_log": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/attempt001-binding.log",
+    "bytes": 339,
+    "sha256": "7b17da98921a14759e6c681590932716d5511c7aa106483383d597bd7120f1c7"
+  },
+  "candidate_changed": false,
+  "ARM_failure": false
+}

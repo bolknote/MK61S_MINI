@@ -1,0 +1,5 @@
+{
+  "status": "CORRECTED_BEFORE_ANY_NUMERIC_PROBE",
+  "reason": "Z is the full x^2 in input-ulp Q16, hence M^2 shift36-e;37-e already includes the half and would double-apply it. Corrected by algebra before any numeric/ARM verification.",
+  "fresh_ARM_calls_excluded": 0
+}

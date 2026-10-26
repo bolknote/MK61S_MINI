@@ -1,0 +1,331 @@
+{
+  "selected": {
+    "bins": 128,
+    "table_bytes": 256,
+    "shift": 9,
+    "input_round": "ceil",
+    "inner_round": "floor",
+    "outer_round": "floor",
+    "error_histogram": {
+      "-1": 140,
+      "0": 5167,
+      "1": 35252,
+      "2": 23815,
+      "3": 1162
+    },
+    "min_error": -1,
+    "max_error": 3,
+    "mean_absolute_corrections": 1.32000732421875,
+    "max_half_divisor_product": 2155806720,
+    "max_NR_product": 2147385600,
+    "all_intermediate_products_fit32": true,
+    "all_exact_residuals_fit_signed32": true,
+    "examples": [
+      {
+        "D": 66226,
+        "seed": 64776,
+        "estimate": 64856,
+        "exact": 64853
+      },
+      {
+        "D": 66228,
+        "seed": 64776,
+        "estimate": 64854,
+        "exact": 64851
+      },
+      {
+        "D": 66230,
+        "seed": 64776,
+        "estimate": 64852,
+        "exact": 64849
+      },
+      {
+        "D": 66232,
+        "seed": 64776,
+        "estimate": 64850,
+        "exact": 64847
+      },
+      {
+        "D": 66234,
+        "seed": 64776,
+        "estimate": 64848,
+        "exact": 64845
+      },
+      {
+        "D": 66236,
+        "seed": 64776,
+        "estimate": 64846,
+        "exact": 64843
+      },
+      {
+        "D": 66238,
+        "seed": 64776,
+        "estimate": 64844,
+        "exact": 64841
+      },
+      {
+        "D": 66240,
+        "seed": 64776,
+        "estimate": 64842,
+        "exact": 64839
+      }
+    ]
+  },
+  "best_by_bins": {
+    "32": {
+      "bins": 32,
+      "table_bytes": 64,
+      "shift": 11,
+      "input_round": "floor",
+      "inner_round": "floor",
+      "outer_round": "ceil",
+      "error_histogram": {
+        "-15": 17,
+        "-14": 44,
+        "-13": 70,
+        "-12": 138,
+        "-11": 237,
+        "-10": 345,
+        "-9": 437,
+        "-8": 642,
+        "-7": 910,
+        "-6": 1196,
+        "-5": 1740,
+        "-4": 2516,
+        "-3": 3954,
+        "-2": 6951,
+        "-1": 11429,
+        "0": 18552,
+        "1": 14006,
+        "2": 2242,
+        "3": 110
+      },
+      "min_error": -15,
+      "max_error": 3,
+      "mean_absolute_corrections": 1.630950927734375,
+      "max_half_divisor_product": 2180431857,
+      "max_NR_product": 2146813290,
+      "all_intermediate_products_fit32": true,
+      "all_exact_residuals_fit_signed32": true,
+      "examples": [
+        {
+          "D": 65536,
+          "seed": 64527,
+          "estimate": 65521,
+          "exact": 65535
+        },
+        {
+          "D": 65537,
+          "seed": 64527,
+          "estimate": 65521,
+          "exact": 65535
+        },
+        {
+          "D": 65538,
+          "seed": 64527,
+          "estimate": 65519,
+          "exact": 65534
+        },
+        {
+          "D": 65539,
+          "seed": 64527,
+          "estimate": 65519,
+          "exact": 65533
+        },
+        {
+          "D": 65540,
+          "seed": 64527,
+          "estimate": 65517,
+          "exact": 65532
+        },
+        {
+          "D": 65541,
+          "seed": 64527,
+          "estimate": 65517,
+          "exact": 65531
+        },
+        {
+          "D": 65542,
+          "seed": 64527,
+          "estimate": 65515,
+          "exact": 65530
+        },
+        {
+          "D": 65543,
+          "seed": 64527,
+          "estimate": 65515,
+          "exact": 65529
+        }
+      ]
+    },
+    "64": {
+      "bins": 64,
+      "table_bytes": 128,
+      "shift": 10,
+      "input_round": "ceil",
+      "inner_round": "floor",
+      "outer_round": "ceil",
+      "error_histogram": {
+        "-5": 1,
+        "-4": 181,
+        "-3": 746,
+        "-2": 2643,
+        "-1": 12064,
+        "0": 33881,
+        "1": 15359,
+        "2": 661
+      },
+      "min_error": -5,
+      "max_error": 2,
+      "mean_absolute_corrections": 0.564544677734375,
+      "max_half_divisor_product": 2164098560,
+      "max_NR_product": 2147256567,
+      "all_intermediate_products_fit32": true,
+      "all_exact_residuals_fit_signed32": true,
+      "examples": [
+        {
+          "D": 65537,
+          "seed": 65027,
+          "estimate": 65531,
+          "exact": 65535
+        },
+        {
+          "D": 65538,
+          "seed": 65027,
+          "estimate": 65531,
+          "exact": 65534
+        },
+        {
+          "D": 65539,
+          "seed": 65027,
+          "estimate": 65529,
+          "exact": 65533
+        },
+        {
+          "D": 65540,
+          "seed": 65027,
+          "estimate": 65529,
+          "exact": 65532
+        },
+        {
+          "D": 65541,
+          "seed": 65027,
+          "estimate": 65527,
+          "exact": 65531
+        },
+        {
+          "D": 65542,
+          "seed": 65027,
+          "estimate": 65527,
+          "exact": 65530
+        },
+        {
+          "D": 65543,
+          "seed": 65027,
+          "estimate": 65525,
+          "exact": 65529
+        },
+        {
+          "D": 65544,
+          "seed": 65027,
+          "estimate": 65525,
+          "exact": 65528
+        }
+      ]
+    },
+    "128": {
+      "bins": 128,
+      "table_bytes": 256,
+      "shift": 9,
+      "input_round": "ceil",
+      "inner_round": "ceil",
+      "outer_round": "floor",
+      "error_histogram": {
+        "-3": 91,
+        "-2": 1841,
+        "-1": 13589,
+        "0": 37141,
+        "1": 12874
+      },
+      "min_error": -3,
+      "max_error": 1,
+      "mean_absolute_corrections": 0.464141845703125,
+      "max_half_divisor_product": 2155806720,
+      "max_NR_product": 2147385600,
+      "all_intermediate_products_fit32": true,
+      "all_exact_residuals_fit_signed32": true,
+      "examples": [
+        {
+          "D": 65981,
+          "seed": 65280,
+          "estimate": 65091,
+          "exact": 65094
+        },
+        {
+          "D": 65983,
+          "seed": 65280,
+          "estimate": 65089,
+          "exact": 65092
+        },
+        {
+          "D": 65985,
+          "seed": 65280,
+          "estimate": 65087,
+          "exact": 65090
+        },
+        {
+          "D": 65987,
+          "seed": 65280,
+          "estimate": 65085,
+          "exact": 65088
+        },
+        {
+          "D": 65989,
+          "seed": 65280,
+          "estimate": 65083,
+          "exact": 65086
+        },
+        {
+          "D": 65991,
+          "seed": 65280,
+          "estimate": 65081,
+          "exact": 65084
+        },
+        {
+          "D": 65993,
+          "seed": 65280,
+          "estimate": 65079,
+          "exact": 65082
+        },
+        {
+          "D": 65995,
+          "seed": 65280,
+          "estimate": 65077,
+          "exact": 65080
+        }
+      ]
+    },
+    "256": {
+      "bins": 256,
+      "table_bytes": 512,
+      "shift": 8,
+      "input_round": "ceil",
+      "inner_round": "ceil",
+      "outer_round": "floor",
+      "error_histogram": {
+        "-2": 1062,
+        "-1": 11676,
+        "0": 37620,
+        "1": 15178
+      },
+      "min_error": -2,
+      "max_error": 1,
+      "mean_absolute_corrections": 0.442169189453125,
+      "max_half_divisor_product": 2151661568,
+      "max_NR_product": 2147475456,
+      "all_intermediate_products_fit32": true,
+      "all_exact_residuals_fit_signed32": true,
+      "examples": []
+    }
+  }
+}

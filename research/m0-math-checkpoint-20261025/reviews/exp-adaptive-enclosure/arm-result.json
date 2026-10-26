@@ -1,0 +1,53 @@
+{
+  "status": "PASS_OWN_BOUNDED_ADAPTIVE_GATE_PRODUCT_ABI_AND_PUBLIC_EXP",
+  "gate_cases": 4154,
+  "gate_ARM_calls": 8308,
+  "gate_admitted_state_cases": 5284,
+  "gate_instruction_histogram": {
+    "30": 2660,
+    "31": 1494,
+    "33": 1530,
+    "32": 2624
+  },
+  "gate_paths": 4,
+  "gate_stack16": true,
+  "gate_PC_SP_memory_no_ROM_firmware_mock_SIO": true,
+  "raw_product_pairs": 627,
+  "valid_product_integer_oracles": 338,
+  "product_ARM_calls": 3020,
+  "product_initial_NZCV16_variant_ARM_calls": 512,
+  "all_raw_returns_parent_bit_exact": true,
+  "product_instructions_old84_new81": true,
+  "product_frame40_written_old40_new36": true,
+  "product_PC_excludes_padding_and_no_external_memory_SIO": true,
+  "public_exp_inputs": 994,
+  "public_exp_ARM_calls": 7952,
+  "public_machine_calls": {
+    "candidate": 1988,
+    "rebuilt_control": 1988,
+    "accepted_parent": 1988,
+    "Qfplib": 1988
+  },
+  "public_exp_actual_directed_MPFR_inputs": 992,
+  "sNaN_shortcuts": 2,
+  "MPFR_version": "4.2.2",
+  "independent_log_preimage_generations_excluded_from_validation": 128,
+  "all29_fixed_and_prior56_margin_inputs_fresh_checked": true,
+  "public_actual_new_gate_events": 132,
+  "public_actual_gate_admissions": 58,
+  "all_actual_gate_q_bias_bound_margin_and_interval_source_exact": true,
+  "original_exp_hard_negative599_Q622_and_positive2264_Q649": true,
+  "raw_parent_bits_and_control_costs_exact": true,
+  "all_DIRTY28bytes_preserved_READY_not_left_DIRTY": true,
+  "observed_public_stack_peaks": {
+    "candidate": 744,
+    "rebuilt_control": 744,
+    "accepted_parent": 744,
+    "Qfplib": 32
+  },
+  "observed_peaks_not_universal": true,
+  "own_total_qualified_ARM": 19280,
+  "real_ROM_initializers_excluded": true,
+  "hardware": false,
+  "canonical": false
+}

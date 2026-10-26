@@ -1,0 +1,331 @@
+{
+  "status": "PRIVATE_LN2_SIGN_UPPER_GATE_COMPONENT_GO_WITH_RETAINED_REGRESSIONS",
+  "utc": "2026-10-24T07:01:35.887043+00:00",
+  "blockers": [],
+  "scope": "Only frozen661ae2b6 / ELF9f872b40 main-ln exact/raw upper uncertainty-gate predicates and strict ln2 sign assertion; exact source isolation, signed/magnitude and next-midpoint proof, private whole-ELF binding, bounded own ARM/MPFR.",
+  "target": {
+    "HANDOFF.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-20261024/HANDOFF.md",
+      "bytes": 1764,
+      "sha256": "f09c4d0b224e7fbc6872ec2763ee9f1c91db9f0c27ccc56f123ee9fcae4423fb"
+    },
+    "result.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-20261024/result.json",
+      "bytes": 8955,
+      "sha256": "12b8ce5010e7804d5259119e7eb5e403eec0021065646d35f84718c1461c0b8f"
+    },
+    "native_eabi_m0_log70.inc": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-20261024/native_eabi_m0_log70.inc",
+      "bytes": 18825,
+      "sha256": "661ae2b62f0f2e3b9da08b689de0a7876f83fa2f80f57380113b78cbbd74e79b"
+    },
+    "candidate.elf": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-20261024/candidate.elf",
+      "bytes": 112372,
+      "sha256": "9f872b40e65543d712459854dd261677ce6b504bc3b829112f09126c940395aa"
+    }
+  },
+  "accepted_parent_component_evidence": {
+    "main_raw": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/FINAL-REVIEW.json",
+      "bytes": 13340,
+      "sha256": "54dc555c2c702619ec174354e6209da4629e1436f5799d4028c2e9d8baaf5150"
+    },
+    "cold_entry": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/FINAL-REVIEW.json",
+      "bytes": 12922,
+      "sha256": "005774ca3ede4873debc15138a214839f1a76b2304aa79a6278f2fb3efe1e2e2"
+    },
+    "Q77_local_conditional": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/FINAL-REVIEW.json",
+      "bytes": 18442,
+      "sha256": "1c2a3bdb70bbede78c425d545520b09e8b2e460df8bf372f03894fad05cc6faa"
+    },
+    "Q77_parent_chain_closure": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/Q77-parent-premise-closure.json",
+      "bytes": 3061,
+      "sha256": "d5bb11662781f4d0ce212dd07f6b555e0c602a6a6f2f5c56eae3d590ca63a3c9"
+    }
+  },
+  "parent_control_ELF_exact_Q77": true,
+  "shipping_GO": false,
+  "canonical_math_GO": false,
+  "whole_ln_GO": false,
+  "whole_ln_speed_GO": false,
+  "whole_math_GO": false,
+  "all507_GO": false,
+  "hardware_GO": false,
+  "hardware_accessed": false,
+  "reviewed_original_goal_count_unchanged": 298,
+  "seals": {
+    "artifacts_verified_before_after": 68,
+    "input_pins_verified_before_after": 617
+  },
+  "independent_proofs": {
+    "check_math_binding.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-independent-20261024/check_math_binding.py",
+      "bytes": 11523,
+      "sha256": "d8badd23ea608646ee51f3458b8ef5296248c5b4b030e869e1cc8b298d9a187c"
+    },
+    "math-binding.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-independent-20261024/math-binding.json",
+      "bytes": 8044,
+      "sha256": "cc7b5198671ca6d31c22e15ab4e302a0df37f6431f252e40040d9e5b86e4f5c8"
+    },
+    "math-binding.log": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-independent-20261024/math-binding.log",
+      "bytes": 3755,
+      "sha256": "b6881ce797b9f41b9d30d622b606efb8967b7face0506475c1c6fa21799afd39"
+    },
+    "check_arm.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-independent-20261024/check_arm.py",
+      "bytes": 8574,
+      "sha256": "3580e07fbd2693283271b8852b377a1ed051391bc7bdc1fb480a69c0eb45d605"
+    },
+    "focused-arm.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-independent-20261024/focused-arm.json",
+      "bytes": 189371,
+      "sha256": "76e25d0b4b6d91b90c59e95f1a78d1fd7a39fe1b377e0577375f65e4860e4bdb"
+    },
+    "focused-arm.log": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-independent-20261024/focused-arm.log",
+      "bytes": 1405,
+      "sha256": "af7c51f175ca0e9077b37f703041ee5b234e30964ca81a20244e7d50e0d04c04"
+    },
+    "proof-notes.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-independent-20261024/proof-notes.md",
+      "bytes": 5212,
+      "sha256": "3466680c0a9e06c0d08ab8f785b040bb1eb19c407ea7fb1882801776ba02b802"
+    }
+  },
+  "independent_mathematical_proof": {
+    "actual_L70": "818323753292969962226",
+    "actual_L94": "13729194366926868337785367782",
+    "Q94_minus_Q70_shifted": 7924966,
+    "own_Fraction_log2_series_terms": 64,
+    "strict_log2_enclosure_not_author_generator": true,
+    "epsilon_L70_minus_true_ln2_Q70_lower": "-7173094742117804857306811356122433970079866643749081316291506235857615416976698659516067097584032196403609558962/15185498564714539937867702225019107632734078011376749632465689265254828527271127575453697780529031896374110153375",
+    "epsilon_upper": "-2391031580705934952435603785374144656693285934396872528804390432232757285496189147077583369886768654259393863654/5061832854904846645955900741673035877578026003792249877488563088418276175757042525151232593509677298791370051125",
+    "epsilon_float": [
+      -0.47236478351691485,
+      -0.47236478351691485
+    ],
+    "epsilon_strictly_negative": true,
+    "compile_time_sign_order_present": true,
+    "word_product_nL70_exact": true,
+    "actual_k_domain": [
+      -1022,
+      1023
+    ],
+    "n_domain": [
+      0,
+      1023
+    ],
+    "both_output_signs_magnitude_error": "n*(L70-2^70*ln2) is negative for either k sign; symmetric polynomial error added.",
+    "exact_polynomial_error": "7157007042211914738946457/906251642853202851790848",
+    "raw_polynomial_error": "12143881388354481213264281/906251642853202851790848",
+    "exact_new_gate": "inside inherited guard && error>8 iff n>0 && tail>=half+8",
+    "raw_new_gate": "inside inherited guard && exponent_error>0 iff n>0 && tail>=half+14",
+    "n0_and_near4_excluded": true,
+    "below_midpoint_and_threshold_minus1_preserve_old_guard": true,
+    "all1023_n_strict_interval_endpoint_checks": 4092,
+    "strict_next_midpoint_reach": {
+      "exact": "2212783454483892920714165602108294519267226564408659155342224488123762296827822586311981037688963476086041885528589670002351773490861/2190600239726082827621831528204189276589290461725654603354321180185670919669876111044813203989931629577454972272979054516240384000",
+      "raw": "2242362577322710163076559777080695504674450581029765559320504339960830917945819818575680362339638712521300582458485456611638875954861/2190600239726082827621831528204189276589290461725654603354321180185670919669876111044813203989931629577454972272979054516240384000"
+    },
+    "minimum_next_midpoint_gap": 2048,
+    "binade_carry_and_signed_RNE_safe": true,
+    "no_new_error_radius_or_polynomial": true
+  },
+  "source_and_artifact_binding": {
+    "source_only_two_predicates_and_static_assert": true,
+    "changed_allocated_sections": {
+      ".text.ln_main_raw": [
+        1360,
+        1368
+      ],
+      ".text.mk61_m0_ln_positive": [
+        1264,
+        1272
+      ]
+    },
+    "object_and_linked_growth_bytes": 16,
+    "other_allocated_code_Q77_near_tables_BSS_ASM_dependencies_equal": true,
+    "exact_inline_production_pack_units": true,
+    "new_tables_RAM_libgcc": false,
+    "whole_CPP_ASM_objects_entire_ELF_and_unit_rebuild_byteexact": true,
+    "rebuild_hashes": {
+      "candidate-full.o": "6e94826dc3aa50b276bad1b0f2a1627e4f2513bf45ac1bf93424540df884faa2",
+      "candidate-ratio.o": "c80865dd3f89454cd4790770059a806133b87f39f1ac5090c12f10e308584fea",
+      "candidate.elf": "9f872b40e65543d712459854dd261677ce6b504bc3b829112f09126c940395aa",
+      "pack-unit.o": "ed31627917d798cbf62e9c16385c6caad08367d045eb94d2b4d4ff7596acfbfe",
+      "pack-unit.elf": "cfdd0e035a53e57fdf756cc391d8e586857995aa0f884e78791e93e140f40d49"
+    },
+    "resident_external_bindings_verified": 39,
+    "generic_M0_allocated_controls_exact": true,
+    "M4_controls": "Exact excluded zero-allocated TUs, not whole-platform math/firmware qualification.",
+    "static_assert_executable_bytes_equal_preassert": true,
+    "preassert_probe_and_inherited_calls_not_counted_as_fresh": true
+  },
+  "own_bounded_execution": {
+    "MPFR": "4.2.2",
+    "public_unique_raw": 39,
+    "public_state_rows": 78,
+    "public_ARM_calls": 234,
+    "candidate_MPFR_errors": 0,
+    "raw_NaN_bits_equal_parent": true,
+    "all7_retained_regression_states_replayed": true,
+    "all3_remaining_raw_deficits_replayed_bothstates": true,
+    "fixed_case_bothstates_loses_fallback": true,
+    "public_trace": {
+      "candidate": {
+        "ln_main_raw": 15,
+        "ln_refine": 10,
+        "ln_near_interval77": 16
+      },
+      "parent": {
+        "ln_main_raw": 15,
+        "ln_refine": 12,
+        "ln_near_interval77": 16
+      }
+    },
+    "PCS_SP_bounded_writes_every_call": true,
+    "DIRTY28bytes_preserved_READY_not_dirty": true,
+    "bare_configurations": 212,
+    "bare_ARM_calls": 424,
+    "bare_new_shortcut_configurations": 40,
+    "bare_class_controls": {
+      "decline": 92,
+      "n0": 36,
+      "below_midpoint": 106,
+      "midpoint": 40,
+      "threshold_minus1": 40,
+      "accept": 120,
+      "npositive": 176
+    },
+    "bare_independent_Fraction_RNE_endpoints": 240,
+    "bare_SIO_accesses": 0,
+    "bare_PC_limited_to_unit": true,
+    "bare_stack_bytes": 44,
+    "public_stack_subset": {
+      "candidate": 504,
+      "parent": 504,
+      "Qfplib": 32
+    },
+    "producer_full_stack640_not_reswept": true,
+    "bare_abstract_interval_points_not_actual_polynomial_evaluation_claim": true,
+    "total_own_ARM_calls": 658
+  },
+  "fixed_actual_case": [
+    {
+      "x": "5FFA5B2647E9E2C7",
+      "group": "new_fixed_gate_counterexample_neighbors",
+      "SIO": "READY",
+      "expected": "4076363F58F1CE38",
+      "outputs": {
+        "candidate": "4076363F58F1CE38",
+        "parent": "4076363F58F1CE38",
+        "Qfplib": "4076363F58F1CE38"
+      },
+      "instructions": {
+        "candidate": 595,
+        "parent": 2238,
+        "Qfplib": 776
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "candidate": {
+          "ln_refine": 0,
+          "ln_main_raw": 0,
+          "ln_near_interval77": 0
+        },
+        "parent": {
+          "ln_refine": 1,
+          "ln_main_raw": 0,
+          "ln_near_interval77": 0
+        }
+      }
+    },
+    {
+      "x": "5FFA5B2647E9E2C7",
+      "group": "new_fixed_gate_counterexample_neighbors",
+      "SIO": "DIRTY",
+      "expected": "4076363F58F1CE38",
+      "outputs": {
+        "candidate": "4076363F58F1CE38",
+        "parent": "4076363F58F1CE38",
+        "Qfplib": "4076363F58F1CE38"
+      },
+      "instructions": {
+        "candidate": 655,
+        "parent": 2333,
+        "Qfplib": 776
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "candidate": {
+          "ln_refine": 0,
+          "ln_main_raw": 1,
+          "ln_near_interval77": 0
+        },
+        "parent": {
+          "ln_refine": 1,
+          "ln_main_raw": 1,
+          "ln_near_interval77": 0
+        }
+      }
+    }
+  ],
+  "finite_saved_profile_recount": {
+    "parent_rows_retained": 118044,
+    "total_rows": 120988,
+    "groups": {
+      "READY": {
+        "equal": 60490,
+        "slower": 3,
+        "faster": 1
+      },
+      "DIRTY": {
+        "slower": 4,
+        "equal": 60489,
+        "faster": 1
+      }
+    },
+    "regression_histogram": {
+      "4": 2,
+      "3": 5
+    },
+    "old_raw_losses": 4,
+    "new_raw_losses": 3,
+    "fixed_raw": "5FFA5B2647E9E2C7",
+    "new_correct_Qfp_deficits": 0
+  },
+  "author_large_corpus_not_reexecuted": {
+    "unique_inputs": 60494,
+    "states": 120988,
+    "public_ARM_calls": 483952,
+    "bare_calls": 12264,
+    "total_qualified_calls": 496216
+  },
+  "limits": [
+    "Private component GO only; no all-binary64 execution or all-input speed guarantee, entire public-ln totality, canonical integration, release or hardware acceptance.",
+    "Three correct-Qfplib raw deficits remain; five parent states regress3instructions and two regress4. Object/linked growth16B and author640B wider-stack bound retained.",
+    "Instruction counts are synthetic emulation counts, not physical cycles. Only658 own ARM calls were run; author496216calls were not repeated.",
+    "Existing Q77 component proof and explicit accepted parent-chain closure are reused only for exact unchanged sources/artifacts. No new unknown child is accepted.",
+    "Original reviewed count remains298/507. Producer302/507, historical ln10 completion or this local fix does not automatically change that count or complete the user goal."
+  ],
+  "actions": {
+    "frozen_files_changed": false,
+    "canonical_primary_Git_leases_USB_serial_Flash_accessed": false,
+    "normal_builds_CI_or_broad_author_corpus_repeated": false,
+    "own_private_rebuild_and_additive_outputs_only": true
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "status": "FROZEN_AUTHOR_PRIVATE_NUMERATOR_ONE_RECIPROCAL_PENDING_REVIEW",
+  "source_parent": ".build/m0-pow-reciprocal-lut-20261025",
+  "source_parent_FROZEN_sha256": "7384323f37dae2fb8a7cf350a64165392181e20276e83551ccf9ef320d811ffc",
+  "parent_independent_review": {
+    "path": ".build/m0-pow-reciprocal-lut-independent-20261025/FINAL-REVIEW.json",
+    "sha256": "c1911a7d57fbdbea1ec6a2f595e99a1685d2592db18f48b3fcfb4b97997bfdde",
+    "status": "TECH_GO_PRIVATE_EXACT_LUT_ROOT_RECIPROCAL_COMPONENT_ONLY"
+  },
+  "ROOT_receipts_present_at_seal": {
+    "soft": {
+      "path": ".build/m0-pow-reciprocal-soft-root-acceptance-20261025-001/RECEIPT.json",
+      "bytes": 15734,
+      "sha256": "de2f15995d64baa1e7e68aec9d45cc90efa43264ce1cf5985fb3fc7d6849372c"
+    }
+  },
+  "candidate_ELF_sha256": "90dbb82bf4a67fc0b81f3b1c73f19a6f251fb56b34d1867d587b37c2a445b3fd",
+  "source_proof_sha256": "8d29ad91156a83ac53f0b65742a4f0de5bafeca244587f70db53169e18b89e13",
+  "numeric_proof_sha256": "0fe85e1813aa437cfa320a6dbdf924c0cd36a1e771406322c66056d48f7b0c14",
+  "private_precondition": "R0=0,R1=0x3ff00000; denominator R2:R3 any binary64",
+  "actual_root_source_and_every_dynamic_entry_prove_precondition": true,
+  "not_a_general_division_or_public_ABI": true,
+  "other_resident_ddiv_callers_unchanged": true,
+  "same_corpus_pairs": 120980,
+  "states": 241960,
+  "reference_state_variants": 279522,
+  "loss_pairs": [
+    11377,
+    11372
+  ],
+  "new_strict_fixes": 5,
+  "new_raw_losses": 0,
+  "candidate_wrong": 0,
+  "accelerated_states": 778,
+  "accelerated_states_by_SIO": {
+    "READY": 389,
+    "DIRTY": 389
+  },
+  "public_instruction_reduction_range": [
+    11,
+    34
+  ],
+  "parent_cost_increase_states": 0,
+  "all778_changed_paths_fresh_parent_replayed": true,
+  "all_parent_return_bits_and_internal_sequences_identical": true,
+  "all_actual_deltas_match_guard_plus15_product_plus8_software_formula": true,
+  "all2048_exponent_guards_equivalent_and_R6_identical": true,
+  "common_after_second_product_RNE_suffix_bytes": 186,
+  "common4_suffixes_byte_identical": true,
+  "all_direct_after_second_product_R0_R7_R12_SP_NZCV_saved28B_identical": true,
+  "READY_nine_ALU_SIO_latency_block_preserved": true,
+  "unchanged312B_exact_seed_and_table": true,
+  "no_new_table_values_RAM_or_libgcc": true,
+  "private_code_bytes": [
+    1168,
+    1060
+  ],
+  "allocated_code_delta_bytes": -108,
+  "default_M0_M4_selected_controls_and6_disabled_objects_empty": true,
+  "twenty_two_complete_source_rebuilds_byte_exact": true,
+  "total_qualified_fresh_ARM_calls": 406406,
+  "fresh_full_candidate_calls": 241960,
+  "fresh_changed_parent_calls": 778,
+  "fresh_MPFR_public_controls_reference_calls": 61524,
+  "fresh_scalar_calls": 102144,
+  "actual_directed_MPFR_inputs": 17785,
+  "sNaN_policy_shortcuts": 110,
+  "all10254_fresh_controls_match_full_records": true,
+  "v1_superseded102144_ARM12734_MPFR34sNaN_excluded": true,
+  "failed_trace308_completed_ARM2partial23_oracles_excluded": true,
+  "tally_import_failure0_ARM_MPFR_excluded": true,
+  "parent_qualification_and_seed_units_not_fresh": true,
+  "all_public_and_scalar_correct_wrong_Qfplib_outputs_costs_retained": true,
+  "wrong_public_Qfplib_variants": 77106,
+  "wrong_direct_Qfplib_variants": 354,
+  "public_correct_Qfplib_comparison": {
+    "slower": 21030,
+    "faster": 178682,
+    "equal": 2704
+  },
+  "direct_correct_Qfplib_comparisons": {
+    "parent": {
+      "faster": 12622,
+      "slower": 12560
+    },
+    "candidate": {
+      "faster": 24966,
+      "slower": 216
+    }
+  },
+  "direct_remaining_loss_states": 216,
+  "direct_remaining_unique_denominators": 18,
+  "direct_remaining_exponents": {
+    "0": 198,
+    "908": 2,
+    "1915": 2,
+    "162": 2,
+    "1023": 12
+  },
+  "no_nominal_reference_domain_filter": true,
+  "full_observed_stack_bytes": 2284,
+  "fresh_controls_observed_stack_bytes": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148
+  },
+  "direct_observed_stack_bytes": {
+    "parent": 176,
+    "control": 176,
+    "candidate": 176
+  },
+  "changed_parent_subset_not_comparable": true,
+  "original_pow153_remaining": [
+    34,
+    34
+  ],
+  "author_separate507_no_slower": 437,
+  "reviewed_separate507_no_slower": 422,
+  "independent_review_pending": true,
+  "remaining_needed_math_general_totality_source_merge_actual_R12_loader_layout_14B_overlay_cycles_release_pending": true,
+  "canonical_runtime_M4_Git_device_USB_Flash_or_release_changed": false,
+  "goal_complete": false
+}

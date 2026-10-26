@@ -1,0 +1,9 @@
+{
+  "status": "PREPARED_NEW_PUBLIC_EXP_CORPUS_NOT_RUNTIME_REFERENCES",
+  "inputs": 10619,
+  "MPFR_directed_log_preimage_generations": 1919,
+  "MPFR_version": "4.2.2",
+  "log_generation_not_added_to_exp_reference_count": true,
+  "input_sha256": "ced261bf60df2ea63a96e90c6b3cca622c8a7bd6dd50048da1286d0c2651bc7b",
+  "hardware_accessed": false
+}

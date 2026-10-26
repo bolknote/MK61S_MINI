@@ -1,0 +1,112 @@
+new-control 0 / 4861 elapsed 0.0
+new-control 64 / 4861 elapsed 1.0
+new-control 128 / 4861 elapsed 1.5
+new-control 192 / 4861 elapsed 2.4
+new-control 256 / 4861 elapsed 3.5
+new-control 320 / 4861 elapsed 4.6
+new-control 384 / 4861 elapsed 5.1
+new-control 448 / 4861 elapsed 5.6
+new-control 512 / 4861 elapsed 6.0
+new-control 576 / 4861 elapsed 6.5
+new-control 640 / 4861 elapsed 6.9
+new-control 704 / 4861 elapsed 7.3
+new-control 768 / 4861 elapsed 8.5
+new-control 832 / 4861 elapsed 12.1
+new-control 896 / 4861 elapsed 14.4
+new-control 960 / 4861 elapsed 15.9
+new-control 1024 / 4861 elapsed 18.1
+new-control 1088 / 4861 elapsed 20.0
+new-control 1152 / 4861 elapsed 21.8
+new-control 1216 / 4861 elapsed 23.6
+new-control 1280 / 4861 elapsed 25.2
+new-control 1344 / 4861 elapsed 33.9
+new-control 1408 / 4861 elapsed 35.0
+new-control 1472 / 4861 elapsed 39.6
+new-control 1536 / 4861 elapsed 47.5
+new-control 1600 / 4861 elapsed 49.4
+new-control 1664 / 4861 elapsed 52.0
+new-control 1728 / 4861 elapsed 53.2
+new-control 1792 / 4861 elapsed 54.4
+new-control 1856 / 4861 elapsed 55.5
+new-control 1920 / 4861 elapsed 56.7
+new-control 1984 / 4861 elapsed 57.8
+new-control 2048 / 4861 elapsed 59.0
+new-control 2112 / 4861 elapsed 60.1
+new-control 2176 / 4861 elapsed 61.3
+new-control 2240 / 4861 elapsed 62.5
+new-control 2304 / 4861 elapsed 63.7
+new-control 2368 / 4861 elapsed 64.8
+new-control 2432 / 4861 elapsed 66.0
+new-control 2496 / 4861 elapsed 67.1
+new-control 2560 / 4861 elapsed 68.3
+new-control 2624 / 4861 elapsed 69.5
+new-control 2688 / 4861 elapsed 70.7
+new-control 2752 / 4861 elapsed 71.8
+new-control 2816 / 4861 elapsed 72.9
+new-control 2880 / 4861 elapsed 74.1
+new-control 2944 / 4861 elapsed 75.2
+new-control 3008 / 4861 elapsed 76.3
+new-control 3072 / 4861 elapsed 77.4
+new-control 3136 / 4861 elapsed 78.5
+new-control 3200 / 4861 elapsed 79.7
+new-control 3264 / 4861 elapsed 80.8
+new-control 3328 / 4861 elapsed 81.9
+new-control 3392 / 4861 elapsed 83.0
+new-control 3456 / 4861 elapsed 84.1
+new-control 3520 / 4861 elapsed 85.2
+new-control 3584 / 4861 elapsed 86.6
+new-control 3648 / 4861 elapsed 87.7
+new-control 3712 / 4861 elapsed 88.8
+new-control 3776 / 4861 elapsed 89.9
+new-control 3840 / 4861 elapsed 91.0
+new-control 3904 / 4861 elapsed 92.2
+new-control 3968 / 4861 elapsed 93.5
+new-control 4032 / 4861 elapsed 94.6
+new-control 4096 / 4861 elapsed 95.7
+new-control 4160 / 4861 elapsed 96.9
+new-control 4224 / 4861 elapsed 98.0
+new-control 4288 / 4861 elapsed 99.2
+new-control 4352 / 4861 elapsed 100.3
+new-control 4416 / 4861 elapsed 101.4
+new-control 4480 / 4861 elapsed 102.5
+new-control 4544 / 4861 elapsed 103.6
+new-control 4608 / 4861 elapsed 104.8
+new-control 4672 / 4861 elapsed 105.9
+new-control 4736 / 4861 elapsed 107.3
+new-control 4800 / 4861 elapsed 109.0
+{
+  "status": "FRESH_INDEPENDENT_POW_CONTROLS_ALL_REFERENCE_OUTPUTS_RETAINED",
+  "candidate_ELF_sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98",
+  "unique_pairs": 4861,
+  "public_state_rows": 9722,
+  "fresh_public_ARM_calls": 58332,
+  "fresh_candidate_calls": 9722,
+  "fresh_parent_calls": 9722,
+  "fresh_control_calls": 9722,
+  "fresh_Qfplib_calls": 29166,
+  "oracle_evaluations": 4861,
+  "actual_directed_MPFR_inputs": 4785,
+  "sNaN_policy_shortcuts": 76,
+  "MPFR_version": "4.2.2",
+  "input_generation": "binary64 host log2 only selects inputs; independent directed MPFR validates actual raw pairs",
+  "all512_roots_seen_in_public_calls": 512,
+  "no_nominal_reference_domain_filter": true,
+  "candidate_wrong": 0,
+  "parent_layout_control_all_raw_bits_and_costs_identical": true,
+  "wrong_Qfplib_state_outputs_retained": 9672,
+  "parent_raw_loss_pairs": 3034,
+  "candidate_raw_loss_pairs": 3021,
+  "new_raw_loss_pairs": 0,
+  "parent_cost_delta_histogram": {
+    "-67": 1542,
+    "0": 2838,
+    "2": 5342
+  },
+  "observed_stacks": {
+    "parent": 2284,
+    "control": 2284,
+    "candidate": 2284
+  },
+  "elapsed_seconds": 110.64033979101805,
+  "hardware_accessed": false
+}

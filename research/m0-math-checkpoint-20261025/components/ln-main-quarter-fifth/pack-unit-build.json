@@ -1,0 +1,39 @@
+{
+  "status": "BUILT_EXACT_MAIN_LN_COEFFICIENT_AND_PACK_UNITS",
+  "source_sha256": "4db4753b23ebaa7a17aed662d2f59d6b351f6c0d8739559ad4235e6c615f1fd2",
+  "coefficient_fragment_sha256": "d52524d8383fea6da6372b658207adefdecedb4569c6a68c213fafb7fedd25cd",
+  "exact_fragment_sha256": "2cd1b4d338718ab2debe0fe3b700022952b7ad89e50b3524f9f19a036b771e6b",
+  "raw_fragment_sha256": "4a96fbb78bd5a682c0be91b32287f2e38ec270ca6eca5522b797076e04ac62d7",
+  "unit_ELF_sha256": "3641aeae32885eb14877f65959364a90201c15999bb063b7560169795a71badc",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/pack-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/pack-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/pack-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/pack-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-quarter-fifth-20261024/pack-unit.elf"
+    ]
+  ],
+  "decline_bits": "7FF8000000000284",
+  "input_fixture_address": "20000000",
+  "input_fixture_bytes": 32,
+  "hardware_accessed": false
+}

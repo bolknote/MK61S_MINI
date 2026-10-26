@@ -1,0 +1,8 @@
+{
+  "status": "PASS_D2F_POSTSEAL_ALL_ARTIFACTS_AND_LINEAGE",
+  "packet": "/Users/bolk/Projects/MK61S_MINI/.build/m0-d2f-leaf-20261024",
+  "FROZEN_sha256": "87c989edfe183f894ad87a833aed18f7b47172366c6362cf2276c3023a6375cb",
+  "artifacts": 60,
+  "lineage_pins": 362,
+  "source_or_device_changes": false
+}

@@ -1,0 +1,3708 @@
+{
+  "status": "PASS_ALL154_CUBIC_LOG_THRESHOLD_CORRECTIONS_ACTUAL_ARM_MPFR_BOUND",
+  "distinct_inputs": 308,
+  "existing_actual_ARM_state_rows": 616,
+  "unique_actual_results_requiring_cubic_correction": 154,
+  "newly_executed_ARM_or_MPFR_calls": 0,
+  "acquisition_is_the_full_qualification": true,
+  "candidate_ELF_sha256": "43bcd8e12044ddd81d8d0d2aa12701e966c4ad3c76f755eb926406cc36bcbf54",
+  "cells": {
+    "3DBFFFF7FFFE0002": {
+      "e": -36,
+      "negative": false,
+      "odd": 262143,
+      "distance": 131070,
+      "expected": "3FF0000000020000",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DBFFFF7FFFE0001": {
+      "e": -36,
+      "negative": false,
+      "odd": 262143,
+      "distance": 131071,
+      "expected": "3FF000000001FFFF",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DCFFFF3FFFC0004": {
+      "e": -35,
+      "negative": false,
+      "odd": 524285,
+      "distance": 262140,
+      "expected": "3FF000000003FFFF",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DCFFFF3FFFC0003": {
+      "e": -35,
+      "negative": false,
+      "odd": 524285,
+      "distance": 262141,
+      "expected": "3FF000000003FFFE",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DCFFFFBFFFC0002": {
+      "e": -35,
+      "negative": false,
+      "odd": 524287,
+      "distance": 262142,
+      "expected": "3FF0000000040000",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DCFFFFBFFFC0001": {
+      "e": -35,
+      "negative": false,
+      "odd": 524287,
+      "distance": 262143,
+      "expected": "3FF000000003FFFF",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DD9B22DFFFAD76F": {
+      "e": -34,
+      "negative": false,
+      "odd": 842007,
+      "distance": 338065,
+      "expected": "3FF0000000066C8C",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DD9B22DFFFAD76E": {
+      "e": -34,
+      "negative": false,
+      "odd": 842007,
+      "distance": 338066,
+      "expected": "3FF0000000066C8B",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDACF21FFFA628C": {
+      "e": -34,
+      "negative": false,
+      "odd": 878481,
+      "distance": 367988,
+      "expected": "3FF000000006B3C9",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDACF21FFFA628B": {
+      "e": -34,
+      "negative": false,
+      "odd": 878481,
+      "distance": 367989,
+      "expected": "3FF000000006B3C8",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFAB55FFF82A1E": {
+      "e": -34,
+      "negative": false,
+      "odd": 1037739,
+      "distance": 513506,
+      "expected": "3FF000000007EAD6",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFAB55FFF82A1D": {
+      "e": -34,
+      "negative": false,
+      "odd": 1037739,
+      "distance": 513507,
+      "expected": "3FF000000007EAD5",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFFFEDFFF8000A": {
+      "e": -34,
+      "negative": false,
+      "odd": 1048567,
+      "distance": 524278,
+      "expected": "3FF000000007FFFC",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFFFEDFFF80009": {
+      "e": -34,
+      "negative": false,
+      "odd": 1048567,
+      "distance": 524279,
+      "expected": "3FF000000007FFFB",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFFFF1FFF80008": {
+      "e": -34,
+      "negative": false,
+      "odd": 1048569,
+      "distance": 524280,
+      "expected": "3FF000000007FFFD",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFFFF1FFF80007": {
+      "e": -34,
+      "negative": false,
+      "odd": 1048569,
+      "distance": 524281,
+      "expected": "3FF000000007FFFC",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFFFF5FFF80006": {
+      "e": -34,
+      "negative": false,
+      "odd": 1048571,
+      "distance": 524282,
+      "expected": "3FF000000007FFFE",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFFFF5FFF80005": {
+      "e": -34,
+      "negative": false,
+      "odd": 1048571,
+      "distance": 524283,
+      "expected": "3FF000000007FFFD",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFFFF9FFF80004": {
+      "e": -34,
+      "negative": false,
+      "odd": 1048573,
+      "distance": 524284,
+      "expected": "3FF000000007FFFF",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFFFF9FFF80003": {
+      "e": -34,
+      "negative": false,
+      "odd": 1048573,
+      "distance": 524285,
+      "expected": "3FF000000007FFFE",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFFFFDFFF80002": {
+      "e": -34,
+      "negative": false,
+      "odd": 1048575,
+      "distance": 524286,
+      "expected": "3FF0000000080000",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DDFFFFDFFF80001": {
+      "e": -34,
+      "negative": false,
+      "odd": 1048575,
+      "distance": 524287,
+      "expected": "3FF000000007FFFF",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE16D6CFFFB4124": {
+      "e": -33,
+      "negative": false,
+      "odd": 1142125,
+      "distance": 311004,
+      "expected": "3FF000000008B6B7",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE16D6CFFFB4123": {
+      "e": -33,
+      "negative": false,
+      "odd": 1142125,
+      "distance": 311005,
+      "expected": "3FF000000008B6B6",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE1EF62FFFAF955": {
+      "e": -33,
+      "negative": false,
+      "odd": 1175395,
+      "distance": 329387,
+      "expected": "3FF000000008F7B2",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE1EF62FFFAF954": {
+      "e": -33,
+      "negative": false,
+      "odd": 1175395,
+      "distance": 329388,
+      "expected": "3FF000000008F7B1",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE326E8FFFA44CF": {
+      "e": -33,
+      "negative": false,
+      "odd": 1255145,
+      "distance": 375601,
+      "expected": "3FF0000000099375",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE326E8FFFA44CE": {
+      "e": -33,
+      "negative": false,
+      "odd": 1255145,
+      "distance": 375602,
+      "expected": "3FF0000000099374",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE39932FFF9FF9C": {
+      "e": -33,
+      "negative": false,
+      "odd": 1284403,
+      "distance": 393316,
+      "expected": "3FF000000009CC9A",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE39932FFF9FF9B": {
+      "e": -33,
+      "negative": false,
+      "odd": 1284403,
+      "distance": 393317,
+      "expected": "3FF000000009CC99",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE5B9B6FFF8A006": {
+      "e": -33,
+      "negative": false,
+      "odd": 1423799,
+      "distance": 483322,
+      "expected": "3FF00000000ADCDC",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE5B9B6FFF8A005": {
+      "e": -33,
+      "negative": false,
+      "odd": 1423799,
+      "distance": 483323,
+      "expected": "3FF00000000ADCDB",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE635C6FFF84ADB": {
+      "e": -33,
+      "negative": false,
+      "odd": 1455559,
+      "distance": 505125,
+      "expected": "3FF00000000B1AE4",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE635C6FFF84ADA": {
+      "e": -33,
+      "negative": false,
+      "odd": 1455559,
+      "distance": 505126,
+      "expected": "3FF00000000B1AE3",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE63E20FFF8450E": {
+      "e": -33,
+      "negative": false,
+      "odd": 1457697,
+      "distance": 506610,
+      "expected": "3FF00000000B1F11",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE63E20FFF8450D": {
+      "e": -33,
+      "negative": false,
+      "odd": 1457697,
+      "distance": 506611,
+      "expected": "3FF00000000B1F10",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE7CC4EFFF7269C": {
+      "e": -33,
+      "negative": false,
+      "odd": 1559631,
+      "distance": 579940,
+      "expected": "3FF00000000BE628",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE7CC4EFFF7269B": {
+      "e": -33,
+      "negative": false,
+      "odd": 1559631,
+      "distance": 579941,
+      "expected": "3FF00000000BE627",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE8A8E6FFF67F96": {
+      "e": -33,
+      "negative": false,
+      "odd": 1616103,
+      "distance": 622698,
+      "expected": "3FF00000000C5474",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE8A8E6FFF67F95": {
+      "e": -33,
+      "negative": false,
+      "odd": 1616103,
+      "distance": 622699,
+      "expected": "3FF00000000C5473",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE910CAFFF62EDE": {
+      "e": -33,
+      "negative": false,
+      "odd": 1642699,
+      "distance": 643362,
+      "expected": "3FF00000000C8866",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE910CAFFF62EDD": {
+      "e": -33,
+      "negative": false,
+      "odd": 1642699,
+      "distance": 643363,
+      "expected": "3FF00000000C8865",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE974BAFFF5DFFA": {
+      "e": -33,
+      "negative": false,
+      "odd": 1668283,
+      "distance": 663558,
+      "expected": "3FF00000000CBA5E",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE974BAFFF5DFF9": {
+      "e": -33,
+      "negative": false,
+      "odd": 1668283,
+      "distance": 663559,
+      "expected": "3FF00000000CBA5D",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE9FB86FFF573A3": {
+      "e": -33,
+      "negative": false,
+      "odd": 1702791,
+      "distance": 691293,
+      "expected": "3FF00000000CFDC4",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DE9FB86FFF573A2": {
+      "e": -33,
+      "negative": false,
+      "odd": 1702791,
+      "distance": 691294,
+      "expected": "3FF00000000CFDC3",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEACB98FFF4C80D": {
+      "e": -33,
+      "negative": false,
+      "odd": 1756057,
+      "distance": 735219,
+      "expected": "3FF00000000D65CD",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEACB98FFF4C80C": {
+      "e": -33,
+      "negative": false,
+      "odd": 1756057,
+      "distance": 735220,
+      "expected": "3FF00000000D65CC",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEAEA22FFF4AE6C": {
+      "e": -33,
+      "negative": false,
+      "odd": 1763875,
+      "distance": 741780,
+      "expected": "3FF00000000D7512",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEAEA22FFF4AE6B": {
+      "e": -33,
+      "negative": false,
+      "odd": 1763875,
+      "distance": 741781,
+      "expected": "3FF00000000D7511",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEBB1C4FFF40415": {
+      "e": -33,
+      "negative": false,
+      "odd": 1814981,
+      "distance": 785387,
+      "expected": "3FF00000000DD8E3",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEBB1C4FFF40414": {
+      "e": -33,
+      "negative": false,
+      "odd": 1814981,
+      "distance": 785388,
+      "expected": "3FF00000000DD8E2",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEBC684FFF3F219": {
+      "e": -33,
+      "negative": false,
+      "odd": 1820293,
+      "distance": 789991,
+      "expected": "3FF00000000DE343",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEBC684FFF3F218": {
+      "e": -33,
+      "negative": false,
+      "odd": 1820293,
+      "distance": 789992,
+      "expected": "3FF00000000DE342",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DECA842FFF32B0C": {
+      "e": -33,
+      "negative": false,
+      "odd": 1878083,
+      "distance": 840948,
+      "expected": "3FF00000000E5422",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DECA842FFF32B0B": {
+      "e": -33,
+      "negative": false,
+      "odd": 1878083,
+      "distance": 840949,
+      "expected": "3FF00000000E5421",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DECAE60FFF32591": {
+      "e": -33,
+      "negative": false,
+      "odd": 1879649,
+      "distance": 842351,
+      "expected": "3FF00000000E5731",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DECAE60FFF32590": {
+      "e": -33,
+      "negative": false,
+      "odd": 1879649,
+      "distance": 842352,
+      "expected": "3FF00000000E5730",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DECCAD6FFF30C02": {
+      "e": -33,
+      "negative": false,
+      "odd": 1886935,
+      "distance": 848894,
+      "expected": "3FF00000000E656C",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DECCAD6FFF30C01": {
+      "e": -33,
+      "negative": false,
+      "odd": 1886935,
+      "distance": 848895,
+      "expected": "3FF00000000E656B",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DECD958FFF2FEF1": {
+      "e": -33,
+      "negative": false,
+      "odd": 1890649,
+      "distance": 852239,
+      "expected": "3FF00000000E6CAD",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DECD958FFF2FEF0": {
+      "e": -33,
+      "negative": false,
+      "odd": 1890649,
+      "distance": 852240,
+      "expected": "3FF00000000E6CAC",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DED0A7CFFF2D27E": {
+      "e": -33,
+      "negative": false,
+      "odd": 1903229,
+      "distance": 863618,
+      "expected": "3FF00000000E853F",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DED0A7CFFF2D27D": {
+      "e": -33,
+      "negative": false,
+      "odd": 1903229,
+      "distance": 863619,
+      "expected": "3FF00000000E853E",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DED2FA4FFF2B0B0": {
+      "e": -33,
+      "negative": false,
+      "odd": 1912741,
+      "distance": 872272,
+      "expected": "3FF00000000E97D3",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DED2FA4FFF2B0AF": {
+      "e": -33,
+      "negative": false,
+      "odd": 1912741,
+      "distance": 872273,
+      "expected": "3FF00000000E97D2",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DED6790FFF27D7E": {
+      "e": -33,
+      "negative": false,
+      "odd": 1927057,
+      "distance": 885378,
+      "expected": "3FF00000000EB3C9",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DED6790FFF27D7D": {
+      "e": -33,
+      "negative": false,
+      "odd": 1927057,
+      "distance": 885379,
+      "expected": "3FF00000000EB3C8",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEDB2FAFFF237D9": {
+      "e": -33,
+      "negative": false,
+      "odd": 1946363,
+      "distance": 903207,
+      "expected": "3FF00000000ED97E",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEDB2FAFFF237D8": {
+      "e": -33,
+      "negative": false,
+      "odd": 1946363,
+      "distance": 903208,
+      "expected": "3FF00000000ED97D",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEE07BEFFF1E8BD": {
+      "e": -33,
+      "negative": false,
+      "odd": 1968063,
+      "distance": 923459,
+      "expected": "3FF00000000F03E0",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEE07BEFFF1E8BC": {
+      "e": -33,
+      "negative": false,
+      "odd": 1968063,
+      "distance": 923460,
+      "expected": "3FF00000000F03DF",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEEA624FFF1528F": {
+      "e": -33,
+      "negative": false,
+      "odd": 2008613,
+      "distance": 961905,
+      "expected": "3FF00000000F5313",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEEA624FFF1528E": {
+      "e": -33,
+      "negative": false,
+      "odd": 2008613,
+      "distance": 961906,
+      "expected": "3FF00000000F5312",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEED4FCFFF1258F": {
+      "e": -33,
+      "negative": false,
+      "odd": 2020605,
+      "distance": 973425,
+      "expected": "3FF00000000F6A7F",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEED4FCFFF1258E": {
+      "e": -33,
+      "negative": false,
+      "odd": 2020605,
+      "distance": 973426,
+      "expected": "3FF00000000F6A7E",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEF4FA2FFF0AE78": {
+      "e": -33,
+      "negative": false,
+      "odd": 2052003,
+      "distance": 1003912,
+      "expected": "3FF00000000FA7D2",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEF4FA2FFF0AE77": {
+      "e": -33,
+      "negative": false,
+      "odd": 2052003,
+      "distance": 1003913,
+      "expected": "3FF00000000FA7D1",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEF5146FFF0ACDD": {
+      "e": -33,
+      "negative": false,
+      "odd": 2052423,
+      "distance": 1004323,
+      "expected": "3FF00000000FA8A4",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEF5146FFF0ACDC": {
+      "e": -33,
+      "negative": false,
+      "odd": 2052423,
+      "distance": 1004324,
+      "expected": "3FF00000000FA8A3",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEF8100FFF07E04": {
+      "e": -33,
+      "negative": false,
+      "odd": 2064641,
+      "distance": 1016316,
+      "expected": "3FF00000000FC081",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEF8100FFF07E03": {
+      "e": -33,
+      "negative": false,
+      "odd": 2064641,
+      "distance": 1016317,
+      "expected": "3FF00000000FC080",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEF92E4FFF06C62": {
+      "e": -33,
+      "negative": false,
+      "odd": 2069221,
+      "distance": 1020830,
+      "expected": "3FF00000000FC973",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEF92E4FFF06C61": {
+      "e": -33,
+      "negative": false,
+      "odd": 2069221,
+      "distance": 1020831,
+      "expected": "3FF00000000FC972",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEF9EACFFF060C0": {
+      "e": -33,
+      "negative": false,
+      "odd": 2072237,
+      "distance": 1023808,
+      "expected": "3FF00000000FCF57",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEF9EACFFF060BF": {
+      "e": -33,
+      "negative": false,
+      "odd": 2072237,
+      "distance": 1023809,
+      "expected": "3FF00000000FCF56",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFC28CFFF03D39": {
+      "e": -33,
+      "negative": false,
+      "odd": 2081421,
+      "distance": 1032903,
+      "expected": "3FF00000000FE147",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFC28CFFF03D38": {
+      "e": -33,
+      "negative": false,
+      "odd": 2081421,
+      "distance": 1032904,
+      "expected": "3FF00000000FE146",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFD5AAFFF02A3A": {
+      "e": -33,
+      "negative": false,
+      "odd": 2086315,
+      "distance": 1037766,
+      "expected": "3FF00000000FEAD6",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFD5AAFFF02A39": {
+      "e": -33,
+      "negative": false,
+      "odd": 2086315,
+      "distance": 1037767,
+      "expected": "3FF00000000FEAD5",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFE6FFF0001A": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097127,
+      "distance": 1048550,
+      "expected": "3FF00000000FFFF4",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFE6FFF00019": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097127,
+      "distance": 1048551,
+      "expected": "3FF00000000FFFF3",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFE8FFF00018": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097129,
+      "distance": 1048552,
+      "expected": "3FF00000000FFFF5",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFE8FFF00017": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097129,
+      "distance": 1048553,
+      "expected": "3FF00000000FFFF4",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFEAFFF00016": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097131,
+      "distance": 1048554,
+      "expected": "3FF00000000FFFF6",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFEAFFF00015": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097131,
+      "distance": 1048555,
+      "expected": "3FF00000000FFFF5",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFECFFF00014": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097133,
+      "distance": 1048556,
+      "expected": "3FF00000000FFFF7",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFECFFF00013": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097133,
+      "distance": 1048557,
+      "expected": "3FF00000000FFFF6",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFEEFFF00012": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097135,
+      "distance": 1048558,
+      "expected": "3FF00000000FFFF8",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFEEFFF00011": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097135,
+      "distance": 1048559,
+      "expected": "3FF00000000FFFF7",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFF0FFF00010": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097137,
+      "distance": 1048560,
+      "expected": "3FF00000000FFFF9",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFF0FFF0000F": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097137,
+      "distance": 1048561,
+      "expected": "3FF00000000FFFF8",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFF2FFF0000E": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097139,
+      "distance": 1048562,
+      "expected": "3FF00000000FFFFA",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFF2FFF0000D": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097139,
+      "distance": 1048563,
+      "expected": "3FF00000000FFFF9",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFF4FFF0000C": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097141,
+      "distance": 1048564,
+      "expected": "3FF00000000FFFFB",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFF4FFF0000B": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097141,
+      "distance": 1048565,
+      "expected": "3FF00000000FFFFA",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFF6FFF0000A": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097143,
+      "distance": 1048566,
+      "expected": "3FF00000000FFFFC",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFF6FFF00009": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097143,
+      "distance": 1048567,
+      "expected": "3FF00000000FFFFB",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFF8FFF00008": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097145,
+      "distance": 1048568,
+      "expected": "3FF00000000FFFFD",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFF8FFF00007": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097145,
+      "distance": 1048569,
+      "expected": "3FF00000000FFFFC",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFFAFFF00006": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097147,
+      "distance": 1048570,
+      "expected": "3FF00000000FFFFE",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFFAFFF00005": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097147,
+      "distance": 1048571,
+      "expected": "3FF00000000FFFFD",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFFCFFF00004": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097149,
+      "distance": 1048572,
+      "expected": "3FF00000000FFFFF",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFFCFFF00003": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097149,
+      "distance": 1048573,
+      "expected": "3FF00000000FFFFE",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFFEFFF00002": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097151,
+      "distance": 1048574,
+      "expected": "3FF0000000100000",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "3DEFFFFEFFF00001": {
+      "e": -33,
+      "negative": false,
+      "odd": 2097151,
+      "distance": 1048575,
+      "expected": "3FF00000000FFFFF",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDCC89B200032E69": {
+      "e": -35,
+      "negative": true,
+      "odd": 935129,
+      "distance": 208489,
+      "expected": "3FEFFFFFFFF8DD94",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDCC89B200032E6A": {
+      "e": -35,
+      "negative": true,
+      "odd": 935129,
+      "distance": 208490,
+      "expected": "3FEFFFFFFFF8DD93",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDD1BB27000274C8": {
+      "e": -34,
+      "negative": true,
+      "odd": 1162023,
+      "distance": 160968,
+      "expected": "3FEFFFFFFFF7226D",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDD1BB27000274C9": {
+      "e": -34,
+      "negative": true,
+      "odd": 1162023,
+      "distance": 160969,
+      "expected": "3FEFFFFFFFF7226C",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDD688A90003F78C": {
+      "e": -34,
+      "negative": true,
+      "odd": 1476777,
+      "distance": 259980,
+      "expected": "3FEFFFFFFFF4BBAC",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDD688A90003F78D": {
+      "e": -34,
+      "negative": true,
+      "odd": 1476777,
+      "distance": 259981,
+      "expected": "3FEFFFFFFFF4BBAB",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDD8C0B50004C966": {
+      "e": -34,
+      "negative": true,
+      "odd": 1622197,
+      "distance": 313702,
+      "expected": "3FEFFFFFFFF39FA6",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDD8C0B50004C967": {
+      "e": -34,
+      "negative": true,
+      "odd": 1622197,
+      "distance": 313703,
+      "expected": "3FEFFFFFFFF39FA5",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDD96C2D00050C9D": {
+      "e": -34,
+      "negative": true,
+      "odd": 1666093,
+      "distance": 330909,
+      "expected": "3FEFFFFFFFF349EA",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDD96C2D00050C9E": {
+      "e": -34,
+      "negative": true,
+      "odd": 1666093,
+      "distance": 330910,
+      "expected": "3FEFFFFFFFF349E9",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDA5D6700056E36": {
+      "e": -34,
+      "negative": true,
+      "odd": 1727847,
+      "distance": 355894,
+      "expected": "3FEFFFFFFFF2D14D",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDA5D6700056E37": {
+      "e": -34,
+      "negative": true,
+      "odd": 1727847,
+      "distance": 355895,
+      "expected": "3FEFFFFFFFF2D14C",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDDF7C100070423": {
+      "e": -34,
+      "negative": true,
+      "odd": 1963969,
+      "distance": 459811,
+      "expected": "3FEFFFFFFFF10420",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDDF7C100070424": {
+      "e": -34,
+      "negative": true,
+      "odd": 1963969,
+      "distance": 459812,
+      "expected": "3FEFFFFFFFF1041F",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDE431500072795": {
+      "e": -34,
+      "negative": true,
+      "odd": 1983253,
+      "distance": 468885,
+      "expected": "3FEFFFFFFFF0DE76",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDE431500072796": {
+      "e": -34,
+      "negative": true,
+      "odd": 1983253,
+      "distance": 468886,
+      "expected": "3FEFFFFFFFF0DE75",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDE69E3000739FA": {
+      "e": -34,
+      "negative": true,
+      "odd": 1993187,
+      "distance": 473594,
+      "expected": "3FEFFFFFFFF0CB0F",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDE69E3000739FB": {
+      "e": -34,
+      "negative": true,
+      "odd": 1993187,
+      "distance": 473595,
+      "expected": "3FEFFFFFFFF0CB0E",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDE79250007413C": {
+      "e": -34,
+      "negative": true,
+      "odd": 1997093,
+      "distance": 475452,
+      "expected": "3FEFFFFFFFF0C36E",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDE79250007413D": {
+      "e": -34,
+      "negative": true,
+      "odd": 1997093,
+      "distance": 475453,
+      "expected": "3FEFFFFFFFF0C36D",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDEA59700075675": {
+      "e": -34,
+      "negative": true,
+      "odd": 2008471,
+      "distance": 480885,
+      "expected": "3FEFFFFFFFF0AD35",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDEA59700075676": {
+      "e": -34,
+      "negative": true,
+      "odd": 2008471,
+      "distance": 480886,
+      "expected": "3FEFFFFFFFF0AD34",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDEA88F000757E1": {
+      "e": -34,
+      "negative": true,
+      "odd": 2009231,
+      "distance": 481249,
+      "expected": "3FEFFFFFFFF0ABB9",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDEA88F000757E2": {
+      "e": -34,
+      "negative": true,
+      "odd": 2009231,
+      "distance": 481250,
+      "expected": "3FEFFFFFFFF0ABB8",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDF29C90007964B": {
+      "e": -34,
+      "negative": true,
+      "odd": 2042313,
+      "distance": 497227,
+      "expected": "3FEFFFFFFFF06B1C",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDDF29C90007964C": {
+      "e": -34,
+      "negative": true,
+      "odd": 2042313,
+      "distance": 497228,
+      "expected": "3FEFFFFFFFF06B1B",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE06B1B80043641": {
+      "e": -33,
+      "negative": true,
+      "odd": 2151991,
+      "distance": 276033,
+      "expected": "3FEFFFFFFFEF94E5",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE06B1B80043642": {
+      "e": -33,
+      "negative": true,
+      "odd": 2151991,
+      "distance": 276034,
+      "expected": "3FEFFFFFFFEF94E4",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE0ABB8800457A9": {
+      "e": -33,
+      "negative": true,
+      "odd": 2185073,
+      "distance": 284585,
+      "expected": "3FEFFFFFFFEF5448",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE0ABB8800457AA": {
+      "e": -33,
+      "negative": true,
+      "odd": 2185073,
+      "distance": 284586,
+      "expected": "3FEFFFFFFFEF5447",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE0AD348004586F": {
+      "e": -33,
+      "negative": true,
+      "odd": 2185833,
+      "distance": 284783,
+      "expected": "3FEFFFFFFFEF52CC",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE0AD3480045870": {
+      "e": -33,
+      "negative": true,
+      "odd": 2185833,
+      "distance": 284784,
+      "expected": "3FEFFFFFFFEF52CB",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE0DE7580047240": {
+      "e": -33,
+      "negative": true,
+      "odd": 2211051,
+      "distance": 291392,
+      "expected": "3FEFFFFFFFEF218B",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE0DE7580047241": {
+      "e": -33,
+      "negative": true,
+      "odd": 2211051,
+      "distance": 291393,
+      "expected": "3FEFFFFFFFEF218A",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE1041F80048631": {
+      "e": -33,
+      "negative": true,
+      "odd": 2230335,
+      "distance": 296497,
+      "expected": "3FEFFFFFFFEEFBE1",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE1041F80048632": {
+      "e": -33,
+      "negative": true,
+      "odd": 2230335,
+      "distance": 296498,
+      "expected": "3FEFFFFFFFEEFBE0",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE244B7800536F1": {
+      "e": -33,
+      "negative": true,
+      "odd": 2394479,
+      "distance": 341745,
+      "expected": "3FEFFFFFFFEDBB49",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE244B7800536F2": {
+      "e": -33,
+      "negative": true,
+      "odd": 2394479,
+      "distance": 341746,
+      "expected": "3FEFFFFFFFEDBB48",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE347888005CEC9": {
+      "e": -33,
+      "negative": true,
+      "odd": 2526993,
+      "distance": 380617,
+      "expected": "3FEFFFFFFFECB878",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE347888005CECA": {
+      "e": -33,
+      "negative": true,
+      "odd": 2526993,
+      "distance": 380618,
+      "expected": "3FEFFFFFFFECB877",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE349E98005D038": {
+      "e": -33,
+      "negative": true,
+      "odd": 2528211,
+      "distance": 380984,
+      "expected": "3FEFFFFFFFECB617",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE349E98005D039": {
+      "e": -33,
+      "negative": true,
+      "odd": 2528211,
+      "distance": 380985,
+      "expected": "3FEFFFFFFFECB616",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE3AC1E80060C01": {
+      "e": -33,
+      "negative": true,
+      "odd": 2578493,
+      "distance": 396289,
+      "expected": "3FEFFFFFFFEC53E2",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE3AC1E80060C02": {
+      "e": -33,
+      "negative": true,
+      "odd": 2578493,
+      "distance": 396290,
+      "expected": "3FEFFFFFFFEC53E1",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE3CBE280061F98": {
+      "e": -33,
+      "negative": true,
+      "odd": 2594757,
+      "distance": 401304,
+      "expected": "3FEFFFFFFFEC341E",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE3CBE280061F99": {
+      "e": -33,
+      "negative": true,
+      "odd": 2594757,
+      "distance": 401305,
+      "expected": "3FEFFFFFFFEC341D",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE4C8878006BFC9": {
+      "e": -33,
+      "negative": true,
+      "odd": 2724111,
+      "distance": 442313,
+      "expected": "3FEFFFFFFFEB3779",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE4C8878006BFCA": {
+      "e": -33,
+      "negative": true,
+      "odd": 2724111,
+      "distance": 442314,
+      "expected": "3FEFFFFFFFEB3778",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE4DBA08006CC36": {
+      "e": -33,
+      "negative": true,
+      "odd": 2733889,
+      "distance": 445494,
+      "expected": "3FEFFFFFFFEB2460",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE4DBA08006CC37": {
+      "e": -33,
+      "negative": true,
+      "odd": 2733889,
+      "distance": 445495,
+      "expected": "3FEFFFFFFFEB245F",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE4E6A48006D366": {
+      "e": -33,
+      "negative": true,
+      "odd": 2739529,
+      "distance": 447334,
+      "expected": "3FEFFFFFFFEB195C",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE4E6A48006D367": {
+      "e": -33,
+      "negative": true,
+      "odd": 2739529,
+      "distance": 447335,
+      "expected": "3FEFFFFFFFEB195B",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE528F38006FEFA": {
+      "e": -33,
+      "negative": true,
+      "odd": 2773479,
+      "distance": 458490,
+      "expected": "3FEFFFFFFFEAD70D",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE528F38006FEFB": {
+      "e": -33,
+      "negative": true,
+      "odd": 2773479,
+      "distance": 458491,
+      "expected": "3FEFFFFFFFEAD70C",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE6126280079CA9": {
+      "e": -33,
+      "negative": true,
+      "odd": 2892997,
+      "distance": 498857,
+      "expected": "3FEFFFFFFFE9ED9E",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE6126280079CAA": {
+      "e": -33,
+      "negative": true,
+      "odd": 2892997,
+      "distance": 498858,
+      "expected": "3FEFFFFFFFE9ED9D",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE63F228007BBA6": {
+      "e": -33,
+      "negative": true,
+      "odd": 2915909,
+      "distance": 506790,
+      "expected": "3FEFFFFFFFE9C0DE",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE63F228007BBA7": {
+      "e": -33,
+      "negative": true,
+      "odd": 2915909,
+      "distance": 506791,
+      "expected": "3FEFFFFFFFE9C0DD",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE6952D8007F7EB": {
+      "e": -33,
+      "negative": true,
+      "odd": 2959963,
+      "distance": 522219,
+      "expected": "3FEFFFFFFFE96AD3",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE6952D8007F7EC": {
+      "e": -33,
+      "negative": true,
+      "odd": 2959963,
+      "distance": 522220,
+      "expected": "3FEFFFFFFFE96AD2",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE6A27980080150": {
+      "e": -33,
+      "negative": true,
+      "odd": 2966771,
+      "distance": 524624,
+      "expected": "3FEFFFFFFFE95D87",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE6A27980080151": {
+      "e": -33,
+      "negative": true,
+      "odd": 2966771,
+      "distance": 524625,
+      "expected": "3FEFFFFFFFE95D86",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE6FA1580083FC0": {
+      "e": -33,
+      "negative": true,
+      "odd": 3011627,
+      "distance": 540608,
+      "expected": "3FEFFFFFFFE905EB",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE6FA1580083FC1": {
+      "e": -33,
+      "negative": true,
+      "odd": 3011627,
+      "distance": 540609,
+      "expected": "3FEFFFFFFFE905EA",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE75EA180088890": {
+      "e": -33,
+      "negative": true,
+      "odd": 3063107,
+      "distance": 559248,
+      "expected": "3FEFFFFFFFE8A15F",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE75EA180088891": {
+      "e": -33,
+      "negative": true,
+      "odd": 3063107,
+      "distance": 559249,
+      "expected": "3FEFFFFFFFE8A15E",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE77CC280089E9F": {
+      "e": -33,
+      "negative": true,
+      "odd": 3078533,
+      "distance": 564895,
+      "expected": "3FEFFFFFFFE8833E",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE77CC280089EA0": {
+      "e": -33,
+      "negative": true,
+      "odd": 3078533,
+      "distance": 564896,
+      "expected": "3FEFFFFFFFE8833D",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE8182A80091229": {
+      "e": -33,
+      "negative": true,
+      "odd": 3158101,
+      "distance": 594473,
+      "expected": "3FEFFFFFFFE7E7D6",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE8182A8009122A": {
+      "e": -33,
+      "negative": true,
+      "odd": 3158101,
+      "distance": 594474,
+      "expected": "3FEFFFFFFFE7E7D5",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE83B2080092C8F": {
+      "e": -33,
+      "negative": true,
+      "odd": 3176001,
+      "distance": 601231,
+      "expected": "3FEFFFFFFFE7C4E0",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE83B2080092C90": {
+      "e": -33,
+      "negative": true,
+      "odd": 3176001,
+      "distance": 601232,
+      "expected": "3FEFFFFFFFE7C4DF",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE87EC680096010": {
+      "e": -33,
+      "negative": true,
+      "odd": 3210637,
+      "distance": 614416,
+      "expected": "3FEFFFFFFFE7813A",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE87EC680096011": {
+      "e": -33,
+      "negative": true,
+      "odd": 3210637,
+      "distance": 614417,
+      "expected": "3FEFFFFFFFE78139",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE890BF80096DD7": {
+      "e": -33,
+      "negative": true,
+      "odd": 3219839,
+      "distance": 617943,
+      "expected": "3FEFFFFFFFE76F41",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE890BF80096DD8": {
+      "e": -33,
+      "negative": true,
+      "odd": 3219839,
+      "distance": 617944,
+      "expected": "3FEFFFFFFFE76F40",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE8E2268009ACBC": {
+      "e": -33,
+      "negative": true,
+      "odd": 3261517,
+      "distance": 634044,
+      "expected": "3FEFFFFFFFE71DDA",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE8E2268009ACBD": {
+      "e": -33,
+      "negative": true,
+      "odd": 3261517,
+      "distance": 634045,
+      "expected": "3FEFFFFFFFE71DD9",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE916DE8009D5E6": {
+      "e": -33,
+      "negative": true,
+      "odd": 3288509,
+      "distance": 644582,
+      "expected": "3FEFFFFFFFE6E922",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE916DE8009D5E7": {
+      "e": -33,
+      "negative": true,
+      "odd": 3288509,
+      "distance": 644583,
+      "expected": "3FEFFFFFFFE6E921",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE93A978009F1FC": {
+      "e": -33,
+      "negative": true,
+      "odd": 3306799,
+      "distance": 651772,
+      "expected": "3FEFFFFFFFE6C569",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE93A978009F1FD": {
+      "e": -33,
+      "negative": true,
+      "odd": 3306799,
+      "distance": 651773,
+      "expected": "3FEFFFFFFFE6C568",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE941A88009F78F": {
+      "e": -33,
+      "negative": true,
+      "odd": 3310417,
+      "distance": 653199,
+      "expected": "3FEFFFFFFFE6BE58",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE941A88009F790": {
+      "e": -33,
+      "negative": true,
+      "odd": 3310417,
+      "distance": 653200,
+      "expected": "3FEFFFFFFFE6BE57",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE954AB800A0696": {
+      "e": -33,
+      "negative": true,
+      "odd": 3320151,
+      "distance": 657046,
+      "expected": "3FEFFFFFFFE6AB55",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE954AB800A0697": {
+      "e": -33,
+      "negative": true,
+      "odd": 3320151,
+      "distance": 657047,
+      "expected": "3FEFFFFFFFE6AB54",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE96863800A1638": {
+      "e": -33,
+      "negative": true,
+      "odd": 3330247,
+      "distance": 661048,
+      "expected": "3FEFFFFFFFE6979D",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE96863800A1639": {
+      "e": -33,
+      "negative": true,
+      "odd": 3330247,
+      "distance": 661049,
+      "expected": "3FEFFFFFFFE6979C",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE9C35A800A5EF3": {
+      "e": -33,
+      "negative": true,
+      "odd": 3376821,
+      "distance": 679667,
+      "expected": "3FEFFFFFFFE63CA6",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDE9C35A800A5EF4": {
+      "e": -33,
+      "negative": true,
+      "odd": 3376821,
+      "distance": 679668,
+      "expected": "3FEFFFFFFFE63CA5",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEA106E800A9D5E": {
+      "e": -33,
+      "negative": true,
+      "odd": 3416285,
+      "distance": 695646,
+      "expected": "3FEFFFFFFFE5EF92",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEA106E800A9D5F": {
+      "e": -33,
+      "negative": true,
+      "odd": 3416285,
+      "distance": 695647,
+      "expected": "3FEFFFFFFFE5EF91",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEA157E800AA17E": {
+      "e": -33,
+      "negative": true,
+      "odd": 3418877,
+      "distance": 696702,
+      "expected": "3FEFFFFFFFE5EA82",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEA157E800AA17F": {
+      "e": -33,
+      "negative": true,
+      "odd": 3418877,
+      "distance": 696703,
+      "expected": "3FEFFFFFFFE5EA81",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEA98BA800B0D84": {
+      "e": -33,
+      "negative": true,
+      "odd": 3486069,
+      "distance": 724356,
+      "expected": "3FEFFFFFFFE56746",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEA98BA800B0D85": {
+      "e": -33,
+      "negative": true,
+      "odd": 3486069,
+      "distance": 724357,
+      "expected": "3FEFFFFFFFE56745",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEAB514800B2521": {
+      "e": -33,
+      "negative": true,
+      "odd": 3500585,
+      "distance": 730401,
+      "expected": "3FEFFFFFFFE54AEC",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEAB514800B2522": {
+      "e": -33,
+      "negative": true,
+      "odd": 3500585,
+      "distance": 730402,
+      "expected": "3FEFFFFFFFE54AEB",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEADEF0800B482C": {
+      "e": -33,
+      "negative": true,
+      "odd": 3522017,
+      "distance": 739372,
+      "expected": "3FEFFFFFFFE52110",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEADEF0800B482D": {
+      "e": -33,
+      "negative": true,
+      "odd": 3522017,
+      "distance": 739373,
+      "expected": "3FEFFFFFFFE5210F",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEAED0D800B5409": {
+      "e": -33,
+      "negative": true,
+      "odd": 3529243,
+      "distance": 742409,
+      "expected": "3FEFFFFFFFE512F3",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEAED0D800B540A": {
+      "e": -33,
+      "negative": true,
+      "odd": 3529243,
+      "distance": 742410,
+      "expected": "3FEFFFFFFFE512F2",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEAF895800B5DBF": {
+      "e": -33,
+      "negative": true,
+      "odd": 3535147,
+      "distance": 744895,
+      "expected": "3FEFFFFFFFE5076B",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEAF895800B5DC0": {
+      "e": -33,
+      "negative": true,
+      "odd": 3535147,
+      "distance": 744896,
+      "expected": "3FEFFFFFFFE5076A",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEB1DAE800B7D19": {
+      "e": -33,
+      "negative": true,
+      "odd": 3554141,
+      "distance": 752921,
+      "expected": "3FEFFFFFFFE4E252",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEB1DAE800B7D1A": {
+      "e": -33,
+      "negative": true,
+      "odd": 3554141,
+      "distance": 752922,
+      "expected": "3FEFFFFFFFE4E251",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEB37D4800B934C": {
+      "e": -33,
+      "negative": true,
+      "odd": 3567529,
+      "distance": 758604,
+      "expected": "3FEFFFFFFFE4C82C",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEB37D4800B934D": {
+      "e": -33,
+      "negative": true,
+      "odd": 3567529,
+      "distance": 758605,
+      "expected": "3FEFFFFFFFE4C82B",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEB46B0800B9FF3": {
+      "e": -33,
+      "negative": true,
+      "odd": 3575137,
+      "distance": 761843,
+      "expected": "3FEFFFFFFFE4B950",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEB46B0800B9FF4": {
+      "e": -33,
+      "negative": true,
+      "odd": 3575137,
+      "distance": 761844,
+      "expected": "3FEFFFFFFFE4B94F",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEB91D1800BE055": {
+      "e": -33,
+      "negative": true,
+      "odd": 3613603,
+      "distance": 778325,
+      "expected": "3FEFFFFFFFE46E2F",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEB91D1800BE056": {
+      "e": -33,
+      "negative": true,
+      "odd": 3613603,
+      "distance": 778326,
+      "expected": "3FEFFFFFFFE46E2E",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEBA67D800BF22B": {
+      "e": -33,
+      "negative": true,
+      "odd": 3624187,
+      "distance": 782891,
+      "expected": "3FEFFFFFFFE45983",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEBA67D800BF22C": {
+      "e": -33,
+      "negative": true,
+      "odd": 3624187,
+      "distance": 782892,
+      "expected": "3FEFFFFFFFE45982",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEBEBE6800C2E70": {
+      "e": -33,
+      "negative": true,
+      "odd": 3659725,
+      "distance": 798320,
+      "expected": "3FEFFFFFFFE4141A",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEBEBE6800C2E71": {
+      "e": -33,
+      "negative": true,
+      "odd": 3659725,
+      "distance": 798321,
+      "expected": "3FEFFFFFFFE41419",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEC2541800C60AF": {
+      "e": -33,
+      "negative": true,
+      "odd": 3689091,
+      "distance": 811183,
+      "expected": "3FEFFFFFFFE3DABF",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEC2541800C60B0": {
+      "e": -33,
+      "negative": true,
+      "odd": 3689091,
+      "distance": 811184,
+      "expected": "3FEFFFFFFFE3DABE",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEC31EB800C6BD5": {
+      "e": -33,
+      "negative": true,
+      "odd": 3695575,
+      "distance": 814037,
+      "expected": "3FEFFFFFFFE3CE15",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEC31EB800C6BD6": {
+      "e": -33,
+      "negative": true,
+      "odd": 3695575,
+      "distance": 814038,
+      "expected": "3FEFFFFFFFE3CE14",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEC51F3800C881E": {
+      "e": -33,
+      "negative": true,
+      "odd": 3711975,
+      "distance": 821278,
+      "expected": "3FEFFFFFFFE3AE0D",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEC51F3800C881F": {
+      "e": -33,
+      "negative": true,
+      "odd": 3711975,
+      "distance": 821279,
+      "expected": "3FEFFFFFFFE3AE0C",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEC5A4F800C8F85": {
+      "e": -33,
+      "negative": true,
+      "odd": 3716255,
+      "distance": 823173,
+      "expected": "3FEFFFFFFFE3A5B1",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEC5A4F800C8F86": {
+      "e": -33,
+      "negative": true,
+      "odd": 3716255,
+      "distance": 823174,
+      "expected": "3FEFFFFFFFE3A5B0",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEC8FC3800CBF0E": {
+      "e": -33,
+      "negative": true,
+      "odd": 3743623,
+      "distance": 835342,
+      "expected": "3FEFFFFFFFE3703D",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEC8FC3800CBF0F": {
+      "e": -33,
+      "negative": true,
+      "odd": 3743623,
+      "distance": 835343,
+      "expected": "3FEFFFFFFFE3703C",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDECA09C800CCE1C": {
+      "e": -33,
+      "negative": true,
+      "odd": 3752249,
+      "distance": 839196,
+      "expected": "3FEFFFFFFFE35F64",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDECA09C800CCE1D": {
+      "e": -33,
+      "negative": true,
+      "odd": 3752249,
+      "distance": 839197,
+      "expected": "3FEFFFFFFFE35F63",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDECA91A800CD5B6": {
+      "e": -33,
+      "negative": true,
+      "odd": 3756597,
+      "distance": 841142,
+      "expected": "3FEFFFFFFFE356E6",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDECA91A800CD5B7": {
+      "e": -33,
+      "negative": true,
+      "odd": 3756597,
+      "distance": 841143,
+      "expected": "3FEFFFFFFFE356E5",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDECB222800CDDCE": {
+      "e": -33,
+      "negative": true,
+      "odd": 3761221,
+      "distance": 843214,
+      "expected": "3FEFFFFFFFE34DDE",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDECB222800CDDCF": {
+      "e": -33,
+      "negative": true,
+      "odd": 3761221,
+      "distance": 843215,
+      "expected": "3FEFFFFFFFE34DDD",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDED1E8B800D3FBD": {
+      "e": -33,
+      "negative": true,
+      "odd": 3816727,
+      "distance": 868285,
+      "expected": "3FEFFFFFFFE2E175",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDED1E8B800D3FBE": {
+      "e": -33,
+      "negative": true,
+      "odd": 3816727,
+      "distance": 868286,
+      "expected": "3FEFFFFFFFE2E174",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDED265A800D46D9": {
+      "e": -33,
+      "negative": true,
+      "odd": 3820725,
+      "distance": 870105,
+      "expected": "3FEFFFFFFFE2D9A6",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDED265A800D46DA": {
+      "e": -33,
+      "negative": true,
+      "odd": 3820725,
+      "distance": 870106,
+      "expected": "3FEFFFFFFFE2D9A5",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDED28AE800D48F8": {
+      "e": -33,
+      "negative": true,
+      "odd": 3821917,
+      "distance": 870648,
+      "expected": "3FEFFFFFFFE2D752",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDED28AE800D48F9": {
+      "e": -33,
+      "negative": true,
+      "odd": 3821917,
+      "distance": 870649,
+      "expected": "3FEFFFFFFFE2D751",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDED455C800D6327": {
+      "e": -33,
+      "negative": true,
+      "odd": 3836601,
+      "distance": 877351,
+      "expected": "3FEFFFFFFFE2BAA4",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDED455C800D6328": {
+      "e": -33,
+      "negative": true,
+      "odd": 3836601,
+      "distance": 877352,
+      "expected": "3FEFFFFFFFE2BAA3",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDED6F57800D89A9": {
+      "e": -33,
+      "negative": true,
+      "odd": 3858095,
+      "distance": 887209,
+      "expected": "3FEFFFFFFFE290A9",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDED6F57800D89AA": {
+      "e": -33,
+      "negative": true,
+      "odd": 3858095,
+      "distance": 887210,
+      "expected": "3FEFFFFFFFE290A8",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEDBE32800DD293": {
+      "e": -33,
+      "negative": true,
+      "odd": 3898469,
+      "distance": 905875,
+      "expected": "3FEFFFFFFFE241CE",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEDBE32800DD294": {
+      "e": -33,
+      "negative": true,
+      "odd": 3898469,
+      "distance": 905876,
+      "expected": "3FEFFFFFFFE241CD",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEDCD76800DE0C7": {
+      "e": -33,
+      "negative": true,
+      "odd": 3906285,
+      "distance": 909511,
+      "expected": "3FEFFFFFFFE2328A",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEDCD76800DE0C8": {
+      "e": -33,
+      "negative": true,
+      "odd": 3906285,
+      "distance": 909512,
+      "expected": "3FEFFFFFFFE23289",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEDEB43800DFC96": {
+      "e": -33,
+      "negative": true,
+      "odd": 3921543,
+      "distance": 916630,
+      "expected": "3FEFFFFFFFE214BD",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEDEB43800DFC97": {
+      "e": -33,
+      "negative": true,
+      "odd": 3921543,
+      "distance": 916631,
+      "expected": "3FEFFFFFFFE214BC",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEE3302800E3FFB": {
+      "e": -33,
+      "negative": true,
+      "odd": 3958277,
+      "distance": 933883,
+      "expected": "3FEFFFFFFFE1CCFE",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEE3302800E3FFC": {
+      "e": -33,
+      "negative": true,
+      "odd": 3958277,
+      "distance": 933884,
+      "expected": "3FEFFFFFFFE1CCFD",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEE52DC800E5E1A": {
+      "e": -33,
+      "negative": true,
+      "odd": 3974585,
+      "distance": 941594,
+      "expected": "3FEFFFFFFFE1AD24",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEE52DC800E5E1B": {
+      "e": -33,
+      "negative": true,
+      "odd": 3974585,
+      "distance": 941595,
+      "expected": "3FEFFFFFFFE1AD23",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEE7AA9800E83EA": {
+      "e": -33,
+      "negative": true,
+      "odd": 3994963,
+      "distance": 951274,
+      "expected": "3FEFFFFFFFE18557",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEE7AA9800E83EB": {
+      "e": -33,
+      "negative": true,
+      "odd": 3994963,
+      "distance": 951275,
+      "expected": "3FEFFFFFFFE18556",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEEA384800EAAEE": {
+      "e": -33,
+      "negative": true,
+      "odd": 4015881,
+      "distance": 961262,
+      "expected": "3FEFFFFFFFE15C7C",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEEA384800EAAEF": {
+      "e": -33,
+      "negative": true,
+      "odd": 4015881,
+      "distance": 961263,
+      "expected": "3FEFFFFFFFE15C7B",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEEAA01800EB125": {
+      "e": -33,
+      "negative": true,
+      "odd": 4019203,
+      "distance": 962853,
+      "expected": "3FEFFFFFFFE155FF",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEEAA01800EB126": {
+      "e": -33,
+      "negative": true,
+      "odd": 4019203,
+      "distance": 962854,
+      "expected": "3FEFFFFFFFE155FE",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEEB8A2800EBF2D": {
+      "e": -33,
+      "negative": true,
+      "odd": 4026693,
+      "distance": 966445,
+      "expected": "3FEFFFFFFFE1475E",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEEB8A2800EBF2E": {
+      "e": -33,
+      "negative": true,
+      "odd": 4026693,
+      "distance": 966446,
+      "expected": "3FEFFFFFFFE1475D",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEED7D6800EDD31": {
+      "e": -33,
+      "negative": true,
+      "odd": 4042669,
+      "distance": 974129,
+      "expected": "3FEFFFFFFFE1282A",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEED7D6800EDD32": {
+      "e": -33,
+      "negative": true,
+      "odd": 4042669,
+      "distance": 974130,
+      "expected": "3FEFFFFFFFE12829",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEEE432800EE91D": {
+      "e": -33,
+      "negative": true,
+      "odd": 4048997,
+      "distance": 977181,
+      "expected": "3FEFFFFFFFE11BCE",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEEE432800EE91E": {
+      "e": -33,
+      "negative": true,
+      "odd": 4048997,
+      "distance": 977182,
+      "expected": "3FEFFFFFFFE11BCD",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF1530800F188E": {
+      "e": -33,
+      "negative": true,
+      "odd": 4074081,
+      "distance": 989326,
+      "expected": "3FEFFFFFFFE0EAD0",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF1530800F188F": {
+      "e": -33,
+      "negative": true,
+      "odd": 4074081,
+      "distance": 989327,
+      "expected": "3FEFFFFFFFE0EACF",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF1B67800F1E98": {
+      "e": -33,
+      "negative": true,
+      "odd": 4077263,
+      "distance": 990872,
+      "expected": "3FEFFFFFFFE0E499",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF1B67800F1E99": {
+      "e": -33,
+      "negative": true,
+      "odd": 4077263,
+      "distance": 990873,
+      "expected": "3FEFFFFFFFE0E498",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF20C9800F23D4": {
+      "e": -33,
+      "negative": true,
+      "odd": 4080019,
+      "distance": 992212,
+      "expected": "3FEFFFFFFFE0DF37",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF20C9800F23D5": {
+      "e": -33,
+      "negative": true,
+      "odd": 4080019,
+      "distance": 992213,
+      "expected": "3FEFFFFFFFE0DF36",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF59A0800F5B51": {
+      "e": -33,
+      "negative": true,
+      "odd": 4109121,
+      "distance": 1006417,
+      "expected": "3FEFFFFFFFE0A660",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF59A0800F5B52": {
+      "e": -33,
+      "negative": true,
+      "odd": 4109121,
+      "distance": 1006418,
+      "expected": "3FEFFFFFFFE0A65F",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF6779800F68E5": {
+      "e": -33,
+      "negative": true,
+      "odd": 4116211,
+      "distance": 1009893,
+      "expected": "3FEFFFFFFFE09887",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF6779800F68E6": {
+      "e": -33,
+      "negative": true,
+      "odd": 4116211,
+      "distance": 1009894,
+      "expected": "3FEFFFFFFFE09886",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF708E800F71D0": {
+      "e": -33,
+      "negative": true,
+      "odd": 4120861,
+      "distance": 1012176,
+      "expected": "3FEFFFFFFFE08F72",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF708E800F71D1": {
+      "e": -33,
+      "negative": true,
+      "odd": 4120861,
+      "distance": 1012177,
+      "expected": "3FEFFFFFFFE08F71",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF8E70800F8F3A": {
+      "e": -33,
+      "negative": true,
+      "odd": 4136161,
+      "distance": 1019706,
+      "expected": "3FEFFFFFFFE07190",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF8E70800F8F3B": {
+      "e": -33,
+      "negative": true,
+      "odd": 4136161,
+      "distance": 1019707,
+      "expected": "3FEFFFFFFFE0718F",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF8F92800F9058": {
+      "e": -33,
+      "negative": true,
+      "odd": 4136741,
+      "distance": 1019992,
+      "expected": "3FEFFFFFFFE0706E",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEF8F92800F9059": {
+      "e": -33,
+      "negative": true,
+      "odd": 4136741,
+      "distance": 1019993,
+      "expected": "3FEFFFFFFFE0706D",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFA338800FA3BF": {
+      "e": -33,
+      "negative": true,
+      "odd": 4146801,
+      "distance": 1024959,
+      "expected": "3FEFFFFFFFE05CC8",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFA338800FA3C0": {
+      "e": -33,
+      "negative": true,
+      "odd": 4146801,
+      "distance": 1024960,
+      "expected": "3FEFFFFFFFE05CC7",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFB598800FB5EF": {
+      "e": -33,
+      "negative": true,
+      "odd": 4156209,
+      "distance": 1029615,
+      "expected": "3FEFFFFFFFE04A68",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFB598800FB5F0": {
+      "e": -33,
+      "negative": true,
+      "odd": 4156209,
+      "distance": 1029616,
+      "expected": "3FEFFFFFFFE04A67",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFC24A800FC286": {
+      "e": -33,
+      "negative": true,
+      "odd": 4162709,
+      "distance": 1032838,
+      "expected": "3FEFFFFFFFE03DB6",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFC24A800FC287": {
+      "e": -33,
+      "negative": true,
+      "odd": 4162709,
+      "distance": 1032839,
+      "expected": "3FEFFFFFFFE03DB5",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFCA09800FCA37": {
+      "e": -33,
+      "negative": true,
+      "odd": 4166675,
+      "distance": 1034807,
+      "expected": "3FEFFFFFFFE035F7",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFCA09800FCA38": {
+      "e": -33,
+      "negative": true,
+      "odd": 4166675,
+      "distance": 1034808,
+      "expected": "3FEFFFFFFFE035F6",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFCE5C800FCE83": {
+      "e": -33,
+      "negative": true,
+      "odd": 4168889,
+      "distance": 1035907,
+      "expected": "3FEFFFFFFFE031A4",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFCE5C800FCE84": {
+      "e": -33,
+      "negative": true,
+      "odd": 4168889,
+      "distance": 1035908,
+      "expected": "3FEFFFFFFFE031A3",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFDA0D800FDA24": {
+      "e": -33,
+      "negative": true,
+      "odd": 4174875,
+      "distance": 1038884,
+      "expected": "3FEFFFFFFFE025F3",
+      "differs_from_quadratic_only": true,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    },
+    "BDEFDA0D800FDA25": {
+      "e": -33,
+      "negative": true,
+      "odd": 4174875,
+      "distance": 1038885,
+      "expected": "3FEFFFFFFFE025F2",
+      "differs_from_quadratic_only": false,
+      "seen": [
+        "READY",
+        "DIRTY"
+      ]
+    }
+  },
+  "hardware_accessed": false
+}

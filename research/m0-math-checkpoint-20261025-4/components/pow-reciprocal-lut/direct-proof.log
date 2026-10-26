@@ -1,0 +1,6 @@
+direct 0 / 2074
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-20261025/verify-direct.py", line 81, in <module>
+    assert results['parent']==results['control'],(i,results)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (2, {'parent': {'output': '3FE170A7F1229EDD', 'instructions': 600, 'correct': True}, 'control': {'output': '3FE170A7F1229EDD', 'instructions': 230, 'correct': True}, 'candidate': {'output': '3FE170A7F1229EDD', 'instructions': 163, 'correct': True}, 'Qfplib': {'output': '3FE170A7F1229EDD', 'instructions': 146, 'correct': True}})

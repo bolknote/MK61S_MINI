@@ -1,0 +1,77 @@
+{
+  "status": "PASS_SOURCE_GUARD_MIDPOINT_LOOP_ENDPOINT_AND_FRESH_LINKED_CALLER_PROOF",
+  "guard_proof": "Old carry guard: low!=FFFFFFFF admits hi00100000..7FEFFFFF; low==FFFFFFFF admits hi00100000..7FEFFFFE. Exactly [0010000000000000,7FEFFFFFFFFFFFFF).",
+  "guard_and_initialization_HOST_spot_checks": 1074,
+  "midpoint_identity": "C=2*((cell&fraction)|2^52)+1; H=C<<10, L=radius=0, exponent=biased-1023; word shifts have disjoint OR fields.",
+  "same_loop_floor_log2_unsigned_denominator": true,
+  "production_power_of_two_domain": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    64,
+    128
+  ],
+  "inductive_step": "Same actual accepted Square12824-byte modular transform, including radius+16 for nonzeroL, carry/normalization and exponent/radius32 wrap; previous inline copy implements that transform.",
+  "square_proof_reused": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-independent-20261025/proof.json",
+    "bytes": 2905,
+    "sha256": "4e0eb81f97937954da2505e6c0b63b15430dd9c2ed2eb27dd85a42417f0d9067"
+  },
+  "inverse_endpoint_rule_HOST_spot_checks": 150,
+  "inverse_rules": "e>0=>-1;e<-1=>+1;e=0 tests H>2^63 or L>radius;e=-1 tests H!=2^64-1 or L<(-radius mod2^64). Radius0 threshold preserved.",
+  "noninverse_same372byte_compare_original_power_and_identical_midpoint": true,
+  "zero_side_remains_undecided": true,
+  "all24_midpoint_fields_same_no_interval_radius_or_RNE_policy_change": true,
+  "ABI": "Pointer,u32,bool occupy R0,R1,R2; aligned uint64 fourth argument is incomingSP[0:8], R3 unused. 8-byte tail preserves R0-R2/SP/LR/cell; ordinary int32 R0 return; no R12 extra contract.",
+  "fresh_actual_four_retained_callers": [
+    {
+      "owner": "pow_root128_decide",
+      "pc": "0x1014e9ae",
+      "fresh_actual_call_disassembly": "\n/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf:     file format elf32-littlearm\n\n\nDisassembly of section .m0_pow_exact_extension:\n\n1014e9ae <pow_root128_decide+0x12>:\n1014e9ae:\tf001 fb27 \tbl\t10150000 <_ZL16root128_boundaryRK13PowInteger128jby>\n1014e9b2:\t4f25      \tldr\tr7, [pc, #148]\t@ (1014ea48 <pow_root128_decide+0xac>)\n1014e9b4:\t2200      \tmovs\tr2, #0\n1014e9b6:\t2800      \tcmp\tr0, #0\n1014e9b8:\td00a      \tbeq.n\t1014e9d0 <pow_root128_decide+0x34>\n1014e9ba:\t990e      \tldr\tr1, [sp, #56]\t@ 0x38\n1014e9bc:\t2900      \tcmp\tr1, #0\n1014e9be:\td009      \tbeq.n\t1014e9d4 <pow_root128_decide+0x38>\n"
+    },
+    {
+      "owner": "pow_root128_decide",
+      "pc": "0x1014e9e8",
+      "fresh_actual_call_disassembly": "\n/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf:     file format elf32-littlearm\n\n\nDisassembly of section .m0_pow_exact_extension:\n\n1014e9e8 <pow_root128_decide+0x4c>:\n1014e9e8:\tf001 fb0a \tbl\t10150000 <_ZL16root128_boundaryRK13PowInteger128jby>\n1014e9ec:\t2800      \tcmp\tr0, #0\n1014e9ee:\td400      \tbmi.n\t1014e9f2 <pow_root128_decide+0x56>\n1014e9f0:\t463e      \tmov\tr6, r7\n1014e9f2:\t17c5      \tasrs\tr5, r0, #31\n1014e9f4:\t4025      \tands\tr5, r4\n1014e9f6:\te010      \tb.n\t1014ea1a <pow_root128_decide+0x7e>\n1014e9f8:\t9202      \tstr\tr2, [sp, #8]\n"
+    },
+    {
+      "owner": "pow_root128_decide",
+      "pc": "0x1014ea10",
+      "fresh_actual_call_disassembly": "\n/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf:     file format elf32-littlearm\n\n\nDisassembly of section .m0_pow_exact_extension:\n\n1014ea10 <pow_root128_decide+0x74>:\n1014ea10:\tf001 faf6 \tbl\t10150000 <_ZL16root128_boundaryRK13PowInteger128jby>\n1014ea14:\t2800      \tcmp\tr0, #0\n1014ea16:\tdd05      \tble.n\t1014ea24 <pow_root128_decide+0x88>\n1014ea18:\t4625      \tmov\tr5, r4\n1014ea1a:\t4637      \tmov\tr7, r6\n1014ea1c:\t4628      \tmov\tr0, r5\n1014ea1e:\t4639      \tmov\tr1, r7\n1014ea20:\tb007      \tadd\tsp, #28\n"
+    },
+    {
+      "owner": "pow_root128_decide",
+      "pc": "0x1014ea3c",
+      "fresh_actual_call_disassembly": "\n/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf:     file format elf32-littlearm\n\n\nDisassembly of section .m0_pow_exact_extension:\n\n1014ea3c <pow_root128_decide+0xa0>:\n1014ea3c:\tf001 fae0 \tbl\t10150000 <_ZL16root128_boundaryRK13PowInteger128jby>\n1014ea40:\t2800      \tcmp\tr0, #0\n1014ea42:\tdceb      \tbgt.n\t1014ea1c <pow_root128_decide+0x80>\n1014ea44:\te7f1      \tb.n\t1014ea2a <pow_root128_decide+0x8e>\n1014ea46:\t46c0      \tnop\t\t\t@ (mov r8, r8)\n1014ea48:\t7ff80000 \t.word\t0x7ff80000\n\n1014ea4c <root64_distance>:\n1014ea4c:\tb5f0      \tpush\t{r4, r5, r6, r7, lr}\n"
+    }
+  ],
+  "new_linked_BL_targets": [
+    "0x1014f720",
+    "0x100f9c9c",
+    "0x100f9268"
+  ],
+  "new_code212_literal16_section228": true,
+  "rejected80bit_code_absent_by_exact_one_slot_source_diff_object_and_link_closure": true,
+  "new_code_undefined_calls_only_accepted_square_original_mul_original_compare": true,
+  "shared_product_R12_unchanged_component_reuse_not_new_integrated_guard": true,
+  "old168_overlay_negative_control": {
+    "overwritten_new_entry_bytes": 14,
+    "old_overlay": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/candidate.elf",
+      "bytes": 1127828,
+      "sha256": "b4049e5a39c2bc9d663acab44a7683f1811daedd1c43497cd5ad7588b1b408ac"
+    },
+    "old_bank_bytes": 168,
+    "overlap_start": "0x20038f7e",
+    "preflight_rejects_corrupted_entry": true,
+    "ARM_calls": 0
+  },
+  "preservation_not_general_pow_totality": true,
+  "CPU_only": true,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "device_IO": 0
+}

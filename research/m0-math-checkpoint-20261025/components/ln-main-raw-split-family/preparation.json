@@ -1,0 +1,4 @@
+{
+  "parent": "m0-log-ratio-small-limb-20261024",
+  "trial": "Split raw main body only for outside-small-limb DIRTY. Test low-word family before volatile CSR; preserve original exact ASM dispatch and pack without carrying divider state."
+}

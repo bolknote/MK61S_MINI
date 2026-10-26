@@ -1,0 +1,110 @@
+{
+  "status": "BOUND_SELECTED_FULL_QUALIFICATION_ROWS",
+  "rows": [
+    {
+      "x": "4085F424184F6DC5",
+      "group": "old440007:old428231:old163675:old48763:historical16",
+      "SIO": "READY",
+      "expected": "7F46EC297B4BF167",
+      "candidate": "7F46EC297B4BF167",
+      "candidate_instructions": 2266,
+      "Qfplib": "7F46EC297B4BF167",
+      "Qfplib_instructions": 649,
+      "Qfplib_correct": true,
+      "parent_instructions": 2264,
+      "Qfplib_acquisition": "inherited adaptive-exp corpus"
+    },
+    {
+      "x": "4085F424184F6DC5",
+      "group": "old440007:old428231:old163675:old48763:historical16",
+      "SIO": "DIRTY",
+      "expected": "7F46EC297B4BF167",
+      "candidate": "7F46EC297B4BF167",
+      "candidate_instructions": 2266,
+      "Qfplib": "7F46EC297B4BF167",
+      "Qfplib_instructions": 649,
+      "Qfplib_correct": true,
+      "parent_instructions": 2264,
+      "Qfplib_acquisition": "inherited adaptive-exp corpus"
+    },
+    {
+      "x": "C041265824E2113C",
+      "group": "old440007:old428231:old163675:old48763:historical16",
+      "SIO": "READY",
+      "expected": "3CD6E1FB162DABC8",
+      "candidate": "3CD6E1FB162DABC8",
+      "candidate_instructions": 596,
+      "Qfplib": "3CD6E1FB162DABC8",
+      "Qfplib_instructions": 622,
+      "Qfplib_correct": true,
+      "parent_instructions": 599,
+      "Qfplib_acquisition": "inherited adaptive-exp corpus"
+    },
+    {
+      "x": "C041265824E2113C",
+      "group": "old440007:old428231:old163675:old48763:historical16",
+      "SIO": "DIRTY",
+      "expected": "3CD6E1FB162DABC8",
+      "candidate": "3CD6E1FB162DABC8",
+      "candidate_instructions": 596,
+      "Qfplib": "3CD6E1FB162DABC8",
+      "Qfplib_instructions": 622,
+      "Qfplib_correct": true,
+      "parent_instructions": 599,
+      "Qfplib_acquisition": "inherited adaptive-exp corpus"
+    },
+    {
+      "x": "3DF0000000000000",
+      "group": "old440007:old428231:dense_extended_domain_edges",
+      "SIO": "READY",
+      "expected": "3FF0000000100000",
+      "candidate": "3FF0000000100000",
+      "candidate_instructions": 439,
+      "Qfplib": "3FF0000000100000",
+      "Qfplib_instructions": 471,
+      "Qfplib_correct": true,
+      "parent_instructions": 520,
+      "Qfplib_acquisition": "inherited adaptive-exp corpus"
+    },
+    {
+      "x": "3DF0000000000000",
+      "group": "old440007:old428231:dense_extended_domain_edges",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000100000",
+      "candidate": "3FF0000000100000",
+      "candidate_instructions": 439,
+      "Qfplib": "3FF0000000100000",
+      "Qfplib_instructions": 471,
+      "Qfplib_correct": true,
+      "parent_instructions": 520,
+      "Qfplib_acquisition": "inherited adaptive-exp corpus"
+    },
+    {
+      "x": "BDF0000000000000",
+      "group": "old440007:old428231:dense_extended_domain_edges",
+      "SIO": "READY",
+      "expected": "3FEFFFFFFFE00000",
+      "candidate": "3FEFFFFFFFE00000",
+      "candidate_instructions": 461,
+      "Qfplib": "3FEFFFFFFFE00000",
+      "Qfplib_instructions": 520,
+      "Qfplib_correct": true,
+      "parent_instructions": 542,
+      "Qfplib_acquisition": "inherited adaptive-exp corpus"
+    },
+    {
+      "x": "BDF0000000000000",
+      "group": "old440007:old428231:dense_extended_domain_edges",
+      "SIO": "DIRTY",
+      "expected": "3FEFFFFFFFE00000",
+      "candidate": "3FEFFFFFFFE00000",
+      "candidate_instructions": 461,
+      "Qfplib": "3FEFFFFFFFE00000",
+      "Qfplib_instructions": 520,
+      "Qfplib_correct": true,
+      "parent_instructions": 542,
+      "Qfplib_acquisition": "inherited adaptive-exp corpus"
+    }
+  ],
+  "new_executions_or_references_added": 0
+}

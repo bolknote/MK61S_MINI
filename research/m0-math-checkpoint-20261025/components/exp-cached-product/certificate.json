@@ -1,0 +1,80 @@
+{
+  "status": "PASS_SOURCE_BOUND_EXP_CACHED_RAM_PRODUCT_AND_TINY_RNE",
+  "source_sha256": "9b0bf27d5080eabe779b924e57db448b205ce0d0a20febcaa7355267f1aa311e",
+  "candidate_ELF_sha256": "5ddab388a96bef9c343e0c11e82797741f7ccb724a812d0532d76aa25c2e794e",
+  "parent_bound": "34668214370154372027613190496324720899883946526059618249184904661311409139477078633487288453355757359/7465385227872689645120498553008384672084787860628440025398200883145354558376061850967595295755468800",
+  "parent_bound_float": 4.64386140995343,
+  "rounded_product_bound": "16385/32768",
+  "candidate_bound": "23470364353822262385666241510151774274589775135137118991117675303173063134266451923376562245418835759/7465385227872689645120498553008384672084787860628440025398200883145354558376061850967595295755468800",
+  "candidate_bound_float": 3.143891927531554,
+  "strict_radius": 4,
+  "normalized_strict_radius": 6,
+  "original_reduction_polynomial_and_all512_table_bounds_rechecked": true,
+  "exp_table_sha256": "9185ad8a13121c810de407f5eac695df9f3b394ee836d4829d0aa37f2fa5719e",
+  "maximum_correction_argument": "34476755421845177728323973310503372828565746882052732830362717326306445545319699495909402221550495403378916311561/2668114806244706806690671391353961641202568928030178708148034625856095267468213670824730270105600",
+  "rounded_product_argument_domain": {
+    "a_bits": 63,
+    "b_bits": 54
+  },
+  "omitted_three_limb_pairs_maximum": "562937068519425",
+  "omitted_full_product_below": "2^49",
+  "product_proof": "All13 limb pairs at columns>=2 are retained; omitted integer<2^49. Half-up integer rounding adds at most1/2, so error<=1/2+2^-15 after>>64.",
+  "runtime_product_address": "0x20038ee4",
+  "runtime_product_bytes": 168,
+  "runtime_product_sha256": "43c7b2bdd81974c27ecd602dbbc0b3ec82070caea16ffeb80d25fb28bc6b9f32",
+  "parent_runtime_product_address": "0x20038ee4",
+  "parent_runtime_product_bytes": 182,
+  "parent_runtime_product_sha256": "20ddbb4bcbf37baffe9dfed52b4c03def48e66568d6929bc4ea711eb116ce948",
+  "product_source_sha256": "f6fa419ccb24858b04912f16fd522894a70494bd66edbdef1071e3d7ed4c66bf",
+  "Flash_wrapper_address": "0x1016b3b8",
+  "Flash_wrapper_bytes": 16,
+  "Flash_wrapper_sha256": "730645909dd2545f62de07daa2336397ccbc9f8b78b094e3bf62319c44b7fb99",
+  "Flash_wrapper_not_a_standalone_product": true,
+  "cached_limbs": [
+    "a3 in r2",
+    "b3 in preserved r7"
+  ],
+  "early_rounded_r5_max": 163900,
+  "first_column4_sum_max": 4292605,
+  "early_rounding_commutes_with_all_upper_columns": true,
+  "product_stack_bytes": 40,
+  "parent_product_stack_bytes": 32,
+  "product_16bit_instructions": 84,
+  "parent_product_16bit_instructions": 91,
+  "tiny_magnitude_domain": "2^-54<abs(x)<2^-40",
+  "tiny_input_exponents": [
+    -54,
+    -41
+  ],
+  "tiny_remainder": "0<exp(x)-1-x<x^2/(2*(1-abs(x))); negative lower x^2*(1/2-abs(x)/6)>0.",
+  "tiny_remainder_input_significand_units": "4503599627370496/1099511627775",
+  "tiny_strict_integer_radius": 4097,
+  "tiny_shift_range": [
+    40,
+    54
+  ],
+  "tiny_output_grid": {
+    "positive": "2^-52",
+    "negative": "2^-53"
+  },
+  "tiny_rounding_proof": "Positive correction may cross only a below-midpoint cell; decline when its integer distance<4097. Negative displacement correction may cross only an above-midpoint cell, same guard. Exact midpoint chooses upward for positive x, downward displacement for negative x. Remaining margin>=4097 is strict; next midpoint is at least1/2 output unit away.",
+  "tiny_declines_preserve_original_exp_path": true,
+  "new_tables_or_global_RAM": false,
+  "refined_exp_table_sha256": "b4769f705c76d7190d0ed816f2fe95c4dc786ea4f48148d2150d085bc3314e52",
+  "all512_Q62_Q94_exp_centers_rechecked": true,
+  "delta32_range": [
+    -2119901138,
+    2144737447
+  ],
+  "table_removed_remaining_bound": "19737671740755002786970836494049663770023145796079612922513347315183022038572349348211926358507347759/7465385227872689645120498553008384672084787860628440025398200883145354558376061850967595295755468800",
+  "table_removed_remaining_bound_float": 2.6438919276479695,
+  "additional_table_predicate": "At distance3(normal), above needs delta32>=-11*2^27; below needs delta32<=11*2^27. Remaining bound+Q94 uncertainty<85/32.",
+  "normalization_only_index0_proved": true,
+  "normalized_table_center_exact": true,
+  "normalized_remaining_bound": "19737671739885917563105992233647581938547381204822898978418574861600385855078420997892764597541101359/3732692613936344822560249276504192336042393930314220012699100441572677279188030925483797647877734400",
+  "accepted_normal_midpoints_excluded": true,
+  "exact_integer_packing_identity_checks": 6138,
+  "bare_actual_ARM_primitive_checks_required": true,
+  "hardware_accessed": false,
+  "whole_math_GO": false
+}

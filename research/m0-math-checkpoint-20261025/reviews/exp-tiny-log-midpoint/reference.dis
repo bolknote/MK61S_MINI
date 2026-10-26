@@ -1,0 +1,80 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/reference.elf:     file format elf32-littlearm
+
+
+Disassembly of section .m0_qfplib:
+
+1018142c <qfp_dexp>:
+1018142c:	b5f0      	push	{r4, r5, r6, r7, lr}
+1018142e:	f7ff fe07 	bl	10181040 <dunpacks>
+10181432:	a454      	add	r4, pc, #336	@ (adr r4, 10181584 <dreddata1>)
+10181434:	f7ff fe1f 	bl	10181076 <dreduce>
+10181438:	2900      	cmp	r1, #0
+1018143a:	da04      	bge.n	10181446 <qfp_dexp+0x1a>
+1018143c:	4c20      	ldr	r4, [pc, #128]	@ (101814c0 <qfp_dexp+0x94>)
+1018143e:	4d21      	ldr	r5, [pc, #132]	@ (101814c4 <qfp_dexp+0x98>)
+10181440:	1900      	adds	r0, r0, r4
+10181442:	4169      	adcs	r1, r5
+10181444:	3a01      	subs	r2, #1
+10181446:	b404      	push	{r2}
+10181448:	2701      	movs	r7, #1
+1018144a:	a652      	add	r6, pc, #328	@ (adr r6, 10181594 <dtab_exp>)
+1018144c:	2200      	movs	r2, #0
+1018144e:	2301      	movs	r3, #1
+10181450:	079b      	lsls	r3, r3, #30
+10181452:	ce30      	ldmia	r6!, {r4, r5}
+10181454:	46b4      	mov	ip, r6
+10181456:	1b00      	subs	r0, r0, r4
+10181458:	41a9      	sbcs	r1, r5
+1018145a:	d40b      	bmi.n	10181474 <qfp_dexp+0x48>
+1018145c:	427e      	negs	r6, r7
+1018145e:	3620      	adds	r6, #32
+10181460:	001d      	movs	r5, r3
+10181462:	413d      	asrs	r5, r7
+10181464:	001c      	movs	r4, r3
+10181466:	40b4      	lsls	r4, r6
+10181468:	0016      	movs	r6, r2
+1018146a:	40fe      	lsrs	r6, r7
+1018146c:	4334      	orrs	r4, r6
+1018146e:	4162      	adcs	r2, r4
+10181470:	416b      	adcs	r3, r5
+10181472:	e001      	b.n	10181478 <qfp_dexp+0x4c>
+10181474:	1900      	adds	r0, r0, r4
+10181476:	4169      	adcs	r1, r5
+10181478:	4666      	mov	r6, ip
+1018147a:	3701      	adds	r7, #1
+1018147c:	2f21      	cmp	r7, #33	@ 0x21
+1018147e:	d1e8      	bne.n	10181452 <qfp_dexp+0x26>
+10181480:	b285      	uxth	r5, r0
+10181482:	b29e      	uxth	r6, r3
+10181484:	4375      	muls	r5, r6
+10181486:	1407      	asrs	r7, r0, #16
+10181488:	437e      	muls	r6, r7
+1018148a:	0c19      	lsrs	r1, r3, #16
+1018148c:	434f      	muls	r7, r1
+1018148e:	b284      	uxth	r4, r0
+10181490:	434c      	muls	r4, r1
+10181492:	17f1      	asrs	r1, r6, #31
+10181494:	1936      	adds	r6, r6, r4
+10181496:	2400      	movs	r4, #0
+10181498:	4161      	adcs	r1, r4
+1018149a:	0409      	lsls	r1, r1, #16
+1018149c:	187f      	adds	r7, r7, r1
+1018149e:	0434      	lsls	r4, r6, #16
+101814a0:	0c31      	lsrs	r1, r6, #16
+101814a2:	1964      	adds	r4, r4, r5
+101814a4:	4179      	adcs	r1, r7
+101814a6:	0fa4      	lsrs	r4, r4, #30
+101814a8:	0088      	lsls	r0, r1, #2
+101814aa:	4320      	orrs	r0, r4
+101814ac:	1789      	asrs	r1, r1, #30
+101814ae:	1880      	adds	r0, r0, r2
+101814b0:	4159      	adcs	r1, r3
+101814b2:	bc04      	pop	{r2}
+101814b4:	4252      	negs	r2, r2
+101814b6:	323e      	adds	r2, #62	@ 0x3e
+101814b8:	f7ff fd7f 	bl	10180fba <qfp_fix642double>
+101814bc:	bdf0      	pop	{r4, r5, r6, r7, pc}
+101814be:	0000      	.short	0x0000
+101814c0:	f473de6b 	.word	0xf473de6b
+101814c4:	2c5c85fd 	.word	0x2c5c85fd

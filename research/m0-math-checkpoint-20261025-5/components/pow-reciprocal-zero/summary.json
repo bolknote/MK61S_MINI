@@ -1,0 +1,84 @@
+{
+  "status": "PASS_KNOWN_ZERO_PUBLIC_SCALAR_AND_UNIT_ACCOUNTING",
+  "same_corpus_pairs": 120980,
+  "states": 241960,
+  "loss_pairs": [
+    11369,
+    11369
+  ],
+  "strict_fixes": 0,
+  "equal_fixes": 0,
+  "new_losses": 0,
+  "correct_Qfplib_comparison": {
+    "slower": 21026,
+    "faster": 178686,
+    "equal": 2704
+  },
+  "wrong_public_Qfplib_variants": 77106,
+  "public_instruction_delta_histogram": {
+    "-3": 142,
+    "-2": 612,
+    "0": 241206
+  },
+  "original153": {
+    "parent": {
+      "slower": 33,
+      "strict": 120
+    },
+    "candidate": {
+      "slower": 33,
+      "strict": 120
+    }
+  },
+  "scalar_loss_states": [
+    1,
+    0
+  ],
+  "new_scalar_loss_states": 0,
+  "scalar_correct_comparison": {
+    "parent": {
+      "faster": 32382,
+      "equal": 5,
+      "slower": 1
+    },
+    "candidate": {
+      "faster": 32387,
+      "equal": 1
+    }
+  },
+  "wrong_scalar_Qfplib_variants": 9600,
+  "scalar_parent_increase_histogram": {},
+  "total_qualified_fresh_ARM_calls": 1460246,
+  "sNaN_policy_shortcuts": 110,
+  "new_ARM_or_MPFR_calls_in_this_recount": 0,
+  "hardware_accessed": false,
+  "goal_complete": false,
+  "same_corpus_qualified_fresh_ARM_calls": 673814,
+  "expanded_seed_scan": {
+    "input_evaluations": 131072,
+    "seed_divisors": 65536,
+    "patterns": 2,
+    "states": 262144,
+    "correct_Qfplib_comparison": {
+      "parent": {
+        "faster": 262096,
+        "equal": 34,
+        "slower": 14
+      },
+      "candidate": {
+        "faster": 262131,
+        "slower": 2,
+        "equal": 11
+      }
+    },
+    "wrong_Qfplib_variants": 0,
+    "parent_increases": 0,
+    "loss_states": [
+      14,
+      2
+    ],
+    "new_losses": 0
+  },
+  "actual_directed_MPFR_input_evaluations": 157083,
+  "campaign_overlap_not_deduplicated_not_unique_input_count": true
+}

@@ -1,0 +1,8 @@
+{
+  "status": "EXCLUDED_OWN_AST_SYNTAX_PREFLIGHT",
+  "cause": "Missing spaces in else147/else1706/else1714/else1712 numeric branches, caught by AST parse before runtime import",
+  "source_sha256": "4859a32e6f74f18edf49351e9ab967da18f65fe048d4e095b690a94dd8ef35b0",
+  "actual_ARM_calls": 0,
+  "actual_MPFR_calls": 0,
+  "supplier_modified": false
+}

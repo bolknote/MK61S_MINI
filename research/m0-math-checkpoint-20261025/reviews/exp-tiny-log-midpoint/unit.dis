@@ -1,0 +1,238 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-tiny-log-midpoint-independent-20261024/unit.elf:     file format elf32-littlearm
+
+
+Disassembly of section .tiny:
+
+10190000 <exp_tiny_rne>:
+10190000:	b5f0      	push	{r4, r5, r6, r7, lr}
+10190002:	2780      	movs	r7, #128	@ 0x80
+10190004:	b089      	sub	sp, #36	@ 0x24
+10190006:	0fcb      	lsrs	r3, r1, #31
+10190008:	004d      	lsls	r5, r1, #1
+1019000a:	4a6e      	ldr	r2, [pc, #440]	@ (101901c4 <exp_tiny_rne+0x1c4>)
+1019000c:	9303      	str	r3, [sp, #12]
+1019000e:	9b03      	ldr	r3, [sp, #12]
+10190010:	0d6d      	lsrs	r5, r5, #21
+10190012:	1b52      	subs	r2, r2, r5
+10190014:	1ad2      	subs	r2, r2, r3
+10190016:	030b      	lsls	r3, r1, #12
+10190018:	037f      	lsls	r7, r7, #13
+1019001a:	0b1b      	lsrs	r3, r3, #12
+1019001c:	9101      	str	r1, [sp, #4]
+1019001e:	0004      	movs	r4, r0
+10190020:	0039      	movs	r1, r7
+10190022:	433b      	orrs	r3, r7
+10190024:	2a20      	cmp	r2, #32
+10190026:	d115      	bne.n	10190054 <exp_tiny_rne+0x54>
+10190028:	2280      	movs	r2, #128	@ 0x80
+1019002a:	9801      	ldr	r0, [sp, #4]
+1019002c:	0612      	lsls	r2, r2, #24
+1019002e:	2800      	cmp	r0, #0
+10190030:	da0d      	bge.n	1019004e <exp_tiny_rne+0x4e>
+10190032:	42a2      	cmp	r2, r4
+10190034:	4192      	sbcs	r2, r2
+10190036:	4250      	negs	r0, r2
+10190038:	2280      	movs	r2, #128	@ 0x80
+1019003a:	0612      	lsls	r2, r2, #24
+1019003c:	18a4      	adds	r4, r4, r2
+1019003e:	1e62      	subs	r2, r4, #1
+10190040:	428a      	cmp	r2, r1
+10190042:	d334      	bcc.n	101900ae <exp_tiny_rne+0xae>
+10190044:	9a01      	ldr	r2, [sp, #4]
+10190046:	181b      	adds	r3, r3, r0
+10190048:	2a00      	cmp	r2, #0
+1019004a:	da25      	bge.n	10190098 <exp_tiny_rne+0x98>
+1019004c:	e047      	b.n	101900de <exp_tiny_rne+0xde>
+1019004e:	0fe0      	lsrs	r0, r4, #31
+10190050:	1b14      	subs	r4, r2, r4
+10190052:	e7f4      	b.n	1019003e <exp_tiny_rne+0x3e>
+10190054:	2120      	movs	r1, #32
+10190056:	4249      	negs	r1, r1
+10190058:	468c      	mov	ip, r1
+1019005a:	4494      	add	ip, r2
+1019005c:	4666      	mov	r6, ip
+1019005e:	311f      	adds	r1, #31
+10190060:	40b1      	lsls	r1, r6
+10190062:	001e      	movs	r6, r3
+10190064:	438e      	bics	r6, r1
+10190066:	2101      	movs	r1, #1
+10190068:	3a21      	subs	r2, #33	@ 0x21
+1019006a:	4091      	lsls	r1, r2
+1019006c:	4662      	mov	r2, ip
+1019006e:	40d3      	lsrs	r3, r2
+10190070:	9a01      	ldr	r2, [sp, #4]
+10190072:	2a00      	cmp	r2, #0
+10190074:	da08      	bge.n	10190088 <exp_tiny_rne+0x88>
+10190076:	428e      	cmp	r6, r1
+10190078:	d804      	bhi.n	10190084 <exp_tiny_rne+0x84>
+1019007a:	d130      	bne.n	101900de <exp_tiny_rne+0xde>
+1019007c:	2800      	cmp	r0, #0
+1019007e:	d02e      	beq.n	101900de <exp_tiny_rne+0xde>
+10190080:	42b8      	cmp	r0, r7
+10190082:	d914      	bls.n	101900ae <exp_tiny_rne+0xae>
+10190084:	3301      	adds	r3, #1
+10190086:	e02a      	b.n	101900de <exp_tiny_rne+0xde>
+10190088:	2200      	movs	r2, #0
+1019008a:	428e      	cmp	r6, r1
+1019008c:	4152      	adcs	r2, r2
+1019008e:	3601      	adds	r6, #1
+10190090:	b2d2      	uxtb	r2, r2
+10190092:	428e      	cmp	r6, r1
+10190094:	d007      	beq.n	101900a6 <exp_tiny_rne+0xa6>
+10190096:	189b      	adds	r3, r3, r2
+10190098:	0018      	movs	r0, r3
+1019009a:	2100      	movs	r1, #0
+1019009c:	2300      	movs	r3, #0
+1019009e:	4c4a      	ldr	r4, [pc, #296]	@ (101901c8 <exp_tiny_rne+0x1c8>)
+101900a0:	18c0      	adds	r0, r0, r3
+101900a2:	4161      	adcs	r1, r4
+101900a4:	e023      	b.n	101900ee <exp_tiny_rne+0xee>
+101900a6:	4949      	ldr	r1, [pc, #292]	@ (101901cc <exp_tiny_rne+0x1cc>)
+101900a8:	4288      	cmp	r0, r1
+101900aa:	d9f4      	bls.n	10190096 <exp_tiny_rne+0x96>
+101900ac:	4244      	negs	r4, r0
+101900ae:	2101      	movs	r1, #1
+101900b0:	9803      	ldr	r0, [sp, #12]
+101900b2:	005a      	lsls	r2, r3, #1
+101900b4:	4088      	lsls	r0, r1
+101900b6:	182d      	adds	r5, r5, r0
+101900b8:	4845      	ldr	r0, [pc, #276]	@ (101901d0 <exp_tiny_rne+0x1d0>)
+101900ba:	430a      	orrs	r2, r1
+101900bc:	1828      	adds	r0, r5, r0
+101900be:	9002      	str	r0, [sp, #8]
+101900c0:	2080      	movs	r0, #128	@ 0x80
+101900c2:	0240      	lsls	r0, r0, #9
+101900c4:	4282      	cmp	r2, r0
+101900c6:	d214      	bcs.n	101900f2 <exp_tiny_rne+0xf2>
+101900c8:	4352      	muls	r2, r2
+101900ca:	9902      	ldr	r1, [sp, #8]
+101900cc:	40ca      	lsrs	r2, r1
+101900ce:	9901      	ldr	r1, [sp, #4]
+101900d0:	2900      	cmp	r1, #0
+101900d2:	db00      	blt.n	101900d6 <exp_tiny_rne+0xd6>
+101900d4:	e071      	b.n	101901ba <exp_tiny_rne+0x1ba>
+101900d6:	42a2      	cmp	r2, r4
+101900d8:	4192      	sbcs	r2, r2
+101900da:	4252      	negs	r2, r2
+101900dc:	189b      	adds	r3, r3, r2
+101900de:	0018      	movs	r0, r3
+101900e0:	2100      	movs	r1, #0
+101900e2:	2300      	movs	r3, #0
+101900e4:	4c38      	ldr	r4, [pc, #224]	@ (101901c8 <exp_tiny_rne+0x1c8>)
+101900e6:	1a1b      	subs	r3, r3, r0
+101900e8:	418c      	sbcs	r4, r1
+101900ea:	0018      	movs	r0, r3
+101900ec:	0021      	movs	r1, r4
+101900ee:	b009      	add	sp, #36	@ 0x24
+101900f0:	bdf0      	pop	{r4, r5, r6, r7, pc}
+101900f2:	0458      	lsls	r0, r3, #17
+101900f4:	0c00      	lsrs	r0, r0, #16
+101900f6:	4301      	orrs	r1, r0
+101900f8:	0c17      	lsrs	r7, r2, #16
+101900fa:	000d      	movs	r5, r1
+101900fc:	003e      	movs	r6, r7
+101900fe:	434d      	muls	r5, r1
+10190100:	434e      	muls	r6, r1
+10190102:	0c28      	lsrs	r0, r5, #16
+10190104:	1980      	adds	r0, r0, r6
+10190106:	b282      	uxth	r2, r0
+10190108:	1992      	adds	r2, r2, r6
+1019010a:	003e      	movs	r6, r7
+1019010c:	437e      	muls	r6, r7
+1019010e:	0c00      	lsrs	r0, r0, #16
+10190110:	1980      	adds	r0, r0, r6
+10190112:	b2ad      	uxth	r5, r5
+10190114:	0c16      	lsrs	r6, r2, #16
+10190116:	0412      	lsls	r2, r2, #16
+10190118:	432a      	orrs	r2, r5
+1019011a:	2520      	movs	r5, #32
+1019011c:	1980      	adds	r0, r0, r6
+1019011e:	9004      	str	r0, [sp, #16]
+10190120:	9802      	ldr	r0, [sp, #8]
+10190122:	9e04      	ldr	r6, [sp, #16]
+10190124:	1a2d      	subs	r5, r5, r0
+10190126:	40ae      	lsls	r6, r5
+10190128:	0015      	movs	r5, r2
+1019012a:	40c5      	lsrs	r5, r0
+1019012c:	432e      	orrs	r6, r5
+1019012e:	2501      	movs	r5, #1
+10190130:	426d      	negs	r5, r5
+10190132:	4085      	lsls	r5, r0
+10190134:	9606      	str	r6, [sp, #24]
+10190136:	0016      	movs	r6, r2
+10190138:	43ae      	bics	r6, r5
+1019013a:	b295      	uxth	r5, r2
+1019013c:	0c12      	lsrs	r2, r2, #16
+1019013e:	0010      	movs	r0, r2
+10190140:	9607      	str	r6, [sp, #28]
+10190142:	002e      	movs	r6, r5
+10190144:	4348      	muls	r0, r1
+10190146:	4684      	mov	ip, r0
+10190148:	434e      	muls	r6, r1
+1019014a:	0c36      	lsrs	r6, r6, #16
+1019014c:	4466      	add	r6, ip
+1019014e:	b2b0      	uxth	r0, r6
+10190150:	4684      	mov	ip, r0
+10190152:	9804      	ldr	r0, [sp, #16]
+10190154:	437d      	muls	r5, r7
+10190156:	4341      	muls	r1, r0
+10190158:	437a      	muls	r2, r7
+1019015a:	4465      	add	r5, ip
+1019015c:	0c36      	lsrs	r6, r6, #16
+1019015e:	0c08      	lsrs	r0, r1, #16
+10190160:	1992      	adds	r2, r2, r6
+10190162:	0c2d      	lsrs	r5, r5, #16
+10190164:	4684      	mov	ip, r0
+10190166:	1952      	adds	r2, r2, r5
+10190168:	9804      	ldr	r0, [sp, #16]
+1019016a:	9204      	str	r2, [sp, #16]
+1019016c:	2200      	movs	r2, #0
+1019016e:	4378      	muls	r0, r7
+10190170:	4460      	add	r0, ip
+10190172:	9205      	str	r2, [sp, #20]
+10190174:	b289      	uxth	r1, r1
+10190176:	0402      	lsls	r2, r0, #16
+10190178:	430a      	orrs	r2, r1
+1019017a:	0016      	movs	r6, r2
+1019017c:	9904      	ldr	r1, [sp, #16]
+1019017e:	9a05      	ldr	r2, [sp, #20]
+10190180:	0c07      	lsrs	r7, r0, #16
+10190182:	1876      	adds	r6, r6, r1
+10190184:	4157      	adcs	r7, r2
+10190186:	033a      	lsls	r2, r7, #12
+10190188:	0d30      	lsrs	r0, r6, #20
+1019018a:	4310      	orrs	r0, r2
+1019018c:	9a03      	ldr	r2, [sp, #12]
+1019018e:	40d0      	lsrs	r0, r2
+10190190:	4a10      	ldr	r2, [pc, #64]	@ (101901d4 <exp_tiny_rne+0x1d4>)
+10190192:	4350      	muls	r0, r2
+10190194:	9a01      	ldr	r2, [sp, #4]
+10190196:	0c40      	lsrs	r0, r0, #17
+10190198:	2a00      	cmp	r2, #0
+1019019a:	da08      	bge.n	101901ae <exp_tiny_rne+0x1ae>
+1019019c:	9a07      	ldr	r2, [sp, #28]
+1019019e:	1810      	adds	r0, r2, r0
+101901a0:	9a02      	ldr	r2, [sp, #8]
+101901a2:	40d0      	lsrs	r0, r2
+101901a4:	1e42      	subs	r2, r0, #1
+101901a6:	4190      	sbcs	r0, r2
+101901a8:	9a06      	ldr	r2, [sp, #24]
+101901aa:	1882      	adds	r2, r0, r2
+101901ac:	e793      	b.n	101900d6 <exp_tiny_rne+0xd6>
+101901ae:	2200      	movs	r2, #0
+101901b0:	9d07      	ldr	r5, [sp, #28]
+101901b2:	9906      	ldr	r1, [sp, #24]
+101901b4:	42a8      	cmp	r0, r5
+101901b6:	4152      	adcs	r2, r2
+101901b8:	1a8a      	subs	r2, r1, r2
+101901ba:	2100      	movs	r1, #0
+101901bc:	42a2      	cmp	r2, r4
+101901be:	4149      	adcs	r1, r1
+101901c0:	185b      	adds	r3, r3, r1
+101901c2:	e769      	b.n	10190098 <exp_tiny_rne+0x98>
+101901c4:	000003ff 	.word	0x000003ff
+101901c8:	3ff00000 	.word	0x3ff00000
+101901cc:	ffefffff 	.word	0xffefffff
+101901d0:	fffffc38 	.word	0xfffffc38
+101901d4:	0000aaab 	.word	0x0000aaab

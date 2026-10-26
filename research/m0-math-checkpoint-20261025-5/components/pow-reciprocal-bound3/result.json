@@ -1,0 +1,115 @@
+{
+  "status": "FROZEN_AUTHOR_PRIVATE_BOUND3_SEED_PENDING_REVIEW",
+  "source_parent": ".build/m0-pow-reciprocal-zero-20261025",
+  "source_parent_FROZEN_sha256": "98efecf01b96bf8cd1d690682cd9d5b255cbeee997b213ba23e692b926f82544",
+  "parent_zero_independent_review_pending": true,
+  "earlier_certificate_review_sha256": "6cfdc8862299f9eb776b15dc0aceab8086fb4c847552df58d3e9cd1be3a6fddd",
+  "earlier_certificate_ROOT_sha256": "aa392003a9237e3d945768cfd2651c9aa3d8be2746a9e5046e520e68298801ba",
+  "earlier_certificate_performance_adoption_GO": false,
+  "candidate_ELF_sha256": "53e624741136a615814141b4f4d69eb563e32909562dd9068fe63bba3d0b0e67",
+  "source_proof_sha256": "f61b2c3638535f8de5a07781935cdafd48c3f06339068b41ac85f1b64dd81078",
+  "numeric_proof_sha256": "fd16386d73df7708de7bd59316f09963af2b8af92506b2b68a5a96924d84c664",
+  "shared_unit_FROZEN_sha256": "58764a6b8b12a221d8cc7061ba60a50541068bf366181aad277c3253757b078e",
+  "private_contract": "exact positive numerator1, denominator any binary64; inline seed requires rawR0=0; not generic division",
+  "exact_floor_seed_quotient_unchanged": true,
+  "changed_R7_for_error3_dead_before_second_product": true,
+  "all_full_after_second_product_and_later_live_joins_identical": true,
+  "bare_unit_tests": 1048576,
+  "bare_unit_ARM_calls": 2097152,
+  "all65536_D_each_all16_NZCV_checked": true,
+  "same_scalar_pairs": 20994,
+  "same_scalar_states": 41988,
+  "same_scalar_loss_states": [
+    0,
+    0
+  ],
+  "same_scalar_candidate_comparison": {
+    "faster": 32387,
+    "equal": 1
+  },
+  "same_scalar_wrong_Qfplib_retained": 9600,
+  "expanded_seed_divisors": 65536,
+  "expanded_inputs": 131072,
+  "expanded_states": 262144,
+  "expanded_patterns_per_D": 2,
+  "expanded_loss_states": [
+    2,
+    0
+  ],
+  "expanded_candidate_comparison": {
+    "faster": 262132,
+    "equal": 12
+  },
+  "expanded_wrong_Qfplib_retained": 0,
+  "remaining_sampled_scalar_losses": 0,
+  "new_scalar_Qfplib_loss_states": 0,
+  "all_own_parent_instruction_cost_increases": 0,
+  "same_pow_pairs": 120980,
+  "pow_states": 241960,
+  "pow_loss_pairs": [
+    11369,
+    11369
+  ],
+  "pow_faster_states": 10,
+  "pow_instruction_saving": 3,
+  "pow_wrong": 0,
+  "new_pow_losses": 0,
+  "all_reference_outputs_costs_and_inherited_tradeoffs_retained": true,
+  "no_nominal_reference_domain_filter": true,
+  "wrong_public_Qfplib_variants_retained": 77106,
+  "total_qualified_fresh_ARM_calls": 3355798,
+  "same_corpus_and_unit_qualified_fresh_ARM_calls": 2569366,
+  "expanded_scan_fresh_ARM_calls": 786432,
+  "fresh_full_candidate_ARM_calls": 241960,
+  "fresh_parent_reciprocal_path_ARM_calls": 778,
+  "fresh_public_MPFR_control_reference_ARM_calls": 61524,
+  "fresh_scalar_ARM_calls": 167952,
+  "fresh_bare_unit_ARM_calls": 2097152,
+  "actual_directed_MPFR_input_evaluations": 157083,
+  "sNaN_policy_shortcuts": 110,
+  "campaign_overlap_not_deduplicated_not_unique_input_count": true,
+  "parent_campaigns_not_fresh": true,
+  "failed_host_trace_completed_ARM_calls_excluded": 14184,
+  "failed_host_trace_directed_MPFR_inputs_excluded": 1106,
+  "failed_host_trace_sNaN_shortcuts_excluded": 76,
+  "failed_partial_ARM_calls": 0,
+  "private_code_bytes": [
+    1100,
+    1108
+  ],
+  "allocated_code_delta_bytes": 8,
+  "same256B_table": true,
+  "no_new_tables_RAM_libgcc_or_external_calls": true,
+  "default_M0_M4_selected_controls_and6_disabled_objects_empty": true,
+  "twenty_two_original_path_source_object_ELF_rebuilds_exact": true,
+  "full_observed_stack_bytes": 2284,
+  "fresh_public_controls_stack_bytes": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148
+  },
+  "same_scalar_stack_bytes": {
+    "parent": 176,
+    "control": 176,
+    "candidate": 176
+  },
+  "expanded_normal_scalar_stack_bytes": {
+    "parent": 28,
+    "candidate": 28
+  },
+  "parent_subset_not_full_stack_comparator": true,
+  "instruction_parity_on_current_scalar_sets_not_universal_cycles_or_full_library_GO": true,
+  "error1_branch_direction_cycle_effect_requires_measurement": true,
+  "original_pow153_remaining": [
+    33,
+    33
+  ],
+  "author_separate507_no_slower": 438,
+  "author_separate507_strict": 432,
+  "author_separate507_equal": 6,
+  "reviewed_separate507_no_slower": 422,
+  "independent_review_pending": true,
+  "general_pow_totality_other_math_unified_source_R12_loader_layout_14B_hazard_physical_cycles_release_pending": true,
+  "canonical_runtime_M4_Git_device_USB_Flash_or_release_changed": false,
+  "goal_complete": false
+}

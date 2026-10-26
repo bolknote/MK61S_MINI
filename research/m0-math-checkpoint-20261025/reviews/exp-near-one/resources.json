@@ -1,0 +1,32 @@
+{
+  "status": "PASS_PRIVATE_RESOURCE_AND_ISOLATION_RECHECK",
+  "private_all_allocated_section_bytes": [
+    16648,
+    17784
+  ],
+  "private_Flash_section_bytes": [
+    16480,
+    17616
+  ],
+  "inherited_RAM_slot_bytes": 168,
+  "private_delta_bytes": 1136,
+  "undefined_symbol_set_unchanged": true,
+  "no_new_libgcc_ROM_math_tables_or_BSS": true,
+  "shared77_instruction_body154_slot168_padding14_unchanged": true,
+  "unchanged_existing_ASM_source_count": 8,
+  "generic_M0_M4soft_hard_selected_objects_unchanged": true,
+  "static_public_frame": [
+    96,
+    88
+  ],
+  "new_helper_frame": 72,
+  "integer_leaf_frame": 36,
+  "observed_public_stack_bytes": {
+    "parent": 744,
+    "candidate": 808
+  },
+  "observed_reference_stack_bytes": 32,
+  "whole_firmware_GC_size_not_measured": true,
+  "universal_stack_bound_not_established": true,
+  "physical_cycles_not_measured": true
+}

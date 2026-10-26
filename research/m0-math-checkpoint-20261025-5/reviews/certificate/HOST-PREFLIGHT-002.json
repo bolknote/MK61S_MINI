@@ -1,0 +1,13 @@
+{
+  "status": "EXCLUDED_HOST_WHOLE_UNIT_ELF_BASENAME_ASSERTION",
+  "source_sha256": "2ff8677bd345b148bc777b46c40b044138bb7f058cfef6589d2e85d2a79e5c20",
+  "cause": "Own unit-control.o basename made linker-generated STT_FILE string unit-control.o instead of control.o. All allocated bytes/addresses and object bytes match; supplier unit ELF unchanged.",
+  "completed_commands": 11,
+  "actual_ARM_calls": 0,
+  "actual_MPFR_calls": 0,
+  "eight_supplier_rebuilds_byteexact": true,
+  "two_unit_objects_byteexact": true,
+  "failed_unit_whole_ELF_retained": "rebuild-preflight-002/unit-control.elf",
+  "correction": "Preserve object basenames in own rebuild/unit/ subdirectory. Reuse the ten successful exact rebuilds without executing them again; relink unit only.",
+  "supplier_modified": false
+}

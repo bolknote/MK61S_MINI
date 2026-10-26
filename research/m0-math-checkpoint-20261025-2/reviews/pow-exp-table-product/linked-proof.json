@@ -1,0 +1,181 @@
+{
+  "status": "PASS_EXACT_TABLE_IDENTITY_AND_PRESENT_LINKED_CALLERS_ONLY",
+  "fresh_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/rebuild/candidate.elf",
+    "bytes": 1203168,
+    "sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98"
+  },
+  "fresh_disassembly": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-independent-20261025/candidate.actual.dis",
+    "bytes": 793603,
+    "sha256": "35fc5e5b233b6504b8fa5987d468349fef8b4641193e64ed214748fbded77448"
+  },
+  "three_actual_scalar_callers": [
+    {
+      "call": {
+        "address": 537102148,
+        "bytes": 4,
+        "op": "bl",
+        "args": "20038f7e <mk61_m0_pow_exp_table_product>"
+      },
+      "target": "0x20038f7e",
+      "direct": true,
+      "scalar_return_capture": [
+        {
+          "address": 537102152,
+          "bytes": 2,
+          "op": "str",
+          "args": "r0, [sp, #80]"
+        },
+        {
+          "address": 537102154,
+          "bytes": 2,
+          "op": "str",
+          "args": "r1, [sp, #84]"
+        }
+      ],
+      "R12_extra_not_consumed_here": true,
+      "tail_veneer_preserves_arguments_SP_and_LR": false
+    },
+    {
+      "call": {
+        "address": 269921104,
+        "bytes": 4,
+        "op": "bl",
+        "args": "1016ac20 <__mk61_m0_pow_exp_table_product_veneer>"
+      },
+      "target": "0x1016ac20",
+      "direct": false,
+      "scalar_return_capture": [
+        {
+          "address": 269921108,
+          "bytes": 2,
+          "op": "str",
+          "args": "r0, [sp, #80]"
+        },
+        {
+          "address": 269921110,
+          "bytes": 2,
+          "op": "str",
+          "args": "r1, [sp, #84]"
+        }
+      ],
+      "R12_extra_not_consumed_here": true,
+      "tail_veneer_preserves_arguments_SP_and_LR": true
+    },
+    {
+      "call": {
+        "address": 269923014,
+        "bytes": 4,
+        "op": "bl",
+        "args": "101b0000 <mk61_m0_pow_exp_table_product_flash>"
+      },
+      "target": "0x101b0000",
+      "direct": false,
+      "scalar_return_capture": [
+        {
+          "address": 269923018,
+          "bytes": 2,
+          "op": "str",
+          "args": "r0, [sp, #64]"
+        },
+        {
+          "address": 269923020,
+          "bytes": 2,
+          "op": "str",
+          "args": "r1, [sp, #68]"
+        }
+      ],
+      "R12_extra_not_consumed_here": true,
+      "tail_veneer_preserves_arguments_SP_and_LR": true
+    }
+  ],
+  "old_general77_R12_capture": {
+    "address": 537104190,
+    "bytes": 2,
+    "op": "mov",
+    "args": "ip, r4"
+  },
+  "table_entry10_instructions": [
+    {
+      "address": 537104254,
+      "bytes": 2,
+      "op": "cmp",
+      "args": "r0, #0"
+    },
+    {
+      "address": 537104256,
+      "bytes": 2,
+      "op": "bne",
+      "args": "20038ee4 <mk61_m0_pow_exp_product>"
+    },
+    {
+      "address": 537104258,
+      "bytes": 2,
+      "op": "lsls",
+      "args": "r0, r3, #30"
+    },
+    {
+      "address": 537104260,
+      "bytes": 2,
+      "op": "lsrs",
+      "args": "r1, r3, #2"
+    },
+    {
+      "address": 537104262,
+      "bytes": 2,
+      "op": "lsrs",
+      "args": "r3, r2, #2"
+    },
+    {
+      "address": 537104264,
+      "bytes": 2,
+      "op": "orrs",
+      "args": "r0, r3"
+    },
+    {
+      "address": 537104266,
+      "bytes": 2,
+      "op": "movs",
+      "args": "r2, #0"
+    },
+    {
+      "address": 537104268,
+      "bytes": 2,
+      "op": "adcs",
+      "args": "r0, r2"
+    },
+    {
+      "address": 537104270,
+      "bytes": 2,
+      "op": "adcs",
+      "args": "r1, r2"
+    },
+    {
+      "address": 537104272,
+      "bytes": 2,
+      "op": "bx",
+      "args": "lr"
+    }
+  ],
+  "exact_universal_B64_halfup_identity": "(B>>2)+bit1(B)",
+  "independent_HOST_word_carry_edges": 56,
+  "all512_actual_roots_low32zero_implies_only_A2pow62": true,
+  "original_resident16byte_wrapper_still_targets_general": true,
+  "scalar_R12_extra_not_promised_for_new_dyadic_path": true,
+  "exp_consumer_absent_in_this_pow_ELF": true,
+  "fresh_integrated_exp_guard_claim": false,
+  "negative_old168overlay_entry_preflight_rejected": true,
+  "destructive_overlap_bytes": 14,
+  "future_requirements": [
+    "Merge source deltas and relink instead of mixing private overlay images.",
+    "On actual integrated ELF rerun general producer/real original wrapper/postcall capture/88-instruction consumer R12 guard with fresh disassembly.",
+    "Validate scratch bank layout, actual new table entry, loader order and bounds; reject stale168-byte overlays that overwrite this entry.",
+    "Do not upgrade whole507 ledger422 or claim hardware/physical cycles/general-pow totality/main/release GO."
+  ],
+  "integration_GO": false,
+  "device_IO": 0,
+  "Git": 0,
+  "canonical": 0,
+  "network": 0
+}

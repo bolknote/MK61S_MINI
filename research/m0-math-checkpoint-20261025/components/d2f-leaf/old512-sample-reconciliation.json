@@ -1,0 +1,4617 @@
+{
+  "status": "PASS_ALL512_OLD_COUNTS_RESULTS_REPRODUCED_AND426_DEFICITS_FIXED",
+  "rows": [
+    {
+      "source": "float.json",
+      "old_index": 0,
+      "x": "0000000000000000",
+      "reference_correct": true,
+      "before": 28,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 109,
+      "x": "80C0000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 218,
+      "x": "019FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 327,
+      "x": "8270000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 436,
+      "x": "0350000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 545,
+      "x": "8428000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 654,
+      "x": "0500000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 763,
+      "x": "85DFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 872,
+      "x": "06B8000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 981,
+      "x": "8790000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 1090,
+      "x": "086FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 1199,
+      "x": "8940000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 1308,
+      "x": "0A20000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 1417,
+      "x": "8AF8000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 1526,
+      "x": "0BD0000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 1635,
+      "x": "8CAFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 1744,
+      "x": "0D88000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 1853,
+      "x": "8E60000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 1962,
+      "x": "0F3FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 2071,
+      "x": "9010000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 2180,
+      "x": "10F0000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 2289,
+      "x": "91C8000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 2398,
+      "x": "12A0000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 2507,
+      "x": "937FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 2616,
+      "x": "1458000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 2725,
+      "x": "9530000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 2834,
+      "x": "160FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 2943,
+      "x": "96E0000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 3052,
+      "x": "17C0000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 3161,
+      "x": "9898000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 3270,
+      "x": "1970000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 3379,
+      "x": "9A4FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 3488,
+      "x": "1B28000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 3597,
+      "x": "9C00000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 3706,
+      "x": "1CDFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 3815,
+      "x": "9DB0000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 3924,
+      "x": "1E90000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 4033,
+      "x": "9F68000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 4142,
+      "x": "2040000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 4251,
+      "x": "A11FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 4360,
+      "x": "21F8000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 4469,
+      "x": "A2D0000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 4578,
+      "x": "23AFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 4687,
+      "x": "A480000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 4796,
+      "x": "2560000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 4905,
+      "x": "A638000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 5014,
+      "x": "2710000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 5123,
+      "x": "A7EFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 5232,
+      "x": "28C8000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 5341,
+      "x": "A9A0000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 5450,
+      "x": "2A7FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 5559,
+      "x": "AB50000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 5668,
+      "x": "2C30000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 5777,
+      "x": "AD08000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 5886,
+      "x": "2DE0000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 5995,
+      "x": "AEBFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 6104,
+      "x": "2F98000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 6213,
+      "x": "B070000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 6322,
+      "x": "314FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 6431,
+      "x": "B220000000000001",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 6540,
+      "x": "3300000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 6649,
+      "x": "B3D8000000000000",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 6758,
+      "x": "34B0000000000001",
+      "reference_correct": true,
+      "before": 169,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 6867,
+      "x": "B58FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 169,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 6976,
+      "x": "3668000000000000",
+      "reference_correct": true,
+      "before": 169,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 7085,
+      "x": "B740000000000000",
+      "reference_correct": false,
+      "before": 169,
+      "after": 32,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 7194,
+      "x": "381FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 7303,
+      "x": "B8F0000000000001",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 7412,
+      "x": "39D0000000000000",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 7521,
+      "x": "BAA8000000000000",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 7630,
+      "x": "3B80000000000001",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 7739,
+      "x": "BC5FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 7848,
+      "x": "3D38000000000000",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 7957,
+      "x": "BE10000000000000",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 8066,
+      "x": "3EEFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 8175,
+      "x": "BFC0000000000001",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 8284,
+      "x": "40A8000000000000",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 8393,
+      "x": "C180000000000000",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 8502,
+      "x": "425FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 8611,
+      "x": "C330000000000001",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 8720,
+      "x": "4410000000000000",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 8829,
+      "x": "C4E8000000000000",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 8938,
+      "x": "45C0000000000001",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 9047,
+      "x": "C69FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 9156,
+      "x": "4778000000000000",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 9265,
+      "x": "C850000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 9374,
+      "x": "492FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 9483,
+      "x": "CA00000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 9592,
+      "x": "4AE0000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 9701,
+      "x": "CBB8000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 9810,
+      "x": "4C90000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 9919,
+      "x": "CD6FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 10028,
+      "x": "4E48000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 10137,
+      "x": "CF20000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 10246,
+      "x": "4FFFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 10355,
+      "x": "D0D0000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 10464,
+      "x": "51B0000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 10573,
+      "x": "D288000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 10682,
+      "x": "5360000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 10791,
+      "x": "D43FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 10900,
+      "x": "5518000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 11009,
+      "x": "D5F0000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 11118,
+      "x": "56CFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 11227,
+      "x": "D7A0000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 11336,
+      "x": "5880000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 11445,
+      "x": "D958000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 11554,
+      "x": "5A30000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 11663,
+      "x": "DB0FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 11772,
+      "x": "5BE8000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 11881,
+      "x": "DCC0000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 11990,
+      "x": "5D9FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 12099,
+      "x": "DE70000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 12208,
+      "x": "5F50000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 12317,
+      "x": "E028000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 12426,
+      "x": "6100000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 12535,
+      "x": "E1DFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 12644,
+      "x": "62B8000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 12753,
+      "x": "E390000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 12862,
+      "x": "646FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 12971,
+      "x": "E540000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 13080,
+      "x": "6620000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 13189,
+      "x": "E6F8000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 13298,
+      "x": "67D0000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 13407,
+      "x": "E8AFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 13516,
+      "x": "6988000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 13625,
+      "x": "EA60000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 13734,
+      "x": "6B3FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 13843,
+      "x": "EC10000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 13952,
+      "x": "6CF0000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 14061,
+      "x": "EDC8000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 14170,
+      "x": "6EA0000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 14279,
+      "x": "EF7FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 14388,
+      "x": "7058000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 14497,
+      "x": "F130000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 14606,
+      "x": "720FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 14715,
+      "x": "F2E0000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 14824,
+      "x": "73C0000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 14933,
+      "x": "F498000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 15042,
+      "x": "7570000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 15151,
+      "x": "F64FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 15260,
+      "x": "7728000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 15369,
+      "x": "F800000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 15478,
+      "x": "78DFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 15587,
+      "x": "F9B0000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 15696,
+      "x": "7A90000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 15805,
+      "x": "FB68000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 15914,
+      "x": "7C40000000000001",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 16023,
+      "x": "FD1FFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 16132,
+      "x": "7DF8000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 16241,
+      "x": "FED0000000000000",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 16350,
+      "x": "7FAFFFFFFFFFFFFF",
+      "reference_correct": true,
+      "before": 100,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 16459,
+      "x": "382FFFFFD0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 23
+    },
+    {
+      "source": "float.json",
+      "old_index": 16568,
+      "x": "B860000030000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 16677,
+      "x": "389FFFFFF0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 16786,
+      "x": "B8D7FFFFF0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 16895,
+      "x": "391000002FFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 17004,
+      "x": "B94FFFFFEFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 17113,
+      "x": "3987FFFFF0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 17222,
+      "x": "B9C0000010000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 23
+    },
+    {
+      "source": "float.json",
+      "old_index": 17331,
+      "x": "39FFFFFFD0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 17440,
+      "x": "BA30000030000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 17549,
+      "x": "3A7000000FFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 17658,
+      "x": "BAAFFFFFCFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 17767,
+      "x": "3AE0000030000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 17876,
+      "x": "BB1FFFFFF0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 17985,
+      "x": "3B57FFFFF0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 18094,
+      "x": "BB90000010000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 18203,
+      "x": "3BCFFFFFEFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 18312,
+      "x": "BC07FFFFEFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 18421,
+      "x": "3C40000010000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 23
+    },
+    {
+      "source": "float.json",
+      "old_index": 18530,
+      "x": "BC7FFFFFD0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 23
+    },
+    {
+      "source": "float.json",
+      "old_index": 18639,
+      "x": "3CB0000030000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 18748,
+      "x": "BCEFFFFFF0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 18857,
+      "x": "3D2FFFFFCFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 18966,
+      "x": "BD6000002FFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 19075,
+      "x": "3D9FFFFFF0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 19184,
+      "x": "BDD7FFFFF0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 19293,
+      "x": "3E10000010000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 19402,
+      "x": "BE4FFFFFD0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 19511,
+      "x": "3E87FFFFEFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 19620,
+      "x": "BEC000000FFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 19729,
+      "x": "3EFFFFFFD0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 23
+    },
+    {
+      "source": "float.json",
+      "old_index": 19838,
+      "x": "BF30000030000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 22,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 19947,
+      "x": "3F6FFFFFF0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 20056,
+      "x": "BFA7FFFFF0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 22,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 20165,
+      "x": "3FE000002FFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 20274,
+      "x": "C01FFFFFEFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 20383,
+      "x": "4057FFFFF0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 20492,
+      "x": "C090000010000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 23
+    },
+    {
+      "source": "float.json",
+      "old_index": 20601,
+      "x": "40CFFFFFD0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 20710,
+      "x": "C100000030000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 20819,
+      "x": "414000000FFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 20928,
+      "x": "C17FFFFFCFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 21037,
+      "x": "41B0000030000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 21146,
+      "x": "C1EFFFFFF0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 21255,
+      "x": "4227FFFFF0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 21364,
+      "x": "C260000010000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 21473,
+      "x": "429FFFFFEFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 21582,
+      "x": "C2D7FFFFEFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 21691,
+      "x": "4310000010000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 23
+    },
+    {
+      "source": "float.json",
+      "old_index": 21800,
+      "x": "C34FFFFFD0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 23
+    },
+    {
+      "source": "float.json",
+      "old_index": 21909,
+      "x": "4380000030000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 22018,
+      "x": "C3BFFFFFF0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 22127,
+      "x": "43FFFFFFCFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 22236,
+      "x": "C43000002FFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 22345,
+      "x": "446FFFFFF0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 22454,
+      "x": "C4A7FFFFF0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 22563,
+      "x": "44E0000010000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 22672,
+      "x": "C51FFFFFD0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 22781,
+      "x": "4557FFFFEFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 22890,
+      "x": "C59000000FFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 22999,
+      "x": "45CFFFFFD0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 23
+    },
+    {
+      "source": "float.json",
+      "old_index": 23108,
+      "x": "C600000030000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 23217,
+      "x": "463FFFFFF0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 23326,
+      "x": "C677FFFFF0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 23435,
+      "x": "46B000002FFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 23544,
+      "x": "C6EFFFFFEFFFFFFF",
+      "reference_correct": true,
+      "before": 18,
+      "after": 14,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 23653,
+      "x": "4727FFFFF0000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 24
+    },
+    {
+      "source": "float.json",
+      "old_index": 23762,
+      "x": "C760000010000000",
+      "reference_correct": true,
+      "before": 24,
+      "after": 17,
+      "Qfplib": 23
+    },
+    {
+      "source": "float.json",
+      "old_index": 23871,
+      "x": "479FFFFFD0000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 23980,
+      "x": "C7D0000030000001",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 24089,
+      "x": "BE7E2E0981C33441",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 24198,
+      "x": "AD8D94B933FBEF9F",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 24307,
+      "x": "2B63CC570158A638",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 24416,
+      "x": "8BFA0569156C0D34",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 24525,
+      "x": "180E70BE01062104",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 24634,
+      "x": "6AAAF6B4FBADFCC8",
+      "reference_correct": true,
+      "before": 99,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 24743,
+      "x": "82849318EC93588B",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 24852,
+      "x": "5E674A3D5F874C26",
+      "reference_correct": true,
+      "before": 99,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 24961,
+      "x": "127670F30E9754C5",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 25070,
+      "x": "F5C2CEC3D0B56A6C",
+      "reference_correct": true,
+      "before": 99,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 25179,
+      "x": "2311484CECB85D7D",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 25288,
+      "x": "BC20A950CE554FD0",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 25397,
+      "x": "B699955BDCAF8F5D",
+      "reference_correct": false,
+      "before": 162,
+      "after": 39,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 25506,
+      "x": "D32A994EFB23431F",
+      "reference_correct": true,
+      "before": 99,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 25615,
+      "x": "01E79BBBD26E4634",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 25724,
+      "x": "757A269654D69203",
+      "reference_correct": true,
+      "before": 99,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 25833,
+      "x": "3C2DE16F6EC4082F",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 25942,
+      "x": "747C331CA25B0AD7",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 26051,
+      "x": "88C177FE841D8960",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 26160,
+      "x": "CE48F42873907224",
+      "reference_correct": true,
+      "before": 99,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 26269,
+      "x": "8E2E777122F16EB6",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 26378,
+      "x": "40EF0ABC51B0B3DF",
+      "reference_correct": true,
+      "before": 21,
+      "after": 17,
+      "Qfplib": 22
+    },
+    {
+      "source": "float.json",
+      "old_index": 26487,
+      "x": "714C96F652AFB4CB",
+      "reference_correct": true,
+      "before": 99,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 26596,
+      "x": "32DF28180FDDC5C2",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 26705,
+      "x": "34CF9C63C4364174",
+      "reference_correct": true,
+      "before": 169,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 26814,
+      "x": "F76A38FAECD1E614",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 26923,
+      "x": "86BDB5CEC9EC59A6",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 27032,
+      "x": "18F4826474F34AEE",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 27141,
+      "x": "DE360BA31879A0DC",
+      "reference_correct": true,
+      "before": 99,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 27250,
+      "x": "D08557D3C588CFF7",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 27359,
+      "x": "3A19BE010014348F",
+      "reference_correct": true,
+      "before": 18,
+      "after": 19,
+      "Qfplib": 20
+    },
+    {
+      "source": "float.json",
+      "old_index": 27468,
+      "x": "2CE420560A812031",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "float.json",
+      "old_index": 27577,
+      "x": "6D286C49AAE851C0",
+      "reference_correct": true,
+      "before": 106,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 27686,
+      "x": "FB29136F59B0A067",
+      "reference_correct": true,
+      "before": 99,
+      "after": 13,
+      "Qfplib": 13
+    },
+    {
+      "source": "float.json",
+      "old_index": 27795,
+      "x": "22C640A837D08879",
+      "reference_correct": true,
+      "before": 131,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 0,
+      "x": "0000000000000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 1,
+      "x": "8000000000000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 2,
+      "x": "0000000000000002",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 3,
+      "x": "8000000000000002",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 4,
+      "x": "0000000000000003",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 5,
+      "x": "8000000000000003",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 6,
+      "x": "0000000000000004",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 7,
+      "x": "8000000000000004",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 8,
+      "x": "0000000000000005",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 9,
+      "x": "8000000000000005",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 10,
+      "x": "0000000000000007",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 11,
+      "x": "8000000000000007",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 12,
+      "x": "0000000000000008",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 13,
+      "x": "8000000000000008",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 14,
+      "x": "0000000000000009",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 15,
+      "x": "8000000000000009",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 16,
+      "x": "000000000000000F",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 17,
+      "x": "800000000000000F",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 18,
+      "x": "0000000000000010",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 19,
+      "x": "8000000000000010",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 20,
+      "x": "0000000000000011",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 21,
+      "x": "8000000000000011",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 22,
+      "x": "000000000000001F",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 23,
+      "x": "800000000000001F",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 24,
+      "x": "0000000000000020",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 25,
+      "x": "8000000000000020",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 26,
+      "x": "0000000000000021",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 27,
+      "x": "8000000000000021",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 28,
+      "x": "000000000000003F",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 29,
+      "x": "800000000000003F",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 30,
+      "x": "0000000000000040",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 31,
+      "x": "8000000000000040",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 32,
+      "x": "0000000000000041",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 33,
+      "x": "8000000000000041",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 34,
+      "x": "000000000000007F",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 35,
+      "x": "800000000000007F",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 36,
+      "x": "0000000000000080",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 37,
+      "x": "8000000000000080",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 38,
+      "x": "0000000000000081",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 39,
+      "x": "8000000000000081",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 40,
+      "x": "00000000000000FF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 41,
+      "x": "80000000000000FF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 42,
+      "x": "0000000000000100",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 43,
+      "x": "8000000000000100",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 44,
+      "x": "0000000000000101",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 45,
+      "x": "8000000000000101",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 46,
+      "x": "00000000000001FF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 47,
+      "x": "80000000000001FF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 48,
+      "x": "0000000000000200",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 49,
+      "x": "8000000000000200",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 50,
+      "x": "0000000000000201",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 51,
+      "x": "8000000000000201",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 52,
+      "x": "00000000000003FF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 53,
+      "x": "80000000000003FF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 54,
+      "x": "0000000000000400",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 55,
+      "x": "8000000000000400",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 56,
+      "x": "0000000000000401",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 57,
+      "x": "8000000000000401",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 58,
+      "x": "00000000000007FF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 59,
+      "x": "80000000000007FF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 60,
+      "x": "0000000000000800",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 61,
+      "x": "8000000000000800",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 62,
+      "x": "0000000000000801",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 63,
+      "x": "8000000000000801",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 64,
+      "x": "0000000000000FFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 65,
+      "x": "8000000000000FFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 66,
+      "x": "0000000000001000",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 67,
+      "x": "8000000000001000",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 68,
+      "x": "0000000000001001",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 69,
+      "x": "8000000000001001",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 70,
+      "x": "0000000000001FFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 71,
+      "x": "8000000000001FFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 72,
+      "x": "0000000000002000",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 73,
+      "x": "8000000000002000",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 74,
+      "x": "0000000000002001",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 75,
+      "x": "8000000000002001",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 76,
+      "x": "0000000000003FFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 77,
+      "x": "8000000000003FFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 78,
+      "x": "0000000000004000",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 79,
+      "x": "8000000000004000",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 80,
+      "x": "0000000000004001",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 81,
+      "x": "8000000000004001",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 82,
+      "x": "0000000000007FFF",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 83,
+      "x": "8000000000007FFF",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 84,
+      "x": "0000000000008000",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 85,
+      "x": "8000000000008000",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 86,
+      "x": "0000000000008001",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 87,
+      "x": "8000000000008001",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 88,
+      "x": "000000000000FFFF",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 89,
+      "x": "800000000000FFFF",
+      "reference_correct": true,
+      "before": 182,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 90,
+      "x": "0000000000010000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 91,
+      "x": "8000000000010000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 92,
+      "x": "0000000000010001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 93,
+      "x": "8000000000010001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 94,
+      "x": "000000000001FFFF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 95,
+      "x": "800000000001FFFF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 96,
+      "x": "0000000000020000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 97,
+      "x": "8000000000020000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 98,
+      "x": "0000000000020001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 99,
+      "x": "8000000000020001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 100,
+      "x": "000000000003FFFF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 101,
+      "x": "800000000003FFFF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 102,
+      "x": "0000000000040000",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 103,
+      "x": "8000000000040000",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 104,
+      "x": "0000000000040001",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 105,
+      "x": "8000000000040001",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 106,
+      "x": "000000000007FFFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 107,
+      "x": "800000000007FFFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 108,
+      "x": "0000000000080000",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 109,
+      "x": "8000000000080000",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 110,
+      "x": "0000000000080001",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 111,
+      "x": "8000000000080001",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 112,
+      "x": "00000000000FFFFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 113,
+      "x": "80000000000FFFFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 114,
+      "x": "0000000000100000",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 115,
+      "x": "8000000000100000",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 116,
+      "x": "0000000000100001",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 117,
+      "x": "8000000000100001",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 118,
+      "x": "00000000001FFFFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 119,
+      "x": "80000000001FFFFF",
+      "reference_correct": true,
+      "before": 184,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 120,
+      "x": "0000000000200000",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 121,
+      "x": "8000000000200000",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 122,
+      "x": "0000000000200001",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 123,
+      "x": "8000000000200001",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 124,
+      "x": "00000000003FFFFF",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 125,
+      "x": "80000000003FFFFF",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 126,
+      "x": "0000000000400000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 127,
+      "x": "8000000000400000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 128,
+      "x": "0000000000400001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 129,
+      "x": "8000000000400001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 130,
+      "x": "00000000007FFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 131,
+      "x": "80000000007FFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 132,
+      "x": "0000000000800000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 133,
+      "x": "8000000000800000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 134,
+      "x": "0000000000800001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 135,
+      "x": "8000000000800001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 136,
+      "x": "0000000000FFFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 137,
+      "x": "8000000000FFFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 138,
+      "x": "0000000001000000",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 139,
+      "x": "8000000001000000",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 140,
+      "x": "0000000001000001",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 141,
+      "x": "8000000001000001",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 142,
+      "x": "0000000001FFFFFF",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 143,
+      "x": "8000000001FFFFFF",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 144,
+      "x": "0000000002000000",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 145,
+      "x": "8000000002000000",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 146,
+      "x": "0000000002000001",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 147,
+      "x": "8000000002000001",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 148,
+      "x": "0000000003FFFFFF",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 149,
+      "x": "8000000003FFFFFF",
+      "reference_correct": true,
+      "before": 187,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 150,
+      "x": "0000000004000000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 151,
+      "x": "8000000004000000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 152,
+      "x": "0000000004000001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 153,
+      "x": "8000000004000001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 154,
+      "x": "0000000007FFFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 155,
+      "x": "8000000007FFFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 156,
+      "x": "0000000008000000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 157,
+      "x": "8000000008000000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 158,
+      "x": "0000000008000001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 159,
+      "x": "8000000008000001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 160,
+      "x": "000000000FFFFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 161,
+      "x": "800000000FFFFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 162,
+      "x": "0000000010000000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 163,
+      "x": "8000000010000000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 164,
+      "x": "0000000010000001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 165,
+      "x": "8000000010000001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 166,
+      "x": "000000001FFFFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 167,
+      "x": "800000001FFFFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 168,
+      "x": "0000000020000000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 169,
+      "x": "8000000020000000",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 170,
+      "x": "0000000020000001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 171,
+      "x": "8000000020000001",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 172,
+      "x": "000000003FFFFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 173,
+      "x": "800000003FFFFFFF",
+      "reference_correct": true,
+      "before": 185,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 174,
+      "x": "0000000040000000",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 175,
+      "x": "8000000040000000",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 176,
+      "x": "0000000040000001",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 177,
+      "x": "8000000040000001",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 178,
+      "x": "000000007FFFFFFF",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 179,
+      "x": "800000007FFFFFFF",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 180,
+      "x": "0000000080000000",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 181,
+      "x": "8000000080000000",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 182,
+      "x": "0000000080000001",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 183,
+      "x": "8000000080000001",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 184,
+      "x": "00000000FFFFFFFF",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 185,
+      "x": "80000000FFFFFFFF",
+      "reference_correct": true,
+      "before": 183,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 186,
+      "x": "0000000100000000",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 187,
+      "x": "8000000100000000",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 188,
+      "x": "0000000100000001",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 189,
+      "x": "8000000100000001",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 190,
+      "x": "00000001FFFFFFFF",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 191,
+      "x": "80000001FFFFFFFF",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 192,
+      "x": "0000000200000000",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 193,
+      "x": "8000000200000000",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 194,
+      "x": "0000000200000001",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 195,
+      "x": "8000000200000001",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 196,
+      "x": "00000003FFFFFFFF",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 197,
+      "x": "80000003FFFFFFFF",
+      "reference_correct": true,
+      "before": 190,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 198,
+      "x": "0000000400000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 199,
+      "x": "8000000400000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 200,
+      "x": "0000000400000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 201,
+      "x": "8000000400000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 202,
+      "x": "00000007FFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 203,
+      "x": "80000007FFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 204,
+      "x": "0000000800000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 205,
+      "x": "8000000800000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 206,
+      "x": "0000000800000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 207,
+      "x": "8000000800000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 208,
+      "x": "0000000FFFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 209,
+      "x": "8000000FFFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 210,
+      "x": "0000001000000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 211,
+      "x": "8000001000000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 212,
+      "x": "0000001000000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 213,
+      "x": "8000001000000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 214,
+      "x": "0000001FFFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 215,
+      "x": "8000001FFFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 216,
+      "x": "0000002000000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 217,
+      "x": "8000002000000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 218,
+      "x": "0000002000000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 219,
+      "x": "8000002000000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 220,
+      "x": "0000003FFFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 221,
+      "x": "8000003FFFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 222,
+      "x": "0000004000000000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 223,
+      "x": "8000004000000000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 224,
+      "x": "0000004000000001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 225,
+      "x": "8000004000000001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 226,
+      "x": "0000007FFFFFFFFF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 227,
+      "x": "8000007FFFFFFFFF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 228,
+      "x": "0000008000000000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 229,
+      "x": "8000008000000000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 230,
+      "x": "0000008000000001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 231,
+      "x": "8000008000000001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 232,
+      "x": "000000FFFFFFFFFF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 233,
+      "x": "800000FFFFFFFFFF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 234,
+      "x": "0000010000000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 235,
+      "x": "8000010000000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 236,
+      "x": "0000010000000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 237,
+      "x": "8000010000000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 238,
+      "x": "000001FFFFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 239,
+      "x": "800001FFFFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 240,
+      "x": "0000020000000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 241,
+      "x": "8000020000000000",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 242,
+      "x": "0000020000000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 243,
+      "x": "8000020000000001",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 244,
+      "x": "000003FFFFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 245,
+      "x": "800003FFFFFFFFFF",
+      "reference_correct": true,
+      "before": 188,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 246,
+      "x": "0000040000000000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 247,
+      "x": "8000040000000000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 248,
+      "x": "0000040000000001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 249,
+      "x": "8000040000000001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 250,
+      "x": "000007FFFFFFFFFF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 251,
+      "x": "800007FFFFFFFFFF",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 252,
+      "x": "0000080000000000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 253,
+      "x": "8000080000000000",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 254,
+      "x": "0000080000000001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    },
+    {
+      "source": "addendum.json",
+      "old_index": 255,
+      "x": "8000080000000001",
+      "reference_correct": true,
+      "before": 186,
+      "after": 9,
+      "Qfplib": 9
+    }
+  ],
+  "both_correct": 510,
+  "before_slower": 426,
+  "after_slower": 0,
+  "no_inherited_calls_added": true
+}

@@ -1,0 +1,11 @@
+{
+  "status": "PASS_FINAL_PUBLIC_EXECUTED_AND_PRE_ALIAS_QUOTIENT_UNIT_BYTES_IDENTICAL",
+  "final_public_ELF_sha256": "e55be65b73b9b7bbbb72896904f61f8a1a5b5c5fb7bb052a78a5c580f351867c",
+  "public_qualification_matches_final_exact_ELF": true,
+  "executed_unit_ELF_sha256": "a14552dce01883cdac4ddc2b9a6393ca63bdc179e9fa3fcf6fee8128563ca2fd",
+  "final_unit_ELF_sha256": "acb17d6cf751e8054a771715c32016fa9509c5e605f0c7bfa77b9c3d29168f5d",
+  "unit_allocated_equal": true,
+  "unit_change": "storage-free CPP alias names only; actual quotient load address and bytes identical",
+  "full_qualification_sha256": "8cdd5e61aa53ced266f7fe5279885c508fc1c420b483a300c9fb1e60515191b4",
+  "unit_proof_sha256": "b4abee1cee2b9bcb6814d5cb53a7b64d7d3168e5925724f630e4c88ac870e896"
+}

@@ -1,0 +1,92 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/control.elf:     file format elf32-littlearm
+
+
+Disassembly of section .pow:
+
+101614cc <mk61_m0_pow_fast>:
+101614cc:	2a00      	cmp	r2, #0
+101614ce:	d115      	bne.n	101614fc <mk61_m0_pow_fast+0x30>
+101614d0:	005a      	lsls	r2, r3, #1
+101614d2:	d034      	beq.n	1016153e <mk61_m0_pow_fast+0x72>
+101614d4:	4a21      	ldr	r2, [pc, #132]	@ (1016155c <mk61_m0_pow_fast+0x90>)
+101614d6:	4293      	cmp	r3, r2
+101614d8:	d011      	beq.n	101614fe <mk61_m0_pow_fast+0x32>
+101614da:	4a21      	ldr	r2, [pc, #132]	@ (10161560 <mk61_m0_pow_fast+0x94>)
+101614dc:	4293      	cmp	r3, r2
+101614de:	d017      	beq.n	10161510 <mk61_m0_pow_fast+0x44>
+101614e0:	4a20      	ldr	r2, [pc, #128]	@ (10161564 <mk61_m0_pow_fast+0x98>)
+101614e2:	4293      	cmp	r3, r2
+101614e4:	d01d      	beq.n	10161522 <mk61_m0_pow_fast+0x56>
+101614e6:	4a20      	ldr	r2, [pc, #128]	@ (10161568 <mk61_m0_pow_fast+0x9c>)
+101614e8:	4293      	cmp	r3, r2
+101614ea:	d018      	beq.n	1016151e <mk61_m0_pow_fast+0x52>
+101614ec:	4a1f      	ldr	r2, [pc, #124]	@ (1016156c <mk61_m0_pow_fast+0xa0>)
+101614ee:	4293      	cmp	r3, r2
+101614f0:	d01b      	beq.n	1016152a <mk61_m0_pow_fast+0x5e>
+101614f2:	4a1f      	ldr	r2, [pc, #124]	@ (10161570 <mk61_m0_pow_fast+0xa4>)
+101614f4:	4694      	mov	ip, r2
+101614f6:	2200      	movs	r2, #0
+101614f8:	4760      	bx	ip
+101614fa:	2200      	movs	r2, #0
+101614fc:	e6fa      	b.n	101612f4 <pow_rsqrt+0x403>
+101614fe:	004b      	lsls	r3, r1, #1
+10161500:	4a1c      	ldr	r2, [pc, #112]	@ (10161574 <mk61_m0_pow_fast+0xa8>)
+10161502:	1a9b      	subs	r3, r3, r2
+10161504:	d303      	bcc.n	1016150e <mk61_m0_pow_fast+0x42>
+10161506:	4303      	orrs	r3, r0
+10161508:	d001      	beq.n	1016150e <mk61_m0_pow_fast+0x42>
+1016150a:	4a1b      	ldr	r2, [pc, #108]	@ (10161578 <mk61_m0_pow_fast+0xac>)
+1016150c:	4311      	orrs	r1, r2
+1016150e:	4770      	bx	lr
+10161510:	4a1a      	ldr	r2, [pc, #104]	@ (1016157c <mk61_m0_pow_fast+0xb0>)
+10161512:	4694      	mov	ip, r2
+10161514:	460b      	mov	r3, r1
+10161516:	4602      	mov	r2, r0
+10161518:	2000      	movs	r0, #0
+1016151a:	4910      	ldr	r1, [pc, #64]	@ (1016155c <mk61_m0_pow_fast+0x90>)
+1016151c:	4760      	bx	ip
+1016151e:	4a18      	ldr	r2, [pc, #96]	@ (10161580 <mk61_m0_pow_fast+0xb4>)
+10161520:	4710      	bx	r2
+10161522:	2900      	cmp	r1, #0
+10161524:	d4e9      	bmi.n	101614fa <mk61_m0_pow_fast+0x2e>
+10161526:	4a17      	ldr	r2, [pc, #92]	@ (10161584 <mk61_m0_pow_fast+0xb8>)
+10161528:	4710      	bx	r2
+1016152a:	0d0a      	lsrs	r2, r1, #20
+1016152c:	2a00      	cmp	r2, #0
+1016152e:	d0e4      	beq.n	101614fa <mk61_m0_pow_fast+0x2e>
+10161530:	4b15      	ldr	r3, [pc, #84]	@ (10161588 <mk61_m0_pow_fast+0xbc>)
+10161532:	429a      	cmp	r2, r3
+10161534:	d201      	bcs.n	1016153a <mk61_m0_pow_fast+0x6e>
+10161536:	4a15      	ldr	r2, [pc, #84]	@ (1016158c <mk61_m0_pow_fast+0xc0>)
+10161538:	4710      	bx	r2
+1016153a:	4b0c      	ldr	r3, [pc, #48]	@ (1016156c <mk61_m0_pow_fast+0xa0>)
+1016153c:	e7dd      	b.n	101614fa <mk61_m0_pow_fast+0x2e>
+1016153e:	004a      	lsls	r2, r1, #1
+10161540:	4b0c      	ldr	r3, [pc, #48]	@ (10161574 <mk61_m0_pow_fast+0xa8>)
+10161542:	1ad2      	subs	r2, r2, r3
+10161544:	d306      	bcc.n	10161554 <mk61_m0_pow_fast+0x88>
+10161546:	4302      	orrs	r2, r0
+10161548:	d004      	beq.n	10161554 <mk61_m0_pow_fast+0x88>
+1016154a:	030a      	lsls	r2, r1, #12
+1016154c:	d402      	bmi.n	10161554 <mk61_m0_pow_fast+0x88>
+1016154e:	4a0a      	ldr	r2, [pc, #40]	@ (10161578 <mk61_m0_pow_fast+0xac>)
+10161550:	4311      	orrs	r1, r2
+10161552:	4770      	bx	lr
+10161554:	2000      	movs	r0, #0
+10161556:	4901      	ldr	r1, [pc, #4]	@ (1016155c <mk61_m0_pow_fast+0x90>)
+10161558:	4770      	bx	lr
+1016155a:	0000      	.short	0x0000
+1016155c:	3ff00000 	.word	0x3ff00000
+10161560:	bff00000 	.word	0xbff00000
+10161564:	3fe00000 	.word	0x3fe00000
+10161568:	40000000 	.word	0x40000000
+1016156c:	bfe00000 	.word	0xbfe00000
+10161570:	10162201 	.word	0x10162201
+10161574:	ffe00000 	.word	0xffe00000
+10161578:	00080000 	.word	0x00080000
+1016157c:	100f7e89 	.word	0x100f7e89
+10161580:	10161e01 	.word	0x10161e01
+10161584:	1016bb01 	.word	0x1016bb01
+10161588:	000007ff 	.word	0x000007ff
+1016158c:	10160ef1 	.word	0x10160ef1

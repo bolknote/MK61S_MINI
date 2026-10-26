@@ -1,0 +1,47 @@
+{
+  "status": "PASS_SEALED_AUTHOR_ACCOUNTING_NO_CORPUS_REPLAY",
+  "qualification_sha256": "17882b093af94235fafcace627167718c620fbc69259f70e0acb0d192bf4f0e2",
+  "parent_qualification_sha256": "ccff3d0a738a27544ade662063d3b6349533b8f7765ebcc1cfd8e57ab8c4e703",
+  "retained_parent_states": 65880,
+  "new_inputs_over_parent": 146,
+  "groups": [
+    {
+      "SIO": "READY",
+      "vs_parent": {
+        "equal": 33086
+      },
+      "expanded_parent_correct_Qfp_raw_losses": 45,
+      "expanded_child_correct_Qfp_raw_losses": 45,
+      "Qfplib_wrong": 6257
+    },
+    {
+      "SIO": "DIRTY",
+      "vs_parent": {
+        "faster": 10197,
+        "equal": 22863,
+        "slower": 26
+      },
+      "expanded_parent_correct_Qfp_raw_losses": 78,
+      "expanded_child_correct_Qfp_raw_losses": 73,
+      "Qfplib_wrong": 6257
+    }
+  ],
+  "expanded_parent_speed_inputs": 78,
+  "expanded_candidate_speed_inputs": 73,
+  "remaining_state_rows": 118,
+  "historical_parent51_fixed": 5,
+  "historical_parent51_remaining": 46,
+  "additional_preexisting_wrap_losses": 27,
+  "no_new_correct_Qfp_deficits": true,
+  "regression_states": 26,
+  "each_regression_instructions": 1,
+  "author_candidate_public_stack": 640,
+  "author_parent_stack_same_corpus": 640,
+  "own_subset_stack_not_maximum": true,
+  "historical_ln10_fixed": 6,
+  "historical_ln10_open": 4,
+  "counts_are_instructions_not_cycles": true,
+  "sealed_author_ARM_calls_not_reexecuted": true,
+  "hardware_access": false,
+  "whole_ln_or_library_GO": false
+}

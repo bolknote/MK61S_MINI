@@ -1,0 +1,15 @@
+{
+  "status": "PASS_FROZEN_Q77_NEAR_LN_ARTIFACTS_INPUTS_AND_LINKED_SIZE",
+  "artifacts": 74,
+  "input_pins": 606,
+  "allocated_linked_bytes": [
+    102200,
+    102648
+  ],
+  "linked_delta": 448,
+  "result_sha256": "87b5b9e32fd6465aefabcd81db263745aa2f789ba72857c3777d060f3e11f191",
+  "HANDOFF_sha256": "9eca0b99b5ac212d605a22e054dc15afe784fac61ea6e9e52783ffbb35566b19",
+  "HEAD": "d0b9cbd6c47648b136104f7a66a714af3db9f7e5",
+  "hardware_accessed": false,
+  "canonical_math_diff_empty": true
+}

@@ -1,0 +1,23 @@
+{
+  "status": "REQUIREMENTS_ONLY_NO_ACTIVATION_AUTHORITY",
+  "actual_parent": "accepted table-product dd0ec366 / ROOT09b8c732",
+  "authoritative_package": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-r2-20261025",
+  "rejected_historical_seal": "2f8310755224d63b246743976692f13b396d40bedfc31a619711f6926791d80c",
+  "requirements": [
+    "Merge source deltas with the separate near-one sibling and relink; private ELF overlays are not a combined release image.",
+    "Rerun the actual integrated exp R12 producer/real16-byte wrapper/postcall-marker/consumer guard on fresh linked disassembly and actual compiler flags.",
+    "Validate actual scratch-bank layout, new table entry, overlay-loader ordering and bounds. Reject the old168-byte exp overlay that overwrites14 bytes of the table entry.",
+    "Retain all24-byte square transform semantics, radius16/nonzero boolean rules,310-byte slot and ordinary void caller ABI.",
+    "Preserve the accepted R qualified-probe lineage correction, r2 reissue record, rejected first seal and historical7bf WIP snapshot without rewriting history.",
+    "Do not convert this private component receipt into general-pow totality, physical cycles, hardware, whole507 or main/release GO."
+  ],
+  "reviewed_whole507": {
+    "no_slower": 422,
+    "strict": 413,
+    "equal": 9
+  },
+  "author437_not_promoted": true,
+  "integration_GO": false,
+  "hardware_GO": false,
+  "release_GO": false
+}

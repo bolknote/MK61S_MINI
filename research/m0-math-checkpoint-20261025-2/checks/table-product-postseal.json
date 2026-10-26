@@ -1,0 +1,13 @@
+{
+  "status": "PASS_POSTSEAL_ALL_LOCAL_AND_EXTERNAL_PINS",
+  "utc": "2026-10-24T22:47:57.019864+00:00",
+  "local_files": 123,
+  "external_lineage_pins": 1349,
+  "FROZEN_sha256": "dd0ec3663009cd390c710611e57ccc23d18c733201911471feae6e52e58e7d1c",
+  "result_sha256": "60e4347619b46d4b07bc2b81181f03ea233bd80cc890a88a80c98c1dea8d219d",
+  "HANDOFF_sha256": "60e70ca8781ffdd290aa766a49ef9011a44dc46781a265cbe26000250782aaf6",
+  "candidate_ELF_sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98",
+  "canonical_math_diff_empty": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

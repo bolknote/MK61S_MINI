@@ -1,0 +1,20 @@
+{
+  "status": "PASS_FINAL_RECEIPT_MANIFEST_ALL_LIVE_CONTEXTS_AND_RETAINED_PUBLIC_SCALAR_REGRESSIONS",
+  "final_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/FINAL-REVIEW.json",
+    "bytes": 16182,
+    "sha256": "6cfdc8862299f9eb776b15dc0aceab8086fb4c847552df58d3e9cd1be3a6fddd"
+  },
+  "manifest": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-independent-20261025/MANIFEST.json",
+    "bytes": 19327,
+    "sha256": "4fff2124eaa049466ce34ea5e672c484bc22016ae6d584d403d520f0d94c3a3a"
+  },
+  "verified_manifest_files": 69,
+  "qualified_ARM5592_MPFR61_plus6sNaN": true,
+  "own_HOST_preflights4_numerical_failures0": true,
+  "all32_public_and1132_scalar_increases_kept_with_two_existing_Qfp_deficits_worsened": true,
+  "no_required_finite_review_work_remaining": true,
+  "integration_hardware_main_release_adoption_all_false": true,
+  "device_IO": 0
+}

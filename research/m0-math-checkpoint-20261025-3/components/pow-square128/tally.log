@@ -1,0 +1,63 @@
+{
+  "status": "PASS_SAVED_PUBLIC_UNION_ACCOUNTING_STRICT_QUIET_NAN_POLICY",
+  "union_unique_pairs": 120980,
+  "union_states": 241960,
+  "union_reference_state_variants": 279522,
+  "new_control_overlap_states": 1230,
+  "parent_raw_loss_pairs": 11449,
+  "candidate_raw_loss_pairs": 11434,
+  "fixed_raw_pairs": 15,
+  "new_raw_losses": 0,
+  "additional_measured_preexisting_loss_pairs": 596,
+  "correct_Qfplib_comparison": {
+    "slower": 21167,
+    "faster": 178544,
+    "equal": 2705
+  },
+  "wrong_Qfplib_state_variants_retained": 77106,
+  "all_reference_flags_match_raw_strict_quiet_NaN_policy": true,
+  "candidate_wrong": 0,
+  "parent_cost_delta_histogram": {
+    "-199": 2,
+    "-158": 16,
+    "-150": 14,
+    "-142": 42,
+    "-140": 2,
+    "-134": 36,
+    "-126": 20,
+    "-117": 14,
+    "-109": 52,
+    "-105": 10,
+    "-101": 38,
+    "-93": 24,
+    "-81": 2,
+    "-76": 352,
+    "-70": 8,
+    "-68": 332,
+    "-62": 4,
+    "-60": 270,
+    "-35": 598,
+    "-27": 584,
+    "0": 239540
+  },
+  "parent_cost_increase_states": 0,
+  "original153": {
+    "parent": {
+      "slower": 35,
+      "strict": 118
+    },
+    "candidate": {
+      "slower": 34,
+      "strict": 119
+    }
+  },
+  "qualified_fresh_ARM_calls": 330880,
+  "fresh_public_ARM_calls": 294460,
+  "fresh_bare_ARM_calls": 36420,
+  "actual_fresh_directed_MPFR_inputs": 5051,
+  "sNaN_shortcuts": 76,
+  "oracle_evaluations": 5127,
+  "pilot918_and_route_study70_not_qualified": true,
+  "inherited_parent_Qfplib_old_MPFR_not_fresh": true,
+  "goal_complete": false
+}

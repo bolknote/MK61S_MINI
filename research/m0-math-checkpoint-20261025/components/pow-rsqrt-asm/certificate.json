@@ -1,0 +1,4182 @@
+{
+  "status": "PASS_EXACT_RATIONAL_RSQRT_COORDINATE_AND_POINT_BOUND",
+  "source_seed_table_sha256": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+  "all_512_RNE_seed_integer_certificates": true,
+  "all_512_reciprocals_certified": true,
+  "reciprocal_deltas": {
+    "0": 511,
+    "-1": 1
+  },
+  "whole_uint32_quotient_underestimate_at_most_2": true,
+  "coordinate_quantization_at_most_1": true,
+  "normal_input_domain": "m in[2^52,2^53), parity0/1, all mantissas",
+  "bounds": {
+    "table_error": {
+      "numerator": 513,
+      "denominator": 1024,
+      "decimal": 0.5009765625
+    },
+    "coordinate_error": {
+      "numerator": 263169,
+      "denominator": 524288,
+      "decimal": 0.5019550323486328
+    },
+    "Taylor_order4": {
+      "numerator": 17955,
+      "denominator": 1048576,
+      "decimal": 0.01712322235107422
+    },
+    "quadratic": {
+      "numerator": 3,
+      "denominator": 4,
+      "decimal": 0.75
+    },
+    "cubic_argument": {
+      "numerator": 329218,
+      "denominator": 263169,
+      "decimal": 1.2509756088293074
+    },
+    "cubic": {
+      "numerator": 3488273,
+      "denominator": 4210704,
+      "decimal": 0.8284298777591586
+    },
+    "seed_round": {
+      "numerator": 1,
+      "denominator": 2,
+      "decimal": 0.5
+    },
+    "seed_total": {
+      "numerator": 855035209253,
+      "denominator": 275952697344,
+      "decimal": 3.0984846949588656
+    },
+    "seed_chosen": {
+      "numerator": 25,
+      "denominator": 8,
+      "decimal": 3.125
+    },
+    "Newton": {
+      "numerator": 32212254735625,
+      "denominator": 2199023255552,
+      "decimal": 14.648437507105427
+    },
+    "point_down": {
+      "numerator": 34411277991177,
+      "denominator": 2199023255552,
+      "decimal": 15.648437507105427
+    },
+    "point_up": {
+      "numerator": 3,
+      "denominator": 1,
+      "decimal": 3.0
+    }
+  },
+  "strict_point_absolute_error_less_than": 16,
+  "unsafe_tail_interval_inclusive": [
+    497,
+    514
+  ],
+  "unsafe_integer_tails": 18,
+  "exact_original_boundary_retained": true,
+  "rows": [
+    {
+      "parity": 0,
+      "index": 0,
+      "d": 513,
+      "seed": 4290779126,
+      "reciprocal": 8372255,
+      "floor": 8372255
+    },
+    {
+      "parity": 0,
+      "index": 1,
+      "d": 515,
+      "seed": 4282439411,
+      "reciprocal": 8339742,
+      "floor": 8339742
+    },
+    {
+      "parity": 0,
+      "index": 2,
+      "d": 517,
+      "seed": 4274148137,
+      "reciprocal": 8307480,
+      "floor": 8307480
+    },
+    {
+      "parity": 0,
+      "index": 3,
+      "d": 519,
+      "seed": 4265904835,
+      "reciprocal": 8275466,
+      "floor": 8275466
+    },
+    {
+      "parity": 0,
+      "index": 4,
+      "d": 521,
+      "seed": 4257709044,
+      "reciprocal": 8243699,
+      "floor": 8243699
+    },
+    {
+      "parity": 0,
+      "index": 5,
+      "d": 523,
+      "seed": 4249560311,
+      "reciprocal": 8212174,
+      "floor": 8212174
+    },
+    {
+      "parity": 0,
+      "index": 6,
+      "d": 525,
+      "seed": 4241458187,
+      "reciprocal": 8180890,
+      "floor": 8180890
+    },
+    {
+      "parity": 0,
+      "index": 7,
+      "d": 527,
+      "seed": 4233402229,
+      "reciprocal": 8149843,
+      "floor": 8149843
+    },
+    {
+      "parity": 0,
+      "index": 8,
+      "d": 529,
+      "seed": 4225392000,
+      "reciprocal": 8119030,
+      "floor": 8119030
+    },
+    {
+      "parity": 0,
+      "index": 9,
+      "d": 531,
+      "seed": 4217427069,
+      "reciprocal": 8088450,
+      "floor": 8088450
+    },
+    {
+      "parity": 0,
+      "index": 10,
+      "d": 533,
+      "seed": 4209507011,
+      "reciprocal": 8058099,
+      "floor": 8058099
+    },
+    {
+      "parity": 0,
+      "index": 11,
+      "d": 535,
+      "seed": 4201631407,
+      "reciprocal": 8027976,
+      "floor": 8027976
+    },
+    {
+      "parity": 0,
+      "index": 12,
+      "d": 537,
+      "seed": 4193799841,
+      "reciprocal": 7998076,
+      "floor": 7998076
+    },
+    {
+      "parity": 0,
+      "index": 13,
+      "d": 539,
+      "seed": 4186011905,
+      "reciprocal": 7968399,
+      "floor": 7968399
+    },
+    {
+      "parity": 0,
+      "index": 14,
+      "d": 541,
+      "seed": 4178267196,
+      "reciprocal": 7938941,
+      "floor": 7938941
+    },
+    {
+      "parity": 0,
+      "index": 15,
+      "d": 543,
+      "seed": 4170565314,
+      "reciprocal": 7909700,
+      "floor": 7909700
+    },
+    {
+      "parity": 0,
+      "index": 16,
+      "d": 545,
+      "seed": 4162905867,
+      "reciprocal": 7880673,
+      "floor": 7880673
+    },
+    {
+      "parity": 0,
+      "index": 17,
+      "d": 547,
+      "seed": 4155288467,
+      "reciprocal": 7851859,
+      "floor": 7851859
+    },
+    {
+      "parity": 0,
+      "index": 18,
+      "d": 549,
+      "seed": 4147712729,
+      "reciprocal": 7823255,
+      "floor": 7823255
+    },
+    {
+      "parity": 0,
+      "index": 19,
+      "d": 551,
+      "seed": 4140178277,
+      "reciprocal": 7794858,
+      "floor": 7794858
+    },
+    {
+      "parity": 0,
+      "index": 20,
+      "d": 553,
+      "seed": 4132684735,
+      "reciprocal": 7766667,
+      "floor": 7766667
+    },
+    {
+      "parity": 0,
+      "index": 21,
+      "d": 555,
+      "seed": 4125231736,
+      "reciprocal": 7738679,
+      "floor": 7738679
+    },
+    {
+      "parity": 0,
+      "index": 22,
+      "d": 557,
+      "seed": 4117818915,
+      "reciprocal": 7710892,
+      "floor": 7710892
+    },
+    {
+      "parity": 0,
+      "index": 23,
+      "d": 559,
+      "seed": 4110445912,
+      "reciprocal": 7683304,
+      "floor": 7683304
+    },
+    {
+      "parity": 0,
+      "index": 24,
+      "d": 561,
+      "seed": 4103112372,
+      "reciprocal": 7655913,
+      "floor": 7655913
+    },
+    {
+      "parity": 0,
+      "index": 25,
+      "d": 563,
+      "seed": 4095817944,
+      "reciprocal": 7628716,
+      "floor": 7628716
+    },
+    {
+      "parity": 0,
+      "index": 26,
+      "d": 565,
+      "seed": 4088562282,
+      "reciprocal": 7601712,
+      "floor": 7601712
+    },
+    {
+      "parity": 0,
+      "index": 27,
+      "d": 567,
+      "seed": 4081345044,
+      "reciprocal": 7574898,
+      "floor": 7574898
+    },
+    {
+      "parity": 0,
+      "index": 28,
+      "d": 569,
+      "seed": 4074165891,
+      "reciprocal": 7548272,
+      "floor": 7548272
+    },
+    {
+      "parity": 0,
+      "index": 29,
+      "d": 571,
+      "seed": 4067024490,
+      "reciprocal": 7521834,
+      "floor": 7521834
+    },
+    {
+      "parity": 0,
+      "index": 30,
+      "d": 573,
+      "seed": 4059920512,
+      "reciprocal": 7495579,
+      "floor": 7495579
+    },
+    {
+      "parity": 0,
+      "index": 31,
+      "d": 575,
+      "seed": 4052853630,
+      "reciprocal": 7469508,
+      "floor": 7469508
+    },
+    {
+      "parity": 0,
+      "index": 32,
+      "d": 577,
+      "seed": 4045823523,
+      "reciprocal": 7443617,
+      "floor": 7443617
+    },
+    {
+      "parity": 0,
+      "index": 33,
+      "d": 579,
+      "seed": 4038829873,
+      "reciprocal": 7417905,
+      "floor": 7417905
+    },
+    {
+      "parity": 0,
+      "index": 34,
+      "d": 581,
+      "seed": 4031872366,
+      "reciprocal": 7392370,
+      "floor": 7392370
+    },
+    {
+      "parity": 0,
+      "index": 35,
+      "d": 583,
+      "seed": 4024950692,
+      "reciprocal": 7367010,
+      "floor": 7367010
+    },
+    {
+      "parity": 0,
+      "index": 36,
+      "d": 585,
+      "seed": 4018064544,
+      "reciprocal": 7341824,
+      "floor": 7341824
+    },
+    {
+      "parity": 0,
+      "index": 37,
+      "d": 587,
+      "seed": 4011213619,
+      "reciprocal": 7316809,
+      "floor": 7316809
+    },
+    {
+      "parity": 0,
+      "index": 38,
+      "d": 589,
+      "seed": 4004397618,
+      "reciprocal": 7291964,
+      "floor": 7291964
+    },
+    {
+      "parity": 0,
+      "index": 39,
+      "d": 591,
+      "seed": 3997616245,
+      "reciprocal": 7267288,
+      "floor": 7267288
+    },
+    {
+      "parity": 0,
+      "index": 40,
+      "d": 593,
+      "seed": 3990869209,
+      "reciprocal": 7242777,
+      "floor": 7242777
+    },
+    {
+      "parity": 0,
+      "index": 41,
+      "d": 595,
+      "seed": 3984156220,
+      "reciprocal": 7218432,
+      "floor": 7218432
+    },
+    {
+      "parity": 0,
+      "index": 42,
+      "d": 597,
+      "seed": 3977476992,
+      "reciprocal": 7194250,
+      "floor": 7194250
+    },
+    {
+      "parity": 0,
+      "index": 43,
+      "d": 599,
+      "seed": 3970831245,
+      "reciprocal": 7170229,
+      "floor": 7170229
+    },
+    {
+      "parity": 0,
+      "index": 44,
+      "d": 601,
+      "seed": 3964218699,
+      "reciprocal": 7146368,
+      "floor": 7146368
+    },
+    {
+      "parity": 0,
+      "index": 45,
+      "d": 603,
+      "seed": 3957639078,
+      "reciprocal": 7122665,
+      "floor": 7122665
+    },
+    {
+      "parity": 0,
+      "index": 46,
+      "d": 605,
+      "seed": 3951092111,
+      "reciprocal": 7099119,
+      "floor": 7099119
+    },
+    {
+      "parity": 0,
+      "index": 47,
+      "d": 607,
+      "seed": 3944577528,
+      "reciprocal": 7075728,
+      "floor": 7075728
+    },
+    {
+      "parity": 0,
+      "index": 48,
+      "d": 609,
+      "seed": 3938095062,
+      "reciprocal": 7052491,
+      "floor": 7052491
+    },
+    {
+      "parity": 0,
+      "index": 49,
+      "d": 611,
+      "seed": 3931644452,
+      "reciprocal": 7029406,
+      "floor": 7029406
+    },
+    {
+      "parity": 0,
+      "index": 50,
+      "d": 613,
+      "seed": 3925225436,
+      "reciprocal": 7006471,
+      "floor": 7006471
+    },
+    {
+      "parity": 0,
+      "index": 51,
+      "d": 615,
+      "seed": 3918837758,
+      "reciprocal": 6983686,
+      "floor": 6983686
+    },
+    {
+      "parity": 0,
+      "index": 52,
+      "d": 617,
+      "seed": 3912481164,
+      "reciprocal": 6961049,
+      "floor": 6961049
+    },
+    {
+      "parity": 0,
+      "index": 53,
+      "d": 619,
+      "seed": 3906155402,
+      "reciprocal": 6938557,
+      "floor": 6938557
+    },
+    {
+      "parity": 0,
+      "index": 54,
+      "d": 621,
+      "seed": 3899860224,
+      "reciprocal": 6916211,
+      "floor": 6916211
+    },
+    {
+      "parity": 0,
+      "index": 55,
+      "d": 623,
+      "seed": 3893595384,
+      "reciprocal": 6894008,
+      "floor": 6894008
+    },
+    {
+      "parity": 0,
+      "index": 56,
+      "d": 625,
+      "seed": 3887360640,
+      "reciprocal": 6871947,
+      "floor": 6871947
+    },
+    {
+      "parity": 0,
+      "index": 57,
+      "d": 627,
+      "seed": 3881155751,
+      "reciprocal": 6850027,
+      "floor": 6850027
+    },
+    {
+      "parity": 0,
+      "index": 58,
+      "d": 629,
+      "seed": 3874980479,
+      "reciprocal": 6828246,
+      "floor": 6828246
+    },
+    {
+      "parity": 0,
+      "index": 59,
+      "d": 631,
+      "seed": 3868834590,
+      "reciprocal": 6806604,
+      "floor": 6806604
+    },
+    {
+      "parity": 0,
+      "index": 60,
+      "d": 633,
+      "seed": 3862717852,
+      "reciprocal": 6785098,
+      "floor": 6785098
+    },
+    {
+      "parity": 0,
+      "index": 61,
+      "d": 635,
+      "seed": 3856630034,
+      "reciprocal": 6763728,
+      "floor": 6763728
+    },
+    {
+      "parity": 0,
+      "index": 62,
+      "d": 637,
+      "seed": 3850570910,
+      "reciprocal": 6742491,
+      "floor": 6742491
+    },
+    {
+      "parity": 0,
+      "index": 63,
+      "d": 639,
+      "seed": 3844540255,
+      "reciprocal": 6721388,
+      "floor": 6721388
+    },
+    {
+      "parity": 0,
+      "index": 64,
+      "d": 641,
+      "seed": 3838537847,
+      "reciprocal": 6700416,
+      "floor": 6700416
+    },
+    {
+      "parity": 0,
+      "index": 65,
+      "d": 643,
+      "seed": 3832563465,
+      "reciprocal": 6679575,
+      "floor": 6679575
+    },
+    {
+      "parity": 0,
+      "index": 66,
+      "d": 645,
+      "seed": 3826616893,
+      "reciprocal": 6658864,
+      "floor": 6658864
+    },
+    {
+      "parity": 0,
+      "index": 67,
+      "d": 647,
+      "seed": 3820697915,
+      "reciprocal": 6638280,
+      "floor": 6638280
+    },
+    {
+      "parity": 0,
+      "index": 68,
+      "d": 649,
+      "seed": 3814806319,
+      "reciprocal": 6617823,
+      "floor": 6617823
+    },
+    {
+      "parity": 0,
+      "index": 69,
+      "d": 651,
+      "seed": 3808941894,
+      "reciprocal": 6597492,
+      "floor": 6597492
+    },
+    {
+      "parity": 0,
+      "index": 70,
+      "d": 653,
+      "seed": 3803104431,
+      "reciprocal": 6577285,
+      "floor": 6577285
+    },
+    {
+      "parity": 0,
+      "index": 71,
+      "d": 655,
+      "seed": 3797293726,
+      "reciprocal": 6557201,
+      "floor": 6557201
+    },
+    {
+      "parity": 0,
+      "index": 72,
+      "d": 657,
+      "seed": 3791509574,
+      "reciprocal": 6537240,
+      "floor": 6537240
+    },
+    {
+      "parity": 0,
+      "index": 73,
+      "d": 659,
+      "seed": 3785751773,
+      "reciprocal": 6517401,
+      "floor": 6517401
+    },
+    {
+      "parity": 0,
+      "index": 74,
+      "d": 661,
+      "seed": 3780020125,
+      "reciprocal": 6497681,
+      "floor": 6497681
+    },
+    {
+      "parity": 0,
+      "index": 75,
+      "d": 663,
+      "seed": 3774314431,
+      "reciprocal": 6478080,
+      "floor": 6478080
+    },
+    {
+      "parity": 0,
+      "index": 76,
+      "d": 665,
+      "seed": 3768634496,
+      "reciprocal": 6458597,
+      "floor": 6458597
+    },
+    {
+      "parity": 0,
+      "index": 77,
+      "d": 667,
+      "seed": 3762980127,
+      "reciprocal": 6439231,
+      "floor": 6439231
+    },
+    {
+      "parity": 0,
+      "index": 78,
+      "d": 669,
+      "seed": 3757351134,
+      "reciprocal": 6419981,
+      "floor": 6419981
+    },
+    {
+      "parity": 0,
+      "index": 79,
+      "d": 671,
+      "seed": 3751747326,
+      "reciprocal": 6400845,
+      "floor": 6400845
+    },
+    {
+      "parity": 0,
+      "index": 80,
+      "d": 673,
+      "seed": 3746168516,
+      "reciprocal": 6381823,
+      "floor": 6381823
+    },
+    {
+      "parity": 0,
+      "index": 81,
+      "d": 675,
+      "seed": 3740614520,
+      "reciprocal": 6362914,
+      "floor": 6362914
+    },
+    {
+      "parity": 0,
+      "index": 82,
+      "d": 677,
+      "seed": 3735085153,
+      "reciprocal": 6344117,
+      "floor": 6344117
+    },
+    {
+      "parity": 0,
+      "index": 83,
+      "d": 679,
+      "seed": 3729580235,
+      "reciprocal": 6325430,
+      "floor": 6325430
+    },
+    {
+      "parity": 0,
+      "index": 84,
+      "d": 681,
+      "seed": 3724099585,
+      "reciprocal": 6306853,
+      "floor": 6306853
+    },
+    {
+      "parity": 0,
+      "index": 85,
+      "d": 683,
+      "seed": 3718643026,
+      "reciprocal": 6288385,
+      "floor": 6288385
+    },
+    {
+      "parity": 0,
+      "index": 86,
+      "d": 685,
+      "seed": 3713210381,
+      "reciprocal": 6270025,
+      "floor": 6270025
+    },
+    {
+      "parity": 0,
+      "index": 87,
+      "d": 687,
+      "seed": 3707801478,
+      "reciprocal": 6251771,
+      "floor": 6251771
+    },
+    {
+      "parity": 0,
+      "index": 88,
+      "d": 689,
+      "seed": 3702416142,
+      "reciprocal": 6233624,
+      "floor": 6233624
+    },
+    {
+      "parity": 0,
+      "index": 89,
+      "d": 691,
+      "seed": 3697054205,
+      "reciprocal": 6215582,
+      "floor": 6215582
+    },
+    {
+      "parity": 0,
+      "index": 90,
+      "d": 693,
+      "seed": 3691715495,
+      "reciprocal": 6197644,
+      "floor": 6197644
+    },
+    {
+      "parity": 0,
+      "index": 91,
+      "d": 695,
+      "seed": 3686399847,
+      "reciprocal": 6179809,
+      "floor": 6179809
+    },
+    {
+      "parity": 0,
+      "index": 92,
+      "d": 697,
+      "seed": 3681107096,
+      "reciprocal": 6162076,
+      "floor": 6162076
+    },
+    {
+      "parity": 0,
+      "index": 93,
+      "d": 699,
+      "seed": 3675837076,
+      "reciprocal": 6144445,
+      "floor": 6144445
+    },
+    {
+      "parity": 0,
+      "index": 94,
+      "d": 701,
+      "seed": 3670589625,
+      "reciprocal": 6126914,
+      "floor": 6126914
+    },
+    {
+      "parity": 0,
+      "index": 95,
+      "d": 703,
+      "seed": 3665364584,
+      "reciprocal": 6109484,
+      "floor": 6109484
+    },
+    {
+      "parity": 0,
+      "index": 96,
+      "d": 705,
+      "seed": 3660161793,
+      "reciprocal": 6092152,
+      "floor": 6092152
+    },
+    {
+      "parity": 0,
+      "index": 97,
+      "d": 707,
+      "seed": 3654981094,
+      "reciprocal": 6074918,
+      "floor": 6074918
+    },
+    {
+      "parity": 0,
+      "index": 98,
+      "d": 709,
+      "seed": 3649822332,
+      "reciprocal": 6057781,
+      "floor": 6057781
+    },
+    {
+      "parity": 0,
+      "index": 99,
+      "d": 711,
+      "seed": 3644685352,
+      "reciprocal": 6040741,
+      "floor": 6040741
+    },
+    {
+      "parity": 0,
+      "index": 100,
+      "d": 713,
+      "seed": 3639570002,
+      "reciprocal": 6023797,
+      "floor": 6023797
+    },
+    {
+      "parity": 0,
+      "index": 101,
+      "d": 715,
+      "seed": 3634476129,
+      "reciprocal": 6006947,
+      "floor": 6006947
+    },
+    {
+      "parity": 0,
+      "index": 102,
+      "d": 717,
+      "seed": 3629403585,
+      "reciprocal": 5990191,
+      "floor": 5990191
+    },
+    {
+      "parity": 0,
+      "index": 103,
+      "d": 719,
+      "seed": 3624352221,
+      "reciprocal": 5973528,
+      "floor": 5973528
+    },
+    {
+      "parity": 0,
+      "index": 104,
+      "d": 721,
+      "seed": 3619321889,
+      "reciprocal": 5956958,
+      "floor": 5956958
+    },
+    {
+      "parity": 0,
+      "index": 105,
+      "d": 723,
+      "seed": 3614312445,
+      "reciprocal": 5940480,
+      "floor": 5940480
+    },
+    {
+      "parity": 0,
+      "index": 106,
+      "d": 725,
+      "seed": 3609323743,
+      "reciprocal": 5924092,
+      "floor": 5924092
+    },
+    {
+      "parity": 0,
+      "index": 107,
+      "d": 727,
+      "seed": 3604355642,
+      "reciprocal": 5907795,
+      "floor": 5907795
+    },
+    {
+      "parity": 0,
+      "index": 108,
+      "d": 729,
+      "seed": 3599408000,
+      "reciprocal": 5891587,
+      "floor": 5891587
+    },
+    {
+      "parity": 0,
+      "index": 109,
+      "d": 731,
+      "seed": 3594480677,
+      "reciprocal": 5875468,
+      "floor": 5875468
+    },
+    {
+      "parity": 0,
+      "index": 110,
+      "d": 733,
+      "seed": 3589573534,
+      "reciprocal": 5859436,
+      "floor": 5859436
+    },
+    {
+      "parity": 0,
+      "index": 111,
+      "d": 735,
+      "seed": 3584686433,
+      "reciprocal": 5843492,
+      "floor": 5843492
+    },
+    {
+      "parity": 0,
+      "index": 112,
+      "d": 737,
+      "seed": 3579819240,
+      "reciprocal": 5827635,
+      "floor": 5827635
+    },
+    {
+      "parity": 0,
+      "index": 113,
+      "d": 739,
+      "seed": 3574971818,
+      "reciprocal": 5811863,
+      "floor": 5811863
+    },
+    {
+      "parity": 0,
+      "index": 114,
+      "d": 741,
+      "seed": 3570144035,
+      "reciprocal": 5796177,
+      "floor": 5796177
+    },
+    {
+      "parity": 0,
+      "index": 115,
+      "d": 743,
+      "seed": 3565335758,
+      "reciprocal": 5780575,
+      "floor": 5780575
+    },
+    {
+      "parity": 0,
+      "index": 116,
+      "d": 745,
+      "seed": 3560546856,
+      "reciprocal": 5765056,
+      "floor": 5765056
+    },
+    {
+      "parity": 0,
+      "index": 117,
+      "d": 747,
+      "seed": 3555777200,
+      "reciprocal": 5749621,
+      "floor": 5749621
+    },
+    {
+      "parity": 0,
+      "index": 118,
+      "d": 749,
+      "seed": 3551026660,
+      "reciprocal": 5734268,
+      "floor": 5734268
+    },
+    {
+      "parity": 0,
+      "index": 119,
+      "d": 751,
+      "seed": 3546295110,
+      "reciprocal": 5718997,
+      "floor": 5718997
+    },
+    {
+      "parity": 0,
+      "index": 120,
+      "d": 753,
+      "seed": 3541582424,
+      "reciprocal": 5703807,
+      "floor": 5703807
+    },
+    {
+      "parity": 0,
+      "index": 121,
+      "d": 755,
+      "seed": 3536888475,
+      "reciprocal": 5688698,
+      "floor": 5688698
+    },
+    {
+      "parity": 0,
+      "index": 122,
+      "d": 757,
+      "seed": 3532213142,
+      "reciprocal": 5673668,
+      "floor": 5673668
+    },
+    {
+      "parity": 0,
+      "index": 123,
+      "d": 759,
+      "seed": 3527556300,
+      "reciprocal": 5658718,
+      "floor": 5658718
+    },
+    {
+      "parity": 0,
+      "index": 124,
+      "d": 761,
+      "seed": 3522917828,
+      "reciprocal": 5643846,
+      "floor": 5643846
+    },
+    {
+      "parity": 0,
+      "index": 125,
+      "d": 763,
+      "seed": 3518297606,
+      "reciprocal": 5629052,
+      "floor": 5629052
+    },
+    {
+      "parity": 0,
+      "index": 126,
+      "d": 765,
+      "seed": 3513695514,
+      "reciprocal": 5614336,
+      "floor": 5614336
+    },
+    {
+      "parity": 0,
+      "index": 127,
+      "d": 767,
+      "seed": 3509111434,
+      "reciprocal": 5599696,
+      "floor": 5599696
+    },
+    {
+      "parity": 0,
+      "index": 128,
+      "d": 769,
+      "seed": 3504545250,
+      "reciprocal": 5585133,
+      "floor": 5585133
+    },
+    {
+      "parity": 0,
+      "index": 129,
+      "d": 771,
+      "seed": 3499996844,
+      "reciprocal": 5570645,
+      "floor": 5570645
+    },
+    {
+      "parity": 0,
+      "index": 130,
+      "d": 773,
+      "seed": 3495466102,
+      "reciprocal": 5556231,
+      "floor": 5556231
+    },
+    {
+      "parity": 0,
+      "index": 131,
+      "d": 775,
+      "seed": 3490952909,
+      "reciprocal": 5541893,
+      "floor": 5541893
+    },
+    {
+      "parity": 0,
+      "index": 132,
+      "d": 777,
+      "seed": 3486457153,
+      "reciprocal": 5527628,
+      "floor": 5527628
+    },
+    {
+      "parity": 0,
+      "index": 133,
+      "d": 779,
+      "seed": 3481978722,
+      "reciprocal": 5513436,
+      "floor": 5513436
+    },
+    {
+      "parity": 0,
+      "index": 134,
+      "d": 781,
+      "seed": 3477517505,
+      "reciprocal": 5499317,
+      "floor": 5499317
+    },
+    {
+      "parity": 0,
+      "index": 135,
+      "d": 783,
+      "seed": 3473073391,
+      "reciprocal": 5485271,
+      "floor": 5485271
+    },
+    {
+      "parity": 0,
+      "index": 136,
+      "d": 785,
+      "seed": 3468646272,
+      "reciprocal": 5471295,
+      "floor": 5471295
+    },
+    {
+      "parity": 0,
+      "index": 137,
+      "d": 787,
+      "seed": 3464236040,
+      "reciprocal": 5457391,
+      "floor": 5457391
+    },
+    {
+      "parity": 0,
+      "index": 138,
+      "d": 789,
+      "seed": 3459842587,
+      "reciprocal": 5443558,
+      "floor": 5443558
+    },
+    {
+      "parity": 0,
+      "index": 139,
+      "d": 791,
+      "seed": 3455465808,
+      "reciprocal": 5429794,
+      "floor": 5429794
+    },
+    {
+      "parity": 0,
+      "index": 140,
+      "d": 793,
+      "seed": 3451105597,
+      "reciprocal": 5416099,
+      "floor": 5416099
+    },
+    {
+      "parity": 0,
+      "index": 141,
+      "d": 795,
+      "seed": 3446761850,
+      "reciprocal": 5402474,
+      "floor": 5402474
+    },
+    {
+      "parity": 0,
+      "index": 142,
+      "d": 797,
+      "seed": 3442434464,
+      "reciprocal": 5388917,
+      "floor": 5388917
+    },
+    {
+      "parity": 0,
+      "index": 143,
+      "d": 799,
+      "seed": 3438123336,
+      "reciprocal": 5375428,
+      "floor": 5375428
+    },
+    {
+      "parity": 0,
+      "index": 144,
+      "d": 801,
+      "seed": 3433828364,
+      "reciprocal": 5362006,
+      "floor": 5362006
+    },
+    {
+      "parity": 0,
+      "index": 145,
+      "d": 803,
+      "seed": 3429549449,
+      "reciprocal": 5348651,
+      "floor": 5348651
+    },
+    {
+      "parity": 0,
+      "index": 146,
+      "d": 805,
+      "seed": 3425286489,
+      "reciprocal": 5335363,
+      "floor": 5335363
+    },
+    {
+      "parity": 0,
+      "index": 147,
+      "d": 807,
+      "seed": 3421039387,
+      "reciprocal": 5322140,
+      "floor": 5322140
+    },
+    {
+      "parity": 0,
+      "index": 148,
+      "d": 809,
+      "seed": 3416808045,
+      "reciprocal": 5308983,
+      "floor": 5308983
+    },
+    {
+      "parity": 0,
+      "index": 149,
+      "d": 811,
+      "seed": 3412592364,
+      "reciprocal": 5295890,
+      "floor": 5295890
+    },
+    {
+      "parity": 0,
+      "index": 150,
+      "d": 813,
+      "seed": 3408392248,
+      "reciprocal": 5282862,
+      "floor": 5282862
+    },
+    {
+      "parity": 0,
+      "index": 151,
+      "d": 815,
+      "seed": 3404207603,
+      "reciprocal": 5269898,
+      "floor": 5269898
+    },
+    {
+      "parity": 0,
+      "index": 152,
+      "d": 817,
+      "seed": 3400038333,
+      "reciprocal": 5256997,
+      "floor": 5256997
+    },
+    {
+      "parity": 0,
+      "index": 153,
+      "d": 819,
+      "seed": 3395884345,
+      "reciprocal": 5244160,
+      "floor": 5244160
+    },
+    {
+      "parity": 0,
+      "index": 154,
+      "d": 821,
+      "seed": 3391745545,
+      "reciprocal": 5231385,
+      "floor": 5231385
+    },
+    {
+      "parity": 0,
+      "index": 155,
+      "d": 823,
+      "seed": 3387621840,
+      "reciprocal": 5218672,
+      "floor": 5218672
+    },
+    {
+      "parity": 0,
+      "index": 156,
+      "d": 825,
+      "seed": 3383513140,
+      "reciprocal": 5206020,
+      "floor": 5206020
+    },
+    {
+      "parity": 0,
+      "index": 157,
+      "d": 827,
+      "seed": 3379419354,
+      "reciprocal": 5193430,
+      "floor": 5193430
+    },
+    {
+      "parity": 0,
+      "index": 158,
+      "d": 829,
+      "seed": 3375340391,
+      "reciprocal": 5180901,
+      "floor": 5180901
+    },
+    {
+      "parity": 0,
+      "index": 159,
+      "d": 831,
+      "seed": 3371276163,
+      "reciprocal": 5168432,
+      "floor": 5168432
+    },
+    {
+      "parity": 0,
+      "index": 160,
+      "d": 833,
+      "seed": 3367226581,
+      "reciprocal": 5156023,
+      "floor": 5156023
+    },
+    {
+      "parity": 0,
+      "index": 161,
+      "d": 835,
+      "seed": 3363191556,
+      "reciprocal": 5143673,
+      "floor": 5143673
+    },
+    {
+      "parity": 0,
+      "index": 162,
+      "d": 837,
+      "seed": 3359171003,
+      "reciprocal": 5131382,
+      "floor": 5131382
+    },
+    {
+      "parity": 0,
+      "index": 163,
+      "d": 839,
+      "seed": 3355164835,
+      "reciprocal": 5119150,
+      "floor": 5119150
+    },
+    {
+      "parity": 0,
+      "index": 164,
+      "d": 841,
+      "seed": 3351172965,
+      "reciprocal": 5106976,
+      "floor": 5106976
+    },
+    {
+      "parity": 0,
+      "index": 165,
+      "d": 843,
+      "seed": 3347195311,
+      "reciprocal": 5094860,
+      "floor": 5094860
+    },
+    {
+      "parity": 0,
+      "index": 166,
+      "d": 845,
+      "seed": 3343231786,
+      "reciprocal": 5082801,
+      "floor": 5082801
+    },
+    {
+      "parity": 0,
+      "index": 167,
+      "d": 847,
+      "seed": 3339282308,
+      "reciprocal": 5070799,
+      "floor": 5070799
+    },
+    {
+      "parity": 0,
+      "index": 168,
+      "d": 849,
+      "seed": 3335346795,
+      "reciprocal": 5058854,
+      "floor": 5058854
+    },
+    {
+      "parity": 0,
+      "index": 169,
+      "d": 851,
+      "seed": 3331425163,
+      "reciprocal": 5046965,
+      "floor": 5046965
+    },
+    {
+      "parity": 0,
+      "index": 170,
+      "d": 853,
+      "seed": 3327517331,
+      "reciprocal": 5035131,
+      "floor": 5035131
+    },
+    {
+      "parity": 0,
+      "index": 171,
+      "d": 855,
+      "seed": 3323623219,
+      "reciprocal": 5023353,
+      "floor": 5023353
+    },
+    {
+      "parity": 0,
+      "index": 172,
+      "d": 857,
+      "seed": 3319742747,
+      "reciprocal": 5011630,
+      "floor": 5011630
+    },
+    {
+      "parity": 0,
+      "index": 173,
+      "d": 859,
+      "seed": 3315875835,
+      "reciprocal": 4999961,
+      "floor": 4999961
+    },
+    {
+      "parity": 0,
+      "index": 174,
+      "d": 861,
+      "seed": 3312022405,
+      "reciprocal": 4988347,
+      "floor": 4988347
+    },
+    {
+      "parity": 0,
+      "index": 175,
+      "d": 863,
+      "seed": 3308182378,
+      "reciprocal": 4976787,
+      "floor": 4976787
+    },
+    {
+      "parity": 0,
+      "index": 176,
+      "d": 865,
+      "seed": 3304355676,
+      "reciprocal": 4965280,
+      "floor": 4965280
+    },
+    {
+      "parity": 0,
+      "index": 177,
+      "d": 867,
+      "seed": 3300542223,
+      "reciprocal": 4953826,
+      "floor": 4953826
+    },
+    {
+      "parity": 0,
+      "index": 178,
+      "d": 869,
+      "seed": 3296741943,
+      "reciprocal": 4942424,
+      "floor": 4942424
+    },
+    {
+      "parity": 0,
+      "index": 179,
+      "d": 871,
+      "seed": 3292954760,
+      "reciprocal": 4931076,
+      "floor": 4931076
+    },
+    {
+      "parity": 0,
+      "index": 180,
+      "d": 873,
+      "seed": 3289180599,
+      "reciprocal": 4919779,
+      "floor": 4919779
+    },
+    {
+      "parity": 0,
+      "index": 181,
+      "d": 875,
+      "seed": 3285419385,
+      "reciprocal": 4908534,
+      "floor": 4908534
+    },
+    {
+      "parity": 0,
+      "index": 182,
+      "d": 877,
+      "seed": 3281671044,
+      "reciprocal": 4897340,
+      "floor": 4897340
+    },
+    {
+      "parity": 0,
+      "index": 183,
+      "d": 879,
+      "seed": 3277935504,
+      "reciprocal": 4886197,
+      "floor": 4886197
+    },
+    {
+      "parity": 0,
+      "index": 184,
+      "d": 881,
+      "seed": 3274212691,
+      "reciprocal": 4875104,
+      "floor": 4875104
+    },
+    {
+      "parity": 0,
+      "index": 185,
+      "d": 883,
+      "seed": 3270502534,
+      "reciprocal": 4864062,
+      "floor": 4864062
+    },
+    {
+      "parity": 0,
+      "index": 186,
+      "d": 885,
+      "seed": 3266804961,
+      "reciprocal": 4853070,
+      "floor": 4853070
+    },
+    {
+      "parity": 0,
+      "index": 187,
+      "d": 887,
+      "seed": 3263119900,
+      "reciprocal": 4842127,
+      "floor": 4842127
+    },
+    {
+      "parity": 0,
+      "index": 188,
+      "d": 889,
+      "seed": 3259447282,
+      "reciprocal": 4831234,
+      "floor": 4831234
+    },
+    {
+      "parity": 0,
+      "index": 189,
+      "d": 891,
+      "seed": 3255787037,
+      "reciprocal": 4820389,
+      "floor": 4820389
+    },
+    {
+      "parity": 0,
+      "index": 190,
+      "d": 893,
+      "seed": 3252139095,
+      "reciprocal": 4809593,
+      "floor": 4809593
+    },
+    {
+      "parity": 0,
+      "index": 191,
+      "d": 895,
+      "seed": 3248503388,
+      "reciprocal": 4798846,
+      "floor": 4798846
+    },
+    {
+      "parity": 0,
+      "index": 192,
+      "d": 897,
+      "seed": 3244879847,
+      "reciprocal": 4788146,
+      "floor": 4788146
+    },
+    {
+      "parity": 0,
+      "index": 193,
+      "d": 899,
+      "seed": 3241268405,
+      "reciprocal": 4777494,
+      "floor": 4777494
+    },
+    {
+      "parity": 0,
+      "index": 194,
+      "d": 901,
+      "seed": 3237668994,
+      "reciprocal": 4766889,
+      "floor": 4766889
+    },
+    {
+      "parity": 0,
+      "index": 195,
+      "d": 903,
+      "seed": 3234081548,
+      "reciprocal": 4756331,
+      "floor": 4756331
+    },
+    {
+      "parity": 0,
+      "index": 196,
+      "d": 905,
+      "seed": 3230506001,
+      "reciprocal": 4745820,
+      "floor": 4745820
+    },
+    {
+      "parity": 0,
+      "index": 197,
+      "d": 907,
+      "seed": 3226942287,
+      "reciprocal": 4735355,
+      "floor": 4735355
+    },
+    {
+      "parity": 0,
+      "index": 198,
+      "d": 909,
+      "seed": 3223390340,
+      "reciprocal": 4724936,
+      "floor": 4724936
+    },
+    {
+      "parity": 0,
+      "index": 199,
+      "d": 911,
+      "seed": 3219850097,
+      "reciprocal": 4714563,
+      "floor": 4714563
+    },
+    {
+      "parity": 0,
+      "index": 200,
+      "d": 913,
+      "seed": 3216321493,
+      "reciprocal": 4704235,
+      "floor": 4704235
+    },
+    {
+      "parity": 0,
+      "index": 201,
+      "d": 915,
+      "seed": 3212804465,
+      "reciprocal": 4693953,
+      "floor": 4693953
+    },
+    {
+      "parity": 0,
+      "index": 202,
+      "d": 917,
+      "seed": 3209298949,
+      "reciprocal": 4683715,
+      "floor": 4683715
+    },
+    {
+      "parity": 0,
+      "index": 203,
+      "d": 919,
+      "seed": 3205804883,
+      "reciprocal": 4673522,
+      "floor": 4673522
+    },
+    {
+      "parity": 0,
+      "index": 204,
+      "d": 921,
+      "seed": 3202322204,
+      "reciprocal": 4663373,
+      "floor": 4663373
+    },
+    {
+      "parity": 0,
+      "index": 205,
+      "d": 923,
+      "seed": 3198850851,
+      "reciprocal": 4653269,
+      "floor": 4653269
+    },
+    {
+      "parity": 0,
+      "index": 206,
+      "d": 925,
+      "seed": 3195390763,
+      "reciprocal": 4643207,
+      "floor": 4643207
+    },
+    {
+      "parity": 0,
+      "index": 207,
+      "d": 927,
+      "seed": 3191941878,
+      "reciprocal": 4633190,
+      "floor": 4633190
+    },
+    {
+      "parity": 0,
+      "index": 208,
+      "d": 929,
+      "seed": 3188504136,
+      "reciprocal": 4623215,
+      "floor": 4623215
+    },
+    {
+      "parity": 0,
+      "index": 209,
+      "d": 931,
+      "seed": 3185077479,
+      "reciprocal": 4613283,
+      "floor": 4613283
+    },
+    {
+      "parity": 0,
+      "index": 210,
+      "d": 933,
+      "seed": 3181661845,
+      "reciprocal": 4603394,
+      "floor": 4603394
+    },
+    {
+      "parity": 0,
+      "index": 211,
+      "d": 935,
+      "seed": 3178257176,
+      "reciprocal": 4593547,
+      "floor": 4593547
+    },
+    {
+      "parity": 0,
+      "index": 212,
+      "d": 937,
+      "seed": 3174863415,
+      "reciprocal": 4583743,
+      "floor": 4583743
+    },
+    {
+      "parity": 0,
+      "index": 213,
+      "d": 939,
+      "seed": 3171480501,
+      "reciprocal": 4573980,
+      "floor": 4573980
+    },
+    {
+      "parity": 0,
+      "index": 214,
+      "d": 941,
+      "seed": 3168108378,
+      "reciprocal": 4564258,
+      "floor": 4564258
+    },
+    {
+      "parity": 0,
+      "index": 215,
+      "d": 943,
+      "seed": 3164746989,
+      "reciprocal": 4554578,
+      "floor": 4554578
+    },
+    {
+      "parity": 0,
+      "index": 216,
+      "d": 945,
+      "seed": 3161396277,
+      "reciprocal": 4544938,
+      "floor": 4544938
+    },
+    {
+      "parity": 0,
+      "index": 217,
+      "d": 947,
+      "seed": 3158056185,
+      "reciprocal": 4535340,
+      "floor": 4535340
+    },
+    {
+      "parity": 0,
+      "index": 218,
+      "d": 949,
+      "seed": 3154726657,
+      "reciprocal": 4525782,
+      "floor": 4525782
+    },
+    {
+      "parity": 0,
+      "index": 219,
+      "d": 951,
+      "seed": 3151407638,
+      "reciprocal": 4516264,
+      "floor": 4516264
+    },
+    {
+      "parity": 0,
+      "index": 220,
+      "d": 953,
+      "seed": 3148099073,
+      "reciprocal": 4506786,
+      "floor": 4506786
+    },
+    {
+      "parity": 0,
+      "index": 221,
+      "d": 955,
+      "seed": 3144800906,
+      "reciprocal": 4497347,
+      "floor": 4497347
+    },
+    {
+      "parity": 0,
+      "index": 222,
+      "d": 957,
+      "seed": 3141513084,
+      "reciprocal": 4487949,
+      "floor": 4487949
+    },
+    {
+      "parity": 0,
+      "index": 223,
+      "d": 959,
+      "seed": 3138235553,
+      "reciprocal": 4478589,
+      "floor": 4478589
+    },
+    {
+      "parity": 0,
+      "index": 224,
+      "d": 961,
+      "seed": 3134968258,
+      "reciprocal": 4469268,
+      "floor": 4469268
+    },
+    {
+      "parity": 0,
+      "index": 225,
+      "d": 963,
+      "seed": 3131711147,
+      "reciprocal": 4459986,
+      "floor": 4459986
+    },
+    {
+      "parity": 0,
+      "index": 226,
+      "d": 965,
+      "seed": 3128464168,
+      "reciprocal": 4450743,
+      "floor": 4450743
+    },
+    {
+      "parity": 0,
+      "index": 227,
+      "d": 967,
+      "seed": 3125227266,
+      "reciprocal": 4441538,
+      "floor": 4441538
+    },
+    {
+      "parity": 0,
+      "index": 228,
+      "d": 969,
+      "seed": 3122000392,
+      "reciprocal": 4432370,
+      "floor": 4432370
+    },
+    {
+      "parity": 0,
+      "index": 229,
+      "d": 971,
+      "seed": 3118783492,
+      "reciprocal": 4423241,
+      "floor": 4423241
+    },
+    {
+      "parity": 0,
+      "index": 230,
+      "d": 973,
+      "seed": 3115576516,
+      "reciprocal": 4414149,
+      "floor": 4414149
+    },
+    {
+      "parity": 0,
+      "index": 231,
+      "d": 975,
+      "seed": 3112379412,
+      "reciprocal": 4405094,
+      "floor": 4405094
+    },
+    {
+      "parity": 0,
+      "index": 232,
+      "d": 977,
+      "seed": 3109192131,
+      "reciprocal": 4396077,
+      "floor": 4396077
+    },
+    {
+      "parity": 0,
+      "index": 233,
+      "d": 979,
+      "seed": 3106014622,
+      "reciprocal": 4387096,
+      "floor": 4387096
+    },
+    {
+      "parity": 0,
+      "index": 234,
+      "d": 981,
+      "seed": 3102846834,
+      "reciprocal": 4378152,
+      "floor": 4378152
+    },
+    {
+      "parity": 0,
+      "index": 235,
+      "d": 983,
+      "seed": 3099688720,
+      "reciprocal": 4369244,
+      "floor": 4369244
+    },
+    {
+      "parity": 0,
+      "index": 236,
+      "d": 985,
+      "seed": 3096540228,
+      "reciprocal": 4360372,
+      "floor": 4360372
+    },
+    {
+      "parity": 0,
+      "index": 237,
+      "d": 987,
+      "seed": 3093401312,
+      "reciprocal": 4351537,
+      "floor": 4351537
+    },
+    {
+      "parity": 0,
+      "index": 238,
+      "d": 989,
+      "seed": 3090271922,
+      "reciprocal": 4342737,
+      "floor": 4342737
+    },
+    {
+      "parity": 0,
+      "index": 239,
+      "d": 991,
+      "seed": 3087152010,
+      "reciprocal": 4333973,
+      "floor": 4333973
+    },
+    {
+      "parity": 0,
+      "index": 240,
+      "d": 993,
+      "seed": 3084041529,
+      "reciprocal": 4325244,
+      "floor": 4325244
+    },
+    {
+      "parity": 0,
+      "index": 241,
+      "d": 995,
+      "seed": 3080940430,
+      "reciprocal": 4316550,
+      "floor": 4316550
+    },
+    {
+      "parity": 0,
+      "index": 242,
+      "d": 997,
+      "seed": 3077848668,
+      "reciprocal": 4307890,
+      "floor": 4307890
+    },
+    {
+      "parity": 0,
+      "index": 243,
+      "d": 999,
+      "seed": 3074766195,
+      "reciprocal": 4299266,
+      "floor": 4299266
+    },
+    {
+      "parity": 0,
+      "index": 244,
+      "d": 1001,
+      "seed": 3071692964,
+      "reciprocal": 4290676,
+      "floor": 4290676
+    },
+    {
+      "parity": 0,
+      "index": 245,
+      "d": 1003,
+      "seed": 3068628931,
+      "reciprocal": 4282120,
+      "floor": 4282120
+    },
+    {
+      "parity": 0,
+      "index": 246,
+      "d": 1005,
+      "seed": 3065574048,
+      "reciprocal": 4273599,
+      "floor": 4273599
+    },
+    {
+      "parity": 0,
+      "index": 247,
+      "d": 1007,
+      "seed": 3062528271,
+      "reciprocal": 4265111,
+      "floor": 4265111
+    },
+    {
+      "parity": 0,
+      "index": 248,
+      "d": 1009,
+      "seed": 3059491554,
+      "reciprocal": 4256657,
+      "floor": 4256657
+    },
+    {
+      "parity": 0,
+      "index": 249,
+      "d": 1011,
+      "seed": 3056463853,
+      "reciprocal": 4248236,
+      "floor": 4248236
+    },
+    {
+      "parity": 0,
+      "index": 250,
+      "d": 1013,
+      "seed": 3053445122,
+      "reciprocal": 4239849,
+      "floor": 4239849
+    },
+    {
+      "parity": 0,
+      "index": 251,
+      "d": 1015,
+      "seed": 3050435318,
+      "reciprocal": 4231494,
+      "floor": 4231494
+    },
+    {
+      "parity": 0,
+      "index": 252,
+      "d": 1017,
+      "seed": 3047434397,
+      "reciprocal": 4223173,
+      "floor": 4223173
+    },
+    {
+      "parity": 0,
+      "index": 253,
+      "d": 1019,
+      "seed": 3044442316,
+      "reciprocal": 4214884,
+      "floor": 4214884
+    },
+    {
+      "parity": 0,
+      "index": 254,
+      "d": 1021,
+      "seed": 3041459030,
+      "reciprocal": 4206628,
+      "floor": 4206628
+    },
+    {
+      "parity": 0,
+      "index": 255,
+      "d": 1023,
+      "seed": 3038484497,
+      "reciprocal": 4198404,
+      "floor": 4198404
+    },
+    {
+      "parity": 1,
+      "index": 0,
+      "d": 513,
+      "seed": 3034039017,
+      "reciprocal": 8372255,
+      "floor": 8372255
+    },
+    {
+      "parity": 1,
+      "index": 1,
+      "d": 515,
+      "seed": 3028141948,
+      "reciprocal": 8339742,
+      "floor": 8339742
+    },
+    {
+      "parity": 1,
+      "index": 2,
+      "d": 517,
+      "seed": 3022279131,
+      "reciprocal": 8307480,
+      "floor": 8307480
+    },
+    {
+      "parity": 1,
+      "index": 3,
+      "d": 519,
+      "seed": 3016450236,
+      "reciprocal": 8275466,
+      "floor": 8275466
+    },
+    {
+      "parity": 1,
+      "index": 4,
+      "d": 521,
+      "seed": 3010654938,
+      "reciprocal": 8243699,
+      "floor": 8243699
+    },
+    {
+      "parity": 1,
+      "index": 5,
+      "d": 523,
+      "seed": 3004892913,
+      "reciprocal": 8212174,
+      "floor": 8212174
+    },
+    {
+      "parity": 1,
+      "index": 6,
+      "d": 525,
+      "seed": 2999163846,
+      "reciprocal": 8180890,
+      "floor": 8180890
+    },
+    {
+      "parity": 1,
+      "index": 7,
+      "d": 527,
+      "seed": 2993467424,
+      "reciprocal": 8149843,
+      "floor": 8149843
+    },
+    {
+      "parity": 1,
+      "index": 8,
+      "d": 529,
+      "seed": 2987803336,
+      "reciprocal": 8119030,
+      "floor": 8119030
+    },
+    {
+      "parity": 1,
+      "index": 9,
+      "d": 531,
+      "seed": 2982171280,
+      "reciprocal": 8088450,
+      "floor": 8088450
+    },
+    {
+      "parity": 1,
+      "index": 10,
+      "d": 533,
+      "seed": 2976570953,
+      "reciprocal": 8058099,
+      "floor": 8058099
+    },
+    {
+      "parity": 1,
+      "index": 11,
+      "d": 535,
+      "seed": 2971002060,
+      "reciprocal": 8027976,
+      "floor": 8027976
+    },
+    {
+      "parity": 1,
+      "index": 12,
+      "d": 537,
+      "seed": 2965464306,
+      "reciprocal": 7998076,
+      "floor": 7998076
+    },
+    {
+      "parity": 1,
+      "index": 13,
+      "d": 539,
+      "seed": 2959957404,
+      "reciprocal": 7968399,
+      "floor": 7968399
+    },
+    {
+      "parity": 1,
+      "index": 14,
+      "d": 541,
+      "seed": 2954481068,
+      "reciprocal": 7938941,
+      "floor": 7938941
+    },
+    {
+      "parity": 1,
+      "index": 15,
+      "d": 543,
+      "seed": 2949035015,
+      "reciprocal": 7909700,
+      "floor": 7909700
+    },
+    {
+      "parity": 1,
+      "index": 16,
+      "d": 545,
+      "seed": 2943618968,
+      "reciprocal": 7880673,
+      "floor": 7880673
+    },
+    {
+      "parity": 1,
+      "index": 17,
+      "d": 547,
+      "seed": 2938232653,
+      "reciprocal": 7851859,
+      "floor": 7851859
+    },
+    {
+      "parity": 1,
+      "index": 18,
+      "d": 549,
+      "seed": 2932875797,
+      "reciprocal": 7823255,
+      "floor": 7823255
+    },
+    {
+      "parity": 1,
+      "index": 19,
+      "d": 551,
+      "seed": 2927548135,
+      "reciprocal": 7794858,
+      "floor": 7794858
+    },
+    {
+      "parity": 1,
+      "index": 20,
+      "d": 553,
+      "seed": 2922249401,
+      "reciprocal": 7766667,
+      "floor": 7766667
+    },
+    {
+      "parity": 1,
+      "index": 21,
+      "d": 555,
+      "seed": 2916979334,
+      "reciprocal": 7738679,
+      "floor": 7738679
+    },
+    {
+      "parity": 1,
+      "index": 22,
+      "d": 557,
+      "seed": 2911737678,
+      "reciprocal": 7710892,
+      "floor": 7710892
+    },
+    {
+      "parity": 1,
+      "index": 23,
+      "d": 559,
+      "seed": 2906524178,
+      "reciprocal": 7683304,
+      "floor": 7683304
+    },
+    {
+      "parity": 1,
+      "index": 24,
+      "d": 561,
+      "seed": 2901338582,
+      "reciprocal": 7655913,
+      "floor": 7655913
+    },
+    {
+      "parity": 1,
+      "index": 25,
+      "d": 563,
+      "seed": 2896180643,
+      "reciprocal": 7628716,
+      "floor": 7628716
+    },
+    {
+      "parity": 1,
+      "index": 26,
+      "d": 565,
+      "seed": 2891050115,
+      "reciprocal": 7601712,
+      "floor": 7601712
+    },
+    {
+      "parity": 1,
+      "index": 27,
+      "d": 567,
+      "seed": 2885946757,
+      "reciprocal": 7574898,
+      "floor": 7574898
+    },
+    {
+      "parity": 1,
+      "index": 28,
+      "d": 569,
+      "seed": 2880870329,
+      "reciprocal": 7548272,
+      "floor": 7548272
+    },
+    {
+      "parity": 1,
+      "index": 29,
+      "d": 571,
+      "seed": 2875820596,
+      "reciprocal": 7521834,
+      "floor": 7521834
+    },
+    {
+      "parity": 1,
+      "index": 30,
+      "d": 573,
+      "seed": 2870797325,
+      "reciprocal": 7495579,
+      "floor": 7495579
+    },
+    {
+      "parity": 1,
+      "index": 31,
+      "d": 575,
+      "seed": 2865800285,
+      "reciprocal": 7469508,
+      "floor": 7469508
+    },
+    {
+      "parity": 1,
+      "index": 32,
+      "d": 577,
+      "seed": 2860829249,
+      "reciprocal": 7443617,
+      "floor": 7443617
+    },
+    {
+      "parity": 1,
+      "index": 33,
+      "d": 579,
+      "seed": 2855883991,
+      "reciprocal": 7417905,
+      "floor": 7417905
+    },
+    {
+      "parity": 1,
+      "index": 34,
+      "d": 581,
+      "seed": 2850964291,
+      "reciprocal": 7392370,
+      "floor": 7392370
+    },
+    {
+      "parity": 1,
+      "index": 35,
+      "d": 583,
+      "seed": 2846069928,
+      "reciprocal": 7367010,
+      "floor": 7367010
+    },
+    {
+      "parity": 1,
+      "index": 36,
+      "d": 585,
+      "seed": 2841200686,
+      "reciprocal": 7341824,
+      "floor": 7341824
+    },
+    {
+      "parity": 1,
+      "index": 37,
+      "d": 587,
+      "seed": 2836356351,
+      "reciprocal": 7316809,
+      "floor": 7316809
+    },
+    {
+      "parity": 1,
+      "index": 38,
+      "d": 589,
+      "seed": 2831536710,
+      "reciprocal": 7291964,
+      "floor": 7291964
+    },
+    {
+      "parity": 1,
+      "index": 39,
+      "d": 591,
+      "seed": 2826741556,
+      "reciprocal": 7267288,
+      "floor": 7267288
+    },
+    {
+      "parity": 1,
+      "index": 40,
+      "d": 593,
+      "seed": 2821970680,
+      "reciprocal": 7242777,
+      "floor": 7242777
+    },
+    {
+      "parity": 1,
+      "index": 41,
+      "d": 595,
+      "seed": 2817223880,
+      "reciprocal": 7218432,
+      "floor": 7218432
+    },
+    {
+      "parity": 1,
+      "index": 42,
+      "d": 597,
+      "seed": 2812500953,
+      "reciprocal": 7194250,
+      "floor": 7194250
+    },
+    {
+      "parity": 1,
+      "index": 43,
+      "d": 599,
+      "seed": 2807801700,
+      "reciprocal": 7170229,
+      "floor": 7170229
+    },
+    {
+      "parity": 1,
+      "index": 44,
+      "d": 601,
+      "seed": 2803125924,
+      "reciprocal": 7146368,
+      "floor": 7146368
+    },
+    {
+      "parity": 1,
+      "index": 45,
+      "d": 603,
+      "seed": 2798473430,
+      "reciprocal": 7122665,
+      "floor": 7122665
+    },
+    {
+      "parity": 1,
+      "index": 46,
+      "d": 605,
+      "seed": 2793844025,
+      "reciprocal": 7099119,
+      "floor": 7099119
+    },
+    {
+      "parity": 1,
+      "index": 47,
+      "d": 607,
+      "seed": 2789237519,
+      "reciprocal": 7075728,
+      "floor": 7075728
+    },
+    {
+      "parity": 1,
+      "index": 48,
+      "d": 609,
+      "seed": 2784653723,
+      "reciprocal": 7052491,
+      "floor": 7052491
+    },
+    {
+      "parity": 1,
+      "index": 49,
+      "d": 611,
+      "seed": 2780092453,
+      "reciprocal": 7029406,
+      "floor": 7029406
+    },
+    {
+      "parity": 1,
+      "index": 50,
+      "d": 613,
+      "seed": 2775553524,
+      "reciprocal": 7006471,
+      "floor": 7006471
+    },
+    {
+      "parity": 1,
+      "index": 51,
+      "d": 615,
+      "seed": 2771036753,
+      "reciprocal": 6983686,
+      "floor": 6983686
+    },
+    {
+      "parity": 1,
+      "index": 52,
+      "d": 617,
+      "seed": 2766541962,
+      "reciprocal": 6961049,
+      "floor": 6961049
+    },
+    {
+      "parity": 1,
+      "index": 53,
+      "d": 619,
+      "seed": 2762068973,
+      "reciprocal": 6938557,
+      "floor": 6938557
+    },
+    {
+      "parity": 1,
+      "index": 54,
+      "d": 621,
+      "seed": 2757617610,
+      "reciprocal": 6916211,
+      "floor": 6916211
+    },
+    {
+      "parity": 1,
+      "index": 55,
+      "d": 623,
+      "seed": 2753187699,
+      "reciprocal": 6894008,
+      "floor": 6894008
+    },
+    {
+      "parity": 1,
+      "index": 56,
+      "d": 625,
+      "seed": 2748779069,
+      "reciprocal": 6871947,
+      "floor": 6871947
+    },
+    {
+      "parity": 1,
+      "index": 57,
+      "d": 627,
+      "seed": 2744391550,
+      "reciprocal": 6850027,
+      "floor": 6850027
+    },
+    {
+      "parity": 1,
+      "index": 58,
+      "d": 629,
+      "seed": 2740024974,
+      "reciprocal": 6828246,
+      "floor": 6828246
+    },
+    {
+      "parity": 1,
+      "index": 59,
+      "d": 631,
+      "seed": 2735679174,
+      "reciprocal": 6806604,
+      "floor": 6806604
+    },
+    {
+      "parity": 1,
+      "index": 60,
+      "d": 633,
+      "seed": 2731353987,
+      "reciprocal": 6785098,
+      "floor": 6785098
+    },
+    {
+      "parity": 1,
+      "index": 61,
+      "d": 635,
+      "seed": 2727049250,
+      "reciprocal": 6763728,
+      "floor": 6763728
+    },
+    {
+      "parity": 1,
+      "index": 62,
+      "d": 637,
+      "seed": 2722764802,
+      "reciprocal": 6742491,
+      "floor": 6742491
+    },
+    {
+      "parity": 1,
+      "index": 63,
+      "d": 639,
+      "seed": 2718500485,
+      "reciprocal": 6721388,
+      "floor": 6721388
+    },
+    {
+      "parity": 1,
+      "index": 64,
+      "d": 641,
+      "seed": 2714256141,
+      "reciprocal": 6700416,
+      "floor": 6700416
+    },
+    {
+      "parity": 1,
+      "index": 65,
+      "d": 643,
+      "seed": 2710031616,
+      "reciprocal": 6679575,
+      "floor": 6679575
+    },
+    {
+      "parity": 1,
+      "index": 66,
+      "d": 645,
+      "seed": 2705826754,
+      "reciprocal": 6658864,
+      "floor": 6658864
+    },
+    {
+      "parity": 1,
+      "index": 67,
+      "d": 647,
+      "seed": 2701641405,
+      "reciprocal": 6638280,
+      "floor": 6638280
+    },
+    {
+      "parity": 1,
+      "index": 68,
+      "d": 649,
+      "seed": 2697475417,
+      "reciprocal": 6617823,
+      "floor": 6617823
+    },
+    {
+      "parity": 1,
+      "index": 69,
+      "d": 651,
+      "seed": 2693328642,
+      "reciprocal": 6597492,
+      "floor": 6597492
+    },
+    {
+      "parity": 1,
+      "index": 70,
+      "d": 653,
+      "seed": 2689200933,
+      "reciprocal": 6577285,
+      "floor": 6577285
+    },
+    {
+      "parity": 1,
+      "index": 71,
+      "d": 655,
+      "seed": 2685092144,
+      "reciprocal": 6557201,
+      "floor": 6557201
+    },
+    {
+      "parity": 1,
+      "index": 72,
+      "d": 657,
+      "seed": 2681002131,
+      "reciprocal": 6537240,
+      "floor": 6537240
+    },
+    {
+      "parity": 1,
+      "index": 73,
+      "d": 659,
+      "seed": 2676930751,
+      "reciprocal": 6517401,
+      "floor": 6517401
+    },
+    {
+      "parity": 1,
+      "index": 74,
+      "d": 661,
+      "seed": 2672877863,
+      "reciprocal": 6497681,
+      "floor": 6497681
+    },
+    {
+      "parity": 1,
+      "index": 75,
+      "d": 663,
+      "seed": 2668843328,
+      "reciprocal": 6478080,
+      "floor": 6478080
+    },
+    {
+      "parity": 1,
+      "index": 76,
+      "d": 665,
+      "seed": 2664827008,
+      "reciprocal": 6458597,
+      "floor": 6458597
+    },
+    {
+      "parity": 1,
+      "index": 77,
+      "d": 667,
+      "seed": 2660828766,
+      "reciprocal": 6439231,
+      "floor": 6439231
+    },
+    {
+      "parity": 1,
+      "index": 78,
+      "d": 669,
+      "seed": 2656848466,
+      "reciprocal": 6419981,
+      "floor": 6419981
+    },
+    {
+      "parity": 1,
+      "index": 79,
+      "d": 671,
+      "seed": 2652885975,
+      "reciprocal": 6400845,
+      "floor": 6400845
+    },
+    {
+      "parity": 1,
+      "index": 80,
+      "d": 673,
+      "seed": 2648941161,
+      "reciprocal": 6381823,
+      "floor": 6381823
+    },
+    {
+      "parity": 1,
+      "index": 81,
+      "d": 675,
+      "seed": 2645013893,
+      "reciprocal": 6362914,
+      "floor": 6362914
+    },
+    {
+      "parity": 1,
+      "index": 82,
+      "d": 677,
+      "seed": 2641104040,
+      "reciprocal": 6344117,
+      "floor": 6344117
+    },
+    {
+      "parity": 1,
+      "index": 83,
+      "d": 679,
+      "seed": 2637211475,
+      "reciprocal": 6325430,
+      "floor": 6325430
+    },
+    {
+      "parity": 1,
+      "index": 84,
+      "d": 681,
+      "seed": 2633336070,
+      "reciprocal": 6306853,
+      "floor": 6306853
+    },
+    {
+      "parity": 1,
+      "index": 85,
+      "d": 683,
+      "seed": 2629477700,
+      "reciprocal": 6288385,
+      "floor": 6288385
+    },
+    {
+      "parity": 1,
+      "index": 86,
+      "d": 685,
+      "seed": 2625636241,
+      "reciprocal": 6270025,
+      "floor": 6270025
+    },
+    {
+      "parity": 1,
+      "index": 87,
+      "d": 687,
+      "seed": 2621811568,
+      "reciprocal": 6251771,
+      "floor": 6251771
+    },
+    {
+      "parity": 1,
+      "index": 88,
+      "d": 689,
+      "seed": 2618003561,
+      "reciprocal": 6233624,
+      "floor": 6233624
+    },
+    {
+      "parity": 1,
+      "index": 89,
+      "d": 691,
+      "seed": 2614212098,
+      "reciprocal": 6215582,
+      "floor": 6215582
+    },
+    {
+      "parity": 1,
+      "index": 90,
+      "d": 693,
+      "seed": 2610437061,
+      "reciprocal": 6197644,
+      "floor": 6197644
+    },
+    {
+      "parity": 1,
+      "index": 91,
+      "d": 695,
+      "seed": 2606678330,
+      "reciprocal": 6179809,
+      "floor": 6179809
+    },
+    {
+      "parity": 1,
+      "index": 92,
+      "d": 697,
+      "seed": 2602935790,
+      "reciprocal": 6162076,
+      "floor": 6162076
+    },
+    {
+      "parity": 1,
+      "index": 93,
+      "d": 699,
+      "seed": 2599209323,
+      "reciprocal": 6144445,
+      "floor": 6144445
+    },
+    {
+      "parity": 1,
+      "index": 94,
+      "d": 701,
+      "seed": 2595498815,
+      "reciprocal": 6126914,
+      "floor": 6126914
+    },
+    {
+      "parity": 1,
+      "index": 95,
+      "d": 703,
+      "seed": 2591804153,
+      "reciprocal": 6109484,
+      "floor": 6109484
+    },
+    {
+      "parity": 1,
+      "index": 96,
+      "d": 705,
+      "seed": 2588125224,
+      "reciprocal": 6092152,
+      "floor": 6092152
+    },
+    {
+      "parity": 1,
+      "index": 97,
+      "d": 707,
+      "seed": 2584461917,
+      "reciprocal": 6074918,
+      "floor": 6074918
+    },
+    {
+      "parity": 1,
+      "index": 98,
+      "d": 709,
+      "seed": 2580814121,
+      "reciprocal": 6057781,
+      "floor": 6057781
+    },
+    {
+      "parity": 1,
+      "index": 99,
+      "d": 711,
+      "seed": 2577181728,
+      "reciprocal": 6040741,
+      "floor": 6040741
+    },
+    {
+      "parity": 1,
+      "index": 100,
+      "d": 713,
+      "seed": 2573564629,
+      "reciprocal": 6023797,
+      "floor": 6023797
+    },
+    {
+      "parity": 1,
+      "index": 101,
+      "d": 715,
+      "seed": 2569962717,
+      "reciprocal": 6006947,
+      "floor": 6006947
+    },
+    {
+      "parity": 1,
+      "index": 102,
+      "d": 717,
+      "seed": 2566375887,
+      "reciprocal": 5990191,
+      "floor": 5990191
+    },
+    {
+      "parity": 1,
+      "index": 103,
+      "d": 719,
+      "seed": 2562804033,
+      "reciprocal": 5973528,
+      "floor": 5973528
+    },
+    {
+      "parity": 1,
+      "index": 104,
+      "d": 721,
+      "seed": 2559247051,
+      "reciprocal": 5956958,
+      "floor": 5956958
+    },
+    {
+      "parity": 1,
+      "index": 105,
+      "d": 723,
+      "seed": 2555704839,
+      "reciprocal": 5940480,
+      "floor": 5940480
+    },
+    {
+      "parity": 1,
+      "index": 106,
+      "d": 725,
+      "seed": 2552177294,
+      "reciprocal": 5924092,
+      "floor": 5924092
+    },
+    {
+      "parity": 1,
+      "index": 107,
+      "d": 727,
+      "seed": 2548664316,
+      "reciprocal": 5907795,
+      "floor": 5907795
+    },
+    {
+      "parity": 1,
+      "index": 108,
+      "d": 729,
+      "seed": 2545165805,
+      "reciprocal": 5891587,
+      "floor": 5891587
+    },
+    {
+      "parity": 1,
+      "index": 109,
+      "d": 731,
+      "seed": 2541681661,
+      "reciprocal": 5875468,
+      "floor": 5875468
+    },
+    {
+      "parity": 1,
+      "index": 110,
+      "d": 733,
+      "seed": 2538211787,
+      "reciprocal": 5859436,
+      "floor": 5859436
+    },
+    {
+      "parity": 1,
+      "index": 111,
+      "d": 735,
+      "seed": 2534756085,
+      "reciprocal": 5843492,
+      "floor": 5843492
+    },
+    {
+      "parity": 1,
+      "index": 112,
+      "d": 737,
+      "seed": 2531314460,
+      "reciprocal": 5827635,
+      "floor": 5827635
+    },
+    {
+      "parity": 1,
+      "index": 113,
+      "d": 739,
+      "seed": 2527886815,
+      "reciprocal": 5811863,
+      "floor": 5811863
+    },
+    {
+      "parity": 1,
+      "index": 114,
+      "d": 741,
+      "seed": 2524473057,
+      "reciprocal": 5796177,
+      "floor": 5796177
+    },
+    {
+      "parity": 1,
+      "index": 115,
+      "d": 743,
+      "seed": 2521073092,
+      "reciprocal": 5780575,
+      "floor": 5780575
+    },
+    {
+      "parity": 1,
+      "index": 116,
+      "d": 745,
+      "seed": 2517686827,
+      "reciprocal": 5765056,
+      "floor": 5765056
+    },
+    {
+      "parity": 1,
+      "index": 117,
+      "d": 747,
+      "seed": 2514314170,
+      "reciprocal": 5749621,
+      "floor": 5749621
+    },
+    {
+      "parity": 1,
+      "index": 118,
+      "d": 749,
+      "seed": 2510955032,
+      "reciprocal": 5734268,
+      "floor": 5734268
+    },
+    {
+      "parity": 1,
+      "index": 119,
+      "d": 751,
+      "seed": 2507609321,
+      "reciprocal": 5718997,
+      "floor": 5718997
+    },
+    {
+      "parity": 1,
+      "index": 120,
+      "d": 753,
+      "seed": 2504276948,
+      "reciprocal": 5703807,
+      "floor": 5703807
+    },
+    {
+      "parity": 1,
+      "index": 121,
+      "d": 755,
+      "seed": 2500957825,
+      "reciprocal": 5688698,
+      "floor": 5688698
+    },
+    {
+      "parity": 1,
+      "index": 122,
+      "d": 757,
+      "seed": 2497651865,
+      "reciprocal": 5673668,
+      "floor": 5673668
+    },
+    {
+      "parity": 1,
+      "index": 123,
+      "d": 759,
+      "seed": 2494358980,
+      "reciprocal": 5658718,
+      "floor": 5658718
+    },
+    {
+      "parity": 1,
+      "index": 124,
+      "d": 761,
+      "seed": 2491079086,
+      "reciprocal": 5643846,
+      "floor": 5643846
+    },
+    {
+      "parity": 1,
+      "index": 125,
+      "d": 763,
+      "seed": 2487812095,
+      "reciprocal": 5629052,
+      "floor": 5629052
+    },
+    {
+      "parity": 1,
+      "index": 126,
+      "d": 765,
+      "seed": 2484557925,
+      "reciprocal": 5614336,
+      "floor": 5614336
+    },
+    {
+      "parity": 1,
+      "index": 127,
+      "d": 767,
+      "seed": 2481316491,
+      "reciprocal": 5599696,
+      "floor": 5599696
+    },
+    {
+      "parity": 1,
+      "index": 128,
+      "d": 769,
+      "seed": 2478087711,
+      "reciprocal": 5585133,
+      "floor": 5585133
+    },
+    {
+      "parity": 1,
+      "index": 129,
+      "d": 771,
+      "seed": 2474871502,
+      "reciprocal": 5570644,
+      "floor": 5570645
+    },
+    {
+      "parity": 1,
+      "index": 130,
+      "d": 773,
+      "seed": 2471667784,
+      "reciprocal": 5556231,
+      "floor": 5556231
+    },
+    {
+      "parity": 1,
+      "index": 131,
+      "d": 775,
+      "seed": 2468476475,
+      "reciprocal": 5541893,
+      "floor": 5541893
+    },
+    {
+      "parity": 1,
+      "index": 132,
+      "d": 777,
+      "seed": 2465297495,
+      "reciprocal": 5527628,
+      "floor": 5527628
+    },
+    {
+      "parity": 1,
+      "index": 133,
+      "d": 779,
+      "seed": 2462130766,
+      "reciprocal": 5513436,
+      "floor": 5513436
+    },
+    {
+      "parity": 1,
+      "index": 134,
+      "d": 781,
+      "seed": 2458976209,
+      "reciprocal": 5499317,
+      "floor": 5499317
+    },
+    {
+      "parity": 1,
+      "index": 135,
+      "d": 783,
+      "seed": 2455833747,
+      "reciprocal": 5485271,
+      "floor": 5485271
+    },
+    {
+      "parity": 1,
+      "index": 136,
+      "d": 785,
+      "seed": 2452703301,
+      "reciprocal": 5471295,
+      "floor": 5471295
+    },
+    {
+      "parity": 1,
+      "index": 137,
+      "d": 787,
+      "seed": 2449584796,
+      "reciprocal": 5457391,
+      "floor": 5457391
+    },
+    {
+      "parity": 1,
+      "index": 138,
+      "d": 789,
+      "seed": 2446478155,
+      "reciprocal": 5443558,
+      "floor": 5443558
+    },
+    {
+      "parity": 1,
+      "index": 139,
+      "d": 791,
+      "seed": 2443383305,
+      "reciprocal": 5429794,
+      "floor": 5429794
+    },
+    {
+      "parity": 1,
+      "index": 140,
+      "d": 793,
+      "seed": 2440300170,
+      "reciprocal": 5416099,
+      "floor": 5416099
+    },
+    {
+      "parity": 1,
+      "index": 141,
+      "d": 795,
+      "seed": 2437228677,
+      "reciprocal": 5402474,
+      "floor": 5402474
+    },
+    {
+      "parity": 1,
+      "index": 142,
+      "d": 797,
+      "seed": 2434168753,
+      "reciprocal": 5388917,
+      "floor": 5388917
+    },
+    {
+      "parity": 1,
+      "index": 143,
+      "d": 799,
+      "seed": 2431120325,
+      "reciprocal": 5375428,
+      "floor": 5375428
+    },
+    {
+      "parity": 1,
+      "index": 144,
+      "d": 801,
+      "seed": 2428083322,
+      "reciprocal": 5362006,
+      "floor": 5362006
+    },
+    {
+      "parity": 1,
+      "index": 145,
+      "d": 803,
+      "seed": 2425057672,
+      "reciprocal": 5348651,
+      "floor": 5348651
+    },
+    {
+      "parity": 1,
+      "index": 146,
+      "d": 805,
+      "seed": 2422043304,
+      "reciprocal": 5335363,
+      "floor": 5335363
+    },
+    {
+      "parity": 1,
+      "index": 147,
+      "d": 807,
+      "seed": 2419040150,
+      "reciprocal": 5322140,
+      "floor": 5322140
+    },
+    {
+      "parity": 1,
+      "index": 148,
+      "d": 809,
+      "seed": 2416048138,
+      "reciprocal": 5308983,
+      "floor": 5308983
+    },
+    {
+      "parity": 1,
+      "index": 149,
+      "d": 811,
+      "seed": 2413067202,
+      "reciprocal": 5295890,
+      "floor": 5295890
+    },
+    {
+      "parity": 1,
+      "index": 150,
+      "d": 813,
+      "seed": 2410097272,
+      "reciprocal": 5282862,
+      "floor": 5282862
+    },
+    {
+      "parity": 1,
+      "index": 151,
+      "d": 815,
+      "seed": 2407138281,
+      "reciprocal": 5269898,
+      "floor": 5269898
+    },
+    {
+      "parity": 1,
+      "index": 152,
+      "d": 817,
+      "seed": 2404190162,
+      "reciprocal": 5256997,
+      "floor": 5256997
+    },
+    {
+      "parity": 1,
+      "index": 153,
+      "d": 819,
+      "seed": 2401252848,
+      "reciprocal": 5244160,
+      "floor": 5244160
+    },
+    {
+      "parity": 1,
+      "index": 154,
+      "d": 821,
+      "seed": 2398326275,
+      "reciprocal": 5231385,
+      "floor": 5231385
+    },
+    {
+      "parity": 1,
+      "index": 155,
+      "d": 823,
+      "seed": 2395410375,
+      "reciprocal": 5218672,
+      "floor": 5218672
+    },
+    {
+      "parity": 1,
+      "index": 156,
+      "d": 825,
+      "seed": 2392505086,
+      "reciprocal": 5206020,
+      "floor": 5206020
+    },
+    {
+      "parity": 1,
+      "index": 157,
+      "d": 827,
+      "seed": 2389610342,
+      "reciprocal": 5193430,
+      "floor": 5193430
+    },
+    {
+      "parity": 1,
+      "index": 158,
+      "d": 829,
+      "seed": 2386726080,
+      "reciprocal": 5180901,
+      "floor": 5180901
+    },
+    {
+      "parity": 1,
+      "index": 159,
+      "d": 831,
+      "seed": 2383852236,
+      "reciprocal": 5168432,
+      "floor": 5168432
+    },
+    {
+      "parity": 1,
+      "index": 160,
+      "d": 833,
+      "seed": 2380988749,
+      "reciprocal": 5156023,
+      "floor": 5156023
+    },
+    {
+      "parity": 1,
+      "index": 161,
+      "d": 835,
+      "seed": 2378135556,
+      "reciprocal": 5143673,
+      "floor": 5143673
+    },
+    {
+      "parity": 1,
+      "index": 162,
+      "d": 837,
+      "seed": 2375292595,
+      "reciprocal": 5131382,
+      "floor": 5131382
+    },
+    {
+      "parity": 1,
+      "index": 163,
+      "d": 839,
+      "seed": 2372459807,
+      "reciprocal": 5119150,
+      "floor": 5119150
+    },
+    {
+      "parity": 1,
+      "index": 164,
+      "d": 841,
+      "seed": 2369637129,
+      "reciprocal": 5106976,
+      "floor": 5106976
+    },
+    {
+      "parity": 1,
+      "index": 165,
+      "d": 843,
+      "seed": 2366824502,
+      "reciprocal": 5094860,
+      "floor": 5094860
+    },
+    {
+      "parity": 1,
+      "index": 166,
+      "d": 845,
+      "seed": 2364021867,
+      "reciprocal": 5082801,
+      "floor": 5082801
+    },
+    {
+      "parity": 1,
+      "index": 167,
+      "d": 847,
+      "seed": 2361229165,
+      "reciprocal": 5070799,
+      "floor": 5070799
+    },
+    {
+      "parity": 1,
+      "index": 168,
+      "d": 849,
+      "seed": 2358446336,
+      "reciprocal": 5058854,
+      "floor": 5058854
+    },
+    {
+      "parity": 1,
+      "index": 169,
+      "d": 851,
+      "seed": 2355673324,
+      "reciprocal": 5046965,
+      "floor": 5046965
+    },
+    {
+      "parity": 1,
+      "index": 170,
+      "d": 853,
+      "seed": 2352910069,
+      "reciprocal": 5035131,
+      "floor": 5035131
+    },
+    {
+      "parity": 1,
+      "index": 171,
+      "d": 855,
+      "seed": 2350156517,
+      "reciprocal": 5023353,
+      "floor": 5023353
+    },
+    {
+      "parity": 1,
+      "index": 172,
+      "d": 857,
+      "seed": 2347412608,
+      "reciprocal": 5011630,
+      "floor": 5011630
+    },
+    {
+      "parity": 1,
+      "index": 173,
+      "d": 859,
+      "seed": 2344678289,
+      "reciprocal": 4999961,
+      "floor": 4999961
+    },
+    {
+      "parity": 1,
+      "index": 174,
+      "d": 861,
+      "seed": 2341953502,
+      "reciprocal": 4988347,
+      "floor": 4988347
+    },
+    {
+      "parity": 1,
+      "index": 175,
+      "d": 863,
+      "seed": 2339238193,
+      "reciprocal": 4976787,
+      "floor": 4976787
+    },
+    {
+      "parity": 1,
+      "index": 176,
+      "d": 865,
+      "seed": 2336532306,
+      "reciprocal": 4965280,
+      "floor": 4965280
+    },
+    {
+      "parity": 1,
+      "index": 177,
+      "d": 867,
+      "seed": 2333835788,
+      "reciprocal": 4953826,
+      "floor": 4953826
+    },
+    {
+      "parity": 1,
+      "index": 178,
+      "d": 869,
+      "seed": 2331148584,
+      "reciprocal": 4942424,
+      "floor": 4942424
+    },
+    {
+      "parity": 1,
+      "index": 179,
+      "d": 871,
+      "seed": 2328470641,
+      "reciprocal": 4931076,
+      "floor": 4931076
+    },
+    {
+      "parity": 1,
+      "index": 180,
+      "d": 873,
+      "seed": 2325801906,
+      "reciprocal": 4919779,
+      "floor": 4919779
+    },
+    {
+      "parity": 1,
+      "index": 181,
+      "d": 875,
+      "seed": 2323142326,
+      "reciprocal": 4908534,
+      "floor": 4908534
+    },
+    {
+      "parity": 1,
+      "index": 182,
+      "d": 877,
+      "seed": 2320491849,
+      "reciprocal": 4897340,
+      "floor": 4897340
+    },
+    {
+      "parity": 1,
+      "index": 183,
+      "d": 879,
+      "seed": 2317850423,
+      "reciprocal": 4886197,
+      "floor": 4886197
+    },
+    {
+      "parity": 1,
+      "index": 184,
+      "d": 881,
+      "seed": 2315217997,
+      "reciprocal": 4875104,
+      "floor": 4875104
+    },
+    {
+      "parity": 1,
+      "index": 185,
+      "d": 883,
+      "seed": 2312594520,
+      "reciprocal": 4864062,
+      "floor": 4864062
+    },
+    {
+      "parity": 1,
+      "index": 186,
+      "d": 885,
+      "seed": 2309979940,
+      "reciprocal": 4853070,
+      "floor": 4853070
+    },
+    {
+      "parity": 1,
+      "index": 187,
+      "d": 887,
+      "seed": 2307374209,
+      "reciprocal": 4842127,
+      "floor": 4842127
+    },
+    {
+      "parity": 1,
+      "index": 188,
+      "d": 889,
+      "seed": 2304777276,
+      "reciprocal": 4831234,
+      "floor": 4831234
+    },
+    {
+      "parity": 1,
+      "index": 189,
+      "d": 891,
+      "seed": 2302189092,
+      "reciprocal": 4820389,
+      "floor": 4820389
+    },
+    {
+      "parity": 1,
+      "index": 190,
+      "d": 893,
+      "seed": 2299609608,
+      "reciprocal": 4809593,
+      "floor": 4809593
+    },
+    {
+      "parity": 1,
+      "index": 191,
+      "d": 895,
+      "seed": 2297038775,
+      "reciprocal": 4798846,
+      "floor": 4798846
+    },
+    {
+      "parity": 1,
+      "index": 192,
+      "d": 897,
+      "seed": 2294476544,
+      "reciprocal": 4788146,
+      "floor": 4788146
+    },
+    {
+      "parity": 1,
+      "index": 193,
+      "d": 899,
+      "seed": 2291922869,
+      "reciprocal": 4777494,
+      "floor": 4777494
+    },
+    {
+      "parity": 1,
+      "index": 194,
+      "d": 901,
+      "seed": 2289377701,
+      "reciprocal": 4766889,
+      "floor": 4766889
+    },
+    {
+      "parity": 1,
+      "index": 195,
+      "d": 903,
+      "seed": 2286840994,
+      "reciprocal": 4756331,
+      "floor": 4756331
+    },
+    {
+      "parity": 1,
+      "index": 196,
+      "d": 905,
+      "seed": 2284312700,
+      "reciprocal": 4745820,
+      "floor": 4745820
+    },
+    {
+      "parity": 1,
+      "index": 197,
+      "d": 907,
+      "seed": 2281792773,
+      "reciprocal": 4735355,
+      "floor": 4735355
+    },
+    {
+      "parity": 1,
+      "index": 198,
+      "d": 909,
+      "seed": 2279281168,
+      "reciprocal": 4724936,
+      "floor": 4724936
+    },
+    {
+      "parity": 1,
+      "index": 199,
+      "d": 911,
+      "seed": 2276777838,
+      "reciprocal": 4714563,
+      "floor": 4714563
+    },
+    {
+      "parity": 1,
+      "index": 200,
+      "d": 913,
+      "seed": 2274282739,
+      "reciprocal": 4704235,
+      "floor": 4704235
+    },
+    {
+      "parity": 1,
+      "index": 201,
+      "d": 915,
+      "seed": 2271795824,
+      "reciprocal": 4693953,
+      "floor": 4693953
+    },
+    {
+      "parity": 1,
+      "index": 202,
+      "d": 917,
+      "seed": 2269317050,
+      "reciprocal": 4683715,
+      "floor": 4683715
+    },
+    {
+      "parity": 1,
+      "index": 203,
+      "d": 919,
+      "seed": 2266846372,
+      "reciprocal": 4673522,
+      "floor": 4673522
+    },
+    {
+      "parity": 1,
+      "index": 204,
+      "d": 921,
+      "seed": 2264383746,
+      "reciprocal": 4663373,
+      "floor": 4663373
+    },
+    {
+      "parity": 1,
+      "index": 205,
+      "d": 923,
+      "seed": 2261929129,
+      "reciprocal": 4653269,
+      "floor": 4653269
+    },
+    {
+      "parity": 1,
+      "index": 206,
+      "d": 925,
+      "seed": 2259482477,
+      "reciprocal": 4643207,
+      "floor": 4643207
+    },
+    {
+      "parity": 1,
+      "index": 207,
+      "d": 927,
+      "seed": 2257043747,
+      "reciprocal": 4633190,
+      "floor": 4633190
+    },
+    {
+      "parity": 1,
+      "index": 208,
+      "d": 929,
+      "seed": 2254612897,
+      "reciprocal": 4623215,
+      "floor": 4623215
+    },
+    {
+      "parity": 1,
+      "index": 209,
+      "d": 931,
+      "seed": 2252189884,
+      "reciprocal": 4613283,
+      "floor": 4613283
+    },
+    {
+      "parity": 1,
+      "index": 210,
+      "d": 933,
+      "seed": 2249774666,
+      "reciprocal": 4603394,
+      "floor": 4603394
+    },
+    {
+      "parity": 1,
+      "index": 211,
+      "d": 935,
+      "seed": 2247367202,
+      "reciprocal": 4593547,
+      "floor": 4593547
+    },
+    {
+      "parity": 1,
+      "index": 212,
+      "d": 937,
+      "seed": 2244967450,
+      "reciprocal": 4583743,
+      "floor": 4583743
+    },
+    {
+      "parity": 1,
+      "index": 213,
+      "d": 939,
+      "seed": 2242575369,
+      "reciprocal": 4573980,
+      "floor": 4573980
+    },
+    {
+      "parity": 1,
+      "index": 214,
+      "d": 941,
+      "seed": 2240190918,
+      "reciprocal": 4564258,
+      "floor": 4564258
+    },
+    {
+      "parity": 1,
+      "index": 215,
+      "d": 943,
+      "seed": 2237814057,
+      "reciprocal": 4554578,
+      "floor": 4554578
+    },
+    {
+      "parity": 1,
+      "index": 216,
+      "d": 945,
+      "seed": 2235444745,
+      "reciprocal": 4544938,
+      "floor": 4544938
+    },
+    {
+      "parity": 1,
+      "index": 217,
+      "d": 947,
+      "seed": 2233082944,
+      "reciprocal": 4535340,
+      "floor": 4535340
+    },
+    {
+      "parity": 1,
+      "index": 218,
+      "d": 949,
+      "seed": 2230728612,
+      "reciprocal": 4525782,
+      "floor": 4525782
+    },
+    {
+      "parity": 1,
+      "index": 219,
+      "d": 951,
+      "seed": 2228381711,
+      "reciprocal": 4516264,
+      "floor": 4516264
+    },
+    {
+      "parity": 1,
+      "index": 220,
+      "d": 953,
+      "seed": 2226042202,
+      "reciprocal": 4506786,
+      "floor": 4506786
+    },
+    {
+      "parity": 1,
+      "index": 221,
+      "d": 955,
+      "seed": 2223710046,
+      "reciprocal": 4497347,
+      "floor": 4497347
+    },
+    {
+      "parity": 1,
+      "index": 222,
+      "d": 957,
+      "seed": 2221385205,
+      "reciprocal": 4487949,
+      "floor": 4487949
+    },
+    {
+      "parity": 1,
+      "index": 223,
+      "d": 959,
+      "seed": 2219067640,
+      "reciprocal": 4478589,
+      "floor": 4478589
+    },
+    {
+      "parity": 1,
+      "index": 224,
+      "d": 961,
+      "seed": 2216757314,
+      "reciprocal": 4469268,
+      "floor": 4469268
+    },
+    {
+      "parity": 1,
+      "index": 225,
+      "d": 963,
+      "seed": 2214454189,
+      "reciprocal": 4459986,
+      "floor": 4459986
+    },
+    {
+      "parity": 1,
+      "index": 226,
+      "d": 965,
+      "seed": 2212158228,
+      "reciprocal": 4450743,
+      "floor": 4450743
+    },
+    {
+      "parity": 1,
+      "index": 227,
+      "d": 967,
+      "seed": 2209869393,
+      "reciprocal": 4441538,
+      "floor": 4441538
+    },
+    {
+      "parity": 1,
+      "index": 228,
+      "d": 969,
+      "seed": 2207587648,
+      "reciprocal": 4432370,
+      "floor": 4432370
+    },
+    {
+      "parity": 1,
+      "index": 229,
+      "d": 971,
+      "seed": 2205312956,
+      "reciprocal": 4423241,
+      "floor": 4423241
+    },
+    {
+      "parity": 1,
+      "index": 230,
+      "d": 973,
+      "seed": 2203045282,
+      "reciprocal": 4414149,
+      "floor": 4414149
+    },
+    {
+      "parity": 1,
+      "index": 231,
+      "d": 975,
+      "seed": 2200784588,
+      "reciprocal": 4405094,
+      "floor": 4405094
+    },
+    {
+      "parity": 1,
+      "index": 232,
+      "d": 977,
+      "seed": 2198530840,
+      "reciprocal": 4396077,
+      "floor": 4396077
+    },
+    {
+      "parity": 1,
+      "index": 233,
+      "d": 979,
+      "seed": 2196284001,
+      "reciprocal": 4387096,
+      "floor": 4387096
+    },
+    {
+      "parity": 1,
+      "index": 234,
+      "d": 981,
+      "seed": 2194044037,
+      "reciprocal": 4378152,
+      "floor": 4378152
+    },
+    {
+      "parity": 1,
+      "index": 235,
+      "d": 983,
+      "seed": 2191810913,
+      "reciprocal": 4369244,
+      "floor": 4369244
+    },
+    {
+      "parity": 1,
+      "index": 236,
+      "d": 985,
+      "seed": 2189584594,
+      "reciprocal": 4360372,
+      "floor": 4360372
+    },
+    {
+      "parity": 1,
+      "index": 237,
+      "d": 987,
+      "seed": 2187365045,
+      "reciprocal": 4351537,
+      "floor": 4351537
+    },
+    {
+      "parity": 1,
+      "index": 238,
+      "d": 989,
+      "seed": 2185152232,
+      "reciprocal": 4342737,
+      "floor": 4342737
+    },
+    {
+      "parity": 1,
+      "index": 239,
+      "d": 991,
+      "seed": 2182946121,
+      "reciprocal": 4333973,
+      "floor": 4333973
+    },
+    {
+      "parity": 1,
+      "index": 240,
+      "d": 993,
+      "seed": 2180746678,
+      "reciprocal": 4325244,
+      "floor": 4325244
+    },
+    {
+      "parity": 1,
+      "index": 241,
+      "d": 995,
+      "seed": 2178553871,
+      "reciprocal": 4316550,
+      "floor": 4316550
+    },
+    {
+      "parity": 1,
+      "index": 242,
+      "d": 997,
+      "seed": 2176367665,
+      "reciprocal": 4307890,
+      "floor": 4307890
+    },
+    {
+      "parity": 1,
+      "index": 243,
+      "d": 999,
+      "seed": 2174188027,
+      "reciprocal": 4299266,
+      "floor": 4299266
+    },
+    {
+      "parity": 1,
+      "index": 244,
+      "d": 1001,
+      "seed": 2172014925,
+      "reciprocal": 4290676,
+      "floor": 4290676
+    },
+    {
+      "parity": 1,
+      "index": 245,
+      "d": 1003,
+      "seed": 2169848326,
+      "reciprocal": 4282120,
+      "floor": 4282120
+    },
+    {
+      "parity": 1,
+      "index": 246,
+      "d": 1005,
+      "seed": 2167688198,
+      "reciprocal": 4273599,
+      "floor": 4273599
+    },
+    {
+      "parity": 1,
+      "index": 247,
+      "d": 1007,
+      "seed": 2165534508,
+      "reciprocal": 4265111,
+      "floor": 4265111
+    },
+    {
+      "parity": 1,
+      "index": 248,
+      "d": 1009,
+      "seed": 2163387225,
+      "reciprocal": 4256657,
+      "floor": 4256657
+    },
+    {
+      "parity": 1,
+      "index": 249,
+      "d": 1011,
+      "seed": 2161246317,
+      "reciprocal": 4248236,
+      "floor": 4248236
+    },
+    {
+      "parity": 1,
+      "index": 250,
+      "d": 1013,
+      "seed": 2159111752,
+      "reciprocal": 4239849,
+      "floor": 4239849
+    },
+    {
+      "parity": 1,
+      "index": 251,
+      "d": 1015,
+      "seed": 2156983499,
+      "reciprocal": 4231494,
+      "floor": 4231494
+    },
+    {
+      "parity": 1,
+      "index": 252,
+      "d": 1017,
+      "seed": 2154861528,
+      "reciprocal": 4223173,
+      "floor": 4223173
+    },
+    {
+      "parity": 1,
+      "index": 253,
+      "d": 1019,
+      "seed": 2152745806,
+      "reciprocal": 4214884,
+      "floor": 4214884
+    },
+    {
+      "parity": 1,
+      "index": 254,
+      "d": 1021,
+      "seed": 2150636305,
+      "reciprocal": 4206628,
+      "floor": 4206628
+    },
+    {
+      "parity": 1,
+      "index": 255,
+      "d": 1023,
+      "seed": 2148532993,
+      "reciprocal": 4198404,
+      "floor": 4198404
+    }
+  ],
+  "new_tables_or_global_RAM": false,
+  "hardware_accessed": false
+}

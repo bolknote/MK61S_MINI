@@ -1,0 +1,43 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-adaptive-enclosure-independent-20261024/rebuild/unit.elf:     file format elf32-littlearm
+
+
+Disassembly of section .unit:
+
+10166000 <audit_exp_gate>:
+10166000:	b570      	push	{r4, r5, r6, lr}
+10166002:	0014      	movs	r4, r2
+10166004:	2280      	movs	r2, #128	@ 0x80
+10166006:	0580      	lsls	r0, r0, #22
+10166008:	0d80      	lsrs	r0, r0, #22
+1016600a:	0092      	lsls	r2, r2, #2
+1016600c:	1a13      	subs	r3, r2, r0
+1016600e:	4290      	cmp	r0, r2
+10166010:	d901      	bls.n	10166016 <audit_exp_gate+0x16>
+10166012:	4b0c      	ldr	r3, [pc, #48]	@ (10166044 <audit_exp_gate+0x44>)
+10166014:	18c3      	adds	r3, r0, r3
+10166016:	0c0d      	lsrs	r5, r1, #16
+10166018:	2114      	movs	r1, #20
+1016601a:	31ff      	adds	r1, #255	@ 0xff
+1016601c:	4369      	muls	r1, r5
+1016601e:	4d0a      	ldr	r5, [pc, #40]	@ (10166048 <audit_exp_gate+0x48>)
+10166020:	1624      	asrs	r4, r4, #24
+10166022:	1949      	adds	r1, r1, r5
+10166024:	2500      	movs	r5, #0
+10166026:	002e      	movs	r6, r5
+10166028:	4282      	cmp	r2, r0
+1016602a:	416d      	adcs	r5, r5
+1016602c:	426a      	negs	r2, r5
+1016602e:	0b89      	lsrs	r1, r1, #14
+10166030:	4062      	eors	r2, r4
+10166032:	021b      	lsls	r3, r3, #8
+10166034:	3181      	adds	r1, #129	@ 0x81
+10166036:	18d2      	adds	r2, r2, r3
+10166038:	2001      	movs	r0, #1
+1016603a:	4291      	cmp	r1, r2
+1016603c:	db00      	blt.n	10166040 <audit_exp_gate+0x40>
+1016603e:	0030      	movs	r0, r6
+10166040:	bd70      	pop	{r4, r5, r6, pc}
+10166042:	46c0      	nop			@ (mov r8, r8)
+10166044:	fffffe00 	.word	0xfffffe00
+10166048:	000059c7 	.word	0x000059c7

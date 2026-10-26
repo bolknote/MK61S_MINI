@@ -1,0 +1,7 @@
+{
+  "status": "AUTHOR_QUALIFICATION_COMPLETE_PENDING_REVIEW",
+  "completed_seed_divisors": 65536,
+  "total_seed_divisors": 65536,
+  "completed_inputs": 131072,
+  "actual_ARM_calls": 786432
+}

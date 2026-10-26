@@ -1,0 +1,288 @@
+{
+  "status": "PASS_NUMERATOR_ONE_CALLER_GUARD_EXACT_PRODUCT_LIVENESS_AND_LATENCY_PROOF",
+  "actual_root_BL": "0x1014f114",
+  "exact_return_site": "0x1014f118",
+  "actual_zero_load": "0x1014f10a",
+  "actual_one_literal": "0x1014f3c4",
+  "literal_value": "3FF00000",
+  "source_no_intermediate_entry_label_and_no_direct_incoming_branch_or_symbol": true,
+  "sole_root_reference_only": true,
+  "precondition": "R0=0,R1=3FF00000; denominator R2:R3 any binary64; hidden reciprocal1 not generic ddiv",
+  "all2048_E_guards_equal_accept1to2044": true,
+  "R6": "2044-E",
+  "guard_instruction_savings": {
+    "accepted": 11,
+    "E2045_2046": 12,
+    "E0_2047": 5
+  },
+  "first_product_identity": "P=2^31*u; low=(u&1)<<31,high=u>>1; doubling gives low0,high2*(u>>1)+(u&1)=u for every uint32u.",
+  "exact_carry_no_approximation_or_rounding_change": true,
+  "old_first_runtime17_new2_saving15": true,
+  "old_first_cross_carry_always0_for_low16_of2pow31_zero": true,
+  "dead_state_proof": "Before second product, live R0=0,R5=u1,R6=u1,R12,SP/28B frame agree. LDR writes R2; UXTH writes R1/R4; LSRS writes R7 then R3. ADDS establishes flags before BCC. Thus differing R1/R2/R3/R4/R7/NZCV cannot reach a read.",
+  "actual_first_second_records": [
+    {
+      "label": "control",
+      "first": "0x101e10d0",
+      "second": "0x101e10fa",
+      "after": "0x101e111e",
+      "actual_second_product_instructions": [
+        [
+          "uxth",
+          "r1, r2"
+        ],
+        [
+          "uxth",
+          "r4, r5"
+        ],
+        [
+          "muls",
+          "r1, r4"
+        ],
+        [
+          "lsrs",
+          "r7, r2, #16"
+        ],
+        [
+          "muls",
+          "r4, r7"
+        ],
+        [
+          "lsrs",
+          "r3, r5, #16"
+        ],
+        [
+          "muls",
+          "r7, r3"
+        ],
+        [
+          "uxth",
+          "r2, r2"
+        ],
+        [
+          "muls",
+          "r2, r3"
+        ],
+        [
+          "adds",
+          "r4, r4, r2"
+        ],
+        [
+          "bcc",
+          "101e1116 <l1_1>"
+        ],
+        [
+          "movs",
+          "r2, #1"
+        ],
+        [
+          "lsls",
+          "r2, r2, #16"
+        ],
+        [
+          "adds",
+          "r7, r7, r2"
+        ],
+        [
+          "lsls",
+          "r2, r4, #16"
+        ],
+        [
+          "lsrs",
+          "r3, r4, #16"
+        ],
+        [
+          "adds",
+          "r2, r2, r1"
+        ],
+        [
+          "adcs",
+          "r3, r7"
+        ]
+      ]
+    },
+    {
+      "label": "candidate",
+      "first": "0x101e10ba",
+      "second": "0x101e10c0",
+      "after": "0x101e10e4",
+      "actual_second_product_instructions": [
+        [
+          "uxth",
+          "r1, r2"
+        ],
+        [
+          "uxth",
+          "r4, r5"
+        ],
+        [
+          "muls",
+          "r1, r4"
+        ],
+        [
+          "lsrs",
+          "r7, r2, #16"
+        ],
+        [
+          "muls",
+          "r4, r7"
+        ],
+        [
+          "lsrs",
+          "r3, r5, #16"
+        ],
+        [
+          "muls",
+          "r7, r3"
+        ],
+        [
+          "uxth",
+          "r2, r2"
+        ],
+        [
+          "muls",
+          "r2, r3"
+        ],
+        [
+          "adds",
+          "r4, r4, r2"
+        ],
+        [
+          "bcc",
+          "101e10dc <l0_1>"
+        ],
+        [
+          "movs",
+          "r2, #1"
+        ],
+        [
+          "lsls",
+          "r2, r2, #16"
+        ],
+        [
+          "adds",
+          "r7, r7, r2"
+        ],
+        [
+          "lsls",
+          "r2, r4, #16"
+        ],
+        [
+          "lsrs",
+          "r3, r4, #16"
+        ],
+        [
+          "adds",
+          "r2, r2, r1"
+        ],
+        [
+          "adcs",
+          "r3, r7"
+        ]
+      ]
+    }
+  ],
+  "after_second_all_R0_R7_R12_SP_NZCV_frame28_induction": true,
+  "software_dead6_unpacking_only_before_overwrites": true,
+  "software_dead2_R0_setup_removed_only_because_seed_overwrites_R0_before_read": true,
+  "hardware_READY_latency": [
+    {
+      "label": "control",
+      "issue": "0x101e10a4",
+      "read": "0x101e10b8",
+      "nine_ALU": [
+        [
+          "lsls",
+          "r1, r1, #12"
+        ],
+        [
+          "lsrs",
+          "r1, r1, #12"
+        ],
+        [
+          "orrs",
+          "r1, r4"
+        ],
+        [
+          "lsls",
+          "r4, r3, #10"
+        ],
+        [
+          "lsrs",
+          "r5, r2, #22"
+        ],
+        [
+          "orrs",
+          "r5, r4"
+        ],
+        [
+          "lsls",
+          "r4, r1, #11"
+        ],
+        [
+          "lsrs",
+          "r6, r0, #21"
+        ],
+        [
+          "orrs",
+          "r4, r6"
+        ]
+      ],
+      "bytes": "0903090b21439c02950d2543cc02460d3443"
+    },
+    {
+      "label": "candidate",
+      "issue": "0x101e108e",
+      "read": "0x101e10a2",
+      "nine_ALU": [
+        [
+          "lsls",
+          "r1, r1, #12"
+        ],
+        [
+          "lsrs",
+          "r1, r1, #12"
+        ],
+        [
+          "orrs",
+          "r1, r4"
+        ],
+        [
+          "lsls",
+          "r4, r3, #10"
+        ],
+        [
+          "lsrs",
+          "r5, r2, #22"
+        ],
+        [
+          "orrs",
+          "r5, r4"
+        ],
+        [
+          "lsls",
+          "r4, r1, #11"
+        ],
+        [
+          "lsrs",
+          "r6, r0, #21"
+        ],
+        [
+          "orrs",
+          "r4, r6"
+        ]
+      ],
+      "bytes": "0903090b21439c02950d2543cc02460d3443"
+    }
+  ],
+  "hardware9ALU_not_shortened": true,
+  "common_suffix186_fourcopies_byte_exact": true,
+  "seed312_unchanged": true,
+  "exact_cost_law": "guard_saved +15 per first product +8 per software seed",
+  "original_IEEE_fallback_raw_operands_preserved_all_rejected_E": true,
+  "no_new_table_values_or_global_RAM": true,
+  "no_scalar_C_ABI_inheritance": true,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "device_IO": 0
+}

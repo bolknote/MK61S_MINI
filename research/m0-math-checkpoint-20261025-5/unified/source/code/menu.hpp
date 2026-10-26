@@ -1,0 +1,160 @@
+#ifndef MENU_CLASS
+#define MENU_CLASS
+
+#include  "keyboard.h"
+#include  "tools.hpp"
+#include  "lcd_ru.hpp"
+
+namespace action {
+  static constexpr bool MENU_EXIT = true;
+  static constexpr bool MENU_BACK = false;
+}
+
+typedef bool (*menu_action)(void);  // возвращает необходимость покинуть главное меню 
+
+enum class ProgramMemoryMode : u8 {
+  CLASSIC_105,
+  EXPANDED_112,
+  AUTO
+};
+
+enum class SpeedMode : u8 {
+  CLASSIC = speed_mode_storage::CLASSIC,
+  MAXIMUM = speed_mode_storage::MAXIMUM
+};
+
+enum class RandomMode : u8 {
+  MK61,
+  MK61S
+};
+
+struct  t_punct {
+    u8            size;
+    menu_action   action;
+    char          text[];
+};
+
+extern bool settings_select(void);
+extern bool TurnSoundVolume(void);
+extern bool TurnSpeed(void);
+extern bool TurnLanguage(void);
+extern bool TurnProgramMemory(void);
+extern bool TurnRandomMode(void);
+extern bool UsbDiskMode(void);
+// The terminal/HIL entry uses the same lifecycle as the menu action, but an
+// initialization error must return to CDC instead of waiting for a physical
+// key that an unattended host cannot press.
+extern bool UsbDiskModeUnattended(void);
+// Changes exactly when CDC was stopped for a real USB class handoff.  A
+// command that spans that boundary must not write its trailing prompt through
+// the destroyed terminal generation.
+extern u32 usb_terminal_generation(void);
+extern bool UsbScreenMode(void);
+extern bool TurnIdleSignal(void);
+#if defined(MK61_OLED1602_WS0010)
+extern bool TurnOledProtection(void);
+#endif
+extern bool TurnDisplayRows(void);
+extern bool SetDateTime(void);
+extern bool SetRtcCalibration(void);
+extern bool FontSetup(void);
+extern bool ResetDevice(void);
+extern bool system_select(void);
+
+namespace library_mk61 {
+  static constexpr int MAIN_MENU_COUNT = 6;
+  extern  const int       COUNT_PUNCTS;
+  extern  t_punct*        MENU[MAIN_MENU_COUNT];
+
+  extern  bool  sound_is_on(void);
+  extern  u8    sound_volume(void);
+  extern  void  set_sound_volume(u8 volume);
+  extern  bool  language_is_ru(void);
+  extern  bool  expanded_program_is_on(void);
+  extern  bool  idle_signal_is_on(void);
+#if defined(MK61_OLED1602_WS0010)
+  extern  u8    oled_timeout(void);
+  extern  void  set_oled_timeout(u8 timeout);
+#endif
+  extern  u8    display_rows(void);
+  extern  lcd_display::TextProfile display_text_profile(void);
+  extern  u8    ui_font_family(void);
+  extern  u8    ui_font_size(void);
+  extern  u32   ui_font_key(void);
+  extern  u8    calculator_font(void);
+  extern  bool  set_calculator_font(u8 font);
+  extern  bool  set_ui_font(u8 family, u8 size, u32 key = 0);
+  // Completes a SETUP.APP installation without recursively loading SETUP.APP.
+  extern  bool  adopt_external_ui_font(u8 size, u32 key);
+  extern  ProgramMemoryMode program_memory_mode(void);
+  extern  RandomMode random_mode(void);
+  extern  bool  random_mode_is_mk61s(void);
+  extern  bool  program_memory_mode_accepts(bool needs_expanded);
+  extern  void  set_program_memory_state(bool enable);
+  extern  void  set_program_memory_mode(ProgramMemoryMode mode);
+  extern  void  set_random_mode_state(RandomMode mode);
+  extern  void  set_idle_signal_state(bool enable);
+  extern  void  set_display_rows(u8 rows);
+  extern  void  set_display_text_profile(lcd_display::TextProfile profile);
+  extern  void  refresh_menu_text(void);
+  extern  bool  store_settings_state(void);
+  extern  void  mark_settings_dirty(void);
+  extern  void  defer_settings_state_save(void);
+  extern  void  flush_settings_state(void);
+  extern  void  poll_settings_state_save(void);
+  extern  void  load_settings_state(void);
+  extern  SpeedMode speed_mode(void);
+  extern  bool  speed_is_classic(void);
+  extern  bool  speed_is_max(void);
+
+  inline const char* text(const char* en, const char* ru) {
+    return language_is_ru() ? ru : en;
+  }
+
+  inline void print_localized_at(u8 x, u8 y, const char* ru, const char* en, u8 width = lcd_ru::LCD_WIDTH) {
+#if defined(MK61_DISPLAY_UC1609)
+    if(x == 0 && width == lcd_ru::LCD_WIDTH) {
+      // Full-width localized messages are UI rows.  Entering the selected
+      // renderer here prevents calculator/fixed-cell state from leaking into
+      // confirmation, error and boot-status screens.
+      main_lcd().beginUiText();
+      main_lcd().printUiLine(y, language_is_ru() ? ru : en);
+      return;
+    }
+#endif
+    if(language_is_ru()) {
+      lcd_ru::print_at(x, y, ru, width);
+      return;
+    }
+
+    main_lcd().setCursor(x, y);
+    u8 used = 0;
+    while(en[used] != 0 && used < width) main_lcd().write((u8) en[used++]);
+    while(used++ < width) main_lcd().write((u8) ' ');
+  }
+
+  inline void restore_localized_font(void) {
+    if(language_is_ru()) lcd_ru::restore_default_font();
+  }
+}
+
+class class_menu {
+  private:
+    int MENU_PUNCT_COUNT;
+    u8 active_punct;
+    u8 previous_up;
+    t_punct** puncts;
+
+    void draw(void);
+    i32 wait_key(void);
+    bool handle_settings_adjustment(i32 key);
+
+  public:
+    constexpr class_menu(t_punct** punts_of_menu, int count_of_puncts)
+      : MENU_PUNCT_COUNT(count_of_puncts), active_punct(0), previous_up(0),
+        puncts(punts_of_menu) {}
+    bool select(void);
+    i32  select(i32 key);
+};
+
+#endif

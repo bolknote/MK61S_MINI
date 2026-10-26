@@ -1,0 +1,78 @@
+{
+  "status": "PASS_PRIVATE_CALLER_SCOPE_FULL_AFTER_SECOND_STATE_AND_CORRECTED_DEFICIT_CLOSURE",
+  "sole_actual_root_BL": "0x1014f114",
+  "hidden_entry_and_private_software": {
+    "mk61_m0_reciprocal1": 2,
+    "mk61_m0_reciprocal1_sw_from_guard": 2
+  },
+  "first_product_incoming_controlflow_only_ready_small_divisor_or_guarded_linear_NR": true,
+  "actual_candidate_scalar_entries_and_return_pops": 846,
+  "actual_public_entries_return_pops_and_return_sites": 10,
+  "actual_public_return_site": "0x1014f118",
+  "all_entries_exact_positive1": true,
+  "after_second_R0_R7_R12_SP_NZCV_saved28_equal_checks": 318,
+  "R3_save_pop_and_private_raw_frame_checks": 157,
+  "actual_READY9ALU_issue_read_checks": 157,
+  "all9remaining_normal_denominators_16flags_bothSIO_and_corrigendum_witness_reproduced": true,
+  "actual_normal_deficit_ranges": {
+    "READY": [
+      2,
+      5
+    ],
+    "DIRTY": [
+      15,
+      21
+    ],
+    "overall": [
+      2,
+      21
+    ]
+  },
+  "no_universal_reciprocal_speed_claim": true,
+  "allocation1060_free_Flash_below2MiB_no_new_RAM": true,
+  "no_overlap_against": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-asin-scaled-bound-v164-20261023/firmware/mk61s-picocalc-pico-h.elf",
+      "bytes": 9015184,
+      "sha256": "3b92d7dc30cc860c0b1f17943f1cd626f94112a98adaf165ec4f9cd300364db1"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/candidate.elf",
+      "bytes": 1116772,
+      "sha256": "5ddab388a96bef9c343e0c11e82797741f7ccb724a812d0532d76aa25c2e794e"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square-ordinary-20261024/candidate.elf",
+      "bytes": 1101716,
+      "sha256": "6e1cf7ded4ee258b49ddffcd1e893f4ec170700b181265048ad06ce0b9c1b8ae"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/candidate.elf",
+      "bytes": 3752,
+      "sha256": "e55be65b73b9b7bbbb72896904f61f8a1a5b5c5fb7bb052a78a5c580f351867c"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/candidate.elf",
+      "bytes": 1203168,
+      "sha256": "e94a79c49895a7f5328d8ef0d9185d88fe920a3101433c771e31759fac936d98"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-square128-r2-20261025/candidate.elf",
+      "bytes": 11292,
+      "sha256": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-boundary128-20261025/candidate.elf",
+      "bytes": 16236,
+      "sha256": "63a80f08c546e7bd07db6056eb1f64aa0de573c7296e5572b090e9d9f6edbfa9"
+    }
+  ],
+  "loader_starts_from_boundary_without_old_private_trailing_code": true,
+  "old168overlay14B_hazard_persists": true,
+  "own_HOST_preflights2_ARM0_MPFR0_preserved": true,
+  "no_failed_partial_or_discarded_own_ARM": true,
+  "integration_R12_loader_layout_physical_cycles_not_qualified": true,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "device_IO": 0
+}

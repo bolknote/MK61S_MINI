@@ -1,0 +1,12 @@
+{
+  "status": "COMPLETE_PARENT_UNION_BOUND_NO_REFERENCE_FILTER",
+  "unique_pairs": 116468,
+  "states": 232936,
+  "reference_state_variants": 252450,
+  "corpus_sha256": "377414521e8469033eac4fd43a1a644176b0bbe36bd8fbbf6b6a3fb06923a718",
+  "sources": {
+    ".build/m0-pow-exp-table-product-20261025/FROZEN.json": "dd0ec3663009cd390c710611e57ccc23d18c733201911471feae6e52e58e7d1c",
+    ".build/m0-pow-exp-table-product-20261025/old-records.jsonl.gz": "fcae79c948099952dcc58e942a20dccfbc495a07ed65fbc0d51daeff2a6ca81a",
+    ".build/m0-pow-exp-table-product-20261025/new-qualification.json": "bffb8a76dcbaf6a3a13e77885f3b3a02dbf924c50706b85c36ddb76783c0015b"
+  }
+}

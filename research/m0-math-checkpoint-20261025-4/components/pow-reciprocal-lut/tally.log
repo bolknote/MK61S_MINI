@@ -1,0 +1,70 @@
+{
+  "status": "PASS_PUBLIC_RAW_RECOUNT_ALL_FRESH_OVERLAPS_AND_DIRECT_EXCLUSIONS",
+  "unique_pairs": 120980,
+  "states": 241960,
+  "reference_state_variants": 279522,
+  "parent_raw_loss_pairs": 11386,
+  "candidate_raw_loss_pairs": 11377,
+  "fixed_pairs": 9,
+  "strict_fixed_pairs": 9,
+  "equal_fixed_pairs": 0,
+  "new_raw_losses": 0,
+  "candidate_wrong": 0,
+  "wrong_Qfplib_reference_state_variants_retained": 77106,
+  "correct_Qfplib_comparison": {
+    "slower": 21044,
+    "faster": 178667,
+    "equal": 2705
+  },
+  "accelerated_states": 377,
+  "public_instruction_reduction_range": [
+    59,
+    73
+  ],
+  "parent_cost_delta_histogram": {
+    "-73": 3,
+    "-72": 10,
+    "-71": 19,
+    "-70": 21,
+    "-69": 66,
+    "-68": 67,
+    "-67": 41,
+    "-66": 46,
+    "-65": 30,
+    "-64": 33,
+    "-63": 22,
+    "-62": 9,
+    "-61": 6,
+    "-60": 3,
+    "-59": 1,
+    "0": 241583
+  },
+  "all10254_fresh_control_rows_match_full_records": true,
+  "original153": {
+    "parent": {
+      "slower": 34,
+      "strict": 119
+    },
+    "candidate": {
+      "slower": 34,
+      "strict": 119
+    }
+  },
+  "qualified_fresh_ARM_calls": 476133,
+  "fresh_full_public_ARM_calls": 242337,
+  "fresh_MPFR_public_ARM_calls": 61524,
+  "fresh_direct_unit_calibration_ARM_calls": 16592,
+  "actual_directed_MPFR_inputs": 6761,
+  "sNaN_policy_shortcuts": 184,
+  "fresh_exact_integer_dyadic_oracle_inputs": 256,
+  "selected_bare_qualified_ARM_calls": 155680,
+  "selected_bare_exhaustive_divisors": 65536,
+  "unselected_variant_experimental_ARM_calls": 233520,
+  "original_seed66288_calls_inherited_not_fresh": true,
+  "new_original153_pilot_not_executed": true,
+  "failed_direct_preflight24_ARM3_MPFR_excluded": true,
+  "parent_pilot_and_qualification_not_counted_fresh": true,
+  "all_fresh_direct_Qfplib_raw_timing_rows_retained": true,
+  "no_nominal_reference_domain_filter": true,
+  "goal_complete": false
+}

@@ -1,0 +1,272 @@
+--- a/code/native_eabi_m0.cpp
++++ b/code/native_eabi_m0.cpp
+@@ -688,6 +688,260 @@
+   return negative?UINT64_C(0x3FF0000000000000)-displacement:
+                   UINT64_C(0x3FF0000000000000)+displacement;
+ }
++// Private prototype: |x| in[2^-32,2^-11). The correction exp(x)-1-x
++// is evaluated in input-ulp Q16, retaining the exact linear significand.
++// Source-bound error proof and ARM qualification are required before use.
++// Both products require a<2^48,b<2^58. High64 retains six16-bit terms;
++// bit48 retains nine. Their wider error intervals are certified below.
++// product64 rounds the retained high word; product48 floors its bit48 word.
++asm(R"asm(
++.syntax unified
++.cpu cortex-m0plus
++.thumb
++.section .m0_exp_small_products,"ax",%progbits
++.align 2
++.global mk61_m0_exp_small_product64
++.type mk61_m0_exp_small_product64,%function
++.thumb_func
++mk61_m0_exp_small_product64:
++ push {r0-r7,lr}
++ lsrs r7,r3,#16
++ mov r3,sp
++ movs r1,#0
++ movs r4,#0
++ movs r0,#0
++ ldrh r5,[r3,#0]
++ muls r5,r7
++ lsrs r6,r5,#16
++ lsls r5,#16
++ adds r4,r5
++ adcs r0,r6
++ ldrh r5,[r3,#2]
++ ldrh r6,[r3,#12]
++ muls r5,r6
++ lsrs r6,r5,#16
++ lsls r5,#16
++ adds r4,r5
++ adcs r0,r6
++ ldrh r5,[r3,#4]
++ ldrh r6,[r3,#10]
++ muls r5,r6
++ lsrs r6,r5,#16
++ lsls r5,#16
++ adds r4,r5
++ adcs r0,r6
++ lsls r4,#1
++ adcs r0,r1
++ ldrh r5,[r3,#2]
++ muls r5,r7
++ adds r0,r5
++ movs r4,#0
++ ldrh r5,[r3,#4]
++ ldrh r6,[r3,#12]
++ muls r5,r6
++ adds r0,r5
++ adcs r1,r4
++ ldrh r5,[r3,#4]
++ muls r5,r7
++ lsrs r6,r5,#16
++ lsls r5,#16
++ adds r0,r5
++ adcs r1,r6
++ add sp,#16
++ pop {r4-r7,pc}
++.size mk61_m0_exp_small_product64,.-mk61_m0_exp_small_product64
++.global mk61_m0_exp_small_product48
++.type mk61_m0_exp_small_product48,%function
++.thumb_func
++mk61_m0_exp_small_product48:
++ push {r0-r7,lr}
++ lsrs r7,r3,#16
++ mov r3,sp
++ movs r1,#0
++ ldrh r4,[r3,#0]
++ ldrh r6,[r3,#12]
++ muls r4,r6
++ movs r0,#0
++ ldrh r5,[r3,#2]
++ ldrh r6,[r3,#10]
++ muls r5,r6
++ adds r4,r5
++ adcs r0,r1
++ ldrh r5,[r3,#4]
++ ldrh r6,[r3,#8]
++ muls r5,r6
++ adds r4,r5
++ adcs r0,r1
++ ldrh r5,[r3,#0]
++ muls r5,r7
++ lsrs r6,r5,#16
++ lsls r5,#16
++ adds r4,r5
++ adcs r0,r6
++ ldrh r5,[r3,#2]
++ ldrh r6,[r3,#12]
++ muls r5,r6
++ lsrs r6,r5,#16
++ lsls r5,#16
++ adds r4,r5
++ adcs r0,r6
++ ldrh r5,[r3,#4]
++ ldrh r6,[r3,#10]
++ muls r5,r6
++ lsrs r6,r5,#16
++ lsls r5,#16
++ adds r4,r5
++ adcs r0,r6
++ mov r2,r4
++ ldrh r5,[r3,#2]
++ muls r5,r7
++ adds r0,r5
++ movs r4,#0
++ ldrh r5,[r3,#4]
++ ldrh r6,[r3,#12]
++ muls r5,r6
++ adds r0,r5
++ adcs r1,r4
++ ldrh r5,[r3,#4]
++ muls r5,r7
++ lsrs r6,r5,#16
++ lsls r5,#16
++ adds r0,r5
++ adcs r1,r6
++ lsrs r4,r0,#16
++ lsls r1,#16
++ orrs r1,r4
++ lsls r0,#16
++ lsrs r2,#16
++ orrs r0,r2
++ add sp,#16
++ pop {r4-r7,pc}
++.size mk61_m0_exp_small_product48,.-mk61_m0_exp_small_product48
++
++.align 2
++.global mk61_m0_exp_small_square48
++.type mk61_m0_exp_small_square48,%function
++.thumb_func
++mk61_m0_exp_small_square48:
++ push {r0-r7,lr}
++ uxth r2,r1
++ lsrs r1,r0,#16
++ uxth r0,r0
++ movs r3,#0
++ mov r4,r0
++ muls r4,r0
++ mov r6,r0
++ muls r6,r1
++ lsrs r4,#16
++ lsrs r7,r6,#15
++ lsls r6,#17
++ lsrs r6,#16
++ adds r4,r6
++ lsrs r4,#16
++ adds r7,r4
++ mov r4,r1
++ muls r4,r1
++ movs r5,#0
++ adds r4,r7
++ adcs r5,r3
++ mov r6,r0
++ muls r6,r2
++ lsrs r7,r6,#31
++ lsls r6,#1
++ adds r4,r6
++ adcs r5,r7
++ mov r6,r1
++ muls r6,r2
++ lsrs r7,r6,#15
++ lsls r6,#17
++ adds r4,r6
++ adcs r5,r7
++ muls r2,r2
++ adds r5,r2
++ ldr r2,[sp,#8]
++ subs r2,#32
++ mov r0,r4
++ mov r1,r5
++ lsrs r0,r0,r2
++ lsrs r1,r1,r2
++ rsbs r2,#0
++ adds r2,#32
++ lsls r5,r5,r2
++ orrs r0,r5
++ add sp,#16
++ pop {r4-r7,pc}
++.size mk61_m0_exp_small_square48,.-mk61_m0_exp_small_square48
++)asm");
++extern "C" MK61_SOFT_PCS U mk61_m0_exp_small_product64(U,U);
++extern "C" MK61_SOFT_PCS U mk61_m0_exp_small_product48(U,U);
++extern "C" MK61_SOFT_PCS U mk61_m0_exp_small_square48(U,unsigned);
++__attribute__((noinline,noipa,optimize("Os"),section(".m0_exp_small")))
++static U exp_small_rne(U a) {
++  const bool negative=bool(a>>63);
++  const int e=int((a>>52)&0x7FFU)-1023;
++  const uint32_t lo=uint32_t(a),hi=(uint32_t(a>>32)&0xFFFFFU)|0x100000U;
++  const U m=(U(hi)<<32)|lo;
++  const unsigned right=unsigned(-e-12);
++  const U x64=right?((U(hi>>right)<<32)|((lo>>right)|(hi<<(32-right)))):m;
++  U coefficient=UINT64_C(11728124029611);
++  if(e==-12) {
++    const U term=mk61_m0_exp_small_product64(UINT64_C(2345624805922),x64);
++    coefficient=negative?coefficient-term:coefficient+term;
++  }
++  const U term2=mk61_m0_exp_small_product64(coefficient,x64);
++  coefficient=negative?UINT64_C(46912496118443)-term2:
++                       UINT64_C(46912496118443)+term2;
++  const U tail=mk61_m0_exp_small_product64(coefficient,x64);
++  const U square=mk61_m0_exp_small_square48(m>>5,unsigned(26-e));
++  const U correction_tail=mk61_m0_exp_small_product48(tail,square);
++  U correction=negative?(square>>1)-correction_tail:
++                         (square>>1)+correction_tail;
++  uint32_t fifth_error=0;
++  if(e<=-13) {
++    if(e>-15) {
++      const uint32_t c=hi>>15,square6=c*c,fourth6=square6*square6,fifth6=fourth6*c;
++      const unsigned s=unsigned(-4*e-48);
++      const uint32_t u=fifth6>>(s+8),h=u>>16,v=(u&65535U)+h;
++      const uint32_t q=(v*4369U)>>16;
++      const uint32_t fifth=q+unsigned(v-15U*q>=15U)+h*4369U;
++      correction=negative?correction-fifth:correction+fifth;
++      fifth_error=(21174U>>s)+2U;
++    } else fifth_error=e==-15?69U:e==-16?5U:1U;
++  }
++  const uint32_t extra=e>=-22?1U<<unsigned(e+22):0U;
++  const uint32_t error=4U*uint32_t(square>>48)+32U+extra+fifth_error;
++  const unsigned shift=unsigned(16-e)-unsigned(negative);
++  const U bottom=m<<16;
++  const U adjusted=negative?bottom-correction:bottom+correction;
++  uint32_t high=(hi>>16)+(negative?0U-unsigned(bottom<correction):unsigned(adjusted<bottom));
++  uint32_t low=uint32_t(adjusted),middle=uint32_t(adjusted>>32),qlo,qhi;
++  bool unsafe;
++  if(shift<32) {
++    const uint32_t before=low;low+=1U<<(shift-1);
++    const uint32_t old=middle;middle+=unsigned(low<before);high+=unsigned(middle<old);
++    unsafe=((low+error)&((1U<<shift)-1U))<=2U*error;
++    qlo=(low>>shift)|(middle<<(32-shift));
++    qhi=(middle>>shift)|(high<<(32-shift));
++  } else {
++    const unsigned d=shift-32;
++    if(d) {
++      const uint32_t old=middle;middle+=1U<<(d-1);high+=unsigned(middle<old);
++      const uint32_t expanded=low+error;
++      const uint32_t remhigh=(middle+unsigned(expanded<low))&((1U<<d)-1U);
++      unsafe=!remhigh && expanded<=2U*error;
++      qlo=(middle>>d)|(high<<(32-d));qhi=high>>d;
++    } else {
++      const uint32_t before=low;low+=0x80000000U;
++      const uint32_t old=middle;middle+=unsigned(low<before);high+=unsigned(middle<old);
++      unsafe=uint32_t(low+error)<=2U*error;qlo=middle;qhi=high;
++    }
++  }
++  if(unsafe) return bits(exp_refine(real(a),0));
++  const U displacement=(U(qhi)<<32)|qlo;
++  return negative?UINT64_C(0x3FF0000000000000)-displacement:
++                  UINT64_C(0x3FF0000000000000)+displacement;
++}
++
+ #endif
+ // On ARMv6-M, -O3 expands wide products into substantially more spills than
+ // -Os. Keep this kernel's measured register allocation in release builds.
+@@ -712,6 +966,8 @@
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+   else if(e<-32) {
+     return real(exp_tiny_rne(a));
++  } else if(e<-11) {
++    return real(exp_small_rne(a));
+   }
+ #endif
+   const int shift=e+12;

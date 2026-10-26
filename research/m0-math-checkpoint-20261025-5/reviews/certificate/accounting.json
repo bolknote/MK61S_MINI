@@ -1,0 +1,255 @@
+{
+  "status": "PASS_IMMEDIATE_PARENT_SAME_CORPUS_RECOUNT_WITH_EXPLICIT_PERFORMANCE_TRADEOFF",
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "public_pairs120980_states241960_refvariants279522": true,
+  "wrong_public77106_retained": true,
+  "loss_pairs": [
+    11371,
+    11369
+  ],
+  "strict_fixes": [
+    [
+      "3FF2A4269F8149D1",
+      "C02A000000000000"
+    ]
+  ],
+  "equality_fixes_not_strict": [
+    [
+      "3FE4F79E13C3C1C2",
+      "C00C000000000000"
+    ]
+  ],
+  "no_wrong_or_new_loss": true,
+  "public_correct_Qfplib": {
+    "slower": 21026,
+    "faster": 178685,
+    "equal": 2705
+  },
+  "public_delta_histogram": {
+    "0": 241574,
+    "-12": 324,
+    "8": 26,
+    "-15": 30,
+    "7": 6
+  },
+  "faster354_READY177_DIRTY177": true,
+  "public_parent_increases32_hist": {
+    "8": 26,
+    "7": 6
+  },
+  "two_already_losing_correctQfp_states_further_slowed": [
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "READY",
+      "candidate": "3FC2B607BC82DBE3",
+      "candidate_instructions": 1705,
+      "parent_instructions": 1838,
+      "expected": "3FC2B607BC82DBE3",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1526,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_exact": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1547,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_integer": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1584,
+          "correct_Qfplib": true
+        }
+      },
+      "parent_boundary_instructions": 1729,
+      "boundary_calls": [
+        {
+          "power": "3f68b73c9273e8dacc3abf490328d7d302000000e0000000",
+          "denominator": 1,
+          "inverse": 1,
+          "cell": "3FC2B607BC82DBE2"
+        }
+      ],
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0014df16e43db0950000000000000000fdffffff00000000",
+          "b": "3f68b73c9273e8dacc3abf490328d7d302000000e0000000"
+        }
+      ],
+      "parent_reciprocal_instructions": 1697,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "401B5D0E724796ED"
+        }
+      ],
+      "software_seed_divisors": [],
+      "first_product_reciprocals": [
+        627838841
+      ],
+      "remainder_certificates": [
+        {
+          "base": 906464855,
+          "u": 1917294317,
+          "v": 2030417861,
+          "estimate": 115700,
+          "exact": 76433,
+          "fast": false,
+          "negative": false,
+          "cross_overflow": false,
+          "expected_saving": -8,
+          "full": true,
+          "decision": "up"
+        }
+      ]
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "DIRTY",
+      "candidate": "3FC2B607BC82DBE3",
+      "candidate_instructions": 1714,
+      "parent_instructions": 2244,
+      "expected": "3FC2B607BC82DBE3",
+      "references": {
+        "qfp_composed_pow": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1526,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_exact": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1547,
+          "correct_Qfplib": true
+        },
+        "qfp_composed_pow_integer": {
+          "output": "3FC2B607BC82DBE3",
+          "instructions": 1584,
+          "correct_Qfplib": true
+        }
+      },
+      "parent_boundary_instructions": 2135,
+      "boundary_calls": [
+        {
+          "power": "3f68b73c9273e8dacc3abf490328d7d302000000e0000000",
+          "denominator": 1,
+          "inverse": 1,
+          "cell": "3FC2B607BC82DBE2"
+        }
+      ],
+      "midpoint_operands": [
+        {
+          "kind": "multiply",
+          "a": "0014df16e43db0950000000000000000fdffffff00000000",
+          "b": "3f68b73c9273e8dacc3abf490328d7d302000000e0000000"
+        }
+      ],
+      "parent_reciprocal_instructions": 1706,
+      "reciprocal_calls": [
+        {
+          "numerator": "3FF0000000000000",
+          "denominator": "401B5D0E724796ED"
+        }
+      ],
+      "software_seed_divisors": [
+        112080
+      ],
+      "first_product_reciprocals": [
+        627838841
+      ],
+      "remainder_certificates": [
+        {
+          "base": 906464855,
+          "u": 1917294317,
+          "v": 2030417861,
+          "estimate": 115700,
+          "exact": 76433,
+          "fast": false,
+          "negative": false,
+          "cross_overflow": false,
+          "expected_saving": -8,
+          "full": true,
+          "decision": "up"
+        }
+      ]
+    }
+  ],
+  "other30_increases_have_no_correct_Qfp": true,
+  "corrigendum_bound_and_confirmed": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-certificate-report-corrigendum-20261025.json",
+    "bytes": 2338,
+    "sha256": "5cd5994f20429814820d5702b8c84782848733e8ee5f95aa17b6a070719a2127"
+  },
+  "all_actual_saved_certificate_arithmetic_branches_and_costs_recounted": true,
+  "public_certificate_classes": {
+    "fast_down_nocross": 192,
+    "full_up_nocross": 24,
+    "fast_down_cross": 20,
+    "fast_up_nocross": 132,
+    "full_up_cross": 2,
+    "fast_up_cross": 10,
+    "full_down_nocross": 6
+  },
+  "all10254_fresh_overlap": true,
+  "fresh_parent_replays778_include392_unchanged_and386_changed": true,
+  "first_product754_and_software377": true,
+  "immediate_parent_cost_field_not_older_history": true,
+  "original153": {
+    "parent": {
+      "slower": 34,
+      "strict": 119
+    },
+    "candidate": {
+      "slower": 33,
+      "strict": 120
+    }
+  },
+  "expanded_scalar_same20994cases41988states": true,
+  "scalar_correct_Qfp": {
+    "parent": {
+      "faster": 32370,
+      "equal": 5,
+      "slower": 13
+    },
+    "candidate": {
+      "faster": 32382,
+      "equal": 5,
+      "slower": 1
+    }
+  },
+  "wrong_scalar9600_retained": true,
+  "scalar_parent_increases1132_hist": {
+    "8": 846,
+    "7": 286
+  },
+  "scalar_classes": {
+    "full_up_nocross": 812,
+    "full_down_cross": 46,
+    "fast_down_nocross": 5784,
+    "fast_up_nocross": 4620,
+    "fast_down_cross": 406,
+    "fast_up_cross": 354,
+    "full_up_cross": 34,
+    "full_down_nocross": 240
+  },
+  "remaining_DIRTY149_vs146": true,
+  "scalar_5equals_kept": true,
+  "no_new_correctQfp_deficits_not_universal_parent_win": true,
+  "author673814_partition": [
+    241960,
+    778,
+    61524,
+    167952,
+    201600
+  ],
+  "author26011MPFR_plus110sNaN": true,
+  "author_unit100800paired_tests201600calls": true,
+  "two_authorHOST_buildselector_and_NaN_recount_preflights0excluded": true,
+  "parent_campaigns_not_fresh": true,
+  "reviewed507_stays422_author438_not_promoted": true,
+  "device_IO": 0
+}

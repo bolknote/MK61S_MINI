@@ -1,0 +1,320 @@
+{
+  "status": "FROZEN_AUTHOR_DIRECTED_EXP_ENCLOSURE_AND_77_INSTRUCTION_PRODUCT_ALL_ORIGINAL_EXP16_STRICT",
+  "accepted_source_parent": ".build/m0-exp-dyadic-product-20261024",
+  "accepted_source_parent_FROZEN_sha256": "acdaac6247165b8b53d3e48dadff2629577e1abd073d2604105cf2f05254031b",
+  "accepted_parent_review": {
+    "status": "GO_PRIVATE_RP_DYADIC_EXP_AND_SHARED79_PRODUCT_COMPONENT_ONLY",
+    "path": ".build/m0-exp-dyadic-product-independent-20261024/FINAL-REVIEW.json",
+    "sha256": "c6aef2f9683f8d234f850363cbfda7f687d65c7ba9581987b723a14db37c536a",
+    "unique_direct_refs_verified": 58,
+    "receipt_plus_refs_verified": 59,
+    "blockers": [],
+    "own_fresh_checks": {
+      "total_qualified_ARM_calls": 14418,
+      "actual_directed_MPFR_validation_inputs": 1028,
+      "sNaN_shortcuts_without_MPFR": 2,
+      "oracle_evaluations": 1030,
+      "MPFR_version": "4.2.2",
+      "literal_dyadic_values": 668,
+      "literal_dyadic_ARM_calls": 1464,
+      "literal16NZCV_variant_calls128_included": true,
+      "literal_instructions9_stack0_no_data_memory_or_ROM": true,
+      "raw_product_pairs": 1145,
+      "valid_product_integer_oracles": 916,
+      "raw_product_ARM_calls": 5092,
+      "raw16NZCV_variant_calls512_included": true,
+      "product_PC_SP_memory_padding_bounds_every_call": true,
+      "public_exp_inputs": 841,
+      "public_exp_ARM_calls": 6728,
+      "original_exp16_and_all547_fixed_cells_fresh": true,
+      "prior_hot_margin_stratified_regressions_own_segment_and_IEEE_controls": true,
+      "actual_public_selection_events": 1636,
+      "actual_index0_bypass_events": 1106,
+      "all_actual_displacements_and_shift_corrections_exact": true,
+      "other_indices_call_shared_kernel_once": true,
+      "other_original_pow_sin_cos_inputs": 189,
+      "other_caller_ARM_calls": 1134,
+      "other_caller_actual_MPFR_inputs": 189,
+      "all_original_product_argument_traces_values_cost_minus2_per_call_exact": true,
+      "all_three_original_pow_new_ties_both_states_MPFR_bound": true,
+      "all_public_raw_parent_bits_and_rebuilt_control_costs_exact": true,
+      "all_DIRTY28bytes_exact_READY_not_left_DIRTY": true,
+      "real_ROM_initializers_excluded": true,
+      "no_own_excluded_failed_numerical_run": true,
+      "observed_public_stack_peak376_not_universal": true
+    },
+    "grants": {
+      "private_RP_dyadic_exp_and_shared79_product_component": true,
+      "whole_math_goal": false,
+      "integrated_firmware": false,
+      "hardware": false,
+      "physical_cycles": false,
+      "canonical_promotion": false,
+      "release": false
+    }
+  },
+  "source_sha256": "575da3303b57fec5afd30b8f8737b58d6519987b9f2344c83c9ec47c83cdb274",
+  "product_include_sha256": "3f7295c25fb0aa69a52151f3ceffb50de41a45c78e51dd36efd58937a6f6f82c",
+  "candidate_ELF_sha256": "b4049e5a39c2bc9d663acab44a7683f1811daedd1c43497cd5ad7588b1b408ac",
+  "public_exp_unique_inputs": 467366,
+  "public_exp_state_rows": 934732,
+  "fresh_public_exp_candidate_ARM_calls": 934732,
+  "fresh_new_Qfplib_ARM_calls": 21232,
+  "fresh_exp_parent_audit_ARM_calls": 732,
+  "qualified_bare_product_ARM_calls_bound_by_actual_byte_identity": 141320,
+  "fresh_literal_directional_gate_ARM_calls": 275672,
+  "fresh_all16NZCV_product_ARM_calls": 2048,
+  "fresh_other_caller_ARM_calls": 1134,
+  "fresh_expanded_pow_replay_ARM_calls": 10081,
+  "total_qualified_fresh_ARM_calls": 1386951,
+  "actual_directed_MPFR_exp_inputs": 467364,
+  "actual_directed_MPFR_other_caller_inputs": 189,
+  "total_actual_directed_MPFR_validation_inputs": 467553,
+  "validation_oracle_evaluations": 467555,
+  "sNaN_shortcuts_without_MPFR": 2,
+  "MPFR_version": "4.2.2",
+  "separate_directed_MPFR_log_preimage_generations_not_validation": 1919,
+  "inherited913500_exp_parent_Qfplib_rows_not_fresh": true,
+  "inherited_full111912_pow_pair_MPFR_references_not_fresh": true,
+  "all_public_probes_diagnostics_rejected_layouts_and_initial10081_pow_scope_counter_run_excluded": true,
+  "wrong": 0,
+  "all_old456750_public_exp_return_bits_identical": true,
+  "all_domain_source_bound_for_new_directional_normal_error4_tail511_positive_below_acceptance": true,
+  "exact_coefficient_reduction_curvature_rounding_and_signed_Q94_bias_proof": true,
+  "all512_Q62_Q94_table_roots_recertified": true,
+  "literal_directional_gate_unit_cases": 275672,
+  "unsafe_unit_admissions": 0,
+  "private_R12_result_is_not_generic_scalar_C_ABI": true,
+  "required_linked_code_call_to_capture_marker_audit_passed": true,
+  "component_builder_runs_required_audit_automatically": true,
+  "marker_allocated_bytes": 0,
+  "actual_post_call_instructions_before_marker": 2,
+  "original_real16byte_Flash_to_RAM_tail_veneer_unchanged": true,
+  "required_again_after_every_changed_release_object": true,
+  "integration_must_install_guard_against_its_actual_linked_image": true,
+  "same_old456750_exp_losses": [
+    1541,
+    1530
+  ],
+  "same_old_inputs_fixed": 11,
+  "same_older48763_exp_losses": [
+    96,
+    88
+  ],
+  "expanded467366_exp_losses": 1896,
+  "expanded_count_scope": "Same456750:1541->1530,11fixed. New467366 union1896=1530old+366new controls(347small preimages,11positive normal preimages,3table-row,3uniform,2broad endpoint), all already lost in accepted parent. Do not subtract different-size corpus counts.",
+  "all1896remaining_exp_losses_parent_bound": true,
+  "new_raw_speed_losses": 0,
+  "correct_Qfplib_comparison": {
+    "faster": 536584,
+    "slower": 3792
+  },
+  "wrong_Qfplib_state_rows_retained": 394356,
+  "no_nominal_domain_filter": true,
+  "public_examples": {
+    "4085F424184F6DC5": {
+      "parent": 2266,
+      "candidate": 612,
+      "Qfplib": 649
+    },
+    "C041265824E2113C": {
+      "parent": 596,
+      "candidate": 593,
+      "Qfplib": 622
+    },
+    "3DF0000000000000": {
+      "parent": 439,
+      "candidate": 438,
+      "Qfplib": 471
+    },
+    "BDF0000000000000": {
+      "parent": 461,
+      "candidate": 460,
+      "Qfplib": 520
+    }
+  },
+  "original_exp16_remaining": [
+    1,
+    0
+  ],
+  "all_original_exp16_both_states_strictly_faster_than_correct_Qfplib": true,
+  "retained_exp_parent_cost_increase_state_rows": 3448,
+  "retained_increase_deltas": {
+    "1": 3348,
+    "2": 34,
+    "4": 6,
+    "5": 22,
+    "7": 34,
+    "50": 4
+  },
+  "increase_scope": {
+    "already_losing_correct_Qfplib": 1392,
+    "wrong_Qfplib": 2022,
+    "still_no_slower_correct_Qfplib": 34
+  },
+  "shared_product_fixed_instructions": [
+    79,
+    77
+  ],
+  "shared_product_active_bytes": [
+    158,
+    154
+  ],
+  "shared_product_RAM_slot_bytes": [
+    168,
+    168
+  ],
+  "outside_function_padding_bytes": 14,
+  "shared_product_all_raw64_return_value_and_PCS_equivalence_source_proof": true,
+  "retained_product_fraction_R12_extra_return_source_proof": true,
+  "bare_product_pairs": 70660,
+  "valid63x54_exact_integer_product_oracles": 36781,
+  "raw_retained_fraction_checks": 70660,
+  "all16_incoming_NZCV_variants_and_arbitrary_initial_R12_checked": true,
+  "product_stack_frame_bytes": [
+    36,
+    36
+  ],
+  "product_stack_written_bytes": [
+    36,
+    36
+  ],
+  "original_other_callers_summary": {
+    "pow": {
+      "jobs": 153,
+      "parent_slower_raw": 48,
+      "candidate_slower_raw": 48,
+      "new_raw_losses": 0,
+      "state_cases_faster": 46,
+      "product_calls": 66
+    },
+    "sin": {
+      "jobs": 22,
+      "parent_slower_raw": 22,
+      "candidate_slower_raw": 22,
+      "new_raw_losses": 0,
+      "state_cases_faster": 0,
+      "product_calls": 0
+    },
+    "cos": {
+      "jobs": 14,
+      "parent_slower_raw": 14,
+      "candidate_slower_raw": 14,
+      "new_raw_losses": 0,
+      "state_cases_faster": 0,
+      "product_calls": 0
+    }
+  },
+  "original_pow_remaining_unchanged": 48,
+  "prior_three_original_pow_ties_now_strict": [
+    {
+      "operation": "pow",
+      "x": "3FEFFFFFFFFFFF2B",
+      "y": "40BA76B89D3E311A",
+      "stream": "near_one_variable_exponent",
+      "SIO": "READY",
+      "expected": "3FEFFFFFFFE9FB38",
+      "outputs": {
+        "parent": "3FEFFFFFFFE9FB38",
+        "candidate": "3FEFFFFFFFE9FB38",
+        "Qfplib": "3FEFFFFFFFE9FB38"
+      },
+      "instructions": {
+        "parent": 1344,
+        "candidate": 1342,
+        "Qfplib": 1344
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "product_calls": 1,
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF000000000004F",
+      "y": "40EAAD0A6A243E3E",
+      "stream": "near_one_variable_exponent",
+      "SIO": "READY",
+      "expected": "3FF000000041DB32",
+      "outputs": {
+        "parent": "3FF000000041DB32",
+        "candidate": "3FF000000041DB32",
+        "Qfplib": "3FF000000041DB32"
+      },
+      "instructions": {
+        "parent": 1320,
+        "candidate": 1318,
+        "Qfplib": 1320
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "product_calls": 1,
+      "reference_symbol": "qfp_composed_pow"
+    },
+    {
+      "operation": "pow",
+      "x": "3FF000000000017C",
+      "y": "4055D6591BBBC2B4",
+      "stream": "near_one_variable_exponent",
+      "SIO": "READY",
+      "expected": "3FF00000000081A9",
+      "outputs": {
+        "parent": "3FF00000000081A9",
+        "candidate": "3FF00000000081A9",
+        "Qfplib": "3FF00000000081A9"
+      },
+      "instructions": {
+        "parent": 1311,
+        "candidate": 1309,
+        "Qfplib": 1311
+      },
+      "correct": {
+        "parent": true,
+        "candidate": true,
+        "Qfplib": true
+      },
+      "product_calls": 1,
+      "reference_symbol": "qfp_composed_pow"
+    }
+  ],
+  "expanded_pow_remaining_unchanged": 7901,
+  "pow_replay_scope": "10085historical reference-state variants including accepted-parent ties,10078currently-losing reference-state variants,10081distinct fresh candidate calls. Current7901losing raw pairs remain7901. Three prior raw-pair ties now strict, not new fixed losses. All costs parent minus2per actual product call; full111912-pair references inherited, no freshMPFR/full reacquisition.",
+  "selected_CPP_code_delta_bytes": 120,
+  "selected_ASM_allocated_delta_bytes": 0,
+  "private_Flash_overlay_load_delta_bytes": 120,
+  "whole_firmware_size_and_GC_delta_not_measured": true,
+  "no_new_tables_global_RAM_libgcc_ROM_math_or_external_runtime_dependencies": true,
+  "public_exp_static_frame96_unchanged": true,
+  "observed_full_public_exp_stack_bytes": 744,
+  "universal_full_math_stack_or_physical_cycle_bound_not_claimed": true,
+  "refinement3736bytes_13relocations_and_tiny472byte_helper_identical": true,
+  "all_other_CPP_allocated_bytes_semantic_relocations_unchanged": true,
+  "all_RP_ASM_outside168byte_slot_bytes_relocations_symbol_addresses_identical": true,
+  "generic_M0_M4_soft_hard_selected_CPP_and_ASM_equal": true,
+  "eleven_complete_object_ELF_rebuilds_byte_exact": true,
+  "direct_public_ABI_and_original_RAM_address_preserved": true,
+  "original507_author_separate_union": {
+    "no_slower": 423,
+    "strictly_faster": 417,
+    "equal": 6,
+    "remaining": 84,
+    "by_operation": {
+      "pow": 48,
+      "exp": 0,
+      "sin": 22,
+      "cos": 14
+    },
+    "not_one_integrated_binary": true
+  },
+  "original507_independently_reviewed_union_unchanged": 422,
+  "independent_review_pending": true,
+  "combined_integration_regression_FMA_general_totality_physical_cycles_and_release_pending": true,
+  "no_canonical_Git_USB_device_Flash_lease_EA9_or_release_changes": true,
+  "goal_complete": false
+}

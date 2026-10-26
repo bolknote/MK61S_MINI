@@ -1,0 +1,272 @@
+#ifndef TOOLS
+#define TOOLS
+
+#include "rust_types.h"
+#include "display.hpp"
+#include "early_dfu.hpp"
+#include "mk61emu_core.h"
+#include "oled_settings.hpp"
+#include "ui_font_settings.hpp"
+#include "program_store.hpp"
+
+#include "debug.h"
+
+#include <stdio.h>
+
+static constexpr usize FLASH_SECTOR_SIZE    = 4096;
+static constexpr usize OFFSET_MK61_PROGRAMM = 1;
+static constexpr usize OFFSET_AFTER_PROGRAM = OFFSET_MK61_PROGRAMM + core_61::MAX_PROGRAM_STEP;
+static constexpr isize MAX_SLOT_FOR_PROGRAM = 99;
+static constexpr isize BLOCK_SIZE           = (core_61::MAX_PROGRAM_STEP + 1) / 13;
+
+static constexpr usize switch_R_GRD_G = OFFSET_AFTER_PROGRAM;
+static constexpr usize count_switch_R_GRD_G = switch_R_GRD_G + 1;
+static constexpr usize switch_settings = switch_R_GRD_G + 2;
+static constexpr usize switch_sound_settings = switch_settings + 1;
+static constexpr usize legacy_switch_R_GRD_G = OFFSET_MK61_PROGRAMM + core_61::CLASSIC_PROGRAM_STEP;
+static constexpr usize legacy_count_switch_R_GRD_G = legacy_switch_R_GRD_G + 1;
+
+class DeferredSave {
+  private:
+    bool pending_save;
+    t_time_ms save_at;
+
+  public:
+    constexpr DeferredSave(void) : pending_save(false), save_at(0) {}
+
+    bool pending(void) const {
+      return pending_save;
+    }
+
+    void schedule(t_time_ms now, t_time_ms delay_ms) {
+      pending_save = true;
+      save_at = now + delay_ms;
+    }
+
+    bool due(t_time_ms now) const {
+      return pending_save && (i32) (now - save_at) >= 0;
+    }
+
+    void clear(void) {
+      pending_save = false;
+    }
+};
+
+struct SettingsFlags {
+  union {
+    u8 raw;
+    struct {
+      u8 language_ru : 1;
+      u8 program_memory_mode : 2;
+      u8 speed_mode : 2;
+      u8 random_mode_mk61s : 1;
+      u8 idle_signal_off : 1;
+      u8 display_rows_8 : 1;
+    } bits;
+  };
+
+  constexpr SettingsFlags(void) : raw(0) {}
+  constexpr explicit SettingsFlags(u8 value) : raw(value) {}
+};
+
+static_assert(sizeof(SettingsFlags) == 1, "SettingsFlags must fit one EEPROM byte");
+
+namespace speed_mode_storage {
+  // These values are persisted in SettingsFlags and therefore form a storage
+  // contract. Value 2 used to mean TURBO; both former fast modes now migrate
+  // to the single, fastest MAXIMUM mode.
+  static constexpr u8 CLASSIC = 0;
+  static constexpr u8 MAXIMUM = 1;
+  static constexpr u8 LEGACY_TURBO = 2;
+
+  constexpr u8 normalize(u8 stored) {
+    return stored == CLASSIC ? CLASSIC : MAXIMUM;
+  }
+
+  static_assert(normalize(CLASSIC) == CLASSIC,
+                "CLASSIC settings must remain CLASSIC");
+  static_assert(normalize(MAXIMUM) == MAXIMUM,
+                "MAXIMUM settings must remain MAXIMUM");
+  static_assert(normalize(LEGACY_TURBO) == MAXIMUM,
+                "legacy TURBO settings must migrate to MAXIMUM");
+  static_assert(normalize(3) == MAXIMUM,
+                "invalid fast settings must fail safe to MAXIMUM");
+}
+
+struct SoundSettings {
+  union {
+    u8 raw;
+    struct {
+      u8 volume : 4;
+      u8 display_rows_mode : 2;
+      u8 reserved : 2;
+    } bits;
+  };
+
+  constexpr SoundSettings(void) : raw(0) {}
+  constexpr explicit SoundSettings(u8 value) : raw(value) {}
+};
+
+static_assert(sizeof(SoundSettings) == 1, "SoundSettings must fit one EEPROM byte");
+
+namespace library_mk61 {
+  extern  u8    sound_volume(void);
+}
+
+extern  void  DFU_enable(void);
+#if !MK61_EARLY_DFU_SUPPORTED
+extern  void  DFU_enter_bootloader(void);
+#endif
+extern  void  reinit_mk61_calculator_state(void);
+extern  void  sound(usize pin, isize freq_Hz, usize duration_ms, usize volume);
+extern  void  sound_scaled(usize pin, isize freq_Hz, usize duration_ms, usize volume, usize volume_percent);
+extern  void  sound_stop(void);
+
+#include "sound_pattern.hpp"
+extern  void  sound_poll(void);
+extern  bool  sound_busy(void);
+extern  void  sound_startup(void);
+extern  void  delay_with_sound_poll(t_time_ms duration_ms);
+
+extern  void  message_and_waitkey(const char* lcd_message);
+extern  bool  Confirmation(void);
+
+extern  bool  flash_is_ok;
+extern  isize calc_address(usize nSlot);
+extern  bool  Store(void);
+extern  bool  Store(usize nSlot);
+extern  bool  StoreProgram(const char* name);
+extern  bool  StoreProgram(u16 parent_id, const char* name);
+extern  bool  Load(void);
+extern  bool  Load(usize nSlot);
+extern  bool  LoadProgram(const char* name);
+extern  bool  LoadProgram(u16 id);
+extern  bool  ResolveStoredFile(u16 cwd, const char* args,
+                               program_store::Entry& entry);
+extern  bool  ResolveStoredFile(const char* args, program_store::Entry& entry);
+extern  bool  OpenStoredEntry(const program_store::Entry& entry);
+extern  bool  OpenStoredFile(u16 cwd, const char* args);
+extern  bool  OpenStoredFile(const char* args);
+extern  u8    load_word(isize segment_address, isize offset);
+extern  bool  FormatDisk(void);
+extern  bool  EraseFlash(void);
+extern  void  init_external_flash(void);
+extern  void  construct_external_flash(void);
+
+extern usize  seek_program_END(u8* code_page);
+extern  void  insert_cmd_in_program(usize into_step, usize opcode);
+extern  bool  program_needs_expanded_memory(const u8* code_page, usize code_len);
+extern  void  apply_program_memory_auto(const u8* code_page, usize code_len, bool preserve_program, bool force_expanded = false);
+extern bool load_binary_program(u16 directory, const char* args);
+extern  void  ensure_program_memory_for_write(usize linear_addr, u8 opcode);
+
+inline void ErrorReaction(void) {
+  sound(PIN_BUZZER, 4000, 750, library_mk61::sound_volume());
+}
+
+inline bool IsDecimalDigit(char symbol) {
+  return ((symbol >= '0') && (symbol <= '9'));
+}
+
+inline isize DecimalDigit(char Symbol) {
+  Symbol -= '0';
+  return (Symbol <= 9)? Symbol : -1;
+}
+
+inline isize HexdecimalDigit(char Symbol) {
+  if(Symbol >= '0' && Symbol <= '9')
+    return Symbol - '0';
+  else if (Symbol >= 'A' && Symbol <= 'F')
+    return Symbol - 'A' + 10;
+  else if (Symbol >= 'a' && Symbol <= 'f')
+    return Symbol - 'a' + 10;
+  else 
+    return -1;
+}
+
+#ifdef SERIAL_OUTPUT
+inline void Serial_write_hex(u8 code) {
+    if(code < 0x10) Serial.write('0');
+    Serial.print(code, HEX);
+}
+
+inline void Serial_writeln_hex(u8 code) {
+    if(code < 0x10) Serial.write('0');
+    Serial.println(code, HEX);
+}
+#endif
+
+inline void pad_left_8_char(char output[8], const char input[8]) {
+  if(output == NULL) return;
+  usize len = 0;
+  if(input != NULL) {
+    while(len < 6 && input[len] != 0) len++;
+  }
+  const usize padding = 6 - len;
+  for(usize i = 0; i < padding; i++) output[i] = ' ';
+  for(usize i = 0; i < len; i++) output[padding + i] = input[i];
+  output[6] = 0;
+  output[7] = 0;
+}
+
+AngleUnit read_stored_grade_switch(void);
+
+inline AngleUnit read_grade_switch(void) {
+  return MK61Emu_GetAngleUnit();
+}
+
+u8 read_counter_switch(void);
+
+inline SettingsFlags normalize_settings_flags(u8 raw_flags) {
+  SettingsFlags flags((raw_flags == 0xFF) ? 0 : raw_flags);
+  if(raw_flags == 0xFF || flags.bits.program_memory_mode > 2) flags.bits.program_memory_mode = 2;
+  flags.bits.speed_mode = speed_mode_storage::normalize(
+      raw_flags == 0xFF ? speed_mode_storage::MAXIMUM : flags.bits.speed_mode);
+  if(raw_flags == 0xFF) flags.bits.display_rows_8 = 0;
+  flags.bits.random_mode_mk61s = flags.bits.random_mode_mk61s ? 1 : 0;
+  return flags;
+}
+
+SettingsFlags read_settings_flags(void);
+void store_settings_flags(SettingsFlags flags);
+
+inline SoundSettings normalize_sound_settings(u8 raw_settings) {
+  SoundSettings settings((raw_settings == 0xFF) ? 0 : raw_settings);
+  if(raw_settings == 0xFF || settings.bits.volume > 10) settings.bits.volume = 10;
+  settings.bits.reserved = 0;
+  return settings;
+}
+
+SoundSettings read_sound_settings(void);
+void store_sound_settings(SoundSettings settings);
+OledSettings read_oled_settings(void);
+void store_oled_settings(OledSettings settings);
+UiFontSettings read_ui_font_settings(void);
+u32 read_ui_font_key(void);
+bool read_display_text_profile(lcd_display::TextProfile& out);
+void store_display_text_profile(lcd_display::TextProfile profile);
+bool store_settings_snapshot(
+  SettingsFlags flags,
+  SoundSettings sound,
+  const lcd_display::TextProfile* text_profile,
+  const OledSettings* oled_settings = NULL,
+  const UiFontSettings* ui_font_settings = NULL,
+  const u32* ui_font_key = NULL
+);
+
+inline AngleUnit load_grade_switch(void) {
+  static const AngleUnit rom_angle = read_stored_grade_switch();
+  if(rom_angle == RADIAN || rom_angle == GRADE || rom_angle == DEGREE) { // состояние переключателя считано из флеш как определнное (радианы или грады)
+    MK61Emu_SetAngleUnit(rom_angle);
+    dbgln(SPIROM, "get grade_switch ", rom_angle);
+    return rom_angle;
+  } else { // из флеш считано либо "чистое" значение (FF - градусы), либо неопределенное в следствии сбоя очистки и записи в флеш
+    MK61Emu_SetAngleUnit(DEGREE);
+    dbgln(SPIROM, "get grade_switch as CLEAR (FF) set to ", DEGREE);
+    return DEGREE;
+  }
+}
+
+void store_grade_switch(AngleUnit angle_unit);
+
+#endif

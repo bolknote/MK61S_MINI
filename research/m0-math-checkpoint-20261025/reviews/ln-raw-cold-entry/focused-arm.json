@@ -1,0 +1,5848 @@
+{
+  "status": "PASS_BOUNDED_EXACT_IEEE_ENTRY_AND_ACTUAL_PUBLIC_ARM_MPFR",
+  "MPFR": "4.2.2",
+  "public_unique_raw": 56,
+  "public_state_rows": 112,
+  "public_ARM_calls": 336,
+  "public_forwarding_exact_bits_SP_LR": true,
+  "public_candidate_wrong": 0,
+  "raw_NaN_policy_equals_parent": true,
+  "public_trace": {
+    "mk61_m0_ln_special": 46,
+    "mk61_m0_ln_positive": 60,
+    "ln_main_raw": 3,
+    "ln_refine": 2
+  },
+  "public_stack_subset": {
+    "candidate": 520,
+    "parent": 520,
+    "Qfplib": 32
+  },
+  "producer_full_640B_public_stack_not_reswept": true,
+  "IEEE_early_actual_costs": {
+    "0000000000000000": [
+      {
+        "candidate": 6,
+        "parent": 53,
+        "Qfplib": 8
+      },
+      {
+        "candidate": 6,
+        "parent": 53,
+        "Qfplib": 8
+      }
+    ],
+    "8000000000000000": [
+      {
+        "candidate": 6,
+        "parent": 53,
+        "Qfplib": 6
+      },
+      {
+        "candidate": 6,
+        "parent": 53,
+        "Qfplib": 6
+      }
+    ],
+    "7FF0000000000000": [
+      {
+        "candidate": 8,
+        "parent": 59,
+        "Qfplib": 10
+      },
+      {
+        "candidate": 8,
+        "parent": 59,
+        "Qfplib": 10
+      }
+    ]
+  },
+  "bare_unique_raw": 208,
+  "bare_ARM_calls": 416,
+  "bare_entry_exact_bits_SP_LR": true,
+  "bare_SIO_accesses": 0,
+  "bare_PC_limited_to_unit": true,
+  "bare_stack_bytes": 16,
+  "bare_tagged_stack_not_entry_stack": true,
+  "PCS_SP_bounded_writes_checked_every_call": true,
+  "DIRTY28bytes_preserved_READY_not_dirty": true,
+  "private_instructions_not_physical_cycles": true,
+  "hardware_accessed": false,
+  "public_rows": [
+    {
+      "x": "0000000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "candidate": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 6,
+        "parent": 53,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {}
+    },
+    {
+      "x": "0000000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "candidate": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 6,
+        "parent": 53,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {}
+    },
+    {
+      "x": "0000000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "C0874385446D71C3",
+      "outputs": {
+        "candidate": "C0874385446D71C3",
+        "parent": "C0874385446D71C3",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 603,
+        "parent": 613,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1
+      }
+    },
+    {
+      "x": "0000000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "C0874385446D71C3",
+      "outputs": {
+        "candidate": "C0874385446D71C3",
+        "parent": "C0874385446D71C3",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 617,
+        "parent": 627,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1
+      }
+    },
+    {
+      "x": "0008000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "C08628B76E3A7B61",
+      "outputs": {
+        "candidate": "C08628B76E3A7B61",
+        "parent": "C08628B76E3A7B61",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 576,
+        "parent": 581,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1
+      }
+    },
+    {
+      "x": "0008000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "C08628B76E3A7B61",
+      "outputs": {
+        "candidate": "C08628B76E3A7B61",
+        "parent": "C08628B76E3A7B61",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 590,
+        "parent": 595,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1
+      }
+    },
+    {
+      "x": "000FFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "candidate": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 575,
+        "parent": 585,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1
+      }
+    },
+    {
+      "x": "000FFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "candidate": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 627,
+        "parent": 637,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1
+      }
+    },
+    {
+      "x": "0010000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "candidate": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "Qfplib": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "candidate": 602,
+        "parent": 597,
+        "Qfplib": 755
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "0010000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "candidate": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "Qfplib": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "candidate": 616,
+        "parent": 611,
+        "Qfplib": 755
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "0010000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "candidate": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "Qfplib": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "candidate": 597,
+        "parent": 597,
+        "Qfplib": 755
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "0010000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "candidate": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "Qfplib": "C086232BDD7ABCD2"
+      },
+      "instructions": {
+        "candidate": 629,
+        "parent": 629,
+        "Qfplib": 755
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "0018000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "C0861FED78FD24DF",
+      "outputs": {
+        "candidate": "C0861FED78FD24DF",
+        "parent": "C0861FED78FD24DF",
+        "Qfplib": "C0861FED78FD24DF"
+      },
+      "instructions": {
+        "candidate": 600,
+        "parent": 595,
+        "Qfplib": 749
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "0018000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "C0861FED78FD24DF",
+      "outputs": {
+        "candidate": "C0861FED78FD24DF",
+        "parent": "C0861FED78FD24DF",
+        "Qfplib": "C0861FED78FD24DF"
+      },
+      "instructions": {
+        "candidate": 614,
+        "parent": 609,
+        "Qfplib": 749
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "001FFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "C0861DA04CBAFE44",
+      "outputs": {
+        "candidate": "C0861DA04CBAFE44",
+        "parent": "C0861DA04CBAFE44",
+        "Qfplib": "C0861DA04CBAFE44"
+      },
+      "instructions": {
+        "candidate": 589,
+        "parent": 589,
+        "Qfplib": 725
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "001FFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "C0861DA04CBAFE44",
+      "outputs": {
+        "candidate": "C0861DA04CBAFE44",
+        "parent": "C0861DA04CBAFE44",
+        "Qfplib": "C0861DA04CBAFE44"
+      },
+      "instructions": {
+        "candidate": 621,
+        "parent": 621,
+        "Qfplib": 725
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "7FE0000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "408628B76E3A7B61",
+      "outputs": {
+        "candidate": "408628B76E3A7B61",
+        "parent": "408628B76E3A7B61",
+        "Qfplib": "408628B76E3A7B61"
+      },
+      "instructions": {
+        "candidate": 598,
+        "parent": 593,
+        "Qfplib": 755
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "7FE0000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "408628B76E3A7B61",
+      "outputs": {
+        "candidate": "408628B76E3A7B61",
+        "parent": "408628B76E3A7B61",
+        "Qfplib": "408628B76E3A7B61"
+      },
+      "instructions": {
+        "candidate": 612,
+        "parent": 607,
+        "Qfplib": 755
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "7FE0000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "408628B76E3A7B61",
+      "outputs": {
+        "candidate": "408628B76E3A7B61",
+        "parent": "408628B76E3A7B61",
+        "Qfplib": "408628B76E3A7B61"
+      },
+      "instructions": {
+        "candidate": 593,
+        "parent": 593,
+        "Qfplib": 755
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "7FE0000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "408628B76E3A7B61",
+      "outputs": {
+        "candidate": "408628B76E3A7B61",
+        "parent": "408628B76E3A7B61",
+        "Qfplib": "408628B76E3A7B61"
+      },
+      "instructions": {
+        "candidate": 625,
+        "parent": 625,
+        "Qfplib": 755
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "7FE8000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "40862BF5D2B81354",
+      "outputs": {
+        "candidate": "40862BF5D2B81354",
+        "parent": "40862BF5D2B81354",
+        "Qfplib": "40862BF5D2B81354"
+      },
+      "instructions": {
+        "candidate": 593,
+        "parent": 588,
+        "Qfplib": 749
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "7FE8000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "40862BF5D2B81354",
+      "outputs": {
+        "candidate": "40862BF5D2B81354",
+        "parent": "40862BF5D2B81354",
+        "Qfplib": "40862BF5D2B81354"
+      },
+      "instructions": {
+        "candidate": 607,
+        "parent": 602,
+        "Qfplib": 749
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "40862E42FEFA39EF",
+      "outputs": {
+        "candidate": "40862E42FEFA39EF",
+        "parent": "40862E42FEFA39EF",
+        "Qfplib": "40862E42FEFA39EF"
+      },
+      "instructions": {
+        "candidate": 592,
+        "parent": 592,
+        "Qfplib": 725
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "40862E42FEFA39EF",
+      "outputs": {
+        "candidate": "40862E42FEFA39EF",
+        "parent": "40862E42FEFA39EF",
+        "Qfplib": "40862E42FEFA39EF"
+      },
+      "instructions": {
+        "candidate": 624,
+        "parent": 624,
+        "Qfplib": 725
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "7FF0000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF0000000000000",
+      "outputs": {
+        "candidate": "7FF0000000000000",
+        "parent": "7FF0000000000000",
+        "Qfplib": "7FF0000000000000"
+      },
+      "instructions": {
+        "candidate": 8,
+        "parent": 59,
+        "Qfplib": 10
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "7FF0000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF0000000000000",
+      "outputs": {
+        "candidate": "7FF0000000000000",
+        "parent": "7FF0000000000000",
+        "Qfplib": "7FF0000000000000"
+      },
+      "instructions": {
+        "candidate": 8,
+        "parent": 59,
+        "Qfplib": 10
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "7FF0000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "candidate": "7FF8000000000001",
+        "parent": "7FF8000000000001",
+        "Qfplib": "7FF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 10
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "7FF0000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "candidate": "7FF8000000000001",
+        "parent": "7FF8000000000001",
+        "Qfplib": "7FF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 10
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "7FF8000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "7FF0000000000000"
+      },
+      "instructions": {
+        "candidate": 50,
+        "parent": 57,
+        "Qfplib": 10
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "7FF8000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "7FF0000000000000"
+      },
+      "instructions": {
+        "candidate": 50,
+        "parent": 57,
+        "Qfplib": 10
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "7FFFFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FFFFFFFFFFFFFFF",
+        "parent": "7FFFFFFFFFFFFFFF",
+        "Qfplib": "7FF0000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 57,
+        "Qfplib": 10
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "7FFFFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FFFFFFFFFFFFFFF",
+        "parent": "7FFFFFFFFFFFFFFF",
+        "Qfplib": "7FF0000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 57,
+        "Qfplib": 10
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8000000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "candidate": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 6,
+        "parent": 53,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8000000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "FFF0000000000000",
+      "outputs": {
+        "candidate": "FFF0000000000000",
+        "parent": "FFF0000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 6,
+        "parent": 53,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8000000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8000000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8008000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8008000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "800FFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "800FFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8010000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8010000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8010000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8010000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8018000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "8018000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "801FFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "801FFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFE0000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFE0000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFE0000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFE0000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFE8000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFE8000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 53,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFEFFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFEFFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFF0000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 62,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFF0000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "7FF8000000000000",
+        "parent": "7FF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 55,
+        "parent": 62,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFF0000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "candidate": "FFF8000000000001",
+        "parent": "FFF8000000000001",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFF0000000000001",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "candidate": "FFF8000000000001",
+        "parent": "FFF8000000000001",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 48,
+        "parent": 60,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFF8000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "FFF8000000000000",
+        "parent": "FFF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 50,
+        "parent": 57,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFF8000000000000",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "FFF8000000000000",
+        "parent": "FFF8000000000000",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 50,
+        "parent": 57,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFFFFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "FFFFFFFFFFFFFFFF",
+        "parent": "FFFFFFFFFFFFFFFF",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 57,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "FFFFFFFFFFFFFFFF",
+      "group": "IEEE_payload_sign_and_endpoint_classes",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "candidate": "FFFFFFFFFFFFFFFF",
+        "parent": "FFFFFFFFFFFFFFFF",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 45,
+        "parent": 57,
+        "Qfplib": 6
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "0000000000000002",
+      "group": "normal_subnormal_boundary_neighbors",
+      "SIO": "READY",
+      "expected": "C0873DF9B3ADB335",
+      "outputs": {
+        "candidate": "C0873DF9B3ADB335",
+        "parent": "C0873DF9B3ADB335",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 594,
+        "parent": 604,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "0000000000000002",
+      "group": "normal_subnormal_boundary_neighbors",
+      "SIO": "DIRTY",
+      "expected": "C0873DF9B3ADB335",
+      "outputs": {
+        "candidate": "C0873DF9B3ADB335",
+        "parent": "C0873DF9B3ADB335",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 608,
+        "parent": 618,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "000FFFFFFFFFFFFE",
+      "group": "normal_subnormal_boundary_neighbors",
+      "SIO": "READY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "candidate": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 575,
+        "parent": 585,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "000FFFFFFFFFFFFE",
+      "group": "normal_subnormal_boundary_neighbors",
+      "SIO": "DIRTY",
+      "expected": "C086232BDD7ABCD2",
+      "outputs": {
+        "candidate": "C086232BDD7ABCD2",
+        "parent": "C086232BDD7ABCD2",
+        "Qfplib": "FFF0000000000000"
+      },
+      "instructions": {
+        "candidate": 627,
+        "parent": 637,
+        "Qfplib": 8
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 1,
+        "mk61_m0_ln_positive": 0
+      }
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFE",
+      "group": "normal_subnormal_boundary_neighbors",
+      "SIO": "READY",
+      "expected": "40862E42FEFA39EF",
+      "outputs": {
+        "candidate": "40862E42FEFA39EF",
+        "parent": "40862E42FEFA39EF",
+        "Qfplib": "40862E42FEFA39EF"
+      },
+      "instructions": {
+        "candidate": 592,
+        "parent": 592,
+        "Qfplib": 725
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFE",
+      "group": "normal_subnormal_boundary_neighbors",
+      "SIO": "DIRTY",
+      "expected": "40862E42FEFA39EF",
+      "outputs": {
+        "candidate": "40862E42FEFA39EF",
+        "parent": "40862E42FEFA39EF",
+        "Qfplib": "40862E42FEFA39EF"
+      },
+      "instructions": {
+        "candidate": 644,
+        "parent": 644,
+        "Qfplib": 725
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "3FEDD3AEF365CBC8",
+      "group": "historical_ln10",
+      "SIO": "READY",
+      "expected": "BFB200DC31BB7557",
+      "outputs": {
+        "candidate": "BFB200DC31BB7557",
+        "parent": "BFB200DC31BB7557",
+        "Qfplib": "BFB200DC31BB7557"
+      },
+      "instructions": {
+        "candidate": 600,
+        "parent": 600,
+        "Qfplib": 795
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1
+      }
+    },
+    {
+      "x": "3FEDD3AEF365CBC8",
+      "group": "historical_ln10",
+      "SIO": "DIRTY",
+      "expected": "BFB200DC31BB7557",
+      "outputs": {
+        "candidate": "BFB200DC31BB7557",
+        "parent": "BFB200DC31BB7557",
+        "Qfplib": "BFB200DC31BB7557"
+      },
+      "instructions": {
+        "candidate": 701,
+        "parent": 700,
+        "Qfplib": 795
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 1
+      }
+    },
+    {
+      "x": "3FEF9AE55188C8D0",
+      "group": "historical_ln10",
+      "SIO": "READY",
+      "expected": "BF896EEE92A8E92F",
+      "outputs": {
+        "candidate": "BF896EEE92A8E92F",
+        "parent": "BF896EEE92A8E92F",
+        "Qfplib": "BF896EEE92A8E92F"
+      },
+      "instructions": {
+        "candidate": 583,
+        "parent": 584,
+        "Qfplib": 783
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0
+      }
+    },
+    {
+      "x": "3FEF9AE55188C8D0",
+      "group": "historical_ln10",
+      "SIO": "DIRTY",
+      "expected": "BF896EEE92A8E92F",
+      "outputs": {
+        "candidate": "BF896EEE92A8E92F",
+        "parent": "BF896EEE92A8E92F",
+        "Qfplib": "BF896EEE92A8E92F"
+      },
+      "instructions": {
+        "candidate": 583,
+        "parent": 584,
+        "Qfplib": 783
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0
+      }
+    },
+    {
+      "x": "3FEFE39CE50E5DA4",
+      "group": "historical_ln10",
+      "SIO": "READY",
+      "expected": "BF6C6FB9B9E8C418",
+      "outputs": {
+        "candidate": "BF6C6FB9B9E8C418",
+        "parent": "BF6C6FB9B9E8C418",
+        "Qfplib": "BF6C6FB9B9E8C418"
+      },
+      "instructions": {
+        "candidate": 585,
+        "parent": 586,
+        "Qfplib": 794
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0
+      }
+    },
+    {
+      "x": "3FEFE39CE50E5DA4",
+      "group": "historical_ln10",
+      "SIO": "DIRTY",
+      "expected": "BF6C6FB9B9E8C418",
+      "outputs": {
+        "candidate": "BF6C6FB9B9E8C418",
+        "parent": "BF6C6FB9B9E8C418",
+        "Qfplib": "BF6C6FB9B9E8C418"
+      },
+      "instructions": {
+        "candidate": 585,
+        "parent": 586,
+        "Qfplib": 794
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0
+      }
+    },
+    {
+      "x": "3FEFE66DEC8E7338",
+      "group": "historical_ln10",
+      "SIO": "READY",
+      "expected": "BF699C5052B5F2B4",
+      "outputs": {
+        "candidate": "BF699C5052B5F2B4",
+        "parent": "BF699C5052B5F2B4",
+        "Qfplib": "BF699C5052B5F2B4"
+      },
+      "instructions": {
+        "candidate": 570,
+        "parent": 571,
+        "Qfplib": 794
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0
+      }
+    },
+    {
+      "x": "3FEFE66DEC8E7338",
+      "group": "historical_ln10",
+      "SIO": "DIRTY",
+      "expected": "BF699C5052B5F2B4",
+      "outputs": {
+        "candidate": "BF699C5052B5F2B4",
+        "parent": "BF699C5052B5F2B4",
+        "Qfplib": "BF699C5052B5F2B4"
+      },
+      "instructions": {
+        "candidate": 570,
+        "parent": 571,
+        "Qfplib": 794
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0
+      }
+    },
+    {
+      "x": "3FEFE71BC4A8909F",
+      "group": "historical_ln10",
+      "SIO": "READY",
+      "expected": "BF68EDEEB9FCF0CE",
+      "outputs": {
+        "candidate": "BF68EDEEB9FCF0CE",
+        "parent": "BF68EDEEB9FCF0CE",
+        "Qfplib": "BF68EDEEB9FCF0CE"
+      },
+      "instructions": {
+        "candidate": 603,
+        "parent": 604,
+        "Qfplib": 800
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0
+      }
+    },
+    {
+      "x": "3FEFE71BC4A8909F",
+      "group": "historical_ln10",
+      "SIO": "DIRTY",
+      "expected": "BF68EDEEB9FCF0CE",
+      "outputs": {
+        "candidate": "BF68EDEEB9FCF0CE",
+        "parent": "BF68EDEEB9FCF0CE",
+        "Qfplib": "BF68EDEEB9FCF0CE"
+      },
+      "instructions": {
+        "candidate": 603,
+        "parent": 604,
+        "Qfplib": 800
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0
+      }
+    },
+    {
+      "x": "3FF01E2A43FC46C8",
+      "group": "historical_ln10",
+      "SIO": "READY",
+      "expected": "3F7E0DF8102610A7",
+      "outputs": {
+        "candidate": "3F7E0DF8102610A7",
+        "parent": "3F7E0DF8102610A7",
+        "Qfplib": "3F7E0DF8102610A7"
+      },
+      "instructions": {
+        "candidate": 2083,
+        "parent": 2084,
+        "Qfplib": 805
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 1
+      }
+    },
+    {
+      "x": "3FF01E2A43FC46C8",
+      "group": "historical_ln10",
+      "SIO": "DIRTY",
+      "expected": "3F7E0DF8102610A7",
+      "outputs": {
+        "candidate": "3F7E0DF8102610A7",
+        "parent": "3F7E0DF8102610A7",
+        "Qfplib": "3F7E0DF8102610A7"
+      },
+      "instructions": {
+        "candidate": 2083,
+        "parent": 2084,
+        "Qfplib": 805
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 1
+      }
+    },
+    {
+      "x": "3FF014C46506F61D",
+      "group": "historical_ln10",
+      "SIO": "READY",
+      "expected": "3F74B6F6717C7EF5",
+      "outputs": {
+        "candidate": "3F74B6F6717C7EF5",
+        "parent": "3F74B6F6717C7EF5",
+        "Qfplib": "3F74B6F6717C7EF5"
+      },
+      "instructions": {
+        "candidate": 571,
+        "parent": 572,
+        "Qfplib": 829
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FF014C46506F61D",
+      "group": "historical_ln10",
+      "SIO": "DIRTY",
+      "expected": "3F74B6F6717C7EF5",
+      "outputs": {
+        "candidate": "3F74B6F6717C7EF5",
+        "parent": "3F74B6F6717C7EF5",
+        "Qfplib": "3F74B6F6717C7EF5"
+      },
+      "instructions": {
+        "candidate": 571,
+        "parent": 572,
+        "Qfplib": 829
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FEF808000000000",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "BF9010157588DE71",
+      "outputs": {
+        "candidate": "BF9010157588DE71",
+        "parent": "BF9010157588DE71",
+        "Qfplib": "BF9010157588DE71"
+      },
+      "instructions": {
+        "candidate": 609,
+        "parent": 604,
+        "Qfplib": 773
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FEF808000000000",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "BF9010157588DE71",
+      "outputs": {
+        "candidate": "BF9010157588DE71",
+        "parent": "BF9010157588DE71",
+        "Qfplib": "BF9010157588DE71"
+      },
+      "instructions": {
+        "candidate": 691,
+        "parent": 686,
+        "Qfplib": 773
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FEF808000000001",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "BF9010157588DE51",
+      "outputs": {
+        "candidate": "BF9010157588DE51",
+        "parent": "BF9010157588DE51",
+        "Qfplib": "BF9010157588DE51"
+      },
+      "instructions": {
+        "candidate": 576,
+        "parent": 577,
+        "Qfplib": 773
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FEF808000000001",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "BF9010157588DE51",
+      "outputs": {
+        "candidate": "BF9010157588DE51",
+        "parent": "BF9010157588DE51",
+        "Qfplib": "BF9010157588DE51"
+      },
+      "instructions": {
+        "candidate": 576,
+        "parent": 577,
+        "Qfplib": 773
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FEF808000000002",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "BF9010157588DE30",
+      "outputs": {
+        "candidate": "BF9010157588DE30",
+        "parent": "BF9010157588DE30",
+        "Qfplib": "BF9010157588DE30"
+      },
+      "instructions": {
+        "candidate": 581,
+        "parent": 582,
+        "Qfplib": 773
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FEF808000000002",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "BF9010157588DE30",
+      "outputs": {
+        "candidate": "BF9010157588DE30",
+        "parent": "BF9010157588DE30",
+        "Qfplib": "BF9010157588DE30"
+      },
+      "instructions": {
+        "candidate": 581,
+        "parent": 582,
+        "Qfplib": 773
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FF03FFFFFFFFFFF",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "3F8FC0A8B0FC0366",
+      "outputs": {
+        "candidate": "3F8FC0A8B0FC0366",
+        "parent": "3F8FC0A8B0FC0366",
+        "Qfplib": "3F8FC0A8B0FC0366"
+      },
+      "instructions": {
+        "candidate": 566,
+        "parent": 567,
+        "Qfplib": 798
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FF03FFFFFFFFFFF",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "3F8FC0A8B0FC0366",
+      "outputs": {
+        "candidate": "3F8FC0A8B0FC0366",
+        "parent": "3F8FC0A8B0FC0366",
+        "Qfplib": "3F8FC0A8B0FC0366"
+      },
+      "instructions": {
+        "candidate": 566,
+        "parent": 567,
+        "Qfplib": 798
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FF0400000000000",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "3F8FC0A8B0FC03E4",
+      "outputs": {
+        "candidate": "3F8FC0A8B0FC03E4",
+        "parent": "3F8FC0A8B0FC03E4",
+        "Qfplib": "3F8FC0A8B0FC03E4"
+      },
+      "instructions": {
+        "candidate": 221,
+        "parent": 217,
+        "Qfplib": 801
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FF0400000000000",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "3F8FC0A8B0FC03E4",
+      "outputs": {
+        "candidate": "3F8FC0A8B0FC03E4",
+        "parent": "3F8FC0A8B0FC03E4",
+        "Qfplib": "3F8FC0A8B0FC03E4"
+      },
+      "instructions": {
+        "candidate": 221,
+        "parent": 217,
+        "Qfplib": 801
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FF0400000000001",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "3F8FC0A8B0FC0462",
+      "outputs": {
+        "candidate": "3F8FC0A8B0FC0462",
+        "parent": "3F8FC0A8B0FC0462",
+        "Qfplib": "3F8FC0A8B0FC0462"
+      },
+      "instructions": {
+        "candidate": 518,
+        "parent": 517,
+        "Qfplib": 801
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FF0400000000001",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "3F8FC0A8B0FC0462",
+      "outputs": {
+        "candidate": "3F8FC0A8B0FC0462",
+        "parent": "3F8FC0A8B0FC0462",
+        "Qfplib": "3F8FC0A8B0FC0462"
+      },
+      "instructions": {
+        "candidate": 550,
+        "parent": 549,
+        "Qfplib": 801
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FFFFFFFFFFFFFFF",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "3FE62E42FEFA39EE",
+      "outputs": {
+        "candidate": "3FE62E42FEFA39EE",
+        "parent": "3FE62E42FEFA39EE",
+        "Qfplib": "3FE62E42FEFA39EE"
+      },
+      "instructions": {
+        "candidate": 520,
+        "parent": 519,
+        "Qfplib": 681
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FFFFFFFFFFFFFFF",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "3FE62E42FEFA39EE",
+      "outputs": {
+        "candidate": "3FE62E42FEFA39EE",
+        "parent": "3FE62E42FEFA39EE",
+        "Qfplib": "3FE62E42FEFA39EE"
+      },
+      "instructions": {
+        "candidate": 552,
+        "parent": 551,
+        "Qfplib": 681
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "4000000000000000",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "3FE62E42FEFA39EF",
+      "outputs": {
+        "candidate": "3FE62E42FEFA39EF",
+        "parent": "3FE62E42FEFA39EF",
+        "Qfplib": "3FE62E42FEFA39EF"
+      },
+      "instructions": {
+        "candidate": 608,
+        "parent": 603,
+        "Qfplib": 711
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "4000000000000000",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "3FE62E42FEFA39EF",
+      "outputs": {
+        "candidate": "3FE62E42FEFA39EF",
+        "parent": "3FE62E42FEFA39EF",
+        "Qfplib": "3FE62E42FEFA39EF"
+      },
+      "instructions": {
+        "candidate": 622,
+        "parent": 617,
+        "Qfplib": 711
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "4000000000000001",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "3FE62E42FEFA39F1",
+      "outputs": {
+        "candidate": "3FE62E42FEFA39F1",
+        "parent": "3FE62E42FEFA39F1",
+        "Qfplib": "3FE62E42FEFA39F1"
+      },
+      "instructions": {
+        "candidate": 603,
+        "parent": 603,
+        "Qfplib": 711
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "4000000000000001",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "3FE62E42FEFA39F1",
+      "outputs": {
+        "candidate": "3FE62E42FEFA39F1",
+        "parent": "3FE62E42FEFA39F1",
+        "Qfplib": "3FE62E42FEFA39F1"
+      },
+      "instructions": {
+        "candidate": 635,
+        "parent": 635,
+        "Qfplib": 711
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFBE",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "3FF62D827A741385",
+      "outputs": {
+        "candidate": "3FF62D827A741385",
+        "parent": "3FF62D827A741385",
+        "Qfplib": "3FF62D827A741385"
+      },
+      "instructions": {
+        "candidate": 593,
+        "parent": 593,
+        "Qfplib": 713
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFBE",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "3FF62D827A741385",
+      "outputs": {
+        "candidate": "3FF62D827A741385",
+        "parent": "3FF62D827A741385",
+        "Qfplib": "3FF62D827A741385"
+      },
+      "instructions": {
+        "candidate": 653,
+        "parent": 652,
+        "Qfplib": 713
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 1,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFBF",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "3FF62D827A741385",
+      "outputs": {
+        "candidate": "3FF62D827A741385",
+        "parent": "3FF62D827A741385",
+        "Qfplib": "3FF62D827A741385"
+      },
+      "instructions": {
+        "candidate": 599,
+        "parent": 599,
+        "Qfplib": 713
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFBF",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "3FF62D827A741385",
+      "outputs": {
+        "candidate": "3FF62D827A741385",
+        "parent": "3FF62D827A741385",
+        "Qfplib": "3FF62D827A741385"
+      },
+      "instructions": {
+        "candidate": 660,
+        "parent": 659,
+        "Qfplib": 713
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 1,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFC0",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "READY",
+      "expected": "3FF62D827A741386",
+      "outputs": {
+        "candidate": "3FF62D827A741386",
+        "parent": "3FF62D827A741386",
+        "Qfplib": "3FF62D827A741386"
+      },
+      "instructions": {
+        "candidate": 589,
+        "parent": 589,
+        "Qfplib": 713
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "400FFE7EFFFFFFC0",
+      "group": "normal_near_or_speed_boundary",
+      "SIO": "DIRTY",
+      "expected": "3FF62D827A741386",
+      "outputs": {
+        "candidate": "3FF62D827A741386",
+        "parent": "3FF62D827A741386",
+        "Qfplib": "3FF62D827A741386"
+      },
+      "instructions": {
+        "candidate": 674,
+        "parent": 674,
+        "Qfplib": 713
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FF0020000000000",
+      "group": "each_saved_regression_cost_witness",
+      "SIO": "READY",
+      "expected": "3F3FFE002AA6AB11",
+      "outputs": {
+        "candidate": "3F3FFE002AA6AB11",
+        "parent": "3F3FFE002AA6AB11",
+        "Qfplib": "3F3FFE002AA6AB14"
+      },
+      "instructions": {
+        "candidate": 228,
+        "parent": 224,
+        "Qfplib": 749
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FF0020000000000",
+      "group": "each_saved_regression_cost_witness",
+      "SIO": "DIRTY",
+      "expected": "3F3FFE002AA6AB11",
+      "outputs": {
+        "candidate": "3F3FFE002AA6AB11",
+        "parent": "3F3FFE002AA6AB11",
+        "Qfplib": "3F3FFE002AA6AB14"
+      },
+      "instructions": {
+        "candidate": 228,
+        "parent": 224,
+        "Qfplib": 749
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": false
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FF0420000000000",
+      "group": "each_saved_regression_cost_witness",
+      "SIO": "READY",
+      "expected": "3F905E547826BC91",
+      "outputs": {
+        "candidate": "3F905E547826BC91",
+        "parent": "3F905E547826BC91",
+        "Qfplib": "3F905E547826BC91"
+      },
+      "instructions": {
+        "candidate": 525,
+        "parent": 519,
+        "Qfplib": 797
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    },
+    {
+      "x": "3FF0420000000000",
+      "group": "each_saved_regression_cost_witness",
+      "SIO": "DIRTY",
+      "expected": "3F905E547826BC91",
+      "outputs": {
+        "candidate": "3F905E547826BC91",
+        "parent": "3F905E547826BC91",
+        "Qfplib": "3F905E547826BC91"
+      },
+      "instructions": {
+        "candidate": 491,
+        "parent": 485,
+        "Qfplib": 797
+      },
+      "correct": {
+        "candidate": true,
+        "parent": true,
+        "Qfplib": true
+      },
+      "trace": {
+        "mk61_m0_ln_special": 0,
+        "mk61_m0_ln_positive": 1,
+        "ln_main_raw": 0,
+        "ln_refine": 0
+      }
+    }
+  ],
+  "bare_rows": [
+    {
+      "x": "0000000000000000",
+      "kind": "zero",
+      "SIO": "READY",
+      "output": "FFF0000000000000",
+      "instructions": 6
+    },
+    {
+      "x": "0000000000000000",
+      "kind": "zero",
+      "SIO": "DIRTY",
+      "output": "FFF0000000000000",
+      "instructions": 6
+    },
+    {
+      "x": "0000000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB97531ECA86421",
+      "instructions": 19
+    },
+    {
+      "x": "0000000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB97531ECA86421",
+      "instructions": 19
+    },
+    {
+      "x": "0000000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB975316CA86420",
+      "instructions": 19
+    },
+    {
+      "x": "0000000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB975316CA86420",
+      "instructions": 19
+    },
+    {
+      "x": "00000000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB9753113579BDF",
+      "instructions": 19
+    },
+    {
+      "x": "00000000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB9753113579BDF",
+      "instructions": 19
+    },
+    {
+      "x": "0000000100000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB97530ECA86420",
+      "instructions": 24
+    },
+    {
+      "x": "0000000100000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB97530ECA86420",
+      "instructions": 24
+    },
+    {
+      "x": "0000000100000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB97530ECA86421",
+      "instructions": 19
+    },
+    {
+      "x": "0000000100000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB97530ECA86421",
+      "instructions": 19
+    },
+    {
+      "x": "0000000180000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB975306CA86420",
+      "instructions": 19
+    },
+    {
+      "x": "0000000180000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB975306CA86420",
+      "instructions": 19
+    },
+    {
+      "x": "00000001FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB9753013579BDF",
+      "instructions": 19
+    },
+    {
+      "x": "00000001FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB9753013579BDF",
+      "instructions": 19
+    },
+    {
+      "x": "0008000000000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB17531ECA86420",
+      "instructions": 24
+    },
+    {
+      "x": "0008000000000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB17531ECA86420",
+      "instructions": 24
+    },
+    {
+      "x": "0008000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB17531ECA86421",
+      "instructions": 19
+    },
+    {
+      "x": "0008000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB17531ECA86421",
+      "instructions": 19
+    },
+    {
+      "x": "0008000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB175316CA86420",
+      "instructions": 19
+    },
+    {
+      "x": "0008000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB175316CA86420",
+      "instructions": 19
+    },
+    {
+      "x": "00080000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB1753113579BDF",
+      "instructions": 19
+    },
+    {
+      "x": "00080000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB1753113579BDF",
+      "instructions": 19
+    },
+    {
+      "x": "000FFFFF00000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB68ACEECA86420",
+      "instructions": 24
+    },
+    {
+      "x": "000FFFFF00000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB68ACEECA86420",
+      "instructions": 24
+    },
+    {
+      "x": "000FFFFF00000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB68ACEECA86421",
+      "instructions": 19
+    },
+    {
+      "x": "000FFFFF00000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB68ACEECA86421",
+      "instructions": 19
+    },
+    {
+      "x": "000FFFFF80000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB68ACE6CA86420",
+      "instructions": 19
+    },
+    {
+      "x": "000FFFFF80000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB68ACE6CA86420",
+      "instructions": 19
+    },
+    {
+      "x": "000FFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "FDB68ACE13579BDF",
+      "instructions": 19
+    },
+    {
+      "x": "000FFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "FDB68ACE13579BDF",
+      "instructions": 19
+    },
+    {
+      "x": "0010000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13479BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0010000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13479BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0010000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13479BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0010000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13479BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0010000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13479BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "0010000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13479BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "00100000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13479BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "00100000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13479BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "0010000100000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13479BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0010000100000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13479BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0010000100000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13479BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0010000100000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13479BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0010000180000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13479BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "0010000180000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13479BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "00100001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13479BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "00100001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13479BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "0018000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "134F9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0018000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "134F9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0018000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "134F9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0018000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "134F9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0018000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "134F9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "0018000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "134F9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "00180000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "134F9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "00180000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "134F9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "001FFFFF00000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "134864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "001FFFFF00000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "134864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "001FFFFF00000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "134864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "001FFFFF00000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "134864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "001FFFFF80000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13486420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "001FFFFF80000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13486420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "001FFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13486420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "001FFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13486420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "0020000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13779BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0020000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13779BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0020000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13779BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0020000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13779BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0020000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13779BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "0020000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13779BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "00200000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13779BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "00200000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13779BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "0020000100000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13779BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0020000100000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13779BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0020000100000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13779BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0020000100000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13779BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0020000180000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13779BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "0020000180000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13779BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "00200001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13779BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "00200001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13779BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "0028000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "137F9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0028000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "137F9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "0028000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "137F9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0028000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "137F9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "0028000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "137F9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "0028000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "137F9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "00280000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "137F9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "00280000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "137F9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "002FFFFF00000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "137864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "002FFFFF00000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "137864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "002FFFFF00000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "137864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "002FFFFF00000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "137864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "002FFFFF80000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13786420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "002FFFFF80000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13786420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "002FFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "13786420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "002FFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "13786420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FE0000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB79BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FE0000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB79BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FE0000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB79BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FE0000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB79BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FE0000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB79BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FE0000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB79BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FE00000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB79BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FE00000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB79BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FE0000100000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB79BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FE0000100000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB79BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FE0000100000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB79BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FE0000100000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB79BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FE0000180000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB79BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FE0000180000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB79BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FE00001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB79BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FE00001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB79BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FE8000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CBF9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FE8000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CBF9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FE8000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CBF9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FE8000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CBF9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FE8000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CBF9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FE8000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CBF9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FE80000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CBF9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FE80000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CBF9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FEFFFFF00000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FEFFFFF00000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FEFFFFF00000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FEFFFFF00000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FEFFFFF80000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB86420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FEFFFFF80000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB86420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FEFFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CB86420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FEFFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CB86420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FF0000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA79BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FF0000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA79BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FF0000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA79BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FF0000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA79BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FF0000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA79BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FF0000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA79BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FF00000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA79BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FF00000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA79BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FF0000100000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA79BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FF0000100000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA79BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FF0000100000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA79BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FF0000100000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA79BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FF0000180000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA79BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FF0000180000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA79BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FF00001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA79BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FF00001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA79BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FF8000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CAF9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FF8000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CAF9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FF8000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CAF9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FF8000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CAF9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FF8000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CAF9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FF8000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CAF9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FF80000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CAF9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FF80000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CAF9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FFFFFFF00000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FFFFFFF00000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "3FFFFFFF00000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FFFFFFF00000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "3FFFFFFF80000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA86420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FFFFFFF80000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA86420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "3FFFFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "2CA86420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "3FFFFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "2CA86420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "4000000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "53579BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "4000000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "53579BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "4000000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "53579BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "4000000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "53579BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "4000000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "53579BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "4000000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "53579BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "40000000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "53579BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "40000000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "53579BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "4000000100000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "53579BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "4000000100000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "53579BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "4000000100000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "53579BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "4000000100000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "53579BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "4000000180000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "53579BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "4000000180000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "53579BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "40000001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "53579BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "40000001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "53579BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "4008000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "535F9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "4008000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "535F9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "4008000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "535F9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "4008000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "535F9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "4008000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "535F9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "4008000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "535F9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "40080000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "535F9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "40080000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "535F9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "400FFFFF00000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "535864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "400FFFFF00000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "535864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "400FFFFF00000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "535864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "400FFFFF00000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "535864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "400FFFFF80000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "53586420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "400FFFFF80000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "53586420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "400FFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "53586420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "400FFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "53586420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FD0000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C879BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FD0000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C879BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FD0000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C879BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FD0000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C879BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FD0000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C879BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FD0000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C879BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FD00000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C879BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FD00000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C879BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FD0000100000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C879BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FD0000100000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C879BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FD0000100000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C879BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FD0000100000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C879BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FD0000180000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C879BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FD0000180000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C879BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FD00001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C879BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FD00001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C879BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FD8000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C8F9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FD8000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C8F9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FD8000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C8F9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FD8000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C8F9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FD8000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C8F9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FD8000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C8F9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FD80000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C8F9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FD80000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C8F9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FDFFFFF00000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C8864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FDFFFFF00000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C8864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FDFFFFF00000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C8864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FDFFFFF00000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C8864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FDFFFFF80000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C886420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FDFFFFF80000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C886420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FDFFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6C886420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FDFFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6C886420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FE0000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB79BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FE0000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB79BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FE0000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB79BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FE0000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB79BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FE0000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB79BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FE0000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB79BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FE00000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB79BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FE00000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB79BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FE0000100000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB79BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FE0000100000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB79BDE2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FE0000100000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB79BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FE0000100000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB79BDE2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FE0000180000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB79BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FE0000180000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB79BDEA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FE00001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB79BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FE00001FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB79BDEDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FE8000000000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CBF9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FE8000000000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CBF9BDF2468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FE8000000000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CBF9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FE8000000000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CBF9BDF2468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FE8000080000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CBF9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FE8000080000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CBF9BDFA468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FE80000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CBF9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FE80000FFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CBF9BDFDB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FEFFFFF00000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FEFFFFF00000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB864202468ACE0",
+      "instructions": 23
+    },
+    {
+      "x": "7FEFFFFF00000001",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FEFFFFF00000001",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB864202468ACE1",
+      "instructions": 18
+    },
+    {
+      "x": "7FEFFFFF80000000",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB86420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FEFFFFF80000000",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB86420A468ACE0",
+      "instructions": 18
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "READY",
+      "output": "6CB86420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "kind": "normal",
+      "SIO": "DIRTY",
+      "output": "6CB86420DB97531F",
+      "instructions": 18
+    },
+    {
+      "x": "7FF0000000000000",
+      "kind": "positive_infinity",
+      "SIO": "READY",
+      "output": "7FF0000000000000",
+      "instructions": 8
+    },
+    {
+      "x": "7FF0000000000000",
+      "kind": "positive_infinity",
+      "SIO": "DIRTY",
+      "output": "7FF0000000000000",
+      "instructions": 8
+    },
+    {
+      "x": "7FF0000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "82497531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "7FF0000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "82497531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "7FF0000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "824975316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "7FF0000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "824975316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "7FF00000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "8249753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "7FF00000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "8249753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "7FF0000100000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "82497530ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "7FF0000100000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "82497530ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "7FF0000100000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "82497530ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "7FF0000100000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "82497530ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "7FF0000180000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "824975306CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "7FF0000180000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "824975306CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "7FF00001FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "8249753013579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "7FF00001FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "8249753013579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "7FF8000000000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "82417531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "7FF8000000000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "82417531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "7FF8000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "82417531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "7FF8000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "82417531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "7FF8000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "824175316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "7FF8000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "824175316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "7FF80000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "8241753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "7FF80000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "8241753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "7FFFFFFF00000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "82468ACEECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "7FFFFFFF00000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "82468ACEECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "7FFFFFFF00000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "82468ACEECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "7FFFFFFF00000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "82468ACEECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "7FFFFFFF80000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "82468ACE6CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "7FFFFFFF80000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "82468ACE6CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "7FFFFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "82468ACE13579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "7FFFFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "82468ACE13579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "8000000000000000",
+      "kind": "zero",
+      "SIO": "READY",
+      "output": "FFF0000000000000",
+      "instructions": 6
+    },
+    {
+      "x": "8000000000000000",
+      "kind": "zero",
+      "SIO": "DIRTY",
+      "output": "FFF0000000000000",
+      "instructions": 6
+    },
+    {
+      "x": "8000000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB97531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8000000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB97531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8000000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB975316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "8000000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB975316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "80000000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB9753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "80000000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB9753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "8000000100000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB97530ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "8000000100000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB97530ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "8000000100000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB97530ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8000000100000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB97530ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8000000180000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB975306CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "8000000180000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB975306CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "80000001FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB9753013579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "80000001FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB9753013579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "8008000000000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB17531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "8008000000000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB17531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "8008000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB17531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8008000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB17531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8008000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB175316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "8008000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB175316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "80080000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB1753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "80080000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB1753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "800FFFFF00000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB68ACEECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "800FFFFF00000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB68ACEECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "800FFFFF00000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB68ACEECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "800FFFFF00000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB68ACEECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "800FFFFF80000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB68ACE6CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "800FFFFF80000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB68ACE6CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "800FFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DB68ACE13579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "800FFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DB68ACE13579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "8010000000000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA97531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "8010000000000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA97531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "8010000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA97531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8010000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA97531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8010000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA975316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "8010000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA975316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "80100000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA9753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "80100000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA9753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "8010000100000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA97530ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "8010000100000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA97530ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "8010000100000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA97530ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8010000100000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA97530ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8010000180000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA975306CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "8010000180000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA975306CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "80100001FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA9753013579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "80100001FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA9753013579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "8018000000000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA17531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "8018000000000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA17531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "8018000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA17531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8018000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA17531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "8018000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA175316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "8018000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA175316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "80180000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA1753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "80180000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA1753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "801FFFFF00000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA68ACEECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "801FFFFF00000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA68ACEECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "801FFFFF00000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA68ACEECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "801FFFFF00000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA68ACEECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "801FFFFF80000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA68ACE6CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "801FFFFF80000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA68ACE6CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "801FFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "7DA68ACE13579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "801FFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "7DA68ACE13579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFE0000000000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02597531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFE0000000000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02597531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFE0000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02597531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFE0000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02597531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFE0000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "025975316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFE0000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "025975316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFE00000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "0259753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFE00000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "0259753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFE0000100000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02597530ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFE0000100000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02597530ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFE0000100000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02597530ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFE0000100000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02597530ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFE0000180000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "025975306CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFE0000180000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "025975306CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFE00001FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "0259753013579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFE00001FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "0259753013579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFE8000000000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02517531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFE8000000000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02517531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFE8000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02517531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFE8000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02517531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFE8000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "025175316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFE8000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "025175316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFE80000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "0251753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFE80000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "0251753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFEFFFFF00000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02568ACEECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFEFFFFF00000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02568ACEECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFEFFFFF00000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02568ACEECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFEFFFFF00000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02568ACEECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFEFFFFF80000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02568ACE6CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFEFFFFF80000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02568ACE6CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFEFFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02568ACE13579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFEFFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02568ACE13579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFF0000000000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02497531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFF0000000000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02497531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFF0000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02497531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFF0000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02497531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFF0000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "024975316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFF0000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "024975316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFF00000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "0249753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFF00000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "0249753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFF0000100000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02497530ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFF0000100000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02497530ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFF0000100000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02497530ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFF0000100000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02497530ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFF0000180000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "024975306CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFF0000180000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "024975306CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFF00001FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "0249753013579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFF00001FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "0249753013579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFF8000000000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02417531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFF8000000000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02417531ECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFF8000000000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02417531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFF8000000000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02417531ECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFF8000080000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "024175316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFF8000080000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "024175316CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFF80000FFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "0241753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFF80000FFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "0241753113579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFFFFFFF00000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02468ACEECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFFFFFFF00000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02468ACEECA86420",
+      "instructions": 22
+    },
+    {
+      "x": "FFFFFFFF00000001",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02468ACEECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFFFFFFF00000001",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02468ACEECA86421",
+      "instructions": 17
+    },
+    {
+      "x": "FFFFFFFF80000000",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02468ACE6CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFFFFFFF80000000",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02468ACE6CA86420",
+      "instructions": 17
+    },
+    {
+      "x": "FFFFFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "READY",
+      "output": "02468ACE13579BDF",
+      "instructions": 17
+    },
+    {
+      "x": "FFFFFFFFFFFFFFFF",
+      "kind": "special",
+      "SIO": "DIRTY",
+      "output": "02468ACE13579BDF",
+      "instructions": 17
+    }
+  ]
+}

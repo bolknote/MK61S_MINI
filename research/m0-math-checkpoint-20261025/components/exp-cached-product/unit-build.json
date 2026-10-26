@@ -1,0 +1,51 @@
+{
+  "status": "BUILT_EXACT_EXP_TINY_PACK_AND_PRODUCT_BARE_UNITS",
+  "source_sha256": "9b0bf27d5080eabe779b924e57db448b205ce0d0a20febcaa7355267f1aa311e",
+  "candidate_ELF_sha256": "5ddab388a96bef9c343e0c11e82797741f7ccb724a812d0532d76aa25c2e794e",
+  "unit_ELF_sha256": "5d823e0b4fd752fea6bd953de2405ef8cfba264f0ceb22044283b9f8e7d59c84",
+  "tiny_fragment_sha256": "dbdcf77c83454f55d0a6836148132345c4130a55d460c0799bed65f281717d06",
+  "normal_pack_fragment_sha256": "1207a23891b9a665ad2d22786675f0f949dbfa8310fa077ed4f909069cd79110",
+  "copied_existing_refine_table_sha256": "b4769f705c76d7190d0ed816f2fe95c4dc786ea4f48148d2150d085bc3314e52",
+  "copied_existing_product_sha256": "43c7b2bdd81974c27ecd602dbbc0b3ec82070caea16ffeb80d25fb28bc6b9f32",
+  "copied_parent_product_sha256": "20ddbb4bcbf37baffe9dfed52b4c03def48e66568d6929bc4ea711eb116ce948",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/product-unit.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/product-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/product-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-cached-product-20261024/unit.elf"
+    ]
+  ],
+  "decline_bits": "7FF80000000005E0",
+  "input_fixture_bytes": 8,
+  "hardware_accessed": false
+}

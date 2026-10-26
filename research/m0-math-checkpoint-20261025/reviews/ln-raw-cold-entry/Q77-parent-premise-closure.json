@@ -1,0 +1,62 @@
+{
+  "status": "EXACT_Q77_NAMED_PARENT_CHAIN_PREMISES_DISCHARGED",
+  "utc": "2026-10-24T06:46:24.621110+00:00",
+  "scope": "Only resolve the two required_unreviewed_premises in unchanged conditional1c2a3bdb for exactQ77source84213d8e/ELF1164948d; no new Q77 numerical, performance, totality or integration claim.",
+  "prior_conditional_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 18442,
+    "sha256": "1c2a3bdb70bbede78c425d545520b09e8b2e460df8bf372f03894fad05cc6faa"
+  },
+  "main_raw_parent_acceptance": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-raw-split-family-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 13340,
+    "sha256": "54dc555c2c702619ec174354e6209da4629e1436f5799d4028c2e9d8baaf5150"
+  },
+  "cold_entry_parent_acceptance": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-raw-cold-entry-independent-20261024/FINAL-REVIEW.json",
+    "bytes": 12922,
+    "sha256": "005774ca3ede4873debc15138a214839f1a76b2304aa79a6278f2fb3efe1e2e2"
+  },
+  "required_parent_reviews_both_component_GO": true,
+  "exact_Q77_control_matches_cold_candidate": {
+    "control.elf": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/control.elf",
+      "bytes": 111816,
+      "sha256": "cc8ac3115c96e3424ac9f4f4ac848d403c9114c4d1fc81270042c53d8c417ef6"
+    },
+    "control-full.o": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/control-full.o",
+      "bytes": 300892,
+      "sha256": "50484963f2c8869573f1aaa87e0d9191c8549ab5bfd8667f0f0ea85365829c2f"
+    },
+    "control-ratio.o": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/control-ratio.o",
+      "bytes": 900,
+      "sha256": "c80865dd3f89454cd4790770059a806133b87f39f1ac5090c12f10e308584fea"
+    }
+  },
+  "Q77_target_exact": {
+    "source": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/native_eabi_m0_log70.inc",
+      "sha256": "84213d8eb6c7841b48a834cd2304eb8c0ccd6bedc150ee84fd01cf39a8a7e06b"
+    },
+    "ELF": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/candidate.elf",
+      "sha256": "1164948d280c23bc66601af789dbd2a4af44c0982fb8c813b35fa2b7a396052e"
+    },
+    "object": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-near-q77-linear-20261024/candidate-full.o",
+      "sha256": "8b866d1d4bfa402aa80330a7615d436ea79cc7683bd3df6e206c8a91a58fea0d"
+    }
+  },
+  "local_Q77_delta_previous_PASS_reused_without_rerun": true,
+  "parent_chain_HOLD_from_two_named_unreviewed_parents_resolved": true,
+  "old_conditional_receipt_unchanged": true,
+  "all_original_local_Q77_proofs_limits_and_remaining_losses_retained": true,
+  "whole_ln_GO": false,
+  "all507_GO": false,
+  "reviewed_original_count_unchanged": 298,
+  "canonical_integration_shipping_Hardware_GO": false,
+  "ln2_sign_or_other_new_children_reviewed": false,
+  "hardware_or_Git_or_leases_accessed": false
+}

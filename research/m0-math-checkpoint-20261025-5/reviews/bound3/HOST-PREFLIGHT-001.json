@@ -1,0 +1,8 @@
+{
+  "status": "EXCLUDED_SAVED_INTEGER_REPRESENTATION_PREFLIGHT",
+  "cause": "Saved unit candidate_residual uses signed integer -53709; independent model stores identical uint32 bits4294913587 at D66226. Comparison corrected to uint32 modulo without changing saved data.",
+  "source_sha256": "a4b264211e5fb4d74a5ead584c5c74c3788282e8934b2b45ae5735de1c6f1fbb",
+  "actual_ARM_calls": 0,
+  "actual_MPFR_calls": 0,
+  "supplier_modified": false
+}

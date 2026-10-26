@@ -1,0 +1,348 @@
+{
+  "status": "PASS_INDEPENDENT_COMPLETE_TINY_ROUNDING_SOURCE_PROOF",
+  "domain": "2^-54 < abs(x) < 2^-38",
+  "correction_input_ulp_bound": "4503599627370496/274877906943",
+  "correction_strictly_below16385": true,
+  "quadratic_displacement_error": "1099511627777/18446744073709551616",
+  "absolute_cubic_and_higher_error": "16384/824633720829",
+  "combined_error": "1208925819612155273543677/15211807202683412585739309809664",
+  "combined_error_strictly_below_2powminus22": true,
+  "minimum_integer_separation": "1/65536",
+  "separation_at_least_2powminus18": true,
+  "complete_midpoint_cells": 49153,
+  "positive_cells": 16385,
+  "negative_cells": 32768,
+  "per_exponent_sign": [
+    {
+      "e": -54,
+      "negative": 0,
+      "midpoint_cells": 1,
+      "first_odd": 1,
+      "last_odd": 1,
+      "q": 1,
+      "selected": 1
+    },
+    {
+      "e": -54,
+      "negative": 1,
+      "midpoint_cells": 1,
+      "first_odd": 1,
+      "last_odd": 1,
+      "q": 3,
+      "selected": 1
+    },
+    {
+      "e": -53,
+      "negative": 0,
+      "midpoint_cells": 1,
+      "first_odd": 1,
+      "last_odd": 1,
+      "q": 2,
+      "selected": 1
+    },
+    {
+      "e": -53,
+      "negative": 1,
+      "midpoint_cells": 1,
+      "first_odd": 3,
+      "last_odd": 3,
+      "q": 4,
+      "selected": 1
+    },
+    {
+      "e": -52,
+      "negative": 0,
+      "midpoint_cells": 1,
+      "first_odd": 3,
+      "last_odd": 3,
+      "q": 3,
+      "selected": 1
+    },
+    {
+      "e": -52,
+      "negative": 1,
+      "midpoint_cells": 2,
+      "first_odd": 5,
+      "last_odd": 7,
+      "q": 5,
+      "selected": 2
+    },
+    {
+      "e": -51,
+      "negative": 0,
+      "midpoint_cells": 2,
+      "first_odd": 5,
+      "last_odd": 7,
+      "q": 4,
+      "selected": 2
+    },
+    {
+      "e": -51,
+      "negative": 1,
+      "midpoint_cells": 4,
+      "first_odd": 9,
+      "last_odd": 15,
+      "q": 6,
+      "selected": 3
+    },
+    {
+      "e": -50,
+      "negative": 0,
+      "midpoint_cells": 4,
+      "first_odd": 9,
+      "last_odd": 15,
+      "q": 5,
+      "selected": 2
+    },
+    {
+      "e": -50,
+      "negative": 1,
+      "midpoint_cells": 8,
+      "first_odd": 17,
+      "last_odd": 31,
+      "q": 7,
+      "selected": 3
+    },
+    {
+      "e": -49,
+      "negative": 0,
+      "midpoint_cells": 8,
+      "first_odd": 17,
+      "last_odd": 31,
+      "q": 6,
+      "selected": 2
+    },
+    {
+      "e": -49,
+      "negative": 1,
+      "midpoint_cells": 16,
+      "first_odd": 33,
+      "last_odd": 63,
+      "q": 8,
+      "selected": 3
+    },
+    {
+      "e": -48,
+      "negative": 0,
+      "midpoint_cells": 16,
+      "first_odd": 33,
+      "last_odd": 63,
+      "q": 7,
+      "selected": 2
+    },
+    {
+      "e": -48,
+      "negative": 1,
+      "midpoint_cells": 32,
+      "first_odd": 65,
+      "last_odd": 127,
+      "q": 9,
+      "selected": 3
+    },
+    {
+      "e": -47,
+      "negative": 0,
+      "midpoint_cells": 32,
+      "first_odd": 65,
+      "last_odd": 127,
+      "q": 8,
+      "selected": 2
+    },
+    {
+      "e": -47,
+      "negative": 1,
+      "midpoint_cells": 64,
+      "first_odd": 129,
+      "last_odd": 255,
+      "q": 10,
+      "selected": 3
+    },
+    {
+      "e": -46,
+      "negative": 0,
+      "midpoint_cells": 64,
+      "first_odd": 129,
+      "last_odd": 255,
+      "q": 9,
+      "selected": 2
+    },
+    {
+      "e": -46,
+      "negative": 1,
+      "midpoint_cells": 128,
+      "first_odd": 257,
+      "last_odd": 511,
+      "q": 11,
+      "selected": 3
+    },
+    {
+      "e": -45,
+      "negative": 0,
+      "midpoint_cells": 128,
+      "first_odd": 257,
+      "last_odd": 511,
+      "q": 10,
+      "selected": 2
+    },
+    {
+      "e": -45,
+      "negative": 1,
+      "midpoint_cells": 256,
+      "first_odd": 513,
+      "last_odd": 1023,
+      "q": 12,
+      "selected": 3
+    },
+    {
+      "e": -44,
+      "negative": 0,
+      "midpoint_cells": 256,
+      "first_odd": 513,
+      "last_odd": 1023,
+      "q": 11,
+      "selected": 2
+    },
+    {
+      "e": -44,
+      "negative": 1,
+      "midpoint_cells": 512,
+      "first_odd": 1025,
+      "last_odd": 2047,
+      "q": 13,
+      "selected": 3
+    },
+    {
+      "e": -43,
+      "negative": 0,
+      "midpoint_cells": 512,
+      "first_odd": 1025,
+      "last_odd": 2047,
+      "q": 12,
+      "selected": 2
+    },
+    {
+      "e": -43,
+      "negative": 1,
+      "midpoint_cells": 1024,
+      "first_odd": 2049,
+      "last_odd": 4095,
+      "q": 14,
+      "selected": 3
+    },
+    {
+      "e": -42,
+      "negative": 0,
+      "midpoint_cells": 1024,
+      "first_odd": 2049,
+      "last_odd": 4095,
+      "q": 13,
+      "selected": 2
+    },
+    {
+      "e": -42,
+      "negative": 1,
+      "midpoint_cells": 2048,
+      "first_odd": 4097,
+      "last_odd": 8191,
+      "q": 15,
+      "selected": 3
+    },
+    {
+      "e": -41,
+      "negative": 0,
+      "midpoint_cells": 2048,
+      "first_odd": 4097,
+      "last_odd": 8191,
+      "q": 14,
+      "selected": 2
+    },
+    {
+      "e": -41,
+      "negative": 1,
+      "midpoint_cells": 4096,
+      "first_odd": 8193,
+      "last_odd": 16383,
+      "q": 16,
+      "selected": 3
+    },
+    {
+      "e": -40,
+      "negative": 0,
+      "midpoint_cells": 4096,
+      "first_odd": 8193,
+      "last_odd": 16383,
+      "q": 15,
+      "selected": 4
+    },
+    {
+      "e": -40,
+      "negative": 1,
+      "midpoint_cells": 8192,
+      "first_odd": 16385,
+      "last_odd": 32767,
+      "q": 17,
+      "selected": 5
+    },
+    {
+      "e": -39,
+      "negative": 0,
+      "midpoint_cells": 8192,
+      "first_odd": 16385,
+      "last_odd": 32767,
+      "q": 16,
+      "selected": 3
+    },
+    {
+      "e": -39,
+      "negative": 1,
+      "midpoint_cells": 16384,
+      "first_odd": 32769,
+      "last_odd": 65535,
+      "q": 18,
+      "selected": 4
+    }
+  ],
+  "q_values": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "max_odd": 65535,
+  "odd_square_uint32_safe": true,
+  "input_high_word_shift6to22_safe": true,
+  "independently_selected_cells": 78,
+  "own_rational_cubic_interval_controls": 934,
+  "own_tiny_cost_values": [
+    74,
+    77,
+    79,
+    80,
+    83,
+    84,
+    87,
+    93,
+    96
+  ],
+  "public_tiny_cost_min74_max96_source_exhaustive": true,
+  "Qfplib_unconditional_loop_iterations32_min11instructions_each": true,
+  "Qfplib_instruction_lower_bound": 352,
+  "all_tiny_paths_faster_than_Qfplib_in_instructions": true,
+  "author442299_model_checks_not_reexecuted_or_counted_own": true,
+  "own_fresh_ARM_or_MPFR_in_this_file": 0,
+  "original507_unchanged418": true
+}

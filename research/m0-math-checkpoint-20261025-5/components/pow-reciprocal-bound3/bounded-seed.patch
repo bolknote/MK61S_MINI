@@ -1,0 +1,14 @@
+--- parent/inline-seed.inc
++++ candidate/inline-seed.inc
+@@ -26,7 +26,10 @@
+ .Linline_seed_high:
+  subs r6,#1
+  adds r7,r1
+- bmi .Linline_seed_high
++ bpl .Linline_seed_done
++ subs r6,#1
++ adds r7,r1
++ sbcs r6,r0                   @ private raw R0=0; borrow corrects third step
+ .Linline_seed_done:
+ .global mk61_m0_inline_seed_done
+ mk61_m0_inline_seed_done:

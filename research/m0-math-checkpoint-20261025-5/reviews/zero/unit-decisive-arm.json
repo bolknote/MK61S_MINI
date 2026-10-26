@@ -1,0 +1,905 @@
+{
+  "status": "PASS_ACTUAL_DECISIVE_TARGET_ARBITRARY_R6_ALL_FLAGS",
+  "actual_ARM_calls": 128,
+  "all16_flags_both_signs_four_zero_nonzero_R6_patterns": true,
+  "full_path_R6_contract_NOT_inferred": true,
+  "rows": [
+    {
+      "negative": false,
+      "NZCV": 0,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 0,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 0,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 0,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 1,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 1,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 1,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 1,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 2,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 2,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 2,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 2,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 3,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 3,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 3,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 3,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 4,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 4,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 4,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 4,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 5,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 5,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 5,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 5,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 6,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 6,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 6,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 6,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 7,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 7,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 7,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 7,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 8,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 8,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 8,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 8,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 9,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 9,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 9,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 9,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 10,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 10,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 10,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 10,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 11,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 11,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 11,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 11,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 12,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 12,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 12,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 12,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 13,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 13,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 13,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 13,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 14,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 14,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 14,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 14,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 15,
+      "arbitrary_R6": 0,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 15,
+      "arbitrary_R6": 1,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 15,
+      "arbitrary_R6": 2147483648,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": false,
+      "NZCV": 15,
+      "arbitrary_R6": 4294967295,
+      "instructions": 14,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 0,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 0,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 0,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 0,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 1,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 1,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 1,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 1,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 2,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 2,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 2,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 2,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 3,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 3,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 3,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 3,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 4,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 4,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 4,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 4,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 5,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 5,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 5,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 5,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 6,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 6,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 6,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 6,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 7,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 7,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 7,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 7,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 8,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 8,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 8,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 8,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 9,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 9,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 9,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 9,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 10,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 10,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 10,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 10,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 11,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 11,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 11,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 11,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 12,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 12,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 12,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 12,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 13,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 13,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 13,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 13,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 14,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 14,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 14,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 14,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 15,
+      "arbitrary_R6": 0,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 15,
+      "arbitrary_R6": 1,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 15,
+      "arbitrary_R6": 2147483648,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    },
+    {
+      "negative": true,
+      "NZCV": 15,
+      "arbitrary_R6": 4294967295,
+      "instructions": 15,
+      "actual_decisive_target_preserved_all_declared_live_registers": true
+    }
+  ],
+  "devices": 0
+}

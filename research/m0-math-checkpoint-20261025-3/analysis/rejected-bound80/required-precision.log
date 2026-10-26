@@ -1,0 +1,24 @@
+{
+  "status": "EXACT_DYADIC_GAP_AND_PARENT_POWER_ENCLOSURE_AUDIT",
+  "boundary_calls_ready": 28,
+  "actual_ARM_or_MPFR_calls": 0,
+  "relative_gap_bits_histogram": {
+    "101": 8,
+    "97": 2,
+    "98": 3,
+    "104": 3,
+    "100": 4,
+    "102": 5,
+    "99": 2,
+    "108": 1
+  },
+  "ideal_exact_truncation_filter_decisions": {
+    "80": 0,
+    "96": 0,
+    "112": 22,
+    "128": 28
+  },
+  "model_radii_use_same_conservative16_not_a_new_ARM_implementation": true,
+  "all_captured_actual_P128_power_enclosures_verified_against_exact_dyadic_powers": true,
+  "hardware_accessed": false
+}

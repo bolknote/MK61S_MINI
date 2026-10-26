@@ -1,0 +1,64 @@
+{
+  "status": "EXPERIMENTAL_BOUND80_UNIT_BUILT_NOT_QUALIFIED",
+  "ELF_sha256": "b56350bace1ce46b27bab8a9e7f07ee89b6b5cf5e34970cb63df22943d2fca31",
+  "sizes": {
+    "mk61_m0_bound80_multiply": 310,
+    "mk61_m0_bound80_compare": 304,
+    "mk61_m0_bound80_wide32": 44,
+    "mk61_m0_bound80_square": 192
+  },
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-Os",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-ffreestanding",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-fno-unwind-tables",
+      "-fno-asynchronous-unwind-tables",
+      "-fno-lto",
+      "-std=c++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-bound80-20261025/filter.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-bound80-20261025/filter.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-Os",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-ffreestanding",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-fno-unwind-tables",
+      "-fno-asynchronous-unwind-tables",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-bound80-20261025/kernels.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-bound80-20261025/kernels.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_bound80_square",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-bound80-20261025/unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-bound80-20261025/kernels.o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-bound80-20261025/filter.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-bound80-20261025/unit.elf"
+    ]
+  ],
+  "hardware_accessed": false
+}

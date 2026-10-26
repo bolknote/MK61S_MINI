@@ -1,0 +1,19 @@
+reciprocal1-new 0 / 5127 0.0
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/qualify-new.py", line 22, in <module>
+    m.uc.mem_write(0xd0000060,state);got,_,cost=m.call(label if label in refs else'_ZN12compact_math3powEdd',x,y,count=True);state_after(m,state)
+                                                ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/support/native_eabi_m0_arm_self_test.py", line 181, in call
+    try:uc.emu_start(self.elf.symbols[name]|1,STOP,count=self.instruction_budget)
+        ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/lib/python3.13/site-packages/unicorn/unicorn_py3/unicorn.py", line 769, in emu_start
+    raise self._hook_exception
+  File "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/lib/python3.13/site-packages/unicorn/unicorn_py3/unicorn.py", line 363, in wrapper
+    return func(uc, *args, **kwargs)
+  File "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/lib/python3.13/site-packages/unicorn/unicorn_py3/unicorn.py", line 1063, in __hook_code_cb
+    callback(uc, address, size, user_data)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-one-20261025/trace.py", line 18, in product
+    def product(uc,pc,unused,user):products.append(uc.reg_read(UC_ARM_REG_R6))
+                                                               ^^^^^^^^^^^^^
+NameError: name 'UC_ARM_REG_R6' is not defined. Did you mean: 'UC_ARM_REG_R0'?

@@ -1,0 +1,36 @@
+{
+  "status": "BUILT_EXACT_MAIN_LN_LN2_UPPER_GATE_PACK_UNITS",
+  "source_sha256": "661ae2b62f0f2e3b9da08b689de0a7876f83fa2f80f57380113b78cbbd74e79b",
+  "exact_fragment_sha256": "9217d30e358dbada4e87c656a8407c5b5a95fd981328547d010c4bb81e7878ed",
+  "raw_fragment_sha256": "e4add7aa611788f4d466086028dfc1e3ece397e4d7f2442560f1ffbe1aaa9ae6",
+  "unit_ELF_sha256": "cfdd0e035a53e57fdf756cc391d8e586857995aa0f884e78791e93e140f40d49",
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-mfloat-abi=soft",
+      "-Os",
+      "-std=gnu++17",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-unwind-tables",
+      "-ffunction-sections",
+      "-fno-lto",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-20261024/pack-unit.cpp",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-20261024/pack-unit.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-20261024/pack-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-20261024/pack-unit.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-ln-main-ln2-sign-20261024/pack-unit.elf"
+    ]
+  ],
+  "decline_bits": "7FF8000000000282",
+  "hardware_accessed": false
+}

@@ -1,0 +1,34 @@
+{
+  "status": "PASS_RAW_BODY_OBJECT_DIFF_ONLY_EXPLICIT_SIGN_MASK_AND_ALIGNMENT",
+  "source_sha256": "52e3a6f0a32069120fe0ccd3ec6593872cb97bd9579bd1a2e9b8d654bd2efb1a",
+  "candidate_ELF_sha256": "cc8ac3115c96e3424ac9f4f4ac848d403c9114c4d1fc81270042c53d8c417ef6",
+  "parent_full_object_sha256": "591c95cd8c26af0a8be5dd6af5a016ac3bd94b5d854d665835d0703e115c1efa",
+  "candidate_full_object_sha256": "50484963f2c8869573f1aaa87e0d9191c8549ab5bfd8667f0f0ea85365829c2f",
+  "normalized_instruction_changes": [
+    {
+      "kind": "replace",
+      "parent": [
+        "lsrs r3, r3, #20"
+      ],
+      "candidate": [
+        "lsls r3, r3, #1",
+        "lsrs r3, r3, #21"
+      ]
+    },
+    {
+      "kind": "insert",
+      "parent": [],
+      "candidate": [
+        "nop "
+      ]
+    }
+  ],
+  "raw_literal_words_identical": true,
+  "raw_relocation_target_names_and_types_identical": true,
+  "actual_extra_instruction": "lsls r3,#1 followed by lsrs#21 implements(high>>20)&2047; old caller proved signzero so compiler emitted lsrs#20.",
+  "valid_domain_equivalence": "For routed positive normals, high bit31 is0, so the two sequences are exactly equal.",
+  "object_bytes_delta": 4,
+  "one_extra_runtime_instruction_plus_alignment_nop": true,
+  "normalization": "Displacement/immediate PC load offsets and branch target addresses normalized; all actual literal words and ordered relocation target names/types separately compared.",
+  "hardware_accessed": false
+}

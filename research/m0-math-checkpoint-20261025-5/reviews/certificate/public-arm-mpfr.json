@@ -1,0 +1,5780 @@
+{
+  "status": "PASS_NESTED_REAL_ROOT_CALLER_STRICT_EQUALITY_FIX_AND_TWO_EXPLICIT_REGRESSIONS",
+  "pairs": 18,
+  "actual_ARM_calls": 216,
+  "directed_MPFR_inputs": 16,
+  "sNaN_shortcuts": 2,
+  "MPFR_version": "4.2.2",
+  "strict_pair_and_equality_pair_separate": true,
+  "both_already_losing_correctQfp_further_slowed_witnesses": [
+    {
+      "SIO": "READY",
+      "parent": 1697,
+      "candidate": 1705,
+      "references": {
+        "qfp_composed_pow": 1526,
+        "qfp_composed_pow_exact": 1547,
+        "qfp_composed_pow_integer": 1584
+      }
+    },
+    {
+      "SIO": "DIRTY",
+      "parent": 1706,
+      "candidate": 1714,
+      "references": {
+        "qfp_composed_pow": 1526,
+        "qfp_composed_pow_exact": 1547,
+        "qfp_composed_pow_integer": 1584
+      }
+    }
+  ],
+  "fresh_positive_one_caller_return_site_frame20_private_guard_R6_R12_and_all_live_joins": true,
+  "nested_inlineSP_ownentryminus20_not_outerSP": true,
+  "every_actual_classifier_branch_and_full_restore_and_live_RNE_skip_checked": true,
+  "READY9ALU_and_DIRTY7words_preserved": true,
+  "classes": {
+    "fast_down_nocross": 4,
+    "fast_down_cross": 2,
+    "full_up_nocross": 2,
+    "fast_up_nocross": 2,
+    "full_up_cross": 2,
+    "fast_up_cross": 2,
+    "full_down_nocross": 2
+  },
+  "all3realQfp_outputs_correctness_and_costs_retained": true,
+  "no_generic_ABI_or_integration_performance_GO": true,
+  "near_one_sibling_not_loaded": true,
+  "observed_stack_bytes": {
+    "parent": 968,
+    "control": 968,
+    "candidate": 968,
+    "Qfplib": 88
+  },
+  "rows": [
+    {
+      "x": "3FE4F79E13C3C1C2",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "group": "equality_pair_fix_not_strict",
+      "expected": "4011911100DB81C8",
+      "outputs": {
+        "parent": "4011911100DB81C8",
+        "control": "4011911100DB81C8",
+        "candidate": "4011911100DB81C8",
+        "qfp_composed_pow": "4011911100DB81C8",
+        "qfp_composed_pow_exact": "4011911100DB81C8",
+        "qfp_composed_pow_integer": "C011911100DB81C8"
+      },
+      "instructions": {
+        "parent": 1505,
+        "control": 1505,
+        "candidate": 1493,
+        "qfp_composed_pow": 1505,
+        "qfp_composed_pow_exact": 1526,
+        "qfp_composed_pow_integer": 1563
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "3FCD256792E0F1DF",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            589439490
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                539066814,
+                2726265278,
+                338187892,
+                884245086,
+                589439490,
+                589439490,
+                338174400,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                28771217,
+                2302498,
+                208742382,
+                5997000,
+                0,
+                589439489,
+                0,
+                880933726,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                28771217,
+                2302498,
+                2464215519,
+                2341692503,
+                15719947,
+                1937554846,
+                0,
+                880933726,
+                4096,
+                537132828,
+                536870912
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 15719947,
+              "u": 2464215519,
+              "v": 28771217,
+              "estimate": 4294180843,
+              "exact": 4294179904,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "down",
+              "actual_full": true,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              28771217,
+              2302498,
+              4096,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              14385608,
+              1151249,
+              4096,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "3FCD256792E0F1DF",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            589439490
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                539066814,
+                2726265278,
+                338187892,
+                884245086,
+                589439490,
+                589439490,
+                338174400,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                28771217,
+                2302498,
+                208742382,
+                5997000,
+                0,
+                589439489,
+                0,
+                880933726,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                28771217,
+                2302498,
+                2464215519,
+                2341692503,
+                15719947,
+                1937554846,
+                0,
+                880933726,
+                4096,
+                537132828,
+                536870912
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 15719947,
+              "u": 2464215519,
+              "v": 28771217,
+              "estimate": 4294180843,
+              "exact": 4294179904,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "down",
+              "actual_full": false,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              28771217,
+              2302498,
+              4096,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              14385608,
+              1151249,
+              4096,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 1,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FE4F79E13C3C1C2",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "group": "equality_pair_fix_not_strict",
+      "expected": "4011911100DB81C8",
+      "outputs": {
+        "parent": "4011911100DB81C8",
+        "control": "4011911100DB81C8",
+        "candidate": "4011911100DB81C8",
+        "qfp_composed_pow": "4011911100DB81C8",
+        "qfp_composed_pow_exact": "4011911100DB81C8",
+        "qfp_composed_pow_integer": "C011911100DB81C8"
+      },
+      "instructions": {
+        "parent": 1517,
+        "control": 1517,
+        "candidate": 1505,
+        "qfp_composed_pow": 1505,
+        "qfp_composed_pow_exact": 1526,
+        "qfp_composed_pow_integer": 1563
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "3FCD256792E0F1DF",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            589439490
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                539066814,
+                2726265278,
+                338187892,
+                884245086,
+                589439490,
+                589439490,
+                338174400,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                28771217,
+                2302498,
+                208742382,
+                5997000,
+                0,
+                589439489,
+                0,
+                880933726,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                28771217,
+                2302498,
+                2464215519,
+                2341692503,
+                15719947,
+                1937554846,
+                0,
+                880933726,
+                4096,
+                537132828,
+                536870912
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 15719947,
+              "u": 2464215519,
+              "v": 28771217,
+              "estimate": 4294180843,
+              "exact": 4294179904,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "down",
+              "actual_full": true,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              28771217,
+              2302498,
+              4096,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              14385608,
+              1151249,
+              4096,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 119382,
+              "live": [
+                0,
+                119382,
+                2464215519,
+                1910119,
+                1955962443,
+                4096,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            119382
+          ],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "3FCD256792E0F1DF",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            589439490
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                539066814,
+                2726265278,
+                338187892,
+                884245086,
+                589439490,
+                589439490,
+                338174400,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                28771217,
+                2302498,
+                208742382,
+                5997000,
+                0,
+                589439489,
+                0,
+                880933726,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                28771217,
+                2302498,
+                2464215519,
+                2341692503,
+                15719947,
+                1937554846,
+                0,
+                880933726,
+                4096,
+                537132828,
+                536870912
+              ],
+              "frame28": "dff1e09267251d00def10000fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 15719947,
+              "u": 2464215519,
+              "v": 28771217,
+              "estimate": 4294180843,
+              "exact": 4294179904,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "down",
+              "actual_full": false,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              28771217,
+              2302498,
+              4096,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              14385608,
+              1151249,
+              4096,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 119382,
+              "live": [
+                0,
+                119382,
+                2464215519,
+                1910119,
+                1955962443,
+                4096,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            119382
+          ],
+          "classified": 1,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FF2A4269F8149D1",
+      "y": "C02A000000000000",
+      "SIO": "READY",
+      "group": "strict_pair_fix",
+      "expected": "3FC19031D705C3EA",
+      "outputs": {
+        "parent": "3FC19031D705C3EA",
+        "control": "3FC19031D705C3EA",
+        "candidate": "3FC19031D705C3EA",
+        "qfp_composed_pow": "3FC19031D705C3EA",
+        "qfp_composed_pow_exact": "3FC19031D705C3EA",
+        "qfp_composed_pow_integer": "BFC19031D705C3EA"
+      },
+      "instructions": {
+        "parent": 1529,
+        "control": 1529,
+        "candidate": 1514,
+        "qfp_composed_pow": 1536,
+        "qfp_composed_pow_exact": 1557,
+        "qfp_composed_pow_integer": 1594
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "401D26D9E973C57B",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            589325231
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                1290113045,
+                3689058325,
+                537419103,
+                1979682557,
+                589325231,
+                589325231,
+                537388896,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2919991253,
+                2302051,
+                287892236,
+                377834,
+                0,
+                589325230,
+                0,
+                589388157,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2919991253,
+                2302051,
+                3916678523,
+                2702229901,
+                2661908450,
+                3225796241,
+                0,
+                589388157,
+                4076,
+                537132828,
+                2415919104
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2661908450,
+              "u": 3916678523,
+              "v": 2919991253,
+              "estimate": 4294135281,
+              "exact": 4294069200,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": true,
+              "expected_saving": 15,
+              "full": false,
+              "decision": "down",
+              "actual_full": true,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              2919991253,
+              2302051,
+              4076,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3607479274,
+              1151025,
+              4076,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "401D26D9E973C57B",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            589325231
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                1290113045,
+                3689058325,
+                537419103,
+                1979682557,
+                589325231,
+                589325231,
+                537388896,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2919991253,
+                2302051,
+                287892236,
+                377834,
+                0,
+                589325230,
+                0,
+                589388157,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2919991253,
+                2302051,
+                3916678523,
+                2702229901,
+                2661908450,
+                3225796241,
+                0,
+                589388157,
+                4076,
+                537132828,
+                2415919104
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2661908450,
+              "u": 3916678523,
+              "v": 2919991253,
+              "estimate": 4294135281,
+              "exact": 4294069200,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": true,
+              "expected_saving": 15,
+              "full": false,
+              "decision": "down",
+              "actual_full": false,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              2919991253,
+              2302051,
+              4076,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3607479274,
+              1151025,
+              4076,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 1,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FF2A4269F8149D1",
+      "y": "C02A000000000000",
+      "SIO": "DIRTY",
+      "group": "strict_pair_fix",
+      "expected": "3FC19031D705C3EA",
+      "outputs": {
+        "parent": "3FC19031D705C3EA",
+        "control": "3FC19031D705C3EA",
+        "candidate": "3FC19031D705C3EA",
+        "qfp_composed_pow": "3FC19031D705C3EA",
+        "qfp_composed_pow_exact": "3FC19031D705C3EA",
+        "qfp_composed_pow_integer": "BFC19031D705C3EA"
+      },
+      "instructions": {
+        "parent": 1538,
+        "control": 1538,
+        "candidate": 1523,
+        "qfp_composed_pow": 1536,
+        "qfp_composed_pow_exact": 1557,
+        "qfp_composed_pow_integer": 1594
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "401D26D9E973C57B",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            589325231
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                1290113045,
+                3689058325,
+                537419103,
+                1979682557,
+                589325231,
+                589325231,
+                537388896,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2919991253,
+                2302051,
+                287892236,
+                377834,
+                0,
+                589325230,
+                0,
+                589388157,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2919991253,
+                2302051,
+                3916678523,
+                2702229901,
+                2661908450,
+                3225796241,
+                0,
+                589388157,
+                4076,
+                537132828,
+                2415919104
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2661908450,
+              "u": 3916678523,
+              "v": 2919991253,
+              "estimate": 4294135281,
+              "exact": 4294069200,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": true,
+              "expected_saving": 15,
+              "full": false,
+              "decision": "down",
+              "actual_full": true,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              2919991253,
+              2302051,
+              4076,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3607479274,
+              1151025,
+              4076,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 119405,
+              "live": [
+                0,
+                119405,
+                3916678523,
+                1910489,
+                1956341669,
+                4076,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            119405
+          ],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "401D26D9E973C57B",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            589325231
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                1290113045,
+                3689058325,
+                537419103,
+                1979682557,
+                589325231,
+                589325231,
+                537388896,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2919991253,
+                2302051,
+                287892236,
+                377834,
+                0,
+                589325230,
+                0,
+                589388157,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2919991253,
+                2302051,
+                3916678523,
+                2702229901,
+                2661908450,
+                3225796241,
+                0,
+                589388157,
+                4076,
+                537132828,
+                2415919104
+              ],
+              "frame28": "7bc573e9d9261d0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2661908450,
+              "u": 3916678523,
+              "v": 2919991253,
+              "estimate": 4294135281,
+              "exact": 4294069200,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": true,
+              "expected_saving": 15,
+              "full": false,
+              "decision": "down",
+              "actual_full": false,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              2919991253,
+              2302051,
+              4076,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3607479274,
+              1151025,
+              4076,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 119405,
+              "live": [
+                0,
+                119405,
+                3916678523,
+                1910489,
+                1956341669,
+                4076,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            119405
+          ],
+          "classified": 1,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FF4B1DD264786A5",
+      "y": "C02A000000000000",
+      "SIO": "READY",
+      "group": "actual_public_fast_down_nocross",
+      "expected": "3FA20E8574F55E66",
+      "outputs": {
+        "parent": "3FA20E8574F55E66",
+        "control": "3FA20E8574F55E66",
+        "candidate": "3FA20E8574F55E66",
+        "qfp_composed_pow": "3FA20E8574F55E66",
+        "qfp_composed_pow_exact": "3FA20E8574F55E66",
+        "qfp_composed_pow_integer": "BFA20E8574F55E66"
+      },
+      "instructions": {
+        "parent": 1893,
+        "control": 1893,
+        "candidate": 1881,
+        "qfp_composed_pow": 1568,
+        "qfp_composed_pow_exact": 1589,
+        "qfp_composed_pow_integer": 1626
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "403C5AE710D09838",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            605883114
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                108876592,
+                2733986608,
+                39796160,
+                372284536,
+                605883114,
+                605883114,
+                39790480,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                3924475083,
+                2366730,
+                332114887,
+                7691877,
+                0,
+                605883113,
+                0,
+                2982571510,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                3924475083,
+                2366730,
+                282105912,
+                1063500077,
+                257424547,
+                2974042672,
+                0,
+                2982571510,
+                4068,
+                537132828,
+                536870912
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 257424547,
+              "u": 282105912,
+              "v": 3924475083,
+              "estimate": 4294659715,
+              "exact": 4294620934,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "down",
+              "actual_full": true,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              3924475083,
+              2366730,
+              4068,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1962237541,
+              1183365,
+              4068,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "403C5AE710D09838",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            605883114
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                108876592,
+                2733986608,
+                39796160,
+                372284536,
+                605883114,
+                605883114,
+                39790480,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                3924475083,
+                2366730,
+                332114887,
+                7691877,
+                0,
+                605883113,
+                0,
+                2982571510,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                3924475083,
+                2366730,
+                282105912,
+                1063500077,
+                257424547,
+                2974042672,
+                0,
+                2982571510,
+                4068,
+                537132828,
+                536870912
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 257424547,
+              "u": 282105912,
+              "v": 3924475083,
+              "estimate": 4294659715,
+              "exact": 4294620934,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "down",
+              "actual_full": false,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              3924475083,
+              2366730,
+              4068,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1962237541,
+              1183365,
+              4068,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 1,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FF4B1DD264786A5",
+      "y": "C02A000000000000",
+      "SIO": "DIRTY",
+      "group": "actual_public_fast_down_nocross",
+      "expected": "3FA20E8574F55E66",
+      "outputs": {
+        "parent": "3FA20E8574F55E66",
+        "control": "3FA20E8574F55E66",
+        "candidate": "3FA20E8574F55E66",
+        "qfp_composed_pow": "3FA20E8574F55E66",
+        "qfp_composed_pow_exact": "3FA20E8574F55E66",
+        "qfp_composed_pow_integer": "BFA20E8574F55E66"
+      },
+      "instructions": {
+        "parent": 1902,
+        "control": 1902,
+        "candidate": 1890,
+        "qfp_composed_pow": 1568,
+        "qfp_composed_pow_exact": 1589,
+        "qfp_composed_pow_integer": 1626
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "403C5AE710D09838",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            605883114
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                108876592,
+                2733986608,
+                39796160,
+                372284536,
+                605883114,
+                605883114,
+                39790480,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                3924475083,
+                2366730,
+                332114887,
+                7691877,
+                0,
+                605883113,
+                0,
+                2982571510,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                3924475083,
+                2366730,
+                282105912,
+                1063500077,
+                257424547,
+                2974042672,
+                0,
+                2982571510,
+                4068,
+                537132828,
+                536870912
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 257424547,
+              "u": 282105912,
+              "v": 3924475083,
+              "estimate": 4294659715,
+              "exact": 4294620934,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "down",
+              "actual_full": true,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              3924475083,
+              2366730,
+              4068,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1962237541,
+              1183365,
+              4068,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 116142,
+              "live": [
+                0,
+                116142,
+                282105912,
+                1858279,
+                1902877763,
+                4068,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            116142
+          ],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "403C5AE710D09838",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            605883114
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                108876592,
+                2733986608,
+                39796160,
+                372284536,
+                605883114,
+                605883114,
+                39790480,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                3924475083,
+                2366730,
+                332114887,
+                7691877,
+                0,
+                605883113,
+                0,
+                2982571510,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                3924475083,
+                2366730,
+                282105912,
+                1063500077,
+                257424547,
+                2974042672,
+                0,
+                2982571510,
+                4068,
+                537132828,
+                536870912
+              ],
+              "frame28": "3898d010e75a1c0037981000fe030000040000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 257424547,
+              "u": 282105912,
+              "v": 3924475083,
+              "estimate": 4294659715,
+              "exact": 4294620934,
+              "fast": true,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "down",
+              "actual_full": false,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              3924475083,
+              2366730,
+              4068,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1962237541,
+              1183365,
+              4068,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 116142,
+              "live": [
+                0,
+                116142,
+                282105912,
+                1858279,
+                1902877763,
+                4068,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            116142
+          ],
+          "classified": 1,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "READY",
+      "group": "actual_public_full_up_nocross",
+      "expected": "3FC2B607BC82DBE3",
+      "outputs": {
+        "parent": "3FC2B607BC82DBE3",
+        "control": "3FC2B607BC82DBE3",
+        "candidate": "3FC2B607BC82DBE3",
+        "qfp_composed_pow": "3FC2B607BC82DBE3",
+        "qfp_composed_pow_exact": "3FC2B607BC82DBE3",
+        "qfp_composed_pow_integer": "3FC2B607BC82DBE3"
+      },
+      "instructions": {
+        "parent": 1697,
+        "control": 1697,
+        "candidate": 1705,
+        "qfp_composed_pow": 1526,
+        "qfp_composed_pow_exact": 1547,
+        "qfp_composed_pow_integer": 1584
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "401B5D0E724796ED",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            627838841
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                153041157,
+                581581061,
+                280270316,
+                486021515,
+                627838841,
+                627838841,
+                280262900,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2030417861,
+                2452495,
+                144842418,
+                187362,
+                0,
+                627838841,
+                0,
+                574741495,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2030417861,
+                2452495,
+                1917294317,
+                333028806,
+                906464855,
+                3055473635,
+                0,
+                574741495,
+                4076,
+                537132828,
+                536870912
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 906464855,
+              "u": 1917294317,
+              "v": 2030417861,
+              "estimate": 115700,
+              "exact": 76433,
+              "fast": false,
+              "negative": false,
+              "cross_overflow": false,
+              "expected_saving": -8,
+              "full": true,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              2030417862,
+              2452495,
+              4076,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3162692579,
+              1226247,
+              4076,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "401B5D0E724796ED",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            627838841
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                153041157,
+                581581061,
+                280270316,
+                486021515,
+                627838841,
+                627838841,
+                280262900,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2030417861,
+                2452495,
+                144842418,
+                187362,
+                0,
+                627838841,
+                0,
+                574741495,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2030417861,
+                2452495,
+                1917294317,
+                333028806,
+                906464855,
+                3055473635,
+                0,
+                574741495,
+                4076,
+                537132828,
+                536870912
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 906464855,
+              "u": 1917294317,
+              "v": 2030417861,
+              "estimate": 115700,
+              "exact": 76433,
+              "fast": false,
+              "negative": false,
+              "cross_overflow": false,
+              "expected_saving": -8,
+              "full": true,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              2030417862,
+              2452495,
+              4076,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3162692579,
+              1226247,
+              4076,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 1,
+          "restored": 1
+        }
+      }
+    },
+    {
+      "x": "3FF2C7DE5B557A7D",
+      "y": "C028000000000000",
+      "SIO": "DIRTY",
+      "group": "actual_public_full_up_nocross",
+      "expected": "3FC2B607BC82DBE3",
+      "outputs": {
+        "parent": "3FC2B607BC82DBE3",
+        "control": "3FC2B607BC82DBE3",
+        "candidate": "3FC2B607BC82DBE3",
+        "qfp_composed_pow": "3FC2B607BC82DBE3",
+        "qfp_composed_pow_exact": "3FC2B607BC82DBE3",
+        "qfp_composed_pow_integer": "3FC2B607BC82DBE3"
+      },
+      "instructions": {
+        "parent": 1706,
+        "control": 1706,
+        "candidate": 1714,
+        "qfp_composed_pow": 1526,
+        "qfp_composed_pow_exact": 1547,
+        "qfp_composed_pow_integer": 1584
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "401B5D0E724796ED",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            627838841
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                153041157,
+                581581061,
+                280270316,
+                486021515,
+                627838841,
+                627838841,
+                280262900,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2030417861,
+                2452495,
+                144842418,
+                187362,
+                0,
+                627838841,
+                0,
+                574741495,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2030417861,
+                2452495,
+                1917294317,
+                333028806,
+                906464855,
+                3055473635,
+                0,
+                574741495,
+                4076,
+                537132828,
+                536870912
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 906464855,
+              "u": 1917294317,
+              "v": 2030417861,
+              "estimate": 115700,
+              "exact": 76433,
+              "fast": false,
+              "negative": false,
+              "cross_overflow": false,
+              "expected_saving": -8,
+              "full": true,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              2030417862,
+              2452495,
+              4076,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3162692579,
+              1226247,
+              4076,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 112080,
+              "live": [
+                0,
+                112080,
+                1917294317,
+                1793294,
+                1836333513,
+                4076,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            112080
+          ],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "401B5D0E724796ED",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            627838841
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                153041157,
+                581581061,
+                280270316,
+                486021515,
+                627838841,
+                627838841,
+                280262900,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2030417861,
+                2452495,
+                144842418,
+                187362,
+                0,
+                627838841,
+                0,
+                574741495,
+                4076,
+                537132828,
+                0
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2030417861,
+                2452495,
+                1917294317,
+                333028806,
+                906464855,
+                3055473635,
+                0,
+                574741495,
+                4076,
+                537132828,
+                536870912
+              ],
+              "frame28": "ed9647720e5d1b0000000000fe030000020000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 906464855,
+              "u": 1917294317,
+              "v": 2030417861,
+              "estimate": 115700,
+              "exact": 76433,
+              "fast": false,
+              "negative": false,
+              "cross_overflow": false,
+              "expected_saving": -8,
+              "full": true,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              2030417862,
+              2452495,
+              4076,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3162692579,
+              1226247,
+              4076,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 112080,
+              "live": [
+                0,
+                112080,
+                1917294317,
+                1793294,
+                1836333513,
+                4076,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            112080
+          ],
+          "classified": 1,
+          "restored": 1
+        }
+      }
+    },
+    {
+      "x": "3FF60E08AA312590",
+      "y": "C008000000000000",
+      "SIO": "READY",
+      "group": "actual_public_fast_up_nocross",
+      "expected": "3FD86F9B00869381",
+      "outputs": {
+        "parent": "3FD86F9B00869381",
+        "control": "3FD86F9B00869381",
+        "candidate": "3FD86F9B00869381",
+        "qfp_composed_pow": "3FD86F9B00869381",
+        "qfp_composed_pow_exact": "3FD86F9B00869381",
+        "qfp_composed_pow_integer": "BFD86F9B00869381"
+      },
+      "instructions": {
+        "parent": 979,
+        "control": 979,
+        "candidate": 967,
+        "qfp_composed_pow": 1523,
+        "qfp_composed_pow_exact": 1544,
+        "qfp_composed_pow_integer": 1581
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "4004F3E5FB5D5123",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            819934721
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                287159075,
+                3891770147,
+                805087878,
+                1149490906,
+                819934721,
+                819934721,
+                805070339,
+                4080,
+                537132828,
+                0
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                17639171,
+                3202870,
+                649025500,
+                430977,
+                0,
+                819934721,
+                0,
+                2189133837,
+                4080,
+                537132828,
+                0
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                17639171,
+                3202870,
+                4217196835,
+                2030550703,
+                17540847,
+                2246875746,
+                0,
+                2189133837,
+                4080,
+                537132828,
+                536870912
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 17540847,
+              "u": 4217196835,
+              "v": 17639171,
+              "estimate": 230966,
+              "exact": 221074,
+              "fast": true,
+              "negative": false,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              17639172,
+              3202870,
+              4080,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              8819586,
+              1601435,
+              4080,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "4004F3E5FB5D5123",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            819934721
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                287159075,
+                3891770147,
+                805087878,
+                1149490906,
+                819934721,
+                819934721,
+                805070339,
+                4080,
+                537132828,
+                0
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                17639171,
+                3202870,
+                649025500,
+                430977,
+                0,
+                819934721,
+                0,
+                2189133837,
+                4080,
+                537132828,
+                0
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                17639171,
+                3202870,
+                4217196835,
+                2030550703,
+                17540847,
+                2246875746,
+                0,
+                2189133837,
+                4080,
+                537132828,
+                536870912
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 17540847,
+              "u": 4217196835,
+              "v": 17639171,
+              "estimate": 230966,
+              "exact": 221074,
+              "fast": true,
+              "negative": false,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "up",
+              "actual_full": false,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              17639172,
+              3202870,
+              4080,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              8819586,
+              1601435,
+              4080,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 1,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FF60E08AA312590",
+      "y": "C008000000000000",
+      "SIO": "DIRTY",
+      "group": "actual_public_fast_up_nocross",
+      "expected": "3FD86F9B00869381",
+      "outputs": {
+        "parent": "3FD86F9B00869381",
+        "control": "3FD86F9B00869381",
+        "candidate": "3FD86F9B00869381",
+        "qfp_composed_pow": "3FD86F9B00869381",
+        "qfp_composed_pow_exact": "3FD86F9B00869381",
+        "qfp_composed_pow_integer": "BFD86F9B00869381"
+      },
+      "instructions": {
+        "parent": 988,
+        "control": 988,
+        "candidate": 976,
+        "qfp_composed_pow": 1523,
+        "qfp_composed_pow_exact": 1544,
+        "qfp_composed_pow_integer": 1581
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "4004F3E5FB5D5123",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            819934721
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                287159075,
+                3891770147,
+                805087878,
+                1149490906,
+                819934721,
+                819934721,
+                805070339,
+                4080,
+                537132828,
+                0
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                17639171,
+                3202870,
+                649025500,
+                430977,
+                0,
+                819934721,
+                0,
+                2189133837,
+                4080,
+                537132828,
+                0
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                17639171,
+                3202870,
+                4217196835,
+                2030550703,
+                17540847,
+                2246875746,
+                0,
+                2189133837,
+                4080,
+                537132828,
+                536870912
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 17540847,
+              "u": 4217196835,
+              "v": 17639171,
+              "estimate": 230966,
+              "exact": 221074,
+              "fast": true,
+              "negative": false,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              17639172,
+              3202870,
+              4080,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              8819586,
+              1601435,
+              4080,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 85822,
+              "live": [
+                0,
+                85822,
+                4217196835,
+                1373157,
+                1406113773,
+                4080,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            85822
+          ],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "4004F3E5FB5D5123",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            819934721
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                287159075,
+                3891770147,
+                805087878,
+                1149490906,
+                819934721,
+                819934721,
+                805070339,
+                4080,
+                537132828,
+                0
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                17639171,
+                3202870,
+                649025500,
+                430977,
+                0,
+                819934721,
+                0,
+                2189133837,
+                4080,
+                537132828,
+                0
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                17639171,
+                3202870,
+                4217196835,
+                2030550703,
+                17540847,
+                2246875746,
+                0,
+                2189133837,
+                4080,
+                537132828,
+                536870912
+              ],
+              "frame28": "23515dfbe5f3140000000000fe030000010000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 17540847,
+              "u": 4217196835,
+              "v": 17639171,
+              "estimate": 230966,
+              "exact": 221074,
+              "fast": true,
+              "negative": false,
+              "cross_overflow": false,
+              "expected_saving": 12,
+              "full": false,
+              "decision": "up",
+              "actual_full": false,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              17639172,
+              3202870,
+              4080,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              8819586,
+              1601435,
+              4080,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 85822,
+              "live": [
+                0,
+                85822,
+                4217196835,
+                1373157,
+                1406113773,
+                4080,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            85822
+          ],
+          "classified": 1,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FF837884FE59E7B",
+      "y": "C020000000000000",
+      "SIO": "READY",
+      "group": "actual_public_full_up_cross",
+      "expected": "3FA297066F78548C",
+      "outputs": {
+        "parent": "3FA297066F78548C",
+        "control": "3FA297066F78548C",
+        "candidate": "3FA297066F78548C",
+        "qfp_composed_pow": "3FA297066F78548D",
+        "qfp_composed_pow_exact": "3FA297066F78548D",
+        "qfp_composed_pow_integer": "3FA297066F78548D"
+      },
+      "instructions": {
+        "parent": 1463,
+        "control": 1463,
+        "candidate": 1471,
+        "qfp_composed_pow": 1518,
+        "qfp_composed_pow_exact": 1539,
+        "qfp_composed_pow_integer": 1576
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "403B8AB1C5ACD888",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            623774944
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                182703872,
+                2715014912,
+                481659467,
+                694392560,
+                623774944,
+                623774944,
+                481648872,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                3740313881,
+                2436620,
+                246420160,
+                7885964,
+                0,
+                623774942,
+                0,
+                404171264,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                3740313881,
+                2436620,
+                3316439176,
+                3039781961,
+                2888172887,
+                2661979744,
+                0,
+                404171264,
+                4068,
+                537132828,
+                2415919104
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2888172887,
+              "u": 3316439176,
+              "v": 3740313881,
+              "estimate": 101399,
+              "exact": 19699,
+              "fast": false,
+              "negative": false,
+              "cross_overflow": true,
+              "expected_saving": -8,
+              "full": true,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              3740313882,
+              2436620,
+              4068,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1870156941,
+              1218310,
+              4068,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "403B8AB1C5ACD888",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            623774944
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                182703872,
+                2715014912,
+                481659467,
+                694392560,
+                623774944,
+                623774944,
+                481648872,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                3740313881,
+                2436620,
+                246420160,
+                7885964,
+                0,
+                623774942,
+                0,
+                404171264,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                3740313881,
+                2436620,
+                3316439176,
+                3039781961,
+                2888172887,
+                2661979744,
+                0,
+                404171264,
+                4068,
+                537132828,
+                2415919104
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2888172887,
+              "u": 3316439176,
+              "v": 3740313881,
+              "estimate": 101399,
+              "exact": 19699,
+              "fast": false,
+              "negative": false,
+              "cross_overflow": true,
+              "expected_saving": -8,
+              "full": true,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              3740313882,
+              2436620,
+              4068,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1870156941,
+              1218310,
+              4068,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 1,
+          "restored": 1
+        }
+      }
+    },
+    {
+      "x": "3FF837884FE59E7B",
+      "y": "C020000000000000",
+      "SIO": "DIRTY",
+      "group": "actual_public_full_up_cross",
+      "expected": "3FA297066F78548C",
+      "outputs": {
+        "parent": "3FA297066F78548C",
+        "control": "3FA297066F78548C",
+        "candidate": "3FA297066F78548C",
+        "qfp_composed_pow": "3FA297066F78548D",
+        "qfp_composed_pow_exact": "3FA297066F78548D",
+        "qfp_composed_pow_integer": "3FA297066F78548D"
+      },
+      "instructions": {
+        "parent": 1472,
+        "control": 1472,
+        "candidate": 1480,
+        "qfp_composed_pow": 1518,
+        "qfp_composed_pow_exact": 1539,
+        "qfp_composed_pow_integer": 1576
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "403B8AB1C5ACD888",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            623774944
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                182703872,
+                2715014912,
+                481659467,
+                694392560,
+                623774944,
+                623774944,
+                481648872,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                3740313881,
+                2436620,
+                246420160,
+                7885964,
+                0,
+                623774942,
+                0,
+                404171264,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                3740313881,
+                2436620,
+                3316439176,
+                3039781961,
+                2888172887,
+                2661979744,
+                0,
+                404171264,
+                4068,
+                537132828,
+                2415919104
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2888172887,
+              "u": 3316439176,
+              "v": 3740313881,
+              "estimate": 101399,
+              "exact": 19699,
+              "fast": false,
+              "negative": false,
+              "cross_overflow": true,
+              "expected_saving": -8,
+              "full": true,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              3740313882,
+              2436620,
+              4068,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1870156941,
+              1218310,
+              4068,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 112811,
+              "live": [
+                0,
+                112811,
+                3316439176,
+                1804977,
+                1848297238,
+                4068,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            112811
+          ],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "403B8AB1C5ACD888",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            623774944
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                182703872,
+                2715014912,
+                481659467,
+                694392560,
+                623774944,
+                623774944,
+                481648872,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                3740313881,
+                2436620,
+                246420160,
+                7885964,
+                0,
+                623774942,
+                0,
+                404171264,
+                4068,
+                537132828,
+                0
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                3740313881,
+                2436620,
+                3316439176,
+                3039781961,
+                2888172887,
+                2661979744,
+                0,
+                404171264,
+                4068,
+                537132828,
+                2415919104
+              ],
+              "frame28": "88d8acc5b18a1b0000000000fe030000040000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2888172887,
+              "u": 3316439176,
+              "v": 3740313881,
+              "estimate": 101399,
+              "exact": 19699,
+              "fast": false,
+              "negative": false,
+              "cross_overflow": true,
+              "expected_saving": -8,
+              "full": true,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              3740313882,
+              2436620,
+              4068,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1870156941,
+              1218310,
+              4068,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 112811,
+              "live": [
+                0,
+                112811,
+                3316439176,
+                1804977,
+                1848297238,
+                4068,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            112811
+          ],
+          "classified": 1,
+          "restored": 1
+        }
+      }
+    },
+    {
+      "x": "3FD789A5EE5BFC5C",
+      "y": "BFF8000000000000",
+      "SIO": "READY",
+      "group": "actual_public_fast_up_cross",
+      "expected": "4011EF2DC8B4E3DB",
+      "outputs": {
+        "parent": "4011EF2DC8B4E3DB",
+        "control": "4011EF2DC8B4E3DB",
+        "candidate": "4011EF2DC8B4E3DB",
+        "qfp_composed_pow": "4011EF2DC8B4E3DC",
+        "qfp_composed_pow_exact": "4011EF2DC8B4E3DC",
+        "qfp_composed_pow_integer": "C011EF2DC8B4E3DC"
+      },
+      "instructions": {
+        "parent": 1125,
+        "control": 1125,
+        "candidate": 1110,
+        "qfp_composed_pow": 1543,
+        "qfp_composed_pow_exact": 1564,
+        "qfp_composed_pow_integer": 1601
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "3FCC8C74ED67ECD3",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            601774994
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                1421218134,
+                2389578070,
+                558066283,
+                1981364664,
+                601774994,
+                601774994,
+                558036050,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2439628725,
+                2350683,
+                378048028,
+                3466202,
+                0,
+                601774993,
+                0,
+                3477745538,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2439628725,
+                2350683,
+                3983011027,
+                2498853380,
+                2263178491,
+                3827902721,
+                0,
+                3477745538,
+                4096,
+                537132828,
+                2415919104
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2263178491,
+              "u": 3983011027,
+              "v": 2439628725,
+              "estimate": 829116,
+              "exact": 747267,
+              "fast": true,
+              "negative": false,
+              "cross_overflow": true,
+              "expected_saving": 15,
+              "full": false,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              2439628726,
+              2350683,
+              4096,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3367298011,
+              1175341,
+              4096,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "3FCC8C74ED67ECD3",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            601774994
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                1421218134,
+                2389578070,
+                558066283,
+                1981364664,
+                601774994,
+                601774994,
+                558036050,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2439628725,
+                2350683,
+                378048028,
+                3466202,
+                0,
+                601774993,
+                0,
+                3477745538,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2439628725,
+                2350683,
+                3983011027,
+                2498853380,
+                2263178491,
+                3827902721,
+                0,
+                3477745538,
+                4096,
+                537132828,
+                2415919104
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2263178491,
+              "u": 3983011027,
+              "v": 2439628725,
+              "estimate": 829116,
+              "exact": 747267,
+              "fast": true,
+              "negative": false,
+              "cross_overflow": true,
+              "expected_saving": 15,
+              "full": false,
+              "decision": "up",
+              "actual_full": false,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              2439628726,
+              2350683,
+              4096,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3367298011,
+              1175341,
+              4096,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 1,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FD789A5EE5BFC5C",
+      "y": "BFF8000000000000",
+      "SIO": "DIRTY",
+      "group": "actual_public_fast_up_cross",
+      "expected": "4011EF2DC8B4E3DB",
+      "outputs": {
+        "parent": "4011EF2DC8B4E3DB",
+        "control": "4011EF2DC8B4E3DB",
+        "candidate": "4011EF2DC8B4E3DB",
+        "qfp_composed_pow": "4011EF2DC8B4E3DC",
+        "qfp_composed_pow_exact": "4011EF2DC8B4E3DC",
+        "qfp_composed_pow_integer": "C011EF2DC8B4E3DC"
+      },
+      "instructions": {
+        "parent": 1137,
+        "control": 1137,
+        "candidate": 1122,
+        "qfp_composed_pow": 1543,
+        "qfp_composed_pow_exact": 1564,
+        "qfp_composed_pow_integer": 1601
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "3FCC8C74ED67ECD3",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            601774994
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                1421218134,
+                2389578070,
+                558066283,
+                1981364664,
+                601774994,
+                601774994,
+                558036050,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2439628725,
+                2350683,
+                378048028,
+                3466202,
+                0,
+                601774993,
+                0,
+                3477745538,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2439628725,
+                2350683,
+                3983011027,
+                2498853380,
+                2263178491,
+                3827902721,
+                0,
+                3477745538,
+                4096,
+                537132828,
+                2415919104
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2263178491,
+              "u": 3983011027,
+              "v": 2439628725,
+              "estimate": 829116,
+              "exact": 747267,
+              "fast": true,
+              "negative": false,
+              "cross_overflow": true,
+              "expected_saving": 15,
+              "full": false,
+              "decision": "up",
+              "actual_full": true,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              2439628726,
+              2350683,
+              4096,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3367298011,
+              1175341,
+              4096,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 116935,
+              "live": [
+                0,
+                116935,
+                3983011027,
+                1870964,
+                1915868085,
+                4096,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            116935
+          ],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "3FCC8C74ED67ECD3",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            601774994
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                1421218134,
+                2389578070,
+                558066283,
+                1981364664,
+                601774994,
+                601774994,
+                558036050,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2439628725,
+                2350683,
+                378048028,
+                3466202,
+                0,
+                601774993,
+                0,
+                3477745538,
+                4096,
+                537132828,
+                0
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2439628725,
+                2350683,
+                3983011027,
+                2498853380,
+                2263178491,
+                3827902721,
+                0,
+                3477745538,
+                4096,
+                537132828,
+                2415919104
+              ],
+              "frame28": "d3ec67ed748c1c00d2ec0700fe030000fdffffff0000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 2263178491,
+              "u": 3983011027,
+              "v": 2439628725,
+              "estimate": 829116,
+              "exact": 747267,
+              "fast": true,
+              "negative": false,
+              "cross_overflow": true,
+              "expected_saving": 15,
+              "full": false,
+              "decision": "up",
+              "actual_full": false,
+              "actual_decision": "up"
+            }
+          ],
+          "down": [
+            [
+              2439628726,
+              2350683,
+              4096,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              3367298011,
+              1175341,
+              4096,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 116935,
+              "live": [
+                0,
+                116935,
+                3983011027,
+                1870964,
+                1915868085,
+                4096,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            116935
+          ],
+          "classified": 1,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "C00C000000000000",
+      "SIO": "READY",
+      "group": "actual_public_full_down_nocross",
+      "expected": "3FB681DD45F270C5",
+      "outputs": {
+        "parent": "3FB681DD45F270C5",
+        "control": "3FB681DD45F270C5",
+        "candidate": "3FB681DD45F270C5",
+        "qfp_composed_pow": "3FB681DD45F270C6",
+        "qfp_composed_pow_exact": "3FB681DD45F270C6",
+        "qfp_composed_pow_integer": "BFB681DD45F270C6"
+      },
+      "instructions": {
+        "parent": 1517,
+        "control": 1517,
+        "candidate": 1524,
+        "qfp_composed_pow": 1546,
+        "qfp_composed_pow_exact": 1567,
+        "qfp_composed_pow_integer": 1604
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "4026BF898D0BC780",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            755219084
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                2438994432,
+                2279873024,
+                416096252,
+                2312828548,
+                755219084,
+                755219084,
+                416060961,
+                4072,
+                537132828,
+                0
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2347032969,
+                2950074,
+                397455675,
+                7499972,
+                0,
+                755219083,
+                0,
+                386841948,
+                4072,
+                537132828,
+                0
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2347032969,
+                2950074,
+                2366359424,
+                59238737,
+                1293067183,
+                2942661376,
+                0,
+                386841948,
+                4072,
+                537132828,
+                536870912
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 1293067183,
+              "u": 2366359424,
+              "v": 2347032969,
+              "estimate": 3299,
+              "exact": 4294910875,
+              "fast": false,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": -7,
+              "full": true,
+              "decision": "down",
+              "actual_full": true,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              2347032969,
+              2950074,
+              4072,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1173516484,
+              1475037,
+              4072,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "4026BF898D0BC780",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            755219084
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                2438994432,
+                2279873024,
+                416096252,
+                2312828548,
+                755219084,
+                755219084,
+                416060961,
+                4072,
+                537132828,
+                0
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2347032969,
+                2950074,
+                397455675,
+                7499972,
+                0,
+                755219083,
+                0,
+                386841948,
+                4072,
+                537132828,
+                0
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2347032969,
+                2950074,
+                2366359424,
+                59238737,
+                1293067183,
+                2942661376,
+                0,
+                386841948,
+                4072,
+                537132828,
+                536870912
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 1293067183,
+              "u": 2366359424,
+              "v": 2347032969,
+              "estimate": 3299,
+              "exact": 4294910875,
+              "fast": false,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": -7,
+              "full": true,
+              "decision": "down",
+              "actual_full": true,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              2347032969,
+              2950074,
+              4072,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1173516484,
+              1475037,
+              4072,
+              537132828
+            ]
+          ],
+          "inline": [],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [
+            9
+          ],
+          "seeds": [],
+          "classified": 1,
+          "restored": 1
+        }
+      }
+    },
+    {
+      "x": "4000063C1015B824",
+      "y": "C00C000000000000",
+      "SIO": "DIRTY",
+      "group": "actual_public_full_down_nocross",
+      "expected": "3FB681DD45F270C5",
+      "outputs": {
+        "parent": "3FB681DD45F270C5",
+        "control": "3FB681DD45F270C5",
+        "candidate": "3FB681DD45F270C5",
+        "qfp_composed_pow": "3FB681DD45F270C6",
+        "qfp_composed_pow_exact": "3FB681DD45F270C6",
+        "qfp_composed_pow_integer": "BFB681DD45F270C6"
+      },
+      "instructions": {
+        "parent": 1526,
+        "control": 1526,
+        "candidate": 1533,
+        "qfp_composed_pow": 1546,
+        "qfp_composed_pow_exact": 1567,
+        "qfp_composed_pow_integer": 1604
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "4026BF898D0BC780",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            755219084
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                2438994432,
+                2279873024,
+                416096252,
+                2312828548,
+                755219084,
+                755219084,
+                416060961,
+                4072,
+                537132828,
+                0
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2347032969,
+                2950074,
+                397455675,
+                7499972,
+                0,
+                755219083,
+                0,
+                386841948,
+                4072,
+                537132828,
+                0
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2347032969,
+                2950074,
+                2366359424,
+                59238737,
+                1293067183,
+                2942661376,
+                0,
+                386841948,
+                4072,
+                537132828,
+                536870912
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 1293067183,
+              "u": 2366359424,
+              "v": 2347032969,
+              "estimate": 3299,
+              "exact": 4294910875,
+              "fast": false,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": -7,
+              "full": true,
+              "decision": "down",
+              "actual_full": true,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              2347032969,
+              2950074,
+              4072,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1173516484,
+              1475037,
+              4072,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 93176,
+              "live": [
+                0,
+                93176,
+                2366359424,
+                1490825,
+                1526605364,
+                4072,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            93176
+          ],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [
+            {
+              "numerator": "3FF0000000000000",
+              "denominator": "4026BF898D0BC780",
+              "entry_SP": 537132856,
+              "return_site": "0x1014f118"
+            }
+          ],
+          "first": [
+            755219084
+          ],
+          "after": [
+            {
+              "registers": [
+                0,
+                2438994432,
+                2279873024,
+                416096252,
+                2312828548,
+                755219084,
+                755219084,
+                416060961,
+                4072,
+                537132828,
+                0
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "zeros": [
+            {
+              "registers": [
+                2347032969,
+                2950074,
+                397455675,
+                7499972,
+                0,
+                755219083,
+                0,
+                386841948,
+                4072,
+                537132828,
+                0
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "pre_cert": [
+            {
+              "registers": [
+                2347032969,
+                2950074,
+                2366359424,
+                59238737,
+                1293067183,
+                2942661376,
+                0,
+                386841948,
+                4072,
+                537132828,
+                536870912
+              ],
+              "frame28": "80c70b8d89bf16007fc70b00fe030000030000000000000019f11410"
+            }
+          ],
+          "certificates": [
+            {
+              "base": 1293067183,
+              "u": 2366359424,
+              "v": 2347032969,
+              "estimate": 3299,
+              "exact": 4294910875,
+              "fast": false,
+              "negative": true,
+              "cross_overflow": false,
+              "expected_saving": -7,
+              "full": true,
+              "decision": "down",
+              "actual_full": true,
+              "actual_decision": "down"
+            }
+          ],
+          "down": [
+            [
+              2347032969,
+              2950074,
+              4072,
+              537132828
+            ]
+          ],
+          "pack": [
+            [
+              1173516484,
+              1475037,
+              4072,
+              537132828
+            ]
+          ],
+          "inline": [
+            {
+              "entry_SP": 537132856,
+              "inline_SP": 537132836,
+              "D": 93176,
+              "live": [
+                0,
+                93176,
+                2366359424,
+                1490825,
+                1526605364,
+                4072,
+                537132836
+              ]
+            }
+          ],
+          "pops": [
+            "0x1014f118"
+          ],
+          "returns": [
+            269807896
+          ],
+          "latency9": [],
+          "seeds": [
+            93176
+          ],
+          "classified": 1,
+          "restored": 1
+        }
+      }
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "SIO": "READY",
+      "group": "original153_unchanged_control",
+      "expected": "3FB0E1D596EB463B",
+      "outputs": {
+        "parent": "3FB0E1D596EB463B",
+        "control": "3FB0E1D596EB463B",
+        "candidate": "3FB0E1D596EB463B",
+        "qfp_composed_pow": "3FB0E1D596EB463B",
+        "qfp_composed_pow_exact": "3FB0E1D596EB463B",
+        "qfp_composed_pow_integer": "3FB0E1D596EB463B"
+      },
+      "instructions": {
+        "parent": 5045,
+        "control": 5045,
+        "candidate": 5045,
+        "qfp_composed_pow": 1585,
+        "qfp_composed_pow_exact": 1606,
+        "qfp_composed_pow_integer": 1643
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "SIO": "DIRTY",
+      "group": "original153_unchanged_control",
+      "expected": "3FB0E1D596EB463B",
+      "outputs": {
+        "parent": "3FB0E1D596EB463B",
+        "control": "3FB0E1D596EB463B",
+        "candidate": "3FB0E1D596EB463B",
+        "qfp_composed_pow": "3FB0E1D596EB463B",
+        "qfp_composed_pow_exact": "3FB0E1D596EB463B",
+        "qfp_composed_pow_integer": "3FB0E1D596EB463B"
+      },
+      "instructions": {
+        "parent": 5691,
+        "control": 5691,
+        "candidate": 5691,
+        "qfp_composed_pow": 1585,
+        "qfp_composed_pow_exact": 1606,
+        "qfp_composed_pow_integer": 1643
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "SIO": "READY",
+      "group": "original153_unchanged_control",
+      "expected": "3FE51503CA80F09C",
+      "outputs": {
+        "parent": "3FE51503CA80F09C",
+        "control": "3FE51503CA80F09C",
+        "candidate": "3FE51503CA80F09C",
+        "qfp_composed_pow": "3FE51503CA80F09C",
+        "qfp_composed_pow_exact": "3FE51503CA80F09C",
+        "qfp_composed_pow_integer": "3FE51503CA80F09C"
+      },
+      "instructions": {
+        "parent": 3537,
+        "control": 3537,
+        "candidate": 3537,
+        "qfp_composed_pow": 1568,
+        "qfp_composed_pow_exact": 1589,
+        "qfp_composed_pow_integer": 1598
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "SIO": "DIRTY",
+      "group": "original153_unchanged_control",
+      "expected": "3FE51503CA80F09C",
+      "outputs": {
+        "parent": "3FE51503CA80F09C",
+        "control": "3FE51503CA80F09C",
+        "candidate": "3FE51503CA80F09C",
+        "qfp_composed_pow": "3FE51503CA80F09C",
+        "qfp_composed_pow_exact": "3FE51503CA80F09C",
+        "qfp_composed_pow_integer": "3FE51503CA80F09C"
+      },
+      "instructions": {
+        "parent": 3537,
+        "control": 3537,
+        "candidate": 3537,
+        "qfp_composed_pow": 1568,
+        "qfp_composed_pow_exact": 1589,
+        "qfp_composed_pow_integer": 1598
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "SIO": "READY",
+      "group": "original153_unchanged_control",
+      "expected": "4004374E30A30829",
+      "outputs": {
+        "parent": "4004374E30A30829",
+        "control": "4004374E30A30829",
+        "candidate": "4004374E30A30829",
+        "qfp_composed_pow": "4004374E30A30829",
+        "qfp_composed_pow_exact": "4004374E30A30829",
+        "qfp_composed_pow_integer": "4004374E30A30829"
+      },
+      "instructions": {
+        "parent": 3230,
+        "control": 3230,
+        "candidate": 3230,
+        "qfp_composed_pow": 1503,
+        "qfp_composed_pow_exact": 1524,
+        "qfp_composed_pow_integer": 1533
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "SIO": "DIRTY",
+      "group": "original153_unchanged_control",
+      "expected": "4004374E30A30829",
+      "outputs": {
+        "parent": "4004374E30A30829",
+        "control": "4004374E30A30829",
+        "candidate": "4004374E30A30829",
+        "qfp_composed_pow": "4004374E30A30829",
+        "qfp_composed_pow_exact": "4004374E30A30829",
+        "qfp_composed_pow_integer": "4004374E30A30829"
+      },
+      "instructions": {
+        "parent": 3230,
+        "control": 3230,
+        "candidate": 3230,
+        "qfp_composed_pow": 1503,
+        "qfp_composed_pow_exact": 1524,
+        "qfp_composed_pow_integer": 1533
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "SIO": "READY",
+      "group": "original153_unchanged_control",
+      "expected": "3FE9F5FE54731716",
+      "outputs": {
+        "parent": "3FE9F5FE54731716",
+        "control": "3FE9F5FE54731716",
+        "candidate": "3FE9F5FE54731716",
+        "qfp_composed_pow": "3FE9F5FE54731716",
+        "qfp_composed_pow_exact": "3FE9F5FE54731716",
+        "qfp_composed_pow_integer": "3FE9F5FE54731716"
+      },
+      "instructions": {
+        "parent": 3213,
+        "control": 3213,
+        "candidate": 3213,
+        "qfp_composed_pow": 1522,
+        "qfp_composed_pow_exact": 1543,
+        "qfp_composed_pow_integer": 1552
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FE74460D9A5823C",
+      "y": "3FE5000000000000",
+      "SIO": "DIRTY",
+      "group": "original153_unchanged_control",
+      "expected": "3FE9F5FE54731716",
+      "outputs": {
+        "parent": "3FE9F5FE54731716",
+        "control": "3FE9F5FE54731716",
+        "candidate": "3FE9F5FE54731716",
+        "qfp_composed_pow": "3FE9F5FE54731716",
+        "qfp_composed_pow_exact": "3FE9F5FE54731716",
+        "qfp_composed_pow_integer": "3FE9F5FE54731716"
+      },
+      "instructions": {
+        "parent": 3213,
+        "control": 3213,
+        "candidate": 3213,
+        "qfp_composed_pow": 1522,
+        "qfp_composed_pow_exact": 1543,
+        "qfp_composed_pow_integer": 1552
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "group": "IEEE_sNaN_control",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 779,
+        "qfp_composed_pow_exact": 800,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "group": "IEEE_sNaN_control",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 779,
+        "qfp_composed_pow_exact": 800,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "0000000000000001",
+      "y": "3FE0000000000000",
+      "SIO": "READY",
+      "group": "IEEE_sNaN_control",
+      "expected": "1E60000000000000",
+      "outputs": {
+        "parent": "1E60000000000000",
+        "control": "1E60000000000000",
+        "candidate": "1E60000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 221,
+        "control": 221,
+        "candidate": 221,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 28,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "0000000000000001",
+      "y": "3FE0000000000000",
+      "SIO": "DIRTY",
+      "group": "IEEE_sNaN_control",
+      "expected": "1E60000000000000",
+      "outputs": {
+        "parent": "1E60000000000000",
+        "control": "1E60000000000000",
+        "candidate": "1E60000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 221,
+        "control": 221,
+        "candidate": 221,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 28,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "C000000000000000",
+      "y": "3FE0000000000000",
+      "SIO": "READY",
+      "group": "IEEE_sNaN_control",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "parent": "7FF8000000000000",
+        "control": "7FF8000000000000",
+        "candidate": "7FF8000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "FFF0000000000000",
+        "qfp_composed_pow_integer": "3FF6A09E667F3BCC"
+      },
+      "instructions": {
+        "parent": 71,
+        "control": 71,
+        "candidate": 71,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 26,
+        "qfp_composed_pow_integer": 1515
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "C000000000000000",
+      "y": "3FE0000000000000",
+      "SIO": "DIRTY",
+      "group": "IEEE_sNaN_control",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "parent": "7FF8000000000000",
+        "control": "7FF8000000000000",
+        "candidate": "7FF8000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "FFF0000000000000",
+        "qfp_composed_pow_integer": "3FF6A09E667F3BCC"
+      },
+      "instructions": {
+        "parent": 71,
+        "control": 71,
+        "candidate": 71,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 26,
+        "qfp_composed_pow_integer": 1515
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "y": "BFE0000000000000",
+      "SIO": "READY",
+      "group": "IEEE_sNaN_control",
+      "expected": "1FF0000000000000",
+      "outputs": {
+        "parent": "1FF0000000000000",
+        "control": "1FF0000000000000",
+        "candidate": "1FF0000000000000",
+        "qfp_composed_pow": "1FF0000000000036",
+        "qfp_composed_pow_exact": "1FF0000000000001",
+        "qfp_composed_pow_integer": "1FF0000000000036"
+      },
+      "instructions": {
+        "parent": 302,
+        "control": 302,
+        "candidate": 302,
+        "qfp_composed_pow": 1345,
+        "qfp_composed_pow_exact": 367,
+        "qfp_composed_pow_integer": 1377
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "y": "BFE0000000000000",
+      "SIO": "DIRTY",
+      "group": "IEEE_sNaN_control",
+      "expected": "1FF0000000000000",
+      "outputs": {
+        "parent": "1FF0000000000000",
+        "control": "1FF0000000000000",
+        "candidate": "1FF0000000000000",
+        "qfp_composed_pow": "1FF0000000000036",
+        "qfp_composed_pow_exact": "1FF0000000000001",
+        "qfp_composed_pow_integer": "1FF0000000000036"
+      },
+      "instructions": {
+        "parent": 302,
+        "control": 302,
+        "candidate": 302,
+        "qfp_composed_pow": 1345,
+        "qfp_composed_pow_exact": 367,
+        "qfp_composed_pow_integer": 1377
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FF0000000000000",
+      "y": "7FF0000000000001",
+      "SIO": "READY",
+      "group": "IEEE_sNaN_control",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "parent": "7FF8000000000001",
+        "control": "7FF8000000000001",
+        "candidate": "7FF8000000000001",
+        "qfp_composed_pow": "7FF0000000000000",
+        "qfp_composed_pow_exact": "7FF0000000000000",
+        "qfp_composed_pow_integer": "7FF0000000000000"
+      },
+      "instructions": {
+        "parent": 46,
+        "control": 46,
+        "candidate": 46,
+        "qfp_composed_pow": 1465,
+        "qfp_composed_pow_exact": 1475,
+        "qfp_composed_pow_integer": 1485
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "3FF0000000000000",
+      "y": "7FF0000000000001",
+      "SIO": "DIRTY",
+      "group": "IEEE_sNaN_control",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "parent": "7FF8000000000001",
+        "control": "7FF8000000000001",
+        "candidate": "7FF8000000000001",
+        "qfp_composed_pow": "7FF0000000000000",
+        "qfp_composed_pow_exact": "7FF0000000000000",
+        "qfp_composed_pow_integer": "7FF0000000000000"
+      },
+      "instructions": {
+        "parent": 46,
+        "control": 46,
+        "candidate": 46,
+        "qfp_composed_pow": 1465,
+        "qfp_composed_pow_exact": 1475,
+        "qfp_composed_pow_integer": 1485
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "FFF0000000000001",
+      "y": "0000000000000000",
+      "SIO": "READY",
+      "group": "IEEE_sNaN_control",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "parent": "FFF8000000000001",
+        "control": "FFF8000000000001",
+        "candidate": "FFF8000000000001",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 15,
+        "control": 15,
+        "candidate": 15,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    },
+    {
+      "x": "FFF0000000000001",
+      "y": "0000000000000000",
+      "SIO": "DIRTY",
+      "group": "IEEE_sNaN_control",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "parent": "FFF8000000000001",
+        "control": "FFF8000000000001",
+        "candidate": "FFF8000000000001",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 15,
+        "control": 15,
+        "candidate": 15,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "captures": {
+        "control": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        },
+        "candidate": {
+          "calls": [],
+          "first": [],
+          "after": [],
+          "zeros": [],
+          "pre_cert": [],
+          "certificates": [],
+          "down": [],
+          "pack": [],
+          "inline": [],
+          "pops": [],
+          "returns": [],
+          "latency9": [],
+          "seeds": [],
+          "classified": 0,
+          "restored": 0
+        }
+      }
+    }
+  ],
+  "device_IO": 0
+}

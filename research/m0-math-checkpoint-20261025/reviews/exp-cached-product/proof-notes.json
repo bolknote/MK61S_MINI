@@ -1,0 +1,23 @@
+{
+  "product_exactness": [
+    "For limbs ai,bi in base2^16, only a0*b0 and the two column1 terms are omitted. Their maximum is562937068519425 <2^49.",
+    "Column2 is a0*b2+a1*b1+a2*b0. Column3 is a0*b3+a1*b2+a2*b1+a3*b0. All13 retained products are present in the emitted straight-line Thumb body.",
+    "After columns2/3, r4:r5 represents C2+2^16*C3 exactly. Shifting r4 once exposes bit63 of the full retained product; ADC adds its half-up round to r5. r6 is still zero.",
+    "Columns4/5/6 are all multiples of2^64 in the original product, so rounding early commutes with these exact integer additions. Cached a3 in r2 and b3 in r7 remain live until their last products.",
+    "Rounded column3 high word is at most163900. Its first column4 addition is at most4292605, so dropping that first carry is safe. The remaining ADC chains preserve every carry; high after column5 is at most32830, and adding a3*b3 cannot overflow32bits.",
+    "The final integer equals floor((a*b-omitted+2^63)/2^64) on a<2^63,b<2^54. Its distance from a*b/2^64 is <=1/2+omitted_max/2^64 <1/2+2^-15. No M0 FPU, wide multiply or runtime helper is used."
+  ],
+  "exp_rounding": [
+    "Own rational proof reconstructs Q96 ln2-step, Q31 inverse, Q44 coefficient quantization, square compensation, Taylor tail and reduction error from frozen source constants; it never calls author certify.py or tools/certificate().",
+    "The new high-product error plus nearest-table error and polynomial/reduction error is <3.143875 Q62 units. Integer distance>=4 from the binary64 midpoint is strictly safe.",
+    "Subtracting the known Q94 table-centre bias leaves <2.643875 units. At distance3 the source threshold admits only biases within11/32 on the relevant side, giving worst margin2.987625<3. All512 Q62 and Q94 centres satisfy independent integer root inequalities.",
+    "Only index0 can normalize, and that table centre is exactly1. Removing table half-error before doubling gives <5.287750 units; distance>=6 is strictly safe. Doubling the unspecialized3.143875 bound would not justify radius6.",
+    "All admitted tails exclude the exact midpoint. tail>512 therefore equals nearest-even on every admitted interval, including retained-parity, binade and normal-endpoint controls. Uncertain cases retain the unchanged exp_refine/CR fallback.",
+    "For2^-54<abs(x)<2^-40, the exp(x)-1-x remainder is strictly positive and <4097 input-significand units. The changed tiny path declines exactly the potentially crossing side within4096 units and handles exact midpoints in the direction of this positive correction. Other points stay strictly in one rounding cell."
+  ],
+  "old_unit_failure": "The old isolated trial copied a16-byte Flash tailcall wrapper and omitted its RAM target. That old trial unit evidence is not accepted. The present standalone unit includes exact168-byte candidate and182-byte V164 RAM bodies and the literal tiny/normal source with exact6144-byte Q94 table. Its ELF has no firmware/ROM dependencies. Own PC restriction, bounded stack writes, PCS/SP preservation and zero SIO accesses passed.",
+  "baseline_evidence": "All97526 saved control/resident/Qfplib rows were checked for exact inheritance from pinned prior qualification. They are not fresh full-corpus executions in this review or in the author cached-product run. All61 old-tight new-loss inputs, every retained cost-regression type, all16 original exp points and all4 new pow fixes were selected for own fresh runs. No wrong-reference trial, sandbox failure, smoke or inherited baseline calls were added to qualified own totals.",
+  "sizes": "Candidate TU .m0_exp_core grows44bytes; product object section184\u2192168(-16 including alignment), so combined allocated objects+28bytes. Product body182\u2192168(-14), leaf instructions91\u219284, leaf stack32\u219240. Own public exp subset observed736bytes same as author full corpus; author original callers observed968same. These are not whole-firmware size/cycle claims.",
+  "platform_scope": "Only RP2040 conditional exp code and the existing RP2040 product body change. GenericM0 allocated sections and semantic relocations are equal; M4 soft/hard selected TUs are empty under MK61_USE_M0_EABI=0 and product is excluded. No wholeM4 build or hardware acceptance was performed.",
+  "integration_scope": "candidate.elf is the whole compiled math TU linked as a private overlay onto exact frozenV164 symbols, not a new complete shipping firmware. The patch targets V164 math only; repaired platform sources, earlier accepted math changes and final publicationea9 are not overwritten or integrated."
+}

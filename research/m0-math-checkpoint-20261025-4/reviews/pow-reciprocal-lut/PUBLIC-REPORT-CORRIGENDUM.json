@@ -1,0 +1,21 @@
+{
+  "status": "OWN_REPORT_KEYWORD_LABEL_CORRECTION_ONLY_NO_NUMERICAL_CHANGE",
+  "report": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-independent-20261025/public-arm-mpfr.json",
+    "bytes": 119481,
+    "sha256": "e260f9cd0bc340394d6e56cdbc80a4a1d8613d95e4f05262e94873a394bc18c2"
+  },
+  "executed_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-reciprocal-lut-independent-20261025/arm.py",
+    "bytes": 8185,
+    "sha256": "b376b9ab61bef2aeec607c0af10b769f5b7991afb5cb9044fc733881b5f5719d"
+  },
+  "original_keyword": "all48_fixes_actual_bothSIO_strict_against_all_correct_refs",
+  "correct_keyword": "all9_fixes_actual_bothSIO_strict_against_all_correct_refs",
+  "reason": "Keyword identifier inherited from the old bounded driver was not an AST Constant; actual fixed-count assertion9, statusALL9, raw23pairs and all9 memberships already correct.",
+  "independently_confirmed_all9_bothSIO_strict": true,
+  "original_raw_and_executed_source_unchanged": true,
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "no_failed_or_discarded_ARM": true
+}

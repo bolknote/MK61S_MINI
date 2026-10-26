@@ -1,0 +1,37 @@
+{
+  "status": "BUILT_BARE_OLD_AND_NEW_SHARED_PRODUCT_UNITS",
+  "pairs": 70660,
+  "input_sha256": "f68a2eb0f8562b2568e637e4c6d9ea3514795906389c02c07713cfb8c23dea3b",
+  "old_body_bytes": 158,
+  "new_body_bytes": 154,
+  "slot_bytes": 168,
+  "old_new_stack_frame_bytes": [
+    36,
+    36
+  ],
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_pow_exp_product",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/product-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-dyadic-product-20261024/product.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/product-old.elf"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "mk61_m0_pow_exp_product",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/product-unit.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/product.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-directed-product-20261024/product-new.elf"
+    ]
+  ],
+  "hardware_accessed": false
+}

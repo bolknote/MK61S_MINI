@@ -1,0 +1,134 @@
+square128-new 0 / 5127 elapsed 0.0
+square128-new 64 / 5127 elapsed 1.0
+square128-new 128 / 5127 elapsed 1.5
+square128-new 192 / 5127 elapsed 2.0
+square128-new 256 / 5127 elapsed 2.4
+square128-new 320 / 5127 elapsed 2.9
+square128-new 384 / 5127 elapsed 3.3
+square128-new 448 / 5127 elapsed 3.8
+square128-new 512 / 5127 elapsed 4.2
+square128-new 576 / 5127 elapsed 4.7
+square128-new 640 / 5127 elapsed 5.7
+square128-new 704 / 5127 elapsed 6.6
+square128-new 768 / 5127 elapsed 7.6
+square128-new 832 / 5127 elapsed 8.5
+square128-new 896 / 5127 elapsed 9.4
+square128-new 960 / 5127 elapsed 10.4
+square128-new 1024 / 5127 elapsed 11.3
+square128-new 1088 / 5127 elapsed 12.3
+square128-new 1152 / 5127 elapsed 13.3
+square128-new 1216 / 5127 elapsed 14.2
+square128-new 1280 / 5127 elapsed 15.2
+square128-new 1344 / 5127 elapsed 16.2
+square128-new 1408 / 5127 elapsed 17.2
+square128-new 1472 / 5127 elapsed 18.1
+square128-new 1536 / 5127 elapsed 19.1
+square128-new 1600 / 5127 elapsed 20.0
+square128-new 1664 / 5127 elapsed 21.0
+square128-new 1728 / 5127 elapsed 21.9
+square128-new 1792 / 5127 elapsed 22.9
+square128-new 1856 / 5127 elapsed 23.8
+square128-new 1920 / 5127 elapsed 24.8
+square128-new 1984 / 5127 elapsed 25.8
+square128-new 2048 / 5127 elapsed 26.7
+square128-new 2112 / 5127 elapsed 27.8
+square128-new 2176 / 5127 elapsed 28.7
+square128-new 2240 / 5127 elapsed 29.7
+square128-new 2304 / 5127 elapsed 30.6
+square128-new 2368 / 5127 elapsed 31.6
+square128-new 2432 / 5127 elapsed 32.6
+square128-new 2496 / 5127 elapsed 33.5
+square128-new 2560 / 5127 elapsed 34.5
+square128-new 2624 / 5127 elapsed 35.6
+square128-new 2688 / 5127 elapsed 36.6
+square128-new 2752 / 5127 elapsed 37.6
+square128-new 2816 / 5127 elapsed 38.6
+square128-new 2880 / 5127 elapsed 39.7
+square128-new 2944 / 5127 elapsed 40.7
+square128-new 3008 / 5127 elapsed 41.7
+square128-new 3072 / 5127 elapsed 42.7
+square128-new 3136 / 5127 elapsed 43.8
+square128-new 3200 / 5127 elapsed 44.8
+square128-new 3264 / 5127 elapsed 45.9
+square128-new 3328 / 5127 elapsed 46.9
+square128-new 3392 / 5127 elapsed 47.9
+square128-new 3456 / 5127 elapsed 48.9
+square128-new 3520 / 5127 elapsed 50.0
+square128-new 3584 / 5127 elapsed 51.0
+square128-new 3648 / 5127 elapsed 52.1
+square128-new 3712 / 5127 elapsed 53.1
+square128-new 3776 / 5127 elapsed 54.1
+square128-new 3840 / 5127 elapsed 55.2
+square128-new 3904 / 5127 elapsed 56.2
+square128-new 3968 / 5127 elapsed 57.2
+square128-new 4032 / 5127 elapsed 58.3
+square128-new 4096 / 5127 elapsed 59.4
+square128-new 4160 / 5127 elapsed 60.5
+square128-new 4224 / 5127 elapsed 61.5
+square128-new 4288 / 5127 elapsed 62.6
+square128-new 4352 / 5127 elapsed 63.6
+square128-new 4416 / 5127 elapsed 64.8
+square128-new 4480 / 5127 elapsed 65.8
+square128-new 4544 / 5127 elapsed 66.8
+square128-new 4608 / 5127 elapsed 67.9
+square128-new 4672 / 5127 elapsed 68.9
+square128-new 4736 / 5127 elapsed 69.9
+square128-new 4800 / 5127 elapsed 71.0
+square128-new 4864 / 5127 elapsed 72.1
+square128-new 4928 / 5127 elapsed 73.2
+square128-new 4992 / 5127 elapsed 76.3
+square128-new 5056 / 5127 elapsed 80.0
+square128-new 5120 / 5127 elapsed 83.7
+{
+  "status": "PASS_FRESH_INDEPENDENT_POW_CONTROLS_AFTER_SQUARE128",
+  "candidate_ELF_sha256": "6325d6e1d2d619028f9cb7d156c688ead1795331513941207e9c3de2c1214898",
+  "unique_pairs": 5127,
+  "state_rows": 10254,
+  "fresh_ARM_calls": 61524,
+  "fresh_candidate_calls": 10254,
+  "fresh_parent_calls": 10254,
+  "fresh_layout_control_calls": 10254,
+  "fresh_Qfplib_calls": 30762,
+  "oracle_evaluations": 5127,
+  "actual_directed_MPFR_inputs": 5051,
+  "sNaN_policy_shortcuts": 76,
+  "MPFR_version": "4.2.2",
+  "all_actual_parent_control_candidate_bits_identical": true,
+  "all_kernel_argument_sequences_identical": true,
+  "all_costs_match_kernel_delta": true,
+  "candidate_wrong": 0,
+  "new_raw_losses": 0,
+  "parent_raw_loss_pairs": 645,
+  "candidate_raw_loss_pairs": 632,
+  "fixed_raw_pairs": 13,
+  "actual_candidate_kernel_calls": 3458,
+  "wrong_Qfplib_state_variants_retained": 18534,
+  "strict_quiet_NaN_reference_classification": true,
+  "no_nominal_reference_domain_filter": true,
+  "pilot918_not_added_to_qualification": true,
+  "cost_delta_histogram": {
+    "-158": 12,
+    "-150": 12,
+    "-142": 34,
+    "-134": 32,
+    "-126": 20,
+    "-117": 4,
+    "-109": 6,
+    "-105": 2,
+    "-101": 4,
+    "-93": 4,
+    "-76": 346,
+    "-68": 300,
+    "-60": 250,
+    "-35": 590,
+    "-27": 576,
+    "0": 8062
+  },
+  "observed_stacks": {
+    "parent": 2148,
+    "control": 2148,
+    "candidate": 2148
+  },
+  "elapsed_seconds": 84.1240108750062,
+  "hardware_accessed": false
+}

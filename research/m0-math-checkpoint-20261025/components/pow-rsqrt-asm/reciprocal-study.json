@@ -1,0 +1,22 @@
+{
+  "status": "MODEL_ONLY_RECIPROCAL_FROM_EXISTING_RSQRT_SEEDS",
+  "seed_table_sha256": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+  "rows": 512,
+  "delta_counts": {
+    "0": 511,
+    "-1": 1
+  },
+  "exceptions": [
+    {
+      "parity": 1,
+      "index": 129,
+      "denominator": 771,
+      "seed": 2474871502,
+      "approx": 5570644,
+      "exact": 5570645,
+      "delta": -1
+    }
+  ],
+  "proof": "Each existing RNE seed is within1/2 of2^32/sqrt(d*2^parity/512); its truncated two-MUL high square gives a reciprocal within one integer of floor(2^32/d).",
+  "hardware_accessed": false
+}

@@ -1,0 +1,20 @@
+{
+  "status": "BOUNDED_VALIDATION_INPUTS_FROM_EXACT_DOMAIN_EXTREMES",
+  "values": {
+    "p_min": 65536,
+    "p_max": 66047,
+    "e_min": 65536,
+    "e_max": 66047,
+    "ue_min": 65536,
+    "ue_max": 66047,
+    "q0_min": 131071,
+    "q0_max": 65536,
+    "residual_min": 122738,
+    "residual_max": 66047,
+    "error_0": 65536,
+    "error_1": 65538,
+    "error_2": 65540,
+    "error_-1": 65981,
+    "error_3": 66226
+  }
+}

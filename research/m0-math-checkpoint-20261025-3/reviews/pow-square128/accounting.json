@@ -1,0 +1,82 @@
+{
+  "status": "PASS_SAVED_24BYTE_KERNEL_PUBLIC_COST_AND_REFERENCE_ACCOUNTING",
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "actual_parent_streams_bound": true,
+  "parent_states232936_reference_variants252450": true,
+  "all_old_bits_identical": true,
+  "all_saved_kernel_trace_classes_recomputed": true,
+  "old_kernel_calls": 756,
+  "kernel_class_counts": {
+    "(129, 94)": 162,
+    "(195, 154)": 232,
+    "(182, 149)": 204,
+    "(116, 89)": 158
+  },
+  "old116468_pair_losses": [
+    10853,
+    10850
+  ],
+  "union120980_pair_states241960": true,
+  "union_reference_variants279522": true,
+  "expanded_losses": [
+    11449,
+    11434
+  ],
+  "additional_preexisting_loss_pairs596": true,
+  "new_raw_loss_pairs": 0,
+  "parent_cost_increases": 0,
+  "actual_cost_delta_histogram": {
+    "0": 239540,
+    "-150": 14,
+    "-158": 16,
+    "-142": 42,
+    "-126": 20,
+    "-101": 38,
+    "-76": 352,
+    "-93": 24,
+    "-60": 270,
+    "-109": 52,
+    "-27": 584,
+    "-134": 36,
+    "-117": 14,
+    "-105": 10,
+    "-68": 332,
+    "-199": 2,
+    "-35": 598,
+    "-62": 4,
+    "-70": 8,
+    "-140": 2,
+    "-81": 2
+  },
+  "correct_Qfplib_comparison": {
+    "slower": 21167,
+    "faster": 178544,
+    "equal": 2705
+  },
+  "wrong_Qfplib_reference_variants": 77106,
+  "strict_quietNaN_all_reference_flags_checked": true,
+  "no_nominal_domain_filter": true,
+  "original153": {
+    "parent": {
+      "slower": 35,
+      "strict": 118
+    },
+    "candidate": {
+      "slower": 34,
+      "strict": 119
+    }
+  },
+  "new_original_strict_fix": [
+    [
+      "3FD0000000000000",
+      "C016000000000000"
+    ]
+  ],
+  "pilot918_and_route70_not_in_qualified_counts": true,
+  "author330880_ARM_and5051_MPFR_plus76shortcuts_not_own_calls": true,
+  "r2_copy_not_new_numerical_execution": true,
+  "reviewed_whole507_stays422": true,
+  "author437_not_promoted": true,
+  "device_IO": 0
+}

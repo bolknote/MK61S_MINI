@@ -1,0 +1,132 @@
+--- parent/hardware.S
++++ candidate/hardware.S
+@@ -72,6 +72,7 @@
+  adds \rzl,\rt0                @                  ZL
+  adcs \rzh,\rt2                @                      ¯ZH
+ .endm
++#include "remainder-certificate.inc"
+ .section .m0_ddiv_hint_hw,"ax",%progbits
+ .p2align 2
+ .Lrp2040_small_divisor:
+@@ -331,7 +332,9 @@
+ 
+  adcs r0,r0,r0
+  adcs r1,r1,r1                 @ z Q53 with 1 in LSB
+- lsls r4,#16                   @ Q105-32=Q73
++.global mk61_m0_reciprocal1_y_low_shift
++mk61_m0_reciprocal1_y_low_shift:
++ // Private numerator one: yL is exactly zero; flags dead before SUBS.
+  ldr r2,[r13,#0]               @ xL Q52
+  ldr r3,[r13,#4]               @ xH Q20
+ 
+@@ -340,17 +343,19 @@
+  subs r4,r5
+  muls r3,r0                    @ zL*xH Q73
+  subs r4,r3
+- mul32_32_64 r2,r0, r2,r3, r5,r6,r7,r2,r3  @ xL*zL
+- negs r2,r2                    @ borrow from low half?
+- sbcs r4,r3                    @ y-xz Q73 (remainder bits 52..73)
+-
+- cmp r4,#0
+-
+- bmi 1f
++.global mk61_m0_reciprocal1_certificate_begin
++mk61_m0_reciprocal1_certificate_begin:
++ remainder_certificate .Lcertificate_full,.Lcertificate_down
++.global mk61_m0_reciprocal1_certificate_up
++mk61_m0_reciprocal1_certificate_up:
++.Lcertificate_up:
+  movs r2,#0                    @ round up
+  adds r0,#1
+  adcs r1,r2
+ 1:
++.global mk61_m0_reciprocal1_certificate_down
++mk61_m0_reciprocal1_certificate_down:
++.Lcertificate_down:
+  lsrs r0,#1                    @ shift back down to Q52
+  lsls r2,r1,#31
+  orrs r0,r2
+@@ -365,6 +370,17 @@
+  adds r1,r7                    @ pack sign
+  pop {r4-r7,r15}
+ 
++.global mk61_m0_reciprocal1_certificate_full
++mk61_m0_reciprocal1_certificate_full:
++.Lcertificate_full:
++ adds r4,r5                   @ restore exact modular base before full product
++ mul32_32_64 r2,r0, r2,r3, r5,r6,r7,r2,r3
++ negs r2,r2
++ sbcs r4,r3
++ cmp r4,#0
++ bmi .Lcertificate_down
++ b .Lcertificate_up
++
+ .size mk61_m0_reciprocal1,.-mk61_m0_reciprocal1
+ 
+ .align 2
+--- parent/software.S
++++ candidate/software.S
+@@ -73,6 +73,7 @@
+  adcs \rzh,\rt2                @                      ¯ZH
+ .endm
+ #include "inline-seed.inc"
++#include "remainder-certificate.inc"
+ .section .m0_ddiv_hint_sw,"ax",%progbits
+ .p2align 2
+ .global mk61_m0_reciprocal1_sw_from_guard
+@@ -237,7 +238,9 @@
+ 
+  adcs r0,r0,r0
+  adcs r1,r1,r1                 @ z Q53 with 1 in LSB
+- lsls r4,#16                   @ Q105-32=Q73
++.global mk61_m0_reciprocal1_sw_y_low_shift
++mk61_m0_reciprocal1_sw_y_low_shift:
++ // Private numerator one: yL is exactly zero; flags dead before SUBS.
+  ldr r2,[r13,#0]               @ xL Q52
+  ldr r3,[r13,#4]               @ xH Q20
+ 
+@@ -246,17 +249,19 @@
+  subs r4,r5
+  muls r3,r0                    @ zL*xH Q73
+  subs r4,r3
+- mul32_32_64 r2,r0, r2,r3, r5,r6,r7,r2,r3  @ xL*zL
+- negs r2,r2                    @ borrow from low half?
+- sbcs r4,r3                    @ y-xz Q73 (remainder bits 52..73)
+-
+- cmp r4,#0
+-
+- bmi 1f
++.global mk61_m0_reciprocal1_sw_certificate_begin
++mk61_m0_reciprocal1_sw_certificate_begin:
++ remainder_certificate .Lcertificate_full,.Lcertificate_down
++.global mk61_m0_reciprocal1_sw_certificate_up
++mk61_m0_reciprocal1_sw_certificate_up:
++.Lcertificate_up:
+  movs r2,#0                    @ round up
+  adds r0,#1
+  adcs r1,r2
+ 1:
++.global mk61_m0_reciprocal1_sw_certificate_down
++mk61_m0_reciprocal1_sw_certificate_down:
++.Lcertificate_down:
+  lsrs r0,#1                    @ shift back down to Q52
+  lsls r2,r1,#31
+  orrs r0,r2
+@@ -271,6 +276,17 @@
+  adds r1,r7                    @ pack sign
+  pop {r4-r7,r15}
+ 
++.global mk61_m0_reciprocal1_sw_certificate_full
++mk61_m0_reciprocal1_sw_certificate_full:
++.Lcertificate_full:
++ adds r4,r5                   @ restore exact modular base before full product
++ mul32_32_64 r2,r0, r2,r3, r5,r6,r7,r2,r3
++ negs r2,r2
++ sbcs r4,r3
++ cmp r4,#0
++ bmi .Lcertificate_down
++ b .Lcertificate_up
++
+ .size mk61_m0_reciprocal1_sw_from_guard,.-mk61_m0_reciprocal1_sw_from_guard
+ .ltorg
+ #include "inline-seed-table.inc"

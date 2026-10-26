@@ -1,0 +1,133 @@
+{
+  "status": "AUTHOR_EXACT_D2F_RANGE_RNE_AND_CORRECT_REFERENCE_PATH_AUDIT",
+  "range_interval_checks": 3072,
+  "normal_packing_and_tie_parity_checks": 18288,
+  "guard_sticky_parity_classes": 48,
+  "subnormal_shift_algebra_checks": 432,
+  "complete_IEEE_domain_partition_explained_in": "NUMERIC-PROOF.md",
+  "all_reference_correct_classes_covered": [
+    "infinity",
+    "normal_high_tie_even",
+    "normal_high_tie_odd",
+    "normal_high_truncate",
+    "normal_high_up",
+    "normal_low_tie_even",
+    "normal_low_tie_odd",
+    "normal_low_truncate",
+    "normal_low_up",
+    "overflow",
+    "subnormal_to_normal",
+    "zero"
+  ],
+  "instruction_table": {
+    "zero": {
+      "candidate": 9,
+      "Qfplib": 9,
+      "state_rows": 92526
+    },
+    "subnormal_to_normal": {
+      "candidate": 19,
+      "Qfplib": 20,
+      "state_rows": 16
+    },
+    "overflow": {
+      "candidate": 13,
+      "Qfplib": 13,
+      "state_rows": 94126
+    },
+    "infinity": {
+      "candidate": 13,
+      "Qfplib": 13,
+      "state_rows": 4
+    },
+    "normal_low_truncate": {
+      "candidate": 19,
+      "Qfplib": 20,
+      "state_rows": 65886
+    },
+    "normal_low_up": {
+      "candidate": 22,
+      "Qfplib": 22,
+      "state_rows": 44896
+    },
+    "normal_low_tie_even": {
+      "candidate": 22,
+      "Qfplib": 23,
+      "state_rows": 10160
+    },
+    "normal_low_tie_odd": {
+      "candidate": 22,
+      "Qfplib": 24,
+      "state_rows": 10160
+    },
+    "normal_high_truncate": {
+      "candidate": 14,
+      "Qfplib": 20,
+      "state_rows": 65860
+    },
+    "normal_high_up": {
+      "candidate": 17,
+      "Qfplib": 22,
+      "state_rows": 44936
+    },
+    "normal_high_tie_even": {
+      "candidate": 17,
+      "Qfplib": 23,
+      "state_rows": 10160
+    },
+    "normal_high_tie_odd": {
+      "candidate": 17,
+      "Qfplib": 24,
+      "state_rows": 10160
+    }
+  },
+  "all_observed_reference_correctness_matches_source_partition": true,
+  "all_observed_cost_pairs_match_source_path_counts": true,
+  "wrong_reference_state_rows_retained": 15078,
+  "wrong_reference_observed_costs": {
+    "subnormal_Qfplib_flushes": [
+      [
+        32,
+        9
+      ],
+      [
+        32,
+        13
+      ],
+      [
+        35,
+        16
+      ],
+      [
+        39,
+        9
+      ],
+      [
+        39,
+        13
+      ],
+      [
+        42,
+        16
+      ]
+    ],
+    "NaN": [
+      [
+        19,
+        13
+      ]
+    ]
+  },
+  "parent_cost_increases_retained": 110782,
+  "parent_cost_increase_delta": 1,
+  "old512_sample_comparable": 510,
+  "old512_sample_deficits": [
+    426,
+    0
+  ],
+  "candidate_ELF_sha256": "2fe6157478c5111a4ef25e035ef1c55134f6ca5128c3c06b391a699647399062",
+  "qfp_ELF_sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+  "qfp_source_sha256": "c445325c849eb73adbef75176a5a0836cb945ad366ceca6bf9517030e2054f48",
+  "whole_goal_or_physical_cycle_GO": false,
+  "independent_review_pending": true
+}

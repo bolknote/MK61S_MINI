@@ -1,0 +1,34 @@
+{
+  "status": "BUILT_UNQUALIFIED_RP_F2D_LEAF",
+  "source_sha256": "deef395b1aa64fc9164bfa0511cca60ef8014ba66cda0f69a603dbf748ed2ca8",
+  "candidate_ELF_sha256": "5ef1aa821b2e4c1b5fa5aaa471d6b8e2f3bb29fda80993085df782e1502130df",
+  "sections": {
+    ".f2d": 172
+  },
+  "no_external_calls_RAM_tables_libgcc": true,
+  "commands": [
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+      "-mcpu=cortex-m0plus",
+      "-mthumb",
+      "-DMK61_USE_M0_EABI=1",
+      "-DMK61_M0_RP2040_EABI=1",
+      "-c",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-f2d-leaf-20261024/f2d.S",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-f2d-leaf-20261024/f2d.o"
+    ],
+    [
+      "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld",
+      "--gc-sections",
+      "-e",
+      "__aeabi_f2d",
+      "-T",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-f2d-leaf-20261024/entry.ld",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-f2d-leaf-20261024/f2d.o",
+      "-o",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-f2d-leaf-20261024/candidate.elf"
+    ]
+  ],
+  "hardware_accessed": false
+}

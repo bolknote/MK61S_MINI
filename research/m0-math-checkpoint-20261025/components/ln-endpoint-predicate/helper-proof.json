@@ -1,0 +1,42 @@
+{
+  "status": "PASS_EXACT_DIRTY_LOG_RATIO_BARE_ARM_ALL_DENOMINATORS",
+  "pairs": 57325,
+  "denominators": 1024,
+  "actual_ARM_calls": 229300,
+  "all_results_exact_integer_floor": true,
+  "source_sha256": "79067df1532a771c3cef484271292d7a592f73e1a0e0d51af86b5359c3de33a7",
+  "candidate_ELF_sha256": "5187e1bbba29ec6b0d24cfc57aba9feb74598cc0b8df0df06fe6b13a53039e7e",
+  "additional_loaded_seed_code_bytes": 184,
+  "additional_loaded_seed_code_sha256": "75729579767fb4b3269141b6c62b1ae4fad49ed8817158b0e7d4bedcc717ecc8",
+  "firmware_or_ROM_mapped": false,
+  "seed_capsule_from_pinned_resident_ELF": true,
+  "SIO_accesses": 0,
+  "both_SIO_states_preserved_every_call": true,
+  "PCS_SP_and_bounded_writes_checked_every_call": true,
+  "observed_stack_bytes": 68,
+  "helper_instruction_range": [
+    44,
+    159
+  ],
+  "profiled_helper_calls": 332,
+  "observed_seed_error_min": "-23965/4037",
+  "observed_seed_error_max": "16384/3641",
+  "corrections_relative_to_generic_product_seed": {
+    "-5": 17022,
+    "-4": 40420,
+    "-3": 16462,
+    "-2": 9916,
+    "-1": 9412,
+    "0": 8250,
+    "1": 6266,
+    "2": 3872,
+    "3": 2186,
+    "4": 740,
+    "5": 104
+  },
+  "dyadic_endpoint_helper_calls": 4096,
+  "transcript_sha256": "f8c0ca90dc2043295961c947491b00cdf7ffbe575a3cee19f8d37b4ef6707bef",
+  "hardware_accessed": false,
+  "elapsed_seconds": 9.430447542021284,
+  "full_public_qualification_or_independent_review": false
+}

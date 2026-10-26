@@ -1,0 +1,18 @@
+{
+  "status": "PASS_FROZEN_LN_IEEE_ENTRY_ARTIFACTS_INPUTS_LINKED_SIZE_AND_HISTORICAL_DELTA",
+  "artifacts": 62,
+  "input_pins": 593,
+  "allocated_linked_bytes": [
+    102184,
+    102200
+  ],
+  "linked_delta": 16,
+  "result_sha256": "202be6bb558e24d314ab7dd43da6b2690fdf331bbf271b1ec40a36364710e184",
+  "HANDOFF_sha256": "64b6eae621246192a11e3e2d5e9a8dffd330688a39cca4fd04c669248bc7c3c9",
+  "HEAD": "d0b9cbd6c47648b136104f7a66a714af3db9f7e5",
+  "historical_ln10_remaining_raw": [
+    "3FF01E2A43FC46C8"
+  ],
+  "hardware_accessed": false,
+  "canonical_math_diff_empty": true
+}

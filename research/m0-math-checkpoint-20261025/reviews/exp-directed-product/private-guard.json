@@ -1,0 +1,27 @@
+{
+  "status": "PASS_OWN_ACTUAL_PRIVATE_RETURN_GUARD_AND_LIVE_RANGE",
+  "actual_production_AST": true,
+  "positive_actual_postcall_instructions": 2,
+  "negative_controls": [
+    "R12_write",
+    "R12_read",
+    "call",
+    "indirect_call",
+    "return",
+    "tail_return",
+    "PCwrite",
+    "outside_branch",
+    "cycle",
+    "conditional_escape",
+    "actual_disassembly_R12_clobber"
+  ],
+  "marker": "0x101a14f0",
+  "consumer": "0x101a164c",
+  "live_instructions_before_use": 88,
+  "no_R12_touch_or_call_on_any_marker_to_consumer_path": true,
+  "actual_pack_path_R12_reuse_after_consumption_or_on_nonconsumer_path_allowed": true,
+  "actual_16byte_Flash_tail_veneer_and_77instruction_producer_bound_by_binding": true,
+  "integration_requirement": "Re-run against actual integrated ELF, its fresh disassembly, actual veneer and compiler/flags; preserve verified private producer-to-definition and definition-to-use dataflow. The scalar C prototype alone is insufficient.",
+  "no_generic_multiple_return_ABI_claim": true,
+  "hardware": false
+}

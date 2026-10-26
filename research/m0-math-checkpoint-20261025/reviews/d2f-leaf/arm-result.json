@@ -1,0 +1,164 @@
+{
+  "status": "PASS_OWN_ADVERSARIAL_REBUILT_ACTUAL_ARM_AND_MPFR",
+  "unique_inputs": 3437,
+  "fresh_ARM_calls": 27496,
+  "state_rows": 6874,
+  "machine_calls": {
+    "candidate": 6874,
+    "intended_source": 6874,
+    "parent": 6874,
+    "Qfplib": 6874
+  },
+  "fresh_MPFR_conversions": 3437,
+  "MPFR_version": "4.2.2",
+  "MPFR_NaN_category_only_conversions": 440,
+  "exact_integer_oracle_on_all_inputs": true,
+  "raw_parent_bits_exact_including_NaN_payload_sign_quiet": true,
+  "groups": {
+    "all_normal_exponents_four_paths": 2032,
+    "normal_carry_and_half_neighbors": 112,
+    "all_subnormal_actual_ties_neighbors": 526,
+    "subnormal_upper_prefix_borrow_guard": 84,
+    "range_special_endpoints": 92,
+    "minimum_half_minimum_normal_overflow_half": 12,
+    "NaN_payload_bit_controls": 308,
+    "NaN_mixed_payload": 128,
+    "independent_uniform_raw": 128,
+    "old_deficit_live_subset": 15
+  },
+  "classes": {
+    "normal_low_truncate": 568,
+    "normal_low_up": 568,
+    "normal_low_tie_even": 520,
+    "normal_low_tie_odd": 520,
+    "normal_high_truncate": 562,
+    "normal_high_up": 574,
+    "normal_high_tie_even": 522,
+    "normal_high_tie_odd": 520,
+    "zero": 196,
+    "subnormal_full_up": 420,
+    "subnormal_full_down": 462,
+    "subnormal_full_tie": 352,
+    "subnormal_to_normal": 28,
+    "overflow": 178,
+    "infinity": 4,
+    "NaN": 880
+  },
+  "observed_actual_path_counts": {
+    "candidate": 17,
+    "intended_source": 17,
+    "Qfplib": 9
+  },
+  "all_correct_reference_costs_no_slower": true,
+  "all_modeled_costs_exact_in_actual_ARM": true,
+  "stack_bytes_candidate": 0,
+  "stack_bytes_intended_source": 0,
+  "SIO_accesses": 0,
+  "SIO_READY_and_DIRTY_all28bytes_preserved": true,
+  "no_leaf_ROM_firmware_mocks_or_veneers": true,
+  "leaf_memory_only_six_in_section_literals": {
+    "candidate": [
+      [
+        269889768,
+        4
+      ],
+      [
+        269889772,
+        4
+      ],
+      [
+        269889776,
+        4
+      ],
+      [
+        269889780,
+        4
+      ],
+      [
+        269889784,
+        4
+      ],
+      [
+        269889788,
+        4
+      ]
+    ],
+    "intended_source": [
+      [
+        269889768,
+        4
+      ],
+      [
+        269889772,
+        4
+      ],
+      [
+        269889776,
+        4
+      ],
+      [
+        269889780,
+        4
+      ],
+      [
+        269889784,
+        4
+      ],
+      [
+        269889788,
+        4
+      ]
+    ]
+  },
+  "every_leaf_instruction_Thumb16_PC_inside_actual_body": true,
+  "leaf_SP_unchanged_on_every_instruction": true,
+  "parent_real_BootROM_initializers_excluded": [
+    {
+      "name": "__aeabi_bits_init",
+      "table": "aeabi_bits_funcs",
+      "pointers": [
+        "0x309",
+        "0x357",
+        "0x38f",
+        "0x32d"
+      ]
+    },
+    {
+      "name": "__aeabi_mem_init",
+      "table": "aeabi_mem_funcs",
+      "pointers": [
+        "0x26b9",
+        "0x261d",
+        "0x26ad",
+        "0x2605"
+      ]
+    }
+  ],
+  "parent_regression_distribution": {
+    "-179": 4,
+    "-177": 4,
+    "-160": 36,
+    "-159": 4,
+    "-152": 24,
+    "-137": 370,
+    "-134": 92,
+    "-130": 340,
+    "-127": 12,
+    "-123": 360,
+    "-122": 148,
+    "-120": 60,
+    "-93": 98,
+    "-87": 20,
+    "-86": 60,
+    "-29": 4,
+    "-23": 880,
+    "-19": 4,
+    "-7": 1042,
+    "-4": 1136,
+    "-2": 1040,
+    "1": 1136
+  },
+  "inputs_sha256": "c736c589aadbaf55d82f3c88d49cb250450b6192e7ebe5e563c0a436a1d381ae",
+  "rows_sha256": "5ee44223e4f0f11f9024f162b3b6a292f0768d2742461d06e4423f7c16dc51a8",
+  "hardware": false
+}

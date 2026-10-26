@@ -1,0 +1,10 @@
+{
+  "status": "PASS_EXISTING_REFINE3736_BYTES_AND_STATIC_CORE96_FRAME_UNCHANGED",
+  "old_core_bytes": 5064,
+  "new_core_bytes": 5088,
+  "existing_refine_prefix_bytes": 3736,
+  "prefix_sha256": "946899a53f67c3f78c746762e235f1fbd821c6579dd90d08ffcf863e755abbbf",
+  "public_prologue_hex": "f0b593b0",
+  "push_saved20_plus_alloc76_frame_bytes": 96,
+  "all_previous_tiny_and_other_CPP_sections_also_bound_by_build": true
+}

@@ -1,0 +1,148 @@
+{
+  "status": "PASS_COMPLETE_SAVED_REFERENCE_AND_LOSSLESS_LINEAGE_ACCOUNTING",
+  "ARM_calls": 0,
+  "MPFR_inputs": 0,
+  "old_states": 223824,
+  "old_pairs": 111912,
+  "old_reference_variants": 223976,
+  "old_wrong_reference_variants": 51126,
+  "old_losses": [
+    7901,
+    7888
+  ],
+  "all10081_cost_sensitive_states_bound_to_actual_directed_replay": true,
+  "union_pairs": 116468,
+  "union_states": 232936,
+  "union_reference_variants": 252450,
+  "overlap_states610": true,
+  "union_losses": [
+    10866,
+    10853
+  ],
+  "new_loss_pairs": 0,
+  "additional2965_losses_preexisting": true,
+  "wrong_reference_variants": 60686,
+  "correct_reference_comparison": {
+    "slower": 18984,
+    "faster": 170087,
+    "equal": 2693
+  },
+  "cost_increase_states8024_plus2": true,
+  "increase_scopes": {
+    "already_slower_than_a_correct_reference": 2293,
+    "still_no_slower_than_all_correct_references": 2343,
+    "wrong_Qfplib_only": 3388
+  },
+  "three_reference_symbols": [
+    "qfp_composed_pow",
+    "qfp_composed_pow_exact",
+    "qfp_composed_pow_integer"
+  ],
+  "original153": {
+    "parent": {
+      "slower": 48,
+      "strict": 105
+    },
+    "candidate": {
+      "slower": 35,
+      "strict": 118
+    }
+  },
+  "thirteen_original_bothstate_strict_fixes": [
+    [
+      "3FEFFFFFFFFFFE2D",
+      "C0A30A8C16DA169E"
+    ],
+    [
+      "3FEFFFFFFFFFFE18",
+      "C0BB7E66C4EEBBAC"
+    ],
+    [
+      "3FEFFFFFFFFFFF52",
+      "C03E59016FD35648"
+    ],
+    [
+      "3FEFFFFFFFFFFF59",
+      "BFFBC37C64A1F798"
+    ],
+    [
+      "3FEFFFFFFFFFFF10",
+      "BFA5555555555502"
+    ],
+    [
+      "3FEFFFFFFFFFFF7D",
+      "C1238B628A4F9B68"
+    ],
+    [
+      "3FEFFFFFFFFFFEEE",
+      "BF658C4622118A1A"
+    ],
+    [
+      "3FEFFFFFFFFFFEFD",
+      "BFBC5942D363FEDA"
+    ],
+    [
+      "3FEFFFFFFFFFFF4B",
+      "C015FEA6F207F1DD"
+    ],
+    [
+      "3FEFFFFFFFFFFF0D",
+      "BF41E45265E52958"
+    ],
+    [
+      "3FEFFFFFFFFFFF77",
+      "BF8F422AA7F3B50B"
+    ],
+    [
+      "3FF0000000000092",
+      "40EF09820FE9DE17"
+    ],
+    [
+      "3FF00000000000D4",
+      "403FB67F25E59355"
+    ]
+  ],
+  "all512_actual_roots_seen_in_saved_new_public_calls": true,
+  "R_source_bindings": {
+    "qualification.json": {
+      "rows": 127590,
+      "ref": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/qualification.json",
+        "bytes": 104266623,
+        "sha256": "8cdd5e61aa53ced266f7fe5279885c508fc1c420b483a300c9fb1e60515191b4"
+      }
+    },
+    "targeted.json": {
+      "rows": 104430,
+      "ref": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/targeted.json",
+        "bytes": 58817443,
+        "sha256": "c60a61d54f728ad16dc76187709789ff9475bce641eee618a41f248e2a50460f"
+      }
+    },
+    "probe.json": {
+      "rows": 726,
+      "ref": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-rsqrt-asm-20261024/probe.json",
+        "bytes": 547596,
+        "sha256": "340318b19b6d4bae44d5317019af900ef06c00e88f1a6e23fb64691a589fc6a2"
+      }
+    }
+  },
+  "without_R_qualified_probe_variants": 223826,
+  "qualified_R_probe_only_variants150": true,
+  "lossless_R_focused_gzip": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exp-table-product-20261025/lineage/qualified-R-focused.json.gz",
+    "bytes": 19483,
+    "sha256": "0a63739bb23ef889fcae02b9e5a25199177796c93537bab302e4ddfa42476613"
+  },
+  "uncompressed_bytes": 547596,
+  "uncompressed_sha256": "340318b19b6d4bae44d5317019af900ef06c00e88f1a6e23fb64691a589fc6a2",
+  "qualification_boundary": "R/probe.json is qualified focused evidence; this packet probe3096 is a distinct excluded pilot. Earlier r5 archive omission is corrected additively; old frozen artifacts are unchanged.",
+  "reviewed_whole507_preserved422": true,
+  "author436_not_promoted": true,
+  "device_IO": 0,
+  "Git": 0,
+  "canonical": 0,
+  "network": 0
+}

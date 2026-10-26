@@ -1,0 +1,43 @@
+--- a/code/native_eabi_m0.cpp
++++ b/code/native_eabi_m0.cpp
+@@ -748,7 +748,11 @@
+   U q=exp_table[index];
+   const bool below=(delta>>63)!=0;
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+-  const U correction=mk61_m0_pow_exp_product_flash(q,below?U(0)-delta:delta);
++  const U displacement=below?U(0)-delta:delta;
++  // Row zero is exactly2^62. The rounded high product is a shift;
++  // all three omitted partial products are identically zero.
++  const U correction=index?mk61_m0_pow_exp_product_flash(q,displacement):
++                           (displacement+2U)>>2;
+   unsigned error=4;
+ #else
+   const U correction=exp_high_product(q,below?U(0)-delta:delta)+1;
+--- a/code/native_eabi_m0_pow_exp_product.inc
++++ b/code/native_eabi_m0_pow_exp_product.inc
+@@ -14,11 +14,9 @@
+ mk61_m0_pow_exp_product:
+  // Save arguments and callee-saved registers in one instruction.
+  push {r0-r7,lr}
+- sub sp,#4
+  lsrs r2,r1,#16
+  lsrs r7,r3,#16
+  mov r3,sp
+- adds r3,#4
+  movs r6,#0
+  // Column2 starts at bit32 of the full product.
+  ldrh r0,[r3,#0]
+@@ -98,10 +96,10 @@
+  adds r6,r2
+  mov r0,r5
+  mov r1,r6
+- add sp,#20
++ add sp,#16
+  pop {r4-r7,pc}
+ .size mk61_m0_pow_exp_product,.-mk61_m0_pow_exp_product
+  // Preserve the established168-byte RAM slot and all following symbols.
+- // These six padding bytes are outside the function and never executed.
+- .hword 0xbf00,0xbf00,0xbf00
++ // These ten padding bytes are outside the function and never executed.
++ .hword 0xbf00,0xbf00,0xbf00,0xbf00,0xbf00
+ #endif

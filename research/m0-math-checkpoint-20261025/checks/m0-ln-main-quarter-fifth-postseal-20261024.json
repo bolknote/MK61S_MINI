@@ -1,0 +1,16 @@
+{
+  "status": "PASS_PRIVATE_MAIN_LN_COEFFICIENT_PACKET_POSTSEAL",
+  "artifacts": 61,
+  "input_pins": 691,
+  "result_sha256": "60c79f7973c18466d67d3f0d473cd63eb597f378ddb9bb53732edebde6caaf58",
+  "HANDOFF_sha256": "37590bc6604dc21cca8362ca4712e6fb51caa9be2d03082282ce37b5f5062ca3",
+  "source_sha256": "4db4753b23ebaa7a17aed662d2f59d6b351f6c0d8739559ad4235e6c615f1fd2",
+  "ELF_sha256": "2c0d376fe0b12c99f694279c2382977b00001875b4777aed504c0e1e309df728",
+  "parent_allocated": 102664,
+  "candidate_allocated": 103552,
+  "linked_delta": 888,
+  "HEAD": "d0b9cbd6c47648b136104f7a66a714af3db9f7e5",
+  "canonical_math_diff_empty": true,
+  "hardware_accessed": false,
+  "whole_goal_complete": false
+}

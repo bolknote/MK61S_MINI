@@ -1,0 +1,4058 @@
+{
+  "status": "PASS_BOUNDED_REAL_PUBLIC_POW_ALL3_REFERENCES",
+  "unique_pairs": 53,
+  "qualified_calls": 636,
+  "directed_MPFR_inputs": 51,
+  "sNaN_shortcuts": 2,
+  "MPFR_version": "4.2.2",
+  "all13_original_fixes_strict_bothSIO": true,
+  "all3_real_Qfplib_compositions_retained": true,
+  "parent_control_costs_bits_identical": true,
+  "candidate_bits_unchanged": true,
+  "exact_cost_law_verified": true,
+  "table_rows_seen": 11,
+  "PCS_R4_R11_SP_PC_and_SIO28_checked": true,
+  "observed_stack_bytes": {
+    "parent": 2284,
+    "control": 2284,
+    "candidate": 2284,
+    "Qfplib": 88
+  },
+  "ROM_initializers_excluded_from_calls": true,
+  "no_new_other_math_qualification": true,
+  "device_IO": 0,
+  "rows": [
+    {
+      "x": "3FEFFFFFFFFFFE18",
+      "y": "C0BB7E66C4EEBBAC",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF00000001A347A",
+      "outputs": {
+        "parent": "3FF00000001A347A",
+        "control": "3FF00000001A347A",
+        "candidate": "3FF00000001A347A",
+        "qfp_composed_pow": "3FF00000001A347A",
+        "qfp_composed_pow_exact": "3FF00000001A347A",
+        "qfp_composed_pow_integer": "3FF00000001A347A"
+      },
+      "instructions": {
+        "parent": 1312,
+        "control": 1312,
+        "candidate": 1245,
+        "qfp_composed_pow": 1291,
+        "qfp_composed_pow_exact": 1301,
+        "qfp_composed_pow_integer": 1337
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000001A3479F3C"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFE18",
+      "y": "C0BB7E66C4EEBBAC",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF00000001A347A",
+      "outputs": {
+        "parent": "3FF00000001A347A",
+        "control": "3FF00000001A347A",
+        "candidate": "3FF00000001A347A",
+        "qfp_composed_pow": "3FF00000001A347A",
+        "qfp_composed_pow_exact": "3FF00000001A347A",
+        "qfp_composed_pow_integer": "3FF00000001A347A"
+      },
+      "instructions": {
+        "parent": 1312,
+        "control": 1312,
+        "candidate": 1245,
+        "qfp_composed_pow": 1291,
+        "qfp_composed_pow_exact": 1301,
+        "qfp_composed_pow_integer": 1337
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000001A3479F3C"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFE2D",
+      "y": "C0A30A8C16DA169E",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF000000008AF0F",
+      "outputs": {
+        "parent": "3FF000000008AF0F",
+        "control": "3FF000000008AF0F",
+        "candidate": "3FF000000008AF0F",
+        "qfp_composed_pow": "3FF000000008AF0F",
+        "qfp_composed_pow_exact": "3FF000000008AF0F",
+        "qfp_composed_pow_integer": "BFF000000008AF0F"
+      },
+      "instructions": {
+        "parent": 1312,
+        "control": 1312,
+        "candidate": 1245,
+        "qfp_composed_pow": 1275,
+        "qfp_composed_pow_exact": 1285,
+        "qfp_composed_pow_integer": 1321
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000000008AF0F636"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFE2D",
+      "y": "C0A30A8C16DA169E",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF000000008AF0F",
+      "outputs": {
+        "parent": "3FF000000008AF0F",
+        "control": "3FF000000008AF0F",
+        "candidate": "3FF000000008AF0F",
+        "qfp_composed_pow": "3FF000000008AF0F",
+        "qfp_composed_pow_exact": "3FF000000008AF0F",
+        "qfp_composed_pow_integer": "BFF000000008AF0F"
+      },
+      "instructions": {
+        "parent": 1312,
+        "control": 1312,
+        "candidate": 1245,
+        "qfp_composed_pow": 1275,
+        "qfp_composed_pow_exact": 1285,
+        "qfp_composed_pow_integer": 1321
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000000008AF0F636"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFEEE",
+      "y": "BF658C4622118A1A",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "3FF0000000000000",
+        "qfp_composed_pow_exact": "3FF0000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 1294,
+        "control": 1294,
+        "candidate": 1227,
+        "qfp_composed_pow": 1290,
+        "qfp_composed_pow_exact": 1300,
+        "qfp_composed_pow_integer": 1310
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000000000005C4"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFEEE",
+      "y": "BF658C4622118A1A",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "3FF0000000000000",
+        "qfp_composed_pow_exact": "3FF0000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 1294,
+        "control": 1294,
+        "candidate": 1227,
+        "qfp_composed_pow": 1290,
+        "qfp_composed_pow_exact": 1300,
+        "qfp_composed_pow_integer": 1310
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000000000005C4"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFEFD",
+      "y": "BFBC5942D363FEDA",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF000000000000E",
+      "outputs": {
+        "parent": "3FF000000000000E",
+        "control": "3FF000000000000E",
+        "candidate": "3FF000000000000E",
+        "qfp_composed_pow": "3FF000000000000E",
+        "qfp_composed_pow_exact": "3FF000000000000E",
+        "qfp_composed_pow_integer": "3FF000000000000E"
+      },
+      "instructions": {
+        "parent": 1294,
+        "control": 1294,
+        "candidate": 1227,
+        "qfp_composed_pow": 1290,
+        "qfp_composed_pow_exact": 1300,
+        "qfp_composed_pow_integer": 1310
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000000000000E572"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFEFD",
+      "y": "BFBC5942D363FEDA",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF000000000000E",
+      "outputs": {
+        "parent": "3FF000000000000E",
+        "control": "3FF000000000000E",
+        "candidate": "3FF000000000000E",
+        "qfp_composed_pow": "3FF000000000000E",
+        "qfp_composed_pow_exact": "3FF000000000000E",
+        "qfp_composed_pow_integer": "3FF000000000000E"
+      },
+      "instructions": {
+        "parent": 1294,
+        "control": 1294,
+        "candidate": 1227,
+        "qfp_composed_pow": 1290,
+        "qfp_composed_pow_exact": 1300,
+        "qfp_composed_pow_integer": 1310
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000000000000E572"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF0D",
+      "y": "BF41E45265E52958",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "3FF0000000000000",
+        "qfp_composed_pow_exact": "3FF0000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 1294,
+        "control": 1294,
+        "candidate": 1227,
+        "qfp_composed_pow": 1291,
+        "qfp_composed_pow_exact": 1301,
+        "qfp_composed_pow_integer": 1311
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000000000000010F"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF0D",
+      "y": "BF41E45265E52958",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "3FF0000000000000",
+        "qfp_composed_pow_exact": "3FF0000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 1294,
+        "control": 1294,
+        "candidate": 1227,
+        "qfp_composed_pow": 1291,
+        "qfp_composed_pow_exact": 1301,
+        "qfp_composed_pow_integer": 1311
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000000000000010F"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF10",
+      "y": "BFA5555555555502",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF0000000000005",
+      "outputs": {
+        "parent": "3FF0000000000005",
+        "control": "3FF0000000000005",
+        "candidate": "3FF0000000000005",
+        "qfp_composed_pow": "3FF0000000000005",
+        "qfp_composed_pow_exact": "3FF0000000000005",
+        "qfp_composed_pow_integer": "3FF0000000000005"
+      },
+      "instructions": {
+        "parent": 1294,
+        "control": 1294,
+        "candidate": 1227,
+        "qfp_composed_pow": 1288,
+        "qfp_composed_pow_exact": 1298,
+        "qfp_composed_pow_integer": 1308
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "0000000000004FFF"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF10",
+      "y": "BFA5555555555502",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000005",
+      "outputs": {
+        "parent": "3FF0000000000005",
+        "control": "3FF0000000000005",
+        "candidate": "3FF0000000000005",
+        "qfp_composed_pow": "3FF0000000000005",
+        "qfp_composed_pow_exact": "3FF0000000000005",
+        "qfp_composed_pow_integer": "3FF0000000000005"
+      },
+      "instructions": {
+        "parent": 1294,
+        "control": 1294,
+        "candidate": 1227,
+        "qfp_composed_pow": 1288,
+        "qfp_composed_pow_exact": 1298,
+        "qfp_composed_pow_integer": 1308
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "0000000000004FFF"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF4B",
+      "y": "C015FEA6F207F1DD",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF00000000001F2",
+      "outputs": {
+        "parent": "3FF00000000001F2",
+        "control": "3FF00000000001F2",
+        "candidate": "3FF00000000001F2",
+        "qfp_composed_pow": "3FF00000000001F2",
+        "qfp_composed_pow_exact": "3FF00000000001F2",
+        "qfp_composed_pow_integer": "BFF00000000001F2"
+      },
+      "instructions": {
+        "parent": 1299,
+        "control": 1299,
+        "candidate": 1232,
+        "qfp_composed_pow": 1295,
+        "qfp_composed_pow_exact": 1305,
+        "qfp_composed_pow_integer": 1341
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000000001F1A18"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF4B",
+      "y": "C015FEA6F207F1DD",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF00000000001F2",
+      "outputs": {
+        "parent": "3FF00000000001F2",
+        "control": "3FF00000000001F2",
+        "candidate": "3FF00000000001F2",
+        "qfp_composed_pow": "3FF00000000001F2",
+        "qfp_composed_pow_exact": "3FF00000000001F2",
+        "qfp_composed_pow_integer": "BFF00000000001F2"
+      },
+      "instructions": {
+        "parent": 1299,
+        "control": 1299,
+        "candidate": 1232,
+        "qfp_composed_pow": 1295,
+        "qfp_composed_pow_exact": 1305,
+        "qfp_composed_pow_integer": 1341
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000000001F1A18"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF52",
+      "y": "C03E59016FD35648",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF0000000000A50",
+      "outputs": {
+        "parent": "3FF0000000000A50",
+        "control": "3FF0000000000A50",
+        "candidate": "3FF0000000000A50",
+        "qfp_composed_pow": "3FF0000000000A50",
+        "qfp_composed_pow_exact": "3FF0000000000A50",
+        "qfp_composed_pow_integer": "3FF0000000000A50"
+      },
+      "instructions": {
+        "parent": 1305,
+        "control": 1305,
+        "candidate": 1238,
+        "qfp_composed_pow": 1291,
+        "qfp_composed_pow_exact": 1301,
+        "qfp_composed_pow_integer": 1337
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "0000000000A503F7"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF52",
+      "y": "C03E59016FD35648",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000A50",
+      "outputs": {
+        "parent": "3FF0000000000A50",
+        "control": "3FF0000000000A50",
+        "candidate": "3FF0000000000A50",
+        "qfp_composed_pow": "3FF0000000000A50",
+        "qfp_composed_pow_exact": "3FF0000000000A50",
+        "qfp_composed_pow_integer": "3FF0000000000A50"
+      },
+      "instructions": {
+        "parent": 1305,
+        "control": 1305,
+        "candidate": 1238,
+        "qfp_composed_pow": 1291,
+        "qfp_composed_pow_exact": 1301,
+        "qfp_composed_pow_integer": 1337
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "0000000000A503F7"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF59",
+      "y": "BFFBC37C64A1F798",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF0000000000091",
+      "outputs": {
+        "parent": "3FF0000000000091",
+        "control": "3FF0000000000091",
+        "candidate": "3FF0000000000091",
+        "qfp_composed_pow": "3FF0000000000091",
+        "qfp_composed_pow_exact": "3FF0000000000091",
+        "qfp_composed_pow_integer": "BFF0000000000091"
+      },
+      "instructions": {
+        "parent": 1293,
+        "control": 1293,
+        "candidate": 1226,
+        "qfp_composed_pow": 1285,
+        "qfp_composed_pow_exact": 1295,
+        "qfp_composed_pow_integer": 1331
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "0000000000090E43"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF59",
+      "y": "BFFBC37C64A1F798",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000091",
+      "outputs": {
+        "parent": "3FF0000000000091",
+        "control": "3FF0000000000091",
+        "candidate": "3FF0000000000091",
+        "qfp_composed_pow": "3FF0000000000091",
+        "qfp_composed_pow_exact": "3FF0000000000091",
+        "qfp_composed_pow_integer": "BFF0000000000091"
+      },
+      "instructions": {
+        "parent": 1293,
+        "control": 1293,
+        "candidate": 1226,
+        "qfp_composed_pow": 1285,
+        "qfp_composed_pow_exact": 1295,
+        "qfp_composed_pow_integer": 1331
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "0000000000090E43"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF77",
+      "y": "BF8F422AA7F3B50B",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF0000000000001",
+      "outputs": {
+        "parent": "3FF0000000000001",
+        "control": "3FF0000000000001",
+        "candidate": "3FF0000000000001",
+        "qfp_composed_pow": "3FF0000000000001",
+        "qfp_composed_pow_exact": "3FF0000000000001",
+        "qfp_composed_pow_integer": "3FF0000000000001"
+      },
+      "instructions": {
+        "parent": 1294,
+        "control": 1294,
+        "candidate": 1227,
+        "qfp_composed_pow": 1291,
+        "qfp_composed_pow_exact": 1301,
+        "qfp_composed_pow_integer": 1311
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000000000010BA"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF77",
+      "y": "BF8F422AA7F3B50B",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000001",
+      "outputs": {
+        "parent": "3FF0000000000001",
+        "control": "3FF0000000000001",
+        "candidate": "3FF0000000000001",
+        "qfp_composed_pow": "3FF0000000000001",
+        "qfp_composed_pow_exact": "3FF0000000000001",
+        "qfp_composed_pow_integer": "3FF0000000000001"
+      },
+      "instructions": {
+        "parent": 1294,
+        "control": 1294,
+        "candidate": 1227,
+        "qfp_composed_pow": 1291,
+        "qfp_composed_pow_exact": 1301,
+        "qfp_composed_pow_integer": 1311
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000000000010BA"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF7D",
+      "y": "C1238B628A4F9B68",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF00000028014DB",
+      "outputs": {
+        "parent": "3FF00000028014DB",
+        "control": "3FF00000028014DB",
+        "candidate": "3FF00000028014DB",
+        "qfp_composed_pow": "3FF00000028014DB",
+        "qfp_composed_pow_exact": "3FF00000028014DB",
+        "qfp_composed_pow_integer": "BFF00000028014DB"
+      },
+      "instructions": {
+        "parent": 1310,
+        "control": 1310,
+        "candidate": 1243,
+        "qfp_composed_pow": 1304,
+        "qfp_composed_pow_exact": 1314,
+        "qfp_composed_pow_integer": 1350
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000028014DB63A"
+        }
+      ]
+    },
+    {
+      "x": "3FEFFFFFFFFFFF7D",
+      "y": "C1238B628A4F9B68",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF00000028014DB",
+      "outputs": {
+        "parent": "3FF00000028014DB",
+        "control": "3FF00000028014DB",
+        "candidate": "3FF00000028014DB",
+        "qfp_composed_pow": "3FF00000028014DB",
+        "qfp_composed_pow_exact": "3FF00000028014DB",
+        "qfp_composed_pow_integer": "BFF00000028014DB"
+      },
+      "instructions": {
+        "parent": 1310,
+        "control": 1310,
+        "candidate": 1243,
+        "qfp_composed_pow": 1304,
+        "qfp_composed_pow_exact": 1314,
+        "qfp_composed_pow_integer": 1350
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000028014DB63A"
+        }
+      ]
+    },
+    {
+      "x": "3FF0000000000092",
+      "y": "40EF09820FE9DE17",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF00000008D9B61",
+      "outputs": {
+        "parent": "3FF00000008D9B61",
+        "control": "3FF00000008D9B61",
+        "candidate": "3FF00000008D9B61",
+        "qfp_composed_pow": "3FF00000008D9B61",
+        "qfp_composed_pow_exact": "3FF00000008D9B61",
+        "qfp_composed_pow_integer": "3FF00000008D9B61"
+      },
+      "instructions": {
+        "parent": 1318,
+        "control": 1318,
+        "candidate": 1251,
+        "qfp_composed_pow": 1315,
+        "qfp_composed_pow_exact": 1325,
+        "qfp_composed_pow_integer": 1361
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000008D9B616B0"
+        }
+      ]
+    },
+    {
+      "x": "3FF0000000000092",
+      "y": "40EF09820FE9DE17",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF00000008D9B61",
+      "outputs": {
+        "parent": "3FF00000008D9B61",
+        "control": "3FF00000008D9B61",
+        "candidate": "3FF00000008D9B61",
+        "qfp_composed_pow": "3FF00000008D9B61",
+        "qfp_composed_pow_exact": "3FF00000008D9B61",
+        "qfp_composed_pow_integer": "3FF00000008D9B61"
+      },
+      "instructions": {
+        "parent": 1318,
+        "control": 1318,
+        "candidate": 1251,
+        "qfp_composed_pow": 1315,
+        "qfp_composed_pow_exact": 1325,
+        "qfp_composed_pow_integer": 1361
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "00000008D9B616B0"
+        }
+      ]
+    },
+    {
+      "x": "3FF00000000000D4",
+      "y": "403FB67F25E59355",
+      "group": "all13new_original_fixes",
+      "SIO": "READY",
+      "expected": "3FF0000000001A43",
+      "outputs": {
+        "parent": "3FF0000000001A43",
+        "control": "3FF0000000001A43",
+        "candidate": "3FF0000000001A43",
+        "qfp_composed_pow": "3FF0000000001A43",
+        "qfp_composed_pow_exact": "3FF0000000001A43",
+        "qfp_composed_pow_integer": "BFF0000000001A43"
+      },
+      "instructions": {
+        "parent": 1311,
+        "control": 1311,
+        "candidate": 1244,
+        "qfp_composed_pow": 1310,
+        "qfp_composed_pow_exact": 1320,
+        "qfp_composed_pow_integer": 1356
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "0000000001A43214"
+        }
+      ]
+    },
+    {
+      "x": "3FF00000000000D4",
+      "y": "403FB67F25E59355",
+      "group": "all13new_original_fixes",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000001A43",
+      "outputs": {
+        "parent": "3FF0000000001A43",
+        "control": "3FF0000000001A43",
+        "candidate": "3FF0000000001A43",
+        "qfp_composed_pow": "3FF0000000001A43",
+        "qfp_composed_pow_exact": "3FF0000000001A43",
+        "qfp_composed_pow_integer": "BFF0000000001A43"
+      },
+      "instructions": {
+        "parent": 1311,
+        "control": 1311,
+        "candidate": 1244,
+        "qfp_composed_pow": 1310,
+        "qfp_composed_pow_exact": 1320,
+        "qfp_composed_pow_integer": 1356
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "0000000001A43214"
+        }
+      ]
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "READY",
+      "expected": "3FB0E1D596EB463B",
+      "outputs": {
+        "parent": "3FB0E1D596EB463B",
+        "control": "3FB0E1D596EB463B",
+        "candidate": "3FB0E1D596EB463B",
+        "qfp_composed_pow": "3FB0E1D596EB463B",
+        "qfp_composed_pow_exact": "3FB0E1D596EB463B",
+        "qfp_composed_pow_integer": "3FB0E1D596EB463B"
+      },
+      "instructions": {
+        "parent": 5043,
+        "control": 5043,
+        "candidate": 5045,
+        "qfp_composed_pow": 1585,
+        "qfp_composed_pow_exact": 1606,
+        "qfp_composed_pow_integer": 1643
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "438FB0CB4F468808",
+          "b": "001FA6DBF6476C57"
+        },
+        {
+          "kind": "general",
+          "a": "438FB0CB4F468808",
+          "b": "001FA6DBF6476C57"
+        }
+      ]
+    },
+    {
+      "x": "3FF00AE3DF9009D6",
+      "y": "C090000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "DIRTY",
+      "expected": "3FB0E1D596EB463B",
+      "outputs": {
+        "parent": "3FB0E1D596EB463B",
+        "control": "3FB0E1D596EB463B",
+        "candidate": "3FB0E1D596EB463B",
+        "qfp_composed_pow": "3FB0E1D596EB463B",
+        "qfp_composed_pow_exact": "3FB0E1D596EB463B",
+        "qfp_composed_pow_integer": "3FB0E1D596EB463B"
+      },
+      "instructions": {
+        "parent": 5689,
+        "control": 5689,
+        "candidate": 5691,
+        "qfp_composed_pow": 1585,
+        "qfp_composed_pow_exact": 1606,
+        "qfp_composed_pow_integer": 1643
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "438FB0CB4F468808",
+          "b": "001FA6DBF6476C57"
+        },
+        {
+          "kind": "general",
+          "a": "438FB0CB4F468808",
+          "b": "001FA6DBF6476C57"
+        }
+      ]
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "READY",
+      "expected": "3FE51503CA80F09C",
+      "outputs": {
+        "parent": "3FE51503CA80F09C",
+        "control": "3FE51503CA80F09C",
+        "candidate": "3FE51503CA80F09C",
+        "qfp_composed_pow": "3FE51503CA80F09C",
+        "qfp_composed_pow_exact": "3FE51503CA80F09C",
+        "qfp_composed_pow_integer": "3FE51503CA80F09C"
+      },
+      "instructions": {
+        "parent": 3800,
+        "control": 3800,
+        "candidate": 3800,
+        "qfp_composed_pow": 1568,
+        "qfp_composed_pow_exact": 1589,
+        "qfp_composed_pow_integer": 1598
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "3FE430FB672E08D5",
+      "y": "3FED000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "DIRTY",
+      "expected": "3FE51503CA80F09C",
+      "outputs": {
+        "parent": "3FE51503CA80F09C",
+        "control": "3FE51503CA80F09C",
+        "candidate": "3FE51503CA80F09C",
+        "qfp_composed_pow": "3FE51503CA80F09C",
+        "qfp_composed_pow_exact": "3FE51503CA80F09C",
+        "qfp_composed_pow_integer": "3FE51503CA80F09C"
+      },
+      "instructions": {
+        "parent": 3800,
+        "control": 3800,
+        "candidate": 3800,
+        "qfp_composed_pow": 1568,
+        "qfp_composed_pow_exact": 1589,
+        "qfp_composed_pow_integer": 1598
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "READY",
+      "expected": "4004374E30A30829",
+      "outputs": {
+        "parent": "4004374E30A30829",
+        "control": "4004374E30A30829",
+        "candidate": "4004374E30A30829",
+        "qfp_composed_pow": "4004374E30A30829",
+        "qfp_composed_pow_exact": "4004374E30A30829",
+        "qfp_composed_pow_integer": "4004374E30A30829"
+      },
+      "instructions": {
+        "parent": 3501,
+        "control": 3501,
+        "candidate": 3501,
+        "qfp_composed_pow": 1503,
+        "qfp_composed_pow_exact": 1524,
+        "qfp_composed_pow_integer": 1533
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "40106D478C41D888",
+      "y": "3FE5000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "DIRTY",
+      "expected": "4004374E30A30829",
+      "outputs": {
+        "parent": "4004374E30A30829",
+        "control": "4004374E30A30829",
+        "candidate": "4004374E30A30829",
+        "qfp_composed_pow": "4004374E30A30829",
+        "qfp_composed_pow_exact": "4004374E30A30829",
+        "qfp_composed_pow_integer": "4004374E30A30829"
+      },
+      "instructions": {
+        "parent": 3501,
+        "control": 3501,
+        "candidate": 3501,
+        "qfp_composed_pow": 1503,
+        "qfp_composed_pow_exact": 1524,
+        "qfp_composed_pow_integer": 1533
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "5B27CF4AC334ECB8",
+      "y": "BFE0000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "READY",
+      "expected": "32528C8368DDDFD3",
+      "outputs": {
+        "parent": "32528C8368DDDFD3",
+        "control": "32528C8368DDDFD3",
+        "candidate": "32528C8368DDDFD3",
+        "qfp_composed_pow": "32528C8368DDDFE0",
+        "qfp_composed_pow_exact": "32528C8368DDDFD3",
+        "qfp_composed_pow_integer": "32528C8368DDDFE0"
+      },
+      "instructions": {
+        "parent": 304,
+        "control": 304,
+        "candidate": 304,
+        "qfp_composed_pow": 1588,
+        "qfp_composed_pow_exact": 341,
+        "qfp_composed_pow_integer": 1620
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "5B27CF4AC334ECB8",
+      "y": "BFE0000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "DIRTY",
+      "expected": "32528C8368DDDFD3",
+      "outputs": {
+        "parent": "32528C8368DDDFD3",
+        "control": "32528C8368DDDFD3",
+        "candidate": "32528C8368DDDFD3",
+        "qfp_composed_pow": "32528C8368DDDFE0",
+        "qfp_composed_pow_exact": "32528C8368DDDFD3",
+        "qfp_composed_pow_integer": "32528C8368DDDFE0"
+      },
+      "instructions": {
+        "parent": 304,
+        "control": 304,
+        "candidate": 304,
+        "qfp_composed_pow": 1588,
+        "qfp_composed_pow_exact": 341,
+        "qfp_composed_pow_integer": 1620
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "72FB4FE9F28F6BD6",
+      "y": "BFE0000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "READY",
+      "expected": "26687E100C7F0F43",
+      "outputs": {
+        "parent": "26687E100C7F0F43",
+        "control": "26687E100C7F0F43",
+        "candidate": "26687E100C7F0F43",
+        "qfp_composed_pow": "26687E100C7F0F5C",
+        "qfp_composed_pow_exact": "26687E100C7F0F43",
+        "qfp_composed_pow_integer": "26687E100C7F0F5C"
+      },
+      "instructions": {
+        "parent": 300,
+        "control": 300,
+        "candidate": 300,
+        "qfp_composed_pow": 1621,
+        "qfp_composed_pow_exact": 307,
+        "qfp_composed_pow_integer": 1653
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "72FB4FE9F28F6BD6",
+      "y": "BFE0000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "DIRTY",
+      "expected": "26687E100C7F0F43",
+      "outputs": {
+        "parent": "26687E100C7F0F43",
+        "control": "26687E100C7F0F43",
+        "candidate": "26687E100C7F0F43",
+        "qfp_composed_pow": "26687E100C7F0F5C",
+        "qfp_composed_pow_exact": "26687E100C7F0F43",
+        "qfp_composed_pow_integer": "26687E100C7F0F5C"
+      },
+      "instructions": {
+        "parent": 300,
+        "control": 300,
+        "candidate": 300,
+        "qfp_composed_pow": 1621,
+        "qfp_composed_pow_exact": 307,
+        "qfp_composed_pow_integer": 1653
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "19B6B177AF096BE8",
+      "y": "BFE0000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "READY",
+      "expected": "530ADEA07C9BE2B8",
+      "outputs": {
+        "parent": "530ADEA07C9BE2B8",
+        "control": "530ADEA07C9BE2B8",
+        "candidate": "530ADEA07C9BE2B8",
+        "qfp_composed_pow": "530ADEA07C9BE27E",
+        "qfp_composed_pow_exact": "530ADEA07C9BE2B8",
+        "qfp_composed_pow_integer": "530ADEA07C9BE27E"
+      },
+      "instructions": {
+        "parent": 302,
+        "control": 302,
+        "candidate": 302,
+        "qfp_composed_pow": 1550,
+        "qfp_composed_pow_exact": 307,
+        "qfp_composed_pow_integer": 1582
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "19B6B177AF096BE8",
+      "y": "BFE0000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "DIRTY",
+      "expected": "530ADEA07C9BE2B8",
+      "outputs": {
+        "parent": "530ADEA07C9BE2B8",
+        "control": "530ADEA07C9BE2B8",
+        "candidate": "530ADEA07C9BE2B8",
+        "qfp_composed_pow": "530ADEA07C9BE27E",
+        "qfp_composed_pow_exact": "530ADEA07C9BE2B8",
+        "qfp_composed_pow_integer": "530ADEA07C9BE27E"
+      },
+      "instructions": {
+        "parent": 302,
+        "control": 302,
+        "candidate": 302,
+        "qfp_composed_pow": 1550,
+        "qfp_composed_pow_exact": 307,
+        "qfp_composed_pow_integer": 1582
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "B7B45700D2E0D2B0",
+      "y": "0000000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "READY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "B7B45700D2E0D2B0",
+      "y": "0000000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "BF705B3F27F11045",
+      "y": "0000000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "READY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "BF705B3F27F11045",
+      "y": "0000000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "BF75F439653E2025",
+      "y": "0000000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "READY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "BF75F439653E2025",
+      "y": "0000000000000000",
+      "group": "each_original_reference_kind",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BF3B5A288307F4A3",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FEFFE9D237FE372",
+      "outputs": {
+        "parent": "3FEFFE9D237FE372",
+        "control": "3FEFFE9D237FE372",
+        "candidate": "3FEFFE9D237FE372",
+        "qfp_composed_pow": "3FEFFE9D237FE372",
+        "qfp_composed_pow_exact": "3FEFFE9D237FE372",
+        "qfp_composed_pow_integer": "3FEFFE9D237FE372"
+      },
+      "instructions": {
+        "parent": 1239,
+        "control": 1239,
+        "candidate": 1172,
+        "qfp_composed_pow": 1475,
+        "qfp_composed_pow_exact": 1485,
+        "qfp_composed_pow_integer": 1495
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000B16E400E473C2"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BF3B5A288307F4A3",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FEFFE9D237FE372",
+      "outputs": {
+        "parent": "3FEFFE9D237FE372",
+        "control": "3FEFFE9D237FE372",
+        "candidate": "3FEFFE9D237FE372",
+        "qfp_composed_pow": "3FEFFE9D237FE372",
+        "qfp_composed_pow_exact": "3FEFFE9D237FE372",
+        "qfp_composed_pow_integer": "3FEFFE9D237FE372"
+      },
+      "instructions": {
+        "parent": 1926,
+        "control": 1926,
+        "candidate": 1859,
+        "qfp_composed_pow": 1475,
+        "qfp_composed_pow_exact": 1485,
+        "qfp_composed_pow_integer": 1495
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000B16E400E473C2"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3F3B5A288307F4A3",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FF000B175EFFDC7",
+      "outputs": {
+        "parent": "3FF000B175EFFDC7",
+        "control": "3FF000B175EFFDC7",
+        "candidate": "3FF000B175EFFDC7",
+        "qfp_composed_pow": "3FF000B175EFFDC7",
+        "qfp_composed_pow_exact": "3FF000B175EFFDC7",
+        "qfp_composed_pow_integer": "3FF000B175EFFDC7"
+      },
+      "instructions": {
+        "parent": 1209,
+        "control": 1209,
+        "candidate": 1142,
+        "qfp_composed_pow": 1407,
+        "qfp_composed_pow_exact": 1417,
+        "qfp_composed_pow_integer": 1427
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000B175EFFDC76B9"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3F3B5A288307F4A3",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FF000B175EFFDC7",
+      "outputs": {
+        "parent": "3FF000B175EFFDC7",
+        "control": "3FF000B175EFFDC7",
+        "candidate": "3FF000B175EFFDC7",
+        "qfp_composed_pow": "3FF000B175EFFDC7",
+        "qfp_composed_pow_exact": "3FF000B175EFFDC7",
+        "qfp_composed_pow_integer": "3FF000B175EFFDC7"
+      },
+      "instructions": {
+        "parent": 1896,
+        "control": 1896,
+        "candidate": 1829,
+        "qfp_composed_pow": 1407,
+        "qfp_composed_pow_exact": 1417,
+        "qfp_composed_pow_integer": 1427
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000B175EFFDC76B9"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BF6EC56D9368F337",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FEFF38868AA75CC",
+      "outputs": {
+        "parent": "3FEFF38868AA75CC",
+        "control": "3FEFF38868AA75CC",
+        "candidate": "3FEFF38868AA75CC",
+        "qfp_composed_pow": "3FEFF38868AA75CC",
+        "qfp_composed_pow_exact": "3FEFF38868AA75CC",
+        "qfp_composed_pow_integer": "3FEFF38868AA75CC"
+      },
+      "instructions": {
+        "parent": 1229,
+        "control": 1229,
+        "candidate": 1231,
+        "qfp_composed_pow": 1461,
+        "qfp_composed_pow_exact": 1471,
+        "qfp_composed_pow_integer": 1481
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FD3AB290E46D769",
+          "b": "000B16E400E473C1"
+        },
+        {
+          "kind": "general",
+          "a": "7FD3AB290E46D769",
+          "b": "000B16E400E473C1"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BF6EC56D9368F337",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FEFF38868AA75CC",
+      "outputs": {
+        "parent": "3FEFF38868AA75CC",
+        "control": "3FEFF38868AA75CC",
+        "candidate": "3FEFF38868AA75CC",
+        "qfp_composed_pow": "3FEFF38868AA75CC",
+        "qfp_composed_pow_exact": "3FEFF38868AA75CC",
+        "qfp_composed_pow_integer": "3FEFF38868AA75CC"
+      },
+      "instructions": {
+        "parent": 1916,
+        "control": 1916,
+        "candidate": 1918,
+        "qfp_composed_pow": 1461,
+        "qfp_composed_pow_exact": 1471,
+        "qfp_composed_pow_integer": 1481
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FD3AB290E46D769",
+          "b": "000B16E400E473C1"
+        },
+        {
+          "kind": "general",
+          "a": "7FD3AB290E46D769",
+          "b": "000B16E400E473C1"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3F6EC56D9368F337",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FF0063E3A559473",
+      "outputs": {
+        "parent": "3FF0063E3A559473",
+        "control": "3FF0063E3A559473",
+        "candidate": "3FF0063E3A559473",
+        "qfp_composed_pow": "3FF0063E3A559473",
+        "qfp_composed_pow_exact": "3FF0063E3A559473",
+        "qfp_composed_pow_integer": "3FF0063E3A559473"
+      },
+      "instructions": {
+        "parent": 1209,
+        "control": 1209,
+        "candidate": 1211,
+        "qfp_composed_pow": 1443,
+        "qfp_composed_pow_exact": 1453,
+        "qfp_composed_pow_integer": 1463
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4016321B687027A8",
+          "b": "000B175EFFDC76B8"
+        },
+        {
+          "kind": "general",
+          "a": "4016321B687027A8",
+          "b": "000B175EFFDC76B8"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3F6EC56D9368F337",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FF0063E3A559473",
+      "outputs": {
+        "parent": "3FF0063E3A559473",
+        "control": "3FF0063E3A559473",
+        "candidate": "3FF0063E3A559473",
+        "qfp_composed_pow": "3FF0063E3A559473",
+        "qfp_composed_pow_exact": "3FF0063E3A559473",
+        "qfp_composed_pow_integer": "3FF0063E3A559473"
+      },
+      "instructions": {
+        "parent": 1896,
+        "control": 1896,
+        "candidate": 1898,
+        "qfp_composed_pow": 1443,
+        "qfp_composed_pow_exact": 1453,
+        "qfp_composed_pow_integer": 1463
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4016321B687027A8",
+          "b": "000B175EFFDC76B8"
+        },
+        {
+          "kind": "general",
+          "a": "4016321B687027A8",
+          "b": "000B175EFFDC76B8"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BF7D0FCB0B3873ED",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FEFE877844D77B6",
+      "outputs": {
+        "parent": "3FEFE877844D77B6",
+        "control": "3FEFE877844D77B6",
+        "candidate": "3FEFE877844D77B6",
+        "qfp_composed_pow": "3FEFE877844D77B6",
+        "qfp_composed_pow_exact": "3FEFE877844D77B6",
+        "qfp_composed_pow_integer": "3FEFE877844D77B6"
+      },
+      "instructions": {
+        "parent": 1229,
+        "control": 1229,
+        "candidate": 1231,
+        "qfp_composed_pow": 1498,
+        "qfp_composed_pow_exact": 1508,
+        "qfp_composed_pow_integer": 1518
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FA765ACA88F6453",
+          "b": "000B16E400E473C0"
+        },
+        {
+          "kind": "general",
+          "a": "7FA765ACA88F6453",
+          "b": "000B16E400E473C0"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BF7D0FCB0B3873ED",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FEFE877844D77B6",
+      "outputs": {
+        "parent": "3FEFE877844D77B6",
+        "control": "3FEFE877844D77B6",
+        "candidate": "3FEFE877844D77B6",
+        "qfp_composed_pow": "3FEFE877844D77B6",
+        "qfp_composed_pow_exact": "3FEFE877844D77B6",
+        "qfp_composed_pow_integer": "3FEFE877844D77B6"
+      },
+      "instructions": {
+        "parent": 1916,
+        "control": 1916,
+        "candidate": 1918,
+        "qfp_composed_pow": 1498,
+        "qfp_composed_pow_exact": 1508,
+        "qfp_composed_pow_integer": 1518
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FA765ACA88F6453",
+          "b": "000B16E400E473C0"
+        },
+        {
+          "kind": "general",
+          "a": "7FA765ACA88F6453",
+          "b": "000B16E400E473C0"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3F7D0FCB0B3873ED",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FF00BCCEB7707EC",
+      "outputs": {
+        "parent": "3FF00BCCEB7707EC",
+        "control": "3FF00BCCEB7707EC",
+        "candidate": "3FF00BCCEB7707EC",
+        "qfp_composed_pow": "3FF00BCCEB7707EC",
+        "qfp_composed_pow_exact": "3FF00BCCEB7707EC",
+        "qfp_composed_pow_integer": "3FF00BCCEB7707EC"
+      },
+      "instructions": {
+        "parent": 1209,
+        "control": 1209,
+        "candidate": 1211,
+        "qfp_composed_pow": 1460,
+        "qfp_composed_pow_exact": 1470,
+        "qfp_composed_pow_integer": 1480
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "402C6BE96AF2FB58",
+          "b": "000B175EFFDC76B7"
+        },
+        {
+          "kind": "general",
+          "a": "402C6BE96AF2FB58",
+          "b": "000B175EFFDC76B7"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3F7D0FCB0B3873ED",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FF00BCCEB7707EC",
+      "outputs": {
+        "parent": "3FF00BCCEB7707EC",
+        "control": "3FF00BCCEB7707EC",
+        "candidate": "3FF00BCCEB7707EC",
+        "qfp_composed_pow": "3FF00BCCEB7707EC",
+        "qfp_composed_pow_exact": "3FF00BCCEB7707EC",
+        "qfp_composed_pow_integer": "3FF00BCCEB7707EC"
+      },
+      "instructions": {
+        "parent": 1896,
+        "control": 1896,
+        "candidate": 1898,
+        "qfp_composed_pow": 1460,
+        "qfp_composed_pow_exact": 1470,
+        "qfp_composed_pow_integer": 1480
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "402C6BE96AF2FB58",
+          "b": "000B175EFFDC76B7"
+        },
+        {
+          "kind": "general",
+          "a": "402C6BE96AF2FB58",
+          "b": "000B175EFFDC76B7"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BFDB2A4ABC22A6B7",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FEAF0C9D32CBB28",
+      "outputs": {
+        "parent": "3FEAF0C9D32CBB28",
+        "control": "3FEAF0C9D32CBB28",
+        "candidate": "3FEAF0C9D32CBB28",
+        "qfp_composed_pow": "3FEAF0C9D32CBB28",
+        "qfp_composed_pow_exact": "3FEAF0C9D32CBB28",
+        "qfp_composed_pow_integer": "3FEAF0C9D32CBB28"
+      },
+      "instructions": {
+        "parent": 1231,
+        "control": 1231,
+        "candidate": 1233,
+        "qfp_composed_pow": 1521,
+        "qfp_composed_pow_exact": 1531,
+        "qfp_composed_pow_integer": 1541
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "6BC7D285E91CD39C",
+          "b": "000B16E400E473B2"
+        },
+        {
+          "kind": "general",
+          "a": "6BC7D285E91CD39C",
+          "b": "000B16E400E473B2"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BFDB2A4ABC22A6B7",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FEAF0C9D32CBB28",
+      "outputs": {
+        "parent": "3FEAF0C9D32CBB28",
+        "control": "3FEAF0C9D32CBB28",
+        "candidate": "3FEAF0C9D32CBB28",
+        "qfp_composed_pow": "3FEAF0C9D32CBB28",
+        "qfp_composed_pow_exact": "3FEAF0C9D32CBB28",
+        "qfp_composed_pow_integer": "3FEAF0C9D32CBB28"
+      },
+      "instructions": {
+        "parent": 1918,
+        "control": 1918,
+        "candidate": 1920,
+        "qfp_composed_pow": 1521,
+        "qfp_composed_pow_exact": 1531,
+        "qfp_composed_pow_integer": 1541
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "6BC7D285E91CD39C",
+          "b": "000B16E400E473B2"
+        },
+        {
+          "kind": "general",
+          "a": "6BC7D285E91CD39C",
+          "b": "000B16E400E473B2"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FDB2A4ABC22A6B7",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FF30139C6D78AA8",
+      "outputs": {
+        "parent": "3FF30139C6D78AA8",
+        "control": "3FF30139C6D78AA8",
+        "candidate": "3FF30139C6D78AA8",
+        "qfp_composed_pow": "3FF30139C6D78AA8",
+        "qfp_composed_pow_exact": "3FF30139C6D78AA8",
+        "qfp_composed_pow_integer": "3FF30139C6D78AA8"
+      },
+      "instructions": {
+        "parent": 1211,
+        "control": 1211,
+        "candidate": 1213,
+        "qfp_composed_pow": 1453,
+        "qfp_composed_pow_exact": 1463,
+        "qfp_composed_pow_integer": 1473
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4C019C194F7F9081",
+          "b": "000B175EFFDC76A9"
+        },
+        {
+          "kind": "general",
+          "a": "4C019C194F7F9081",
+          "b": "000B175EFFDC76A9"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FDB2A4ABC22A6B7",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FF30139C6D78AA8",
+      "outputs": {
+        "parent": "3FF30139C6D78AA8",
+        "control": "3FF30139C6D78AA8",
+        "candidate": "3FF30139C6D78AA8",
+        "qfp_composed_pow": "3FF30139C6D78AA8",
+        "qfp_composed_pow_exact": "3FF30139C6D78AA8",
+        "qfp_composed_pow_integer": "3FF30139C6D78AA8"
+      },
+      "instructions": {
+        "parent": 1898,
+        "control": 1898,
+        "candidate": 1900,
+        "qfp_composed_pow": 1453,
+        "qfp_composed_pow_exact": 1463,
+        "qfp_composed_pow_integer": 1473
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4C019C194F7F9081",
+          "b": "000B175EFFDC76A9"
+        },
+        {
+          "kind": "general",
+          "a": "4C019C194F7F9081",
+          "b": "000B175EFFDC76A9"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BFEB42399F954DAD",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FE6A77C1055EA0B",
+      "outputs": {
+        "parent": "3FE6A77C1055EA0B",
+        "control": "3FE6A77C1055EA0B",
+        "candidate": "3FE6A77C1055EA0B",
+        "qfp_composed_pow": "3FE6A77C1055EA0B",
+        "qfp_composed_pow_exact": "3FE6A77C1055EA0B",
+        "qfp_composed_pow_integer": "3FE6A77C1055EA0B"
+      },
+      "instructions": {
+        "parent": 3158,
+        "control": 3158,
+        "candidate": 3160,
+        "qfp_composed_pow": 1462,
+        "qfp_composed_pow_exact": 1472,
+        "qfp_composed_pow_integer": 1482
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "5AA1DD507B9C6112",
+          "b": "000B16E400E47371"
+        },
+        {
+          "kind": "general",
+          "a": "5AA1DD507B9C6112",
+          "b": "000B16E400E47371"
+        },
+        {
+          "kind": "general",
+          "a": "02C5C85FDF4729B6",
+          "b": "000B17217F7D1CA6"
+        },
+        {
+          "kind": "general",
+          "a": "00001EBFBDFF82C4",
+          "b": "000B17217F7D1CA6"
+        },
+        {
+          "kind": "general",
+          "a": "00001EBFBDFF82C4",
+          "b": "0000007AFEF7FE0B"
+        },
+        {
+          "kind": "general",
+          "a": "00000000000EC601",
+          "b": "000B17217F7D1CA6"
+        },
+        {
+          "kind": "general",
+          "a": "50EEA83DCE3088EE",
+          "b": "000B16E400E47371"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BFEB42399F954DAD",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FE6A77C1055EA0B",
+      "outputs": {
+        "parent": "3FE6A77C1055EA0B",
+        "control": "3FE6A77C1055EA0B",
+        "candidate": "3FE6A77C1055EA0B",
+        "qfp_composed_pow": "3FE6A77C1055EA0B",
+        "qfp_composed_pow_exact": "3FE6A77C1055EA0B",
+        "qfp_composed_pow_integer": "3FE6A77C1055EA0B"
+      },
+      "instructions": {
+        "parent": 4532,
+        "control": 4532,
+        "candidate": 4534,
+        "qfp_composed_pow": 1462,
+        "qfp_composed_pow_exact": 1472,
+        "qfp_composed_pow_integer": 1482
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "5AA1DD507B9C6112",
+          "b": "000B16E400E47371"
+        },
+        {
+          "kind": "general",
+          "a": "5AA1DD507B9C6112",
+          "b": "000B16E400E47371"
+        },
+        {
+          "kind": "general",
+          "a": "02C5C85FDF4729B6",
+          "b": "000B17217F7D1CA6"
+        },
+        {
+          "kind": "general",
+          "a": "00001EBFBDFF82C4",
+          "b": "000B17217F7D1CA6"
+        },
+        {
+          "kind": "general",
+          "a": "00001EBFBDFF82C4",
+          "b": "0000007AFEF7FE0B"
+        },
+        {
+          "kind": "general",
+          "a": "00000000000EC601",
+          "b": "000B17217F7D1CA6"
+        },
+        {
+          "kind": "general",
+          "a": "50EEA83DCE3088EE",
+          "b": "000B16E400E47371"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FEB42399F954DAD",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FF699C2D15B8B6E",
+      "outputs": {
+        "parent": "3FF699C2D15B8B6E",
+        "control": "3FF699C2D15B8B6E",
+        "candidate": "3FF699C2D15B8B6E",
+        "qfp_composed_pow": "3FF699C2D15B8B6E",
+        "qfp_composed_pow_exact": "3FF699C2D15B8B6E",
+        "qfp_composed_pow_integer": "3FF699C2D15B8B6E"
+      },
+      "instructions": {
+        "parent": 1211,
+        "control": 1211,
+        "candidate": 1213,
+        "qfp_composed_pow": 1459,
+        "qfp_composed_pow_exact": 1469,
+        "qfp_composed_pow_integer": 1479
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "5A6320C293234E5E",
+          "b": "000B175EFFDC7668"
+        },
+        {
+          "kind": "general",
+          "a": "5A6320C293234E5E",
+          "b": "000B175EFFDC7668"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FEB42399F954DAD",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FF699C2D15B8B6E",
+      "outputs": {
+        "parent": "3FF699C2D15B8B6E",
+        "control": "3FF699C2D15B8B6E",
+        "candidate": "3FF699C2D15B8B6E",
+        "qfp_composed_pow": "3FF699C2D15B8B6E",
+        "qfp_composed_pow_exact": "3FF699C2D15B8B6E",
+        "qfp_composed_pow_integer": "3FF699C2D15B8B6E"
+      },
+      "instructions": {
+        "parent": 1898,
+        "control": 1898,
+        "candidate": 1900,
+        "qfp_composed_pow": 1459,
+        "qfp_composed_pow_exact": 1469,
+        "qfp_composed_pow_integer": 1479
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "5A6320C293234E5E",
+          "b": "000B175EFFDC7668"
+        },
+        {
+          "kind": "general",
+          "a": "5A6320C293234E5E",
+          "b": "000B175EFFDC7668"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BFEB5D93C81855A2",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FE69FA379BC1641",
+      "outputs": {
+        "parent": "3FE69FA379BC1641",
+        "control": "3FE69FA379BC1641",
+        "candidate": "3FE69FA379BC1641",
+        "qfp_composed_pow": "3FE69FA379BC1641",
+        "qfp_composed_pow_exact": "3FE69FA379BC1641",
+        "qfp_composed_pow_integer": "3FE69FA379BC1641"
+      },
+      "instructions": {
+        "parent": 1231,
+        "control": 1231,
+        "candidate": 1233,
+        "qfp_composed_pow": 1478,
+        "qfp_composed_pow_exact": 1488,
+        "qfp_composed_pow_integer": 1498
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "5A827999FCEF3242",
+          "b": "000B16E400E4749F"
+        },
+        {
+          "kind": "general",
+          "a": "5A827999FCEF3242",
+          "b": "000B16E400E4749F"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BFEB5D93C81855A2",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FE69FA379BC1641",
+      "outputs": {
+        "parent": "3FE69FA379BC1641",
+        "control": "3FE69FA379BC1641",
+        "candidate": "3FE69FA379BC1641",
+        "qfp_composed_pow": "3FE69FA379BC1641",
+        "qfp_composed_pow_exact": "3FE69FA379BC1641",
+        "qfp_composed_pow_integer": "3FE69FA379BC1641"
+      },
+      "instructions": {
+        "parent": 1918,
+        "control": 1918,
+        "candidate": 1920,
+        "qfp_composed_pow": 1478,
+        "qfp_composed_pow_exact": 1488,
+        "qfp_composed_pow_integer": 1498
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "5A827999FCEF3242",
+          "b": "000B16E400E4749F"
+        },
+        {
+          "kind": "general",
+          "a": "5A827999FCEF3242",
+          "b": "000B16E400E4749F"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FEB5D93C81855A2",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FF6A1995E21761E",
+      "outputs": {
+        "parent": "3FF6A1995E21761E",
+        "control": "3FF6A1995E21761E",
+        "candidate": "3FF6A1995E21761E",
+        "qfp_composed_pow": "3FF6A1995E21761E",
+        "qfp_composed_pow_exact": "3FF6A1995E21761E",
+        "qfp_composed_pow_integer": "3FF6A1995E21761E"
+      },
+      "instructions": {
+        "parent": 1211,
+        "control": 1211,
+        "candidate": 1213,
+        "qfp_composed_pow": 1505,
+        "qfp_composed_pow_exact": 1515,
+        "qfp_composed_pow_integer": 1525
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "5A827999FCEF3242",
+          "b": "000B175EFFDC7796"
+        },
+        {
+          "kind": "general",
+          "a": "5A827999FCEF3242",
+          "b": "000B175EFFDC7796"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FEB5D93C81855A2",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FF6A1995E21761E",
+      "outputs": {
+        "parent": "3FF6A1995E21761E",
+        "control": "3FF6A1995E21761E",
+        "candidate": "3FF6A1995E21761E",
+        "qfp_composed_pow": "3FF6A1995E21761E",
+        "qfp_composed_pow_exact": "3FF6A1995E21761E",
+        "qfp_composed_pow_integer": "3FF6A1995E21761E"
+      },
+      "instructions": {
+        "parent": 1898,
+        "control": 1898,
+        "candidate": 1900,
+        "qfp_composed_pow": 1505,
+        "qfp_composed_pow_exact": 1515,
+        "qfp_composed_pow_integer": 1525
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "5A827999FCEF3242",
+          "b": "000B175EFFDC7796"
+        },
+        {
+          "kind": "general",
+          "a": "5A827999FCEF3242",
+          "b": "000B175EFFDC7796"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BFFB4083FD0D1D2E",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FE00A6910F3B6FD",
+      "outputs": {
+        "parent": "3FE00A6910F3B6FD",
+        "control": "3FE00A6910F3B6FD",
+        "candidate": "3FE00A6910F3B6FD",
+        "qfp_composed_pow": "3FE00A6910F3B6FD",
+        "qfp_composed_pow_exact": "3FE00A6910F3B6FD",
+        "qfp_composed_pow_integer": "BFE00A6910F3B6FD"
+      },
+      "instructions": {
+        "parent": 1231,
+        "control": 1231,
+        "candidate": 1233,
+        "qfp_composed_pow": 1472,
+        "qfp_composed_pow_exact": 1482,
+        "qfp_composed_pow_integer": 1518
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "402C6BE96AF2FB58",
+          "b": "000B16E400E47502"
+        },
+        {
+          "kind": "general",
+          "a": "402C6BE96AF2FB58",
+          "b": "000B16E400E47502"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BFFB4083FD0D1D2E",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FE00A6910F3B6FD",
+      "outputs": {
+        "parent": "3FE00A6910F3B6FD",
+        "control": "3FE00A6910F3B6FD",
+        "candidate": "3FE00A6910F3B6FD",
+        "qfp_composed_pow": "3FE00A6910F3B6FD",
+        "qfp_composed_pow_exact": "3FE00A6910F3B6FD",
+        "qfp_composed_pow_integer": "BFE00A6910F3B6FD"
+      },
+      "instructions": {
+        "parent": 1918,
+        "control": 1918,
+        "candidate": 1920,
+        "qfp_composed_pow": 1472,
+        "qfp_composed_pow_exact": 1482,
+        "qfp_composed_pow_integer": 1518
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "402C6BE96AF2FB58",
+          "b": "000B16E400E47502"
+        },
+        {
+          "kind": "general",
+          "a": "402C6BE96AF2FB58",
+          "b": "000B16E400E47502"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FFB4083FD0D1D2E",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FFFEB3B615C0A8A",
+      "outputs": {
+        "parent": "3FFFEB3B615C0A8A",
+        "control": "3FFFEB3B615C0A8A",
+        "candidate": "3FFFEB3B615C0A8A",
+        "qfp_composed_pow": "3FFFEB3B615C0A8A",
+        "qfp_composed_pow_exact": "3FFFEB3B615C0A8A",
+        "qfp_composed_pow_integer": "BFFFEB3B615C0A8A"
+      },
+      "instructions": {
+        "parent": 1211,
+        "control": 1211,
+        "candidate": 1213,
+        "qfp_composed_pow": 1514,
+        "qfp_composed_pow_exact": 1524,
+        "qfp_composed_pow_integer": 1560
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FA765ACA88F6453",
+          "b": "000B175EFFDC77F9"
+        },
+        {
+          "kind": "general",
+          "a": "7FA765ACA88F6453",
+          "b": "000B175EFFDC77F9"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FFB4083FD0D1D2E",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FFFEB3B615C0A8A",
+      "outputs": {
+        "parent": "3FFFEB3B615C0A8A",
+        "control": "3FFFEB3B615C0A8A",
+        "candidate": "3FFFEB3B615C0A8A",
+        "qfp_composed_pow": "3FFFEB3B615C0A8A",
+        "qfp_composed_pow_exact": "3FFFEB3B615C0A8A",
+        "qfp_composed_pow_integer": "BFFFEB3B615C0A8A"
+      },
+      "instructions": {
+        "parent": 1898,
+        "control": 1898,
+        "candidate": 1900,
+        "qfp_composed_pow": 1514,
+        "qfp_composed_pow_exact": 1524,
+        "qfp_composed_pow_integer": 1560
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FA765ACA88F6453",
+          "b": "000B175EFFDC77F9"
+        },
+        {
+          "kind": "general",
+          "a": "7FA765ACA88F6453",
+          "b": "000B175EFFDC77F9"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BFFB4E31114EA128",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FE004DADB113DA0",
+      "outputs": {
+        "parent": "3FE004DADB113DA0",
+        "control": "3FE004DADB113DA0",
+        "candidate": "3FE004DADB113DA0",
+        "qfp_composed_pow": "3FE004DADB113DA0",
+        "qfp_composed_pow_exact": "3FE004DADB113DA0",
+        "qfp_composed_pow_integer": "BFE004DADB113DA0"
+      },
+      "instructions": {
+        "parent": 1231,
+        "control": 1231,
+        "candidate": 1233,
+        "qfp_composed_pow": 1428,
+        "qfp_composed_pow_exact": 1438,
+        "qfp_composed_pow_integer": 1474
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4016321B687027A8",
+          "b": "000B16E400E472F2"
+        },
+        {
+          "kind": "general",
+          "a": "4016321B687027A8",
+          "b": "000B16E400E472F2"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "BFFB4E31114EA128",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FE004DADB113DA0",
+      "outputs": {
+        "parent": "3FE004DADB113DA0",
+        "control": "3FE004DADB113DA0",
+        "candidate": "3FE004DADB113DA0",
+        "qfp_composed_pow": "3FE004DADB113DA0",
+        "qfp_composed_pow_exact": "3FE004DADB113DA0",
+        "qfp_composed_pow_integer": "BFE004DADB113DA0"
+      },
+      "instructions": {
+        "parent": 1918,
+        "control": 1918,
+        "candidate": 1920,
+        "qfp_composed_pow": 1428,
+        "qfp_composed_pow_exact": 1438,
+        "qfp_composed_pow_integer": 1474
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4016321B687027A8",
+          "b": "000B16E400E472F2"
+        },
+        {
+          "kind": "general",
+          "a": "4016321B687027A8",
+          "b": "000B16E400E472F2"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FFB4E31114EA128",
+      "group": "selected_table_centers",
+      "SIO": "READY",
+      "expected": "3FFFF64D3B37397B",
+      "outputs": {
+        "parent": "3FFFF64D3B37397B",
+        "control": "3FFFF64D3B37397B",
+        "candidate": "3FFFF64D3B37397B",
+        "qfp_composed_pow": "3FFFF64D3B37397B",
+        "qfp_composed_pow_exact": "3FFFF64D3B37397B",
+        "qfp_composed_pow_integer": "BFFFF64D3B37397B"
+      },
+      "instructions": {
+        "parent": 1211,
+        "control": 1211,
+        "candidate": 1213,
+        "qfp_composed_pow": 1450,
+        "qfp_composed_pow_exact": 1460,
+        "qfp_composed_pow_integer": 1496
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FD3AB290E46D769",
+          "b": "000B175EFFDC75E9"
+        },
+        {
+          "kind": "general",
+          "a": "7FD3AB290E46D769",
+          "b": "000B175EFFDC75E9"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "3FFB4E31114EA128",
+      "group": "selected_table_centers",
+      "SIO": "DIRTY",
+      "expected": "3FFFF64D3B37397B",
+      "outputs": {
+        "parent": "3FFFF64D3B37397B",
+        "control": "3FFFF64D3B37397B",
+        "candidate": "3FFFF64D3B37397B",
+        "qfp_composed_pow": "3FFFF64D3B37397B",
+        "qfp_composed_pow_exact": "3FFFF64D3B37397B",
+        "qfp_composed_pow_integer": "BFFFF64D3B37397B"
+      },
+      "instructions": {
+        "parent": 1898,
+        "control": 1898,
+        "candidate": 1900,
+        "qfp_composed_pow": 1450,
+        "qfp_composed_pow_exact": 1460,
+        "qfp_composed_pow_integer": 1496
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FD3AB290E46D769",
+          "b": "000B175EFFDC75E9"
+        },
+        {
+          "kind": "general",
+          "a": "7FD3AB290E46D769",
+          "b": "000B175EFFDC75E9"
+        }
+      ]
+    },
+    {
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "READY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 779,
+        "qfp_composed_pow_exact": 800,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "0000000000000000",
+      "y": "0000000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "DIRTY",
+      "expected": "3FF0000000000000",
+      "outputs": {
+        "parent": "3FF0000000000000",
+        "control": "3FF0000000000000",
+        "candidate": "3FF0000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 11,
+        "control": 11,
+        "candidate": 11,
+        "qfp_composed_pow": 779,
+        "qfp_composed_pow_exact": 800,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "8000000000000000",
+      "y": "4008000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "READY",
+      "expected": "8000000000000000",
+      "outputs": {
+        "parent": "8000000000000000",
+        "control": "8000000000000000",
+        "candidate": "8000000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "8000000000000000"
+      },
+      "instructions": {
+        "parent": 796,
+        "control": 796,
+        "candidate": 796,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 796,
+        "qfp_composed_pow_integer": 835
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "8000000000000000",
+      "y": "4008000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "DIRTY",
+      "expected": "8000000000000000",
+      "outputs": {
+        "parent": "8000000000000000",
+        "control": "8000000000000000",
+        "candidate": "8000000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "8000000000000000"
+      },
+      "instructions": {
+        "parent": 796,
+        "control": 796,
+        "candidate": 796,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 796,
+        "qfp_composed_pow_integer": 835
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "0000000000000001",
+      "y": "3FE0000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "READY",
+      "expected": "1E60000000000000",
+      "outputs": {
+        "parent": "1E60000000000000",
+        "control": "1E60000000000000",
+        "candidate": "1E60000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 221,
+        "control": 221,
+        "candidate": 221,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 28,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "0000000000000001",
+      "y": "3FE0000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "DIRTY",
+      "expected": "1E60000000000000",
+      "outputs": {
+        "parent": "1E60000000000000",
+        "control": "1E60000000000000",
+        "candidate": "1E60000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 221,
+        "control": 221,
+        "candidate": 221,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 28,
+        "qfp_composed_pow_integer": 807
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "y": "BFE0000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "READY",
+      "expected": "1FF0000000000000",
+      "outputs": {
+        "parent": "1FF0000000000000",
+        "control": "1FF0000000000000",
+        "candidate": "1FF0000000000000",
+        "qfp_composed_pow": "1FF0000000000036",
+        "qfp_composed_pow_exact": "1FF0000000000001",
+        "qfp_composed_pow_integer": "1FF0000000000036"
+      },
+      "instructions": {
+        "parent": 302,
+        "control": 302,
+        "candidate": 302,
+        "qfp_composed_pow": 1345,
+        "qfp_composed_pow_exact": 367,
+        "qfp_composed_pow_integer": 1377
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "7FEFFFFFFFFFFFFF",
+      "y": "BFE0000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "DIRTY",
+      "expected": "1FF0000000000000",
+      "outputs": {
+        "parent": "1FF0000000000000",
+        "control": "1FF0000000000000",
+        "candidate": "1FF0000000000000",
+        "qfp_composed_pow": "1FF0000000000036",
+        "qfp_composed_pow_exact": "1FF0000000000001",
+        "qfp_composed_pow_integer": "1FF0000000000036"
+      },
+      "instructions": {
+        "parent": 302,
+        "control": 302,
+        "candidate": 302,
+        "qfp_composed_pow": 1345,
+        "qfp_composed_pow_exact": 367,
+        "qfp_composed_pow_integer": 1377
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "C000000000000000",
+      "y": "4008000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "READY",
+      "expected": "C020000000000000",
+      "outputs": {
+        "parent": "C020000000000000",
+        "control": "C020000000000000",
+        "candidate": "C020000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "C01FFFFFFFFFFFFE"
+      },
+      "instructions": {
+        "parent": 467,
+        "control": 467,
+        "candidate": 467,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 796,
+        "qfp_composed_pow_integer": 1434
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "C000000000000000",
+      "y": "4008000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "DIRTY",
+      "expected": "C020000000000000",
+      "outputs": {
+        "parent": "C020000000000000",
+        "control": "C020000000000000",
+        "candidate": "C020000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "C01FFFFFFFFFFFFE"
+      },
+      "instructions": {
+        "parent": 467,
+        "control": 467,
+        "candidate": 467,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 796,
+        "qfp_composed_pow_integer": 1434
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "C000000000000000",
+      "y": "3FE0000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "parent": "7FF8000000000000",
+        "control": "7FF8000000000000",
+        "candidate": "7FF8000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "FFF0000000000000",
+        "qfp_composed_pow_integer": "3FF6A09E667F3BCC"
+      },
+      "instructions": {
+        "parent": 71,
+        "control": 71,
+        "candidate": 71,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 26,
+        "qfp_composed_pow_integer": 1515
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "C000000000000000",
+      "y": "3FE0000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "parent": "7FF8000000000000",
+        "control": "7FF8000000000000",
+        "candidate": "7FF8000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "FFF0000000000000",
+        "qfp_composed_pow_integer": "3FF6A09E667F3BCC"
+      },
+      "instructions": {
+        "parent": 71,
+        "control": 71,
+        "candidate": 71,
+        "qfp_composed_pow": 775,
+        "qfp_composed_pow_exact": 26,
+        "qfp_composed_pow_integer": 1515
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "7FF0000000000000",
+      "y": "BFF0000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "READY",
+      "expected": "0000000000000000",
+      "outputs": {
+        "parent": "0000000000000000",
+        "control": "0000000000000000",
+        "candidate": "0000000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 96,
+        "control": 96,
+        "candidate": 96,
+        "qfp_composed_pow": 779,
+        "qfp_composed_pow_exact": 177,
+        "qfp_composed_pow_integer": 178
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "7FF0000000000000",
+      "y": "BFF0000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "DIRTY",
+      "expected": "0000000000000000",
+      "outputs": {
+        "parent": "0000000000000000",
+        "control": "0000000000000000",
+        "candidate": "0000000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 96,
+        "control": 96,
+        "candidate": 96,
+        "qfp_composed_pow": 779,
+        "qfp_composed_pow_exact": 177,
+        "qfp_composed_pow_integer": 178
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": []
+    },
+    {
+      "x": "3FF0000000000000",
+      "y": "7FF0000000000001",
+      "group": "IEEE_boundary",
+      "SIO": "READY",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "parent": "7FF8000000000001",
+        "control": "7FF8000000000001",
+        "candidate": "7FF8000000000001",
+        "qfp_composed_pow": "7FF0000000000000",
+        "qfp_composed_pow_exact": "7FF0000000000000",
+        "qfp_composed_pow_integer": "7FF0000000000000"
+      },
+      "instructions": {
+        "parent": 46,
+        "control": 46,
+        "candidate": 46,
+        "qfp_composed_pow": 1465,
+        "qfp_composed_pow_exact": 1475,
+        "qfp_composed_pow_integer": 1485
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "3FF0000000000000",
+      "y": "7FF0000000000001",
+      "group": "IEEE_boundary",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000001",
+      "outputs": {
+        "parent": "7FF8000000000001",
+        "control": "7FF8000000000001",
+        "candidate": "7FF8000000000001",
+        "qfp_composed_pow": "7FF0000000000000",
+        "qfp_composed_pow_exact": "7FF0000000000000",
+        "qfp_composed_pow_integer": "7FF0000000000000"
+      },
+      "instructions": {
+        "parent": 46,
+        "control": 46,
+        "candidate": 46,
+        "qfp_composed_pow": 1465,
+        "qfp_composed_pow_exact": 1475,
+        "qfp_composed_pow_integer": 1485
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "FFF0000000000001",
+      "y": "0000000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "READY",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "parent": "FFF8000000000001",
+        "control": "FFF8000000000001",
+        "candidate": "FFF8000000000001",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 15,
+        "control": 15,
+        "candidate": 15,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "FFF0000000000001",
+      "y": "0000000000000000",
+      "group": "IEEE_boundary",
+      "SIO": "DIRTY",
+      "expected": "FFF8000000000001",
+      "outputs": {
+        "parent": "FFF8000000000001",
+        "control": "FFF8000000000001",
+        "candidate": "FFF8000000000001",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "3FF0000000000000"
+      },
+      "instructions": {
+        "parent": 15,
+        "control": 15,
+        "candidate": 15,
+        "qfp_composed_pow": 777,
+        "qfp_composed_pow_exact": 798,
+        "qfp_composed_pow_integer": 17
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "BFF0000000000000",
+      "y": "7FF8000012345678",
+      "group": "IEEE_boundary",
+      "SIO": "READY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "parent": "7FF8000012345678",
+        "control": "7FF8000012345678",
+        "candidate": "7FF8000012345678",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "7FF0000000000000"
+      },
+      "instructions": {
+        "parent": 194,
+        "control": 194,
+        "candidate": 194,
+        "qfp_composed_pow": 780,
+        "qfp_composed_pow_exact": 790,
+        "qfp_composed_pow_integer": 1485
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "BFF0000000000000",
+      "y": "7FF8000012345678",
+      "group": "IEEE_boundary",
+      "SIO": "DIRTY",
+      "expected": "7FF8000000000000",
+      "outputs": {
+        "parent": "7FF8000012345678",
+        "control": "7FF8000012345678",
+        "candidate": "7FF8000012345678",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "7FF0000000000000"
+      },
+      "instructions": {
+        "parent": 194,
+        "control": 194,
+        "candidate": 194,
+        "qfp_composed_pow": 780,
+        "qfp_composed_pow_exact": 790,
+        "qfp_composed_pow_integer": 1485
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": []
+    },
+    {
+      "x": "3FE8000000000000",
+      "y": "C0A341AA6679367F",
+      "group": "large_refinement_control",
+      "SIO": "READY",
+      "expected": "7FDFF4EAC9925C27",
+      "outputs": {
+        "parent": "7FDFF4EAC9925C27",
+        "control": "7FDFF4EAC9925C27",
+        "candidate": "7FDFF4EAC9925C27",
+        "qfp_composed_pow": "7FDFF4EAC9925962",
+        "qfp_composed_pow_exact": "7FDFF4EAC9925962",
+        "qfp_composed_pow_integer": "7FDFF4EAC9925962"
+      },
+      "instructions": {
+        "parent": 48307,
+        "control": 48307,
+        "candidate": 48309,
+        "qfp_composed_pow": 1488,
+        "qfp_composed_pow_exact": 1498,
+        "qfp_composed_pow_integer": 1534
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FD3AB290E46D769",
+          "b": "000000058B98238B"
+        },
+        {
+          "kind": "general",
+          "a": "7FD3AB290E46D769",
+          "b": "000000058B98238B"
+        }
+      ]
+    },
+    {
+      "x": "3FE8000000000000",
+      "y": "C0A341AA6679367F",
+      "group": "large_refinement_control",
+      "SIO": "DIRTY",
+      "expected": "7FDFF4EAC9925C27",
+      "outputs": {
+        "parent": "7FDFF4EAC9925C27",
+        "control": "7FDFF4EAC9925C27",
+        "candidate": "7FDFF4EAC9925C27",
+        "qfp_composed_pow": "7FDFF4EAC9925962",
+        "qfp_composed_pow_exact": "7FDFF4EAC9925962",
+        "qfp_composed_pow_integer": "7FDFF4EAC9925962"
+      },
+      "instructions": {
+        "parent": 48994,
+        "control": 48994,
+        "candidate": 48996,
+        "qfp_composed_pow": 1488,
+        "qfp_composed_pow_exact": 1498,
+        "qfp_composed_pow_integer": 1534
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FD3AB290E46D769",
+          "b": "000000058B98238B"
+        },
+        {
+          "kind": "general",
+          "a": "7FD3AB290E46D769",
+          "b": "000000058B98238B"
+        }
+      ]
+    },
+    {
+      "x": "7FED64F050A91116",
+      "y": "BDF0000000000000",
+      "group": "large_refinement_control",
+      "SIO": "READY",
+      "expected": "3FEFFFFFA749AC4A",
+      "outputs": {
+        "parent": "3FEFFFFFA749AC4A",
+        "control": "3FEFFFFFA749AC4A",
+        "candidate": "3FEFFFFFA749AC4A",
+        "qfp_composed_pow": "3FEFFFFFA749AC49",
+        "qfp_composed_pow_exact": "3FEFFFFFA749AC49",
+        "qfp_composed_pow_integer": "3FEFFFFFA749AC49"
+      },
+      "instructions": {
+        "parent": 44395,
+        "control": 44395,
+        "candidate": 44328,
+        "qfp_composed_pow": 1560,
+        "qfp_composed_pow_exact": 1581,
+        "qfp_composed_pow_integer": 1592
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000002C5B29DB3FF"
+        }
+      ]
+    },
+    {
+      "x": "7FED64F050A91116",
+      "y": "BDF0000000000000",
+      "group": "large_refinement_control",
+      "SIO": "DIRTY",
+      "expected": "3FEFFFFFA749AC4A",
+      "outputs": {
+        "parent": "3FEFFFFFA749AC4A",
+        "control": "3FEFFFFFA749AC4A",
+        "candidate": "3FEFFFFFA749AC4A",
+        "qfp_composed_pow": "3FEFFFFFA749AC49",
+        "qfp_composed_pow_exact": "3FEFFFFFA749AC49",
+        "qfp_composed_pow_integer": "3FEFFFFFA749AC49"
+      },
+      "instructions": {
+        "parent": 45042,
+        "control": 45042,
+        "candidate": 44975,
+        "qfp_composed_pow": 1560,
+        "qfp_composed_pow_exact": 1581,
+        "qfp_composed_pow_integer": 1592
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000002C5B29DB3FF"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "C09B45A4E4A5E560",
+      "group": "large_refinement_control",
+      "SIO": "READY",
+      "expected": "001FFFFFFF4E8DE3",
+      "outputs": {
+        "parent": "001FFFFFFF4E8DE3",
+        "control": "001FFFFFFF4E8DE3",
+        "candidate": "001FFFFFFF4E8DE3",
+        "qfp_composed_pow": "001FFFFFFF4E8F08",
+        "qfp_composed_pow_exact": "001FFFFFFF4E8F08",
+        "qfp_composed_pow_integer": "801FFFFFFF4E8F08"
+      },
+      "instructions": {
+        "parent": 40681,
+        "control": 40681,
+        "candidate": 40614,
+        "qfp_composed_pow": 1520,
+        "qfp_composed_pow_exact": 1530,
+        "qfp_composed_pow_integer": 1566
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000000058B90EB55"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "C09B45A4E4A5E560",
+      "group": "large_refinement_control",
+      "SIO": "DIRTY",
+      "expected": "001FFFFFFF4E8DE3",
+      "outputs": {
+        "parent": "001FFFFFFF4E8DE3",
+        "control": "001FFFFFFF4E8DE3",
+        "candidate": "001FFFFFFF4E8DE3",
+        "qfp_composed_pow": "001FFFFFFF4E8F08",
+        "qfp_composed_pow_exact": "001FFFFFFF4E8F08",
+        "qfp_composed_pow_integer": "801FFFFFFF4E8F08"
+      },
+      "instructions": {
+        "parent": 41368,
+        "control": 41368,
+        "candidate": 41301,
+        "qfp_composed_pow": 1520,
+        "qfp_composed_pow_exact": 1530,
+        "qfp_composed_pow_integer": 1566
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "000000058B90EB55"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "C09B45A69A4836DC",
+      "group": "large_refinement_control",
+      "SIO": "READY",
+      "expected": "001FFA74EA381F8D",
+      "outputs": {
+        "parent": "001FFA74EA381F8D",
+        "control": "001FFA74EA381F8D",
+        "candidate": "001FFA74EA381F8D",
+        "qfp_composed_pow": "001FFA74EA382093",
+        "qfp_composed_pow_exact": "001FFA74EA382093",
+        "qfp_composed_pow_integer": "801FFA74EA382093"
+      },
+      "instructions": {
+        "parent": 40663,
+        "control": 40663,
+        "candidate": 40596,
+        "qfp_composed_pow": 1467,
+        "qfp_composed_pow_exact": 1477,
+        "qfp_composed_pow_integer": 1513
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "002C58AE3F039ACA"
+        }
+      ]
+    },
+    {
+      "x": "3FF8000000000000",
+      "y": "C09B45A69A4836DC",
+      "group": "large_refinement_control",
+      "SIO": "DIRTY",
+      "expected": "001FFA74EA381F8D",
+      "outputs": {
+        "parent": "001FFA74EA381F8D",
+        "control": "001FFA74EA381F8D",
+        "candidate": "001FFA74EA381F8D",
+        "qfp_composed_pow": "001FFA74EA382093",
+        "qfp_composed_pow_exact": "001FFA74EA382093",
+        "qfp_composed_pow_integer": "801FFA74EA382093"
+      },
+      "instructions": {
+        "parent": 41350,
+        "control": 41350,
+        "candidate": 41283,
+        "qfp_composed_pow": 1467,
+        "qfp_composed_pow_exact": 1477,
+        "qfp_composed_pow_integer": 1513
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": false,
+        "qfp_composed_pow_exact": false,
+        "qfp_composed_pow_integer": false
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "4000000000000000",
+          "b": "002C58AE3F039ACA"
+        }
+      ]
+    },
+    {
+      "x": "3FE8000000000000",
+      "y": "40A4411677BE3883",
+      "group": "retained_plus2_control",
+      "SIO": "READY",
+      "expected": "0000000000000000",
+      "outputs": {
+        "parent": "0000000000000000",
+        "control": "0000000000000000",
+        "candidate": "0000000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 1406,
+        "control": 1406,
+        "candidate": 1408,
+        "qfp_composed_pow": 1506,
+        "qfp_composed_pow_exact": 1516,
+        "qfp_composed_pow_integer": 1552
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FD3AB290E46D769",
+          "b": "002C58AE3F1BB228"
+        },
+        {
+          "kind": "general",
+          "a": "7FD3AB290E46D769",
+          "b": "002C58AE3F1BB228"
+        }
+      ]
+    },
+    {
+      "x": "3FE8000000000000",
+      "y": "40A4411677BE3883",
+      "group": "retained_plus2_control",
+      "SIO": "DIRTY",
+      "expected": "0000000000000000",
+      "outputs": {
+        "parent": "0000000000000000",
+        "control": "0000000000000000",
+        "candidate": "0000000000000000",
+        "qfp_composed_pow": "0000000000000000",
+        "qfp_composed_pow_exact": "0000000000000000",
+        "qfp_composed_pow_integer": "0000000000000000"
+      },
+      "instructions": {
+        "parent": 2093,
+        "control": 2093,
+        "candidate": 2095,
+        "qfp_composed_pow": 1506,
+        "qfp_composed_pow_exact": 1516,
+        "qfp_composed_pow_integer": 1552
+      },
+      "correct": {
+        "parent": true,
+        "control": true,
+        "candidate": true,
+        "qfp_composed_pow": true,
+        "qfp_composed_pow_exact": true,
+        "qfp_composed_pow_integer": true
+      },
+      "products": [
+        {
+          "kind": "table",
+          "a": "7FD3AB290E46D769",
+          "b": "002C58AE3F1BB228"
+        },
+        {
+          "kind": "general",
+          "a": "7FD3AB290E46D769",
+          "b": "002C58AE3F1BB228"
+        }
+      ]
+    }
+  ]
+}

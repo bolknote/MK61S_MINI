@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-source-20261025/compose.py", line 32, in <module>
+    assert module.image_fingerprint(out.read_bytes())==module.image_fingerprint(parent.read_bytes()),target
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: RP-candidate-cpp.o
