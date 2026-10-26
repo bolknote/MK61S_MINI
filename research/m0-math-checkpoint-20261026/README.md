@@ -103,3 +103,8 @@ and semantic relocations for both R45 and R47, keeping the original debug
 flags because they affect linker veneer order. No ARM/MPFR campaign or
 device access occurs. Historical producer scripts are evidence: do not
 run them inside this archive or the frozen original directories.
+
+For Windows checkout, the archived `r38-qualification/aux.log` is stored as
+`r38-qualification/auxiliary.log`, with identical bytes and SHA-256.
+`provenance.json` records this path mapping; historical source paths and
+all original `FROZEN.json` bytes and hashes remain unchanged.

@@ -2,6 +2,9 @@
   "status": "LOSSLESS_INTERMEDIATE_R45_R47_PRESERVATION",
   "original_producers_are_historical": true,
   "binary_images_omitted": true,
+  "archive_path_remaps": {
+    "r38-qualification/aux.log": "r38-qualification/auxiliary.log"
+  },
   "archived_files": [
     {
       "source": ".build/m0-math-unified-ddiv-normalized-r47-20261026/FROZEN.json",
@@ -15693,7 +15696,7 @@
     },
     {
       "source": ".build/m0-math-unified-exp-row0-midpoint-r38-qualification-20261026/aux.log",
-      "path": "r38-qualification/aux.log",
+      "path": "r38-qualification/auxiliary.log",
       "encoding": "identity",
       "sha256": "f39927948c36cbc7bdaec466a94555e8f4531ce18ede86e7944e271dd8d9d8cc",
       "uncompressed_sha256": "f39927948c36cbc7bdaec466a94555e8f4531ce18ede86e7944e271dd8d9d8cc",
