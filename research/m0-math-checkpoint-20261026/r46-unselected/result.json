@@ -1,0 +1,35 @@
+{
+  "status": "UNSELECTED_R46_FINITE_DIAGNOSTIC_COMPLETE",
+  "selected": false,
+  "selected_source_remains_R45": true,
+  "candidate_ELF_sha256": "d8d475200a0562f2e0fd8b8dda2c8d8482c9708d5db73e5a117a15a67c1bd547",
+  "direct": {
+    "inputs": 2862,
+    "ARM": 25758,
+    "MPFR": 2828,
+    "sNaN": 34,
+    "parent_losses": 148,
+    "candidate_losses": 0
+  },
+  "expanded": {
+    "inputs": 77282,
+    "ARM": 695538,
+    "MPFR": 77174,
+    "sNaN": 108,
+    "parent_losses": 36914,
+    "candidate_losses": 10202
+  },
+  "unselected_earlier_prototype_ARM_calls": 25758,
+  "all_R46_diagnostic_ARM_calls": 747054,
+  "all_R46_ARM_calls_excluded_from_future_fresh_pool": true,
+  "new_correct_Qfp_losses": 0,
+  "candidate_wrong": 0,
+  "all_adverse_parent_rows_retained": true,
+  "all_source_numeric_and_host_handles_terminal": true,
+  "source_pending_qualification_not_selected": true,
+  "normal_boundary_expansion_requires_normalized_exponent_followup": true,
+  "universal_CR_generalpowtotality_FMA_stack_cycles_open": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

@@ -1,0 +1,170 @@
+R29 full candidate 0 /989922 elapsed 0.0 loss 0
+R29 full candidate 8192 /989922 elapsed 3.5 loss 4
+R29 full candidate 16384 /989922 elapsed 10.5 loss 4
+R29 full candidate 24576 /989922 elapsed 16.8 loss 16
+R29 full candidate 32768 /989922 elapsed 23.2 loss 25
+R29 full candidate 40960 /989922 elapsed 29.5 loss 37
+R29 full candidate 49152 /989922 elapsed 35.8 loss 44
+R29 full candidate 57344 /989922 elapsed 42.1 loss 54
+R29 full candidate 65536 /989922 elapsed 48.4 loss 59
+R29 full candidate 73728 /989922 elapsed 54.7 loss 64
+R29 full candidate 81920 /989922 elapsed 61.2 loss 68
+R29 full candidate 90112 /989922 elapsed 67.2 loss 73
+R29 full candidate 98304 /989922 elapsed 68.9 loss 73
+R29 full candidate 106496 /989922 elapsed 70.9 loss 73
+R29 full candidate 114688 /989922 elapsed 72.9 loss 73
+R29 full candidate 122880 /989922 elapsed 74.9 loss 73
+R29 full candidate 131072 /989922 elapsed 76.9 loss 73
+R29 full candidate 139264 /989922 elapsed 78.8 loss 73
+R29 full candidate 147456 /989922 elapsed 80.9 loss 73
+R29 full candidate 155648 /989922 elapsed 82.9 loss 73
+R29 full candidate 163840 /989922 elapsed 85.0 loss 73
+R29 full candidate 172032 /989922 elapsed 86.9 loss 73
+R29 full candidate 180224 /989922 elapsed 88.8 loss 73
+R29 full candidate 188416 /989922 elapsed 90.7 loss 73
+R29 full candidate 196608 /989922 elapsed 92.6 loss 73
+R29 full candidate 204800 /989922 elapsed 94.6 loss 73
+R29 full candidate 212992 /989922 elapsed 96.5 loss 73
+R29 full candidate 221184 /989922 elapsed 98.5 loss 73
+R29 full candidate 229376 /989922 elapsed 100.5 loss 73
+R29 full candidate 237568 /989922 elapsed 102.4 loss 73
+R29 full candidate 245760 /989922 elapsed 104.3 loss 73
+R29 full candidate 253952 /989922 elapsed 106.2 loss 73
+R29 full candidate 262144 /989922 elapsed 108.1 loss 73
+R29 full candidate 270336 /989922 elapsed 110.1 loss 73
+R29 full candidate 278528 /989922 elapsed 112.0 loss 73
+R29 full candidate 286720 /989922 elapsed 113.9 loss 73
+R29 full candidate 294912 /989922 elapsed 115.8 loss 73
+R29 full candidate 303104 /989922 elapsed 117.5 loss 73
+R29 full candidate 311296 /989922 elapsed 119.1 loss 73
+R29 full candidate 319488 /989922 elapsed 120.7 loss 73
+R29 full candidate 327680 /989922 elapsed 123.0 loss 74
+R29 full candidate 335872 /989922 elapsed 124.8 loss 74
+R29 full candidate 344064 /989922 elapsed 126.7 loss 74
+R29 full candidate 352256 /989922 elapsed 128.6 loss 74
+R29 full candidate 360448 /989922 elapsed 130.5 loss 74
+R29 full candidate 368640 /989922 elapsed 132.4 loss 74
+R29 full candidate 376832 /989922 elapsed 134.3 loss 74
+R29 full candidate 385024 /989922 elapsed 136.8 loss 74
+R29 full candidate 393216 /989922 elapsed 139.4 loss 74
+R29 full candidate 401408 /989922 elapsed 141.9 loss 74
+R29 full candidate 409600 /989922 elapsed 144.4 loss 74
+R29 full candidate 417792 /989922 elapsed 146.9 loss 74
+R29 full candidate 425984 /989922 elapsed 149.3 loss 74
+R29 full candidate 434176 /989922 elapsed 151.8 loss 74
+R29 full candidate 442368 /989922 elapsed 154.2 loss 74
+R29 full candidate 450560 /989922 elapsed 156.6 loss 74
+R29 full candidate 458752 /989922 elapsed 159.1 loss 74
+R29 full candidate 466944 /989922 elapsed 161.6 loss 74
+R29 full candidate 475136 /989922 elapsed 164.0 loss 74
+R29 full candidate 483328 /989922 elapsed 166.4 loss 74
+R29 full candidate 491520 /989922 elapsed 168.9 loss 74
+R29 full candidate 499712 /989922 elapsed 171.4 loss 74
+R29 full candidate 507904 /989922 elapsed 173.8 loss 74
+R29 full candidate 516096 /989922 elapsed 176.3 loss 74
+R29 full candidate 524288 /989922 elapsed 178.7 loss 74
+R29 full candidate 532480 /989922 elapsed 181.2 loss 74
+R29 full candidate 540672 /989922 elapsed 183.6 loss 74
+R29 full candidate 548864 /989922 elapsed 186.1 loss 74
+R29 full candidate 557056 /989922 elapsed 188.6 loss 74
+R29 full candidate 565248 /989922 elapsed 191.2 loss 74
+R29 full candidate 573440 /989922 elapsed 193.7 loss 74
+R29 full candidate 581632 /989922 elapsed 196.3 loss 74
+R29 full candidate 589824 /989922 elapsed 198.8 loss 74
+R29 full candidate 598016 /989922 elapsed 201.4 loss 74
+R29 full candidate 606208 /989922 elapsed 204.0 loss 74
+R29 full candidate 614400 /989922 elapsed 206.5 loss 74
+R29 full candidate 622592 /989922 elapsed 209.1 loss 74
+R29 full candidate 630784 /989922 elapsed 211.7 loss 74
+R29 full candidate 638976 /989922 elapsed 214.2 loss 74
+R29 full candidate 647168 /989922 elapsed 216.8 loss 74
+R29 full candidate 655360 /989922 elapsed 219.3 loss 74
+R29 full candidate 663552 /989922 elapsed 221.8 loss 74
+R29 full candidate 671744 /989922 elapsed 224.2 loss 74
+R29 full candidate 679936 /989922 elapsed 226.7 loss 74
+R29 full candidate 688128 /989922 elapsed 229.1 loss 74
+R29 full candidate 696320 /989922 elapsed 231.6 loss 74
+R29 full candidate 704512 /989922 elapsed 234.0 loss 74
+R29 full candidate 712704 /989922 elapsed 236.4 loss 74
+R29 full candidate 720896 /989922 elapsed 238.9 loss 74
+R29 full candidate 729088 /989922 elapsed 241.3 loss 74
+R29 full candidate 737280 /989922 elapsed 243.8 loss 74
+R29 full candidate 745472 /989922 elapsed 246.2 loss 74
+R29 full candidate 753664 /989922 elapsed 248.7 loss 74
+R29 full candidate 761856 /989922 elapsed 251.1 loss 74
+R29 full candidate 770048 /989922 elapsed 253.6 loss 74
+R29 full candidate 778240 /989922 elapsed 256.0 loss 74
+R29 full candidate 786432 /989922 elapsed 258.5 loss 74
+R29 full candidate 794624 /989922 elapsed 260.8 loss 74
+R29 full candidate 802816 /989922 elapsed 263.2 loss 74
+R29 full candidate 811008 /989922 elapsed 265.5 loss 74
+R29 full candidate 819200 /989922 elapsed 267.9 loss 74
+R29 full candidate 827392 /989922 elapsed 270.2 loss 74
+R29 full candidate 835584 /989922 elapsed 271.8 loss 74
+R29 full candidate 843776 /989922 elapsed 273.8 loss 74
+R29 full candidate 851968 /989922 elapsed 275.4 loss 74
+R29 full candidate 860160 /989922 elapsed 279.7 loss 78
+R29 full candidate 868352 /989922 elapsed 285.8 loss 89
+R29 full candidate 876544 /989922 elapsed 292.0 loss 94
+R29 full candidate 884736 /989922 elapsed 298.2 loss 109
+R29 full candidate 892928 /989922 elapsed 303.7 loss 123
+R29 full candidate 901120 /989922 elapsed 309.1 loss 140
+R29 full candidate 909312 /989922 elapsed 314.5 loss 154
+R29 full candidate 917504 /989922 elapsed 320.2 loss 164
+R29 full candidate 925696 /989922 elapsed 326.3 loss 171
+R29 full candidate 933888 /989922 elapsed 332.4 loss 181
+R29 full candidate 942080 /989922 elapsed 337.9 loss 182
+R29 full candidate 950272 /989922 elapsed 343.3 loss 182
+R29 full candidate 958464 /989922 elapsed 348.7 loss 182
+R29 full candidate 966656 /989922 elapsed 354.1 loss 185
+R29 full candidate 974848 /989922 elapsed 359.9 loss 200
+R29 full candidate 983040 /989922 elapsed 365.7 loss 286
+{
+  "status": "PASS_FRESH_R29_FULL_ARM_WITH_EXPLICIT_INHERITED_R28_ORACLES_AND_REFERENCES",
+  "source_FROZEN_sha256": "c176067a6ba6afda1ff3f158be5c8e148c6bdc8f98dfc0f63dfa86f03f262018",
+  "parent_qualification_FROZEN_sha256": "0ba57f4e189ef444dc849d8dc42836f2a56ab8780282c36854d320317b42a70b",
+  "candidate_ELF_sha256": "6a0728833c0a3afa306b3e57f8110fd56c9d24a726c8ae8bf16e7b02b9a78c79",
+  "parent_records_sha256": "6c602b65018234f58f60eea142ff4dc182390584ee01423cbba386a0aded14c3",
+  "records_sha256": "8b524c1d51f139d78e671f3c6cfb6d0eebd1a970a257c2742fc1a6481abab15f",
+  "unique_inputs": 494961,
+  "state_rows": 989922,
+  "actual_fresh_public_R29_ARM_calls": 989922,
+  "actual_fresh_parent_ARM_calls": 0,
+  "actual_fresh_Qfplib_ARM_calls": 0,
+  "actual_fresh_MPFR_inputs": 0,
+  "inherited_R28_candidate_state_measurements": 989922,
+  "inherited_Qfplib_state_measurements": 989922,
+  "inherited_oracle_input_rows": 494961,
+  "inherited_actual_directed_MPFR_inputs": 494959,
+  "inherited_exact_sNaN_shortcuts": 2,
+  "all_outputs_exact_saved_correctly_rounded_R28": true,
+  "candidate_wrong": 0,
+  "parent_losing_inputs": 428,
+  "candidate_losing_inputs": 428,
+  "fixed_inputs": 0,
+  "new_losing_inputs": 0,
+  "new_correct_Qfplib_loss_rows": [],
+  "all_parent_increases": [],
+  "instruction_delta_histogram": {
+    "-2": 166996,
+    "0": 822926
+  },
+  "normalization_visit_histogram": {
+    "1": 166996,
+    "0": 822926
+  },
+  "all_actual_main_q_within_proved_global_interval": true,
+  "all_actual_costs_exact_proved_0_or_minus2_mapping": true,
+  "correct_inherited_Qfplib_relations": {
+    "strict": 580654,
+    "slower": 856
+  },
+  "wrong_inherited_Qfplib_rows_retained": 408412,
+  "observed_stack": 816,
+  "primitive_and_diagnostic_and_inherited_R28_full_calls_not_pooled": true,
+  "physical_cycles_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 371.0028258340317
+}

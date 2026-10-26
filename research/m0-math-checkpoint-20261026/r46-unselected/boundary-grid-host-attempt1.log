@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-boundaries-r46-20261026/boundary-grid.py", line 12, in <module>
+    jobs={(int(r['a'],16),int(r['b'],16)):r['group'] for r in json.loads((P/'boundary-grid-inputs.json').read_bytes())['groups']}
+                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.17/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.17/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-cold-overflow-r45-20261026/boundary-grid-inputs.json'

@@ -1,0 +1,8 @@
+{
+  "status": "TERMINAL_R45_PRIVATE_AUTHOR_PASS",
+  "all_producers_terminal": true,
+  "selected_private_source": "R45",
+  "author_result_sha256": "d318cdb28ae0807c3b43a8d89b6e5cd4cdfc0a7c728ce7a681fcd091ebf398a0",
+  "source_and_WIP_pending_superseded_only_by_completed_qualification": true,
+  "goal_complete": false
+}

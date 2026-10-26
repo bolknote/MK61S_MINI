@@ -1,0 +1,82 @@
+{
+  "status": "PASS_R38_PRIMARY_ALL_NONEXP_BITS_REFERENCES_AND_OWN_COSTS_EXACT_R37",
+  "parent_qualification_FROZEN_sha256": "00dc5efa117f764392cacc06a7d97145ba9cca7650909dd4fc6b68cda5bae8e4",
+  "matrices": {
+    "original507": {
+      "state_rows": 1014,
+      "operation_rows": {
+        "pow": 306,
+        "exp": 32,
+        "ln": 20,
+        "atan": 4,
+        "sin": 44,
+        "cos": 28,
+        "dsub": 8,
+        "dadd": 26,
+        "d2uiz": 512,
+        "l2d": 32,
+        "sqrt": 2
+      },
+      "all_outputs_and_correctness_exact_R37": true,
+      "all_reference_instruction_counts_exact_R37": true,
+      "every_nonexp_candidate_and_zero_control_instruction_count_exact_R37": true,
+      "candidate_instruction_delta_histogram": {
+        "0": 1014
+      },
+      "parent_increase_rows": [],
+      "new_correct_Qfplib_loss_rows": [],
+      "parent_records_sha256": "c1bfdcc19d291aace2e9a53e9ec9fa1881e29aec6c31b2407fe46b707d698716",
+      "candidate_records_sha256": "c1bfdcc19d291aace2e9a53e9ec9fa1881e29aec6c31b2407fe46b707d698716"
+    },
+    "broad": {
+      "state_rows": 60272,
+      "operation_rows": {
+        "sin": 2886,
+        "cos": 2886,
+        "tan": 2886,
+        "i2d": 2626,
+        "sqrt": 4888,
+        "exp": 2342,
+        "ui2d": 1024,
+        "l2d": 3072,
+        "ul2d": 3072,
+        "d2iz": 2048,
+        "d2uiz": 1024,
+        "d2lz": 2048,
+        "d2ulz": 1024,
+        "f2d": 1024,
+        "d2f": 1024,
+        "dcmpeq": 1024,
+        "dcmplt": 1024,
+        "dcmple": 1024,
+        "dcmpge": 1024,
+        "dcmpgt": 1024,
+        "ln": 4864,
+        "atan": 3072,
+        "dmul": 792,
+        "ddiv": 792,
+        "dadd": 792,
+        "dsub": 24,
+        "asin": 1392,
+        "acos": 1392,
+        "log10": 2036,
+        "pow": 6122
+      },
+      "all_outputs_and_correctness_exact_R37": true,
+      "all_reference_instruction_counts_exact_R37": true,
+      "every_nonexp_candidate_and_zero_control_instruction_count_exact_R37": true,
+      "candidate_instruction_delta_histogram": {
+        "0": 60272
+      },
+      "parent_increase_rows": [],
+      "new_correct_Qfplib_loss_rows": [],
+      "parent_records_sha256": "6916cda4023be6da4a66acffaf5ac8f171d6e527aa7165dc7a7d46c68e7b0b7f",
+      "candidate_records_sha256": "6916cda4023be6da4a66acffaf5ac8f171d6e527aa7165dc7a7d46c68e7b0b7f"
+    }
+  },
+  "no_new_ARM_or_MPFR_calls": true,
+  "does_not_complete_full_exp_qualification": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

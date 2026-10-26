@@ -1,0 +1,71 @@
+R38 boundaries 0 / 12311 elapsed 0.0 loss 0 new 0
+R38 boundaries 1024 / 12311 elapsed 6.3 loss 0 new 0
+R38 boundaries 2048 / 12311 elapsed 12.5 loss 0 new 0
+R38 boundaries 3072 / 12311 elapsed 18.7 loss 0 new 0
+R38 boundaries 4096 / 12311 elapsed 24.9 loss 0 new 0
+R38 boundaries 5120 / 12311 elapsed 31.0 loss 0 new 0
+R38 boundaries 6144 / 12311 elapsed 37.2 loss 0 new 0
+R38 boundaries 7168 / 12311 elapsed 43.5 loss 6 new 0
+R38 boundaries 8192 / 12311 elapsed 49.9 loss 6 new 0
+R38 boundaries 9216 / 12311 elapsed 56.4 loss 12 new 0
+R38 boundaries 10240 / 12311 elapsed 62.7 loss 15 new 0
+R38 boundaries 11264 / 12311 elapsed 68.9 loss 20 new 0
+R38 boundaries 12288 / 12311 elapsed 75.1 loss 21 new 0
+{
+  "status": "COMPLETED_R38_FRESH_PUBLIC_EDGES_AND_ACTUAL_PRIVATE_METADATA",
+  "source_FROZEN_sha256": "da406f31b39e0a01ee415a1ee9d2658d1fbed5ac5ceb04784dc8a25e146a60a2",
+  "candidate_ELF_sha256": "d779746439194b0695519f56f5cc9858b6d2cd8cab3d4408081789caf449c3ab",
+  "input_sha256": "2bffc89dd6e9ce762fcbee57dcf3b03e84730a534e6563b93765ee7c06832cd2",
+  "records_sha256": "4e153e2a8db4c0fc0efc53861f8a2e41c816fb275d6084c391d5b1d5f033123c",
+  "unique_inputs": 12311,
+  "state_rows": 36933,
+  "actual_base_public_ARM_calls": {
+    "candidate": 36933,
+    "parent": 36933,
+    "Qfplib": 36933
+  },
+  "actual_public_index0_poison16NZCV_calls": 0,
+  "actual_qualified_public_ARM_calls": 110799,
+  "actual_directed_MPFR_inputs": 12311,
+  "generation_MPFR_calls_not_validation_pool": true,
+  "primitive_or_stub_calls": 0,
+  "candidate_wrong": 0,
+  "parent_losing_inputs": 55,
+  "candidate_losing_inputs": 25,
+  "fixed_inputs": 30,
+  "new_losing_inputs": 0,
+  "instruction_delta_histogram": {
+    "0": 36768,
+    "7": 36,
+    "-1697": 90,
+    "3": 39
+  },
+  "correct_Qfplib_relations": {
+    "strict": 34914,
+    "slower": 75
+  },
+  "wrong_Qfplib_rows_retained": 1944,
+  "actual_private_entry_counts": {
+    "dispatch": 453,
+    "refine": 153,
+    "normalized17": 156,
+    "midpoint17": 90,
+    "small17": 54
+  },
+  "all_actual_helper_params_match_callsite_metadata": true,
+  "all_actual_helper_inputs_within_proved_domain": true,
+  "row0_helper_unique_inputs": 0,
+  "row0_public_poison_selected_inputs": 0,
+  "public_poison_tests_not_part_of_this_fresh_campaign": true,
+  "observed_stacks": {
+    "candidate": 376,
+    "parent": 376,
+    "Qfplib": 32
+  },
+  "no_nominal_reference_domain_filter": true,
+  "physical_cycles_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 75.57988779200241
+}

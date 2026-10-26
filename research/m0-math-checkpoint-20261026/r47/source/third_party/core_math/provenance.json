@@ -1,0 +1,85 @@
+{
+  "project": "CORE-MATH",
+  "license": "MIT (per-file notices retained)",
+  "upstream": "https://gitlab.inria.fr/core-math/core-math",
+  "upstream_revision": "bc80b31cd1ea1f8051f92b2669f58f8ff1892239",
+  "snapshot": "https://github.com/indigobio/core-math-binary64",
+  "snapshot_revision": "d6a504a43319e9bedbdaeb1724955ffa2bbd7a7c",
+  "files": {
+    "sin/sin.c": {
+      "upstream_sha256": "e97d6d5a88119a6a5a2d12df624cdbac7969eefb15898d959965f932e391200c",
+      "ported_sha256": "ab4050c9b61db2e28f42d420344e30b64c2c3793586046cd00ae04bf69073af3"
+    },
+    "cos/cos.c": {
+      "upstream_sha256": "04bffbc8b483c886f78f2c9ab3f2a1ca318dda78ab637a2983a4a9d82374e9d9",
+      "ported_sha256": "7e91eda83d11bf2e7439f6a6956eb66ef8f4bbaabb44fa26f7f7165d12ceb250"
+    },
+    "tan/tan.c": {
+      "upstream_sha256": "dd662b7af88a86d85e01b88c57f9df4b6019ddfd02120ca381b5ba42283987ae",
+      "ported_sha256": "4e1d57e2e1ce6a73e2df90e5b4a53cb267f7168976f28241c3aae65ceed08db6"
+    },
+    "atan/atan.c": {
+      "upstream_sha256": "2d62a4d780f233fd0460b8e6076880fcb9d2f55280ead5799180983b6b77c863",
+      "ported_sha256": "2d62a4d780f233fd0460b8e6076880fcb9d2f55280ead5799180983b6b77c863"
+    },
+    "asin/asin.c": {
+      "upstream_sha256": "6eaffc6f0b19f44425b54fe4fb8b8efaddc027de0e50fd9a55ac970c0a2ca716",
+      "ported_sha256": "6eaffc6f0b19f44425b54fe4fb8b8efaddc027de0e50fd9a55ac970c0a2ca716"
+    },
+    "acos/acos.c": {
+      "upstream_sha256": "ecd6173837214367f0140c038c615a4f37d27795c0cc74e16bdaa59f7df8cff1",
+      "ported_sha256": "ecd6173837214367f0140c038c615a4f37d27795c0cc74e16bdaa59f7df8cff1"
+    },
+    "log/log.c": {
+      "upstream_sha256": "5f923601d1d0aab2e42136f5432794ecfcf4c23568f273ad8d32921bd1832bcf",
+      "ported_sha256": "5f923601d1d0aab2e42136f5432794ecfcf4c23568f273ad8d32921bd1832bcf"
+    },
+    "log/dint.h": {
+      "upstream_sha256": "0da80a15d311bb1e550035f98edc2266ef31828cd423aec3a2e4507d2dad5e0e",
+      "ported_sha256": "cfedae42677b17f0d18ee74658823127fe1b0934279ccd07851ee692be7a07a9"
+    },
+    "log10/dint.h": {
+      "upstream_sha256": "3bdfe6175e6d107506badbaf3f6cd1005165bee4e601827d1f1da2560f84d264",
+      "ported_sha256": "399cda52c9ec0db13b246cfed210e8603100b66bab54413038d1a2cb589cff3c"
+    },
+    "log10/log10.c": {
+      "upstream_sha256": "a83f2e651a55ee707876b0ba60094475c77028d785de30cb304b8d8a446e5ef0",
+      "ported_sha256": "a83f2e651a55ee707876b0ba60094475c77028d785de30cb304b8d8a446e5ef0"
+    },
+    "exp/exp.c": {
+      "upstream_sha256": "024b63b3433b455be57a6523f3acf3c82e7db1edf2cee414dc03d01be4359c63",
+      "ported_sha256": "024b63b3433b455be57a6523f3acf3c82e7db1edf2cee414dc03d01be4359c63"
+    },
+    "pow/qint.h": {
+      "upstream_sha256": "32de9c10388056e2294339e3302c3695cdf4abc87ca790ad48917d9794bfb6e4",
+      "ported_sha256": "dd9af960a743dd0d57f931912acaff4bd580c1645ff0b87380698552b61c67f7"
+    },
+    "pow/dint.h": {
+      "upstream_sha256": "c62a9788d872c314c743a821602d6819e5c13113b70f6d4a5d0076695dc413ef",
+      "ported_sha256": "3e824639e3e5150982e5d5c4a4a0dea3d138cb6ccbd784f80f35957129bbdb28"
+    },
+    "pow/pow.c": {
+      "upstream_sha256": "678fcee66219574d754b7fbd0091461b9caa85cceaf95dd39978efebc62b9757",
+      "ported_sha256": "9de7dbb7618725402faeed6b77f8ee060d215b4a7bc426cd507c073cd5242b2a"
+    },
+    "pow/pow.h": {
+      "upstream_sha256": "b7c21d4cf273c09e5d0d347907832de6013d18199bdf67f532132567dd9fcb0c",
+      "ported_sha256": "097062a0a622948db73d4f47c8cbcc37c361838e71b79be5f1e620d028d7d22b"
+    }
+  },
+  "shared_types": {
+    "path": "code/native_eabi_m0_cr_types.hpp",
+    "sha256": "55056af4c32208c1208ac54070c9853088d66a2450c081ceac141c237ac90df9",
+    "sources": [
+      "sin/sin.c",
+      "log/dint.h"
+    ]
+  },
+  "constant_storage": "C++ port shares byte-identical sin/cos/tan S,C and ln/log10 INVERSE_2,LOG_INV_2,P_2 arrays by const references with identical neutral storage types. No coefficients or mathematical algorithms changed.",
+  "pow_integer_body": {
+    "path": "pow/pow_accurate_body.inc",
+    "adapted_pow_sha256": "dd671f8191c81b5b70d81671e0d6e93afb385fe9e01b9d26d726f375aa66ffa1",
+    "sha256": "bcad277964a1cf39dead82972b436ece5a4b6acbaafc364d2f4c25cae2807b8d",
+    "description": "Extracted verbatim from the existing cr_pow integer128/exact/integer256 tail, including all rounding guards and the final rescue call. RP2040 shares one noipa body and can enter it after its Q94 guard; generic ARMv6-M retains the original expanded token stream."
+  }
+}

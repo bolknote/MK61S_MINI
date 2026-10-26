@@ -1,0 +1,105 @@
+{
+  "status": "PASS_R30_CORRECTNESS_ACCOUNTING_NARROW_RECEIPT_DIRECT_PINS",
+  "review_sha256": "e36d26d2a5241f76a345b592449a763f93f41a68597a4cad7a71ad76533863d3",
+  "pins": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-bit62-r29-independent-20261026/FINAL-REVIEW.json": {
+      "bytes": 13152,
+      "sha256": "3750a965ef134d253bcd741174a41c3f741ccc782ae08eb6eb10ff2b1541657a"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-cached-index-r30-20261026/FROZEN.json": {
+      "bytes": 70751,
+      "sha256": "7c4ea69858bdaa995868aa1b5b70f112315e726f17aeaf719c9049ff6533bfb1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-cached-index-r30-qualification-20261026/FROZEN.json": {
+      "bytes": 3628,
+      "sha256": "e94560ca0f4d9a6a3a1148c967807cecd2b9fd8513b116c06c2ccc435eaa6fda"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-cached-index-r30-qualification-20261026/author-result.json": {
+      "bytes": 3181,
+      "sha256": "0e43088d31014bb3e906d72fe2a075cd2f0d27630fc9e9cdfef7bd0f9222f592"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-cached-index-r30-qualification-20261026/TERMINAL.json": {
+      "bytes": 288,
+      "sha256": "eb63a201a63aa353b2ad889e95fb484a4b642f7a663639e285e043c2633f37c1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-cached-index-r30-20261026/candidate.elf": {
+      "bytes": 2341884,
+      "sha256": "4e5809b442dce441dbb6f34446eb42f72b748dd882b7df6b42c722161160b804"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-cached-index-r30-independent-20261026/SOURCE-CSE-LINK-PROOF.json": {
+      "bytes": 4352,
+      "sha256": "548840f8613b2ffb52ffa0548063c74953c1938f7cb1c025c6ff109783b05085"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-cached-index-r30-independent-20261026/RECORD-RECOUNT.json": {
+      "bytes": 3122,
+      "sha256": "878fc876076194bc4972b1e735b7c7b5fcac042a257a078c5d74ff791d90537c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-cached-index-r30-independent-20261026/review.py": {
+      "bytes": 11581,
+      "sha256": "0265ecda38cf5586bb9fa14d5ae0802c9b46ad3565b54e7ef2620616002e2848"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-cached-index-r30-independent-20261026/recount.py": {
+      "bytes": 9155,
+      "sha256": "a461af1365b543329eb93e4e5c4dbaf290937ec0ca975082350bd38525a92f8e"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-cached-index-r30-independent-20261026/finish.py": {
+      "bytes": 9372,
+      "sha256": "08468dfebaf214f6318247b9f3b12d73465f4138b02105cdda6543bfaaee84c4"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/oracles.py": {
+      "bytes": 11361,
+      "sha256": "bb653a4fb333c521c7d3b7e4f4c53e7a18c07a60ec5f9e00b422b883b8e24bc9"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/support/m0_mpfr_oracle.py": {
+      "bytes": 5027,
+      "sha256": "fb880de9b8fe7d4b0fc9225121b90d7c41d976fec01b67bf4f7d6e2a89c7000a"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-float-fma-qualification-20261023/support/native_eabi_m0_arm_self_test.py": {
+      "bytes": 25185,
+      "sha256": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-current-primary-classification-r30-20261026.json": {
+      "bytes": 796,
+      "sha256": "e8fc7058a2aaa4f73bda991e9f6f09596c087127dad72049635c1d25e05b7ce3"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-current-ledger-relative-baselines-r30-20261026.json": {
+      "bytes": 3486,
+      "sha256": "ccfbc1867edd869de506aa0820fd66bdecc1202e2cf79fcd8f4582a8b9bfa4c6"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-r30-oldscope-20261026.json": {
+      "bytes": 806,
+      "sha256": "ed8f2d06a6bea99b236c72b01634548db6a02db5a366e93c99c25c8f3499f2ac"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-subnormal-endpoints-r25-20261026/FROZEN.json": {
+      "bytes": 75486,
+      "sha256": "110712b8caad63ad5a541e491d086aa95a05a16b439b7fba760a1799c2cb8123"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-subnormal-endpoints-r25-20261026/candidate.elf": {
+      "bytes": 2341964,
+      "sha256": "145732d70cfb617913a14385d44b8c588ff11994e4d728989cd52e3606c22493"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-directed-distance-r28-20261026/FROZEN.json": {
+      "bytes": 73501,
+      "sha256": "db217c84919e9b5a7e521a8b5328757d852d2121c6086cb255ebc5a35b0a5ce6"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-directed-distance-r28-20261026/candidate.elf": {
+      "bytes": 2343576,
+      "sha256": "34efdeb39ad8e1dc496ce3642e42c8c11af4216d8cc466702a0444f0a8a1725c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-bit62-r29-20261026/FROZEN.json": {
+      "bytes": 70890,
+      "sha256": "c176067a6ba6afda1ff3f158be5c8e148c6bdc8f98dfc0f63dfa86f03f262018"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-bit62-r29-20261026/candidate.elf": {
+      "bytes": 2341600,
+      "sha256": "6a0728833c0a3afa306b3e57f8110fd56c9d24a726c8ae8bf16e7b02b9a78c79"
+    }
+  },
+  "Root_reported_scope": "correctness/accounting only; no PERFORMANCE or ADOPTION GO",
+  "historical_full_parent_increase_rows": 166416,
+  "historical_primary_parent_increase_rows": 2098,
+  "historical_full_net_instruction_increase_vs_R29": 346174,
+  "cumulative_R29_baseline_still_required": true,
+  "new_ARM_MPFR_calls": 0,
+  "no_whole_R33_R35_GO": true
+}

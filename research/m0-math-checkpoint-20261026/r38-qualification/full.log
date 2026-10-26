@@ -1,0 +1,181 @@
+R38 full 0 elapsed 0.1 loss 0 new 0
+R38 full 8192 elapsed 4.5 loss 4 new 0
+R38 full 16384 elapsed 13.5 loss 4 new 0
+R38 full 24576 elapsed 21.9 loss 16 new 0
+R38 full 32768 elapsed 30.4 loss 25 new 0
+R38 full 40960 elapsed 38.8 loss 37 new 0
+R38 full 49152 elapsed 47.1 loss 43 new 0
+R38 full 57344 elapsed 55.5 loss 52 new 0
+R38 full 65536 elapsed 63.9 loss 54 new 0
+R38 full 73728 elapsed 72.3 loss 58 new 0
+R38 full 81920 elapsed 80.6 loss 61 new 0
+R38 full 90112 elapsed 88.3 loss 66 new 0
+R38 full 98304 elapsed 90.0 loss 66 new 0
+R38 full 106496 elapsed 92.1 loss 66 new 0
+R38 full 114688 elapsed 94.1 loss 66 new 0
+R38 full 122880 elapsed 96.1 loss 66 new 0
+R38 full 131072 elapsed 98.1 loss 66 new 0
+R38 full 139264 elapsed 100.1 loss 66 new 0
+R38 full 147456 elapsed 102.2 loss 66 new 0
+R38 full 155648 elapsed 104.2 loss 66 new 0
+R38 full 163840 elapsed 106.2 loss 66 new 0
+R38 full 172032 elapsed 108.3 loss 66 new 0
+R38 full 180224 elapsed 110.3 loss 66 new 0
+R38 full 188416 elapsed 112.3 loss 66 new 0
+R38 full 196608 elapsed 114.3 loss 66 new 0
+R38 full 204800 elapsed 116.4 loss 66 new 0
+R38 full 212992 elapsed 118.4 loss 66 new 0
+R38 full 221184 elapsed 120.5 loss 66 new 0
+R38 full 229376 elapsed 122.5 loss 66 new 0
+R38 full 237568 elapsed 124.5 loss 66 new 0
+R38 full 245760 elapsed 126.6 loss 66 new 0
+R38 full 253952 elapsed 128.6 loss 66 new 0
+R38 full 262144 elapsed 130.6 loss 66 new 0
+R38 full 270336 elapsed 132.6 loss 66 new 0
+R38 full 278528 elapsed 134.7 loss 66 new 0
+R38 full 286720 elapsed 136.7 loss 66 new 0
+R38 full 294912 elapsed 138.7 loss 66 new 0
+R38 full 303104 elapsed 140.5 loss 66 new 0
+R38 full 311296 elapsed 142.2 loss 66 new 0
+R38 full 319488 elapsed 143.9 loss 66 new 0
+R38 full 327680 elapsed 146.5 loss 67 new 0
+R38 full 335872 elapsed 148.4 loss 67 new 0
+R38 full 344064 elapsed 150.3 loss 67 new 0
+R38 full 352256 elapsed 152.3 loss 67 new 0
+R38 full 360448 elapsed 154.2 loss 67 new 0
+R38 full 368640 elapsed 156.2 loss 67 new 0
+R38 full 376832 elapsed 158.2 loss 67 new 0
+R38 full 385024 elapsed 161.1 loss 67 new 0
+R38 full 393216 elapsed 164.0 loss 67 new 0
+R38 full 401408 elapsed 166.9 loss 67 new 0
+R38 full 409600 elapsed 169.7 loss 67 new 0
+R38 full 417792 elapsed 172.6 loss 67 new 0
+R38 full 425984 elapsed 175.5 loss 67 new 0
+R38 full 434176 elapsed 178.4 loss 67 new 0
+R38 full 442368 elapsed 181.3 loss 67 new 0
+R38 full 450560 elapsed 184.1 loss 67 new 0
+R38 full 458752 elapsed 187.0 loss 67 new 0
+R38 full 466944 elapsed 189.9 loss 67 new 0
+R38 full 475136 elapsed 192.8 loss 67 new 0
+R38 full 483328 elapsed 195.6 loss 67 new 0
+R38 full 491520 elapsed 198.5 loss 67 new 0
+R38 full 499712 elapsed 201.4 loss 67 new 0
+R38 full 507904 elapsed 204.3 loss 67 new 0
+R38 full 516096 elapsed 207.1 loss 67 new 0
+R38 full 524288 elapsed 210.0 loss 67 new 0
+R38 full 532480 elapsed 212.9 loss 67 new 0
+R38 full 540672 elapsed 215.7 loss 67 new 0
+R38 full 548864 elapsed 218.5 loss 67 new 0
+R38 full 557056 elapsed 221.3 loss 67 new 0
+R38 full 565248 elapsed 224.1 loss 67 new 0
+R38 full 573440 elapsed 226.9 loss 67 new 0
+R38 full 581632 elapsed 229.7 loss 67 new 0
+R38 full 589824 elapsed 232.5 loss 67 new 0
+R38 full 598016 elapsed 235.2 loss 67 new 0
+R38 full 606208 elapsed 238.0 loss 67 new 0
+R38 full 614400 elapsed 240.7 loss 67 new 0
+R38 full 622592 elapsed 243.5 loss 67 new 0
+R38 full 630784 elapsed 246.2 loss 67 new 0
+R38 full 638976 elapsed 248.9 loss 67 new 0
+R38 full 647168 elapsed 251.7 loss 67 new 0
+R38 full 655360 elapsed 254.4 loss 67 new 0
+R38 full 663552 elapsed 257.1 loss 67 new 0
+R38 full 671744 elapsed 259.8 loss 67 new 0
+R38 full 679936 elapsed 262.5 loss 67 new 0
+R38 full 688128 elapsed 265.3 loss 67 new 0
+R38 full 696320 elapsed 268.0 loss 67 new 0
+R38 full 704512 elapsed 270.7 loss 67 new 0
+R38 full 712704 elapsed 273.4 loss 67 new 0
+R38 full 720896 elapsed 276.2 loss 67 new 0
+R38 full 729088 elapsed 278.9 loss 67 new 0
+R38 full 737280 elapsed 281.6 loss 67 new 0
+R38 full 745472 elapsed 284.3 loss 67 new 0
+R38 full 753664 elapsed 287.1 loss 67 new 0
+R38 full 761856 elapsed 289.8 loss 67 new 0
+R38 full 770048 elapsed 292.5 loss 67 new 0
+R38 full 778240 elapsed 295.2 loss 67 new 0
+R38 full 786432 elapsed 297.9 loss 67 new 0
+R38 full 794624 elapsed 300.6 loss 67 new 0
+R38 full 802816 elapsed 303.2 loss 67 new 0
+R38 full 811008 elapsed 305.8 loss 67 new 0
+R38 full 819200 elapsed 308.4 loss 67 new 0
+R38 full 827392 elapsed 311.0 loss 67 new 0
+R38 full 835584 elapsed 312.6 loss 67 new 0
+R38 full 843776 elapsed 314.8 loss 67 new 0
+R38 full 851968 elapsed 316.4 loss 67 new 0
+R38 full 860160 elapsed 321.7 loss 69 new 0
+R38 full 868352 elapsed 329.2 loss 78 new 0
+R38 full 876544 elapsed 337.0 loss 83 new 0
+R38 full 884736 elapsed 345.1 loss 97 new 0
+R38 full 892928 elapsed 352.0 loss 102 new 0
+R38 full 901120 elapsed 358.9 loss 111 new 0
+R38 full 909312 elapsed 365.7 loss 112 new 0
+R38 full 917504 elapsed 373.2 loss 116 new 0
+R38 full 925696 elapsed 381.2 loss 122 new 0
+R38 full 933888 elapsed 389.0 loss 131 new 0
+R38 full 942080 elapsed 395.1 loss 132 new 0
+R38 full 950272 elapsed 401.1 loss 132 new 0
+R38 full 958464 elapsed 407.1 loss 132 new 0
+R38 full 966656 elapsed 413.1 loss 135 new 0
+R38 full 974848 elapsed 419.6 loss 150 new 0
+R38 full 983040 elapsed 426.1 loss 172 new 0
+{
+  "status": "COMPLETED_FRESH_R38_FULL_WITH_INHERITED_R37_ORACLES_QFP_PARENT",
+  "phase": "full",
+  "source_FROZEN_sha256": "da406f31b39e0a01ee415a1ee9d2658d1fbed5ac5ceb04784dc8a25e146a60a2",
+  "parent_qualification_FROZEN_sha256": "00dc5efa117f764392cacc06a7d97145ba9cca7650909dd4fc6b68cda5bae8e4",
+  "candidate_ELF_sha256": "d779746439194b0695519f56f5cc9858b6d2cd8cab3d4408081789caf449c3ab",
+  "input_records_sha256": "096c01ce71fc36a5ec031bf29346f8f2b603def0a8da19849011fe8b53c13865",
+  "input_source_FROZEN_sha256": "00dc5efa117f764392cacc06a7d97145ba9cca7650909dd4fc6b68cda5bae8e4",
+  "input_source": ".build/m0-math-unified-exp-row0-small-r37-qualification-20261026",
+  "records_sha256": "6db90a52a997d04d2bb317e5fec5f961560ce53241063e2071444b3d50526f59",
+  "unique_inputs": 494961,
+  "state_rows": 989922,
+  "actual_fresh_public_R38_ARM_calls": 989922,
+  "actual_fresh_public_index0_poison16NZCV_calls": 0,
+  "actual_qualified_public_ARM_calls": 989922,
+  "actual_fresh_parent_Qfp_MPFR_calls": 0,
+  "all_oracles_Qfp_parent_from_frozen_input_source": true,
+  "source_is_R38_diagnostic_not_R37_qualification": false,
+  "inherited_R37_calls_not_fresh": true,
+  "all_outputs_exact_frozen_correctly_rounded_R37": true,
+  "candidate_wrong": 0,
+  "parent_losing_inputs": 260,
+  "candidate_losing_inputs": 248,
+  "fixed_inputs": 12,
+  "new_losing_inputs": 0,
+  "instruction_delta_histogram": {
+    "0": 989868,
+    "7": 20,
+    "3": 10,
+    "-1697": 24
+  },
+  "correct_inherited_Qfplib_relations": {
+    "strict": 581012,
+    "slower": 496,
+    "equal": 2
+  },
+  "wrong_inherited_Qfplib_rows_retained": 408412,
+  "actual_private_entry_counts": {
+    "dispatch": 856,
+    "refine": 584,
+    "helper": 92,
+    "normalized17": 164,
+    "midpoint17": 24,
+    "small17": 112,
+    "fast21": 48
+  },
+  "all_actual_fast_inputs_within_proved_domain": true,
+  "all_actual_helper_parameters_exact_and_in_domain": true,
+  "row0_public_poison_unique_inputs": 0,
+  "all_poison_bits_and_costs_exact": true,
+  "observed_stack": 816,
+  "not_universal_stack_bound": true,
+  "diagnostics_primitives_inherited_oracles_generation_not_pooled": true,
+  "no_nominal_reference_filter": true,
+  "physical_cycles_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 432.61385283304844
+}

@@ -1,0 +1,18 @@
+{
+  "status": "R43_ALL_PRODUCERS_TERMINAL_CONSUMED",
+  "all_producers_terminal": true,
+  "source_build": 3604,
+  "source_helper_controls": 1959,
+  "source_diagnostic": 85437,
+  "full": 46667,
+  "admission": 74115,
+  "primary": 66785,
+  "audit": 46637,
+  "all7_exit0_consumed": true,
+  "unit_handle_resumed_across_continuation_not_restarted": true,
+  "source_controls_attempt1": "direct exit1 metadata alias only, preserved",
+  "source_controls_final_and_native_guard12negative_expguards_bankmap_proof": "direct exit0",
+  "primary_comparison": "direct exit0",
+  "no_observation_timeout_restart": true,
+  "goal_complete": false
+}

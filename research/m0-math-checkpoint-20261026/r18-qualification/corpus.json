@@ -1,0 +1,25 @@
+{
+  "status": "PREPARED_R18_UNION_WITH_CURRENT_R15_PARENT_RECORDS",
+  "counts": {
+    "ln": 91573
+  },
+  "old_union_inputs": 91573,
+  "new_unique_probe_inputs": 0,
+  "parent_source_FROZEN_sha256": "2d48d6bac94d6635ca15acf686565ffc77840fa9e585403affea4e1b1b701058",
+  "prepared_files": {
+    "ln-inputs.jsonl.gz": {
+      "bytes": 3005463,
+      "sha256": "f0f1b6037a820118a0424591471abae60569219c2584a747add1e986cb76ea00"
+    }
+  },
+  "provenance": {
+    ".build/m0-math-unified-ln-ln2-r15-qualification-20261025/FROZEN.json": "4fcb2be11c6c8dcffe1365f942566100cd3f5a33c7c8f6385fd0163f8d20155a",
+    ".build/m0-math-unified-ln-ln2-r15-qualification-20261025/ln-records.jsonl.gz": "7be74f81d7d55a6d410afaed45e5ce2bc63ace50ceb54df15b517d66b3ab8266",
+    ".build/m0-math-unified-ln-small-partials-r18-20261025/probe-records.jsonl.gz": "3081b9a39cc806f9dbdf910775a49a993c5e9f44c309d910eb1c2b3df3030abc",
+    ".build/m0-math-unified-ln-small-partials-r18-20261025/probe-result.json": "c0e1e7244563c089b12bbf2c72ff195b51c8fe29e7a79395a9c4356cce2c529a"
+  },
+  "historical_records_are_only_inputs_and_parent_counts_not_loaded_code": true,
+  "fresh_MPFR_and_Qfplib_required": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

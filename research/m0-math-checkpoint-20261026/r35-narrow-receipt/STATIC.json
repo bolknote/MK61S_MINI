@@ -1,0 +1,207 @@
+{
+  "status": "PASS",
+  "pins": {
+    "source": "545ce93e947599e5a1345e04c45aab8b979aa2f4d72dc9b11ed9437c12eb3a98",
+    "qualification": "df92a59684a5c83363d598859797d03de312c001b6713a45c468c2ee5cf99258",
+    "author": "6570b1a6a063a2adb06ff6f7db4ccd4129e4ec1ba40a56c6ba8bc06ac3aaaa2d",
+    "parent_review": "cb914841a63f96fc90f3833b3f522e54ef4b5fcf5694d3bc66a78beb31fddea1",
+    "parent_source": "ebdf17a90f34a7d2e5e7d49ac8fd49de47442f1509459bb10b3eb22633b89dd1",
+    "parent_qualification": "6cc6994839b641b9496508dcf0181918089835a8327b3f71862ee5cd759c9fde",
+    "model": "20a11b8f73f5173bd2963a961a09474260fc52709a9adf4f6e3d8deb6f63f413",
+    "ELF": "af140ef43618ed582d01b5bfa67ee649f55e1b361580423e54a7fbaf286279be"
+  },
+  "seal_counts": {
+    "source": 475,
+    "qualification": 39,
+    "model": 2
+  },
+  "source_file_count": 0,
+  "changed_source": [
+    "code/native_eabi_m0.cpp"
+  ],
+  "source_delta_inverse_exact": true,
+  "other18_objects_exact": true,
+  "old_core5192_helper108_exact_object": true,
+  "only_changed_allocated_section": ".m0_exp_positive_dispatch",
+  "bridge_bytes": 140,
+  "parent_bridge_bytes": 104,
+  "code_delta": 36,
+  "linked_flash_bytes": 492320,
+  "parent_linked_flash_bytes": 492280,
+  "linked_flash_delta": 40,
+  "no_new_table_RAM_libgcc": true,
+  "bank_bytes": 4080,
+  "bank_changed_bytes": 5,
+  "all_bank_changes_symbolic": true,
+  "bindings": [
+    {
+      "section": ".m0_exp_core",
+      "address": "0x1003fc20",
+      "bytes": 5192,
+      "resolved": [
+        [
+          50,
+          10,
+          "__aeabi_llsl"
+        ],
+        [
+          330,
+          10,
+          "mk61_m0_cr_exp"
+        ],
+        [
+          344,
+          10,
+          "__aeabi_llsl"
+        ],
+        [
+          360,
+          10,
+          "__aeabi_llsr"
+        ],
+        [
+          966,
+          10,
+          "_ZN7m0_eabi11low_productEyy"
+        ],
+        [
+          3186,
+          10,
+          "_ZN7m0_eabi5clz64Ey"
+        ],
+        [
+          3212,
+          10,
+          "__aeabi_llsl"
+        ],
+        [
+          3330,
+          10,
+          "__aeabi_llsr"
+        ],
+        [
+          3396,
+          2,
+          "_ZN7m0_eabiL16refine_exp_tableE"
+        ],
+        [
+          3452,
+          10,
+          "_ZN7m0_eabi5clz64Ey"
+        ],
+        [
+          3502,
+          10,
+          "__aeabi_llsl"
+        ],
+        [
+          3612,
+          10,
+          "__aeabi_llsl"
+        ],
+        [
+          3626,
+          10,
+          "__aeabi_llsr"
+        ],
+        [
+          4068,
+          10,
+          "mk61_m0_cr_exp"
+        ],
+        [
+          4126,
+          10,
+          "exp_tiny_rne"
+        ],
+        [
+          4132,
+          10,
+          "exp_small_rne"
+        ],
+        [
+          4712,
+          10,
+          "mk61_m0_pow_exp_product_flash"
+        ],
+        [
+          5012,
+          10,
+          "mk61_m0_exp_positive_dispatch"
+        ],
+        [
+          5096,
+          10,
+          "mk61_m0_exp_endpoint"
+        ],
+        [
+          5148,
+          2,
+          "_ZN7m0_eabiL9exp_tableE"
+        ],
+        [
+          5168,
+          2,
+          "_ZN7m0_eabiL16refine_exp_tableE"
+        ]
+      ]
+    },
+    {
+      "section": ".m0_exp_positive_upper",
+      "address": "0x100430f8",
+      "bytes": 108,
+      "resolved": [
+        [
+          104,
+          2,
+          "_ZN7m0_eabiL16refine_exp_tableE"
+        ]
+      ]
+    },
+    {
+      "section": ".m0_exp_positive_dispatch",
+      "address": "0x10030504",
+      "bytes": 140,
+      "resolved": [
+        [
+          44,
+          10,
+          "mk61_m0_exp_positive_upper"
+        ],
+        [
+          136,
+          2,
+          "exp_refine"
+        ]
+      ]
+    }
+  ],
+  "actual_callsite": "0x10040fb4",
+  "marker": "0x10040e90",
+  "same_private_86node_CFG_from_exact_object_and_current_disassembly": true,
+  "leaf_address": "0x1003055e",
+  "fast_instructions": 21,
+  "no_calls_stack_R12_or_callee_saved_write": true,
+  "row0_decline_sets_caller_clobbered_R12_constant": true,
+  "nonzero_general_path_keeps_original_R12": true,
+  "proof": {
+    "Dmax": 9007199254740991,
+    "Pmax": 2251799813685248,
+    "qhead_max": 16392,
+    "gmax": 2048,
+    "curvature_max": 192,
+    "D8max": 705,
+    "effect_max": 177,
+    "U8max": 245,
+    "minimum_midpoint_Q8": 256,
+    "tail_domain": [
+      509,
+      510,
+      511
+    ]
+  },
+  "caller_and_theorem_inherited_R33_not_portable_generic_ABI": true,
+  "control_calls": 23376,
+  "control_stubs_not_numerical_gold": true,
+  "new_ARM_MPFR_builds": 0
+}

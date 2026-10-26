@@ -1,0 +1,20 @@
+{
+  "status": "FROZEN_PRIVATE_R45_SOURCE_PENDING_FULL_SHARED_ARITHMETIC_QUALIFICATION",
+  "candidate_ELF_sha256": "724e202d93cff5184ca3788649a6a82727791fce7b97262525100c7d1c45abb7",
+  "source_binding_proof_sha256": "5776afa49a6cf37d4b35d27bd4189632d75844fef9a11a326cb62d6e4b56a0d5",
+  "diagnostic_pow2343to2047": true,
+  "diagnostic_ddiv_union9061to148": true,
+  "source_diagnostic_ARM433836_separate": true,
+  "all_parent_increases_retained": true,
+  "code_Flash_delta_bytes104": true,
+  "M4default_other17objects_exact": true,
+  "new_tables_RAM_libgcc0": true,
+  "bank6bytes_mapped": true,
+  "selected": false,
+  "full_qualification_pending": true,
+  "exp_ln_other_operations_need_revalidation": true,
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

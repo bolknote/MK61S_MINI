@@ -1,0 +1,13 @@
+{
+  "status": "R45_SOURCE_ALL_PRODUCERS_TERMINAL",
+  "all_producers_terminal": true,
+  "R45build8859": "exit0_consumed",
+  "R45direct97293": "exit0_consumed",
+  "R45pow90876": "exit0_consumed",
+  "R45grid74544": "exit0_consumed",
+  "all_static_new_and_inherited_guards": "direct_exit0",
+  "host_div_guard_alias_first_attempt": "preserved0ARM_no_numeric_change",
+  "proof": "direct_exit0",
+  "no_observation_timeout_restart": true,
+  "all_public_fresh_diagnostic_ARM433836": true
+}

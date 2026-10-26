@@ -1,0 +1,415 @@
+{
+  "status": "NARROW_PRIVATE_SOURCE_AND_FINITE_ACCOUNTING_GO",
+  "reviewer": "/root/release_audit",
+  "blocking_findings": [],
+  "source_R35_FROZEN_sha256": "545ce93e947599e5a1345e04c45aab8b979aa2f4d72dc9b11ed9437c12eb3a98",
+  "qualification_R35_FROZEN_sha256": "df92a59684a5c83363d598859797d03de312c001b6713a45c468c2ee5cf99258",
+  "author_result_sha256": "6570b1a6a063a2adb06ff6f7db4ccd4129e4ec1ba40a56c6ba8bc06ac3aaaa2d",
+  "candidate_ELF_sha256": "af140ef43618ed582d01b5bfa67ee649f55e1b361580423e54a7fbaf286279be",
+  "parent_R33_independent_review_sha256": "cb914841a63f96fc90f3833b3f522e54ef4b5fcf5694d3bc66a78beb31fddea1",
+  "scope": "Only row0 reuse leaf/general-path index-test reuse relative to accepted private R33. No independent whole-library or adoption acceptance.",
+  "source_static": {
+    "seals_verified": {
+      "source": 475,
+      "qualification": 39,
+      "model": 2
+    },
+    "source_files": 385,
+    "changed_source": [
+      "code/native_eabi_m0.cpp"
+    ],
+    "source_inverse_recovers_R33": true,
+    "other18objects_M4_default_exact": true,
+    "old_core_5192_and_helper108_bytes_symbols_semantic_relocations_exact": true,
+    "only_changed_allocated_section": ".m0_exp_positive_dispatch",
+    "bridge104_to140_code_delta36": true,
+    "actual_linked_flash_parent492280_current492320_delta40": true,
+    "no_new_table_RAM_libgcc": true,
+    "linked_bank4080_changed5bytes_named_targets_and_veneers_verified_not_literalidentity": true,
+    "current_private_callsite": "0x10040fb4",
+    "current_capture_marker": "0x10040e90",
+    "current_private_CFG": "Core object and all relative branches exact R33; all current ELF relocations/disassembly verified. Same86eligible-node q/SP/R12 contract. Compiler/flags/frame-specific, guard needed again after every changed object.",
+    "fast_leaf": "21actual instructions including entry checks; no calls, stack writes, R12 or callee-saved changes; exact1022literal and existing normal down-pack formula.",
+    "ordinary_general": "Existing nmod512test reused; nonzero path passes originalR12. Row0decline writes0x40000000 only to caller-clobberedR12, rejoins same helper/fallback; originalx/n/SP/LR restore unchanged.",
+    "source_count_report_only_correction": "ADDITIONAL-CHECKS.json supersedes STATIC.source_file_count only (a local report-variable shadow); author/source/proof/numeric files untouched."
+  },
+  "mathematical_subset": {
+    "inherited_R33_positive_bound_assumptions": true,
+    "guards": [
+      "positive originalx",
+      "nmod512=0",
+      "unsignedDhi<2^21",
+      "existing normal ambiguous error4tail509..515",
+      "tailbit9clear"
+    ],
+    "theorem": "A=2^62 and bias0;D<=2^53−1 =>P<=2^51,qhead<=16392,g<=2048,curvature<=192,D8<=705,effect<=177,U8<=245<256. Hence R33 already accepts all lower509..511; leaf packs the same down result.",
+    "row0_current_ELF_Q62_Q94_and_all_table_bytes_exact_R33": true,
+    "old_global_q_range_and_positive_D_implies_R_nonnegative_inherited": true,
+    "not_a_portable_entry_for_arbitrary_synthetic_q_or_tail": true
+  },
+  "qualification": {
+    "old494961_inputs": {
+      "parent401_current377_fixed24_new0": true
+    },
+    "unchanged_expanded546161": {
+      "parent584_current559_fixed25_new0": true
+    },
+    "new_inputs_this_round": 0,
+    "every_candidate_output_ref_and_Qfp_cost_matches_frozen_R33_parent_chain": true,
+    "original507_and_broad_every_current_row_exact_R33": true,
+    "full": {
+      "rows": 989922,
+      "parent_losses": 401,
+      "candidate_losses": 377,
+      "fixed": 24,
+      "new_losses": 0,
+      "wrong_Qfp_rows": 408412,
+      "delta_histogram": {
+        "-64": 48,
+        "0": 989548,
+        "2": 150,
+        "7": 4,
+        "9": 166,
+        "11": 6
+      },
+      "net_parent_instruction_delta": -1184,
+      "increase_partition": {
+        "wrong_reference": 152,
+        "parent_already_slower": 174
+      },
+      "routes": {
+        "no_bridge": 989066,
+        "fallback": 716,
+        "helper_decline": 58,
+        "helper_accept": 34,
+        "fast21": 48
+      },
+      "overlap_rows": 0
+    },
+    "boundary": {
+      "rows": 176952,
+      "parent_losses": 584,
+      "candidate_losses": 559,
+      "fixed": 25,
+      "new_losses": 0,
+      "wrong_Qfp_rows": 1704,
+      "delta_histogram": {
+        "-64": 90,
+        "0": 176130,
+        "2": 462,
+        "7": 21,
+        "9": 204,
+        "11": 45
+      },
+      "net_parent_instruction_delta": -2358,
+      "increase_partition": {
+        "parent_already_slower": 519,
+        "wrong_reference": 213
+      },
+      "routes": {
+        "no_bridge": 175341,
+        "fallback": 1131,
+        "helper_accept": 204,
+        "helper_decline": 186,
+        "fast21": 90
+      },
+      "overlap_rows": 15568
+    },
+    "exact_Qfp_tie_3FD2D8152348013D_all5states642": [
+      {
+        "phase": "full",
+        "SIO": "READY",
+        "candidate": 642,
+        "Qfp": 642,
+        "parent": 642
+      },
+      {
+        "phase": "full",
+        "SIO": "DIRTY",
+        "candidate": 642,
+        "Qfp": 642,
+        "parent": 642
+      },
+      {
+        "phase": "boundary",
+        "SIO": "READY",
+        "candidate": 642,
+        "Qfp": 642,
+        "parent": 642
+      },
+      {
+        "phase": "boundary",
+        "SIO": "DIRTY",
+        "candidate": 642,
+        "Qfp": 642,
+        "parent": 642
+      },
+      {
+        "phase": "boundary",
+        "SIO": "PENDING",
+        "candidate": 642,
+        "Qfp": 642,
+        "parent": 642
+      }
+    ],
+    "current_original507_classes": {
+      "strict": 468,
+      "equal": 6,
+      "slower": 33
+    },
+    "current_broad_classes": {
+      "strict": 23939,
+      "equal": 274,
+      "slower": 35,
+      "no_correct_reference": 5888
+    },
+    "no_nominal_reference_filter": true,
+    "wrong_Qfp_full408412_boundary1704_retained": true,
+    "cumulative_R29_old494961": {
+      "rows": 989922,
+      "net": 222314,
+      "increased": 166432,
+      "decreased": 564,
+      "same": 822926,
+      "histogram": {
+        "-1674": 24,
+        "-1672": 24,
+        "-1626": 2,
+        "-1622": 2,
+        "-1619": 2,
+        "-1613": 2,
+        "-1609": 2,
+        "-1606": 4,
+        "-1603": 2,
+        "-1601": 6,
+        "-1600": 6,
+        "-1598": 2,
+        "-1595": 2,
+        "-1594": 2,
+        "-5": 16,
+        "-3": 466,
+        "0": 822926,
+        "1": 80,
+        "2": 151150,
+        "3": 14466,
+        "6": 24,
+        "7": 356,
+        "10": 34,
+        "12": 32,
+        "19": 166,
+        "21": 20,
+        "27": 40,
+        "36": 6,
+        "80": 54,
+        "89": 4
+      },
+      "all_saved_cumulative_rows_independently_matched": true
+    },
+    "cumulative_R29_primary": {
+      "original507": {
+        "rows": 1014,
+        "net_vs_R29": 22,
+        "increases_vs_R29": 18,
+        "histogram": {
+          "-3": 4,
+          "0": 992,
+          "1": 2,
+          "2": 16
+        },
+        "all_current_records_exact_R33": true,
+        "ARM": 3654
+      },
+      "broad": {
+        "rows": 60272,
+        "net_vs_R29": 4350,
+        "increases_vs_R29": 2080,
+        "histogram": {
+          "-3": 6,
+          "0": 58186,
+          "1": 2,
+          "2": 1868,
+          "3": 210
+        },
+        "all_current_records_exact_R33": true,
+        "ARM": 193060
+      }
+    },
+    "extra51200_inputs_have_no_R29_baseline": true,
+    "new_full326_boundary732_parent_increases_preserved": true,
+    "primary0_increases_vs_R33_but_R30_R29_18plus2080_increases_retained": true,
+    "finite_current": {
+      "ln0_inherited": true,
+      "pow2501_inherited": true,
+      "exp559": true,
+      "total3060": true,
+      "not_whole_remaining_library": true
+    }
+  },
+  "freshness": {
+    "fresh_author_ARM": {
+      "full_candidate": 989922,
+      "boundary_candidate": 176952,
+      "boundary_poison": 8880,
+      "primary": 196714,
+      "public": 1372468,
+      "bridge_marker_controls": 23376,
+      "total": 1395844
+    },
+    "fresh_full_boundary_MPFR_Qfp_parent": 0,
+    "oracles_and_baselines_inherited": "exact R33→R30→R29→R28 records; not newly measured",
+    "fresh_primary_MPFR_Qfp": "Separate author primary records; preserved provider denominators,196714public ARM.",
+    "primitive23376": "7328synthetic caller controls×3SIO +29selected×16NZCV×3SIO; two callees are explicit marker stubs, not public accuracy gold.",
+    "row0_public_poison8880": "37real public inputs×3SIO×5R12poisons×16NZCV; same bits and costs at production entry, separate from stubs.",
+    "inherited_R33_actual_realhelper921901_not_fresh": true,
+    "excluded": {
+      "diagnostic_ARM": 70056,
+      "diagnostic_MPFR": 7784,
+      "failed_syntax_ARM_MPFR": 0,
+      "source_loader_ARM": 2
+    },
+    "independent_new_ARM_MPFR_builds": 0,
+    "review_method": "Static/rational source-object-ELF checks plus one saved-row recount. No numeric execution or producer import."
+  },
+  "retained_limitations": [
+    "Net common R29 corpus cost remains +222314instructions (166432rows increased/564decreased/822926same). Primary original+22 and broad+4350 net remain; no workload weighting or physical-cycle inference.",
+    "R34 rejected trial is not pooled. Current exact tie642 independently checked; historical R34 reported642→644 is not relabeled as R35 evidence.",
+    "Current syntax0ARM failure logs/script are preserved; inherited R33 serializer failure original-log loss remains a historical parent limitation.",
+    "Source pending/unselected snapshots are historical; only sealed completed qualification/TERMINAL selects privateR35. No frozen source metadata rewritten.",
+    "Observed exp816B stack is sampled; neither whole-library totality/rounding nor universal stack/resource bound established."
+  ],
+  "authority": {
+    "correctness_and_finite_accounting_only": true,
+    "blanket_performance_GO": false,
+    "adoption_GO": false,
+    "whole_library_GO": false,
+    "universal_CR": false,
+    "general_pow_totality": false,
+    "float_FMA": false,
+    "universal_stack": false,
+    "device_cycles": false,
+    "integration_GO": false,
+    "hardware_GO": false,
+    "main_UI_release_GO": false
+  },
+  "inputs": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-20261026/FROZEN.json",
+      "bytes": 72624,
+      "sha256": "545ce93e947599e5a1345e04c45aab8b979aa2f4d72dc9b11ed9437c12eb3a98"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-20261026/candidate.elf",
+      "bytes": 2343700,
+      "sha256": "af140ef43618ed582d01b5bfa67ee649f55e1b361580423e54a7fbaf286279be"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-20261026/RP-merged-cpp.o",
+      "bytes": 1950004,
+      "sha256": "ed248b17752243f12f7742ea51dc75f26f0056a9320d2e0c66b75e58dee2d35e"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-20261026/source-binding-proof.json",
+      "bytes": 2007,
+      "sha256": "4d1d458962f43c5905c0a999bc422103b30e80b49c96686699b3c85b4a9c1c9a"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-20261026/private-caller-proof.json",
+      "bytes": 1767,
+      "sha256": "2f6a370e3b93f9e50d592ac2682becaa91f1fb6e1de2f585fab603ff10df6f9a"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-20261026/private-return-proof.json",
+      "bytes": 2159,
+      "sha256": "e7d54344510910cc3e54c289e1a7b9b44f35dd1d01bc434f477eb94f8316c9a0"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-20261026/private-guard-controls.json",
+      "bytes": 809,
+      "sha256": "a4ecbaf63be3a16aa3923d699afe8819d7dd232b819a9629d1359b98d9725b54"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-20261026/bridge-control-result.json",
+      "bytes": 1803,
+      "sha256": "37f918f150319bf3fa7bd2827a2e372f6e68e451ad053c360f57ae63838aab03"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-20261026/bank-map.json",
+      "bytes": 23923,
+      "sha256": "dde8581095fdd5f257b9b3162017286652133ad234eee90444838815c10cf853"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-qualification-20261026/FROZEN.json",
+      "bytes": 5828,
+      "sha256": "df92a59684a5c83363d598859797d03de312c001b6713a45c468c2ee5cf99258"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-qualification-20261026/author-result.json",
+      "bytes": 22672,
+      "sha256": "6570b1a6a063a2adb06ff6f7db4ccd4129e4ec1ba40a56c6ba8bc06ac3aaaa2d"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-qualification-20261026/full-records.jsonl.gz",
+      "bytes": 11274705,
+      "sha256": "a7eef456780d671eefb6439d5b1ef0a160b70265a5fc668477d897ef9c11fc9a"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-qualification-20261026/boundary-records.jsonl.gz",
+      "bytes": 2251957,
+      "sha256": "3940511e04045e9efc484914197e5c5133037a95ebbe00b14d789e4f56db34bc"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-qualification-20261026/cumulative-R29-full-records.jsonl.gz",
+      "bytes": 4175626,
+      "sha256": "e9dd035cff9b576bd2bf833826c46337ed9e909641fc2b7e153045facc86c187"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-qualification-20261026/cumulative-R29-original507-records.jsonl.gz",
+      "bytes": 11182,
+      "sha256": "c920a191b2929ece2b9ebe08fe978ac539cc13a33532ffa6f57e0d9dbd420ca7"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-qualification-20261026/cumulative-R29-broad-records.jsonl.gz",
+      "bytes": 562970,
+      "sha256": "d14b4e1e27c014b5fbf063f923a2deeb115da38359358cb8d9468f7f551d9517"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-qualification-20261026/TERMINAL.json",
+      "bytes": 325,
+      "sha256": "2a90ee36706e8bf95e9b7026571d4f2f95bd95fc9a8ddc6b43c16acb12851ac1"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-qualification-20261026/replay-attempt1/result.json",
+      "bytes": 318,
+      "sha256": "bc9afd7f6b00668129ede15f6ccdee476058198951f918dd71ef92f4c377077d"
+    }
+  ],
+  "independent_evidence": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-independent-20261026/review.py",
+      "bytes": 20711,
+      "sha256": "bb0439b1554f598e89c9836dd49bc5d658e646d4689e46deabc48a24e0640f76"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-independent-20261026/review-attempt-001.log",
+      "bytes": 228,
+      "sha256": "40513a354776017c50115a0b3c088601c2a6e212fc5fa09a9610e9b11a546fb5"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-independent-20261026/STATIC.json",
+      "bytes": 4571,
+      "sha256": "752dd50589e972dc6829308a7c844ec843c9096af647effb2c15dacf3fc48bfd"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-independent-20261026/COUNTS.json",
+      "bytes": 4205,
+      "sha256": "11b4dddc5f6e4f65a62453219b217d4629e45cdf5c3acb36bf126ff96a89ccd9"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-row0-reuse-r35-independent-20261026/ADDITIONAL-CHECKS.json",
+      "bytes": 16551,
+      "sha256": "5dc6be677c97c6a6036a0efe0eb3d3c949a0dd360b12dd04d1fb5a41ae1e2124"
+    }
+  ],
+  "review_exit_code": 0,
+  "mutations": "Only new own independent review directory; devices/Git/source/canonical/author/frozen/raw untouched."
+}

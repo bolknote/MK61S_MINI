@@ -1,0 +1,24 @@
+admission 0 / 92160 elapsed 0.0 losses 0 new 0
+admission 4096 / 92160 elapsed 21.4 losses 0 new 0
+admission 8192 / 92160 elapsed 42.9 losses 0 new 0
+admission 12288 / 92160 elapsed 64.4 losses 0 new 0
+admission 16384 / 92160 elapsed 85.9 losses 0 new 0
+admission 20480 / 92160 elapsed 107.4 losses 0 new 0
+admission 24576 / 92160 elapsed 129.2 losses 0 new 0
+admission 28672 / 92160 elapsed 150.5 losses 0 new 0
+admission 32768 / 92160 elapsed 171.9 losses 0 new 0
+admission 36864 / 92160 elapsed 193.5 losses 0 new 0
+admission 40960 / 92160 elapsed 215.2 losses 0 new 0
+admission 45056 / 92160 elapsed 236.7 losses 0 new 0
+admission 49152 / 92160 elapsed 258.3 losses 0 new 0
+admission 53248 / 92160 elapsed 280.0 losses 0 new 0
+admission 57344 / 92160 elapsed 301.6 losses 0 new 0
+admission 61440 / 92160 elapsed 323.2 losses 0 new 0
+admission 65536 / 92160 elapsed 344.6 losses 0 new 0
+admission 69632 / 92160 elapsed 365.5 losses 0 new 0
+admission 73728 / 92160 elapsed 386.2 losses 0 new 0
+admission 77824 / 92160 elapsed 406.7 losses 0 new 0
+admission 81920 / 92160 elapsed 427.7 losses 0 new 0
+admission 86016 / 92160 elapsed 446.6 losses 0 new 0
+admission 90112 / 92160 elapsed 465.3 losses 0 new 0
+admission PASS ARM 552960 wrong0 losses 0 new 0

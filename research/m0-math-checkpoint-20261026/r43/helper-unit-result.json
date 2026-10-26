@@ -1,0 +1,92 @@
+{
+  "status": "PASS_R43_BOTH_ACTUAL_ENTRIES_WITH_EXPLICIT_NATIVE_ARM_FIXTURES",
+  "candidate_ELF_sha256": "d0a3a9bd38aa755ad6b21b2fb8d3551bdd7b9f27197aaf718b0714fa8c72799d",
+  "parent_source_FROZEN_sha256": "b5e0bf1e6316a2bc0924127f0b9564c025cb042842f4d3527ce1eef8fd48a676",
+  "captured_metadata_FROZEN_sha256": "3257d6a962a261c65ff01daba80189190302661f700f53ca2b1ffc79a48e5630",
+  "fixtures": {
+    "parent": {
+      "source_sha256": "737207db628c79ceaa78eedb52c1b7db09140f9343f93f28483b94cde785aa70",
+      "ELF_sha256": "b0a9aa274f6b7f775bada2d62adbca83b4c58ec7d66015732ccd69f98de1e81f",
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-nostdlib",
+        "-Wl,-Ttext=0x101e0000",
+        "-Wl,--entry=r43_native_test_entry",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-nativeq8-r43-20261026/parent-native-fixture.S",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-nativeq8-r43-20261026/parent-native-fixture.elf"
+      ],
+      "base": 270401536,
+      "production_target": 268633581,
+      "disjoint_all_production_VMA_LMA_and_context": true,
+      "explicit_test_symbol_added_to_call_namespace_only": true
+    },
+    "candidate": {
+      "source_sha256": "ed447fdb922e7c10a538699ebcbca8cf1dab7a6c5dd7d5f603c012df55de8fea",
+      "ELF_sha256": "385c8c08747634f9a6cedbfe67717596b18c11275f6aed8a292681cca37552df",
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+        "-mcpu=cortex-m0plus",
+        "-mthumb",
+        "-nostdlib",
+        "-Wl,-Ttext=0x101e0000",
+        "-Wl,--entry=r43_native_test_entry",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-nativeq8-r43-20261026/candidate-native-fixture.S",
+        "-o",
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-nativeq8-r43-20261026/candidate-native-fixture.elf"
+      ],
+      "base": 270401536,
+      "production_target": 268633593,
+      "disjoint_all_production_VMA_LMA_and_context": true,
+      "explicit_test_symbol_added_to_call_namespace_only": true
+    }
+  },
+  "captured_frame_cases1116": true,
+  "generated_uv_sign_grid_cases131072": true,
+  "selected_poison_frames36_all5R12_all16NZCV_all3SIO": true,
+  "state_rows": 143384,
+  "completed_ARM_calls": {
+    "generic-parent": 143384,
+    "generic-candidate": 143384,
+    "native-parent": 143384,
+    "native-candidate": 143384
+  },
+  "actual_qualified_control_ARM_calls": 573536,
+  "candidate_wrong": 0,
+  "integer_formula_routes": {
+    "up": 69335,
+    "down": 73148,
+    "decline": 901
+  },
+  "generic_instruction_delta_histogram": {
+    "2": 143384
+  },
+  "native_fixture_instruction_delta_histogram": {
+    "-1": 143384
+  },
+  "all_generic_parent_instruction_increase_rows": 143384,
+  "all_native_fixture_parent_instruction_increase_rows": 0,
+  "every_generic_increase_retained_in_binary_rows": true,
+  "explicit_carry_up_rows": 180,
+  "frame_readonly": true,
+  "ordinary_generic_arbitrary_NZCV_contract_checked": true,
+  "native_incoming_C_from_actual_fixture_guard_checked_every_call": true,
+  "native_entry_C_histogram": {
+    "0": 71815,
+    "1": 71569
+  },
+  "ordinary_APCS_callee_saved_SP_checked_every_call": true,
+  "R12_all16NZCV_and_threeSIO_results_invariant": true,
+  "no_SIO_access": true,
+  "synthetic_frames_and_native_fixtures_not_public_accuracy_gold": true,
+  "MPFR_calls": 0,
+  "records_sha256": "c3a40fe95cc2f28b45042166f9ebf9b06cc0341b0aae1b0f84e55028847d669f",
+  "record_format": "<11I4Q6I",
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 90.07433408300858
+}

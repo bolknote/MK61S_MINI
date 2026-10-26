@@ -1,0 +1,18 @@
+{
+  "status": "PASS_R45_POSTSEAL_SOURCE_QUALIFICATION_CURRENT_SELECTION",
+  "manifests": [
+    {
+      "path": ".build/m0-math-unified-ddiv-cold-overflow-r45-20261026",
+      "files": 491,
+      "FROZEN_sha256": "dbc455078837507acaeb750df1e3fb6800b923e2a9a880c9c6bcc2150ba3527a"
+    },
+    {
+      "path": ".build/m0-math-unified-ddiv-cold-overflow-r45-qualification-20261026",
+      "files": 41,
+      "FROZEN_sha256": "e3f2df20d066f085a82722c3f601625e27bf51d070d21659bfeb40fdc270da30"
+    }
+  ],
+  "new_ARM_MPFR_calls": 0,
+  "source_frozen_files_unchanged": true,
+  "goal_complete": false
+}

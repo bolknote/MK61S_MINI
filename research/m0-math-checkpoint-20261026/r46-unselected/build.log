@@ -1,0 +1,9 @@
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-boundaries-r46-20261026/source/code/native_eabi_m0.cpp:624:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-boundaries-r46-20261026/source/code/native_eabi_m0_trig_checked.inc:201:51: warning: 'm0_eabi::U checked_trig_fast_table(CheckedTrigArgument, unsigned int, m0_eabi::U)' defined but not used [-Wunused-function]
+  201 | __attribute__((optimize("Os"),noinline)) static U checked_trig_fast_table(CheckedTrigArgument a,unsigned op,U sign) {
+      |                                                   ^~~~~~~~~~~~~~~~~~~~~~~
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-boundaries-r46-20261026/source/code/native_eabi_m0.cpp:384:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-boundaries-r46-20261026/source/code/native_eabi_m0_log70.inc:249:56: warning: 'double ln_near_interval(double, m0_eabi::U)' defined but not used [-Wunused-function]
+  249 | __attribute__((optimize("Os"),noinline)) static double ln_near_interval(double x,U b) {
+      |                                                        ^~~~~~~~~~~~~~~~
+R46 built {'ELF_sha256': 'd8d475200a0562f2e0fd8b8dda2c8d8482c9708d5db73e5a117a15a67c1bd547', 'scratch_y_bytes': 4080, 'all_undefined_symbols_resolved': True} changed {'RP-merged-cpp.o': ['.text._ZN7m0_eabi6BinaryILj52ELj11EE3divEyy'], 'RP-unified-native_eabi_m0_rp2040.S.o': ['.text.mk61_rp2040_arithmetic']} unchanged 17

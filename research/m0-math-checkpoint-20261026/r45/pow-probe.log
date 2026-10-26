@@ -1,0 +1,128 @@
+R45 public probe 0 / 16740 elapsed 0.0 loss 0
+R45 public probe 512 / 16740 elapsed 16.9 loss 364
+R45 public probe 1024 / 16740 elapsed 32.8 loss 876
+R45 public probe 1536 / 16740 elapsed 43.0 loss 1388
+R45 public probe 2048 / 16740 elapsed 50.0 loss 1900
+R45 public probe 2560 / 16740 elapsed 56.3 loss 2047
+R45 public probe 3072 / 16740 elapsed 61.5 loss 2047
+R45 public probe 3584 / 16740 elapsed 66.7 loss 2047
+R45 public probe 4096 / 16740 elapsed 71.9 loss 2047
+R45 public probe 4608 / 16740 elapsed 77.0 loss 2047
+R45 public probe 5120 / 16740 elapsed 82.3 loss 2047
+R45 public probe 5632 / 16740 elapsed 87.5 loss 2047
+R45 public probe 6144 / 16740 elapsed 92.7 loss 2047
+R45 public probe 6656 / 16740 elapsed 97.9 loss 2047
+R45 public probe 7168 / 16740 elapsed 103.1 loss 2047
+R45 public probe 7680 / 16740 elapsed 108.2 loss 2047
+R45 public probe 8192 / 16740 elapsed 113.5 loss 2047
+R45 public probe 8704 / 16740 elapsed 118.8 loss 2047
+R45 public probe 9216 / 16740 elapsed 124.1 loss 2047
+R45 public probe 9728 / 16740 elapsed 129.2 loss 2047
+R45 public probe 10240 / 16740 elapsed 134.4 loss 2047
+R45 public probe 10752 / 16740 elapsed 139.4 loss 2047
+R45 public probe 11264 / 16740 elapsed 144.6 loss 2047
+R45 public probe 11776 / 16740 elapsed 149.8 loss 2047
+R45 public probe 12288 / 16740 elapsed 155.1 loss 2047
+R45 public probe 12800 / 16740 elapsed 160.4 loss 2047
+R45 public probe 13312 / 16740 elapsed 165.8 loss 2047
+R45 public probe 13824 / 16740 elapsed 171.4 loss 2047
+R45 public probe 14336 / 16740 elapsed 176.9 loss 2047
+R45 public probe 14848 / 16740 elapsed 182.1 loss 2047
+R45 public probe 15360 / 16740 elapsed 187.5 loss 2047
+R45 public probe 15872 / 16740 elapsed 192.7 loss 2047
+R45 public probe 16384 / 16740 elapsed 198.0 loss 2047
+{
+  "status": "PASS_R45_FRESH_PUBLIC_DIAGNOSTIC_NOT_FULLQUALIFICATION",
+  "input_pairs": 16740,
+  "state_rows": 50220,
+  "actual_diagnostic_ARM_calls": 251100,
+  "completed_ARM_calls": {
+    "candidate": 50220,
+    "parent": 50220,
+    "qfp_composed_pow": 50220,
+    "qfp_composed_pow_exact": 50220,
+    "qfp_composed_pow_integer": 50220
+  },
+  "actual_directed_MPFR_inputs": 16726,
+  "exact_sNaN_policy_shortcuts": 14,
+  "candidate_ELF_sha256": "724e202d93cff5184ca3788649a6a82727791fce7b97262525100c7d1c45abb7",
+  "parent_FROZEN_sha256": "170cd77a62244459c526ea2817f964652f4355c31e7824defc7b0195a6a5b22b",
+  "parent_qualification_FROZEN_sha256": "ebef878da8240173c273bb9e31b02c0a55c48e75286a7fe0dcc800c3c2130786",
+  "input_sha256": "b7acec5ce4fd700b6e930cd19d8fc7bda88f93835548e1d3a849feed7d20155b",
+  "records_sha256": "a0ab00412ef4233efb423c116fea952df98116bb72e75c861ec3993c296f8cd1",
+  "candidate_wrong": 0,
+  "parent_losing_pairs": 2343,
+  "candidate_losing_pairs": 2047,
+  "parent_instruction_delta_histogram": {
+    "0": 49290,
+    "-237": 12,
+    "-580": 96,
+    "-235": 48,
+    "-566": 12,
+    "-578": 84,
+    "-233": 54,
+    "-564": 6,
+    "-576": 36,
+    "-570": 18,
+    "-582": 24,
+    "-568": 24,
+    "-231": 12,
+    "-590": 6,
+    "-572": 12,
+    "-594": 6,
+    "-558": 18,
+    "-592": 18,
+    "-236": 36,
+    "-559": 18,
+    "-588": 12,
+    "-234": 36,
+    "-557": 12,
+    "-586": 24,
+    "-591": 18,
+    "-560": 6,
+    "-575": 12,
+    "-573": 6,
+    "-232": 12,
+    "-584": 12,
+    "-574": 6,
+    "-242": 12,
+    "-240": 48,
+    "-589": 48,
+    "-238": 36,
+    "-587": 36,
+    "-585": 12,
+    "2": 12,
+    "-48": 6,
+    "31": 6,
+    "-1": 6,
+    "1": 12
+  },
+  "old2343_fixed": 296,
+  "all3_Qfplib_compositions_allinputs_allstates": true,
+  "no_nominal_reference_filter": true,
+  "all_wrong_reference_outputs_and_costs_retained": true,
+  "wrong_reference_state_variants": 55296,
+  "native_call_state_histogram": {
+    "0": 4506,
+    "1": 45714
+  },
+  "Q8_call_state_histogram": {
+    "0": 46557,
+    "1": 3663
+  },
+  "all16_public_incoming_NZCV_and5R12_patterns_checked": true,
+  "actual_private_C_contract_asserted_every_Q8_call": true,
+  "all_actual_native_q_and_live_frame_and_Bh_R5_exact_parent": true,
+  "Q8_source_code_and_runtime_metadata_unchanged_from_R43": true,
+  "non_native_public_counts_exact": true,
+  "observed_stacks": {
+    "candidate": 2148,
+    "parent": 2148,
+    "Qfplib": 88
+  },
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 201.70496395800728
+}

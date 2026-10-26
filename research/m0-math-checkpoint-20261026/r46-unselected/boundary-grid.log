@@ -1,0 +1,371 @@
+R46 all-exponent grid 0 / 77282 loss 0
+R46 all-exponent grid 512 / 77282 loss 0
+R46 all-exponent grid 1024 / 77282 loss 0
+R46 all-exponent grid 1536 / 77282 loss 0
+R46 all-exponent grid 2048 / 77282 loss 0
+R46 all-exponent grid 2560 / 77282 loss 0
+R46 all-exponent grid 3072 / 77282 loss 0
+R46 all-exponent grid 3584 / 77282 loss 0
+R46 all-exponent grid 4096 / 77282 loss 0
+R46 all-exponent grid 4608 / 77282 loss 0
+R46 all-exponent grid 5120 / 77282 loss 0
+R46 all-exponent grid 5632 / 77282 loss 0
+R46 all-exponent grid 6144 / 77282 loss 0
+R46 all-exponent grid 6656 / 77282 loss 0
+R46 all-exponent grid 7168 / 77282 loss 0
+R46 all-exponent grid 7680 / 77282 loss 0
+R46 all-exponent grid 8192 / 77282 loss 0
+R46 all-exponent grid 8704 / 77282 loss 0
+R46 all-exponent grid 9216 / 77282 loss 0
+R46 all-exponent grid 9728 / 77282 loss 0
+R46 all-exponent grid 10240 / 77282 loss 0
+R46 all-exponent grid 10752 / 77282 loss 0
+R46 all-exponent grid 11264 / 77282 loss 0
+R46 all-exponent grid 11776 / 77282 loss 0
+R46 all-exponent grid 12288 / 77282 loss 0
+R46 all-exponent grid 12800 / 77282 loss 0
+R46 all-exponent grid 13312 / 77282 loss 0
+R46 all-exponent grid 13824 / 77282 loss 0
+R46 all-exponent grid 14336 / 77282 loss 0
+R46 all-exponent grid 14848 / 77282 loss 0
+R46 all-exponent grid 15360 / 77282 loss 0
+R46 all-exponent grid 15872 / 77282 loss 0
+R46 all-exponent grid 16384 / 77282 loss 0
+R46 all-exponent grid 16896 / 77282 loss 0
+R46 all-exponent grid 17408 / 77282 loss 0
+R46 all-exponent grid 17920 / 77282 loss 0
+R46 all-exponent grid 18432 / 77282 loss 0
+R46 all-exponent grid 18944 / 77282 loss 0
+R46 all-exponent grid 19456 / 77282 loss 0
+R46 all-exponent grid 19968 / 77282 loss 0
+R46 all-exponent grid 20480 / 77282 loss 0
+R46 all-exponent grid 20992 / 77282 loss 0
+R46 all-exponent grid 21504 / 77282 loss 0
+R46 all-exponent grid 22016 / 77282 loss 0
+R46 all-exponent grid 22528 / 77282 loss 0
+R46 all-exponent grid 23040 / 77282 loss 0
+R46 all-exponent grid 23552 / 77282 loss 0
+R46 all-exponent grid 24064 / 77282 loss 0
+R46 all-exponent grid 24576 / 77282 loss 0
+R46 all-exponent grid 25088 / 77282 loss 0
+R46 all-exponent grid 25600 / 77282 loss 0
+R46 all-exponent grid 26112 / 77282 loss 0
+R46 all-exponent grid 26624 / 77282 loss 0
+R46 all-exponent grid 27136 / 77282 loss 380
+R46 all-exponent grid 27648 / 77282 loss 764
+R46 all-exponent grid 28160 / 77282 loss 1148
+R46 all-exponent grid 28672 / 77282 loss 1532
+R46 all-exponent grid 29184 / 77282 loss 1916
+R46 all-exponent grid 29696 / 77282 loss 2300
+R46 all-exponent grid 30208 / 77282 loss 2684
+R46 all-exponent grid 30720 / 77282 loss 3068
+R46 all-exponent grid 31232 / 77282 loss 3452
+R46 all-exponent grid 31744 / 77282 loss 3836
+R46 all-exponent grid 32256 / 77282 loss 4220
+R46 all-exponent grid 32768 / 77282 loss 4604
+R46 all-exponent grid 33280 / 77282 loss 4988
+R46 all-exponent grid 33792 / 77282 loss 5372
+R46 all-exponent grid 34304 / 77282 loss 5756
+R46 all-exponent grid 34816 / 77282 loss 5998
+R46 all-exponent grid 35328 / 77282 loss 6188
+R46 all-exponent grid 35840 / 77282 loss 6386
+R46 all-exponent grid 36352 / 77282 loss 6554
+R46 all-exponent grid 36864 / 77282 loss 6554
+R46 all-exponent grid 37376 / 77282 loss 6554
+R46 all-exponent grid 37888 / 77282 loss 6554
+R46 all-exponent grid 38400 / 77282 loss 6554
+R46 all-exponent grid 38912 / 77282 loss 6554
+R46 all-exponent grid 39424 / 77282 loss 6554
+R46 all-exponent grid 39936 / 77282 loss 6554
+R46 all-exponent grid 40448 / 77282 loss 6554
+R46 all-exponent grid 40960 / 77282 loss 6554
+R46 all-exponent grid 41472 / 77282 loss 6554
+R46 all-exponent grid 41984 / 77282 loss 6554
+R46 all-exponent grid 42496 / 77282 loss 6554
+R46 all-exponent grid 43008 / 77282 loss 6554
+R46 all-exponent grid 43520 / 77282 loss 6554
+R46 all-exponent grid 44032 / 77282 loss 6554
+R46 all-exponent grid 44544 / 77282 loss 6554
+R46 all-exponent grid 45056 / 77282 loss 6554
+R46 all-exponent grid 45568 / 77282 loss 6554
+R46 all-exponent grid 46080 / 77282 loss 6578
+R46 all-exponent grid 46592 / 77282 loss 6706
+R46 all-exponent grid 47104 / 77282 loss 6834
+R46 all-exponent grid 47616 / 77282 loss 6962
+R46 all-exponent grid 48128 / 77282 loss 7090
+R46 all-exponent grid 48640 / 77282 loss 7218
+R46 all-exponent grid 49152 / 77282 loss 7346
+R46 all-exponent grid 49664 / 77282 loss 7474
+R46 all-exponent grid 50176 / 77282 loss 7602
+R46 all-exponent grid 50688 / 77282 loss 7730
+R46 all-exponent grid 51200 / 77282 loss 7858
+R46 all-exponent grid 51712 / 77282 loss 7986
+R46 all-exponent grid 52224 / 77282 loss 8114
+R46 all-exponent grid 52736 / 77282 loss 8242
+R46 all-exponent grid 53248 / 77282 loss 8370
+R46 all-exponent grid 53760 / 77282 loss 8498
+R46 all-exponent grid 54272 / 77282 loss 8614
+R46 all-exponent grid 54784 / 77282 loss 8824
+R46 all-exponent grid 55296 / 77282 loss 9038
+R46 all-exponent grid 55808 / 77282 loss 9260
+R46 all-exponent grid 56320 / 77282 loss 9486
+R46 all-exponent grid 56832 / 77282 loss 9708
+R46 all-exponent grid 57344 / 77282 loss 9838
+R46 all-exponent grid 57856 / 77282 loss 9838
+R46 all-exponent grid 58368 / 77282 loss 9838
+R46 all-exponent grid 58880 / 77282 loss 9838
+R46 all-exponent grid 59392 / 77282 loss 9838
+R46 all-exponent grid 59904 / 77282 loss 9838
+R46 all-exponent grid 60416 / 77282 loss 9838
+R46 all-exponent grid 60928 / 77282 loss 9838
+R46 all-exponent grid 61440 / 77282 loss 9838
+R46 all-exponent grid 61952 / 77282 loss 9838
+R46 all-exponent grid 62464 / 77282 loss 9838
+R46 all-exponent grid 62976 / 77282 loss 9838
+R46 all-exponent grid 63488 / 77282 loss 9838
+R46 all-exponent grid 64000 / 77282 loss 9838
+R46 all-exponent grid 64512 / 77282 loss 9838
+R46 all-exponent grid 65024 / 77282 loss 9838
+R46 all-exponent grid 65536 / 77282 loss 9838
+R46 all-exponent grid 66048 / 77282 loss 9838
+R46 all-exponent grid 66560 / 77282 loss 9838
+R46 all-exponent grid 67072 / 77282 loss 9838
+R46 all-exponent grid 67584 / 77282 loss 9838
+R46 all-exponent grid 68096 / 77282 loss 9838
+R46 all-exponent grid 68608 / 77282 loss 9838
+R46 all-exponent grid 69120 / 77282 loss 9838
+R46 all-exponent grid 69632 / 77282 loss 9838
+R46 all-exponent grid 70144 / 77282 loss 9838
+R46 all-exponent grid 70656 / 77282 loss 9838
+R46 all-exponent grid 71168 / 77282 loss 9838
+R46 all-exponent grid 71680 / 77282 loss 9838
+R46 all-exponent grid 72192 / 77282 loss 9838
+R46 all-exponent grid 72704 / 77282 loss 9838
+R46 all-exponent grid 73216 / 77282 loss 9838
+R46 all-exponent grid 73728 / 77282 loss 9838
+R46 all-exponent grid 74240 / 77282 loss 9838
+R46 all-exponent grid 74752 / 77282 loss 9838
+R46 all-exponent grid 75264 / 77282 loss 9862
+R46 all-exponent grid 75776 / 77282 loss 9886
+R46 all-exponent grid 76288 / 77282 loss 10202
+R46 all-exponent grid 76800 / 77282 loss 10202
+{
+  "status": "PASS_R46_FRESH_ALL_EXPONENT_BOUNDARY_GRID",
+  "input_pairs": 77282,
+  "state_rows": 231846,
+  "actual_diagnostic_ARM_calls": 695538,
+  "completed_ARM_calls": {
+    "candidate": 231846,
+    "parent": 231846,
+    "Qfplib": 231846
+  },
+  "actual_directed_MPFR_inputs": 77174,
+  "sNaN_policy_shortcuts": 108,
+  "candidate_wrong": 0,
+  "parent_losing_pairs": 36914,
+  "candidate_losing_pairs": 10202,
+  "parent_instruction_delta_histogram": {
+    "0": 35280,
+    "5": 17046,
+    "-271": 5838,
+    "-611": 5910,
+    "-265": 5982,
+    "-618": 6030,
+    "-605": 252,
+    "-596": 36,
+    "-601": 108,
+    "-606": 36,
+    "-614": 168,
+    "-623": 108,
+    "-604": 252,
+    "-617": 348,
+    "-622": 240,
+    "-590": 252,
+    "-609": 264,
+    "-595": 324,
+    "-598": 252,
+    "-599": 180,
+    "-625": 204,
+    "-615": 108,
+    "-607": 72,
+    "-616": 36,
+    "-269": 72,
+    "-594": 108,
+    "-608": 36,
+    "-602": 36,
+    "-263": 108,
+    "-629": 216,
+    "-588": 72,
+    "-583": 180,
+    "-591": 36,
+    "-612": 84,
+    "-603": 36,
+    "-589": 36,
+    "-597": 240,
+    "-621": 60,
+    "-610": 36,
+    "-137": 5850,
+    "-475": 5958,
+    "-132": 6282,
+    "-493": 5898,
+    "-469": 552,
+    "-460": 768,
+    "-465": 528,
+    "-473": 108,
+    "-478": 84,
+    "-490": 528,
+    "-471": 540,
+    "-492": 204,
+    "-474": 432,
+    "-479": 288,
+    "-468": 348,
+    "-495": 144,
+    "-482": 144,
+    "-485": 600,
+    "-486": 84,
+    "-487": 144,
+    "-489": 48,
+    "-497": 48,
+    "-501": 240,
+    "-455": 636,
+    "-470": 6048,
+    "-463": 276,
+    "-477": 168,
+    "-480": 300,
+    "13": 23400,
+    "-464": 264,
+    "-466": 540,
+    "-481": 48,
+    "-213": 6180,
+    "14": 7260,
+    "-207": 6468,
+    "-443": 6444,
+    "-445": 180,
+    "-422": 180,
+    "-418": 720,
+    "-421": 132,
+    "-435": 336,
+    "-432": 516,
+    "-212": 144,
+    "-423": 372,
+    "-437": 120,
+    "-426": 216,
+    "-449": 120,
+    "-206": 216,
+    "-413": 312,
+    "-458": 588,
+    "-384": 72,
+    "-407": 108,
+    "-381": 72,
+    "-391": 72,
+    "-433": 240,
+    "-390": 228,
+    "-387": 96,
+    "-419": 108,
+    "-385": 72,
+    "-476": 84,
+    "-404": 204,
+    "-401": 168,
+    "-424": 192,
+    "-429": 312,
+    "-394": 108,
+    "-223": 6156,
+    "-452": 6312,
+    "-217": 6300,
+    "-453": 6228,
+    "-441": 60,
+    "-438": 108,
+    "-447": 36,
+    "-442": 276,
+    "-405": 72,
+    "-440": 108,
+    "-393": 144,
+    "-399": 228,
+    "-431": 144,
+    "-428": 288,
+    "-450": 72,
+    "-396": 132,
+    "-221": 72,
+    "-446": 6204,
+    "-459": 60,
+    "-402": 36,
+    "-427": 144,
+    "-215": 108,
+    "-467": 192,
+    "-416": 36,
+    "-410": 108,
+    "-400": 36,
+    "-109": 6192,
+    "-103": 6240,
+    "-100": 6576,
+    "-436": 24,
+    "-457": 36,
+    "-420": 48,
+    "-434": 72,
+    "-417": 72,
+    "-415": 24,
+    "-425": 72,
+    "-444": 48,
+    "-107": 72,
+    "-104": 264,
+    "-101": 336,
+    "-98": 408,
+    "6": 792,
+    "-439": 144,
+    "11": 72,
+    "-472": 24,
+    "-462": 12,
+    "-139": 12,
+    "-134": 12,
+    "-503": 12,
+    "-46": 288,
+    "-284": 96,
+    "-624": 96,
+    "-627": 96,
+    "-277": 96,
+    "-643": 96,
+    "-619": 240,
+    "-279": 48,
+    "-613": 48,
+    "-635": 96,
+    "-292": 48,
+    "-632": 48,
+    "-626": 48,
+    "-326": 24,
+    "-666": 24,
+    "-660": 72,
+    "-656": 24,
+    "-669": 24,
+    "-659": 24,
+    "-318": 24,
+    "-684": 24,
+    "-638": 48,
+    "-676": 24,
+    "-288": 24,
+    "-628": 24,
+    "-631": 24,
+    "-280": 24,
+    "-646": 24,
+    "-600": 24
+  },
+  "known296_parent_losses": 0,
+  "known296_candidate_losses": 0,
+  "actual_proven_overflow_shortcut_state_rows": 127764,
+  "significand_division_visits_recorded_for_all_rows": true,
+  "wrong_reference_state_variants_retained": 65340,
+  "all_wrong_reference_outputs_costs_retained": true,
+  "no_nominal_reference_filter": true,
+  "candidate_ELF_sha256": "d8d475200a0562f2e0fd8b8dda2c8d8482c9708d5db73e5a117a15a67c1bd547",
+  "baseline_FROZEN_sha256": "06aed184b8178826326a19a26dbb700875e4826c7e0b915f1fb8f52c0625e9da",
+  "records_sha256": "126eb2560f40518d2c15106c7357d90c8d326987809e0d185551ae5ae10b17d9",
+  "observed_stack": {
+    "candidate": 176,
+    "parent": 176,
+    "Qfplib": 28
+  },
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 280.6508665420115
+}

@@ -1,0 +1,119 @@
+{
+  "status": "PASS_R43_MANDATORY_LINKED_NATIVE_CARRY_CONTRACT_AND_12_NEGATIVE_CONTROLS",
+  "candidate_ELF_sha256": "724e202d93cff5184ca3788649a6a82727791fce7b97262525100c7d1c45abb7",
+  "actual": {
+    "callsite": 268517450,
+    "native_entry": 268633696,
+    "ordinary_entry": 268633684,
+    "common": 268633702,
+    "rejected_other_factor_target": 268517356
+  },
+  "guard_instructions": [
+    {
+      "address": 268517432,
+      "bytes": 2,
+      "mnemonic": "ldr",
+      "operands": "r2, [sp, #28]",
+      "line": "10014038:\t9a07      \tldr\tr2, [sp, #28]"
+    },
+    {
+      "address": 268517434,
+      "bytes": 2,
+      "mnemonic": "ldr",
+      "operands": "r3, [pc, #52]",
+      "line": "1001403a:\t4b0d      \tldr\tr3, [pc, #52]\t@ (10014070 <mk61_m0_pow_rsqrt_q8_frame_ready+0x28>)"
+    },
+    {
+      "address": 268517436,
+      "bytes": 2,
+      "mnemonic": "subs",
+      "operands": "r2, r2, r3",
+      "line": "1001403c:\t1ad2      \tsubs\tr2, r2, r3"
+    },
+    {
+      "address": 268517438,
+      "bytes": 2,
+      "mnemonic": "cmp",
+      "operands": "r2, #1",
+      "line": "1001403e:\t2a01      \tcmp\tr2, #1"
+    },
+    {
+      "address": 268517440,
+      "bytes": 2,
+      "mnemonic": "bhi",
+      "operands": "10013fec <mk61_m0_pow_rsqrt_local_guard_end>",
+      "line": "10014040:\td8d4      \tbhi.n\t10013fec <mk61_m0_pow_rsqrt_local_guard_end>"
+    },
+    {
+      "address": 268517442,
+      "bytes": 2,
+      "mnemonic": "str",
+      "operands": "r0, [sp, #36]",
+      "line": "10014042:\t9009      \tstr\tr0, [sp, #36]\t@ 0x24"
+    },
+    {
+      "address": 268517444,
+      "bytes": 2,
+      "mnemonic": "str",
+      "operands": "r1, [sp, #40]",
+      "line": "10014044:\t910a      \tstr\tr1, [sp, #40]\t@ 0x28"
+    },
+    {
+      "address": 268517446,
+      "bytes": 2,
+      "mnemonic": "str",
+      "operands": "r5, [sp, #8]",
+      "line": "10014046:\t9502      \tstr\tr5, [sp, #8]"
+    },
+    {
+      "address": 268517448,
+      "bytes": 2,
+      "mnemonic": "mov",
+      "operands": "r0, sp",
+      "line": "10014048:\t4668      \tmov\tr0, sp"
+    },
+    {
+      "address": 268517450,
+      "bytes": 4,
+      "mnemonic": "bl",
+      "operands": "10030660 <mk61_m0_pow_rsqrt_local_q8_native>",
+      "line": "1001404a:\tf01c fb09 \tbl\t10030660 <mk61_m0_pow_rsqrt_local_q8_native>"
+    }
+  ],
+  "integer_truth": [
+    {
+      "Fhi": 2147483647,
+      "difference": 0,
+      "C": 0,
+      "SBC_mask": 4294967295
+    },
+    {
+      "Fhi": 2147483648,
+      "difference": 1,
+      "C": 1,
+      "SBC_mask": 0
+    }
+  ],
+  "all_native_calls_guarded_unique": true,
+  "ordinary_entry_never_uses_incoming_flags": true,
+  "all_intervening_STR_MOV_BL_and_native_PUSH_MOV_preserve_C": true,
+  "negative_controls_rejected": [
+    "wrong-factor-offset",
+    "wrong-difference",
+    "wrong-CMP-constant",
+    "wrong-CMP-register",
+    "wrong-domain-branch",
+    "missing-frame-qlo",
+    "flag-clobber-after-guard",
+    "flag-clobber-before-call",
+    "wrong-call-entry",
+    "wrong-native-prologue",
+    "wrong-SBC",
+    "generic-flag-contract-break"
+  ],
+  "mandatory_after_each_changed_release_object": true,
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

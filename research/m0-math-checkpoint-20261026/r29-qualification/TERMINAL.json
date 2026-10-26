@@ -1,0 +1,8 @@
+{
+  "status": "TERMINAL_R29_PASS_SELECTED_PRIVATE_AUTHOR",
+  "all_producers_terminal": true,
+  "selected_private_source": "R29",
+  "initial_RUNNING_json_superseded": true,
+  "author_result_sha256": "4c96aef293c1735e8205645d40a1fff5fc289e94f89460b83b3d13e9526cca7a",
+  "goal_complete": false
+}

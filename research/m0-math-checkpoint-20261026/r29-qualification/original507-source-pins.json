@@ -1,0 +1,21 @@
+{
+  "files": {
+    ".build/m0-asin-scaled-bound-v164-20261023/slower-inputs.json": "5dcc6280f81c729634a58fd41f9a6e40c842dec286ad03fbb705a9d5b171a192",
+    ".build/m0-v138-execution-20261023/reference/reference.elf": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+    ".build/m0-math-unified-exp-bit62-r29-20261026/candidate.elf": "6a0728833c0a3afa306b3e57f8110fd56c9d24a726c8ae8bf16e7b02b9a78c79",
+    ".build/m0-math-unified-exp-bit62-r29-20261026/zero-control.elf": "9e5344e14c4db6bdc6ef3263fa1ba4a183ffa9b2aa4ff7999533fcd855291ada",
+    ".build/m0-math-unified-exp-bit62-r29-20261026/harness.py": "536ad262f45d3a2bdc33cd321c6546aabb8e25afdf40928eb792535f0abfcba8",
+    ".build/m0-math-unified-exp-bit62-r29-20261026/link-result.json": "fac792cb666c13de718973bdaa1b75a35208d7a8f73d6c94034e4a0f14c0dca3",
+    ".build/m0-math-unified-exp-bit62-r29-20261026/loader-layout-proof.json": "0bbb426c68e1372eb39aac32815aa8c5b687fe897ed1ed704cb4fc3411773dfb",
+    ".build/m0-math-unified-exp-bit62-r29-20261026/private-return-proof.json": "52157758f5ddfc4ea9cf0f7f22afaf809e28ac4294d1ec3495d44ddf14cc9a28",
+    ".build/m0-math-unified-exp-bit62-r29-20261026/private-guard-controls.json": "5f56ab362d96415aa27ad06e41bb8c5dcf67fd14efd83790cad1dbd7dc6d37a5",
+    ".build/m0-float-fma-qualification-20261023/support/m0_mpfr_oracle.py": "fb880de9b8fe7d4b0fc9225121b90d7c41d976fec01b67bf4f7d6e2a89c7000a",
+    ".build/m0-float-fma-qualification-20261023/support/native_eabi_m0_arm_self_test.py": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3",
+    ".build/m0-float-fma-qualification-20261023/oracles.py": "bb653a4fb333c521c7d3b7e4f4c53e7a18c07a60ec5f9e00b422b883b8e24bc9",
+    "research/rp2040-memset-2026-10-21/capture/bootrom.bin": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    ".build/m0-math-unified-exp-bit62-r29-qualification-20261026/original507.py": "d8012a1c6b1127291c3bc9466396608c9aac84943f9146bf48ab623bb66d6b0f"
+  },
+  "candidate_is_one_ELF_plus_real_BootROM": true,
+  "previous_loop_timing_control": true,
+  "no_old_firmware_or_component_overlays_loaded": true
+}

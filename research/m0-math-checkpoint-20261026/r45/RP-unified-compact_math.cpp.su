@@ -1,0 +1,3 @@
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-cold-overflow-r45-20261026/source/code/compact_math.cpp:1005:8:double compact_math::sin(double)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-cold-overflow-r45-20261026/source/code/compact_math.cpp:1028:8:double compact_math::cos(double)	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-cold-overflow-r45-20261026/source/code/compact_math.cpp:1051:8:double compact_math::tan(double)	8	static

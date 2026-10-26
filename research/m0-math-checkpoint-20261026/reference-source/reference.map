@@ -1,0 +1,151 @@
+
+There are no discarded input sections
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.m0_qfplib      0x10180000     0x18dc
+ *(.m0_qfplib)
+ .m0_qfplib     0x10180000     0x1694 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/qfplib-linked.S.o
+                0x101800b2                qfp_fcmp
+                0x101800f4                qfp_float2int
+                0x101800f6                qfp_float2fix
+                0x10180128                qfp_float2uint
+                0x1018012a                qfp_float2ufix
+                0x10180144                qfp_uint642float
+                0x10180146                qfp_ufix642float
+                0x10180156                qfp_int642float
+                0x10180158                qfp_fix642float
+                0x1018017e                qfp_int2float
+                0x10180180                qfp_fix2float
+                0x1018018e                qfp_uint2float
+                0x10180190                qfp_ufix2float
+                0x1018021c                qfp_fsin
+                0x10180266                qfp_fcos
+                0x10180284                qfp_ftan
+                0x1018028c                qfp_fexp
+                0x101802ca                qfp_fln
+                0x10180364                qfp_fatan2
+                0x10180414                qfp_fsub
+                0x10180418                qfp_fadd
+                0x101804e8                qfp_fmul
+                0x101805b4                qfp_fdiv
+                0x10180698                qfp_fsqrt
+                0x10180734                qfp_dsub
+                0x10180740                qfp_dadd
+                0x1018089c                qfp_dmul
+                0x101809f8                qfp_ddiv
+                0x10180bc4                qfp_dsqrt
+                0x10180d56                qfp_dcmp
+                0x10180e4c                qfp_double2int
+                0x10180e4e                qfp_double2fix
+                0x10180e5a                qfp_double2uint
+                0x10180e5c                qfp_double2ufix
+                0x10180e68                qfp_float2int64
+                0x10180e6a                qfp_float2fix64
+                0x10180e72                qfp_float2uint64
+                0x10180e74                qfp_float2ufix64
+                0x10180ea8                qfp_double2int64
+                0x10180eaa                qfp_double2fix64
+                0x10180ec2                qfp_double2uint64
+                0x10180ec4                qfp_double2ufix64
+                0x10180f24                qfp_float2double
+                0x10180f4a                qfp_double2float
+                0x10180fa2                qfp_uint2double
+                0x10180fa4                qfp_ufix2double
+                0x10180faa                qfp_int2double
+                0x10180fac                qfp_fix2double
+                0x10180fb2                qfp_uint642double
+                0x10180fb4                qfp_ufix642double
+                0x10180fb8                qfp_int642double
+                0x10180fba                qfp_fix642double
+                0x101810f8                qfp_dtan
+                0x10181118                qfp_dcos
+                0x10181128                qfp_dsin
+                0x10181218                qfp_datan2
+                0x1018142c                qfp_dexp
+                0x101814c8                qfp_dln
+ .m0_qfplib     0x10181694       0x6c /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/adapters.S.o
+                0x10181694                audit_dcmpeq
+                0x101816a6                audit_dcmplt
+                0x101816b8                audit_dcmple
+                0x101816ca                audit_dcmpge
+                0x101816dc                audit_dcmpgt
+                0x101816ee                audit_atan
+ .m0_qfplib     0x10181700      0x1dc /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/compositions.c.o
+                0x10181700                qfp_composed_asin
+                0x1018174c                qfp_composed_acos
+                0x10181794                qfp_composed_log10
+                0x101817ac                qfp_composed_pow
+                0x101817c8                qfp_composed_pow_integer
+                0x10181870                qfp_composed_pow_exact
+ *(.text*)
+ .text          0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/qfplib-linked.S.o
+ .text          0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/adapters.S.o
+ .text          0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/compositions.c.o
+ *(.rodata*)
+
+.glue_7         0x101818dc        0x0
+ .glue_7        0x101818dc        0x0 linker stubs
+
+.glue_7t        0x101818dc        0x0
+ .glue_7t       0x101818dc        0x0 linker stubs
+
+.vfp11_veneer   0x101818dc        0x0
+ .vfp11_veneer  0x101818dc        0x0 linker stubs
+
+.v4_bx          0x101818dc        0x0
+ .v4_bx         0x101818dc        0x0 linker stubs
+
+.iplt           0x101818dc        0x0
+ .iplt          0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/qfplib-linked.S.o
+
+.igot.plt       0x101818dc        0x0
+ .igot.plt      0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/qfplib-linked.S.o
+
+.rel.dyn        0x101818dc        0x0
+ .rel.iplt      0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/qfplib-linked.S.o
+
+.reference_ram  0x101818dc        0x0
+ *(.data*)
+ .data          0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/qfplib-linked.S.o
+ .data          0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/adapters.S.o
+ .data          0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/compositions.c.o
+ *(.bss*)
+ .bss           0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/qfplib-linked.S.o
+ .bss           0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/adapters.S.o
+ .bss           0x101818dc        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/compositions.c.o
+ *(COMMON)
+
+/DISCARD/
+ *(.ARM.exidx*)
+ *(.ARM.extab*)
+                0x00000001                        ASSERT ((SIZEOF (.reference_ram) == 0x0), Reference must not add RAM state)
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/qfplib-linked.S.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/adapters.S.o
+LOAD /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/compositions.c.o
+OUTPUT(/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/reference.elf elf32-littlearm)
+LOAD linker stubs
+
+.ARM.attributes
+                0x00000000       0x2e
+ .ARM.attributes
+                0x00000000       0x22 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/qfplib-linked.S.o
+ .ARM.attributes
+                0x00000022       0x22 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/adapters.S.o
+ .ARM.attributes
+                0x00000044       0x2c /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/compositions.c.o
+
+.note.GNU-stack
+                0x00000000        0x0
+ .note.GNU-stack
+                0x00000000        0x0 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/adapters.S.o
+
+.comment        0x00000000       0x38
+ .comment       0x00000000       0x38 /Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/compositions.c.o
+                                 0x39 (size before relaxing)

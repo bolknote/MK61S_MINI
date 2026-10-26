@@ -1,0 +1,81 @@
+R38 boundary 0 elapsed 0.5 loss 0 new 0
+R38 boundary 8192 elapsed 9.8 loss 248 new 0
+R38 boundary 16384 elapsed 17.0 loss 248 new 0
+R38 boundary 24576 elapsed 24.4 loss 252 new 0
+R38 boundary 32768 elapsed 32.8 loss 261 new 0
+R38 boundary 40960 elapsed 41.2 loss 270 new 0
+R38 boundary 49152 elapsed 49.7 loss 288 new 0
+R38 boundary 57344 elapsed 58.2 loss 303 new 0
+R38 boundary 65536 elapsed 66.7 loss 317 new 0
+R38 boundary 73728 elapsed 75.1 loss 327 new 0
+R38 boundary 81920 elapsed 83.6 loss 340 new 0
+R38 boundary 90112 elapsed 91.9 loss 346 new 0
+R38 boundary 98304 elapsed 100.4 loss 359 new 0
+R38 boundary 106496 elapsed 108.8 loss 366 new 0
+R38 boundary 114688 elapsed 117.2 loss 378 new 0
+R38 boundary 122880 elapsed 125.7 loss 392 new 0
+R38 boundary 131072 elapsed 134.1 loss 404 new 0
+R38 boundary 139264 elapsed 142.5 loss 413 new 0
+R38 boundary 147456 elapsed 150.6 loss 424 new 0
+R38 boundary 155648 elapsed 157.6 loss 427 new 0
+R38 boundary 163840 elapsed 164.7 loss 430 new 0
+R38 boundary 172032 elapsed 171.7 loss 430 new 0
+{
+  "status": "COMPLETED_FRESH_R38_BOUNDARY_WITH_INHERITED_R37_ORACLES_QFP_PARENT",
+  "phase": "boundary",
+  "source_FROZEN_sha256": "da406f31b39e0a01ee415a1ee9d2658d1fbed5ac5ceb04784dc8a25e146a60a2",
+  "parent_qualification_FROZEN_sha256": "00dc5efa117f764392cacc06a7d97145ba9cca7650909dd4fc6b68cda5bae8e4",
+  "candidate_ELF_sha256": "d779746439194b0695519f56f5cc9858b6d2cd8cab3d4408081789caf449c3ab",
+  "input_records_sha256": "0993fc4c6388dd504b5debb88ef2b88195de545f9254c78985e7f02374d7793a",
+  "input_source_FROZEN_sha256": "00dc5efa117f764392cacc06a7d97145ba9cca7650909dd4fc6b68cda5bae8e4",
+  "input_source": ".build/m0-math-unified-exp-row0-small-r37-qualification-20261026",
+  "records_sha256": "943e0fa62fdab0355066addceabc92fab2393364a50489509f061dc5a2072ed5",
+  "unique_inputs": 58984,
+  "state_rows": 176952,
+  "actual_fresh_public_R38_ARM_calls": 176952,
+  "actual_fresh_public_index0_poison16NZCV_calls": 36960,
+  "actual_qualified_public_ARM_calls": 213912,
+  "actual_fresh_parent_Qfp_MPFR_calls": 0,
+  "all_oracles_Qfp_parent_from_frozen_input_source": true,
+  "source_is_R38_diagnostic_not_R37_qualification": false,
+  "inherited_R37_calls_not_fresh": true,
+  "all_outputs_exact_frozen_correctly_rounded_R37": true,
+  "candidate_wrong": 0,
+  "parent_losing_inputs": 442,
+  "candidate_losing_inputs": 430,
+  "fixed_inputs": 12,
+  "new_losing_inputs": 0,
+  "instruction_delta_histogram": {
+    "0": 176910,
+    "-1697": 36,
+    "3": 6
+  },
+  "correct_inherited_Qfplib_relations": {
+    "slower": 1290,
+    "strict": 173955,
+    "equal": 3
+  },
+  "wrong_inherited_Qfplib_rows_retained": 1704,
+  "actual_private_entry_counts": {
+    "refine": 2694,
+    "dispatch": 38571,
+    "helper": 2070,
+    "small17": 12393,
+    "fast21": 7290,
+    "normalized17": 16038,
+    "midpoint17": 36
+  },
+  "all_actual_fast_inputs_within_proved_domain": true,
+  "all_actual_helper_parameters_exact_and_in_domain": true,
+  "row0_public_poison_unique_inputs": 154,
+  "all_poison_bits_and_costs_exact": true,
+  "observed_stack": 816,
+  "not_universal_stack_bound": true,
+  "diagnostics_primitives_inherited_oracles_generation_not_pooled": true,
+  "no_nominal_reference_filter": true,
+  "physical_cycles_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 216.33286933298223
+}

@@ -1,0 +1,64 @@
+R38 admission 0 elapsed 0.2 loss 0 new 0
+R38 admission 8192 elapsed 7.4 loss 248 new 0
+R38 admission 16384 elapsed 12.9 loss 248 new 0
+R38 admission 24576 elapsed 18.9 loss 352 new 0
+{
+  "status": "COMPLETED_FRESH_R38_ADMISSION_WITH_INHERITED_R37_ORACLES_QFP_PARENT",
+  "phase": "admission",
+  "source_FROZEN_sha256": "da406f31b39e0a01ee415a1ee9d2658d1fbed5ac5ceb04784dc8a25e146a60a2",
+  "parent_qualification_FROZEN_sha256": "00dc5efa117f764392cacc06a7d97145ba9cca7650909dd4fc6b68cda5bae8e4",
+  "candidate_ELF_sha256": "d779746439194b0695519f56f5cc9858b6d2cd8cab3d4408081789caf449c3ab",
+  "input_records_sha256": "afba21d15b3ce820a73cac2bbc5a4750bbf5f5b79458840c8026798555818001",
+  "input_source_FROZEN_sha256": "da406f31b39e0a01ee415a1ee9d2658d1fbed5ac5ceb04784dc8a25e146a60a2",
+  "input_source": ".build/m0-math-unified-exp-row0-midpoint-r38-20261026",
+  "records_sha256": "6e3946b58842e68df02368497066d666ee77a09c7ab2d73d53d98c44236af228",
+  "unique_inputs": 8669,
+  "state_rows": 26007,
+  "actual_fresh_public_R38_ARM_calls": 26007,
+  "actual_fresh_public_index0_poison16NZCV_calls": 4560,
+  "actual_qualified_public_ARM_calls": 30567,
+  "actual_fresh_parent_Qfp_MPFR_calls": 0,
+  "all_oracles_Qfp_parent_from_frozen_input_source": true,
+  "source_is_R38_diagnostic_not_R37_qualification": true,
+  "inherited_R37_calls_not_fresh": true,
+  "all_outputs_exact_frozen_correctly_rounded_R37": true,
+  "candidate_wrong": 0,
+  "parent_losing_inputs": 510,
+  "candidate_losing_inputs": 491,
+  "fixed_inputs": 19,
+  "new_losing_inputs": 0,
+  "instruction_delta_histogram": {
+    "0": 25902,
+    "-1697": 57,
+    "3": 33,
+    "7": 15
+  },
+  "correct_inherited_Qfplib_relations": {
+    "slower": 1473,
+    "strict": 24276,
+    "equal": 3
+  },
+  "wrong_inherited_Qfplib_rows_retained": 255,
+  "actual_private_entry_counts": {
+    "refine": 870,
+    "dispatch": 5976,
+    "helper": 246,
+    "small17": 171,
+    "fast21": 75,
+    "normalized17": 204,
+    "midpoint17": 4617
+  },
+  "all_actual_fast_inputs_within_proved_domain": true,
+  "all_actual_helper_parameters_exact_and_in_domain": true,
+  "row0_public_poison_unique_inputs": 19,
+  "all_poison_bits_and_costs_exact": true,
+  "observed_stack": 816,
+  "not_universal_stack_bound": true,
+  "diagnostics_primitives_inherited_oracles_generation_not_pooled": true,
+  "no_nominal_reference_filter": true,
+  "physical_cycles_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 24.068369332992006
+}

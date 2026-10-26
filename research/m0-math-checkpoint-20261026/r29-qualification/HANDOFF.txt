@@ -1,0 +1,8 @@
+PRIVATE R29 author-qualified exact bit62 normalization; whole goal remains open.
+Fresh full candidate989922ARM/494961inputs with explicit INHERITED R28 oracle/Qfp/parent; fresh primary196714ARM gives1186636qualifiedARM.
+FullMPFR/Qfp/parentfresh0; primaryoracle evidence fresh and reported separately, all inherited raw baselines pinned.
+All actual outputs exactR28, qrange checks and0/-2 pernormalization checks pass, no wrong/new/increase; exp428/pow2501/ln0FINITE2929 unchanged.
+Source exactrange proof + actual669otherinstructions mapped, R2/NZCVdead/CFG/branch/literal closed.
+Core5212->5208B;18otherobjects/M4default exact; bank1changedbyte mapped; actualR12/17/ROMloader/9disabled pass; no newtablesRAMlibgcc.
+Sourcepending and initialRUNNING snapshots superseded by completedqualification only. No independent/HW/main/adoption/integration/releaseGO.
+No canonical/Git/device/USB/Flash changes; globalCR/generalpowtotality/floatFMA/stack/cycles still open.

@@ -1,0 +1,79 @@
+{
+  "status": "PASS_PRIVATE_AUTHOR_R29_EXACT_BIT62_FULL_FRESH_CANDIDATE",
+  "source_FROZEN_sha256": "c176067a6ba6afda1ff3f158be5c8e148c6bdc8f98dfc0f63dfa86f03f262018",
+  "candidate_ELF_sha256": "6a0728833c0a3afa306b3e57f8110fd56c9d24a726c8ae8bf16e7b02b9a78c79",
+  "parent_R28_qualification_FROZEN_sha256": "0ba57f4e189ef444dc849d8dc42836f2a56ab8780282c36854d320317b42a70b",
+  "actual_fresh_full_R29_public_ARM_calls": 989922,
+  "actual_fresh_primary_public_ARM_calls": 196714,
+  "actual_fresh_qualified_ARM_calls": 1186636,
+  "actual_fresh_private_primitive_ARM_calls": 0,
+  "full_unique_inputs": 494961,
+  "full_state_rows": 989922,
+  "full_actual_fresh_MPFR_inputs": 0,
+  "full_actual_fresh_Qfplib_ARM_calls": 0,
+  "full_actual_fresh_parent_ARM_calls": 0,
+  "inherited_full_directed_MPFR_inputs": 494959,
+  "inherited_full_sNaN_shortcuts": 2,
+  "inherited_Qfplib_state_measurements": 989922,
+  "inherited_R28_state_measurements": 989922,
+  "inherited_R28_1114954_primitive_ARM_and_2969766_full_ARM_not_fresh_R29": true,
+  "diagnostic70056_ARM_and7784_MPFR_not_pooled": true,
+  "source_bound_global_q_range_and_actual_CFG_R2_NZCV_mapping": true,
+  "all_outputs_exact_frozen_correct_R28": true,
+  "all_actual_normalization_q_within_global_bound": true,
+  "all_actual_costs_follow0_or_minus2_mapping": true,
+  "full_instruction_delta_histogram": {
+    "-2": 166996,
+    "0": 822926
+  },
+  "full_normalization_visit_histogram": {
+    "1": 166996,
+    "0": 822926
+  },
+  "all_parent_increases": 0,
+  "new_correct_Qfplib_losses": 0,
+  "candidate_wrong": 0,
+  "parent_exp_losing_inputs": 428,
+  "current_exp_losing_inputs": 428,
+  "current_pow_losing_pairs": 2501,
+  "current_ln_losing_inputs": 0,
+  "known_finite_losing_operation_arguments": 2929,
+  "whole_remaining_library_count": false,
+  "all_wrong_inherited_Qfplib_rows_retained": 408412,
+  "all_primary_nonexp_outputs_reference_and_own_costs_exact_R28": true,
+  "all_primary_parent_increases": 0,
+  "fresh_primary_oracle_accounting": {
+    "original507": {
+      "MPFR_version": "4.2.2",
+      "oracle_evaluations": 507,
+      "actual_directed_MPFR_inputs": 507,
+      "integer_conversions_also_checked_with_exact_integer_oracle": true
+    },
+    "broad": {
+      "oracle_input_evaluations": {
+        "binary64_directed_MPFR_inputs": 18583,
+        "integer_to_double_MPFR_and_exact": 4897,
+        "double_to_integer_MPFR_and_exact": 3072,
+        "float_cast_directed_MPFR_and_exact": 1024,
+        "comparison_exact_MPFR_inputs": 2560
+      },
+      "MPFR_version": "4.2.2"
+    }
+  },
+  "other18_objects_M4_default_exact": true,
+  "RP_exp_core_bytes": 5208,
+  "code_delta_bytes_vs_R28": -4,
+  "new_tables_RAM_libgcc_bytes": 0,
+  "linked_bank_changed_bytes": 1,
+  "linked_bank_all_changes_symbolically_mapped": true,
+  "actual_linked_R12_17negative_realROMloader9disabled_pass": true,
+  "observed_full_stack": 816,
+  "not_universal_stack_bound": true,
+  "source_pending_snapshot_and_initial_RUNNING_superseded_by_completed_qualification": true,
+  "selected_private_author_candidate": true,
+  "new_independent_acceptance": false,
+  "universal_CR_totality_floatFMA_stack_cycles_integration_release_GO": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

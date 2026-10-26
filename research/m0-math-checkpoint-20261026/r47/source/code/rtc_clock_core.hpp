@@ -1,0 +1,460 @@
+#ifndef MK61_RTC_CLOCK_CORE_HPP
+#define MK61_RTC_CLOCK_CORE_HPP
+
+#include "rust_types.h"
+
+namespace rtc_clock {
+
+static constexpr usize DATETIME_TEXT_LENGTH = 19;
+static constexpr usize DATETIME_TEXT_SIZE = DATETIME_TEXT_LENGTH + 1;
+
+enum class ClockSource : u8 {
+  LSI,
+  LSE
+};
+
+static constexpr i16 CALIBRATION_MIN_PPM = -487;
+static constexpr i16 CALIBRATION_MAX_PPM = 488;
+static constexpr u32 CALIBRATION_RECORD_MAGIC = 0x43410000UL; // "CA"
+static constexpr u32 CALIBRATION_RECORD_MAGIC_MASK = 0xFFFF0000UL;
+static constexpr u32 CALIBRATION_PULSES_PER_WINDOW = 1UL << 20;
+static constexpr u32 PPM_SCALE = 1000000UL;
+
+struct SmoothCalibration {
+  bool plus_512_pulses;
+  u16 minus_pulses;
+};
+
+constexpr bool calibration_ppm_is_valid(i32 ppm) {
+  return ppm >= CALIBRATION_MIN_PPM && ppm <= CALIBRATION_MAX_PPM;
+}
+
+// CALP добавляет 512 импульсов за окно 2^20 RTCCLK, а CALM затем вычитает
+// 0..511 импульсов. Положительная поправка ускоряет часы, отрицательная
+// замедляет. Округление даёт ближайший доступный шаг около 0,954 ppm.
+inline bool smooth_calibration_for_ppm(i32 ppm, SmoothCalibration& out) {
+  if(!calibration_ppm_is_valid(ppm)) return false;
+  if(ppm == 0) {
+    out = {false, 0};
+    return true;
+  }
+
+  const u32 magnitude = (u32) (ppm < 0 ? -ppm : ppm);
+  u32 pulses = (magnitude * CALIBRATION_PULSES_PER_WINDOW +
+                PPM_SCALE / 2U) / PPM_SCALE;
+  if(ppm < 0) {
+    if(pulses > 511U) pulses = 511U;
+    out = {false, (u16) pulses};
+  } else {
+    if(pulses > 512U) pulses = 512U;
+    out = {true, (u16) (512U - pulses)};
+  }
+  return true;
+}
+
+inline u32 encode_calibration_record(i32 ppm) {
+  if(!calibration_ppm_is_valid(ppm)) return 0;
+  return CALIBRATION_RECORD_MAGIC | (u16) (i16) ppm;
+}
+
+inline bool decode_calibration_record(u32 record, i16& out) {
+  if((record & CALIBRATION_RECORD_MAGIC_MASK) != CALIBRATION_RECORD_MAGIC) {
+    return false;
+  }
+  const u16 raw = (u16) record;
+  const i32 value = (raw & 0x8000U) != 0
+      ? (i32) raw - 0x10000L
+      : (i32) raw;
+  if(!calibration_ppm_is_valid(value)) return false;
+  out = (i16) value;
+  return true;
+}
+
+constexpr const char* clock_source_name(ClockSource source) {
+  return source == ClockSource::LSE ? "LSE" : "LSI";
+}
+
+// Разводка платы определяет, безопасно ли использовать OSC32_IN/OUT. Даже если
+// LSE разрешён, нужно убедиться, что он действительно запустился; иначе загрузка
+// продолжается от внутреннего LSI вместо перехода в Error_Handler ядра STM32.
+constexpr ClockSource select_clock_source(bool lse_available, bool lse_ready) {
+  return (lse_available && lse_ready) ? ClockSource::LSE : ClockSource::LSI;
+}
+
+constexpr bool retained_lse_must_be_disabled(bool lse_available,
+                                             bool lse_enabled) {
+  return !lse_available && lse_enabled;
+}
+
+static constexpr u32 RTC_PREDIV_ASYNC_MAX = 0x7FU;
+static constexpr u32 RTC_PREDIV_SYNC_MAX = 0x7FFFU;
+
+struct Prescalers {
+  u16 asynchronous;
+  u16 synchronous;
+};
+
+// Convert a capture span to the measured source frequency.  Using the span
+// between distant captures instead of one LSI period keeps timer quantization
+// well below the accuracy of the high-speed reference clock.
+inline bool captured_frequency_hz(u32 timer_clock_hz, u32 source_cycles,
+                                  u32 timer_ticks, u32& out) {
+  if(timer_clock_hz == 0 || source_cycles == 0 || timer_ticks == 0) {
+    return false;
+  }
+  const u64 numerator = (u64) timer_clock_hz * source_cycles;
+  const u64 rounded = (numerator + timer_ticks / 2U) / timer_ticks;
+  if(rounded == 0 || rounded > 0xFFFFFFFFULL) return false;
+  out = (u32) rounded;
+  return true;
+}
+
+// Find the legal two-stage divider whose product is closest to the measured
+// source frequency.  Equal-error candidates prefer the larger asynchronous
+// divider because ST recommends it for lower RTC power consumption.
+inline bool prescalers_for_frequency(u32 source_hz, Prescalers& out) {
+  static constexpr u32 ASYNC_FACTOR_MAX = RTC_PREDIV_ASYNC_MAX + 1U;
+  static constexpr u32 SYNC_FACTOR_MAX = RTC_PREDIV_SYNC_MAX + 1U;
+  if(source_hz == 0 ||
+     source_hz > ASYNC_FACTOR_MAX * SYNC_FACTOR_MAX) {
+    return false;
+  }
+
+  u32 best_error = 0xFFFFFFFFUL;
+  u32 best_async_factor = 0;
+  u32 best_sync_factor = 0;
+  for(u32 async_factor = 1; async_factor <= ASYNC_FACTOR_MAX;
+      async_factor++) {
+    u32 sync_factor =
+        (source_hz + async_factor / 2U) / async_factor;
+    if(sync_factor == 0) sync_factor = 1;
+    if(sync_factor > SYNC_FACTOR_MAX) continue;
+
+    const u32 divider = async_factor * sync_factor;
+    const u32 error = divider > source_hz
+        ? divider - source_hz : source_hz - divider;
+    if(error < best_error ||
+       (error == best_error && async_factor > best_async_factor)) {
+      best_error = error;
+      best_async_factor = async_factor;
+      best_sync_factor = sync_factor;
+    }
+  }
+
+  if(best_async_factor == 0) return false;
+  out = {(u16) (best_async_factor - 1U),
+         (u16) (best_sync_factor - 1U)};
+  return true;
+}
+
+struct DateTime {
+  u16 year;
+  u8 month;
+  u8 day;
+  u8 hour;
+  u8 minute;
+  u8 second;
+};
+
+// Согласованное состояние RTC, используемое только для разнообразия начального
+// заполнения. Субсекундный регистр STM32 — обратный счётчик: subsecond изменяется
+// от second_fraction до нуля. Ни эта структура, ни функции её упаковки не
+// предполагают, что часы являются источником энтропии.
+struct StartupSnapshot {
+  DateTime date_time;
+  u32 subsecond;
+  u32 second_fraction;
+  bool time_set;
+};
+
+enum class TerminalAction : u8 {
+  SHOW,
+  SET,
+  INVALID
+};
+
+struct TerminalRequest {
+  TerminalAction action;
+  DateTime date_time;
+};
+
+inline bool is_horizontal_space(char c) {
+  return c == ' ' || c == '\t';
+}
+
+inline bool is_text_end(char c) {
+  return c == 0 || c == '\r' || c == '\n';
+}
+
+inline const char* skip_horizontal_spaces(const char* text) {
+  while(text != 0 && is_horizontal_space(*text)) text++;
+  return text;
+}
+
+inline bool is_leap_year(u16 year) {
+  return (year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0));
+}
+
+inline u8 days_in_month(u16 year, u8 month) {
+  static constexpr u8 DAYS[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  if(month < 1 || month > 12) return 0;
+  if(month == 2 && is_leap_year(year)) return 29;
+  return DAYS[month - 1];
+}
+
+inline bool is_valid(const DateTime& value) {
+  if(value.year < 2000 || value.year > 2099) return false;
+  if(value.month < 1 || value.month > 12) return false;
+  if(value.day < 1 || value.day > days_in_month(value.year, value.month)) return false;
+  if(value.hour > 23 || value.minute > 59 || value.second > 59) return false;
+  return true;
+}
+
+inline bool is_valid(const StartupSnapshot& value) {
+  return is_valid(value.date_time) && value.subsecond <= value.second_fraction;
+}
+
+// RTC SSR counts down. Convert the coherent raw phase to elapsed milliseconds
+// within the named calendar second without floating point or assuming a
+// particular LSE/LSI prescaler.
+inline u16 snapshot_milliseconds(const StartupSnapshot& value) {
+  if(value.subsecond > value.second_fraction) return 0;
+  return (u16) (((u64) (value.second_fraction - value.subsecond) * 1000U) /
+                ((u64) value.second_fraction + 1U));
+}
+
+// Monotonic calendar projection used to repair Arduino's millisecond clock
+// after STM32 STOP, where SysTick is intentionally suspended.  The supported
+// RTC domain is only 2000..2099, so the result easily fits in u64 and does not
+// need libc time zones, epochs or floating point.
+inline bool snapshot_milliseconds_since_2000(const StartupSnapshot& value,
+                                             u64& out) {
+  if(!is_valid(value)) return false;
+
+  u32 days = 0;
+  for(u16 year = 2000; year < value.date_time.year; year++) {
+    days += is_leap_year(year) ? 366U : 365U;
+  }
+  for(u8 month = 1; month < value.date_time.month; month++) {
+    days += days_in_month(value.date_time.year, month);
+  }
+  days += (u32) value.date_time.day - 1U;
+
+  const u64 seconds = (u64) days * 86400U +
+      (u64) value.date_time.hour * 3600U +
+      (u64) value.date_time.minute * 60U + value.date_time.second;
+  out = seconds * 1000U + snapshot_milliseconds(value);
+  return true;
+}
+
+inline bool elapsed_snapshot_milliseconds(const StartupSnapshot& before,
+                                          const StartupSnapshot& after,
+                                          u32& out) {
+  u64 before_ms = 0;
+  u64 after_ms = 0;
+  if(!snapshot_milliseconds_since_2000(before, before_ms) ||
+     !snapshot_milliseconds_since_2000(after, after_ms) ||
+     after_ms < before_ms || after_ms - before_ms > 0xFFFFFFFFULL) {
+    return false;
+  }
+  out = (u32) (after_ms - before_ms);
+  return true;
+}
+
+// ck_spre is phase-aligned to the next calendar second, so its first interval
+// may be much shorter than requested. Derive a phase-independent RTCCLK/16
+// counter from the live calendar prescalers instead. This covers both the
+// usual 32768 Hz LSE (127,255) and 32000 Hz LSI (127,249).
+inline bool stop_wakeup_counter(u32 prediv_async, u32 prediv_sync,
+                                u8 seconds, u16& out) {
+  if(seconds == 0 || seconds > 5 || prediv_async > 0x7FU ||
+     prediv_sync > 0x7FFFU) {
+    return false;
+  }
+  const u64 source_ticks = (u64) (prediv_async + 1U) *
+      (prediv_sync + 1U) * seconds;
+  const u64 divided_ticks = (source_ticks + 8U) / 16U;
+  if(divided_ticks == 0 || divided_ticks > 65536U) return false;
+  out = (u16) (divided_ticks - 1U);
+  return true;
+}
+
+// Храним календарь и фазу в отдельных словах, чтобы пул энтропии мог помечать
+// и поглощать их независимо. time_set отличает календарь, установленный
+// пользователем, от корректного календаря по умолчанию, который ведёт RTC.
+inline u64 startup_calendar_material(const StartupSnapshot& value) {
+  return (value.time_set ? (1ULL << 63) : 0ULL)
+      | ((u64) value.date_time.year << 40)
+      | ((u64) value.date_time.month << 32)
+      | ((u64) value.date_time.day << 24)
+      | ((u64) value.date_time.hour << 16)
+      | ((u64) value.date_time.minute << 8)
+      | (u64) value.date_time.second;
+}
+
+inline u64 startup_phase_material(const StartupSnapshot& value) {
+  return ((u64) value.second_fraction << 32) | value.subsecond;
+}
+
+inline u16 parse_fixed_decimal(const char* text, usize count) {
+  u16 value = 0;
+  for(usize i = 0; i < count; i++) value = (u16) (value * 10 + (u16) (text[i] - '0'));
+  return value;
+}
+
+// Строгий человекочитаемый формат терминала: YYYY-MM-DD HH:MM:SS.
+inline bool parse_datetime(const char* text, DateTime& out) {
+  text = skip_horizontal_spaces(text);
+  if(text == 0) return false;
+
+  usize length = 0;
+  while(!is_text_end(text[length])) length++;
+  while(length > 0 && is_horizontal_space(text[length - 1])) length--;
+  if(length != DATETIME_TEXT_LENGTH) return false;
+
+  static constexpr usize DIGIT_POSITIONS[] = {
+    0, 1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18
+  };
+  for(usize position : DIGIT_POSITIONS) {
+    if(text[position] < '0' || text[position] > '9') return false;
+  }
+  if(text[4] != '-' || text[7] != '-' || text[10] != ' ' || text[13] != ':' || text[16] != ':') return false;
+
+  const DateTime parsed = {
+    parse_fixed_decimal(text, 4),
+    (u8) parse_fixed_decimal(text + 5, 2),
+    (u8) parse_fixed_decimal(text + 8, 2),
+    (u8) parse_fixed_decimal(text + 11, 2),
+    (u8) parse_fixed_decimal(text + 14, 2),
+    (u8) parse_fixed_decimal(text + 17, 2)
+  };
+  if(!is_valid(parsed)) return false;
+  out = parsed;
+  return true;
+}
+
+inline bool parse_time_of_day(const char* text, DateTime& out) {
+  text = skip_horizontal_spaces(text);
+  if(text == 0) return false;
+  usize length = 0;
+  while(!is_text_end(text[length])) length++;
+  while(length > 0 && is_horizontal_space(text[length - 1])) length--;
+  if(length != 8 || text[2] != ':' || text[5] != ':') return false;
+  static constexpr usize DIGITS[] = {0, 1, 3, 4, 6, 7};
+  for(usize position : DIGITS) {
+    if(text[position] < '0' || text[position] > '9') return false;
+  }
+  const DateTime parsed = {
+    2000, 1, 1,
+    (u8) parse_fixed_decimal(text, 2),
+    (u8) parse_fixed_decimal(text + 3, 2),
+    (u8) parse_fixed_decimal(text + 6, 2)
+  };
+  if(!is_valid(parsed)) return false;
+  out = parsed;
+  return true;
+}
+
+inline void write_two_digits(char* out, u8 value) {
+  out[0] = (char) ('0' + value / 10);
+  out[1] = (char) ('0' + value % 10);
+}
+
+inline bool format_datetime(const DateTime& value, char out[DATETIME_TEXT_SIZE]) {
+  if(out == 0 || !is_valid(value)) return false;
+  out[0] = (char) ('0' + (value.year / 1000) % 10);
+  out[1] = (char) ('0' + (value.year / 100) % 10);
+  out[2] = (char) ('0' + (value.year / 10) % 10);
+  out[3] = (char) ('0' + value.year % 10);
+  out[4] = '-';
+  write_two_digits(out + 5, value.month);
+  out[7] = '-';
+  write_two_digits(out + 8, value.day);
+  out[10] = ' ';
+  write_two_digits(out + 11, value.hour);
+  out[13] = ':';
+  write_two_digits(out + 14, value.minute);
+  out[16] = ':';
+  write_two_digits(out + 17, value.second);
+  out[19] = 0;
+  return true;
+}
+
+inline usize bounded_text_length(const char* text, usize limit) {
+  if(text == 0) return 0;
+  usize length = 0;
+  while(length <= limit && text[length] != 0) length++;
+  return length;
+}
+
+inline u8 build_month(const char* text) {
+  static constexpr char MONTHS[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
+  if(text == 0) return 0;
+  for(u8 month = 0; month < 12; month++) {
+    const usize offset = (usize) month * 3;
+    if(text[0] == MONTHS[offset] && text[1] == MONTHS[offset + 1] && text[2] == MONTHS[offset + 2]) {
+      return (u8) (month + 1);
+    }
+  }
+  return 0;
+}
+
+// Преобразует стандартные строки компилятора ("Mmm dd yyyy", "HH:MM:SS")
+// в редактируемое начальное значение. Аппаратные часы при этом не помечаются
+// как установленные и не настраиваются.
+inline bool parse_build_datetime(const char* date, const char* time, DateTime& out) {
+  if(bounded_text_length(date, 11) != 11 || bounded_text_length(time, 8) != 8) return false;
+  if(date[3] != ' ' || date[6] != ' ' || time[2] != ':' || time[5] != ':') return false;
+
+  const u8 month = build_month(date);
+  if(month == 0 || date[5] < '0' || date[5] > '9') return false;
+  if(date[4] != ' ' && (date[4] < '0' || date[4] > '9')) return false;
+
+  for(usize position = 7; position < 11; position++) {
+    if(date[position] < '0' || date[position] > '9') return false;
+  }
+  static constexpr usize TIME_DIGITS[] = {0, 1, 3, 4, 6, 7};
+  for(usize position : TIME_DIGITS) {
+    if(time[position] < '0' || time[position] > '9') return false;
+  }
+
+  const DateTime parsed = {
+    parse_fixed_decimal(date + 7, 4),
+    month,
+    (u8) ((date[4] == ' ')
+      ? (date[5] - '0')
+      : parse_fixed_decimal(date + 4, 2)),
+    (u8) parse_fixed_decimal(time, 2),
+    (u8) parse_fixed_decimal(time + 3, 2),
+    (u8) parse_fixed_decimal(time + 6, 2)
+  };
+  if(!is_valid(parsed)) return false;
+  out = parsed;
+  return true;
+}
+
+// День недели календаря STM32: понедельник=1 ... воскресенье=7.
+inline u8 weekday(const DateTime& value) {
+  static constexpr u8 MONTH_OFFSETS[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+  u32 year = value.year;
+  if(value.month < 3) year--;
+  const u8 sunday_zero = (u8) ((year + year / 4 - year / 100 + year / 400
+      + MONTH_OFFSETS[value.month - 1] + value.day) % 7);
+  return sunday_zero == 0 ? 7 : sunday_zero;
+}
+
+inline TerminalRequest parse_date_request(const char* args) {
+  TerminalRequest result = {TerminalAction::INVALID, {0, 0, 0, 0, 0, 0}};
+  const char* text = skip_horizontal_spaces(args);
+  if(text == 0 || is_text_end(*text)) {
+    result.action = TerminalAction::SHOW;
+    return result;
+  }
+
+  if(parse_datetime(text, result.date_time)) result.action = TerminalAction::SET;
+  return result;
+}
+
+} // пространство имён rtc_clock
+
+#endif

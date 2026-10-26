@@ -1,0 +1,7 @@
+ENTRY(qfp_dadd)
+SECTIONS {
+ .m0_qfplib 0x10180000 : { KEEP(*(.m0_qfplib)) *(.text*) *(.rodata*) }
+ .reference_ram (NOLOAD) : { *(.data*) *(.bss*) *(COMMON) }
+ /DISCARD/ : { *(.ARM.exidx*) *(.ARM.extab*) }
+ ASSERT(SIZEOF(.reference_ram)==0,"Reference must not add RAM state")
+}

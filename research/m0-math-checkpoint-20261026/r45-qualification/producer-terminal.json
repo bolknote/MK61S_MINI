@@ -1,0 +1,16 @@
+{
+  "status": "R45_QUALIFICATION_PRODUCERS_TERMINAL_CONSUMED",
+  "all_producers_terminal": true,
+  "full_pow82509": "exit0",
+  "admission_pow77626": "exit0",
+  "primary23042": "exit0",
+  "full_exp55330": "exit0",
+  "full_ln22521": "exit0",
+  "audit75971": "exit0",
+  "source_handles_in_frozen_source_producer_terminal": true,
+  "source_new_and_inherited_guards": "directexit0",
+  "primary_comparison": "directexit0",
+  "no_timeout_or_missing_handle_restart": true,
+  "source_division_validation_included_once_without_rerun": true,
+  "goal_complete": false
+}

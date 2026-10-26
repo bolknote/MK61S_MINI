@@ -1,0 +1,148 @@
+R45 all-exponent grid 0 / 17442 loss 0
+R45 all-exponent grid 512 / 17442 loss 0
+R45 all-exponent grid 1024 / 17442 loss 0
+R45 all-exponent grid 1536 / 17442 loss 0
+R45 all-exponent grid 2048 / 17442 loss 0
+R45 all-exponent grid 2560 / 17442 loss 0
+R45 all-exponent grid 3072 / 17442 loss 0
+R45 all-exponent grid 3584 / 17442 loss 0
+R45 all-exponent grid 4096 / 17442 loss 0
+R45 all-exponent grid 4608 / 17442 loss 0
+R45 all-exponent grid 5120 / 17442 loss 0
+R45 all-exponent grid 5632 / 17442 loss 0
+R45 all-exponent grid 6144 / 17442 loss 0
+R45 all-exponent grid 6656 / 17442 loss 0
+R45 all-exponent grid 7168 / 17442 loss 0
+R45 all-exponent grid 7680 / 17442 loss 0
+R45 all-exponent grid 8192 / 17442 loss 0
+R45 all-exponent grid 8704 / 17442 loss 0
+R45 all-exponent grid 9216 / 17442 loss 0
+R45 all-exponent grid 9728 / 17442 loss 0
+R45 all-exponent grid 10240 / 17442 loss 0
+R45 all-exponent grid 10752 / 17442 loss 0
+R45 all-exponent grid 11264 / 17442 loss 0
+R45 all-exponent grid 11776 / 17442 loss 0
+R45 all-exponent grid 12288 / 17442 loss 0
+R45 all-exponent grid 12800 / 17442 loss 0
+R45 all-exponent grid 13312 / 17442 loss 0
+R45 all-exponent grid 13824 / 17442 loss 0
+R45 all-exponent grid 14336 / 17442 loss 0
+R45 all-exponent grid 14848 / 17442 loss 0
+R45 all-exponent grid 15360 / 17442 loss 0
+R45 all-exponent grid 15872 / 17442 loss 0
+R45 all-exponent grid 16384 / 17442 loss 0
+R45 all-exponent grid 16896 / 17442 loss 0
+R45 all-exponent grid 17408 / 17442 loss 0
+{
+  "status": "PASS_R45_FRESH_ALL_EXPONENT_GUARD_GRID",
+  "input_pairs": 17442,
+  "state_rows": 52326,
+  "actual_diagnostic_ARM_calls": 156978,
+  "completed_ARM_calls": {
+    "candidate": 52326,
+    "parent": 52326,
+    "Qfplib": 52326
+  },
+  "actual_directed_MPFR_inputs": 17442,
+  "sNaN_policy_shortcuts": 0,
+  "candidate_wrong": 0,
+  "parent_losing_pairs": 7608,
+  "candidate_losing_pairs": 0,
+  "parent_instruction_delta_histogram": {
+    "-48": 12336,
+    "11": 11694,
+    "-240": 174,
+    "26": 126,
+    "-235": 66,
+    "31": 186,
+    "-237": 120,
+    "-260": 6132,
+    "-613": 6216,
+    "-44": 120,
+    "9": 60,
+    "29": 996,
+    "-236": 468,
+    "27": 1260,
+    "-238": 252,
+    "-234": 696,
+    "-598": 24,
+    "-577": 216,
+    "-583": 252,
+    "-567": 96,
+    "-581": 168,
+    "-596": 240,
+    "-593": 168,
+    "-571": 276,
+    "-591": 204,
+    "-575": 288,
+    "-561": 144,
+    "-565": 84,
+    "-569": 264,
+    "-579": 300,
+    "-232": 624,
+    "-594": 240,
+    "-563": 168,
+    "-559": 108,
+    "-589": 192,
+    "-573": 180,
+    "-576": 108,
+    "-585": 276,
+    "-595": 60,
+    "-230": 216,
+    "-592": 84,
+    "-587": 204,
+    "-603": 36,
+    "-597": 48,
+    "-607": 12,
+    "-605": 24,
+    "-588": 36,
+    "34": 1116,
+    "-590": 96,
+    "32": 1608,
+    "-586": 72,
+    "-600": 12,
+    "-572": 204,
+    "-574": 132,
+    "-582": 84,
+    "-570": 264,
+    "-228": 84,
+    "-584": 132,
+    "-580": 120,
+    "-568": 144,
+    "-556": 660,
+    "-558": 612,
+    "-557": 60,
+    "-566": 24,
+    "-226": 24,
+    "-554": 156,
+    "-578": 36,
+    "-564": 12,
+    "-551": 48,
+    "-560": 144,
+    "-562": 12,
+    "-549": 12,
+    "-606": 72,
+    "-609": 120,
+    "-627": 24
+  },
+  "known296_parent_losses": 0,
+  "known296_candidate_losses": 0,
+  "actual_proven_overflow_shortcut_state_rows": 22824,
+  "all_nonoverflow_significand_division_visit_counts_exact_parent": true,
+  "wrong_reference_state_variants_retained": 17046,
+  "all_wrong_reference_outputs_costs_retained": true,
+  "no_nominal_reference_filter": true,
+  "candidate_ELF_sha256": "724e202d93cff5184ca3788649a6a82727791fce7b97262525100c7d1c45abb7",
+  "baseline_FROZEN_sha256": "06aed184b8178826326a19a26dbb700875e4826c7e0b915f1fb8f52c0625e9da",
+  "records_sha256": "df1b3bd11db5d877970ac724260c18f7c25619a96313dcd5f264b0a6980371b0",
+  "observed_stack": {
+    "candidate": 176,
+    "parent": 176,
+    "Qfplib": 28
+  },
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 66.07252020901069
+}

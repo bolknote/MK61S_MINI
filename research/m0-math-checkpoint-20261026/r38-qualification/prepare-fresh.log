@@ -1,0 +1,17 @@
+{
+  "status": "PREPARED_R38_FRESH_MIDPOINT_AND_GUARD_INPUTS_NOT_ORACLES",
+  "parent_qualification_FROZEN_sha256": "00dc5efa117f764392cacc06a7d97145ba9cca7650909dd4fc6b68cda5bae8e4",
+  "source_FROZEN_sha256": "da406f31b39e0a01ee415a1ee9d2658d1fbed5ac5ceb04784dc8a25e146a60a2",
+  "unique_inputs": 12311,
+  "old556578_overlap": 33,
+  "new_inputs": 12278,
+  "generation_precision": 256,
+  "generation_log2_calls": 1,
+  "generation_mpfr_mul_calls": 4092,
+  "generation_mpfr_sub_calls": 4092,
+  "generation_delta_init_shift_calls": 4,
+  "generation_not_accuracy_validation": true,
+  "new_ARM_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

@@ -1,0 +1,248 @@
+unified-original507 0 / 507 0.0
+unified-original507 32 / 507 0.3
+unified-original507 64 / 507 0.7
+unified-original507 96 / 507 1.0
+unified-original507 128 / 507 1.2
+unified-original507 160 / 507 1.5
+unified-original507 192 / 507 1.7
+unified-original507 224 / 507 1.7
+unified-original507 256 / 507 1.8
+unified-original507 288 / 507 1.8
+unified-original507 320 / 507 1.8
+unified-original507 352 / 507 1.9
+unified-original507 384 / 507 1.9
+unified-original507 416 / 507 1.9
+unified-original507 448 / 507 1.9
+unified-original507 480 / 507 1.9
+{
+  "status": "PASS_UNIFIED_ORIGINAL507_RNE_AND_FRESH_INSTRUCTION_QUALIFICATION",
+  "candidate_ELF_sha256": "d779746439194b0695519f56f5cc9858b6d2cd8cab3d4408081789caf449c3ab",
+  "zero_control_ELF_sha256": "652c172d4f0bb5d2d92eb42972c18880e562d4bcfe3c7dca81f09f174465b3dd",
+  "matrix_sha256": "5dcc6280f81c729634a58fd41f9a6e40c842dec286ad03fbb705a9d5b171a192",
+  "reference_ELF_sha256": "b66da3a6805ecd110580e6dd281e17c37bc4399bee0ba1fae86f8c8cf78bfc26",
+  "raw_records_sha256": "c1bfdcc19d291aace2e9a53e9ec9fa1881e29aec6c31b2407fe46b707d698716",
+  "original_cases": 507,
+  "states": 1014,
+  "candidate_wrong": 0,
+  "zero_control_wrong": 0,
+  "completed_ARM_calls": {
+    "candidate": 1014,
+    "zero-control": 1014,
+    "qfp_composed_pow": 306,
+    "qfp_composed_pow_exact": 306,
+    "qfp_composed_pow_integer": 306,
+    "qfp_dexp": 32,
+    "qfp_dln": 20,
+    "audit_atan": 4,
+    "qfp_dsin": 44,
+    "qfp_dcos": 28,
+    "qfp_dsub": 8,
+    "qfp_dadd": 26,
+    "qfp_double2uint": 512,
+    "qfp_int642double": 32,
+    "qfp_dsqrt": 2
+  },
+  "actual_qualified_math_ARM_calls": 3654,
+  "automatic_ROM_lookup_initializations_excluded": 2,
+  "explicit_source_loader_calls_excluded": 2,
+  "MPFR_version": "4.2.2",
+  "oracle_evaluations": 507,
+  "actual_directed_MPFR_inputs": 507,
+  "sNaN_policy_shortcuts": 0,
+  "integer_conversions_also_checked_with_exact_integer_oracle": true,
+  "historical_reference_classification": {
+    "slower": 33,
+    "strict": 468,
+    "equal": 6
+  },
+  "every_correct_reference_classification": {
+    "slower": 33,
+    "strict": 468,
+    "equal": 6
+  },
+  "candidate_minus_zero_control_instruction_deltas": {
+    "0": 1014
+  },
+  "groups": {
+    "pow": {
+      "cases": 153,
+      "state_rows": 306,
+      "historical_reference_classification": {
+        "slower": 33,
+        "strict": 120
+      },
+      "every_correct_reference_classification": {
+        "slower": 33,
+        "strict": 120
+      },
+      "correct_Qfplib_comparison": {
+        "slower": 180,
+        "faster": 406
+      },
+      "wrong_Qfplib_outputs_costs_retained": 332
+    },
+    "exp": {
+      "cases": 16,
+      "state_rows": 32,
+      "historical_reference_classification": {
+        "strict": 16
+      },
+      "every_correct_reference_classification": {
+        "strict": 16
+      },
+      "correct_Qfplib_comparison": {
+        "faster": 32
+      },
+      "wrong_Qfplib_outputs_costs_retained": 0
+    },
+    "ln": {
+      "cases": 10,
+      "state_rows": 20,
+      "historical_reference_classification": {
+        "strict": 9,
+        "equal": 1
+      },
+      "every_correct_reference_classification": {
+        "strict": 9,
+        "equal": 1
+      },
+      "correct_Qfplib_comparison": {
+        "faster": 18,
+        "equal": 2
+      },
+      "wrong_Qfplib_outputs_costs_retained": 0
+    },
+    "atan": {
+      "cases": 2,
+      "state_rows": 4,
+      "historical_reference_classification": {
+        "strict": 2
+      },
+      "every_correct_reference_classification": {
+        "strict": 2
+      },
+      "correct_Qfplib_comparison": {
+        "faster": 4
+      },
+      "wrong_Qfplib_outputs_costs_retained": 0
+    },
+    "sin": {
+      "cases": 22,
+      "state_rows": 44,
+      "historical_reference_classification": {
+        "strict": 22
+      },
+      "every_correct_reference_classification": {
+        "strict": 22
+      },
+      "correct_Qfplib_comparison": {
+        "faster": 44
+      },
+      "wrong_Qfplib_outputs_costs_retained": 0
+    },
+    "cos": {
+      "cases": 14,
+      "state_rows": 28,
+      "historical_reference_classification": {
+        "strict": 14
+      },
+      "every_correct_reference_classification": {
+        "strict": 14
+      },
+      "correct_Qfplib_comparison": {
+        "faster": 28
+      },
+      "wrong_Qfplib_outputs_costs_retained": 0
+    },
+    "sqrt": {
+      "cases": 1,
+      "state_rows": 2,
+      "historical_reference_classification": {
+        "equal": 1
+      },
+      "every_correct_reference_classification": {
+        "equal": 1
+      },
+      "correct_Qfplib_comparison": {
+        "equal": 2
+      },
+      "wrong_Qfplib_outputs_costs_retained": 0
+    },
+    "dadd": {
+      "cases": 13,
+      "state_rows": 26,
+      "historical_reference_classification": {
+        "strict": 13
+      },
+      "every_correct_reference_classification": {
+        "strict": 13
+      },
+      "correct_Qfplib_comparison": {
+        "faster": 26
+      },
+      "wrong_Qfplib_outputs_costs_retained": 0
+    },
+    "dsub": {
+      "cases": 4,
+      "state_rows": 8,
+      "historical_reference_classification": {
+        "strict": 4
+      },
+      "every_correct_reference_classification": {
+        "strict": 4
+      },
+      "correct_Qfplib_comparison": {
+        "faster": 8
+      },
+      "wrong_Qfplib_outputs_costs_retained": 0
+    },
+    "d2uiz": {
+      "cases": 256,
+      "state_rows": 512,
+      "historical_reference_classification": {
+        "strict": 256
+      },
+      "every_correct_reference_classification": {
+        "strict": 256
+      },
+      "correct_Qfplib_comparison": {
+        "faster": 512
+      },
+      "wrong_Qfplib_outputs_costs_retained": 0
+    },
+    "l2d": {
+      "cases": 16,
+      "state_rows": 32,
+      "historical_reference_classification": {
+        "equal": 4,
+        "strict": 12
+      },
+      "every_correct_reference_classification": {
+        "equal": 4,
+        "strict": 12
+      },
+      "correct_Qfplib_comparison": {
+        "equal": 8,
+        "faster": 24
+      },
+      "wrong_Qfplib_outputs_costs_retained": 0
+    }
+  },
+  "observed_stacks": {
+    "candidate": 968,
+    "zero-control": 968,
+    "Qfplib": 88
+  },
+  "single_ELF_candidate_no_overlays": true,
+  "all_correct_references_compared": true,
+  "all_incorrect_reference_outputs_and_costs_retained": true,
+  "no_nominal_reference_domain_filter": true,
+  "PCS_SP_bounded_writes_and_SIO_checked_every_call": true,
+  "instructions_are_not_physical_cycles": true,
+  "broad_regressions_and_totality_pending": true,
+  "integration_GO": false,
+  "canonical_or_M4_changed": false,
+  "elapsed_seconds": 1.9950398750370368,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

@@ -1,0 +1,70 @@
+{
+  "status": "PASS_NEW_ISOLATED_ROUTER_FAMILY_FRESH_ARM_QFPLIB_AND_MPFR",
+  "source_FROZEN_sha256": "eb8d9ec8d61ad1eded286d52046d7b1d54053712d4fca4c88b288d7ddf7c5479",
+  "candidate_ELF_sha256": "19dd878b65200b1ec187d28123b09d29c7b446484011af3b50ab7508a33a1583",
+  "parent_FROZEN_sha256": "2d48d6bac94d6635ca15acf686565ffc77840fa9e585403affea4e1b1b701058",
+  "input_cases": 92160,
+  "state_rows": 184320,
+  "completed_ARM_calls": {
+    "candidate": 184320,
+    "parent": 184320,
+    "Qfplib": 184320
+  },
+  "actual_qualified_math_ARM_calls": 552960,
+  "fresh_directed_MPFR_input_evaluations": 92160,
+  "exact_sNaN_shortcuts": 0,
+  "MPFR_version": "4.2.2",
+  "all10_new_admitted_exponents": [
+    1,
+    3,
+    7,
+    15,
+    31,
+    63,
+    127,
+    255,
+    511,
+    1023
+  ],
+  "all1024_log_cells": true,
+  "boundary_shapes": 8,
+  "random_full_mantissa_per_exponent_cell": 1,
+  "candidate_wrong": 0,
+  "parent_wrong": 0,
+  "correct_reference_comparisons": {
+    "strict": 183600
+  },
+  "case_classification": {
+    "strict": 91800,
+    "no_correct_reference": 360
+  },
+  "wrong_Qfplib_state_rows_retained": 720,
+  "all_wrong_reference_outputs_and_costs_in_raw_records": true,
+  "remaining_losing_inputs": 0,
+  "remaining_reference_state_rows": [],
+  "newly_losing_inputs_vs_R15": 0,
+  "newly_losing_reference_state_rows": [],
+  "old_R15_losing_inputs": 0,
+  "fixed_R15_losing_input_candidates": 0,
+  "parent_instruction_delta_histogram": {
+    "-1": 184318,
+    "-2": 2
+  },
+  "parent_instruction_increase_state_rows": 0,
+  "all_parent_increase_rows_retained_in_complete_raw_records": true,
+  "source_loader_and_ROM_initializations_excluded": true,
+  "no_nominal_Qfplib_domain_filter": true,
+  "observed_stacks": {
+    "candidate": 400,
+    "parent": 400,
+    "Qfplib": 32
+  },
+  "input_sha256": "7e0f17a43bd9155475256b99da551c57289caeb4c1472185e766ca3a26ba262c",
+  "records_sha256": "583110bc09af4878dbfbe1f58241795e668e595f4ef21cab2d76716de83ae9ff",
+  "overlapping_campaign_inputs_not_deduplicated_in_execution_totals": true,
+  "instructions_are_not_physical_cycles": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 474.6571982910391
+}

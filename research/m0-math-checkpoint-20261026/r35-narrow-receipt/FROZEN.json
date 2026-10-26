@@ -1,0 +1,33 @@
+{
+  "status": "IMMUTABLE_NARROW_PRIVATE_R35_REVIEW",
+  "files": {
+    "ADDITIONAL-CHECKS.json": {
+      "bytes": 16551,
+      "sha256": "5dc6be677c97c6a6036a0efe0eb3d3c949a0dd360b12dd04d1fb5a41ae1e2124"
+    },
+    "COUNTS.json": {
+      "bytes": 4205,
+      "sha256": "11b4dddc5f6e4f65a62453219b217d4629e45cdf5c3acb36bf126ff96a89ccd9"
+    },
+    "FINAL-REVIEW.json": {
+      "bytes": 16028,
+      "sha256": "39190e68d24f5036498bc3a487c77c6d8819dfed66fcc52710be8bf7faf54a3f"
+    },
+    "STATIC.json": {
+      "bytes": 4571,
+      "sha256": "752dd50589e972dc6829308a7c844ec843c9096af647effb2c15dacf3fc48bfd"
+    },
+    "review-attempt-001.log": {
+      "bytes": 228,
+      "sha256": "40513a354776017c50115a0b3c088601c2a6e212fc5fa09a9610e9b11a546fb5"
+    },
+    "review.py": {
+      "bytes": 20711,
+      "sha256": "bb0439b1554f598e89c9836dd49bc5d658e646d4689e46deabc48a24e0640f76"
+    }
+  },
+  "final_review_sha256": "39190e68d24f5036498bc3a487c77c6d8819dfed66fcc52710be8bf7faf54a3f",
+  "new_ARM_MPFR_builds": 0,
+  "hardware_accessed": false,
+  "integration_GO": false
+}

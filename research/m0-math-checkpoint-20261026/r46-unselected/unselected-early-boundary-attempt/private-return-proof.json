@@ -1,0 +1,54 @@
+{
+  "status": "PASS_REQUIRED_LINKED_PRIVATE_R12_RETURN_DATAFLOW",
+  "candidate_ELF_sha256": "7b4639f62e135b944fbf804c424f07c8b5a605b380454905a4c456af88ac21ae",
+  "source_sha256": "d63bd6894e446a48896f39d25e69a1c8604d54398e21d79d04854a5182eda3de",
+  "public_function_start": "0x10040cd0",
+  "public_function_size": 1456,
+  "actual_fresh_disassembly_sha256": "b16c5fe2d1788907706f67ea5ad49c04a1e3c0f1a6574c620a55c8f7d8c281d6",
+  "product_call": "0x100410a0",
+  "private_output_definition_marker": "0x100410a8",
+  "all_post_call_paths_reach_marker_before_R12_write_call_or_return": true,
+  "call_to_marker_instructions": [
+    {
+      "address": 268701860,
+      "bytes": 2,
+      "mnemonic": "str",
+      "operands": "r0, [sp, #16]",
+      "line": "100410a4:\t9004      \tstr\tr0, [sp, #16]"
+    },
+    {
+      "address": 268701862,
+      "bytes": 2,
+      "mnemonic": "str",
+      "operands": "r1, [sp, #20]",
+      "line": "100410a6:\t9105      \tstr\tr1, [sp, #20]"
+    }
+  ],
+  "CFG_edges": [
+    [
+      268701860,
+      268701862
+    ],
+    [
+      268701862,
+      268701864
+    ]
+  ],
+  "marker_allocated_bytes": 0,
+  "extra_actual_timed_veneer_or_NOP": false,
+  "actual_consumer": "0x1004119e",
+  "marker_to_consumer_live_instructions": 126,
+  "all_marker_to_consumer_paths_preserve_R12_without_call_or_touch": true,
+  "original_wrapper_address": "0x1004a778",
+  "original_wrapper_bytes": 16,
+  "original_wrapper_sha256": "730645909dd2545f62de07daa2336397ccbc9f8b78b094e3bf62319c44b7fb99",
+  "wrapper_tail_jumps_actual_RAM_leaf_after_restoring_R0_and_SP": true,
+  "no_post_producer_wrapper_or_return_trampoline_can_clobber_R12": true,
+  "leaf_captures_R4_fraction_immediately_before_rounding_once": true,
+  "scalar_return_P_unchanged_extra_R12_is_caller_clobbered": true,
+  "index0_uncalled_fraction_arbitrary_but_new_gate_source_preconditions_exclude_it": true,
+  "compiler_and_flags_dependent_private_contract": true,
+  "required_again_for_every_changed_release_object_not_generic_CXX_ABI_claim": true,
+  "actual_wrapper_and_leaf_from_this_ELF_not_old_firmware": true,
+  "code_and_real_wrapper_only_no_firmware_execution_ROM_mocks_or_device": true
+}
