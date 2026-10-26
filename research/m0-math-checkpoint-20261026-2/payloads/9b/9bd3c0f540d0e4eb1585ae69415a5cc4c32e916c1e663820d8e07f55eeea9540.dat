@@ -1,0 +1,59 @@
+R47 full ln 0 phase ln elapsed 0.0 loss 0 division visits 0
+R47 full ln 16384 phase ln elapsed 17.6 loss 0 division visits 0
+R47 full ln 32768 phase ln elapsed 34.6 loss 0 division visits 0
+R47 full ln 49152 phase ln elapsed 50.2 loss 0 division visits 0
+R47 full ln 65536 phase ln elapsed 69.9 loss 0 division visits 0
+R47 full ln 81920 phase ln elapsed 88.4 loss 0 division visits 0
+R47 full ln 98304 phase ln elapsed 106.9 loss 0 division visits 0
+R47 full ln 114688 phase ln elapsed 126.7 loss 0 division visits 0
+R47 full ln 131072 phase ln elapsed 143.7 loss 0 division visits 0
+R47 full ln 147456 phase ln elapsed 162.3 loss 0 division visits 0
+R47 full ln 163840 phase ln elapsed 179.9 loss 0 division visits 0
+R47 full ln 180224 phase ln elapsed 198.0 loss 0 division visits 0
+R47 full ln 196608 phase admission elapsed 216.0 loss 0 division visits 0
+R47 full ln 212992 phase admission elapsed 234.1 loss 0 division visits 0
+R47 full ln 229376 phase admission elapsed 252.0 loss 0 division visits 0
+R47 full ln 245760 phase admission elapsed 269.8 loss 0 division visits 0
+R47 full ln 262144 phase admission elapsed 287.8 loss 0 division visits 0
+R47 full ln 278528 phase admission elapsed 305.6 loss 0 division visits 0
+R47 full ln 294912 phase admission elapsed 323.7 loss 0 division visits 0
+R47 full ln 311296 phase admission elapsed 341.8 loss 0 division visits 0
+R47 full ln 327680 phase admission elapsed 359.6 loss 0 division visits 0
+R47 full ln 344064 phase admission elapsed 377.8 loss 0 division visits 0
+R47 full ln 360448 phase admission elapsed 394.6 loss 0 division visits 0
+{
+  "status": "PASS_R47_FULL_LN_FRESH_CANDIDATE_CACHED_R18_GOLD_QFP",
+  "source_FROZEN_sha256": "0fc886823e57e22c97a082e457bf7795376c9b78b5a1795d9bcb4a07ac600894",
+  "inherited_R18_qualification_FROZEN_sha256": "2e0d945318df0f86b2125ac1a3b9d9c0f387616ef3e38ee19de9c99a9bb5ceb1",
+  "source_rows_by_phase": {
+    "ln": 183146,
+    "admission": 184320
+  },
+  "fresh_R47_rows_by_phase": {
+    "ln": 183146,
+    "admission": 177444
+  },
+  "duplicate_state_rows_checked": 6876,
+  "unique_inputs": 180295,
+  "state_rows": 360590,
+  "actual_qualified_public_ARM_calls": 360590,
+  "actual_fresh_parent_Qfp_MPFR_calls": 0,
+  "parent_R18_gold_Qfp_cached_as_inherited_R43_not_fresh": true,
+  "candidate_wrong": 0,
+  "parent_losing_inputs": 0,
+  "candidate_losing_inputs": 0,
+  "parent_instruction_delta_histogram": {
+    "0": 360590
+  },
+  "all6_shared_division_entry_visits": {},
+  "wrong_reference_state_rows_retained": 21680,
+  "all_correct_reference_results_compared_no_nominalfilter": true,
+  "records_sha256": "15e0f083e63107592c47280b508dc187372a4430cb45602408f27419ca9c7cfa",
+  "observed_stack": 664,
+  "not_universal_stack_bound": true,
+  "physical_cycles_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 394.72214074997464
+}

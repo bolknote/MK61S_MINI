@@ -1,0 +1,37 @@
+{
+  "r47-source": {
+    "original_directory": ".build/m0-math-unified-ddiv-normalized-r47-20261026",
+    "scope": "selected private source, completed qualification archived separately",
+    "FROZEN_sha256": "0fc886823e57e22c97a082e457bf7795376c9b78b5a1795d9bcb4a07ac600894",
+    "frozen_pinned_files": 494,
+    "archived_files": 465
+  },
+  "r47-qualification": {
+    "original_directory": ".build/m0-math-unified-ddiv-normalized-r47-qualification-20261026",
+    "scope": "completed private author qualification; independent and hardware acceptance open",
+    "FROZEN_sha256": "2acca11ddee077b7919173f6ff97d96e3db632a81313aed123e481531a1d0358",
+    "frozen_pinned_files": 50,
+    "archived_files": 51
+  },
+  "r48-source": {
+    "original_directory": ".build/m0-math-unified-ddiv-power-dispatch-r48-20261026",
+    "scope": "frozen diagnostic experiment, not selected",
+    "FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+    "frozen_pinned_files": 493,
+    "archived_files": 464
+  },
+  "r48-qualification-preparation": {
+    "original_directory": ".build/m0-math-unified-ddiv-power-dispatch-r48-qualification-20261026",
+    "scope": "eight prepared scripts only; no full qualification executed",
+    "FROZEN_sha256": null,
+    "frozen_pinned_files": 0,
+    "archived_files": 8
+  },
+  "exp-q73-host-study": {
+    "original_directory": ".build/m0-exp-q73-host-study-20261026",
+    "scope": "host model only; no ARM implementation or performance measurement",
+    "FROZEN_sha256": null,
+    "frozen_pinned_files": 0,
+    "archived_files": 4
+  }
+}

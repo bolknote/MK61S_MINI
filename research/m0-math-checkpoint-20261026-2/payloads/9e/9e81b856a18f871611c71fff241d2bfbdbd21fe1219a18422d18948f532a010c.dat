@@ -1,0 +1,20 @@
+{
+  "status": "PASS_R47_POSTSEAL_SOURCE_QUALIFICATION_CURRENT_SELECTION",
+  "manifests": [
+    {
+      "path": ".build/m0-math-unified-ddiv-normalized-r47-20261026",
+      "files": 494,
+      "FROZEN_sha256": "0fc886823e57e22c97a082e457bf7795376c9b78b5a1795d9bcb4a07ac600894"
+    },
+    {
+      "path": ".build/m0-math-unified-ddiv-normalized-r47-qualification-20261026",
+      "files": 50,
+      "FROZEN_sha256": "2acca11ddee077b7919173f6ff97d96e3db632a81313aed123e481531a1d0358"
+    }
+  ],
+  "author_result_sha256": "6eba8d342c21c4a80e4353208b6e376ef12fc0a20dcc8158038e6ebbf0e53366",
+  "candidate_ELF_sha256": "64753f7bc086b6bde36f6cb0e3559885fd6b644ba050d49669bc26af79c64dfa",
+  "new_ARM_MPFR_calls": 0,
+  "source_frozen_files_unchanged": true,
+  "goal_complete": false
+}

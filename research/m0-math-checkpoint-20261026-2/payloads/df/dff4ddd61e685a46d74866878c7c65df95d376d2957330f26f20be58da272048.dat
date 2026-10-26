@@ -1,0 +1,124 @@
+--- R47/native_eabi_m0_rp2040.S
++++ R48/native_eabi_m0_rp2040.S
+@@ -1246,6 +1246,58 @@
+ @ exponent/sign representation. Cold IEEE and extreme paths are unchanged.
+ 
+ .section .text.mk61_rp2040_arithmetic,"ax",%progbits
++// Entered only for normal a/b with b.low==0 and three fraction bits.
++.global mk61_m0_ddiv_dyadic_body_begin
++.hidden mk61_m0_ddiv_dyadic_body_begin
++mk61_m0_ddiv_dyadic_body_begin:
++.Lrp2040_div_dyadic_body:
++ lsls r6,r3,#12
++ bne .Lrp2040_div_small_normalize
++ // Exact power-of-two scaling has e=Ea-Eb and needs no R12 metadata.
++ subs r6,r4,r5
++ ldr r5,=1022
++ adds r6,r5
++ cmp r6,r7
++ bls .Lrp2040_div_power_scale
++ b .Lrp2040_div_normalize_main
++.Lrp2040_div_power_scale:
++ ldr r7,=0x3ff00000
++ subs r1,r3
++ adds r1,r7
++ pop {r4-r7,pc}
++.global mk61_m0_ddiv_small_normalize_begin
++.hidden mk61_m0_ddiv_small_normalize_begin
++mk61_m0_ddiv_small_normalize_begin:
++.Lrp2040_div_small_normalize:
++ // Correct the packed subtraction's sign-difference bit, then its
++ // arithmetic high20 shift is exactly Ea-Eb-(Ma<Mb).
++ mov r4,r1
++ eors r4,r3
++ lsrs r4,#31
++ lsls r4,#31
++ mov r12,r4
++ mov r6,r1
++ subs r6,r3
++ eors r6,r4
++ asrs r6,#20
++ ldr r5,=1022
++ adds r6,r5
++ cmp r6,r7                    // e+1022 in0..2045 => normal RNE result.
++.global mk61_m0_ddiv_small_range_guard_call
++.hidden mk61_m0_ddiv_small_range_guard_call
++mk61_m0_ddiv_small_range_guard_call:
++ bhi .Lrp2040_div_range_slow
++ lsls r6,#20
++ add r12,r6                   // (e+1022)<<20 plus result sign.
++.global mk61_m0_ddiv_small_range_join
++.hidden mk61_m0_ddiv_small_range_join
++mk61_m0_ddiv_small_range_join:
++ lsls r7,r3,#12
++ b .Lrp2040_small_divisor
++.global mk61_m0_ddiv_dyadic_body_end
++.hidden mk61_m0_ddiv_dyadic_body_end
++mk61_m0_ddiv_dyadic_body_end:
++
+ // Full exact zero predicate for a subnormal/zero numerator and a
+ // normal denominator. All declined paths retain R0..R3 unchanged.
+ .global mk61_m0_ddiv_numerator_guard_body
+@@ -1423,6 +1475,12 @@
+  orrs r4,r5
+  b .Lrp2040_quotient_refine
+ 
++.global mk61_m0_ddiv_dyadic_dispatch
++.hidden mk61_m0_ddiv_dyadic_dispatch
++mk61_m0_ddiv_dyadic_dispatch:
++.Lrp2040_div_dyadic_entry:
++ b .Lrp2040_div_dyadic_body
++
+  regular_func __aeabi_ddiv
+  push {r4-r7,r14}
+ ddiv0:                         @ entry point from dtan
+@@ -1440,6 +1498,18 @@
+ .hidden mk61_m0_ddiv_denominator_guard_call
+ mk61_m0_ddiv_denominator_guard_call:
+  bhi .Lrp2040_div_den_slow
++ // Normal operands: the entire low divisor word and its lower17
++ // fraction bits determine the dyadic route. R4=Ea/R5=Eb/R7=2045.
++.global mk61_m0_ddiv_coarse_dispatch_begin
++.hidden mk61_m0_ddiv_coarse_dispatch_begin
++mk61_m0_ddiv_coarse_dispatch_begin:
++ lsls r6,r3,#15
++ orrs r6,r2
++ beq .Lrp2040_div_dyadic_entry
++.global mk61_m0_ddiv_normalize_main
++.hidden mk61_m0_ddiv_normalize_main
++mk61_m0_ddiv_normalize_main:
++.Lrp2040_div_normalize_main:
+  // Correct the packed subtraction's sign-difference bit, then its
+  // arithmetic high20 shift is exactly Ea-Eb-(Ma<Mb).
+  mov r4,r1
+@@ -1464,29 +1534,13 @@
+ .global mk61_m0_ddiv_normal_range_join
+ .hidden mk61_m0_ddiv_normal_range_join
+ mk61_m0_ddiv_normal_range_join:
+- // Dyadic mantissas with at most three fraction bits use an exact
+- // rational reciprocal seed. Powers of two reduce to exponent scaling.
+- lsls r7,r3,#15
+- orrs r7,r2
+- bne 88f
+- lsls r7, r3, #12
+- bne .Lrp2040_small_divisor
+- // Subtract the packed power-of-two divisor and restore the bias;
+- // its sign bit subtracts exactly like XOR, with no rounding needed.
+- ldr r7,=0x3ff00000
+- subs r1,r3
+- adds r1,r7
+- pop {r4-r7,pc}
+-88:
+- // General normal division never touches SIO. The reciprocal error and
+- // exact final rounding are proved over all normalized mantissas.
++ // General normal division; R12 already holds normalized metadata.
+ .Lrp2040_general_divisor:
+  ldr r4,=0x00100000
+  lsls r3,#12
+  lsrs r3,#12
+  orrs r3,r4                   @ normal divisor significand
+ 
+- lsrs r5,r3,#4
+ .global mk61_m0_public_ddiv_seed_begin
+ .hidden mk61_m0_public_ddiv_seed_begin
+ mk61_m0_public_ddiv_seed_begin:

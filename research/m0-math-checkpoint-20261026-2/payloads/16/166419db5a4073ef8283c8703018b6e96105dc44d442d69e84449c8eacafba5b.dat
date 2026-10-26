@@ -1,0 +1,24 @@
+"""Prepare fresh R47 qualification without executing frozen producer scripts."""
+from pathlib import Path
+import hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+P=ROOT/'.build/m0-math-unified-ddiv-cold-overflow-r45-qualification-20261026'
+S=ROOT/'.build/m0-math-unified-ddiv-normalized-r47-20261026'
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+assert sha(P/'FROZEN.json')=='e3f2df20d066f085a82722c3f601625e27bf51d070d21659bfeb40fdc270da30'
+assert sha(S/'FROZEN.json')=='0fc886823e57e22c97a082e457bf7795376c9b78b5a1795d9bcb4a07ac600894'
+for b in [P,S]:
+    for n,r in json.loads((b/'FROZEN.json').read_bytes())['files'].items():assert(b/n).stat().st_size==r['bytes']and sha(b/n)==r['sha256'],n
+assert not(W/'replay.py').exists()
+for n in ['original507.py','broad.py','exp-replay.py','ln-replay.py']:
+    t=(P/n).read_text().replace('m0-math-unified-ddiv-cold-overflow-r45-20261026','m0-math-unified-ddiv-normalized-r47-20261026').replace('dbc455078837507acaeb750df1e3fb6800b923e2a9a880c9c6bcc2150ba3527a',sha(S/'FROZEN.json')).replace('r45_','r47_').replace('R45','R47')
+    if n in ['exp-replay.py','ln-replay.py']:
+        t=t.replace("'mk61_m0_ddiv_denominator_guard_begin']","'mk61_m0_ddiv_denominator_guard_begin','mk61_m0_ddiv_numerator_guard_body','mk61_m0_ddiv_range_guard_begin']").replace('all4_shared_division_entry_visits','all6_shared_division_entry_visits')
+    (W/n).write_text(t)
+(W/'run-matrix.py').write_bytes((P/'run-matrix.py').read_bytes())
+t=(P/'replay.py').read_text().replace('m0-math-unified-ddiv-cold-overflow-r45-20261026','m0-math-unified-ddiv-normalized-r47-20261026').replace('dbc455078837507acaeb750df1e3fb6800b923e2a9a880c9c6bcc2150ba3527a',sha(S/'FROZEN.json')).replace('m0-math-unified-pow-rsqrt-nativeq8-r43-qualification-20261026','m0-math-unified-ddiv-cold-overflow-r45-qualification-20261026').replace('ebef878da8240173c273bb9e31b02c0a55c48e75286a7fe0dcc800c3c2130786',sha(P/'FROZEN.json'))
+t=t.replace('R45','R47').replace('R43','R45').replace('r45_','r47_').replace('(281430,140715,2293)','(281430,140715,1997)').replace('(50220,16740,2343)','(50220,16740,2047)')
+(W/'replay.py').write_text(t)
+for p in W.glob('*.py'):compile(p.read_text(),str(p),'exec')
+print('Prepared R47: fresh primary MPFR/Qfp, full/admission pow cached R45 or source, exp/ln cached R38/R18 with six actual division observers.',flush=True)

@@ -1,0 +1,11 @@
+{
+  "status": "HOST_PROVED_DEAD_SETUP_STUDY_NOT_IMPLEMENTED",
+  "candidate_ELF_sha256": "64753f7bc086b6bde36f6cb0e3559885fd6b644ba050d49669bc26af79c64dfa",
+  "dead_instruction": 268573872,
+  "dead_result": "R5 overwritten by LSLS R5,R3,#8 before read",
+  "dead_flags": "following LSRS R6,R3,#15 replaces NZC; both LSRS preserve V",
+  "potential_saved_executed_instructions": 1,
+  "new_ARM_MPFR_calls": 0,
+  "binary_modified": false,
+  "goal_complete": false
+}

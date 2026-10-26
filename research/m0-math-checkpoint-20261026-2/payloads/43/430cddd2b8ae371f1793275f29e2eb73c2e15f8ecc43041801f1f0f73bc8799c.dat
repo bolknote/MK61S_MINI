@@ -1,0 +1,12 @@
+{
+  "status": "PASS_R47_TWO_SOURCE_FILES_REVERSE_EXACTLY_TO_R45",
+  "changed": [
+    "code/native_eabi_m0_rp2040.S",
+    "code/native_eabi_m0.cpp"
+  ],
+  "candidate_ELF_sha256": "64753f7bc086b6bde36f6cb0e3559885fd6b644ba050d49669bc26af79c64dfa",
+  "cpp_underflow_only_under_RP_and_F52": true,
+  "ASM_exact_reversal_of_header_metadata_rounding_fix_and_cold_helpers": true,
+  "new_ARM_MPFR_calls": 0,
+  "full_universal_numeric_proof_pending": true
+}

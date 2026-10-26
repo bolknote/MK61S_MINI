@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-normalized-r47-20261026/verify-normalized-div.py", line 66, in <module>
+    check(code)
+    ~~~~~^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-normalized-r47-20261026/verify-normalized-div.py", line 56, in check
+    d=sym('dd_0');assert c[d]['mnemonic']=='adds'and canon('adds',c[d]['operands'])=='r3,r3,#128'
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

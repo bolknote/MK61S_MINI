@@ -1,0 +1,43 @@
+R47 admission rows 0 elapsed 0.0 loss 0 new 0
+R47 admission rows 8192 elapsed 21.6 loss 2045 new 0
+R47 admission rows 16384 elapsed 25.6 loss 2045 new 0
+R47 admission rows 24576 elapsed 29.7 loss 2045 new 0
+R47 admission rows 32768 elapsed 33.6 loss 2045 new 0
+R47 admission rows 40960 elapsed 37.5 loss 2045 new 0
+R47 admission rows 49152 elapsed 41.5 loss 2045 new 0
+{
+  "status": "PASS_R47_FRESH_ADMISSION_CACHED_GOLD_R45_ALL_QFP",
+  "source_FROZEN_sha256": "0fc886823e57e22c97a082e457bf7795376c9b78b5a1795d9bcb4a07ac600894",
+  "parent_R45_qualification_FROZEN_sha256": "e3f2df20d066f085a82722c3f601625e27bf51d070d21659bfeb40fdc270da30",
+  "input_source_FROZEN_sha256": "0fc886823e57e22c97a082e457bf7795376c9b78b5a1795d9bcb4a07ac600894",
+  "input_records_sha256": "9344ed76f2a5b311f5fbf49529c602982a1415b135ffd022272feae388ed8f76",
+  "records_sha256": "be0dabafe9ef9e8765853e84046a55f18e17947ffdc117409c51be11c8b298d5",
+  "unique_input_pairs": 16740,
+  "state_rows": 50220,
+  "actual_qualified_public_ARM_calls": 50220,
+  "actual_fresh_R45_Qfp_MPFR_calls": 0,
+  "oracles_R45_allQfp_from_frozen_R45_qualification_or_R47_diagnostic_not_fresh": true,
+  "candidate_wrong": 0,
+  "all_candidate_bits_exact_frozen_correct_parent": true,
+  "parent_losing_pairs": 2047,
+  "candidate_losing_pairs": 2045,
+  "parent_instruction_delta_histogram": {
+    "0": 50178,
+    "-215": 6,
+    "5": 6,
+    "8": 24,
+    "18": 6
+  },
+  "wrong_reference_state_variants_retained": 55296,
+  "all3_Qfplib_references_retained_eachinput_eachstate": true,
+  "no_nominal_reference_filter": true,
+  "observed_stack": 2148,
+  "not_universal_stack_bound": true,
+  "diagnostic_source_ARM251100_not_fresh_qualified_pool": true,
+  "source_loader_initialization_excluded": true,
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 42.032352291978896
+}

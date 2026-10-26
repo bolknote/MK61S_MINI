@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-normalized-r47-20261026/verify-div-guard.py", line 50, in <module>
+    overflow=check(code);negatives=[]
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-normalized-r47-20261026/verify-div-guard.py", line 31, in check
+    assert int(c[start+16]['operands'].split()[0],16)==slow and int(c[call]['operands'].split()[0],16)==begin
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

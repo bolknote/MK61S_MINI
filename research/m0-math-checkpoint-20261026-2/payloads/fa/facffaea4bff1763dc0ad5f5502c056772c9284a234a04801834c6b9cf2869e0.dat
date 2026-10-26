@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-ddiv-normalized-r47-qualification-20261026/metadata-proof.py", line 37, in <module>
+    assert[(c[a]['mnemonic'],norm(c[a]['operands']))for a in sorted(drop)]==[('movs','r2,#1'),('lsls','r2,r2,#20'),('add','r12,r12,r2')]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
