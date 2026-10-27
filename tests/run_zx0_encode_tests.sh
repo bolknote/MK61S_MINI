@@ -20,3 +20,5 @@ for variant in scalar word; do
     -o "$work/$variant"
   "$work/$variant"
 done
+
+bash "$root/tests/run_workspace_progress_tests.sh"

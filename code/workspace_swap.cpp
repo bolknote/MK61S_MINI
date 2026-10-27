@@ -8,6 +8,13 @@
 #include <string.h>
 #include <type_traits>
 
+// Transport/key sampling only. The resident hook does not execute terminal
+// commands, change filesystem ownership or publish a partial display.
+// The resident supplies the strong restricted service; other platforms and
+// HOST-only users retain their existing no-service behavior.
+void storage_io_process(void) __attribute__((weak, noinline));
+void storage_io_process(void) {}
+
 namespace workspace_swap {
 
 #if !MK61_SHARED_MEMORY_BULK_ENABLED
@@ -199,8 +206,12 @@ class PreparedPayload {
         plan_size = scratch_.size();
       }
 
-      const bool planned = zx0::prepare(
-          source_, (u32) raw_size, plan_memory, plan_size, prepared_);
+      // Source and plan arenas stay pinned. The resident observer only
+      // samples/queues keys and deferred USB control/TX; it cannot execute
+      // clients or observe/publish the uncommitted snapshot payload.
+      const bool planned = zx0::prepare_cooperative(
+          source_, (u32) raw_size, plan_memory, plan_size, prepared_,
+          storage_io_process);
       if(planned && prepared_.output_size < stored_size_ &&
          prepared_.output_size <= capacity) {
         codec_ = Codec::ZX0;
@@ -586,11 +597,20 @@ bool acquire(shared_memory::Owner owner, usize required, AcquireMode mode,
 
   if(shared_memory::owner_snapshot_schema(owner) != 0) {
     const RestoreResult restored = restore(owner, required, destination);
-    if(restored == RestoreResult::ACQUIRED) return true;
+    if(restored == RestoreResult::ACQUIRED) {
+      // restore() has committed both images and released transition-local
+      // leases. Only a complete, pinned destination is visible here.
+      storage_io_process();
+      return true;
+    }
     if(restored == RestoreResult::BUSY) return false;
   }
 
   (void) capture_resident_before(owner);
+  // Finish the snapshot transaction before sampling input. Do not concatenate
+  // its compression cost with the next client's work (e.g. core reinit or
+  // font preparation); retain every snapshot and the same acquire policy.
+  storage_io_process();
   return direct_acquire(owner, required, mode, destination);
 }
 

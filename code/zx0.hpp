@@ -51,6 +51,13 @@ bool prepare(const u8* input, u32 input_size,
              u8* workspace, usize workspace_size,
              Prepared& prepared);
 
+// Same deterministic plan/stream; a restricted foreground observer may run
+// between bounded units of planning work. It must not mutate input/workspace,
+// execute clients, or publish a partially built image. No heap or clock used.
+bool prepare_cooperative(const u8* input, u32 input_size,
+                         u8* workspace, usize workspace_size,
+                         Prepared& prepared, void (*progress)(void));
+
 // Повторно выдаёт уже подготовленный побитно идентичный поток, не перестраивая
 // DP/greedy-план и не изменяя input или workspace.
 bool emit(const Prepared& prepared, const Output& output);

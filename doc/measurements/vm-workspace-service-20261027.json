@@ -1,0 +1,322 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "status": "CLASSIC_STARTUP_SERVICE_FIX_QUALIFIED",
+  "base_sha": "fafce31ed5238317ba23445bc90a1362ff95e4a6",
+  "scope": "V8 cooperative ZX0 workspace planning and completed snapshot transitions",
+  "metric": "MCU acceptance of non-script OPEN to first APP blocking key wait, full ready menu",
+  "device": {
+    "model": "Classic v3 UC1609",
+    "uid": "AEB505B6E0067623",
+    "clock_MHz": 96,
+    "USB_Screen": "continuous",
+    "diagnostic_build": "B301EE3E"
+  },
+  "hardware_samples": [
+    {
+      "case": "continuous-compile-cold",
+      "MCU_seconds": 1.952478,
+      "USB_max_us": 20173.135416666668,
+      "keyboard_rows_max_us": 27200.145833333332,
+      "all_service_over30_zero": true,
+      "overflow": 0,
+      "PONG": {
+        "count": 81,
+        "max_seconds": 0.006787542020902038,
+        "p99_seconds": 0.005454500031191856
+      },
+      "menu_sha256": "f11c0e5aa2006167b08425f0a641d9604c0bf7891d814e0a8879d12091744104",
+      "arrow_input_verified": true,
+      "profile_top_self_ms": {
+        "flash.read": 423.440656,
+        "flash.erase": 380.710969,
+        "app.entry.basic": 259.105917,
+        "zx0.app.basic": 119.611583,
+        "zx0.app.input": 119.227823,
+        "zx0.app.vm": 118.148156,
+        "flash.write": 98.890031,
+        "vm.invoke": 59.444927,
+        "app.entry.vm": 52.915375,
+        "file.other": 36.282292,
+        "zx0.source": 32.355521,
+        "idle.main": 30.316031
+      }
+    },
+    {
+      "case": "continuous-file_cache_cold_RAM",
+      "MCU_seconds": 0.346555,
+      "USB_max_us": 19956.291666666668,
+      "keyboard_rows_max_us": 29593.364583333332,
+      "all_service_over30_zero": true,
+      "overflow": 0,
+      "PONG": {
+        "count": 17,
+        "max_seconds": 0.005130457982886583,
+        "p99_seconds": 0.004933666030410677
+      },
+      "menu_sha256": "f11c0e5aa2006167b08425f0a641d9604c0bf7891d814e0a8879d12091744104",
+      "arrow_input_verified": true,
+      "profile_top_self_ms": {
+        "flash.read": 81.798479,
+        "zx0.app.vm": 78.603375,
+        "app.entry.vm": 47.081104,
+        "zx0.app.other": 27.51901,
+        "core.step": 18.007792,
+        "m61.command": 13.811417,
+        "file.font": 12.522604,
+        "font.activate": 12.389146,
+        "app.entry.other": 12.250188,
+        "core.ticks.00-26": 11.579531,
+        "file.other": 10.17676,
+        "usb.service": 6.472396
+      }
+    },
+    {
+      "case": "continuous-warm_repeat",
+      "MCU_seconds": 0.347823,
+      "USB_max_us": 18322.708333333332,
+      "keyboard_rows_max_us": 26939.395833333332,
+      "all_service_over30_zero": true,
+      "overflow": 0,
+      "PONG": {
+        "count": 16,
+        "max_seconds": 0.01815708400681615,
+        "p99_seconds": 0.004148165986407548
+      },
+      "menu_sha256": "f11c0e5aa2006167b08425f0a641d9604c0bf7891d814e0a8879d12091744104",
+      "arrow_input_verified": true,
+      "profile_top_self_ms": {
+        "zx0.app.vm": 78.711969,
+        "flash.read": 63.621729,
+        "app.entry.vm": 47.235604,
+        "m61.command": 34.876312,
+        "app.entry.other": 30.621646,
+        "zx0.app.other": 27.5155,
+        "core.step": 18.021854,
+        "file.font": 12.525115,
+        "core.ticks.00-26": 11.580854,
+        "file.other": 9.383687,
+        "usb.service": 6.607417,
+        "app.load.vm": 5.923625
+      }
+    }
+  ],
+  "hardware_modes": [
+    "continuous"
+  ],
+  "move_searches": 0,
+  "shipping_performance_ABA": false,
+  "shipping_speedup_claim": false,
+  "intermediate_versions": {
+    "v6_warm_USB_max_us": 37117.083333333336,
+    "v6_warm_row_max_us": 43242.583333333336,
+    "v7_warm_row_max_us": 42861,
+    "v7_warm_startup_seconds": 0.340133,
+    "v8_warm_startup_seconds": 0.347823,
+    "v8_vs_v7_diagnostic_time_delta_ms": 7.69,
+    "interpretation": "Latency correctness fix; no controlled shipping speedup claim."
+  },
+  "cause": "Snapshot planning (~16.05 ms) immediately followed by core.step (~18.02 ms); one boundary checkpoint cannot advance all five rows with 1 ms electrical settle.",
+  "runtime_changes": [
+    "restricted service observer during planning only",
+    "completed capture/restore service checkpoints",
+    "existing prepare ABI delegates with null observer; only workspace snapshots opt in"
+  ],
+  "invariants": [
+    "input and plan arenas remain pinned",
+    "old canonical snapshot byte-exact or absent until emit",
+    "no callbacks during payload emission or header commit",
+    "no client execution/FS changes/display publication in observer",
+    "same bytecode, CRC, codec stream, GPIO settle/debounce and acquire policies"
+  ],
+  "HOST_checks": {
+    "sanitizers": [
+      "ASan",
+      "UBSan"
+    ],
+    "codec_cases_per_kernel": 48,
+    "kernels": [
+      "scalar",
+      "word"
+    ],
+    "pinned_source_backup_observations_per_kernel": 26,
+    "complete_transition_checks_per_kernel": 6,
+    "memory_profiles": [
+      "host",
+      "F401",
+      "no-BULK"
+    ],
+    "VM_repeat_arithmetics": [
+      "BINARY64 (0)",
+      "MK61_CORE (1)"
+    ],
+    "VM_repeat_coverage": "real C9 BASIC/FOCAL, INPUT, epochs, resume, ABI, failures; warm NOR reads/writes=0"
+  },
+  "trace_free_production_builds": {
+    "f411-base": {
+      "flash_bytes": 379268,
+      "flash_capacity": 524288,
+      "flash_headroom": 145020,
+      "minimum_flash_headroom": 131072,
+      "global_RAM_bytes": 21768,
+      "RAM_capacity": 131072,
+      "global_RAM_limit": 49152,
+      "max_frame": 1928,
+      "frame_limit": 3072,
+      "sealed_image": {
+        "path": "LAB/resident-closure-base-f411/sealed.bin",
+        "bytes": 379268,
+        "sha256": "3e47434088129dcd66e378482e364bf823e4f480c96a5d94f4e5a122daf63a9a"
+      },
+      "ELF": {
+        "path": "LAB/resident-closure-base-f411/resident.elf",
+        "bytes": 633568,
+        "sha256": "fe18d25a7d1ba0221b688ae88e51f94d5bf83d7495200e995a96e3c833b4b882"
+      },
+      "log": {
+        "path": "LAB/closure/build-f411-base.log",
+        "bytes": 31491,
+        "sha256": "49b170475b978d66cf19c1a04e34415baa619445b23fa1ec01cf478c92e94a90"
+      }
+    },
+    "f411-v8": {
+      "flash_bytes": 379460,
+      "flash_capacity": 524288,
+      "flash_headroom": 144828,
+      "minimum_flash_headroom": 131072,
+      "global_RAM_bytes": 21768,
+      "RAM_capacity": 131072,
+      "global_RAM_limit": 49152,
+      "max_frame": 1928,
+      "frame_limit": 3072,
+      "sealed_image": {
+        "path": "LAB/resident-closure-v8-f411/sealed.bin",
+        "bytes": 379460,
+        "sha256": "0f906049d8894bd8fbfff447d6c7200c6d3d4b9d394f47ddec5b41583eacb443"
+      },
+      "ELF": {
+        "path": "LAB/resident-closure-v8-f411/resident.elf",
+        "bytes": 633724,
+        "sha256": "eff7e32bd1a9b22ba5ec6252937fc258a26a641829c56ebefa0be37a8bf6e3e2"
+      },
+      "log": {
+        "path": "LAB/closure/build-f411-v8.log",
+        "bytes": 31825,
+        "sha256": "91abb95f63619b4e78718609d0bb265adff378a6e167f5045887d1c652bcc97f"
+      },
+      "delta": {
+        "flash_bytes": 192,
+        "global_RAM_bytes": 0,
+        "max_frame": 0
+      }
+    },
+    "f401-base": {
+      "flash_bytes": 257796,
+      "flash_capacity": 262144,
+      "flash_headroom": 4348,
+      "minimum_flash_headroom": 4096,
+      "global_RAM_bytes": 29604,
+      "RAM_capacity": 65536,
+      "global_RAM_limit": 52428,
+      "max_frame": 1304,
+      "frame_limit": 2048,
+      "sealed_image": {
+        "path": "LAB/resident-closure-base-f401/sealed.bin",
+        "bytes": 257796,
+        "sha256": "1d4540ac335bf569a8fde4430a463013c758cb3a744af70041ced05824696851"
+      },
+      "ELF": {
+        "path": "LAB/resident-closure-base-f401/resident.elf",
+        "bytes": 470584,
+        "sha256": "12c54e2f53098d277ed94d072fa50eb5fc24bfcac1c33eef45e7e54c3607216b"
+      },
+      "log": {
+        "path": "LAB/closure/build-f401-base.log",
+        "bytes": 31572,
+        "sha256": "df7937130ca75eb93817fa63744774f36a015c278997a6ffafabfb411c1bf1fc"
+      }
+    },
+    "f401-v8": {
+      "flash_bytes": 257980,
+      "flash_capacity": 262144,
+      "flash_headroom": 4164,
+      "minimum_flash_headroom": 4096,
+      "global_RAM_bytes": 29604,
+      "RAM_capacity": 65536,
+      "global_RAM_limit": 52428,
+      "max_frame": 1304,
+      "frame_limit": 2048,
+      "sealed_image": {
+        "path": "LAB/resident-closure-v8-f401/sealed.bin",
+        "bytes": 257980,
+        "sha256": "d41610d91a50077af3ce799a3cf125f9f674a600529c5835d72a3c30b9805f88"
+      },
+      "ELF": {
+        "path": "LAB/resident-closure-v8-f401/resident.elf",
+        "bytes": 470740,
+        "sha256": "bad78b34ff328fa8d468cb7502623b93f5b38a59e01a6e4427226e62bb61f77d"
+      },
+      "log": {
+        "path": "LAB/closure/build-f401-v8.log",
+        "bytes": 31906,
+        "sha256": "f4e82ae2ec1dc89d8b6d0b6d0d68af6f03a532ce3ebaefdbd763da6e1a0373ea"
+      },
+      "delta": {
+        "flash_bytes": 184,
+        "global_RAM_bytes": 0,
+        "max_frame": 0
+      }
+    }
+  },
+  "tests": [
+    {
+      "path": "LAB/closure/zx0-and-progress-tests.log",
+      "bytes": 506,
+      "sha256": "4d1cb116a1a6dc9011ade805540a960d5f53f87d54bd8f9359d7e7bca99811a2"
+    },
+    {
+      "path": "LAB/closure/vm-repeat-both-arithmetics.log",
+      "bytes": 396,
+      "sha256": "8f804a25e2bac2c8010cb8a746c9025c973acf9c5e935741b048f19a3f016397"
+    },
+    {
+      "path": "LAB/closure/memory-tests.log",
+      "bytes": 95,
+      "sha256": "abead84972dda34c4a0fbf578ba987826508b726dcdb337b6a74b4a72d12fa61"
+    }
+  ],
+  "limits_weakened": false,
+  "original_return": {
+    "full_flash_bytes": 524288,
+    "full_flash_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+    "files": 24,
+    "directories": 2,
+    "typed_IP_cwd_restored": true,
+    "fresh_window_RTC_trajectory_preserved": true,
+    "actual_child_exit": 0,
+    "reaped": true,
+    "device_access_closed": true
+  },
+  "raw_evidence": [
+    {
+      "path": "LAB/STARTUP-V8-ACTUAL-SUMMARY.json",
+      "bytes": 7207,
+      "sha256": "e32ea146a713e252b89feef2c37cde26c2922af872fed2c1494c815841e17a38"
+    },
+    {
+      "path": "LAB/startup-window-v8/hil-startup-pc-profile-0/report.json",
+      "bytes": 152975,
+      "sha256": "619b7c3dd40adc02369f93c2604bc03902fabc3d017c364202489c660e91d21a"
+    },
+    {
+      "path": "REPO/.build/classic-startup-root-20261027-001/STARTUP-V8-ACTUAL-CLOSE.json",
+      "bytes": 4564,
+      "sha256": "b96d64bb70293042706778ef90f6fe404743f8f5a0276fb47b3f5438ba19831d"
+    }
+  ],
+  "excluded_experiments": [
+    "private Value packing/check hoisting WIP",
+    "CRC hardware-unqualified candidate",
+    "earlier raw alias guard NO_GO WIP"
+  ]
+}

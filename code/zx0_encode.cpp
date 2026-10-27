@@ -46,6 +46,17 @@ struct Plan {
   EncodeMode mode;
 };
 
+class WorkBudget {
+ public:
+  explicit WorkBudget(void (*progress)(void)):progress_(progress),work_(0){}
+  void add(u32 amount) {
+    if(!progress_)return;
+    work_+=amount;
+    if(work_>=2048){work_=0;progress_();}
+  }
+ private:void (*progress_)(void);u32 work_;
+};
+
 static u16 gamma_cost(u32 value) {
   u16 bits = 1;
   while(value > 1) {
@@ -106,7 +117,7 @@ static bool append_token(Token* tokens, usize capacity, u16& count,
 
 static Token find_match_choice(const u8* input, u16 size, u16 position,
                                const Costs* costs, u16 target,
-                               u16 preferred_offset) {
+                               u16 preferred_offset, WorkBudget& progress) {
   const u16 maximum_offset =
     position < MAX_OFFSET ? position : MAX_OFFSET;
 
@@ -115,9 +126,11 @@ static Token find_match_choice(const u8* input, u16 size, u16 position,
   if(preferred_offset != 0 && preferred_offset <= maximum_offset) {
     const u16 maximum =
       match_length(input, size, position, preferred_offset);
+    progress.add((u32)maximum+1);
     if(maximum >= 2) {
       u16 cost = new_match_cost(preferred_offset, maximum);
       for(u16 length = maximum;; length--) {
+        progress.add(1);
         const u16 tail = costs[position + length].literal;
         if(add_cost(tail, cost) == target) {
           return {length, preferred_offset};
@@ -138,9 +151,11 @@ static Token find_match_choice(const u8* input, u16 size, u16 position,
   for(u16 offset = 1; offset <= maximum_offset; offset++) {
     if(offset == preferred_offset) continue;
     const u16 maximum = match_length(input, size, position, offset);
+    progress.add((u32)maximum+1);
     if(maximum < 2) continue;
     u16 cost = new_match_cost(offset, maximum);
     for(u16 length = maximum;; length--) {
+        progress.add(1);
       const u16 tail = costs[position + length].literal;
       if(add_cost(tail, cost) == target) {
         if(length > best_length ||
@@ -163,7 +178,7 @@ static Token find_match_choice(const u8* input, u16 size, u16 position,
 
 static bool build_bounded_optimal_plan(const u8* input, u16 size,
                                        u8* workspace, usize workspace_size,
-                                       Plan& plan) {
+                                       Plan& plan, WorkBudget& progress) {
   const usize required = ((usize) size + 1U) * sizeof(Costs);
   if(workspace_size < required) return false;
 
@@ -197,10 +212,12 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
       }
     }
 #endif
+    progress.add(MAX_OFFSET);
 
     u16 best_match = INFINITE_COST;
     u16 match_cost = 10;
     for(u16 length = 2; length <= near_length; length++) {
+      progress.add(1);
       const u16 candidate =
         add_cost(costs[position + length].literal, match_cost);
       if(candidate < best_match) best_match = candidate;
@@ -210,6 +227,7 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
     }
     match_cost = 12;
     for(u16 length = 2; length <= far_length; length++) {
+      progress.add(1);
       const u16 candidate =
         add_cost(costs[position + length].literal, match_cost);
       if(candidate < best_match) best_match = candidate;
@@ -223,6 +241,7 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
     const u16 remaining = (u16) (size - position);
     u16 block_cost = 10;
     for(u16 length = 1; length <= remaining; length++) {
+      progress.add(1);
       const u16 candidate =
         add_cost(costs[position + length].match, block_cost);
       if(candidate < best_literal) best_literal = candidate;
@@ -254,6 +273,7 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
       u16 block_cost = (u16) (
           1U + gamma_cost(maximum) + (u32) maximum * 8U);
       for(u16 length = maximum;; length--) {
+        progress.add(1);
         if(add_cost(costs[position + length].match, block_cost) == target) {
           chosen = length;
           break;
@@ -276,7 +296,7 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
       // Literal не является лучшим продолжением: остаёмся в состоянии
       // "после match" и записываем соседний new-offset match.
       const Token choice =
-          find_match_choice(input, size, position, costs, target, last_offset);
+          find_match_choice(input, size, position, costs, target, last_offset, progress);
       if(choice.offset == 0 ||
          !append_token(tokens, token_capacity, token_count,
                        choice.length, choice.offset)) {
@@ -288,7 +308,7 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
     } else {
       const u16 target = costs[position].match;
       const Token choice =
-          find_match_choice(input, size, position, costs, target, last_offset);
+          find_match_choice(input, size, position, costs, target, last_offset, progress);
       if(choice.offset == 0 ||
          !append_token(tokens, token_capacity, token_count,
                        choice.length, choice.offset)) {
@@ -308,7 +328,7 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
 
 static bool build_greedy_plan(const u8* input, u16 size,
                               u8* workspace, usize workspace_size,
-                              Plan& plan) {
+                              Plan& plan, WorkBudget& progress) {
   Token* const tokens = (Token*) workspace;
   const usize token_capacity = workspace_size / sizeof(Token);
   u16 token_count = 0;
@@ -323,6 +343,9 @@ static bool build_greedy_plan(const u8* input, u16 size,
     u16 best_offset = 0;
     for(u16 offset = 1; offset <= maximum_offset; offset++) {
       const u16 length = match_length(input, size, position, offset);
+      // A single LCP primitive is bounded by MAX_INPUT_SIZE; count actual
+      // compared bytes so long matches cannot starve the observer either.
+      progress.add((u32)length+1);
       if(length > best_length ||
          (length == best_length && length >= 2 &&
           (offset == last_offset ||
@@ -504,6 +527,13 @@ class OutputWriter {
 bool prepare(const u8* input, u32 input_size,
              u8* workspace, usize workspace_size,
              Prepared& prepared) {
+  return prepare_cooperative(input,input_size,workspace,workspace_size,
+                             prepared,nullptr);
+}
+
+bool prepare_cooperative(const u8* input, u32 input_size,
+                         u8* workspace, usize workspace_size,
+                         Prepared& prepared, void (*observer)(void)) {
   prepared = {};
   prepared.mode = EncodeMode::GREEDY;
   if(input == nullptr || input_size == 0 || input_size > MAX_INPUT_SIZE ||
@@ -524,11 +554,12 @@ bool prepare(const u8* input, u32 input_size,
   workspace += alignment_skip;
   workspace_size -= alignment_skip;
 
+  WorkBudget progress(observer);
   Plan plan = {};
   const u16 size = (u16) input_size;
   if(!build_bounded_optimal_plan(input, size, workspace,
-                                 workspace_size, plan) &&
-     !build_greedy_plan(input, size, workspace, workspace_size, plan)) {
+                                 workspace_size, plan, progress) &&
+     !build_greedy_plan(input, size, workspace, workspace_size, plan, progress)) {
     return false;
   }
 
