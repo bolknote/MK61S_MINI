@@ -1,0 +1,36 @@
+{
+  "status": "STATIC_R50_COUPLED_PREPARATION_PASS",
+  "source_FROZEN_sha256": "05b6ddbc103a81fe03896241ceedcbf2b0465d71b69ce79a017aa4a9f819fb3d",
+  "parent_qualification_FROZEN_sha256": "6c49ec8a093b4a73cc3dd2cb4ad3dd491c6080253c9c831a1e775ba0ce072eb7",
+  "expected_finite_loss_counts_from_exact_targeted_fixes": {
+    "full": 1923,
+    "admission": 1960,
+    "joined_pow": 1960,
+    "exp": 0,
+    "ln": 0
+  },
+  "integer_result_comparisons_now_exact_bits_not_float_NaN_comparison": true,
+  "gold_full_pow_exp_ln_Qfp_cached_frozen_R49": true,
+  "primary_MPFR_Qfp_fresh": true,
+  "new_pow_caller_variants": 4320,
+  "new_pow_caller_baselines": 54,
+  "selected_private_author_remains": "R49",
+  "source": ".build/m0-math-unified-pow-rsqrt-entry-r50-20261027",
+  "parent": ".build/m0-math-unified-exp-incremental-r49-qualification-20261027",
+  "hardware_accessed": false,
+  "goal_complete": false,
+  "pins": {
+    ".build/m0-math-unified-exp-incremental-r49-qualification-20261027": {
+      "FROZEN_sha256": "6c49ec8a093b4a73cc3dd2cb4ad3dd491c6080253c9c831a1e775ba0ce072eb7",
+      "files_verified": 86
+    },
+    ".build/m0-math-unified-pow-rsqrt-entry-r50-20261027": {
+      "FROZEN_sha256": "05b6ddbc103a81fe03896241ceedcbf2b0465d71b69ce79a017aa4a9f819fb3d",
+      "files_verified": 490
+    },
+    ".build/m0-exp-q73-incremental-r2-20261027": {
+      "FROZEN_sha256": "c0264f8367cc40ace6b3cb93697e0244f7cb09daf1a2be07e6ec45e8e300d539",
+      "files_verified": 52
+    }
+  }
+}

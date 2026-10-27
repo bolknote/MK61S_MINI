@@ -1,0 +1,19 @@
+{
+  "status": "READ_ONLY_INTEGER_RESULT_POLICY_AUDIT_OF_PARENT",
+  "checked_integer_output_comparisons": 35328,
+  "counts_by_operation": {
+    "d2uiz": 4608,
+    "d2iz": 6144,
+    "d2lz": 6144,
+    "d2ulz": 3072,
+    "dcmpeq": 3072,
+    "dcmplt": 3072,
+    "dcmple": 3072,
+    "dcmpge": 3072,
+    "dcmpgt": 3072
+  },
+  "classification_changes": [],
+  "new_ARM_MPFR_calls": 0,
+  "selected_source_unchanged": "R48",
+  "goal_complete": false
+}

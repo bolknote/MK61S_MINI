@@ -1,0 +1,49 @@
+--- R50/source/code/native_eabi_m0_pow_rsqrt.inc
++++ R51/source/code/native_eabi_m0_pow_rsqrt.inc
+@@ -223,23 +223,38 @@
+  ir_mul32 r0,r6,r0,r1,r2,r3,r4,r0,r1
+  mov r7,r1
+  ldr r0,[sp,#28]
+- // These two common factor words have exact shift/subtract products.
+- // Every other word still uses the complete32x32 multiplication.
++ // Exact signed decomposition: Fhigh=2^31+D, |D|<=130.
++ // The integer/rational seed certificate proves this for every normal x.
+  ldr r2,=0x7fffffff
+- cmp r0,r2
++ subs r2,r0,r2
+  beq .Lir_factor_below
+- adds r2,#1
+- cmp r0,r2
++ cmp r2,#1
+  beq .Lir_factor_equal
+- ir_mul32 r0,r6,r0,r1,r2,r3,r4,r0,r1
++ subs r0,r2,#1
++ // Exact64-bit seed*D from two bounded signed16-bit partial products.
++ // Low32 is one full MULS. Add the exact seed<<31 with ADD/ADC.
++ uxth r2,r6
++ muls r2,r0
++ asrs r2,#16
++ lsrs r1,r6,#16
++ muls r1,r0
++ adds r1,r2
++ asrs r1,#16
++ muls r0,r6
++ lsls r2,r6,#31
++ lsrs r3,r6,#1
++ adds r0,r2
++ adcs r1,r3
+  b .Lir_factor_product
+ .Lir_factor_below:
++ // The incoming SUBS result is R2=0; both SBC and final ADC reuse it.
+  lsls r0,r6,#31
+  lsrs r1,r6,#1
+  subs r0,r0,r6
+- movs r2,#0
+  sbcs r1,r2
+- b .Lir_factor_product
++ adds r0,r7
++ adcs r1,r2
++ b mk61_m0_pow_rsqrt_point
+ .Lir_factor_equal:
+  lsls r0,r6,#31
+  lsrs r1,r6,#1

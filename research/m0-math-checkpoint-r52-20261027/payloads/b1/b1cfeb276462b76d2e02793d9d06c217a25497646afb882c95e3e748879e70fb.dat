@@ -1,0 +1,12 @@
+{
+  "status": "PASS_R49_SOURCE_POSTSEAL_ALL_PINS",
+  "source_FROZEN_sha256": "e9db8a83b36789ffd54d1586e60779502fb8ec4bd4b8381495f15abed8ebc15e",
+  "source_files_verified": 496,
+  "source_author_sha256": "a7e638c8ba4c1a80d3d243633bef5a0c2df210d5a619b2bb6a87135e1282292a",
+  "selected_author_source_still_R48": true,
+  "all_source_jobs_terminal": true,
+  "no_new_ARM_MPFR_calls": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

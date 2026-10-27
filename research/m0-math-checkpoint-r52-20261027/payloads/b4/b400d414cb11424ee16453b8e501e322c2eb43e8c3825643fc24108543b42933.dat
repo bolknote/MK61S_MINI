@@ -1,0 +1,86 @@
+{
+  "status": "PASS_ALL9_QUALIFICATION_PROCESSES_PRIVATE_FIXTURE_NO_PRIMARY_OPENS",
+  "receipts": [
+    {
+      "path": "private-io-receipts/42418.json",
+      "sha256": "2a94a046c417726e3201791dd5d9ce550379abdc3fb5a5811cdd1855cfda4ac4",
+      "process": 42418,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-qualification-20261027/run-pow.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/42420.json",
+      "sha256": "716a7511b7faaf4006455a9db383f6585afa378bd22f1357f827b020f3c84134",
+      "process": 42420,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-qualification-20261027/check-caller-state.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/42421.json",
+      "sha256": "bcba76dedf88ab07c5f408b0a93aaa2752b76826ad100449e8b9daa22ace1f41",
+      "process": 42421,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-qualification-20261027/replay.py",
+        "full"
+      ]
+    },
+    {
+      "path": "private-io-receipts/42424.json",
+      "sha256": "1038100c384dc36e0017fa939f1f0adbac32619817b374c96fa0a576a11b1e63",
+      "process": 42424,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-qualification-20261027/replay.py",
+        "exp"
+      ]
+    },
+    {
+      "path": "private-io-receipts/42426.json",
+      "sha256": "f16e05a879d995ee9293cba376a3812b7f631fad653fae0daea06164bf9a8ff2",
+      "process": 42426,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-qualification-20261027/replay.py",
+        "ln"
+      ]
+    },
+    {
+      "path": "private-io-receipts/42428.json",
+      "sha256": "adf68fe4fbf28e296d475c4dd1024007bbe49c86bcfa3b2e4021af3a3f532003",
+      "process": 42428,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-qualification-20261027/run-matrix.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/42429.json",
+      "sha256": "8df7dcf69e52ce67dbc3848cd36c5718c0033745ea06be1c257d686a61af13b0",
+      "process": 42429,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-qualification-20261027/original507.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/42437.json",
+      "sha256": "31b2a26ff0e88fcfb0ab5b90c1a5efb01bd7a60031729e2d4aa5b105e9a511b1",
+      "process": 42437,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-qualification-20261027/broad.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/42702.json",
+      "sha256": "769a040139452ea3caa391aa7d980be9830b30460fa0a95208a1a188f68c791b",
+      "process": 42702,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-qualification-20261027/replay.py",
+        "admission"
+      ]
+    }
+  ],
+  "denied_primary_open_attempts": 0,
+  "no_guest_semantic_modifications": true,
+  "no_ROM_models": true,
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false
+}

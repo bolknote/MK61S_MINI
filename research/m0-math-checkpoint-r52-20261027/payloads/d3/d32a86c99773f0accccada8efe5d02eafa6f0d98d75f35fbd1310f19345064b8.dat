@@ -1,0 +1,15 @@
+{
+  "status": "STATIC_CONSUMER_EMPTY_REFERENCE_CASE_ACCOUNTING_FIXED",
+  "failure": "v1 omitted broad cases with no correct Qfplib reference from its case-classification denominator",
+  "broad_case_classification_recount": {
+    "strict": 23939,
+    "no_correct_reference": 5888,
+    "equal": 274,
+    "slower": 35
+  },
+  "zero_correct_reference_cases": 5888,
+  "runtime_results_or_counts_changed": false,
+  "oracle_reference_policy_changed": false,
+  "new_ARM_MPFR_calls": 0,
+  "all_source_jobs_already_terminal0": true
+}

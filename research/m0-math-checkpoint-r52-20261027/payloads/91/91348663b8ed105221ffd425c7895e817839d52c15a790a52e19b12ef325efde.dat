@@ -1,0 +1,28 @@
+{
+  "status": "R49_PRIVATE_AUTHOR_SELECTED_ALL_QUALIFICATION_HANDLES_TERMINAL0",
+  "source": ".build/m0-math-unified-exp-incremental-r49-20261027",
+  "source_FROZEN_sha256": "e9db8a83b36789ffd54d1586e60779502fb8ec4bd4b8381495f15abed8ebc15e",
+  "qualification": ".build/m0-math-unified-exp-incremental-r49-qualification-20261027",
+  "qualification_FROZEN_sha256": "6c49ec8a093b4a73cc3dd2cb4ad3dd491c6080253c9c831a1e775ba0ce072eb7",
+  "author_result_sha256": "be3ab178ceac73177982809189845d708becb901129cc07e8153edd516779374",
+  "joined_audit_sha256": "454aca76ef1de4d1632976878027cc8e3fb8e2204929af8f3d90d7b09b84a3a9",
+  "terminal_original_exec_sessions": {
+    "primary": 24008,
+    "pow": 56452,
+    "exp": 66127,
+    "ln": 19342,
+    "caller-state": 62273,
+    "read-only-audit": 61823
+  },
+  "all_exit0_consumed": true,
+  "active_math_jobs": [],
+  "last_human_commit": "dda1627de651f0b397bc54e1d7be2dda24eef8ed",
+  "no_new_Git_authority": true,
+  "selected_private_source": "R49",
+  "finite_remaining_pow_pairs": 2045,
+  "finite_exp_and_ln_deficits": 0,
+  "next_action": "Profile/optimise pow on actual losing SIO state, start with -0.5 reciprocal sqrt and extreme overflow/underflow routes; preserve CR and all-correct-Qfplib comparisons, M4/default exact. READY-only representatives can be faster when the pair loses in DIRTY/PENDING.",
+  "whole_goal_precision_totality_FMA_stack_cycles_independent_integration_open": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

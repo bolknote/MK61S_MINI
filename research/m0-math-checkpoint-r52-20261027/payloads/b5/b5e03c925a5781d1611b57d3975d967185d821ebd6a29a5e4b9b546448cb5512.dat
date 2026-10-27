@@ -1,0 +1,36 @@
+{
+  "status": "PASS_R51_COMPLETE_RSQRT_POW_INITIAL_PROBE",
+  "cached_state_rows": 45765,
+  "cached_unique_inputs": 15255,
+  "old_losing_pairs": 903,
+  "candidate_losing_pairs": 855,
+  "parent_instruction_delta_histogram": {
+    "-3": 1185,
+    "-1": 24681,
+    "-2": 19776,
+    "-6": 72,
+    "0": 51
+  },
+  "actual_public_ARM_calls": {
+    "candidate_public_cached_corpus": 45765,
+    "candidate_fresh_public": 54,
+    "parent_R50_fresh_public": 54,
+    "qfp_composed_pow_fresh_public": 54,
+    "qfp_composed_pow_exact_fresh_public": 54,
+    "qfp_composed_pow_integer_fresh_public": 54
+  },
+  "fresh_MPFR_inputs": 18,
+  "additional_fresh_MPFR_leaf_ABI_checks": 7,
+  "bare_old_ABI_diagnostic_ARM_calls": 42,
+  "loaders_excluded": 2,
+  "all_normal_source_deltas_minus1_minus2_minus3_minus6": true,
+  "all_correct_references_compared_no_nominal_filter": true,
+  "all_wrong_reference_outputs_costs_retained": true,
+  "source_R50_cached_gold_Qfplib_explicit": true,
+  "records_sha256": "5b8cd8a920ef6d0f7dcbb26f8de9ffcde5b1ca3183c27adb4fbe68ae90180b3e",
+  "fresh_records_sha256": "677df0c9e07554a4ad6a0406c376b5d51c6ad306b8fe8cc3f717996b8c33f611",
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

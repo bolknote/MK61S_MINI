@@ -1,0 +1,33 @@
+{
+  "status": "HOST_SATURATION_ADMISSION_MATCHES_PINNED_R52_GOLD_NOT_IMPLEMENTED",
+  "qualification_FROZEN_sha256": "bc3eb3419524d11f9abcc77d333a0fdcc8c4ad092c72bd68be7af82d65de52b1",
+  "checked_unique_pairs": 16740,
+  "current_losing_pairs": 1778,
+  "admitted_unique_pairs": {
+    "integer_exponent_log2_bound": 380,
+    "huge_y_uniform_binary64_spacing_bound": 30
+  },
+  "current_losing_pairs_covered": 317,
+  "covered_by_kind": {
+    "integer_exponent_log2_bound": 287,
+    "huge_y_uniform_binary64_spacing_bound": 30
+  },
+  "mathematical_basis": [
+    "normal x>=2^E gives log2(x)>=E; x<2^(E+1)<1 gives abs(log2(x))>-(E+1)",
+    "all positive subnormals<2^-1022; high32==0 gives x<2^-1042",
+    "top21 significand of finite abs(y) is a lower bound, times integer k fitsu32; compare against1075/1024 scaled thresholds",
+    "negative product>=1075 rounds to+0 including half-minsub tie; positive product>=1024 overflows to+infinity",
+    "abs(y)>=3*2^61 and binary64 x!=1 gives abs(y*lnx)>=768; ln2<7/10 proves saturation"
+  ],
+  "HUGE_Y_bits": "43D8000000000000",
+  "only_positive_finite_nonzero_x_admitted": true,
+  "negative_base_IEEE_specials_deferred": true,
+  "NaN_zero_infinite_y_deferred": true,
+  "new_ARM_MPFR_calls": 0,
+  "performance_measured": false,
+  "not_fixed_pairs_yet": true,
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

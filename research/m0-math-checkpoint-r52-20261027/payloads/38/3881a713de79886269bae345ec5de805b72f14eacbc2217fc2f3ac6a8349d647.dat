@@ -1,0 +1,38 @@
+{
+  "status": "R50_SIX_COUPLED_JOBS_DISPATCHED_ONCE",
+  "jobs": [
+    {
+      "label": "primary",
+      "session_id": 80719,
+      "exit_code": null
+    },
+    {
+      "label": "pow",
+      "session_id": 46916,
+      "exit_code": null
+    },
+    {
+      "label": "exp",
+      "session_id": 38988,
+      "exit_code": null
+    },
+    {
+      "label": "ln",
+      "session_id": 69289,
+      "exit_code": null
+    },
+    {
+      "label": "caller-state",
+      "session_id": 3087,
+      "exit_code": null
+    },
+    {
+      "label": "pow-caller-state",
+      "session_id": 90704,
+      "exit_code": null
+    }
+  ],
+  "selected_private_author_remains": "R49",
+  "hardware_accessed": false,
+  "goal_complete": false
+}

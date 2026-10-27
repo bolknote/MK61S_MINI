@@ -1,0 +1,91 @@
+{
+  "status": "FROZEN_R51_EXACT_FACTOR_PROTOTYPE_SUPERSEDED_FOR_COMBINED_R52_QUALIFICATION",
+  "source_parent": "R50",
+  "source_parent_FROZEN_sha256": "05b6ddbc103a81fe03896241ceedcbf2b0465d71b69ce79a017aa4a9f819fb3d",
+  "candidate_ELF_sha256": "f8d264e7f5191c790080a3428961e64f5dc2fb5ea11d8f4d82ab96160e9b6fc5",
+  "all22_other_objects_exact": true,
+  "M4_default_objects_exact": true,
+  "new_tables_RAM_libgcc_bytes": 0,
+  "source_required_proofs": {
+    "private-return-proof.json": {
+      "status": "PASS_REQUIRED_LINKED_PRIVATE_R12_RETURN_DATAFLOW",
+      "sha256": "5405c5f9134c7631c73059877b2ec5a0cd9aeba9142902a128fa6563b60d1872"
+    },
+    "private-guard-controls.json": {
+      "status": "PASS_ACTUAL_LINKED_PRIVATE_GUARD_POSITIVE_AND_REJECTION_CONTROLS",
+      "sha256": "bd1b97c2f17017b1be37c6c69dde0e2e8c9849ef446a9691ae57c51b12f1a38f"
+    },
+    "loader-layout-proof.json": {
+      "status": "PASS_ACTUAL_SOURCE_LOADER_AND_LINKED_MATH_LAYOUT",
+      "sha256": "ad9445927368daad1b2722b90bbf523298d1d72335e87425bd43fbc5706825a9"
+    },
+    "disabled-isolation.json": {
+      "status": "PASS_ALL_RP_ONLY_ASM_UNITS_DISABLED_ON_DEFAULT_M0_AND_BOTH_M4_ABIS",
+      "sha256": "3a5cd928a8e3e41d2e4f9afd2a4e776b6e67a9b30893d37d2b6c6b81c8f4613b"
+    },
+    "div-guard-proof.json": {
+      "status": "PASS_R45_ACTUAL_NORMAL_NUMERATOR_DENOMINATOR_GUARD_AND_6_NEGATIVES",
+      "sha256": "37b789ae996f291b48613d6647e6325e9d99f58dac8c9f656ca74e078c947cea"
+    },
+    "native-caller-proof.json": {
+      "status": "PASS_R43_MANDATORY_LINKED_NATIVE_CARRY_CONTRACT_AND_12_NEGATIVE_CONTROLS",
+      "sha256": "fe53800d129aa0b53e78462ffa8debe241b29dc80992653664db1a7dd39ed75b"
+    },
+    "private-caller-proof.json": {
+      "status": "PASS_REQUIRED_CURRENT_OBJECT_COLD_BRIDGE_CALLER_BINDING",
+      "sha256": "3541b2e5c91db535b78cd0a4f361baa3f96dde91330002b57511834028038c43"
+    },
+    "normalized-caller-proof.json": {
+      "status": "PASS_REQUIRED_CURRENT_NORMALIZED_ROW0_NEGATIVE_D_CALLER_BINDING",
+      "sha256": "4037971db92763c3cd915bd6bdf6ef5b174bfbb3770ab93e61ef2ec0ae259933"
+    },
+    "native-entry-proof.json": {
+      "status": "PASS_LINKED_R50_NATIVE_R2_CONTRACT_AND18_MUTATED_ELF_CONTROLS",
+      "sha256": "e1fab39094d55c10bd6a83f7ee4054b3cd95651381521737221f5b63978926b2"
+    },
+    "smallfactor-linked-proof.json": {
+      "status": "PASS_R51_LINKED_EXACT_SMALL_FACTOR_PRODUCT_AND26_MUTATED_ELF_CONTROLS",
+      "sha256": "70378d814c98c164802f435ab9ebba50091ebc9fe1eba80752dafbd5293c0a7d"
+    }
+  },
+  "smallfactor26_mutated_ELF_controls_pass": true,
+  "native_R2_18_mutated_ELF_controls_pass": true,
+  "all_required_linked_source_guards_pass": true,
+  "old_positive_normal_leaf_ABI_preserved": true,
+  "cached_probe_inputs": 15255,
+  "cached_probe_state_rows": 45765,
+  "old_rsqrt_losing_pairs": 903,
+  "candidate_rsqrt_losing_pairs": 855,
+  "fixed_probe_pairs": 48,
+  "normal_whole_pow_instruction_delta": [
+    -1,
+    -2,
+    -3,
+    -6
+  ],
+  "new_correct_Qfplib_loss_rows": 0,
+  "all_parent_increase_rows": 0,
+  "source_diagnostic_public_ARM_calls": 46035,
+  "source_diagnostic_bare_ARM_calls": 42,
+  "MPFR_unique_inputs": 18,
+  "MPFR_evaluations": 25,
+  "source_loader_calls_excluded": 4,
+  "allocated_section_size_deltas_vs_R50": {
+    ".bss": 0,
+    ".data": 0,
+    ".pow_dispatch_group": -8,
+    ".pow_log_group": 0,
+    ".rodata": 0,
+    ".scratch_y": 0,
+    ".sqrt_group": 0,
+    ".text": 0
+  },
+  "full_coupled_qualification_started": false,
+  "all_source_jobs_terminal": true,
+  "selected_private_author_remains": "R50",
+  "selected": false,
+  "next": "Combine exact two-stage center quotient with this exact factor product as R52, then full coupled qualification once. R51 raw diagnostics are not full library qualification.",
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

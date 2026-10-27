@@ -1,0 +1,48 @@
+{
+  "status": "ALL_FIVE_EXEC_SESSIONS_TERMINAL0_CONSUMED_ON_ORIGINAL_HANDLES",
+  "observed_utc": "2026-10-27T01:54:46.990688+00:00",
+  "all_producers_terminal": true,
+  "jobs": {
+    "primary": {
+      "session_id": 24008,
+      "exit_code": 0,
+      "completed_reports": [
+        "original507.json",
+        "broad.json"
+      ]
+    },
+    "pow": {
+      "session_id": 56452,
+      "exit_code": 0,
+      "completed_reports": [
+        "full-result.json",
+        "admission-result.json"
+      ]
+    },
+    "exp": {
+      "session_id": 66127,
+      "exit_code": 0,
+      "completed_reports": [
+        "exp-result.json"
+      ]
+    },
+    "ln": {
+      "session_id": 19342,
+      "exit_code": 0,
+      "completed_reports": [
+        "ln-result.json"
+      ]
+    },
+    "caller-state": {
+      "session_id": 62273,
+      "exit_code": 0,
+      "completed_reports": [
+        "caller-state-result.json"
+      ]
+    }
+  },
+  "restarts": 0,
+  "historical_RUNNING_and_PROGRESS_are_not_current_state": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

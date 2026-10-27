@@ -1,0 +1,39 @@
+{
+  "status": "PASS_R45_ACTUAL_NORMAL_NUMERATOR_DENOMINATOR_GUARD_AND_6_NEGATIVES",
+  "candidate_ELF_sha256": "f8d264e7f5191c790080a3428961e64f5dc2fb5ea11d8f4d82ab96160e9b6fc5",
+  "caller": 268573862,
+  "guard_begin": 268573654,
+  "guard_end": 268573740,
+  "overflow_pack": 268573726,
+  "old_fallback": 268573798,
+  "caller_prefix_proves_Ea1to2046_and_Eb0or2047": true,
+  "all2048_Eb_integer_truth": [
+    {
+      "Eb": 0,
+      "N": 1
+    },
+    {
+      "Eb": 2047,
+      "N": 0
+    }
+  ],
+  "no_argument_writes_on_any_decline": true,
+  "normal_common_division_prefix_instruction_count_unchanged": true,
+  "guard_source_instructions_branches_literals_bound": true,
+  "callee_stack20bytes_popped_on_fast_return": true,
+  "no_new_calls_or_SIO": true,
+  "negative_controls_rejected": [
+    "bad-Ea-unpack",
+    "bad-first-Ea-reject",
+    "bad-Eb-CMP",
+    "wrong-cold-target",
+    "wrong-flag-consumer",
+    "wrong-sign-XOR"
+  ],
+  "mandatory_after_each_changed_release": true,
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "physical_cycles_measured": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

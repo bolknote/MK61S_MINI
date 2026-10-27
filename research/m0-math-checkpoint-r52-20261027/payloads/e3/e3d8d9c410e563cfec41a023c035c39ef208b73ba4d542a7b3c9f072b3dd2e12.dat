@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-smallfactor-r51-20261027/verify-smallfactor.py", line 91, in <module>
+    else:raise AssertionError(('mutant accepted',label,name))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('mutant accepted', 'candidate', 'D_plus1')

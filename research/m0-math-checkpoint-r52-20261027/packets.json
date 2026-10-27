@@ -1,0 +1,51 @@
+{
+  "r49-qualification": {
+    "original_directory": ".build/m0-math-unified-exp-incremental-r49-qualification-20261027",
+    "scope": "completed author qualification; supersedes previous pending source note",
+    "FROZEN_sha256": "6c49ec8a093b4a73cc3dd2cb4ad3dd491c6080253c9c831a1e775ba0ce072eb7",
+    "frozen_pinned_files": 86,
+    "archived_files": 87
+  },
+  "r50-source": {
+    "original_directory": ".build/m0-math-unified-pow-rsqrt-entry-r50-20261027",
+    "scope": "source and mandatory guards, qualified by r50-qualification",
+    "FROZEN_sha256": "05b6ddbc103a81fe03896241ceedcbf2b0465d71b69ce79a017aa4a9f819fb3d",
+    "frozen_pinned_files": 490,
+    "archived_files": 454
+  },
+  "r50-qualification": {
+    "original_directory": ".build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027",
+    "scope": "completed author qualification, superseded by R52",
+    "FROZEN_sha256": "77419ccefb6866c0bf0f40f5b3e288da4f3b5f5cf5f8a6d16cbb0176c35d5b6a",
+    "frozen_pinned_files": 73,
+    "archived_files": 74
+  },
+  "r51-source": {
+    "original_directory": ".build/m0-math-unified-pow-rsqrt-smallfactor-r51-20261027",
+    "scope": "intermediate source prototype; not fully qualified or selected",
+    "FROZEN_sha256": "36260a443c656d0e3e2745012f327865794cfeae5ad73e0fb1025e0a75238e1e",
+    "frozen_pinned_files": 492,
+    "archived_files": 456
+  },
+  "r52-source": {
+    "original_directory": ".build/m0-math-unified-pow-rsqrt-center-r52-20261027",
+    "scope": "source and mandatory guards, qualified by r52-qualification",
+    "FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+    "frozen_pinned_files": 498,
+    "archived_files": 462
+  },
+  "r52-qualification": {
+    "original_directory": ".build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027",
+    "scope": "completed author qualification, current private selected candidate",
+    "FROZEN_sha256": "bc3eb3419524d11f9abcc77d333a0fdcc8c4ad092c72bd68be7af82d65de52b1",
+    "frozen_pinned_files": 73,
+    "archived_files": 74
+  },
+  "saturation-host": {
+    "original_directory": ".build/m0-pow-saturation-bound-host-20261027",
+    "scope": "host-only bound study, not implemented or timed",
+    "FROZEN_sha256": null,
+    "frozen_pinned_files": 0,
+    "archived_files": 3
+  }
+}

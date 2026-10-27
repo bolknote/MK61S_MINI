@@ -1,0 +1,14 @@
+{
+  "status": "PASS_R49_QUALIFICATION_POSTSEAL_ALL_PINS",
+  "qualification_FROZEN_sha256": "6c49ec8a093b4a73cc3dd2cb4ad3dd491c6080253c9c831a1e775ba0ce072eb7",
+  "files_verified": 86,
+  "author_result_sha256": "be3ab178ceac73177982809189845d708becb901129cc07e8153edd516779374",
+  "joined_audit_sha256": "454aca76ef1de4d1632976878027cc8e3fb8e2204929af8f3d90d7b09b84a3a9",
+  "source_FROZEN_sha256": "e9db8a83b36789ffd54d1586e60779502fb8ec4bd4b8381495f15abed8ebc15e",
+  "selected_private_author_source": "R49",
+  "all_source_qualification_audit_jobs_terminal": true,
+  "new_ARM_MPFR_calls_by_finalizer": 0,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

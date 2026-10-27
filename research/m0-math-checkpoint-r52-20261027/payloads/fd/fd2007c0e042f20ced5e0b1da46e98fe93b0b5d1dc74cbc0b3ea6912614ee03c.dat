@@ -1,0 +1,72 @@
+AUDITED PRIMARY original507 1014
+AUDITED PRIMARY broad 60272
+AUDITED REPLAY full 281430 1995 0
+AUDITED REPLAY admission 50220 2045 0
+AUDITED REPLAY exp 1224907 0 809101
+AUDITED REPLAY ln 360590 0 0
+{
+  "status": "PASS_R49_COUPLED_STREAM_AUDIT_NO_NEW_CORRECT_QFPLIB_DEFICITS",
+  "source_FROZEN_sha256": "e9db8a83b36789ffd54d1586e60779502fb8ec4bd4b8381495f15abed8ebc15e",
+  "candidate_ELF_sha256": "e42e81761f1aa7c5d756eec06ec5336e0c6e18149e40f938b85c4cf376f723db",
+  "parent_R48_qualification_FROZEN_sha256": "849b995c8433e0dc6831c7af4411ef190c13bbd3204571553db490061af63ec9",
+  "prototype_r2_FROZEN_sha256": "c0264f8367cc40ace6b3cb93697e0244f7cb09daf1a2be07e6ec45e8e300d539",
+  "actual_fresh_qualification_public_ARM_calls": 2117263,
+  "primary_fresh_oracle_input_evaluations": 30643,
+  "legal_caller_variation_rows": 3360,
+  "legal_caller_baseline_calls": 42,
+  "all16_NZCV_5_R12_3_SIO_checked": true,
+  "all_references_and_wrong_outputs_costs_retained": true,
+  "all_adverse_parent_changes_retained": true,
+  "tested_unique_arguments_by_operation": {
+    "acos": 688,
+    "asin": 688,
+    "atan": 1536,
+    "cos": 1433,
+    "d2f": 512,
+    "d2iz": 1024,
+    "d2lz": 1024,
+    "d2uiz": 512,
+    "d2ulz": 512,
+    "dadd": 392,
+    "dcmpeq": 512,
+    "dcmpge": 512,
+    "dcmpgt": 512,
+    "dcmple": 512,
+    "dcmplt": 512,
+    "ddiv": 396,
+    "dmul": 396,
+    "dsub": 12,
+    "exp": 569993,
+    "f2d": 512,
+    "i2d": 1313,
+    "l2d": 1521,
+    "ln": 182569,
+    "log10": 889,
+    "pow": 151409,
+    "sin": 1432,
+    "sqrt": 2437,
+    "tan": 1431,
+    "ui2d": 512,
+    "ul2d": 1514
+  },
+  "remaining_known_unique_losing_arguments_by_operation": {
+    "pow": 2045
+  },
+  "known_fresh_current_finite_losing_operation_arguments": 2045,
+  "not_whole_library_or_binary64_universe": true,
+  "inherited_R48_expanded_division_not_fresh_R49": true,
+  "source_diagnostic_171_ARM_and19_MPFR_not_added_to_fresh_qualification": true,
+  "new_ARM_MPFR_calls_by_this_audit": 0,
+  "metrics": "executed Thumb instructions, not physical cycles",
+  "physical_cycles_measured": false,
+  "universal_CR": false,
+  "general_pow_totality": false,
+  "FMA_acceptance": false,
+  "universal_stack_bound": false,
+  "independent_acceptance": false,
+  "selected": false,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

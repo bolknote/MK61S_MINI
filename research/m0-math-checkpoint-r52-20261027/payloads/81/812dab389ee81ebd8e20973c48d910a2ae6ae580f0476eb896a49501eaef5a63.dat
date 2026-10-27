@@ -1,0 +1,21 @@
+{
+  "status": "R50_EXACT_INTEGER_ENTRY_REUSE_PENDING_BUILD_AND_PROOF",
+  "source_parent_FROZEN_sha256": "e9db8a83b36789ffd54d1586e60779502fb8ec4bd4b8381495f15abed8ebc15e",
+  "changed_source_files": {
+    "source/code/native_eabi_m0.S": {
+      "before_sha256": "25e288874c6931c85cee00b8c1f480ce1df204f5d9d7f30e3e048850659f46fd",
+      "after_sha256": "dc40c9a7bba2a1f7031b27d76d1975767bb32befae50997065b2422ca3fdac8e"
+    },
+    "source/code/native_eabi_m0_pow_rsqrt.inc": {
+      "before_sha256": "94c28ef4b1136c5bd8259af59b30a479c6f619ba95dad15b8de36fc61d56c434",
+      "after_sha256": "0ab2429aeeaee365126f1594b10de2b8c71190d13d56af0a156096cffee5872b"
+    }
+  },
+  "new_lookup_table_global_RAM_libgcc_bytes": 0,
+  "selected_private_author_remains": "R49",
+  "new_native_R2_contract_requires_linked_proof": true,
+  "original_positive_normal_leaf_ABI_preserved": true,
+  "numerical_algorithm_and_error_bounds_unchanged": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

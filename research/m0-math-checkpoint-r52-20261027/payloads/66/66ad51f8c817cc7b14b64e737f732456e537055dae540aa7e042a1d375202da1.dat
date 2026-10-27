@@ -1,0 +1,14 @@
+{
+  "status": "PASS_R52_QUALIFICATION_POSTSEAL_ALL_PINS",
+  "qualification_FROZEN_sha256": "bc3eb3419524d11f9abcc77d333a0fdcc8c4ad092c72bd68be7af82d65de52b1",
+  "files_verified": 73,
+  "author_result_sha256": "18fda826d356c2afada936f79fb47a935ed4b6d2ccfe75fabf8a2e3e7ae004ee",
+  "joined_audit_sha256": "4941b0edddb55a1c61f3d0659a535b483dc91eefba39757a3aa0726a97fe91f0",
+  "source_FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+  "selected_private_author_source": "R52",
+  "all_jobs_terminal": true,
+  "no_new_ARM_MPFR_calls_by_finalizer": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

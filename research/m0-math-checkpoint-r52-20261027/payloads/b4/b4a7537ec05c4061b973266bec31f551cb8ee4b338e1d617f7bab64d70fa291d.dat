@@ -1,0 +1,49 @@
+"""Public AAPCS caller flags/R12 and all three divider states, including declines."""
+from pathlib import Path
+from collections import Counter
+import gzip,hashlib,json,struct,sys
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',None)
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+sys.path[:0]=[str(W),str(ROOT/'.build/m0-float-fma-qualification-20261023'),str(ROOT/'.build/m0-float-fma-qualification-20261023/support')]
+from harness import machine
+from oracles import equal
+from unicorn import UC_HOOK_CODE
+from unicorn.arm_const import UC_ARM_REG_R12,UC_ARM_REG_XPSR
+assert not(W/'pow-caller-state-result.json').exists()
+m=machine();configuration=None;entry_visits=0
+def enter(uc,address,size,unused):
+    global entry_visits
+    entry_visits+=1
+    if configuration is not None:
+        nzcv,r12=configuration
+        uc.reg_write(UC_ARM_REG_XPSR,0x01000000|(nzcv<<28))
+        uc.reg_write(UC_ARM_REG_R12,r12)
+pc=m.elf.symbols['_ZN12compact_math3powEdd']&~1
+hook=m.uc.hook_add(UC_HOOK_CODE,enter,begin=pc,end=pc)
+states=dict(READY=(0,0,0,0,0,0,1),DIRTY=(17,3,17,3,5,2,3),PENDING=(0x80000001,7,0x80000001,7,0x11223344,0x55667788,2))
+patterns=[0,0xffffffff,0xa5a5a5a5,0x80000000,0x13579bdf]
+jobs={}
+for line in gzip.open(ROOT/'.build/m0-math-unified-pow-rsqrt-center-r52-20261027/rsqrt-fresh-records.jsonl.gz'):
+    row=json.loads(line);jobs.setdefault(row['x'],row['expected'])
+assert len(jobs)==18
+calls=0;baselines=0;costs=Counter()
+with gzip.GzipFile(filename=str(W/'pow-caller-state-records.jsonl.gz'),mode='wb',mtime=0)as output:
+    for hx,expected in jobs.items():
+        x=int(hx,16);gold=int(expected,16)
+        for state,words in states.items():
+            before=struct.pack('<7I',*words)
+            configuration=None;m.uc.mem_write(0xd0000060,before)
+            value,_,base=m.call('_ZN12compact_math3powEdd',x,0xbfe0000000000000,count=True);baselines+=1
+            assert equal(value,gold,64)
+            for nzcv in range(16):
+                for r12 in patterns:
+                    configuration=(nzcv,r12);m.uc.mem_write(0xd0000060,before)
+                    value,_,cost=m.call('_ZN12compact_math3powEdd',x,0xbfe0000000000000,count=True);calls+=1
+                    assert equal(value,gold,64)and cost==base,(hx,state,nzcv,r12,value,gold,cost,base)
+                    after=bytes(m.uc.mem_read(0xd0000060,28));assert after==before if state!='READY'else not struct.unpack('<7I',after)[6]&2
+                    costs[cost]+=1
+                    output.write((json.dumps(dict(x=hx,SIO=state,NZCV=nzcv,R12=f'{r12:08X}',actual=f'{value:016X}',expected=expected,instructions=cost,baseline_instructions=base),separators=(',',':'))+'\n').encode())
+assert entry_visits==calls+baselines
+report=dict(status='PASS_ALL16_NZCV_5_R12_3_SIO_PUBLIC_CALLERS',inputs=len(jobs),caller_variation_ARM_calls=calls,baseline_ARM_calls=baselines,total_ARM_calls=calls+baselines,all_outputs_and_counts_exact_baseline=True,all_AAPCS_SP_bounded_writes_SIO_checks=True,entry_only_legal_caller_flags_R12_injected=True,guest_body_or_instruction_counts_not_modified=True,no_fresh_MPFR_Qfplib_calls=True,records_sha256=hashlib.sha256((W/'pow-caller-state-records.jsonl.gz').read_bytes()).hexdigest(),hardware_accessed=False,integration_GO=False,goal_complete=False)
+(W/'pow-caller-state-result.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))

@@ -1,0 +1,92 @@
+{
+  "status": "PASS_ALL10_EXACT_QUALIFICATION_PROCESS_SIGNATURES_NO_PRIMARY_SOURCE_OPENS",
+  "receipts": [
+    {
+      "path": "private-io-receipts/53097.json",
+      "sha256": "fb1700fd4abdf25328b7b16e5654529e158b8e229c418c725f45be8fb5db5ded",
+      "process": 53097,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027/replay.py",
+        "ln"
+      ]
+    },
+    {
+      "path": "private-io-receipts/53099.json",
+      "sha256": "28292f4a4ca86c03823617708f03d4602a7e194b7dfbb431e5eebb22c36c4071",
+      "process": 53099,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027/run-matrix.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/53101.json",
+      "sha256": "de3a89bca2ce6c23cdd070809c9bcbcc04dad97af66adc86e2b1a2bbee96132d",
+      "process": 53101,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027/check-caller-state.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/53102.json",
+      "sha256": "f863c1137ff982743f899248740c52b6f0d24a4e76dd63c868e1bd2f5b495e13",
+      "process": 53102,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027/original507.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/53107.json",
+      "sha256": "b5426c6ef8691de39e12b7644c74c46cb330dbae24d77718c2429aa2bf91218d",
+      "process": 53107,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027/replay.py",
+        "exp"
+      ]
+    },
+    {
+      "path": "private-io-receipts/53110.json",
+      "sha256": "3f5d4026089783e15ded3b5b1d90e445f1a44fcda740b0c724f644e6e1521df9",
+      "process": 53110,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027/run-pow.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/53111.json",
+      "sha256": "ee40ecb1bfc42222d030b81dbda8c2284fc9bd0c0a6f5dc0f09e107909c44c05",
+      "process": 53111,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027/check-pow-caller-state.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/53112.json",
+      "sha256": "6fbea9476af7e3d62172d66fb4e4594559a952f4dc179c027a45d9422573e023",
+      "process": 53112,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027/replay.py",
+        "full"
+      ]
+    },
+    {
+      "path": "private-io-receipts/53113.json",
+      "sha256": "58bcc2debbb742119b5cc498bdc387c587772b5eae419495fa1642ac51ee97d7",
+      "process": 53113,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027/broad.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/53445.json",
+      "sha256": "d739f636f04f088502b5bd5055ec8e9f614eb3b4a92c17b6cb1b8eccbd403628",
+      "process": 53445,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027/replay.py",
+        "admission"
+      ]
+    }
+  ],
+  "denied_primary_open_attempts": 0,
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false
+}

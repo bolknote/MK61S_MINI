@@ -1,0 +1,112 @@
+{
+  "status": "PASS_R49_FRESH_LN_CACHED_R48_GOLD_ALL_CORRECT_QFPLIB",
+  "source_FROZEN_sha256": "e9db8a83b36789ffd54d1586e60779502fb8ec4bd4b8381495f15abed8ebc15e",
+  "parent_R48_qualification_FROZEN_sha256": "849b995c8433e0dc6831c7af4411ef190c13bbd3204571553db490061af63ec9",
+  "input_records_sha256": "15e0f083e63107592c47280b508dc187372a4430cb45602408f27419ca9c7cfa",
+  "candidate_ELF_sha256": "e42e81761f1aa7c5d756eec06ec5336e0c6e18149e40f938b85c4cf376f723db",
+  "state_rows": 360590,
+  "unique_inputs": 180295,
+  "actual_fresh_public_ARM_calls": 360590,
+  "actual_fresh_Qfplib_MPFR_calls": 0,
+  "gold_and_Qfplib_outputs_costs_cached_frozen_R48": true,
+  "candidate_wrong": 0,
+  "parent_losing_unique_inputs": 0,
+  "candidate_losing_unique_inputs": 0,
+  "remaining_losing_arguments": [],
+  "new_losing_argument_pairs": [],
+  "new_correct_Qfplib_loss_state_rows": 0,
+  "all_parent_instruction_increase_rows": 0,
+  "parent_instruction_delta_histogram": {
+    "0": 360590
+  },
+  "all_adverse_increases_streamed_including_already_slower": true,
+  "all_Qfplib_references_retained_each_state": true,
+  "no_nominal_reference_filter": true,
+  "wrong_Qfplib_state_comparisons_retained": 21680,
+  "prototype_r2_FROZEN_sha256": null,
+  "actual_R49_exp_bits_counts_paths_exact_full_prototype": null,
+  "prototype_instruction_delta_histogram": {},
+  "prototype_increase_rows": 0,
+  "actual_exp_path_histogram": {},
+  "actual_watched_division_sites": [
+    [
+      "__aeabi_ddiv",
+      268573856
+    ],
+    [
+      "mk61_m0_ddiv_slow",
+      268565140
+    ],
+    [
+      "_ZN7m0_eabi6BinaryILj52ELj11EE3divEyy",
+      268564756
+    ],
+    [
+      "mk61_m0_ddiv_denominator_guard_begin",
+      268573670
+    ],
+    [
+      "mk61_m0_ddiv_numerator_guard_body",
+      268573586
+    ],
+    [
+      "mk61_m0_ddiv_range_guard_begin",
+      268573776
+    ],
+    [
+      "mk61_m0_ddiv_coarse_dispatch_begin",
+      268573880
+    ],
+    [
+      "mk61_m0_ddiv_dyadic_body_begin",
+      268573528
+    ],
+    [
+      "mk61_m0_ddiv_small_normalize_begin",
+      268573552
+    ],
+    [
+      "actual_ddiv0_after_public_push",
+      268573858
+    ]
+  ],
+  "all10_division_entry_visits": {
+    "__aeabi_ddiv": 0,
+    "mk61_m0_ddiv_slow": 0,
+    "_ZN7m0_eabi6BinaryILj52ELj11EE3divEyy": 0,
+    "mk61_m0_ddiv_denominator_guard_begin": 0,
+    "mk61_m0_ddiv_numerator_guard_body": 0,
+    "mk61_m0_ddiv_range_guard_begin": 0,
+    "mk61_m0_ddiv_coarse_dispatch_begin": 0,
+    "mk61_m0_ddiv_dyadic_body_begin": 0,
+    "mk61_m0_ddiv_small_normalize_begin": 0,
+    "actual_ddiv0_after_public_push": 0
+  },
+  "source_loader_excluded": {
+    "actual_ARM_calls": 1,
+    "instructions": 1024,
+    "whole_scratch_y_bytes": 4080,
+    "reserved_tail_untouched": true,
+    "actual_ROM_pointers": [
+      9913,
+      9757,
+      9901,
+      9733
+    ],
+    "no_old_firmware_overlay_loaded": true
+  },
+  "observed_stack_bytes": 664,
+  "not_universal_library_stack_bound": true,
+  "records_sha256": "8d11c8f3bc6a2e8f6f3e66948e7c652e2671b242c0f311a9120e84a9fb96d378",
+  "adverse_records_sha256": "d1ead987906fa6750d834390bf78ae2be00bdc864dd9b005df0df85bb74425e9",
+  "new_loss_records_sha256": "40d78fe1bb21c2e6e3f28f36fc61ab5d164b05835c75750263d00a84d1b987b3",
+  "all_AAPCS_SP_bounded_stack_writes_SIO_checks": true,
+  "metrics": "executed Thumb instructions, not physical cycles",
+  "selected": false,
+  "independent_acceptance": false,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 399.6732868750114
+}

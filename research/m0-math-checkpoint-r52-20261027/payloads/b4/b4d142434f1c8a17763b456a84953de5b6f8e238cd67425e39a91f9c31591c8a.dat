@@ -1,0 +1,45 @@
+{
+  "legacy_caller_symbol": "mk61_m0_exp_fallback",
+  "status": "PASS_REQUIRED_CURRENT_OBJECT_COLD_BRIDGE_CALLER_BINDING",
+  "candidate_ELF_sha256": "8e73f841899dd169cb0538d02d839d9499d37a5e971d85e740ec0d21f43732f4",
+  "parent_FROZEN_sha256": "7c4ea69858bdaa995868aa1b5b70f112315e726f17aeaf719c9049ff6533bfb1",
+  "parent_core_sha256": "394a40547f1e56b55656ec14f5c04cbc838f2366399363f2bb560f14875c9511",
+  "current_core_sha256": "b69128cc7d6e3bf6f37005ce73a45004ed445f9d23adbfe8c2e9e7362b0efc78",
+  "core_bytes": 5192,
+  "only_old_core_machine_code_change_one4byte_callsite": true,
+  "callsite_section_offset": 5012,
+  "all_other_core_bytes_and_semantic_relocations_exact": true,
+  "current_unique_bridge_call": "0x10041e5c",
+  "capture_marker": "0x10041d38",
+  "caller_x_n_exact_APCS_preparation": true,
+  "positive_displacement_q_after_capture": "R7:R6=A+P",
+  "delta_high_SP_offset": 28,
+  "duplicate_sign_SP_offset": 44,
+  "k_SP_offset": 8,
+  "n_SP_offset": 32,
+  "eligible_pruned_edges": [
+    {
+      "address": "0x10041d44",
+      "reason": "eligible delta_high>=0 and SP44 equals SP28"
+    },
+    {
+      "address": "0x10041d56",
+      "reason": "A+P>=2^62 and global q<2^63 =>error4"
+    },
+    {
+      "address": "0x10041df6",
+      "reason": "eligible delta_high>=0 and SP44 equals SP28"
+    }
+  ],
+  "eligible_live_instructions": 86,
+  "eligible_no_calls_SP_changes_R12_touches_q_or_metadata_writes": true,
+  "fraction_nonzero_index_is_same_actual_leaf_R12": true,
+  "row0_must_use_bridge_constant_not_R12": true,
+  "baseline_CPP_used_noipa_refine_body_machine_bytes_exact": true,
+  "compiler_flags_dependent_private_contract": true,
+  "required_again_every_changed_release_object": true,
+  "no_new_ARM_MPFR_calls": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

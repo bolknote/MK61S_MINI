@@ -1,0 +1,38 @@
+"""Pinned pure source harness; no frozen producer is executed."""
+from pathlib import Path
+import hashlib, importlib.util, json, struct, sys
+sys.dont_write_bytecode = True
+assert getattr(sys, 'mk61_private_fixture', None), 'Private I/O fixture required'
+W = Path(__file__).resolve().parent
+ROOT = W.parents[1]
+SOURCE = ROOT / '.build/m0-math-unified-exp-incremental-r49-20261027'
+PARENT = ROOT / '.build/m0-math-unified-ddiv-power-dispatch-r48-qualification-20261026'
+PROTOTYPE = ROOT / '.build/m0-exp-q73-incremental-r2-20261027'
+SOURCE_PIN = 'e9db8a83b36789ffd54d1586e60779502fb8ec4bd4b8381495f15abed8ebc15e'
+PARENT_PIN = '849b995c8433e0dc6831c7af4411ef190c13bbd3204571553db490061af63ec9'
+PROTOTYPE_PIN = 'c0264f8367cc40ace6b3cb93697e0244f7cb09daf1a2be07e6ec45e8e300d539'
+def sha(p):
+    h = hashlib.sha256()
+    with p.open('rb') as f:
+        for block in iter(lambda: f.read(1048576), b''):
+            h.update(block)
+    return h.hexdigest()
+def pinned(base, manifest_hash, name):
+    assert sha(base / 'FROZEN.json') == manifest_hash
+    pin = json.loads((base / 'FROZEN.json').read_bytes())['files'][name]
+    p = base / name
+    assert p.stat().st_size == pin['bytes'] and sha(p) == pin['sha256'], p
+    return p
+def source_machine(label='candidate'):
+    pinned(SOURCE, SOURCE_PIN, 'harness.py')
+    pinned(SOURCE, SOURCE_PIN, 'link-result.json')
+    pinned(SOURCE, SOURCE_PIN, label + '.elf')
+    spec = importlib.util.spec_from_file_location('r49_pinned_pure_harness', SOURCE / 'harness.py')
+    harness = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(harness)
+    return harness.machine(label)
+STATES = {
+    'READY': struct.pack('<7I', 0, 0, 0, 0, 0, 0, 1),
+    'DIRTY': struct.pack('<7I', 17, 3, 17, 3, 5, 2, 3),
+    'PENDING': struct.pack('<7I', 0x80000001, 7, 0x80000001, 7, 0x11223344, 0x55667788, 2),
+}

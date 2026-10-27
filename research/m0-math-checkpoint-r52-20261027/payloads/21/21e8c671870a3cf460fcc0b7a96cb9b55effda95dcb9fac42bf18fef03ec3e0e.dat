@@ -1,0 +1,17 @@
+{
+  "status": "COMBINED_R52_EXACT_QUOTIENT_AND_FACTOR_PENDING_LINKED_PROOF",
+  "source_parent_FROZEN_sha256": "36260a443c656d0e3e2745012f327865794cfeae5ad73e0fb1025e0a75238e1e",
+  "changed_source_files": {
+    "source/code/native_eabi_m0_pow_rsqrt.inc": {
+      "before_sha256": "136b6447795af59df311b26420bf0189a981d61b141f1cf1ef09016aaeeddede",
+      "after_sha256": "af038897433360881ca7897d551191039612e767ff913dc0efe72ced9da72d93"
+    }
+  },
+  "selected_private_author_remains": "R50",
+  "R51_not_full_qualified_not_selected": true,
+  "combined_qualification_parent_R50": true,
+  "center_host_proof_sha256": "d42d789735477c412a92917141f22b96c8bb50335001d2e5e39b154734d48bf1",
+  "new_lookup_table_global_RAM_libgcc_bytes": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

@@ -1,0 +1,7 @@
+{
+  "source": ".build/m0-math-unified-pow-rsqrt-entry-r50-20261027/verify-rsqrt-entry.py",
+  "source_sha256": "bd6aecf40e01644bb82fbe1d3f941b9544b976499aabf5742028a68f027fa2a3",
+  "extraction": "prefix before def check(e); pure ELF/GNU decoder only, no producer or tests imported",
+  "only_path_adjustment": "W=__file__.parents[1] for support module",
+  "helper_sha256": "6cb15bef3cb94db714b3dd63f8f0f69b25df095f087d2b742dd3159ae414e74e"
+}

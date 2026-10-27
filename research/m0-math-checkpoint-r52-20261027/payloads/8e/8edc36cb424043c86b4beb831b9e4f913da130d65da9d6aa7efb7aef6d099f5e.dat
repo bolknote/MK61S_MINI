@@ -1,0 +1,23 @@
+--- R49/source/code/native_eabi_m0.S
++++ R50/source/code/native_eabi_m0.S
+@@ -1072,14 +1072,15 @@
+  ldr r2,=mk61_m0_sqrt
+  bx r2
+ .Lpow_inverse_root:
++ // Unsigned E-1<2046 admits exactly positive normal inputs.
++ // Preserve E-1 in R2 for the private native entry.
+  lsrs r2,r1,#20
+- cmp r2,#0
+- beq .Lpow_restore_low
+- ldr r3,=0x7ff
++ subs r2,#1
++ ldr r3,=0x7fe
+  cmp r2,r3
+  bhs .Lpow_restore_negative_half
+- ldr r2,=mk61_m0_pow_rsqrt_fast
+- bx r2
++ ldr r3,=mk61_m0_pow_rsqrt_normal_eminus1
++ bx r3
+ .Lpow_restore_negative_half:
+  ldr r3,=0xbfe00000
+  b .Lpow_restore_low

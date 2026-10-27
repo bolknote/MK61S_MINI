@@ -1,0 +1,79 @@
+{
+  "status": "R49_COUPLED_QUALIFICATION_PREPARED_NOT_RUN",
+  "previous_goal_turn": "progress: intermediate source and measurement archive committed as dda1627; qualification next",
+  "pins": {
+    ".build/m0-math-unified-exp-incremental-r49-20261027": {
+      "FROZEN_sha256": "e9db8a83b36789ffd54d1586e60779502fb8ec4bd4b8381495f15abed8ebc15e",
+      "files_verified": 496
+    },
+    ".build/m0-math-unified-ddiv-power-dispatch-r48-qualification-20261026": {
+      "FROZEN_sha256": "849b995c8433e0dc6831c7af4411ef190c13bbd3204571553db490061af63ec9",
+      "files_verified": 56
+    },
+    ".build/m0-exp-q73-incremental-r2-20261027": {
+      "FROZEN_sha256": "c0264f8367cc40ace6b3cb93697e0244f7cb09daf1a2be07e6ec45e8e300d539",
+      "files_verified": 52
+    }
+  },
+  "driver_adaptations": {
+    "original507.py": {
+      "from": ".build/m0-math-unified-ddiv-power-dispatch-r48-qualification-20261026/original507.py",
+      "original_sha256": "ec4f547d79469ceeb9ed0416fb58e474056a6cea0e74d3e95959423bfc68882d",
+      "copied_sha256": "e61c7ff4339e02e59c4bb819261db984eabbae39f5f863194bd1caccfcbba235",
+      "changes": "source path and source FROZEN pin only; oracle and reference policy unchanged"
+    },
+    "broad.py": {
+      "from": ".build/m0-math-unified-ddiv-power-dispatch-r48-qualification-20261026/broad.py",
+      "original_sha256": "c5f68c0a3ceb0476e9c56da5929a415f2d50f5636890db227780a26126996d3e",
+      "copied_sha256": "43d7f881af46b92bcee416af4deebc4a2d5a07516124cb7914407bd26a812ca5",
+      "changes": "source path and source FROZEN pin only; oracle and reference policy unchanged"
+    },
+    "run-matrix.py": {
+      "from": ".build/m0-math-unified-ddiv-power-dispatch-r48-qualification-20261026/run-matrix.py",
+      "original_sha256": "3280b27eb2b5b2f5bdaaadeb8c2edd443aa67907183249c8d6fe763b41d3ee30",
+      "copied_sha256": "3280b27eb2b5b2f5bdaaadeb8c2edd443aa67907183249c8d6fe763b41d3ee30",
+      "changes": "source path and source FROZEN pin only; oracle and reference policy unchanged"
+    },
+    "check-caller-state.py": {
+      "from": ".build/m0-exp-q73-incremental-r2-20261027/check-caller-state.py",
+      "original_sha256": "e09fbaab9e4fdb90ddae8db33efad1d61b6817a6695d948c55d05f8bbbc9b7b7",
+      "copied_sha256": "30a2e161a65b7b4363ae94319fdd9f90faeb5d8d44dabc8a19d7af2078b1a767",
+      "changes": "only native source public exp symbol replaces prototype public exp symbol"
+    }
+  },
+  "fixture_sitecustomize_sha256": "41f94e7c6c23d7e43ce8c58411a7fc44c847563b0a450f59a2d1a3d43946021b",
+  "fixture_input_pins": {
+    "status": "PINNED_PRIVATE_FIXTURE_INPUTS",
+    "files": {
+      ".build/m0-math-offline-io-20261026/sitecustomize.py": {
+        "sha256": "41f94e7c6c23d7e43ce8c58411a7fc44c847563b0a450f59a2d1a3d43946021b",
+        "bytes": 2897
+      },
+      ".build/m0-fixed-tails-v73-20261021/source/research/rp2040-memset-2026-10-21/capture/bootrom.bin": {
+        "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+        "bytes": 16384
+      },
+      ".build/m0-float-fma-qualification-20261023/support/check_stm32_vectors.py": {
+        "sha256": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708",
+        "bytes": 3952
+      }
+    },
+    "smoke_receipts": [
+      {
+        "path": ".build/m0-math-offline-io-20261026/receipts/85143.json",
+        "sha256": "0c0ce6e67a3236358668f647c93539e0bd3c5ff02e13d193048ec2d5c2a8d09a",
+        "redirects": 2
+      }
+    ],
+    "no_guest_semantics_change": true,
+    "primary_source_opens_prohibited": true
+  },
+  "source_guards_already_passed_no_repeat": true,
+  "exp_full_gold_and_Qfp_cached_frozen_R48": true,
+  "exp_prototype_counts_cached_frozen_incremental_r2": true,
+  "primary_MPFR_and_Qfplib_fresh": true,
+  "selected_private_author_remains_R48": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

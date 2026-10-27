@@ -1,0 +1,33 @@
+"""Ensure all four RP-only assembly units allocate no disabled-target code."""
+from pathlib import Path
+import hashlib
+import importlib.util
+import json
+import subprocess
+import sys
+
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+assert not(W/'disabled-isolation.json').exists()
+link=json.loads((W/'link-result.json').read_bytes());tc=Path(link['commands'][0][0]).parent
+spec=importlib.util.spec_from_file_location('disabled_fingerprints',W/'support/fingerprint.py')
+v=importlib.util.module_from_spec(spec);spec.loader.exec_module(v)
+targets={'generic_M0':['-mcpu=cortex-m0','-mfloat-abi=soft'],
+         'M4_soft':['-mcpu=cortex-m4','-mfloat-abi=soft'],
+         'M4_hard':['-mcpu=cortex-m4','-mfloat-abi=hard','-mfpu=fpv4-sp-d16']}
+sources=['native_eabi_m0_rp2040.S','native_eabi_m0_reciprocal1.S','native_eabi_m0_reciprocal1_sw.S','native_eabi_m0_exp.S']
+results={};commands=[]
+for target,flags in targets.items():
+ for source in sources:
+  p=W/'source/code'/source;out=W/(target+'-disabled-'+source+'.o')
+  command=[str(tc/'arm-none-eabi-gcc'),*flags,'-mthumb','-DMK61_USE_M0_EABI=1','-DMK61_M0_RP2040_EABI=0','-c',str(p),'-o',str(out)]
+  subprocess.run(command,cwd=W,check=True);commands.append(command)
+  fingerprint=v.image_fingerprint(out.read_bytes())
+  assert all(row[4]==0 for row in fingerprint['allocated']),(target,source)
+  assert not fingerprint['relocations']
+  results[out.name]=dict(source_sha256=hashlib.sha256(p.read_bytes()).hexdigest(),
+    object_sha256=hashlib.sha256(out.read_bytes()).hexdigest(),fingerprint=fingerprint)
+result=dict(status='PASS_ALL_RP_ONLY_ASM_UNITS_DISABLED_ON_DEFAULT_M0_AND_BOTH_M4_ABIS',commands=commands,outputs=results,
+    core_default_M0_M4_objects_also_fingerprint_exact_to_parent=link['M4_default_objects_exact'],
+    actual_ARM_or_MPFR_calls=0,canonical_files_changed=False,hardware_accessed=False,goal_complete=False)
+(W/'disabled-isolation.json').write_text(json.dumps(result,indent=2)+'\n');print(result['status'])

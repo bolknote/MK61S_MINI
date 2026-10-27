@@ -1,0 +1,29 @@
+{
+  "status": "PASS_INTEGER_RATIONAL_SMALL_FACTOR_RANGE_AND_UNIVERSAL_PRODUCT_IDENTITY",
+  "source_R50_FROZEN_sha256": "05b6ddbc103a81fe03896241ceedcbf2b0465d71b69ce79a017aa4a9f819fb3d",
+  "table_sha256": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+  "table_entries_verified": 512,
+  "base_seed_center_error_strictly_below1": true,
+  "all512_center_reciprocals_at_most2_increments": true,
+  "t_max": 8372255,
+  "Q_max": 6120,
+  "cubic_C_max": 10,
+  "coarse_seed_error_upper_bound_fraction": [
+    21552850025,
+    810034182
+  ],
+  "coarse_seed_error_strictly_below64": true,
+  "normal_factor_high_D_absolute_bound": 130,
+  "partial_signed32_product_absolute_bound": 8519550,
+  "middle_signed32_sum_absolute_bound": 8519680,
+  "universal_product_identity_proved_by_integer_decomposition": true,
+  "finite_implementation_checks": 276921,
+  "finite_checks_not_universal_proof": true,
+  "old_new_rounded_Q63_point_intended_exact": true,
+  "linked_implementation_and_caller_liveness_not_yet_proved": true,
+  "new_ARM_MPFR_calls": 0,
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

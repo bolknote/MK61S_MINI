@@ -1,0 +1,97 @@
+{
+  "status": "AUTHOR_SOURCE_R50_RSQRT_ENTRY_GATES_PASS_FULL_QUALIFICATION_PENDING",
+  "source_parent": "R49",
+  "parent_source_FROZEN_sha256": "e9db8a83b36789ffd54d1586e60779502fb8ec4bd4b8381495f15abed8ebc15e",
+  "candidate_ELF_sha256": "2d19c7e25c4e68c380f119f597edfca9ecceb1b8c60d98c963f05743a446797b",
+  "all22_other_objects_exact": true,
+  "M4_default_objects_exact": true,
+  "changed_RP_sections": [
+    ".m0_pow_dispatch_extension"
+  ],
+  "exact_new_R2_private_contract_and18_mutated_ELF_controls": true,
+  "source_required_proofs": {
+    "private-return-proof.json": {
+      "status": "PASS_REQUIRED_LINKED_PRIVATE_R12_RETURN_DATAFLOW",
+      "sha256": "c1bdde31d5d9ae653f51dade2dc1208f68d7d1f862208d4aadcab34812dc470c"
+    },
+    "private-guard-controls.json": {
+      "status": "PASS_ACTUAL_LINKED_PRIVATE_GUARD_POSITIVE_AND_REJECTION_CONTROLS",
+      "sha256": "2cc4eae79590b825532d9ee960374dad22980f6b27c347cefebc9336d7476b90"
+    },
+    "loader-layout-proof.json": {
+      "status": "PASS_ACTUAL_SOURCE_LOADER_AND_LINKED_MATH_LAYOUT",
+      "sha256": "ba6c136f2d8e9886da446bcfd84433c8cbac9c0cdc5b4c56c85b4285b10a3930"
+    },
+    "disabled-isolation.json": {
+      "status": "PASS_ALL_RP_ONLY_ASM_UNITS_DISABLED_ON_DEFAULT_M0_AND_BOTH_M4_ABIS",
+      "sha256": "89a67314d0d76f5a6b7b43c535a4c97d9f92ca2ed3c2e926bb1a624e060b8b73"
+    },
+    "div-guard-proof.json": {
+      "status": "PASS_R45_ACTUAL_NORMAL_NUMERATOR_DENOMINATOR_GUARD_AND_6_NEGATIVES",
+      "sha256": "8293a3fb1f83c0f05542d2696ba7a3bce7063e48f17dc510373f903a9a19c55d"
+    },
+    "native-caller-proof.json": {
+      "status": "PASS_R43_MANDATORY_LINKED_NATIVE_CARRY_CONTRACT_AND_12_NEGATIVE_CONTROLS",
+      "sha256": "013e6797b377342eb10776b9c104b50ac7f25fe3a53cf4b9e7f5f7727bfd3dc0"
+    },
+    "private-caller-proof.json": {
+      "status": "PASS_REQUIRED_CURRENT_OBJECT_COLD_BRIDGE_CALLER_BINDING",
+      "sha256": "a9e867942a447fbbed30a9e7148e6433d325bb2bc5cf2c28f40a03a5ef8c9fbc"
+    },
+    "normalized-caller-proof.json": {
+      "status": "PASS_REQUIRED_CURRENT_NORMALIZED_ROW0_NEGATIVE_D_CALLER_BINDING",
+      "sha256": "8fa71dd6c115d429a55e48ef1df884207f7f9816a003069af648606ed535bc0b"
+    },
+    "native-entry-proof.json": {
+      "status": "PASS_LINKED_R50_NATIVE_R2_CONTRACT_AND18_MUTATED_ELF_CONTROLS",
+      "sha256": "e9664db83f2ca140b0b6c419b510d724e15c0d7c3d5e8fdc872d4c408d46b96c"
+    }
+  },
+  "cached_probe_state_rows": 45765,
+  "cached_probe_unique_inputs": 15255,
+  "old_rsqrt_losing_pairs": 988,
+  "candidate_rsqrt_losing_pairs": 903,
+  "fixed_probe_pairs": 85,
+  "new_correct_Qfplib_loss_rows": 0,
+  "normal_whole_pow_instruction_delta": [
+    -4,
+    -3
+  ],
+  "all_probe_parent_delta_histogram": {
+    "-3": 25938,
+    "-4": 19776,
+    "4": 9,
+    "-1": 42
+  },
+  "all_parent_increase_rows_retained": 9,
+  "source_diagnostic_public_ARM_calls": 46035,
+  "source_diagnostic_bare_old_ABI_ARM_calls": 42,
+  "fresh_directed_MPFR_unique_inputs": 18,
+  "fresh_directed_MPFR_evaluations": 25,
+  "mandatory_loader_actual_ARM_calls": 2,
+  "probe_loader_actual_ARM_calls": 2,
+  "all_loader_calls_excluded_from_math_totals": true,
+  "allocated_section_size_deltas": {
+    ".bss": 0,
+    ".data": 0,
+    ".pow_dispatch_group": -8,
+    ".pow_log_group": 0,
+    ".rodata": 0,
+    ".scratch_y": 0,
+    ".sqrt_group": 0,
+    ".text": 0
+  },
+  "new_lookup_table_global_RAM_libgcc_bytes": 0,
+  "all_source_jobs_terminal": true,
+  "initial_controls_wrapper_exit1_disabled_report_field_only": true,
+  "all_individual_required_source_gates_pass_after_metadata_consumer_repair": true,
+  "old_positive_normal_leaf_ABI_preserved": true,
+  "coupled_qualification_pending": true,
+  "selected": false,
+  "selected_private_author_remains": "R49",
+  "universal_CR_totality_FMA_stack_cycles_independent_integration_open": true,
+  "metrics": "executed Thumb instructions, not physical cycles",
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

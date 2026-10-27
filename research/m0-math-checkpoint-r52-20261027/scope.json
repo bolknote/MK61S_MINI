@@ -1,0 +1,292 @@
+{
+  "status": "R52_QUALIFIED_PRIVATE_RESEARCH_CHECKPOINT_NOT_PRODUCTION",
+  "selected_private_author_source": "R52",
+  "R52": {
+    "status": "AUTHOR_QUALIFIED_PRIVATE_R52_SELECTED_RSQRT182_FINITE_POW_DEFICITS_FIXED",
+    "path": ".build/m0-math-unified-pow-rsqrt-center-r52-20261027",
+    "source_FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+    "qualification_path": ".build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027",
+    "candidate_ELF_sha256": "8e73f841899dd169cb0538d02d839d9499d37a5e971d85e740ec0d21f43732f4",
+    "source_parent": "R51_unselected_source_with_R50_qualified_performance_parent",
+    "R51_not_full_qualified_or_selected": true,
+    "source_linked": true,
+    "selected_private_author_candidate": true,
+    "actual_fresh_qualification_public_ARM_calls": 2121637,
+    "actual_current_candidate_public_ARM_calls": 1986209,
+    "actual_zero_control_public_ARM_calls": 61286,
+    "actual_fresh_Qfplib_primary_public_ARM_calls": 74142,
+    "primary_fresh_oracle_input_evaluations": 30643,
+    "primary_matrix_public_ARM_calls": 196714,
+    "full_pow_state_calls": 281430,
+    "admission_pow_state_calls": 50220,
+    "full_exp_state_calls": 1224907,
+    "full_ln_state_calls": 360590,
+    "exp_legal_caller_ARM_calls": 3402,
+    "pow_legal_caller_ARM_calls": 4374,
+    "source_diagnostic_public46035_bare42_MPFR25_evaluations_not_added_to_fresh_qualification": true,
+    "source_diagnostic_MPFR_unique_inputs": 18,
+    "source_diagnostic_loaders4_excluded": true,
+    "original507_no_slower": 474,
+    "original507_classification": {
+      "slower": 33,
+      "strict": 468,
+      "equal": 6
+    },
+    "current_joined_pow_inputs": 151409,
+    "current_joined_pow_losing_pairs": 1778,
+    "old_joined_pow_losing_pairs": 1960,
+    "pow_fixed_pairs": 182,
+    "old_rsqrt_losing_pairs": 903,
+    "current_rsqrt_losing_pairs": 721,
+    "full_pow_losing_pairs": 1754,
+    "old_full_pow_losing_pairs": 1923,
+    "current_full_exp_losing_inputs": 0,
+    "current_full_ln_losing_inputs": 0,
+    "known_finite_losing_operation_arguments": 1778,
+    "not_whole_library_remaining_count": true,
+    "new_correct_Qfplib_loss_state_rows": 0,
+    "all_correct_references_compared_no_nominal_filter": true,
+    "all_parent_increases_including_already_slower_preserved": true,
+    "all_parent_increase_rows_by_campaign": {
+      "full": 0,
+      "admission": 0,
+      "exp": 0,
+      "ln": 0,
+      "original507_candidate": 0,
+      "original507_zero-control": 0,
+      "broad_candidate": 0,
+      "broad_zero-control": 0
+    },
+    "all_wrong_Qfplib_outputs_and_costs_preserved": true,
+    "normal_whole_pow_rsqrt_instruction_delta_vs_R50_range": [
+      -20,
+      -1
+    ],
+    "cold_rsqrt_instruction_delta": 0,
+    "unaffected_pow_exponents_delta": 0,
+    "source_readonly_quotient_checks": 38040,
+    "all_u32_center_quotient_and_Q63_point_exact": true,
+    "full_exp_ln_bits_counts_exact_R50": true,
+    "full_exp_bits_counts_paths_exact_r2": true,
+    "primary_MPFR_Qfplib_fresh": true,
+    "full_pow_exp_ln_gold_Qfplib_cached_frozen_R50": true,
+    "all22_other_objects_exact": true,
+    "M4_default_objects_exact": true,
+    "mandatory_linked_source_guards_pass": true,
+    "new_R2_native_contract_and18_negative_ELF_controls_pass": true,
+    "center24_and_factor26_mutated_ELF_controls_pass": true,
+    "old_positive_normal_leaf_ABI_preserved": true,
+    "scratch_y_bytes": 4080,
+    "allocated_pow_dispatch_group_delta_bytes": -40,
+    "new_lookup_table_global_RAM_libgcc_bytes": 0,
+    "inherited_division_unique_pairs": 79846,
+    "inherited_division_losing_pairs": 0,
+    "inherited_expanded_division_not_fresh_R52": true,
+    "all10_division_entries_zero_visits_full_exp_ln": true,
+    "observed_max_stack_bytes": 2284,
+    "not_universal_library_stack_bound": true,
+    "private_fixture_processes": 10,
+    "denied_primary_source_open_attempts": 0,
+    "metrics": "executed Thumb instructions, not physical cycles",
+    "universal_correct_rounding_closed": false,
+    "general_pow_totality_closed": false,
+    "FMA_acceptance_closed": false,
+    "universal_stack_closed": false,
+    "physical_cycles_measured": false,
+    "current_author_candidate_independently_accepted": false,
+    "independent_review_complete": false,
+    "performance_or_adoption_GO": false,
+    "canonical_runtime_integrated": false,
+    "hardware_accessed": false,
+    "integration_GO": false,
+    "release_GO": false,
+    "goal_complete": false
+  },
+  "R52_postseal": {
+    "status": "PASS_R52_QUALIFICATION_POSTSEAL_ALL_PINS",
+    "qualification_FROZEN_sha256": "bc3eb3419524d11f9abcc77d333a0fdcc8c4ad092c72bd68be7af82d65de52b1",
+    "files_verified": 73,
+    "author_result_sha256": "18fda826d356c2afada936f79fb47a935ed4b6d2ccfe75fabf8a2e3e7ae004ee",
+    "joined_audit_sha256": "4941b0edddb55a1c61f3d0659a535b483dc91eefba39757a3aa0726a97fe91f0",
+    "source_FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+    "selected_private_author_source": "R52",
+    "all_jobs_terminal": true,
+    "no_new_ARM_MPFR_calls_by_finalizer": true,
+    "hardware_accessed": false,
+    "integration_GO": false,
+    "goal_complete": false
+  },
+  "R51_intermediate_not_full_qualified_or_selected": true,
+  "source_phase_pending_notes_are_historical_superseded_by_frozen_qualification": true,
+  "R49_R50_R52_qualification_complete_author_only": true,
+  "R49_checkpoint_source_already_preserved_in_commit": "dda1627de651f0b397bc54e1d7be2dda24eef8ed",
+  "historical_Qfplib_wrong_outputs_and_costs_retained": true,
+  "all_parent_increases_including_already_slower_retained": true,
+  "host_saturation_study_not_implemented": {
+    "status": "HOST_SATURATION_ADMISSION_MATCHES_PINNED_R52_GOLD_NOT_IMPLEMENTED",
+    "qualification_FROZEN_sha256": "bc3eb3419524d11f9abcc77d333a0fdcc8c4ad092c72bd68be7af82d65de52b1",
+    "checked_unique_pairs": 16740,
+    "current_losing_pairs": 1778,
+    "admitted_unique_pairs": {
+      "integer_exponent_log2_bound": 380,
+      "huge_y_uniform_binary64_spacing_bound": 30
+    },
+    "current_losing_pairs_covered": 317,
+    "covered_by_kind": {
+      "integer_exponent_log2_bound": 287,
+      "huge_y_uniform_binary64_spacing_bound": 30
+    },
+    "examples": [
+      {
+        "x": "0000000000000001",
+        "y": "3FF0FFFFFFFFFFFF",
+        "expected": "0000000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000001",
+        "y": "BFEFC00000000000",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000001",
+        "y": "BFEFFBFFFFFFFFFF",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000002",
+        "y": "3FF0FFFFFFFFFFFF",
+        "expected": "0000000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000002",
+        "y": "BFEFC00000000000",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000002",
+        "y": "BFEFFBFFFFFFFFFF",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000003",
+        "y": "3FF0FFFFFFFFFFFF",
+        "expected": "0000000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000003",
+        "y": "BFEFC00000000000",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000003",
+        "y": "BFEFFBFFFFFFFFFF",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000004",
+        "y": "3FF0FFFFFFFFFFFF",
+        "expected": "0000000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000004",
+        "y": "BFEFC00000000000",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000004",
+        "y": "BFEFFBFFFFFFFFFF",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000005",
+        "y": "3FF0FFFFFFFFFFFF",
+        "expected": "0000000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000005",
+        "y": "BFEFC00000000000",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000005",
+        "y": "BFEFFBFFFFFFFFFF",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000006",
+        "y": "BFEFC00000000000",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000007",
+        "y": "3FF0FFFFFFFFFFFF",
+        "expected": "0000000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000007",
+        "y": "BFEFC00000000000",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000007",
+        "y": "BFEFFBFFFFFFFFFF",
+        "expected": "7FF0000000000000",
+        "kind": "integer_exponent_log2_bound"
+      },
+      {
+        "x": "0000000000000008",
+        "y": "3FF0FFFFFFFFFFFF",
+        "expected": "0000000000000000",
+        "kind": "integer_exponent_log2_bound"
+      }
+    ],
+    "mathematical_basis": [
+      "normal x>=2^E gives log2(x)>=E; x<2^(E+1)<1 gives abs(log2(x))>-(E+1)",
+      "all positive subnormals<2^-1022; high32==0 gives x<2^-1042",
+      "top21 significand of finite abs(y) is a lower bound, times integer k fitsu32; compare against1075/1024 scaled thresholds",
+      "negative product>=1075 rounds to+0 including half-minsub tie; positive product>=1024 overflows to+infinity",
+      "abs(y)>=3*2^61 and binary64 x!=1 gives abs(y*lnx)>=768; ln2<7/10 proves saturation"
+    ],
+    "HUGE_Y_bits": "43D8000000000000",
+    "only_positive_finite_nonzero_x_admitted": true,
+    "negative_base_IEEE_specials_deferred": true,
+    "NaN_zero_infinite_y_deferred": true,
+    "new_ARM_MPFR_calls": 0,
+    "performance_measured": false,
+    "not_fixed_pairs_yet": true,
+    "selected": false,
+    "hardware_accessed": false,
+    "integration_GO": false,
+    "goal_complete": false
+  },
+  "metric": "executed Thumb instructions; not physical cycles",
+  "new_ARM_MPFR_calls_for_checkpoint": 0,
+  "universal_CR_proven": false,
+  "general_pow_totality_closed": false,
+  "FMA_acceptance_closed": false,
+  "universal_stack_closed": false,
+  "independent_acceptance": false,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "release_GO": false,
+  "goal_complete": false
+}

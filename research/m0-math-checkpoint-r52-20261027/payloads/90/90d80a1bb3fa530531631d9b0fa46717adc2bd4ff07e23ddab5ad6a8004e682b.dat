@@ -1,0 +1,17 @@
+{
+  "status": "STATIC_COMPILE_PASS_BEFORE_ANY_R49_QUALIFICATION_CALL",
+  "files": {
+    "run-pow.py": "50759c8a2a22a825b8a42987e7acce90498fcaf717690130e37378d7061e841a",
+    "harness.py": "1dee314134bdbb9f60bb7d92e1d8ed83a9d400a68c26b0c5d39b2bb4818944d5",
+    "check-caller-state.py": "30a2e161a65b7b4363ae94319fdd9f90faeb5d8d44dabc8a19d7af2078b1a767",
+    "replay.py": "97cd939c848536ecfe69fdfdb18b1eaa534011efe4e181b98a370eb0497fc7f6",
+    "common.py": "91a2fab6b8985db05c196c7cd8ceb75034bbfc013b35909551be5483dc702e3a",
+    "compare-matrices.py": "7ca808ec08a4b6d690da53466baf0323c5c30f6be6d24bd21e1266f4e8f30b0e",
+    "run-matrix.py": "3280b27eb2b5b2f5bdaaadeb8c2edd443aa67907183249c8d6fe763b41d3ee30",
+    "original507.py": "e61c7ff4339e02e59c4bb819261db984eabbae39f5f863194bd1caccfcbba235",
+    "broad.py": "43d7f881af46b92bcee416af4deebc4a2d5a07516124cb7914407bd26a812ca5"
+  },
+  "all_source_producers_terminal": true,
+  "run_count_each_planned_campaign": 1,
+  "no_ARM_MPFR_calls_at_this_stage": true
+}

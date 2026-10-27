@@ -1,0 +1,53 @@
+--- R51/source/code/native_eabi_m0_pow_rsqrt.inc
++++ R52/source/code/native_eabi_m0_pow_rsqrt.inc
+@@ -37,26 +37,36 @@
+  adcs \hi,\t2
+ .endm
+ .macro ir_center_quotient
+- mov r12,r0
++.global mk61_m0_pow_center_refine_begin
++.hidden mk61_m0_pow_center_refine_begin
++mk61_m0_pow_center_refine_begin:
++ // Exact N/center by a16-bit high estimate and one short refinement.
++ // Existing512 seed certificates bound both unsigned products and prove
++ // the refined estimate is at most one quotient unit below the result.
+  mov r5,r6
+- uxth r6,r7
+  lsrs r2,r7,#16
+- muls r6,r2
+  muls r2,r2
+- lsrs r6,#15
+- adds r2,r6
+  movs r6,#9
+  subs r6,r6,r3
+  lsrs r2,r6
+- ir_mul32 r0,r2,r0,r1,r3,r6,r4,r0,r2
+- mov r4,r12
+- mov r0,r1
+- muls r0,r5
+- subs r0,r4,r0
+- cmp r0,r5
+- blo .Lir_div_done\@
+- subs r0,r0,r5
+- adds r1,#1
++ lsrs r3,r0,#16
++ lsrs r1,r2,#16
++ muls r1,r3
++ uxth r4,r2
++ muls r4,r3
++ lsrs r4,#16
++ adds r1,r4
++ lsrs r2,#13
++ mov r12,r2
++ mov r4,r1
++ muls r4,r5
++ subs r0,r0,r4
++ mov r2,r12
++ muls r2,r0
++ lsrs r2,#19
++ adds r1,r2
++ muls r2,r5
++ subs r0,r2
+  cmp r0,r5
+  blo .Lir_div_done\@
+  adds r1,#1

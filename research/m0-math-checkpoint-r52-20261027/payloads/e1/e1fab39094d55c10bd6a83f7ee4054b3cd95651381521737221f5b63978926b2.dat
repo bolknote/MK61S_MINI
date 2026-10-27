@@ -1,0 +1,144 @@
+{
+  "status": "PASS_LINKED_R50_NATIVE_R2_CONTRACT_AND18_MUTATED_ELF_CONTROLS",
+  "images": {
+    "candidate": {
+      "public": 268516164,
+      "native": 268516692,
+      "wrapper": 268516688,
+      "guard_address": 268516262,
+      "guard_sub_address": 268516264,
+      "guard_limit_literal": 268516352,
+      "guard_branch_address": 268516270,
+      "target_load_address": 268516272,
+      "target_literal": 268516356,
+      "prologue_scale_literal": 268517456,
+      "parity_and_address": 268516710,
+      "factor_sbc_address": 268517270,
+      "complete4096_sign_exponent_guard": true,
+      "all2046_scale_and_parity_identities": true,
+      "wrapper_original_ABI_R2_independent": true,
+      "changed_parity_C_dead_before_next_LSLS": true,
+      "factor_high_output_and_inline_point_exact": true,
+      "below_R2_zero_bound_to_actual_SUBS_BEQ": true
+    },
+    "zero-control": {
+      "public": 268516164,
+      "native": 268516692,
+      "wrapper": 268516688,
+      "guard_address": 268516262,
+      "guard_sub_address": 268516264,
+      "guard_limit_literal": 268516352,
+      "guard_branch_address": 268516270,
+      "target_load_address": 268516272,
+      "target_literal": 268516356,
+      "prologue_scale_literal": 268517456,
+      "parity_and_address": 268516710,
+      "factor_sbc_address": 268517270,
+      "complete4096_sign_exponent_guard": true,
+      "all2046_scale_and_parity_identities": true,
+      "wrapper_original_ABI_R2_independent": true,
+      "changed_parity_C_dead_before_next_LSLS": true,
+      "factor_high_output_and_inline_point_exact": true,
+      "below_R2_zero_bound_to_actual_SUBS_BEQ": true
+    }
+  },
+  "negative_controls": [
+    {
+      "image": "candidate",
+      "control": "E_minus0",
+      "rejected": true
+    },
+    {
+      "image": "candidate",
+      "control": "admit_infinity",
+      "rejected": true
+    },
+    {
+      "image": "candidate",
+      "control": "signed_range_test",
+      "rejected": true
+    },
+    {
+      "image": "candidate",
+      "control": "old_ABI_target",
+      "rejected": true
+    },
+    {
+      "image": "candidate",
+      "control": "clobber_R2_with_target",
+      "rejected": true
+    },
+    {
+      "image": "candidate",
+      "control": "wrapper_missing_E_extract",
+      "rejected": true
+    },
+    {
+      "image": "candidate",
+      "control": "wrong_scale3066",
+      "rejected": true
+    },
+    {
+      "image": "candidate",
+      "control": "wrong_parity_OR",
+      "rejected": true
+    },
+    {
+      "image": "candidate",
+      "control": "wrong_factor_high_destination",
+      "rejected": true
+    },
+    {
+      "image": "zero-control",
+      "control": "E_minus0",
+      "rejected": true
+    },
+    {
+      "image": "zero-control",
+      "control": "admit_infinity",
+      "rejected": true
+    },
+    {
+      "image": "zero-control",
+      "control": "signed_range_test",
+      "rejected": true
+    },
+    {
+      "image": "zero-control",
+      "control": "old_ABI_target",
+      "rejected": true
+    },
+    {
+      "image": "zero-control",
+      "control": "clobber_R2_with_target",
+      "rejected": true
+    },
+    {
+      "image": "zero-control",
+      "control": "wrapper_missing_E_extract",
+      "rejected": true
+    },
+    {
+      "image": "zero-control",
+      "control": "wrong_scale3066",
+      "rejected": true
+    },
+    {
+      "image": "zero-control",
+      "control": "wrong_parity_OR",
+      "rejected": true
+    },
+    {
+      "image": "zero-control",
+      "control": "wrong_factor_high_destination",
+      "rejected": true
+    }
+  ],
+  "new_ARM_MPFR_calls": 0,
+  "source_algorithm_and_rounding_bounds_unchanged": true,
+  "all_sign_exponent_fields_proved": true,
+  "physical_cycles_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

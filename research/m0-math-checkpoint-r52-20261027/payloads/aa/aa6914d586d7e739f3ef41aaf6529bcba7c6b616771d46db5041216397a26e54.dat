@@ -1,0 +1,12 @@
+{
+  "status": "R50_DISABLED_CONSUMER_METADATA_NAME_ADAPTED_ONLY",
+  "from": "R49 verify-disabled.py",
+  "before_sha256": "d60d46118c6f9c0954d882c295f2b0b9c25be5e77af434e9922a7388f6bdb977",
+  "after_sha256": "2a20e8964d796696ebad3ff2233312f4c7d0ba8018721cf720c8c5d6e240ec7b",
+  "old_report_field": "default_M0_M4_original_objects_exact",
+  "new_report_field": "M4_default_objects_exact",
+  "both_mean_all_default_M0_M4_allocated_symbols_semantic_relocs_exact": true,
+  "all_actual_disabled_compile_and_export_checks_unchanged": true,
+  "initial_failure_ARM_calls": 0,
+  "no_reexecution_of_passed_R12_guard_loader_checks": true
+}

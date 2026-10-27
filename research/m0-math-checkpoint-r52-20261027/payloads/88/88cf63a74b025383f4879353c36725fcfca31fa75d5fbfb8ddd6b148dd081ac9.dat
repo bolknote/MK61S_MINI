@@ -1,0 +1,16 @@
+{
+  "status": "R51_EXACT_SMALL_SIGNED_FACTOR_PRODUCT_PENDING_LINKED_PROOF",
+  "source_parent_FROZEN_sha256": "05b6ddbc103a81fe03896241ceedcbf2b0465d71b69ce79a017aa4a9f819fb3d",
+  "changed_source_files": {
+    "source/code/native_eabi_m0_pow_rsqrt.inc": {
+      "before_sha256": "0ab2429aeeaee365126f1594b10de2b8c71190d13d56af0a156096cffee5872b",
+      "after_sha256": "136b6447795af59df311b26420bf0189a981d61b141f1cf1ef09016aaeeddede"
+    }
+  },
+  "point_and_rounding_bounds_intended_exact": true,
+  "new_lookup_table_global_RAM_libgcc_bytes": 0,
+  "selected_private_author_remains": "R50",
+  "range_proof_result_sha256": "be8f4e56dd2bbe51fb4c582adf708f4a999c0e841728d8d5dfc302b1c416100f",
+  "hardware_accessed": false,
+  "goal_complete": false
+}

@@ -1,0 +1,15 @@
+{
+  "status": "STATIC_COMPILE_PASS_BEFORE_R50_COUPLED_CALLS",
+  "files": {
+    "check-pow-caller-state.py": "dd036b6b90692ae73b0cf7e538320fb074b8de5e6780f7d531778ce53b3f841e",
+    "run-pow.py": "50759c8a2a22a825b8a42987e7acce90498fcaf717690130e37378d7061e841a",
+    "harness.py": "1dee314134bdbb9f60bb7d92e1d8ed83a9d400a68c26b0c5d39b2bb4818944d5",
+    "check-caller-state.py": "dbf20b7918fadcc341ea4bad5c33e27ef2291dbc535cd942eb09be2fd0c396ef",
+    "replay.py": "28ceb73875d579d24bd69f08afbdff92e44e3bbb07277a509b953d41bd595d53",
+    "common.py": "ec33e5d0aaa64f183fcaabd33add0852297d6e2061cc58dc7107975d808b5de2",
+    "compare-matrices.py": "ff00d000b1ac650d76f0560e7bd89a0794b57f690316973b5ac2efcb9ab1e463",
+    "run-matrix.py": "3280b27eb2b5b2f5bdaaadeb8c2edd443aa67907183249c8d6fe763b41d3ee30",
+    "original507.py": "6bf04600c73ab93bf67d531836140b0359eee2f9550364166394a0c4d9c63513",
+    "broad.py": "a9b11140ebf89d3469e9fe57aa5d4a3aa323636d6fb69b77e66a1385328081a7"
+  }
+}

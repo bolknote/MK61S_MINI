@@ -1,0 +1,9 @@
+"""Each pinned pow stream is executed once, with separate receipts and logs."""
+from pathlib import Path
+import subprocess, sys
+sys.dont_write_bytecode = True
+W = Path(__file__).resolve().parent
+for phase in ('full', 'admission'):
+    with (W / (phase + '.log')).open('x') as log:
+        subprocess.run([sys.executable, '-B', str(W / 'replay.py'), phase], stdout=log, stderr=subprocess.STDOUT, check=True)
+    print('R52 pow', phase, 'PASS', flush=True)

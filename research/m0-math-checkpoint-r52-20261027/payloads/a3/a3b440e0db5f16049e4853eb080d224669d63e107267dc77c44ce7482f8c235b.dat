@@ -1,0 +1,11 @@
+# R52: выбранный частный авторский кандидат
+
+Объединены точный малый signed factor product и точное двухшаговое частное center.512 рациональных сертификатов доказывают quotient для всехu32 числителей с одной коррекцией; фактор |D|<=130 имеет точную64-битную декомпозицию. Реальная linked CFG/liveness и24+26+18 мутированных ELF-контролей пройдены. Исходный seed/Q63 point и все границы округления сохранены. Все обязательные source guards пройдены.22other objects/M4/default точны; pow_dispatch_group-40B к выбранной R50, новых tables/RAM/libgcc0, bank4080.
+
+Свежих публичных ARM-вызовов2121637: primary196714 с новыми MPFR/Qfplib; fullpow281430, admission50220, exp1224907, ln360590, legalcaller exp3402+pow4374. В больших корпусах gold/Qfplib взяты из frozenR50, не fresh. Все6 исходных процессов и readonly audit terminal0, рестартов0. R51 не был выбран или fullqualified: его48 улучшений объединены с center в один кандидат и один полный прогон R52.
+
+Pow joined151409:1960->1778 отстающих пар,182 исправлено. Full140715:1923->1754. Rsqrt903->721. Новых корректных-Qfplib потерь нет. Все свежие parent increases0, включая уже медленные случаи; wrongQfp outputs/costs сохранены, фильтра номинальной области нет. Исторические increases R50/R49 не удалены, frozen родители закреплены. Exp/ln по значениям и инструкциям точныR50, exp также по путям точенr2;10 division-entry visits0.
+
+Source diagnostics46035public+42bare ARM/25MPFR evaluations18unique и38040 readonly quotient hook checks не прибавлены к свежему qualification pool. Expanded division79846 унаследован через неизменные объекты и прежние proofs, не freshR52. Все10 точных Python argv имеют clean private I/O receipts, primary opens0.
+
+Метрика — исполненные инструкции, не physicalcycles. UniversalCR/generalpowtotality/FMA/universalstack/physical/independent/adoption/canonicalintegration/release остаются открытыми. Это private math ELF; production/Git/device не менялись. Frozen producers не запускать на месте.

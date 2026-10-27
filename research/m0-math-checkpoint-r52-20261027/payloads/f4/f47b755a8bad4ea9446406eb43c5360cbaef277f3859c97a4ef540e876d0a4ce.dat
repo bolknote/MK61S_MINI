@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-20261027/verify-rsqrt-entry.py", line 121, in <module>
+    proof=check(e);proofs[label]=proof
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-20261027/verify-rsqrt-entry.py", line 71, in check
+    ins=decode(e,public,e.sizes['mk61_m0_pow_fast'])
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-20261027/verify-rsqrt-entry.py", line 52, in decode
+    ops=[operand(part)for part in parts if part.strip()]
+         ~~~~~~~^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-20261027/verify-rsqrt-entry.py", line 23, in operand
+    if token.startswith('#'):return int(token[1:],0)
+                                    ~~~^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 0: '132]'

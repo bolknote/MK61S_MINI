@@ -1,0 +1,65 @@
+"""Actual linked R2 contract, exact integer identities, and mutated ELF controls."""
+from pathlib import Path
+import hashlib, json, struct, sys, re, subprocess, tempfile
+from types import SimpleNamespace
+sys.dont_write_bytecode = True
+assert getattr(sys, 'mk61_private_fixture', None)
+from check_stm32_vectors import ElfImage
+W = Path(__file__).resolve().parents[1]
+def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
+def memory(e, address, size):
+    for section in e.sections:
+        if section[2]&2 and section[1] != 8 and section[3] <= address and address+size <= section[3]+section[5]:
+            return e.bytes_at(section)[address-section[3]:address-section[3]+size]
+    raise AssertionError(('unmapped',hex(address),size))
+def offset(e, address, size):
+    for section in e.sections:
+        if section[2]&2 and section[1] != 8 and section[3] <= address and address+size <= section[3]+section[5]:
+            return section[4]+address-section[3]
+    raise AssertionError('unmapped mutation')
+def operand(token):
+    token=token.strip()
+    aliases={'ip':'r12','sl':'r10','fp':'r11','sb':'r9'}
+    if token.startswith('#'):return int(token[1:],0)
+    if token.startswith('['):
+        inner=token.strip('[]').split(',')
+        base=aliases.get(inner[0].strip(),inner[0].strip())
+        index=None;disp=0
+        for part in inner[1:]:
+            part=part.strip()
+            if part.startswith('#'):disp=int(part[1:],0)
+            else:index=aliases.get(part,part)
+        return ('mem',base,index,disp)
+    return aliases.get(token,token)
+OBJDUMP=Path(json.loads((W/'link-result.json').read_bytes())['commands'][0][0]).parent/'arm-none-eabi-objdump'
+def decode(e,address,size):
+    # The installed ARM GNU decoder consumes these exact positive/mutant
+    # linked bytes. This never executes guest instructions.
+    with tempfile.NamedTemporaryFile(suffix='.bin',dir=W)as raw:
+        raw.write(memory(e,address,size));raw.flush()
+        text=subprocess.check_output([str(OBJDUMP),'-D','-b','binary','-m','arm','-M','force-thumb','--adjust-vma='+hex(address),raw.name],text=True)
+    result=[]
+    for line in text.splitlines():
+        match=re.match(r'^\s*([0-9a-f]+):\s+((?:[0-9a-f]{4}\s+){1,2})([.a-z0-9]+)\s*(.*)$',line)
+        if not match:continue
+        pc=int(match[1],16);mnemonic=match[3].replace('.n','').replace('.w','');opstr=match[4].split('@')[0].strip()
+        if mnemonic in ('b','beq','bne','bhs','blo','bcs','bcc','bge','blt','bgt','ble','bmi','bpl','bhi','bls','bl'):
+            ops=[int(opstr.split()[0],16)]
+        elif mnemonic in ('push','pop'):
+            ops=[operand(part)for part in opstr.strip('{}').split(',')]
+        else:
+            parts=re.findall(r'\[[^]]+\]|[^,\[\]]+',opstr)
+            ops=[operand(part)for part in parts if part.strip()]
+        result.append(SimpleNamespace(address=pc,mnemonic=mnemonic,op_str=opstr,operands=ops))
+    return result
+def literal_address(i):
+    assert i.mnemonic=='ldr' and isinstance(i.operands[1],tuple) and i.operands[1][1]=='pc'
+    return ((i.address+4)&~3)+i.operands[1][3]
+def key(e,i):
+    operands=list(i.operands)
+    mnemonic={'bcs':'bhs','bcc':'blo'}.get(i.mnemonic,i.mnemonic)
+    if mnemonic=='ldr' and len(operands)==2 and isinstance(operands[1],tuple) and operands[1][1]=='pc':
+        return ('literal',(operands[0],struct.unpack('<I',memory(e,literal_address(i),4))[0]))
+    if mnemonic in ('add','adds','sub','subs','ands','orrs','eors','muls','adcs','sbcs','lsls','lsrs','asrs') and len(operands)==2:
+        operands.insert(1,operands[0])
+    return mnemonic,tuple(operands)

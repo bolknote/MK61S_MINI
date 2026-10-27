@@ -1,0 +1,60 @@
+"""Conservative integer saturation admission; host study only, no speed claim."""
+from pathlib import Path
+from collections import Counter
+from fractions import Fraction as F
+import gzip,hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+Q=ROOT/'.build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027'
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+post=json.loads((ROOT/'.build/m0-r52-qualification-postseal-20261027.json').read_bytes())
+assert sha(Q/'FROZEN.json')==post['qualification_FROZEN_sha256']
+manifest=json.loads((Q/'FROZEN.json').read_bytes())['files'];inputpath=Q/'admission-records.jsonl.gz'
+assert sha(inputpath)==manifest[inputpath.name]['sha256']
+losses={tuple(v)for v in json.loads((Q/'joined-audit.json').read_bytes())['remaining_pow_argument_pairs']};assert len(losses)==1778
+ONE=0x3ff0000000000000;INF=0x7ff0000000000000
+# 3*2^61=1.5*2^62, exactly represented; no decimal/host-float conversion.
+HUGE_Y=((1023+62)<<52)|(1<<51)
+assert HUGE_Y==0x43d8000000000000
+# exp(7/10)>sum_{k=0..4}(7/10)^k/k!>2, hence ln2<7/10.
+term=F(1);partial=term
+for k in range(1,5):term*=F(7,10*k);partial+=term
+assert partial>2 and F(7,10)*1075<768
+def admit(x,y):
+    ym=y&0x7fffffffffffffff
+    if x>>63 or not 0<x<INF or x==ONE or not 0<ym<INF:return None
+    negative=(x<ONE)^bool(y>>63)
+    result=0 if negative else INF
+    if ym>=HUGE_Y:
+        return result,'huge_y_uniform_binary64_spacing_bound'
+    exponent=(x>>52)&2047
+    if exponent:
+        e=exponent-1023
+        lower_log=e if e>=1 else -e-1 if e<=-1 else 0
+    else:
+        lower_log=1042 if x>>32==0 else 1022
+    if lower_log<=0:return None
+    yh=ym>>32;ey=(yh>>20)-1023
+    if ey< -1:return None
+    threshold=1075 if negative else 1024
+    if ey>=20:return result,'integer_exponent_log2_bound'
+    mantissa=(yh&0xfffff)|0x100000
+    product=mantissa*lower_log;limit=threshold<<(20-ey)
+    assert product<1<<32 and limit<1<<32
+    if product>=limit:return result,'integer_exponent_log2_bound'
+    return None
+seen={};admitted=Counter();covered=set();groups=Counter();examples=[]
+for line in gzip.open(inputpath,'rt'):
+    row=json.loads(line);key=row['x'],row['y']
+    if key in seen:assert seen[key]==row['expected'];continue
+    seen[key]=row['expected'];a=admit(int(key[0],16),int(key[1],16))
+    if a is None:continue
+    value,kind=a;assert f'{value:016X}'==row['expected'],(key,kind,f'{value:016X}',row['expected'])
+    admitted[kind]+=1
+    if key in losses:
+        covered.add(key);groups[kind]+=1
+        if len(examples)<20:examples.append(dict(x=key[0],y=key[1],expected=row['expected'],kind=kind))
+result=dict(status='HOST_SATURATION_ADMISSION_MATCHES_PINNED_R52_GOLD_NOT_IMPLEMENTED',qualification_FROZEN_sha256=sha(Q/'FROZEN.json'),checked_unique_pairs=len(seen),current_losing_pairs=1778,admitted_unique_pairs=dict(admitted),current_losing_pairs_covered=len(covered),covered_by_kind=dict(groups),covered_argument_pairs=[list(v)for v in sorted(covered)],examples=examples,
+    mathematical_basis=['normal x>=2^E gives log2(x)>=E; x<2^(E+1)<1 gives abs(log2(x))>-(E+1)','all positive subnormals<2^-1022; high32==0 gives x<2^-1042','top21 significand of finite abs(y) is a lower bound, times integer k fitsu32; compare against1075/1024 scaled thresholds','negative product>=1075 rounds to+0 including half-minsub tie; positive product>=1024 overflows to+infinity','abs(y)>=3*2^61 and binary64 x!=1 gives abs(y*lnx)>=768; ln2<7/10 proves saturation'],
+    HUGE_Y_bits=f'{HUGE_Y:016X}',only_positive_finite_nonzero_x_admitted=True,negative_base_IEEE_specials_deferred=True,NaN_zero_infinite_y_deferred=True,new_ARM_MPFR_calls=0,performance_measured=False,not_fixed_pairs_yet=True,selected=False,hardware_accessed=False,integration_GO=False,goal_complete=False)
+(W/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:v for k,v in result.items()if k not in('covered_argument_pairs','examples')},indent=2),flush=True)

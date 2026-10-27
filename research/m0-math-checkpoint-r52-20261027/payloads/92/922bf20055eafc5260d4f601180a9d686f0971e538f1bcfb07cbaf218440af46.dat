@@ -1,0 +1,3 @@
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-20261027/source/code/memory_copy_arm.h:18:7:__wrap_memcpy	0	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-20261027/source/code/memory_move_arm.h:18:7:__wrap_memmove	0	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-center-r52-20261027/source/code/memory_compare_arm.h:18:5:__wrap_memcmp	0	static

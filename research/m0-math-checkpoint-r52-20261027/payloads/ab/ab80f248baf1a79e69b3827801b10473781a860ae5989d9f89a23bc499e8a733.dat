@@ -1,0 +1,29 @@
+{
+  "status": "FOUR_JOBS_TERMINAL0_EXP_CONFIRMED_LIVE",
+  "jobs": {
+    "primary": {
+      "session_id": 24008,
+      "exit_code": 0
+    },
+    "pow": {
+      "session_id": 56452,
+      "exit_code": 0
+    },
+    "ln": {
+      "session_id": 19342,
+      "exit_code": 0
+    },
+    "caller-state": {
+      "session_id": 62273,
+      "exit_code": 0
+    },
+    "exp": {
+      "session_id": 66127,
+      "last_observed_running": true
+    }
+  },
+  "selected_private_author_remains": "R48",
+  "no_restart": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

@@ -1,0 +1,101 @@
+{
+  "status": "R50_FRESH_PRIMARY_COMPARISON_ALL_ADVERSE_CHANGES_RETAINED",
+  "parent_R49_qualification_FROZEN_sha256": "6c49ec8a093b4a73cc3dd2cb4ad3dd491c6080253c9c831a1e775ba0ce072eb7",
+  "matrices": {
+    "original507": {
+      "state_rows": 1014,
+      "operation_rows": {
+        "pow": 306,
+        "exp": 32,
+        "ln": 20,
+        "atan": 4,
+        "sin": 44,
+        "cos": 28,
+        "dsub": 8,
+        "dadd": 26,
+        "d2uiz": 512,
+        "l2d": 32,
+        "sqrt": 2
+      },
+      "all_outputs_correctness_and_reference_costs_exact_R49": true,
+      "candidate_and_zero_control_delta_histograms": {
+        "candidate": {
+          "0": 952,
+          "-4": 34,
+          "-3": 28
+        },
+        "zero-control": {
+          "0": 952,
+          "-4": 34,
+          "-3": 28
+        }
+      },
+      "all_candidate_and_zero_control_increase_rows": {
+        "candidate": [],
+        "zero-control": []
+      },
+      "new_correct_Qfplib_loss_rows": [],
+      "parent_records_sha256": "33f5156c0994fef0a6140699a6a04ea6166b33680b6f7b596252db1570bf5308",
+      "candidate_records_sha256": "8e5e3e770ff7f9a209d5e3039493fb439eadd88a0e23f6d523862a1a0be6b37b"
+    },
+    "broad": {
+      "state_rows": 60272,
+      "operation_rows": {
+        "sin": 2886,
+        "cos": 2886,
+        "tan": 2886,
+        "i2d": 2626,
+        "sqrt": 4888,
+        "exp": 2342,
+        "ui2d": 1024,
+        "l2d": 3072,
+        "ul2d": 3072,
+        "d2iz": 2048,
+        "d2uiz": 1024,
+        "d2lz": 2048,
+        "d2ulz": 1024,
+        "f2d": 1024,
+        "d2f": 1024,
+        "dcmpeq": 1024,
+        "dcmplt": 1024,
+        "dcmple": 1024,
+        "dcmpge": 1024,
+        "dcmpgt": 1024,
+        "ln": 4864,
+        "atan": 3072,
+        "dmul": 792,
+        "ddiv": 792,
+        "dadd": 792,
+        "dsub": 24,
+        "asin": 1392,
+        "acos": 1392,
+        "log10": 2036,
+        "pow": 6122
+      },
+      "all_outputs_correctness_and_reference_costs_exact_R49": true,
+      "candidate_and_zero_control_delta_histograms": {
+        "candidate": {
+          "0": 60174,
+          "-3": 56,
+          "-4": 42
+        },
+        "zero-control": {
+          "0": 60174,
+          "-3": 56,
+          "-4": 42
+        }
+      },
+      "all_candidate_and_zero_control_increase_rows": {
+        "candidate": [],
+        "zero-control": []
+      },
+      "new_correct_Qfplib_loss_rows": [],
+      "parent_records_sha256": "03f2de42b25b3d0f4997b24dd7e6b4c2b1dc3707439208697775b476f990d7a0",
+      "candidate_records_sha256": "cddb74e971e7d95516fca7aa72718e2e3e6c2d53452e2d25d7a90648633f4f18"
+    }
+  },
+  "no_new_ARM_MPFR_calls": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

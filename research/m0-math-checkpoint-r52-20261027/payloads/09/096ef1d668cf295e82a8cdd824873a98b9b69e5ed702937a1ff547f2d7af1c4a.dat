@@ -1,0 +1,55 @@
+--- R49/source/code/native_eabi_m0_pow_rsqrt.inc
++++ R50/source/code/native_eabi_m0_pow_rsqrt.inc
+@@ -72,17 +72,25 @@
+ // Positive normal binary64 only. The unchanged entry keeps cold IEEE and
+ // subnormal inputs in the old dispatcher. Integer point matches pow_rsqrt.
+ mk61_m0_pow_rsqrt_fast:
++ // Preserve the original positive-normal ABI entry for direct callers.
++ lsrs r2,r1,#20
++ subs r2,#1
++.global mk61_m0_pow_rsqrt_normal_eminus1
++.hidden mk61_m0_pow_rsqrt_normal_eminus1
++.type mk61_m0_pow_rsqrt_normal_eminus1,%function
++.thumb_func
++// Private contract: original x in R0:R1, R2=(R1>>20)-1 in[0,2045].
++mk61_m0_pow_rsqrt_normal_eminus1:
+  push {r4-r7,lr}
+  sub sp,#44
+  str r0,[sp,#0]
+- // Original xhigh was used only by the impossible compare==2 fallback.
+- lsrs r2,r1,#20
+- ldr r4,=3066
++ // 3065-(E-1)==3066-E, with the original normal exponent E.
++ ldr r4,=3065
+  subs r4,r4,r2
+  lsrs r4,#1
+  lsls r4,#20
+  str r4,[sp,#12]
+- adds r2,#1
++ // (E-1)&1==(E+1)&1; the former ADD's carry was dead.
+  movs r3,#1
+  ands r2,r3
+  str r2,[sp,#16]
+@@ -227,11 +235,10 @@
+  b .Lir_factor_product
+ .Lir_factor_below:
+  lsls r0,r6,#31
+- lsrs r2,r6,#1
++ lsrs r1,r6,#1
+  subs r0,r0,r6
+- movs r1,#0
+- sbcs r2,r1
+- mov r1,r2
++ movs r2,#0
++ sbcs r1,r2
+  b .Lir_factor_product
+ .Lir_factor_equal:
+  lsls r0,r6,#31
+@@ -357,6 +364,7 @@
+  b .Lir_exact_boundary
+ .ltorg
+ .size mk61_m0_pow_rsqrt_fast,.-mk61_m0_pow_rsqrt_fast
++.size mk61_m0_pow_rsqrt_normal_eminus1,.-mk61_m0_pow_rsqrt_normal_eminus1
+ 
+ 
+ #endif

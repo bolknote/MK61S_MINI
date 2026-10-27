@@ -1,0 +1,9 @@
+{
+  "status": "STATIC_FINALIZER_PROCESS_ACCOUNTING_FIXED_BEFORE_SEAL",
+  "incorrect_expected_fixture_receipts": 10,
+  "actual_expected_receipts": 9,
+  "reason": "5 top-level jobs, plus 2 matrix children and 2 pow children; each exact argv now checked",
+  "all9_processes_present_and_clean": true,
+  "no_existing_FROZEN_modified": true,
+  "no_ARM_MPFR_calls": true
+}

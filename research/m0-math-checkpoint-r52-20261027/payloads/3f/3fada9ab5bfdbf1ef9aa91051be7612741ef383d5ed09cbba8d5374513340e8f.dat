@@ -1,0 +1,57 @@
+{
+  "status": "R50_PRIVATE_AUTHOR_SELECTED_ALL_HANDLES_TERMINAL0",
+  "source": ".build/m0-math-unified-pow-rsqrt-entry-r50-20261027",
+  "source_FROZEN_sha256": "05b6ddbc103a81fe03896241ceedcbf2b0465d71b69ce79a017aa4a9f819fb3d",
+  "qualification": ".build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027",
+  "qualification_FROZEN_sha256": "77419ccefb6866c0bf0f40f5b3e288da4f3b5f5cf5f8a6d16cbb0176c35d5b6a",
+  "author_result_sha256": "5b840ede89b98c76353901b8effd199a4d5f3329cdded5588295a353437d542c",
+  "joined_audit_sha256": "ccef6ae3b2f85d016e39df4750bb4e0f58f7f09a4b2c1e6481968f33b58a7542",
+  "terminal_original_exec_sessions": {
+    "primary": 80719,
+    "pow": 46916,
+    "exp": 38988,
+    "ln": 69289,
+    "exp-caller": 3087,
+    "pow-caller": 90704,
+    "read-only-audit": 50646
+  },
+  "all_exit0_consumed": true,
+  "active_jobs": [],
+  "source_build90283_probe17738_div7727_native31153_terminal0": true,
+  "source_controls_initial_exit1_metadata_only_then_all_individual_gates_pass": true,
+  "last_human_commit": "dda1627de651f0b397bc54e1d7be2dda24eef8ed",
+  "no_new_Git_or_device_authority": true,
+  "finite_remaining_pow_pairs": 1960,
+  "finite_remaining_rsqrt_pairs": 903,
+  "finite_exp_ln_losses": 0,
+  "next_proposal": {
+    "status": "NEXT_PROPOSAL_NOT_IMPLEMENTED_NOT_ACCEPTED",
+    "target": "general factor-high*seed product in native_eabi_m0_pow_rsqrt.inc",
+    "selector": "ldr r2,=0x7fffffff; subs r2,r0,r2; beq below; cmp r2,#1; beq equal; subs r0,r2,#1",
+    "new_generic_product": [
+      "uxth r2,r6",
+      "muls r2,r0",
+      "asrs r2,#16",
+      "lsrs r1,r6,#16",
+      "muls r1,r0",
+      "adds r1,r2",
+      "asrs r1,#16",
+      "muls r0,r6",
+      "lsls r2,r6,#31",
+      "lsrs r3,r6,#1",
+      "adds r0,r2",
+      "adcs r1,r3"
+    ],
+    "meaning": "D=Fhigh-2^31 signed small; form exact signed S*D then add S<<31. Keep central below/equal exits. Expected exact same point, selector saves equal1; generic3/6; below0. Must prove actual linked dataflow, range, flags, old ABI and full source deltas.",
+    "coarse_range_proof_plan": [
+      "Verify512 base seeds against exact center square inequalities (B-1)^2*c*2^p <2^73 <(B+1)^2*c*2^p.",
+      "Verify exact center quotient for every table-derived reciprocal using c*R<=2^32 and 2^32-c*R<2c, hence at most2 increments for any numeratorU32.",
+      "z<=1/513, t approximates z*2^32 to<2. Compare seed to second-order binomial; derivative Taylor remainder<=z^3/3 since 513^7*225<512^7*256. Cubic correction<=11, quadratic+linear quantisation small; obtain coarse |seed-Strue|<64 independent of unproven tight25/8 assertion.",
+      "For A<=2^64,Strue<=2^32, AStrue^2=2^126, seed error<64 gives |A*S^2/2^64-2^62|<2^39+4096. Existing exp_high_product differs downward<3, so |Fhigh-2^31|<=130, safely signed16.",
+      "For |D|<=130, all16-bit partial signed products and their sum fit signed32; exact high/low construction with ASR and ADC. Compare actual linked instructions and mutated negative controls before any acceptance."
+    ]
+  },
+  "whole_original_goal_open": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

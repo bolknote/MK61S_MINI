@@ -1,0 +1,92 @@
+{
+  "status": "PASS_ALL10_EXACT_QUALIFICATION_PROCESS_SIGNATURES_NO_PRIMARY_SOURCE_OPENS",
+  "receipts": [
+    {
+      "path": "private-io-receipts/46857.json",
+      "sha256": "b74dae82289b602958e0372cdfdf7b0b0831a39ef21009fb184541e986f61d99",
+      "process": 46857,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027/replay.py",
+        "ln"
+      ]
+    },
+    {
+      "path": "private-io-receipts/46858.json",
+      "sha256": "8d0a46c658185ea857a29e997684401368dce331da3f88de658b7cd9acdf9e64",
+      "process": 46858,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027/check-pow-caller-state.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/46859.json",
+      "sha256": "5497337e0407de1feb43a4362ef703e878b3b4417b256d36be8e6d747e51076d",
+      "process": 46859,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027/replay.py",
+        "exp"
+      ]
+    },
+    {
+      "path": "private-io-receipts/46863.json",
+      "sha256": "1e48e9093d0541fad73eac635120ab2909cefe0c4ea8457bb502ee088a1f2a96",
+      "process": 46863,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027/check-caller-state.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/46865.json",
+      "sha256": "4cc824cb5a3f35c7c8ac5f9cf8a7a708be4dd07d85cb2be3a659432682cc9f35",
+      "process": 46865,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027/run-pow.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/46866.json",
+      "sha256": "c92710a1bb17f6b1c8c0733dc790c5f027b6d0d2a6987b96fee50807b0c0d86a",
+      "process": 46866,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027/replay.py",
+        "full"
+      ]
+    },
+    {
+      "path": "private-io-receipts/46868.json",
+      "sha256": "a18e80fae7f50105362b4f665b5e02609fa82927ff935d64702f3cfa39516bf5",
+      "process": 46868,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027/run-matrix.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/46869.json",
+      "sha256": "fee170822a85de91df01c27b43b339bce8574f80fa563814b2bbad1c63183f9a",
+      "process": 46869,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027/original507.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/46873.json",
+      "sha256": "85cf6e19e93041af621166743f1e81475534ca64ad167e807e59ccc1d0f5a4b3",
+      "process": 46873,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027/broad.py"
+      ]
+    },
+    {
+      "path": "private-io-receipts/47110.json",
+      "sha256": "7dc804a68072636b55fec0b3abfc6fd5b4b96f4e4d84d186ec2ec0fcc79d91a3",
+      "process": 47110,
+      "argv": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027/replay.py",
+        "admission"
+      ]
+    }
+  ],
+  "denied_primary_open_attempts": 0,
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false
+}

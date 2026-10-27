@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-rsqrt-entry-r50-20261027/verify-disabled.py", line 31, in <module>
+    core_default_M0_M4_objects_also_fingerprint_exact_to_parent=link['default_M0_M4_original_objects_exact'],
+                                                                ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'default_M0_M4_original_objects_exact'

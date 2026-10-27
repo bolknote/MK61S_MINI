@@ -1,0 +1,1 @@
+R52 primary PASS [('original507', {'candidate': {0: 952, -11: 8, -8: 22, -7: 22, -12: 10}, 'zero-control': {0: 952, -11: 8, -8: 22, -7: 22, -12: 10}}, {'candidate': 0, 'zero-control': 0}), ('broad', {'candidate': {0: 60174, -10: 8, -11: 20, -8: 28, -7: 32, -12: 10}, 'zero-control': {0: 60174, -10: 8, -11: 20, -8: 28, -7: 32, -12: 10}}, {'candidate': 0, 'zero-control': 0})]

@@ -1,0 +1,14 @@
+{
+  "status": "PASS_R50_QUALIFICATION_POSTSEAL_ALL_PINS",
+  "qualification_FROZEN_sha256": "77419ccefb6866c0bf0f40f5b3e288da4f3b5f5cf5f8a6d16cbb0176c35d5b6a",
+  "files_verified": 73,
+  "author_result_sha256": "5b840ede89b98c76353901b8effd199a4d5f3329cdded5588295a353437d542c",
+  "joined_audit_sha256": "ccef6ae3b2f85d016e39df4750bb4e0f58f7f09a4b2c1e6481968f33b58a7542",
+  "source_FROZEN_sha256": "05b6ddbc103a81fe03896241ceedcbf2b0465d71b69ce79a017aa4a9f819fb3d",
+  "selected_private_author_source": "R50",
+  "all_jobs_terminal": true,
+  "no_new_ARM_MPFR_calls_by_finalizer": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

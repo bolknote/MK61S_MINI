@@ -1,0 +1,16 @@
+{
+  "status": "ALL_SOURCE_JOBS_TERMINAL_ORIGINAL_HANDLES_CONSUMED",
+  "build_session90283_exit": 0,
+  "probe17738_exit": 0,
+  "controls_wrapper_exit": 1,
+  "controls_failure_scope": "last disabled-isolation report old metadata name; all actual checks passed after consumer field repair",
+  "div_guard7727_exit": 0,
+  "native_caller31153_exit": 0,
+  "private_caller_exit": 0,
+  "normalized_caller_exit": 0,
+  "new_native_entry_final_proof_exit": 0,
+  "repaired_disabled_guard_exit": 0,
+  "repeated_math_corpus_runs": 0,
+  "no_active_source_jobs": true,
+  "hardware_accessed": false
+}
