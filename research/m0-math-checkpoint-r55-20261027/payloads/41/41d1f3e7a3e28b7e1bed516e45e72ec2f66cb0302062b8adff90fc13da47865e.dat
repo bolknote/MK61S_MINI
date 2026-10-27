@@ -1,0 +1,6 @@
+{
+  "audit_r2_sha256": "b22ec7050302a29912f01199faac2b8a55b3731b0dc8541055617e35d73b57b1",
+  "original_audit_unchanged_sha256": "13db54457caa222170e67d7a1134f1ab95ecf05574245b19871ce11b1c9ac382",
+  "repair_scope": "read-only consumer: classify generated original507 source-pin OUTPUT correctly; no math/driver/input changes",
+  "new_ARM_MPFR_calls": 0
+}

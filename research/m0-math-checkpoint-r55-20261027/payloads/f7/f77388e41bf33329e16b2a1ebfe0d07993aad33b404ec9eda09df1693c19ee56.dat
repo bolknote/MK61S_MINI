@@ -1,0 +1,14 @@
+{
+  "status": "PASS_R55_QUALIFICATION_POSTSEAL_ALL_PINS",
+  "qualification_FROZEN_sha256": "193dfa9d249dba658f9644da1affdb8b9e8a0ca24ac8da7c0c15e6dd5e1c687c",
+  "files_verified": 92,
+  "author_result_sha256": "268cde28184b07fb260e21539e0904290966abace80ea184260be5afab38c06e",
+  "joined_audit_sha256": "2425b8d8acef69395f14c444b71a706edd957133e827329ac2c8ad2a5e295002",
+  "source_FROZEN_sha256": "1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6",
+  "selected_private_author_source": "R55",
+  "all_jobs_terminal": true,
+  "no_new_ARM_MPFR_calls_by_finalizer": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

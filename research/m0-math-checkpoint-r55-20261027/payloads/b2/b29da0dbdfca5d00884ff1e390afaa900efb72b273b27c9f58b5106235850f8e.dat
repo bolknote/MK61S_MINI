@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r55-qualification-20261027/audit.py", line 68, in <module>
+    for name,pin in read(W/'driver-pins-before-run.json')['data_files'].items():assert sha(W/name)==pin
+                                                                                       ^^^^^^^^^^^^^^^^
+AssertionError

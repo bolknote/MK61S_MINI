@@ -1,0 +1,10 @@
+{
+  "source": "research/m0-math-checkpoint-20261025/verify.py",
+  "source_sha256": "a2d68bab1251cdb6791e183836897833340a79531ba8549ec1c03063a79fd753",
+  "extracted_only_pure_functions": [
+    "image_fingerprint",
+    "sha"
+  ],
+  "no_historical_module_import_or_producer_execution": true,
+  "fingerprint_sha256": "f29257c9d25782e42d59fad81e5fc3705d14671ae233c5d40ae8725fc462965b"
+}

@@ -1,0 +1,25 @@
+"""Actual linked quotient proof and instruction/data mutation controls."""
+from pathlib import Path
+import hashlib,json,struct,sys
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',None)
+W=Path(__file__).resolve().parent;ROOT=W.parents[1];P=ROOT/'.build/m0-math-unified-pow-rsqrt-smallfactor-r51-20261027'
+sys.path.insert(0,str(W/'support'))
+from linked_thumb import ElfImage,memory,offset
+from center_contract import check
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+assert sha(P/'FROZEN.json')=='36260a443c656d0e3e2745012f327865794cfeae5ad73e0fb1025e0a75238e1e'
+assert not(W/'center-linked-proof.json').exists()
+images={};negative=[]
+for label in('candidate','zero-control'):
+    e=ElfImage(W/(label+'.elf'));old=ElfImage(P/(label+'.elf'));p=check(e,old);images[label]=p;a=p['macro_addresses']
+    def word(address):return struct.unpack('<H',memory(e,address,2))[0]
+    controls=[('wrong_parity_scale',a[3],struct.pack('<H',word(a[3])^1)),('wrong_R_high_shift',a[13],struct.pack('<H',word(a[13])^0x40)),('drop_R_high_preservation',a[14],struct.pack('<H',0x46c0)),('wrong_refinement_shift',a[20],struct.pack('<H',word(a[20])^0x40)),('wrong_low16_N_product',a[10],struct.pack('<H',word(a[10])^8)),('refinement_uses_q_not_remainder',a[19],struct.pack('<H',word(a[19])^8)),('omit_q1_times_center',a[22],struct.pack('<H',0x46c0)),('signed_remainder_branch',a[25],struct.pack('<H',word(a[25])^0x0800)),('increment_by2',a[26],struct.pack('<H',word(a[26])^3)),('return_remainder',a[27],struct.pack('<H',0x46c0)),('clobber_live_base_R7',a[7],struct.pack('<H',(word(a[7])&~7)|7)),('wrong_seed_word',e.symbols['factor_rsqrt_seeds'],struct.pack('<I',struct.unpack('<I',memory(e,e.symbols['factor_rsqrt_seeds'],4))[0]+2))]
+    for name,address,data in controls:
+        assert memory(e,address,len(data))!=data,('no-op negative control',name)
+        mutant=ElfImage(W/(label+'.elf'));raw=bytearray(mutant.data);at=offset(mutant,address,len(data));raw[at:at+len(data)]=data;mutant.data=bytes(raw)
+        try:check(mutant,old)
+        except AssertionError:negative.append(dict(image=label,name=name,rejected=True))
+        else:raise AssertionError(('accepted invalid quotient contract',label,name))
+result=dict(status='PASS_LINKED_R52_ALL_U32_CENTER_QUOTIENT_AND24_MUTATED_ELF_CONTROLS',images=images,negative_controls=negative,host_proof_sha256=sha(W/'center-two-stage-proof/proof-result.json'),parent_source_FROZEN_sha256=sha(P/'FROZEN.json'),exact_T_and_numeric_seed_point_preserved=True,no_new_tables=True,new_ARM_MPFR_calls=0,selected=False,hardware_accessed=False,integration_GO=False,goal_complete=False)
+(W/'center-linked-proof.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2),flush=True)

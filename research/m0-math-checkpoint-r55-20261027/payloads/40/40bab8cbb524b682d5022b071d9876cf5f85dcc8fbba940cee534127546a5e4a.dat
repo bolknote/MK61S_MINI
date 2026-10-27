@@ -1,0 +1,34 @@
+{
+  "status": "STATIC_R52_COMBINED_COUPLED_PREPARATION_PASS",
+  "source_FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+  "parent_qualification_FROZEN_sha256": "77419ccefb6866c0bf0f40f5b3e288da4f3b5f5cf5f8a6d16cbb0176c35d5b6a",
+  "pins": {
+    ".build/m0-math-unified-pow-rsqrt-center-r52-20261027": {
+      "FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+      "files_verified": 498
+    },
+    ".build/m0-math-unified-pow-rsqrt-entry-r50-qualification-20261027": {
+      "FROZEN_sha256": "77419ccefb6866c0bf0f40f5b3e288da4f3b5f5cf5f8a6d16cbb0176c35d5b6a",
+      "files_verified": 73
+    },
+    ".build/m0-exp-q73-incremental-r2-20261027": {
+      "FROZEN_sha256": "c0264f8367cc40ace6b3cb93697e0244f7cb09daf1a2be07e6ec45e8e300d539",
+      "files_verified": 52
+    }
+  },
+  "expected_finite_loss_counts_from_exact_targeted_fixes": {
+    "full": 1754,
+    "admission": 1778,
+    "joined_pow": 1778,
+    "exp": 0,
+    "ln": 0
+  },
+  "R51_not_selected_or_full_qualified": true,
+  "gold_Qfplib_full_pow_exp_ln_cached_frozen_R50": true,
+  "primary_MPFR_Qfplib_fresh": true,
+  "both_exp_pow_legal_callers": true,
+  "integer_output_comparisons_exact": true,
+  "selected_private_author_remains": "R50",
+  "hardware_accessed": false,
+  "goal_complete": false
+}

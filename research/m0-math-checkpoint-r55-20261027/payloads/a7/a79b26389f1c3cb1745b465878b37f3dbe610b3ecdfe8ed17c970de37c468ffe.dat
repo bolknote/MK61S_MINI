@@ -1,0 +1,33 @@
+{
+  "status": "PASS_R55_UNIVERSAL_SATURATION_SELECTORS_AND_MUTATED_ELF_CONTROLS",
+  "all4096_half_exponent_cells_checked": true,
+  "newly_redirected_cells": [
+    2171,
+    2172,
+    2173,
+    2174,
+    2175
+  ],
+  "huge_y_threshold_bits": "43D8000000000000",
+  "minimum_abs_y_ln_x_bound": 768,
+  "ln2_upper_rational": "7/10",
+  "subnormal_cuts": {
+    "1075/1022": "3FF0D46B",
+    "1024/1022": "3FF00805",
+    "1075/1025": "3FF0C7CF",
+    "1024/1025": "3FEFF802",
+    "1075/1042": "3FF081B9",
+    "1024/1042": "3FEF727D"
+  },
+  "doubled_unsigned_high_word_order_and_zero_test_exact": true,
+  "all_shortcut_results_correctly_rounded_including_half_min_subnormal_tie": true,
+  "all_rejected_paths_restore_original_arguments": true,
+  "default_M0_M4_objects_exact": true,
+  "new_ARM_MPFR_calls": 0,
+  "universal_original_full_math_CR_not_proved": true,
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}
+NEGATIVE_ELF_CONTROLS 64

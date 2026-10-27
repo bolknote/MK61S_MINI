@@ -1,0 +1,28 @@
+{
+  "status": "R53_SATURATION_SOURCE_PENDING_BUILD_AND_DIAGNOSTICS",
+  "source_parent_FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+  "changed_source_files": {
+    "source/code/native_eabi_m0_pow_fast.inc": {
+      "before_sha256": "d51454e9e8c7acdd2c027853371cc73998e99bae274a28e345a958f37ff37d23",
+      "after_sha256": "a1fdc70539294e4e75daf84f625008ebb2b2fad20b76520a614b4426ee372fae"
+    },
+    "source/code/native_eabi_m0_rp2040.S": {
+      "before_sha256": "eba8d2b0951bad9b4f05ca6c162b67d8153c5a1f64f63d4e9d5bbf81b316a786",
+      "after_sha256": "c8a1e4ec302ab0044daf78ecc862b37dad54a9001aab177e21251c108e8fad3c"
+    }
+  },
+  "subnormal_highword_cuts": {
+    "1075/1022": "3FF0D46B",
+    "1024/1022": "3FF00805",
+    "1075/1025": "3FF0C7CF",
+    "1024/1025": "3FEFF802",
+    "1075/1042": "3FF081B9",
+    "1024/1042": "3FEF727D"
+  },
+  "new_y_exponent_upper_bound": 61,
+  "old_y_exponent_upper_bound": 64,
+  "huge_y_bits": "43D8000000000000",
+  "selected_private_author_remains": "R52",
+  "hardware_accessed": false,
+  "goal_complete": false
+}

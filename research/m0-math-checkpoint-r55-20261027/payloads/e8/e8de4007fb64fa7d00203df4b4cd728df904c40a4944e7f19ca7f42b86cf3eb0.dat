@@ -1,0 +1,82 @@
+AUDITED PRIMARY original507 1014
+AUDITED PRIMARY broad 60272
+AUDITED REPLAY full 281430 1754 0
+AUDITED REPLAY admission 50220 1778 0
+AUDITED REPLAY exp 1224907 0 0
+AUDITED REPLAY ln 360590 0 0
+{
+  "status": "PASS_R52_COUPLED_STREAM_AUDIT_NO_NEW_CORRECT_QFPLIB_DEFICITS",
+  "source_FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+  "candidate_ELF_sha256": "8e73f841899dd169cb0538d02d839d9499d37a5e971d85e740ec0d21f43732f4",
+  "parent_R50_qualification_FROZEN_sha256": "77419ccefb6866c0bf0f40f5b3e288da4f3b5f5cf5f8a6d16cbb0176c35d5b6a",
+  "prototype_r2_FROZEN_sha256": "c0264f8367cc40ace6b3cb93697e0244f7cb09daf1a2be07e6ec45e8e300d539",
+  "actual_fresh_qualification_public_ARM_calls": 2121637,
+  "primary_fresh_oracle_input_evaluations": 30643,
+  "legal_caller_variation_rows": 7680,
+  "legal_caller_baseline_calls": 96,
+  "caller_reports": {
+    "exp": {
+      "variants": 3360,
+      "baseline_calls": 42
+    },
+    "pow-": {
+      "variants": 4320,
+      "baseline_calls": 54
+    }
+  },
+  "all16_NZCV_5_R12_3_SIO_checked": true,
+  "all_references_and_wrong_outputs_costs_retained": true,
+  "all_adverse_parent_changes_retained": true,
+  "tested_unique_arguments_by_operation": {
+    "acos": 688,
+    "asin": 688,
+    "atan": 1536,
+    "cos": 1433,
+    "d2f": 512,
+    "d2iz": 1024,
+    "d2lz": 1024,
+    "d2uiz": 512,
+    "d2ulz": 512,
+    "dadd": 392,
+    "dcmpeq": 512,
+    "dcmpge": 512,
+    "dcmpgt": 512,
+    "dcmple": 512,
+    "dcmplt": 512,
+    "ddiv": 396,
+    "dmul": 396,
+    "dsub": 12,
+    "exp": 569993,
+    "f2d": 512,
+    "i2d": 1313,
+    "l2d": 1521,
+    "ln": 182569,
+    "log10": 889,
+    "pow": 151409,
+    "sin": 1432,
+    "sqrt": 2437,
+    "tan": 1431,
+    "ui2d": 512,
+    "ul2d": 1514
+  },
+  "remaining_known_unique_losing_arguments_by_operation": {
+    "pow": 1778
+  },
+  "known_fresh_current_finite_losing_operation_arguments": 1778,
+  "not_whole_library_or_binary64_universe": true,
+  "inherited_R50_expanded_division_not_fresh_R52": true,
+  "source_diagnostic_public46035_bare42_MPFR25_evaluations_not_added_to_fresh_qualification": true,
+  "new_ARM_MPFR_calls_by_this_audit": 0,
+  "metrics": "executed Thumb instructions, not physical cycles",
+  "physical_cycles_measured": false,
+  "universal_CR": false,
+  "general_pow_totality": false,
+  "FMA_acceptance": false,
+  "universal_stack_bound": false,
+  "independent_acceptance": false,
+  "selected": false,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

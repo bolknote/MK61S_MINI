@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r53-20261027/verify-smallfactor.py", line 10, in <module>
+    from center_contract import check as check_center
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r53-20261027/support/center_contract.py", line 6, in <module>
+    CERT=json.loads((W/'center-two-stage-proof/proof-result.json').read_bytes())
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-offline-io-20261026/sitecustomize.py", line 31, in private_rom_read
+    return read_bytes(path)
+  File "/opt/homebrew/Cellar/python@3.13/3.13.17/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.17/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r53-20261027/center-two-stage-proof/proof-result.json'

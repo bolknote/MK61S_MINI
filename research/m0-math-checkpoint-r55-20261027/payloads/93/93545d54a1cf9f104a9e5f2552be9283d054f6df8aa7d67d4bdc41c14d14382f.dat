@@ -1,0 +1,97 @@
+{
+  "status": "REJECT_R53_COARSE_EXPONENT_GUARD_NEW_CORRECT_QFPLIB_DEFICITS",
+  "new_losing_argument_pairs": [
+    [
+      "3FEFFFFFFFFFFFFE",
+      "43D0000000000000"
+    ],
+    [
+      "3FEFFFFFFFFFFFFE",
+      "43D0000000000001"
+    ],
+    [
+      "3FEFFFFFFFFFFFFE",
+      "43D7FFFFFFFFFFFF"
+    ],
+    [
+      "3FEFFFFFFFFFFFFE",
+      "C3D0000000000000"
+    ],
+    [
+      "3FEFFFFFFFFFFFFE",
+      "C3D0000000000001"
+    ],
+    [
+      "3FEFFFFFFFFFFFFE",
+      "C3D7FFFFFFFFFFFF"
+    ],
+    [
+      "3FEFFFFFFFFFFFFF",
+      "43D7FFFFFFFFFFFF"
+    ],
+    [
+      "3FEFFFFFFFFFFFFF",
+      "C3D7FFFFFFFFFFFF"
+    ],
+    [
+      "3FF0000000000001",
+      "43D0000000000000"
+    ],
+    [
+      "3FF0000000000001",
+      "43D0000000000001"
+    ],
+    [
+      "3FF0000000000001",
+      "43D7FFFFFFFFFFFF"
+    ],
+    [
+      "3FF0000000000001",
+      "C3D0000000000000"
+    ],
+    [
+      "3FF0000000000001",
+      "C3D0000000000001"
+    ],
+    [
+      "3FF0000000000001",
+      "C3D7FFFFFFFFFFFF"
+    ],
+    [
+      "BFF0000000000001",
+      "43D0000000000000"
+    ],
+    [
+      "BFF0000000000001",
+      "43D0000000000001"
+    ],
+    [
+      "BFF0000000000001",
+      "43D7FFFFFFFFFFFF"
+    ],
+    [
+      "BFF0000000000001",
+      "C3D0000000000000"
+    ],
+    [
+      "BFF0000000000001",
+      "C3D0000000000001"
+    ],
+    [
+      "BFF0000000000001",
+      "C3D7FFFFFFFFFFFF"
+    ]
+  ],
+  "new_losing_unique_pairs": 20,
+  "new_losing_reference_state_rows": 144,
+  "all_process_handles_terminal": true,
+  "source_build_terminal0": true,
+  "probe_terminal1_assert_reject": true,
+  "selected": false,
+  "selected_private_author_remains": "R52",
+  "universal_saturation_predicate_not_yet_linked_proved": true,
+  "loader_gate_not_run": true,
+  "full_qualification_not_run": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

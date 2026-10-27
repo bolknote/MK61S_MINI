@@ -1,0 +1,11 @@
+# R55: выбранный частный авторский кандидат
+
+Новые subnormal rational cuts для bounds1022/1025/1042, exact half-exponent cutoff3*2^61 и doubled abs(yH) в холодном helper.64 новых actual mutated ELF controls +68 существующих и все mandatory source guards проходят. Семантика остальных21objects и всех незатронутых секций двух изменённых объектов проверена заново; M4/default точны.
+
+Coupled qualification2123149freshpublic ARM: первичная матрица196714, fullpow281430, expandedadmission51732, exp1224907, ln360590, caller3402+4374. PrimaryMPFR/Qfplib fresh; большиеgold/referencecosts cachedfrozenR52.504newpairs взяты из frozenfreshsource diagnostics с R52parentcosts; нынешний R55 output НЕ используется как свой эталон. Source17631publiccalls/522oracle(464MPFR+58sNaNpolicy) не прибавлены к pool.
+
+На том же расширенном корпусеR52pow1886->R551452loss pairs,434fixed; на старом корпусе1778->1410(368fixed). Full140715:1754->1386. Rsqrt721 прежние, exp/ln0loss. Новых correct-reference losses0. Все parent increases сохранены: full11850, expandedadmission213, primarycandidate38+1084 и столько жеzero-control; exp/ln0. WrongQfp outputs/costs сохранены, nominal-domainfilter отсутствует.
+
+Bank4072/24tail; .text+32B, bankcode-8B, totalallocated+24B, новыхtables/globalRAM/libgcc0. Observedstack2284B неуниверсальнаяграница. FullExp/LN значения/counts точныR52 и10division-entryvisits0, expтакжепутиr2точны. Division79846pairs унаследован по неизменнымddivsections/relocations, неfreshR55. Все10точныхargvprivateI/Oclean. Первый readonlyaudit ошибочнопотребовалнеизменностиoriginal507-source-pins.json, которыйproducerсоздаёткакOUTPUT; audit-r2 сохранилpre-runmanifest, проверилстарыйparent-output ивсепиныновогоoutput. Mathdrivers/inputsнеизменены, mathrerun0.
+
+Universalfull-libraryCR/generalpowtotality/FMA/universalstack/physicalcycles/independent/adoption/canonicalintegration/releaseOPEN. Толькоprivate mathELF; production/Git/deviceнеизменены. Frozenproducerinplaceне запускать.

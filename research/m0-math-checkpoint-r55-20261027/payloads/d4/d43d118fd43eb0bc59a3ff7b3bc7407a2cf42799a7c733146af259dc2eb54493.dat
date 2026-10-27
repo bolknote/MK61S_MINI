@@ -1,0 +1,88 @@
+R52 full rows 0 seconds 0.0 losses 0 newlossrows 0
+R52 full rows 16384 seconds 10.9 losses 36 newlossrows 0
+R52 full rows 32768 seconds 14.5 losses 36 newlossrows 0
+R52 full rows 49152 seconds 18.2 losses 36 newlossrows 0
+R52 full rows 65536 seconds 22.1 losses 36 newlossrows 0
+R52 full rows 81920 seconds 25.9 losses 36 newlossrows 0
+R52 full rows 98304 seconds 29.8 losses 36 newlossrows 0
+R52 full rows 114688 seconds 33.4 losses 36 newlossrows 0
+R52 full rows 131072 seconds 43.9 losses 212 newlossrows 0
+R52 full rows 147456 seconds 51.5 losses 373 newlossrows 0
+R52 full rows 163840 seconds 59.2 losses 509 newlossrows 0
+R52 full rows 180224 seconds 66.9 losses 639 newlossrows 0
+R52 full rows 196608 seconds 74.6 losses 760 newlossrows 0
+R52 full rows 212992 seconds 82.4 losses 846 newlossrows 0
+R52 full rows 229376 seconds 107.3 losses 960 newlossrows 0
+R52 full rows 245760 seconds 144.3 losses 1455 newlossrows 0
+R52 full rows 262144 seconds 205.0 losses 1754 newlossrows 0
+R52 full rows 278528 seconds 213.6 losses 1754 newlossrows 0
+{
+  "status": "PASS_R52_FRESH_FULL_CACHED_R50_GOLD_ALL_CORRECT_QFPLIB",
+  "source_FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+  "parent_R50_qualification_FROZEN_sha256": "77419ccefb6866c0bf0f40f5b3e288da4f3b5f5cf5f8a6d16cbb0176c35d5b6a",
+  "input_records_sha256": "dc3156223f31902a09eeef49a914d93d54b2784105e792f49bced7a20da70284",
+  "candidate_ELF_sha256": "8e73f841899dd169cb0538d02d839d9499d37a5e971d85e740ec0d21f43732f4",
+  "state_rows": 281430,
+  "unique_inputs": 140715,
+  "actual_fresh_public_ARM_calls": 281430,
+  "actual_fresh_Qfplib_MPFR_calls": 0,
+  "gold_and_Qfplib_outputs_costs_cached_frozen_R50": true,
+  "candidate_wrong": 0,
+  "parent_losing_unique_inputs": 1923,
+  "candidate_losing_unique_inputs": 1754,
+  "new_correct_Qfplib_loss_state_rows": 0,
+  "all_parent_instruction_increase_rows": 0,
+  "parent_instruction_delta_histogram": {
+    "0": 176484,
+    "-11": 20196,
+    "-8": 28272,
+    "-7": 34748,
+    "-12": 10904,
+    "-10": 6000,
+    "-6": 578,
+    "-1": 1482,
+    "-2": 1590,
+    "-13": 294,
+    "-9": 870,
+    "-15": 2,
+    "-16": 10
+  },
+  "all_adverse_increases_streamed_including_already_slower": true,
+  "all_Qfplib_references_retained_each_state": true,
+  "no_nominal_reference_filter": true,
+  "wrong_Qfplib_state_comparisons_retained": 335278,
+  "prototype_r2_FROZEN_sha256": null,
+  "actual_R52_exp_bits_counts_paths_exact_full_prototype": null,
+  "prototype_instruction_delta_histogram": {},
+  "prototype_increase_rows": 0,
+  "actual_exp_path_histogram": {},
+  "actual_watched_division_sites": [],
+  "all10_division_entry_visits": {},
+  "source_loader_excluded": {
+    "actual_ARM_calls": 1,
+    "instructions": 1024,
+    "whole_scratch_y_bytes": 4080,
+    "reserved_tail_untouched": true,
+    "actual_ROM_pointers": [
+      9913,
+      9757,
+      9901,
+      9733
+    ],
+    "no_old_firmware_overlay_loaded": true
+  },
+  "observed_stack_bytes": 2284,
+  "not_universal_library_stack_bound": true,
+  "records_sha256": "bc9dee022924c954ff77cdb8833ada8be5cf2da9bbf91ee95e4b14fb45aabf7b",
+  "adverse_records_sha256": "b5c0afd3a8e33d5a5445868861d6f04f55eac56a4614d880734e3be907eee3e5",
+  "new_loss_records_sha256": "06197aa8786ad405d868acae246e3e22e22a89743cc91a60e3c47082203805b0",
+  "all_AAPCS_SP_bounded_stack_writes_SIO_checks": true,
+  "metrics": "executed Thumb instructions, not physical cycles",
+  "selected": false,
+  "independent_acceptance": false,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 215.1018984169932
+}

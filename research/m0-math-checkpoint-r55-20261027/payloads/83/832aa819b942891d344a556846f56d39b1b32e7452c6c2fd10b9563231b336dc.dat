@@ -1,0 +1,15 @@
+{
+  "status": "R55_COUPLED_DRIVERS_READY_DISPATCH_NEXT",
+  "source_FROZEN_sha256": "1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6",
+  "parent_qualification_FROZEN_sha256": "bc3eb3419524d11f9abcc77d333a0fdcc8c4ad092c72bd68be7af82d65de52b1",
+  "expected_fresh_public_ARM_calls": 2123149,
+  "new_edge_pairs_in_admission": 504,
+  "new_edge_state_calls": 1512,
+  "source_diagnostics_not_added_to_pool": true,
+  "selected_private_author_remains": "R52",
+  "source_producers_terminal": true,
+  "created_utc": "2026-10-27T05:10:37.676574+00:00",
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

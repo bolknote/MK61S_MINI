@@ -1,0 +1,28 @@
+{
+  "status": "PASS_ALL512_UNIVERSAL_U32_TWO_STAGE_QUOTIENT_ONE_CORRECTION",
+  "source_R50_FROZEN_sha256": "05b6ddbc103a81fe03896241ceedcbf2b0465d71b69ce79a017aa4a9f819fb3d",
+  "seed_table_sha256": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+  "table_entries_verified": 512,
+  "quotient0_underestimate_proved_by_floor_identity": true,
+  "strict_remainder_bound_less_than_2pow20": true,
+  "refinement_product_unsigned32_safe": true,
+  "refinement_integer_deficit_at_most1": true,
+  "one_unsigned_compare_increment_gives_exact_floor_N_over_center_for_all_u32": true,
+  "T_shift": 13,
+  "product_shift": 19,
+  "max_refinement_product": 245295998,
+  "max_strict_real_refinement_error": [
+    31565939,
+    59965440
+  ],
+  "implementation_boundary_random_checks": 146426,
+  "finite_checks_not_universal_proof": true,
+  "old_center_quotient_already_proved_exact_and_new_result_identical": true,
+  "new_tables": 0,
+  "new_ARM_MPFR_calls": 0,
+  "linked_code_and_caller_liveness_pending": true,
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

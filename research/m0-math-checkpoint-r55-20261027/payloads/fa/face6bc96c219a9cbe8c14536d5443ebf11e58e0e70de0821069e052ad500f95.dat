@@ -1,0 +1,40 @@
+{
+  "status": "R55_COUPLED_PREPARATION_PINNED",
+  "pins": {
+    ".build/m0-math-unified-pow-saturation-r55-20261027": {
+      "FROZEN_sha256": "1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6",
+      "files": 507
+    },
+    ".build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027": {
+      "FROZEN_sha256": "bc3eb3419524d11f9abcc77d333a0fdcc8c4ad092c72bd68be7af82d65de52b1",
+      "files": 73
+    },
+    ".build/m0-exp-q73-incremental-r2-20261027": {
+      "FROZEN_sha256": "c0264f8367cc40ace6b3cb93697e0244f7cb09daf1a2be07e6ec45e8e300d539",
+      "files": 52
+    }
+  },
+  "admission_baseline": {
+    "status": "EXPANDED_PARENT_R52_ADMISSION_INCLUDES_ALL_NEW_SOURCE_EDGE_PAIRS",
+    "state_rows": 51732,
+    "unique_pairs": 17244,
+    "old_state_rows": 50220,
+    "old_unique_pairs": 16740,
+    "new_state_rows": 1512,
+    "new_unique_pairs": 504,
+    "parent_losing_pairs": 1886,
+    "old_parent_losing_pairs": 1778,
+    "records_sha256": "ae576b486d2b6436ee2432e047292a761c9d604929c8b15fe0f87c509839178a",
+    "old_qualification_FROZEN_sha256": "bc3eb3419524d11f9abcc77d333a0fdcc8c4ad092c72bd68be7af82d65de52b1",
+    "source_FROZEN_sha256": "1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6",
+    "source_fresh_records_sha256": "23677317817865c3428785e1333ddfa3cebb2a4f88c002d2cef2956541b3613f",
+    "new_gold_and_Qfplib_and_R52_costs_cached_fresh_source_diagnostics": true,
+    "new_ARM_MPFR_calls": 0,
+    "hardware_accessed": false,
+    "goal_complete": false
+  },
+  "selected_private_author_remains": "R52",
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

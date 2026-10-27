@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r55-qualification-20261027/finalize.py", line 34, in <module>
+    assert Counter((Path(r['argv'][0]).name,*r['argv'][1:])for r in receipts)==expected and len(receipts)==len({r['process']for r in receipts})==10
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

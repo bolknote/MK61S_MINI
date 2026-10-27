@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r53-20261027/build.py", line 54, in <module>
+    run(cmd)
+    ~~~^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r53-20261027/build.py", line 26, in run
+    assert result.returncode == 0, result.stderr
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-ld: cannot open linker script file /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r53-20261027/unified.ld: No such file or directory
+

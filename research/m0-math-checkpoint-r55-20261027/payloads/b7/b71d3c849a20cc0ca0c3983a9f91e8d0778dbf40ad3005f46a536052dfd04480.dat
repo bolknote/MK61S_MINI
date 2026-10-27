@@ -1,0 +1,59 @@
+{
+  "status": "BUILT_R55_EXACT_SATURATION_AND_DOUBLED_Y_HIGH_PENDING_PROOF_AND_QUALIFICATION",
+  "images": {
+    "candidate": {
+      "ELF_sha256": "1a180d7303348546feb39bd5121a6d8c5eb729d875719cb92dfa2d80164d7920",
+      "scratch_y_bytes": 4072,
+      "all_undefined_symbols_resolved": true,
+      "native_rsqrt_entry_offset": 4
+    },
+    "zero-control": {
+      "ELF_sha256": "f81e26d580bae7ae1ccb0b64bf05742641640f7ff23c2ab04f7e377da54047e1",
+      "scratch_y_bytes": 4072,
+      "all_undefined_symbols_resolved": true,
+      "native_rsqrt_entry_offset": 4
+    }
+  },
+  "parent_source_FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+  "unchanged_objects": [
+    "RP-merged-asm.o",
+    "RP-exp-asm.o",
+    "generic_M0-merged-cpp.o",
+    "generic_M0-merged-asm.o",
+    "generic_M0-exp-asm.o",
+    "M4_soft-merged-cpp.o",
+    "M4_soft-merged-asm.o",
+    "M4_soft-exp-asm.o",
+    "M4_hard-merged-cpp.o",
+    "M4_hard-merged-asm.o",
+    "M4_hard-exp-asm.o",
+    "RP-unified-native_eabi_m0_cr.cpp.o",
+    "RP-unified-compact_math.cpp.o",
+    "RP-unified-native_eabi_m0_reciprocal1.S.o",
+    "RP-unified-native_eabi_m0_reciprocal1_sw.S.o",
+    "RP-unified-boundary.o",
+    "RP-unified-native_math_memory.c.o",
+    "RP-unified-native_math_memory_fill.S.o",
+    "RP-unified-native_math_bootrom.c.o",
+    "RP-unified-loader.o",
+    "RP-zero-control-sw.o"
+  ],
+  "all21_other_original_objects_exact": true,
+  "changed_RP_object_sections": {
+    "RP-merged-cpp.o": [
+      ".m0_pow_refine_extension",
+      ".scratch_y.m0_pow_hot"
+    ],
+    "RP-unified-native_eabi_m0_rp2040.S.o": [
+      ".m0_pow_tiny_cold"
+    ]
+  },
+  "M4_default_objects_exact": true,
+  "new_lookup_table_global_RAM_libgcc_bytes": 0,
+  "selected": false,
+  "new_native_entry_contract_proof_pending": true,
+  "mandatory_linked_source_guards_pending": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

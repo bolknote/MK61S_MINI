@@ -1,0 +1,9 @@
+{
+  "first_attempt": {
+    "terminal_exit": 1,
+    "cause": "Old archive consumer expected exactly4080B; actual valid bank shrank to4072B",
+    "linker_budget_4080_pass": true,
+    "ARM_MPFR_calls": 0
+  },
+  "second_attempt": "same source/commands; exact4072B consumer, remaining24B protected (at least16B)"
+}

@@ -1,0 +1,49 @@
+"""Legal caller state on all new saturation buckets, declines and IEEE paths."""
+from pathlib import Path
+import gzip,hashlib,json,struct,sys
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',None)
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+sys.path[:0]=[str(W),str(ROOT/'.build/m0-float-fma-qualification-20261023'),str(ROOT/'.build/m0-float-fma-qualification-20261023/support')]
+from harness import machine
+from oracles import equal
+from unicorn import UC_HOOK_CODE
+from unicorn.arm_const import UC_ARM_REG_R12,UC_ARM_REG_XPSR
+assert not(W/'saturation-caller-result.json').exists()
+gold={}
+for name in ('saturation-probe-records.jsonl.gz','saturation-fresh-records.jsonl.gz'):
+ for line in gzip.open(W/name,'rt'):
+  r=json.loads(line);k=r['x'],r['y'];assert k not in gold or gold[k]==r['expected'];gold[k]=r['expected']
+edit=json.loads((W/'source-edits.json').read_bytes());jobs=set()
+for k,x in ((1022,0x000fffffffffffff),(1025,0x0001ffffffffffff),(1042,0xffffffff)):
+ for target in (1075,1024):
+  cut=int(edit['subnormal_highword_cuts'][f'{target}/{k}'],16)<<32
+  for y in (cut,cut-1):jobs.add((f'{x:016X}',f'{y|(0 if target==1075 else 1<<63):016X}'))
+for x,y in [(0x3fefffffffffffff,0x43d8000000000000),(0x3fefffffffffffff,0x43d7ffffffffffff),(0x3ff0000000000001,0xc3d8000000000000),(0x3ff0000000000001,0xc3d7ffffffffffff),(0,0x43d8000000000000),(0x7ff0000000000000,0x43d8000000000000),(0x7ff0000000000001,0x43d8000000000000),(0x4000000000000000,0x7ff0000000000001),(0x3fe2983b056122c0,0xbdff8c3e59654e91),(0x3fe37efd23afdb24,0xbe25b22300000000)]:jobs.add((f'{x:016X}',f'{y:016X}'))
+assert jobs<=gold.keys()
+m=machine();configuration=None;visits=0
+pc=m.elf.symbols['_ZN12compact_math3powEdd']&~1
+def enter(uc,a,size,data):
+ global visits
+ visits+=1
+ if configuration is not None:
+  nzcv,r12=configuration;uc.reg_write(UC_ARM_REG_XPSR,0x01000000|(nzcv<<28));uc.reg_write(UC_ARM_REG_R12,r12)
+hook=m.uc.hook_add(UC_HOOK_CODE,enter,begin=pc,end=pc)
+states=dict(READY=(0,0,0,0,0,0,1),DIRTY=(17,3,17,3,5,2,3),PENDING=(0x80000001,7,0x80000001,7,0x11223344,0x55667788,2));patterns=[0,0xffffffff,0xa5a5a5a5,0x80000000,0x13579bdf]
+variants=baselines=0
+with gzip.GzipFile(filename=str(W/'saturation-caller-records.jsonl.gz'),mode='wb',mtime=0)as out:
+ for x,y in sorted(jobs):
+  expected=int(gold[x,y],16)
+  for state,words in states.items():
+   before=struct.pack('<7I',*words);configuration=None;m.uc.mem_write(0xd0000060,before)
+   got,_,base=m.call('_ZN12compact_math3powEdd',int(x,16),int(y,16),count=True);baselines+=1;assert equal(got,expected,64)
+   for nzcv in range(16):
+    for r12 in patterns:
+     configuration=nzcv,r12;m.uc.mem_write(0xd0000060,before)
+     got,_,cost=m.call('_ZN12compact_math3powEdd',int(x,16),int(y,16),count=True);variants+=1
+     assert equal(got,expected,64)and cost==base,(x,y,state,nzcv,r12)
+     after=bytes(m.uc.mem_read(0xd0000060,28));assert after==before if state!='READY'else not struct.unpack('<7I',after)[6]&2
+     out.write((json.dumps(dict(x=x,y=y,SIO=state,NZCV=nzcv,R12=f'{r12:08X}',actual=f'{got:016X}',expected=gold[x,y],instructions=cost,baseline_instructions=base),separators=(',',':'))+'\n').encode())
+assert visits==variants+baselines
+p=W/'saturation-caller-records.jsonl.gz';result=dict(status='PASS_R55_NEW_COLD_PATH_ALL16_NZCV_5_R12_3_SIO_CALLERS',unique_argument_pairs=len(jobs),variation_ARM_calls=variants,baseline_ARM_calls=baselines,total_ARM_calls=variants+baselines,records_sha256=hashlib.sha256(p.read_bytes()).hexdigest(),cached_gold_from_fresh_source_probe=True,new_MPFR_or_Qfplib_calls=0,loader_excluded=1,entry_only_legal_caller_flags_R12_injected=True,no_guest_body_or_instruction_count_modification=True,hardware_accessed=False,goal_complete=False)
+(W/'saturation-caller-result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2),flush=True)

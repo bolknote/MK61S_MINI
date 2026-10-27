@@ -1,0 +1,19 @@
+{
+  "status": "PINNED_R55_REMAINING_FINITE_POW_PAIRS_CLASSIFIED",
+  "qualification_FROZEN_sha256": "193dfa9d249dba658f9644da1affdb8b9e8a0ca24ac8da7c0c15e6dd5e1c687c",
+  "remaining_pairs": 1452,
+  "categories": {
+    "zero_or_infinity": 236,
+    "other_positive_x": 725,
+    "other_fractional_y": 518,
+    "normal_result": 495,
+    "inverse_root": 721,
+    "other_integer_y": 213,
+    "other_negative_x": 6
+  },
+  "all_pairs_retained": true,
+  "no_new_ARM_MPFR_calls": true,
+  "not_universal_remaining_count": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

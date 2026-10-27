@@ -1,0 +1,13 @@
+{
+  "first_attempt": {
+    "terminal_exit": 1,
+    "cause": "Private timing-control input not copied",
+    "ARM_MPFR_calls": 0
+  },
+  "second_attempt": {
+    "terminal_exit": 1,
+    "cause": "Private unified.ld not copied",
+    "ARM_MPFR_calls": 0
+  },
+  "third_attempt": "same source, copy both pinned private linker scripts; no prior linked build result"
+}

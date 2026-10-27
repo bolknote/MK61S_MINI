@@ -1,0 +1,10 @@
+{
+  "status": "READ_ONLY_AUDIT_R2_ORIGINAL_EXEC_HANDLE_TERMINAL0_CONSUMED",
+  "exec_session": 77965,
+  "exit_code": 0,
+  "original_handle_result_consumed": true,
+  "auditor": "audit-r2.py",
+  "auditor_sha256": "b22ec7050302a29912f01199faac2b8a55b3731b0dc8541055617e35d73b57b1",
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false
+}

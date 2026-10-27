@@ -1,0 +1,93 @@
+{
+  "status": "PASS_ACTUAL_SOURCE_LOADER_AND_LINKED_MATH_LAYOUT",
+  "images": {
+    "candidate": {
+      "ELF_sha256": "4450aa62bf07528aea3a80f7c2fa13aebe36cb731d8cd97b4d7330fda1180d83",
+      "loader": {
+        "actual_ARM_calls": 1,
+        "instructions": 1022,
+        "whole_scratch_y_bytes": 4072,
+        "reserved_tail_untouched": true,
+        "actual_ROM_pointers": [
+          9913,
+          9757,
+          9901,
+          9733
+        ],
+        "no_old_firmware_overlay_loaded": true
+      },
+      "flash_load_intervals": [
+        [
+          268500992,
+          268992768
+        ],
+        [
+          268992768,
+          268996840
+        ],
+        [
+          268996840,
+          268996856
+        ]
+      ],
+      "scratch_y_address": 537100288,
+      "scratch_y_bytes": 4072,
+      "stack_bottom": 537104384,
+      "stack_top": 537137152,
+      "main_RAM_data_end": 536870928,
+      "actual_generic_product": 537104092,
+      "actual_new_table_entry": 537104246,
+      "old_overlay_intersects_new_entry_bytes": 14,
+      "host_negative_old_overlay_detected": true,
+      "actual_bank_sha256": "d85b8009d94c78855ce9bd76f033cad0aad85b912fef8c2bfbfa9c319f64ee48",
+      "real_BootROM_without_models": true
+    },
+    "zero-control": {
+      "ELF_sha256": "ee5bbe0fa1ddd53aa0a57834bee18327ab1049669b50be60487b0fded91202d4",
+      "loader": {
+        "actual_ARM_calls": 1,
+        "instructions": 1022,
+        "whole_scratch_y_bytes": 4072,
+        "reserved_tail_untouched": true,
+        "actual_ROM_pointers": [
+          9913,
+          9757,
+          9901,
+          9733
+        ],
+        "no_old_firmware_overlay_loaded": true
+      },
+      "flash_load_intervals": [
+        [
+          268500992,
+          268992760
+        ],
+        [
+          268992760,
+          268996832
+        ],
+        [
+          268996832,
+          268996848
+        ]
+      ],
+      "scratch_y_address": 537100288,
+      "scratch_y_bytes": 4072,
+      "stack_bottom": 537104384,
+      "stack_top": 537137152,
+      "main_RAM_data_end": 536870928,
+      "actual_generic_product": 537104092,
+      "actual_new_table_entry": 537104246,
+      "old_overlay_intersects_new_entry_bytes": 14,
+      "host_negative_old_overlay_detected": true,
+      "actual_bank_sha256": "661aa3cdda10abc2fad916a2a4c31c422f72baaf75a08f1ac23c6ac3ff965237",
+      "real_BootROM_without_models": true
+    }
+  },
+  "actual_loader_ARM_calls": 2,
+  "actual_MPFR_calls": 0,
+  "whole_library_math_only_not_bootable_firmware": true,
+  "full_device_loader_and_hardware_acceptance_not_implied": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

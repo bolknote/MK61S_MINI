@@ -1,0 +1,52 @@
+{
+  "status": "PASS_R55_ALL_UNAFFECTED_ALLOCATED_BYTES_SYMBOLS_AND_SEMANTIC_RELOCATIONS_EXACT_R52",
+  "source_FROZEN_sha256": "1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6",
+  "parent_source_FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+  "unchanged21_objects": [
+    "RP-merged-asm.o",
+    "RP-exp-asm.o",
+    "generic_M0-merged-cpp.o",
+    "generic_M0-merged-asm.o",
+    "generic_M0-exp-asm.o",
+    "M4_soft-merged-cpp.o",
+    "M4_soft-merged-asm.o",
+    "M4_soft-exp-asm.o",
+    "M4_hard-merged-cpp.o",
+    "M4_hard-merged-asm.o",
+    "M4_hard-exp-asm.o",
+    "RP-unified-native_eabi_m0_cr.cpp.o",
+    "RP-unified-compact_math.cpp.o",
+    "RP-unified-native_eabi_m0_reciprocal1.S.o",
+    "RP-unified-native_eabi_m0_reciprocal1_sw.S.o",
+    "RP-unified-boundary.o",
+    "RP-unified-native_math_memory.c.o",
+    "RP-unified-native_math_memory_fill.S.o",
+    "RP-unified-native_math_bootrom.c.o",
+    "RP-unified-loader.o",
+    "RP-zero-control-sw.o"
+  ],
+  "changed_object_unaffected_section_checks": {
+    "RP-merged-cpp.o": {
+      "changed_only_sections": [
+        ".m0_pow_refine_extension",
+        ".scratch_y.m0_pow_hot"
+      ],
+      "all_other_allocated_bytes_symbols_semantic_relocations_exact": true,
+      "unchanged_allocated_sections": 149,
+      "unchanged_semantic_relocation_rows": 733
+    },
+    "RP-unified-native_eabi_m0_rp2040.S.o": {
+      "changed_only_sections": [
+        ".m0_pow_tiny_cold"
+      ],
+      "all_other_allocated_bytes_symbols_semantic_relocations_exact": true,
+      "unchanged_allocated_sections": 27,
+      "unchanged_semantic_relocation_rows": 55
+    }
+  },
+  "default_M0_M4_exact": true,
+  "division_sections_and_semantic_relocations_exact": true,
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

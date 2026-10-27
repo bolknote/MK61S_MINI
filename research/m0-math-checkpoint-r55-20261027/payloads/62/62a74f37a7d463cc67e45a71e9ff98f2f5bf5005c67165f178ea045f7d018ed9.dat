@@ -1,0 +1,10 @@
+{
+  "status": "PASS_R55_SOURCE_POSTSEAL_ALL_PINS",
+  "source_FROZEN_sha256": "1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6",
+  "files_verified": 507,
+  "author_sha256": "875c377a9b116ab9d2d31378434976e21eb1d35ff654a13fa70bcc476058e9eb",
+  "all_jobs_terminal": true,
+  "selected_private_author_remains": "R52",
+  "hardware_accessed": false,
+  "goal_complete": false
+}

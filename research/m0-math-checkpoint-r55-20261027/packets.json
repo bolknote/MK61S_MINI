@@ -1,0 +1,51 @@
+{
+  "r52-qualification": {
+    "original_directory": ".build/m0-math-unified-pow-rsqrt-center-r52-qualification-20261027",
+    "scope": "frozen parent data and costs; historical parent qualification already committed",
+    "FROZEN_sha256": "bc3eb3419524d11f9abcc77d333a0fdcc8c4ad092c72bd68be7af82d65de52b1",
+    "frozen_pinned_files": 73,
+    "archived_files": 74
+  },
+  "r53-source": {
+    "original_directory": ".build/m0-math-unified-pow-saturation-r53-20261027",
+    "scope": "rejected coarse exponent-range source prototype; new correct-reference losses retained",
+    "FROZEN_sha256": "4a4f8c9c69f89f5bbf66c3d5d67fa1687d377095308f834071f684fcd4e126ca",
+    "frozen_pinned_files": 502,
+    "archived_files": 466
+  },
+  "r54-source": {
+    "original_directory": ".build/m0-math-unified-pow-saturation-r54-20261027",
+    "scope": "rejected exact-range prototype with two new one-instruction reference deficits",
+    "FROZEN_sha256": "75febffb13aacd3e8219b9e914625d134ff99b42a238635b50b84198ab5a228d",
+    "frozen_pinned_files": 499,
+    "archived_files": 463
+  },
+  "r55-source": {
+    "original_directory": ".build/m0-math-unified-pow-saturation-r55-20261027",
+    "scope": "source, universal new shortcut proofs and mandatory guards; qualified by r55-qualification",
+    "FROZEN_sha256": "1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6",
+    "frozen_pinned_files": 507,
+    "archived_files": 471
+  },
+  "r55-qualification": {
+    "original_directory": ".build/m0-math-unified-pow-saturation-r55-qualification-20261027",
+    "scope": "completed author qualification; current private selected candidate",
+    "FROZEN_sha256": "193dfa9d249dba658f9644da1affdb8b9e8a0ca24ac8da7c0c15e6dd5e1c687c",
+    "frozen_pinned_files": 92,
+    "archived_files": 93
+  },
+  "r55-profile": {
+    "original_directory": ".build/m0-r55-remaining-profile-20261027",
+    "scope": "host classification of remaining finite deficits; no new ARM or MPFR calls",
+    "FROZEN_sha256": null,
+    "frozen_pinned_files": 0,
+    "archived_files": 2
+  },
+  "r55-hil-draft": {
+    "original_directory": ".build/m0-math-r55-hil-20261027",
+    "scope": "unfinished HOST RAM re-link experiment; math blobs only, no bootable worker or physical results",
+    "FROZEN_sha256": null,
+    "frozen_pinned_files": 0,
+    "archived_files": 10
+  }
+}

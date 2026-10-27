@@ -1,0 +1,15 @@
+[
+  "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+  "-mcpu=cortex-m0plus",
+  "-mthumb",
+  "-mfloat-abi=soft",
+  "-nostdlib",
+  "-Wl,--no-undefined",
+  "-Wl,-T,/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/qfplib-ram.ld",
+  "-Wl,-Map=/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/qfplib-ram.map",
+  "/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/qfplib-linked.S.o",
+  "/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/adapters.S.o",
+  "/Users/bolk/Projects/MK61S_MINI/.build/m0-v138-execution-20261023/reference/compositions.c.o",
+  "-o",
+  "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/qfplib-ram.elf"
+]

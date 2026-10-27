@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r54-20261027/build.py", line 62, in <module>
+    assert elf.named_sections['.scratch_y'][5] == 4080
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

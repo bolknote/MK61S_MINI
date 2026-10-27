@@ -1,0 +1,120 @@
+{
+  "status": "PASS_R55_FRESH_EXP_CACHED_R52_GOLD_ALL_CORRECT_QFPLIB",
+  "source_FROZEN_sha256": "1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6",
+  "parent_R52_qualification_FROZEN_sha256": "bc3eb3419524d11f9abcc77d333a0fdcc8c4ad092c72bd68be7af82d65de52b1",
+  "input_records_sha256": "388c096059f2e3e8f7bb197561872150388627321bc8c372833396a48d183296",
+  "candidate_ELF_sha256": "1a180d7303348546feb39bd5121a6d8c5eb729d875719cb92dfa2d80164d7920",
+  "state_rows": 1224907,
+  "unique_inputs": 568856,
+  "actual_fresh_public_ARM_calls": 1224907,
+  "actual_fresh_Qfplib_MPFR_calls": 0,
+  "gold_and_Qfplib_outputs_costs_cached_frozen_R52": true,
+  "admission_new_edges_cached_source_R55_fresh_diagnostics": false,
+  "candidate_wrong": 0,
+  "parent_losing_unique_inputs": 0,
+  "candidate_losing_unique_inputs": 0,
+  "remaining_losing_arguments": [],
+  "new_losing_argument_pairs": [],
+  "new_correct_Qfplib_loss_state_rows": 0,
+  "all_parent_instruction_increase_rows": 0,
+  "parent_instruction_delta_histogram": {
+    "0": 1224907
+  },
+  "all_adverse_increases_streamed_including_already_slower": true,
+  "all_Qfplib_references_retained_each_state": true,
+  "no_nominal_reference_filter": true,
+  "wrong_Qfplib_state_comparisons_retained": 414230,
+  "prototype_r2_FROZEN_sha256": "c0264f8367cc40ace6b3cb93697e0244f7cb09daf1a2be07e6ec45e8e300d539",
+  "actual_R55_exp_bits_counts_paths_exact_full_prototype": true,
+  "prototype_instruction_delta_histogram": {
+    "0": 1224907
+  },
+  "prototype_increase_rows": 0,
+  "actual_exp_path_histogram": {
+    "small0_incremental0_fallback0": 403629,
+    "small0_incremental0_fallback1": 794712,
+    "small1_incremental0_fallback0": 26563,
+    "small0_incremental1_fallback0": 3
+  },
+  "actual_watched_division_sites": [
+    [
+      "__aeabi_ddiv",
+      268573808
+    ],
+    [
+      "mk61_m0_ddiv_slow",
+      268565092
+    ],
+    [
+      "_ZN7m0_eabi6BinaryILj52ELj11EE3divEyy",
+      268564708
+    ],
+    [
+      "mk61_m0_ddiv_denominator_guard_begin",
+      268573622
+    ],
+    [
+      "mk61_m0_ddiv_numerator_guard_body",
+      268573538
+    ],
+    [
+      "mk61_m0_ddiv_range_guard_begin",
+      268573728
+    ],
+    [
+      "mk61_m0_ddiv_coarse_dispatch_begin",
+      268573832
+    ],
+    [
+      "mk61_m0_ddiv_dyadic_body_begin",
+      268573480
+    ],
+    [
+      "mk61_m0_ddiv_small_normalize_begin",
+      268573504
+    ],
+    [
+      "actual_ddiv0_after_public_push",
+      268573810
+    ]
+  ],
+  "all10_division_entry_visits": {
+    "__aeabi_ddiv": 0,
+    "mk61_m0_ddiv_slow": 0,
+    "_ZN7m0_eabi6BinaryILj52ELj11EE3divEyy": 0,
+    "mk61_m0_ddiv_denominator_guard_begin": 0,
+    "mk61_m0_ddiv_numerator_guard_body": 0,
+    "mk61_m0_ddiv_range_guard_begin": 0,
+    "mk61_m0_ddiv_coarse_dispatch_begin": 0,
+    "mk61_m0_ddiv_dyadic_body_begin": 0,
+    "mk61_m0_ddiv_small_normalize_begin": 0,
+    "actual_ddiv0_after_public_push": 0
+  },
+  "source_loader_excluded": {
+    "actual_ARM_calls": 1,
+    "instructions": 1022,
+    "whole_scratch_y_bytes": 4072,
+    "reserved_tail_untouched": true,
+    "actual_ROM_pointers": [
+      9913,
+      9757,
+      9901,
+      9733
+    ],
+    "no_old_firmware_overlay_loaded": true
+  },
+  "observed_stack_bytes": 816,
+  "not_universal_library_stack_bound": true,
+  "records_sha256": "4d6049db9e803ce4a5090e7759b20dc96dea056dcc45a411045f5b7c48e483f2",
+  "adverse_records_sha256": "52d380748725557774ad66b40e0021a0595c3e4b8540ed942422c94c010937d4",
+  "new_loss_records_sha256": "08f906e5bbd04a857d32ee62ee74fbe528943c9c0d95051bfda519bc07465b4c",
+  "all_AAPCS_SP_bounded_stack_writes_SIO_checks": true,
+  "metrics": "executed Thumb instructions, not physical cycles",
+  "selected": false,
+  "independent_acceptance": false,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 584.3637767499895
+}

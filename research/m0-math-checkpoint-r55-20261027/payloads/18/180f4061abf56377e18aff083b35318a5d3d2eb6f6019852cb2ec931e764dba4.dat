@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r53-20261027/build.py", line 32, in <module>
+    run(cmd)
+    ~~~^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r53-20261027/build.py", line 26, in run
+    assert result.returncode == 0, result.stderr
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: cc1: fatal error: /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r53-20261027/timing-control/native_eabi_m0_reciprocal1_sw.S: No such file or directory
+compilation terminated.
+

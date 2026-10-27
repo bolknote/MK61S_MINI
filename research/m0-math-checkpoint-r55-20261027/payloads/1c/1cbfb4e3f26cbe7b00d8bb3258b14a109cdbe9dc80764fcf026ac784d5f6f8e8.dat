@@ -1,0 +1,77 @@
+{
+  "status": "R55_EXACT_SATURATION_AND_DOUBLED_Y_HIGH_PENDING_BUILD_AND_DIAGNOSTICS",
+  "source_parent_FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+  "changed_source_files": {
+    "source/code/native_eabi_m0_pow_fast.inc": {
+      "before_sha256": "d51454e9e8c7acdd2c027853371cc73998e99bae274a28e345a958f37ff37d23",
+      "after_sha256": "7d9eb9108f5ade2489af492bad0d991e426748ae91413c58e06ffae8e2247967"
+    },
+    "source/code/native_eabi_m0_rp2040.S": {
+      "before_sha256": "eba8d2b0951bad9b4f05ca6c162b67d8153c5a1f64f63d4e9d5bbf81b316a786",
+      "after_sha256": "9358f9adfbb81ceb24859168a49397ea70cf436d26dcaf4bc6e67b64e80f296b"
+    }
+  },
+  "subnormal_highword_cuts": {
+    "1075/1022": "3FF0D46B",
+    "1024/1022": "3FF00805",
+    "1075/1025": "3FF0C7CF",
+    "1024/1025": "3FEFF802",
+    "1075/1042": "3FF081B9",
+    "1024/1042": "3FEF727D"
+  },
+  "new_y_exponent_upper_bound": "exact half-exponent unsigned bin [2022,2170]",
+  "old_y_exponent_upper_bound": 64,
+  "huge_y_bits": "43D8000000000000",
+  "selected_private_author_remains": "R52",
+  "hardware_accessed": false,
+  "goal_complete": false,
+  "rejected_R53_FROZEN_sha256": "4a4f8c9c69f89f5bbf66c3d5d67fa1687d377095308f834071f684fcd4e126ca",
+  "rejected_R54_FROZEN_sha256": "75febffb13aacd3e8219b9e914625d134ff99b42a238635b50b84198ab5a228d",
+  "doubled_y_high_representation": true,
+  "doubled_compared_literals": [
+    {
+      "old": "3BF00000",
+      "new": "77E00000"
+    },
+    {
+      "old": "43D80000",
+      "new": "87B00000"
+    },
+    {
+      "old": "7FF00000",
+      "new": "FFE00000"
+    },
+    {
+      "old": "3F300000",
+      "new": "7E600000"
+    },
+    {
+      "old": "7FF00000",
+      "new": "FFE00000"
+    },
+    {
+      "old": "3FF0D46B",
+      "new": "7FE1A8D6"
+    },
+    {
+      "old": "3FF00805",
+      "new": "7FE0100A"
+    },
+    {
+      "old": "3FF0C7CF",
+      "new": "7FE18F9E"
+    },
+    {
+      "old": "3FEFF802",
+      "new": "7FDFF004"
+    },
+    {
+      "old": "3FF081B9",
+      "new": "7FE10372"
+    },
+    {
+      "old": "3FEF727D",
+      "new": "7FDEE4FA"
+    }
+  ]
+}

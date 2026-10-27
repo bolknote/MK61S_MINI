@@ -1,0 +1,22 @@
+EXTERN(_ZN12compact_math3powEdd unified_math_init)
+MEMORY {
+ MATH(rwx):ORIGIN = 0x2000c010, LENGTH = 208K
+ HOT(rwx):ORIGIN = 0x2003f000, LENGTH = 4K
+ MDATA(rwx):ORIGIN = 0x2000c000, LENGTH = 16
+}
+SECTIONS {
+ .sqrt_group : { *(.m0_sqrt_special) *(.m0_sqrt64_fixed.mk61_m0_sqrt) *(.m0_sqrt64_fixed.*) } > MATH
+ .pow_log_group : { *(.m0_pow_log_selector) *(.m0_pow_extension) } > MATH
+ .pow_dispatch_group : { *(.m0_pow_dispatch_extension) *(.m0_pow_extension_data) *(.m0_pow_argument_extension) } > MATH
+ .text : { *(.text*) *(.m0_*) *(.time_critical*) } > MATH
+ .rodata : { *(.rodata*) *(.data.rel.ro*) } > MATH
+ .scratch_y : ALIGN(4) { __scratch_y_start__ = .; *(.scratch_y*) . = ALIGN(4); __scratch_y_end__ = .; } > HOT
+ __scratch_y_source__ = LOADADDR(.scratch_y);
+ .data : ALIGN(4) { __data_start__ = .; *(.data*) . = ALIGN(4); __data_end__ = .; } > MDATA
+ __data_source__ = LOADADDR(.data);
+ .bss (NOLOAD) : ALIGN(4) { __bss_start__ = .; *(.bss*) *(COMMON) . = ALIGN(4); __bss_end__ = .; } > MDATA
+ __StackBottom = 0x20040000;__StackTop = 0x20041000;
+ /DISCARD/ : { *(.ARM.exidx*) *(.ARM.extab*) *(.comment) *(.note*) *(.ARM.attributes) *(.preinit_array*) *(.init_array*) }
+}
+ASSERT(SIZEOF(.scratch_y)<=4080,"math scratch overflow")
+ASSERT(__bss_end__<=0x2000c010,"math data overflow")

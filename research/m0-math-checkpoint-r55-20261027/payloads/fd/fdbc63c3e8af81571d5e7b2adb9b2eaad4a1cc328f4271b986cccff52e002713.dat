@@ -1,0 +1,12 @@
+{
+  "status": "PASS_ALL_INPUT_PINS_UNCHANGED_ONE_EXPECTED_GENERATED_OUTPUT_REPLACED",
+  "original_pre_run_manifest_preserved": true,
+  "unchanged_admission_and_preparation_input_files": 3,
+  "generated_output": "original507-source-pins.json",
+  "old_parent_output_sha256": "5d42bd4294051fffe06562e345506b9627c3c1b2dad3816e76f668360387432d",
+  "actual_R55_output_sha256": "600e802da529c3a1228554d1c26d20361d8b9b24a9ffffb09e944772958579ac",
+  "all_generated_source_pins_verified": true,
+  "all_math_producer_code_pins_unchanged": true,
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false
+}

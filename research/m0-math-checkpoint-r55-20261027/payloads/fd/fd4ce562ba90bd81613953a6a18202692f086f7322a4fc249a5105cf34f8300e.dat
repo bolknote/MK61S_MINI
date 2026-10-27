@@ -1,0 +1,15 @@
+{
+  "status": "PASS_R55_NEW_COLD_PATH_ALL16_NZCV_5_R12_3_SIO_CALLERS",
+  "unique_argument_pairs": 22,
+  "variation_ARM_calls": 5280,
+  "baseline_ARM_calls": 66,
+  "total_ARM_calls": 5346,
+  "records_sha256": "16548634a82a8f98c8992d4f2ee9959c663aad33ef2662ab27e8ee22d78cbfa2",
+  "cached_gold_from_fresh_source_probe": true,
+  "new_MPFR_or_Qfplib_calls": 0,
+  "loader_excluded": 1,
+  "entry_only_legal_caller_flags_R12_injected": true,
+  "no_guest_body_or_instruction_count_modification": true,
+  "hardware_accessed": false,
+  "goal_complete": false
+}

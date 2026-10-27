@@ -1,0 +1,9 @@
+{
+  "status": "BOUND_RELATIVE_AND_ABSOLUTE_ORIGINAL_SCRIPT_ARGV_TO_EXACT_QUALIFICATION_NAMESPACE",
+  "reason": "Six original exec jobs used relative .build script argv; four driver children used absolute script argv. First collector selected only absolute entries.",
+  "original_receipt_bytes_unchanged": true,
+  "exact_expected_processes": 10,
+  "new_ARM_MPFR_calls": 0,
+  "math_drivers_rerun": false,
+  "hardware_accessed": false
+}

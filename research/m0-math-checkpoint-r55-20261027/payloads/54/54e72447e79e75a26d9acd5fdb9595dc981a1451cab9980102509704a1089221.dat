@@ -1,0 +1,57 @@
+"""Uniform exact-u32 quotient certificate, using existing rsqrt seeds only."""
+from pathlib import Path
+from fractions import Fraction as F
+import hashlib,json,random,re,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+S=ROOT/'.build/m0-math-unified-pow-rsqrt-entry-r50-20261027'
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+assert sha(S/'FROZEN.json')=='05b6ddbc103a81fe03896241ceedcbf2b0465d71b69ce79a017aa4a9f819fb3d'
+table=S/'source/code/native_eabi_m0_rsqrt_table.inc'
+seeds=list(map(int,re.findall(r'\b(\d+)U\b',table.read_text())));assert len(seeds)==512
+rng=random.Random(0x325132513)
+checks=0;rows=[];max_product=0;max_real_error=F(0)
+for n,B in enumerate(seeds):
+    parity,index=divmod(n,256);c=513+2*index
+    R=((B>>16)**2)>>(9-parity)
+    d0=(1<<32)-c*R
+    assert d0>=0
+    # q0=floor(floor(N/2^16)*R/2^16), hence q0<=floor(N/c).
+    # For N=Nhi*2^16+Nlo, rem=N-c*q0 is strictly below
+    # d0+c*R/2^16+c. The following integer is a uniform strict upper bound.
+    rem_bound=(c*R)//65536+c+d0+1
+    assert rem_bound<1<<20
+    T=R>>13
+    d1=(1<<32)-c*(T<<13)
+    assert d1>=0
+    assert rem_bound*T<1<<32
+    # q1=floor(rem*T/2^19)=floor(rem*(T*2^13)/2^32).
+    # q1 is not above floor(rem/c); its integer deficit is at most1.
+    assert rem_bound*d1<c*(1<<32)
+    max_product=max(max_product,rem_bound*T)
+    max_real_error=max(max_real_error,F(rem_bound*d1,c*(1<<32)))
+    values={0,1,c-1,c,c+1,65535,65536,65537,0x7fffffff,0x80000000,0xfffffffe,0xffffffff}
+    for k in (1,2,255,256,65535,(1<<32)//c-1,(1<<32)//c):
+        for delta in (-1,0,1):
+            x=k*c+delta
+            if 0<=x<1<<32:values.add(x)
+    values.update(rng.getrandbits(32)for _ in range(256))
+    for N in values:
+        nh=N>>16
+        q0=nh*(R>>16)+((nh*(R&65535))>>16)
+        assert q0==(nh*R)>>16 and q0<=N//c
+        assert nh*(R&65535)<1<<32
+        rem=N-q0*c;assert 0<=rem<rem_bound
+        product=rem*T;assert product<1<<32
+        q1=product>>19
+        assert q1<=rem//c<=q1+1
+        q=q0+q1;remainder=rem-q1*c
+        if remainder>=c:q+=1
+        assert q==N//c
+        checks+=1
+    rows.append(dict(parity=parity,index=index,center=c,base=B,R=R,R_deficit=d0,strict_remainder_bound=rem_bound,T=T,refined_reciprocal_deficit=d1,max_refinement_product=rem_bound*T,strict_real_refinement_error_numerator=rem_bound*d1,strict_real_refinement_error_denominator=c*(1<<32)))
+result=dict(status='PASS_ALL512_UNIVERSAL_U32_TWO_STAGE_QUOTIENT_ONE_CORRECTION',source_R50_FROZEN_sha256=sha(S/'FROZEN.json'),seed_table_sha256=sha(table),table_entries_verified=512,
+    quotient0_underestimate_proved_by_floor_identity=True,strict_remainder_bound_less_than_2pow20=True,refinement_product_unsigned32_safe=True,refinement_integer_deficit_at_most1=True,one_unsigned_compare_increment_gives_exact_floor_N_over_center_for_all_u32=True,
+    T_shift=13,product_shift=19,max_refinement_product=max_product,max_strict_real_refinement_error=[max_real_error.numerator,max_real_error.denominator],implementation_boundary_random_checks=checks,finite_checks_not_universal_proof=True,
+    old_center_quotient_already_proved_exact_and_new_result_identical=True,new_tables=0,new_ARM_MPFR_calls=0,linked_code_and_caller_liveness_pending=True,selected=False,hardware_accessed=False,integration_GO=False,goal_complete=False)
+(W/'certificates.json').write_text(json.dumps(rows,indent=2)+'\n');(W/'proof-result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2),flush=True)

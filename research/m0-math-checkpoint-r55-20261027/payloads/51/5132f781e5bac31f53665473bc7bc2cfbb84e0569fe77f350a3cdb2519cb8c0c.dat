@@ -1,0 +1,73 @@
+R52 admission rows 0 seconds 0.0 losses 0 newlossrows 0
+R52 admission rows 16384 seconds 23.6 losses 1778 newlossrows 0
+R52 admission rows 32768 seconds 30.9 losses 1778 newlossrows 0
+R52 admission rows 49152 seconds 38.4 losses 1778 newlossrows 0
+{
+  "status": "PASS_R52_FRESH_ADMISSION_CACHED_R50_GOLD_ALL_CORRECT_QFPLIB",
+  "source_FROZEN_sha256": "8e83adfbcea0495ebe8b2e69dcf77880f88a196aa7eb5f78198215d07bfe2453",
+  "parent_R50_qualification_FROZEN_sha256": "77419ccefb6866c0bf0f40f5b3e288da4f3b5f5cf5f8a6d16cbb0176c35d5b6a",
+  "input_records_sha256": "798fd4df61ba990b2a271a1abe17d1115372e96750455b4168d1a7c5bd03cdb3",
+  "candidate_ELF_sha256": "8e73f841899dd169cb0538d02d839d9499d37a5e971d85e740ec0d21f43732f4",
+  "state_rows": 50220,
+  "unique_inputs": 16740,
+  "actual_fresh_public_ARM_calls": 50220,
+  "actual_fresh_Qfplib_MPFR_calls": 0,
+  "gold_and_Qfplib_outputs_costs_cached_frozen_R50": true,
+  "candidate_wrong": 0,
+  "parent_losing_unique_inputs": 1960,
+  "candidate_losing_unique_inputs": 1778,
+  "new_correct_Qfplib_loss_state_rows": 0,
+  "all_parent_instruction_increase_rows": 0,
+  "parent_instruction_delta_histogram": {
+    "0": 4506,
+    "-13": 420,
+    "-11": 11175,
+    "-2": 3987,
+    "-12": 6123,
+    "-1": 3729,
+    "-10": 2418,
+    "-8": 8100,
+    "-7": 8964,
+    "-6": 117,
+    "-9": 639,
+    "-16": 42
+  },
+  "all_adverse_increases_streamed_including_already_slower": true,
+  "all_Qfplib_references_retained_each_state": true,
+  "no_nominal_reference_filter": true,
+  "wrong_Qfplib_state_comparisons_retained": 55296,
+  "prototype_r2_FROZEN_sha256": null,
+  "actual_R52_exp_bits_counts_paths_exact_full_prototype": null,
+  "prototype_instruction_delta_histogram": {},
+  "prototype_increase_rows": 0,
+  "actual_exp_path_histogram": {},
+  "actual_watched_division_sites": [],
+  "all10_division_entry_visits": {},
+  "source_loader_excluded": {
+    "actual_ARM_calls": 1,
+    "instructions": 1024,
+    "whole_scratch_y_bytes": 4080,
+    "reserved_tail_untouched": true,
+    "actual_ROM_pointers": [
+      9913,
+      9757,
+      9901,
+      9733
+    ],
+    "no_old_firmware_overlay_loaded": true
+  },
+  "observed_stack_bytes": 2148,
+  "not_universal_library_stack_bound": true,
+  "records_sha256": "98b060104ec9a4eb596a8b1634b7cfcb4255a2db9f8ccb94d1f4bcefb5a95acc",
+  "adverse_records_sha256": "2eef097d62d45be126a064c6f51b041fb3fcee439aebc18951b71285dcc2eb83",
+  "new_loss_records_sha256": "683bf682c8c5f835b9ac7ae5b6e64f523fcd77768067bccba1e51a49ab6f86c4",
+  "all_AAPCS_SP_bounded_stack_writes_SIO_checks": true,
+  "metrics": "executed Thumb instructions, not physical cycles",
+  "selected": false,
+  "independent_acceptance": false,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 38.85307441698387
+}
