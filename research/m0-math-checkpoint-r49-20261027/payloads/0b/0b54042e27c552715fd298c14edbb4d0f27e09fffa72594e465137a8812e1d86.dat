@@ -1,0 +1,50 @@
+"""Measure the complete incremental operation and inspect its private metadata."""
+from pathlib import Path
+from collections import Counter
+import gzip,hashlib,json,struct,sys
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',None)
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+sys.path[:0]=[str(W),str(ROOT/'.build/m0-float-fma-qualification-20261023/support'),str(ROOT/'.build/m0-float-fma-qualification-20261023')]
+from harness import machine
+from native_eabi_m0_arm_self_test import Machine
+from m0_mpfr_oracle import Oracle
+from oracles import equal
+from unicorn import UC_HOOK_CODE
+from unicorn.arm_const import UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2
+import model
+assert not(W/'probe-result.json').exists()
+m=machine();reference=Machine(ROOT/'.build/m0-v138-execution-20261023/reference/reference.elf',True);oracle=Oracle();calls=Counter();captured=[]
+pc=m.elf.symbols['mk61_q73_incremental_side']&~1
+def capture(uc,a,size,data):
+    address=uc.reg_read(UC_ARM_REG_R0)
+    words=struct.unpack('<27I',uc.mem_read(address,108))
+    captured.append(dict(words=list(words),root_raw=uc.reg_read(UC_ARM_REG_R1),rounded_q73_low=uc.reg_read(UC_ARM_REG_R2)))
+m.uc.hook_add(UC_HOOK_CODE,capture,begin=pc,end=pc)
+jobs={'4068D94447091680'}
+with gzip.open(ROOT/'.build/m0-exp-q83-general-prototype-20261027/probe-records.jsonl.gz','rt')as f:
+    for line in f:jobs.add(json.loads(line)['x'])
+jobs.update(('0000000000000000','8000000000000000','3EA0000000000000','BEA0000000000000','3F88F40B5ED9812C','BFF0000000000000'))
+states=dict(READY=(0,0,0,0,0,0,1),DIRTY=(17,3,17,3,5,2,3),PENDING=(0x80000001,7,0x80000001,7,0x11223344,0x55667788,2))
+records=[]
+for hx in sorted(jobs):
+    x=int(hx,16);gold=oracle.reference('exp',x)
+    for state,words in states.items():
+        before=struct.pack('<7I',*words);m.uc.mem_write(0xd0000060,before);prior=len(captured)
+        value,_,cost=m.call('mk61_m0_exp',x,count=True);calls['candidate']+=1
+        assert equal(value,gold,64),(hx,state,f'{value:016X}',f'{gold:016X}',cost,captured[prior:],model.evaluate(x))
+        after=bytes(m.uc.mem_read(0xd0000060,28));assert after==before if state!='READY'else not struct.unpack('<7I',after)[6]&2
+        m.uc.mem_write(0xd0000060,before);pv,_,pcost=m.call('mk61_m0_exp_fallback',x,count=True);calls['parent_R48']+=1;assert equal(pv,gold,64)
+        reference.uc.mem_write(0xd0000060,before);qv,_,qc=reference.call('qfp_dexp',x,count=True);calls['Qfplib']+=1
+        r=dict(x=hx,SIO=state,expected=f'{gold:016X}',outputs=dict(candidate=f'{value:016X}',parent_R48=f'{pv:016X}',Qfplib=f'{qv:016X}'),instructions=dict(candidate=cost,parent_R48=pcost,Qfplib=qc),correct=dict(candidate=True,parent_R48=True,Qfplib=equal(qv,gold,64)),incremental_visits=len(captured)-prior)
+        if len(captured)>prior:
+            c=captured[-1];v=model.incremental_evaluate(x);assert v
+            assert (c['words'][21]&1023)==v['square_metadata'],(hx,'square',c,v)
+            assert c['words'][24]==v['product52_fraction10'],(hx,'product52',c,v)
+            assert (c['root_raw']&511)==v['root_product_fraction9'],(hx,'root',c,v)
+            r['private_metadata']=c
+        records.append(r)
+with gzip.GzipFile(filename=str(W/'probe-records.jsonl.gz'),mode='wb',mtime=0)as f:
+    for r in records:f.write((json.dumps(r,separators=(',',':'))+'\n').encode())
+report=dict(status='PASS_INITIAL_INCREMENTAL_COMPLETE_EXP_PROBE',calls=dict(calls),inputs=len(jobs),actual_directed_MPFR_inputs=len(jobs),candidate_wrong=0,hard_case=[r for r in records if r['x']=='4068D94447091680'],correct_Qfplib_losing_rows=[r for r in records if r['correct']['Qfplib']and r['instructions']['candidate']>r['instructions']['Qfplib']],all_R48_parent_increases=[r for r in records if r['instructions']['candidate']>r['instructions']['parent_R48']],loader_excluded=m.unified_loader_report,all_AAPCS_SP_bounded_writes_SIO_checks=True,no_full_corpus_claim=True,hardware_accessed=False,integration_GO=False,goal_complete=False)
+(W/'probe-result.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))

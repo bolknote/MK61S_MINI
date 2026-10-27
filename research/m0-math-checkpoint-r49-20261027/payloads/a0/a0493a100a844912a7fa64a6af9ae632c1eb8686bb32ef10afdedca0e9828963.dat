@@ -1,0 +1,17 @@
+{
+  "status": "REJECTED_INCREMENTAL_V1_STILL15_INSTRUCTIONS_SLOWER",
+  "ELF_sha256": "13096dc6861e54089962ba20fdbfa78d285dda133966667ff8af8370a07ff1d7",
+  "actual_public_ARM_calls": 171,
+  "actual_directed_MPFR_inputs": 19,
+  "candidate_wrong": 0,
+  "hard_input_whole_instructions": 649,
+  "hard_correct_Qfplib_instructions": 634,
+  "new_losing_unique_inputs_vs_R48": 0,
+  "full_corpus_run": false,
+  "initial_generator_assertion_ARM_MPFR_calls": 0,
+  "all_adverse_rows_retained": true,
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

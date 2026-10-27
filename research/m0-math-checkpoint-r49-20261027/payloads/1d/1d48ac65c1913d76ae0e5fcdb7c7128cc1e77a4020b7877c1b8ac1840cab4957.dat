@@ -1,0 +1,55 @@
+"""Exact local instruction reductions of the measured incremental prototype."""
+from pathlib import Path
+import difflib,hashlib,json,shutil
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+P=ROOT/'.build/m0-exp-q73-incremental-prototype-20261027'
+H=ROOT/'.build/m0-exp-q73-incremental-ratio9-host-20261027'
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+for n in ('core.S','small.S','entry.S','incremental.S','build.py','harness.py','model.py','probe.py'):
+    assert not(W/n).exists();shutil.copyfile(P/n,W/n)
+edits=[]
+def edit(name,before,after):
+    p=W/name;s=p.read_text();assert s.count(before)==1,(name,before,s.count(before))
+    p.write_text(s.replace(before,after));edits.append(dict(file=name,before=before,after=after))
+edit('incremental.S',' lsls r4,r1,#23\n lsrs r4,r4,#23',' lsls r4,r1,#23\n lsrs r4,r4,#22')
+edit('incremental.S',' lsls r5,r2,#11\n asrs r5,r5,#11\n lsls r5,r5,#10',' lsls r5,r2,#11\n asrs r5,r5,#1')
+before=''' ldr r0,[r7,#100]
+ lsls r0,r0,#9
+ lsrs r0,r0,#9
+ lsls r3,r0,#12
+ lsrs r4,r0,#20
+ ldr r1,[r7,#12]
+ ldr r2,=832
+ muls r1,r2
+ movs r2,#0
+ subs r3,r1
+ sbcs r4,r2
+ lsrs r0,r3,#25
+ lsls r4,r4,#7
+ orrs r0,r4
+ rsbs r0,r0,#0'''
+after=''' ldr r0,[r7,#100]
+ lsls r0,r0,#9
+ lsrs r0,r0,#3
+ ldr r1,[r7,#12]
+ movs r2,#13
+ muls r1,r2
+ subs r0,r1
+ asrs r0,r0,#19
+ rsbs r0,r0,#0'''
+edit('incremental.S',before,after)
+edit('incremental.S',' ldr r0,[r7,#40]\n lsls r0,r0,#3\n ldr r1,[r7,#36]\n lsrs r1,r1,#29\n orrs r0,r1\n muls r0,r6\n asrs r0,r0,#12',' ldr r0,[r7,#40]\n muls r0,r6\n asrs r0,r0,#9')
+edit('incremental.S',' ldr r1,[sp,#0]\n lsls r1,r1,#1\n subs r0,r1',' ldr r1,[sp,#0]\n subs r0,r1')
+edit('incremental.S',' /* Strict interval is (centre-38, centre+16). */\n cmp r0,#38',' /* Strict interval is (centre-45, centre+23). */\n cmp r0,#45')
+edit('incremental.S',' movs r1,#16\n rsbs r1,r1,#0',' movs r1,#23\n rsbs r1,r1,#0')
+edit('incremental.S','.Linc_below:\n movs r0,#0\n mvns r0,r0','.Linc_below:\n movs r0,#2')
+edit('incremental.S','Return -1/below, +1/above, 0/decline.','Return 2/below, 1/above, 0/decline.')
+edit('incremental.S','the 12-bit approximation of A/Q73','the 9-bit approximation of A/Q73')
+edit('entry.S',' bl mk61_q73_incremental_side\n cmp r0,#0\n beq .Lfallback_frame\n movs r3,#0\n cmp r0,#0\n bmi .Linc_below',' bl mk61_q73_incremental_side\n movs r3,#0\n cmp r0,#2\n beq .Linc_below\n cmp r0,#1\n bne .Lfallback_frame')
+edit('model.py','m0-exp-q73-incremental-coarse-host-20261027','m0-exp-q73-incremental-ratio9-host-20261027')
+for name in ('entry.S','incremental.S','model.py'):
+    (W/(name+'.patch')).write_text(''.join(difflib.unified_diff((P/name).read_text().splitlines(True),(W/name).read_text().splitlines(True),fromfile='parent/'+name,tofile='r2/'+name)))
+shutil.copyfile(H/'proof.json',W/'model-proof.json');shutil.copyfile(H/'result.json',W/'host-result.json')
+assert json.loads((W/'host-result.json').read_text())['hard_case']['kind']=='accepted'
+(W/'prepare-result.json').write_text(json.dumps(dict(status='EXACT_INCREMENTAL_R2_OPTIMIZATIONS',files={n:dict(parent_path=str(P/n),parent_sha256=sha(P/n),candidate_sha256=sha(W/n))for n in ('entry.S','incremental.S','model.py')},edits=edits,source_other_runtime_files_exact_parent=True,step_identity='((F<<12)-n*832)>>25 == ((F<<6)-n*13)>>19 for F23,n20',step_factored_signed32_range=[-(13*(1<<20)),(1<<29)-64],new_root_ratio_error_interval=[-8,9],new_final_q83_error_interval=[-45,23],no_new_tables_or_RAM=True,hardware_accessed=False,integration_GO=False,goal_complete=False),indent=2)+'\n')
+print((W/'prepare-result.json').read_text())

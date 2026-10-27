@@ -1,0 +1,37 @@
+{
+  "status": "FROZEN_Q83_GENERAL_HOST_STUDY_ONLY",
+  "files": {
+    "HANDOFF.md": {
+      "bytes": 1385,
+      "sha256": "2439177a81cbc37744f009ecfbed97d7dc6e2ca5288334f41cd4c44481e5f463"
+    },
+    "model-proof.json": {
+      "bytes": 1929,
+      "sha256": "0175bef9fa69c4a58c5164b10d356b31fd915fcfcc7bc22d7532e3d159a89823"
+    },
+    "records.jsonl.gz": {
+      "bytes": 1258948,
+      "sha256": "60a0f32f130dfe64d688e5dd4b0268dff58aaf78626cbb4c56bb4ac2ee5bb69c"
+    },
+    "result.json": {
+      "bytes": 1307,
+      "sha256": "6a4738f71d8884fc9a4eca9fd34a1398b801f319415f18f15f4a8cebf3d8e905"
+    },
+    "study.log": {
+      "bytes": 1307,
+      "sha256": "6a4738f71d8884fc9a4eca9fd34a1398b801f319415f18f15f4a8cebf3d8e905"
+    },
+    "study.py": {
+      "bytes": 5318,
+      "sha256": "70c54b2e25e30de82be5cd616d04e407712c9573f070bdca20744619b469bce9"
+    }
+  },
+  "all_producers_terminal": true,
+  "original_session_id": 86841,
+  "original_session_exit_code": 0,
+  "ARM_implemented": false,
+  "performance_measured": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

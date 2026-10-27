@@ -1,0 +1,17 @@
+{
+  "status": "REJECTED_Q83_GENERAL_BROAD_PATH_INITIAL_PERFORMANCE",
+  "ELF_sha256": "72bcd209b0749656be122d4a939111375bdee83390b2067de1b19e865c3db9ee",
+  "actual_ARM_calls": 2224,
+  "actual_directed_MPFR_inputs": 13,
+  "wrong": 0,
+  "hard_input_whole_instructions": 629,
+  "hard_correct_Qfplib_instructions": 634,
+  "new_losing_state_rows_vs_R48": 15,
+  "new_losing_unique_inputs_vs_R48": 5,
+  "full_corpus_run": false,
+  "all_adverse_rows_retained": true,
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

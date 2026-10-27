@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/build.py", line 82, in <module>
+    run(newcmd);f=fp.image_fingerprint(newout.read_bytes())
+    ~~~^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/build.py", line 58, in run
+    assert p.returncode==0,p.stderr
+           ^^^^^^^^^^^^^^^
+AssertionError: /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_exp.S: Assembler messages:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_exp.S:1699: Error: symbol `.Linc_below' is already defined
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_exp.S:1693: Error: branch out of range
+

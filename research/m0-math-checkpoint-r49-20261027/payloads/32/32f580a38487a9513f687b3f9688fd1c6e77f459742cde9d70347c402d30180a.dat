@@ -1,0 +1,11 @@
+{
+  "status": "PREPARED_INLINE_NEGATIVE_Q73_WITH_INCREMENTAL_CERTIFICATE",
+  "parent_FROZEN_sha256": "8f92255383f6640bc350f68552930060bb3cc060156686f92a3d077f4f4bdcbd",
+  "host_proof_sha256": "d8b753ae13f8a40ddfeb5c7b311b2fd67ee1ddac37cddd59aa5fb20fae265a5f",
+  "entry_sha256": "6a33a4ee5463e73560a59f9e8b47df1568c7e114332b8f1c681beb3cdac47616",
+  "rich_fixed_frame_bytes": 128,
+  "parent_frame_bytes": 72,
+  "retained_metadata_uses_existing_work_and_5extra_words": true,
+  "caller_primary_sources_unchanged": true,
+  "conditional_branch_near_stub_placement": true
+}

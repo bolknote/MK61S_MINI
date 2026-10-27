@@ -1,0 +1,42 @@
+{
+  "status": "FROZEN_INCREMENTAL_HOST_CERTIFICATE_ONLY",
+  "files": {
+    "AUTHOR-RESULT.json": {
+      "bytes": 413,
+      "sha256": "c8cdadf9cccc90054a3b4199858eb9140a9711735400effa03db29401417c0b1"
+    },
+    "HANDOFF.md": {
+      "bytes": 453,
+      "sha256": "745903a6c57149edbc19f74e71015a3db940455b0737dfeb18527fbe753d8409"
+    },
+    "proof.json": {
+      "bytes": 1120,
+      "sha256": "d8b753ae13f8a40ddfeb5c7b311b2fd67ee1ddac37cddd59aa5fb20fae265a5f"
+    },
+    "records.jsonl.gz": {
+      "bytes": 1127698,
+      "sha256": "606f7c722a5c27b0acdeff620a6c8e79f3099361b637a21ebe7ddb15ad56b448"
+    },
+    "result.json": {
+      "bytes": 1515,
+      "sha256": "f9d8a3adfde7177253b03adf4bf4b47616aff16606692347ce1694f0b8eb9dc3"
+    },
+    "source-edits.json": {
+      "bytes": 369,
+      "sha256": "fcd4838dab16ad73b65031146301397f2213f1202c15f8b74949a4788f5e3ecb"
+    },
+    "study.log": {
+      "bytes": 1515,
+      "sha256": "f9d8a3adfde7177253b03adf4bf4b47616aff16606692347ce1694f0b8eb9dc3"
+    },
+    "study.py": {
+      "bytes": 6029,
+      "sha256": "c3ce21ade55be19d481a9789fdb9f6ee2183f67bd5169fe2c2fa694ff0248430"
+    }
+  },
+  "all_producers_terminal": true,
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

@@ -1,0 +1,72 @@
+{
+  "status": "PASS_Q83_GENERAL_NEGATIVE_RESIDUAL_RATIONAL_BOUNDS",
+  "parent_V3_FROZEN_sha256": "2731f20f84226b6c85137b213c6ff2d46808b5f6f9826afe3dd35236865f8d7c",
+  "input_domain": "positive x, nonzero n and index, negative r73, abs(r73)<3*2^59-2^32; n<2^20",
+  "step108": 439334219741659786809131769024,
+  "step108_identity": "STEP96*4096 - 832; floor of true step*2^108 from inherited directed ln2 bounds",
+  "reduction_identity": "r83 = r73*1024 - floor(((n*STEP96 mod2^23)*4096 - n*832)/2^25)",
+  "reduction_error_open_interval": [
+    -1.03125,
+    0
+  ],
+  "polynomial_error_open_interval": [
+    -4,
+    3
+  ],
+  "final_root_error_open_interval": [
+    -11,
+    8
+  ],
+  "bounds": {
+    "square": {
+      "exact": [
+        9223934973923295233,
+        9223372036854775808
+      ],
+      "decimal": 1.0000610337592661
+    },
+    "product60": {
+      "exact": [
+        1153484441675366401,
+        1152921504606846976
+      ],
+      "decimal": 1.000488270074129
+    },
+    "cubic_coefficient60": {
+      "exact": [
+        725096143330574889461036003360771,
+        152118072027387528179604384645120
+      ],
+      "decimal": 4.766666666666849
+    },
+    "negative_below": {
+      "exact": [
+        638473020913147569547948756013877,
+        162259276829213363391578010288128
+      ],
+      "decimal": 3.934893790912028
+    },
+    "negative_above": {
+      "exact": [
+        223451199474743910530036006927,
+        99035203142830421991929937920
+      ],
+      "decimal": 2.2562805182767023
+    },
+    "root_product": {
+      "exact": [
+        14507017601655181548716033,
+        9671406556917033397649408
+      ],
+      "decimal": 1.499990463256836
+    }
+  },
+  "polynomial_uses_degree5_only": true,
+  "existing_root94_to_root83_shift": 11,
+  "root20_MUL16_terms": true,
+  "no_new_lookup_tables": true,
+  "no_new_MPFR_or_ARM": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

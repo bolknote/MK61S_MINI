@@ -1,0 +1,18 @@
+{
+  "status": "PASS_R2_EXACT_SOURCE_PREPARATION_REPRODUCTION",
+  "files": {
+    "core.S": "b87feb6d7a14dd5575a96005646e0820e274221ce660a53d329eeb6310a78e91",
+    "small.S": "6206d5716db94e72d72aa10f3dabb6ddb47e1f88e29a48d1cec5d60f2d5352db",
+    "entry.S": "d9bcda479b906a2149d3701bfbb681da0d5d5823dbbd594c7734cf26dc5a5a8a",
+    "incremental.S": "15c7430b22ef9d023b83cfe3a0c313c86482f5335f28ca08f97e240be0ef2b67",
+    "build.py": "4b0693b3696d4e6989e405b1e18fcce74caf8e407c950f2f3f2636916774941e",
+    "harness.py": "3d76da087b380539280f5abf77b240080a894fff41e6b31df9e96ff5ffa3623a",
+    "model.py": "f6e7b32255a8a84f0411a69126fca50ae8dd98252be9a82a2fb7316d13f675a5",
+    "probe.py": "af6acbb2cbdcc60eb59b4ed65ace126b4afca8fe9eb596b3be083892185ae3ef",
+    "model-proof.json": "9ce98d01cf33fbd0308d29949385d42a8e0818df2bdaa4197eff231384c75bb7",
+    "host-result.json": "4ae5d776dbd5470cc22ee0ee72ef390c10f4b9c56be4fcd1adc36b4cca07d986"
+  },
+  "original_runtime_sources_unchanged": true,
+  "no_build_ARM_MPFR_calls": true,
+  "no_frozen_producer_executed_in_place": true
+}

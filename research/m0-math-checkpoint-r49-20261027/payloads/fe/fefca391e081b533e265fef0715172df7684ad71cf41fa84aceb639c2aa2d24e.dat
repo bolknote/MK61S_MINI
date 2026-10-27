@@ -1,0 +1,19 @@
+{
+  "parent_FROZEN_sha256": "2731f20f84226b6c85137b213c6ff2d46808b5f6f9826afe3dd35236865f8d7c",
+  "files": {
+    "core.S": {
+      "parent_sha256": "b87feb6d7a14dd5575a96005646e0820e274221ce660a53d329eeb6310a78e91",
+      "candidate_sha256": "b87feb6d7a14dd5575a96005646e0820e274221ce660a53d329eeb6310a78e91",
+      "parent_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-public-v3-20261027/core.S"
+    },
+    "entry.S": {
+      "parent_sha256": "ad35cc066153d3239a852d7204453a4f3d0d759ad2fa00e224ef9072a31a0660",
+      "candidate_sha256": "5c154f4c284534416a5b2e62699ee7cb2abc4b543b560b7ffe849874667c3e50",
+      "parent_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-public-v3-20261027/entry.S"
+    }
+  },
+  "additional_source": {
+    "path": "small.S",
+    "sha256": "6206d5716db94e72d72aa10f3dabb6ddb47e1f88e29a48d1cec5d60f2d5352db"
+  }
+}

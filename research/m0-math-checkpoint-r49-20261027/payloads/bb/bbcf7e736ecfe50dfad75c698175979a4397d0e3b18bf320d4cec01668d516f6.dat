@@ -1,0 +1,22 @@
+{
+  "all_original_handles_consumed_terminal": true,
+  "jobs": [
+    {
+      "phase": "targeted",
+      "session_id": 24720,
+      "exit_code": 0
+    },
+    {
+      "phase": "full",
+      "session_id": 71184,
+      "exit_code": 0
+    },
+    {
+      "phase": "caller",
+      "session_id": 35109,
+      "exit_code": 0
+    }
+  ],
+  "probe_build_model_and_sourceproof_commands_terminal0": true,
+  "no_observation_timeout_restart": true
+}

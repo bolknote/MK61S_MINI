@@ -1,0 +1,17 @@
+{
+  "legacy_R12_guard_caller": "mk61_m0_exp_fallback",
+  "reason": "The byte-identical C++ R12 caller is the explicitly named fallback; optimized public exp is assembly",
+  "all17_negative_controls_unchanged": true,
+  "disabled_units_checked": 4,
+  "disabled_targets": 3,
+  "private_fingerprint_pure_function_source": "support/fingerprint.py",
+  "initial_guard_correctly_rejected_marker_outside_new_ASM_public_function": true,
+  "initial_failed_guard_ARM_MPFR_calls": 0,
+  "no_runtime_instruction_change_by_consumer_adaptations": true,
+  "cold_bridge_and_normalized_guard_explicit_legacy_symbol_map": true,
+  "normalized_CPP_symbol_map": {
+    "mk61_m0_exp_fallback": "mk61_m0_exp",
+    "_ZN12compact_math3expEd": "old alias removed from CPP, now in new ASM"
+  },
+  "allocated_bytes_and_CFG_predicates_not_weakened": true
+}

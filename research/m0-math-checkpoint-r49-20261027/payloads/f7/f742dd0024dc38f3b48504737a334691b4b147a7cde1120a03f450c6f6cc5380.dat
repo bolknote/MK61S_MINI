@@ -1,0 +1,40 @@
+{
+  "status": "PASS_ALL_TERMINAL_DIAGNOSTIC_PINS",
+  "packets": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q83-general-prototype-20261027",
+      "FROZEN_sha256": "faabdaef93856e6a4ad1029dfd9f322add6b713f3a1e98056beae035cdcc23de",
+      "artifacts": 34,
+      "author_sha256": "2e978e243e7e9e9460b94508083ddb55aa90c008afc6075d582a01da00755596"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-incremental-prototype-20261027",
+      "FROZEN_sha256": "ebbfbfb56b47667311710a6b1476eeb712066350ff27ef744f3c787cbe17b459",
+      "artifacts": 33,
+      "author_sha256": "a0493a100a844912a7fa64a6af9ae632c1eb8686bb32ef10afdedca0e9828963"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-incremental-host-20261027",
+      "FROZEN_sha256": "51af79a8630ffd95dc3ed071cb8c781bb688b1c1cfbbc64fd72ff3b1d0372211",
+      "artifacts": 7,
+      "author_sha256": "0ef3166d9664e4da812aa9635dc60f703d062361a54840bf720fefd2462fc317"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-incremental-coarse-host-20261027",
+      "FROZEN_sha256": "c1cec8ec2b2d581cc28ebb8aa99793e661c9b7208a8cd8784ae02046edf7a65e",
+      "artifacts": 8,
+      "author_sha256": "c8cdadf9cccc90054a3b4199858eb9140a9711735400effa03db29401417c0b1"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-incremental-ratio9-host-20261027",
+      "FROZEN_sha256": "0b74e54ef4851196197820f0c1a335f9f63ddcfbdd617c66fd4eda392491eb89",
+      "artifacts": 8,
+      "author_sha256": "1cce875038d178ee532850d28c61aa639836aaf12525a9afa815eaa7e872e262"
+    }
+  ],
+  "no_new_ARM_MPFR_calls": true,
+  "selected_library_unchanged": "R48",
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

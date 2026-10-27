@@ -1,0 +1,46 @@
+"""Exact rational error bounds and private host replay; no ARM/MPFR producer."""
+from pathlib import Path
+from fractions import Fraction as F
+from collections import Counter
+import gzip,hashlib,json,sys,time
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+import model
+P=ROOT/'.build/m0-exp-q73-public-v3-20261027'
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+assert sha(P/'FROZEN.json')=='2731f20f84226b6c85137b213c6ff2d46808b5f6f9826afe3dd35236865f8d7c'
+U=F(1,1<<12);B=1<<16;ES=1+F((B-1)**2*(1+2*B),1<<61)
+EL=F(2);EQ=2+ES/F(3*(1<<24))
+EC=2+(U*(1<<7)*(1+ES/F(1<<31))+U*U*(1<<20))/15
+EP=1+F((B-1)**2*(1+2*B+3*B*B),1<<64)
+X=U*U*(1<<36)
+E6=3*X*X*(1+ES/F(1<<49))/F(45*(1<<27))+F(1,45)+X**3/F((1<<27)*45*4096)+1
+R7=U**7*(1<<85)/F(5040)/(1-U)
+H=ES/2+F(1,2);ratio=U*U*(1<<21);T=U/6+U*U/24+U**3/120
+positive=H+ES*T+ratio*(EL+EQ+EC)+EP+E6+R7
+negative_below=ES*T+ratio*(EL+EC)+EP+R7
+negative_above=H+ratio*EQ+E6
+assert positive<7 and negative_below<5 and negative_above<3,(positive,negative_below,negative_above)
+for v in range(65539):
+    assert 0<=v//3-((v*21845)>>16)<=1
+for v in range(69631):
+    assert 0<=v//15-((v*4369)>>16)<=1
+proof=dict(status='PASS_Q85_SMALL_EXACT_RATIONAL_BOUNDS',model_sha256=sha(W/'model.py'),parent_FROZEN_sha256=sha(P/'FROZEN.json'),input_domain='2^-21 <= abs(x) < 2^-12, exactly dyadic r73; original binary64 input',strict_error_intervals=dict(positive=[0,7],negative=[-5,3]),bounds={n:dict(fraction=[v.numerator,v.denominator],decimal=float(v))for n,v in locals().copy().items()if n in ('ES','EL','EQ','EC','EP','E6','R7','positive','negative_below','negative_above')},division_identity='B=65536; N/3 = ((a1+a2+a3)+(a2+a3)B+a3 B^2)*21845 + (a0+a1+a2+a3)/3; final small quotient may be one below floor',product64_omits_only_columns=[0,1,2],square_omits_only_columns=[0,1],positive_approximation_strictly_below_exp=True,negative_error_identity='H - product_error + sixth_error - alternating_remainder7',integer_output_midpoints_and_open_halfunit_endpoint_checks=True,new_lookup_tables=0,new_MPFR_ARM_calls=0,hardware_accessed=False,integration_GO=False,goal_complete=False)
+(W/'model-proof.json').write_text(json.dumps(proof,indent=2)+'\n')
+print('PROOF',json.dumps({n:float(v)for n,v in [('positive',positive),('negative_below',negative_below),('negative_above',negative_above)]}),flush=True)
+oldloss=set(json.loads((P/'full-result.json').read_text())['remaining_losing_inputs']);seen=set();kinds=Counter();old=Counter();wrong=0;ambiguous=[];started=time.monotonic()
+source=ROOT/'.build/m0-math-unified-ddiv-power-dispatch-r48-qualification-20261026/exp-records.jsonl.gz'
+with gzip.open(source,'rt')as src,gzip.GzipFile(filename=str(W/'host-records.jsonl.gz'),mode='wb',mtime=0)as out:
+    for line in src:
+        row=json.loads(line);hx=row['x']
+        if hx in seen:continue
+        seen.add(hx);x=int(hx,16);e=((x&0x7fffffffffffffff)>>52)-1023
+        if not -21<=e<=-13:continue
+        v=model.small_evaluate(x);kinds[v['kind']]+=1
+        if hx in oldloss:old[v['kind']]+=1
+        if v['kind']=='accepted':
+            assert f"{v['output']:016X}"==row['expected'],(hx,v,row['expected'])
+        else:ambiguous.append(hx)
+        out.write((json.dumps(dict(x=hx,expected=row['expected'],previous_V3_loss=hx in oldloss,model=v),separators=(',',':'))+'\n').encode())
+report=dict(status='PASS_Q85_SMALL_HOST_CACHED_GOLD',unique_full_corpus_scanned=len(seen),domain_classification=dict(kinds),previous_V3_loss_classification=dict(old),ambiguous_inputs=ambiguous,accepted_wrong=0,input_records_sha256=sha(source),model_proof_sha256=sha(W/'model-proof.json'),records_sha256=sha(W/'host-records.jsonl.gz'),no_ARM_implementation_or_performance_claim=True,new_MPFR_ARM_calls=0,hardware_accessed=False,integration_GO=False,goal_complete=False,elapsed_seconds=time.monotonic()-started)
+(W/'host-result.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2),flush=True)

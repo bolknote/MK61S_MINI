@@ -1,0 +1,47 @@
+"""Verify new integer helpers and complete public exp against fresh MPFR."""
+from pathlib import Path
+from collections import Counter
+import gzip,hashlib,json,random,struct,sys
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',None)
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+sys.path[:0]=[str(W),str(ROOT/'.build/m0-float-fma-qualification-20261023/support'),str(ROOT/'.build/m0-float-fma-qualification-20261023')]
+from harness import machine
+from m0_mpfr_oracle import Oracle
+from oracles import equal
+import model
+m=machine();oracle=Oracle();rng=random.Random(0x853127);calls=Counter();costs={};records=[]
+assert not(W/'smoke-result.json').exists()
+def call(name,a,b=0):
+    v,secondary,cost=m.call(name,a,b,count=True);calls[name]+=1
+    costs.setdefault(name,Counter())[cost]+=1
+    return v,secondary,cost
+for a in [0,1,65535,65536,(1<<62)-1]+[rng.randrange(1<<62)for _ in range(2048)]:
+    v,_,c=call('mk61_q85_square',a);assert v==model.square85(a),(a,v,model.square85(a),c)
+for a in [0,1,65535,65536,(1<<52)-1]+[rng.randrange(1<<52)for _ in range(2048)]:
+    v,_,c=call('mk61_q85_divide3',a);assert v==model.divide3_under(a),(a,v,model.divide3_under(a),c)
+for i in range(2053):
+    a=(1<<32)-1 if i==0 else rng.randrange(1<<32);b=(1<<32)-1 if i==0 else rng.randrange(1<<32)
+    v,_,c=call('mk61_q85_multiply_high32',a|(b<<32));assert v&0xffffffff==(a*b)>>32,(a,b,v,c)
+for i in range(2053):
+    a=(1<<63)-1 if i==0 else rng.randrange(1<<63);b=(1<<51)-1 if i==0 else rng.randrange(1<<51)
+    v,_,c=call('mk61_q85_product64',a,b);assert v==model.product64(a,b),(a,b,v,model.product64(a,b),c)
+states=dict(READY=(0,0,0,0,0,0,1),DIRTY=(17,3,17,3,5,2,3),PENDING=(0x80000001,7,0x80000001,7,0x11223344,0x55667788,2))
+jobs=set()
+for e in range(-22,-10):
+    for sign in (0,1):
+        for mantissa in (0,1,(1<<52)-1):jobs.add((sign<<63)|((e+1023)<<52)|mantissa)
+for i in range(256):jobs.add((rng.randrange(2)<<63)|(rng.randrange(1002,1011)<<52)|rng.getrandbits(52))
+jobs.update(int(h,16)for h in ('3EDF98C5307EDE68','4068D94447091680','0000000000000000','8000000000000000','7FF0000000000000','FFF0000000000000','7FF0000000000001'))
+for x in sorted(jobs):
+    gold=oracle.reference('exp',x)
+    for state,words in states.items():
+        before=struct.pack('<7I',*words);m.uc.mem_write(0xd0000060,before)
+        v,_,c=call('mk61_q73_exp',x)
+        assert equal(v,gold,64),(f'{x:016X}',state,f'{v:016X}',f'{gold:016X}',c,model.evaluate(x))
+        after=bytes(m.uc.mem_read(0xd0000060,28));assert after==before if state!='READY'else not struct.unpack('<7I',after)[6]&2
+        records.append(dict(x=f'{x:016X}',SIO=state,expected=f'{gold:016X}',actual=f'{v:016X}',instructions=c))
+with gzip.GzipFile(filename=str(W/'smoke-records.jsonl.gz'),mode='wb',mtime=0)as f:
+    for r in records:f.write((json.dumps(r,separators=(',',':'))+'\n').encode())
+report=dict(status='PASS_Q85_HELPERS_AND_COMPLETE_PUBLIC_EXP_SMOKE',calls=dict(calls),exp_inputs=len(jobs),MPFR_oracle_inputs_including_sNaN=len(jobs),sNaN_shortcuts=1,candidate_wrong=0,instruction_histograms={k:dict(v)for k,v in costs.items()},all_AAPCS_SP_bounded_writes_SIO_checks=True,loader=m.unified_loader_report,observed_stack_bytes=0x2003fff0-m.stack_lowest,not_universal_stack_bound=True,hardware_accessed=False,integration_GO=False,goal_complete=False)
+(W/'smoke-result.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))

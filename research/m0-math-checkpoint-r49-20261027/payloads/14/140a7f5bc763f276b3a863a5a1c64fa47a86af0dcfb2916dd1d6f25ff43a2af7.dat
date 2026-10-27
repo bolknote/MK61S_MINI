@@ -1,0 +1,28 @@
+{
+  "status": "SOURCE_INTEGRATED_EXP_ENTRY_PENDING_BUILD_GATES",
+  "R48_source_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "prototype_FROZEN_sha256": "c0264f8367cc40ace6b3cb93697e0244f7cb09daf1a2be07e6ec45e8e300d539",
+  "CPP_before_sha256": "40e2e2caed606b02e4c5ea538988917a50ef23b45e699424da57f02174745aa8",
+  "CPP_after_sha256": "13722790e081bed28d399f9af1c7f0a560676558588daa714e1e97146ac73e8e",
+  "CPP_name_rewrite_RP_v6M_only": true,
+  "new_assembly_sha256": "ff045534cb051a1e7d88a37052c93e0c1d30f08d30b0ca930563d71276341fe4",
+  "default_M0_M4_new_assembly_guard_empty": true,
+  "root_table_export_alias_no_allocated_data": true,
+  "prototype_symbol_renames": {
+    "mk61_q73_exp": "mk61_m0_exp",
+    "mk61_m0_exp": "mk61_m0_exp_fallback",
+    "_ZN7m0_eabiL16refine_exp_tableE": "mk61_m0_exp_refine_roots"
+  },
+  "assembly_input_order": [
+    "core.S",
+    "entry.S",
+    "small.S",
+    "incremental.S"
+  ],
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "initial_assembly_sha256": "e16fe08f1d115e1f69d7d16254865b36f4c5e3d0fe5ca99d33ad7d37ed3d77cc",
+  "local_labels_namespaced_per_original_object": true
+}

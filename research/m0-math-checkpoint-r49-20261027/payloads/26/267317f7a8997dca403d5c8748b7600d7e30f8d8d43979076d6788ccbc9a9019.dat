@@ -1,0 +1,3 @@
+Incremental v1 preserves intermediate data in owned caller frame and resolves rounding with no second polynomial. Correct on19-input probe, but649 vs634 for the last case. One source-generator assertion before build/ARM is preserved; corrected root destination was r5. Three-limb and source realization details retained. Superseded by r2 exact bit/step factoring and9-bit root ratio.
+
+All producers terminated, no frozen producer rerun. Selected author library remains R48; no independent/adoption/integration/physical-cycle/release GO. No canonical/Git/device change.

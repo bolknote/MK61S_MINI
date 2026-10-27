@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/verify-normalized-caller.py", line 16, in <module>
+    assert[r for r in a if r[idx]=='.m0_exp_core']==[r for r in b if r[idx]=='.m0_exp_core']
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

@@ -1,0 +1,29 @@
+--- R48/native_eabi_m0.cpp
++++ R49/native_eabi_m0.cpp
+@@ -965,7 +965,12 @@
+ extern "C" __attribute__((optimize("Os"),noinline,noipa,cold))
+ MK61_SOFT_PCS double mk61_m0_exp_positive_dispatch(double,uint32_t);
+ #endif
+-MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_exp(double x) {
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && defined(__ARM_ARCH_6M__)
++#define MK61_M0_EXP_ENTRY mk61_m0_exp_fallback
++#else
++#define MK61_M0_EXP_ENTRY mk61_m0_exp
++#endif
++MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double MK61_M0_EXP_ENTRY(double x) {
+   const U a=bits(x),m=a&D::Magnitude;
+   if(m>=UINT64_C(0x4090000000000000)) {
+     if(m>D::Infinity) return real(a|D::Quiet);
+@@ -1408,7 +1413,12 @@
+   ".thumb_set _ZN12compact_math2lnEd,mk61_m0_ln\n"
+   ".global _ZN12compact_math5log10Ed\n"
+   ".thumb_set _ZN12compact_math5log10Ed,mk61_m0_log10\n"
++#if defined(__ARM_ARCH_6M__)
++  ".global mk61_m0_exp_refine_roots\n"
++  ".set mk61_m0_exp_refine_roots,_ZN7m0_eabiL16refine_exp_tableE\n"
++#else
+   ".global _ZN12compact_math3expEd\n"
+   ".thumb_set _ZN12compact_math3expEd,mk61_m0_exp\n"
++#endif
+ );
+ #endif

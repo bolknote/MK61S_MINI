@@ -1,0 +1,100 @@
+{
+  "status": "EXACT_INCREMENTAL_R2_OPTIMIZATIONS",
+  "files": {
+    "entry.S": {
+      "parent_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-incremental-prototype-20261027/entry.S",
+      "parent_sha256": "6a33a4ee5463e73560a59f9e8b47df1568c7e114332b8f1c681beb3cdac47616",
+      "candidate_sha256": "d9bcda479b906a2149d3701bfbb681da0d5d5823dbbd594c7734cf26dc5a5a8a"
+    },
+    "incremental.S": {
+      "parent_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-incremental-prototype-20261027/incremental.S",
+      "parent_sha256": "529774ad9a8e1693e1a43065aeba179946345bb21a0a95624e58262f19aa195a",
+      "candidate_sha256": "15c7430b22ef9d023b83cfe3a0c313c86482f5335f28ca08f97e240be0ef2b67"
+    },
+    "model.py": {
+      "parent_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-incremental-prototype-20261027/model.py",
+      "parent_sha256": "e9c58b83f59a274bd0af7828cf009153bd29afb21e85b3e3363ea401a3d81e29",
+      "candidate_sha256": "f6e7b32255a8a84f0411a69126fca50ae8dd98252be9a82a2fb7316d13f675a5"
+    }
+  },
+  "edits": [
+    {
+      "file": "incremental.S",
+      "before": " lsls r4,r1,#23\n lsrs r4,r4,#23",
+      "after": " lsls r4,r1,#23\n lsrs r4,r4,#22"
+    },
+    {
+      "file": "incremental.S",
+      "before": " lsls r5,r2,#11\n asrs r5,r5,#11\n lsls r5,r5,#10",
+      "after": " lsls r5,r2,#11\n asrs r5,r5,#1"
+    },
+    {
+      "file": "incremental.S",
+      "before": " ldr r0,[r7,#100]\n lsls r0,r0,#9\n lsrs r0,r0,#9\n lsls r3,r0,#12\n lsrs r4,r0,#20\n ldr r1,[r7,#12]\n ldr r2,=832\n muls r1,r2\n movs r2,#0\n subs r3,r1\n sbcs r4,r2\n lsrs r0,r3,#25\n lsls r4,r4,#7\n orrs r0,r4\n rsbs r0,r0,#0",
+      "after": " ldr r0,[r7,#100]\n lsls r0,r0,#9\n lsrs r0,r0,#3\n ldr r1,[r7,#12]\n movs r2,#13\n muls r1,r2\n subs r0,r1\n asrs r0,r0,#19\n rsbs r0,r0,#0"
+    },
+    {
+      "file": "incremental.S",
+      "before": " ldr r0,[r7,#40]\n lsls r0,r0,#3\n ldr r1,[r7,#36]\n lsrs r1,r1,#29\n orrs r0,r1\n muls r0,r6\n asrs r0,r0,#12",
+      "after": " ldr r0,[r7,#40]\n muls r0,r6\n asrs r0,r0,#9"
+    },
+    {
+      "file": "incremental.S",
+      "before": " ldr r1,[sp,#0]\n lsls r1,r1,#1\n subs r0,r1",
+      "after": " ldr r1,[sp,#0]\n subs r0,r1"
+    },
+    {
+      "file": "incremental.S",
+      "before": " /* Strict interval is (centre-38, centre+16). */\n cmp r0,#38",
+      "after": " /* Strict interval is (centre-45, centre+23). */\n cmp r0,#45"
+    },
+    {
+      "file": "incremental.S",
+      "before": " movs r1,#16\n rsbs r1,r1,#0",
+      "after": " movs r1,#23\n rsbs r1,r1,#0"
+    },
+    {
+      "file": "incremental.S",
+      "before": ".Linc_below:\n movs r0,#0\n mvns r0,r0",
+      "after": ".Linc_below:\n movs r0,#2"
+    },
+    {
+      "file": "incremental.S",
+      "before": "Return -1/below, +1/above, 0/decline.",
+      "after": "Return 2/below, 1/above, 0/decline."
+    },
+    {
+      "file": "incremental.S",
+      "before": "the 12-bit approximation of A/Q73",
+      "after": "the 9-bit approximation of A/Q73"
+    },
+    {
+      "file": "entry.S",
+      "before": " bl mk61_q73_incremental_side\n cmp r0,#0\n beq .Lfallback_frame\n movs r3,#0\n cmp r0,#0\n bmi .Linc_below",
+      "after": " bl mk61_q73_incremental_side\n movs r3,#0\n cmp r0,#2\n beq .Linc_below\n cmp r0,#1\n bne .Lfallback_frame"
+    },
+    {
+      "file": "model.py",
+      "before": "m0-exp-q73-incremental-coarse-host-20261027",
+      "after": "m0-exp-q73-incremental-ratio9-host-20261027"
+    }
+  ],
+  "source_other_runtime_files_exact_parent": true,
+  "step_identity": "((F<<12)-n*832)>>25 == ((F<<6)-n*13)>>19 for F23,n20",
+  "step_factored_signed32_range": [
+    -13631488,
+    536870848
+  ],
+  "new_root_ratio_error_interval": [
+    -8,
+    9
+  ],
+  "new_final_q83_error_interval": [
+    -45,
+    23
+  ],
+  "no_new_tables_or_RAM": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

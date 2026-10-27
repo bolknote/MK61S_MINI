@@ -1,0 +1,24 @@
+{
+  "status": "PASS_Q85_SMALL_HOST_CACHED_GOLD",
+  "unique_full_corpus_scanned": 568856,
+  "domain_classification": {
+    "accepted": 14321,
+    "ambiguous": 1
+  },
+  "previous_V3_loss_classification": {
+    "accepted": 398
+  },
+  "ambiguous_inputs": [
+    "3EDF98C5307EDE68"
+  ],
+  "accepted_wrong": 0,
+  "input_records_sha256": "e0c6de17de9be68c9cc2d76f7f8bbfad7ec30779ae89dcf8e33ef80ff34552bc",
+  "model_proof_sha256": "2e5a79e323aae39bd0a69e65c1449b379dc3f405aceaf96db13e55b5bfe71e28",
+  "records_sha256": "534eaab72028c8e3e9c0938b4c360ec53cc8811b6035ae24a062624c99947b7e",
+  "no_ARM_implementation_or_performance_claim": true,
+  "new_MPFR_ARM_calls": 0,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false,
+  "elapsed_seconds": 3.1456054159789346
+}

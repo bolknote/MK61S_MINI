@@ -1,0 +1,11 @@
+{
+  "parent_source": ".build/m0-exp-q73-incremental-host-20261027/study.py",
+  "parent_sha256": "2a9cc46014c21880a3101759bd56ac00361cb515ffc18740d770aecaa031a57b",
+  "candidate_sha256": "c3ce21ade55be19d481a9789fdb9f6ee2183f67bd5169fe2c2fa694ff0248430",
+  "coarse_cubic_residue_divisor": 120,
+  "coarse_cubic_error_less": 124,
+  "final_bounds": [
+    -38,
+    16
+  ]
+}

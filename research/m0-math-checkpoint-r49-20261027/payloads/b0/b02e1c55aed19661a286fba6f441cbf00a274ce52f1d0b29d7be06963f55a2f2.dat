@@ -1,0 +1,41 @@
+{
+  "all_consumed_terminal": true,
+  "jobs": [
+    {
+      "phase": "initial-wide-model",
+      "session_id": 34380,
+      "exit_code": 0
+    },
+    {
+      "phase": "small-model",
+      "session_id": 67074,
+      "exit_code": 0
+    },
+    {
+      "phase": "smoke",
+      "session_id": 94052,
+      "exit_code": 0
+    },
+    {
+      "phase": "targeted",
+      "session_id": 72873,
+      "exit_code": 0
+    },
+    {
+      "phase": "full",
+      "session_id": 7399,
+      "exit_code": 0
+    },
+    {
+      "phase": "caller-state",
+      "session_id": 62246,
+      "exit_code": 0
+    },
+    {
+      "phase": "margin-classification",
+      "session_id": 2424,
+      "exit_code": 0
+    }
+  ],
+  "no_observation_timeout_restarts": true
+}

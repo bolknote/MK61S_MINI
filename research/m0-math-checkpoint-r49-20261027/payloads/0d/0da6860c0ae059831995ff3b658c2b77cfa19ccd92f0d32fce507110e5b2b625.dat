@@ -1,0 +1,63 @@
+{
+  "status": "BUILT_TRUE_SOURCE_R49_EXP_INTEGRATION_PENDING_QUALIFICATION",
+  "images": {
+    "candidate": {
+      "ELF_sha256": "e42e81761f1aa7c5d756eec06ec5336e0c6e18149e40f938b85c4cf376f723db",
+      "scratch_y_bytes": 4080,
+      "all_undefined_symbols_resolved": true,
+      "public_exp_alias_same_address": true,
+      "legacy_fallback_separate": true,
+      "root_alias_same_existing_table_address": true
+    },
+    "zero-control": {
+      "ELF_sha256": "4ce521eea4564285fe7ceb557f6e9ca304ed831d047f9fd68c622d0e7b63c781",
+      "scratch_y_bytes": 4080,
+      "all_undefined_symbols_resolved": true,
+      "public_exp_alias_same_address": true,
+      "legacy_fallback_separate": true,
+      "root_alias_same_existing_table_address": true
+    }
+  },
+  "parent_source_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "prototype_FROZEN_sha256": "c0264f8367cc40ace6b3cb93697e0244f7cb09daf1a2be07e6ec45e8e300d539",
+  "unchanged_objects": [
+    "RP-merged-asm.o",
+    "generic_M0-merged-cpp.o",
+    "generic_M0-merged-asm.o",
+    "M4_soft-merged-cpp.o",
+    "M4_soft-merged-asm.o",
+    "M4_hard-merged-cpp.o",
+    "M4_hard-merged-asm.o",
+    "RP-unified-native_eabi_m0_rp2040.S.o",
+    "RP-unified-native_eabi_m0_cr.cpp.o",
+    "RP-unified-compact_math.cpp.o",
+    "RP-unified-native_eabi_m0_reciprocal1.S.o",
+    "RP-unified-native_eabi_m0_reciprocal1_sw.S.o",
+    "RP-unified-boundary.o",
+    "RP-unified-native_math_memory.c.o",
+    "RP-unified-native_math_memory_fill.S.o",
+    "RP-unified-native_math_bootrom.c.o",
+    "RP-unified-loader.o",
+    "RP-zero-control-sw.o"
+  ],
+  "RP_CPP_change": {
+    "allocated_bytes_exact": true,
+    "only_expected_fallback_name_and_alias_symbols_changed": true
+  },
+  "new_objects": [
+    "RP-exp-asm.o",
+    "generic_M0-exp-asm.o",
+    "M4_soft-exp-asm.o",
+    "M4_hard-exp-asm.o"
+  ],
+  "all18_other_original_objects_exact": true,
+  "default_M0_M4_original_objects_exact": true,
+  "new_default_M0_M4_exp_objects_empty": true,
+  "new_lookup_table_global_RAM_libgcc_bytes": 0,
+  "source_and_private_symbol_guards_pending": true,
+  "full_coupled_qualification_pending": true,
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

@@ -1,0 +1,37 @@
+{
+  "status": "PASS_INCREMENTAL_Q73_STRICT_RATIONAL_BOUNDS",
+  "input_domain": "positive input, nonzero n/index, negative residual with abs(r73)<3*2^59-2^32",
+  "coefficient_error_intervals_Q10": {
+    "combined_linear_minus_quartic": [
+      -1,
+      2
+    ],
+    "cubic": [
+      0,
+      124
+    ]
+  },
+  "square_half_error83_interval": "rawSquareLow10 + [0,4)",
+  "product_error83_interval": "pfrac10 + omittedCross + propagatedCoefficient + (-1,12)",
+  "delta_correction83_interval": "inputCorrection + rawSquareLow10 - productCentre + (-14,6)",
+  "root_fraction83_interval": "fraction10 + (-1,2)",
+  "root_product_error83_interval": "2*rawRootLow9 + [0,8)",
+  "root_ratio9_approximation": "floor(A73/2^64); abs(deltaCentre)<4096 gives multiplication error(-8,9)",
+  "final_q83_error_open_interval": [
+    -45,
+    23
+  ],
+  "cubic_error_upper": [
+    253849747064329,
+    2061584302080
+  ],
+  "product_error_upper": [
+    209271233069983,
+    17592186044416
+  ],
+  "no_new_lookup_tables": true,
+  "no_new_ARM_MPFR_calls": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-incremental-r2-proof-20261027/proof.py", line 18, in <module>
+    assert entry.count(needle)==1,needle
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError:  str r3,[sp,#96]

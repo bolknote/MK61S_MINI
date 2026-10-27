@@ -1,0 +1,63 @@
+{
+  "status": "PASS_SOURCE_INTEGRATION_NUMERICAL_CODE_AND_BANK_VENEER_EQUIVALENCE",
+  "text_rodata_data_bss_and_other_allocated_sections_exact": true,
+  "public_entry_and_fallback_addresses_mapped": true,
+  "all_changed_front_bytes_only_5_BL32_to_permuted_identical_stubs": true,
+  "calls": [
+    {
+      "call": "0x2003829e",
+      "old_stub": "0x20038fe0",
+      "new_stub": "0x20038fb0",
+      "identical_absolute_callee": "0x1001eb89",
+      "callee_symbols": [
+        "__aeabi_lmul"
+      ]
+    },
+    {
+      "call": "0x20038826",
+      "old_stub": "0x20038fa0",
+      "new_stub": "0x20038fe0",
+      "identical_absolute_callee": "0x10012f39",
+      "callee_symbols": [
+        "pow_small_integer"
+      ]
+    },
+    {
+      "call": "0x20038868",
+      "old_stub": "0x20038fb0",
+      "new_stub": "0x20038fd0",
+      "identical_absolute_callee": "0x10038ff1",
+      "callee_symbols": [
+        "pow_refine_checked"
+      ]
+    },
+    {
+      "call": "0x20038878",
+      "old_stub": "0x20038fc0",
+      "new_stub": "0x20038fa0",
+      "identical_absolute_callee": "0x10012311",
+      "callee_symbols": [
+        "mk61_m0_pow_log_select"
+      ]
+    },
+    {
+      "call": "0x20038ce4",
+      "old_stub": "0x20038fd0",
+      "new_stub": "0x20038fc0",
+      "identical_absolute_callee": "0x1003472d",
+      "callee_symbols": [
+        "pow_first_cell"
+      ]
+    }
+  ],
+  "identical_5_stub_multiset_and_ABI_prefix": true,
+  "stub_prefix_semantics": "push r0; ldr absolute target; mov r12,r0; pop r0; bx r12; nop; flags preserved, original LR untouched",
+  "callee_address_registers_SP_stack_writes_and_return_LR_equal_after_stub": true,
+  "executed_instruction_counts_preserved_by_stub_permutation": true,
+  "no_physical_cycle_equivalence_claim": true,
+  "no_whole_library_acceptance_GO": true,
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

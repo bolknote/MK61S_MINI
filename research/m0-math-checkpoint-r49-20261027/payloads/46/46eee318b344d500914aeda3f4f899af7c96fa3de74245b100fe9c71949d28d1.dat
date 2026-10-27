@@ -1,0 +1,5 @@
+/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_bootrom/include/pico/bootrom.h:130:7:rom_func_lookup	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_bootrom/include/pico/bootrom.h:138:7:rom_data_lookup	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_bootrom/include/pico/bootrom.h:151:6:rom_funcs_lookup	32	static
+/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_bootrom/include/pico/bootrom.h:261:32:rom_reset_usb_boot	16	static
+/Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/rp2_common/pico_bootrom/include/pico/bootrom.h:283:32:rom_reset_usb_boot_extra	16	static

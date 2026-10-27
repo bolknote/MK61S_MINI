@@ -1,0 +1,8 @@
+{
+  "status": "EMPTY_OBJECT_CONSUMER_REJECTED_NORMAL_NULL_AND_SECTION_SYMBOLS",
+  "runtime_source_or_object_change": false,
+  "actual_new_default_M0_allocated_bytes": 0,
+  "actual_new_default_M0_relocations": 0,
+  "corrected_gate": "No allocated bytes/relocations and no named symbols except section descriptors; no function/object/undefined/global-absolute exports",
+  "new_ARM_MPFR_calls": 0
+}

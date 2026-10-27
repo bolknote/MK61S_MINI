@@ -1,0 +1,106 @@
+{
+  "status": "MAPPED_SOURCE_INTEGRATION_SCRATCH_DIFFERENCES",
+  "word_changes": [
+    {
+      "offset": 672,
+      "address": 537100960,
+      "old": "9A06FE9F",
+      "new": "9A06FE87",
+      "old_symbols": [],
+      "new_symbols": []
+    },
+    {
+      "offset": 2088,
+      "address": 537102376,
+      "old": "9006FBBB",
+      "new": "9006FBDB",
+      "old_symbols": [],
+      "new_symbols": []
+    },
+    {
+      "offset": 2152,
+      "address": 537102440,
+      "old": "FBA2F000",
+      "new": "FBB2F000",
+      "old_symbols": [],
+      "new_symbols": []
+    },
+    {
+      "offset": 2168,
+      "address": 537102456,
+      "old": "FBA2F000",
+      "new": "FB92F000",
+      "old_symbols": [],
+      "new_symbols": []
+    },
+    {
+      "offset": 3300,
+      "address": 537103588,
+      "old": "F974F000",
+      "new": "F96CF000",
+      "old_symbols": [],
+      "new_symbols": []
+    },
+    {
+      "offset": 4012,
+      "address": 537104300,
+      "old": "10012F39",
+      "new": "10012311",
+      "old_symbols": [
+        "pow_small_integer"
+      ],
+      "new_symbols": [
+        "mk61_m0_pow_log_select"
+      ]
+    },
+    {
+      "offset": 4028,
+      "address": 537104316,
+      "old": "10038FF1",
+      "new": "1001EB89",
+      "old_symbols": [
+        "pow_refine_checked"
+      ],
+      "new_symbols": [
+        "__aeabi_lmul"
+      ]
+    },
+    {
+      "offset": 4044,
+      "address": 537104332,
+      "old": "10012311",
+      "new": "1003472D",
+      "old_symbols": [
+        "mk61_m0_pow_log_select"
+      ],
+      "new_symbols": [
+        "pow_first_cell"
+      ]
+    },
+    {
+      "offset": 4060,
+      "address": 537104348,
+      "old": "1003472D",
+      "new": "10038FF1",
+      "old_symbols": [
+        "pow_first_cell"
+      ],
+      "new_symbols": [
+        "pow_refine_checked"
+      ]
+    },
+    {
+      "offset": 4076,
+      "address": 537104364,
+      "old": "1001EB89",
+      "new": "10012F39",
+      "old_symbols": [
+        "__aeabi_lmul"
+      ],
+      "new_symbols": [
+        "pow_small_integer"
+      ]
+    }
+  ],
+  "new_ARM_MPFR_calls": 0
+}

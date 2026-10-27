@@ -1,0 +1,7 @@
+Q83 general negative-residual HOST study only. Scanned all568856 cached-gold inputs;12500 admitted and unambiguously correct, including last Q85 deficit4068D94447091680 ->51DBB7CAB20F046F. No fresh ARM/MPFR, no speed claim and no public implementation.
+
+Exact reduction: r83=r73*1024-floor(((n*STEP96 mod2^23)*4096-n*832)/2^25). STEP108=floor(ln2*2^99)=STEP96*4096-832, verified with inherited directed ln2. n*832 fits32; fractional product uses64bits. Negative residual domainabs(r73)<3*2^59-2^32, positive input, nonzero n and rootindex.
+
+Degree5 Q83 polynomial uses floor(abs(r83)/1024) as Q73 magnitude and exact R83 linear term; square83 eight MUL16, Q60 coefficients, small cubic two MUL (word bound in proof), product60 nine MUL16. Existing Q94 root shifted11. The root product MUST retain columns4..9:20 MUL16; retaining only5..9 would omit up to~40960 raw Q83 units and invalidate the bound. Final strict q83 error(-11,+8), polynomial(-4,+3). Models all exact integer/rational; source/word realization and whole-operation performance still need implementation and measurement.
+
+Implementation candidate should use a fresh packet, preserve frozen Q85/V3/R48. Q85 remains unselected, chosen author library R48. Primary source/Git fence from Root applies; no device permission. Universal library CR/totality/FMA/stack/physical cycles/independent/integration/release remain open.

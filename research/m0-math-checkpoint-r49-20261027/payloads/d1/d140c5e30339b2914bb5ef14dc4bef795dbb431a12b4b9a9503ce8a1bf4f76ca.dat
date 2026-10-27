@@ -1,0 +1,7 @@
+{
+  "status": "ASSEMBLER_LOCAL_LABEL_COLLISION_BEFORE_ARM",
+  "cause": "entry.S and incremental.S had separate-object .Linc_below labels; now namespaced per piece",
+  "new_runtime_algorithm_changes": false,
+  "new_ARM_MPFR_calls": 0,
+  "next_build_has_actual_source_label_change": true
+}

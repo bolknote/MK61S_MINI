@@ -1,0 +1,17 @@
+{
+  "status": "HOST_INCREMENTAL_CERTIFICATE_ONLY",
+  "accepted_inputs": 12500,
+  "old_Q73_ambiguous_inputs": 1,
+  "hard_case_unambiguous": true,
+  "accepted_wrong": 0,
+  "final_q83_error_open_interval": [
+    -22,
+    16
+  ],
+  "ARM_implemented_in_this_packet": false,
+  "performance_measured": false,
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

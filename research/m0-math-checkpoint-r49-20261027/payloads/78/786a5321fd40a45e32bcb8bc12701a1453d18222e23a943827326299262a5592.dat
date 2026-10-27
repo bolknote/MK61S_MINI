@@ -1,0 +1,34 @@
+{
+  "status": "FROZEN_AUTHOR_INCREMENTAL_R2_SOURCE_WORD_PROOF",
+  "files": {
+    "HANDOFF.md": {
+      "bytes": 474,
+      "sha256": "b28acf47b226032fb53a5479d4465634ca8f0e04cc5606fdc6d17f616928caef"
+    },
+    "proof-result.json": {
+      "bytes": 2677,
+      "sha256": "5c2e73954a85b6194e687e240de3e83caa114bb3ebf01894322f7d9454d93297"
+    },
+    "proof.initial-slot-liveness-assertion.log": {
+      "bytes": 263,
+      "sha256": "1b646507b4069ce0c1f3b6d28048117986935203b47772e0ca48fdcc4f74606e"
+    },
+    "proof.log": {
+      "bytes": 2182,
+      "sha256": "0c0f4a033c3804cea15e44c4ad4e0cfb2d3be56ca0df826d82f27659243fd7c5"
+    },
+    "proof.py": {
+      "bytes": 5494,
+      "sha256": "7c9a06808ac730cb880aa28b361bd7c8f73b0b54dd019edd1eaba6565a448496"
+    },
+    "reproduction-result.json": {
+      "bytes": 1069,
+      "sha256": "3cc3e2a9f14951c861fca559c3c6534b164bf573a208a828dcb2bbd5078eeb81"
+    }
+  },
+  "all_producers_terminal": true,
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

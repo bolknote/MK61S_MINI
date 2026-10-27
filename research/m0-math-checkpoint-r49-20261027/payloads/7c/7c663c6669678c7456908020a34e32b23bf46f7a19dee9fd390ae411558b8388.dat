@@ -1,0 +1,35 @@
+{
+  "status": "PASS_Q85_WORD_CLOSURE_AND_FIXED_FRAMES",
+  "square_prefix_maxima": {
+    "column3_prefix": 2147516412,
+    "column4_prefix": 2147483646,
+    "column5_total": 2147418111
+  },
+  "divide3_maxima": {
+    "tmid": 1431939750,
+    "tlow": 2863617365
+  },
+  "product64_maxima": {
+    "column4_prefix": 622586,
+    "column5_total": 2147942399,
+    "column6": 262143
+  },
+  "small_exp_frame": 72,
+  "max_leaf_frame": 40,
+  "small_fast_stack_bound": 112,
+  "no_recursion_or_dynamic_allocation": true,
+  "all_private_BL_sites_stack_aligned8": true,
+  "leaf_push20_may_have_internal4alignment_without_calls": true,
+  "all_removed_carries_have_unsigned_prefix_less2p32": true,
+  "returned_helper_domains": {
+    "square": "a<2^62",
+    "divide3": "N<2^52",
+    "multiply_high32": "a,b<2^32",
+    "product64": "a<2^63,b<2^51"
+  },
+  "actual_source_sha256": "6206d5716db94e72d72aa10f3dabb6ddb47e1f88e29a48d1cec5d60f2d5352db",
+  "new_ARM_MPFR_calls": 0,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/verify-private-caller.py", line 16, in <module>
+    assert objects[0].symbols[name]==objects[1].symbols[name]and objects[0].sizes.get(name)==objects[1].sizes.get(name)
+                                     ~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: 'mk61_m0_exp'

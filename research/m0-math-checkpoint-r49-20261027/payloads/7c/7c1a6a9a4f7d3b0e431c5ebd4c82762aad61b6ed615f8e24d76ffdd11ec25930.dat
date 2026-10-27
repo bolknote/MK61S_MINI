@@ -1,0 +1,90 @@
+--- parent/incremental.S
++++ r2/incremental.S
+@@ -4,7 +4,7 @@
+ .section .text.q73_incremental,"ax",%progbits
+ .balign 4
+ /* PRIVATE ABI: r0 is the live caller frame, r1=root raw column4,
+- * r2=rounded Q73 low word. Return -1/below, +1/above, 0/decline.
++ * r2=rounded Q73 low word. Return 2/below, 1/above, 0/decline.
+  * Called only for a near-midpoint, admitted negative residual. */
+ .global mk61_q73_incremental_side
+ .type mk61_q73_incremental_side,%function
+@@ -14,11 +14,10 @@
+  sub sp,#20
+  mov r7,r0
+  lsls r4,r1,#23
+- lsrs r4,r4,#23
++ lsrs r4,r4,#22
+  str r4,[sp,#0]
+  lsls r5,r2,#11
+- asrs r5,r5,#11
+- lsls r5,r5,#10
++ asrs r5,r5,#1
+  str r5,[sp,#4]
+  /* 4*RL-RQ, formed exactly modulo32 then interpreted as signed. */
+  ldr r0,[r7,#52]
+@@ -78,45 +77,34 @@
+  /* R83-r73*1024, using STEP108=STEP96*4096-832. */
+  ldr r0,[r7,#100]
+  lsls r0,r0,#9
+- lsrs r0,r0,#9
+- lsls r3,r0,#12
+- lsrs r4,r0,#20
++ lsrs r0,r0,#3
+  ldr r1,[r7,#12]
+- ldr r2,=832
++ movs r2,#13
+  muls r1,r2
+- movs r2,#0
+- subs r3,r1
+- sbcs r4,r2
+- lsrs r0,r3,#25
+- lsls r4,r4,#7
+- orrs r0,r4
++ subs r0,r1
++ asrs r0,r0,#19
+  rsbs r0,r0,#0
+  ldr r1,[r7,#84]
+  lsls r1,r1,#22
+  lsrs r1,r1,#22
+  adds r0,r1
+  subs r6,r0,r6
+- /* Root fraction and the 12-bit approximation of A/Q73. */
++ /* Root fraction and the 9-bit approximation of A/Q73. */
+  ldr r4,[r7,#104]
+  lsls r4,r4,#11
+  lsrs r4,r4,#22
+  ldr r0,[r7,#40]
+- lsls r0,r0,#3
+- ldr r1,[r7,#36]
+- lsrs r1,r1,#29
+- orrs r0,r1
+  muls r0,r6
+- asrs r0,r0,#12
++ asrs r0,r0,#9
+  adds r0,r4
+  ldr r1,[sp,#0]
+- lsls r1,r1,#1
+  subs r0,r1
+  ldr r1,[sp,#4]
+  adds r0,r1
+- /* Strict interval is (centre-38, centre+16). */
+- cmp r0,#38
++ /* Strict interval is (centre-45, centre+23). */
++ cmp r0,#45
+  bge .Linc_above
+- movs r1,#16
++ movs r1,#23
+  rsbs r1,r1,#0
+  cmp r0,r1
+  ble .Linc_below
+@@ -126,8 +114,7 @@
+  movs r0,#1
+  b .Linc_return
+ .Linc_below:
+- movs r0,#0
+- mvns r0,r0
++ movs r0,#2
+ .Linc_return:
+  add sp,#20
+  pop {r4-r7,pc}

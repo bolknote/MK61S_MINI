@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/build.py", line 92, in <module>
+    assert not[r for r in f['symbols']if r[-1]!=0xfff1]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

@@ -1,0 +1,19 @@
+"""Recheck the realized three-limb division model, without running producers."""
+from pathlib import Path
+import gzip,hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+import model
+P=ROOT/'.build/m0-exp-q83-general-host-study-20261027'
+rows=0;ambiguous=[];hard=None
+with gzip.open(P/'records.jsonl.gz','rt')as f,gzip.GzipFile(filename=str(W/'host-records.jsonl.gz'),mode='wb',mtime=0)as out:
+    for line in f:
+        r=json.loads(line);v=model.general_evaluate(int(r['x'],16));assert v
+        rows+=1
+        if v['kind']=='accepted':assert f"{v['output']:016X}"==r['expected'],(r['x'],v,r['expected'])
+        else:ambiguous.append(r['x'])
+        if r['x']=='4068D94447091680':hard=dict(expected=r['expected'],**v)
+        out.write((json.dumps(dict(x=r['x'],expected=r['expected'],model=v),separators=(',',':'))+'\n').encode())
+assert rows==12500
+report=dict(status='PASS_Q83_REALIZED_THREE_LIMB_DIVIDE_MODEL',inputs=rows,accepted_wrong=0,ambiguous_inputs=ambiguous,hard_case=hard,three_limb_quotient_underestimate_at_most1=True,original_rational_error_bounds_still_apply=True,no_new_ARM_MPFR_calls=True,model_sha256=hashlib.sha256((W/'model.py').read_bytes()).hexdigest(),records_sha256=hashlib.sha256((W/'host-records.jsonl.gz').read_bytes()).hexdigest(),hardware_accessed=False,integration_GO=False,goal_complete=False)
+(W/'host-result.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))

@@ -1,0 +1,9 @@
+{
+  "parent_source": ".build/m0-exp-q73-incremental-coarse-host-20261027/study.py",
+  "parent_sha256": "c3ce21ade55be19d481a9789fdb9f6ee2183f67bd5169fe2c2fa694ff0248430",
+  "candidate_sha256": "2fa0b3fecc09d0c246bf85f78a6548bb9799725b1d2ff8c8908b516ad26eebac",
+  "new_final_bounds": [
+    -45,
+    23
+  ]
+}

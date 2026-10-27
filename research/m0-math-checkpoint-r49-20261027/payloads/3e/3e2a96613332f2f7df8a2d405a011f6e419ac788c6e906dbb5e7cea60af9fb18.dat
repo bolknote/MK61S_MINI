@@ -1,0 +1,106 @@
+{
+  "status": "PASS_Q85_SMALL_EXACT_RATIONAL_BOUNDS",
+  "model_sha256": "cb51b5b0c9800b2a040e0251968c2527bb5ffeaac688dc5e04cd971c633bdea8",
+  "parent_FROZEN_sha256": "2731f20f84226b6c85137b213c6ff2d46808b5f6f9826afe3dd35236865f8d7c",
+  "input_domain": "2^-21 <= abs(x) < 2^-12, exactly dyadic r73; original binary64 input",
+  "strict_error_intervals": {
+    "positive": [
+      0,
+      7
+    ],
+    "negative": [
+      -5,
+      3
+    ]
+  },
+  "bounds": {
+    "ES": {
+      "fraction": [
+        2306405946282213377,
+        2305843009213693952
+      ],
+      "decimal": 1.0002441350370646
+    },
+    "EL": {
+      "fraction": [
+        2,
+        1
+      ],
+      "decimal": 2.0
+    },
+    "EQ": {
+      "fraction": [
+        232113759672414747825799169,
+        116056878683004400771792896
+      ],
+      "decimal": 2.0000000198730654
+    },
+    "EC": {
+      "fraction": [
+        953709006265918244971541744845,
+        475368975085586025561263702016
+      ],
+      "decimal": 2.0062500000009704
+    },
+    "EP": {
+      "fraction": [
+        73785850394931363841,
+        18446744073709551616
+      ],
+      "decimal": 3.99993896484375
+    },
+    "E6": {
+      "fraction": [
+        53653734204859886263617110829345451,
+        51922968585348276285304963292200960
+      ],
+      "decimal": 1.0333333333333334
+    },
+    "R7": {
+      "fraction": [
+        512,
+        1289925
+      ],
+      "decimal": 0.00039692230168420644
+    },
+    "positive": {
+      "fraction": [
+        90882248993394383795629583421098413527019,
+        13395347050491075057464400954938464665600
+      ],
+      "decimal": 6.7846132430038555
+    },
+    "negative_below": {
+      "fraction": [
+        3680088585900244386990889970534582251,
+        817587100249699405362817441097318400
+      ],
+      "decimal": 4.501157839667857
+    },
+    "negative_above": {
+      "fraction": [
+        355691349520376530718888797533110273,
+        155768905756044828855914889876602880
+      ],
+      "decimal": 2.283455403335999
+    }
+  },
+  "division_identity": "B=65536; N/3 = ((a1+a2+a3)+(a2+a3)B+a3 B^2)*21845 + (a0+a1+a2+a3)/3; final small quotient may be one below floor",
+  "product64_omits_only_columns": [
+    0,
+    1,
+    2
+  ],
+  "square_omits_only_columns": [
+    0,
+    1
+  ],
+  "positive_approximation_strictly_below_exp": true,
+  "negative_error_identity": "H - product_error + sixth_error - alternating_remainder7",
+  "integer_output_midpoints_and_open_halfunit_endpoint_checks": true,
+  "new_lookup_tables": 0,
+  "new_MPFR_ARM_calls": 0,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

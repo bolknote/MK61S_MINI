@@ -1,0 +1,20 @@
+#ifndef MK61_TERMINAL_CATALOG_HPP
+#define MK61_TERMINAL_CATALOG_HPP
+#include "terminal_command_ids.hpp"
+namespace terminal_catalog {
+struct TerminalCommand {
+  const char* name;
+  u8 id;
+  const char* desc;
+};
+// The interactive and script frontends use the same immutable catalog.
+usize count();
+// NUL-terminated C string containing the nine-byte command-set tag.
+const char* help_signature();
+TerminalCommand at(usize index); // index < count(); view into the Flash text pool
+u8 lookup(const u8* line); // NUL-terminated command line; no leading spaces.
+// Same catalog spelling as lookup(); no leading spaces or token prefixes.
+const char* conditional_arguments(const char* line);
+const char* open_arguments(const char* line);
+}
+#endif

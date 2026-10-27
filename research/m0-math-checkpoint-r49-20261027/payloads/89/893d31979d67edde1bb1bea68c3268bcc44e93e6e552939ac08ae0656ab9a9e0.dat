@@ -1,0 +1,30 @@
+{
+  "status": "LINKED_PRIVATE_INCREMENTAL_Q73_Q85_R48_COMPLETE_EXP",
+  "ELF_sha256": "13096dc6861e54089962ba20fdbfa78d285dda133966667ff8af8370a07ff1d7",
+  "source_R48_FROZEN_sha256": "116fd1508430a8843e715eec46189bd36262b74f3b73004df6370d9b3bbd037f",
+  "parent_Q85_FROZEN_sha256": "8f92255383f6640bc350f68552930060bb3cc060156686f92a3d077f4f4bdcbd",
+  "model_proof_sha256": "d8b753ae13f8a40ddfeb5c7b311b2fd67ee1ddac37cddd59aa5fb20fae265a5f",
+  "core_exact_allocated_parent": true,
+  "export_only_CPP_allocated_bytes_identical": true,
+  "existing_root_table_symbol": "_ZN7m0_eabiL16refine_exp_tableE",
+  "existing_root_table_sha256": "b4769f705c76d7190d0ed816f2fe95c4dc786ea4f48148d2150d085bc3314e52",
+  "root_table_bytes": 6144,
+  "root_table_allocated_occurrences": 1,
+  "new_lookup_table_bytes": 0,
+  "new_bss_bytes": 0,
+  "scratch_y_bytes": 4080,
+  "undefined_symbols": [],
+  "new_objects": [
+    "core.o",
+    "entry.o",
+    "small.o",
+    "incremental.o"
+  ],
+  "text_delta_vs_Q85": 752,
+  "text_delta_vs_R48": 3192,
+  "M4_default_source_objects_untouched": true,
+  "full_exp_correctness_and_speed_pending": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

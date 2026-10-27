@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/run-controls.py", line 5, in <module>
+    with(W/(name+'.log')).open('w')as f:subprocess.run([sys.executable,str(W/(name+'.py'))],stdout=f,stderr=subprocess.STDOUT,check=True)
+                                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.17/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python', '/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/verify-private-return.py']' returned non-zero exit status 1.

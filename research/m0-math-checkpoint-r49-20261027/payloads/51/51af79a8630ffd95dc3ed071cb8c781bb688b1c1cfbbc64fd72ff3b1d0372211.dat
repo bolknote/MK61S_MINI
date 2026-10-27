@@ -1,0 +1,38 @@
+{
+  "status": "FROZEN_INCREMENTAL_HOST_CERTIFICATE_ONLY",
+  "files": {
+    "AUTHOR-RESULT.json": {
+      "bytes": 413,
+      "sha256": "0ef3166d9664e4da812aa9635dc60f703d062361a54840bf720fefd2462fc317"
+    },
+    "HANDOFF.md": {
+      "bytes": 453,
+      "sha256": "745903a6c57149edbc19f74e71015a3db940455b0737dfeb18527fbe753d8409"
+    },
+    "proof.json": {
+      "bytes": 1129,
+      "sha256": "87df16b95a9cd95f936a3813411038d9f37d9815be4159895fed8587f38d27cc"
+    },
+    "records.jsonl.gz": {
+      "bytes": 1138949,
+      "sha256": "30e740c9cbb085dd5dd8d306bc2fb094a8ca8bb7b0208247c5f9b4601fb6be31"
+    },
+    "result.json": {
+      "bytes": 1510,
+      "sha256": "316b209366eed7f3b918d3de4068b009cf21af20fce114f92ad69506b0a0553c"
+    },
+    "study.log": {
+      "bytes": 1510,
+      "sha256": "316b209366eed7f3b918d3de4068b009cf21af20fce114f92ad69506b0a0553c"
+    },
+    "study.py": {
+      "bytes": 5884,
+      "sha256": "2a9cc46014c21880a3101759bd56ac00361cb515ffc18740d770aecaa031a57b"
+    }
+  },
+  "all_producers_terminal": true,
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

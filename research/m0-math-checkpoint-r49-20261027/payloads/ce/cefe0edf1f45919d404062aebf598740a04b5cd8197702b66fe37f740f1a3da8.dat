@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-incremental-prototype-20261027/prepare.py", line 107, in <module>
+    assert entry.count(needle)==1
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

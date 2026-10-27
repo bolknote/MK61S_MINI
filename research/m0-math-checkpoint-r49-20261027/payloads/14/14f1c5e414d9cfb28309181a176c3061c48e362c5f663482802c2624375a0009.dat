@@ -1,0 +1,27 @@
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0.cpp:624:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_trig_checked.inc:201:51: warning: 'm0_eabi::U checked_trig_fast_table(CheckedTrigArgument, unsigned int, m0_eabi::U)' defined but not used [-Wunused-function]
+  201 | __attribute__((optimize("Os"),noinline)) static U checked_trig_fast_table(CheckedTrigArgument a,unsigned op,U sign) {
+      |                                                   ^~~~~~~~~~~~~~~~~~~~~~~
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0.cpp:384:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_log70.inc:249:56: warning: 'double ln_near_interval(double, m0_eabi::U)' defined but not used [-Wunused-function]
+  249 | __attribute__((optimize("Os"),noinline)) static double ln_near_interval(double x,U b) {
+      |                                                        ^~~~~~~~~~~~~~~~
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_exp.S: Assembler messages:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_exp.S:1699: Error: symbol `.Linc_below' is already defined
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_exp.S:1693: Error: branch out of range
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0.cpp:624:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_trig_checked.inc:201:51: warning: 'm0_eabi::U checked_trig_fast_table(CheckedTrigArgument, unsigned int, m0_eabi::U)' defined but not used [-Wunused-function]
+  201 | __attribute__((optimize("Os"),noinline)) static U checked_trig_fast_table(CheckedTrigArgument a,unsigned op,U sign) {
+      |                                                   ^~~~~~~~~~~~~~~~~~~~~~~
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0.cpp:384:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_log70.inc:249:56: warning: 'double ln_near_interval(double, m0_eabi::U)' defined but not used [-Wunused-function]
+  249 | __attribute__((optimize("Os"),noinline)) static double ln_near_interval(double x,U b) {
+      |                                                        ^~~~~~~~~~~~~~~~
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0.cpp:624:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_trig_checked.inc:201:51: warning: 'm0_eabi::U checked_trig_fast_table(CheckedTrigArgument, unsigned int, m0_eabi::U)' defined but not used [-Wunused-function]
+  201 | __attribute__((optimize("Os"),noinline)) static U checked_trig_fast_table(CheckedTrigArgument a,unsigned op,U sign) {
+      |                                                   ^~~~~~~~~~~~~~~~~~~~~~~
+In file included from /Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0.cpp:384:
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/source/code/native_eabi_m0_log70.inc:249:56: warning: 'double ln_near_interval(double, m0_eabi::U)' defined but not used [-Wunused-function]
+  249 | __attribute__((optimize("Os"),noinline)) static double ln_near_interval(double x,U b) {
+      |                                                        ^~~~~~~~~~~~~~~~

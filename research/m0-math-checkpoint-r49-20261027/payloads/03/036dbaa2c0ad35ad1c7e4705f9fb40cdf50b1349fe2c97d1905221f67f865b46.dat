@@ -1,0 +1,13 @@
+{
+  "ROM_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "ELF_reader_sha256": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708",
+  "primary_source_opens_prohibited": true,
+  "process": 38063,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/verify-loader.py"
+  ],
+  "bootrom_reads_redirected": 3,
+  "denied_primary_open_attempts": [],
+  "guest_code_or_registers_modified": false,
+  "ROM_models_installed": false
+}

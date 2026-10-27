@@ -1,0 +1,13 @@
+{
+  "status": "PASS_Q85_SMALL_POSTSEAL_ALL_PINS",
+  "FROZEN_sha256": "8f92255383f6640bc350f68552930060bb3cc060156686f92a3d077f4f4bdcbd",
+  "artifact_files_verified": 57,
+  "author_result_sha256": "c552dee25220340e890230950596c36ffbce63976c390bbb66760386c2598ea4",
+  "source_diagnostic_pool_not_added_to_R48_qualification": true,
+  "all_handles_consumed_terminal": true,
+  "no_new_ARM_MPFR_calls": true,
+  "selected": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

@@ -1,0 +1,5 @@
+Private Q85 small exp prototype. Complete full corpus: 568856 unique /1224907 states; old R48 512 ->1, V3 399 ->1, no new correct-Qfplib losses and no wrong outputs.
+
+Selected author library is still R48. The public prototype symbol is mk61_q73_exp; production mk61_m0_exp remains unchanged as fallback. The remaining 4068D94447091680 uses the expensive fallback. All794715 R48 increases and427353 V3 increases are retained, including already slower cases;414230 wrong-Qfplib state rows retained. New helper domains and static fast stack112 are bounded, full observed816 is not a universal library bound. No physical cycles, independent/adoption/integration/release GO. No new table/global RAM/libgcc or M4/default changes.
+
+All recorded handles terminated and were consumed; do not rerun frozen producers. Next study: Q83 general negative residual with cached ln2 step identity and existing Q94 roots. No speed claim for that unimplemented study.

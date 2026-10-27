@@ -1,0 +1,57 @@
+{
+  "status": "PASS_AUTHOR_INCREMENTAL_R2_SOURCE_WORD_AND_LIVENESS_CLOSURE",
+  "runtime_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-q73-incremental-r2-20261027",
+  "runtime_ELF_sha256": "702d53bcb14d7b30f17b73176037526a6eb3a33cab44d6674755609c383fa0f2",
+  "entry_source_sha256": "d9bcda479b906a2149d3701bfbb681da0d5d5823dbbd594c7734cf26dc5a5a8a",
+  "certificate_source_sha256": "15c7430b22ef9d023b83cfe3a0c313c86482f5335f28ca08f97e240be0ef2b67",
+  "host_proof_sha256": "9ce98d01cf33fbd0308d29949385d42a8e0818df2bdaa4197eff231384c75bb7",
+  "rich_predicate_stricter_than_model": true,
+  "rich_polynomial_inlined_no_BL_no_temporary_stack": true,
+  "main_fixed_frame_including_saved_registers": 128,
+  "certificate_fixed_frame": 40,
+  "combined_rich_certificate_stack_bound": 168,
+  "not_universal_library_stack_bound": true,
+  "all_BL_sites_sp_aligned8": true,
+  "SP_and_LR_restore_offsets_proved": true,
+  "reuse_liveness": "linear high only reused after tail formation; temporary b1 overwritten by rich marker after product; temporary b2 overwritten by fraction10 after its final read",
+  "metadata_capture": "square raw column4 into R12 then owned frame; product52 columns2/3 combine into fraction10; root raw column4 into R12 until late guard",
+  "new_R12_private_return_contract": true,
+  "legal_public_incoming_R12_and_flags_not_used_as_metadata": true,
+  "factored_step_identity_all_F23_n20": true,
+  "factored_step_signed32_range": [
+    -13631475,
+    536870848
+  ],
+  "signed_combined_division_complete_small_domain_checked": 12289,
+  "cubic_residue_upper": [
+    131504,
+    1
+  ],
+  "cubic_error_upper": [
+    253849747064329,
+    2061584302080
+  ],
+  "delta_centre_bounds": [
+    [
+      -2462,
+      1
+    ],
+    [
+      1344,
+      1
+    ]
+  ],
+  "final_q83_error_open_interval": [
+    -45,
+    23
+  ],
+  "safe_side_and_adjacent_packing_proved": true,
+  "existing512_roots_and_ln2_pins_inherited_no_new_MPFR": true,
+  "new_lookup_table_global_RAM_libgcc_bytes": 0,
+  "no_fresh_ARM_MPFR_calls": true,
+  "independent_acceptance": false,
+  "canonical_runtime_integrated": false,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

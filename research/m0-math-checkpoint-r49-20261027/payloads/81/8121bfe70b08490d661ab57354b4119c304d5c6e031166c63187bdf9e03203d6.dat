@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-exp-incremental-r49-20261027/verify-private-return.py", line 25, in <module>
+    assert start<=marker<end
+           ^^^^^^^^^^^^^^^^^
+AssertionError

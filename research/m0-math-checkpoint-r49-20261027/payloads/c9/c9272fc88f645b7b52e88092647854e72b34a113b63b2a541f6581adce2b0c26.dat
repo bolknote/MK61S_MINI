@@ -1,0 +1,64 @@
+{
+  "status": "COMPARED_ACTUAL_SOURCE_AND_PROTO_ALLOCATED_IMAGES",
+  "allocated": {
+    ".bss": {
+      "exact": true,
+      "new_bytes": 0,
+      "old_bytes": 0,
+      "new_address": 536870928,
+      "old_address": 536870928
+    },
+    ".data": {
+      "exact": true,
+      "new_bytes": 16,
+      "old_bytes": 16,
+      "new_address": 536870912,
+      "old_address": 536870912
+    },
+    ".pow_dispatch_group": {
+      "exact": true,
+      "new_bytes": 5424,
+      "old_bytes": 5424,
+      "new_address": 268514160,
+      "old_address": 268514160
+    },
+    ".pow_log_group": {
+      "exact": true,
+      "new_bytes": 4192,
+      "old_bytes": 4192,
+      "new_address": 268509968,
+      "old_address": 268509968
+    },
+    ".rodata": {
+      "exact": true,
+      "new_bytes": 237424,
+      "old_bytes": 237424,
+      "new_address": 268755368,
+      "old_address": 268755368
+    },
+    ".scratch_y": {
+      "exact": false,
+      "new_bytes": 4080,
+      "old_bytes": 4080,
+      "new_address": 537100288,
+      "old_address": 537100288
+    },
+    ".sqrt_group": {
+      "exact": true,
+      "new_bytes": 8976,
+      "old_bytes": 8976,
+      "new_address": 268500992,
+      "old_address": 268500992
+    },
+    ".text": {
+      "exact": true,
+      "new_bytes": 235784,
+      "old_bytes": 235784,
+      "new_address": 268519584,
+      "old_address": 268519584
+    }
+  },
+  "all_allocated_exact": false,
+  "new_ARM_MPFR_calls": 0,
+  "not_qualification_GO": true
+}

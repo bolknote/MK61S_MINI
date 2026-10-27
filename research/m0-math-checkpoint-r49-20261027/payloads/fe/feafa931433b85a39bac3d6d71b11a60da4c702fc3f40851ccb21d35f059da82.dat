@@ -1,0 +1,65 @@
+{
+  "status": "PASS_Q85_HELPERS_AND_COMPLETE_PUBLIC_EXP_SMOKE",
+  "calls": {
+    "mk61_q85_square": 2053,
+    "mk61_q85_divide3": 2053,
+    "mk61_q85_multiply_high32": 2053,
+    "mk61_q85_product64": 2053,
+    "mk61_q73_exp": 1005
+  },
+  "exp_inputs": 335,
+  "MPFR_oracle_inputs_including_sNaN": 335,
+  "sNaN_shortcuts": 1,
+  "candidate_wrong": 0,
+  "instruction_histograms": {
+    "mk61_q85_square": {
+      "65": 2053
+    },
+    "mk61_q85_divide3": {
+      "29": 2053
+    },
+    "mk61_q85_multiply_high32": {
+      "24": 2053
+    },
+    "mk61_q85_product64": {
+      "66": 2053
+    },
+    "mk61_q73_exp": {
+      "34": 6,
+      "456": 6,
+      "453": 3,
+      "376": 447,
+      "316": 9,
+      "403": 6,
+      "508": 3,
+      "22340": 3,
+      "17": 6,
+      "16": 3,
+      "473": 6,
+      "475": 3,
+      "371": 486,
+      "327": 9,
+      "414": 6,
+      "514": 3
+    }
+  },
+  "all_AAPCS_SP_bounded_writes_SIO_checks": true,
+  "loader": {
+    "actual_ARM_calls": 1,
+    "instructions": 1024,
+    "whole_scratch_y_bytes": 4080,
+    "reserved_tail_untouched": true,
+    "actual_ROM_pointers": [
+      9913,
+      9757,
+      9901,
+      9733
+    ],
+    "no_old_firmware_overlay_loaded": true
+  },
+  "observed_stack_bytes": 744,
+  "not_universal_stack_bound": true,
+  "hardware_accessed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

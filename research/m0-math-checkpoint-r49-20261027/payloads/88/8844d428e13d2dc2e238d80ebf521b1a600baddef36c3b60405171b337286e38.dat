@@ -1,0 +1,19 @@
+--- parent/entry.S
++++ r2/entry.S
+@@ -619,11 +619,11 @@
+  mov r1,r12
+  mov r2,r4
+  bl mk61_q73_incremental_side
+- cmp r0,#0
+- beq .Lfallback_frame
+- movs r3,#0
+- cmp r0,#0
+- bmi .Linc_below
++ movs r3,#0
++ cmp r0,#2
++ beq .Linc_below
++ cmp r0,#1
++ bne .Lfallback_frame
+  adds r4,#64
+  adcs r5,r3
+  adcs r6,r3

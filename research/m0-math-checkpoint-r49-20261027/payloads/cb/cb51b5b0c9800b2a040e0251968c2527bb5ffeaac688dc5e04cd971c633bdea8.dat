@@ -1,0 +1,49 @@
+"""Pure integer model: Q85 direct exp for -21 <= exponent(x) <= -13."""
+from pathlib import Path
+import importlib.util, sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+P=ROOT/'.build/m0-exp-q73-public-v3-20261027'
+spec=importlib.util.spec_from_file_location('q73_parent_model',P/'model.py')
+parent=importlib.util.module_from_spec(spec);spec.loader.exec_module(parent)
+Q=1<<85;MASK=(1<<64)-1
+def square85(a):
+    a0=a&65535;a1=(a>>16)&65535
+    return (a*a-a0*a0-((2*a0*a1)<<16))>>61
+def divide3_under(a):
+    a0,a1,a2,a3=(a>>(16*i)&65535 for i in range(4))
+    s=a0+a1+a2+a3;lo=s&65535;hi=s>>16
+    small=hi*21845+(((lo+hi)*21845)>>16)
+    return (a1+a2+a3)*21845+((a2+a3)*21845<<16)+(a3*21845<<32)+small
+def divide15_under(a):
+    lo=a&65535;hi=a>>16
+    return hi*4369+(((lo+hi)*4369)>>16)
+def product64(a,b):
+    aa=[a>>(16*i)&65535 for i in range(4)]
+    bb=[b>>(16*i)&65535 for i in range(4)]
+    omitted=sum((aa[i]*bb[j])<<(16*(i+j)) for i in range(4) for j in range(4) if i+j<3)
+    return (a*b-omitted)>>64
+def polynomial(mag,negative):
+    c2=square85(mag)
+    linear=divide3_under(mag>>10)
+    quartic=divide3_under(c2>>24)
+    cubic=divide15_under(((c2>>31)*(mag>>32))>>34)
+    tail=linear-quartic+cubic if negative else linear+quartic+cubic
+    assert 0<=tail<1<<51 and 0<=c2<1<<63
+    odd=product64(c2,tail)
+    a=c2>>49;sixth=(((a*a*a)>>27)*1456)>>16
+    sign=-1 if negative else 1
+    q=Q+sign*(mag<<12)+(c2>>1)+sign*odd+sixth
+    return dict(q85=q,c2=c2,linear=linear,quartic=quartic,cubic=cubic,tail=tail,odd=odd,sixth=sixth)
+def small_evaluate(x):
+    m=x&0x7fffffffffffffff;e=(m>>52)-1023
+    assert -21<=e<=-13
+    sig=(m&((1<<52)-1))|(1<<52);mag=sig<<(e+21)
+    v=polynomial(mag,bool(x>>63));q=v['q85']
+    below,above=(5,3) if x>>63 else (0,7)
+    lo=parent.round_binary64(2*(q-below)+1,-86)
+    hi=parent.round_binary64(2*(q+above)-1,-86)
+    return dict(kind='accepted' if lo==hi else 'ambiguous',output=lo if lo==hi else None,lower_round=f'{lo:016X}',upper_round=f'{hi:016X}',lower_error=below,upper_error=above,mag73=mag,**v)
+def evaluate(x):
+    e=((x&0x7fffffffffffffff)>>52)-1023
+    return small_evaluate(x) if -21<=e<=-13 else parent.evaluate(x)
