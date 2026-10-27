@@ -1,0 +1,17 @@
+{
+  "status": "HOLD_READONLY_CAPTURE_NO_RESET_OR_RECOVERY",
+  "pid": 28956,
+  "stage": "resident-capture",
+  "device_transition_attempts": 0,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "APP_opens": 0,
+  "physical_keys": 0,
+  "goal_complete": false,
+  "error": "RuntimeError('New physical input; preserve it')",
+  "serial_closed": true,
+  "TX_bytes": 1,
+  "RX_bytes": 3261,
+  "no_new_device_IO_after_revoke": true,
+  "no_global_noholder_claim": true
+}

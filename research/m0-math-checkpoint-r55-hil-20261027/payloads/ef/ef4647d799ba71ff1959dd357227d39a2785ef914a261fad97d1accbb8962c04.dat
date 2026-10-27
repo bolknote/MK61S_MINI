@@ -1,0 +1,30 @@
+{
+  "status": "HOST_READY_STAGE0_R2_COUNTER_BASELINE_PINNED_READONLY",
+  "packet": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2",
+  "PREFLIGHT_FROZEN_sha256": "81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22",
+  "pins": 19,
+  "actual_previous_PID": 28956,
+  "previous_exit_code": 1,
+  "previous_actual_TX_bytes": 1,
+  "previous_actual_RX_bytes": 3261,
+  "current_observed_cumulative_counter": 25,
+  "current_observed_epoch": [
+    "6",
+    "00010001"
+  ],
+  "requires_new_root_grant": true,
+  "previous_grant_not_reused": true,
+  "argv_template": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2/preflight.py",
+    "--execute",
+    "--grant",
+    "ROOT_FRESH_ABSOLUTE_STAGE0_GRANT",
+    "--lease-sha256",
+    "ROOT_EXACT_GRANT_AND_CANONICAL_SHA256",
+    "--output",
+    "ROOT_NEW_ABSOLUTE_OUTPUT"
+  ],
+  "successor_actual_device_IO": 0
+}

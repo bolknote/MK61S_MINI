@@ -1,0 +1,49 @@
+{
+  "status": "SOURCE_QUALIFIED_OPERATOR_RETURN_FINDINGS_REQUIRING_ROOT_DISPOSITION",
+  "selected249_source_commit": "5e7f70c823b70e2a6ed20abe4cce412fe0b97b66",
+  "selected249_ELF_sha256": "8a68bf96894739618ce60906095af28f39906f8ef2d1201740841ddbbba0d208",
+  "source_files": {
+    "ports/picocalc/main.cpp": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/selected249-source/ports/picocalc/main.cpp",
+      "bytes": 37824,
+      "sha256": "b16b588b7667ffa3439521d730d941b3fbeaaa3317f32f3ec7992761bf2a86ac"
+    },
+    "ports/picocalc/clock.cpp": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/selected249-source/ports/picocalc/clock.cpp",
+      "bytes": 10798,
+      "sha256": "8a2213285dd0af18bf2806d12d3cdd1160b5b4678960d5b4e32d9b134112fc8f"
+    },
+    "ports/picocalc/terminal.cpp": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/selected249-source/ports/picocalc/terminal.cpp",
+      "bytes": 20576,
+      "sha256": "0b6b66b47c07ea0eaa48da9698a20d7688f37356e1f321dff35adea528e6e7c4"
+    },
+    "ports/picocalc/terminal.hpp": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/selected249-source/ports/picocalc/terminal.hpp",
+      "bytes": 2353,
+      "sha256": "acfb5e8fe4a4593c152a1a39762edf5a12305c5469db3a7657d29305c61f246c"
+    }
+  },
+  "ROM_entry": {
+    "CMD_DFU_calls_save_settings_before_reset": true,
+    "raw_exclamation_has_no_save_settings_call": true,
+    "proposed": "Fresh stopped/CLOSED source frame, explicit RAW transition if needed, one ! byte and open-DTR ROM handoff. No dfu command, no settings/Flash writes."
+  },
+  "RTC_return": {
+    "resident_clock_init_always_calls_rtc_init": true,
+    "resident_uses_watchdog_scratch_0_1_2_last_software_snapshot": true,
+    "resident_service_updates_snapshot_only_when_configured": true,
+    "R1_worker_preserves_RTC_hardware_but_does_not_update_resident_software_snapshot": true,
+    "ordinary_reboot_cannot_prove_elapsed_RTC_trajectory_preserved": true,
+    "RTC_SET_0_may_reset_to_placeholder_and_RTC_SET_1_may_resume_stale_seconds": true,
+    "no_RTC_setter_or_indirect_scratch_calendar_injection_proposed": true,
+    "required": "Before RAM launch Root must resolve source-proven normal-return clock limitation, or supply an already qualified nonsetter return mechanism. Read-only capture/verification and HOLD on mismatch can be prepared now; no clock PASS is promised."
+  },
+  "live_guard": {
+    "implemented": "live_io.py",
+    "tests": "live-io-test.json",
+    "actual_device_opens": 0
+  },
+  "physical_IO": 0,
+  "goal_complete": false
+}

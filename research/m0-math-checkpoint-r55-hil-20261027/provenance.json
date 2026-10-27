@@ -1,0 +1,1908 @@
+{
+  "archived_files": [
+    {
+      "source": ".build/m0-math-r55-hil-20261027/R1-READY.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "d44e2353179ffa737c073778b15b114953b4edc469b5518ad7988d200e197a30",
+      "uncompressed_bytes": 622,
+      "path": "payloads/d4/d44e2353179ffa737c073778b15b114953b4edc469b5518ad7988d200e197a30.dat",
+      "encoding": "identity",
+      "sha256": "d44e2353179ffa737c073778b15b114953b4edc469b5518ad7988d200e197a30",
+      "stored_bytes": 622
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/STAGE0-R2-READY.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "ef4647d799ba71ff1959dd357227d39a2785ef914a261fad97d1accbb8962c04",
+      "uncompressed_bytes": 1011,
+      "path": "payloads/ef/ef4647d799ba71ff1959dd357227d39a2785ef914a261fad97d1accbb8962c04.dat",
+      "encoding": "identity",
+      "sha256": "ef4647d799ba71ff1959dd357227d39a2785ef914a261fad97d1accbb8962c04",
+      "stored_bytes": 1011
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/STAGE0-READY.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "33160d67d0b2114ff3eab6c0d8676f5a353238ebba154f70834148b5516a7dcb",
+      "uncompressed_bytes": 775,
+      "path": "payloads/33/33160d67d0b2114ff3eab6c0d8676f5a353238ebba154f70834148b5516a7dcb.dat",
+      "encoding": "identity",
+      "sha256": "33160d67d0b2114ff3eab6c0d8676f5a353238ebba154f70834148b5516a7dcb",
+      "stored_bytes": 775
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/CDC-GRANT-TEMPLATE.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e2d6ecb27d78d7e8505161f839a8bad48361c6a042fa6a1e7706eb79b6a4f987",
+      "uncompressed_bytes": 1382,
+      "path": "payloads/e2/e2d6ecb27d78d7e8505161f839a8bad48361c6a042fa6a1e7706eb79b6a4f987.dat",
+      "encoding": "identity",
+      "sha256": "e2d6ecb27d78d7e8505161f839a8bad48361c6a042fa6a1e7706eb79b6a4f987",
+      "stored_bytes": 1382
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/CMakeLists.txt",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e467648c33786d47c30f533cf52ad1e34e39416ee98a1be830017e1160396c64",
+      "uncompressed_bytes": 1301,
+      "path": "payloads/e4/e467648c33786d47c30f533cf52ad1e34e39416ee98a1be830017e1160396c64.dat",
+      "encoding": "identity",
+      "sha256": "e467648c33786d47c30f533cf52ad1e34e39416ee98a1be830017e1160396c64",
+      "stored_bytes": 1301
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/FROZEN.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8",
+      "uncompressed_bytes": 7057,
+      "path": "payloads/8e/8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8.gz",
+      "encoding": "gzip",
+      "sha256": "90fa8f550a1c30cff03a40f473b7afdab5519097ee8592cac30eb2dbf136eb69",
+      "stored_bytes": 2928
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/METHOD.md",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "bc3490f9deab229ab707659cd65e0ea4bcb51e12a13dca4e7d96edaffc724d1f",
+      "uncompressed_bytes": 7486,
+      "path": "payloads/bc/bc3490f9deab229ab707659cd65e0ea4bcb51e12a13dca4e7d96edaffc724d1f.gz",
+      "encoding": "gzip",
+      "sha256": "d96c9b7db97b88771499bde453561b2aa0ca540444d83a99bd3022876cc4da33",
+      "stored_bytes": 3697
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/PACKAGE.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "f867b7dc00529b35af54d725a5abcfb844b91ccd1c87acc8416a3cf0873a27c1",
+      "uncompressed_bytes": 2571,
+      "path": "payloads/f8/f867b7dc00529b35af54d725a5abcfb844b91ccd1c87acc8416a3cf0873a27c1.dat",
+      "encoding": "identity",
+      "sha256": "f867b7dc00529b35af54d725a5abcfb844b91ccd1c87acc8416a3cf0873a27c1",
+      "stored_bytes": 2571
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/bench.c",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "c302d8dd47c0e68fa188327ab4e57c129596dc2e78edda8ce37e584af52b94db",
+      "uncompressed_bytes": 8697,
+      "path": "payloads/c3/c302d8dd47c0e68fa188327ab4e57c129596dc2e78edda8ce37e584af52b94db.gz",
+      "encoding": "gzip",
+      "sha256": "613ac7bf74c77e5cc669a14999899d9f0a7058f82f3b9eaf4be7f85152e597a8",
+      "stored_bytes": 3067
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/blob-meta.h",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "d19f542b5539e12f25b781f142fb14a413d871c31755ac4d1718a58fad7588a6",
+      "uncompressed_bytes": 601,
+      "path": "payloads/d1/d19f542b5539e12f25b781f142fb14a413d871c31755ac4d1718a58fad7588a6.dat",
+      "encoding": "identity",
+      "sha256": "d19f542b5539e12f25b781f142fb14a413d871c31755ac4d1718a58fad7588a6",
+      "stored_bytes": 601
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/blobs.S",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "9d930f0bcdb5e360704d529e1f9edf928d9cd7e807bc956d051d9ad9b8ad667b",
+      "uncompressed_bytes": 630,
+      "path": "payloads/9d/9d930f0bcdb5e360704d529e1f9edf928d9cd7e807bc956d051d9ad9b8ad667b.dat",
+      "encoding": "identity",
+      "sha256": "9d930f0bcdb5e360704d529e1f9edf928d9cd7e807bc956d051d9ad9b8ad667b",
+      "stored_bytes": 630
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/blobs.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "89987327c31b05af37d8913707982d93316886cdc30ab684423b7e180d354d85",
+      "uncompressed_bytes": 1494,
+      "path": "payloads/89/89987327c31b05af37d8913707982d93316886cdc30ab684423b7e180d354d85.dat",
+      "encoding": "identity",
+      "sha256": "89987327c31b05af37d8913707982d93316886cdc30ab684423b7e180d354d85",
+      "stored_bytes": 1494
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/build/compile_commands.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "dbaee8457771daa60c22135ca845949a3d76791adcb4bf996ba3dd59ccf4b08d",
+      "uncompressed_bytes": 690901,
+      "path": "payloads/db/dbaee8457771daa60c22135ca845949a3d76791adcb4bf996ba3dd59ccf4b08d.gz",
+      "encoding": "gzip",
+      "sha256": "3156110ff3a175c065b47a895cd79e778f279acd2123711923e6ebd1ac0d22dd",
+      "stored_bytes": 8119
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/build/m0_r55_pow_hil.dis",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "f06abdfd9e9cf6da660aaa92df39e89801738e71a60b1d3805ce3c7cf05de066",
+      "uncompressed_bytes": 2129881,
+      "path": "payloads/f0/f06abdfd9e9cf6da660aaa92df39e89801738e71a60b1d3805ce3c7cf05de066.gz",
+      "encoding": "gzip",
+      "sha256": "a3b8588cd55a78c4202e1df4387f93eb173fa71e515eb1116e1e88ea380f744f",
+      "stored_bytes": 524953
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/build/m0_r55_pow_hil.elf.map",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "f906a91eff9348c0e287628cd8ffd5e3bd8c6d52032ab806f011ee2f47253599",
+      "uncompressed_bytes": 544116,
+      "path": "payloads/f9/f906a91eff9348c0e287628cd8ffd5e3bd8c6d52032ab806f011ee2f47253599.gz",
+      "encoding": "gzip",
+      "sha256": "be84ad072b07ccaf522cb3bce01414da1e4a9e64e966d07fddd2b7a5a19330a2",
+      "stored_bytes": 28885
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/build-keep-rtc-r2.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "ea90abcc686451e71a144b9aac553da70124ee6eaac874ee74dafc0b50e1f24c",
+      "uncompressed_bytes": 130,
+      "path": "payloads/ea/ea90abcc686451e71a144b9aac553da70124ee6eaac874ee74dafc0b50e1f24c.dat",
+      "encoding": "identity",
+      "sha256": "ea90abcc686451e71a144b9aac553da70124ee6eaac874ee74dafc0b50e1f24c",
+      "stored_bytes": 130
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/build-keep-rtc.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e8b6b7735f0bb63056ca98e4a45401e8b8a50e02c4675af12847b5bea4a30790",
+      "uncompressed_bytes": 923,
+      "path": "payloads/e8/e8b6b7735f0bb63056ca98e4a45401e8b8a50e02c4675af12847b5bea4a30790.dat",
+      "encoding": "identity",
+      "sha256": "e8b6b7735f0bb63056ca98e4a45401e8b8a50e02c4675af12847b5bea4a30790",
+      "stored_bytes": 923
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/build-r2.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "f74fc32751bd6ed52bbf5362b4e8dbb53020d3f38899fc6945af8ea2909cb1dc",
+      "uncompressed_bytes": 759,
+      "path": "payloads/f7/f74fc32751bd6ed52bbf5362b4e8dbb53020d3f38899fc6945af8ea2909cb1dc.dat",
+      "encoding": "identity",
+      "sha256": "f74fc32751bd6ed52bbf5362b4e8dbb53020d3f38899fc6945af8ea2909cb1dc",
+      "stored_bytes": 759
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/build.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "bb9bcba71fdec157481d96de9e7b0b58f207b40daeedf7a29c98b849d0b36236",
+      "uncompressed_bytes": 29439,
+      "path": "payloads/bb/bb9bcba71fdec157481d96de9e7b0b58f207b40daeedf7a29c98b849d0b36236.gz",
+      "encoding": "gzip",
+      "sha256": "58edd7587f3c5323898410dd0950d9658a1942b494603356e3657bbd9a03a254",
+      "stored_bytes": 2592
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/check-worker.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "c2e35d332769e74b687a72f5d2ab56405d1ae74bcf811b8d1ca3a2d4fa28e71d",
+      "uncompressed_bytes": 1864,
+      "path": "payloads/c2/c2e35d332769e74b687a72f5d2ab56405d1ae74bcf811b8d1ca3a2d4fa28e71d.dat",
+      "encoding": "identity",
+      "sha256": "c2e35d332769e74b687a72f5d2ab56405d1ae74bcf811b8d1ca3a2d4fa28e71d",
+      "stored_bytes": 1864
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/check-worker.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "be92b5059a5116fe27a3afead30427d44d98fcb05a63841e895a55da31a0f1dc",
+      "uncompressed_bytes": 6699,
+      "path": "payloads/be/be92b5059a5116fe27a3afead30427d44d98fcb05a63841e895a55da31a0f1dc.gz",
+      "encoding": "gzip",
+      "sha256": "ef790d6b79951507a4dea194a5180a47fa1a0a49253d97f59ed3d79bcf0d0208",
+      "stored_bytes": 2865
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/compiled-inputs.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "f336dfdc8f3c8bf74c3f470b0dad5735e500be602488b07def89ca28781eaa26",
+      "uncompressed_bytes": 87755,
+      "path": "payloads/f3/f336dfdc8f3c8bf74c3f470b0dad5735e500be602488b07def89ca28781eaa26.gz",
+      "encoding": "gzip",
+      "sha256": "14fc9440483d409ceaf609d67b1969c790f599fb3216d02805649a9c94f89233",
+      "stored_bytes": 20154
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/configure.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "07f1a189df49dea03f215de81645eb34b50d36b23d8ca5a8ea24279068eed07b",
+      "uncompressed_bytes": 1913,
+      "path": "payloads/07/07f1a189df49dea03f215de81645eb34b50d36b23d8ca5a8ea24279068eed07b.dat",
+      "encoding": "identity",
+      "sha256": "07f1a189df49dea03f215de81645eb34b50d36b23d8ca5a8ea24279068eed07b",
+      "stored_bytes": 1913
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/dataset.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "45199caabb258dfe8c3af9258844d5acc066a8c73185f2d4d61d0046caedd943",
+      "uncompressed_bytes": 2380,
+      "path": "payloads/45/45199caabb258dfe8c3af9258844d5acc066a8c73185f2d4d61d0046caedd943.dat",
+      "encoding": "identity",
+      "sha256": "45199caabb258dfe8c3af9258844d5acc066a8c73185f2d4d61d0046caedd943",
+      "stored_bytes": 2380
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/dataset.jsonl.gz",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "cfbef4a46c89671b7b2f3d1be7a666e0cdd221bc21e1bf55ede3cc750c51e4b2",
+      "uncompressed_bytes": 1323865,
+      "path": "payloads/cf/cfbef4a46c89671b7b2f3d1be7a666e0cdd221bc21e1bf55ede3cc750c51e4b2.dat",
+      "encoding": "identity",
+      "sha256": "cfbef4a46c89671b7b2f3d1be7a666e0cdd221bc21e1bf55ede3cc750c51e4b2",
+      "stored_bytes": 1323865
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/descriptors.c",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "3c5f8df38824963a954d532c34e948060118081454339699217b7b385da4aaa5",
+      "uncompressed_bytes": 1379,
+      "path": "payloads/3c/3c5f8df38824963a954d532c34e948060118081454339699217b7b385da4aaa5.dat",
+      "encoding": "identity",
+      "sha256": "3c5f8df38824963a954d532c34e948060118081454339699217b7b385da4aaa5",
+      "stored_bytes": 1379
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/driver.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "6b7d7d4b6feb6edd4d597c34f76a5d7333647a65c0b36eb8571ba6d76ffe080e",
+      "uncompressed_bytes": 8318,
+      "path": "payloads/6b/6b7d7d4b6feb6edd4d597c34f76a5d7333647a65c0b36eb8571ba6d76ffe080e.gz",
+      "encoding": "gzip",
+      "sha256": "b46e60ab3b768286da61edf8a63a865dd676ca20654fa1dee85e097200fd28d5",
+      "stored_bytes": 3311
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/image-proof.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "ee811354f3957680ba8b05899a08eb999dab2fc8644e162246ce5c5f657d77ea",
+      "uncompressed_bytes": 2009,
+      "path": "payloads/ee/ee811354f3957680ba8b05899a08eb999dab2fc8644e162246ce5c5f657d77ea.dat",
+      "encoding": "identity",
+      "sha256": "ee811354f3957680ba8b05899a08eb999dab2fc8644e162246ce5c5f657d77ea",
+      "stored_bytes": 2009
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/link-commands.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "f7458524f2a7dbc69ebe46b1f2d0be3129799e5f35359950c994333bd23d626b",
+      "uncompressed_bytes": 3573,
+      "path": "payloads/f7/f7458524f2a7dbc69ebe46b1f2d0be3129799e5f35359950c994333bd23d626b.dat",
+      "encoding": "identity",
+      "sha256": "f7458524f2a7dbc69ebe46b1f2d0be3129799e5f35359950c994333bd23d626b",
+      "stored_bytes": 3573
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/math-pow-ram-link.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_bytes": 0,
+      "path": "payloads/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.dat",
+      "encoding": "identity",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/math-pow-ram.ld",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "5ded319acf83528200f3af3cc222dc4369678fd094c721759a6b4a90103e99ca",
+      "uncompressed_bytes": 1293,
+      "path": "payloads/5d/5ded319acf83528200f3af3cc222dc4369678fd094c721759a6b4a90103e99ca.dat",
+      "encoding": "identity",
+      "sha256": "5ded319acf83528200f3af3cc222dc4369678fd094c721759a6b4a90103e99ca",
+      "stored_bytes": 1293
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/math-pow-ram.map",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "ba6f48c07802260c2c09eeb3fc3ea5a2a2013b6db3e5963127339294fe7b485a",
+      "uncompressed_bytes": 132281,
+      "path": "payloads/ba/ba6f48c07802260c2c09eeb3fc3ea5a2a2013b6db3e5963127339294fe7b485a.gz",
+      "encoding": "gzip",
+      "sha256": "b5385fe4b8d159a242a850723399d1794c873dd74571a0db9d51bc55075cbf45",
+      "stored_bytes": 10431
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/measure.S",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "4f1e9aac01fd0f64a41334a4081a26284b0df2836138fff85abdf557d91c4e4a",
+      "uncompressed_bytes": 1863,
+      "path": "payloads/4f/4f1e9aac01fd0f64a41334a4081a26284b0df2836138fff85abdf557d91c4e4a.dat",
+      "encoding": "identity",
+      "sha256": "4f1e9aac01fd0f64a41334a4081a26284b0df2836138fff85abdf557d91c4e4a",
+      "stored_bytes": 1863
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/memmap.ld",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "a36ae049417917c66bcec9c4dc92c7badbc2b7eadcd45d78e5cd5ca20910ca15",
+      "uncompressed_bytes": 7638,
+      "path": "payloads/a3/a36ae049417917c66bcec9c4dc92c7badbc2b7eadcd45d78e5cd5ca20910ca15.gz",
+      "encoding": "gzip",
+      "sha256": "29c716746926f4251400bc99f211ff3c6a32ab6e3c00872f60b269b54183fc72",
+      "stored_bytes": 2418
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/prepare-blobs.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "89987327c31b05af37d8913707982d93316886cdc30ab684423b7e180d354d85",
+      "uncompressed_bytes": 1494,
+      "path": "payloads/89/89987327c31b05af37d8913707982d93316886cdc30ab684423b7e180d354d85.dat",
+      "encoding": "identity",
+      "sha256": "89987327c31b05af37d8913707982d93316886cdc30ab684423b7e180d354d85",
+      "stored_bytes": 1494
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/prepare-blobs.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "a96166dec8727012a2908d078dddcb04cf5725012662b88b0f04951a4520de90",
+      "uncompressed_bytes": 3786,
+      "path": "payloads/a9/a96166dec8727012a2908d078dddcb04cf5725012662b88b0f04951a4520de90.dat",
+      "encoding": "identity",
+      "sha256": "a96166dec8727012a2908d078dddcb04cf5725012662b88b0f04951a4520de90",
+      "stored_bytes": 3786
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/prepare-dataset.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "45199caabb258dfe8c3af9258844d5acc066a8c73185f2d4d61d0046caedd943",
+      "uncompressed_bytes": 2380,
+      "path": "payloads/45/45199caabb258dfe8c3af9258844d5acc066a8c73185f2d4d61d0046caedd943.dat",
+      "encoding": "identity",
+      "sha256": "45199caabb258dfe8c3af9258844d5acc066a8c73185f2d4d61d0046caedd943",
+      "stored_bytes": 2380
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/prepare-dataset.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "3cfc04e90156dffd1b414a57afeaa38e23b50da4e26e467ffa89997c90740e6a",
+      "uncompressed_bytes": 3302,
+      "path": "payloads/3c/3cfc04e90156dffd1b414a57afeaa38e23b50da4e26e467ffa89997c90740e6a.dat",
+      "encoding": "identity",
+      "sha256": "3cfc04e90156dffd1b414a57afeaa38e23b50da4e26e467ffa89997c90740e6a",
+      "stored_bytes": 3302
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/prepare-smoke.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "8ba90189da0e2dd3d5a123e752b044aaf7bb14dca190b76c6fade1529cb53d8b",
+      "uncompressed_bytes": 2846,
+      "path": "payloads/8b/8ba90189da0e2dd3d5a123e752b044aaf7bb14dca190b76c6fade1529cb53d8b.dat",
+      "encoding": "identity",
+      "sha256": "8ba90189da0e2dd3d5a123e752b044aaf7bb14dca190b76c6fade1529cb53d8b",
+      "stored_bytes": 2846
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/prepare-smoke.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "7b1431611bb382723f8e25d0eb0cb6f1dbbeada89d489697e4beb0a60fe4b0bd",
+      "uncompressed_bytes": 2689,
+      "path": "payloads/7b/7b1431611bb382723f8e25d0eb0cb6f1dbbeada89d489697e4beb0a60fe4b0bd.dat",
+      "encoding": "identity",
+      "sha256": "7b1431611bb382723f8e25d0eb0cb6f1dbbeada89d489697e4beb0a60fe4b0bd",
+      "stored_bytes": 2689
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/protocol.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "231534646d9f24587a47a6059473a2f5e540742ea68cff810ef71442c8beb333",
+      "uncompressed_bytes": 3192,
+      "path": "payloads/23/231534646d9f24587a47a6059473a2f5e540742ea68cff810ef71442c8beb333.dat",
+      "encoding": "identity",
+      "sha256": "231534646d9f24587a47a6059473a2f5e540742ea68cff810ef71442c8beb333",
+      "stored_bytes": 3192
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/qfplib-ram-link.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_bytes": 0,
+      "path": "payloads/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.dat",
+      "encoding": "identity",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/qfplib-ram.ld",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e169ffe1f0b24ba83b052c93887eecbe6322475004042a1c7570fae2d7c22f51",
+      "uncompressed_bytes": 352,
+      "path": "payloads/e1/e169ffe1f0b24ba83b052c93887eecbe6322475004042a1c7570fae2d7c22f51.dat",
+      "encoding": "identity",
+      "sha256": "e169ffe1f0b24ba83b052c93887eecbe6322475004042a1c7570fae2d7c22f51",
+      "stored_bytes": 352
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/qfplib-ram.map",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e849ba51a7ff9a6efec0affd9dae20c9c1345a4371385d343adf14d558a19778",
+      "uncompressed_bytes": 8343,
+      "path": "payloads/e8/e849ba51a7ff9a6efec0affd9dae20c9c1345a4371385d343adf14d558a19778.gz",
+      "encoding": "gzip",
+      "sha256": "9f55b31c7b44f59b56e690dca7cd66f29be5830848117e0afac2e053c7a87460",
+      "stored_bytes": 1290
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/r55-qualification-FROZEN.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "193dfa9d249dba658f9644da1affdb8b9e8a0ca24ac8da7c0c15e6dd5e1c687c",
+      "uncompressed_bytes": 13636,
+      "path": "payloads/19/193dfa9d249dba658f9644da1affdb8b9e8a0ca24ac8da7c0c15e6dd5e1c687c.gz",
+      "encoding": "gzip",
+      "sha256": "97dc7011e27df8882e5ef1f24bde1b80a9137bcfaa473a15faee06cc89a8d3c2",
+      "stored_bytes": 4640
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/r55-source-FROZEN.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6",
+      "uncompressed_bytes": 77543,
+      "path": "payloads/1a/1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6.gz",
+      "encoding": "gzip",
+      "sha256": "7091ca7f773500ba961eca6736285769b276a907464ac137aca5a0193b0bbe46",
+      "stored_bytes": 26332
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/ram-records.jsonl.gz",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "58f8a56d976bfee0b807873c08b1f776cee838760cc9aaf53379d172f714836d",
+      "uncompressed_bytes": 1243797,
+      "path": "payloads/58/58f8a56d976bfee0b807873c08b1f776cee838760cc9aaf53379d172f714836d.dat",
+      "encoding": "identity",
+      "sha256": "58f8a56d976bfee0b807873c08b1f776cee838760cc9aaf53379d172f714836d",
+      "stored_bytes": 1243797
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/ram-validation.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "f1699e7a2b1bfb29e112c7104b221ae7496d1601e80246e8dcd293822f8bbc32",
+      "uncompressed_bytes": 95835,
+      "path": "payloads/f1/f1699e7a2b1bfb29e112c7104b221ae7496d1601e80246e8dcd293822f8bbc32.gz",
+      "encoding": "gzip",
+      "sha256": "b6c3d2be0f893cbcc2e55635aabfdcd20534fb1e55065750c43d4b4d4851079e",
+      "stored_bytes": 14730
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/runtime-clock-source.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "f4a3859ae5154e3e8379dc48b7b035b72c9a10749b4bbb6fb64f9719cf9d6c17",
+      "uncompressed_bytes": 373,
+      "path": "payloads/f4/f4a3859ae5154e3e8379dc48b7b035b72c9a10749b4bbb6fb64f9719cf9d6c17.dat",
+      "encoding": "identity",
+      "sha256": "f4a3859ae5154e3e8379dc48b7b035b72c9a10749b4bbb6fb64f9719cf9d6c17",
+      "stored_bytes": 373
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/runtime-clocks-keep-rtc.c",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "24b9c03c3cf44f4b6188ed35a19f30d833c0daf8ed91db1bbcee2e4e21aedea7",
+      "uncompressed_bytes": 6095,
+      "path": "payloads/24/24b9c03c3cf44f4b6188ed35a19f30d833c0daf8ed91db1bbcee2e4e21aedea7.gz",
+      "encoding": "gzip",
+      "sha256": "80893c114953562eca48ee992ccba7e1a2258a787c7b2439f132e0aeeb495fc9",
+      "stored_bytes": 2267
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/runtime-resets-keep-rtc.c",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "23a3dacb9cb86f5d0278a84f18cfd229a20dea99b417c57a0e45877b9cb16129",
+      "uncompressed_bytes": 1691,
+      "path": "payloads/23/23a3dacb9cb86f5d0278a84f18cfd229a20dea99b417c57a0e45877b9cb16129.dat",
+      "encoding": "identity",
+      "sha256": "23a3dacb9cb86f5d0278a84f18cfd229a20dea99b417c57a0e45877b9cb16129",
+      "stored_bytes": 1691
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/smoke-plan.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "8ba90189da0e2dd3d5a123e752b044aaf7bb14dca190b76c6fade1529cb53d8b",
+      "uncompressed_bytes": 2846,
+      "path": "payloads/8b/8ba90189da0e2dd3d5a123e752b044aaf7bb14dca190b76c6fade1529cb53d8b.dat",
+      "encoding": "identity",
+      "sha256": "8ba90189da0e2dd3d5a123e752b044aaf7bb14dca190b76c6fade1529cb53d8b",
+      "stored_bytes": 2846
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/tusb_config.h",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "1419ac0cb638f6dcd9f9b0dc5ad497db05ec25ee7770bddd6ab93a2457189f32",
+      "uncompressed_bytes": 404,
+      "path": "payloads/14/1419ac0cb638f6dcd9f9b0dc5ad497db05ec25ee7770bddd6ab93a2457189f32.dat",
+      "encoding": "identity",
+      "sha256": "1419ac0cb638f6dcd9f9b0dc5ad497db05ec25ee7770bddd6ab93a2457189f32",
+      "stored_bytes": 404
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/validate-image-final.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "ee811354f3957680ba8b05899a08eb999dab2fc8644e162246ce5c5f657d77ea",
+      "uncompressed_bytes": 2009,
+      "path": "payloads/ee/ee811354f3957680ba8b05899a08eb999dab2fc8644e162246ce5c5f657d77ea.dat",
+      "encoding": "identity",
+      "sha256": "ee811354f3957680ba8b05899a08eb999dab2fc8644e162246ce5c5f657d77ea",
+      "stored_bytes": 2009
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/validate-image.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "9d869769246f62bb26ad247018fc331f2157c93f3039b496ea986ee02e91724a",
+      "uncompressed_bytes": 2009,
+      "path": "payloads/9d/9d869769246f62bb26ad247018fc331f2157c93f3039b496ea986ee02e91724a.dat",
+      "encoding": "identity",
+      "sha256": "9d869769246f62bb26ad247018fc331f2157c93f3039b496ea986ee02e91724a",
+      "stored_bytes": 2009
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/validate-image.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "58e0409de950fe91a07631eb23a8650e928e3fea108e5a489efa7498352ba186",
+      "uncompressed_bytes": 4789,
+      "path": "payloads/58/58e0409de950fe91a07631eb23a8650e928e3fea108e5a489efa7498352ba186.gz",
+      "encoding": "gzip",
+      "sha256": "514f44ce9d88cd2df6fcfa2bd7498915ad495c2cb70282b7838fa7ec8df7530a",
+      "stored_bytes": 2133
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/validate-ram.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "a24644616c4bd453d70e71367fb4deda1f5b5ae7e673dd9e767b6b85f5417b4c",
+      "uncompressed_bytes": 4883,
+      "path": "payloads/a2/a24644616c4bd453d70e71367fb4deda1f5b5ae7e673dd9e767b6b85f5417b4c.gz",
+      "encoding": "gzip",
+      "sha256": "69ac24fdbbb7e2b3092eef66fd422984c106fe0bbd039f5a36d45989582877d7",
+      "stored_bytes": 1806
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/validate-ram.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "a0aa7ee929c00168fcb3f848523e158c157d0ac3b0b01aba659ae298b750f45a",
+      "uncompressed_bytes": 7141,
+      "path": "payloads/a0/a0aa7ee929c00168fcb3f848523e158c157d0ac3b0b01aba659ae298b750f45a.gz",
+      "encoding": "gzip",
+      "sha256": "80ab2416ff9561e2d2b3070dcecb29e3d80253259062a0e33882b8661f5ebc6f",
+      "stored_bytes": 3062
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/verify-packet.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "7170ca2ee0f4b76ffed8b6951424b6ea5bc464329dadbde9871c830a08ae51c3",
+      "uncompressed_bytes": 3311,
+      "path": "payloads/71/7170ca2ee0f4b76ffed8b6951424b6ea5bc464329dadbde9871c830a08ae51c3.dat",
+      "encoding": "identity",
+      "sha256": "7170ca2ee0f4b76ffed8b6951424b6ea5bc464329dadbde9871c830a08ae51c3",
+      "stored_bytes": 3311
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/worker-check.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "c2e35d332769e74b687a72f5d2ab56405d1ae74bcf811b8d1ca3a2d4fa28e71d",
+      "uncompressed_bytes": 1864,
+      "path": "payloads/c2/c2e35d332769e74b687a72f5d2ab56405d1ae74bcf811b8d1ca3a2d4fa28e71d.dat",
+      "encoding": "identity",
+      "sha256": "c2e35d332769e74b687a72f5d2ab56405d1ae74bcf811b8d1ca3a2d4fa28e71d",
+      "stored_bytes": 1864
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/math-link-command.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "9307e2e2411806c06a1c03e9607e987d177dd0c2954fb854edd799839ebf8d90",
+      "uncompressed_bytes": 1958,
+      "path": "payloads/93/9307e2e2411806c06a1c03e9607e987d177dd0c2954fb854edd799839ebf8d90.dat",
+      "encoding": "identity",
+      "sha256": "9307e2e2411806c06a1c03e9607e987d177dd0c2954fb854edd799839ebf8d90",
+      "stored_bytes": 1958
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/math-link-command2.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "2c0be62cc319fcea300344197a7e43da241b3a29eacc9a5acb95315760093847",
+      "uncompressed_bytes": 2359,
+      "path": "payloads/2c/2c0be62cc319fcea300344197a7e43da241b3a29eacc9a5acb95315760093847.dat",
+      "encoding": "identity",
+      "sha256": "2c0be62cc319fcea300344197a7e43da241b3a29eacc9a5acb95315760093847",
+      "stored_bytes": 2359
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/math-pow-ram-link.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e18eb442719093fb43bea542faa904dbcfdb871cf71946fe5c7830b359e99aba",
+      "uncompressed_bytes": 64320,
+      "path": "payloads/e1/e18eb442719093fb43bea542faa904dbcfdb871cf71946fe5c7830b359e99aba.gz",
+      "encoding": "gzip",
+      "sha256": "630d94dc146b7f5497fd8dd0e9a353a8bc34f0c4c7a5e4797b48cc76603ad37b",
+      "stored_bytes": 2561
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/math-pow-ram-link2.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_bytes": 0,
+      "path": "payloads/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.dat",
+      "encoding": "identity",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/math-pow-ram.ld",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e2390fef389ce3a223e15f6b3c424e2442e0adb4c83811dc3a75a9233b1e05b8",
+      "uncompressed_bytes": 1290,
+      "path": "payloads/e2/e2390fef389ce3a223e15f6b3c424e2442e0adb4c83811dc3a75a9233b1e05b8.dat",
+      "encoding": "identity",
+      "sha256": "e2390fef389ce3a223e15f6b3c424e2442e0adb4c83811dc3a75a9233b1e05b8",
+      "stored_bytes": 1290
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/math-pow-ram.map",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "4248219537141e145209d279dc6113b832cc40552cb252367aa8454570975f0c",
+      "uncompressed_bytes": 132269,
+      "path": "payloads/42/4248219537141e145209d279dc6113b832cc40552cb252367aa8454570975f0c.gz",
+      "encoding": "gzip",
+      "sha256": "087db41c609c72a513c83ef6e1f87c604af1db9eeaaa5495cae596c7b3848d9e",
+      "stored_bytes": 10421
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/HELPER-PROVENANCE.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "d78130ab5c4aa0e0aaeb6c45ac267d050578bd1b8307e87c0ecb6bbf8c7861e0",
+      "uncompressed_bytes": 713,
+      "path": "payloads/d7/d78130ab5c4aa0e0aaeb6c45ac267d050578bd1b8307e87c0ecb6bbf8c7861e0.dat",
+      "encoding": "identity",
+      "sha256": "d78130ab5c4aa0e0aaeb6c45ac267d050578bd1b8307e87c0ecb6bbf8c7861e0",
+      "stored_bytes": 713
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/OPERATOR.md",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "1cdcf9680175f45bbcf0846eb2245d2170d9675648e3a697ec60b3274494ef39",
+      "uncompressed_bytes": 5618,
+      "path": "payloads/1c/1cdcf9680175f45bbcf0846eb2245d2170d9675648e3a697ec60b3274494ef39.gz",
+      "encoding": "gzip",
+      "sha256": "db1ff9856b455d297ecb3a7f767d6f0283a427a32afec15af52530c7f135d043",
+      "stored_bytes": 2983
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/PREFLIGHT-FROZEN.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d",
+      "uncompressed_bytes": 2904,
+      "path": "payloads/b8/b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d.dat",
+      "encoding": "identity",
+      "sha256": "b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d",
+      "stored_bytes": 2904
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/PREFLIGHT-GRANT-TEMPLATE.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "3b87a5e26e21500b8262209bcfd422b91922678025deef3c7cee5ffa1551aaee",
+      "uncompressed_bytes": 733,
+      "path": "payloads/3b/3b87a5e26e21500b8262209bcfd422b91922678025deef3c7cee5ffa1551aaee.dat",
+      "encoding": "identity",
+      "sha256": "3b87a5e26e21500b8262209bcfd422b91922678025deef3c7cee5ffa1551aaee",
+      "stored_bytes": 733
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/PREFLIGHT-MANIFEST.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "ed4dfba78500ff4a6e73dfdae1595ae8e873335ebc13b84140ac7fb63a519dc0",
+      "uncompressed_bytes": 1614,
+      "path": "payloads/ed/ed4dfba78500ff4a6e73dfdae1595ae8e873335ebc13b84140ac7fb63a519dc0.dat",
+      "encoding": "identity",
+      "sha256": "ed4dfba78500ff4a6e73dfdae1595ae8e873335ebc13b84140ac7fb63a519dc0",
+      "stored_bytes": 1614
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/PREFLIGHT.md",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "c351526cdb28fae72d7d42379203b13035b6433475add73b13d18c09d4867cb1",
+      "uncompressed_bytes": 3611,
+      "path": "payloads/c3/c351526cdb28fae72d7d42379203b13035b6433475add73b13d18c09d4867cb1.dat",
+      "encoding": "identity",
+      "sha256": "c351526cdb28fae72d7d42379203b13035b6433475add73b13d18c09d4867cb1",
+      "stored_bytes": 3611
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/RETURN-SOURCE-FINDINGS.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "29b6b8f167ebfad7fbfb9a1dcb60ba929059c1cdadca26cbc426f94f1f53f5e0",
+      "uncompressed_bytes": 2694,
+      "path": "payloads/29/29b6b8f167ebfad7fbfb9a1dcb60ba929059c1cdadca26cbc426f94f1f53f5e0.dat",
+      "encoding": "identity",
+      "sha256": "29b6b8f167ebfad7fbfb9a1dcb60ba929059c1cdadca26cbc426f94f1f53f5e0",
+      "stored_bytes": 2694
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/envelope_pins.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "0b40727f7dc6e868d2dbfdbbea601c03c3ebeb4038acd3932c00d4555a6c8766",
+      "uncompressed_bytes": 579,
+      "path": "payloads/0b/0b40727f7dc6e868d2dbfdbbea601c03c3ebeb4038acd3932c00d4555a6c8766.dat",
+      "encoding": "identity",
+      "sha256": "0b40727f7dc6e868d2dbfdbbea601c03c3ebeb4038acd3932c00d4555a6c8766",
+      "stored_bytes": 579
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/live-io-test.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "abff95e041301fd9f7ea0c19aa86598dd538f0fb435a8283181ad57d69acacc9",
+      "uncompressed_bytes": 569,
+      "path": "payloads/ab/abff95e041301fd9f7ea0c19aa86598dd538f0fb435a8283181ad57d69acacc9.dat",
+      "encoding": "identity",
+      "sha256": "abff95e041301fd9f7ea0c19aa86598dd538f0fb435a8283181ad57d69acacc9",
+      "stored_bytes": 569
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/live_io.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "5d359cb810affc1a7c04fb9dbd691c9424951e6b2975abc594af24b001891065",
+      "uncompressed_bytes": 7147,
+      "path": "payloads/5d/5d359cb810affc1a7c04fb9dbd691c9424951e6b2975abc594af24b001891065.gz",
+      "encoding": "gzip",
+      "sha256": "5874311466ae682fca089b7f6ba328748ed6211c426a86db412ceddcab31fe1e",
+      "stored_bytes": 2774
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/preflight-test.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "0a3fa85f28a2c42acde7f807a5d802b43e7570c8f65df5c101eb1ef23b3da863",
+      "uncompressed_bytes": 865,
+      "path": "payloads/0a/0a3fa85f28a2c42acde7f807a5d802b43e7570c8f65df5c101eb1ef23b3da863.dat",
+      "encoding": "identity",
+      "sha256": "0a3fa85f28a2c42acde7f807a5d802b43e7570c8f65df5c101eb1ef23b3da863",
+      "stored_bytes": 865
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/preflight.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "2056ff980e8395fcfcbfb0cd9986c3490af1e9d6a1f4e717c52941a5ab368651",
+      "uncompressed_bytes": 9429,
+      "path": "payloads/20/2056ff980e8395fcfcbfb0cd9986c3490af1e9d6a1f4e717c52941a5ab368651.gz",
+      "encoding": "gzip",
+      "sha256": "14b79c05d27d4b87a45ead183bda0c239083ec51c070ff82dce1529ed5a8a32d",
+      "stored_bytes": 4003
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/resident_stage.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "20fbab67d2a728b2cf65b4eab330d9cfd9790fc6fed524a09c3c9ac7c051a247",
+      "uncompressed_bytes": 6431,
+      "path": "payloads/20/20fbab67d2a728b2cf65b4eab330d9cfd9790fc6fed524a09c3c9ac7c051a247.gz",
+      "encoding": "gzip",
+      "sha256": "178ba0252e3059c54fd713e91d4ec02c1b3f4752f23cd68009fdac1f805eda7c",
+      "stored_bytes": 2858
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/rom-envelope-test.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "fec9b074ccda6246d1f3c495a3c3e577e18f58cc142f6d4b6c93c901420d15c9",
+      "uncompressed_bytes": 326,
+      "path": "payloads/fe/fec9b074ccda6246d1f3c495a3c3e577e18f58cc142f6d4b6c93c901420d15c9.dat",
+      "encoding": "identity",
+      "sha256": "fec9b074ccda6246d1f3c495a3c3e577e18f58cc142f6d4b6c93c901420d15c9",
+      "stored_bytes": 326
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/rom_stage.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "5d7fb5ea4ee801a8d68162699478029f07a4c6ea428cfbd67c8605d81daee3a3",
+      "uncompressed_bytes": 8067,
+      "path": "payloads/5d/5d7fb5ea4ee801a8d68162699478029f07a4c6ea428cfbd67c8605d81daee3a3.gz",
+      "encoding": "gzip",
+      "sha256": "ed0ec7c4ec6e1524dc6443de3d87ca45daa35370ce5b53f5a228a645691be676",
+      "stored_bytes": 3343
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/selected249-source/ports/picocalc/clock.cpp",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "8a2213285dd0af18bf2806d12d3cdd1160b5b4678960d5b4e32d9b134112fc8f",
+      "uncompressed_bytes": 10798,
+      "path": "payloads/8a/8a2213285dd0af18bf2806d12d3cdd1160b5b4678960d5b4e32d9b134112fc8f.gz",
+      "encoding": "gzip",
+      "sha256": "d31bfba207afe1fe1a8ed489ce19fb7da2973cf4e0e9e942a86d093a1c63cf0f",
+      "stored_bytes": 3539
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/selected249-source/ports/picocalc/main.cpp",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "b16b588b7667ffa3439521d730d941b3fbeaaa3317f32f3ec7992761bf2a86ac",
+      "uncompressed_bytes": 37824,
+      "path": "payloads/b1/b16b588b7667ffa3439521d730d941b3fbeaaa3317f32f3ec7992761bf2a86ac.gz",
+      "encoding": "gzip",
+      "sha256": "30cb752c35dbc6b1f55f95ec868de690cd8b85ad0231aaf1e891965869683efa",
+      "stored_bytes": 9934
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/selected249-source/ports/picocalc/terminal.cpp",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "0b6b66b47c07ea0eaa48da9698a20d7688f37356e1f321dff35adea528e6e7c4",
+      "uncompressed_bytes": 20576,
+      "path": "payloads/0b/0b6b66b47c07ea0eaa48da9698a20d7688f37356e1f321dff35adea528e6e7c4.gz",
+      "encoding": "gzip",
+      "sha256": "50d72e144869f4610ddc78fb732eefee584b88142d40e29be2eb2fd60a923712",
+      "stored_bytes": 5612
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/selected249-source/ports/picocalc/terminal.hpp",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "acfb5e8fe4a4593c152a1a39762edf5a12305c5469db3a7657d29305c61f246c",
+      "uncompressed_bytes": 2353,
+      "path": "payloads/ac/acfb5e8fe4a4593c152a1a39762edf5a12305c5469db3a7657d29305c61f246c.dat",
+      "encoding": "identity",
+      "sha256": "acfb5e8fe4a4593c152a1a39762edf5a12305c5469db3a7657d29305c61f246c",
+      "stored_bytes": 2353
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/test-live-io.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "6d2d2fbe3d2bc11bfdf93190a75a1b3ad9a1bc947d86b44206b953b0f6242dc9",
+      "uncompressed_bytes": 4381,
+      "path": "payloads/6d/6d2d2fbe3d2bc11bfdf93190a75a1b3ad9a1bc947d86b44206b953b0f6242dc9.gz",
+      "encoding": "gzip",
+      "sha256": "becf084e12e3f509ff449c24c9a4ef9bc5d2c43df8086b77f65e142131773b45",
+      "stored_bytes": 1637
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/test-preflight.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "55d989000df894ba64cdde3667850a29e8ed9ab48e98b2c451297387918e09fa",
+      "uncompressed_bytes": 2711,
+      "path": "payloads/55/55d989000df894ba64cdde3667850a29e8ed9ab48e98b2c451297387918e09fa.dat",
+      "encoding": "identity",
+      "sha256": "55d989000df894ba64cdde3667850a29e8ed9ab48e98b2c451297387918e09fa",
+      "stored_bytes": 2711
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/test-rom-envelope.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "d217bbd26e0b425f35092b5d87b008bb13fdc2d57360aa996db0d1abbb01f83c",
+      "uncompressed_bytes": 2763,
+      "path": "payloads/d2/d217bbd26e0b425f35092b5d87b008bb13fdc2d57360aa996db0d1abbb01f83c.dat",
+      "encoding": "identity",
+      "sha256": "d217bbd26e0b425f35092b5d87b008bb13fdc2d57360aa996db0d1abbb01f83c",
+      "stored_bytes": 2763
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/test-worker-live.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "3dbbcb7637d03ef53d84d29d629982839404a0518fd243dfb55998a54533304a",
+      "uncompressed_bytes": 2959,
+      "path": "payloads/3d/3dbbcb7637d03ef53d84d29d629982839404a0518fd243dfb55998a54533304a.dat",
+      "encoding": "identity",
+      "sha256": "3dbbcb7637d03ef53d84d29d629982839404a0518fd243dfb55998a54533304a",
+      "stored_bytes": 2959
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/vendor/clock_bridge.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "41f49a7134038cdc96ce523cc47a518a0a2b5c20178551e62297846c0c2ff963",
+      "uncompressed_bytes": 9385,
+      "path": "payloads/41/41f49a7134038cdc96ce523cc47a518a0a2b5c20178551e62297846c0c2ff963.gz",
+      "encoding": "gzip",
+      "sha256": "f4e0c34e4ae3025e825d6847f4520d9c7bb203662fd1c5ea0aacd41f16b86b15",
+      "stored_bytes": 3339
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/vendor/status_frames.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "9db5fecce7034764e30bbdfe44c2244575fb261f6e7896092ef722d441c82eaa",
+      "uncompressed_bytes": 1132,
+      "path": "payloads/9d/9db5fecce7034764e30bbdfe44c2244575fb261f6e7896092ef722d441c82eaa.dat",
+      "encoding": "identity",
+      "sha256": "9db5fecce7034764e30bbdfe44c2244575fb261f6e7896092ef722d441c82eaa",
+      "stored_bytes": 1132
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/vendor/transaction_core.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "a428aa09ad4c1c6f3bb5794a1667f4aee4c1ae7cab36e222b3baf13aa23713f5",
+      "uncompressed_bytes": 112,
+      "path": "payloads/a4/a428aa09ad4c1c6f3bb5794a1667f4aee4c1ae7cab36e222b3baf13aa23713f5.dat",
+      "encoding": "identity",
+      "sha256": "a428aa09ad4c1c6f3bb5794a1667f4aee4c1ae7cab36e222b3baf13aa23713f5",
+      "stored_bytes": 112
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/verify-preflight.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "f1d383eb03bb1a237897bc3b70174ac0821ed594fbe0fa419362b7da8ed40feb",
+      "uncompressed_bytes": 1018,
+      "path": "payloads/f1/f1d383eb03bb1a237897bc3b70174ac0821ed594fbe0fa419362b7da8ed40feb.dat",
+      "encoding": "identity",
+      "sha256": "f1d383eb03bb1a237897bc3b70174ac0821ed594fbe0fa419362b7da8ed40feb",
+      "stored_bytes": 1018
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/worker-live-test.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "b019244921ce9a231c3c2a5d47d3ed8ead7b0af96ffbc5ef0b398c4950f1366f",
+      "uncompressed_bytes": 328,
+      "path": "payloads/b0/b019244921ce9a231c3c2a5d47d3ed8ead7b0af96ffbc5ef0b398c4950f1366f.dat",
+      "encoding": "identity",
+      "sha256": "b019244921ce9a231c3c2a5d47d3ed8ead7b0af96ffbc5ef0b398c4950f1366f",
+      "stored_bytes": 328
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r1/worker_stage.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "24bedc107c719ba24c39239fff9aa330f143212d11a41f40dce09543f7c15a7c",
+      "uncompressed_bytes": 3971,
+      "path": "payloads/24/24bedc107c719ba24c39239fff9aa330f143212d11a41f40dce09543f7c15a7c.dat",
+      "encoding": "identity",
+      "sha256": "24bedc107c719ba24c39239fff9aa330f143212d11a41f40dce09543f7c15a7c",
+      "stored_bytes": 3971
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/HELPER-PROVENANCE.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "d78130ab5c4aa0e0aaeb6c45ac267d050578bd1b8307e87c0ecb6bbf8c7861e0",
+      "uncompressed_bytes": 713,
+      "path": "payloads/d7/d78130ab5c4aa0e0aaeb6c45ac267d050578bd1b8307e87c0ecb6bbf8c7861e0.dat",
+      "encoding": "identity",
+      "sha256": "d78130ab5c4aa0e0aaeb6c45ac267d050578bd1b8307e87c0ecb6bbf8c7861e0",
+      "stored_bytes": 713
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/PREFLIGHT-FROZEN.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22",
+      "uncompressed_bytes": 3089,
+      "path": "payloads/81/81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22.dat",
+      "encoding": "identity",
+      "sha256": "81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22",
+      "stored_bytes": 3089
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/PREFLIGHT-GRANT-TEMPLATE.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "a63dfb8842f216a386cdce0ea82b500ffc2af9d7aa6ecb0e173ab1c8e37e2dd4",
+      "uncompressed_bytes": 765,
+      "path": "payloads/a6/a63dfb8842f216a386cdce0ea82b500ffc2af9d7aa6ecb0e173ab1c8e37e2dd4.dat",
+      "encoding": "identity",
+      "sha256": "a63dfb8842f216a386cdce0ea82b500ffc2af9d7aa6ecb0e173ab1c8e37e2dd4",
+      "stored_bytes": 765
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/PREFLIGHT-MANIFEST.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "b8e8eca7591ebcde589080542ca7f871d6d798ddc4c2055a1b60634e9dbb91ef",
+      "uncompressed_bytes": 1776,
+      "path": "payloads/b8/b8e8eca7591ebcde589080542ca7f871d6d798ddc4c2055a1b60634e9dbb91ef.dat",
+      "encoding": "identity",
+      "sha256": "b8e8eca7591ebcde589080542ca7f871d6d798ddc4c2055a1b60634e9dbb91ef",
+      "stored_bytes": 1776
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/PREFLIGHT.md",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "903b50983d544633dfd31fb35c2caa5d8b6e1597ad09dc2768a993272e418d8d",
+      "uncompressed_bytes": 4071,
+      "path": "payloads/90/903b50983d544633dfd31fb35c2caa5d8b6e1597ad09dc2768a993272e418d8d.dat",
+      "encoding": "identity",
+      "sha256": "903b50983d544633dfd31fb35c2caa5d8b6e1597ad09dc2768a993272e418d8d",
+      "stored_bytes": 4071
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/RETURN-SOURCE-FINDINGS.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "29b6b8f167ebfad7fbfb9a1dcb60ba929059c1cdadca26cbc426f94f1f53f5e0",
+      "uncompressed_bytes": 2694,
+      "path": "payloads/29/29b6b8f167ebfad7fbfb9a1dcb60ba929059c1cdadca26cbc426f94f1f53f5e0.dat",
+      "encoding": "identity",
+      "sha256": "29b6b8f167ebfad7fbfb9a1dcb60ba929059c1cdadca26cbc426f94f1f53f5e0",
+      "stored_bytes": 2694
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/live-io-test.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "abff95e041301fd9f7ea0c19aa86598dd538f0fb435a8283181ad57d69acacc9",
+      "uncompressed_bytes": 569,
+      "path": "payloads/ab/abff95e041301fd9f7ea0c19aa86598dd538f0fb435a8283181ad57d69acacc9.dat",
+      "encoding": "identity",
+      "sha256": "abff95e041301fd9f7ea0c19aa86598dd538f0fb435a8283181ad57d69acacc9",
+      "stored_bytes": 569
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/live_io.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "5d359cb810affc1a7c04fb9dbd691c9424951e6b2975abc594af24b001891065",
+      "uncompressed_bytes": 7147,
+      "path": "payloads/5d/5d359cb810affc1a7c04fb9dbd691c9424951e6b2975abc594af24b001891065.gz",
+      "encoding": "gzip",
+      "sha256": "5874311466ae682fca089b7f6ba328748ed6211c426a86db412ceddcab31fe1e",
+      "stored_bytes": 2774
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/preflight-test.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "01fd998e8f6a26c90424cbc62fbca2943616a8354c4f8bc2f7a9922ca0b2228b",
+      "uncompressed_bytes": 946,
+      "path": "payloads/01/01fd998e8f6a26c90424cbc62fbca2943616a8354c4f8bc2f7a9922ca0b2228b.dat",
+      "encoding": "identity",
+      "sha256": "01fd998e8f6a26c90424cbc62fbca2943616a8354c4f8bc2f7a9922ca0b2228b",
+      "stored_bytes": 946
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/preflight.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "69627ff676619cab6b3bf285b72d7217b451327b9d4a55e817ef42409dadc234",
+      "uncompressed_bytes": 9935,
+      "path": "payloads/69/69627ff676619cab6b3bf285b72d7217b451327b9d4a55e817ef42409dadc234.gz",
+      "encoding": "gzip",
+      "sha256": "99039426f0af2eeaab2d73e1cae32e705cf3615d5271f32b26b43fafc539fbed",
+      "stored_bytes": 4147
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/selected249-source/ports/picocalc/clock.cpp",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "8a2213285dd0af18bf2806d12d3cdd1160b5b4678960d5b4e32d9b134112fc8f",
+      "uncompressed_bytes": 10798,
+      "path": "payloads/8a/8a2213285dd0af18bf2806d12d3cdd1160b5b4678960d5b4e32d9b134112fc8f.gz",
+      "encoding": "gzip",
+      "sha256": "d31bfba207afe1fe1a8ed489ce19fb7da2973cf4e0e9e942a86d093a1c63cf0f",
+      "stored_bytes": 3539
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/selected249-source/ports/picocalc/main.cpp",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "b16b588b7667ffa3439521d730d941b3fbeaaa3317f32f3ec7992761bf2a86ac",
+      "uncompressed_bytes": 37824,
+      "path": "payloads/b1/b16b588b7667ffa3439521d730d941b3fbeaaa3317f32f3ec7992761bf2a86ac.gz",
+      "encoding": "gzip",
+      "sha256": "30cb752c35dbc6b1f55f95ec868de690cd8b85ad0231aaf1e891965869683efa",
+      "stored_bytes": 9934
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/selected249-source/ports/picocalc/terminal.cpp",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "0b6b66b47c07ea0eaa48da9698a20d7688f37356e1f321dff35adea528e6e7c4",
+      "uncompressed_bytes": 20576,
+      "path": "payloads/0b/0b6b66b47c07ea0eaa48da9698a20d7688f37356e1f321dff35adea528e6e7c4.gz",
+      "encoding": "gzip",
+      "sha256": "50d72e144869f4610ddc78fb732eefee584b88142d40e29be2eb2fd60a923712",
+      "stored_bytes": 5612
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/selected249-source/ports/picocalc/terminal.hpp",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "acfb5e8fe4a4593c152a1a39762edf5a12305c5469db3a7657d29305c61f246c",
+      "uncompressed_bytes": 2353,
+      "path": "payloads/ac/acfb5e8fe4a4593c152a1a39762edf5a12305c5469db3a7657d29305c61f246c.dat",
+      "encoding": "identity",
+      "sha256": "acfb5e8fe4a4593c152a1a39762edf5a12305c5469db3a7657d29305c61f246c",
+      "stored_bytes": 2353
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/test-live-io.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "6d2d2fbe3d2bc11bfdf93190a75a1b3ad9a1bc947d86b44206b953b0f6242dc9",
+      "uncompressed_bytes": 4381,
+      "path": "payloads/6d/6d2d2fbe3d2bc11bfdf93190a75a1b3ad9a1bc947d86b44206b953b0f6242dc9.gz",
+      "encoding": "gzip",
+      "sha256": "becf084e12e3f509ff449c24c9a4ef9bc5d2c43df8086b77f65e142131773b45",
+      "stored_bytes": 1637
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/test-preflight.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "3d916be74b6a4e83a822e651e971362a33f495f279e8c7932e4e262f4d9d40eb",
+      "uncompressed_bytes": 3086,
+      "path": "payloads/3d/3d916be74b6a4e83a822e651e971362a33f495f279e8c7932e4e262f4d9d40eb.dat",
+      "encoding": "identity",
+      "sha256": "3d916be74b6a4e83a822e651e971362a33f495f279e8c7932e4e262f4d9d40eb",
+      "stored_bytes": 3086
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/vendor/clock_bridge.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "41f49a7134038cdc96ce523cc47a518a0a2b5c20178551e62297846c0c2ff963",
+      "uncompressed_bytes": 9385,
+      "path": "payloads/41/41f49a7134038cdc96ce523cc47a518a0a2b5c20178551e62297846c0c2ff963.gz",
+      "encoding": "gzip",
+      "sha256": "f4e0c34e4ae3025e825d6847f4520d9c7bb203662fd1c5ea0aacd41f16b86b15",
+      "stored_bytes": 3339
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/vendor/status_frames.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "9db5fecce7034764e30bbdfe44c2244575fb261f6e7896092ef722d441c82eaa",
+      "uncompressed_bytes": 1132,
+      "path": "payloads/9d/9db5fecce7034764e30bbdfe44c2244575fb261f6e7896092ef722d441c82eaa.dat",
+      "encoding": "identity",
+      "sha256": "9db5fecce7034764e30bbdfe44c2244575fb261f6e7896092ef722d441c82eaa",
+      "stored_bytes": 1132
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/vendor/transaction_core.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "a428aa09ad4c1c6f3bb5794a1667f4aee4c1ae7cab36e222b3baf13aa23713f5",
+      "uncompressed_bytes": 112,
+      "path": "payloads/a4/a428aa09ad4c1c6f3bb5794a1667f4aee4c1ae7cab36e222b3baf13aa23713f5.dat",
+      "encoding": "identity",
+      "sha256": "a428aa09ad4c1c6f3bb5794a1667f4aee4c1ae7cab36e222b3baf13aa23713f5",
+      "stored_bytes": 112
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/operator-r2/verify-preflight.py",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "4437b5eb7f25fc9c36db83014e01bb2b39fc92b075138f6c7a289b77004aecfa",
+      "uncompressed_bytes": 1018,
+      "path": "payloads/44/4437b5eb7f25fc9c36db83014e01bb2b39fc92b075138f6c7a289b77004aecfa.dat",
+      "encoding": "identity",
+      "sha256": "4437b5eb7f25fc9c36db83014e01bb2b39fc92b075138f6c7a289b77004aecfa",
+      "stored_bytes": 1018
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/qfplib-link-command.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "087f0f9687007efb49cf9bc6fa079679e12b6ecfaa49ee188b135f657226b768",
+      "uncompressed_bytes": 794,
+      "path": "payloads/08/087f0f9687007efb49cf9bc6fa079679e12b6ecfaa49ee188b135f657226b768.dat",
+      "encoding": "identity",
+      "sha256": "087f0f9687007efb49cf9bc6fa079679e12b6ecfaa49ee188b135f657226b768",
+      "stored_bytes": 794
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/qfplib-ram-link.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "c6bf8780cd77c7a66bcf74a06d9550abaa441a856927d21ef9a55d4ed60f2efb",
+      "uncompressed_bytes": 587,
+      "path": "payloads/c6/c6bf8780cd77c7a66bcf74a06d9550abaa441a856927d21ef9a55d4ed60f2efb.dat",
+      "encoding": "identity",
+      "sha256": "c6bf8780cd77c7a66bcf74a06d9550abaa441a856927d21ef9a55d4ed60f2efb",
+      "stored_bytes": 587
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/qfplib-ram.ld",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "bda8e04cc0d968877a963cd7e064e52e7edff046ca9ebcbc83f80ac21b07b7d7",
+      "uncompressed_bytes": 277,
+      "path": "payloads/bd/bda8e04cc0d968877a963cd7e064e52e7edff046ca9ebcbc83f80ac21b07b7d7.dat",
+      "encoding": "identity",
+      "sha256": "bda8e04cc0d968877a963cd7e064e52e7edff046ca9ebcbc83f80ac21b07b7d7",
+      "stored_bytes": 277
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/qfplib-ram.map",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "be41da43bf0fb95a50595aa467a60fe56da6e753e6ca20c804049b39543fc371",
+      "uncompressed_bytes": 8197,
+      "path": "payloads/be/be41da43bf0fb95a50595aa467a60fe56da6e753e6ca20c804049b39543fc371.gz",
+      "encoding": "gzip",
+      "sha256": "be08b2fd657356755828415c97759c39e0ae82fd8ef4d30b6d0f8e76c4df7700",
+      "stored_bytes": 1241
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/r1-packet-verification.log",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "61b9bddfd9179c469a624d63f17d50200fc8423a51afaea10dcb64aa276eb5ab",
+      "uncompressed_bytes": 570,
+      "path": "payloads/61/61b9bddfd9179c469a624d63f17d50200fc8423a51afaea10dcb64aa276eb5ab.dat",
+      "encoding": "identity",
+      "sha256": "61b9bddfd9179c469a624d63f17d50200fc8423a51afaea10dcb64aa276eb5ab",
+      "stored_bytes": 570
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-current249-actual-001/RESULT.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "c86867b94f263496a43474d45eb46c056b3befd41b7697cc496d2f450ac5e62a",
+      "uncompressed_bytes": 451,
+      "path": "payloads/c8/c86867b94f263496a43474d45eb46c056b3befd41b7697cc496d2f450ac5e62a.dat",
+      "encoding": "identity",
+      "sha256": "c86867b94f263496a43474d45eb46c056b3befd41b7697cc496d2f450ac5e62a",
+      "stored_bytes": 451
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-current249-actual-001/STARTED.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "811c1ae9e20689c9ffcc12f5a26cab0af10bbea9038a1947c89b21275ce7632c",
+      "uncompressed_bytes": 243,
+      "path": "payloads/81/811c1ae9e20689c9ffcc12f5a26cab0af10bbea9038a1947c89b21275ce7632c.dat",
+      "encoding": "identity",
+      "sha256": "811c1ae9e20689c9ffcc12f5a26cab0af10bbea9038a1947c89b21275ce7632c",
+      "stored_bytes": 243
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-current249-actual-001/grant.byteexact.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "ea0ea0b765551714e1ad539d8216b452201ec2e9c0cdbbb49a99fa22b95d1869",
+      "uncompressed_bytes": 3271,
+      "path": "payloads/ea/ea0ea0b765551714e1ad539d8216b452201ec2e9c0cdbbb49a99fa22b95d1869.dat",
+      "encoding": "identity",
+      "sha256": "ea0ea0b765551714e1ad539d8216b452201ec2e9c0cdbbb49a99fa22b95d1869",
+      "stored_bytes": 3271
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-current249-actual-001/io.jsonl",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "17620968c46ef9ec83960fc3eca2995480f2f4d8ed0fa1ea7e3a27d742b88930",
+      "uncompressed_bytes": 92,
+      "path": "payloads/17/17620968c46ef9ec83960fc3eca2995480f2f4d8ed0fa1ea7e3a27d742b88930.dat",
+      "encoding": "identity",
+      "sha256": "17620968c46ef9ec83960fc3eca2995480f2f4d8ed0fa1ea7e3a27d742b88930",
+      "stored_bytes": 92
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-current249-actual-001/raw-from-open.bin",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "aa417af4e6b32c90f46cf3a5193c0a0e3f820b6c7a144c9dd4bd3aa022860ba6",
+      "uncompressed_bytes": 3261,
+      "path": "payloads/aa/aa417af4e6b32c90f46cf3a5193c0a0e3f820b6c7a144c9dd4bd3aa022860ba6.dat",
+      "encoding": "identity",
+      "sha256": "aa417af4e6b32c90f46cf3a5193c0a0e3f820b6c7a144c9dd4bd3aa022860ba6",
+      "stored_bytes": 3261
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-current249-supervisor-001/ACTUAL-EXIT.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "1b8a525888f438570477d19af521e380acd867b915ce4be2f47b542e8bfc6209",
+      "uncompressed_bytes": 690,
+      "path": "payloads/1b/1b8a525888f438570477d19af521e380acd867b915ce4be2f47b542e8bfc6209.dat",
+      "encoding": "identity",
+      "sha256": "1b8a525888f438570477d19af521e380acd867b915ce4be2f47b542e8bfc6209",
+      "stored_bytes": 690
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-current249-supervisor-001/ACTUAL-PID.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "33962b1317bab41bdcc2f6b7dd782fcb244ad1848e5004127e929b1f760473b3",
+      "uncompressed_bytes": 185,
+      "path": "payloads/33/33962b1317bab41bdcc2f6b7dd782fcb244ad1848e5004127e929b1f760473b3.dat",
+      "encoding": "identity",
+      "sha256": "33962b1317bab41bdcc2f6b7dd782fcb244ad1848e5004127e929b1f760473b3",
+      "stored_bytes": 185
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-current249-supervisor-001/ARGV.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "5238546af4e9b511f20950f5a82c08e95cfc7dc3c2979cb6b959beab02dc421d",
+      "uncompressed_bytes": 507,
+      "path": "payloads/52/5238546af4e9b511f20950f5a82c08e95cfc7dc3c2979cb6b959beab02dc421d.dat",
+      "encoding": "identity",
+      "sha256": "5238546af4e9b511f20950f5a82c08e95cfc7dc3c2979cb6b959beab02dc421d",
+      "stored_bytes": 507
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-current249-supervisor-001/stderr.bin",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "7b3597fe47ba11117ae1f2235ebbe78fd995abdfa7b87701859fa48637b691aa",
+      "uncompressed_bytes": 1890,
+      "path": "payloads/7b/7b3597fe47ba11117ae1f2235ebbe78fd995abdfa7b87701859fa48637b691aa.dat",
+      "encoding": "identity",
+      "sha256": "7b3597fe47ba11117ae1f2235ebbe78fd995abdfa7b87701859fa48637b691aa",
+      "stored_bytes": 1890
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-current249-supervisor-001/stdout.bin",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "c86867b94f263496a43474d45eb46c056b3befd41b7697cc496d2f450ac5e62a",
+      "uncompressed_bytes": 451,
+      "path": "payloads/c8/c86867b94f263496a43474d45eb46c056b3befd41b7697cc496d2f450ac5e62a.dat",
+      "encoding": "identity",
+      "sha256": "c86867b94f263496a43474d45eb46c056b3befd41b7697cc496d2f450ac5e62a",
+      "stored_bytes": 451
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/RESULT.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "da477ea2aede4ef9c9abc7725b4ee63d1c2ff73f8e0f331e975fc6c6aae8fb20",
+      "uncompressed_bytes": 635,
+      "path": "payloads/da/da477ea2aede4ef9c9abc7725b4ee63d1c2ff73f8e0f331e975fc6c6aae8fb20.dat",
+      "encoding": "identity",
+      "sha256": "da477ea2aede4ef9c9abc7725b4ee63d1c2ff73f8e0f331e975fc6c6aae8fb20",
+      "stored_bytes": 635
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/STARTED.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "2af22d8e0af5a14de1ead965ea91c079d3c0a05ae431668f95786ab9906e5a64",
+      "uncompressed_bytes": 255,
+      "path": "payloads/2a/2af22d8e0af5a14de1ead965ea91c079d3c0a05ae431668f95786ab9906e5a64.dat",
+      "encoding": "identity",
+      "sha256": "2af22d8e0af5a14de1ead965ea91c079d3c0a05ae431668f95786ab9906e5a64",
+      "stored_bytes": 255
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/alarm.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "616aa9d1623b76c74a02c03b80edc35c1d247bdd2495b3b895795c8baa262528",
+      "uncompressed_bytes": 89,
+      "path": "payloads/61/616aa9d1623b76c74a02c03b80edc35c1d247bdd2495b3b895795c8baa262528.dat",
+      "encoding": "identity",
+      "sha256": "616aa9d1623b76c74a02c03b80edc35c1d247bdd2495b3b895795c8baa262528",
+      "stored_bytes": 89
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/current-state.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "4f5387ed04e720920ea8b7ec5086f0c2a7b3b6d0ea1577f544b4a4736cfd8393",
+      "uncompressed_bytes": 2239,
+      "path": "payloads/4f/4f5387ed04e720920ea8b7ec5086f0c2a7b3b6d0ea1577f544b4a4736cfd8393.dat",
+      "encoding": "identity",
+      "sha256": "4f5387ed04e720920ea8b7ec5086f0c2a7b3b6d0ea1577f544b4a4736cfd8393",
+      "stored_bytes": 2239
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/date.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "f650de9271893996fefb4e3c0011ec78ac8a3a939f5310701669174fc40c7482",
+      "uncompressed_bytes": 33,
+      "path": "payloads/f6/f650de9271893996fefb4e3c0011ec78ac8a3a939f5310701669174fc40c7482.dat",
+      "encoding": "identity",
+      "sha256": "f650de9271893996fefb4e3c0011ec78ac8a3a939f5310701669174fc40c7482",
+      "stored_bytes": 33
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/grant.byteexact.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "cb9d5486f99c443ac7875d89a92d7400006f0efef0c5879696e34e5cf3e899df",
+      "uncompressed_bytes": 3511,
+      "path": "payloads/cb/cb9d5486f99c443ac7875d89a92d7400006f0efef0c5879696e34e5cf3e899df.dat",
+      "encoding": "identity",
+      "sha256": "cb9d5486f99c443ac7875d89a92d7400006f0efef0c5879696e34e5cf3e899df",
+      "stored_bytes": 3511
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/host-clock/session-000001.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "b37603f68fe710488b4e9281e9adc139d855e9447eb1caa9c8d9ba34f8302f11",
+      "uncompressed_bytes": 65,
+      "path": "payloads/b3/b37603f68fe710488b4e9281e9adc139d855e9447eb1caa9c8d9ba34f8302f11.dat",
+      "encoding": "identity",
+      "sha256": "b37603f68fe710488b4e9281e9adc139d855e9447eb1caa9c8d9ba34f8302f11",
+      "stored_bytes": 65
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/host-clock/session-000001.stderr.bin",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_bytes": 0,
+      "path": "payloads/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.dat",
+      "encoding": "identity",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/host-clock/session-000001.stdout.bin",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "287f239066e595d3705bbe6ff3ce02d656d2c91b54a8926dae4e65f404c9f64a",
+      "uncompressed_bytes": 37,
+      "path": "payloads/28/287f239066e595d3705bbe6ff3ce02d656d2c91b54a8926dae4e65f404c9f64a.dat",
+      "encoding": "identity",
+      "sha256": "287f239066e595d3705bbe6ff3ce02d656d2c91b54a8926dae4e65f404c9f64a",
+      "stored_bytes": 37
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/host-clock/session-000002.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "b37603f68fe710488b4e9281e9adc139d855e9447eb1caa9c8d9ba34f8302f11",
+      "uncompressed_bytes": 65,
+      "path": "payloads/b3/b37603f68fe710488b4e9281e9adc139d855e9447eb1caa9c8d9ba34f8302f11.dat",
+      "encoding": "identity",
+      "sha256": "b37603f68fe710488b4e9281e9adc139d855e9447eb1caa9c8d9ba34f8302f11",
+      "stored_bytes": 65
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/host-clock/session-000002.stderr.bin",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_bytes": 0,
+      "path": "payloads/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.dat",
+      "encoding": "identity",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/host-clock/session-000002.stdout.bin",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "287f239066e595d3705bbe6ff3ce02d656d2c91b54a8926dae4e65f404c9f64a",
+      "uncompressed_bytes": 37,
+      "path": "payloads/28/287f239066e595d3705bbe6ff3ce02d656d2c91b54a8926dae4e65f404c9f64a.dat",
+      "encoding": "identity",
+      "sha256": "287f239066e595d3705bbe6ff3ce02d656d2c91b54a8926dae4e65f404c9f64a",
+      "stored_bytes": 37
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/host-clock/timebase.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "1b1aea426aacfe7cef1210a9db53258f155b629bb6781c540dc6ea26d7b8a32e",
+      "uncompressed_bytes": 107,
+      "path": "payloads/1b/1b1aea426aacfe7cef1210a9db53258f155b629bb6781c540dc6ea26d7b8a32e.dat",
+      "encoding": "identity",
+      "sha256": "1b1aea426aacfe7cef1210a9db53258f155b629bb6781c540dc6ea26d7b8a32e",
+      "stored_bytes": 107
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/hout.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "56d12ba14ae536ec2ad49bac5633aa537cacc0ab180b9722db7cc505fc560d71",
+      "uncompressed_bytes": 277,
+      "path": "payloads/56/56d12ba14ae536ec2ad49bac5633aa537cacc0ab180b9722db7cc505fc560d71.dat",
+      "encoding": "identity",
+      "sha256": "56d12ba14ae536ec2ad49bac5633aa537cacc0ab180b9722db7cc505fc560d71",
+      "stored_bytes": 277
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/identity.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "44fb2971dced4e91afce4f35bf72f07f4a7876033009e5bc04fc28995377e884",
+      "uncompressed_bytes": 85,
+      "path": "payloads/44/44fb2971dced4e91afce4f35bf72f07f4a7876033009e5bc04fc28995377e884.dat",
+      "encoding": "identity",
+      "sha256": "44fb2971dced4e91afce4f35bf72f07f4a7876033009e5bc04fc28995377e884",
+      "stored_bytes": 85
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/io.jsonl",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "4b6bea3bdcb6da590f1bce3d2c158e96591a3d7b6d4a7312b491d46778a12540",
+      "uncompressed_bytes": 1808,
+      "path": "payloads/4b/4b6bea3bdcb6da590f1bce3d2c158e96591a3d7b6d4a7312b491d46778a12540.dat",
+      "encoding": "identity",
+      "sha256": "4b6bea3bdcb6da590f1bce3d2c158e96591a3d7b6d4a7312b491d46778a12540",
+      "stored_bytes": 1808
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/pwd.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "8f9a038d9e7ce3f98cb4f1fd38d65a8acf3e941243554a626346b2da46d02db2",
+      "uncompressed_bytes": 14,
+      "path": "payloads/8f/8f9a038d9e7ce3f98cb4f1fd38d65a8acf3e941243554a626346b2da46d02db2.dat",
+      "encoding": "identity",
+      "sha256": "8f9a038d9e7ce3f98cb4f1fd38d65a8acf3e941243554a626346b2da46d02db2",
+      "stored_bytes": 14
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/raw-from-open.bin",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "6236a8d60cdb70967be4db60e318aa340724506fd37f9edee08b5a954bca319a",
+      "uncompressed_bytes": 36861,
+      "path": "payloads/62/6236a8d60cdb70967be4db60e318aa340724506fd37f9edee08b5a954bca319a.gz",
+      "encoding": "gzip",
+      "sha256": "2d98d6401c15ec40f8cb7c1ce90d61d01e36752a23df573dc5063de355c99d7b",
+      "stored_bytes": 2499
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/reg.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "7065ecbadd66945fd7d52b2fbcf3779bcddceae27ac3d9fa43bf3d5303f7cc7f",
+      "uncompressed_bytes": 326,
+      "path": "payloads/70/7065ecbadd66945fd7d52b2fbcf3779bcddceae27ac3d9fa43bf3d5303f7cc7f.dat",
+      "encoding": "identity",
+      "sha256": "7065ecbadd66945fd7d52b2fbcf3779bcddceae27ac3d9fa43bf3d5303f7cc7f",
+      "stored_bytes": 326
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/status-001.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "da77fcd931e6a2e1a7f73f25acfc80689b81f5a2ff30639d4b8c697d74d2c4d8",
+      "uncompressed_bytes": 3262,
+      "path": "payloads/da/da77fcd931e6a2e1a7f73f25acfc80689b81f5a2ff30639d4b8c697d74d2c4d8.dat",
+      "encoding": "identity",
+      "sha256": "da77fcd931e6a2e1a7f73f25acfc80689b81f5a2ff30639d4b8c697d74d2c4d8",
+      "stored_bytes": 3262
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/status-002.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "d1a28dd07275f15893d2a2e6b22befd3cabb1bd5fc37ff035d7d3c306eac8b68",
+      "uncompressed_bytes": 3262,
+      "path": "payloads/d1/d1a28dd07275f15893d2a2e6b22befd3cabb1bd5fc37ff035d7d3c306eac8b68.dat",
+      "encoding": "identity",
+      "sha256": "d1a28dd07275f15893d2a2e6b22befd3cabb1bd5fc37ff035d7d3c306eac8b68",
+      "stored_bytes": 3262
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/status-003.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "73dea71bcc40c43d7a71f5caaee7352c4069f68cc841a6ee8edb87503eb95697",
+      "uncompressed_bytes": 3262,
+      "path": "payloads/73/73dea71bcc40c43d7a71f5caaee7352c4069f68cc841a6ee8edb87503eb95697.dat",
+      "encoding": "identity",
+      "sha256": "73dea71bcc40c43d7a71f5caaee7352c4069f68cc841a6ee8edb87503eb95697",
+      "stored_bytes": 3262
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/status-004.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "d52d8e5ee6abf7dc67e9b40f56b535366e88f4a55fd5bf69b8e83e85b3f44473",
+      "uncompressed_bytes": 3260,
+      "path": "payloads/d5/d52d8e5ee6abf7dc67e9b40f56b535366e88f4a55fd5bf69b8e83e85b3f44473.dat",
+      "encoding": "identity",
+      "sha256": "d52d8e5ee6abf7dc67e9b40f56b535366e88f4a55fd5bf69b8e83e85b3f44473",
+      "stored_bytes": 3260
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/status-005.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "a4695e2ca2322f4516feaa391806dba5d93196a94c8b96ddf17a99e66f8c6f1e",
+      "uncompressed_bytes": 3260,
+      "path": "payloads/a4/a4695e2ca2322f4516feaa391806dba5d93196a94c8b96ddf17a99e66f8c6f1e.dat",
+      "encoding": "identity",
+      "sha256": "a4695e2ca2322f4516feaa391806dba5d93196a94c8b96ddf17a99e66f8c6f1e",
+      "stored_bytes": 3260
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/status-006.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "0ee98f97e15053c3eafd4ac8d0470755357635db62364b3e407fe2dfcc0ef40a",
+      "uncompressed_bytes": 3260,
+      "path": "payloads/0e/0ee98f97e15053c3eafd4ac8d0470755357635db62364b3e407fe2dfcc0ef40a.dat",
+      "encoding": "identity",
+      "sha256": "0ee98f97e15053c3eafd4ac8d0470755357635db62364b3e407fe2dfcc0ef40a",
+      "stored_bytes": 3260
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/status-007.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "944e7628498cab404f24e6a8072f5c3e498dd62d2e7d77a5686e0c2b563f742b",
+      "uncompressed_bytes": 3260,
+      "path": "payloads/94/944e7628498cab404f24e6a8072f5c3e498dd62d2e7d77a5686e0c2b563f742b.dat",
+      "encoding": "identity",
+      "sha256": "944e7628498cab404f24e6a8072f5c3e498dd62d2e7d77a5686e0c2b563f742b",
+      "stored_bytes": 3260
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/status-008.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "2ff2c3905ed69cdbd6aeac011176ea65f2a1ec8eb359341b21dc2dbdcf8228ae",
+      "uncompressed_bytes": 3260,
+      "path": "payloads/2f/2ff2c3905ed69cdbd6aeac011176ea65f2a1ec8eb359341b21dc2dbdcf8228ae.dat",
+      "encoding": "identity",
+      "sha256": "2ff2c3905ed69cdbd6aeac011176ea65f2a1ec8eb359341b21dc2dbdcf8228ae",
+      "stored_bytes": 3260
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/status-009.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "faac83ed0de7be2f6de00d8f8dc5da4a422355cd6804015dcfa8733ce35c4825",
+      "uncompressed_bytes": 3260,
+      "path": "payloads/fa/faac83ed0de7be2f6de00d8f8dc5da4a422355cd6804015dcfa8733ce35c4825.dat",
+      "encoding": "identity",
+      "sha256": "faac83ed0de7be2f6de00d8f8dc5da4a422355cd6804015dcfa8733ce35c4825",
+      "stored_bytes": 3260
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/status-010.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "50597e7ca254eaecdedf52e1c773791301cf77c33126b7afeaa433066c75f775",
+      "uncompressed_bytes": 3260,
+      "path": "payloads/50/50597e7ca254eaecdedf52e1c773791301cf77c33126b7afeaa433066c75f775.dat",
+      "encoding": "identity",
+      "sha256": "50597e7ca254eaecdedf52e1c773791301cf77c33126b7afeaa433066c75f775",
+      "stored_bytes": 3260
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/status-011.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "9cc299542ae5145e31d9f321a1ddc1643c35eb2a98ed1c01229ce8739f222e4d",
+      "uncompressed_bytes": 3260,
+      "path": "payloads/9c/9cc299542ae5145e31d9f321a1ddc1643c35eb2a98ed1c01229ce8739f222e4d.dat",
+      "encoding": "identity",
+      "sha256": "9cc299542ae5145e31d9f321a1ddc1643c35eb2a98ed1c01229ce8739f222e4d",
+      "stored_bytes": 3260
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001/stk.raw",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "00c927b56dd930c2131dfd3e81e104078cfc4d7a739fadd6362253cb3e341f85",
+      "uncompressed_bytes": 116,
+      "path": "payloads/00/00c927b56dd930c2131dfd3e81e104078cfc4d7a739fadd6362253cb3e341f85.dat",
+      "encoding": "identity",
+      "sha256": "00c927b56dd930c2131dfd3e81e104078cfc4d7a739fadd6362253cb3e341f85",
+      "stored_bytes": 116
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-supervisor-001/ACTUAL-EXIT.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "f53ef5b8480f2eea0bc2f2fe42a0e3ee5f289927f8f6e0ed68485eac05368be2",
+      "uncompressed_bytes": 699,
+      "path": "payloads/f5/f53ef5b8480f2eea0bc2f2fe42a0e3ee5f289927f8f6e0ed68485eac05368be2.dat",
+      "encoding": "identity",
+      "sha256": "f53ef5b8480f2eea0bc2f2fe42a0e3ee5f289927f8f6e0ed68485eac05368be2",
+      "stored_bytes": 699
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-supervisor-001/ACTUAL-PID.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "fabf20c6e466f8ac17abf7de778d7fe4f2d299db400246c58e699a77895c4cce",
+      "uncompressed_bytes": 185,
+      "path": "payloads/fa/fabf20c6e466f8ac17abf7de778d7fe4f2d299db400246c58e699a77895c4cce.dat",
+      "encoding": "identity",
+      "sha256": "fabf20c6e466f8ac17abf7de778d7fe4f2d299db400246c58e699a77895c4cce",
+      "stored_bytes": 185
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-supervisor-001/ARGV.json",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "3f82234789040e29ec56be88c644ccbd218573e1f552c3911fdf7beb73e17183",
+      "uncompressed_bytes": 513,
+      "path": "payloads/3f/3f82234789040e29ec56be88c644ccbd218573e1f552c3911fdf7beb73e17183.dat",
+      "encoding": "identity",
+      "sha256": "3f82234789040e29ec56be88c644ccbd218573e1f552c3911fdf7beb73e17183",
+      "stored_bytes": 513
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-supervisor-001/stderr.bin",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_bytes": 0,
+      "path": "payloads/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.dat",
+      "encoding": "identity",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/stage0-r2-current249-supervisor-001/stdout.bin",
+      "packet": "r55-hil",
+      "uncompressed_sha256": "da477ea2aede4ef9c9abc7725b4ee63d1c2ff73f8e0f331e975fc6c6aae8fb20",
+      "uncompressed_bytes": 635,
+      "path": "payloads/da/da477ea2aede4ef9c9abc7725b4ee63d1c2ff73f8e0f331e975fc6c6aae8fb20.dat",
+      "encoding": "identity",
+      "sha256": "da477ea2aede4ef9c9abc7725b4ee63d1c2ff73f8e0f331e975fc6c6aae8fb20",
+      "stored_bytes": 635
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/PAYLOAD-REVIEW.json",
+      "packet": "root-review",
+      "uncompressed_sha256": "109d91b96049f87b93e43147fef7cfc9049a866cc0fed6c58ce518b751117164",
+      "uncompressed_bytes": 3822,
+      "path": "payloads/10/109d91b96049f87b93e43147fef7cfc9049a866cc0fed6c58ce518b751117164.dat",
+      "encoding": "identity",
+      "sha256": "109d91b96049f87b93e43147fef7cfc9049a866cc0fed6c58ce518b751117164",
+      "stored_bytes": 3822
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/PAYLOAD-VERIFY.stderr.txt",
+      "packet": "root-review",
+      "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uncompressed_bytes": 0,
+      "path": "payloads/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.dat",
+      "encoding": "identity",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stored_bytes": 0
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/PAYLOAD-VERIFY.stdout.txt",
+      "packet": "root-review",
+      "uncompressed_sha256": "61b9bddfd9179c469a624d63f17d50200fc8423a51afaea10dcb64aa276eb5ab",
+      "uncompressed_bytes": 570,
+      "path": "payloads/61/61b9bddfd9179c469a624d63f17d50200fc8423a51afaea10dcb64aa276eb5ab.dat",
+      "encoding": "identity",
+      "sha256": "61b9bddfd9179c469a624d63f17d50200fc8423a51afaea10dcb64aa276eb5ab",
+      "stored_bytes": 570
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/STAGE0-ACTUAL-CLOSE.json",
+      "packet": "root-review",
+      "uncompressed_sha256": "18a74a0e41cc1eff87cb2cb49b7a1275b1c525f17227d97d2fc88471e96720aa",
+      "uncompressed_bytes": 5119,
+      "path": "payloads/18/18a74a0e41cc1eff87cb2cb49b7a1275b1c525f17227d97d2fc88471e96720aa.gz",
+      "encoding": "gzip",
+      "sha256": "db4125febcebce54e10f737edf8305362ac83e7655e6c35675f51e684e0f55b8",
+      "stored_bytes": 2129
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/STAGE0-ARGV.json",
+      "packet": "root-review",
+      "uncompressed_sha256": "a339dabf943a0dff816cf03ce643836775ad86c82bf8bd738c37b45c7cb0745e",
+      "uncompressed_bytes": 703,
+      "path": "payloads/a3/a339dabf943a0dff816cf03ce643836775ad86c82bf8bd738c37b45c7cb0745e.dat",
+      "encoding": "identity",
+      "sha256": "a339dabf943a0dff816cf03ce643836775ad86c82bf8bd738c37b45c7cb0745e",
+      "stored_bytes": 703
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/STAGE0-GRANT.json",
+      "packet": "root-review",
+      "uncompressed_sha256": "ea0ea0b765551714e1ad539d8216b452201ec2e9c0cdbbb49a99fa22b95d1869",
+      "uncompressed_bytes": 3271,
+      "path": "payloads/ea/ea0ea0b765551714e1ad539d8216b452201ec2e9c0cdbbb49a99fa22b95d1869.dat",
+      "encoding": "identity",
+      "sha256": "ea0ea0b765551714e1ad539d8216b452201ec2e9c0cdbbb49a99fa22b95d1869",
+      "stored_bytes": 3271
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/STAGE0-R2-ACTUAL-CLOSE.json",
+      "packet": "root-review",
+      "uncompressed_sha256": "f5440e603f61c9d66c96cab12a45c9ca779bff5c1a728bb9354ab8a7e3d0eed4",
+      "uncompressed_bytes": 5048,
+      "path": "payloads/f5/f5440e603f61c9d66c96cab12a45c9ca779bff5c1a728bb9354ab8a7e3d0eed4.gz",
+      "encoding": "gzip",
+      "sha256": "1dfb8e5866457e8c64161b68f9e30bd8fdc7bc09ffc6ca98755704ba14502689",
+      "stored_bytes": 2040
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/STAGE0-R2-ARGV.json",
+      "packet": "root-review",
+      "uncompressed_sha256": "637db47b5c0baff7400bbb66f3bf1312d9183538b61161d2a67d5ecc8fb41513",
+      "uncompressed_bytes": 678,
+      "path": "payloads/63/637db47b5c0baff7400bbb66f3bf1312d9183538b61161d2a67d5ecc8fb41513.dat",
+      "encoding": "identity",
+      "sha256": "637db47b5c0baff7400bbb66f3bf1312d9183538b61161d2a67d5ecc8fb41513",
+      "stored_bytes": 678
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/STAGE0-R2-GRANT.json",
+      "packet": "root-review",
+      "uncompressed_sha256": "cb9d5486f99c443ac7875d89a92d7400006f0efef0c5879696e34e5cf3e899df",
+      "uncompressed_bytes": 3511,
+      "path": "payloads/cb/cb9d5486f99c443ac7875d89a92d7400006f0efef0c5879696e34e5cf3e899df.dat",
+      "encoding": "identity",
+      "sha256": "cb9d5486f99c443ac7875d89a92d7400006f0efef0c5879696e34e5cf3e899df",
+      "stored_bytes": 3511
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/STAGE0-R2-REVIEW.json",
+      "packet": "root-review",
+      "uncompressed_sha256": "ff05eae19254413ad2790054b55f22e0877a71dba65f2b3e69f540890c6d9c38",
+      "uncompressed_bytes": 1921,
+      "path": "payloads/ff/ff05eae19254413ad2790054b55f22e0877a71dba65f2b3e69f540890c6d9c38.dat",
+      "encoding": "identity",
+      "sha256": "ff05eae19254413ad2790054b55f22e0877a71dba65f2b3e69f540890c6d9c38",
+      "stored_bytes": 1921
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/STAGE0-R2-VERIFY.stdout.txt",
+      "packet": "root-review",
+      "uncompressed_sha256": "d308b3a7e879b269b299bd14e4681682e5f5b376717c3a0e9d3fe599f1a5e81a",
+      "uncompressed_bytes": 224,
+      "path": "payloads/d3/d308b3a7e879b269b299bd14e4681682e5f5b376717c3a0e9d3fe599f1a5e81a.dat",
+      "encoding": "identity",
+      "sha256": "d308b3a7e879b269b299bd14e4681682e5f5b376717c3a0e9d3fe599f1a5e81a",
+      "stored_bytes": 224
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/STAGE0-REVIEW.json",
+      "packet": "root-review",
+      "uncompressed_sha256": "f900c8ff4a9db43031e86ab25127fd932d4a18991ea1c1fad76f990749358583",
+      "uncompressed_bytes": 2138,
+      "path": "payloads/f9/f900c8ff4a9db43031e86ab25127fd932d4a18991ea1c1fad76f990749358583.dat",
+      "encoding": "identity",
+      "sha256": "f900c8ff4a9db43031e86ab25127fd932d4a18991ea1c1fad76f990749358583",
+      "stored_bytes": 2138
+    },
+    {
+      "source": ".build/picocalc-math-root-20261027-001/STAGE0-VERIFY.stdout.txt",
+      "packet": "root-review",
+      "uncompressed_sha256": "88a21a5f308b4170da799a37b0938a454abec7f7f2c4a87f4af6b88aa1e95eae",
+      "uncompressed_bytes": 224,
+      "path": "payloads/88/88a21a5f308b4170da799a37b0938a454abec7f7f2c4a87f4af6b88aa1e95eae.dat",
+      "encoding": "identity",
+      "sha256": "88a21a5f308b4170da799a37b0938a454abec7f7f2c4a87f4af6b88aa1e95eae",
+      "stored_bytes": 224
+    },
+    {
+      "source": ".build/root-hardware-metadata-20261027-math-r2-classic-v4-001/root-physical-and-noholder.json",
+      "packet": "root-metadata",
+      "uncompressed_sha256": "3fd199178b5cad416510273cc76b0944a9cc92262cc74d84629aa6a080495b1f",
+      "uncompressed_bytes": 4983,
+      "path": "payloads/3f/3fd199178b5cad416510273cc76b0944a9cc92262cc74d84629aa6a080495b1f.gz",
+      "encoding": "gzip",
+      "sha256": "7c012d2fe66f369a66b48703225676bf9a0915a6ad3cd1b27b54e90df0105a9d",
+      "stored_bytes": 1133
+    },
+    {
+      "source": ".build/root-hardware-metadata-20261027-math-r2-classic-v4-close-001/root-physical-and-noholder.json",
+      "packet": "root-metadata",
+      "uncompressed_sha256": "50d1a76fd2f3e80a0699878a5c71386d659b84d0d31fe9c6c709921c65fe2d66",
+      "uncompressed_bytes": 5013,
+      "path": "payloads/50/50d1a76fd2f3e80a0699878a5c71386d659b84d0d31fe9c6c709921c65fe2d66.gz",
+      "encoding": "gzip",
+      "sha256": "c80eed664dc9d7b491ebeaccc2494888aac4c35db3a81b57f4787aa04b3d17e9",
+      "stored_bytes": 1140
+    },
+    {
+      "source": ".build/picocalc-device-handoff.json",
+      "packet": "closed-handoff-snapshot",
+      "uncompressed_sha256": "f5440e603f61c9d66c96cab12a45c9ca779bff5c1a728bb9354ab8a7e3d0eed4",
+      "uncompressed_bytes": 5048,
+      "path": "payloads/f5/f5440e603f61c9d66c96cab12a45c9ca779bff5c1a728bb9354ab8a7e3d0eed4.gz",
+      "encoding": "gzip",
+      "sha256": "1dfb8e5866457e8c64161b68f9e30bd8fdc7bc09ffc6ca98755704ba14502689",
+      "stored_bytes": 2040
+    },
+    {
+      "source": ".build/m0-math-checkpoint-r55-hil-20261027-preparation/prepare.py",
+      "packet": "checkpoint-tools",
+      "uncompressed_sha256": "4606cbfea8dca9ce01dc37ca07382adb000f9c4c774fe347c7ea2e8d2c3c7861",
+      "uncompressed_bytes": 5541,
+      "path": "payloads/46/4606cbfea8dca9ce01dc37ca07382adb000f9c4c774fe347c7ea2e8d2c3c7861.gz",
+      "encoding": "gzip",
+      "sha256": "79a1406982a722ce189e546f68d40e68c314d0fb115467a90aac774c14490228",
+      "stored_bytes": 2346
+    }
+  ],
+  "omitted_binary_files": [
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/build/m0_r55_pow_hil.bin",
+      "packet": "r55-hil",
+      "bytes": 257940,
+      "sha256": "c8d9408b61e40e5e31642bb61df1f9eaa8038af935e3987b1c50cbce8e30aab5",
+      "reason": "compiled binary omitted; source, recipe and fingerprint preserved"
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/build/m0_r55_pow_hil.elf",
+      "packet": "r55-hil",
+      "bytes": 638568,
+      "sha256": "68f752c5c5a581be8929c9318ebe5c18d1a754911faf80c72ff3b42a59728b6a",
+      "reason": "compiled binary omitted; source, recipe and fingerprint preserved"
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/math-pow-ram.elf",
+      "packet": "r55-hil",
+      "bytes": 2029616,
+      "sha256": "584d763790a9c00bce905a4b77a34894ba94264b2df11d6c41684c77f3b7c838",
+      "reason": "compiled binary omitted; source, recipe and fingerprint preserved"
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/math_data.bin",
+      "packet": "r55-hil",
+      "bytes": 16,
+      "sha256": "c1292dbff446f8780d7c3da658022fece94cb978e203e04cfffd61070fb218d7",
+      "reason": "compiled binary omitted; source, recipe and fingerprint preserved"
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/math_hot.bin",
+      "packet": "r55-hil",
+      "bytes": 3988,
+      "sha256": "51129e714442cded5cd7c3c1cbf68e74b300b28564d2dcfe5b7c7dac1169a0cc",
+      "reason": "compiled binary omitted; source, recipe and fingerprint preserved"
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/math_main.bin",
+      "packet": "r55-hil",
+      "bytes": 207912,
+      "sha256": "1de7a7a94406703b9220bf74386aea74e37c6f914f477f97d5abc9b601526787",
+      "reason": "compiled binary omitted; source, recipe and fingerprint preserved"
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/qfplib-ram.elf",
+      "packet": "r55-hil",
+      "bytes": 17268,
+      "sha256": "d2fadff810cb3964271ff7cad08cd64c9d5e2ec49eca21c3a66d841d237c4787",
+      "reason": "compiled binary omitted; source, recipe and fingerprint preserved"
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/bootable-r1/qfplib.bin",
+      "packet": "r55-hil",
+      "bytes": 6364,
+      "sha256": "03e34e32e5d5602dadc322f6ba2d112769540d34cae4e5c07027f5ad0540005b",
+      "reason": "compiled binary omitted; source, recipe and fingerprint preserved"
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/math-pow-ram.elf",
+      "packet": "r55-hil",
+      "bytes": 2029616,
+      "sha256": "584d763790a9c00bce905a4b77a34894ba94264b2df11d6c41684c77f3b7c838",
+      "reason": "compiled binary omitted; source, recipe and fingerprint preserved"
+    },
+    {
+      "source": ".build/m0-math-r55-hil-20261027/qfplib-ram.elf",
+      "packet": "r55-hil",
+      "bytes": 17268,
+      "sha256": "a458f38a52b5703bd52bf2fd5a4b3aa17b427a4a86431b511b8827f7575a6060",
+      "reason": "compiled binary omitted; source, recipe and fingerprint preserved"
+    }
+  ],
+  "original_payloads_rewritten": false,
+  "excluded_transient_directory": "bootable-r1/build, except all FROZEN-pinned files"
+}

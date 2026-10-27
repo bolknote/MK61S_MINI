@@ -1,0 +1,27 @@
+PICO_SDK_PATH is /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk
+Target board (PICO_BOARD) is 'pico'.
+Using board configuration from /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/boards/include/boards/pico.h
+Defaulting platform (PICO_PLATFORM) to 'rp2040' based on PICO_BOARD setting.
+Defaulting compiler (PICO_COMPILER) to 'pico_arm_cortex_m0plus_gcc' since not specified.
+Configuring toolchain based on PICO_COMPILER 'pico_arm_cortex_m0plus_gcc'
+Defaulting PICO_GCC_TRIPLE to 'arm-none-eabi'
+-- The C compiler identification is GNU 14.2.1
+-- The CXX compiler identification is GNU 14.2.1
+-- The ASM compiler identification is GNU
+-- Found assembler: /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+Build type is Release
+-- Found Python3: /opt/homebrew/Frameworks/Python.framework/Versions/3.15/bin/python3.15 (found version "3.15.1") found components: Interpreter
+TinyUSB available at /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/lib/tinyusb/hw/bsp/rp2040; enabling build support for USB.
+-- Configuring done (0.7s)
+-- Generating done (0.1s)
+-- Build files have been written to: /Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1/build

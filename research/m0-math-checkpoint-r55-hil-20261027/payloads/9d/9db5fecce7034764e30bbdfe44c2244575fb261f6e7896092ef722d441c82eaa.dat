@@ -1,0 +1,24 @@
+"""Exact qualified bounded frame parser; no hardware-health observer."""
+import re
+from transaction_core import require
+MAX_STATUS_EXCHANGE=65536
+START=re.compile(rb"(?m)^RESET_REASON=")
+END=re.compile(rb"(?m)^MSC_SD_READ_US=[^\r\n]*\r?\n")
+HEADER=re.compile(rb"RESET_REASON=[0-9A-F]{8} BOOTS=\d+ CRASH=\S+ BUILD=[0-9A-F]{8}\r?\n")
+def first_complete_frame(data):
+    """Keep a leading startup tail, but never skip a bad/interleaved first frame."""
+    require(len(data) <= MAX_STATUS_EXCHANGE, 'Status exchange exceeds its bound')
+    start = START.search(data)
+    if start is None:
+        return None
+    end = END.search(data, start.start())
+    second = START.search(data, start.end())
+    require(second is None or (end is not None and second.start() >= end.end()),
+            'Interleaved/incomplete first status frame')
+    newline = data.find(b'\n', start.start())
+    if newline >= 0:
+        require(HEADER.fullmatch(data[start.start():newline + 1]) is not None,
+                'Malformed first status header')
+    if end is None:
+        return None
+    return data[start.start():end.end()].decode('utf-8', 'strict')

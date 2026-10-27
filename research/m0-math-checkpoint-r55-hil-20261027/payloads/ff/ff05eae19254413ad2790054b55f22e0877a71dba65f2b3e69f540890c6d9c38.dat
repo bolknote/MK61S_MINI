@@ -1,0 +1,40 @@
+{
+  "verdict": "GO_FRESH_STAGE0_R2_COUNTER_BASELINE_READONLY",
+  "created_utc": "2026-10-27T13:45:44.490244+00:00",
+  "reviewer": "Root directly",
+  "ready": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/STAGE0-R2-READY.json",
+    "bytes": 1011,
+    "sha256": "ef4647d799ba71ff1959dd357227d39a2785ef914a261fad97d1accbb8962c04"
+  },
+  "packet": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2/PREFLIGHT-FROZEN.json",
+    "bytes": 3089,
+    "sha256": "81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22"
+  },
+  "prior_stage_close": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/STAGE0-ACTUAL-CLOSE.json",
+    "bytes": 5119,
+    "sha256": "18a74a0e41cc1eff87cb2cb49b7a1275b1c525f17227d97d2fc88471e96720aa"
+  },
+  "source_review": [
+    "Grant must carry observed cumulative physical count25; first and all subsequent frames compare against it within one epoch",
+    "No counter reset/ignored growth; preserves current source/foreground checks, exact getters, live-FD guard, no RAM/ROM/Flash/setter",
+    "Selected249 Terminal.receive source read: US unconditionally emits exact command banner in RAW or COMMAND; no new framing assumption",
+    "Action count0 distinguished from observed cumulative25; actualR1 oneENQ HOLD and frozen payloads unchanged"
+  ],
+  "live_controls": 9,
+  "source_controls": 17,
+  "own_readonly_verifier": {
+    "status": "PASS_HOST_READONLY_STAGE0_PACKET_NOT_DEVICE_ADMISSION",
+    "pins": 19,
+    "FROZEN_sha256": "81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22",
+    "actual_device_IO": 0,
+    "goal_complete": false
+  },
+  "findings": [],
+  "expected_physical_keys": 25,
+  "current_RTC_SET": 0,
+  "clock_return_disposition": "Known SET0 placeholder/HOLD accepted without setters; full typed capture still required before RAM",
+  "device_IO": 0
+}

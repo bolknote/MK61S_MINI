@@ -1,0 +1,12 @@
+{
+  "status": "PASS_INERT_FROZEN_R1_EXCHANGE_LIVE_GUARD_INTEGRATION",
+  "rejected": [
+    "revoke-after-R1-intent-before-native-write",
+    "revoke-before-R1-response-read",
+    "revoke-before-R1-X"
+  ],
+  "global_os_or_port_substitutions": 0,
+  "actual_device_opens": 0,
+  "new_firmware_builds": 0,
+  "new_ARM_MPFR_calls": 0
+}

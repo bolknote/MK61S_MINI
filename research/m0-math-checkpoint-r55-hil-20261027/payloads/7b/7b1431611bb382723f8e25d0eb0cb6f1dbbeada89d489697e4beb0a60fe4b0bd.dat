@@ -1,0 +1,39 @@
+"""A small, varied physical admission; the full corpus remains preserved."""
+from pathlib import Path
+from collections import defaultdict
+import gzip,json,hashlib
+W=Path(__file__).resolve().parent
+groups=defaultdict(dict)
+with gzip.open(W/'dataset.jsonl.gz','rt') as f:
+    for line in f:
+        row=json.loads(line);groups[(row['x'],row['y'])][row['SIO']]=row
+eligible=[(k,v['READY']) for k,v in sorted(groups.items()) if set(v)=={'READY','DIRTY','PENDING'}]
+chosen=[];reasons={}
+def choose(reason,predicate,reverse=False):
+    pool=[(k,r) for k,r in eligible if k not in chosen and predicate(r)]
+    if not pool:return
+    if reverse:pool.sort(key=lambda p:p[1]['historical_flash_costs'].get('candidate',0),reverse=True)
+    k,r=pool[0];chosen.append(k);reasons['/'.join(k)]=reason
+def abs_gold(r):return int(r['expected'],16)&0x7fffffffffffffff
+for reason,p in [
+ ('positive zero base',lambda r:r['x']=='0000000000000000'),
+ ('negative zero base',lambda r:r['x']=='8000000000000000'),
+ ('positive infinity base',lambda r:r['x']=='7FF0000000000000'),
+ ('negative infinity base',lambda r:r['x']=='FFF0000000000000'),
+ ('NaN result',lambda r:abs_gold(r)>0x7ff0000000000000),
+ ('minimum subnormal base',lambda r:r['x']=='0000000000000001'),
+ ('subnormal nonzero result',lambda r:0<abs_gold(r)<0x0010000000000000),
+ ('zero endpoint',lambda r:abs_gold(r)==0 and int(r['x'],16)&0x7fffffffffffffff!=0),
+ ('infinity endpoint',lambda r:abs_gold(r)==0x7ff0000000000000 and int(r['x'],16)&0x7fffffffffffffff<0x7ff0000000000000),
+ ('inverse root',lambda r:r['y']=='BFE0000000000000'),
+ ('negative finite base',lambda r:int(r['x'],16)>>63 and abs_gold(r)<0x7ff0000000000000),
+ ('saturation boundary below',lambda r:r['y']=='43D7FFFFFFFFFFFF'),
+ ('saturation boundary exact',lambda r:r['y']=='43D8000000000000'),
+ ('saturation boundary above',lambda r:r['y']=='43D8000000000001'),
+ ('wrong Qfplib reference retained',lambda r:any(not x['correct'] for x in r['historical_references'].values())),
+]:choose(reason,p)
+while len(chosen)<24:choose('large-cost fallback or inverse-root path',lambda r:True,reverse=True)
+ids=[groups[k][state]['case_id'] for k in chosen for state in ['READY','DIRTY','PENDING']]
+assert len(ids)==72 and len(set(ids))==72
+result=dict(status='HOST_PINNED_FIRST_PHYSICAL_MATH_SMOKE_PLAN',unique_pairs=24,state_cases=72,case_ids=ids,pair_reasons=reasons,calibration_queries=6,total_query_requests=78,maximum_public_target_calls=2940,includes_all_three_hardware_divider_entry_states=True,not_full_corpus_or_performance_acceptance=True,maximum_session_seconds=300,hardware_IO=0)
+(W/'smoke-plan.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

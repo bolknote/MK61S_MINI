@@ -1,0 +1,22 @@
+{
+  "status": "INTERMEDIATE_R55_HIL_CHECKPOINT",
+  "previous_checkpoint_commit": "77b128bf3ac89c0518052a875a0c6e88736fc8b2",
+  "selected_math_source": "R55; unchanged by this checkpoint",
+  "standalone_HIL_image_built": true,
+  "relocated_emulator_public_ARM_calls": 274008,
+  "readonly_physical_capture_attempts": 2,
+  "readonly_physical_capture_successes": 1,
+  "physical_RAM_loads": 0,
+  "physical_math_benchmark_calls": 0,
+  "physical_cycles_measured": false,
+  "production_runtime_changed": false,
+  "M4_changed": false,
+  "operator_envelope_complete": false,
+  "operator_envelope_pending": "ENVELOPE-FROZEN.json and final Root review/grants",
+  "current_observed_RTC_SET": 0,
+  "clock_return_HOLD": true,
+  "historical_grants_closed_not_reusable": true,
+  "new_device_IO_by_checkpoint_preparation": 0,
+  "new_ARM_MPFR_or_build_calls_by_checkpoint_preparation": 0,
+  "goal_complete": false
+}

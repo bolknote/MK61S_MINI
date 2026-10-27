@@ -1,0 +1,10 @@
+"""Read-only binding of every operator stage to one reviewed HOST packet."""
+from pathlib import Path
+import json
+from live_io import need,sha
+W=Path(__file__).resolve().parent
+def verify_operator(lease):
+    raw=(W/'ENVELOPE-FROZEN.json').read_bytes();g=lease.guard()
+    need(g['operator_packet_sha256']==sha(raw),'Root binds a different operator envelope')
+    for name,pin in json.loads(raw)['files'].items():
+        p=W/name;need(p.is_file() and not p.is_symlink() and p.stat().st_size==pin['bytes'] and sha(p.read_bytes())==pin['sha256'],'Operator source changed: '+name)

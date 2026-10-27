@@ -1,0 +1,11 @@
+{
+  "status": "STARTED_READONLY_CURRENT249_CAPTURE",
+  "pid": 28956,
+  "stage": "resident-capture",
+  "device_transition_attempts": 0,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "APP_opens": 0,
+  "physical_keys": 0,
+  "goal_complete": false
+}

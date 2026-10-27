@@ -1,0 +1,6 @@
+{
+  "returncode": 0,
+  "numer": 125,
+  "denom": 3,
+  "source": "direct mach_timebase_info in this actor"
+}

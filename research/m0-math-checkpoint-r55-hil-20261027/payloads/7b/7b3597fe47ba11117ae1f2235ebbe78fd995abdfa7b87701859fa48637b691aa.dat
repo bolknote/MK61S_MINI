@@ -1,0 +1,25 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/preflight.py", line 128, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/preflight.py", line 127, in main
+    if failure:raise failure
+               ^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/preflight.py", line 117, in main
+    state=capture(port,out,lease);(out/'current-state.json').write_text(json.dumps(state,indent=2)+'\n')
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/preflight.py", line 78, in capture
+    shell=Resident(port,folder);shell.admit();identity=shell.command('identity')
+                                ~~~~~~~~~~~^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/preflight.py", line 51, in admit
+    self.status()
+    ~~~~~~~~~~~^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/preflight.py", line 47, in status
+    frame=first_complete_frame(wire);self.epoch,terminal=validate_frame(frame,self.epoch,mode)
+                                                         ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/preflight.py", line 33, in validate_frame
+    need(value(row(frame,'X_RAW='),'PHYSICAL_KEYS',r'\d+')=='0','New physical input; preserve it')
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/live_io.py", line 12, in need
+    if not ok:raise RuntimeError(why)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: New physical input; preserve it

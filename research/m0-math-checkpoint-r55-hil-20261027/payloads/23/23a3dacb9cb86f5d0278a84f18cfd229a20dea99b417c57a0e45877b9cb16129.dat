@@ -1,0 +1,29 @@
+/* Minimal SDK reset overrides for the standalone math bench.
+ * RTC and its existing clock source are deliberately preserved. */
+#include <stdint.h>
+#include "hardware/resets.h"
+#include "hardware/clocks.h"
+extern void bench_fault_entry(void);
+uint32_t bench_rtc_before_ctrl,bench_rtc_before_div,bench_rtc_before_reset;
+uint32_t bench_rtc_after_ctrl,bench_rtc_after_div,bench_rtc_after_reset;
+void runtime_init_early_resets(void){
+    bench_rtc_before_ctrl=clocks_hw->clk[clk_rtc].ctrl;
+    bench_rtc_before_div=clocks_hw->clk[clk_rtc].div;
+    bench_rtc_before_reset=resets_hw->reset&(1u<<RESET_RTC);
+    /* Changing PLL_SYS would retime a nonstandard RTC source. Decline it. */
+    uint32_t source=(bench_rtc_before_ctrl&CLOCKS_CLK_RTC_CTRL_AUXSRC_BITS)>>CLOCKS_CLK_RTC_CTRL_AUXSRC_LSB;
+    if((bench_rtc_before_ctrl&CLOCKS_CLK_RTC_CTRL_ENABLE_BITS) &&
+       (source==CLOCKS_CLK_RTC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS || source>=CLOCKS_CLK_RTC_CTRL_AUXSRC_VALUE_CLKSRC_GPIN0)){
+        bench_fault_entry();
+    }
+    reset_block_mask(RESETS_RESET_BITS & ~((1u<<RESET_IO_QSPI)|(1u<<RESET_PADS_QSPI)|
+        (1u<<RESET_PLL_USB)|(1u<<RESET_USBCTRL)|(1u<<RESET_SYSCFG)|(1u<<RESET_PLL_SYS)|(1u<<RESET_RTC)));
+    unreset_block_mask_wait_blocking(RESETS_RESET_BITS & ~((1u<<RESET_ADC)|(1u<<RESET_RTC)|
+        (1u<<RESET_SPI0)|(1u<<RESET_SPI1)|(1u<<RESET_UART0)|(1u<<RESET_UART1)|(1u<<RESET_USBCTRL)));
+}
+void runtime_init_post_clock_resets(void){
+    unreset_block_mask_wait_blocking(RESETS_RESET_BITS & ~(1u<<RESET_RTC));
+    bench_rtc_after_ctrl=clocks_hw->clk[clk_rtc].ctrl;
+    bench_rtc_after_div=clocks_hw->clk[clk_rtc].div;
+    bench_rtc_after_reset=resets_hw->reset&(1u<<RESET_RTC);
+}

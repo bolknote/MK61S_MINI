@@ -1,0 +1,14 @@
+{
+  ".build/m0-math-r55-hil-20261027/bootable-r1/FROZEN.json": {
+    "sha256": "8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8",
+    "pins": 50
+  },
+  ".build/m0-math-r55-hil-20261027/operator-r1/PREFLIGHT-FROZEN.json": {
+    "sha256": "b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d",
+    "pins": 19
+  },
+  ".build/m0-math-r55-hil-20261027/operator-r2/PREFLIGHT-FROZEN.json": {
+    "sha256": "81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22",
+    "pins": 19
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "status": "PASS_HOST_READONLY_STAGE0_PACKET_NOT_DEVICE_ADMISSION",
+  "pins": 19,
+  "FROZEN_sha256": "b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d",
+  "actual_device_IO": 0,
+  "goal_complete": false
+}

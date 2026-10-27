@@ -1,0 +1,96 @@
+{
+  "verdict": "HOST_PAYLOAD_GO_OPERATOR_STAGES_AND_LIVE_GRANT_ENVELOPE_PENDING",
+  "created_utc": "2026-10-27T10:05:47.078276+00:00",
+  "reviewer": "Root directly",
+  "FROZEN": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1/FROZEN.json",
+    "bytes": 7057,
+    "sha256": "8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8"
+  },
+  "ready": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/R1-READY.json",
+    "bytes": 622,
+    "sha256": "d44e2353179ffa737c073778b15b114953b4edc469b5518ad7988d200e197a30"
+  },
+  "ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1/build/m0_r55_pow_hil.elf",
+    "bytes": 638568,
+    "sha256": "68f752c5c5a581be8929c9318ebe5c18d1a754911faf80c72ff3b42a59728b6a"
+  },
+  "BIN": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1/build/m0_r55_pow_hil.bin",
+    "bytes": 257940,
+    "sha256": "c8d9408b61e40e5e31642bb61df1f9eaa8038af935e3987b1c50cbce8e30aab5"
+  },
+  "actual_PT_LOAD_verified": [
+    {
+      "address": 536875008,
+      "file_bytes": 16608,
+      "memory_bytes": 22336,
+      "flags": 7,
+      "sha256": "ac63b78e4272610f635837b83d8511de24e10646c26a17fb7746938ead9861ec"
+    },
+    {
+      "address": 536911872,
+      "file_bytes": 6364,
+      "memory_bytes": 6364,
+      "flags": 5,
+      "sha256": "03e34e32e5d5602dadc322f6ba2d112769540d34cae4e5c07027f5ad0540005b"
+    },
+    {
+      "address": 536920064,
+      "file_bytes": 16,
+      "memory_bytes": 16,
+      "flags": 6,
+      "sha256": "c1292dbff446f8780d7c3da658022fece94cb978e203e04cfffd61070fb218d7"
+    },
+    {
+      "address": 536920080,
+      "file_bytes": 207912,
+      "memory_bytes": 207912,
+      "flags": 5,
+      "sha256": "1de7a7a94406703b9220bf74386aea74e37c6f914f477f97d5abc9b601526787"
+    },
+    {
+      "address": 537128960,
+      "file_bytes": 3988,
+      "memory_bytes": 3988,
+      "flags": 5,
+      "sha256": "51129e714442cded5cd7c3c1cbf68e74b300b28564d2dcfe5b7c7dac1169a0cc"
+    },
+    {
+      "address": 537133056,
+      "file_bytes": 0,
+      "memory_bytes": 4096,
+      "flags": 4,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "first4KiB_and_core1_bank_excluded": true,
+  "source_review": [
+    "Exact Thumb timing wrapper for all libraries, IRQoff/SysTick and independent50ms TIMER bound",
+    "Physical PENDING first-entry CSR probe; normal completed quotient/remainder17/3 preserved, no frozen emulator-pending equality",
+    "RTC reset/clock overrides exclude RTC and preserve existing USB PLL configuration; real peripherals/startup still untested",
+    "Finite72state smoke plus6calibration,2940calls; all wrong reference values/costs kept; raw cycles include same wrapper"
+  ],
+  "own_readonly_record_recount": {
+    "status": "PASS_HOST_PREPARED_PACKET_NOT_PHYSICAL_ACCEPTANCE",
+    "pinned_files": 50,
+    "package_FROZEN_sha256": "8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8",
+    "ELF_sha256": "68f752c5c5a581be8929c9318ebe5c18d1a754911faf80c72ff3b42a59728b6a",
+    "new_ARM_MPFR_calls": 0,
+    "device_IO": 0,
+    "physical_cycles_measured": false,
+    "goal_complete": false,
+    "recounted_states": 68502,
+    "recounted_public_ARM_calls": 274008,
+    "remaining_finite_RAM_pow_pairs": 1435,
+    "all_wrong_reference_outputs_costs_and_all_correct_comparisons_retained": true
+  },
+  "known_integration_finding": "CDC R1 checks static grant at open only; operator must add exact live canonical/grant revocation guards through open/read/write/wait/X, with inert controls",
+  "operator_ROM_RAM_current_state_return249_plan_pending": true,
+  "physical_grant_issued": false,
+  "device_IO": 0,
+  "new_ARM_calls": 0,
+  "new_review_agents": 0
+}

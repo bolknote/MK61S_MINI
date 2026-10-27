@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2/preflight.py",
+    "--execute",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/STAGE0-R2-GRANT.json",
+    "--lease-sha256",
+    "cb9d5486f99c443ac7875d89a92d7400006f0efef0c5879696e34e5cf3e899df",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001"
+  ],
+  "lease_sha256": "cb9d5486f99c443ac7875d89a92d7400006f0efef0c5879696e34e5cf3e899df",
+  "scope": "PICO_R55_MATH_RAM_SMOKE_ONCE"
+}

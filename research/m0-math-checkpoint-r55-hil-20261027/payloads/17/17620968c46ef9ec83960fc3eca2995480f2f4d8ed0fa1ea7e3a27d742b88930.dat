@@ -1,0 +1,2 @@
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}

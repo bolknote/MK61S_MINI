@@ -1,0 +1,54 @@
+"""Pure HOST wire codec. Importing this module performs no hardware I/O."""
+import dataclasses, zlib
+STATES={'READY':0,'DIRTY':1,'PENDING':2}
+LIBRARIES=('R55','qfp_composed_pow','qfp_composed_pow_exact','qfp_composed_pow_integer')
+def frame(prefix):
+    raw=prefix.encode('ascii')
+    return raw+f' {zlib.crc32(raw):08X}\n'.encode('ascii')
+def control(kind,nonce):
+    assert kind in ('I','X') and 0<=nonce<2**32
+    return frame(f'{kind} {nonce:08X}')
+def query(nonce,id,op,state,x,y,gold):
+    assert 0<id<2**32 and 0<=nonce<2**32 and op in (0,1,2) and state in (0,1,2)
+    assert all(0<=v<2**64 for v in (x,y,gold))
+    out=frame(f'Q {nonce:08X} {id:08X} {op:02X} {state:02X} {x:016X} {y:016X} {gold:016X}')
+    assert len(out)==86
+    return out
+SCHEMA={
+ 'I':(('nonce',8),('protocol',8),('core_hz',8),('rom_version',8),('rom_crc',8),('math_main_crc',8),('math_hot_crc',8),('qfplib_crc',8),('math_ok',8),('calibrated',8),('vtor',8),('sp',8),('rtc_before_ctrl',8),('rtc_before_div',8),('rtc_before_reset',8),('rtc_after_ctrl',8),('rtc_after_div',8),('rtc_after_reset',8)),
+ 'R':(('nonce',8),('id',8),('op',2),('state',2),('library',2),('round',2),('bits',16),('cycles',8),('elapsed_us',8),('csr',8),('dividend',8),('divisor',8),('quotient',8),('remainder',8),('flags',8),('stack_used',8)),
+ 'D':(('nonce',8),('id',8),('samples',8),('calibrated',8)),
+ 'E':(('nonce',8),('id',8),('code',8)),
+ 'X':(('nonce',8),),
+}
+def parse(raw):
+    if not raw.endswith(b'\n') or len(raw)>256 or b'\r' in raw:raise ValueError('invalid line boundary')
+    body,sep,crc=raw[:-1].rpartition(b' ')
+    if not sep or len(crc)!=8 or any(c not in b'0123456789ABCDEF' for c in crc) or int(crc,16)!=zlib.crc32(body):raise ValueError('CRC mismatch')
+    parts=body.decode('ascii').split(' ')
+    if parts[0] not in SCHEMA:raise ValueError('unknown response type')
+    schema=SCHEMA[parts[0]]
+    if len(parts)!=len(schema)+1:raise ValueError('response field count')
+    result={'type':parts[0]}
+    for value,(name,width) in zip(parts[1:],schema):
+        if len(value)!=width or any(c not in '0123456789ABCDEF' for c in value):raise ValueError('invalid '+name)
+        result[name]=int(value,16)
+    return result
+def equal64(got,expected):
+    if expected&0x7fffffffffffffff>0x7ff0000000000000:
+        return got&0x7fffffffffffffff>0x7ff0000000000000 and bool(got&(1<<51))
+    return got==expected
+def check_sample(row,nonce,id,op,state,gold):
+    assert row['type']=='R' and (row['nonce'],row['id'],row['op'],row['state'])==(nonce,id,op,state)
+    assert row['library'] in range(4 if op==2 else 1)
+    assert row['round'] in (0x80,0x81,0,1,2,3,4,5,6,7)
+    assert row['elapsed_us']<50000 and 0<row['cycles']<2**24
+    assert row['stack_used']<=4000 and not row['flags']&~1
+    assert bool(row['flags']&1)==(not equal64(row['bits'],gold))
+    if state:
+        assert row['csr']&3==3
+        assert (row['dividend'],row['divisor'],row['quotient'],row['remainder'])==(17,3,5,2)
+    else:assert not row['csr']&2
+    if op==1:assert row['bits']==(1,3,2)[state], 'PENDING must be observed at actual public entry'
+    if row['library']==0:assert equal64(row['bits'],gold), 'Candidate result differs from pinned gold'
+

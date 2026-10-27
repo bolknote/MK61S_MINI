@@ -1,0 +1,44 @@
+"""Portable read-only consumer: hashes and independent recount of saved RAM rows."""
+from pathlib import Path
+from collections import Counter
+import argparse,gzip,hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def equal(got,expected):
+    if expected&0x7fffffffffffffff>0x7ff0000000000000:return got&0x7fffffffffffffff>0x7ff0000000000000 and bool(got&(1<<51))
+    return got==expected
+p=argparse.ArgumentParser(description=__doc__);p.add_argument('--records',action='store_true');a=p.parse_args()
+m=json.loads((W/'FROZEN.json').read_text())
+for name,pin in m['files'].items():
+    path=W/name;assert path.is_file() and not path.is_symlink()
+    assert path.stat().st_size==pin['bytes'] and sha(path)==pin['sha256'],name
+proof=json.loads((W/'image-proof.json').read_text());ram=json.loads((W/'ram-validation.json').read_text());worker=json.loads((W/'worker-check.json').read_text());meta=json.loads((W/'blobs.json').read_text())
+assert sha(W/'build/m0_r55_pow_hil.elf')==proof['ELF_sha256']==worker['ELF_sha256']
+assert proof['first4096_RAM_bytes_untouched'] and proof['all_blob_bytes_exact'] and proof['core1_bank_untouched']
+assert ram['all_candidates_correct_on_pinned_gold'] and not ram['physical_cycles_measured']
+assert ram['math_ELF_sha256']==meta['math_ELF_sha256'] and ram['Qfplib_ELF_sha256']==meta['Qfplib_ELF_sha256']
+assert worker['hardware_IO']==0 and worker['HOST_driver_rejected_corruptions']==['candidate','pending','crc']
+report=dict(status='PASS_HOST_PREPARED_PACKET_NOT_PHYSICAL_ACCEPTANCE',pinned_files=len(m['files']),package_FROZEN_sha256=sha(W/'FROZEN.json'),ELF_sha256=proof['ELF_sha256'],new_ARM_MPFR_calls=0,device_IO=0,physical_cycles_measured=False,goal_complete=False)
+if a.records:
+    rows=wrong=0;classes=Counter();losing=set();seen=set()
+    with gzip.open(W/'ram-records.jsonl.gz','rt') as f:
+        for line in f:
+            r=json.loads(line);gold=int(r['expected'],16);k=(r['x'],r['y'],r['SIO'])
+            assert k not in seen;seen.add(k);rows+=1
+            assert equal(int(r['outputs']['candidate'],16),gold)
+            assert set(r['outputs'])=={'candidate','qfp_composed_pow','qfp_composed_pow_exact','qfp_composed_pow_integer'}
+            for name,bits in r['outputs'].items():
+                correct=equal(int(bits,16),gold);assert correct==r['correct'][name]
+                if name=='candidate':continue
+                if not correct:wrong+=1;continue
+                c,q=r['instructions']['candidate'],r['instructions'][name]
+                rel='slower' if c>q else 'equal' if c==q else 'strict';classes[rel]+=1
+                if c>q:losing.add((r['x'],r['y']))
+    assert rows==ram['state_rows']==68502 and 4*rows==ram['actual_public_ARM_calls']==274008
+    assert wrong==ram['wrong_Qfplib_comparisons_and_costs_retained']==79762
+    assert classes==ram['correct_reference_state_comparison_classes']
+    assert len(losing)==ram['RAM_known_losing_pairs']==1435
+    assert [list(k) for k in sorted(losing)]==ram['RAM_losing_pairs']
+    report.update(recounted_states=rows,recounted_public_ARM_calls=4*rows,remaining_finite_RAM_pow_pairs=len(losing),all_wrong_reference_outputs_costs_and_all_correct_comparisons_retained=True)
+print(json.dumps(report,indent=2))

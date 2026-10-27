@@ -1,0 +1,10 @@
+{
+  "SDK_source": ".build/picocalc-deps/pico-sdk/src/rp2_common/pico_runtime_init/runtime_init_clocks.c",
+  "SDK_source_sha256": "b7d77028b775d89660488ba0b872c82f28402daca910c1cfbd9bdc0eb55502d8",
+  "changes": [
+    "strong override",
+    "omit RTC clock configuration",
+    "validate running 48MHz USB PLL without reprogramming it"
+  ],
+  "no_math_source_changes": true
+}

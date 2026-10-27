@@ -1,0 +1,10 @@
+{
+  "status": "PURE_QUALIFIED_HELPER_REUSE_WITHOUT_OLD_ACTOR_OR_LEASE",
+  "status_parser_source": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-ci249-activation-20261027-001/core/status_frames.py",
+  "status_parser_source_sha256": "bf0b488c93bb084d25019b5dbffb77291ee1b1dd4626882c4431f656c3d5a2f1",
+  "first_complete_frame_exact_text_sha256": "9ec3ebba81b086c2bc3bacc0d059fa1dc5fda8e529eec51aae2a1533c864b578",
+  "clock_bridge_source": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-ci249-activation-20261027-001/core/clock_bridge.py",
+  "clock_bridge_source_sha256": "41f49a7134038cdc96ce523cc47a518a0a2b5c20178551e62297846c0c2ff963",
+  "imports_open_devices": false,
+  "RTC_setter_functions_used": false
+}

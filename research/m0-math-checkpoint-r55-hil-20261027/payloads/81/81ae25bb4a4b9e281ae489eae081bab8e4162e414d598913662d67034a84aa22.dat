@@ -1,0 +1,85 @@
+{
+  "status": "HOST_R2_READONLY_CURRENT_COUNTER_BASELINE_SUCCESSOR_NOT_DEVICE_AUTHORITY",
+  "all_producers_terminal": true,
+  "parent_frozen_sha256": "b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d",
+  "actual_R1_readonly_failure_preserved": true,
+  "physical_IO_by_this_successor": 0,
+  "files": {
+    "preflight.py": {
+      "bytes": 9935,
+      "sha256": "69627ff676619cab6b3bf285b72d7217b451327b9d4a55e817ef42409dadc234"
+    },
+    "live_io.py": {
+      "bytes": 7147,
+      "sha256": "5d359cb810affc1a7c04fb9dbd691c9424951e6b2975abc594af24b001891065"
+    },
+    "test-live-io.py": {
+      "bytes": 4381,
+      "sha256": "6d2d2fbe3d2bc11bfdf93190a75a1b3ad9a1bc947d86b44206b953b0f6242dc9"
+    },
+    "live-io-test.json": {
+      "bytes": 569,
+      "sha256": "abff95e041301fd9f7ea0c19aa86598dd538f0fb435a8283181ad57d69acacc9"
+    },
+    "test-preflight.py": {
+      "bytes": 3086,
+      "sha256": "3d916be74b6a4e83a822e651e971362a33f495f279e8c7932e4e262f4d9d40eb"
+    },
+    "preflight-test.json": {
+      "bytes": 946,
+      "sha256": "01fd998e8f6a26c90424cbc62fbca2943616a8354c4f8bc2f7a9922ca0b2228b"
+    },
+    "verify-preflight.py": {
+      "bytes": 1018,
+      "sha256": "4437b5eb7f25fc9c36db83014e01bb2b39fc92b075138f6c7a289b77004aecfa"
+    },
+    "PREFLIGHT.md": {
+      "bytes": 4071,
+      "sha256": "903b50983d544633dfd31fb35c2caa5d8b6e1597ad09dc2768a993272e418d8d"
+    },
+    "PREFLIGHT-MANIFEST.json": {
+      "bytes": 1776,
+      "sha256": "b8e8eca7591ebcde589080542ca7f871d6d798ddc4c2055a1b60634e9dbb91ef"
+    },
+    "PREFLIGHT-GRANT-TEMPLATE.json": {
+      "bytes": 765,
+      "sha256": "a63dfb8842f216a386cdce0ea82b500ffc2af9d7aa6ecb0e173ab1c8e37e2dd4"
+    },
+    "HELPER-PROVENANCE.json": {
+      "bytes": 713,
+      "sha256": "d78130ab5c4aa0e0aaeb6c45ac267d050578bd1b8307e87c0ecb6bbf8c7861e0"
+    },
+    "RETURN-SOURCE-FINDINGS.json": {
+      "bytes": 2694,
+      "sha256": "29b6b8f167ebfad7fbfb9a1dcb60ba929059c1cdadca26cbc426f94f1f53f5e0"
+    },
+    "vendor/status_frames.py": {
+      "bytes": 1132,
+      "sha256": "9db5fecce7034764e30bbdfe44c2244575fb261f6e7896092ef722d441c82eaa"
+    },
+    "vendor/transaction_core.py": {
+      "bytes": 112,
+      "sha256": "a428aa09ad4c1c6f3bb5794a1667f4aee4c1ae7cab36e222b3baf13aa23713f5"
+    },
+    "vendor/clock_bridge.py": {
+      "bytes": 9385,
+      "sha256": "41f49a7134038cdc96ce523cc47a518a0a2b5c20178551e62297846c0c2ff963"
+    },
+    "selected249-source/ports/picocalc/clock.cpp": {
+      "bytes": 10798,
+      "sha256": "8a2213285dd0af18bf2806d12d3cdd1160b5b4678960d5b4e32d9b134112fc8f"
+    },
+    "selected249-source/ports/picocalc/main.cpp": {
+      "bytes": 37824,
+      "sha256": "b16b588b7667ffa3439521d730d941b3fbeaaa3317f32f3ec7992761bf2a86ac"
+    },
+    "selected249-source/ports/picocalc/terminal.cpp": {
+      "bytes": 20576,
+      "sha256": "0b6b66b47c07ea0eaa48da9698a20d7688f37356e1f321dff35adea528e6e7c4"
+    },
+    "selected249-source/ports/picocalc/terminal.hpp": {
+      "bytes": 2353,
+      "sha256": "acfb5e8fe4a4593c152a1a39762edf5a12305c5469db3a7657d29305c61f246c"
+    }
+  }
+}

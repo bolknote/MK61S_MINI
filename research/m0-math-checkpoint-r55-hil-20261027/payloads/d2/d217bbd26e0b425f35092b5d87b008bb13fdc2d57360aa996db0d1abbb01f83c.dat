@@ -1,0 +1,45 @@
+"""Inert exact-UID/parser and owned-child withdrawal checks. No tool is run."""
+from pathlib import Path
+import json,subprocess,tempfile
+from rom_stage import ToolRunner,exact_rom
+from resident_stage import unchanged_data
+W=Path(__file__).resolve().parent
+valid=b'Device Information\n type: RP2040\n flash size: 2048K\n flash id: 0xE6657CD423721C35\n'
+assert exact_rom(valid,b'',0)
+assert not exact_rom(valid.replace(b'E6657CD423721C35',b'E665000000000000'),b'',0)
+assert not exact_rom(valid,b'warning',0)
+assert not exact_rom(valid+valid,b'',0)
+class Lease:
+    def __init__(self):self.revoked=False;self.fields=dict(bus=2,address=7,ROM_USB_serial='E0C9125B0D9B',location_id=34799616,max_picotool_commands=4)
+    def guard(self):
+        if self.revoked:raise RuntimeError('Root revoked')
+        return self.fields
+class Child:
+    pid=99999999
+    def __init__(self,lease,*,revoke=False):self.lease=lease;self.revoke=revoke;self.returncode=None;self.terminated=False;self.reaped=False
+    def poll(self):return self.returncode
+    def wait(self,timeout=None):
+        if self.revoke and self.returncode is None:
+            self.revoke=False;self.lease.revoked=True;raise subprocess.TimeoutExpired('inert child',timeout)
+        if self.returncode is None:self.returncode=0
+        self.reaped=True;return self.returncode
+    def terminate(self):self.terminated=True;self.returncode=-15
+    def kill(self):self.returncode=-9
+rejected=[]
+with tempfile.TemporaryDirectory(prefix='m0-rom-envelope-',dir=W.parent) as name:
+    out=Path(name);lease=Lease();created=[]
+    def factory(argv,stdout,stderr):
+        assert argv[-6:]==['--bus','2','--address','7','--ser','E6657CD423721C35']
+        child=Child(lease,revoke=True);created.append(child);return child
+    runner=ToolRunner(lease,out,factory=factory)
+    try:runner.call('inert-readonly-identity',['info','-d'])
+    except RuntimeError:rejected.append('revoked-owned-child-terminated-and-reaped')
+    else:raise AssertionError('Revoked external command accepted')
+    assert len(created)==1 and created[0].terminated and created[0].reaped
+    before=dict(reg='zero',stk='zero',hout='zeros',pwd='/',alarm='OFF',IP=0,settings={'RTC_SET':0})
+    unchanged_data(before,dict(before));after=dict(before);after['IP']=1
+    try:unchanged_data(before,after)
+    except RuntimeError:rejected.append('changed-return-data-no-setter-or-restore')
+    else:raise AssertionError('Changed return data accepted')
+result=dict(status='PASS_INERT_ROM_AND_RETURN_ENVELOPE_CONTROLS',rejected=rejected,actual_external_tools_started=0,actual_device_IO=0,Flash_writer_API_present=False,RTC_setters=0,new_ARM_MPFR_calls=0)
+(W/'rom-envelope-test.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

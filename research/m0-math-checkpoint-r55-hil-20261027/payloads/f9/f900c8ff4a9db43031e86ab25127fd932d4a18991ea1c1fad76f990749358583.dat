@@ -1,0 +1,44 @@
+{
+  "verdict": "GO_FRESH_STAGE0_RESIDENT_CAPTURE_AFTER_KERNEL_METADATA",
+  "created_utc": "2026-10-27T13:32:24.832401+00:00",
+  "reviewer": "Root directly",
+  "packet": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/PREFLIGHT-FROZEN.json",
+    "bytes": 2904,
+    "sha256": "b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d"
+  },
+  "ready": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/STAGE0-READY.json",
+    "bytes": 775,
+    "sha256": "33160d67d0b2114ff3eab6c0d8676f5a353238ebba154f70834148b5516a7dcb"
+  },
+  "prior_closed_canonical": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-device-handoff.json",
+    "bytes": 5810,
+    "sha256": "11ba0a0afa837dfeaf8f56392f9e1a53f2657f81db6113eebd0cf26febfec531"
+  },
+  "source_review": [
+    "No import-time device IO; actual execution requires exact fresh Root canonical/grant hash, owner/UID/scope/stage/nonce/expiry",
+    "Native instance-local lease guard before open/ioctl/select/read/write and buffered responses, bounded single-write no continuation, own-close after revoke",
+    "First source frame retained from open without drain/skip; full source-domain selected249 CRC/stopped foreground checked before US, exact echo/prompt fixed getters only",
+    "Captures actual UID/current typed state/IP/settings/calendar/RTC_SET/watchdog row and direct Mach time bracket; no fabricated scratch-calendar values",
+    "No ROM/RAM/Flash/APP/SDhelper/reset/RTC setter; RTC/source data only read, no UI hardware acceptance"
+  ],
+  "live_revoke_controls": 9,
+  "readonly_negative_controls": 15,
+  "own_readonly_verifier": {
+    "status": "PASS_HOST_READONLY_STAGE0_PACKET_NOT_DEVICE_ADMISSION",
+    "pins": 19,
+    "FROZEN_sha256": "b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d",
+    "actual_device_IO": 0,
+    "goal_complete": false
+  },
+  "findings": [],
+  "max_TX_bytes": 128,
+  "max_RX_bytes": 262144,
+  "max_session_seconds": 120,
+  "nominal_TX_bytes": 49,
+  "device_IO": 0,
+  "ROM_RAM_or_Flash_grant": false,
+  "hardware_current_state_not_yet_observed": true
+}

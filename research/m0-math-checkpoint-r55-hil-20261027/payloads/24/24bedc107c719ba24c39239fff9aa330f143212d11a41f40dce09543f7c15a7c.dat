@@ -1,0 +1,48 @@
+"""Frozen R1 math protocol with the operator's per-native-operation live guard."""
+from pathlib import Path
+import argparse,hashlib,importlib.util,json,os,sys,time
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;PAYLOAD=W.parent/'bootable-r1'
+sys.path.insert(0,str(PAYLOAD))
+from driver import Exchange,run,load_cases
+from live_io import LiveLease,LeasePort,need,sha
+PAYLOAD_PIN='8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8'
+class RevocableExchange(Exchange):
+    def __init__(self,lease,*args,**kwargs):self.lease=lease;super().__init__(*args,**kwargs)
+    def check_deadline(self):self.lease.guard();super().check_deadline()
+def verify_payload():
+    raw=(PAYLOAD/'FROZEN.json').read_bytes();need(sha(raw)==PAYLOAD_PIN,'Different frozen R1 payload')
+    for name,pin in json.loads(raw)['files'].items():
+        p=PAYLOAD/name;need(p.is_file() and not p.is_symlink() and p.stat().st_size==pin['bytes'] and sha(p.read_bytes())==pin['sha256'],'Changed R1 payload '+name)
+def main():
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--execute',action='store_true');p.add_argument('--grant',type=Path);p.add_argument('--lease-sha256');p.add_argument('--output',type=Path);a=p.parse_args()
+    if not a.execute:print('HOST_ONLY: frozen R1 worker stage; no device I/O');return
+    need(a.grant and a.lease_sha256 and a.output,'Exact fresh worker stage grant required')
+    lease=LiveLease(a.grant,a.lease_sha256,'math-cdc');verify_payload();g=lease.guard()
+    from envelope_pins import verify_operator
+    verify_operator(lease)
+    need(g['payload_FROZEN_sha256']==PAYLOAD_PIN,'Grant binds another payload')
+    smoke=json.loads((PAYLOAD/'smoke-plan.json').read_text());need(g['case_ids']==smoke['case_ids'],'Only pinned first smoke plan allowed')
+    need(0<g['wire_nonce']<2**32 and g['max_query_requests']==78,'Wrong nonce/request bound')
+    need(g['max_TX_bytes']<=10000 and g['max_RX_bytes']<=800000,'Broader worker byte budget')
+    need(g['exit_to_bootsel'] is True,'Normal explicit X return must be granted')
+    cases=load_cases(g['case_ids']);meta=json.loads((PAYLOAD/'blobs.json').read_text());proof=json.loads((PAYLOAD/'image-proof.json').read_text());checked=json.loads((PAYLOAD/'worker-check.json').read_text())
+    out=a.output.resolve();need(not out.exists(),'Fresh output required');out.mkdir()
+    (out/'grant.byteexact.json').write_bytes(a.grant.read_bytes());result=dict(status='STARTED_ROOT_REVOCABLE_MATH_CDC_SMOKE',pid=os.getpid(),payload_FROZEN_sha256=PAYLOAD_PIN,Flash_writes=0,RTC_setters=0,goal_complete=False)
+    (out/'STARTED.json').write_text(json.dumps(result,indent=2)+'\n');port=None;failure=None
+    try:
+        with (out/'wire-from-open.bin').open('xb') as raw,(out/'native-io.jsonl').open('x') as journal,(out/'tx.raw').open('xb') as tx,(out/'rx.raw').open('xb') as rx,(out/'records.jsonl').open('x') as records:
+            port=LeasePort(lease,raw,journal)
+            exchange=RevocableExchange(lease,port,g['wire_nonce'],tx,rx,g['max_TX_bytes'],g['max_RX_bytes'],time.monotonic()+g['session_seconds'])
+            def emit(row):records.write(json.dumps(row,separators=(',',':'))+'\n');records.flush()
+            done=run(exchange,cases,meta,proof,checked['actual_ROM_CRC32'],emit,True)
+            result.update(status='PASS_BOUNDED_PHYSICAL_SMOKE_NOT_FULL_ACCEPTANCE',**done)
+    except BaseException as e:failure=e;result.update(status='HOLD_OR_REVOKED_NO_AUTOMATIC_RECOVERY',error=repr(e))
+    finally:
+        if port is not None:port.close();result.update(serial_closed=not port.is_open,TX_bytes=port.tx_bytes,RX_bytes=port.rx_bytes)
+        else:result['serial_closed']=True
+        result.update(no_implicit_X_after_failure=True,resident249_return_not_claimed=True,no_global_noholder_claim=True)
+        (out/'RESULT.json').write_text(json.dumps(result,indent=2)+'\n')
+    print(json.dumps(result,indent=2))
+    if failure:raise failure
+if __name__=='__main__':main()

@@ -1,0 +1,12 @@
+[0/1] Re-running CMake...
+PICO_SDK_PATH is /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk
+Target board (PICO_BOARD) is 'pico'.
+Using board configuration from /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/src/boards/include/boards/pico.h
+Pico Platform (PICO_PLATFORM) is 'rp2040'.
+Build type is Release
+TinyUSB available at /Users/bolk/Projects/MK61S_MINI/.build/picocalc-deps/pico-sdk/lib/tinyusb/hw/bsp/rp2040; enabling build support for USB.
+-- Configuring done (0.2s)
+-- Generating done (0.1s)
+-- Build files have been written to: /Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1/build
+[1/3] Building C object CMakeFiles/m0_r55_pow_hil.dir/bench.c.o
+[2/3] Linking CXX executable m0_r55_pow_hil.elf

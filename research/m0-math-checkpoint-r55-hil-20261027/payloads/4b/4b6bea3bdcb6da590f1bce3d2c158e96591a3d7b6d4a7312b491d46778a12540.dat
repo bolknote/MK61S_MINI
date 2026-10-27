@@ -1,0 +1,38 @@
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}
+{"event": "WRITE_INTENT", "hex": "1f"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}
+{"event": "WRITE_INTENT", "hex": "6964656e746974790d"}
+{"event": "WRITE_RESULT", "count": 9, "intended": 9}
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}
+{"event": "WRITE_INTENT", "hex": "7265670d"}
+{"event": "WRITE_RESULT", "count": 4, "intended": 4}
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}
+{"event": "WRITE_INTENT", "hex": "73746b0d"}
+{"event": "WRITE_RESULT", "count": 4, "intended": 4}
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}
+{"event": "WRITE_INTENT", "hex": "686f75740d"}
+{"event": "WRITE_RESULT", "count": 5, "intended": 5}
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}
+{"event": "WRITE_INTENT", "hex": "7077640d"}
+{"event": "WRITE_RESULT", "count": 4, "intended": 4}
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}
+{"event": "WRITE_INTENT", "hex": "616c61726d0d"}
+{"event": "WRITE_RESULT", "count": 6, "intended": 6}
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}
+{"event": "WRITE_INTENT", "hex": "646174650d"}
+{"event": "WRITE_RESULT", "count": 5, "intended": 5}
+{"event": "WRITE_INTENT", "hex": "05"}
+{"event": "WRITE_RESULT", "count": 1, "intended": 1}

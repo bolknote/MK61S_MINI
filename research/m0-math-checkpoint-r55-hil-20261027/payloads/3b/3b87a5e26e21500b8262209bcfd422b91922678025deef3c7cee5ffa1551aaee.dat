@@ -1,0 +1,23 @@
+{
+  "owner": "m0-math-ram",
+  "owner_thread": "01a14fdd-8514-7d33-b324-93b038e5f137",
+  "coordinator_thread": "01a164b7-9caa-7011-90d1-807e9630921c",
+  "uid": "E6657CD423721C35",
+  "scope": "PICO_R55_MATH_RAM_SMOKE_ONCE",
+  "status": "DRAFT_NOT_A_GRANT",
+  "stage": "resident-capture",
+  "enabled": false,
+  "hardware_window_granted": false,
+  "hardware_execution_allowed": false,
+  "lease_nonce": "ROOT_FRESH_32_HEX",
+  "expires_unix": 0,
+  "session_seconds": 120,
+  "port": "ROOT_FRESH_EXACT_NATIVE_PATH",
+  "port_stat_rdev": null,
+  "location_id": null,
+  "kernel_entry": null,
+  "kernel_session": null,
+  "max_TX_bytes": 128,
+  "max_RX_bytes": 262144,
+  "preflight_packet_sha256": "ROOT_BIND_PUBLISHED_PREFLIGHT_FROZEN_SHA256"
+}

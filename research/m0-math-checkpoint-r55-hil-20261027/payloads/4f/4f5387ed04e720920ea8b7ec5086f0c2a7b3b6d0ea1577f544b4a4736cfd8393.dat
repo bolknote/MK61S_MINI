@@ -1,0 +1,46 @@
+{
+  "reg": "R0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00",
+  "stk": "S0 =  0.0000000  00\r\nS1 =  0.0000000  00\r\nS2 =  0.0000000  00\r\nS3 =  0.0000000  00\r\nS4 =  0.0000000  00",
+  "hout": "hin 0000 000000000000000000000000000000000000000000000000\r\nhin 0024 000000000000000000000000000000000000000000000000\r\nhin 0048 000000000000000000000000000000000000000000000000\r\nhin 0072 000000000000000000000000000000000000000000000000\r\nhin 0096 000000000000000000",
+  "pwd": "/",
+  "alarm": "ALARM A OFF ONCE 2026-10-17 21:05:00\r\nALARM B OFF ONCE 2000-01-01 00:00:00",
+  "IP": 0,
+  "settings": {
+    "UI_FONT_FAMILY=": "UI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000",
+    "UI=": "UI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED",
+    "SETTINGS_WRITES": 0,
+    "SETTINGS_ERASES": 0,
+    "SETTINGS_SEQUENCE": 331,
+    "RTC_SET": 0,
+    "RTC_PPM": 0
+  },
+  "identity": "MK61S PicoCalc 0.8.15 CPU=RP2040 UID=E6657CD423721C35 FLASH=2097152",
+  "epoch": [
+    "6",
+    "00010001"
+  ],
+  "clock": {
+    "rtc": "2026-01-01 09:24:27",
+    "continuous_interval_ns": [
+      505640816419914,
+      505640830972960
+    ],
+    "host_identity": {
+      "boot_session": "501BFC14-D411-41D3-BC4A-D5ABE0436FCA",
+      "timebase": {
+        "numer": 125,
+        "denom": 3
+      }
+    },
+    "getter_phase_seconds": [
+      0,
+      1
+    ]
+  },
+  "watchdog_status": "WATCHDOG=ON TIMEOUT_MS=8000 RELOADS=1955302 MAX_GAP_MS=707 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=4864784 PREVIOUS_GAP_MS=707",
+  "watchdog_scratch_calendar_directly_exposed_by_readonly_CLI": false,
+  "software_snapshot_source_semantics": "clock::service writes watchdog scratch0..2 only while configured; these register values are not directly returned by the qualified getters",
+  "current_zero_data_losslessly_rebootable": true,
+  "physical_keys_baseline": 25,
+  "RAM_launch_or_clock_return_GO": false
+}

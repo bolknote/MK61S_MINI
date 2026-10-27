@@ -1,0 +1,12 @@
+{
+  "status": "PASS_INERT_ROM_AND_RETURN_ENVELOPE_CONTROLS",
+  "rejected": [
+    "revoked-owned-child-terminated-and-reaped",
+    "changed-return-data-no-setter-or-restore"
+  ],
+  "actual_external_tools_started": 0,
+  "actual_device_IO": 0,
+  "Flash_writer_API_present": false,
+  "RTC_setters": 0,
+  "new_ARM_MPFR_calls": 0
+}

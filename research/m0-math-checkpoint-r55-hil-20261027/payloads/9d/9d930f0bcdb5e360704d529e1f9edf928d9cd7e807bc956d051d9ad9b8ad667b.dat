@@ -1,0 +1,13 @@
+.section .math_main_blob,"ax",%progbits
+.balign 4
+.incbin "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1/math_main.bin"
+.section .math_hot_blob,"ax",%progbits
+.balign 4
+.incbin "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1/math_hot.bin"
+.section .math_data_blob,"aw",%progbits
+.balign 4
+.incbin "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1/math_data.bin"
+.section .qfplib_blob,"ax",%progbits
+.balign 4
+.incbin "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1/qfplib.bin"
+.section .note.GNU-stack,"",%progbits

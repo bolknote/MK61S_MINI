@@ -1,0 +1,14 @@
+{
+  "status": "HOST_READY_STANDALONE_R55_POW_RAM_IMAGE_AWAIT_FRESH_ROOT_PHYSICAL_GRANT",
+  "packet_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1",
+  "FROZEN_sha256": "8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8",
+  "ELF_sha256": "68f752c5c5a581be8929c9318ebe5c18d1a754911faf80c72ff3b42a59728b6a",
+  "BIN_sha256": "c8d9408b61e40e5e31642bb61df1f9eaa8038af935e3987b1c50cbce8e30aab5",
+  "BIN_bytes": 257940,
+  "pinned_files": 50,
+  "all_HOST_handles_terminal": true,
+  "device_grant_closed": true,
+  "Git_mutations": 0,
+  "physical_IO": 0,
+  "goal_complete": false
+}

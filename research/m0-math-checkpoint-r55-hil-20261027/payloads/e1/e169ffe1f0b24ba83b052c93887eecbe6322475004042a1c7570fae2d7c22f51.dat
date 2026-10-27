@@ -1,0 +1,9 @@
+ENTRY(qfp_dadd)
+SECTIONS {
+ .m0_qfplib 0x2000a000 : { KEEP(*(.m0_qfplib)) *(.text*) *(.rodata*) }
+ .reference_ram (NOLOAD) : { *(.data*) *(.bss*) *(COMMON) }
+ /DISCARD/ : { *(.ARM.exidx*) *(.ARM.extab*) }
+ ASSERT(SIZEOF(.reference_ram)==0,"Reference must not add RAM state")
+}
+
+ASSERT(ADDR(.m0_qfplib)+SIZEOF(.m0_qfplib)<=0x2000c000,"Qfplib overflow")

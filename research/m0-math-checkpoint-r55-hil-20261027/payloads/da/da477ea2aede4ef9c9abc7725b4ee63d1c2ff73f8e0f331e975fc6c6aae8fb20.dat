@@ -1,0 +1,21 @@
+{
+  "status": "PASS_READONLY_CURRENT249_CAPTURE_NOT_RAM_GO",
+  "pid": 30738,
+  "stage": "resident-capture",
+  "device_transition_attempts": 0,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "APP_opens": 0,
+  "physical_key_actions_sent": 0,
+  "goal_complete": false,
+  "state_sha256": "4f5387ed04e720920ea8b7ec5086f0c2a7b3b6d0ea1577f544b4a4736cfd8393",
+  "RTC_SET": 0,
+  "calendar": "2026-01-01 09:24:27",
+  "observed_physical_keys_baseline": 25,
+  "current_zero_data_losslessly_rebootable": true,
+  "serial_closed": true,
+  "TX_bytes": 49,
+  "RX_bytes": 36861,
+  "no_new_device_IO_after_revoke": true,
+  "no_global_noholder_claim": true
+}

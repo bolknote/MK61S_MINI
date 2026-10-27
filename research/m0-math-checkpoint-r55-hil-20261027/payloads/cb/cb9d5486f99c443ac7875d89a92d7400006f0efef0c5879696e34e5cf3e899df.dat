@@ -1,0 +1,89 @@
+{
+  "schema_version": 2,
+  "owner": "m0-math-ram",
+  "owner_thread": "01a14fdd-8514-7d33-b324-93b038e5f137",
+  "operator_thread": "01a14fdd-8514-7d33-b324-93b038e5f137",
+  "coordinator_thread": "01a164b7-9caa-7011-90d1-807e9630921c",
+  "uid": "E6657CD423721C35",
+  "scope": "PICO_R55_MATH_RAM_SMOKE_ONCE",
+  "stage": "resident-capture",
+  "status": "ROOT_MATH_STAGE_GO",
+  "state": "RESERVED_READONLY_RESIDENT_CAPTURE",
+  "parent_handoff_sha256": "18a74a0e41cc1eff87cb2cb49b7a1275b1c525f17227d97d2fc88471e96720aa",
+  "parent_handoff_record": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/STAGE0-ACTUAL-CLOSE.json",
+    "bytes": 5119,
+    "sha256": "18a74a0e41cc1eff87cb2cb49b7a1275b1c525f17227d97d2fc88471e96720aa"
+  },
+  "enabled": true,
+  "hardware_window_granted": true,
+  "hardware_execution_allowed": true,
+  "scope_consumed": false,
+  "lease_nonce": "41a1e7a8810b4bec8cc8ef6611f70910",
+  "expires_unix": 1793109233.989106,
+  "session_seconds": 120,
+  "port": "/dev/cu.usbmodem21301",
+  "port_stat_rdev": 150994949,
+  "location_id": 34799616,
+  "kernel_entry": 4297662282,
+  "kernel_session": 11740050473427,
+  "max_TX_bytes": 128,
+  "max_RX_bytes": 262144,
+  "preflight_packet_sha256": "81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22",
+  "preflight_packet": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2/PREFLIGHT-FROZEN.json",
+    "bytes": 3089,
+    "sha256": "81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22"
+  },
+  "actual_READY": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/STAGE0-R2-READY.json",
+    "bytes": 1011,
+    "sha256": "ef4647d799ba71ff1959dd357227d39a2785ef914a261fad97d1accbb8962c04"
+  },
+  "Root_source_host_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/STAGE0-R2-REVIEW.json",
+    "bytes": 1921,
+    "sha256": "ff05eae19254413ad2790054b55f22e0877a71dba65f2b3e69f540890c6d9c38"
+  },
+  "Root_admission_metadata": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/root-hardware-metadata-20261027-math-r2-classic-v4-001/root-physical-and-noholder.json",
+    "bytes": 4983,
+    "sha256": "3fd199178b5cad416510273cc76b0944a9cc92262cc74d84629aa6a080495b1f"
+  },
+  "allowed_transport_control_hex": [
+    "05",
+    "1f"
+  ],
+  "allowed_ASCII_getters": [
+    "identity",
+    "reg",
+    "stk",
+    "hout",
+    "pwd",
+    "alarm",
+    "date"
+  ],
+  "output": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/stage0-r2-current249-actual-001",
+  "CDC_open_attempts": 1,
+  "ROM_transitions_allowed": false,
+  "RAM_loads_allowed": false,
+  "Flash_writes_allowed": false,
+  "RTC_setter_budget": 0,
+  "APP_opens_allowed": false,
+  "SD_helper_allowed": false,
+  "physical_key_budget": 0,
+  "other_device_IO_allowed": false,
+  "Root_device_IO": 0,
+  "master13_global_restore_deferred": true,
+  "current_target": {
+    "build": "249A92DE",
+    "CRC": "E6CFC3B8",
+    "image_bytes": 1537008
+  },
+  "failure": "HOLD and close own FD; no recovery/reset/ROM/extra I/O after revocation",
+  "next_stage": "Root decides on observed RTC_SET and losslessly rebootable current data; this is not RAM GO",
+  "created_utc": "2026-10-27T13:48:53.989187+00:00",
+  "expected_physical_keys": 25,
+  "current_observed_RTC_SET": 0,
+  "RTC_return_disposition": "Known SET0 placeholder reset/HOLD accepted without setter or scratch injection; typed capture and ROM/RAM operator admission still pending"
+}

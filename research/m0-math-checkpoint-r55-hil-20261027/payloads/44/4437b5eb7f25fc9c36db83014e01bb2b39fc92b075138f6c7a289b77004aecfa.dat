@@ -1,0 +1,14 @@
+"""Read-only stage0 packet verifier; importing the caller is unnecessary."""
+from pathlib import Path
+import hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent
+manifest=json.loads((W/'PREFLIGHT-FROZEN.json').read_text())
+for name,pin in manifest['files'].items():
+    p=W/name
+    assert p.is_file() and not p.is_symlink() and p.stat().st_size==pin['bytes'] and hashlib.sha256(p.read_bytes()).hexdigest()==pin['sha256'],name
+live=json.loads((W/'live-io-test.json').read_text());source=json.loads((W/'preflight-test.json').read_text())
+assert live['actual_device_opens']==source['actual_device_opens']==0
+assert len(live['rejected'])==9 and len(source['rejected'])==17
+assert 'actual-expiry-with-unchanged-authority-bytes' in live['rejected']
+print(json.dumps(dict(status='PASS_HOST_READONLY_STAGE0_PACKET_NOT_DEVICE_ADMISSION',pins=len(manifest['files']),FROZEN_sha256=hashlib.sha256((W/'PREFLIGHT-FROZEN.json').read_bytes()).hexdigest(),actual_device_IO=0,goal_complete=False),indent=2))
