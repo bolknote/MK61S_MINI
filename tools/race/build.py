@@ -18,7 +18,7 @@ def outputs():
     out = ROOT / 'programs/games/RACE'
     return {
         out / 'race.bin': program_binary(image),
-        out / 'autoexec.m61': (b'open? manual.md\nreinit\nbind OK run :help\n'
+        out / 'autoexec.m61': (b'open? manual.md\nreinit\nbind key 13 down run :help\n'
                                b'load 0000 race.bin\nrun\nret\n\n'
                                b':help\nopen? manual.md\nret\n'),
         ROOT / 'tools/race/race.map.json':

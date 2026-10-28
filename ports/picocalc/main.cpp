@@ -458,8 +458,16 @@ int main() {
             usb_retry = time_us_64() + 5000000;
         }
         picocalc::KeyEvent event{};
-        if(key_event(event) && event.pressed()) {
-            input(event.code,physical_event);
+        if(key_event(event)) {
+            const bool captured = !services.active() &&
+                ui.page()==picocalc::Page::CALCULATOR && picocalc::script::input(event);
+            if(captured) {
+                calculator.wake_core();power.activity(time_us_64());
+                if(event.pressed()) {
+                    last_activity=time_us_64();tone(ui.settings().volume);
+                    if(physical_event) { ++physical_keys;last_physical_key=event.code; }
+                }
+            } else if(event.pressed()) input(event.code,physical_event);
         }
         if(!keyboard.online()) panel_ready = false;
         if(keyboard.online() && !panel_ready && !keyboard.transaction_pending()) {

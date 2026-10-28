@@ -121,7 +121,9 @@ int main(int argc, char** argv) {
       continue;
     }
     if(op == "help") {
-      if(!m61_text::handle_ok_key()) return 4;
+      if(!m61_text::handle_key_event(0x13,true)) return 4;
+      (void)m61_text::handle_key_event(0x13,false);
+      for(unsigned i=0;i<4096 && core_61::is_RUN() && !m61_text::calculator_suspended();++i) elite_tracked_step();
       m61_text::service();
       m61_text::Error error = {};
       if(m61_text::last_error(error) || m61_text::calculator_suspended()) return 5;

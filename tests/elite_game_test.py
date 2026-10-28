@@ -908,7 +908,7 @@ def test_target_selection_transitions():
 def main():
     directory=ROOT/'programs/games/ELITE'
     assert not list(directory.glob('part*.m61')) and not list(directory.glob('b[0-9][0-9].m61'))
-    expected=['open? manual.md','reinit','bind OK run :help',
+    expected=['open? manual.md','reinit','bind key 13 down run :help',
               'load 0000 elite.bin','run','ret','',
               ':help','open? manual.md','ret']
     assert (directory/'autoexec.m61').read_text().splitlines()==expected

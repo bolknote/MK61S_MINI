@@ -7,6 +7,7 @@ class_calc_config config;
 #include "rust_types.h"
 #include "keyboard.h"
 #include "m61_text.hpp"
+#include "m61_keys.hpp"
 #include "language_vm_resident.hpp"
 #include "calculator_control.hpp"
 
@@ -885,11 +886,13 @@ static void service_m61_controls(void) {
     was_active = true;
     kbd::clear_immediate_presses();
   }
-
-  // Управляющие клавиши M61 фиксируются уже по первому прочитанному фронту
-  // матрицы. Штатное debounced-событие остаётся в общей очереди, но короткое
-  // нажатие больше не исчезает, если отпущено раньше 30 мс.
-  if(kbd::take_immediate_press(KEY_ESC)) {
+  if(!m61_text::keyboard_available()) return;
+  const bool foreground = input_focus == &mk61_baseloop_hook &&
+      !core_61::edit_program;
+  // Unbound system keys retain their immediate path. Bound ones must reach
+  // the same debounced DOWN/UP stream, before any native action is taken.
+  if(!(foreground && m61_text::captures_key(m61_keys::ESC)) &&
+     kbd::take_immediate_press(KEY_ESC)) {
     m61_text::cancel();
     if(core_61::is_RUN()) hidden_press_key(sw::RUN);
     kbd::handoff(kbd::Event(KEY_ESC_PRESS));
@@ -897,52 +900,41 @@ static void service_m61_controls(void) {
     lcd_std_display_redraw();
     return;
   }
-  if(kbd::take_immediate_press(KEY_DEGREE)) {
-    (void) select_m61_angle_unit(KEY_DEGREE);
+  const i32 angle_keys[] = {KEY_DEGREE, KEY_GRADE, KEY_RADIAN};
+  for(i32 key : angle_keys) {
+    const i32 logical = m61_keys::logical_key(keyboard_layout::ACTIVE, key);
+    if(!(foreground && m61_text::captures_key((u8)logical)) &&
+       kbd::take_immediate_press(key)) (void)select_m61_angle_unit(key);
   }
-  if(kbd::take_immediate_press(KEY_GRADE)) {
-    (void) select_m61_angle_unit(KEY_GRADE);
-  }
-  if(kbd::take_immediate_press(KEY_RADIAN)) {
-    (void) select_m61_angle_unit(KEY_RADIAN);
-  }
-
-  const i32 release_mask = (i32) keyboard_core::RELEASE_MASK;
   while(true) {
-    const i32 event = kbd::last_key();
-    if(event < 0) return;
-    const i32 keycode = event & ~release_mask;
-    const bool pressed = (event & release_mask) == 0;
-
-    if(keycode == KEY_DEGREE || keycode == KEY_GRADE ||
-       keycode == KEY_RADIAN) {
-      (void) kbd::get_key();
-      if(pressed) (void) select_m61_angle_unit(keycode);
+    const kbd::Event event(kbd::last_key());
+    if(!event.valid()) return;
+    const i32 keycode = event.key();
+    const i32 logical = m61_keys::logical_key(keyboard_layout::ACTIVE, keycode);
+    if(foreground && logical >= 0 &&
+       m61_text::handle_key_event((u8)logical, event.press())) {
+      (void)kbd::get_key();
+      if(event.press()) (void)kbd::take_immediate_press(keycode);
+      if(m61_text::calculator_suspended()) classic_timer::synchronize(false);
       continue;
     }
-
+    if(keycode == KEY_DEGREE || keycode == KEY_GRADE || keycode == KEY_RADIAN) {
+      (void)kbd::get_key();
+      if(event.press()) (void)select_m61_angle_unit(keycode);
+      continue;
+    }
     if(keycode == KEY_ESC) {
-      (void) kbd::get_key();
-      if(!pressed) continue;
+      (void)kbd::get_key();
+      if(event.release()) continue;
       m61_text::cancel();
       if(core_61::is_RUN()) hidden_press_key(sw::RUN);
-      kbd::handoff(kbd::Event(event));
+      kbd::handoff(event);
       was_active = false;
       lcd_std_display_redraw();
       return;
     }
-
-    if(keycode == KEY_OK && pressed &&
-       input_focus == &mk61_baseloop_hook && !core_61::edit_program &&
-       m61_text::handle_ok_key()) {
-      (void) kbd::get_key();
-      kbd::handoff(kbd::Event(event));
-      classic_timer::synchronize(false);
-      continue;
-    }
-
     if(!m61_text::calculator_suspended()) return;
-    (void) kbd::get_key();
+    (void)kbd::get_key();
   }
 }
 
@@ -1407,11 +1399,19 @@ void idle_main_process(void) {
 }
 
 void event_hold_key(i32 holded_key, i32 hold_quant) {
+  const i32 logical = m61_keys::logical_key(keyboard_layout::ACTIVE, holded_key);
+  if(holded_key != KEY_CX && logical >= 0 &&
+     m61_text::captures_key((u8)logical)) return;
   switch(holded_key) {
       case KEY_CX:
           if(hold_quant == 0) {
+            const bool key_script = m61_text::key_bindings_active();
             const bool handlers_cleared =
                 m61_text::clear_bindings_and_traps();
+            if(key_script) {
+              m61_text::cancel();
+              if(core_61::is_RUN()) hidden_press_key(sw::RUN);
+            }
             const bool display_restored =
                 core_61::restore_standard_display();
             dbgln(MINI, "HOLD [Cx]: handlers=", handlers_cleared,
@@ -1437,6 +1437,8 @@ void event_hold_key(i32 holded_key, i32 hold_quant) {
 }
 
 void event_unhold_key(i32 unholded_key, i32 hold_quant) {
+  const i32 logical = m61_keys::logical_key(keyboard_layout::ACTIVE, unholded_key);
+  if(logical >= 0 && m61_text::captures_key((u8)logical)) return;
   switch(unholded_key) {
       case KEY_USER_PRESS:
           #if MK61_USER_EXPLORER_SHORTCUT

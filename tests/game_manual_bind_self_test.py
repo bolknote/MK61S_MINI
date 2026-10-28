@@ -28,19 +28,19 @@ for name, expected in STARTUP.items():
     main, helper = source.split("\n:help\n")
     lines = main.splitlines()
     assert lines[0] == "open? manual.md", name
-    assert lines.count("bind OK run :help") == 1, name
+    assert lines.count("bind key 13 down run :help") == 1, name
     assert lines[-1] == "ret" or lines[-2:] == ["ret", ""], name
     if "reinit" in lines:
-        assert lines.index("reinit") < lines.index("bind OK run :help"), name
+        assert lines.index("reinit") < lines.index("bind key 13 down run :help"), name
     expected_helper = ["open? manual.md", "ret"]
     if name == "Bumblebee":
         expected_helper.insert(1, "print off")
     assert helper.splitlines() == expected_helper, name
     assert (game / "manual.md").is_file(), name
     startup = "\n".join(line for line in lines
-                        if line and not line.startswith(("open", "bind OK"))
+                        if line and not line.startswith(("open", "bind key 13"))
                         and line != "ret")
     assert sha256(startup.encode()).hexdigest() == expected, (name, "game changed")
 
-assert "bind OK" not in (ROOT / "High Noon/autoexec.m61").read_text()
+assert "bind key 13" not in (ROOT / "High Noon/autoexec.m61").read_text()
 print("game manuals: 12 OK bindings, unchanged startup/code, storage limits: ok")

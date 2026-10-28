@@ -29,6 +29,7 @@ bool press_scan(u8 code);
 bool write_program(u16 address, const u8 *bytes, u16 count);
 u16 program_limit();
 bool input(u8 code);
+bool input(KeyEvent event);
 void output(const char *text);
 bool print(const char *arguments);
 const u8 *frame();

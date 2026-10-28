@@ -19,7 +19,7 @@ def outputs():
     # reinit, the unwritten end of the last allocated bank is already zero.
     image=b''.join(banks.get(bank,bytes(BANK_SIZE)) for bank in range(32))
     files={OUT/'elite.bin':program_binary(image.rstrip(b'\0'))}
-    files[OUT/'autoexec.m61']=(b'open? manual.md\nreinit\nbind OK run :help\n'
+    files[OUT/'autoexec.m61']=(b'open? manual.md\nreinit\nbind key 13 down run :help\n'
                              b'load 0000 elite.bin\nrun\nret\n\n'
                              b':help\nopen? manual.md\nret\n')
     files[ROOT/'tools/elite/elite.map.json']=(json.dumps(info,indent=2,ensure_ascii=False)+'\n').encode('utf-8')

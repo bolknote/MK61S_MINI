@@ -1,4 +1,5 @@
 #include "m61_text.hpp"
+#include "m61_keys.hpp"
 
 #include "bounded_string.hpp"
 #include "mk61emu_core.h"
@@ -84,9 +85,6 @@ static constexpr u8 TRAP_BITMAP_SIZE =
     (u8) ((core_61::MAX_PROGRAM_STEP + 7U) / 8U);
 static constexpr u8 INVALID_TRAP_TARGET = 0xFF;
 static constexpr u8 MAX_BINDS = 8;
-// Named service keys share the bind table, outside the MK-61 opcode range.
-// Numeric F0 remains invalid syntax; it is not an emulated operation.
-static constexpr u8 BIND_KEY_OK = 0xF0;
 static constexpr u8 INVALID_BIND_OPCODE = 0xFF;
 static constexpr u8 INVALID_BIND_TARGET = 0xFF;
 static constexpr u8 RETURN_STACK_DEPTH = SCRIPT_STACK_DEPTH + 1;
@@ -112,6 +110,8 @@ struct ScriptFrame {
   u16 line;
   u8 active_traps[TRAP_BITMAP_SIZE];
   u8 active_bind_opcodes[MAX_BINDS];
+  u8 active_keys[2][m61_keys::MASK_BYTES];
+  u8 held_keys[m61_keys::MASK_BYTES];
 };
 
 enum class ReturnKind : u8 {
@@ -168,12 +168,12 @@ static bool prepare_runtime() {
 static void release_runtime() { runtime_storage.reset(); }
 #if defined(ARDUINO_ARCH_STM32)
 // Keep the full live-script cost in APP qualification after removing its BSS.
-static_assert(sizeof(RuntimeBuffers) == READ_CACHE_SIZE + 1076U,
+static_assert(sizeof(RuntimeBuffers) == READ_CACHE_SIZE + 1236U,
               "update the scoped M61 ELF reserve when runtime shapes change");
 #define MK61_M61_STRING_IMPL(x) #x
 #define MK61_M61_STRING(x) MK61_M61_STRING_IMPL(x)
 __asm__(".global mk61_m61_runtime_bytes\n.set mk61_m61_runtime_bytes, (("
-        MK61_M61_STRING(MK61_M61_READ_CACHE_BYTES) "+1076+31)&-32)");
+        MK61_M61_STRING(MK61_M61_READ_CACHE_BYTES) "+1236+31)&-32)");
 #undef MK61_M61_STRING
 #undef MK61_M61_STRING_IMPL
 #endif
@@ -246,8 +246,37 @@ static bool bind_ready = false;
 static u8 pending_bind_target = INVALID_BIND_TARGET;
 static u32 pending_bind_sequence = 0;
 static bool bind_handler_active = false;
-static bool ok_bind_pending = false;
-static bool ok_bind_active = false;
+static bool key_bind_active = false;
+static u8 key_targets[2][m61_keys::COUNT];
+static u8 active_keys[2][m61_keys::MASK_BYTES];
+static constexpr u8 KEY_QUEUE_CAPACITY = 128;
+static u8 key_queue[KEY_QUEUE_CAPACITY];
+static u8 key_queue_head = 0, key_queue_count = 0;
+static u8 key_reserved_count = 0;
+static u64 key_pressed = 0, key_ignored = 0, key_reserved = 0;
+static bool key_boundary_ready = false;
+static u8 key_input_blocked = 0;
+
+static void clear_key_runtime() {
+  key_queue_head = key_queue_count = 0;
+  key_reserved_count = 0;
+  key_pressed = key_ignored = key_reserved = 0;
+  key_boundary_ready = false;
+}
+static bool key_event_active(u8 code, u8 event) {
+  return m61_keys::valid(code) &&
+      (active_keys[event][code / 8U] & (1U << (code % 8U))) != 0;
+}
+static void set_key_active(u8 code, u8 event, bool on) {
+  const u8 bit = (u8)(1U << (code % 8U));
+  if(on) active_keys[event][code / 8U] |= bit;
+  else active_keys[event][code / 8U] &= (u8)~bit;
+}
+static void queue_key(u8 code, u8 event) {
+  key_queue[(key_queue_head + key_queue_count) % KEY_QUEUE_CAPACITY] =
+      (u8)(code | (event ? 0x40U : 0U));
+  ++key_queue_count;
+}
 static bool boundary_hook_installed = false;
 static bool display_claimed = false;
 #if M61_TEXT_FONT_COMMAND
@@ -290,6 +319,7 @@ static void clear_active_traps(void) {
 }
 
 static void clear_active_binds(void) {
+  memset(active_keys, 0, sizeof(active_keys));
   for(u8 i = 0; i < MAX_BINDS; i++) {
     active_bind_opcodes[i] = INVALID_BIND_OPCODE;
   }
@@ -318,7 +348,14 @@ static bool bind_is_active(u8 opcode) {
   return false;
 }
 
+bool key_bindings_active(void) {
+  for(u8 event = 0; event < 2; ++event)
+    for(u8 bits : active_keys[event]) if(bits) return true;
+  return false;
+}
+
 static bool any_bind_is_active(void) {
+  if(key_bindings_active()) return true;
   for(u8 i = 0; i < MAX_BINDS; i++) {
     if(active_bind_opcodes[i] != INVALID_BIND_OPCODE) return true;
   }
@@ -355,7 +392,6 @@ static bool sync_bind_hooks(void) {
       clear_bind_hooks();
       return false;
     }
-    if(opcode == BIND_KEY_OK) continue;
 
     bind_before_hooks[hook_index] = core_61::register_mk61_command_hook(
         opcode, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
@@ -487,6 +523,9 @@ static void store_current_frame(ScriptFrame& frame) {
   frame.line = script_line;
   save_active_traps(frame.active_traps);
   save_active_binds(frame.active_bind_opcodes);
+  memcpy(frame.active_keys, active_keys, sizeof(active_keys));
+  for(u8 i=0;i<m61_keys::MASK_BYTES;++i)
+    frame.held_keys[i]=(u8)((key_pressed & ~key_ignored) >> (8U*i));
 }
 
 static bool restore_frame(const ScriptFrame& frame) {
@@ -503,6 +542,7 @@ static bool restore_frame(const ScriptFrame& frame) {
   script_line = frame.line;
   restore_active_traps(frame.active_traps);
   restore_active_binds(frame.active_bind_opcodes);
+  memcpy(active_keys, frame.active_keys, sizeof(active_keys));
   invalidate_read_cache();
   return true;
 }
@@ -520,6 +560,8 @@ static bool make_store_frame(u16 id, ScriptFrame& frame) {
   memset(frame.active_traps, 0, sizeof(frame.active_traps));
   memset(frame.active_bind_opcodes, INVALID_BIND_OPCODE,
          sizeof(frame.active_bind_opcodes));
+  memset(frame.active_keys, 0, sizeof(frame.active_keys));
+  memset(frame.held_keys, 0, sizeof(frame.held_keys));
   return true;
 }
 
@@ -595,18 +637,48 @@ bool active(void) {
 }
 
 bool calculator_suspended(void) {
-  return trap_pending || trap_context_valid() || ok_bind_pending ||
-      (ok_bind_active && runner_state != RunnerState::WAIT_RUN_STOP);
+  return trap_pending || trap_context_valid() ||
+      (key_bind_active && runner_state != RunnerState::WAIT_RUN_STOP) ||
+      (!bind_handler_active && !bind_pending && key_queue_count && key_boundary_ready);
 }
 
-bool handle_ok_key(void) {
-  if(!bind_is_active(BIND_KEY_OK) || bind_handler_active || bind_pending ||
-     (runner_state != RunnerState::WATCH_EVENTS &&
-      runner_state != RunnerState::WAIT_RUN_STOP &&
-      !trap_pending && !trap_context_valid())) return false;
-  // Keep only one press. A trap may be holding a timed animation frame; do
-  // not enter an ordinary bind (which can open files) inside its snapshot.
-  ok_bind_pending = true;
+bool trap_handler_active(void) { return trap_pending || trap_context_valid(); }
+
+bool captures_key(u8 code) {
+  return active() && !key_input_blocked &&
+      (key_event_active(code, 0) || key_event_active(code, 1));
+}
+
+bool keyboard_available(void) { return active() && !key_input_blocked; }
+
+bool handle_key_event(u8 code, bool down) {
+  if(!captures_key(code)) return false;
+  const u64 bit = (u64)1U << code;
+  if(down) {
+    if(key_pressed & bit) return true; // one DOWN for the whole gesture
+    key_pressed |= bit;
+    const bool press = key_event_active(code, 0);
+    const bool release = key_event_active(code, 1);
+    // Reserve release capacity before accepting a gesture. Under pressure
+    // ignore a NEW complete gesture; never lose UP for an accepted DOWN.
+    if(KEY_QUEUE_CAPACITY - key_queue_count < key_reserved_count + press + release) {
+      key_ignored |= bit;
+      return true;
+    }
+    if(release) { key_reserved |= bit; ++key_reserved_count; }
+    if(press) queue_key(code, 0);
+  } else {
+    if(!(key_pressed & bit)) return true;
+    key_pressed &= ~bit;
+    if(key_ignored & bit) { key_ignored &= ~bit; return true; }
+    if(key_reserved & bit) {
+      key_reserved &= ~bit;
+      --key_reserved_count;
+      queue_key(code, 1);
+    }
+  }
+  if(!core_61::is_RUN() || trap_pending || trap_context_valid())
+    key_boundary_ready = true;
   return true;
 }
 
@@ -641,8 +713,9 @@ static void clear_bind_runtime(void) {
   pending_bind_target = INVALID_BIND_TARGET;
   pending_bind_sequence = 0;
   bind_handler_active = false;
-  ok_bind_pending = false;
-  ok_bind_active = false;
+  key_bind_active = false;
+  key_input_blocked = 0;
+  clear_key_runtime();
 }
 
 static void close_text_font_session(void) {
@@ -940,6 +1013,8 @@ static TrapParse parse_trap(const char* line, ParsedTrap& out) {
 enum class BindParse : u8 { NONE, VALID, INVALID };
 
 struct ParsedBind {
+  bool key;
+  u8 event;
   u8 opcode;
   const char* label;
   usize label_len;
@@ -959,18 +1034,25 @@ static BindParse parse_bind(const char* line, ParsedBind& out) {
   p = skip_spaces(p);
 
   if(is_line_end(*p)) return BindParse::INVALID;
-  if(p[0] == 'O' && p[1] == 'K') {
-    out.opcode = BIND_KEY_OK;
-    p += 2;
-  } else {
-    const i8 high = hex_value(*p++);
-    if(is_line_end(*p)) return BindParse::INVALID;
-    const i8 low = hex_value(*p++);
-    if(high < 0 || low < 0 || high > 0x0E) return BindParse::INVALID;
-    out.opcode = (u8) (((u8) high << 4) | (u8) low);
-  }
+  out.key = strncmp(p, "key", 3) == 0 && is_space(p[3]);
+  out.event = 0;
+  if(out.key) p = skip_spaces(p + 3);
+  const i8 high = hex_value(*p++);
+  if(is_line_end(*p)) return BindParse::INVALID;
+  const i8 low = hex_value(*p++);
+  if(high < 0 || low < 0) return BindParse::INVALID;
+  out.opcode = (u8)(((u8)high << 4) | (u8)low);
   if(!is_space(*p)) return BindParse::INVALID;
   p = skip_spaces(p);
+  if(out.key) {
+    if(!m61_keys::valid(out.opcode)) return BindParse::INVALID;
+    if(strncmp(p, "down", 4) == 0 && is_space(p[4])) p += 4;
+    else if(strncmp(p, "up", 2) == 0 && is_space(p[2])) {
+      out.event = 1;
+      p += 2;
+    } else return BindParse::INVALID;
+    p = skip_spaces(p);
+  } else if(high > 0x0E) return BindParse::INVALID;
 
   if(!parse_handler_target(p, out.label, out.label_len)) {
     return BindParse::INVALID;
@@ -1112,6 +1194,7 @@ static bool build_bind_index(const char*& error_message, u16& error_line) {
   script_pos = 0;
   script_line = 1;
   bind_count = 0;
+  memset(key_targets, INVALID_BIND_TARGET, sizeof(key_targets));
   invalidate_read_cache();
 
   char line[MAX_LINE_SIZE + 1];
@@ -1127,9 +1210,25 @@ static bool build_bind_index(const char*& error_message, u16& error_line) {
     const BindParse result = parse_bind(line, parsed);
     if(result == BindParse::NONE) continue;
     if(result == BindParse::INVALID) {
-      error_message = "invalid bind (use: bind <00..EF|OK> run :label)";
+      error_message = "invalid bind (use: bind key <code> down/up run :label)";
       error_line = line_number;
       return false;
+    }
+    if(parsed.key) {
+      u8& target = key_targets[parsed.event][parsed.opcode];
+      if(target != INVALID_BIND_TARGET) {
+        error_message = "duplicate bind key event";
+        error_line = line_number;
+        return false;
+      }
+      const i16 found = find_label_index(parsed.label, parsed.label_len);
+      if(found < 0) {
+        error_message = "bind label not found";
+        error_line = line_number;
+        return false;
+      }
+      target = (u8)found;
+      continue;
     }
     if(bind_count >= MAX_BINDS) {
       error_message = "too many binds (maximum 8)";
@@ -1165,6 +1264,10 @@ static void discard_undefined_active_traps(void) {
 }
 
 static void discard_undefined_active_binds(void) {
+  for(u8 event = 0; event < 2; ++event)
+    for(u8 code = 0; code < m61_keys::COUNT; ++code)
+      if(key_targets[event][code] == INVALID_BIND_TARGET)
+        set_key_active(code, event, false);
   u8 next = 0;
   for(u8 i = 0; i < MAX_BINDS; i++) {
     const u8 opcode = active_bind_opcodes[i];
@@ -1198,6 +1301,7 @@ static bool activate_bind(u8 opcode) {
 
 static bool activate_frame(const ScriptFrame& frame, const char*& error_message, u16& error_line) {
   clear_bind_hooks();
+  if(frame.id != script_id) clear_key_runtime();
   if(!restore_frame(frame)) {
     error_message = "script file is unavailable";
     error_line = frame.line;
@@ -1255,8 +1359,9 @@ static bool return_from_script(void) {
     }
     if(!restore_return_frame(returned)) return false;
     bind_handler_active = false;
-    const bool redraw = ok_bind_active && !display_owned();
-    ok_bind_active = false;
+    const bool redraw = key_bind_active && !display_owned();
+    key_bind_active = false;
+    if(!key_queue_count) key_boundary_ready = false;
     runner_state = returned.runner_state;
     if(redraw) lcd_std_display_redraw();
     if(runner_state == RunnerState::WATCH_EVENTS &&
@@ -1270,8 +1375,18 @@ static bool return_from_script(void) {
     if(returned.kind == ReturnKind::SCRIPT && script_stack_depth > 0) {
       script_stack_depth--;
     }
+    if(returned.kind == ReturnKind::SCRIPT) clear_key_runtime();
     if(!restore_return_frame(returned)) return false;
     runner_state = returned.runner_state;
+    if(returned.kind == ReturnKind::SCRIPT) {
+      // A nested program owned the input. End the parent's old gestures on
+      // return, before its calculator can advance, rather than leave a flag
+      // held forever when the physical UP was consumed by the child.
+      for(u8 code=0;code<m61_keys::COUNT;++code)
+        if((returned.script.held_keys[code/8U] & (1U << (code%8U))) &&
+           key_event_active(code,1)) queue_key(code,1);
+      if(key_queue_count) key_boundary_ready=true;
+    }
     return true;
   }
 
@@ -1311,6 +1426,7 @@ static bool open_store_script(const char* name) {
   ScriptFrame child;
   if(!make_store_frame(name, child)) return false;
   if(!push_current_frame(ReturnKind::SCRIPT)) return false;
+  clear_key_runtime();
 
   const char* error_message = NULL;
   u16 error_line = 0;
@@ -1331,6 +1447,7 @@ static bool open_store_script(u16 id) {
   ScriptFrame child;
   if(!make_store_frame(id, child)) return false;
   if(!push_current_frame(ReturnKind::SCRIPT)) return false;
+  clear_key_runtime();
 
   const char* error_message = NULL;
   u16 error_line = 0;
@@ -1471,6 +1588,11 @@ static bool program_boundary_hook(
     return false;
   }
 
+  if(key_queue_count && !bind_handler_active && !bind_pending) {
+    key_boundary_ready = true;
+    return true;
+  }
+
   if(bypass_trap_once) {
     const bool bypass = context.address == bypass_trap_address;
     bypass_trap_once = false;
@@ -1533,6 +1655,16 @@ enum class ReferencedOpenResult : u8 {
 
 static ReferencedOpenResult open_referenced_entry(
     const program_store::Entry& entry) {
+  struct InputScope {
+    bool owns_input;
+    explicit InputScope(bool owns) : owns_input(owns) {
+      if(!owns_input) return;
+      for(u8 code = 0; code < m61_keys::COUNT; ++code)
+        if(key_pressed & ((u64)1U << code)) (void)handle_key_event(code, false);
+      ++key_input_blocked;
+    }
+    ~InputScope() { if(owns_input && key_input_blocked) --key_input_blocked; }
+  } input_scope(entry.type != program_store::ProgramType::MK61);
 #if defined(MK61_CORE_STANDALONE)
   return (ReferencedOpenResult)picocalc::script::open_entry(entry);
 #elif !defined(M61_TEXT_HOST_TEST)
@@ -1736,6 +1868,8 @@ static void clear_frame_handlers(ScriptFrame& frame) {
   memset(frame.active_traps, 0, sizeof(frame.active_traps));
   memset(frame.active_bind_opcodes, INVALID_BIND_OPCODE,
          sizeof(frame.active_bind_opcodes));
+  memset(frame.active_keys, 0, sizeof(frame.active_keys));
+  memset(frame.held_keys, 0, sizeof(frame.held_keys));
 }
 
 static void clear_active_handlers(void) {
@@ -1755,10 +1889,12 @@ static void clear_active_handlers(void) {
   bind_ready = false;
   pending_bind_target = INVALID_BIND_TARGET;
   pending_bind_sequence = 0;
-  ok_bind_pending = false;
+  clear_key_runtime();
 }
 
 static bool frame_has_active_handlers(const ScriptFrame& frame) {
+  for(const auto& events : frame.active_keys)
+    for(u8 bits : events) if(bits) return true;
   for(u8 i = 0; i < TRAP_BITMAP_SIZE; i++) {
     if(frame.active_traps[i] != 0) return true;
   }
@@ -1860,12 +1996,16 @@ static bool execute_script_line(const char* raw_line,
   ParsedBind parsed_bind = {};
   const BindParse bind_result = parse_bind(line, parsed_bind);
   if(bind_result == BindParse::VALID) {
+    if(parsed_bind.key) {
+      set_key_active(parsed_bind.opcode, parsed_bind.event, true);
+      return true;
+    }
     if(activate_bind(parsed_bind.opcode)) return true;
     line_error_message = "cannot activate bind command hooks";
     return false;
   }
   if(bind_result == BindParse::INVALID) {
-    line_error_message = "invalid bind (use: bind <00..EF|OK> run :label)";
+    line_error_message = "invalid bind (use: bind key <code> down/up run :label)";
     return false;
   }
 
@@ -2007,16 +2147,21 @@ void service(void) {
     }
   }
 
-  if(ok_bind_pending && !trap_context_valid() &&
+  if(key_queue_count && !trap_context_valid() && !bind_handler_active && !bind_pending &&
      (runner_state == RunnerState::WATCH_EVENTS ||
-      runner_state == RunnerState::WAIT_RUN_STOP)) {
-    const i16 index = find_bind_index(BIND_KEY_OK);
-    ok_bind_pending = false;
-    if(index >= 0 && bind_is_active(BIND_KEY_OK)) {
-      pending_bind_target = binds[index].target;
+      runner_state == RunnerState::WAIT_RUN_STOP) &&
+     (key_boundary_ready || !core_61::is_RUN())) {
+    const u8 event = key_queue[key_queue_head];
+    key_queue_head = (u8)((key_queue_head + 1U) % KEY_QUEUE_CAPACITY);
+    --key_queue_count;
+    const u8 code = event & 0x3FU;
+    const u8 edge = event & 0x40U ? 1 : 0;
+    const u8 target = key_targets[edge][code];
+    if(target != INVALID_BIND_TARGET && key_event_active(code, edge)) {
+      pending_bind_target = target;
       pending_bind_sequence = 0;
       bind_pending = bind_ready = true;
-      ok_bind_active = true;
+      key_bind_active = true;
     }
   }
 
@@ -2100,6 +2245,7 @@ static bool load_frame(const ScriptFrame& frame) {
   if(restart_same_root) {
     save_active_traps(next.active_traps);
     save_active_binds(next.active_bind_opcodes);
+    memcpy(next.active_keys, active_keys, sizeof(active_keys));
   }
   if(active()) stop_runner();
   clear_error();

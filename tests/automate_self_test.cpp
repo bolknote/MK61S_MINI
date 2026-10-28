@@ -83,8 +83,10 @@ bool program_boundary_yielded(void) { return boundary_yielded; }
 namespace m61_text {
 static bool script_active;
 static bool suspended;
+static bool physical_bindings;
 bool active(void) { return script_active; }
 bool calculator_suspended(void) { return suspended; }
+bool key_bindings_active(void) { return physical_bindings; }
 }
 
 namespace kbd {
@@ -124,6 +126,7 @@ static struct {
 #include "../code/automate.hpp"
 
 static void reset_fakes(void) {
+  m61_text::physical_bindings = false;
   fake_millis = 1000;
   sound_count = 0;
   delivered_key = -1;
@@ -200,6 +203,14 @@ static void test_m61_cancel_stays_silent(void) {
   assert(delivered_key_count == 0);
 }
 
+static void test_bound_releases_scan_all_rows_while_suspended(void) {
+  reset_fakes();
+  m61_text::suspended = true;
+  m61_text::physical_bindings = true;
+  scan_m61_runtime_keyboard();
+  assert(full_scan_count == 1 && control_scan_count == 0);
+}
+
 static void test_maximum_mode_runs_the_fast_batch(void) {
   reset_fakes();
   library_mk61::maximum = true;
@@ -265,6 +276,7 @@ static void test_stop_without_matching_start_keeps_last_runtime(void) {
 }
 
 int main(void) {
+  test_bound_releases_scan_all_rows_while_suspended();
   test_m61_normal_stop_keeps_stop_signal();
   test_m61_run_delivers_regular_calculator_key();
   test_suspended_trap_only_scans_controls();

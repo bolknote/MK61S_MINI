@@ -20,9 +20,14 @@ bool open_program(u16 id);
 bool loading_program(void);
 bool active(void);
 bool calculator_suspended(void);
-// Called only for a physical OK press in the calculator foreground, outside
-// PRG. Queues the existing bind handler; a running trap finishes first.
-bool handle_ok_key(void);
+// A saved trap snapshot forbids writes; an input handler deliberately allows them.
+bool trap_handler_active(void);
+// Stable logical key numbers from m61_keys.hpp, before native key dispatch.
+// Captures the complete gesture; callbacks are serialized at core boundaries.
+bool handle_key_event(u8 code, bool down);
+bool captures_key(u8 code);
+bool key_bindings_active(void);
+bool keyboard_available(void);
 bool display_owned(void);
 void claim_display(void);
 void release_display(void);

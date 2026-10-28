@@ -86,7 +86,7 @@ inline void service_run_keypress(void) {
 }
 
 inline void scan_m61_runtime_keyboard(void) {
-  if(m61_text::calculator_suspended()) {
+  if(m61_text::calculator_suspended() && !m61_text::key_bindings_active()) {
     (void) kbd::scan_m61_controls();
   } else {
     kbd::scan();
@@ -101,10 +101,8 @@ inline void run_program_steps(void) {
   for(usize i = 0; i < step_count; i++) {
       core_61::step();
 
-      // Во время M61 программа калькулятора может выполнять целый пакет MAXIMUM
-      // между проходами loop(). Пока калькулятор работает, опрашиваем всю
-      // матрицу: любая его клавиша должна штатно остановить программу. В
-      // замороженной trap-сцене остаются Р/Г/ГРД, ESC и отложенная привязка OK.
+      // Physical bindings receive DOWN/UP before the calculator, including
+      // while a handler or trap holds a frame. Unbound keys retain ROM input.
       if(m61_text::active()) {
         scan_m61_runtime_keyboard();
         service_m61_controls();
@@ -118,7 +116,7 @@ inline void run_program_steps(void) {
 
       // Ловушка M61: ядро остановилось на стабильной границе команды. Нельзя
       // делать следующий быстрый шаг или передавать клавишу до сохранения контекста скриптом.
-      // Запрос bind OK также прерывает пакет, не отправляя ядру С/П.
+      // A key handler also yields without sending C/P to the core.
       if(core_61::program_boundary_yielded() ||
          m61_text::calculator_suspended()) return;
   }

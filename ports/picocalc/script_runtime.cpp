@@ -5,6 +5,8 @@
 #include "prepared_font.hpp"
 #include "m61_ansi.hpp"
 #include "m61_platform.hpp"
+#include "m61_keys.hpp"
+#include "input.hpp"
 #include "m61_print.hpp"
 #include "mk8_codec.hpp"
 #include "program_load.hpp"
@@ -348,18 +350,36 @@ bool write_program(u16 address, const u8 *bytes, u16 count) {
   return true;
 }
 bool press_scan(u8 code) { return hidden_press_scan_code(code); }
+bool input(KeyEvent event) {
+  if(!m61_text::keyboard_available() || core_61::edit_program) return false;
+  i32 key=-1;
+  if(event.native_scan<40)
+    key=m61_keys::logical_key(keyboard_layout::MINI,event.native_scan);
+  else {
+    const auto mapped=map_key(event.code);
+    if(mapped.angle==RADIAN) key=m61_keys::RADIAN;
+    else if(mapped.angle==GRADE) key=m61_keys::GRADE;
+    else if(mapped.angle==DEGREE) key=m61_keys::DEGREE;
+    else key=m61_keys::logical_key(keyboard_layout::MINI,controls::raw_key(event.code));
+  }
+  if(key<0 || !m61_text::captures_key((u8)key)) return false;
+  if(event.state==2) return true;
+  return (event.state==1 || event.state==3) &&
+      m61_text::handle_key_event((u8)key,event.state==1);
+}
 bool input(u8 code) {
   if (!m61_text::active())
     return false;
+  if(input(KeyEvent{1,code})) {
+    (void)input(KeyEvent{3,code});
+    return true;
+  }
+  if(!m61_text::keyboard_available()) return false;
   if (code == 0x1B || code == 0xB1) {
     m61_text::cancel();
     if (core_61::is_RUN())
       hidden_press_key(sw::RUN);
     return true;
-  }
-  if (code == '\n' || code == '\r') {
-    if (!core_61::edit_program && m61_text::handle_ok_key())
-      return true;
   }
   if (m61_text::calculator_suspended()) {
     const auto key = map_key(code);

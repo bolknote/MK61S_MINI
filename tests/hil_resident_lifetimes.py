@@ -67,7 +67,7 @@ def main():
         try:
             write_file(p,APP,args.app.read_bytes());created.append(APP)
             write_file(p,ALT,args.app.read_bytes());created.append(ALT)
-            write_file(p,SCRIPT,b'bind OK run :help\nret\n:help\nprint "RAM LIFETIME CALLBACK"\nret\n');created.append(SCRIPT)
+            write_file(p,SCRIPT,b'bind key 13 down run :help\nret\n:help\nprint "RAM LIFETIME CALLBACK"\nret\n');created.append(SCRIPT)
             measure('idle',0,0)
             for order in (0,1):
                 restart()

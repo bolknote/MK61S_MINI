@@ -121,7 +121,7 @@ def main():
                 'open lib/child.m61\nif r0!=27 run :bad\nif r1!=9 run :bad\n'
                 'if r2!=42 run :bad\nif r3!=42 run :bad\n'
                 'hin 0000 010E021050\ntrap 2 run :frame\nbind 01 run :one\n'
-                'bind OK run :help\nrun\npoke X 3\nret\n'
+                'bind key 13 down run :help\nrun\npoke X 3\nret\n'
                 ':frame\nprint off\nprint "PICO M61 TRAP {X:m}"\nwait 1800\nprint on\nret\n'
                 ':one\nprint off\nprint "PICO M61 KEY"\nret\n'
                 ':help\nopen? manual.md\nprint off\nprint "PICO M61 HELP RETURN"\nret\n'

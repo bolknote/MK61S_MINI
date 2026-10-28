@@ -199,7 +199,7 @@ bool prepare_if(const char *line, PreparedIf &out, u8 &tail_offset) {
   return true;
 }
 IfResult evaluate_if(const PreparedIf &prepared, bool trap) {
-  trap = trap || m61_text::calculator_suspended();
+  trap = trap || m61_text::trap_handler_active();
   if (!terminal_command_allowed_in_script(CMD_IF) ||
       (trap && !terminal_command_allowed_in_trap(CMD_IF)))
     return IfResult::FALLBACK;
@@ -271,7 +271,7 @@ Result execute(const char *line, bool trap) {
     if (!terminal_core::input_can_append(size++))
       return fail("M61 command is too long");
   }
-  trap = trap || m61_text::calculator_suspended();
+  trap = trap || m61_text::trap_handler_active();
   while (const char *tail = terminal_catalog::conditional_arguments(line)) {
     bool truth = false;
     if (!condition(tail, truth))

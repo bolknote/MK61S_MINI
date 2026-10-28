@@ -2983,7 +2983,7 @@ bool class_terminal::prepare_script_if(const char* line,
 terminal_script::IfResult class_terminal::evaluate_script_if(
     const terminal_script::PreparedIf& condition, bool trap_mode) {
       using terminal_script::IfResult;
-      trap_mode = trap_mode || m61_text::calculator_suspended();
+      trap_mode = trap_mode || m61_text::trap_handler_active();
       if(!terminal_command_allowed_in_script(CMD_IF) ||
          (trap_mode && !terminal_command_allowed_in_trap(CMD_IF)))
         return IfResult::FALLBACK;
@@ -3051,7 +3051,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
         input_buffer[--recive_pos] = 0;
         // Интерактивный терминал использует общее с M61 ядро. Он не должен
         // обходить приостановленную ловушку прямым изменением через kbd/cmd/run.
-        if(m61_text::calculator_suspended()) trap_mode = true;
+        if(m61_text::trap_handler_active()) trap_mode = true;
         if(!script_mode && current_directory != program_store::ROOT_ID) {
           program_store::Entry cwd_entry;
           if(!program_store::entry_by_id(current_directory, cwd_entry) ||
@@ -4090,7 +4090,7 @@ terminal_protocol::Result class_terminal::execute_script_line(
     ++len;
   }
   const char* const end=line+len;
-  trap_mode=trap_mode || m61_text::calculator_suspended();
+  trap_mode=trap_mode || m61_text::trap_handler_active();
   if(terminal_command_allowed_in_script(CMD_IF) &&
      (!trap_mode || terminal_command_allowed_in_trap(CMD_IF))) {
     // False conditions neither mutate the shared interactive buffer nor

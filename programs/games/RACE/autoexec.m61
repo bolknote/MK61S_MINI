@@ -1,6 +1,6 @@
 open? manual.md
 reinit
-bind OK run :help
+bind key 13 down run :help
 load 0000 race.bin
 run
 ret

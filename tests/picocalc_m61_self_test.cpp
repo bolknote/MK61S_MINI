@@ -161,10 +161,46 @@ void picocalc_m61_test() {
   until(calc, [] { return reg(0) == 9; });
   assert(x() == 0 && m61_text::active());
 
+  // Physical bindings run against the real ROM at command boundaries, with
+  // no C/P and no restarting the running program. Hold/release stay distinct.
+  reset(calc, services);
+  source("/M61 Tests/keys.m61",
+         "bind key 04 down run :left\nbind key 04 up run :left_up\n"
+         "bind key 06 down run :right\nbind key 06 up run :right_up\n"
+         "bind key 15 down run :run_key\nbind key 14 down run :escape\n"
+         "hin 0000 0D1A471F510000\nrun\nret\n"
+         ":left\nR8= 1\nret\n:left_up\nR8= 0\nret\n"
+         ":right\nR9= 1\nret\n:right_up\nR9= 0\nret\n"
+         ":run_key\nRA= 55\nret\n:escape\nRB= 14\nret\n");
+  assert(script::start("/M61 Tests/keys.m61"));
+  until(calc, [] { return core_61::is_RUN() && reg(7)==90; });
+  assert(script::input(KeyEvent{1,'4'}));
+  until(calc, [] { return reg(8)==1; });
+  assert(core_61::is_RUN());
+  assert(script::input(KeyEvent{2,'4'})); // BIOS hold is not a second DOWN
+  assert(script::input(KeyEvent{1,'6'}));
+  until(calc, [] { return reg(9)==1; });
+  assert(script::input(KeyEvent{3,'4'}));
+  until(calc, [] { return reg(8)==0; });
+  assert(reg(9)==1 && core_61::is_RUN());
+  assert(script::input(KeyEvent{3,'6'}));
+  until(calc, [] { return reg(9)==0; });
+  // USB Screen supplies the native calculator scan independently of text.
+  assert(script::input(KeyEvent{1,'?',keyboard_layout::MINI.digit[4]}));
+  until(calc, [] { return reg(8)==1; });
+  assert(script::input(KeyEvent{3,'?',keyboard_layout::MINI.digit[4]}));
+  until(calc, [] { return reg(8)==0; });
+  assert(script::input('r'));
+  until(calc, [] { return reg(10)==55; });
+  assert(core_61::is_RUN());
+  assert(script::input(0x1B));
+  until(calc, [] { return reg(11)==14; });
+  assert(core_61::is_RUN() && m61_text::active());
+
   reset(calc, services);
   source("/M61 Tests/manual.md", "# Manual\n\nUse **OK**.\n");
   source("/M61 Tests/ok.m61",
-         "bind OK run :help\nret\n:help\nopen? manual.md\nret\n");
+         "bind key 13 down run :help\nret\n:help\nopen? manual.md\nret\n");
   unsigned viewer_keys = 0;
   services.set_pump(
       [](void *raw, u8 &key) {
@@ -183,7 +219,7 @@ void picocalc_m61_test() {
   source("/M61 Tests/lib/font.tbi",
          "10 .R6=COLS\n20 .R7=ROWS\n30 PRINT \"FONT\"\n40 END\n");
   source("/M61 Tests/font.m61", "loadfont Turochamp\nopen lib/font.tbi\nbind "
-                                "OK run :key\nret\n:key\nret\n");
+                                "key 13 down run :key\nret\n:key\nret\n");
   assert(script::start("/M61 Tests/font.m61"));
   until(calc, [] { return reg(6) > 0; });
   assert(reg(6) == 27 && reg(7) == 9 && script::font_active());
