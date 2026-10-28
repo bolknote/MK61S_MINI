@@ -155,10 +155,10 @@ void recovery(lcd::Region region,bool fail_first) {
         controller.commands.clear();panel.flush(frame);
         require(panel.update_.count==1 && panel.update_.bytes==lcd::WIDTH*lcd::HEIGHT*2,"full recovery frame");
         controller.run();
-        if(controller.count(0x33)!=1 || controller.count(0x37)!=1) {
+        if(controller.count(0x33)>1 || controller.count(0x37)!=1) {
             std::fprintf(stderr,"Partial-region recovery top=%u height=%u: VSCRDEF=%u VSCSAD=%u origin=%u expected=%u\n",
                          region.top,region.height,controller.count(0x33),controller.count(0x37),controller.origin,region.top);
-            require(false,"recovery must explicitly restore scroll definition and zero-offset origin");
+            require(false,"recovery must publish the zero-offset origin of the actual scroll region");
         }
         require(controller.region==region && controller.origin==region.top && panel.scroll_offset()==0,
                 "partial zero-offset origin includes fixed top");
@@ -186,8 +186,8 @@ void recovery(lcd::Region region,bool fail_first) {
     require(panel.update_.count==1 && panel.update_.bytes==lcd::WIDTH*lcd::HEIGHT*2,
             "configured-region failure forces full retry");
     controller.run();
-    require(controller.count(0x33)==1 && controller.count(0x37)==1,
-            "configured-region retry restores definition and origin explicitly");
+    require(controller.count(0x33)<=1 && controller.count(0x37)==1,
+            "configured-region retry publishes the origin of the actual scroll region");
     require(controller.region==frame.region && controller.origin==frame.region.top && panel.scroll_offset()==0,
             "region switch resets absolute origin");
     require(controller.visible(frame),"region-switch full redraw exact");
@@ -197,6 +197,42 @@ void recovery(lcd::Region region,bool fail_first) {
     std::printf("Panel actual flush/transfer: top=%u height=%u first_failure_recovery=%u scrolls=%u both_wraps configured_region_failure_retry fixed_pixels PASS\n",
                 region.top,region.height,fail_first?1U:0U,steps);
 }
+void changed_view_before_retry(lcd::Region initial,lcd::Region failed,bool ordinary_exit) {
+    controller=Controller{};Panel panel;Screen frame;frame.region=initial;
+    for(auto& value:frame.pixels) value=byte();
+    panel.flush(frame);controller.run();
+    frame=shifted(frame,16);panel.flush(frame);controller.run();
+    require(controller.region==initial && controller.origin==initial.top+16 && controller.visible(frame),
+            "view-change fixture begins with a successfully configured scroll");
+    if(ordinary_exit) {
+        frame.region={};frame.pixels[0]^=1;panel.flush(frame);controller.run();
+        require(controller.region==lcd::Region{0,320} && controller.origin==0 &&
+                panel.configured_region_==lcd::Region{0,320} && controller.visible(frame),
+                "ordinary fixture has cached full-screen definition and origin zero");
+    }
+    frame.region=failed;frame.pixels[2]^=1;
+    controller.commands.clear();controller.fail_completion=true;
+    panel.flush(frame);controller.run();
+    require(controller.count(0x33)==1 && controller.count(0x37)==0 && panel.errors()==1 && controller.region==failed,
+            "changed-view fault follows the actual definition change before origin publication");
+    frame.region=ordinary_exit?lcd::Region{}:initial;frame.pixels[3]^=1;
+    const auto expected=ordinary_exit?lcd::Region{0,320}:initial;
+    controller.commands.clear();panel.flush(frame);
+    require(panel.update_.count==1 && panel.update_.bytes==lcd::WIDTH*lcd::HEIGHT*2,
+            "view change before retry still forces a full frame");
+    controller.run();
+    const bool visible=controller.visible(frame);
+    if(controller.count(0x33)!=1 || controller.count(0x37)!=1 || controller.region!=expected ||
+       controller.origin!=expected.top || panel.scroll_offset()!=0 || !visible) {
+        std::fprintf(stderr,"View changed before retry initial=%u/%u failed=%u/%u target=%u/%u: VSCRDEF=%u VSCSAD=%u actual=%u/%u cached=%u/%u origin=%u visible=%u\n",
+                     initial.top,initial.height,failed.top,failed.height,expected.top,expected.height,
+                     controller.count(0x33),controller.count(0x37),controller.region.top,controller.region.height,
+                     panel.configured_region_.top,panel.configured_region_.height,controller.origin,visible?1U:0U);
+        require(false,"changed-view retry must redefine the actual region and publish its matching origin");
+    }
+    std::printf("Panel changed-view retry: initial=%u/%u failed=%u/%u target=%u/%u actual_definition origin fixed_pixels PASS\n",
+                initial.top,initial.height,failed.top,failed.height,expected.top,expected.height);
+}
 }
 int main() {
     unsigned failed=0;
@@ -204,6 +240,17 @@ int main() {
         try { recovery(region,region.top!=0); }
         catch(const std::exception& error) {
             ++failed;std::fprintf(stderr,"Panel region top=%u height=%u FAIL: %s\n",region.top,region.height,error.what());
+        }
+    }
+    for(auto partial:{picocalc::lcd::Region{40,240},picocalc::lcd::Region{42,238}}) {
+        for(bool ordinary_exit:{false,true}) {
+            const auto initial=ordinary_exit?picocalc::lcd::Region{0,320}:
+                partial.top==40?picocalc::lcd::Region{42,238}:picocalc::lcd::Region{40,240};
+            try { changed_view_before_retry(initial,partial,ordinary_exit); }
+            catch(const std::exception& error) {
+                ++failed;std::fprintf(stderr,"Panel changed-view failed-region=%u/%u ordinary_exit=%u FAIL: %s\n",
+                                     partial.top,partial.height,ordinary_exit?1U:0U,error.what());
+            }
         }
     }
     return failed?1:0;
