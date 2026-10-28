@@ -1,0 +1,252 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "status": "CLOSED_UNQUALIFIED_CRC_NOT_ACCEPTED_FOR_MAIN",
+  "baseline": "c093d8a08af8d22c8f41793736d80368d8dfc0c7",
+  "scope": "Finite generic APP chunk CRC experiment on Classic startup",
+  "previous_service_fix_retained": true,
+  "CRC_runtime_integrated": false,
+  "CRC_regression_integrated": false,
+  "shipping_speedup_claim": false,
+  "planned_launches": 24,
+  "completed_OPEN_launches": 3,
+  "completed_headless_launches": 0,
+  "completed_ABA_timing_launches": 0,
+  "remaining_launches_stopped": 21,
+  "move_searches": 0,
+  "diagnostic_samples": [
+    {
+      "case": "compile_cold",
+      "mode": "continuous",
+      "status": "QUALIFIED_DIAGNOSTIC_ONLY",
+      "MCU_seconds": 1.976905,
+      "host_full_menu_seconds": 1.9825807500164956,
+      "keyboard_rows_max_us": 26917.895833333332,
+      "USB_max_us": 19886.1875,
+      "limit_us": 100000,
+      "over30": {
+        "keyboard.poll": 0,
+        "keyboard.sample": 0,
+        "keyboard.row0": 0,
+        "keyboard.row1": 0,
+        "keyboard.row2": 0,
+        "keyboard.row3": 0,
+        "keyboard.row4": 0,
+        "usb.service": 0
+      },
+      "keyboard_overflow": 0,
+      "PONG": {
+        "count": 83,
+        "max_seconds": 0.006400166894309223,
+        "p99_seconds": 0.00412570801563561
+      },
+      "ready_menu_sha256": "f11c0e5aa2006167b08425f0a641d9604c0bf7891d814e0a8879d12091744104",
+      "arrow_input_verified": true,
+      "run": {
+        "path": "REPO/.build/vm-app-crc-20261028-001/startup-crc-window-v1/hil-startup-pc-profile-0/D-startup/continuous-compile-cold/run.json",
+        "bytes": 50214,
+        "sha256": "9d850e2394ae61a6b4a02d91b6a350a5973b314f4e12e1afc788cf7b5371a31e"
+      },
+      "profile": {
+        "path": "REPO/.build/vm-app-crc-20261028-001/startup-crc-window-v1/hil-startup-pc-profile-0/D-startup/continuous-compile-cold/profile.txt",
+        "bytes": 13609,
+        "sha256": "9210ae76ed39ff0c5a4dd56d0f210fa367b63efa211259dff97a4790711683ed"
+      }
+    },
+    {
+      "case": "file_cache_cold_RAM",
+      "mode": "continuous",
+      "status": "QUALIFIED_DIAGNOSTIC_ONLY",
+      "MCU_seconds": 0.319561,
+      "host_full_menu_seconds": 0.3248949999688193,
+      "keyboard_rows_max_us": 30393.989583333332,
+      "USB_max_us": 20156.135416666668,
+      "limit_us": 100000,
+      "over30": {
+        "keyboard.poll": 0,
+        "keyboard.sample": 0,
+        "keyboard.row0": 0,
+        "keyboard.row1": 0,
+        "keyboard.row2": 1,
+        "keyboard.row3": 0,
+        "keyboard.row4": 0,
+        "usb.service": 0
+      },
+      "keyboard_overflow": 0,
+      "PONG": {
+        "count": 16,
+        "max_seconds": 0.003071292070671916,
+        "p99_seconds": 0.0017119169933721423
+      },
+      "ready_menu_sha256": "f11c0e5aa2006167b08425f0a641d9604c0bf7891d814e0a8879d12091744104",
+      "arrow_input_verified": true,
+      "run": {
+        "path": "REPO/.build/vm-app-crc-20261028-001/startup-crc-window-v1/hil-startup-pc-profile-0/D-startup/continuous-file_cache_cold_RAM/run.json",
+        "bytes": 25754,
+        "sha256": "13dfe9bfbb3d118e988baf2cf80a4421abdcddb513809fd501013c3892f67d06"
+      },
+      "profile": {
+        "path": "REPO/.build/vm-app-crc-20261028-001/startup-crc-window-v1/hil-startup-pc-profile-0/D-startup/continuous-file_cache_cold_RAM/profile.txt",
+        "bytes": 10444,
+        "sha256": "d82ed86d41cff7a706c47316f584288df5ccb16b126af95fe16036fbea8efbc3"
+      }
+    },
+    {
+      "case": "warm_repeat",
+      "mode": "continuous",
+      "status": "QUALIFIED_DIAGNOSTIC_ONLY",
+      "MCU_seconds": 0.321211,
+      "host_full_menu_seconds": 0.32784024998545647,
+      "keyboard_rows_max_us": 27282.458333333332,
+      "USB_max_us": 18322.0625,
+      "limit_us": 30000,
+      "over30": {
+        "keyboard.poll": 0,
+        "keyboard.sample": 0,
+        "keyboard.row0": 0,
+        "keyboard.row1": 0,
+        "keyboard.row2": 0,
+        "keyboard.row3": 0,
+        "keyboard.row4": 0,
+        "usb.service": 0
+      },
+      "keyboard_overflow": 0,
+      "PONG": {
+        "count": 15,
+        "max_seconds": 0.017954041948542,
+        "p99_seconds": 0.0023994999937713146
+      },
+      "ready_menu_sha256": "f11c0e5aa2006167b08425f0a641d9604c0bf7891d814e0a8879d12091744104",
+      "arrow_input_verified": true,
+      "run": {
+        "path": "REPO/.build/vm-app-crc-20261028-001/startup-crc-window-v1/hil-startup-pc-profile-0/D-startup/continuous-warm_repeat/run.json",
+        "bytes": 25260,
+        "sha256": "c36f12a89dcc6f68f1ce3a838b07151a8a0574e80768a03e3e5272b49763efc7"
+      },
+      "profile": {
+        "path": "REPO/.build/vm-app-crc-20261028-001/startup-crc-window-v1/hil-startup-pc-profile-0/D-startup/continuous-warm_repeat/profile.txt",
+        "bytes": 10659,
+        "sha256": "bc6999634f4610fd3cf28e339f095a9d9bbf8bb223457469e2eb92ede1e7031e"
+      }
+    }
+  ],
+  "metric": "MCU accepted non-script OPEN to first APP blocking key wait; complete menu and side arrow independently verified. These three samples have active diagnostics and are not A/B/A performance evidence.",
+  "failure": {
+    "type": "HOST_OPERATOR_ATTACHED_LATCH_ASSERTION",
+    "location": "startup_measure.py:39",
+    "before_headless_OPEN": true,
+    "code": "port.send(0x13); port.pump(.2); assert not port.attached",
+    "explanation": "Real PingPort/ScreenPort.send sends STOP without clearing its local attached latch. The fake transport cleared it automatically, masking this adapter-contract mismatch. No headless OPEN or timing-control stage ran. The assertion was retained; the frozen operator was not repaired or retried.",
+    "terminal": {
+      "path": "REPO/.build/vm-app-crc-20261028-001/startup-crc-window-v1/hil-startup-pc-profile-0/D-startup/headless-compile-cold/terminal.txt",
+      "bytes": 173,
+      "sha256": "b697cffd96e8adb0f3f66a46c19c8c93068951abd4b9dbf6e34349acd8e1ab79"
+    },
+    "actual_exit": {
+      "path": "REPO/.build/vm-app-crc-20261028-001/crc-actual-001/ACTUAL-EXIT.json",
+      "bytes": 229,
+      "sha256": "96746ac5590fc0e407c3e43f4f3854b30398f35c79dfa75cd836971cb7bff99a"
+    },
+    "driver": {
+      "path": "REPO/.build/vm-app-crc-20261028-001/startup-crc-window-v1/hardware-window/result.json",
+      "bytes": 34023,
+      "sha256": "3194317a429e3400df93b60d99679ff531b46ca810c746d9265a280d43d2d028"
+    },
+    "qualifier": {
+      "path": "REPO/.build/vm-app-crc-20261028-001/startup-crc-window-v1/hil-startup-pc-profile-0/report.json",
+      "bytes": 17031,
+      "sha256": "a3d698aeb1aac66c9600408e9b1998804c4352037b15c216beb4150165898daa"
+    }
+  },
+  "source_and_checks": {
+    "selected_runtime_paths": [
+      "code/crc32.hpp",
+      "code/loadable_module_format.cpp"
+    ],
+    "arbitrary_seed_chunk_crc": "short hardware lease only after Reader refill; busy lease uses exact software continuation",
+    "context_compaction": "private completion state reuses pending-size sentinel; result/pending written before valid reads, no new persistent buffer",
+    "language_specific_tuning": false,
+    "new_native_ASM": false,
+    "old_50k_corpus_replayed": false,
+    "affected_checks": "Default CRC plus1769 seeded/basis/alignment/boundary/chunk/busy-owner/poison cases, software and STM32 emulation under ASan/UBSan; real6APP normal/nested-owner/corrupt-code-and-tail; realC9 BASIC/FOCAL repeat INPUT/epochs/resume/ABI/failures for BINARY64 and MK61_CORE.",
+    "M0_compile": "Actual header default+seeded test fixtures and loadable_module_format.cpp compile for Cortex-M0+ without SDK. A test-only mixed initializer_list type was fixed in an unfrozen typed-u32 regression copy; values/assertions unchanged. All five ARMv6M APPs rebuilt byte-identical.",
+    "M0_proof": {
+      "path": "REPO/.build/vm-app-crc-20261028-001/M0-COMPILE-PROOF.json",
+      "bytes": 2604,
+      "sha256": "b6048a8a59224397499bd49626b017e77486893c28331405ae2abd50f033b3f2"
+    },
+    "paired_shipping_costs": {
+      "F411": {
+        "baseline": 379460,
+        "candidate": 379508,
+        "delta": 48,
+        "headroom": 144780,
+        "min_headroom": 131072,
+        "globals": 21768,
+        "globals_limit": 49152,
+        "max_frame": 1928,
+        "frame_limit": 3072
+      },
+      "F401": {
+        "baseline": 257980,
+        "candidate": 258044,
+        "delta": 64,
+        "headroom": 4100,
+        "min_headroom": 4096,
+        "globals": 29604,
+        "globals_limit": 52428,
+        "max_frame": 1304,
+        "frame_limit": 2048
+      }
+    },
+    "all_limits_preserved": true
+  },
+  "return_proof": {
+    "original_build": "3AB3DD45",
+    "internal_Flash_bytes": 524288,
+    "internal_Flash_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+    "fresh_original_reads": 2,
+    "additional_qualifier_before_read": true,
+    "full_independent_original_return": true,
+    "files": 24,
+    "directories": 2,
+    "typed_register_stack_program_HOUT_cwd_exact": true,
+    "within_window_RTC_trajectory_preserved": true,
+    "RTC_setters": 0,
+    "child_exit": 1,
+    "child_reaped": true,
+    "actor_PIDs_gone": true,
+    "serial_closed_and_no_holder_independently_verified": true,
+    "effects": {
+      "download": 2,
+      "upload": 5,
+      "dfu_command": 5,
+      "warm_reset": 3,
+      "ROM_leave_request": 5
+    },
+    "Root_close": {
+      "path": "REPO/.build/bytecode-crc-root-review-20261028-001/ROOT-CRC-HARDWARE-CLOSE.json",
+      "bytes": 3785,
+      "sha256": "de806b154e6eb9b88c36fbfc23f621d064abd315a1eae5db932c802abf739956"
+    }
+  },
+  "preservation": {
+    "archive": {
+      "path": "REPO/.build/vm-app-crc-20261028-001/closure/crc-research.tar.gz",
+      "bytes": 14284254,
+      "sha256": "6bd5e47f4fdb84b4b3d1ae7e61d8649ce3b5771296441a69c402d82132f8d2f7"
+    },
+    "mirror": {
+      "path": "LOCAL-ARTIFACTS/2026/09/29/01a0edb6-9895-7361-8772-36834d38596b/bytecode-crc-20261028/crc-research.tar.gz",
+      "bytes": 14284254,
+      "sha256": "6bd5e47f4fdb84b4b3d1ae7e61d8649ce3b5771296441a69c402d82132f8d2f7"
+    },
+    "verified_members": 417,
+    "existing_laboratory_retained": true,
+    "private_original_files_or_Flash_not_committed": true
+  },
+  "decision": "Do not integrate CRC or its production regression: usefulness remains unconfirmed because matched A/B/A did not run. Preserve research and end this finite stage. Only this measurement record and its narrative enter main.",
+  "current_stage_owned_worktrees": 0,
+  "current_stage_owned_refs": 0,
+  "prior_owned_worktree_and_ref_cleanup_unchanged": true
+}
