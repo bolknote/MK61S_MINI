@@ -1,0 +1,30 @@
+
+.build/m0-bootrom-baseline-20261020/bootrom.bin:     file format binary
+
+
+Disassembly of section .data:
+
+00002590 <.data+0x2590>:
+    2590:	4b05      	ldr	r3, [pc, #20]	@ (0x25a8)
+    2592:	b510      	push	{r4, lr}
+    2594:	220a      	movs	r2, #10
+    2596:	60d8      	str	r0, [r3, #12]
+    2598:	6119      	str	r1, [r3, #16]
+    259a:	4804      	ldr	r0, [pc, #16]	@ (0x25ac)
+    259c:	4904      	ldr	r1, [pc, #16]	@ (0x25b0)
+    259e:	f7fe fa41 	bl	0xa24
+    25a2:	bf30      	wfi
+    25a4:	e7fd      	b.n	0x25a2
+    25a6:	46c0      	nop			@ (mov r8, r8)
+    25a8:	8000      	strh	r0, [r0, #0]
+    25aa:	4005      	ands	r5, r0
+    25ac:	1b89      	subs	r1, r1, r6
+    25ae:	0000      	movs	r0, r0
+    25b0:	2000      	movs	r0, #0
+    25b2:	2004      	movs	r0, #4
+    25b4:	b530      	push	{r4, r5, lr}
+    25b6:	1809      	adds	r1, r1, r0
+    25b8:	4d5d      	ldr	r5, [pc, #372]	@ (0x2730)
+    25ba:	e00c      	b.n	0x25d6
+    25bc:	7804      	ldrb	r4, [r0, #0]
+    25be:	ba13      	rev	r3, r2

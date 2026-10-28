@@ -1,0 +1,89 @@
+{
+  "status": "ROOT_JOINT_R62_R63_ACTUAL_RAM_ELF_WORKER_MATRIX_AND_INERT_PLAN_PASS",
+  "reused_worker_objects": 79,
+  "accepted_R63_math_objects": 14,
+  "ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/bootable/build/m0_r55_pow_hil.elf",
+    "bytes": 639888,
+    "sha256": "cbbe6dd1407f57db603a266fa289741e677ffe68f063e1d628e7b5fb80e18a26"
+  },
+  "BIN": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/bootable/build/m0_r55_pow_hil.bin",
+    "bytes": 257940,
+    "sha256": "fd7dd76849cf7ae87b21ee8db6af126eb691d33b5d72d15c1843a31af500d6ce"
+  },
+  "actual_RAM_load_start": 536875008,
+  "actual_RAM_file_end": 537132948,
+  "first4KiB_and_core1_bank_unborrowed": true,
+  "core0_stack_bytes": 4096,
+  "blobs": {
+    "math_main": {
+      "address": 536920080,
+      "bytes": 208456,
+      "free_to_limit": 424
+    },
+    "math_hot": {
+      "address": 537128960,
+      "bytes": 3988,
+      "free_to_limit": 108
+    },
+    "math_data": {
+      "address": 536920064,
+      "bytes": 16,
+      "free_to_limit": 0
+    },
+    "qfplib": {
+      "address": 536911872,
+      "bytes": 6364,
+      "free_to_limit": 1828
+    }
+  },
+  "worker_functions_byteexact": 186,
+  "main_only_metadata_words_changed": 5,
+  "no_Flash_writer_or_UID_functions": true,
+  "actual_RAM_guard66_and_prefix120_exact_to_accepted_R63": true,
+  "unique_pairs": 84,
+  "states": 252,
+  "saved_fresh_public_RAM_calls": 1008,
+  "all42_original_targets_present_and_faster_by_instruction_count": true,
+  "R62_six_cost_range": [
+    233,
+    242
+  ],
+  "R63_36_cost_range": [
+    172,
+    195
+  ],
+  "all24_prior_physical_controls_retained": true,
+  "comparison_classes": {
+    "wrong": 306,
+    "strict": 438,
+    "slower": 12
+  },
+  "remaining_control_pairs": [
+    [
+      "0013900000000000",
+      "BFE0000000000000"
+    ],
+    [
+      "3FFAAF14E8A4B59B",
+      "BFE0000000000000"
+    ],
+    [
+      "7FE8A00000000000",
+      "BFE0000000000000"
+    ],
+    [
+      "C02FFFFFFFFFFFFF",
+      "C02E000000000000"
+    ]
+  ],
+  "independent_gold_sources": 3,
+  "proposed_batches": 4,
+  "finite_queries_total": 276,
+  "finite_target_calls_total": 10320,
+  "all24_templates_disabled_and_exact_ARGV_checked": true,
+  "all_physical_grants_directory_empty": true,
+  "physical_R63_cycles_measured": false,
+  "Root_new_ARM_MPFR_device_Git_calls": 0
+}

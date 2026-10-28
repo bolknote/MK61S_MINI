@@ -1,0 +1,53 @@
+{
+  "status": "PINNED_FINITE_POW_HIL_DATASET_WITH_ALL_ADVERSE_AND_WRONG_REFERENCE_RECORDS",
+  "qualification_FROZEN_sha256": "193dfa9d249dba658f9644da1affdb8b9e8a0ca24ac8da7c0c15e6dd5e1c687c",
+  "source_FROZEN_sha256": "1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6",
+  "inputs": [
+    {
+      "path": ".build/m0-math-unified-pow-saturation-r55-qualification-20261027/admission-records.jsonl.gz",
+      "bytes": 897836,
+      "sha256": "7bc1e37550ae0490bc216f4141ee0135aed52f72dfa5f28167f1ce26b5fde202"
+    },
+    {
+      "path": ".build/m0-math-unified-pow-saturation-r55-qualification-20261027/full-parent-increases.jsonl.gz",
+      "bytes": 242028,
+      "sha256": "b03b51a1ed851b2ea561e795e6ce7aa54a626af59d3bc20f6984f669e3465867"
+    },
+    {
+      "path": ".build/m0-math-unified-pow-saturation-r55-qualification-20261027/original507-records.jsonl.gz",
+      "bytes": 25971,
+      "sha256": "f8a64284c9936637ae1be99f9f93a9edd89fa98c865ad70a195e0282ec699908"
+    },
+    {
+      "path": ".build/m0-math-unified-pow-saturation-r55-qualification-20261027/broad-records.jsonl.gz",
+      "bytes": 1439752,
+      "sha256": "a0318bb174f2f4cc8503cbef460b51043e165aad8f3c94ee9df2d8d4cfca3101"
+    },
+    {
+      "path": ".build/m0-math-unified-pow-saturation-r55-20261027/saturation-fresh-records.jsonl.gz",
+      "bytes": 15337,
+      "sha256": "23677317817865c3428785e1333ddfa3cebb2a4f88c002d2cef2956541b3613f"
+    },
+    {
+      "path": ".build/m0-math-unified-pow-saturation-r55-20261027/saturation-caller-records.jsonl.gz",
+      "bytes": 15803,
+      "sha256": "16548634a82a8f98c8992d4f2ee9959c663aad33ef2662ab27e8ee22d78cbfa2"
+    }
+  ],
+  "source_rows_by_origin": {
+    "admission-records.jsonl.gz": 51732,
+    "full-parent-increases.jsonl.gz": 11850,
+    "original507-records.jsonl.gz": 306,
+    "broad-records.jsonl.gz": 6122,
+    "source522-fresh": 1566,
+    "source22-legal-callers": 5280
+  },
+  "unique_state_cases": 68502,
+  "unique_pairs": 25629,
+  "dataset_sha256": "cfbef4a46c89671b7b2f3d1be7a666e0cdd221bc21e1bf55ede3cc750c51e4b2",
+  "expected_bits_are_pinned_source_or_qualification_oracle_not_R55_generated": true,
+  "all1452_known_losing_pairs_included": true,
+  "all_current_parent_increase_rows_included": true,
+  "metric_for_historical_costs": "Flash-linked executed Thumb instructions, not RAM ISA or physical cycles",
+  "hardware_IO": 0
+}

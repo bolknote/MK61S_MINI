@@ -1,0 +1,57 @@
+{
+  "capture_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/capture_stage.py",
+    "bytes": 5517,
+    "sha256": "10ae5fc6704348633b594273b230e2efb88b09a13662b6edb680db283eb35385"
+  },
+  "snapshot.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/snapshot.py",
+    "bytes": 7159,
+    "sha256": "a0b598bea8b9f2fbea7bc755e909b6386ab24fcd943cf10c314aa8a72c5accd8"
+  },
+  "live_io.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/live_io.py",
+    "bytes": 7269,
+    "sha256": "726d15d653682c1abd8a1bf9f2362498bddde43179a2efdbe9efeca93c8715d7"
+  },
+  "envelope_pins.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/envelope_pins.py",
+    "bytes": 2237,
+    "sha256": "ff002ce70f8d351d3642dbeced27c8a20dc2158e1f26a65563b871481c47f838"
+  },
+  "supervise_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/supervise_stage.py",
+    "bytes": 4434,
+    "sha256": "7bb17273971a3bc26c8ccad0fc2b59f539b341bc496239a5d41471242d1b7a20"
+  },
+  "test-fresh-capture.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/test-fresh-capture.py",
+    "bytes": 6999,
+    "sha256": "d9f8567c681c22ae340e0387b72d3a35f32d192995f52ad091ffd4eadbb999ae"
+  },
+  "test-live-io.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/test-live-io.py",
+    "bytes": 4381,
+    "sha256": "6d2d2fbe3d2bc11bfdf93190a75a1b3ad9a1bc947d86b44206b953b0f6242dc9"
+  },
+  "test-supervisor.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/test-supervisor.py",
+    "bytes": 2716,
+    "sha256": "9a6809d1ff3af2a5ddd871fd939e096c3b6f9df30c9f9037d7bb0b1e1a6d853b"
+  },
+  "vendor/clock_bridge.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/vendor/clock_bridge.py",
+    "bytes": 9385,
+    "sha256": "41f49a7134038cdc96ce523cc47a518a0a2b5c20178551e62297846c0c2ff963"
+  },
+  "vendor/status_frames.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/vendor/status_frames.py",
+    "bytes": 1132,
+    "sha256": "9db5fecce7034764e30bbdfe44c2244575fb261f6e7896092ef722d441c82eaa"
+  },
+  "vendor/transaction_core.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/vendor/transaction_core.py",
+    "bytes": 112,
+    "sha256": "a428aa09ad4c1c6f3bb5794a1667f4aee4c1ae7cab36e222b3baf13aa23713f5"
+  }
+}

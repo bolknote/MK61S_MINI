@@ -1,0 +1,43 @@
+"""Preserve finite accuracy/performance cases; never compute truth from R55 outputs."""
+from pathlib import Path
+from collections import Counter
+import gzip,hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;ROOT=W.parents[2]
+Q=ROOT/'.build/m0-math-unified-pow-saturation-r55-qualification-20261027'
+S=ROOT/'.build/m0-math-unified-pow-saturation-r55-20261027'
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+rows={};inputs=[];counts=Counter()
+def add(path,origin,only_pow=False,caller=False):
+    inputs.append(dict(path=str(path.relative_to(ROOT)),bytes=path.stat().st_size,sha256=sha(path)))
+    with gzip.open(path,'rt') as f:
+        for line in f:
+            r=json.loads(line)
+            if only_pow and r['operation']!='pow':continue
+            k=(r['x'],r['y'],r['SIO']);expected=r['expected']
+            counts[origin]+=1
+            if k not in rows:rows[k]=dict(x=k[0],y=k[1],SIO=k[2],expected=expected,origins=[],historical_references={},historical_flash_costs={})
+            out=rows[k];assert out['expected']==expected
+            if origin not in out['origins']:out['origins'].append(origin)
+            if caller:continue
+            for name,value in r['outputs'].items():
+                if name in ('candidate','zero-control','prototype_r2') or name.startswith('parent_R'):continue
+                previous=out['historical_references'].setdefault(name,dict(bits=value,correct=r['correct'][name]))
+                assert previous==dict(bits=value,correct=r['correct'][name])
+            for name,cost in r['instructions'].items():
+                if name=='zero-control':continue
+                previous=out['historical_flash_costs'].setdefault(name,cost)
+                assert previous==cost,(k,name,previous,cost)
+for name in ['admission-records.jsonl.gz','full-parent-increases.jsonl.gz','original507-records.jsonl.gz','broad-records.jsonl.gz']:
+    add(Q/name,name,only_pow=name.startswith(('original','broad')))
+add(S/'saturation-fresh-records.jsonl.gz','source522-fresh')
+add(S/'saturation-caller-records.jsonl.gz','source22-legal-callers',caller=True)
+out=W/'dataset.jsonl.gz'
+with out.open('wb') as raw,gzip.GzipFile(filename='',fileobj=raw,mode='wb',mtime=0) as f:
+    for index,(k,row) in enumerate(sorted(rows.items()),1):
+        row['case_id']=index
+        f.write((json.dumps(row,separators=(',',':'))+'\n').encode())
+result=dict(status='PINNED_FINITE_POW_HIL_DATASET_WITH_ALL_ADVERSE_AND_WRONG_REFERENCE_RECORDS',qualification_FROZEN_sha256=sha(Q/'FROZEN.json'),source_FROZEN_sha256=sha(S/'FROZEN.json'),inputs=inputs,source_rows_by_origin=dict(counts),unique_state_cases=len(rows),unique_pairs=len({(x,y) for x,y,state in rows}),dataset_sha256=sha(out),expected_bits_are_pinned_source_or_qualification_oracle_not_R55_generated=True,all1452_known_losing_pairs_included=True,all_current_parent_increase_rows_included=True,metric_for_historical_costs='Flash-linked executed Thumb instructions, not RAM ISA or physical cycles',hardware_IO=0)
+known=json.loads((Q/'joined-audit.json').read_text())['remaining_pow_argument_pairs']
+assert all(any((x,y,state) in rows for state in ['READY','DIRTY','PENDING']) for x,y in known)
+(W/'dataset.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

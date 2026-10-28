@@ -1,0 +1,19 @@
+{
+  "status": "R5_WORKER_ONLY_ENVELOPE_READY_FOR_ROOT_REVIEW_NOT_GRANT",
+  "packet": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r5",
+  "FROZEN": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r5/ENVELOPE-FROZEN.json",
+    "bytes": 4715,
+    "sha256": "083da5bb699eace08f2a628a3dc6c7b554f762182d9425062020b337716df0d9"
+  },
+  "operator_pins": 15,
+  "external_frozen_pins": 187,
+  "external_file_refs": 5,
+  "stages": [
+    "math-cdc"
+  ],
+  "argv_template": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r5/ARGV-TEMPLATE-math-cdc.json",
+  "actual_device_IO": 0,
+  "new_ARM_MPFR_or_firmware_calls": 0,
+  "goal_complete": false
+}

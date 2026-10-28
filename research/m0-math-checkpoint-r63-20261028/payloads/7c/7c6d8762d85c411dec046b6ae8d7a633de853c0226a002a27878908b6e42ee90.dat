@@ -1,0 +1,44 @@
+"""Read-only audit of frozen components and all final inert supervisor arguments."""
+from pathlib import Path
+import hashlib,importlib.util,json,sys
+sys.dont_write_bytecode=True
+H=Path(__file__).resolve().parent
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def check(w,name):
+    m=json.loads((w/name).read_text())
+    for n,pin in m['files'].items():
+        p=w/n;assert p.is_file() and not p.is_symlink() and p.stat().st_size==pin['bytes'] and sha(p)==pin['sha256'],(w,n)
+    return m
+payload=check(H/'bootable','FROZEN.json');components={}
+for folder in ['preflight-current249','operator-joint']:
+    w=H/folder;m=check(w,'ENVELOPE-FROZEN.json');components[folder]=dict(pins=len(m['files']),sha256=sha(w/'ENVELOPE-FROZEN.json'))
+    for n in ['live_io','envelope_pins']:sys.modules.pop(n,None)
+    sys.path.insert(0,str(w))
+    spec=importlib.util.spec_from_file_location('verify_'+folder.replace('-','_'),w/'envelope_pins.py');mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
+    class InertLease:
+        def guard(self):return dict(operator_packet_sha256=sha(w/'ENVELOPE-FROZEN.json'))
+    mod.verify_operator(InertLease())
+sys.path.insert(0,str(H/'operator-joint'))
+import worker_stage
+worker_stage.verify_payload()
+transactions=json.loads((H/'transaction-plan.json').read_text())['transactions'];assert len(transactions)==24
+counts={}
+for r in transactions:
+    w=H/r['operator_directory'];g=json.loads((w/r['template']).read_text());a=json.loads((w/r['arguments']).read_text())
+    assert all(g[k] is False for k in ['enabled','hardware_window_granted','hardware_execution_allowed'])
+    assert a['HOST_TEMPLATE_ONLY'] and a['not_executable_until_fresh_Root_grant']
+    argv=a['argv'];assert argv[argv.index('--stage')+1]==r['stage']
+    assert argv[argv.index('--lease-sha256')+1]=='ROOT_FRESH_EXACT_GRANT_SHA256'
+    assert argv[argv.index('--output')+1]==g['output'] and not Path(g['output']).exists()
+    assert argv[argv.index('--supervisor-output')+1]==g['supervisor_output'] and not Path(g['supervisor_output']).exists()
+    if r['stage']=='resident-capture':assert g['expected_physical_keys'] is None and g['physical_baseline_mode']=='OBSERVE_FIRST_VALIDATED_STATUS_THEN_LOCK'
+    if r['stage']=='math-cdc':
+        b=worker_stage.pinned_batch(g);assert b['batch_id']==r['batch']
+        assert g['max_TX_bytes']==b['TX_bytes_exact'] and g['max_RX_bytes']==b['RX_bytes_max']
+    counts[r['stage']]=counts.get(r['stage'],0)+1
+assert set(counts.values())=={4}
+result=dict(status='PASS_FROZEN_PAYLOAD_CAPTURE_OPERATORS_AND_ALL24_INERT_ARGUMENT_SETS',payload_pins=len(payload['files']),components=components,
+            stage_counts=counts,all_payload_external_and_operator_dependency_pins_verified=True,
+            first_live_counter_epoch_not_historical=True,all_grants_disabled_and_placeholder_only=True,
+            all_operator_output_paths_fresh=True,actual_device_IO=0,canonical_mutation=0,new_ARM_MPFR_calls=0,goal_complete=False)
+(H/'POSTSEAL-AUDIT.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

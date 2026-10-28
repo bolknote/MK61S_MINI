@@ -1,0 +1,41 @@
+"""Read kernel USB metadata, exact-port holder result, advisory lock; never CDC FD."""
+from pathlib import Path
+from datetime import datetime,timezone
+import argparse,fcntl,hashlib,importlib.util,json,os,plistlib,re,stat,subprocess,sys
+sys.dont_write_bytecode=True
+OUT=Path(__file__).resolve().parent
+parser=argparse.ArgumentParser();parser.add_argument('--stage',choices=['resident-capture','resident-rom','resident-verify'],default='resident-capture');parser.add_argument('--run',type=int,default=2);parser.add_argument('--location-id',type=int,default=1245184);args=parser.parse_args()
+D=OUT/f'metadata-{args.stage}-{args.run:03d}';D.mkdir(exist_ok=False)
+def pin(p):return dict(path=str(p),bytes=p.stat().st_size,sha256=hashlib.sha256(p.read_bytes()).hexdigest())
+r=subprocess.run(['/usr/sbin/ioreg','-a','-l','-r','-c','IOUSBHostDevice'],capture_output=True,check=True,timeout=20)
+(D/'root-usb.plist').write_bytes(r.stdout)
+def walk(n):
+    if isinstance(n,list):
+        for a in n:yield from walk(a)
+    elif isinstance(n,dict):
+        yield n
+        for a in n.get('IORegistryEntryChildren',[]):yield from walk(a)
+nodes=[n for n in walk(plistlib.loads(r.stdout)) if n.get('USB Serial Number')=='E6657CD423721C35' and type(n.get('sessionID')) is int]
+assert len(nodes)==1,'Exact PicoCalc normal UID is not uniquely enumerated'
+n=nodes[0];ports=[c['IOCalloutDevice'] for c in walk(n) if 'IOCalloutDevice' in c]
+assert len(ports)==1 and re.fullmatch(r'/dev/cu\.usbmodem[0-9]+',ports[0])
+port=ports[0]
+physical=dict(serial=n['USB Serial Number'],location_id=n['locationID'],VID=n['idVendor'],PID=n['idProduct'],port=port,callouts=ports,entry=n['IORegistryEntryID'],session=n['sessionID'])
+assert physical['VID']==0xcafe and physical['PID']==0x4003 and physical['location_id']==args.location_id
+node=os.stat(port,follow_symlinks=False);assert stat.S_ISCHR(node.st_mode)
+lsof=subprocess.run(['/usr/sbin/lsof','-nP',port],capture_output=True,timeout=15)
+(D/'lsof.stdout.bin').write_bytes(lsof.stdout);(D/'lsof.stderr.bin').write_bytes(lsof.stderr)
+lib=Path('/Users/bolk/Projects/MK61S_MINI/.build/picocalc-panic-origin-20261026-001/hardware-caller-006/lib/named_cdc_noholder.py')
+spec=importlib.util.spec_from_file_location('root_qualified_named_port_noholder',lib);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+qualified=module.qualify_named_cdc_noholder(lsof.returncode,lsof.stdout,lsof.stderr,port)
+lockpath=f'/tmp/mk61-hil-cdc-{os.geteuid()}-{hashlib.sha256(port.encode()).hexdigest()[:20]}.lock'
+fd=os.open(lockpath,os.O_CREAT|os.O_RDWR,0o600)
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+finally:os.close(fd)
+ps=subprocess.run(['/bin/ps','-axo','pid=,ppid=,command='],capture_output=True,check=True,text=True)
+pattern=re.compile(r'/m0-math-(?:r61|r62-r63)-ram-hil-[^\s]+/(?:operator[^/\s]*|preflight[^/\s]*)/(?:supervise_stage|capture_stage|resident_stage|rom_stage|worker_stage|return_stage)\.py\s+--execute(?:\s|$)')
+actors=[row for row in ps.stdout.splitlines() if pattern.search(row)]
+assert not actors,actors
+report=dict(created_utc=datetime.now(timezone.utc).isoformat(),raw_USB=pin(D/'root-usb.plist'),facts=[dict(physical=physical,noholder=dict(exit_code=lsof.returncode,stdout=pin(D/'lsof.stdout.bin'),stderr=pin(D/'lsof.stderr.bin'),node_present=True,advisory_EX_acquired=True,lock_path=lockpath,exact_named_port_only=True,public_policy_qualification=qualified),serial_FD_opened=False)],own_prior_hardware_stage_actors_live=actors,Root_device_IO=0)
+f=D/'root-physical-and-noholder.json';f.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+print(json.dumps(dict(metadata=pin(f),physical=physical,named_CDC_noholder_qualified=qualified['qualified'],actor_barrier_clear=True,Root_device_IO=0),indent=2))

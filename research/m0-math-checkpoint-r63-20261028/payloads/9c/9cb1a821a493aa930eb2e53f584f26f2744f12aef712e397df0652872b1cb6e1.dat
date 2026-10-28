@@ -1,0 +1,63 @@
+{
+  "status": "PASS_R61_FIRST_PHYSICAL_SMOKE_72STATES_2940TARGETCALLS_ONE_EXPLICIT_X_ACK_ROM_ROUTE_PENDING",
+  "recorded_utc": "2026-10-27T23:15:16.319959+00:00",
+  "actor_pid": 99062,
+  "supervisor_pid": 99061,
+  "exit_code": 0,
+  "reaped": true,
+  "serial_closed": true,
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/RESULT.json",
+    "bytes": 794,
+    "sha256": "d97d18b3e5ad89b735355028ca620a3af7fb0b0d8187869bf07520c06da0d693"
+  },
+  "records": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/records.jsonl",
+    "bytes": 696564,
+    "sha256": "5f3e1e32ede01baa2631ad5623e4495c1c4dbefa19c0b74463b65748e957abfe"
+  },
+  "raw_TX": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/tx.raw",
+    "bytes": 6748,
+    "sha256": "52b3e9f218328c330395c18f16d6ba476464ef830e74edfb1e37de4fedbb170c"
+  },
+  "raw_RX": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/rx.raw",
+    "bytes": 412519,
+    "sha256": "92a840844512d989b4143035ee6808c768335a576101157e617ae4578394f8a9"
+  },
+  "raw_from_open": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/wire-from-open.bin",
+    "bytes": 412519,
+    "sha256": "92a840844512d989b4143035ee6808c768335a576101157e617ae4578394f8a9"
+  },
+  "native_IO_journal": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/native-io.jsonl",
+    "bytes": 20856,
+    "sha256": "9270e135196dde191074755dc699c1b4e04e4192ccf39bea455885ca3304ac5b"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1299,
+    "sha256": "3021cdfa8fe6f618643c53fcd06d6dcddee1d437d242f595a602cd9e8a4d9a8e"
+  },
+  "completed_math_state_cases": 72,
+  "completed_target_calls": 2940,
+  "completed_query_requests": 78,
+  "candidate_wrong_calls": 0,
+  "calibration_all_three_entry_states_passed": true,
+  "core_hz": 125000000,
+  "ROM_version": 3,
+  "ROM_crc": 172131586,
+  "math_ok": 1,
+  "math_main_crc": 4252426209,
+  "math_hot_crc": 764869799,
+  "qfplib_crc": 1710762013,
+  "explicit_X_ACK": true,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "other_batches_run": 0,
+  "resident_returned": false,
+  "next_stage_granted": false,
+  "goal_complete": false
+}

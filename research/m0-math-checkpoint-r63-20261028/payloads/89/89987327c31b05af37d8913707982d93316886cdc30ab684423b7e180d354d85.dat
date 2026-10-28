@@ -1,0 +1,47 @@
+{
+  "status": "HOST_UNCHANGED_R55_POW_AND_QFPLIB_RELINKED_IN_SRAM",
+  "source_FROZEN_sha256": "1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6",
+  "math_ELF_sha256": "584d763790a9c00bce905a4b77a34894ba94264b2df11d6c41684c77f3b7c838",
+  "Qfplib_ELF_sha256": "d2fadff810cb3964271ff7cad08cd64c9d5e2ec49eca21c3a66d841d237c4787",
+  "blobs": {
+    "math_main": {
+      "address": 536920080,
+      "end": 537127992,
+      "bytes": 207912,
+      "sha256": "1de7a7a94406703b9220bf74386aea74e37c6f914f477f97d5abc9b601526787",
+      "crc32": 3851774117
+    },
+    "math_hot": {
+      "address": 537128960,
+      "end": 537132948,
+      "bytes": 3988,
+      "sha256": "51129e714442cded5cd7c3c1cbf68e74b300b28564d2dcfe5b7c7dac1169a0cc",
+      "crc32": 88097606
+    },
+    "math_data": {
+      "address": 536920064,
+      "end": 536920080,
+      "bytes": 16,
+      "sha256": "c1292dbff446f8780d7c3da658022fece94cb978e203e04cfffd61070fb218d7",
+      "crc32": 2555082678
+    },
+    "qfplib": {
+      "address": 536911872,
+      "end": 536918236,
+      "bytes": 6364,
+      "sha256": "03e34e32e5d5602dadc322f6ba2d112769540d34cae4e5c07027f5ad0540005b",
+      "crc32": 1710762013
+    }
+  },
+  "symbols": {
+    "MATH_INIT": 536971841,
+    "MATH_POW": 536935233,
+    "QFP_POW": 536917933,
+    "QFP_POW_EXACT": 536918129,
+    "QFP_POW_INTEGER": 536917961
+  },
+  "all_source_objects_byte_unchanged": true,
+  "public_pow_kept_with_fallbacks": true,
+  "board_bootable_yet": false,
+  "physical_IO": 0
+}

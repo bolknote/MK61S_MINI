@@ -1,0 +1,3 @@
+lsof: WARNING: can't stat() smbfs file system /Volumes/.timemachine/AirPort Time Capsule._smb._tcp.local./5892CB7F-9FF5-4D12-9E21-18126E7AE270/Диск AirPort
+      Output information may be incomplete.
+      assuming "dev=3600004e" from mount table

@@ -1,0 +1,22 @@
+{
+  "pid": 45178,
+  "exit_code": 0,
+  "reaped": true,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-picotool/picotool",
+    "save",
+    "-a",
+    "-v",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-rom-load-001/flash-before-math-confirm.bin",
+    "-t",
+    "bin",
+    "--bus",
+    "0",
+    "--address",
+    "5",
+    "--ser",
+    "E6657CD423721C35"
+  ],
+  "stdout_sha256": "d92cd9e051c61d9b95577e7961b66f2ff283d5880cdd57d7ee5193e205b8323a",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

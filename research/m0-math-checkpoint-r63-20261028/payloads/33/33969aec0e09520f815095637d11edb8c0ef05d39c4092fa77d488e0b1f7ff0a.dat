@@ -1,0 +1,20 @@
+{
+  "status": "ROOT_JOINT_FRESH_READONLY_CAPTURE_VERIFIED_ZERO_SET0_ADMISSIBLE_FOR_SEPARATE_ROM_STAGE",
+  "state_sha256": "4fa5c66a5b655de115ab8da75faa4d49a25024f7f161f64eeea581546e6a8a30",
+  "all38_capture_supervisor_pins_verified": true,
+  "all12_status_physical_keys_zero": true,
+  "observed_epoch": [
+    "8",
+    "00010001"
+  ],
+  "all_typed_reg_stack_program_IP_cwd_alarm_settings_exact_to_prior_qualified_zero_baseline": true,
+  "RTC_SET": 0,
+  "clock_disposition": "SET0_PLACEHOLDER_RETURN_CLOCK_HOLD_ACCEPTED",
+  "UI": "UI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED",
+  "TX_bytes": 50,
+  "RX_bytes": 40007,
+  "all20_writes_full": true,
+  "actor_reaped": true,
+  "supervisor_exit0": true,
+  "Root_device_IO": 0
+}

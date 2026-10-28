@@ -1,0 +1,32 @@
+{
+  "all_HOST_jobs_terminal": true,
+  "jobs": {
+    "worker-live-test.json": {
+      "result": "worker-live-test.json",
+      "result_sha256": "b019244921ce9a231c3c2a5d47d3ed8ead7b0af96ffbc5ef0b398c4950f1366f",
+      "exit_code": 0,
+      "terminal": true
+    },
+    "rom-envelope-test.json": {
+      "result": "rom-envelope-test.json",
+      "result_sha256": "b3833446e17fb73e92d469838f60001e512b52f394df2dcb05d6d8f843eb868f",
+      "exit_code": 0,
+      "terminal": true
+    },
+    "resident-stage-test.json": {
+      "result": "resident-stage-test.json",
+      "result_sha256": "4b83871e0c1eed03be7ad67111ff3735791121759575b0f412e4711188d21db9",
+      "exit_code": 0,
+      "terminal": true
+    },
+    "supervisor-test.json": {
+      "result": "supervisor-test.json",
+      "result_sha256": "0680e444f62ec6b5067cc627f32441a4b99502d0a1d0b94223448cece5ccaae4",
+      "exit_code": 0,
+      "terminal": true
+    }
+  },
+  "new_firmware_builds": 0,
+  "new_ARM_MPFR_calls": 0,
+  "actual_device_IO": 0
+}

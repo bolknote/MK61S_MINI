@@ -1,0 +1,92 @@
+{
+  "schema_version": 2,
+  "owner": "root",
+  "owner_thread": "01a164b7-9caa-7011-90d1-807e9630921c",
+  "operator_thread": "01a14fdd-8514-7d33-b324-93b038e5f137",
+  "uid": "E6657CD423721C35",
+  "scope": "PICO_R55_MATH_RAM_SMOKE_ONCE",
+  "stage": "resident-verify",
+  "status": "CLOSED_MATH_STAGE",
+  "state": "CLOSED_FIRST_R55_PHYSICAL_SMOKE_PASS_UNCHANGED249_RETURN_TYPED_SETTINGS_VERIFIED",
+  "enabled": false,
+  "hardware_window_granted": false,
+  "hardware_execution_allowed": false,
+  "scope_consumed": true,
+  "parent_active_lease_sha256": "70f115df51b760f6cae372abd09a7aa90693ee6a9c69c8947f5bb4b47536c60a",
+  "actual_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/resident-verify-r4-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1350,
+    "sha256": "c203baa22f161e022634da7c1390bdfe4b687823a3b756de055b13017b8b213f"
+  },
+  "actual_result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/resident-verify-r4-actual-001/RESULT.json",
+    "bytes": 918,
+    "sha256": "d911a4061793834bcbb2fd9bc99573da9ba0aae8a40d2784c50553349765eea7"
+  },
+  "current_state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/resident-verify-r4-actual-001/current-state.json",
+    "bytes": 2236,
+    "sha256": "4e9832b5fa71c4f71fe2b8de7e73edcc496e804226442f6264907026297722f4"
+  },
+  "Root_final_metadata": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/root-hardware-metadata-20261027-math-final-close-001/root-physical-and-noholder.json",
+    "bytes": 4281,
+    "sha256": "63884bfd537d64333e5f94005b500ad1418a3f07b106115c4afbebc9ef65e825"
+  },
+  "Root_physical_smoke_close": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/MATH-CDC-R5-ACTUAL-CLOSE.json",
+    "bytes": 2210,
+    "sha256": "2ac3c955927a67e0e219672b03a65004cc6e9e3c63c2d7c590c5aab6fc385783"
+  },
+  "Root_physical_record_recount": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/PHYSICAL-SMOKE-RECORD-RECOUNT.json",
+    "bytes": 2203,
+    "sha256": "7e858f772c56aa3ca6756d283bfef9533fe24cf91b965dcffafc25125fd89feb"
+  },
+  "Root_full_Flash_before_after_return_close": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/ROM-RETURN-R3-ACTUAL-CLOSE.json",
+    "bytes": 3105,
+    "sha256": "8c2674904685b64bb41438d0e86984545ff0277f8e1f2158d66d593c8ed6a007"
+  },
+  "serial_closed": true,
+  "no_holder": true,
+  "actor_reaped": true,
+  "supervisor_pid": 53429,
+  "actor_pid": 53430,
+  "physical_query_requests": 78,
+  "physical_math_states": 72,
+  "observed_public_target_calls": 2940,
+  "all_R55_samples_match_pinned_golden_policy": true,
+  "quiet_NaN_class_policy_retained": true,
+  "comparisons": {
+    "wrong_reference": 78,
+    "equal_or_faster": 72,
+    "slower": 66
+  },
+  "incorrect_reference_outputs_and_costs_retained": true,
+  "observed_stack_bytes": 2284,
+  "full_2MiB_Flash_before_after_byte_exact": true,
+  "current_resident_build": "249A92DE",
+  "current_resident_CRC": "E6CFC3B8",
+  "typed_IP_cwd_alarm_and_persistent_settings_exact": true,
+  "UI_exact": false,
+  "UI_VIEW_RESET": true,
+  "UI_return_disposition": "VIEW1_RETURN_TO_DEFAULT0_ACCEPTED_NO_EXACT_UI_CLAIM",
+  "UI_exactness_HOLD_retained": true,
+  "RTC_SET": 0,
+  "RTC_after_calendar": "2026-01-01 00:04:07",
+  "clock_trajectory_PASS": false,
+  "clock_disposition": "SET0_PLACEHOLDER_RETURN_CLOCK_HOLD_ACCEPTED",
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "APP_opens": 0,
+  "SD_helper_calls": 0,
+  "physical_key_actions_sent": 0,
+  "master13_global_restore_deferred": true,
+  "full_mathematical_and_performance_acceptance": false,
+  "runtime_canonical_integration": false,
+  "remote_publish_or_release": false,
+  "Root_device_IO": 0,
+  "closed_utc": "2026-10-27T17:24:32.457949+00:00",
+  "next_owner_task": "HOST endpoint-pow optimization using measured correct-reference losses; next concrete candidate and affected qualification before new hardware scope"
+}

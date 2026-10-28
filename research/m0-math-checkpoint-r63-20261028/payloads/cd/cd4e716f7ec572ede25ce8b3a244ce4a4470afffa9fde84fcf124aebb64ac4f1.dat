@@ -1,0 +1,6 @@
+{
+  "status": "REJECTED_OUT_OF_RANGE_NEW_THUMB_DIRECT_BRANCH",
+  "link_exit_code": 1,
+  "repair": "Manual five-instruction Thumb function-pointer tail thunk, preserving r0 and LR; no linker-selected veneer assumption",
+  "new_public_ARM_calls": 0
+}

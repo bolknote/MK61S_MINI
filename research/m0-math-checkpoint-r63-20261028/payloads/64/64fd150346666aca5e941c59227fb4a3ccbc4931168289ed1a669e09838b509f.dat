@@ -1,0 +1,21 @@
+{
+  "status": "ROOT_EXACT_RATIONAL_PREDICATES_PASS",
+  "R59_ln2_interval_series_terms": 80,
+  "R59_recomputed_upward_binary64_cutoffs": {
+    "above1/underflow_zero": "43C74910D52D3053",
+    "above1/overflow_infinity": "43C62E42FEFA39F0",
+    "below1/underflow_zero": "43D74910D52D3052",
+    "below1/overflow_infinity": "43D62E42FEFA39EF"
+  },
+  "R59_proof_basis": "ln(1+d)>d-d\u00b2/2; -ln(1-d)>d+d\u00b2/2; monotonicity; positive atanh series with geometric tail",
+  "R60_ln2_strict_lower": "842/1215",
+  "R60_exact_positive_log_gap": "2238289014802921457/6160781917109194891273977578127360",
+  "R60_x_raw_cutoff": "00040000000000B1",
+  "R60_min_abs_y_raw": "3FF0000000000001",
+  "R60_result_strictly_exceeds_2_to_1024_on_admission": true,
+  "mathematical_domain": "finite positive nonzero base; guards separately exclude zero, signs and nonfinite values",
+  "fresh_ARM_calls": 0,
+  "fresh_MPFR_calls": 0,
+  "hardware_IO": 0,
+  "Git_writes": 0
+}

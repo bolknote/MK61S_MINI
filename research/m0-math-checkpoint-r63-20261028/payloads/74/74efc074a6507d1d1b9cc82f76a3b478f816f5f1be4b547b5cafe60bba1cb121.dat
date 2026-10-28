@@ -1,0 +1,84 @@
+{
+  "status": "PASS_EXACT_WORKER_REUSE_AND_ACCEPTED_R63_ACTUAL_SRAM_GUARD",
+  "worker_regions": [
+    {
+      "section": ".text",
+      "address": 536875008,
+      "bytes": 15932,
+      "all_bytes_exact_except_pinned_metadata": true
+    },
+    {
+      "section": ".rodata",
+      "address": 536890940,
+      "bytes": 496,
+      "all_bytes_exact_except_pinned_metadata": true
+    },
+    {
+      "section": ".binary_info",
+      "address": 536891436,
+      "bytes": 20,
+      "all_bytes_exact_except_pinned_metadata": true
+    },
+    {
+      "section": ".data",
+      "address": 536891456,
+      "bytes": 240,
+      "all_bytes_exact_except_pinned_metadata": true
+    }
+  ],
+  "unchanged_worker_functions": 186,
+  "only_changed_function": [
+    "main"
+  ],
+  "changed_literals": [
+    {
+      "address": 536878568,
+      "old": 208312,
+      "new": 208456,
+      "roles": [
+        "MATH_MAIN_BYTES"
+      ]
+    },
+    {
+      "address": 536878576,
+      "old": 4252426209,
+      "new": 4184172300,
+      "roles": [
+        "MATH_MAIN_CRC"
+      ]
+    },
+    {
+      "address": 536878588,
+      "old": 764869799,
+      "new": 203475046,
+      "roles": [
+        "MATH_HOT_CRC"
+      ]
+    },
+    {
+      "address": 536879692,
+      "old": 4252426209,
+      "new": 4184172300,
+      "roles": [
+        "MATH_MAIN_CRC"
+      ]
+    },
+    {
+      "address": 536879696,
+      "old": 764869799,
+      "new": 203475046,
+      "roles": [
+        "MATH_HOT_CRC"
+      ]
+    }
+  ],
+  "worker_instruction_opcodes_unchanged": true,
+  "prior_startup_transitively_inherited": true,
+  "math_objects_recompiled": 0,
+  "worker_objects_recompiled": 0,
+  "SDK_rebuilds": 0,
+  "actual_RAM_guard66_opcode_words_exact_to_accepted_R63": true,
+  "actual_RAM_prefix120_semantics_and_BL_targets_exact": true,
+  "actual_new_ARM_MPFR_device_calls": 0,
+  "goal_complete": false
+}

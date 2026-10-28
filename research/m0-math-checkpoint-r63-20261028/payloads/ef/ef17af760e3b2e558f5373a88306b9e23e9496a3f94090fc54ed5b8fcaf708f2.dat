@@ -1,0 +1,35 @@
+"""Compile only the changed RP unit with its RP code disabled for M0/M4."""
+from pathlib import Path
+import hashlib,importlib.util,json,subprocess,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+P=ROOT/'.build/m0-math-pow-subnormal-powerzero-r62-20261028'
+F=ROOT/'.build/m0-math-unified-pow-saturation-r55-20261027/support/fingerprint.py'
+spec=importlib.util.spec_from_file_location('r61_disabled_fp',F);fp=importlib.util.module_from_spec(spec);spec.loader.exec_module(fp)
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+template=json.loads((W/'link-result.json').read_text())['commands'][0]['argv']
+results={};commands=[]
+for label,cpu in [('default_M0','cortex-m0plus'),('M4','cortex-m4')]:
+    images={}
+    for source,base in [('old',P),('new',W)]:
+        target=W/(label+'-disabled-'+source+'.o')
+        argv=list(template)
+        argv=[a for a in argv if not a.startswith('-DMK61_M0_RP2040_EABI=')]
+        argv=[('-mcpu='+cpu) if a.startswith('-mcpu=') else a for a in argv]
+        argv.insert(1,'-DMK61_M0_RP2040_EABI=0')
+        argv[argv.index('-o')+1]=str(target)
+        argv[argv.index('-c')+1]=str(base/'source/code/native_eabi_m0_rp2040.S')
+        r=subprocess.run(argv,cwd=W,capture_output=True,text=True)
+        commands.append(dict(argv=argv,exit_code=r.returncode,stderr=r.stderr))
+        assert r.returncode==0,r.stderr
+        images[source]=fp.image_fingerprint(target.read_bytes())
+    assert images['old']==images['new']
+    assert sum(s[4] for s in images['new']['allocated'])==0
+    results[label]=dict(allocated_sections_symbols_semantic_relocations_equal=True,
+        allocated_bytes=0,old_object_sha256=sha(W/(label+'-disabled-old.o')),
+        new_object_sha256=sha(W/(label+'-disabled-new.o')))
+report=dict(status='PASS_R63_CHANGED_RP_UNIT_DISABLED_DEFAULT_M0_M4_CONTROLS',controls=results,
+    commands=commands,full_M4_or_SDK_rebuild=False,new_math_ARM_or_MPFR_calls=0,
+    actual_device_IO=0,new_Git_writes=0,goal_complete=False)
+(W/'disabled-controls.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps({k:v for k,v in report.items() if k!='commands'},indent=2))

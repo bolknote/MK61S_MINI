@@ -1,0 +1,72 @@
+{
+  "status": "PASS_R62_JOIN_ALL_PARENT_AND_DIRECTED_EVIDENCE_NO_NUMERICAL_REPLAY",
+  "same_old_corpus": {
+    "pairs": 152160,
+    "states": 322071,
+    "R61_losing_pairs": 1398,
+    "R62_losing_pairs": 1392,
+    "fixed_pairs": 6,
+    "new_losing_states": 0
+  },
+  "new_directed_only": {
+    "new_pairs": 238,
+    "new_states": 758,
+    "old_pairs_with_new_SIO_states": 44,
+    "newly_measured_preexisting_R61_loss_pairs": 138,
+    "fixed_pairs": 105,
+    "still_open_pairs": 33
+  },
+  "expanded_corpus": {
+    "pairs": 152398,
+    "states": 322829,
+    "R61_losing_pairs": 1536,
+    "R62_losing_pairs": 1425,
+    "fixed_pairs": 111,
+    "new_losing_states": 0
+  },
+  "remaining_expanded_by_kind": {
+    "zero_or_infinity": 221,
+    "normal_result": 483,
+    "inverse_root": 721
+  },
+  "remaining_old_by_kind": {
+    "zero_or_infinity": 188,
+    "normal_result": 483,
+    "inverse_root": 721
+  },
+  "old_state_cost_evidence": {
+    "completed_affected": 3205,
+    "proved_zero_delta_without_invented_exact_counts": 318866
+  },
+  "parent_delta_histogram_measured_affected_states": {
+    "-5042": 3,
+    "-5041": 3,
+    "-5031": 3,
+    "-5001": 3,
+    "-4995": 3,
+    "-4987": 3,
+    "0": 671,
+    "3": 1746,
+    "8": 740,
+    "12": 18,
+    "13": 6,
+    "37": 3,
+    "39": 3
+  },
+  "all_wrong_reference_outputs_and_costs_retained_by_pinned_evidence": true,
+  "comparison_policy": "Exact binary64 bits for numbers/signed zeros/infinities; the existing oracle accepts NaN payload variations. Raw NaN payloads retained.",
+  "unexecuted_paths_have_no_new_invented_exact_counts": true,
+  "original_parent_evidence_pinned_by_sha256": {
+    "joined-pow-audit-records.jsonl.gz": "9966db8d9fc873cb6fac64749c87ea814b797bfc041d0fbe0f9166d8a464b55a",
+    "new-boundary-union-records.jsonl.gz": "2b9eeb05aa8eb9e3d7964efd54ef1fe03742b01bfddeee61f60b9f0b1f1f4f32",
+    "remaining-old-pow-pairs.json": "6b661c920f9516f9ccbcc97a949ac8fa0c44c3c54d345d70c1b2cfb4ae8a4f0c",
+    "remaining-extra-pow-pairs.json": "343108eff73e236f40294210c4f839a88a382ad00685b2bb3286632b1845b833"
+  },
+  "joined_records_sha256": "c3c4290438bbcc911cec37e5d2dd938107c626a1781d76d1f31ebb02193e09ca",
+  "remaining_pairs_sha256": "57ffa7bef8447f31a65884870ba8a0207a4724dd968e412fc8a51ff47a00a4cd",
+  "new_ARM_MPFR_device_calls": 0,
+  "full_library_remaining_count": false,
+  "selected_private_baseline": "R61",
+  "R62_selected": false,
+  "goal_complete": false
+}

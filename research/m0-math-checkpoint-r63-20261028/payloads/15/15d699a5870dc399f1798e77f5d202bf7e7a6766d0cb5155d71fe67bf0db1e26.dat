@@ -1,0 +1,18 @@
+{
+  "status": "ROOT_SIX_ORIGINAL_TARGET_PUBLIC_COSTS_RECOUNT_PASS",
+  "pairs": 6,
+  "states": 18,
+  "candidate_instruction_range": [
+    245,
+    254
+  ],
+  "parent_R61_instruction_range": [
+    5232,
+    5293
+  ],
+  "fastest_correct_Qfplib_range": [
+    777,
+    777
+  ],
+  "physical_cycles_measured": false
+}

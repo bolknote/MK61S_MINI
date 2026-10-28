@@ -1,0 +1,22 @@
+{
+  "pid": 52584,
+  "exit_code": 0,
+  "reaped": true,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-picotool/picotool",
+    "save",
+    "-a",
+    "-v",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/rom-return-r3-actual-001/flash-after-math.bin",
+    "-t",
+    "bin",
+    "--bus",
+    "0",
+    "--address",
+    "5",
+    "--ser",
+    "E6657CD423721C35"
+  ],
+  "stdout_sha256": "5df3e994d704b7d80dea4f5cc1ff01968fb0bf653e87e6558b83c6ee8c5957eb",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

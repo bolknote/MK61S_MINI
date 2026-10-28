@@ -1,0 +1,68 @@
+{
+  "status": "INTERMEDIATE_PRIVATE_R63_AND_PARTIAL_PHYSICAL_CHECKPOINT",
+  "previous_math_checkpoint_commit": "fafce31ed",
+  "base_commit": "c069c501a",
+  "selected_private_math": "R63",
+  "canonical_runtime_integrated": false,
+  "M4_changed": false,
+  "R63_finite_union": {
+    "pairs": 152937,
+    "states": 324446,
+    "R62_losing_pairs": 1692,
+    "R63_losing_pairs": 1400,
+    "repaired_pairs": 292,
+    "new_losing_states": 0
+  },
+  "known_pow_losing_pairs": {
+    "inverse_root": 721,
+    "normal_result": 483,
+    "zero_or_infinity": 196
+  },
+  "physical": {
+    "matrix_pairs": 84,
+    "measured_unique_pairs": 48,
+    "measured_states": 144,
+    "our_math_calls": 1440,
+    "all_target_calls_including_references_and_calibration": 5880,
+    "our_wrong": 0,
+    "repaired_target_pairs_measured": 26,
+    "target_speedup_range": [
+      2.4401913875598087,
+      3.363036303630363
+    ],
+    "remaining_pairs": 36,
+    "retained_slow_control_pairs": 5,
+    "observed_stack_bytes": 2276,
+    "universal_stack_bound": false
+  },
+  "physical_return": {
+    "first_smoke_exact_typed_return_closed": true,
+    "joint01_resident_and_Flash_restored": true,
+    "joint01_typed_return": "HOLD: physical keys 4 and IP158 differ from initial keys0/IP0",
+    "latest_readonly_capture_saved": true,
+    "latest_IP": 158,
+    "volatile_reinit_executed": false,
+    "RTC_SET": 0,
+    "RTC_trajectory_exact": false
+  },
+  "nearpower": {
+    "narrow_mathematical_proof_saved": true,
+    "generalized_mathematical_proof_saved": true,
+    "guard_patch_saved_but_not_applied": true,
+    "new_candidate_compiled": false,
+    "new_patch_performance_known": false
+  },
+  "open": [
+    "36 remaining physical pairs and typed state clearance/return",
+    "known pow speed deficits",
+    "universal correct rounding and pow termination",
+    "universal stack bound",
+    "FMA acceptance",
+    "production integration"
+  ],
+  "historical_permissions_are_inert": true,
+  "new_device_IO_by_checkpoint": 0,
+  "new_ARM_MPFR_SDK_calls_by_checkpoint": 0,
+  "primary_main_changed": false,
+  "goal_complete": false
+}

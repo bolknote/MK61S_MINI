@@ -1,0 +1,15 @@
+{
+  "status": "EXACT_WORKER_CODE_PRIMITIVES_INHERITED_NOT_FRESH_CALLS",
+  "actual_ROM_CRC32": 172131586,
+  "source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/worker-check.json",
+    "bytes": 2118,
+    "sha256": "9c64667439174aee4d818f5fd036f53e41327542a54daf6cffccfff523890d5e"
+  },
+  "joint_correspondence": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/bootable/correspondence.json",
+    "bytes": 1849,
+    "sha256": "74efc074a6507d1d1b9cc82f76a3b478f816f5f1be4b547b5cafe60bba1cb121"
+  },
+  "fresh_ARM_calls": 0
+}

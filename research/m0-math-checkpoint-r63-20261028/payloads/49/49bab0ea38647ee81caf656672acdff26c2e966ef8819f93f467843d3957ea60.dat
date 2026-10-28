@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/operator-joint/supervise_stage.py",
+    "--execute",
+    "--stage",
+    "resident-verify",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/resident-verify.json",
+    "--lease-sha256",
+    "888f76458dbd49356352969ff4b2de3d49d4997df216d380f6998659891b1add",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-001",
+    "--supervisor-output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-supervisor-001"
+  ],
+  "grant": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/resident-verify.json",
+    "bytes": 2152,
+    "sha256": "888f76458dbd49356352969ff4b2de3d49d4997df216d380f6998659891b1add"
+  },
+  "stage": "resident-verify"
+}

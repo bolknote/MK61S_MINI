@@ -1,0 +1,95 @@
+{
+  "status": "PASS_ACTUAL_WORKER_THUMB_WIRE_PRIMITIVES_AND_RESET_MASKS_PLUS_HOST_DRIVER_TESTS",
+  "ELF_sha256": "68f752c5c5a581be8929c9318ebe5c18d1a754911faf80c72ff3b42a59728b6a",
+  "checks": 147,
+  "actual_ARM_primitive_calls": 148,
+  "actual_ROM_CRC32": 172131586,
+  "RTC_reset_and_clock_registers_unchanged_in_actual_reset_functions": [
+    {
+      "ctrl": 2048,
+      "div": 262144,
+      "RTC_reset_bit": 0,
+      "actual_MMIO_writes": [
+        [
+          1073799168,
+          16469439
+        ],
+        [
+          1073803264,
+          3964926
+        ],
+        [
+          1073803264,
+          33521663
+        ]
+      ]
+    },
+    {
+      "ctrl": 0,
+      "div": 0,
+      "RTC_reset_bit": 32768,
+      "actual_MMIO_writes": [
+        [
+          1073799168,
+          16469439
+        ],
+        [
+          1073803264,
+          3964926
+        ],
+        [
+          1073803264,
+          33521663
+        ]
+      ]
+    },
+    {
+      "ctrl": 2112,
+      "div": 274960,
+      "RTC_reset_bit": 0,
+      "actual_MMIO_writes": [
+        [
+          1073799168,
+          16469439
+        ],
+        [
+          1073803264,
+          3964926
+        ],
+        [
+          1073803264,
+          33521663
+        ]
+      ]
+    },
+    {
+      "ctrl": 2144,
+      "div": 74496,
+      "RTC_reset_bit": 0,
+      "actual_MMIO_writes": [
+        [
+          1073799168,
+          16469439
+        ],
+        [
+          1073803264,
+          3964926
+        ],
+        [
+          1073803264,
+          33521663
+        ]
+      ]
+    }
+  ],
+  "USB_PLL_not_reprogrammed_in_bench_clock_source": true,
+  "RTC_clock_configuration_omitted_in_bench_clock_source": true,
+  "HOST_driver_rejected_corruptions": [
+    "candidate",
+    "pending",
+    "crc"
+  ],
+  "driver_fake_is_not_hardware_evidence": true,
+  "hardware_IO": 0,
+  "physical_cycles_measured": false
+}

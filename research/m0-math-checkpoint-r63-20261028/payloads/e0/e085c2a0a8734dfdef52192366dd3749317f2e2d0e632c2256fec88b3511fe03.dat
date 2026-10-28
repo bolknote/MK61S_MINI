@@ -1,0 +1,22 @@
+{
+  "status": "ONE_RAW_ROM_REQUEST_NATIVE_DISCONNECT_SEEN_EXACT_ROM_PENDING",
+  "stage": "resident-rom",
+  "pid": 51270,
+  "Flash_writes_requested": 0,
+  "RTC_setters": 0,
+  "APP_opens": 0,
+  "physical_key_actions_sent": 0,
+  "goal_complete": false,
+  "received_hex": "456e746572696e67205250323034302055534220424f4f5453454c0d0a",
+  "ack_complete": true,
+  "disconnect": {
+    "errno": 6
+  },
+  "raw_exclamation_attempts": 1,
+  "CMD_DFU_attempts": 0,
+  "ROM_UID_not_yet_confirmed": true,
+  "serial_closed": true,
+  "TX_bytes": 53,
+  "RX_bytes": 43484,
+  "no_global_noholder_claim": true
+}

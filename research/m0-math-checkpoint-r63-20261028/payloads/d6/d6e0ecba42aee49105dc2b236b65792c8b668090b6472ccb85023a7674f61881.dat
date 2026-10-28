@@ -1,0 +1,32 @@
+{
+  "status": "PASS_R62_ORIGINAL_PREFIX_EQUIVALENCE_EXACT_UINT32_GUARD_AND_COMPLETE_BRANCH_RELATIONS",
+  "parent_R61_FROZEN_sha256": "e09a1db789376f5987f8c0650d93339bcfdd8ee78875e0fa371e78286057b90f",
+  "new_object_sha256": "252dd2fd4a60604f649107d605e695dd94c4b6c923ceb067b51de2a16fb76494",
+  "original_instruction_prefix_verified": 120,
+  "only_two_old_decline_edges_redirected": [
+    148,
+    172
+  ],
+  "all_earlier_returns_and_negative_paths_unchanged": true,
+  "literal_load_values_and_BL_relocations_original_exact": true,
+  "new_guard_static_instructions": 52,
+  "new_guard_acyclic": true,
+  "all52_power_positions_checked": true,
+  "integer_relation_partition_cases": 527,
+  "maximal_added_instructions_on_any_decline": 44,
+  "all_declines_preserve_R0_R3_R4_R6_R7": true,
+  "stack_memory_LR_or_SIO_instructions_in_guard": false,
+  "all_memory_reads_are_scalar_literals": true,
+  "unsigned_product_max": 2252340174,
+  "uint32_product_fits": true,
+  "exact_RNE_tie": {
+    "x": "0004000000000000",
+    "y": "3FF0CC0000000000",
+    "result": "0000000000000000"
+  },
+  "mathematical_proof": "x=2^-k and y=M/2^20 imply x^y=2^(-k*M/2^20). Under RNE result is +0 iff k*M>=1075*2^20; equality rounds the half-minsubnormal tie to even zero.",
+  "actual_new_ARM_MPFR_calls": 0,
+  "new_device_IO": 0,
+  "not_universal_library_CR_or_speed": true,
+  "goal_complete": false
+}

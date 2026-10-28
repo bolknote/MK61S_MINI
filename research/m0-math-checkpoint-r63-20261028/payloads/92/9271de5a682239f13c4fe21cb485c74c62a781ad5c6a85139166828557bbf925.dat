@@ -1,0 +1,14 @@
+{
+  "status": "ROOT_EXPLICIT_FRESH_USB_ROUTE_REBIND_FOR_SAME_EXPECTED_UID_RETURN",
+  "old_location_id": 1245184,
+  "new_location_id": 34799616,
+  "unchanged_ROM_serial": "E0C9125B0D9B",
+  "required_chip_UID_before_any_followup": "E6657CD423721C35",
+  "new_bus": 2,
+  "new_address": 4,
+  "metadata_sha256": "a0d4214515e5114b78f359aebdc13a25666a4d47c08aae90d4182c7030e09c4f",
+  "old_actors_closed": true,
+  "expired_lease_not_reused": true,
+  "allowed_next_action": "Separate fresh UID/read-Flash/reboot grant only; stop on UID or image mismatch",
+  "Root_device_IO": 0
+}

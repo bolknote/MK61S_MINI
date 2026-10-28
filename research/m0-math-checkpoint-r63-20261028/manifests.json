@@ -1,0 +1,246 @@
+{
+  ".build/m0-math-pow-tight-endpoint-r56-20261027/FROZEN.json": {
+    "sha256": "b471e0ee4be64c92211c43d9b30c1d38c58568b9a8b96befa645b94e829600db",
+    "pins": 127
+  },
+  ".build/m0-math-pow-early-endpoint-r57-20261027/FROZEN.json": {
+    "sha256": "66fedf4f9b6bade70f122b0d90d9faee7ad9e93e293bf1730f72aad6b2a7a759",
+    "pins": 426
+  },
+  ".build/m0-math-pow-early-endpoint-r58-20261027/FROZEN.json": {
+    "sha256": "ad1f74fac60c3bf459b48ee0c69b88640b02d0241f7eb9450bf4c1e7f78990e6",
+    "pins": 429
+  },
+  ".build/m0-math-pow-dispatch-contract-r59-20261027/FROZEN.json": {
+    "sha256": "fdb260d5f7430c74306175d7d41d01fda8268493d5d7dbcc7bf57bf481f7154a",
+    "pins": 457
+  },
+  ".build/m0-math-pow-subnormal-overflow-r60-20261027/FROZEN.json": {
+    "sha256": "5effdab53736d79be6d0f4be5d0fa766220a59f20d97c037c602ddf47f88c89f",
+    "pins": 460
+  },
+  ".build/m0-math-pow-fullword-endpoints-r61-20261028/FROZEN.json": {
+    "sha256": "e09a1db789376f5987f8c0650d93339bcfdd8ee78875e0fa371e78286057b90f",
+    "pins": 444
+  },
+  ".build/m0-math-pow-subnormal-powerzero-r62-20261028/FROZEN.json": {
+    "sha256": "342d99787bd364c760151d44223329ed1ffc2077ceac766d99f9008588bf32d5",
+    "pins": 460
+  },
+  ".build/m0-math-pow-fullword-powerzero-r63-20261028/FROZEN.json": {
+    "sha256": "c0758769eeda95445fd7640af92cabb9485285278befd1472864e6e26f633558",
+    "pins": 458
+  },
+  ".build/m0-math-r55-hil-20261027/analysis-r2/FROZEN.json": {
+    "sha256": "3d567e81e88c559342be4803b437c1dafcd7b9a1a4b7d2ce10fde4aafdabe1b2",
+    "pins": 3
+  },
+  ".build/m0-math-r55-hil-20261027/bootable-r1/FROZEN.json": {
+    "sha256": "8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8",
+    "pins": 50
+  },
+  ".build/m0-math-r55-hil-20261027/bootable-r2/FROZEN.json": {
+    "sha256": "9d7b6553249dfa43bbeed46460fe6384152804d96c1a3e8da249df878e34310a",
+    "pins": 75
+  },
+  ".build/m0-math-r55-hil-20261027/operator-r1/ENVELOPE-FROZEN.json": {
+    "sha256": "8e52b8f7c8fc58074a8bd169b8368f63f10660e15d3cf3a980905aba477b7905",
+    "pins": 24
+  },
+  ".build/m0-math-r55-hil-20261027/operator-r1/PREFLIGHT-FROZEN.json": {
+    "sha256": "b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d",
+    "pins": 19
+  },
+  ".build/m0-math-r55-hil-20261027/operator-r2/PREFLIGHT-FROZEN.json": {
+    "sha256": "81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22",
+    "pins": 19
+  },
+  ".build/m0-math-r55-hil-20261027/operator-r3/ENVELOPE-FROZEN.json": {
+    "sha256": "b78b32046ddeab627471a282a16d890d762949ce18cbb30cc4be562cb66136ea",
+    "pins": 24
+  },
+  ".build/m0-math-r55-hil-20261027/operator-r4/ENVELOPE-FROZEN.json": {
+    "sha256": "187b76327a130744aab4724b0b0dc58d9712f84fdc94f5d4602f9cee851d5262",
+    "pins": 15
+  },
+  ".build/m0-math-r55-hil-20261027/operator-r5/ENVELOPE-FROZEN.json": {
+    "sha256": "083da5bb699eace08f2a628a3dc6c7b554f762182d9425062020b337716df0d9",
+    "pins": 15
+  },
+  ".build/m0-math-r61-ram-hil-20261028/bootable/FROZEN.json": {
+    "sha256": "200c37008279297013d90938049f257279d650a321b371fe4f27ea31d3b46bbc",
+    "pins": 62
+  },
+  ".build/m0-math-r61-ram-hil-20261028/operator-r61/ENVELOPE-FROZEN.json": {
+    "sha256": "e27112f8a30a0c34133173ddb091601b7e12ce9dc3799e173d7d62a16974faac",
+    "pins": 50
+  },
+  ".build/m0-math-r61-ram-hil-20261028/physical-smoke-analysis-001/FROZEN.json": {
+    "sha256": "7d35403619395bb7efdd77eb2e355ed27a13b8ebd86a6fc2dd72e816df108f59",
+    "pins": 5
+  },
+  ".build/m0-math-r61-ram-hil-20261028/preflight-current249/ENVELOPE-FROZEN.json": {
+    "sha256": "18aaaa31353d0b3e0917732c45dfef2c4ac9f5895676c8da6cbc3210416b42f4",
+    "pins": 31
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/FROZEN.json": {
+    "sha256": "1e54a834537666c7763587f27d18068311f960deed9cd16044bae68dcbb63c19",
+    "pins": 9
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/bootable/FROZEN.json": {
+    "sha256": "ac1858610e19121935d24e5cb9f8c5aad8ad38e90ba350eb7ded7f47df2e17aa",
+    "pins": 57
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/current-state-before-calc-clear-001/FROZEN.json": {
+    "sha256": "e98f57a91d833e59522e16a7df2c256c0e4c400f611fed6dd899db7caf00166c",
+    "pins": 33
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/current-state-before-calc-clear-001-supervisor/FROZEN.json": {
+    "sha256": "5d49f64831837b9119712476beba6dac24a1451e9b017cae5d1d0985e8439249",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/first-physical-round-001/FROZEN.json": {
+    "sha256": "e90d85eeafc98500b8a2915090cc1954a280834499e2426d970e84a85f16ae1e",
+    "pins": 1
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-math-cdc-001/FROZEN.json": {
+    "sha256": "de079233a679ece388109cc24eea861f377ab72b9e15e0c2935e9de9480d523b",
+    "pins": 9
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-math-cdc-supervisor-001/FROZEN.json": {
+    "sha256": "31a221d0f181d33219bd48877227f8fb80b102e180dc0ee9ee4ae3177c9a8fc8",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-capture-001/FROZEN.json": {
+    "sha256": "1cbb656958168a2eeee5fde44989065ca0578b51f532e5cd6d4bb288d7d0a9bb",
+    "pins": 33
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-capture-supervisor-001/FROZEN.json": {
+    "sha256": "3b2942068af29b00c0d8c1a35f55ed6a573bb7626b80844361deb097c9a37f68",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-001/FROZEN.json": {
+    "sha256": "b41c6a20998c6350730ee47229a6f6b1416cd8a31cfcfffeca328e7a0cbb589d",
+    "pins": 35
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-supervisor-001/FROZEN.json": {
+    "sha256": "1d5d015d75d6e2a61417748ae29a41016dbfdfb2d8530910a21c825d4b4b2a4d",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-verify-001/FROZEN.json": {
+    "sha256": "1360e63d60384e15cbbe1ed580dcfb0a01757859ea6b1136585453871c4f6012",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-verify-supervisor-001/FROZEN.json": {
+    "sha256": "130ab95f94ec5c3be2215d0ccbf65a07aca32e834819c6fbb0b90ce563d3a688",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-load-001/FROZEN.json": {
+    "sha256": "c05a30f7f359a552a10ba84939e7e1a62aa59598743a6f27fead1ad3c5596d96",
+    "pins": 25
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-load-supervisor-001/FROZEN.json": {
+    "sha256": "0db2128f1e6a001449a65bded0ec0079f8f18acb88a756996aec11c884d0674d",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-return-001/FROZEN.json": {
+    "sha256": "405085e022a94988ece61d774f0c15609f736fe0d46fca3f2c925794f860e677",
+    "pins": 19
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-return-supervisor-001/FROZEN.json": {
+    "sha256": "c1765c1e81b076cb7b5d8f4c9cc2a867d66e738fdc3b60525e264ca5395f443d",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-math-cdc-001/FROZEN.json": {
+    "sha256": "e7db9e4ca36ddc3d757144f2dcd373dfbbca2b8af9f82d956a59def0fe2be1ed",
+    "pins": 9
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-math-cdc-supervisor-001/FROZEN.json": {
+    "sha256": "4b4b91b163233e927bbabcf0cfa94be0e9336ee4119dc52119f5a7691466b4ad",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-resident-capture-001/FROZEN.json": {
+    "sha256": "b7682fb7b745c501e4afcee5d920d404758487c00904dc97c4f9b362737aceec",
+    "pins": 33
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-resident-capture-supervisor-001/FROZEN.json": {
+    "sha256": "306d7da48b5b0b2563cd54026a6401d7bb4417ccf2e75cf4d4769407edef5c93",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-resident-rom-001/FROZEN.json": {
+    "sha256": "e3ac33d5c5e53592c16146c3c27841dd0090e8e1a24d80f05f494b8bfa832cc9",
+    "pins": 35
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-resident-rom-supervisor-001/FROZEN.json": {
+    "sha256": "784488e7a7dacd96368bc13f501b580e6abc51e713ce5ca012422b5f288d9e53",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-001/FROZEN.json": {
+    "sha256": "0dcf17151a291b93fd45783cbd81c9497d46efa9b828f3aa54ebe159ad4057f7",
+    "pins": 31
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-supervisor-001/FROZEN.json": {
+    "sha256": "457e0b93facfe83e624cc1b219e1c6c9734d81d88880e3a9420bd99e49e5cb6d",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-rom-load-001/FROZEN.json": {
+    "sha256": "69a763549cd86452de32a18f84fe39859cac46fc49bdb1d0e47e813b2a39fce1",
+    "pins": 25
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-rom-load-supervisor-001/FROZEN.json": {
+    "sha256": "68397a221e14d3e051c5c04b9e95397ebac6b29e3dd0e9bd6bfde07cbfad0330",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-rom-return-001/FROZEN.json": {
+    "sha256": "e206af4587a83906a8a89a24b5d89feefe3e96b7d49014771e573ffb56734b52",
+    "pins": 19
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/joint-rom-return-supervisor-001/FROZEN.json": {
+    "sha256": "71c4d09e9e8010e5791ac1f1f3f1cc2a952ab4be677ac6a85be456a1def66b33",
+    "pins": 5
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/operator-joint/ENVELOPE-FROZEN.json": {
+    "sha256": "0ce9b7df679c87bfaa662346e7b702d21bdf36db35ee5593868c953268cd4810",
+    "pins": 78
+  },
+  ".build/m0-math-r62-r63-ram-hil-20261028/preflight-current249/ENVELOPE-FROZEN.json": {
+    "sha256": "2ec9c3717fb6663f08072d99f7cbe620a92e375674216a39ccb6c45a39a66394",
+    "pins": 33
+  },
+  ".build/m0-math-r59-r60-root-review-20261028-001/FROZEN.json": {
+    "sha256": "f6c012549fc8ae5a182e65068e3edf3513f5eeadc71fa9a6f70f1a7614821deb",
+    "pins": 8
+  },
+  ".build/m0-math-r61-root-review-20261028-001/FROZEN.json": {
+    "sha256": "796d444bd28888f6419daa5538725e129029b77675eab553f4167cf59f3376e2",
+    "pins": 5
+  },
+  ".build/m0-math-r62-root-review-20261028-001/FROZEN.json": {
+    "sha256": "e9c099916d199f7dfea9bc21575ece159fab2b3e165107ffeacad977782de5f4",
+    "pins": 7
+  },
+  ".build/m0-math-r63-root-review-20261028-001/FROZEN.json": {
+    "sha256": "d6a15fe5740ca14037a9a7f28b39975ad1a5a9d976623fcbaa54e606db00c24c",
+    "pins": 7
+  },
+  ".build/m0-math-r61-hil-root-review-20261028-001/FROZEN.json": {
+    "sha256": "018a2717278ceb718ad8d0f40f7eca9c69d56f23f6f14bb31f43104a749d1776",
+    "pins": 36
+  },
+  ".build/m0-math-r62-fullword-zero-predicate-note-20261028/FROZEN.json": {
+    "sha256": "29868f4db847ff1bde098f6a10a4bdbb173796bbc33c1153f6624518a89a7521",
+    "pins": 3
+  },
+  ".build/m0-math-r63-nearpower-negative-study-20261028-001/FROZEN.json": {
+    "sha256": "09312f6187b2912186da4a4b45076b5b8f89ed5673d19f01edc078562d4b95dd",
+    "pins": 3
+  },
+  ".build/m0-math-r63-nearpower-negative-study-20261028-002/FROZEN.json": {
+    "sha256": "51e0fd78159cca0e5be324fa97a8e00c79f227a7ea44fcf70a5a3d23c916ee4b",
+    "pins": 3
+  },
+  ".build/m0-math-r63-nearpower-negative-patch-20261028-001/FROZEN.json": {
+    "sha256": "bb5d11e98fff60101282e95b70a570f7843c20d74e3736448a7c042622c9c74d",
+    "pins": 3
+  }
+}

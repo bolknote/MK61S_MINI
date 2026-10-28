@@ -1,0 +1,26 @@
+{
+  "created_utc": "2026-10-28T04:54:07.884588+00:00",
+  "raw_USB": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-rom-load-002/root-usb.plist",
+    "bytes": 117033,
+    "sha256": "df5d9e11e38eb23180026ac1fc5d7117bc11370e6885d9437b96e7c1bac31418"
+  },
+  "facts": {
+    "mode": "rom",
+    "serial": "E0C9125B0D9B",
+    "VID": 11914,
+    "PID": 3,
+    "location_id": 1245184,
+    "entry": 4298039423,
+    "session": 13025580819611,
+    "USBAddress": 5,
+    "callouts": [],
+    "bus": 0,
+    "address": 5,
+    "bus_mapping": "Reused qualified pinned picotool/libusb Darwin1.0.30 mapping: locationID high byte and IOKit USB Address",
+    "no_live_owned_hardware_actors": true,
+    "no_global_libusb_holder_claim": true,
+    "Root_device_IO": 0
+  },
+  "Root_device_IO": 0
+}

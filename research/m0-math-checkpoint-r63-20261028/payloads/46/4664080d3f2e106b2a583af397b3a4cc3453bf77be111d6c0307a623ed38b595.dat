@@ -1,0 +1,30 @@
+{
+  "status": "ROOT_ONE_REMAINING_BATCH_SINGLE_STAGE_GRANTED",
+  "batch": "joint-01",
+  "stage": "resident-rom",
+  "grant": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/joint-01-resident-rom.json",
+    "bytes": 2180,
+    "sha256": "47d049fd96c3c9f47e785c60b14dc9527269410b0a2c6b47c2dcc0192a572b09"
+  },
+  "argv": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/ARGV-joint-01-resident-rom.json",
+    "bytes": 1049,
+    "sha256": "7bb448504d39f419d3461d15b086c73822835d2e9f8fbc480b6d93d34828d00a"
+  },
+  "metadata": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-resident-rom-002/root-physical-and-noholder.json",
+    "bytes": 4371,
+    "sha256": "48c19b671b01bc90ff34697cfcfb58f0f89149efec8e2c091a4b4b211097b2a7"
+  },
+  "previous_canonical": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/CANONICAL-BEFORE-joint-01-resident-rom.json",
+    "bytes": 1858,
+    "sha256": "a4a5390e9504eac9fc6811bee88b86747decc80346d32fb64277c2f4502c698e"
+  },
+  "expires_utc": "2026-10-28T05:20:28.010606+00:00",
+  "other_stages_not_granted": true,
+  "Flash_programming_allowed": false,
+  "RTC_setter_allowed": false,
+  "Root_device_IO": 0
+}

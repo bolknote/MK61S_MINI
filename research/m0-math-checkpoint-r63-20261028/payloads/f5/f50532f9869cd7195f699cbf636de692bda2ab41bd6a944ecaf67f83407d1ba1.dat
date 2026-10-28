@@ -1,0 +1,123 @@
+{
+  "status": "PASS_R59_ALL_ACTUAL_CALLER_SITES_LEGAL_PRIVATE_ABI_AND_LINKED_FAULTS",
+  "actual_five_caller_definitions": [
+    {
+      "object": "RP-merged-asm.o",
+      "section": ".m0_pow_dispatch_extension",
+      "relocation_offset": 192,
+      "kind": 2,
+      "target": "mk61_m0_pow_dispatch_high_word",
+      "consumer_offset": 36,
+      "object_anchor": 0,
+      "anchor": "mk61_m0_pow_fast",
+      "role": "public_high_word_tail_load"
+    },
+    {
+      "object": "RP-merged-asm.o",
+      "section": ".m0_pow_dispatch_extension",
+      "relocation_offset": 58,
+      "kind": 102,
+      "target": "mk61_m0_pow_dispatch",
+      "consumer_offset": 58,
+      "object_anchor": 0,
+      "anchor": "mk61_m0_pow_fast",
+      "role": "public_direct_tail"
+    },
+    {
+      "object": "RP-merged-asm.o",
+      "section": ".m0_pow_dispatch_extension",
+      "relocation_offset": 72,
+      "kind": 102,
+      "target": "mk61_m0_pow_dispatch_fractional",
+      "consumer_offset": 72,
+      "object_anchor": 0,
+      "anchor": "mk61_m0_pow_fast",
+      "role": "public_direct_tail"
+    },
+    {
+      "object": "RP-unified-native_eabi_m0_rp2040.S.o",
+      "section": ".m0_pow_early_endpoint",
+      "relocation_offset": 120,
+      "kind": 2,
+      "target": "mk61_m0_pow_dispatch_fractional",
+      "consumer_offset": 2,
+      "object_anchor": 0,
+      "anchor": "mk61_m0_pow_tight_dispatch",
+      "role": "early_context_target_load"
+    },
+    {
+      "object": "RP-unified-native_eabi_m0_rp2040.S.o",
+      "section": ".m0_pow_early_endpoint",
+      "relocation_offset": 124,
+      "kind": 2,
+      "target": "mk61_m0_pow_dispatch_high_word",
+      "consumer_offset": 10,
+      "object_anchor": 0,
+      "anchor": "mk61_m0_pow_tight_dispatch",
+      "role": "early_context_target_load"
+    }
+  ],
+  "actual_site_observations": {
+    "RP-unified-native_eabi_m0_rp2040.S.o/120/mk61_m0_pow_dispatch_fractional": 14,
+    "RP-unified-native_eabi_m0_rp2040.S.o/124/mk61_m0_pow_dispatch_high_word": 1544,
+    "RP-merged-asm.o/72/mk61_m0_pow_dispatch_fractional": 6,
+    "RP-merged-asm.o/192/mk61_m0_pow_dispatch_high_word": 6,
+    "RP-merged-asm.o/58/mk61_m0_pow_dispatch": 12
+  },
+  "completed_real_calls": {
+    "positive_cutoff": 4,
+    "intentional_cutoff_fault": 4,
+    "legal_private/candidate": 960,
+    "public_high_boundary/candidate": 4,
+    "public_caller_witness/candidate": 15,
+    "legal_private/zero-control": 960,
+    "public_high_boundary/zero-control": 4,
+    "public_caller_witness/zero-control": 15,
+    "positive_reconstruct": 1,
+    "intentional_reconstruct_fault": 1
+  },
+  "entry_probes_not_counted_as_completed": {
+    "early_ordinary_decline/candidate": 768,
+    "early_ordinary_decline/zero-control": 768
+  },
+  "linked_negative_controls": [
+    {
+      "label": "lower-cutoff-one-ULP/above1/underflow_zero",
+      "rejected": true,
+      "wrong_gold": true
+    },
+    {
+      "label": "lower-cutoff-one-ULP/above1/overflow_infinity",
+      "rejected": true,
+      "wrong_gold": true
+    },
+    {
+      "label": "lower-cutoff-one-ULP/below1/underflow_zero",
+      "rejected": true,
+      "wrong_gold": true
+    },
+    {
+      "label": "lower-cutoff-one-ULP/below1/overflow_infinity",
+      "rejected": true,
+      "wrong_gold": true
+    },
+    {
+      "label": "remove-required-early-ordinary-r2-reconstruction",
+      "rejected": true,
+      "wrong_gold": true
+    }
+  ],
+  "all16_NZCV_all4_R12_and_independent_ignored_r2_values_tested": true,
+  "all_three_SIO_states": true,
+  "completed_APPCS_return_PC_SP_callee_saved_and_SIO_checks": true,
+  "LR_exact_at_all_tail_entry_sites": true,
+  "LR_caller_saved_not_required_unchanged_after_nested_CPP_calls": true,
+  "new_justified_high_word_boundary_MPFR_queries": 4,
+  "no_positive_guest_code_or_return_stubs": true,
+  "declines_observed_before_real_callee_not_substituted": true,
+  "records_sha256": "fba425e63f5ec5f38234407ae6bde585a592c361930fd4c71e971cd8c37ec87a",
+  "selected": false,
+  "actual_device_IO": 0,
+  "new_Git_writes": 0,
+  "goal_complete": false
+}

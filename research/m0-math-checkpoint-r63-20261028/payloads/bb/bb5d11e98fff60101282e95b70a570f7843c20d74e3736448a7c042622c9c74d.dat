@@ -1,0 +1,37 @@
+{
+  "status": "UNAPPLIED_NARROW_RP_GUARD_PATCH_READY_FOR_SCOPE_REVIEW",
+  "files": {
+    "guard.patch": {
+      "bytes": 1182,
+      "sha256": "c839e4c011049affacce599db907a29b81c3ce292ab60f2990c29d95a228a0d3"
+    },
+    "prepare.py": {
+      "bytes": 5925,
+      "sha256": "9ae2daa1c009e8df42ca160dd71d2a01cebc8eb9038e4351119657f0e535dbf7"
+    },
+    "proposal.json": {
+      "bytes": 3350,
+      "sha256": "7163e4f9db496c9339c3cfa1a85c16d53c4938979b9cb41e485a9485050739f6"
+    }
+  },
+  "external_refs": {
+    "source": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-powerzero-r63-20261028/FROZEN.json",
+      "bytes": 73981,
+      "sha256": "c0758769eeda95445fd7640af92cabb9485285278befd1472864e6e26f633558"
+    },
+    "proof": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-nearpower-negative-study-20261028-001/FROZEN.json",
+      "bytes": 1354,
+      "sha256": "09312f6187b2912186da4a4b45076b5b8f89ed5673d19f01edc078562d4b95dd"
+    },
+    "hardware_HOLD": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/joint-01-RETURN-HOLD-CLOSED.json",
+      "bytes": 1361,
+      "sha256": "de52d79a337ea3f47aac3215e326832343c73d8a111453fbe9871172a06f4a29"
+    }
+  },
+  "actual_runtime_modified": false,
+  "device_IO": 0,
+  "full_goal_complete": false
+}

@@ -1,0 +1,56 @@
+"""Exact private fixtures for offline math checks during a primary-tree fence.
+
+No guest semantics change: redirect only the immutable BootROM read, preload
+the byte-identical ELF reader, and reject every other primary-tree file open.
+"""
+import sys
+sys.dont_write_bytecode = True
+try:
+    import atexit, hashlib, importlib.util, json, os
+    from pathlib import Path
+    HERE = Path(__file__).resolve().parent
+    ROOT = HERE.parents[1]
+    PRIVATE = ROOT / '.build'
+    ROM_SOURCE = ROOT / 'research/rp2040-memset-2026-10-21/capture/bootrom.bin'
+    ROM = PRIVATE / 'm0-fixed-tails-v73-20261021/source/research/rp2040-memset-2026-10-21/capture/bootrom.bin'
+    READER = PRIVATE / 'm0-float-fma-qualification-20261023/support/check_stm32_vectors.py'
+    ROM_SHA = 'ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe'
+    READER_SHA = '360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708'
+    read_bytes = Path.read_bytes
+    assert hashlib.sha256(read_bytes(ROM)).hexdigest() == ROM_SHA
+    assert hashlib.sha256(read_bytes(READER)).hexdigest() == READER_SHA
+    redirected = 0
+    denied = []
+    def private_rom_read(path):
+        global redirected
+        if path.absolute() == ROM_SOURCE:
+            redirected += 1
+            data = read_bytes(ROM)
+            assert hashlib.sha256(data).hexdigest() == ROM_SHA
+            return data
+        return read_bytes(path)
+    Path.read_bytes = private_rom_read
+    def audit(event, args):
+        if event != 'open' or not isinstance(args[0], (str, bytes, os.PathLike)):
+            return
+        value = Path(os.fsdecode(args[0])).resolve()
+        if ROOT in value.parents and PRIVATE not in value.parents:
+            denied.append(str(value))
+            raise RuntimeError('Primary-tree open prohibited by offline fixture: ' + str(value))
+    sys.addaudithook(audit)
+    specification = importlib.util.spec_from_file_location('check_stm32_vectors', READER)
+    reader = importlib.util.module_from_spec(specification)
+    sys.modules['check_stm32_vectors'] = reader
+    specification.loader.exec_module(reader)
+    sys.mk61_private_fixture = dict(ROM_sha256=ROM_SHA, ELF_reader_sha256=READER_SHA, primary_source_opens_prohibited=True)
+    def finish():
+        directory = HERE / 'receipts'
+        directory.mkdir(exist_ok=True)
+        report = dict(sys.mk61_private_fixture, process=os.getpid(), argv=sys.argv, bootrom_reads_redirected=redirected, denied_primary_open_attempts=denied, guest_code_or_registers_modified=False, ROM_models_installed=False)
+        (directory / (str(os.getpid()) + '.json')).write_text(json.dumps(report, indent=2) + '\n')
+    atexit.register(finish)
+except BaseException as error:
+    # sitecustomize import failure otherwise lets Python continue unguarded.
+    import os
+    os.write(2, ('FATAL offline fixture installation: ' + repr(error) + '\n').encode())
+    os._exit(97)

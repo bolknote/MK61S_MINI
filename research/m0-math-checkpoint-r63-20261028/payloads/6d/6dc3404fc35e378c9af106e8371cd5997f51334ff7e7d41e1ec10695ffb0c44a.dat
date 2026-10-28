@@ -1,0 +1,75 @@
+{
+  "created_utc": "2026-10-28T05:58:33.310103+00:00",
+  "raw_USB": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-resident-verify-002/root-usb.plist",
+    "bytes": 110749,
+    "sha256": "340facbffa61973c253f20b54f45e89813664b882de7d28b6aef857305a6420d"
+  },
+  "facts": [
+    {
+      "physical": {
+        "serial": "E6657CD423721C35",
+        "location_id": 34799616,
+        "VID": 51966,
+        "PID": 16387,
+        "port": "/dev/cu.usbmodem21301",
+        "callouts": [
+          "/dev/cu.usbmodem21301"
+        ],
+        "entry": 4298054888,
+        "session": 13088820447888
+      },
+      "noholder": {
+        "exit_code": 1,
+        "stdout": {
+          "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-resident-verify-002/lsof.stdout.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-resident-verify-002/lsof.stderr.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "node_present": true,
+        "advisory_EX_acquired": true,
+        "lock_path": "/tmp/mk61-hil-cdc-501-dde700eee72842c8fa3d.lock",
+        "exact_named_port_only": true,
+        "public_policy_qualification": {
+          "policy_id": "host-named-cdc-noholder-001",
+          "policy_ref": {
+            "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-panic-origin-20261026-001/hardware-caller-006/lib/POLICY.json",
+            "sha256": "a26687e320bcde1cd733ffb0f0a824b34623fe425b392f249db0df14b8c1fd77"
+          },
+          "ownport": "/dev/cu.usbmodem21301",
+          "lsof_returncode": 1,
+          "scope": "exact named CDC probe only",
+          "lsof_stdout_hex": "",
+          "lsof_stderr_hex": "",
+          "lsof_stderr": "",
+          "local_observation": {
+            "monotonic_ns": 545599259148541,
+            "follow_symlinks": false,
+            "dev_stat": {
+              "st_mode": 16749,
+              "st_dev": 2106754796,
+              "st_rdev": 0,
+              "st_ino": 333
+            },
+            "own_stat": {
+              "st_mode": 8630,
+              "st_dev": 2106754796,
+              "st_rdev": 150994949,
+              "st_ino": 3909
+            }
+          },
+          "qualified": true,
+          "reason": "exact named CDC result qualified; no global noholder claim"
+        }
+      },
+      "serial_FD_opened": false
+    }
+  ],
+  "own_prior_hardware_stage_actors_live": [],
+  "Root_device_IO": 0
+}

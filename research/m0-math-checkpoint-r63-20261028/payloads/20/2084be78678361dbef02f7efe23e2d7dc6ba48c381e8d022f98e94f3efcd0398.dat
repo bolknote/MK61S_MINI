@@ -1,0 +1,26 @@
+{
+  "status": "PASS_R59_FIRST_PUBLIC_REGRESSIONS_AND_ENDPOINTS",
+  "state_rows": 262,
+  "actual_public_calls": {
+    "candidate": 262,
+    "zero-control": 262
+  },
+  "candidate_or_control_wrong": 0,
+  "R58_regression_pairs_still_slower": [],
+  "endpoint_pairs_still_slower": [],
+  "endpoint_public_instruction_range": [
+    44,
+    53
+  ],
+  "actual_dispatch_entry_contract_checks": {
+    "high_word": 30,
+    "fractional": 8
+  },
+  "all_AAPCS_SP_LR_and_SIO_checks": true,
+  "original_numerical_CXX_objects_byteexact": true,
+  "MPFR_queries": 0,
+  "actual_device_IO": 0,
+  "new_Git_writes": 0,
+  "selected": false,
+  "goal_complete": false
+}

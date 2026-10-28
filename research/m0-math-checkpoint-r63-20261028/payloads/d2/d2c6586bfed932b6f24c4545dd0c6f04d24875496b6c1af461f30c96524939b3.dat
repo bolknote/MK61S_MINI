@@ -1,0 +1,42 @@
+{
+  "status": "ROOT_R61_DUAL2MiB_FLASH_BYTEEXACT_AND_VERIFIED_RAM_LOAD_EXIT0",
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-load-001/RESULT.json",
+    "bytes": 1175,
+    "sha256": "d1f3894b4105c9fcb445be0294193f3f65e35ef3b9fa1e220d54a31995aec993"
+  },
+  "actual_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-load-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1328,
+    "sha256": "0df881eb703475a298b6f2f2e53fe4fe4fcd853bb33f55e7511fc3763ff169bd"
+  },
+  "Flash_before": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-load-001/flash-before-math.bin",
+    "bytes": 2097152,
+    "sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442"
+  },
+  "Flash_before_confirm": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-load-001/flash-before-math-confirm.bin",
+    "bytes": 2097152,
+    "sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442"
+  },
+  "full_copies_byteexact": true,
+  "all4_picotool_operations_reaped_exit0": true,
+  "RAM_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/build/m0_r55_pow_hil.elf",
+    "bytes": 639888,
+    "sha256": "1a7e1db9e596a61da7d8f67acc5681fa8166f09bb734e551c7a64bdec86e854a"
+  },
+  "readback": "Pinned picotool -v before -x; no independent RAM dump claimed",
+  "child_pids": [
+    98766,
+    98767,
+    98780,
+    98790
+  ],
+  "actor_pid": 98765,
+  "supervisor_pid": 98764,
+  "Flash_program_commands": 0,
+  "Root_device_IO": 0,
+  "physical_math_not_yet_started": true
+}

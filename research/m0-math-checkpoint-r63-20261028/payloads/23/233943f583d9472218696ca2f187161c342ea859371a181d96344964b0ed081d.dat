@@ -1,0 +1,22 @@
+{
+  "pid": 51689,
+  "exit_code": 0,
+  "reaped": true,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-picotool/picotool",
+    "load",
+    "-v",
+    "-x",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r2/build/m0_r55_pow_hil.elf",
+    "-t",
+    "elf",
+    "--bus",
+    "0",
+    "--address",
+    "5",
+    "--ser",
+    "E6657CD423721C35"
+  ],
+  "stdout_sha256": "06d7fadec355f49546f36f952bf8f5b67a8cd6bbf8e44be3649a4fe95b2ad0dd",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

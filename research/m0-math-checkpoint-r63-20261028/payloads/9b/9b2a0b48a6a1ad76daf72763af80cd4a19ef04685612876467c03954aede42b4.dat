@@ -1,0 +1,21 @@
+"""One explicit post-return UI-view exception; all other state stays exact."""
+import re
+from live_io import need
+DISPOSITION='VIEW1_RETURN_TO_DEFAULT0_ACCEPTED_NO_EXACT_UI_CLAIM'
+def compare_return_data(before,after,disposition=None):
+    for key in ['reg','stk','hout','pwd','alarm','IP']:
+        need(before[key]==after[key],'Current data changed: '+key)
+    if before['settings']==after['settings']:
+        return dict(typed_data_exact=True,other_settings_exact=True,UI_exact=True,UI_VIEW_RESET=False)
+    need(disposition==DISPOSITION,'Changed settings without exact Root UI disposition')
+    prior=before['settings']['UI='];current=after['settings']['UI=']
+    pattern=r'(?<![A-Za-z0-9_])VIEW=(\d+)(?=\s|$)'
+    a=list(re.finditer(pattern,prior));b=list(re.finditer(pattern,current))
+    need(len(a)==len(b)==1 and a[0].group(1)=='1' and b[0].group(1)=='0','Only captured VIEW1 to boot-default VIEW0 is accepted')
+    normalized=current[:b[0].start(1)]+'1'+current[b[0].end(1):]
+    need(normalized==prior,'UI row changed outside accepted VIEW field')
+    settings=dict(after['settings']);settings['UI=']=prior
+    need(settings==before['settings'],'Non-UI settings changed')
+    return dict(typed_data_exact=True,other_settings_exact=True,UI_exact=False,UI_VIEW_RESET=True,
+                UI_view_before=1,UI_view_after=0,UI_return_disposition=disposition,
+                UI_acceptance_status='KNOWN_TRANSIENT_VIEW_RESET_HOLD_NOT_EXACT_UI')

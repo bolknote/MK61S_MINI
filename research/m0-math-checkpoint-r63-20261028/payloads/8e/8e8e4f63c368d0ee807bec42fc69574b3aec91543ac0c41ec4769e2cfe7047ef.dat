@@ -1,0 +1,72 @@
+{
+  "live_io.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/live_io.py",
+    "bytes": 7267,
+    "sha256": "fc5c738ff76f021d79379f5d68ff8efcfc1ff8a52e38c3f6d78809414a787f80"
+  },
+  "envelope_pins.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/envelope_pins.py",
+    "bytes": 2237,
+    "sha256": "ff002ce70f8d351d3642dbeced27c8a20dc2158e1f26a65563b871481c47f838"
+  },
+  "worker_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/worker_stage.py",
+    "bytes": 4366,
+    "sha256": "65b244921522fbc0de93fdc7087078092182a432c0a9d24306079681f22c30e4"
+  },
+  "supervise_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/supervise_stage.py",
+    "bytes": 4559,
+    "sha256": "ec7595c70787ef275c33c514463ad24e4f1044bd070a8cb0bc59e33b11ff1bc9"
+  },
+  "resident_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/resident_stage.py",
+    "bytes": 6661,
+    "sha256": "581b3ee925142272ac8d10fef35f8d1e39298ff21c5667c7429496d85ac5a3ca"
+  },
+  "return_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/return_stage.py",
+    "bytes": 4283,
+    "sha256": "580e3cd7781cdef161dc0a9e9d3b4d9cfa1978c748cb2e55505ec5cfa67c246d"
+  },
+  "return_ui.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/return_ui.py",
+    "bytes": 1452,
+    "sha256": "9b2a0b48a6a1ad76daf72763af80cd4a19ef04685612876467c03954aede42b4"
+  },
+  "rom_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/rom_stage.py",
+    "bytes": 8106,
+    "sha256": "51c20bf1988a4864997a5103cf81b949384109b9878d3e12607bbd1021e94791"
+  },
+  "test-supervisor.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-supervisor.py",
+    "bytes": 2716,
+    "sha256": "9a6809d1ff3af2a5ddd871fd939e096c3b6f9df30c9f9037d7bb0b1e1a6d853b"
+  },
+  "test-rom-envelope.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-rom-envelope.py",
+    "bytes": 3358,
+    "sha256": "e1cf805f3016e98ec856e1844fa8404cb39a37f1364937cf857f83cb014d41b7"
+  },
+  "test-return-ui.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-return-ui.py",
+    "bytes": 1563,
+    "sha256": "8d60f85668d4d0c84250b4da13eb1404809d9fc3ab1984332cf054239f0b2253"
+  },
+  "test-worker-live.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-worker-live.py",
+    "bytes": 2959,
+    "sha256": "3dbbcb7637d03ef53d84d29d629982839404a0518fd243dfb55998a54533304a"
+  },
+  "test-worker-path.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-worker-path.py",
+    "bytes": 2878,
+    "sha256": "155009f96aca8b90ba735162fb35f75ccc3719b35e28e25f8d156a49713a183e"
+  },
+  "test-r61-plan.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-r61-plan.py",
+    "bytes": 4397,
+    "sha256": "5801b09cfd7a8dd017ab28a11d9883340556880c6b4d26beff6c2ece33d1d307"
+  }
+}

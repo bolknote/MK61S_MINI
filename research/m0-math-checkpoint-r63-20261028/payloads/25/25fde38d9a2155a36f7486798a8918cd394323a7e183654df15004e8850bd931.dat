@@ -1,0 +1,15 @@
+{
+  "status": "R63_PRIVATE_FULLWORD_ZERO_SOURCE_PREPARED_AWAIT_BUILD",
+  "parent_R62_FROZEN_sha256": "342d99787bd364c760151d44223329ed1ffc2077ceac766d99f9008588bf32d5",
+  "parent_pins_verified": 460,
+  "scope_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-root-review-20261028-001/NEXT-HOST-R63-SCOPE.json",
+  "scope_sha256": "fc2863cea3f896f552b395f79bd2e317752bff3a8d72d5c4a4b1503bc38254a9",
+  "only_modified_source": "source/code/native_eabi_m0_rp2040.S",
+  "zero_low_cost_plan": "Remove first two lowword tests; restore exactly two only on lower-high-product decline; other lowzero paths improve2.",
+  "selected_private_baseline": "R62",
+  "new_device_IO": 0,
+  "new_Git_writes": 0,
+  "new_SDK_builds": 0,
+  "agents_spawned": 0,
+  "goal_complete": false
+}

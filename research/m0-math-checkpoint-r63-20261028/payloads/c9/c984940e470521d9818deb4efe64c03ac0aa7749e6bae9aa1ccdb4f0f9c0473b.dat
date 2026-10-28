@@ -1,0 +1,16 @@
+{
+  "status": "NOT_STARTED_GRANT_EXPIRED_BEFORE_ANY_DEVICE_OPEN",
+  "grant": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/RESIDENT-ROM-R3-GRANT.json",
+  "grant_sha256": "6f153bb27dee74b26bbad3649fea1c83d4006a0785a85c603350b7eac76449ef",
+  "observed_unix": 1793119594.146013,
+  "grant_expires_unix": 1793119313.660494,
+  "supervisor_started": false,
+  "stage_actor_started": false,
+  "device_open_attempts": 0,
+  "ROM_transition_attempts": 0,
+  "RAM_loads": 0,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "canonical_edited": false,
+  "requires_fresh_Root_grant": true
+}

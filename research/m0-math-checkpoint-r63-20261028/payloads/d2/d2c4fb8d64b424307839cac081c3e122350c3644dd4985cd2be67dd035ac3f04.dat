@@ -1,0 +1,35 @@
+# Joint R62/R63 HOST operator envelope
+
+This refreshes the qualified R61 operator with a new scope and frozen R63 RAM
+payload binding. No device has been opened. All TEMPLATE/ARGV files are inert:
+a fresh exact Root grant and independent review are required for each stage.
+The current canonical lease remains closed; this envelope does not change it.
+
+For each finite proposed batch, first capture selected249 using the first
+validated live status to learn the actual physical keycounter and epoch. A
+historical counter is not an admission. Lock every subsequent status to that
+fresh counter/epoch and bind later grants to the fresh typed snapshot hash.
+The capture can save a nonzero/configured state, but it never authorizes reboot.
+The current ROM/return path requires freshly demonstrated losslessly rebootable
+zero data and admitted RTC_SET=0 HOLD. Any nonzero data, changed image or configured
+clock stops before a transition and requires a separate concrete Root decision.
+Do not infer permission to reset, overwrite, or globally restore user data.
+
+The five following supervised stages are resident-to-ROM, exact-UID ROM dual
+Flash read/load/verify/execute, math-only CDC, ROM return/read, and typed resident
+verification. No Flash programming, SD writes, RTC setters or global restore.
+Two fresh2MiB Flash copies must match before execution; the after copy must match
+them. A mismatch stops before RAM execution. UI/value/stack/program/IP/cwd/alarm/
+settings are checked against fresh data; no UI exception is inferred. SET0 clock
+is documented HOLD, with no claimed exact calendar trajectory and no setter.
+No entire-SD backup is claimed. All own actors/FDs must close and be reaped.
+
+Only the four pinned new batches are proposals. No old30R61 batches resume. Each
+batch binds its exact case IDs, unique nonce, query/byte/time budgets and explicit
+normal X return. Revocation/expiry is checked before each native operation and
+buffered response. Failure never causes automatic X, reset, retry or recovery.
+The worker's legacy R55 protocol/USB/file identifiers name the same qualified
+transport, not the selected mathematical revision. Worker code is unchanged;
+five literal metadata words bind the accepted R63 math image. Full primitive
+checks are inherited through exact-code proof; fake HOST tests are not physical
+device, backup, clock or cycle evidence.

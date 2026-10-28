@@ -1,0 +1,32 @@
+{
+  "status": "ACTUAL_STAGE_EXIT_REAPED",
+  "stage": "resident-verify",
+  "supervisor_pid": 99765,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/return_stage.py",
+    "--execute",
+    "--stage",
+    "resident-verify",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/grants/resident-verify.json",
+    "--lease-sha256",
+    "83609ea28c7d7edd62a198fbd6411d7d63b14cb068dac1b71d2772a8387f5071",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-resident-verify-001"
+  ],
+  "grant_sha256": "83609ea28c7d7edd62a198fbd6411d7d63b14cb068dac1b71d2772a8387f5071",
+  "stage_output": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-resident-verify-001",
+  "supervisor_device_IO": 0,
+  "pid": 99766,
+  "owned_process_group": 99766,
+  "exit_code": 0,
+  "reaped": true,
+  "terminated_by_owned_supervisor": false,
+  "supervisor_withdrawal_or_error": false,
+  "owned_group_signals_sent": [],
+  "finished_unix": 1793143395.234165,
+  "stdout.bin_sha256": "0c1dd1592788c9b7f93c65cc96b2578519014db8de92abea03fd8599464d0844",
+  "stderr.bin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

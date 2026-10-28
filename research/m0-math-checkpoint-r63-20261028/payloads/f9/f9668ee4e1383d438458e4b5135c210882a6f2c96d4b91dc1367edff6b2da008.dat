@@ -1,0 +1,2 @@
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-early-endpoint-r57-20261027/RP-merged-asm.o: in function `compact_math::pow(double, double)':
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-early-endpoint-r57-20261027/source/code/native_eabi_m0.S:1059:(.m0_pow_dispatch_extension+0x4a): relocation truncated to fit: R_ARM_THM_JUMP11 against symbol `mk61_m0_pow_tight_dispatch' defined in .m0_pow_early_endpoint section in /Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-early-endpoint-r57-20261027/RP-unified-native_eabi_m0_rp2040.S.o

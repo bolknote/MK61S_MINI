@@ -1,0 +1,103 @@
+{
+  "status": "FROZEN_AUTHOR_QUALIFIED_R60_EXACT_SUBNORMAL_OVERFLOW_NOT_SELECTED",
+  "source_parent": "R59",
+  "source_parent_FROZEN_sha256": "fdb260d5f7430c74306175d7d41d01fda8268493d5d7dbcc7bf57bf481f7154a",
+  "selected_private_baseline": "R55",
+  "selected": false,
+  "candidate_ELF_sha256": "bf6ca00ff072a1043d4974fc50dc3f21329dfb1831f5f022800caeb6ea09f9aa",
+  "zero_control_ELF_sha256": "070e471048d5dee9fab9d57603be061009a816bdb6e7d35b83cf514f3273986e",
+  "same_old_corpus_R59_remaining_pairs": 1358,
+  "same_old_corpus_R60_remaining_pairs": 1351,
+  "old_corpus_fixed_pairs": 7,
+  "new_old_corpus_losing_pairs": 0,
+  "expanded_unique_pairs": 151878,
+  "expanded_unique_states": 321225,
+  "expanded_parent_R59_losing_pairs": 1360,
+  "expanded_R60_losing_pairs": 1351,
+  "expanded_fixed_pairs": 9,
+  "newly_measured_preexisting_parent_losses": 2,
+  "new_expanded_losing_pairs": 0,
+  "remaining_by_kind": {
+    "normal_result": 483,
+    "inverse_root": 721,
+    "zero_or_infinity": 147
+  },
+  "first_seven_public_instruction_range": [
+    150,
+    209
+  ],
+  "correct_Qfplib_reference_instructions": 788,
+  "code_delta_bytes_from_R59": 32,
+  "code_delta_bytes_from_R55": 616,
+  "scratch_bytes": 4072,
+  "rodata_bytes": 237424,
+  "new_lookup_table_global_RAM_libgcc_bytes": 0,
+  "all23_other_original_objects_byteexact": true,
+  "default_M0_and_M4_disabled_old_new_objects_byteexact": true,
+  "actual_completed_ARM_calls": 22393,
+  "positive_completed_ARM_calls": 22390,
+  "intentional_fault_completed_ARM_calls": 3,
+  "entry_probes_not_completed": 0,
+  "actual_fresh_call_campaigns": {
+    "prior_R59_prefix_profile": 7,
+    "seven_target_probe": 42,
+    "affected_domain": 17334,
+    "boundaries_private_flags_and_faults": 4866,
+    "negative_integer_magnitude_paths": 144
+  },
+  "inherited_or_reused_calls_not_added": true,
+  "new_oracle_input_evaluations": 79,
+  "new_directed_MPFR_input_evaluations": 74,
+  "sNaN_policy_shortcuts": 5,
+  "MPFR_version": "4.2.2",
+  "all6030_saved_affected_states_measured": true,
+  "all314812_unaffected_states_inherited_by_proof": true,
+  "guard_added_instruction_bound": 13,
+  "all83_old_helper_instruction_semantics_preserved": true,
+  "negative_public_magnitude_paths_source_proved_and_coupled_tested": true,
+  "all_measured_parent_increases_and_wrong_reference_outputs_costs_retained": true,
+  "observed_stack_bytes": 2140,
+  "universal_stack_CR_or_pow_termination_not_proven": true,
+  "FMA_acceptance": false,
+  "independent_acceptance": false,
+  "physical_cycles": false,
+  "canonical_runtime_integrated": false,
+  "new_SDK_builds": 0,
+  "actual_device_IO": 0,
+  "new_Git_writes": 0,
+  "agents_spawned": 0,
+  "all_producers_terminal": true,
+  "fixture_receipts": [
+    {
+      "path": "receipts/86605.json",
+      "sha256": "3b0859ed2b469b22f83803421d3257f96a464256ff8ce619d163ba88a45e0dee",
+      "pid": 86605,
+      "producer_not_live": true
+    },
+    {
+      "path": "receipts/87229.json",
+      "sha256": "309255a6f3c69a9edab1d512b43332932146fbf61e6c8881777cd36f0d1e1d59",
+      "pid": 87229,
+      "producer_not_live": true
+    },
+    {
+      "path": "receipts/87531.json",
+      "sha256": "95ab5033ab9e11216bc1693a3b6ad498c9f131a27a44d9d9957de0b917cb8e27",
+      "pid": 87531,
+      "producer_not_live": true
+    },
+    {
+      "path": "receipts/87845.json",
+      "sha256": "07ce7a77be6bbcf714f4f0e50d08a24f9c85496309da056bf8f55f0b1ce94d77",
+      "pid": 87845,
+      "producer_not_live": true
+    },
+    {
+      "path": "receipts/88552.json",
+      "sha256": "9e62e47667c46ee6f609597ac65237f9adb38743d48204c61e1a81d5ef0108eb",
+      "pid": 88552,
+      "producer_not_live": true
+    }
+  ],
+  "goal_complete": false
+}

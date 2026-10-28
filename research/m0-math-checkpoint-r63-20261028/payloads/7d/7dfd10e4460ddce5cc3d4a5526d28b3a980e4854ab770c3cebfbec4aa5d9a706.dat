@@ -1,0 +1,14 @@
+{
+  "status": "PASS_HOST_ONLY_FRESH_READONLY_PREFLIGHT_ALL_PRODUCERS_TERMINAL",
+  "all_producers_terminal": true,
+  "HOST_TESTS": [
+    "fresh-capture-test.json",
+    "live-io-test.json",
+    "supervisor-test.json",
+    "source-isolation.json"
+  ],
+  "actual_device_IO": 0,
+  "actual_external_device_or_clock_children_started": 0,
+  "new_ARM_MPFR_calls": 0,
+  "Git_writes": 0
+}

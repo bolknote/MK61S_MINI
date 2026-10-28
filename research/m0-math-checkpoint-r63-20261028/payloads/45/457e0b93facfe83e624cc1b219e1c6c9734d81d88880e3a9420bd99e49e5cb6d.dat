@@ -1,0 +1,30 @@
+{
+  "status": "FROZEN_TYPED_RESIDENT_RETURN_VERIFIED_AND_REAPED",
+  "files": {
+    "ACTUAL-EXIT.json": {
+      "bytes": 1366,
+      "sha256": "65c9300212907cc79c53b0f9b70f81598361fcd33ebb0ec10ef3549c68ba62bb"
+    },
+    "ACTUAL-PID.json": {
+      "bytes": 686,
+      "sha256": "14fd9afe7718425edce66196b0ca96f1af483f61f787f86b2df76ddb9be505c1"
+    },
+    "ARGV.json": {
+      "bytes": 697,
+      "sha256": "eeb63aeaa6aee9a3cd27626633eb6e0ecb9dafa24be278c595f319044eb43a32"
+    },
+    "stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout.bin": {
+      "bytes": 711,
+      "sha256": "b9f10d445b33d12eec8ee7dec0415997a6275e4122d2b2e453472200e9e5d88c"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "UI_setters": 0,
+  "goal_complete": false
+}

@@ -1,0 +1,17 @@
+{
+  "status": "EXACT_COPIED_SNAPSHOT_PARSER_GETTERS_AND_CLOCK_HELPERS_WITH_ONLY_FRESH_ENTRY_LATCH",
+  "unchanged_AST_definitions": [
+    "row",
+    "value",
+    "settings",
+    "validate_frame",
+    "whole_frame",
+    "Resident",
+    "rebootable_zero"
+  ],
+  "capture_body_after_entry_exact": true,
+  "all_three_vendor_helpers_byteexact": true,
+  "old_unsupervised_CLI_not_copied": true,
+  "new_ARM_MPFR_calls": 0,
+  "device_IO": 0
+}

@@ -1,0 +1,8 @@
+{
+  "status": "STARTED_ROOT_ROM_MATH_STAGE",
+  "stage": "rom-return",
+  "pid": 74687,
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

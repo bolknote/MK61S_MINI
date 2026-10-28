@@ -1,0 +1,30 @@
+# R4: read-only final return verification
+
+R4 is only for the `resident-verify` stage after the reviewed R2 RAM worker has
+returned to the selected249 resident firmware. The other four stages keep the
+already reviewed, unchanged R3 operator. R1/R2/R3, every math/Qfplib byte, firmware
+and dataset remain unchanged. R4 contains no transition, flash, UI setter or key
+action; it uses the frozen R2 read-only capture and unchanged R3 live lease,
+native transport, pinning and owned process supervisor.
+
+Root accepted that the physical B6 input changed volatile `VIEW=0` to `VIEW=1`
+before the fresh current26 capture, while the firmware initializes the view to0
+on boot. A fresh Root grant may explicitly contain
+`transient_UI_view_disposition=VIEW1_RETURN_TO_DEFAULT0_ACCEPTED_NO_EXACT_UI_CLAIM`.
+Only in this post-return verifier, that exact disposition admits a single
+`VIEW=1` to `VIEW=0` token change. The rest of the UI row, all other settings,
+registers, stack, program, calculator IP, working directory and alarms must
+match exactly. Any other difference or a missing disposition produces HOLD.
+Exact original settings remain accepted without an exception.
+
+An admitted view reset is recorded as `UI_VIEW_RESET=true`, `UI_exact=false`
+and an explicit UI acceptance HOLD; it never becomes a claim of exact UI
+restoration. No effort is made to send a key or save the view. The already
+adopted RTC_SET0 placeholder remains a separate fresh-base clock HOLD with no
+setter and no claim of calendar continuity. Master13 restoration is deferred.
+
+The three inert controls cover missing Root disposition, a changed second UI
+field and a changed calculator IP. They are pure JSON comparisons and do not
+open hardware, run ARM, rebuild firmware or repeat mathematical qualification.
+The envelope is a source/evidence binding, not a physical stage grant. Actual
+execution still requires Root's fresh exact canonical lease and argv.

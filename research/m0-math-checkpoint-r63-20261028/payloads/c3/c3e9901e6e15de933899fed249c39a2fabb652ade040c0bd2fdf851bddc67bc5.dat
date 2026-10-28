@@ -1,0 +1,14 @@
+{
+  "all_producers_terminal": true,
+  "diagnostic_public_calls": 1,
+  "qualification_calls": {
+    "candidate": 5019,
+    "zero-control": 4971
+  },
+  "total_completed_public_calls": 9991,
+  "build_final_exit": 0,
+  "qualification_exit": 0,
+  "status": "PARTIAL_NEW_SPEED_LOSS_NOT_SELECTED",
+  "public_guard_mutants_run": false,
+  "all_exec_results_consumed": true
+}

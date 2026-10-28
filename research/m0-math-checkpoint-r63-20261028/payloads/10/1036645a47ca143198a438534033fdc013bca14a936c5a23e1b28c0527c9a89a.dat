@@ -1,0 +1,62 @@
+{
+  "status": "PASS_FRESH_FLASH_AFTER_BITEXACT_TO_BOTH_BEFORE_COPIES_AND_ONE_RESIDENT_REBOOT_TYPED_VERIFY_PENDING",
+  "recorded_utc": "2026-10-27T23:20:04.114455+00:00",
+  "supervisor_pid": 99456,
+  "actor_pid": 99457,
+  "exit_code": 0,
+  "reaped": true,
+  "tool_children": [
+    {
+      "pid": 99458,
+      "exit_code": 0,
+      "reaped": true,
+      "receipt": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-return-001/01-exact-ROM-identity.actual-exit.json",
+        "bytes": 425,
+        "sha256": "16a39c8e1396d49a80f250726e4dec2e0cd2fa5e46eb63b2c21139242a085b94"
+      }
+    },
+    {
+      "pid": 99459,
+      "exit_code": 0,
+      "reaped": true,
+      "receipt": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-return-001/02-flash-after-math.actual-exit.json",
+        "bytes": 582,
+        "sha256": "2cad9beb875d499985b0efe39a46fc9838ea52b822ca2a1842c6c78906734e6d"
+      }
+    },
+    {
+      "pid": 99468,
+      "exit_code": 0,
+      "reaped": true,
+      "receipt": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-return-001/03-boot-unchanged-selected249.actual-exit.json",
+        "bytes": 417,
+        "sha256": "fb229b0673f381f9a856d0f64a850c7184f6a6048855c314839422fa9d8a4185"
+      }
+    }
+  ],
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-return-001/RESULT.json",
+    "bytes": 626,
+    "sha256": "8576a23efa66497089582399f9636fda4e6fbdcc74ca2248028d96d2fcf63014"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-return-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1337,
+    "sha256": "fcb7a783fec24096acd2a365be19d1445dcf84f09ee09316554b88ee0f5a2736"
+  },
+  "Flash_after": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-return-001/flash-after-math.bin",
+    "bytes": 2097152,
+    "sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442"
+  },
+  "all_three_Flash_copies_bitexact": true,
+  "resident_reboot_attempts": 1,
+  "typed_resident_return_verified": false,
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "next_stage_granted": false,
+  "goal_complete": false
+}

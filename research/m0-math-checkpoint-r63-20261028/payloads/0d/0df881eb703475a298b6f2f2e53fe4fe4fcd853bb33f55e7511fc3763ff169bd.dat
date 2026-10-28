@@ -1,0 +1,32 @@
+{
+  "status": "ACTUAL_STAGE_EXIT_REAPED",
+  "stage": "rom-load",
+  "supervisor_pid": 98764,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/rom_stage.py",
+    "--execute",
+    "--stage",
+    "rom-load",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/grants/rom-load.json",
+    "--lease-sha256",
+    "1701a1db1c82c4658827ed74c1c06014d8bd3b437290d68cf90fe91c452a5004",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-load-001"
+  ],
+  "grant_sha256": "1701a1db1c82c4658827ed74c1c06014d8bd3b437290d68cf90fe91c452a5004",
+  "stage_output": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-load-001",
+  "supervisor_device_IO": 0,
+  "pid": 98765,
+  "owned_process_group": 98765,
+  "exit_code": 0,
+  "reaped": true,
+  "terminated_by_owned_supervisor": false,
+  "supervisor_withdrawal_or_error": false,
+  "owned_group_signals_sent": [],
+  "finished_unix": 1793142664.661431,
+  "stdout.bin_sha256": "d1f3894b4105c9fcb445be0294193f3f65e35ef3b9fa1e220d54a31995aec993",
+  "stderr.bin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

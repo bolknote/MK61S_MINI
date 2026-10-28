@@ -1,0 +1,24 @@
+{
+  "status": "INDEPENDENT_OFFLINE_PAYLOAD_MATRIX_AND_SEPARATE_READONLY_CAPTURE_ACCEPTED_PENDING_FRESH_ROOT_ROUTE_GRANT",
+  "observed_utc": "2026-10-27T22:58:10.520202+00:00",
+  "review_files": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-hil-root-review-20261028-001/PAYLOAD-MATRIX-REVIEW.json",
+      "bytes": 8519,
+      "sha256": "060515a31e97cf2a353c7ce6739c3124ac9d99b6d4fdcdb9ec2fb888fd9d2705"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-hil-root-review-20261028-001/PREFLIGHT-REVIEW.json",
+      "bytes": 3587,
+      "sha256": "3025ea9d890e8bc278c3bbf4db7a55ef1353e492dc83ff0904c0d7ef4c99ebe7"
+    }
+  ],
+  "source_baseline": "R61",
+  "actual_saved_RAM_calls_verified": 8688,
+  "first_smoke_not_yet_run": true,
+  "root_review_turn_last_confirmed": "inProgress",
+  "root_review_cursor": "d91c0e1a-ef15-427f-8c6c-7a4304996b84:428",
+  "new_math_or_device_IO_this_turn": 0,
+  "global_remaining_known_pow_loss_pairs": 1398,
+  "goal_complete": false
+}

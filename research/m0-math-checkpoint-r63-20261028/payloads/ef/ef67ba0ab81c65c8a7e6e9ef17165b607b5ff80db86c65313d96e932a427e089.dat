@@ -1,0 +1,9 @@
+{
+  "status": "TERMINAL_EXIT1_ZERO_LENGTH_ALLOCATED_SECTIONS_ACCOUNTING_ASSERTION",
+  "chunk_id": "088bbe",
+  "exit_code": 1,
+  "numerical_ARM_MPFR_calls": 0,
+  "source_code_failure": false,
+  "producer_sha256": "a0f581eaf136993f0ae28d60a12482cca9a9a574280d6b4ebc6ea5e88eb1fc15",
+  "correction": "Compiler emits allocated .text/.data/.bss section headers of size0. Old/new fingerprints were already equal. Require zero allocated bytes rather than an absent list of section headers."
+}

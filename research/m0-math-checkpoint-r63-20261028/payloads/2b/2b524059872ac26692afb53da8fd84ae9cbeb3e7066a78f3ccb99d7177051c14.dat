@@ -1,0 +1,80 @@
+{
+  "status": "PASS_PHYSICAL_JOINT_SMOKE_ALL720_OUR_MATH_RESULTS_EXACT_AND_ALL14_SAMPLED_TARGET_PAIRS_FASTER",
+  "physical_pairs": 24,
+  "physical_states": 72,
+  "queries": 78,
+  "actual_target_calls": 2940,
+  "our_math_calls": 720,
+  "our_wrong": 0,
+  "wrong_Qfplib_samples_retained": 870,
+  "target_pairs_sampled": 14,
+  "target_states": 42,
+  "target_speedup_by_median_range": [
+    2.4401913875598087,
+    3.3409836065573773
+  ],
+  "state_classes_by_median": {
+    "no_slower": 51,
+    "slower": 15,
+    "no_correct_reference": 6
+  },
+  "pair_classes_by_median": {
+    "no_slower": 17,
+    "slower": 5,
+    "no_correct_reference": 2
+  },
+  "observed_stack_max": 2276,
+  "universal_stack_bound": false,
+  "raw_cycles_include_same_wrapper": true,
+  "no_overhead_subtracted": true,
+  "all8_samples_and2_warmups_retained": true,
+  "raw_records": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-math-cdc-001/records.jsonl",
+    "bytes": 691774,
+    "sha256": "2a050d0b8edf03a77f4722aac7ceb762d9b490ecc32cf9899efc6a5e5ff5bf3d"
+  },
+  "full84_pair_round_complete": false,
+  "resident_return_not_yet_verified": true,
+  "goal_complete": false,
+  "components": {
+    "joint-math-cdc-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-math-cdc-001/FROZEN.json",
+        "bytes": 1407,
+        "sha256": "e7db9e4ca36ddc3d757144f2dcd373dfbbca2b8af9f82d956a59def0fe2be1ed"
+      },
+      "pins": 9
+    },
+    "joint-math-cdc-supervisor-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-math-cdc-supervisor-001/FROZEN.json",
+        "bytes": 851,
+        "sha256": "4b4b91b163233e927bbabcf0cfa94be0e9336ee4119dc52119f5a7691466b4ad"
+      },
+      "pins": 5
+    }
+  },
+  "quick_analysis": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-math-cdc-001/quick-analysis.json",
+    "bytes": 63184,
+    "sha256": "2949928eb170eb9c8ee11db921458e9f2d85c0d6c75e5a0b72c766934d0e071c"
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-math-cdc-001/RESULT.json",
+    "bytes": 794,
+    "sha256": "acac1f41577f46cd5807d91735396503aac55a345e8ec082444819417ea55aea"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-math-cdc-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1300,
+    "sha256": "0dd82efb077a3582d4aca462f24a2810009166ac6097d5843ecf964e69d096a0"
+  },
+  "normal_X_sent_once": true,
+  "serial_closed": true,
+  "operator_reaped": true,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "canonical_lease_mutations": 0,
+  "next_stage_authorized": false,
+  "recorded_utc": "2026-10-28T05:00:23.859011+00:00"
+}

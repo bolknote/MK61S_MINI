@@ -1,0 +1,41 @@
+"""Pure consumer of the return-only R4 envelope, without device or ARM work."""
+from pathlib import Path
+import ast,hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent
+from envelope_pins import verify_files
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+m=json.loads((W/'ENVELOPE-FROZEN.json').read_text())
+assert m['all_producers_terminal'] and m['actual_device_IO']==0
+verify_files(W,m);external_pins=0
+for d in m['external_frozen_packets'].values():
+    folder=(W/d['relative_directory']).resolve();p=folder/d['manifest']
+    assert p.is_file() and not p.is_symlink() and sha(p)==d['sha256']
+    packet=json.loads(p.read_text());assert packet['all_producers_terminal'] and len(packet['files'])==d['pins']
+    verify_files(folder,packet);external_pins+=d['pins']
+for ref in m['external_file_refs'].values():
+    p=Path(ref['path']);assert p.is_absolute() and p.is_file() and not p.is_symlink()
+    assert p.stat().st_size==ref['bytes'] and sha(p)==ref['sha256']
+for name in m['files']:
+    if name.endswith('.py'):ast.parse((W/name).read_text(),filename=name)
+definition=json.loads((W/'ENVELOPE-MANIFEST.json').read_text())
+assert definition['stages']==['resident-verify'] and definition['source_math_candidate']=='R55'
+assert not definition['physical_cycles_measured'] and not definition['math_or_firmware_changes']
+t=json.loads((W/'TEMPLATE-resident-verify.json').read_text())
+assert t['stage']=='resident-verify' and t['HOST_FIXTURE_ONLY'] and not t['enabled'] and not t['hardware_execution_allowed']
+assert t['operator_packet_sha256']=='ROOT_EXACT_ENVELOPE_FROZEN_SHA256'
+assert t['transient_UI_view_disposition']=='VIEW1_RETURN_TO_DEFAULT0_ACCEPTED_NO_EXACT_UI_CLAIM'
+test=json.loads((W/'return-ui-test.json').read_text())
+assert test['status']=='PASS_THREE_INERT_ROOT_UI_RETURN_CONTROLS'
+assert test['rejected']==['no-Root-disposition','other-UI-field-changed','calculator-IP-changed']
+assert test['actual_device_IO']==test['new_ARM_MPFR_or_firmware_calls']==0
+terminal=json.loads((W/'producer-terminal.json').read_text())
+assert terminal['all_HOST_jobs_terminal'] and terminal['exit_code']==0
+assert sha(W/'return-ui-test.json')==terminal['result_sha256']
+r3=W.parent/'operator-r3'
+for name in ['live_io.py','envelope_pins.py']:assert sha(W/name)==sha(r3/name)
+original=(r3/'supervise_stage.py').read_text()
+replacement="SCRIPTS={'resident-verify':'resident_stage.py'}"
+old="SCRIPTS={'resident-rom':'resident_stage.py','resident-verify':'resident_stage.py',\n         'rom-load':'rom_stage.py','rom-return':'rom_stage.py','math-cdc':'worker_stage.py'}"
+assert (W/'supervise_stage.py').read_text()==original.replace(old,replacement)
+print(json.dumps(dict(status='PASS_HOST_RETURN_ONLY_R4_ENVELOPE_NOT_PHYSICAL_GRANT',ENVELOPE_FROZEN_sha256=sha(W/'ENVELOPE-FROZEN.json'),operator_pins=len(m['files']),external_frozen_pins=external_pins,external_file_refs=len(m['external_file_refs']),inert_rejections=3,actual_device_IO=0,new_ARM_MPFR_or_build_calls=0,physical_cycles_measured=False,whole_library_goal_complete=False),indent=2))

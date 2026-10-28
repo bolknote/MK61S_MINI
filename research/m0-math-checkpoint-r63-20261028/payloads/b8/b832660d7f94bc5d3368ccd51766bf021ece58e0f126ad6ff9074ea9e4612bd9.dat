@@ -1,0 +1,30 @@
+{
+  "status": "ACTUAL_STAGE_EXIT_REAPED",
+  "stage": "math-cdc",
+  "supervisor_pid": 52354,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r5/worker_stage.py",
+    "--execute",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/MATH-CDC-R5-GRANT.json",
+    "--lease-sha256",
+    "6c47580a8375cd95d9a4bb2f4c86651499f9cbf123e82132c485102a7759bdf0",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/math-cdc-r5-actual-001"
+  ],
+  "grant_sha256": "6c47580a8375cd95d9a4bb2f4c86651499f9cbf123e82132c485102a7759bdf0",
+  "stage_output": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/math-cdc-r5-actual-001",
+  "supervisor_device_IO": 0,
+  "pid": 52355,
+  "owned_process_group": 52355,
+  "exit_code": 0,
+  "reaped": true,
+  "terminated_by_owned_supervisor": false,
+  "supervisor_withdrawal_or_error": false,
+  "owned_group_signals_sent": [],
+  "finished_unix": 1793121285.505326,
+  "stdout.bin_sha256": "69f51e5b173ce3a21c343ad5394bf1bb309c9acf11c335fc23d3e4cc3d8187ff",
+  "stderr.bin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,96 @@
+{
+  "status": "AUTHOR_QUALIFIED_R59_FROZEN_FOR_INDEPENDENT_REVIEW_NOT_SELECTED",
+  "source_parent": "R55/R58",
+  "candidate_ELF_sha256": "5ac911ffca3ade6baf81fb8f8dd8f168fc8f0cacca89eb0a4dc5b3e1c34dc39d",
+  "zero_control_ELF_sha256": "091922246ec335ce7e6b88a80dc5f1ec6daf9016180963cee1b231360ef3e6ee",
+  "old_known_losing_pow_pairs": 1452,
+  "remaining_known_losing_pow_pairs": 1358,
+  "fixed_pairs": 94,
+  "new_known_losing_pairs": 0,
+  "remaining_by_kind": {
+    "inverse_root": 721,
+    "normal_result": 483,
+    "zero_or_infinity": 154
+  },
+  "joined_baseline_unique_pairs": 151799,
+  "joined_baseline_unique_states": 320842,
+  "actual_completed_ARM_calls": 19847,
+  "positive_completed_ARM_calls": 19842,
+  "intentional_negative_completed_ARM_calls": 5,
+  "entry_probes_not_completed": 1536,
+  "fresh_call_campaigns": {
+    "probe": 524,
+    "affected": 14697,
+    "private_callers_including5faults": 1968,
+    "wider_risk": 2658
+  },
+  "fresh_MPFR_evaluations": 21,
+  "inherited_measured_calls_not_added_to_fresh_totals": true,
+  "code_delta_bytes_from_R55": 584,
+  "code_delta_bytes_from_R58": 368,
+  "new_lookup_table_RAM_libgcc_bytes": 0,
+  "M4_and_default_controls_byteexact": true,
+  "all_original_CPP_and_numerical_tails_byteexact": true,
+  "all_new_dispatch_callers_and_legal_register_SIO_variants_covered": true,
+  "maximum_added_dispatch_instruction_bound": 124,
+  "unexecuted_safe_exact_costs_left_unknown": true,
+  "measured_parent_increase_rows_in_joined_union": 594,
+  "all_parent_increases_and_incorrect_reference_bits_costs_retained": true,
+  "observed_stack_bytes_terminal_captured_campaigns": 2148,
+  "stopped_first_wide_attempt_aggregate_stack_not_captured": true,
+  "universal_stack_or_CR_or_pow_termination_proven": false,
+  "FMA_acceptance": false,
+  "physical_cycles": false,
+  "independent_acceptance": false,
+  "canonical_runtime_integrated": false,
+  "selected": false,
+  "selected_private_baseline": "R55",
+  "all_producers_terminal": true,
+  "fixture_receipts": [
+    {
+      "path": "receipts/79299.json",
+      "sha256": "535cceb393894d913d0ad4b3b4218e36f0c5497d74c0b4d56fe1d17313824d88",
+      "producer_pid": 79299,
+      "original_producer_not_live": true
+    },
+    {
+      "path": "receipts/79574.json",
+      "sha256": "5fba7849c5059211625ea0d5efde1c06a16490536e2c6fda702307e18e24b814",
+      "producer_pid": 79574,
+      "original_producer_not_live": true
+    },
+    {
+      "path": "receipts/81559.json",
+      "sha256": "13308513aaf50d5480d75a2eef5df641c384eee138002616f2a4a1b41b623a10",
+      "producer_pid": 81559,
+      "original_producer_not_live": true
+    },
+    {
+      "path": "receipts/83298.json",
+      "sha256": "c8240e0fcab41d87aea3035781d398d7dae2f4b946049bb25f5717f2c2ac6559",
+      "producer_pid": 83298,
+      "original_producer_not_live": true
+    },
+    {
+      "path": "receipts/84700.json",
+      "sha256": "44005c0e6aa6eae4d5abb46a3bc49437acccbdca1b9595f936f6bd0bb1860003",
+      "producer_pid": 84700,
+      "original_producer_not_live": true
+    },
+    {
+      "path": "receipts/84878.json",
+      "sha256": "e067e243f79b192ca56a62d460c55ccd25bddb44fa4f2dc55359254359013c82",
+      "producer_pid": 84878,
+      "original_producer_not_live": true
+    },
+    {
+      "path": "receipts/84940.json",
+      "sha256": "b6a162ec50090e476aebd3f254e58bf7f0c9972dddbe14af117c0337ce75c028",
+      "producer_pid": 84940,
+      "original_producer_not_live": true
+    }
+  ],
+  "actual_device_IO": 0,
+  "new_Git_writes": 0,
+  "goal_complete": false
+}

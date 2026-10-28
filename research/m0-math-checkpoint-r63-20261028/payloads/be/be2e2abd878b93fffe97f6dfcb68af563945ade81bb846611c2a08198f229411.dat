@@ -1,0 +1,82 @@
+{
+  "status": "R61_FIRST_PHYSICAL_ROUND_CLOSED_RETURN_VERIFIED_HOST_ANALYSIS_FROZEN_GOAL_OPEN",
+  "observed_utc": "2026-10-27T23:31:41.754338+00:00",
+  "manifests_verified": [
+    {
+      "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/FROZEN.json",
+      "pins": 62,
+      "sha256": "200c37008279297013d90938049f257279d650a321b371fe4f27ea31d3b46bbc"
+    },
+    {
+      "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/ENVELOPE-FROZEN.json",
+      "pins": 50,
+      "sha256": "e27112f8a30a0c34133173ddb091601b7e12ce9dc3799e173d7d62a16974faac"
+    },
+    {
+      "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/ENVELOPE-FROZEN.json",
+      "pins": 31,
+      "sha256": "18aaaa31353d0b3e0917732c45dfef2c4ac9f5895676c8da6cbc3210416b42f4"
+    },
+    {
+      "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-analysis-001/FROZEN.json",
+      "pins": 5,
+      "sha256": "7d35403619395bb7efdd77eb2e355ed27a13b8ebd86a6fc2dd72e816df108f59"
+    }
+  ],
+  "Root_closed_window": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-hil-root-review-20261028-001/DEVICE-WINDOW-CLOSED.json",
+    "sha256": "edfdfd6105921fc30772c0cbbc8a8838db0a85c6a35aed882acbb4b09f4160df"
+  },
+  "physical_analysis": {
+    "status": "R61_FIRST_PHYSICAL_SMOKE_ANALYZED_AND_DEVICE_RETURN_VERIFIED",
+    "analysis": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-analysis-001/analysis.json",
+      "bytes": 3754,
+      "sha256": "272ba9682d0da9f41b3041560b1133a8e028dbe1a747e4d041f7b0f38b14d9f9"
+    },
+    "report": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-analysis-001/REPORT.md",
+      "bytes": 3448,
+      "sha256": "2ddaa7763dda2e5ef90b383cb9807e9b22a149584b5cfbc722e1f1a438b7cbde"
+    },
+    "FROZEN": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-analysis-001/FROZEN.json",
+      "bytes": 5176,
+      "sha256": "7d35403619395bb7efdd77eb2e355ed27a13b8ebd86a6fc2dd72e816df108f59"
+    },
+    "proposal": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-analysis-001/NEXT-HOST-PROPOSAL.json",
+      "bytes": 1743,
+      "sha256": "d2419be03c8069c30e8eb4b16009aa1546e65bff55b1bc9eb6ef5060582c927d"
+    },
+    "smoke_pairs": 24,
+    "smoke_states": 72,
+    "actual_completed_target_calls": 2940,
+    "candidate_wrong": 0,
+    "repaired_pairs_sampled": 13,
+    "all39repaired_states_faster": true,
+    "physical_pair_classes": {
+      "no_slower": 15,
+      "slower": 8,
+      "no_correct_reference": 1
+    },
+    "global_remaining_known_pow_pairs": 1398,
+    "known_six_pairs_in_next_proposal": true,
+    "device_window_closed_ref": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-hil-root-review-20261028-001/DEVICE-WINDOW-CLOSED.json",
+      "bytes": 4175,
+      "sha256": "edfdfd6105921fc30772c0cbbc8a8838db0a85c6a35aed882acbb4b09f4160df"
+    },
+    "new_device_IO_after_resident_verify": 0,
+    "Git_writes": 0,
+    "all_own_sessions_terminal": true,
+    "full_goal_complete": false
+  },
+  "repaired_13pairs_all39states_faster": true,
+  "source_R61_unchanged": true,
+  "global_remaining_pow_pairs": 1398,
+  "next_proposal": "Exact zero saturation for positive power-of-two subnormal base, y in[1,2) with low32zero;6knownpairs including3physical8kcycledeclines",
+  "next_math_source_stage_started": false,
+  "no_further_device_or_Git_scope": true,
+  "full_goal_complete": false
+}

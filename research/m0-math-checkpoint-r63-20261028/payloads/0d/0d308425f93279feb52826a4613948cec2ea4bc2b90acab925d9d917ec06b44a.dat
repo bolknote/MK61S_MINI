@@ -1,0 +1,75 @@
+{
+  "status": "JOINT01_TYPED_VERIFY_HELD_AFTER_ONE_STATUS_PHYSICAL_COUNTER_CHANGED_CURRENT_DATA_NOT_CAPTURED",
+  "components": {
+    "joint-01-resident-verify-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-verify-001/FROZEN.json",
+        "bytes": 929,
+        "sha256": "1360e63d60384e15cbbe1ed580dcfb0a01757859ea6b1136585453871c4f6012"
+      },
+      "pins": 5
+    },
+    "joint-01-resident-verify-supervisor-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-verify-supervisor-001/FROZEN.json",
+        "bytes": 922,
+        "sha256": "130ab95f94ec5c3be2215d0ccbf65a07aca32e834819c6fbb0b90ce563d3a688"
+      },
+      "pins": 5
+    }
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-verify-001/RESULT.json",
+    "bytes": 448,
+    "sha256": "70fcf82882ed54966d470ef2b64d33ece1d0cde2a52a5b9a6561fd77a86d869f"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-verify-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1382,
+    "sha256": "cf8f1bea06278852e8888ac1c10ecca6da35708adc199dd29bad539c99019a5e"
+  },
+  "stderr": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-verify-supervisor-001/stderr.bin",
+    "bytes": 2199,
+    "sha256": "c0f7085d81a4171752677194587241d9399fe3fb55afba51f73f4c740ffcca86"
+  },
+  "raw_first_status": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-verify-001/raw-from-open.bin",
+    "bytes": 3241,
+    "sha256": "0a40c4c948c958cd09d152bd8a19c04e6e0332708397130ae72351716d5c99d3"
+  },
+  "io_ledger": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-verify-001/io.jsonl",
+    "bytes": 92,
+    "sha256": "17620968c46ef9ec83960fc3eca2995480f2f4d8ed0fa1ea7e3a27d742b88930"
+  },
+  "expected_physical_keys": 0,
+  "observed_physical_keys": 4,
+  "observed_IP": 158,
+  "old_capture_IP": 0,
+  "return_epoch": [
+    "10",
+    "00010001"
+  ],
+  "observed_build": "249A92DE",
+  "observed_CRC": "E6CFC3B8",
+  "actual_status_requests": 1,
+  "actual_getters": 0,
+  "actual_command_or_RAW_entries": 0,
+  "TX_bytes": 1,
+  "RX_bytes": 3241,
+  "serial_closed": true,
+  "operator_reaped": true,
+  "stage_exit_code": 1,
+  "no_retry_or_recovery": true,
+  "current_data_or_UI_return_verified": false,
+  "Flash_writes": 0,
+  "SD_operations": 0,
+  "RTC_setters": 0,
+  "UI_setters": 0,
+  "canonical_lease_mutations": 0,
+  "next_stage_authorized": false,
+  "clock_disposition": "SET0_HOLD_NO_SETTER",
+  "goal_complete": false,
+  "recorded_utc": "2026-10-28T06:01:04.551789+00:00"
+}

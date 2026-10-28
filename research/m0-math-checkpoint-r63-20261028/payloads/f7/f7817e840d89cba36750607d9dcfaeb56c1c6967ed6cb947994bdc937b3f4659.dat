@@ -1,0 +1,60 @@
+--- R62/native_eabi_m0_rp2040.S
++++ R63/native_eabi_m0_rp2040.S
+@@ -1927,15 +1927,14 @@
+ mk61_m0_pow_subnormal_gate_end:
+ 
+ // Only an already declined positive-subnormal endpoint path enters here.
+-// x=2^-k,1023<=k<=1074; y=M/2^20,2^20<=M<2^21.
+-// k*M>=1075*2^20 proves +0 under RNE, including the even half tie.
+-// Maximum product1074*(2^21-1)=2252340174 fits uint32: unsigned CMP.
++// x=2^-k,1023<=k<=1074; y=(H*2^32+L)/2^52,2^20<=H<2^21.
++// k*(H*2^32+L)>=1075*2^52 proves +0, including the even half tie.
++// k*H<=2252340174 fits uint32. L=0 paths remove two early checks;
++// only P<T restores those two checks, preserving all R62 zero-low costs.
+ .global mk61_m0_pow_power_zero_begin
+ .hidden mk61_m0_pow_power_zero_begin
+ mk61_m0_pow_power_zero_begin:
+ .Lpow_subnormal_power_zero_decline:
+- cmp r2,#0
+- bne .Lpow_power_zero_reject_fast
+  cmp r4,#0                  @ doubled positive y.high: negative iff y>=2
+  bmi .Lpow_power_zero_reject_fast
+  ldr r5,=0x7fe00000
+@@ -1986,13 +1985,36 @@
+  lsls r5,r3,#12
+  lsrs r5,r5,#12
+  ldr r4,=0x00100000
+- orrs r5,r4               @ exact21-bit M; original y.low proved zero
++ orrs r5,r4               @ exact high21-bit H; original y.low untouched
+  muls r5,r6
+ .global mk61_m0_pow_power_zero_compare
+ .hidden mk61_m0_pow_power_zero_compare
+ mk61_m0_pow_power_zero_compare:
+  ldr r4,=0x43300000        @ 1075*2^20
+  cmp r5,r4
++ blo .Lpow_fullword_zero_try
++ b .Lpow_magnitude_zero
++.Lpow_fullword_zero_try:
++.global mk61_m0_pow_fullword_zero_begin
++.hidden mk61_m0_pow_fullword_zero_begin
++mk61_m0_pow_fullword_zero_begin:
++ cmp r2,#0
++ beq .Lpow_power_zero_restore_decline
++ subs r5,r4,r5              @ r=T-k*H>0
++ cmp r5,r6
++ bhs .Lpow_power_zero_restore_decline @ k*L<k*2^32: r>=k cannot qualify
++.global mk61_m0_pow_fullword_zero_partial
++.hidden mk61_m0_pow_fullword_zero_partial
++mk61_m0_pow_fullword_zero_partial:
++ lsls r4,r2,#16
++ lsrs r4,r4,#16
++ muls r4,r6                 @ k*low16(L)<2^27
++ lsrs r4,r4,#16             @ carry<=k-1<=1073
++ lsls r5,r5,#16             @ r*2^16<2^27
++ subs r5,r5,r4              @ strictly positive threshold, no wrap
++ lsrs r4,r2,#16
++ muls r4,r6                 @ k*high16(L)<2^27
++ cmp r4,r5
+  blo .Lpow_power_zero_restore_decline
+  b .Lpow_magnitude_zero
+ .Lpow_power_zero_restore_decline:

@@ -1,0 +1,100 @@
+#ifndef TEXT_SCREEN_HPP
+#define TEXT_SCREEN_HPP
+
+#include "ui_build_config.hpp"
+#include "rust_types.h"
+
+namespace text_screen {
+
+static constexpr u8 COLS = 16;
+static constexpr u8 MAX_ROWS = 10;
+#if MK61_PROPORTIONAL_UI_FONTS
+// Runtime FMK faces derive their visible column count from their advance.
+// Sixty-four cells cover every practical 192-pixel text face down to a
+// three-pixel advance without making the grid depend on one particular font.
+static constexpr u8 MAX_COLS = 64;
+static constexpr usize CELL_CAPACITY = (usize) MAX_COLS * MAX_ROWS;
+#else
+static constexpr u8 MAX_COLS = COLS;
+static constexpr usize CELL_CAPACITY = (usize) COLS * MAX_ROWS;
+#endif
+static constexpr usize FLAG_BYTES = (CELL_CAPACITY + 7U) / 8U;
+
+struct FontGeometry {
+  u8 rows;
+  u8 width;
+  u8 height;
+  u8 line_gap;
+};
+
+FontGeometry fitFontToDisplay(u8 width, u8 height, u8 line_gap);
+FontGeometry sanitizeFontGeometry(FontGeometry geometry);
+
+class Grid {
+  public:
+    Grid(void);
+
+    // Rows and columns share one bounded backing store. Graphical builds keep
+    // enough tokens for the narrowest supported 64x10 text face; character
+    // displays retain the original 16x10 allocation.
+    void reset(u8 rows, u8 cols = COLS);
+    // Change geometry in place, preserving the overlapping cells/custom
+    // flags and clamping the cursor. No second grid or stack-sized copy.
+    void reshape(u8 rows, u8 cols = COLS);
+    void clear(void);
+    void setCursor(u8 x, u8 y);
+    void newline(void);
+    // Возвращает true, только если видимое содержимое ячейки изменилось.
+    // Курсор продвигается в любом случае, как у обычного текстового дисплея.
+    bool writeCodepoint(u16 codepoint);
+    bool writeByte(u8 value);
+
+    u8 rows(void) const { return row_count; }
+    u8 cols(void) const {
+#if MK61_PROPORTIONAL_UI_FONTS
+      return column_count;
+#else
+      return COLS;
+#endif
+    }
+    u8 cursorX(void) const { return cursor_x; }
+    u8 cursorY(void) const { return cursor_y; }
+    u16 cell(u8 x, u8 y) const;
+    bool cellIsCustom(u8 x, u8 y) const;
+
+    void markCell(u8 x, u8 y);
+    void markAll(void);
+    bool markCustomSlot(u8 slot);
+    // The legacy mask names individual columns only up to 16 columns. Wider
+    // text rows return 0xFFFF for any damage and must be repainted as a unit.
+    u16 dirtyMask(u8 row) const;
+    void clearDirty(u8 row);
+    void clearColumns(u16 mask);
+    bool anyDirty(void) const;
+
+  private:
+#if MK61_PROPORTIONAL_UI_FONTS
+    u16 cells[CELL_CAPACITY];
+    u8 custom_cells[FLAG_BYTES];
+    u8 dirty_cells[FLAG_BYTES];
+#else
+    u16 cells[MAX_ROWS][COLS];
+    u16 custom_cols[MAX_ROWS];
+    u16 dirty_cols[MAX_ROWS];
+#endif
+    u8 row_count;
+#if MK61_PROPORTIONAL_UI_FONTS
+    u8 column_count;
+#endif
+    u8 cursor_x;
+    u8 cursor_y;
+
+    void advance(void);
+#if MK61_PROPORTIONAL_UI_FONTS
+    usize index(u8 x, u8 y) const { return (usize) y * column_count + x; }
+#endif
+};
+
+} // пространство имён text_screen
+
+#endif

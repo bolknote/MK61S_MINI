@@ -1,0 +1,81 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-dispatch-contract-r59-20261027/RP-specialized-pow-dispatch.o:     file format elf32-littlearm
+
+
+Disassembly of section .m0_pow_dispatch_extension:
+
+00000000 <mk61_m0_pow_dispatch_fractional>:
+   0:	b5f0      	push	{r4, r5, r6, r7, lr}
+   2:	b087      	sub	sp, #28
+   4:	0006      	movs	r6, r0
+   6:	000f      	movs	r7, r1
+   8:	0014      	movs	r4, r2
+   a:	001d      	movs	r5, r3
+   c:	4694      	mov	ip, r2
+   e:	9303      	str	r3, [sp, #12]
+  10:	2800      	cmp	r0, #0
+  12:	d113      	bne.n	3c <mk61_m0_pow_dispatch_fractional+0x3c>
+  14:	4b1d      	ldr	r3, [pc, #116]	@ (8c <mk61_m0_pow_dispatch_fractional+0x8c>)
+  16:	4299      	cmp	r1, r3
+  18:	d110      	bne.n	3c <mk61_m0_pow_dispatch_fractional+0x3c>
+  1a:	4a1d      	ldr	r2, [pc, #116]	@ (90 <mk61_m0_pow_dispatch_fractional+0x90>)
+  1c:	006b      	lsls	r3, r5, #1
+  1e:	085b      	lsrs	r3, r3, #1
+  20:	4293      	cmp	r3, r2
+  22:	d802      	bhi.n	2a <mk61_m0_pow_dispatch_fractional+0x2a>
+  24:	d108      	bne.n	38 <mk61_m0_pow_dispatch_fractional+0x38>
+  26:	2c00      	cmp	r4, #0
+  28:	d006      	beq.n	38 <mk61_m0_pow_dispatch_fractional+0x38>
+  2a:	2380      	movs	r3, #128	@ 0x80
+  2c:	031b      	lsls	r3, r3, #12
+  2e:	422b      	tst	r3, r5
+  30:	d102      	bne.n	38 <mk61_m0_pow_dispatch_fractional+0x38>
+  32:	432b      	orrs	r3, r5
+  34:	4660      	mov	r0, ip
+  36:	0019      	movs	r1, r3
+  38:	b007      	add	sp, #28
+  3a:	bdf0      	pop	{r4, r5, r6, r7, pc}
+  3c:	2900      	cmp	r1, #0
+  3e:	da06      	bge.n	4e <mk61_m0_pow_dispatch_fractional+0x4e>
+  40:	0022      	movs	r2, r4
+  42:	002b      	movs	r3, r5
+  44:	0030      	movs	r0, r6
+  46:	0039      	movs	r1, r7
+  48:	f7ff fffe 	bl	0 <mk61_m0_pow_negative_integer_dispatch>
+			48: R_ARM_THM_CALL	mk61_m0_pow_negative_integer_dispatch
+  4c:	e7f4      	b.n	38 <mk61_m0_pow_dispatch_fractional+0x38>
+  4e:	4b11      	ldr	r3, [pc, #68]	@ (94 <mk61_m0_pow_dispatch_fractional+0x94>)
+  50:	18fb      	adds	r3, r7, r3
+  52:	2b01      	cmp	r3, #1
+  54:	d812      	bhi.n	7c <mk61_m0_pow_dispatch_fractional+0x7c>
+  56:	2240      	movs	r2, #64	@ 0x40
+  58:	4b0f      	ldr	r3, [pc, #60]	@ (98 <mk61_m0_pow_dispatch_fractional+0x98>)
+  5a:	1992      	adds	r2, r2, r6
+  5c:	417b      	adcs	r3, r7
+  5e:	2b00      	cmp	r3, #0
+  60:	d10c      	bne.n	7c <mk61_m0_pow_dispatch_fractional+0x7c>
+  62:	2a60      	cmp	r2, #96	@ 0x60
+  64:	d80a      	bhi.n	7c <mk61_m0_pow_dispatch_fractional+0x7c>
+  66:	ab04      	add	r3, sp, #16
+  68:	9300      	str	r3, [sp, #0]
+  6a:	4662      	mov	r2, ip
+  6c:	9b03      	ldr	r3, [sp, #12]
+  6e:	f7ff fffe 	bl	0 <mk61_m0_pow_near_one_binomial_dispatch>
+			6e: R_ARM_THM_CALL	mk61_m0_pow_near_one_binomial_dispatch
+  72:	2800      	cmp	r0, #0
+  74:	d002      	beq.n	7c <mk61_m0_pow_dispatch_fractional+0x7c>
+  76:	9804      	ldr	r0, [sp, #16]
+  78:	9905      	ldr	r1, [sp, #20]
+  7a:	e7dd      	b.n	38 <mk61_m0_pow_dispatch_fractional+0x38>
+  7c:	0022      	movs	r2, r4
+  7e:	002b      	movs	r3, r5
+  80:	0030      	movs	r0, r6
+  82:	0039      	movs	r1, r7
+  84:	f7ff fffe 	bl	0 <mk61_m0_pow_positive_checked_dispatch>
+			84: R_ARM_THM_CALL	mk61_m0_pow_positive_checked_dispatch
+  88:	e7d6      	b.n	38 <mk61_m0_pow_dispatch_fractional+0x38>
+  8a:	46c0      	nop			@ (mov r8, r8)
+  8c:	3ff00000 	.word	0x3ff00000
+  90:	7ff00000 	.word	0x7ff00000
+  94:	c0100001 	.word	0xc0100001
+  98:	c0100000 	.word	0xc0100000

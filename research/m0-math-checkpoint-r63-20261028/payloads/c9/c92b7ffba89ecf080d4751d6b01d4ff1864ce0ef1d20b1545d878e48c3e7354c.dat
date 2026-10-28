@@ -1,0 +1,69 @@
+{
+  "status": "ROOT_INDEPENDENT_SAVED_RECORD_RECOUNT_PASS_NOT_HARDWARE_OR_PRODUCTION_ACCEPTANCE",
+  "baseline_unique_pairs": 151799,
+  "baseline_unique_states": 320842,
+  "baseline_campaign_rows": {
+    "full-records.jsonl.gz": 281430,
+    "original507-records.jsonl.gz": 306,
+    "broad-records.jsonl.gz": 6122,
+    "admission-records.jsonl.gz": 51732
+  },
+  "duplicates_verified": {
+    "original507-records.jsonl.gz": 306,
+    "broad-records.jsonl.gz": 6122,
+    "admission-records.jsonl.gz": 12320
+  },
+  "reference_flag_recomputed_from_bits": {
+    "correct": 577210,
+    "wrong_retained": 385316
+  },
+  "R59_completed_measurement_states": 6357,
+  "R59_partitions": {
+    "completed_R59_measurement": 6274,
+    "unchanged_native_exact_or_retained_legacy_half_root": 257867,
+    "new_dispatch_acyclic_cost_upper_bound": 27145,
+    "no_correct_Qfplib_reference_no_speed_claim": 29556
+  },
+  "R59_old_losing_pairs": 1452,
+  "R59_remaining": 1358,
+  "R59_fixed": 94,
+  "R59_measured_parent_increases_retained": 594,
+  "R60_affected_states": 6030,
+  "R60_guard_routes": {
+    "accepted": 3356,
+    "declined": 2354,
+    "not_reached": 320
+  },
+  "R60_partitions": {
+    "unchanged_R59_path": 314812,
+    "completed_R60_affected_call": 6030
+  },
+  "R60_remaining": 1351,
+  "R60_old_corpus_fixed": 7,
+  "R60_measured_parent_increases_retained": 2759,
+  "R60_remaining_kinds": {
+    "inverse_root": 721,
+    "zero_or_infinity": 147,
+    "normal_result": 483
+  },
+  "expanded_pairs": 151878,
+  "expanded_states": 321225,
+  "expanded_R59_losing": 1360,
+  "expanded_R60_losing": 1351,
+  "expanded_fixed": 9,
+  "additional_boundary_states": 383,
+  "additional_argument_pairs": 79,
+  "R59_private_outcomes": {
+    "completed_real_call": 1968,
+    "original_high_word_callee_entry": 1536
+  },
+  "R59_linked_fault_calls": 5,
+  "R60_boundary_actual_calls": 4866,
+  "R60_private_legal_flags_completed": 1536,
+  "R60_linked_faults_differ_from_correct_controls": 3,
+  "new_losing_states": 0,
+  "fresh_ARM_calls": 0,
+  "fresh_MPFR_calls": 0,
+  "hardware_IO": 0,
+  "Git_writes": 0
+}

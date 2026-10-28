@@ -1,0 +1,100 @@
+{
+  "status": "READY_JOINT_R62_R63_RAM_HIL_HOST_PACKET_FOR_INDEPENDENT_REVIEW_ONLY",
+  "files": {
+    "HOST-OPERATOR-TESTS.json": {
+      "bytes": 1148,
+      "sha256": "0288ddd2c385dc9cafa24d48f4622952a8f3084bab8745c8cc8e411506aa88d7"
+    },
+    "PLAN.md": {
+      "bytes": 5892,
+      "sha256": "cac420f994beb1eee7a79ca3eecdf62d692b0ba1bfb42a2d7cd74cebdb45f5c6"
+    },
+    "POSTSEAL-AUDIT.json": {
+      "bytes": 880,
+      "sha256": "ed1b7cc7b05e70b711699131a81aab89f6a836fe545dcfad643b005295d0b634"
+    },
+    "PREPARATION.json": {
+      "bytes": 976,
+      "sha256": "8aa3246033da2dd29fcb9d9558260dea8ce0b2224f42230e69c77e7887dfe817"
+    },
+    "READY-FOR-REVIEW.json": {
+      "bytes": 5935,
+      "sha256": "c40317861b284996d1a3c17101e66253ee9aece87c249612dbaa31a70ad66fe3"
+    },
+    "postseal.py": {
+      "bytes": 3099,
+      "sha256": "7c6d8762d85c411dec046b6ae8d7a633de853c0226a002a27878908b6e42ee90"
+    },
+    "prepare-operators.py": {
+      "bytes": 7775,
+      "sha256": "630a3bfdc5efa01364bb4f383a76702d671895c043241aa97ffafe00bd4e6ccc"
+    },
+    "seal-review-packet.py": {
+      "bytes": 8562,
+      "sha256": "dee7eaf347b9d6ea9b14647361193832f925deb49d825822d81d771ceb22cb03"
+    },
+    "transaction-plan.json": {
+      "bytes": 7052,
+      "sha256": "074e2dcf832756c1c0fcbc72a35a7c15682071e3e60afd5ab3737212c925c759"
+    }
+  },
+  "external_frozen_components": {
+    "bootable": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/bootable/FROZEN.json",
+        "bytes": 9679,
+        "sha256": "ac1858610e19121935d24e5cb9f8c5aad8ad38e90ba350eb7ded7f47df2e17aa"
+      },
+      "pins": 57
+    },
+    "preflight-current249": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/preflight-current249/ENVELOPE-FROZEN.json",
+        "bytes": 9128,
+        "sha256": "2ec9c3717fb6663f08072d99f7cbe620a92e375674216a39ccb6c45a39a66394"
+      },
+      "pins": 33
+    },
+    "operator-joint": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/operator-joint/ENVELOPE-FROZEN.json",
+        "bytes": 15927,
+        "sha256": "0ce9b7df679c87bfaa662346e7b702d21bdf36db35ee5593868c953268cd4810"
+      },
+      "pins": 78
+    }
+  },
+  "external_file_refs": {
+    "accepted_R63": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-powerzero-r63-20261028/FROZEN.json",
+      "bytes": 73981,
+      "sha256": "c0758769eeda95445fd7640af92cabb9485285278befd1472864e6e26f633558"
+    },
+    "Root_R63": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-root-review-20261028-001/FROZEN.json",
+      "bytes": 1257,
+      "sha256": "d6a15fe5740ca14037a9a7f28b39975ad1a5a9d976623fcbaa54e606db00c24c"
+    },
+    "Root_acceptance": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-root-review-20261028-001/ROOT-ACCEPTANCE.json",
+      "bytes": 5258,
+      "sha256": "356adf2d7424c1ecef90a355c52f589970918dbf18f9a23c8b16b2eb41d768e6"
+    },
+    "Root_scope": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-root-review-20261028-001/NEXT-JOINT-RAM-HIL-SCOPE.json",
+      "bytes": 4731,
+      "sha256": "a0d5afaf4b04ec79f438c0e6e6b38f7a03819f6e9cdfb0208c17272d1e1e6a7c"
+    },
+    "qualified_R61_payload": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/FROZEN.json",
+      "bytes": 8850,
+      "sha256": "200c37008279297013d90938049f257279d650a321b371fe4f27ea31d3b46bbc"
+    }
+  },
+  "all_producers_terminal": true,
+  "actual_device_IO": 0,
+  "canonical_lease_mutations": 0,
+  "new_Git_writes": 0,
+  "full_goal_complete": false,
+  "recorded_utc": "2026-10-28T04:36:57.013889+00:00"
+}

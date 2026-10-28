@@ -1,0 +1,45 @@
+{
+  "status": "FROZEN_JOINT01_PHYSICAL_RAW_RESULTS_REAPED",
+  "files": {
+    "RESULT.json": {
+      "bytes": 794,
+      "sha256": "27bfbf06ab6eefbab58480ced1586e1912b60f2ce2a6ebfd56d6762e99f80cd4"
+    },
+    "STARTED.json": {
+      "bytes": 234,
+      "sha256": "249be325f7721c0cd9be834d43c260b4c738b3ca9fb2c26b28d01ee3c5ac43f6"
+    },
+    "grant.byteexact.json": {
+      "bytes": 2873,
+      "sha256": "185b540d683102f68fedda55f1779b7d71c9257ace2507a5ecb71464c7a4a3bb"
+    },
+    "native-io.jsonl": {
+      "bytes": 20856,
+      "sha256": "29d9b88fa984aaad237cf3bcaa3064a1284d38a1735a48d4bb220eb3d2a283b9"
+    },
+    "quick-analysis.json": {
+      "bytes": 61169,
+      "sha256": "f4f53ff2aa3635b339227a69f0df5b1476e0e96874978a0b529abc40c0cf5d8c"
+    },
+    "records.jsonl": {
+      "bytes": 679785,
+      "sha256": "cfe9553060fd4e6a20acc59b24fd768345497d5c643cc6e3d2ca3b9fb0ff9e34"
+    },
+    "rx.raw": {
+      "bytes": 412519,
+      "sha256": "bde2ea78114b310f1a8304e6e2500ac2d1c8baa1a69720842e7c76a6ba5a103e"
+    },
+    "tx.raw": {
+      "bytes": 6748,
+      "sha256": "7e5ad7059e081bd081fdd3d8ff29ee16d2da5d0798976ce85853dc5a96c8d5a0"
+    },
+    "wire-from-open.bin": {
+      "bytes": 412519,
+      "sha256": "bde2ea78114b310f1a8304e6e2500ac2d1c8baa1a69720842e7c76a6ba5a103e"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

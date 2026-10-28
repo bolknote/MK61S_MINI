@@ -1,0 +1,100 @@
+{
+  "status": "ROOT_ACCEPTED_R62_PRIVATE_FINITE_MATH_SUCCESSOR_NOT_PHYSICAL_OR_PRODUCTION",
+  "created_utc": "2026-10-28T00:44:51.930066+00:00",
+  "client_date": "2026-10-28",
+  "owner": "M0+ Math",
+  "selected_private_baseline": "R62",
+  "candidate": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-subnormal-powerzero-r62-20261028/candidate.elf",
+    "bytes": 2353564,
+    "sha256": "760615cdda1f30e1119d662cd16f897deafa7fe4307d7decb792837b83b03582"
+  },
+  "zero_control": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-subnormal-powerzero-r62-20261028/zero-control.elf",
+    "bytes": 2353540,
+    "sha256": "adaff1855721ae95826b6fea88b567df28cdb832d4b68198d6048cc77274b70a"
+  },
+  "verified_packets": [
+    {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-endpoints-r61-20261028/FROZEN.json",
+        "bytes": 68597,
+        "sha256": "e09a1db789376f5987f8c0650d93339bcfdd8ee78875e0fa371e78286057b90f"
+      },
+      "all_pins_verified": 444,
+      "external_refs_verified": 4
+    },
+    {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-subnormal-powerzero-r62-20261028/FROZEN.json",
+        "bytes": 73814,
+        "sha256": "342d99787bd364c760151d44223329ed1ffc2077ceac766d99f9008588bf32d5"
+      },
+      "all_pins_verified": 460,
+      "external_refs_verified": 14
+    }
+  ],
+  "independent_reviews": {
+    "STATIC-REVIEW.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-root-review-20261028-001/STATIC-REVIEW.json",
+      "bytes": 1414,
+      "sha256": "d960ea241e61976307ee8bffe9bcbe07b3f34e4cef968dd5a1b47e503b26f4a5"
+    },
+    "RECORD-REVIEW.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-root-review-20261028-001/RECORD-REVIEW.json",
+      "bytes": 1751,
+      "sha256": "39fd00c13798e01a32536d3c26f38d24260b253ac9f6a8823852825e47fc1c74"
+    }
+  },
+  "accepted_scope": "Exact positive-subnormal power-of-two underflow guard, RNE half tie, uint32 bound, full legal caller/decline preservation and finite expanded corpus",
+  "old_corpus": {
+    "pairs": 152160,
+    "states": 322071,
+    "R61_losses": 1398,
+    "R62_losses": 1392,
+    "fixed": 6
+  },
+  "expanded_corpus": {
+    "pairs": 152398,
+    "states": 322829,
+    "R61_losses": 1536,
+    "R62_losses": 1425,
+    "fixed": 111,
+    "new_losing_states": 0,
+    "newly_measured_preexisting_R61_loss_pairs": 138,
+    "new_preexisting_still_open": 33
+  },
+  "remaining_by_kind": {
+    "zero_or_infinity": 221,
+    "normal_result": 483,
+    "inverse_root": 721
+  },
+  "source_notes": [
+    "3..39 added instructions describes the affected saved campaign; directed boundary calls also observe44, so measured overall maximum is44, matching the proven bound.",
+    "Six numerical linked faults and one exact-tie admission-route fault are separate; the tie mutant remains numerically correct but loses the required early route.",
+    "Existing quiet-NaN policy checked independently, not the weaker any-NaN consumer shortcut."
+  ],
+  "exact_cached_parent_instruction_cost_checks": 863,
+  "source_file_changed_only": "code/native_eabi_m0_rp2040.S",
+  "new_code_bytes": 112,
+  "physical_R62_cycles_measured": false,
+  "canonical_runtime_integration_approved": false,
+  "Git_writer": false,
+  "hardware_grant": false,
+  "hardware_window_remains_closed": true,
+  "current_resident": "249A92DE",
+  "last_physical_math": "R61",
+  "current_canonical": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-device-handoff.json",
+    "bytes": 5223,
+    "sha256": "717c03d047d7d270012d02b1f61c2c221bb89fde6ae45686be66d44e8174674c"
+  },
+  "main": "c093d8a08af8d22c8f41793736d80368d8dfc0c7",
+  "Bytecode_task_complete_unchanged": true,
+  "historical_selected_false_records_immutable": true,
+  "new_Root_ARM_calls": 0,
+  "new_Root_MPFR_calls": 0,
+  "new_Root_device_IO": 0,
+  "new_Root_Git_writes": 0,
+  "full_math_goal_complete": false
+}

@@ -1,0 +1,40 @@
+"""Pure ELF/data/object comparison. No code execution, compiler or device IO."""
+from pathlib import Path
+import hashlib,json,struct,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent;P=W.parent/'bootable-r1'
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def sections(path):
+    data=path.read_bytes();h=struct.unpack_from('<16sHHIIIIIHHHHHH',data)
+    assert h[0][:6]==b'\x7fELF\x01\x01' and h[2]==40
+    raw=[struct.unpack_from('<10I',data,h[6]+i*h[11]) for i in range(h[12])]
+    names=raw[h[13]];names=data[names[4]:names[4]+names[5]]
+    return {names[s[0]:names.find(b'\0',s[0])].decode():dict(address=s[3],bytes=s[5],sha256=hashlib.sha256(data[s[4]:s[4]+s[5]]).hexdigest()) for s in raw if s[1]!=8}
+old=sections(P/'build/m0_r55_pow_hil.elf');new=sections(W/'build/m0_r55_pow_hil.elf')
+math={}
+for name in ['.r55_main','.r55_hot','.r55_data','.qfplib']:
+    assert old[name]==new[name],name;math[name]=new[name]
+names=['bench.c','measure.S','descriptors.c','runtime-resets-keep-rtc.c','blob-meta.h','blobs.S','blobs.json','tusb_config.h','memmap.ld','math_main.bin','math_hot.bin','math_data.bin','qfplib.bin','math-pow-ram.elf','qfplib-ram.elf','dataset.json','dataset.jsonl.gz','smoke-plan.json','ram-validation.json','ram-records.jsonl.gz','protocol.py','driver.py','r55-source-FROZEN.json','r55-qualification-FROZEN.json']
+for name in names:assert (P/name).read_bytes()==(W/name).read_bytes(),name
+borrowed=json.loads((W/'borrowed-object-pins.json').read_text())
+for name,info in borrowed['objects'].items():
+    p=Path(name);assert p.stat().st_size==info['bytes'] and sha(p)==info['sha256'],name
+assert len(borrowed['objects'])==81
+parent=json.loads((P/'image-proof.json').read_text());image=json.loads((W/'image-proof.json').read_text())
+assert parent['PT_LOAD'][1:]==image['PT_LOAD'][1:]
+startup=json.loads((W/'startup-check.json').read_text());worker=json.loads((W/'worker-check.json').read_text())
+assert startup['ELF_sha256']==worker['ELF_sha256']==image['ELF_sha256']==sha(W/'build/m0_r55_pow_hil.elf')
+assert worker['startup_check_sha256']==sha(W/'startup-check.json')
+result=dict(status='PASS_STARTUP_ONLY_SUCCESSOR_MATH_AND_REFERENCES_EXACT',
+    parent_R1_FROZEN_sha256=sha(P/'FROZEN.json'),ELF_sha256=image['ELF_sha256'],BIN_sha256=image['BIN_sha256'],
+    all_four_math_sections_addresses_and_bytes_exact=math,unchanged_files=names,
+    borrowed_original_objects_checked=81,unchanged_objects_reused=80,recompiled_final_object_count=1,
+    SDK_segment_file_size_delta=image['PT_LOAD'][0]['file_bytes']-parent['PT_LOAD'][0]['file_bytes'],
+    SDK_segment_memory_size_delta=image['PT_LOAD'][0]['memory_bytes']-parent['PT_LOAD'][0]['memory_bytes'],
+    mathematical_layout_dataset_and_raw_RAM_records_unchanged=True,
+    inherited_RAM_math_calls=274008,new_public_math_ARM_calls=0,new_MPFR_calls=0,
+    new_startup_and_parent_function_calls=startup['completed_positive_parent_ARM_function_calls'],
+    new_worker_primitive_calls=worker['actual_ARM_primitive_calls'],physical_IO=0,
+    physical_cycles_measured=False,goal_complete=False)
+(W/'successor-comparison.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps({k:v for k,v in result.items() if k not in ['all_four_math_sections_addresses_and_bytes_exact','unchanged_files']},indent=2))

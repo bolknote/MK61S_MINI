@@ -1,0 +1,81 @@
+{
+  "status": "FRESH_CURRENT_CAPTURE_BEFORE_CLEAR_PASS_NO_RESET_AUTHORITY",
+  "components": {
+    "current-state-before-calc-clear-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/current-state-before-calc-clear-001/FROZEN.json",
+        "bytes": 4763,
+        "sha256": "e98f57a91d833e59522e16a7df2c256c0e4c400f611fed6dd899db7caf00166c"
+      },
+      "pins": 33
+    },
+    "current-state-before-calc-clear-001-supervisor": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/current-state-before-calc-clear-001-supervisor/FROZEN.json",
+        "bytes": 895,
+        "sha256": "5d49f64831837b9119712476beba6dac24a1451e9b017cae5d1d0985e8439249"
+      },
+      "pins": 5
+    }
+  },
+  "current_state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/current-state-before-calc-clear-001/current-state.json",
+    "bytes": 2461,
+    "sha256": "fa6821631c9e84ac426176150529a5397694948a169b8958546376c1db704a9a"
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/current-state-before-calc-clear-001/RESULT.json",
+    "bytes": 899,
+    "sha256": "354eec49780d9984feb3873fed7dc8ea736b8501b9ae4c8969b5d16f4b218c6a"
+  },
+  "baseline": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/current-state-before-calc-clear-001/BASELINE.json",
+    "bytes": 930,
+    "sha256": "155eb21dac6f43298caa95d500208a06e0a352491e2ae252ea38195f2a803814"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/current-state-before-calc-clear-001-supervisor/ACTUAL-EXIT.json",
+    "bytes": 1415,
+    "sha256": "2f177d5354bc9739e1ed82a61a9ef59d902d15ac3feac7bbe60ca4522d40b9d2"
+  },
+  "raw_journal": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/current-state-before-calc-clear-001/raw-from-open.bin",
+    "bytes": 39955,
+    "sha256": "342faa5a107bb82519c40c7adce39f8477bcfac11b05ec7829e49758e051daee"
+  },
+  "io_ledger": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/current-state-before-calc-clear-001/io.jsonl",
+    "bytes": 1900,
+    "sha256": "e0c241056dba9df1cfc7c53bfbc4e0060ddbf0f3199c637edec1b8c3123d37c4"
+  },
+  "physical_keys": 4,
+  "epoch": [
+    "10",
+    "00010001"
+  ],
+  "IP": 158,
+  "settings": {
+    "UI_FONT_FAMILY=": "UI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000",
+    "UI=": "UI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED",
+    "SETTINGS_WRITES": 0,
+    "SETTINGS_ERASES": 0,
+    "SETTINGS_SEQUENCE": 331,
+    "RTC_SET": 0,
+    "RTC_PPM": 0
+  },
+  "current_zero_data_losslessly_rebootable": false,
+  "RTC_SET": 0,
+  "calendar": "2026-01-01 00:45:13",
+  "TX_bytes": 50,
+  "RX_bytes": 39955,
+  "serial_closed": true,
+  "operator_reaped": true,
+  "reset_attempts": 0,
+  "Flash_writes": 0,
+  "SD_operations": 0,
+  "RTC_setters": 0,
+  "canonical_lease_mutations": 0,
+  "next_stage_authorized": false,
+  "goal_complete": false,
+  "recorded_utc": "2026-10-28T06:40:46.228870+00:00"
+}

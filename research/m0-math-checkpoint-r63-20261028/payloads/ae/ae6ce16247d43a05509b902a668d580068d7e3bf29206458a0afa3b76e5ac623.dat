@@ -1,0 +1,76 @@
+{
+  "status": "READONLY_CAPTURE_PASS_FROZEN_REAPED_AWAITING_ROOT_REVIEW_NOT_NEXT_STAGE_GO",
+  "components": {
+    "joint-resident-capture-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-capture-001/FROZEN.json",
+        "bytes": 4756,
+        "sha256": "b7682fb7b745c501e4afcee5d920d404758487c00904dc97c4f9b362737aceec"
+      },
+      "pins": 33
+    },
+    "joint-resident-capture-supervisor-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-capture-supervisor-001/FROZEN.json",
+        "bytes": 880,
+        "sha256": "306d7da48b5b0b2563cd54026a6401d7bb4417ccf2e75cf4d4769407edef5c93"
+      },
+      "pins": 5
+    }
+  },
+  "current_state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-capture-001/current-state.json",
+    "bytes": 2460,
+    "sha256": "4fa5c66a5b655de115ab8da75faa4d49a25024f7f161f64eeea581546e6a8a30"
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-capture-001/RESULT.json",
+    "bytes": 897,
+    "sha256": "e85ca2d057366911f16bac69308eb462e8d2647b4d1dccd9e51475d6b5ae0b4c"
+  },
+  "baseline": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-capture-001/BASELINE.json",
+    "bytes": 920,
+    "sha256": "cb66be280ca59f1e7d8490bc7f258527938dd422853d0775d96151e1dc1b1e56"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-capture-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1379,
+    "sha256": "03f257c9ba76efc3b2a6f7e3ada1bf105bb14c353ee11b536b0ab6a2a80e1358"
+  },
+  "raw_journal": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-capture-001/raw-from-open.bin",
+    "bytes": 40007,
+    "sha256": "d139dbdb2af1d9f55a0e95a799f1e42f800b007f3dcfd6fefdc0253608900aac"
+  },
+  "io_ledger": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-capture-001/io.jsonl",
+    "bytes": 1900,
+    "sha256": "e0c241056dba9df1cfc7c53bfbc4e0060ddbf0f3199c637edec1b8c3123d37c4"
+  },
+  "actual_getters": 7,
+  "status_requests": 12,
+  "command_mode_entries": 1,
+  "TX_bytes": 50,
+  "RX_bytes": 40007,
+  "fresh_observed_physical_keys": 0,
+  "fresh_observed_epoch": [
+    "8",
+    "00010001"
+  ],
+  "zero_data_losslessly_rebootable": true,
+  "RTC_SET": 0,
+  "clock_disposition": "SET0_PLACEHOLDER_HOLD_NO_EXACT_CALENDAR_TRAJECTORY_CLAIM",
+  "serial_closed": true,
+  "own_child_reaped": true,
+  "no_global_noholder_claim": true,
+  "device_transition_attempts": 0,
+  "Flash_writes": 0,
+  "SD_operations": 0,
+  "RTC_setters": 0,
+  "canonical_lease_mutations": 0,
+  "next_stage_authorized": false,
+  "physical_math_executed": false,
+  "goal_complete": false,
+  "recorded_utc": "2026-10-28T04:45:59.122447+00:00"
+}

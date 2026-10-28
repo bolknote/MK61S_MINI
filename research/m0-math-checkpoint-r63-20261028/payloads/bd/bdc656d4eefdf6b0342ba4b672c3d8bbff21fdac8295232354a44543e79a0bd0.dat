@@ -1,0 +1,36 @@
+"""Measure the seven proved overflow targets in all three SIO states."""
+from pathlib import Path
+import importlib.util,json,struct,sys,time
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',False)
+W=Path(__file__).resolve().parent
+spec=importlib.util.spec_from_file_location('r60_probe_harness',W/'harness.py')
+h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
+machines={n:h.machine(n) for n in ['candidate','zero-control']}
+states={'READY':struct.pack('<7I',0,0,0,0,0,0,1),
+        'DIRTY':struct.pack('<7I',17,3,17,3,5,2,3),
+        'PENDING':struct.pack('<7I',23,7,23,7,3,2,2)}
+rows=[];started=time.monotonic()
+for r in json.loads((W/'target-pairs.json').read_text()):
+    for state,sio in states.items():
+        actual={}
+        for label,m in machines.items():
+            m.uc.mem_write(0xd0000060,sio)
+            value,_,cost=m.call('_ZN12compact_math3powEdd',int(r['x'],16),int(r['y'],16),count=True)
+            assert value==int(r['expected'],16)==0x7ff0000000000000
+            after=bytes(m.uc.mem_read(0xd0000060,28))
+            assert (after==sio) if state!='READY' else not struct.unpack('<7I',after)[6]&2
+            actual[label]=dict(bits=f'{value:016X}',instructions=cost)
+        references=r['R59_states'][state]['correct_reference_costs']
+        assert actual['candidate']['instructions']<min(references.values())
+        rows.append(dict(x=r['x'],y=r['y'],SIO=state,expected=r['expected'],actual_R60=actual,
+            R59=r['R59_states'][state],all_R55_data=r['parent_R55_states'][state]))
+report=dict(status='PASS_R60_SEVEN_PROVED_OVERFLOW_PAIRS_ALL_THREE_SIO',
+    actually_completed_public_ARM_calls=42,pairs=7,state_rows=21,wrong=0,
+    instruction_range=[min(r['actual_R60']['candidate']['instructions'] for r in rows),
+                       max(r['actual_R60']['candidate']['instructions'] for r in rows)],
+    fastest_correct_cached_Qfplib=788,records=rows,MPFR_queries=0,
+    actual_device_IO=0,new_Git_writes=0,selected=False,goal_complete=False,
+    elapsed_seconds=time.monotonic()-started)
+(W/'probe-result.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps({k:v for k,v in report.items() if k!='records'},indent=2))

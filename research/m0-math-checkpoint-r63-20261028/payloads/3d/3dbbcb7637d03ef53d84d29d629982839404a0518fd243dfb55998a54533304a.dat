@@ -1,0 +1,43 @@
+"""R1 Exchange integration withdrawal checks using a single inert IO instance."""
+from pathlib import Path
+import io,json,stat,tempfile,time,types
+from live_io import LiveLease,LeasePort,OWNER,ROOT,UID,SCOPE,sha
+from worker_stage import RevocableExchange
+W=Path(__file__).resolve().parent
+class FakeIO:
+    def __init__(self):self.writes=0;self.reads=0;self.closed=[]
+    def stat(self,p):return types.SimpleNamespace(st_mode=stat.S_IFCHR,st_rdev=123)
+    def lock(self,p):return 41
+    def open(self,p):return 42
+    def fstat(self,fd):return types.SimpleNamespace(st_rdev=123)
+    def exclusive(self,fd):pass
+    def attributes(self,fd):return [0,0,0,0,0,0,[0]*32]
+    def configure(self,fd,a):pass
+    def dtr(self,fd):pass
+    def wait(self,*a):return True
+    def read(self,*a):self.reads+=1;return b''
+    def write(self,fd,data):self.writes+=1;return len(data)
+    def close(self,fd):self.closed.append(fd)
+rejected=[]
+with tempfile.TemporaryDirectory(prefix='m0-live-worker-',dir=W.parent) as name:
+    d=Path(name).resolve();grant=d/'grant.json';canonical=d/'canonical.json'
+    g=dict(owner='m0-math-ram',owner_thread=OWNER,coordinator_thread=ROOT,uid=UID,scope=SCOPE,status='ROOT_MATH_STAGE_GO',stage='math-cdc',enabled=True,hardware_window_granted=True,hardware_execution_allowed=True,lease_nonce='b'*32,expires_unix=time.time()+100,session_seconds=300,port='/dev/cu.usbmodem999999',port_stat_rdev=123,max_TX_bytes=1000,max_RX_bytes=1000)
+    def fresh():
+        raw=(json.dumps(g)+'\n').encode();grant.write_bytes(raw);canonical.write_bytes(raw)
+        return LiveLease(grant,sha(raw),'math-cdc',canonical=canonical)
+    def revoke():canonical.write_text('{"enabled":false}')
+    def reject(fn,reason):
+        try:fn()
+        except RuntimeError:rejected.append(reason)
+        else:raise AssertionError('Revoked integrated exchange continued')
+    lease=fresh();fake=FakeIO();port=LeasePort(lease,io.BytesIO(),io.StringIO(),io=fake)
+    class RevokeAtDurableIntent(io.BytesIO):
+        def flush(self):revoke();super().flush()
+    ex=RevocableExchange(lease,port,1,RevokeAtDurableIntent(),io.BytesIO(),1000,1000,time.monotonic()+10)
+    reject(lambda:ex.send(b'Q EXAMPLE\n'),'revoke-after-R1-intent-before-native-write');assert fake.writes==0;port.close()
+    lease=fresh();fake=FakeIO();port=LeasePort(lease,io.BytesIO(),io.StringIO(),io=fake)
+    ex=RevocableExchange(lease,port,1,io.BytesIO(),io.BytesIO(),1000,1000,time.monotonic()+10);revoke()
+    reject(ex.receive,'revoke-before-R1-response-read');reject(lambda:ex.exit_to_bootsel(),'revoke-before-R1-X');assert fake.reads==fake.writes==0;port.close()
+    assert fake.closed==[42,41]
+result=dict(status='PASS_INERT_FROZEN_R1_EXCHANGE_LIVE_GUARD_INTEGRATION',rejected=rejected,global_os_or_port_substitutions=0,actual_device_opens=0,new_firmware_builds=0,new_ARM_MPFR_calls=0)
+(W/'worker-live-test.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

@@ -1,0 +1,76 @@
+{
+  "status": "JOINT01_NEW_ROUTE_EXACT_UID_THREE_FLASH_COPIES_IDENTICAL_249_BOOTED_TYPED_VERIFY_PENDING",
+  "components": {
+    "joint-01-rom-return-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-return-001/FROZEN.json",
+        "bytes": 3047,
+        "sha256": "405085e022a94988ece61d774f0c15609f736fe0d46fca3f2c925794f860e677"
+      },
+      "pins": 19
+    },
+    "joint-01-rom-return-supervisor-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-return-supervisor-001/FROZEN.json",
+        "bytes": 842,
+        "sha256": "c1765c1e81b076cb7b5d8f4c9cc2a867d66e738fdc3b60525e264ca5395f443d"
+      },
+      "pins": 5
+    }
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-return-001/RESULT.json",
+    "bytes": 624,
+    "sha256": "8b221b1d6b49586b67e371125c4ef09c340e2afb47690a1227ed297386ac422e"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-return-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1354,
+    "sha256": "f009335b6c1bce7ca4c3bfb143ed6fd74b2d89976ae142534560f13e1c452941"
+  },
+  "three_actual_exit_receipts": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-return-001/01-exact-ROM-identity.actual-exit.json",
+      "bytes": 425,
+      "sha256": "88126f5fc2be5e8aa3c869777bd17a5337814f67270aa5fda1ecfee11577644d"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-return-001/02-flash-after-math.actual-exit.json",
+      "bytes": 580,
+      "sha256": "de39472e94a9a1b01affd267bef25de6f1ddde97eb86f667aeb832a9b4f24733"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-return-001/03-boot-unchanged-selected249.actual-exit.json",
+      "bytes": 417,
+      "sha256": "c8d7a787bd4a52db8ac3d6920e5b4f3e45d28b1fb64a873cb0b3f104f235fe01"
+    }
+  ],
+  "Flash_after": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-rom-return-001/flash-after-math.bin",
+    "bytes": 2097152,
+    "sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442"
+  },
+  "both_joint01_before_copies_equal_after": true,
+  "confirmed_chip_UID": "E6657CD423721C35",
+  "explicit_new_route": {
+    "location_id": 34799616,
+    "bus": 2,
+    "address": 4
+  },
+  "resident_boot_attempts": 1,
+  "all3_tool_children_reaped": true,
+  "tool_child_pids": [
+    74691,
+    74693,
+    74850
+  ],
+  "operator_reaped": true,
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "canonical_lease_mutations": 0,
+  "typed_data_UI_return_verified": false,
+  "next_stage_authorized": false,
+  "clock_disposition": "SET0_PLACEHOLDER_HOLD_NO_EXACT_CALENDAR_CLAIM",
+  "goal_complete": false,
+  "recorded_utc": "2026-10-28T05:55:02.542037+00:00"
+}

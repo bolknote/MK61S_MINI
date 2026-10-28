@@ -1,0 +1,15 @@
+{
+  "status": "TERMINAL_EXIT1_EXPECTED_FULL_PAIR_COUNT_REPLACED_BY_STATE_UNION_NO_ARM_EXECUTION",
+  "session_id": 72287,
+  "exit_code": 1,
+  "chunk_id": "527842",
+  "observed_R55_full_losing_pairs": 1386,
+  "observed_R59_full_losing_pairs": 1310,
+  "observed_full_fixed_pairs": 76,
+  "observed_union_fixed_pairs": 94,
+  "observed_union_remaining_pairs": 1358,
+  "numerical_failure": false,
+  "actual_new_ARM_MPFR_calls": 0,
+  "producer_sha256": "7ec3e2d4599cb3c60fdcb024ce860ad2bd05de3d1a6201b185ee89531b2fb9c3",
+  "correction": "A pair is repaired only if no covered SIO state still loses. Join all states instead of subtracting the risk replay set of pairs with any repaired state. Joined record stream is the evidence."
+}

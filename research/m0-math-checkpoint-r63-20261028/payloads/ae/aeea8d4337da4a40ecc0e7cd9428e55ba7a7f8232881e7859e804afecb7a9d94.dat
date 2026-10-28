@@ -1,0 +1,40 @@
+# Full-word form of the R62 exact zero predicate
+
+This is a mathematical review annex, not a runtime successor or qualification.
+It leaves the frozen R62 packet and selected R61 untouched. No ARM, MPFR, SDK,
+device or Git execution is needed for the identities below.
+
+For a positive subnormal power x=2^-k, k∈[1023,1074], and positive binary64
+y∈[1,2), write its significand as H·2^32+L, where 2^20≤H<2^21 and 0≤L<2^32.
+The exact RNE zero condition is
+
+    k·(H·2^32+L) ≥ 1075·2^52.
+
+Let T=1075·2^20 and P=k·H. P fits uint32: its maximum is2252340174.
+If P≥T, zero is certain for every L; this includes R62's existing L=0 success.
+If P<T, let r=T−P. Since k·L<k·2^32, r≥k cannot return zero. The only remaining
+case is0<r<k, for which the condition becomes k·L≥r·2^32.
+
+Split L=A·2^16+B, with both A and B unsigned16-bit. Exact integer division gives
+
+    floor(k·L / 2^16) = k·A + floor(k·B / 2^16).
+
+The right side of the desired comparison is a multiple of2^16, so dropping the
+fractional remainder is exact, including equality. Thus the condition is
+
+    k·A ≥ r·2^16 − floor(k·B / 2^16).
+
+This needs two ordinary32-bit low-product multiplications. Both partial products
+are below2^27. The subtracted carry is at most k−1≤1073, whereas r·2^16≥65536;
+the comparison threshold is strictly positive and below2^27. No unsigned wrap,
+64-bit division, lookup table, or rounding approximation is involved.
+
+Only51 of the52 k values need a borderline low-word test: k=1024 divides T, so
+its boundary is already decided by the high product. The attached pure-integer
+checks cover the branch relations, word boundaries, threshold neighbors and
+all36 known remaining low-word-nonzero exact-zero pairs.
+
+This proves the arithmetic identity, not the cost or ABI of a future assembly
+implementation. Any implementation still needs an authorized fresh successor,
+actual linked cost/ABI/SIO checks, changed-route risk analysis, directed oracle
+boundaries, and independent acceptance. The original full goal remains open.

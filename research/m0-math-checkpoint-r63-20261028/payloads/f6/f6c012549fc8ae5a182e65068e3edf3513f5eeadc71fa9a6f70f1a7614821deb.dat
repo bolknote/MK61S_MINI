@@ -1,0 +1,44 @@
+{
+  "status": "ROOT_INDEPENDENT_R59_R60_PRIVATE_FINITE_ACCEPTANCE_FROZEN",
+  "files": {
+    "BINARY-REVIEW.json": {
+      "bytes": 2708,
+      "sha256": "2fb66dc02665d36da1ce9db70ed4c8ce88c5cb50005407f9beb9ee2d530cc156"
+    },
+    "MANIFEST-REVIEW.json": {
+      "bytes": 7599,
+      "sha256": "0dcbff4ec6f292d7613d4b819ec7690da84e332887bf06828a6501d7be0ade09"
+    },
+    "PREDICATE-REVIEW.json": {
+      "bytes": 948,
+      "sha256": "64fd150346666aca5e941c59227fb4a3ccbc4931168289ed1a669e09838b509f"
+    },
+    "RECORD-RECOUNT.json": {
+      "bytes": 2067,
+      "sha256": "c92b7ffba89ecf080d4751d6b01d4ff1864ce0ef1d20b1545d878e48c3e7354c"
+    },
+    "ROOT-ACCEPTANCE.json": {
+      "bytes": 4696,
+      "sha256": "de996f6329912e4985e9a445d2dd61a15135a0e271f5dcff53d9fcc1e3a565d2"
+    },
+    "review_binary.py": {
+      "bytes": 10473,
+      "sha256": "d3373ea0053e874666b473701d9a52372db453ad273af933f44b5f46a158396e"
+    },
+    "review_predicates.py": {
+      "bytes": 2720,
+      "sha256": "cca50c21d5dc20b74c54458f7f858cf9410cf3c4272e3b73fdb3a99b9c01e981"
+    },
+    "review_records.py": {
+      "bytes": 12754,
+      "sha256": "78af4927d4c2720da4fdf479f6d2a59ac2cff2b6e45e63d55296933af7700378"
+    }
+  },
+  "selected_private_baseline": "R60",
+  "main_integration": false,
+  "new_hardware_grant": false,
+  "root_numerical_reexecution": 0,
+  "other_agents_contacted": 0,
+  "M0_Math_instruction_sent": true,
+  "full_math_goal_complete": false
+}

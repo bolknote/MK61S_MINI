@@ -1,0 +1,31 @@
+{
+  "status": "SUPERVISED_FRESH_READONLY_CURRENT249_CAPTURE_READY_FOR_OFFLINE_ROOT_REVIEW",
+  "packet": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249",
+  "FROZEN": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/ENVELOPE-FROZEN.json",
+    "bytes": 7473,
+    "sha256": "18aaaa31353d0b3e0917732c45dfef2c4ac9f5895676c8da6cbc3210416b42f4"
+  },
+  "pins": 31,
+  "argv": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/ARGV-resident-capture.json",
+    "bytes": 805,
+    "sha256": "cfa46e89c81ce4942e5c8f408981042929edf21802e463c4c81353053af1903f"
+  },
+  "disabled_grant_template": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/TEMPLATE-resident-capture.json",
+    "bytes": 1435,
+    "sha256": "4192b8f12612477a767687e5d532cc4df543c2e6f54c22937d1b9214a8ebbd7c"
+  },
+  "scope": "PICO_R61_READONLY_CURRENT249_ONCE",
+  "stage": "resident-capture",
+  "physical_baseline": "FIRST_ACTUAL_VALIDATED_STATUS_THEN_LOCK_EPOCH_AND_COUNTER_THROUGHOUT",
+  "all_getters_and_clock_helpers_inherited": true,
+  "all_producers_terminal": true,
+  "hardware_IO": 0,
+  "ARM_MPFR_calls": 0,
+  "Git_writes": 0,
+  "historical_payload_operator_and_PLAN_unchanged": true,
+  "existing1398math_speed_deficits_unchanged": true,
+  "full_goal_complete": false
+}

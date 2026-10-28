@@ -1,0 +1,30 @@
+{
+  "status": "FROZEN_JOINT01_FRESH_READONLY_CAPTURE_REAPED",
+  "files": {
+    "ACTUAL-EXIT.json": {
+      "bytes": 1393,
+      "sha256": "63ac31f4a9e5f60343355d44b8eb02d89eae77348ded92478beb20f769b1b2e7"
+    },
+    "ACTUAL-PID.json": {
+      "bytes": 708,
+      "sha256": "c1762e76c1b37e512508a778377b25d866555b79b06469e97bca6ab50dec5ed9"
+    },
+    "ARGV.json": {
+      "bytes": 719,
+      "sha256": "3bb57523d6e40f830ddaeee20b3987e709b4197bf4eb3965724e7d7993c8d0e1"
+    },
+    "stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout.bin": {
+      "bytes": 897,
+      "sha256": "e101db198bce9fc6b323d15f64a2a16ae095d896a396e34bd821d7895ab839fa"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "device_transition_attempts": 0,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

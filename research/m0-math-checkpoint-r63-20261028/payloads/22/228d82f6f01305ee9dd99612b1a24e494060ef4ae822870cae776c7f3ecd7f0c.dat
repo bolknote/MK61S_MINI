@@ -1,0 +1,79 @@
+{
+  "status": "RAM_FINITE_MATRIX_BY_ORIGIN_ALL_ADVERSE_CASES_RETAINED",
+  "groups": {
+    "R60_directed_boundary": {
+      "unique_pairs": 281,
+      "losing_pairs": 0,
+      "min_correct_reference_minus_candidate": 2,
+      "max_correct_reference_minus_candidate": 1258
+    },
+    "R61_directed_boundary": {
+      "unique_pairs": 301,
+      "losing_pairs": 58,
+      "min_correct_reference_minus_candidate": -36638,
+      "max_correct_reference_minus_candidate": 1258
+    },
+    "previous_R55_physical_control": {
+      "unique_pairs": 24,
+      "losing_pairs": 1,
+      "min_correct_reference_minus_candidate": -4290,
+      "max_correct_reference_minus_candidate": 1512
+    },
+    "R61_decline_added_9": {
+      "unique_pairs": 4,
+      "losing_pairs": 2,
+      "min_correct_reference_minus_candidate": -5209,
+      "max_correct_reference_minus_candidate": -4290
+    },
+    "R61_retained_boundary_state": {
+      "unique_pairs": 24,
+      "losing_pairs": 5,
+      "min_correct_reference_minus_candidate": -5218,
+      "max_correct_reference_minus_candidate": 647
+    },
+    "R61_fixed": {
+      "unique_pairs": 66,
+      "losing_pairs": 0,
+      "min_correct_reference_minus_candidate": 628,
+      "max_correct_reference_minus_candidate": 639
+    },
+    "R61_decline_added_8": {
+      "unique_pairs": 4,
+      "losing_pairs": 2,
+      "min_correct_reference_minus_candidate": -5218,
+      "max_correct_reference_minus_candidate": -4298
+    },
+    "R61_decline_added_7": {
+      "unique_pairs": 3,
+      "losing_pairs": 1,
+      "min_correct_reference_minus_candidate": -4326,
+      "max_correct_reference_minus_candidate": -4326
+    },
+    "R60_fixed": {
+      "unique_pairs": 9,
+      "losing_pairs": 0,
+      "min_correct_reference_minus_candidate": 589,
+      "max_correct_reference_minus_candidate": 648
+    },
+    "R59_fixed": {
+      "unique_pairs": 94,
+      "losing_pairs": 0,
+      "min_correct_reference_minus_candidate": 0,
+      "max_correct_reference_minus_candidate": 1514
+    },
+    "unchanged_normal_result_control": {
+      "unique_pairs": 6,
+      "losing_pairs": 5,
+      "min_correct_reference_minus_candidate": -1708,
+      "max_correct_reference_minus_candidate": 129
+    },
+    "unchanged_inverse_root_control": {
+      "unique_pairs": 8,
+      "losing_pairs": 8,
+      "min_correct_reference_minus_candidate": -399,
+      "max_correct_reference_minus_candidate": -21
+    }
+  },
+  "physical_cycles": false,
+  "new_ARM_MPFR_calls": 0
+}

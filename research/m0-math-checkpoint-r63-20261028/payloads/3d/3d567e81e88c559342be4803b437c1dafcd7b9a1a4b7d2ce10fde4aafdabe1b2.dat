@@ -1,0 +1,21 @@
+{
+  "status": "OFFLINE_R2_SMOKE_CONSUMER_READY_NOT_HARDWARE_EVIDENCE",
+  "files": {
+    "analyze_smoke.py": {
+      "bytes": 7981,
+      "sha256": "90c204e0043538e2257eb5a444e0f12486e0c02cfa8fe2773e42f6612a07716f"
+    },
+    "test_analysis.py": {
+      "bytes": 2818,
+      "sha256": "31d4cc698177e134e0e062fac6b28cc85a3272ab17d3b8b93c6e1099fa998e7e"
+    },
+    "test-result.json": {
+      "bytes": 379,
+      "sha256": "ebd5dafdbeec4170d1cb1d8b91d0cacf88b3e198c6382c4f26a5ce758faa01c3"
+    }
+  },
+  "payload_FROZEN_sha256": "9d7b6553249dfa43bbeed46460fe6384152804d96c1a3e8da249df878e34310a",
+  "actual_device_IO": 0,
+  "new_ARM_MPFR_calls": 0,
+  "goal_complete": false
+}

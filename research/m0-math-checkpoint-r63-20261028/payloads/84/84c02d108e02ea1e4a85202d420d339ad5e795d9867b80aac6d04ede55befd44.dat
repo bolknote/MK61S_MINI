@@ -1,0 +1,100 @@
+{
+  "status": "AUTHOR_QUALIFIED_R61_FULLWORD_ENDPOINTS_FROZEN_PENDING_REVIEW",
+  "source_parent": "R60",
+  "reviewed_private_baseline": "R60",
+  "root_base_acceptance_sha256": "de996f6329912e4985e9a445d2dd61a15135a0e271f5dcff53d9fcc1e3a565d2",
+  "candidate_ELF_sha256": "6521c3dbe77f093f3ea991b1db8649603a999c6f575f1b86b277e73f494dbc46",
+  "zero_control_ELF_sha256": "129d46a8639a6951fb1c6194ef12ea4e248d8f753068084746b30a3e75a098e6",
+  "same_old_corpus_pairs": 151878,
+  "same_old_corpus_states": 321225,
+  "parent_R60_old_losing_pairs": 1351,
+  "R61_old_remaining_pairs": 1340,
+  "old_fixed_pairs": 11,
+  "old_new_losing_states": 0,
+  "expanded_pairs": 152160,
+  "expanded_states": 322071,
+  "expanded_parent_R60_losing_pairs": 1464,
+  "expanded_R61_losing_pairs": 1398,
+  "expanded_fixed_pairs": 66,
+  "expanded_new_losing_states": 0,
+  "newly_measured_preexisting_R60_loss_pairs": 113,
+  "new_preexisting_pairs_still_open": 58,
+  "remaining_old_by_kind": {
+    "inverse_root": 721,
+    "normal_result": 483,
+    "zero_or_infinity": 136
+  },
+  "remaining_expanded_by_kind": {
+    "inverse_root": 721,
+    "normal_result": 483,
+    "zero_or_infinity": 194
+  },
+  "first11_instruction_range": [
+    152,
+    162
+  ],
+  "correct_Qfplib_reference_range": [
+    777,
+    788
+  ],
+  "text_delta_from_R60": 72,
+  "text_delta_from_R55": 688,
+  "new_scalar_constant_bytes": 24,
+  "new_lookup_table_global_RAM_libgcc_bytes": 0,
+  "scratch_bytes": 4072,
+  "rodata_bytes": 237424,
+  "all_other_runtime_objects_byteexact": true,
+  "default_M0_and_M4_disabled_objects_byteexact": true,
+  "unequal_high_word_added_instructions": 0,
+  "maximum_equal_high_word_added_instructions": 9,
+  "old_unchanged_state_rows_inherited": 321153,
+  "old_affected_state_rows_measured": 72,
+  "actual_completed_ARM_calls": 10119,
+  "positive_completed_ARM_calls": 10113,
+  "intentional_fault_completed_calls": 6,
+  "entry_probes_not_completed": 0,
+  "actual_fresh_call_campaigns": {
+    "first_target_probe": 66,
+    "affected": 216,
+    "boundary_private_flags_and_faults": 9837
+  },
+  "new_directed_MPFR_input_evaluations": 282,
+  "new_sNaN_policy_shortcuts": 0,
+  "inherited_or_reused_calls_not_added": true,
+  "all_adverse_deltas_and_wrong_reference_outputs_costs_retained": true,
+  "observed_stack_bytes": 2140,
+  "universal_CR_totality_stack_not_proven": true,
+  "FMA_acceptance": false,
+  "selected": false,
+  "independent_acceptance": false,
+  "physical_cycles": false,
+  "canonical_runtime_integrated": false,
+  "next_scope": "Prepare concrete RAM HIL plan/payload with reviewed startup/restore/operator; review before I/O. No other optimization direction.",
+  "new_SDK_builds": 0,
+  "actual_device_IO": 0,
+  "new_Git_writes": 0,
+  "agents_spawned": 0,
+  "all_producers_terminal": true,
+  "fixture_receipts": [
+    {
+      "path": "receipts/90827.json",
+      "sha256": "6438a686589e56f5e0302ad0af1b12058983de3678e31d9da0c2fa800d38a001",
+      "producer_pid": 90827,
+      "producer_not_live": true
+    },
+    {
+      "path": "receipts/91385.json",
+      "sha256": "e97ad71035d2e57340f3423613ab5a4577fd5a514cdb449e91e7d0dbd2c42c50",
+      "producer_pid": 91385,
+      "producer_not_live": true
+    },
+    {
+      "path": "receipts/92080.json",
+      "sha256": "f3efaa6f14edf60d1ff1b8722c7f4809b08dff3c20751fca345004e582dd3dc1",
+      "producer_pid": 92080,
+      "producer_not_live": true
+    }
+  ],
+  "goal_complete": false,
+  "updated_utc": "2026-10-27T22:12:57.528289+00:00"
+}

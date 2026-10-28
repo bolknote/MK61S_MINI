@@ -1,0 +1,69 @@
+{
+  "status": "PASS_FRESH_RELOCATED_R63_POW_AND_QFPLIB_FINITE_TARGETED_MATRIX",
+  "math_ELF_sha256": "843790f24b6676bfb587f87db5f28917028b4b522d417e92c8e6986e08f31428",
+  "Qfplib_ELF_sha256": "d2fadff810cb3964271ff7cad08cd64c9d5e2ec49eca21c3a66d841d237c4787",
+  "dataset_sha256": "01223fd41230c7a82af4dce770de5e9bd1d368e5a8f40506fb5a41eb4decbe89",
+  "state_rows": 252,
+  "actual_public_ARM_calls": 1008,
+  "actual_loader_ARM_calls_excluded": 1,
+  "loader_instructions": 1008,
+  "raw_ROM_function_table_initialized_once": true,
+  "actual_ROM_pointers": [
+    9913,
+    9757,
+    9901,
+    9733
+  ],
+  "ROM_models_installed": [],
+  "all_candidates_correct_on_pinned_gold": true,
+  "all_correct_Qfplib_references_compared": true,
+  "wrong_Qfplib_comparisons_and_costs_retained": 306,
+  "correct_reference_state_comparison_classes": {
+    "strict": 438,
+    "slower": 12
+  },
+  "RAM_known_losing_pairs": 4,
+  "RAM_losing_pairs": [
+    [
+      "0013900000000000",
+      "BFE0000000000000"
+    ],
+    [
+      "3FFAAF14E8A4B59B",
+      "BFE0000000000000"
+    ],
+    [
+      "7FE8A00000000000",
+      "BFE0000000000000"
+    ],
+    [
+      "C02FFFFFFFFFFFFF",
+      "C02E000000000000"
+    ]
+  ],
+  "RAM_vs_Flash_candidate_instruction_delta_histogram": {
+    "0": 12,
+    "-555": 3,
+    "-670": 18,
+    "-10": 150,
+    "-1200": 3,
+    "-1085": 3,
+    "-1185": 3,
+    "-1115": 3
+  },
+  "records_sha256": "03bd10d79ad284ac4a84b1e49bc047e34054ebff0104ac478791b82f2a5d032b",
+  "caller_SP": 537136896,
+  "stack_guard_boundary": 537133088,
+  "observed_math_stack_bytes": 2140,
+  "observed_Qfplib_stack_bytes": 88,
+  "first4096_RAM_bytes_untouched": true,
+  "SIO_functional_fixture_not_cycle_or_pending_hardware_model": true,
+  "metrics": "executed Thumb instructions for newly SRAM-linked images; not physical cycles",
+  "all_unrelated_frozen_campaigns_not_rerun": true,
+  "new_MPFR_calls": 0,
+  "hardware_IO": 0,
+  "physical_cycles_measured": false,
+  "universal_CR": false,
+  "goal_complete": false,
+  "elapsed_seconds": 1.402029125019908
+}

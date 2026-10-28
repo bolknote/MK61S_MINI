@@ -1,0 +1,36 @@
+{
+  "status": "HOST_ANALYSIS_ADDENDUM_ONLY_NO_RUNTIME_OR_HARDWARE_AUTHORITY",
+  "parent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-nearpower-negative-study-20261028-001/FROZEN.json",
+    "bytes": 1354,
+    "sha256": "09312f6187b2912186da4a4b45076b5b8f89ed5673d19f01edc078562d4b95dd"
+  },
+  "proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-nearpower-negative-study-20261028-002/proof.json",
+    "bytes": 282009,
+    "sha256": "71e86300e15ffbe7c8beaeaa3b37b84b8bb8814ce8d94fefd65a32b4a609a6a6"
+  },
+  "current_HOLD": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/joint-01-RETURN-HOLD-CLOSED.json",
+    "bytes": 1361,
+    "sha256": "de52d79a337ea3f47aac3215e326832343c73d8a111453fbe9871172a06f4a29"
+  },
+  "source_not_changed": true,
+  "any_future_implementation_requires_separate_scope": true,
+  "parent_narrow_candidate_scope_not_automatically_expanded": true,
+  "possible_word_contract": "After finite/negative-integer validation, high fraction20bits=0xfffff and t=uint32_t(0-x.low32) in1..2^20; k1..64 and normal p. Then k*t<=2^26 and fraction=(k*t+1)>>1 fits low32.",
+  "integer_bounds": {
+    "max_k_times_t": 67108864,
+    "max_output_fraction": 33554432,
+    "max_abs_exponent_product": 65536
+  },
+  "no_FPop_table_or_divider_mathematically_required": true,
+  "actual_Thumb_code_size_or_speed_not_measured": true,
+  "all_guard_decline_and_regression_obligations_still_required": true,
+  "M4_modified": false,
+  "Git_writes": 0,
+  "SDK_builds": 0,
+  "new_agents": 0,
+  "original_full_goal_complete": false,
+  "recorded_utc": "2026-10-28T06:26:20.185734+00:00"
+}

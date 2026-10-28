@@ -1,0 +1,10 @@
+{
+  "status": "TERMINAL_EXIT1_ACCOUNTING_GUARD_BEFORE_ANY_EMULATION",
+  "chunk_id": "817c84",
+  "exit_code": 1,
+  "actual_new_ARM_calls": 0,
+  "new_MPFR_calls": 0,
+  "source_math_changes": false,
+  "producer_sha256": "870ac4058770bad984886b60da1a380292d5fa5f71190d2223e8b8c244084b45",
+  "correction": "Retained cached assertion row was initially misclassified as two fresh calls; fixed from pinned affected and first-attempt records before any replay."
+}

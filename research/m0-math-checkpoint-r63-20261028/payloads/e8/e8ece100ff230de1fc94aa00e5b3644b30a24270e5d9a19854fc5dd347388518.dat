@@ -1,0 +1,21 @@
+{
+  "status": "PASS_HOST_R61_PINNED_BATCH_AND_DUAL_FLASH_STAGE_CONTROLS",
+  "all_pinned_batches_checked": 4,
+  "rejected": [
+    "unknown-batch",
+    "changed-case",
+    "reordered-case",
+    "partial-batch",
+    "zero-wire-nonce",
+    "unbound-new-nonce",
+    "broader-query-budget",
+    "dual-Flash-mismatch-before-RAM-load",
+    "fifth-ROM-operation-not-admitted"
+  ],
+  "successful_RAM_load_sequence_operations": 4,
+  "actual_external_tools_started": 0,
+  "actual_children_started": 0,
+  "actual_device_IO": 0,
+  "new_ARM_MPFR_calls": 0,
+  "fake_Flash_metadata_is_not_physical_backup_evidence": true
+}

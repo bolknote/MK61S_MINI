@@ -1,0 +1,48 @@
+{
+  "status": "PASS_FOUR_LINKED_PUBLIC_CUTOFF_NEGATIVE_CONTROLS",
+  "controls": [
+    {
+      "label": "lower-cutoff-one-ULP/above1/underflow_zero",
+      "rejected_by_missing_required_fallback": true,
+      "actual_bits": "0000000000000000",
+      "expected": "0000000000000001",
+      "wrong_gold": true,
+      "actual_public_ARM_calls": 1,
+      "instructions": 2923
+    },
+    {
+      "label": "lower-cutoff-one-ULP/above1/overflow_infinity",
+      "rejected_by_missing_required_fallback": true,
+      "actual_bits": "7FF0000000000000",
+      "expected": "7FEFFFFFFFFFFC64",
+      "wrong_gold": true,
+      "actual_public_ARM_calls": 1,
+      "instructions": 2926
+    },
+    {
+      "label": "lower-cutoff-one-ULP/below1/underflow_zero",
+      "rejected_by_missing_required_fallback": true,
+      "actual_bits": "0000000000000000",
+      "expected": "0000000000000001",
+      "wrong_gold": true,
+      "actual_public_ARM_calls": 1,
+      "instructions": 2902
+    },
+    {
+      "label": "lower-cutoff-one-ULP/below1/overflow_infinity",
+      "rejected_by_missing_required_fallback": true,
+      "actual_bits": "7FF0000000000000",
+      "expected": "7FEFFFFFFFFFFC8D",
+      "wrong_gold": true,
+      "actual_public_ARM_calls": 1,
+      "instructions": 2904
+    }
+  ],
+  "actual_public_ARM_calls": 4,
+  "actual_whole_bank_ROM_loader_calls": 4,
+  "positive_public_rows_reused_without_execution": true,
+  "new_MPFR_queries": 0,
+  "device_IO": 0,
+  "selected": false,
+  "goal_complete": false
+}

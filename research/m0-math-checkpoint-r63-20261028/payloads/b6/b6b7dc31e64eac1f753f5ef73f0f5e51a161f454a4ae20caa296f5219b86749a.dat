@@ -1,0 +1,28 @@
+{
+  "status": "PASS_R63_ACTUAL_INTEGER_ISA_FULLWORD_PREDICATE_AND_ZERO_LOW_COST_RELATIONS",
+  "parent_R62_FROZEN_sha256": "342d99787bd364c760151d44223329ed1ffc2077ceac766d99f9008588bf32d5",
+  "new_object_sha256": "d2a1a16ef1027d2958db6768dc82ec8c0342a7bee8dbbb03b17579db3162c0d4",
+  "original_linked_object_prefix_instructions_verified": 120,
+  "original_prefix_semantic_changes": 0,
+  "new_guard_static_instructions": 66,
+  "guard_acyclic": true,
+  "all52power_positions_checked": true,
+  "integer_relation_cases": 3850,
+  "max_legal_guard_decline_instructions": 57,
+  "max_added_nonzero_low_decline_instructions_over_R62": 54,
+  "zero_low_public_paths_instruction_delta": [
+    -2,
+    0
+  ],
+  "all_zero_low_outcomes_and_derived_regs_exact": true,
+  "all_declines_R0_R3_R4_R6_R7_preserved": true,
+  "no_guard_memory_stack_LR_SIO_or_calls": true,
+  "high_product_max": 2252340174,
+  "full_high_word_max": 2252341247,
+  "partial_products_and_positive_threshold_below": 134217728,
+  "exact_half_min_subnormal_tie_included": true,
+  "completeness": "After exact-power validation all52 legal single-bit log paths are explicit. H partitions into P>=T, r>=k,0<r<k. In the last class L has a single exact integer threshold; both sides/equality and word carries are checked. Nonpowers exit before logarithm. Algebra excludes overflow and proves the low-word comparison for every L.",
+  "mathematical_proof": "k*(H*2^32+L)>=T*2^32. If P=k*H<T and0<r=T-P<k, equivalent to k*(L>>16)>=(r<<16)-((k*(L&65535))>>16). carry<=k-1 makes threshold positive; both products/threshold<2^27.",
+  "actual_new_ARM_MPFR_device_calls": 0,
+  "goal_complete": false
+}

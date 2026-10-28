@@ -1,0 +1,66 @@
+{
+  "status": "PASS_HOST_ACTUAL_THUMB_CRT_TO_RUNTIME_ENTRY_AND_RESERVED_LAYOUT",
+  "ELF_sha256": "1a7e1db9e596a61da7d8f67acc5681fa8166f09bb734e551c7a64bdec86e854a",
+  "BIN_sha256": "9d0783b7fbf768a8cca5d86aa64842b1b6aff84fad930005007b407544684619",
+  "entry": 536875009,
+  "vtor": 536875264,
+  "initial_SP": 537137152,
+  "PT_LOAD": [
+    {
+      "address": 536875008,
+      "file_bytes": 16688,
+      "memory_bytes": 22416,
+      "flags": 7,
+      "sha256": "138604c2a9fdde5f3518975a8240ba07ee2edf279a745eda09c0e8abef754947"
+    },
+    {
+      "address": 536911872,
+      "file_bytes": 6364,
+      "memory_bytes": 6364,
+      "flags": 5,
+      "sha256": "03e34e32e5d5602dadc322f6ba2d112769540d34cae4e5c07027f5ad0540005b"
+    },
+    {
+      "address": 536920064,
+      "file_bytes": 16,
+      "memory_bytes": 16,
+      "flags": 6,
+      "sha256": "c1292dbff446f8780d7c3da658022fece94cb978e203e04cfffd61070fb218d7"
+    },
+    {
+      "address": 536920080,
+      "file_bytes": 208312,
+      "memory_bytes": 208312,
+      "flags": 5,
+      "sha256": "0863e15504d3ec037677a382551fcff8b0e974be666863a384cb187fa0322247"
+    },
+    {
+      "address": 537128960,
+      "file_bytes": 3988,
+      "memory_bytes": 3988,
+      "flags": 5,
+      "sha256": "cde42132b12bff227f15d7edd383b1ae22ab489089a256a3d715d28e02e8946f"
+    },
+    {
+      "address": 537133056,
+      "file_bytes": 0,
+      "memory_bytes": 4096,
+      "flags": 4,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "BSS_zero_range": [
+    536891696,
+    536895376
+  ],
+  "CRT_instructions_to_runtime_entry": 2779,
+  "CRT_write_operations": 921,
+  "first4096_RAM_bytes_untouched": true,
+  "core1_bank_untouched": true,
+  "all_blob_bytes_exact": true,
+  "SDK_peripheral_initialization_and_USB_enumeration_not_emulated": true,
+  "pending_prelude_STR_BLX_and_first_entry_CSR_load_verified": true,
+  "no_Flash_writer_or_unique_id_function_in_image": true,
+  "physical_IO": 0,
+  "physical_cycles_measured": false
+}

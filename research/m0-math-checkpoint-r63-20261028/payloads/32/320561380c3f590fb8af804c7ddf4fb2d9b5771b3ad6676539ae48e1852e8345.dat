@@ -1,0 +1,32 @@
+{
+  "status": "ACTUAL_STAGE_EXIT_REAPED",
+  "stage": "rom-return",
+  "supervisor_pid": 52581,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/rom_stage.py",
+    "--execute",
+    "--stage",
+    "rom-return",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/ROM-RETURN-R3-GRANT.json",
+    "--lease-sha256",
+    "925ca9d887d65394c3eb7ed495dc4ec11555ffe7d09247ed2a59686a317ad1a7",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/rom-return-r3-actual-001"
+  ],
+  "grant_sha256": "925ca9d887d65394c3eb7ed495dc4ec11555ffe7d09247ed2a59686a317ad1a7",
+  "stage_output": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/rom-return-r3-actual-001",
+  "supervisor_device_IO": 0,
+  "pid": 52582,
+  "owned_process_group": 52582,
+  "exit_code": 0,
+  "reaped": true,
+  "terminated_by_owned_supervisor": false,
+  "supervisor_withdrawal_or_error": false,
+  "owned_group_signals_sent": [],
+  "finished_unix": 1793121423.183681,
+  "stdout.bin_sha256": "5f96ae36de3d62d7462e4f06636f236f6ba5cf3400666f3fade540f099c64f74",
+  "stderr.bin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

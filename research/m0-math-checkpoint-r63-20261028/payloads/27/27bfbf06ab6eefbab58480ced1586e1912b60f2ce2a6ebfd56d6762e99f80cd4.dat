@@ -1,0 +1,23 @@
+{
+  "status": "PASS_BOUNDED_PHYSICAL_SMOKE_NOT_FULL_ACCEPTANCE",
+  "pid": 68014,
+  "payload_FROZEN_sha256": "ac1858610e19121935d24e5cb9f8c5aad8ad38e90ba350eb7ded7f47df2e17aa",
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "goal_complete": false,
+  "completed_query_requests": 78,
+  "completed_math_state_cases": 72,
+  "measured_samples_per_library": 8,
+  "warmups_per_library": 2,
+  "raw_cycles_include_identical_wrapper_overhead": true,
+  "no_blind_overhead_subtraction": true,
+  "all_wrong_reference_results_and_cycles_preserved": true,
+  "exit_to_ROM_USB_sent": true,
+  "automatic_restore_or_reflash": false,
+  "serial_closed": true,
+  "TX_bytes": 6748,
+  "RX_bytes": 412519,
+  "no_implicit_X_after_failure": true,
+  "resident249_return_not_claimed": true,
+  "no_global_noholder_claim": true
+}

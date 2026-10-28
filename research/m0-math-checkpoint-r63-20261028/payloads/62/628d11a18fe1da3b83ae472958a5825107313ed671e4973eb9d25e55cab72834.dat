@@ -1,0 +1,97 @@
+"""Mathematical review annex; no runtime source, ARM, MPFR or device calls."""
+from pathlib import Path
+import hashlib
+import json
+
+W = Path(__file__).resolve().parent
+B = W.parent
+P = B / 'm0-math-pow-subnormal-powerzero-r62-20261028'
+U32 = (1 << 32) - 1
+T = 1075 << 20
+
+def sha(p):
+    return hashlib.sha256(p.read_bytes()).hexdigest()
+
+def decomposed(k, hi, lo):
+    p = k * hi
+    assert 0 <= p < (1 << 32)
+    if p >= T:
+        return True, 'high_product_sufficient'
+    r = T - p
+    if r >= k:
+        return False, 'low_product_cannot_reach_threshold'
+    assert 1 <= r < k
+    lower, upper = lo & 0xffff, lo >> 16
+    carry = (k * lower) >> 16
+    assert 0 <= carry <= k - 1
+    threshold = (r << 16) - carry
+    high_product = k * upper
+    assert 0 < threshold < (1 << 27)
+    assert 0 <= high_product < (1 << 27)
+    return high_product >= threshold, 'two_u16_products'
+
+cases = set()
+borderline = []
+for k in range(1023, 1075):
+    last_below = (T - 1) // k
+    for hi in {(1 << 20), (1 << 21) - 1, *range(last_below - 2, last_below + 3)}:
+        assert (1 << 20) <= hi < (1 << 21)
+        r = T - k * hi
+        low_threshold = (r * (1 << 32) + k - 1) // k
+        lows = {0, 1, U32, 0xffff, 0x10000, 0x7fffffff, 0x80000000,
+                0xffff0000, *range(low_threshold - 2, low_threshold + 3)}
+        for low in lows:
+            if 0 <= low <= U32:
+                cases.add((k, hi, low))
+        if 1 <= r < k:
+            borderline.append(dict(k=k, high_mantissa=hi, deficit=r,
+                                   first_admitted_low_word=low_threshold))
+
+remaining = json.loads((P / 'remaining-pow-pairs.json').read_text())
+matched = []
+for record in remaining:
+    x, y = int(record['x'], 16), int(record['y'], 16)
+    if not (0 < x < (1 << 52) and not x & (x - 1)
+            and 0x3ff0000000000000 <= y < 0x4000000000000000 and y & U32):
+        continue
+    k = 1075 - x.bit_length()
+    hi = (1 << 20) | ((y >> 32) & 0xfffff)
+    lo = y & U32
+    exact = k * ((hi << 32) | lo) >= (1075 << 52)
+    if exact:
+        assert record['expected'] == '0000000000000000'
+        assert decomposed(k, hi, lo)[0]
+        cases.add((k, hi, lo))
+        matched.append(dict(x=record['x'], y=record['y'], k=k, high_mantissa=hi,
+                            low_word=lo, integer_branch=decomposed(k, hi, lo)[1]))
+assert len(matched) == 36
+outcomes = {}
+for k, hi, lo in sorted(cases):
+    result, branch = decomposed(k, hi, lo)
+    exact = k * ((hi << 32) | lo) >= (1075 << 52)
+    assert result == exact, (k, hi, lo, result, exact)
+    outcomes[branch] = outcomes.get(branch, 0) + 1
+assert len(borderline) == 51 and all(r['k'] != 1024 for r in borderline)
+assert 1074 * ((1 << 21) - 1) == 2252340174 < (1 << 32)
+assert 1074 * 65535 < (1 << 27)
+assert 1073 * 65536 < (1 << 27)
+
+report = dict(
+    status='PASS_EXACT_FULLWORD_ZERO_PREDICATE_MATHEMATICAL_REVIEW_ANNEX_ONLY',
+    source_R62_FROZEN_sha256=sha(P / 'FROZEN.json'),
+    remaining_pairs_sha256=sha(P / 'remaining-pow-pairs.json'),
+    exact_predicate='k * ((H << 32) | L) >= 1075 << 52',
+    domain=dict(k=[1023, 1074], H=[1 << 20, (1 << 21) - 1], L=[0, U32]),
+    intermediate_branch='0 < r = (1075<<20)-k*H < k',
+    exact_decomposition='k*(L>>16) >= (r<<16) - ((k*(L&65535))>>16)',
+    unsigned_overflow_excluded=True, high_product_max=2252340174,
+    low_partial_products_below=1 << 27, comparison_threshold_strictly_positive=True,
+    borderline_high_words=51, k1024_exact_high_tie_uses_existing_sufficient_branch=True,
+    pure_integer_relation_checks=len(cases), relation_check_outcomes=outcomes,
+    matched_preexisting_R62_losing_pairs=len(matched), matched_pairs=matched,
+    actual_ARM_MPFR_calls=0, device_IO=0, Git_writes=0, new_runtime_sources=0,
+    successor_stage_started=False, measured_instruction_or_cycle_claim=False,
+    full_goal_complete=False,
+)
+(W / 'proof.json').write_text(json.dumps(report, indent=2) + '\n')
+print(json.dumps({k:v for k,v in report.items() if k != 'matched_pairs'}))

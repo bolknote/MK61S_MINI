@@ -1,0 +1,19 @@
+{
+  "pid": 99457,
+  "owned_process_group": 99457,
+  "supervisor_pid": 99456,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/rom_stage.py",
+    "--execute",
+    "--stage",
+    "rom-return",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/grants/rom-return.json",
+    "--lease-sha256",
+    "d40bd3c7667e1ed886aeda45e35e3aea7274383af4d3bb7cc0e6066c420befd7",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-return-001"
+  ]
+}

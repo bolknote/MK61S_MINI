@@ -1,0 +1,29 @@
+[
+  {
+    "argv": [
+      "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+      "-B",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/test-live-io.py"
+    ],
+    "cwd": "/Users/bolk/Projects/MK61S_MINI",
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+      "-B",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/test-supervisor.py"
+    ],
+    "cwd": "/Users/bolk/Projects/MK61S_MINI",
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+      "-B",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/test-fresh-capture.py"
+    ],
+    "cwd": "/Users/bolk/Projects/MK61S_MINI",
+    "exit_code": 0
+  }
+]

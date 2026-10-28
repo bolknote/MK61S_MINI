@@ -1,0 +1,20 @@
+{
+  "status": "HOST_RETURN_ONLY_R4_NOT_PHYSICAL_AUTHORITY",
+  "source_math_candidate": "R55",
+  "stages": [
+    "resident-verify"
+  ],
+  "math_or_firmware_changes": false,
+  "physical_cycles_measured": false,
+  "Root_disposition_field": "transient_UI_view_disposition",
+  "Root_disposition_value": "VIEW1_RETURN_TO_DEFAULT0_ACCEPTED_NO_EXACT_UI_CLAIM",
+  "adopted_current_state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/stage0-r2-current26-actual-001/current-state.json",
+    "bytes": 2239,
+    "sha256": "651e2e82bb3a2e4982314cd759c6cf50226b7cb18e3348894d23cdf8a19c0f2d"
+  },
+  "current_adopted_RTC_SET": 0,
+  "clock_return_status": "SET0_PLACEHOLDER_HOLD_NO_SETTER",
+  "actual_device_IO": 0,
+  "goal_complete": false
+}

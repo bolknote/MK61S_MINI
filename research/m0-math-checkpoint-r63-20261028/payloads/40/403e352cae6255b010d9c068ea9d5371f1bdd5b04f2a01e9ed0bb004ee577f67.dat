@@ -1,0 +1,27 @@
+{
+  "status": "ROOT_PHYSICAL_SMOKE_ACTOR_PASS_EXIT0_CLOSED_DETAILED_RECOUNT_AFTER_RETURN",
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/RESULT.json",
+    "bytes": 794,
+    "sha256": "d97d18b3e5ad89b735355028ca620a3af7fb0b0d8187869bf07520c06da0d693"
+  },
+  "actual_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1299,
+    "sha256": "3021cdfa8fe6f618643c53fcd06d6dcddee1d437d242f595a602cd9e8a4d9a8e"
+  },
+  "records": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/records.jsonl",
+    "bytes": 696564,
+    "sha256": "5f3e1e32ede01baa2631ad5623e4495c1c4dbefa19c0b74463b65748e957abfe"
+  },
+  "wire": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/wire-from-open.bin",
+    "bytes": 412519,
+    "sha256": "92a840844512d989b4143035ee6808c768335a576101157e617ae4578394f8a9"
+  },
+  "actor_pid": 99062,
+  "supervisor_pid": 99061,
+  "resident_return_pending": true,
+  "Root_device_IO": 0
+}

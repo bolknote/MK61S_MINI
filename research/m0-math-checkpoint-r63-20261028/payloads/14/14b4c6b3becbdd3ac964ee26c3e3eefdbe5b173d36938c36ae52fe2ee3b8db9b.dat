@@ -1,0 +1,46 @@
+{
+  "status": "R62_NECESSARY_COLD_DOMAIN_SELECTED_FROM_ALL322071_PRIOR_STATES_WITHOUT_MATH_REPLAY",
+  "counts": {
+    "states": 322071,
+    "potential_states": 3205,
+    "prior_not_losing": 3103,
+    "prior_losing": 102
+  },
+  "potential_pairs": 1564,
+  "condition": "positive nonzero subnormal x; positive y>=2^-12 strictly below its existing R61 upward bucket1075/k cutoff; all other public states have zero added instructions",
+  "all_eligible_prior_states_including_nonlosers_and_wrong_references_retained": true,
+  "source_pins": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-endpoints-r61-20261028/joined-pow-audit-records.jsonl.gz": {
+      "bytes": 4717201,
+      "sha256": "9966db8d9fc873cb6fac64749c87ea814b797bfc041d0fbe0f9166d8a464b55a"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-endpoints-r61-20261028/new-boundary-union-records.jsonl.gz": {
+      "bytes": 10034,
+      "sha256": "2b9eeb05aa8eb9e3d7964efd54ef1fe03742b01bfddeee61f60b9f0b1f1f4f32"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r55-qualification-20261027/full-records.jsonl.gz": {
+      "bytes": 6079139,
+      "sha256": "af578a5de9fc63ebbad4f44c84d8c1025cb32aa6457dde8b7f4b0c8caa3c1733"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r55-qualification-20261027/original507-records.jsonl.gz": {
+      "bytes": 25971,
+      "sha256": "f8a64284c9936637ae1be99f9f93a9edd89fa98c865ad70a195e0282ec699908"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r55-qualification-20261027/broad-records.jsonl.gz": {
+      "bytes": 1439752,
+      "sha256": "a0318bb174f2f4cc8503cbef460b51043e165aad8f3c94ee9df2d8d4cfca3101"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-unified-pow-saturation-r55-qualification-20261027/admission-records.jsonl.gz": {
+      "bytes": 897836,
+      "sha256": "7bc1e37550ae0490bc216f4141ee0135aed52f72dfa5f28167f1ce26b5fde202"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-subnormal-overflow-r60-20261027/new-boundary-union-records.jsonl.gz": {
+      "bytes": 6506,
+      "sha256": "f4db9b0d132b990074e4a0c4e34f83f75559398e001e53a935598178b0860fb7"
+    }
+  },
+  "inputs_sha256": "cbda8da1861cd08693d2bc49547845261d44fd46be90a680342c53828805c4fc",
+  "new_ARM_MPFR_calls": 0,
+  "new_device_IO": 0,
+  "goal_complete": false
+}

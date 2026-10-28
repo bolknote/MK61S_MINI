@@ -1,0 +1,61 @@
+{
+  "status": "PASS_FRESH_PHYSICAL_READONLY_CURRENT249_CAPTURE_ONLY_NO_NEXT_STAGE",
+  "recorded_utc": "2026-10-27T22:59:50.673992+00:00",
+  "supervisor_pid": 97869,
+  "actor_pid": 97870,
+  "exit_code": 0,
+  "reaped": true,
+  "serial_closed": true,
+  "TX_bytes": 50,
+  "RX_bytes": 40007,
+  "actual_physical_keys": 0,
+  "epoch": [
+    "7",
+    "00010001"
+  ],
+  "RTC_SET": 0,
+  "calendar": "2026-01-01 05:42:25",
+  "current_zero_data_losslessly_rebootable": true,
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-001/RESULT.json",
+    "bytes": 897,
+    "sha256": "39c1922a05eb61e1049ade8221910f9f8f18dbf98dd1d0eb136933ce466e6dc8"
+  },
+  "baseline": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-001/BASELINE.json",
+    "bytes": 921,
+    "sha256": "3a2500a8678a541f8cf51d99717de91e220d80f93b03f2a48b6744acb57ef3ab"
+  },
+  "current_state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-001/current-state.json",
+    "bytes": 2460,
+    "sha256": "6e5386b4f1662e91c7adef38fd145e16043b034042c84310769686107ed2dbc1"
+  },
+  "raw_initial_status": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-001/baseline/status-001.raw",
+    "bytes": 3253,
+    "sha256": "3f69da356bf5b11d3a418ee1932449c763bdce30fd59c586fe5939ac147b8eeb"
+  },
+  "raw_from_open": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-001/raw-from-open.bin",
+    "bytes": 40007,
+    "sha256": "6d28c48f6c8a4b5378cfa9785e452e8c7f5898d5a731a9046f5d7d2de80aeee1"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1372,
+    "sha256": "b425933e6c5e78f291c356c354df07415fe35a79234826c4d2abf3748e27994c"
+  },
+  "native_IO_journal": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-001/io.jsonl",
+    "bytes": 1900,
+    "sha256": "e0c241056dba9df1cfc7c53bfbc4e0060ddbf0f3199c637edec1b8c3123d37c4"
+  },
+  "new_ROM_RAM_transitions": 0,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "APP_SD_key_actions": 0,
+  "no_global_noholder_claim": true,
+  "next_stage_granted": false,
+  "goal_complete": false
+}

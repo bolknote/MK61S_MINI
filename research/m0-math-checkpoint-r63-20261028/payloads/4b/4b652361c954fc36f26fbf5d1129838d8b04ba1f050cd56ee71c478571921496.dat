@@ -1,0 +1,74 @@
+{
+  "status": "PASS_UNCHANGED249_TYPED_DATA_SETTINGS_ALARMS_IP_CWD_UI_EXACT_RETURN_SET0_CLOCK_HOLD",
+  "components": {
+    "joint-resident-verify-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-001/FROZEN.json",
+        "bytes": 4458,
+        "sha256": "0dcf17151a291b93fd45783cbd81c9497d46efa9b828f3aa54ebe159ad4057f7"
+      },
+      "pins": 31
+    },
+    "joint-resident-verify-supervisor-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-supervisor-001/FROZEN.json",
+        "bytes": 867,
+        "sha256": "457e0b93facfe83e624cc1b219e1c6c9734d81d88880e3a9420bd99e49e5cb6d"
+      },
+      "pins": 5
+    }
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-001/RESULT.json",
+    "bytes": 711,
+    "sha256": "b9f10d445b33d12eec8ee7dec0415997a6275e4122d2b2e453472200e9e5d88c"
+  },
+  "current_state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-001/current-state.json",
+    "bytes": 2236,
+    "sha256": "478d94fdd7a345b3877df39e75d51180fc5d22de3bee0647f24285459a29d459"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1366,
+    "sha256": "65c9300212907cc79c53b0f9b70f81598361fcd33ebb0ec10ef3549c68ba62bb"
+  },
+  "raw_journal": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-001/raw-from-open.bin",
+    "bytes": 36654,
+    "sha256": "51546e6f9d41fde3193cc0c2c064700f1c69cb186048474f534e7b6b1ea7d051"
+  },
+  "io_ledger": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-001/io.jsonl",
+    "bytes": 1808,
+    "sha256": "4b6bea3bdcb6da590f1bce3d2c158e96591a3d7b6d4a7312b491d46778a12540"
+  },
+  "typed_data_settings_UI_exact": true,
+  "UI_exception_used": false,
+  "actual_getters": 7,
+  "status_requests": 11,
+  "command_mode_entries": 1,
+  "actual_write_operations": 19,
+  "TX_bytes": 49,
+  "RX_bytes": 36654,
+  "return_epoch": [
+    "9",
+    "00010001"
+  ],
+  "RTC_SET": 0,
+  "returned_calendar": "2026-01-01 00:02:35",
+  "clock_trajectory_exact": false,
+  "clock_disposition": "ROOT_ACCEPTED_SET0_PLACEHOLDER_FRESH_BASE_NO_SETTER",
+  "serial_closed": true,
+  "operator_reaped": true,
+  "Flash_writes": 0,
+  "SD_operations": 0,
+  "RTC_setters": 0,
+  "UI_setters": 0,
+  "canonical_lease_mutations": 0,
+  "no_global_noholder_claim": true,
+  "next_stage_authorized": false,
+  "full84_pair_round_complete": false,
+  "goal_complete": false,
+  "recorded_utc": "2026-10-28T05:08:44.373176+00:00"
+}

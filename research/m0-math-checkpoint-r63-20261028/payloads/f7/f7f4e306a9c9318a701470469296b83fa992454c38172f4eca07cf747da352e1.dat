@@ -1,0 +1,20 @@
+{
+  "status": "R4_RETURN_ONLY_ENVELOPE_READY_FOR_ROOT_REVIEW_NOT_GRANT",
+  "packet": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r4",
+  "FROZEN": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r4/ENVELOPE-FROZEN.json",
+    "bytes": 4713,
+    "sha256": "187b76327a130744aab4724b0b0dc58d9712f84fdc94f5d4602f9cee851d5262"
+  },
+  "operator_pins": 15,
+  "external_frozen_pins": 187,
+  "external_file_refs": 5,
+  "stages": [
+    "resident-verify"
+  ],
+  "resident_rom_load_math_and_rom_return_use_unchanged_R3": true,
+  "exact_UI_disposition": "VIEW1_RETURN_TO_DEFAULT0_ACCEPTED_NO_EXACT_UI_CLAIM",
+  "actual_device_IO": 0,
+  "new_ARM_MPFR_or_firmware_calls": 0,
+  "goal_complete": false
+}

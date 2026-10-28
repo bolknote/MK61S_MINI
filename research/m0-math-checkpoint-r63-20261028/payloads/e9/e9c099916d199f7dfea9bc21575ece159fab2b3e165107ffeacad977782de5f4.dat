@@ -1,0 +1,39 @@
+{
+  "status": "ROOT_R62_PRIVATE_FINITE_ACCEPTANCE_AND_NEXT_HOST_SCOPE_FROZEN",
+  "files": {
+    "NEXT-HOST-R63-SCOPE.json": {
+      "bytes": 8186,
+      "sha256": "fc2863cea3f896f552b395f79bd2e317752bff3a8d72d5c4a4b1503bc38254a9"
+    },
+    "RECORD-REVIEW.json": {
+      "bytes": 1751,
+      "sha256": "39fd00c13798e01a32536d3c26f38d24260b253ac9f6a8823852825e47fc1c74"
+    },
+    "ROOT-ACCEPTANCE.json": {
+      "bytes": 3975,
+      "sha256": "b5bf8ebbff2a6dfa13da173456d924ccdef609801f2b1cb2e33537e82a5815e4"
+    },
+    "SIX-TARGET-COSTS.json": {
+      "bytes": 311,
+      "sha256": "15d699a5870dc399f1798e77f5d202bf7e7a6766d0cb5155d71fe67bf0db1e26"
+    },
+    "STATIC-REVIEW.json": {
+      "bytes": 1414,
+      "sha256": "d960ea241e61976307ee8bffe9bcbe07b3f34e4cef968dd5a1b47e503b26f4a5"
+    },
+    "review_records.py": {
+      "bytes": 9844,
+      "sha256": "8a2f0e3b4b4f77f453e6d9da089245bf4460d4e3426794cb006abcf0739519bb"
+    },
+    "review_static.py": {
+      "bytes": 8944,
+      "sha256": "6844683cc1c0c338068d2857753742cfb0e66424a336be3d477125c82da691cd"
+    }
+  },
+  "selected_private_baseline": "R62",
+  "next_narrow_HOST_stage": "R63",
+  "hardware_window_closed": true,
+  "physical_R62_cycles_measured": false,
+  "Git_writer": false,
+  "full_math_goal_complete": false
+}

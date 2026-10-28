@@ -1,0 +1,8 @@
+Historical preimplementation plan, completed by this packet.
+Current implementation, evidence and remaining work are in HANDOFF.md.
+
+R60 research only, no runtime changes yet.
+
+The existing RP2040 `mk61_m0_pow_tiny_or_cr` checks positive nonzero finite x and finite magnitude2^-12<=abs(y)<2^63 before `.Lpow_subnormal_endpoints`. Its negative-subnormal branch `.Lpow_subnormal_reciprocal_cut` is a candidate insertion point. Normal inputs already take the unchanged exponent check to fallback; public exact exponent shortcuts and old half-root dispatches must remain unchanged.
+
+Before editing, measure actual instructions to this helper and to cr_pow on the seven saved R59 arguments. A late insertion is useful only if public-path cost can still beat the cached correct Qfplib788+ instructions. Retain actual declines and all parent increases; no common normal-prefix check should be added.

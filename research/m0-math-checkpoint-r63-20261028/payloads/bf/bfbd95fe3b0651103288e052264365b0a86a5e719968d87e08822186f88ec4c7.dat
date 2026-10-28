@@ -1,0 +1,10 @@
+{
+  "status": "REJECTED_UNFROZEN_STARTUP_TRIAL",
+  "reason": "SDK pll_init early-return checks LOCK/divisors, but not BYPASS; invalid existing bypass state skipped required reinitialization",
+  "actual_default_ROM_case_passed": true,
+  "actual_active_USB_RTC_preservation_passed": true,
+  "failed_fixture": "bypassed-existing-PLL",
+  "fix": "Explicit reset/unreset only inside needs-init and after live-RTC guard",
+  "new_public_math_ARM_calls": 0,
+  "hardware_IO": 0
+}

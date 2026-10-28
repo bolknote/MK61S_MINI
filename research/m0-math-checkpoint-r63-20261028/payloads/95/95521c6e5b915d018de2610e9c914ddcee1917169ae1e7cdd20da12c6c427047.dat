@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-picotool/picotool",
+    "load",
+    "-v",
+    "-x",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r2/build/m0_r55_pow_hil.elf",
+    "-t",
+    "elf",
+    "--bus",
+    "0",
+    "--address",
+    "5",
+    "--ser",
+    "E6657CD423721C35"
+  ],
+  "timeout": 30
+}

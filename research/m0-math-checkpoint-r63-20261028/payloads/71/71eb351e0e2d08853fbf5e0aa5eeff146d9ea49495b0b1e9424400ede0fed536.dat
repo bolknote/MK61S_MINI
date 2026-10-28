@@ -1,0 +1,10 @@
+{
+  "status": "TERMINAL_HOST_ASSERTION_FAILED_AFTER_148_COMPLETED_PRIMITIVE_CALLS",
+  "error": "Symbol-table audit classified only STT_FUNC; _entry_point is STT_NOTYPE. CRT actual execution passed independently.",
+  "exit_code": 1,
+  "actual_worker_primitive_calls": 148,
+  "new_math_calls": 0,
+  "new_MPFR": 0,
+  "hardware_IO": 0,
+  "fix": "Assert actual entry prefix bytes and keep functional-symbol checks; no firmware change"
+}

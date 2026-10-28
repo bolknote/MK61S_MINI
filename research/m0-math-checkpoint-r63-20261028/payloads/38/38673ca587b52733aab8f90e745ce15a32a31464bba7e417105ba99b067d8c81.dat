@@ -1,0 +1,20 @@
+{
+  "status": "ROOT_FIRST_SMOKE_TYPED_USER_DATA_SETTINGS_UI_RETURN_EXACT_PASS",
+  "all36_pins_verified": true,
+  "all_typed_fields_exact_to_fresh_initial": true,
+  "UI_exact": true,
+  "UI_exception": false,
+  "RTC_SET": 0,
+  "clock_trajectory_claim": false,
+  "clock_disposition": "SET0_PLACEHOLDER_HOLD",
+  "return_state_sha256": "478d94fdd7a345b3877df39e75d51180fc5d22de3bee0647f24285459a29d459",
+  "return_epoch": [
+    "9",
+    "00010001"
+  ],
+  "physical_keys": 0,
+  "TX_bytes": 49,
+  "all19_writes_full": true,
+  "actor_reaped": true,
+  "Root_device_IO": 0
+}

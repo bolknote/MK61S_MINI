@@ -1,0 +1,39 @@
+"""Freeze the small return-only successor, running only three inert controls."""
+from pathlib import Path
+import ast,hashlib,json,subprocess,sys
+W=Path(__file__).resolve().parent;R3=W.parent/'operator-r3'
+assert not (W/'ENVELOPE-FROZEN.json').exists()
+def digest(data):return hashlib.sha256(data).hexdigest()
+def pin(p):
+    data=p.read_bytes();return dict(bytes=len(data),sha256=digest(data))
+def ref(p):return dict(path=str(p.resolve()),**pin(p))
+def write(name,data):(W/name).write_text(json.dumps(data,indent=2)+'\n')
+for name in ['live_io.py','envelope_pins.py']:(W/name).write_bytes((R3/name).read_bytes())
+old="SCRIPTS={'resident-rom':'resident_stage.py','resident-verify':'resident_stage.py',\n         'rom-load':'rom_stage.py','rom-return':'rom_stage.py','math-cdc':'worker_stage.py'}"
+source=(R3/'supervise_stage.py').read_text();assert source.count(old)==1
+(W/'supervise_stage.py').write_text(source.replace(old,"SCRIPTS={'resident-verify':'resident_stage.py'}"))
+for p in W.glob('*.py'):ast.parse(p.read_text(),filename=p.name)
+run=subprocess.run([sys.executable,'-B',str(W/'test-return-ui.py')],capture_output=True)
+(W/'test.stdout.bin').write_bytes(run.stdout);(W/'test.stderr.bin').write_bytes(run.stderr)
+assert run.returncode==0,(run.returncode,run.stderr.decode())
+write('producer-terminal.json',dict(all_HOST_jobs_terminal=True,argv=[sys.executable,'-B',str(W/'test-return-ui.py')],exit_code=run.returncode,result='return-ui-test.json',result_sha256=pin(W/'return-ui-test.json')['sha256'],actual_device_IO=0,new_ARM_MPFR_or_firmware_calls=0))
+r3=json.loads((R3/'ENVELOPE-FROZEN.json').read_text())
+external=dict(r3['external_frozen_packets'])
+external['parent_operator_R3']=dict(relative_directory='../operator-r3',manifest='ENVELOPE-FROZEN.json',sha256=digest((R3/'ENVELOPE-FROZEN.json').read_bytes()),pins=len(r3['files']))
+root=W.parents[1]/'picocalc-math-root-20261027-001'
+refs={
+ 'adopted_current26_state':ref(W.parent/'stage0-r2-current26-actual-001/current-state.json'),
+ 'adopted_current26_capture':ref(W.parent/'stage0-r2-current26-actual-001/RESULT.json'),
+ 'adopted_current26_exit':ref(W.parent/'stage0-r2-current26-supervisor-001/ACTUAL-EXIT.json'),
+ 'Root_current26_close':ref(root/'CURRENT26-CAPTURE-CLOSE.json'),
+ 'Root_R2_R3_review':ref(root/'R2-R3-FOCUSED-REVIEW.json'),
+}
+write('ENVELOPE-MANIFEST.json',dict(status='HOST_RETURN_ONLY_R4_NOT_PHYSICAL_AUTHORITY',source_math_candidate='R55',stages=['resident-verify'],math_or_firmware_changes=False,physical_cycles_measured=False,Root_disposition_field='transient_UI_view_disposition',Root_disposition_value='VIEW1_RETURN_TO_DEFAULT0_ACCEPTED_NO_EXACT_UI_CLAIM',adopted_current_state=refs['adopted_current26_state'],current_adopted_RTC_SET=0,clock_return_status='SET0_PLACEHOLDER_HOLD_NO_SETTER',actual_device_IO=0,goal_complete=False))
+t=json.loads((R3/'TEMPLATE-resident-verify.json').read_text())
+t['current_state']=refs['adopted_current26_state'];t['transient_UI_view_disposition']='VIEW1_RETURN_TO_DEFAULT0_ACCEPTED_NO_EXACT_UI_CLAIM'
+write('TEMPLATE-resident-verify.json',t)
+files={p.name:pin(p) for p in sorted(W.iterdir()) if p.is_file() and p.name!='ENVELOPE-FROZEN.json'}
+write('ENVELOPE-FROZEN.json',dict(status='HOST_RETURN_ONLY_R4_FROZEN_NOT_HARDWARE_AUTHORITY',files=files,external_frozen_packets=external,external_file_refs=refs,all_producers_terminal=True,actual_device_IO=0,goal_complete=False))
+ready=dict(status='R4_RETURN_ONLY_ENVELOPE_READY_FOR_ROOT_REVIEW_NOT_GRANT',packet=str(W),FROZEN=ref(W/'ENVELOPE-FROZEN.json'),operator_pins=len(files),external_frozen_pins=sum(d['pins'] for d in external.values()),external_file_refs=len(refs),stages=['resident-verify'],resident_rom_load_math_and_rom_return_use_unchanged_R3=True,exact_UI_disposition=t['transient_UI_view_disposition'],actual_device_IO=0,new_ARM_MPFR_or_firmware_calls=0,goal_complete=False)
+(W.parent/'ENVELOPE-R4-READY.json').write_text(json.dumps(ready,indent=2)+'\n')
+print(json.dumps(ready,indent=2))

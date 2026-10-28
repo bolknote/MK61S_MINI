@@ -1,0 +1,67 @@
+{
+  "live_io.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r5/live_io.py",
+    "bytes": 7264,
+    "sha256": "17637c24682c3f8e2f8df13cf3a4262ae8b4358a88d625cdd5165e978ef69622"
+  },
+  "envelope_pins.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r5/envelope_pins.py",
+    "bytes": 2237,
+    "sha256": "ff002ce70f8d351d3642dbeced27c8a20dc2158e1f26a65563b871481c47f838"
+  },
+  "worker_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r5/worker_stage.py",
+    "bytes": 4105,
+    "sha256": "9658ba6218d8f0080da3abb753f81e516c21785ad2cb7d54c077f3dcb0b1199d"
+  },
+  "supervise_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/supervise_stage.py",
+    "bytes": 4561,
+    "sha256": "a4a46b05c5ec81d317aacbf0b7e0721c300930237849142cba5a77af75730c80"
+  },
+  "resident_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/resident_stage.py",
+    "bytes": 6600,
+    "sha256": "5e72d5d512b4adc87a7d640a78d710d61864dee97cad4a604ea54142a005821d"
+  },
+  "return_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r4/resident_stage.py",
+    "bytes": 4222,
+    "sha256": "5626d7d4e91aae99672b173ca9d2a91b2304bbe498ab4c551a4be0b429241f01"
+  },
+  "return_ui.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r4/return_ui.py",
+    "bytes": 1452,
+    "sha256": "9b2a0b48a6a1ad76daf72763af80cd4a19ef04685612876467c03954aede42b4"
+  },
+  "rom_stage.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/rom_stage.py",
+    "bytes": 8096,
+    "sha256": "885bba078d719d53987767541556e2ec3d6db9a065479abaee4a5f426207a81d"
+  },
+  "test-worker-path.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r5/test-worker-path.py",
+    "bytes": 2878,
+    "sha256": "155009f96aca8b90ba735162fb35f75ccc3719b35e28e25f8d156a49713a183e"
+  },
+  "test-supervisor.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/test-supervisor.py",
+    "bytes": 2716,
+    "sha256": "9a6809d1ff3af2a5ddd871fd939e096c3b6f9df30c9f9037d7bb0b1e1a6d853b"
+  },
+  "test-rom-envelope.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/test-rom-envelope.py",
+    "bytes": 3358,
+    "sha256": "e1cf805f3016e98ec856e1844fa8404cb39a37f1364937cf857f83cb014d41b7"
+  },
+  "test-return-ui.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r4/test-return-ui.py",
+    "bytes": 1502,
+    "sha256": "88ca667ee499781fcbbad70abe2ca2fb6fe724cddb2120c3179f9ed558cdca1f"
+  },
+  "test-worker-live.py": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/test-worker-live.py",
+    "bytes": 2959,
+    "sha256": "3dbbcb7637d03ef53d84d29d629982839404a0518fd243dfb55998a54533304a"
+  }
+}

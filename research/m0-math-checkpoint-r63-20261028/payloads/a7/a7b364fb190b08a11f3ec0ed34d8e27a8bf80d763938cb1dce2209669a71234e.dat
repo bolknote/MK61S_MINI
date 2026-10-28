@@ -1,0 +1,30 @@
+{
+  "status": "ROOT_ONE_REMAINING_BATCH_SINGLE_STAGE_GRANTED",
+  "batch": "joint-01",
+  "stage": "resident-verify",
+  "grant": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/joint-01-resident-verify.json",
+    "bytes": 2162,
+    "sha256": "4d94f9de218edbd88388d5b735748756fccfe6cef91387557247c4098c690595"
+  },
+  "argv": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/ARGV-joint-01-resident-verify.json",
+    "bytes": 1067,
+    "sha256": "1202e8345b1bdc175558c0bd817a4daa21bd82e0a42b361f44ee1108188eeb96"
+  },
+  "metadata": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-resident-verify-002/root-physical-and-noholder.json",
+    "bytes": 2743,
+    "sha256": "6dc3404fc35e378c9af106e8371cd5997f51334ff7e7d41e1ec10695ffb0c44a"
+  },
+  "previous_canonical": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/CANONICAL-BEFORE-joint-01-resident-verify.json",
+    "bytes": 2241,
+    "sha256": "4065d659d39a6aa43ef1f1d50b3f2e2e80e624ecfaada1411c6759c7c124b5d5"
+  },
+  "expires_utc": "2026-10-28T06:03:33.370850+00:00",
+  "other_stages_not_granted": true,
+  "Flash_programming_allowed": false,
+  "RTC_setter_allowed": false,
+  "Root_device_IO": 0
+}

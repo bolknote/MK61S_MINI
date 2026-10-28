@@ -1,0 +1,24 @@
+{
+  "status": "EXACT_RAM_IMAGE_LOAD_READBACK_ENTRY_COMMAND_COMPLETE_CDC_PENDING",
+  "stage": "rom-load",
+  "pid": 51643,
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "goal_complete": false,
+  "Flash_before": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/rom-load-r3-actual-001/flash-before-math.bin",
+    "bytes": 2097152,
+    "sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442"
+  },
+  "RAM_image": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r2/build/m0_r55_pow_hil.elf",
+  "RAM_image_sha256": "f14fd6f37ce138772aee8ee843c279c1e8729349beab4f96bbbe2d20bc41f7da",
+  "RAM_load_attempts": 1,
+  "RAM_entry_attempts": 1,
+  "independent_saved_RAM_dump": false,
+  "readback_method": "pinned picotool -v exact comparison before -x",
+  "child_pids": [
+    51644,
+    51645,
+    51689
+  ]
+}

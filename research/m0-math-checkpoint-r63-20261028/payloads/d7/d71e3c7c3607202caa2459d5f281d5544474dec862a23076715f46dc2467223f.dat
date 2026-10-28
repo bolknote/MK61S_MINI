@@ -1,0 +1,8 @@
+{
+  "status": "STARTED_ROOT_REVOCABLE_MATH_CDC_SMOKE",
+  "pid": 52355,
+  "payload_FROZEN_sha256": "9d7b6553249dfa43bbeed46460fe6384152804d96c1a3e8da249df878e34310a",
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

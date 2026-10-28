@@ -1,0 +1,29 @@
+{
+  "status": "FROZEN_COMPLETED_ROM_LOAD_STAGE_AND_REAPED_RECEIPTS",
+  "files": {
+    "ACTUAL-EXIT.json": {
+      "bytes": 1328,
+      "sha256": "eadf27bc428c3612a7c683dcf9a30c7b7a587f7e8c476ac25e2bb5234f4bd2fa"
+    },
+    "ACTUAL-PID.json": {
+      "bytes": 662,
+      "sha256": "4e8bf37eb0bcea712aba284515146b8dfb63c6137517eea2bc9e5b52fdafa96f"
+    },
+    "ARGV.json": {
+      "bytes": 673,
+      "sha256": "13a13aa705eab1e42a3da4a16757fe08961b3b7019e52b2cc15d3e7236cbd016"
+    },
+    "stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout.bin": {
+      "bytes": 1169,
+      "sha256": "ac88eea98982c35eab78a0ac6cfdae630f831dfb4874f8c8839f7df9f146a46c"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

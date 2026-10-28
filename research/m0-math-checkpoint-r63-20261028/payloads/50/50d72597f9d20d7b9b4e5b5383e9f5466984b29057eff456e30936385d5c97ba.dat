@@ -1,0 +1,94 @@
+{
+  "status": "EXACT_RATIONAL_FULL_BINARY64_SUBNORMAL_ENDPOINT_CUTOFFS_NOT_IMPLEMENTED",
+  "parent_FROZEN_sha256": "5effdab53736d79be6d0f4be5d0fa766220a59f20d97c037c602ddf47f88c89f",
+  "cutoffs": {
+    "zero/1022": {
+      "target": 1075,
+      "k": 1022,
+      "rational_numerator": 1075,
+      "rational_denominator": 1022,
+      "bits": "3FF0D46A351A8D47",
+      "doubled_high": "7FE1A8D4",
+      "low": "351A8D47",
+      "old_doubled_high": "7FE1A8D6",
+      "strictly_above_exact_rational": true
+    },
+    "zero/1025": {
+      "target": 1075,
+      "k": 1025,
+      "rational_numerator": 43,
+      "rational_denominator": 41,
+      "bits": "3FF0C7CE0C7CE0C8",
+      "doubled_high": "7FE18F9C",
+      "low": "0C7CE0C8",
+      "old_doubled_high": "7FE18F9E",
+      "strictly_above_exact_rational": true
+    },
+    "zero/1042": {
+      "target": 1075,
+      "k": 1042,
+      "rational_numerator": 1075,
+      "rational_denominator": 1042,
+      "bits": "3FF081B842D34937",
+      "doubled_high": "7FE10370",
+      "low": "42D34937",
+      "old_doubled_high": "7FE10372",
+      "strictly_above_exact_rational": true
+    },
+    "infinity/1022": {
+      "target": 1024,
+      "k": 1022,
+      "rational_numerator": 512,
+      "rational_denominator": 511,
+      "bits": "3FF0080402010081",
+      "doubled_high": "7FE01008",
+      "low": "02010081",
+      "old_doubled_high": "7FE0100A",
+      "strictly_above_exact_rational": true
+    },
+    "infinity/1025": {
+      "target": 1024,
+      "k": 1025,
+      "rational_numerator": 1024,
+      "rational_denominator": 1025,
+      "bits": "3FEFF801FF801FF9",
+      "doubled_high": "7FDFF002",
+      "low": "FF801FF9",
+      "old_doubled_high": "7FDFF004",
+      "strictly_above_exact_rational": true
+    },
+    "infinity/1042": {
+      "target": 1024,
+      "k": 1042,
+      "rational_numerator": 512,
+      "rational_denominator": 521,
+      "bits": "3FEF727CCE5F530B",
+      "doubled_high": "7FDEE4F8",
+      "low": "CE5F530B",
+      "old_doubled_high": "7FDEE4FA",
+      "strictly_above_exact_rational": true
+    }
+  },
+  "buckets": [
+    "0<x<2^-1022 for every positive subnormal.",
+    "x.high>>17==0 proves0<x<2^-1025.",
+    "x.high==0 proves0<x<2^-1042."
+  ],
+  "reasoning": [
+    "For each bucket, -log2(x)>k.",
+    "Finite negative y with |y|>=ceil_binary64(1024/k) implies x^y>2^1024, hence+Inf RNE.",
+    "Finite positive y>=ceil_binary64(1075/k) implies x^y<2^-1075, hence+0 RNE.",
+    "Cutoffs are upward-rounded by exact integer ceiling; preceding binary64 is checked smaller than target/k.",
+    "All six low words are nonzero. The old doubled-high cutoff is exactly the new doubled-high+2.",
+    "Since doubled-high(y) is even, high words unequal to the new cutoff take the identical old outcome with the same three/two comparison instructions. Only high-word equality needs a new low-word comparison."
+  ],
+  "predicted_remaining_pairs": 11,
+  "predicted_by_kind": {
+    "zero": 6,
+    "infinity": 5
+  },
+  "new_ARM_MPFR_calls": 0,
+  "M4_changed": false,
+  "new_tables_global_RAM_libgcc": 0,
+  "goal_complete": false
+}

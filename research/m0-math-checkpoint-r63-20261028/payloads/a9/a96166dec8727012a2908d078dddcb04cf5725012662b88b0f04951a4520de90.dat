@@ -1,0 +1,63 @@
+"""Re-link unchanged qualified math objects, then embed their exact SRAM bytes."""
+from pathlib import Path
+import hashlib, json, struct, subprocess, sys, zlib
+sys.dont_write_bytecode = True
+W = Path(__file__).resolve().parent
+ROOT = W.parents[2]
+OLD = W.parent
+SOURCE = ROOT / '.build/m0-math-unified-pow-saturation-r55-20261027'
+sys.path.insert(0, str(ROOT / '.build/m0-float-fma-qualification-20261023/support'))
+from check_stm32_vectors import ElfImage
+def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
+manifest = json.loads((SOURCE/'FROZEN.json').read_bytes())
+assert sha(SOURCE/'FROZEN.json') == '1af80c6be09a05f1abd9f35097fffd543288e267eb047b3945b8b718315ff2f6'
+for name,pin in manifest['files'].items():
+    p=SOURCE/name
+    assert p.stat().st_size==pin['bytes'] and sha(p)==pin['sha256'], name
+ld=(OLD/'math-pow-ram.ld').read_text().replace('LENGTH = 208K','LENGTH = 0x32ff0')
+(W/'math-pow-ram.ld').write_text(ld)
+(W/'qfplib-ram.ld').write_text((OLD/'qfplib-ram.ld').read_text()+'\nASSERT(ADDR(.m0_qfplib)+SIZEOF(.m0_qfplib)<=0x2000c000,"Qfplib overflow")\n')
+commands=[]
+for old_name,label in [('math-link-command2.json','math-pow-ram'),('qfplib-link-command.json','qfplib-ram')]:
+    cmd=[s.replace(str(OLD)+'/',str(W)+'/') for s in json.loads((OLD/old_name).read_text())]
+    if label=='qfplib-ram': cmd.insert(1,'-Wl,-z,noexecstack,--fatal-warnings')
+    run=subprocess.run(cmd,cwd=ROOT,capture_output=True)
+    (W/(label+'-link.log')).write_bytes(run.stdout+run.stderr)
+    assert run.returncode==0,(label,run.returncode)
+    commands.append(dict(command=cmd,exit_code=run.returncode))
+(W/'link-commands.json').write_text(json.dumps(commands,indent=2)+'\n')
+math=ElfImage(W/'math-pow-ram.elf');qfp=ElfImage(W/'qfplib-ram.elf')
+blobs={}
+for name,image,lo,hi in [('math_main',math,0x2000c010,0x2003f000),('math_hot',math,0x2003f000,0x20040000),('math_data',math,0x2000c000,0x2000c010),('qfplib',qfp,0x2000a000,0x2000c000)]:
+    regions=[]
+    for s in image.sections:
+        if s[2]&2 and s[5] and s[1]!=8 and lo<=s[3]<hi:
+            assert s[3]+s[5]<=hi
+            regions.append((s[3],image.bytes_at(s)))
+    assert regions,name
+    end=max(a+len(b) for a,b in regions)
+    raw=bytearray(end-lo)
+    for a,b in regions:raw[a-lo:a-lo+len(b)]=b
+    p=W/(name+'.bin');p.write_bytes(raw)
+    blobs[name]=dict(address=lo,end=end,bytes=len(raw),sha256=sha(p),crc32=zlib.crc32(raw))
+symbols={
+    'MATH_INIT':math.symbols['unified_math_init'],
+    'MATH_POW':math.symbols['_ZN12compact_math3powEdd'],
+    'QFP_POW':qfp.symbols['qfp_composed_pow'],
+    'QFP_POW_EXACT':qfp.symbols['qfp_composed_pow_exact'],
+    'QFP_POW_INTEGER':qfp.symbols['qfp_composed_pow_integer'],
+}
+assembly=[]
+for n in blobs:
+    flags='aw' if n=='math_data' else 'ax'
+    assembly+=['.section .'+n+'_blob,"'+flags+'",%progbits','.balign 4','.incbin "'+str(W/(n+'.bin'))+'"']
+assembly+=['.section .note.GNU-stack,"",%progbits']
+(W/'blobs.S').write_text('\n'.join(assembly)+'\n')
+header=['#pragma once','#define BENCH_PROTOCOL 0x00550001u']
+for n,v in symbols.items():header.append('#define '+n+' 0x%08xu'%v)
+for n,v in blobs.items():
+    header+=['#define '+n.upper()+'_ADDRESS 0x%08xu'%v['address'],'#define '+n.upper()+'_BYTES %du'%v['bytes'],'#define '+n.upper()+'_CRC 0x%08xu'%v['crc32']]
+(W/'blob-meta.h').write_text('\n'.join(header)+'\n')
+result=dict(status='HOST_UNCHANGED_R55_POW_AND_QFPLIB_RELINKED_IN_SRAM',source_FROZEN_sha256=sha(SOURCE/'FROZEN.json'),math_ELF_sha256=sha(W/'math-pow-ram.elf'),Qfplib_ELF_sha256=sha(W/'qfplib-ram.elf'),blobs=blobs,symbols=symbols,all_source_objects_byte_unchanged=True,public_pow_kept_with_fallbacks=True,board_bootable_yet=False,physical_IO=0)
+(W/'blobs.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps(result,indent=2))

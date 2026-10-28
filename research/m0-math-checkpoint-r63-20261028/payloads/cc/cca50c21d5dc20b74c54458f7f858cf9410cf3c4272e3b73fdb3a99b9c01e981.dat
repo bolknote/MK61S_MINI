@@ -1,0 +1,56 @@
+"""Exact rational arithmetic only: no MPFR, ARM, candidate imports or writes."""
+from fractions import Fraction as F
+from pathlib import Path
+import json
+
+B = Path('/Users/bolk/Projects/MK61S_MINI/.build')
+P = B/'m0-pow-saturation-tight-host-r1-20261027'
+R60 = B/'m0-math-pow-subnormal-overflow-r60-20261027'
+OUT = Path(__file__).resolve().parent
+def binary64(raw):
+    e, f = raw >> 52, raw & ((1 << 52)-1)
+    n, p = ((1 << 52) | f, e-1075) if e else (f, -1074)
+    return F(n << p) if p >= 0 else F(n, 1 << -p)
+def rational(r):
+    return F(int(r['numerator']), int(r['denominator']))
+
+proof = json.loads((P/'proof.json').read_text())
+ln2lo = sum((F(2, (2*k+1)*3**(2*k+1)) for k in range(80)), F())
+ln2hi = ln2lo + F(2, 161*3**161) / (1-F(1, 9))
+assert ln2lo == rational(proof['ln2_lower']) and ln2hi == rational(proof['ln2_upper'])
+cutoffs = {}
+for side, d, sign in [('above1', F(1, 2**52), -1), ('below1', F(1, 2**53), 1)]:
+    lower = d + sign*d*d/2
+    assert lower == rational(proof['nearest_neighbour_log_lower'][side])
+    for mode, target in [('underflow_zero', 1075), ('overflow_infinity', 1024)]:
+        bound = target*ln2hi/lower
+        lo, hi = 1, 0x7fefffffffffffff
+        while lo < hi:
+            mid = (lo+hi)//2
+            if binary64(mid) >= bound:
+                hi = mid
+            else:
+                lo = mid+1
+        assert binary64(lo-1) < bound <= binary64(lo)
+        name = side+'/'+mode
+        assert lo == int(proof['cutoff_bits'][name], 16)
+        cutoffs[name] = f'{lo:016X}'
+
+p60 = json.loads((R60/'predicate-proof.json').read_text())
+alpha, t = F(1, 2**52), F(177, 2**50)
+ln2simple = sum((F(2, (2*k+1)*3**(2*k+1)) for k in range(3)), F())
+assert ln2simple == F(842, 1215)
+gap = 1024*alpha*ln2simple - (1+alpha)*t
+assert gap > 0 and gap == rational(p60['strict_log_overflow_margin_lower'])
+assert binary64(0x00040000000000b1) == F(1, 2**1024)*(1+t)
+assert binary64(0x3ff0000000000001) == 1+alpha
+summary = dict(status='ROOT_EXACT_RATIONAL_PREDICATES_PASS',
+    R59_ln2_interval_series_terms=80, R59_recomputed_upward_binary64_cutoffs=cutoffs,
+    R59_proof_basis='ln(1+d)>d-d²/2; -ln(1-d)>d+d²/2; monotonicity; positive atanh series with geometric tail',
+    R60_ln2_strict_lower='842/1215', R60_exact_positive_log_gap=str(gap),
+    R60_x_raw_cutoff='00040000000000B1', R60_min_abs_y_raw='3FF0000000000001',
+    R60_result_strictly_exceeds_2_to_1024_on_admission=True,
+    mathematical_domain='finite positive nonzero base; guards separately exclude zero, signs and nonfinite values',
+    fresh_ARM_calls=0, fresh_MPFR_calls=0, hardware_IO=0, Git_writes=0)
+(OUT/'PREDICATE-REVIEW.json').write_text(json.dumps(summary, indent=2)+'\n')
+print(json.dumps(summary, indent=2))

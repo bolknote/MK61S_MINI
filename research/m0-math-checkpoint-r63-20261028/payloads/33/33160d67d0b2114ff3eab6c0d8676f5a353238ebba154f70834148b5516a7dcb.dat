@@ -1,0 +1,21 @@
+{
+  "status": "HOST_READY_STAGE0_READONLY_CURRENT249_CAPTURE_NOT_RAM_GO",
+  "packet": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1",
+  "PREFLIGHT_FROZEN_sha256": "b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d",
+  "pins": 19,
+  "argv_template": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/preflight.py",
+    "--execute",
+    "--grant",
+    "ROOT_FRESH_ABSOLUTE_STAGE0_GRANT",
+    "--lease-sha256",
+    "ROOT_EXACT_GRANT_AND_CANONICAL_SHA256",
+    "--output",
+    "ROOT_NEW_ABSOLUTE_OUTPUT"
+  ],
+  "actual_device_IO": 0,
+  "Root_stage0_grant_not_yet_received": true,
+  "all_jobs_terminal": true
+}

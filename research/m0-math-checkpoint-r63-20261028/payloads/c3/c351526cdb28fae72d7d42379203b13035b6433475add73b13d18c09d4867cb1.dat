@@ -1,0 +1,60 @@
+# Stage0: current249 read-only math admission
+
+The only entry point in this packet is `preflight.py`. No action happens on
+import or without `--execute`. Required invocation, with fresh values supplied
+by Root:
+
+```
+.build/picocalc-apps-arm-venv/bin/python -B \
+  .build/m0-math-r55-hil-20261027/operator-r1/preflight.py \
+  --execute --grant ROOT_STAGE0.json --lease-sha256 EXACT_ROOT_HASH \
+  --output NEW_DEDICATED_OUTPUT_DIRECTORY
+```
+
+The staged grant must be byte-identical to the live canonical
+`.build/picocalc-device-handoff.json`; both hashes must match the CLI hash.
+`LiveLease` checks owner, coordinator, UID, scope, stage, enabled flags, nonce,
+wall expiry and a continuous budget before named open, configuration, each
+select/read/write and each further response. Own FD close remains possible
+after revocation. A partial write never permits continuation or a retry.
+There is no global replacement of OS or port APIs. Focused tests use only an
+injected inert IO instance and private authority files.
+
+Root fields: owner=`m0-math-ram`, owner_thread=`01a14fdd-8514-7d33-b324-93b038e5f137`,
+coordinator_thread=`01a164b7-9caa-7011-90d1-807e9630921c`,
+uid=`E6657CD423721C35`, scope=`PICO_R55_MATH_RAM_SMOKE_ONCE`,
+stage=`resident-capture`, status=`ROOT_MATH_STAGE_GO`, enabled/window/execution
+flags true, 32-hex `lease_nonce`, fresh exact native `port` and `port_stat_rdev`,
+`expires_unix`, `session_seconds` at most120, `max_TX_bytes` at most128,
+`max_RX_bytes` at most262144, and the exact `preflight_packet_sha256`.
+Root binds fresh kernel location/session/entry and no-holder evidence before
+issuing it. No saved port is current authority. The supplied template is inert.
+
+The source domain must be selected249 (`249A92DE` / `E6CFC3B8`, image1537008),
+calculator stopped, service CLOSED/not dirty/empty path, no runtime/screen/disk/
+M61 foreground, and no physical input. KBD/PANEL/SD hardware readiness and
+retained incident investigation are outside this math preflight. CRASH AVAILABLE
+is recorded as source metadata; there is no crash show/clear or observer loop.
+
+First ENQ obtains a complete source frame without pre-draining the FD. Leading
+incomplete source data is preserved and rejected. After that positive idle
+domain, one US resets the terminal line/enters command mode; exact banner and a
+new COMMAND frame are required. Only fixed getters `identity`, `reg`, `stk`,
+`hout`, `pwd`, `alarm`, `date` can be sent. Each has a fresh source-domain check
+and one exact echo/prompt envelope. Input data is not replayed or changed.
+No `dfu`, RAW `!`, reset, APP, SD helper, RTC setter or Flash operation exists in
+this stage. Current software/watchdog diagnostics are archived from status;
+scratch0..2 calendar words are not directly exposed by these read-only getters,
+and the packet does not invent their values.
+
+Outputs contain raw bytes from open, each source frame, exact getter envelopes,
+current typed state/IP/settings, current RTC_SET/calendar, the direct Mach
+continuous-time bracket/boot-session/timebase, and actual own-close result.
+The observed zero-state rebootability is reported, never assumed. This capture
+does not authorize a ROM transition or RAM launch. Root decides the next stage:
+SET0 may have explicit clock HOLD after return; SET1 requires a proved time-
+preserving return before launching RAM. Master13 remains separate and deferred.
+
+All parser/revocation tests are HOST fixtures and are not current device
+admission. No prior hardware acceptance, cold/PARK/UI/UART scope or lease is
+reused. Actual process EXIT and fresh named no-holder adoption belong to Root.

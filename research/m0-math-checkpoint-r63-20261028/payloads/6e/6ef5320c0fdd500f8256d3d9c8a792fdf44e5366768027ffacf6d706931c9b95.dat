@@ -1,0 +1,56 @@
+// Private RP2040 dispatchers. Original dispatchers and numerical kernels stay
+// byte-identical. The assembly callers prove the documented y-word contracts.
+#include <stdint.h>
+using U=uint64_t;
+#define SOFT __attribute__((pcs("aapcs")))
+#define COLD(section_name) __attribute__((optimize("Os"),noinline,noipa,section(section_name)))
+static inline U bits(double x) { union {double d;U u;} v={x};return v.u; }
+static inline double real(U x) { union {U u;double d;} v={x};return v.d; }
+static constexpr U Sign=UINT64_C(0x8000000000000000);
+static constexpr U Magnitude=UINT64_C(0x7fffffffffffffff);
+static constexpr U Infinity=UINT64_C(0x7ff0000000000000);
+static constexpr U Quiet=UINT64_C(0x0008000000000000);
+static constexpr U One=UINT64_C(0x3ff0000000000000);
+extern "C" SOFT double mk61_m0_pow_negative_integer_dispatch(double,double);
+extern "C" SOFT double mk61_m0_pow_positive_checked_dispatch(double,double);
+extern "C" bool mk61_m0_pow_near_one_binomial_dispatch(U,U,U*);
+extern "C" U pow_root128_ranged(U,U);
+
+// Entered only from the nonzero-low-word public path or its early-gate
+// decline. In particular y is not either zero and is not a half exponent.
+extern "C" SOFT COLD(".m0_pow_dispatch_extension")
+double mk61_m0_pow_dispatch_fractional(double x,double y) {
+ const U xb=bits(x),yb=bits(y);
+ if(xb==One) {
+   const U ym=yb&Magnitude;
+   return real(ym>Infinity && !(yb&Quiet)?yb|Quiet:xb);
+ }
+ if(xb&Sign) return mk61_m0_pow_negative_integer_dispatch(x,y);
+ const uint32_t xh=uint32_t(xb>>32);
+ if(xh-0x3fefffffU<=1U && xb-One+64U<=96U) {
+   U result;
+   if(mk61_m0_pow_near_one_binomial_dispatch(xb,yb,&result)) return real(result);
+ }
+ return mk61_m0_pow_positive_checked_dispatch(x,y);
+}
+
+// Private high-word ABI: x uses r0:r1, r2 is ignored, yHigh uses r3.
+// Reconstructing the proven zero low word removes impossible low-y branches
+// and lets the assembly use a two-instruction function-pointer tail call.
+extern "C" SOFT COLD(".m0_pow_dispatch_high_word")
+double mk61_m0_pow_dispatch_high_word(double x,uint32_t,uint32_t yHigh) {
+ const U xb=bits(x),yb=U(yHigh)<<32,ym=yb&Magnitude;
+ const double y=real(yb);
+ if(xb==One) return real(ym>Infinity && !(yb&Quiet)?yb|Quiet:xb);
+ if(xb&Sign) return mk61_m0_pow_negative_integer_dispatch(x,y);
+ const uint32_t xh=uint32_t(xb>>32);
+ if(xh-0x3fefffffU>1U) {
+   const bool small=yHigh-0x40080000U<=0x00180000U &&
+      !(yHigh&(yHigh<0x40100000U?0x7ffffU:0x3ffffU));
+   if(!small && ((yHigh>>20)&0x7ffU)-1016U<=12U) {
+     const U result=pow_root128_ranged(xb,yb);
+     if(result!=(Infinity|Quiet)) return real(result);
+   }
+ }
+ return mk61_m0_pow_positive_checked_dispatch(x,y);
+}

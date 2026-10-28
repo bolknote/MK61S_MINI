@@ -1,0 +1,33 @@
+{
+  "status": "PASS_INERT_READONLY_CURRENT249_PREFLIGHT_PARSER_AND_WHITELIST",
+  "historical_fixture_sha256": "a686b9dc12c4f3ff84e1df616ab4309d9cfb4e4fb37f642fdb9d02cd86fbe541",
+  "historical_fixture_is_not_current_admission": true,
+  "source_domain_grammar_fixture_epoch": [
+    "6",
+    "00010001"
+  ],
+  "rejected": [
+    "leading-incomplete-status-tail",
+    "wrong-resident-build",
+    "wrong-current-image-CRC",
+    "unknown-foreground",
+    "active-calculator",
+    "new-physical-input",
+    "changed-reset-epoch",
+    "changed-from-current25-baseline",
+    "cannot-silently-assume-zero-origin",
+    "forbidden-dfu",
+    "forbidden-!",
+    "forbidden-date 2026-10-27 00:00:00",
+    "forbidden-alarm a off",
+    "forbidden-reg 0",
+    "forbidden-reinit",
+    "forbidden-open APP",
+    "forbidden-crash clear"
+  ],
+  "actual_device_opens": 0,
+  "actual_TX_bytes": 0,
+  "RTC_setters": 0,
+  "ROM_transitions": 0,
+  "wide_campaigns_rerun": 0
+}

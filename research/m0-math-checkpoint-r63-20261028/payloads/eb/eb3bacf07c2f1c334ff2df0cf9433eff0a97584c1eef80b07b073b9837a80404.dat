@@ -1,0 +1,37 @@
+{
+  "status": "ROOT_OWNER_HOST_ANALYSIS_CROSSCHECK_AGREES_WITH_INDEPENDENT_WIRE_RECOUNT",
+  "owner_packet": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-analysis-001/FROZEN.json",
+    "bytes": 5176,
+    "sha256": "7d35403619395bb7efdd77eb2e355ed27a13b8ebd86a6fc2dd72e816df108f59"
+  },
+  "owner_report": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-analysis-001/REPORT.md",
+    "bytes": 3448,
+    "sha256": "2ddaa7763dda2e5ef90b383cb9807e9b22a149584b5cfbc722e1f1a438b7cbde"
+  },
+  "Root_recount": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-hil-root-review-20261028-001/PHYSICAL-RECOUNT.json",
+    "bytes": 119640,
+    "sha256": "a944442cb8c234535a2fc153ab785e561d16e34ce72ef9b55779b7deab748bbc"
+  },
+  "agreed": {
+    "calls": 2940,
+    "pairs": 24,
+    "states": 72,
+    "selected_repairs": 13,
+    "selected_repair_speedup_min": 3.682142857142857,
+    "selected_repair_speedup_max": 23.49367088607595,
+    "slower_pairs": 8,
+    "no_correct_reference_pairs": 1,
+    "wrong_Qfplib_calls": 720,
+    "measured_wrong_Qfplib_calls": 576,
+    "stack_observed": 2276
+  },
+  "next_HOST_scope": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-hil-root-review-20261028-001/NEXT-HOST-R62-SCOPE.json",
+    "bytes": 1425,
+    "sha256": "06e599cf084b1f33c84c585c5c13c3d707bf1de944093887ca519a7423b0f861"
+  },
+  "new_device_grant": false
+}

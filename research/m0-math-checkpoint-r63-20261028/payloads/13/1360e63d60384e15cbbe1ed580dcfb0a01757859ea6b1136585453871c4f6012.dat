@@ -1,0 +1,31 @@
+{
+  "status": "FROZEN_JOINT01_TYPED_VERIFY_HOLD_FIRST_STATUS_COUNTER_CHANGED_REAPED",
+  "files": {
+    "RESULT.json": {
+      "bytes": 448,
+      "sha256": "70fcf82882ed54966d470ef2b64d33ece1d0cde2a52a5b9a6561fd77a86d869f"
+    },
+    "STARTED.json": {
+      "bytes": 247,
+      "sha256": "39970b841dbe96d1321253fc7b438e1707242f1c4fd931a571a463f0a39e779e"
+    },
+    "grant.byteexact.json": {
+      "bytes": 2162,
+      "sha256": "4d94f9de218edbd88388d5b735748756fccfe6cef91387557247c4098c690595"
+    },
+    "io.jsonl": {
+      "bytes": 92,
+      "sha256": "17620968c46ef9ec83960fc3eca2995480f2f4d8ed0fa1ea7e3a27d742b88930"
+    },
+    "raw-from-open.bin": {
+      "bytes": 3241,
+      "sha256": "0a40c4c948c958cd09d152bd8a19c04e6e0332708397130ae72351716d5c99d3"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "no_retry_or_recovery": true,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "UI_setters": 0,
+  "goal_complete": false
+}

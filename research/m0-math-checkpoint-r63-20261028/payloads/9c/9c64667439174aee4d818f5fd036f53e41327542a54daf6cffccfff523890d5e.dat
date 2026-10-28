@@ -1,0 +1,98 @@
+{
+  "status": "PASS_ACTUAL_WORKER_THUMB_WIRE_PRIMITIVES_AND_RESET_MASKS_PLUS_HOST_DRIVER_TESTS",
+  "ELF_sha256": "1a7e1db9e596a61da7d8f67acc5681fa8166f09bb734e551c7a64bdec86e854a",
+  "checks": 147,
+  "actual_ARM_primitive_calls": 148,
+  "actual_ROM_CRC32": 172131586,
+  "RTC_reset_and_clock_registers_unchanged_in_actual_reset_functions": [
+    {
+      "ctrl": 2048,
+      "div": 262144,
+      "RTC_reset_bit": 0,
+      "actual_MMIO_writes": [
+        [
+          1073799168,
+          16469439
+        ],
+        [
+          1073803264,
+          3964926
+        ],
+        [
+          1073803264,
+          33521663
+        ]
+      ]
+    },
+    {
+      "ctrl": 0,
+      "div": 0,
+      "RTC_reset_bit": 32768,
+      "actual_MMIO_writes": [
+        [
+          1073799168,
+          16469439
+        ],
+        [
+          1073803264,
+          3964926
+        ],
+        [
+          1073803264,
+          33521663
+        ]
+      ]
+    },
+    {
+      "ctrl": 2112,
+      "div": 274960,
+      "RTC_reset_bit": 0,
+      "actual_MMIO_writes": [
+        [
+          1073799168,
+          16469439
+        ],
+        [
+          1073803264,
+          3964926
+        ],
+        [
+          1073803264,
+          33521663
+        ]
+      ]
+    },
+    {
+      "ctrl": 2144,
+      "div": 74496,
+      "RTC_reset_bit": 0,
+      "actual_MMIO_writes": [
+        [
+          1073799168,
+          16469439
+        ],
+        [
+          1073803264,
+          3964926
+        ],
+        [
+          1073803264,
+          33521663
+        ]
+      ]
+    }
+  ],
+  "USB_PLL_initialized_only_when_needed_and_RTC_safe": true,
+  "inherited_startup_check_sha256": "0f07c9ed185838e6855751dec76befea25d1e05c4708cbb500e573e48e65ae8a",
+  "startup_inheritance_sha256": "4d97986e0201016ff8d144945fee5cd6100d9d0f478be23f22e55277f9029cd5",
+  "new_full_startup_execution_claimed": false,
+  "RTC_clock_configuration_omitted_in_bench_clock_source": true,
+  "HOST_driver_rejected_corruptions": [
+    "candidate",
+    "pending",
+    "crc"
+  ],
+  "driver_fake_is_not_hardware_evidence": true,
+  "hardware_IO": 0,
+  "physical_cycles_measured": false
+}

@@ -1,0 +1,85 @@
+{
+  "status": "FROZEN_ROM_RETURN_AND_REAPED_RECEIPTS",
+  "files": {
+    "01-exact-ROM-identity.actual-exit.json": {
+      "bytes": 425,
+      "sha256": "5e838eebaa07d11714561b65c993bbfb6d080b7f9827bc5f0e737b81bf878889"
+    },
+    "01-exact-ROM-identity.intent.json": {
+      "bytes": 216,
+      "sha256": "006fd632f956ce3966f7da809fa3f8db783a11237f65dc4b8cf16340f76b0515"
+    },
+    "01-exact-ROM-identity.pid.json": {
+      "bytes": 40,
+      "sha256": "3ad633da52c0790b104117bca4d41d14dd16fe49bd10fd077f5c9cec537f600b"
+    },
+    "01-exact-ROM-identity.stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "01-exact-ROM-identity.stdout.bin": {
+      "bytes": 93,
+      "sha256": "49bdb0185e0aa53a0e88d59980da6f95d6205bb349123afc58e6530181f747d4"
+    },
+    "02-flash-after-math.actual-exit.json": {
+      "bytes": 577,
+      "sha256": "8b20dbb98b325c9d7586fde9ac1b972a0ff26258649f1fc13dba9c2c0db750e0"
+    },
+    "02-flash-after-math.intent.json": {
+      "bytes": 368,
+      "sha256": "dbedc5996f7c14c224d3b10b06cc8228a73f0db0ee7ea3ae8aba229c100f93d3"
+    },
+    "02-flash-after-math.pid.json": {
+      "bytes": 40,
+      "sha256": "fbfbe7109574fe008dcb85fecfc99aadc08bdac2eb3c2beb48065173e9e47201"
+    },
+    "02-flash-after-math.stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "02-flash-after-math.stdout.bin": {
+      "bytes": 10568,
+      "sha256": "964bdbbf65ca8911e781826e442d2f968f3b1f688035099ac2a2560b5701aa4a"
+    },
+    "03-boot-unchanged-selected249.actual-exit.json": {
+      "bytes": 417,
+      "sha256": "93afea23f1658b36d7d497d4e5e1c5ffa7b0e4a2207194e3bf511a83695b8c99"
+    },
+    "03-boot-unchanged-selected249.intent.json": {
+      "bytes": 208,
+      "sha256": "8fa61925d8c0025d17de16abae2a2c774e0fc602065e231e65271098aff3c77b"
+    },
+    "03-boot-unchanged-selected249.pid.json": {
+      "bytes": 40,
+      "sha256": "619d669f2a9826399e93eb3c34b4c8ff4e6a1eefd940543e22c5732bade0b40e"
+    },
+    "03-boot-unchanged-selected249.stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "03-boot-unchanged-selected249.stdout.bin": {
+      "bytes": 47,
+      "sha256": "ec01d4b1cb33d63c2cc601a53215453468ad30b007b147b0b732cc1f09d648d9"
+    },
+    "RESULT.json": {
+      "bytes": 621,
+      "sha256": "7c6a9d00739807d39e049ed48c75a97023c1b522a2e271f52317775c7587e2f6"
+    },
+    "STARTED.json": {
+      "bytes": 164,
+      "sha256": "8dd9b75ea9f96e09938d789409b1b672c99534edc6c818a22e617e9268ab5787"
+    },
+    "flash-after-math.bin": {
+      "bytes": 2097152,
+      "sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442"
+    },
+    "grant.byteexact.json": {
+      "bytes": 2231,
+      "sha256": "153b1fdc7b567a049002d0803df20a843146433781e498a9c5a96f1f73740dd9"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

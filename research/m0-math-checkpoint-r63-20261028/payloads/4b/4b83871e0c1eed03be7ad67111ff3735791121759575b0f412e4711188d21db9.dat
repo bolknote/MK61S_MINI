@@ -1,0 +1,15 @@
+{
+  "status": "PASS_INERT_SELECTED249_RAW_HANDOFF_AND_EVIDENCE",
+  "rejected": [
+    "bad-ack",
+    "revoke-after-wait",
+    "new-physical-input",
+    "new-boot",
+    "changed-typed-state-before-device-open"
+  ],
+  "success_and_missing_ack_distinguished": true,
+  "actual_qualified_frame_parser_used": true,
+  "actual_device_IO": 0,
+  "global_OS_substitutions": 0,
+  "new_ARM_MPFR_calls": 0
+}

@@ -1,0 +1,37 @@
+"""Resume the inert copy preparation and make only the authorized R62 cold edit."""
+from pathlib import Path
+import difflib,hashlib,json,shutil
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+P=ROOT/'.build/m0-math-pow-fullword-endpoints-r61-20261028'
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+assert not (W/'build.py').exists() and not (W/'link-result.json').exists()
+assert sha(P/'FROZEN.json')=='e09a1db789376f5987f8c0650d93339bcfdd8ee78875e0fa371e78286057b90f'
+manifest=json.loads((P/'FROZEN.json').read_text())
+for n,d in manifest['files'].items():
+    p=P/n;assert p.stat().st_size==d['bytes'] and sha(p)==d['sha256'],n
+for p in P.glob('*.ld'):shutil.copyfile(p,W/p.name)
+for name in ['harness.py','sitecustomize.py']:shutil.copyfile(P/name,W/name)
+for name in ['build.py','verify-disabled.py']:
+    s=(P/name).read_text().replace('m0-math-pow-subnormal-overflow-r60-20261027','m0-math-pow-fullword-endpoints-r61-20261028')
+    s=s.replace('5effdab53736d79be6d0f4be5d0fa766220a59f20d97c037c602ddf47f88c89f','e09a1db789376f5987f8c0650d93339bcfdd8ee78875e0fa371e78286057b90f')
+    s=s.replace('R60','R61').replace('R61_FULLWORD_SUBNORMAL_ENDPOINTS','R62_EXACT_POWER_SUBNORMAL_ZERO').replace('PASS_R61_CHANGED','PASS_R62_CHANGED')
+    (W/name).write_text(s)
+p=W/'source/code/native_eabi_m0_rp2040.S';old=(P/'source/code/native_eabi_m0_rp2040.S').read_text()
+assert p.read_text()==old
+s=old;start=s.index('mk61_m0_pow_subnormal_zero_fullword_compare:');end=s.index('.Lpow_subnormal_reciprocal_cut:',start)
+block=s[start:end]
+assert block.count('blo .Lpow_magnitude_fallback')==1 and block.count('b .Lpow_magnitude_fallback')==1
+block=block.replace('blo .Lpow_magnitude_fallback','blo .Lpow_subnormal_power_zero_decline').replace('b .Lpow_magnitude_fallback','b .Lpow_subnormal_power_zero_decline')
+s=s[:start]+block+s[end:]
+needle='mk61_m0_pow_subnormal_gate_end:\n .ltorg';assert s.count(needle)==1
+s=s.replace(needle,'mk61_m0_pow_subnormal_gate_end:\n'+(W/'power-zero-guard.txt').read_text()+' .ltorg');p.write_text(s)
+(W/'source.patch').write_text(''.join(difflib.unified_diff(old.splitlines(True),s.splitlines(True),fromfile='R61/native_eabi_m0_rp2040.S',tofile='R62/native_eabi_m0_rp2040.S')))
+proposal=json.loads((ROOT/'.build/m0-math-r61-ram-hil-20261028/physical-smoke-analysis-001/NEXT-HOST-PROPOSAL.json').read_text())
+(W/'target-pairs.json').write_text(json.dumps(proposal['matching_pairs'],indent=2)+'\n')
+result=dict(status='R62_PRIVATE_COLD_SOURCE_PREPARED_NOT_YET_BUILT_OR_QUALIFIED',
+    parent_R61_FROZEN_sha256=sha(P/'FROZEN.json'),parent_pins_verified=len(manifest['files']),
+    scope_path=str(ROOT/'.build/m0-math-r61-hil-root-review-20261028-001/NEXT-HOST-R62-SCOPE.json'),
+    only_modified_source='source/code/native_eabi_m0_rp2040.S',new_device_IO=0,new_Git_writes=0,
+    selected_private_baseline='R61',goal_complete=False)
+(W/'PREPARATION.json').write_text(json.dumps(result,indent=2)+'\n')
+print('Prepared two positive-decline edges and new cold exact-power guard; old return paths unchanged')

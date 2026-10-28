@@ -1,0 +1,5 @@
+{
+  "status": "PASS_EXACT_BINARY64_RAW_WORDS_MATCH_RATIONAL_PREDICATE",
+  "source_proof_sha256": "ef77955461ed202323e87888eee61598fcac16708bd0d3d5a8292f69e6d2cb6a",
+  "actual_ARM_or_MPFR_calls": 0
+}

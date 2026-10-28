@@ -1,0 +1,36 @@
+"""Read-only binding of every operator stage to one reviewed HOST packet."""
+from pathlib import Path
+import json
+from live_io import need,sha
+W=Path(__file__).resolve().parent
+def verify_files(directory,manifest):
+    for name,pin in manifest['files'].items():
+        rel=Path(name)
+        need(not rel.is_absolute() and '..' not in rel.parts,'Nonlocal operator pin')
+        p=directory/rel
+        need(p.is_file() and not p.is_symlink() and p.stat().st_size==pin['bytes'] and sha(p.read_bytes())==pin['sha256'],'Operator source changed: '+name)
+def verify_operator(lease):
+    raw=(W/'ENVELOPE-FROZEN.json').read_bytes();g=lease.guard()
+    need(g['operator_packet_sha256']==sha(raw),'Root binds a different operator envelope')
+    manifest=json.loads(raw);verify_files(W,manifest)
+    for dependency in manifest['external_frozen_packets'].values():
+        directory=(W/dependency['relative_directory']).resolve();frozen=directory/dependency['manifest']
+        need(frozen.is_file() and not frozen.is_symlink(),'Missing frozen dependency')
+        data=frozen.read_bytes();need(sha(data)==dependency['sha256'],'Different frozen dependency')
+        packet=json.loads(data);need(packet['all_producers_terminal'] and len(packet['files'])==dependency['pins'],'Unfinished frozen dependency')
+        verify_files(directory,packet)
+    for ref in manifest['external_file_refs'].values():
+        p=Path(ref['path'])
+        need(p.is_absolute() and p.is_file() and not p.is_symlink(),'Missing exact external evidence')
+        data=p.read_bytes();need(len(data)==ref['bytes'] and sha(data)==ref['sha256'],'Changed external evidence '+str(p))
+    lease.guard()
+def stage_output(lease,path):
+    g=lease.guard();path=Path(path)
+    need(path.is_absolute() and path.resolve()==path and not path.exists(),'Fresh exact absolute output required')
+    need(g['output']==str(path),'Output differs from the Root stage grant')
+    need(path.parent.is_dir(),'Output parent must already exist')
+    path.mkdir();return path
+def install_signal_handlers():
+    import signal
+    def interrupted(signum,frame):raise KeyboardInterrupt('operator signal '+str(signum))
+    for signum in (signal.SIGTERM,signal.SIGINT):signal.signal(signum,interrupted)

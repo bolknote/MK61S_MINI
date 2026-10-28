@@ -1,0 +1,17 @@
+{
+  "pid": 99062,
+  "owned_process_group": 99062,
+  "supervisor_pid": 99061,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/worker_stage.py",
+    "--execute",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/grants/math-cdc.json",
+    "--lease-sha256",
+    "8478c4982c042bf28b57a6355df4045bbe43b863e5459943fa4e82479812f956",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001"
+  ]
+}

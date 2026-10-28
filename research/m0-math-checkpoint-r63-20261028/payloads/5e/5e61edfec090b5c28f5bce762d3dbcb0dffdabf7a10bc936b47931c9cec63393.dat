@@ -1,0 +1,27 @@
+{
+  "status": "ROOT_FRESH_JOINT_MATH_READONLY_CAPTURE_GRANTED_NOT_RAM_GO",
+  "grant": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/resident-capture.json",
+    "bytes": 1853,
+    "sha256": "3e020a4486a1731daa60106d2a1492132740a30f7c748c7148a393d0b057cb24"
+  },
+  "argv": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/CAPTURE-ARGV.json",
+    "bytes": 1032,
+    "sha256": "7c0d75ddbcd407b1967e7c06e8ea834040489205c120cba2ec1cf684100d023d"
+  },
+  "metadata": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-resident-capture-002/root-physical-and-noholder.json",
+    "bytes": 4383,
+    "sha256": "efed36bcdfb6152c883288ce3b56c3ad705013b9ac98e14c20a5dfd77e78b2b4"
+  },
+  "old_canonical": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/CANONICAL-BEFORE-READONLY.json",
+    "bytes": 5223,
+    "sha256": "717c03d047d7d270012d02b1f61c2c221bb89fde6ae45686be66d44e8174674c"
+  },
+  "expires_utc": "2026-10-28T04:50:00.221158+00:00",
+  "Root_device_IO": 0,
+  "RAM_transition_allowed": false,
+  "Flash_writes_allowed": false
+}

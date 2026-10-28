@@ -1,0 +1,52 @@
+{
+  "status": "HOST_READY_STAGE0_READONLY_CURRENT249_CAPTURE_NOT_RAM_GO",
+  "owner_thread": "01a14fdd-8514-7d33-b324-93b038e5f137",
+  "coordinator_thread": "01a164b7-9caa-7011-90d1-807e9630921c",
+  "stage": "resident-capture",
+  "source_target": {
+    "build": "249A92DE",
+    "CRC": "E6CFC3B8",
+    "image_bytes": 1537008,
+    "source_commit": "5e7f70c823b70e2a6ed20abe4cce412fe0b97b66",
+    "ELF_sha256": "8a68bf96894739618ce60906095af28f39906f8ef2d1201740841ddbbba0d208"
+  },
+  "argv_template": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/preflight.py",
+    "--execute",
+    "--grant",
+    "ROOT_FRESH_ABSOLUTE_STAGE0_GRANT",
+    "--lease-sha256",
+    "ROOT_EXACT_GRANT_AND_CANONICAL_SHA256",
+    "--output",
+    "ROOT_NEW_ABSOLUTE_OUTPUT"
+  ],
+  "control_bytes": [
+    "05",
+    "1f"
+  ],
+  "ASCII_getters": [
+    "identity",
+    "reg",
+    "stk",
+    "hout",
+    "pwd",
+    "alarm",
+    "date"
+  ],
+  "nominal_TX_bytes": 49,
+  "max_TX_bytes": 128,
+  "max_RX_bytes": 262144,
+  "max_session_seconds": 120,
+  "live_guard_before_each_named_open_ioctl_select_read_write": true,
+  "partial_write_no_retry": true,
+  "own_close_allowed_after_revoke": true,
+  "register_or_software_watchdog_calendar_not_exposed_by_qualified_CLI": true,
+  "RAM_Flash_ROM_RTCsetters_APP_SDhelper_commands_present": false,
+  "master13_deferred": true,
+  "first_complete_source_frame_no_predrain_or_skip": true,
+  "no_UI_hardware_or_cold_PARK_acceptance": true,
+  "physical_IO": 0,
+  "goal_complete": false
+}

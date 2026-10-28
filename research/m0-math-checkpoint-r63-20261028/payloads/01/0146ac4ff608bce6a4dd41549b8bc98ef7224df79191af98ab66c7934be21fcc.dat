@@ -1,0 +1,12 @@
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:39:17:crc32	20	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:44:13:text	16	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:45:13:hex	32	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:49:13:field	16	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:65:13:parse_hex	16	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:76:39:paint_stack	0	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:81:17:stack_used	0	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:51:13:transmit	32	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:73:13:error	16	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:34:32:bench_fault_bootsel	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:38:32:__wrap_panic	8	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/bench.c:161:5:main	88	static

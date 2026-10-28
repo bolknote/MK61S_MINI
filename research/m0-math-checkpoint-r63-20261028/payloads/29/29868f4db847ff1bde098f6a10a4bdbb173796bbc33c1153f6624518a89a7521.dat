@@ -1,0 +1,25 @@
+{
+  "status": "FROZEN_READONLY_MATHEMATICAL_REVIEW_ANNEX_NO_RUNTIME_SUCCESSOR",
+  "files": {
+    "NOTE.md": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-fullword-zero-predicate-note-20261028/NOTE.md",
+      "bytes": 2056,
+      "sha256": "aeea8d4337da4a40ecc0e7cd9428e55ba7a7f8232881e7859e804afecb7a9d94"
+    },
+    "proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-fullword-zero-predicate-note-20261028/proof.json",
+      "bytes": 8547,
+      "sha256": "64e80f60518e06fbdba4f5f234ca57a28b40ecbae36b44ba6b24e726842d4706"
+    },
+    "prove.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-fullword-zero-predicate-note-20261028/prove.py",
+      "bytes": 3987,
+      "sha256": "628d11a18fe1da3b83ae472958a5825107313ed671e4973eb9d25e55cab72834"
+    }
+  },
+  "parent_R62_FROZEN_sha256": "342d99787bd364c760151d44223329ed1ffc2077ceac766d99f9008588bf32d5",
+  "runtime_source_changes": 0,
+  "actual_ARM_MPFR_device_Git_calls": 0,
+  "all_producers_terminal": true,
+  "goal_complete": false
+}

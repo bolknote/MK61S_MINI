@@ -1,0 +1,30 @@
+{
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/supervise_stage.py",
+    "--execute",
+    "--stage",
+    "resident-capture",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/grants/resident-capture.json",
+    "--lease-sha256",
+    "74e73d70ebef353b14132d04fdb77b1c915170f00893beb061166760f5537595",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-001",
+    "--supervisor-output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-supervisor-001"
+  ],
+  "grant": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/grants/resident-capture.json",
+    "bytes": 2029,
+    "sha256": "74e73d70ebef353b14132d04fdb77b1c915170f00893beb061166760f5537595"
+  },
+  "canonical": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-device-handoff.json",
+    "bytes": 2029,
+    "sha256": "74e73d70ebef353b14132d04fdb77b1c915170f00893beb061166760f5537595"
+  },
+  "read_only_capture_only": true,
+  "RAM_transition_allowed": false
+}

@@ -1,0 +1,71 @@
+{
+  "status": "ROOT_JOINT_R62_R63_FIRST_PHYSICAL_SMOKE_AND_EXACT249_RETURN_CLOSED",
+  "created_utc": "2026-10-28T05:13:55.814473+00:00",
+  "owner": "m0-math-ram",
+  "owner_thread": "01a14fdd-8514-7d33-b324-93b038e5f137",
+  "coordinator_thread": "01a164b7-9caa-7011-90d1-807e9630921c",
+  "uid": "E6657CD423721C35",
+  "scope": "PICO_R62_R63_FIRST_SMOKE_CLOSED",
+  "stage": "closed",
+  "enabled": false,
+  "hardware_window_granted": false,
+  "hardware_execution_allowed": false,
+  "Flash_writes_allowed": false,
+  "RTC_setter_budget": 0,
+  "APP_opens_allowed": false,
+  "SD_helper_allowed": false,
+  "physical_key_action_budget": 0,
+  "other_device_IO_allowed": false,
+  "physical_pairs": 24,
+  "physical_states": 72,
+  "target_calls": 2940,
+  "all720_own_math_samples_correct": true,
+  "selected_repaired_pairs": 14,
+  "speedup_vs_all_correct_Qfplib_samples": [
+    2.4401913875598087,
+    3.3409836065573773
+  ],
+  "five_slow_controls_retained": true,
+  "pairs_without_correct_reference_no_speed_claim": 2,
+  "raw_physical_recount": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/PHYSICAL-RECOUNT.json",
+    "bytes": 124236,
+    "sha256": "793ff0a8d7c0d90336b923a9880d672b65e078253f6af53e5dff478916b422b7"
+  },
+  "observed_stack_only": 2276,
+  "universal_stack_claim": false,
+  "all_three_full_Flash_copies_exact": true,
+  "current_Flash_sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442",
+  "current_resident": "249A92DE/E6CFC3B8",
+  "all_typed_data_settings_alarm_IP_cwd_UI_exact_to_initial": true,
+  "UI_setters_or_exceptions": 0,
+  "RTC_SET": 0,
+  "RTC_disposition": "SET0_PLACEHOLDER_HOLD_NO_EXACT_TRAJECTORY",
+  "return_state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-verify-001/current-state.json",
+    "bytes": 2236,
+    "sha256": "478d94fdd7a345b3877df39e75d51180fc5d22de3bee0647f24285459a29d459"
+  },
+  "actual_return_epoch": [
+    "9",
+    "00010001"
+  ],
+  "all19_actors_terminal": true,
+  "owner_summary": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/first-physical-round-001/SUMMARY.json",
+    "bytes": 7716,
+    "sha256": "a034f3a0a94aeb83c3741b88f830cbcb3571ec499f2ee2ef6cda11e986ad034c"
+  },
+  "fresh_named_route_and_noholder": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-resident-capture-004/root-physical-and-noholder.json",
+    "bytes": 4383,
+    "sha256": "343f2e04a05eb8570264b8b7d9e6e11ec6492d315ada2371fd17630d436094b0"
+  },
+  "remaining_matrix_pairs": 60,
+  "remaining_matrix_batches": 3,
+  "other_stages_granted": false,
+  "UI_grant": false,
+  "Root_device_IO": 0,
+  "Root_Git_writes": 0,
+  "full_math_goal_complete": false
+}

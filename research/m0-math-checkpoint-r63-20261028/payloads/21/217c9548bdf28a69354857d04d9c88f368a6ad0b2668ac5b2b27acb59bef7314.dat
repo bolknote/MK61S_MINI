@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/operator-joint/supervise_stage.py",
+    "--execute",
+    "--stage",
+    "rom-return",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/rom-return.json",
+    "--lease-sha256",
+    "153b1fdc7b567a049002d0803df20a843146433781e498a9c5a96f1f73740dd9",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-rom-return-001",
+    "--supervisor-output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-rom-return-supervisor-001"
+  ],
+  "grant": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/rom-return.json",
+    "bytes": 2231,
+    "sha256": "153b1fdc7b567a049002d0803df20a843146433781e498a9c5a96f1f73740dd9"
+  },
+  "stage": "rom-return"
+}
