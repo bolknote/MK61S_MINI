@@ -1,0 +1,15 @@
+{
+  "pid": 56339,
+  "producer": {
+    "path": "/private/tmp/m0-math-r64-final-host-20261028-001/qualify_positive_v2.py",
+    "bytes": 7081,
+    "sha256": "0189d4c90d5568ace1d5ebed32450111929b536159e87370e574c4bee52eb143"
+  },
+  "inputs": {
+    "path": "/private/tmp/m0-math-r64-final-host-20261028-001/positive-inputs.jsonl.gz",
+    "bytes": 6043044,
+    "sha256": "2775715ef37f887cc7ae4303afeb454e384cb65ce23c19dbbd0984d849fffe20"
+  },
+  "phase": "before_any_Machine_or_guest_initialization",
+  "actual_device_IO": 0
+}

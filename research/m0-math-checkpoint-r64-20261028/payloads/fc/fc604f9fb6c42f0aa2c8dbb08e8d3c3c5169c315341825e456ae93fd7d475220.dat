@@ -1,0 +1,18 @@
+{
+  "status": "ROOT_WAKE_OPERATOR_PINS_AND_QUALIFIED_AST_REUSE_PASS",
+  "FROZEN": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/FROZEN.json",
+    "bytes": 29033,
+    "sha256": "be6016a58976adaa997937b9ba9300e3482775dbe6fca1bb974c519fb8b3639a"
+  },
+  "ready": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/READY-FOR-REVIEW.json",
+    "bytes": 4107,
+    "sha256": "450f1c31b6241e98f65db8ac419d5c449d250c51e14aff3c19bd41045cfcb038"
+  },
+  "top_pins": 184,
+  "core_AST_rows": 11,
+  "four_adapters_UI_wake_methods_AST_exact": true,
+  "Root_device_IO": 0,
+  "live_grant": false
+}

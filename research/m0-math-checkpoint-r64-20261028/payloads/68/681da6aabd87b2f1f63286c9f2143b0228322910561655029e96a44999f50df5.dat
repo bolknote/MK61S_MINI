@@ -1,0 +1,33 @@
+{
+  "status": "FORMAL_NORMAL_RANGE_ENCLOSURE_WITH_EXPLICIT_ENDPOINTS",
+  "source": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-pow-nearpower-negative-r64-20261028/decline-trials/normal-saturation-skip-001/source/code/native_eabi_m0_pow_fast.inc",
+    "bytes": 49256,
+    "sha256": "3209fae69fb3554fc2ff6f85cc8eb12ec91e3617bacc5e93e1350e1fe58ca50a"
+  },
+  "actual_control_flow": [
+    "Finite nonzero magnitude and finite nonzero integer exponent have already been validated.",
+    "The new skip is inside the old saturation block, after its exact-power-of-two return.",
+    "For E=1022 or1023 that outer block requires e>=4; the new test also requires e<=6.",
+    "Thus actual skip has nonzero fraction, 0.5<abs(x)<2 and16<=abs(y)<=127."
+  ],
+  "general_enclosure": {
+    "assumptions": "0.5<=a<2; integer1<=n<=127; y is+n or-n",
+    "exact_result": "[2^-127,2^127]",
+    "rounded_binary64_RNE": "[2^-127,2^127]",
+    "all_results_normal": true
+  },
+  "actual_skip_enclosure": {
+    "assumptions": "0.5<a<2,16<=n<=127",
+    "exact_result": "(2^-127,2^127)",
+    "rounded_result_finite_normal": true
+  },
+  "endpoint_clarification": "For the full half-open base interval the lower result bound must be closed: (0.5)^127=2^-127. The earlier terse open-lower statement is valid at the actual skip because the preceding exact-power shortcut excludes0.5. No runtime or rounding formula changed by this clarification.",
+  "proof_steps": [
+    "Both a and its reciprocal lie in the closed interval[1/2,2].",
+    "For1<=n<=127 their positive integer powers lie in[2^-127,2^127].",
+    "Both endpoints are exactly representable finite normal binary64 values; monotonic RNE keeps this interval inside the normal range.",
+    "Consequently a valid zero/infinity saturation test cannot return on the skipped path. All final rounding still uses the unchanged existing implementation or the proved t=1 shortcut."
+  ],
+  "actual_device_IO": 0
+}

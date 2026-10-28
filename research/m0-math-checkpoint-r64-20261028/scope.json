@@ -1,0 +1,84 @@
+{
+  "status": "PRIVATE_R64_FINITE_HOST_AND_ALL84_PHYSICAL_CHECKPOINT",
+  "previous_checkpoint_commit": "e47a37b1e29ecf1d3fd1240cc7be537e4a04b569",
+  "variant": "MK61_USE_M0_EABI=1; MK61_M0_RP2040_EABI=1 private mathematical block",
+  "canonical_runtime_integrated": false,
+  "selected_default_provider_changed": false,
+  "M4_changed": false,
+  "HOST": {
+    "pairs": 152937,
+    "states": 324446,
+    "R63_losing_pairs": 1400,
+    "R64_losing_pairs": 1398,
+    "new_losing_states": 0,
+    "adverse_states_vs_R63": 7658,
+    "max_adverse_instructions": 14,
+    "remaining_by_kind": {
+      "inverse_root": 721,
+      "normal_result": 481,
+      "zero_or_infinity": 196
+    }
+  },
+  "physical": {
+    "pairs": 28,
+    "states_per_runtime": 84,
+    "total_calls": 6960,
+    "math_calls": 6720,
+    "calibration_calls": 240,
+    "our_calls": 1680,
+    "our_wrong": 0,
+    "Qfplib_wrong_retained": 3060,
+    "R64_vs_R63": {
+      "faster": 39,
+      "equal": 18,
+      "slower": 27
+    },
+    "cycle_delta_range": [
+      -4135,
+      40
+    ],
+    "R64_vs_correct_Qfplib": {
+      "faster": 24,
+      "slower": 45,
+      "no_correct_reference": 15
+    },
+    "R63_vs_correct_Qfplib": {
+      "faster": 12,
+      "slower": 57,
+      "no_correct_reference": 15
+    },
+    "new_Qfplib_losing_states": 0,
+    "Qfplib_medians_exact": 252,
+    "observed_stack_bytes": {
+      "R64": 1096,
+      "R63": 1088
+    },
+    "universal_stack_bound": false
+  },
+  "device_return": {
+    "hardware_window_closed": true,
+    "full_Flash_reads": 12,
+    "full_Flash_bytes": 2097152,
+    "all_Flash_sha256": "a05379163123d8f634ad1c81e82daf1d48afd5ea500139201f3503b96ee8f126",
+    "typed_settings_UI_exact": true,
+    "final_epoch": [
+      "18",
+      "00010001"
+    ],
+    "final_keys": 0,
+    "RTC_SET": 0,
+    "RTC_trajectory_claim": false,
+    "setters_or_Flash_programming": 0
+  },
+  "new_device_ARM_MPFR_SDK_calls_by_checkpoint": 0,
+  "local_shell_typo": "Before the final read-only verifier a nonexistent executable path returned127, before Python/operator/device open; then the one authorized literal verifier succeeded.",
+  "historical_permissions_inert": true,
+  "open": [
+    "Known pow speed deficits",
+    "Universal correct rounding and general pow termination",
+    "Universal stack bound",
+    "FMA acceptance",
+    "Production integration"
+  ],
+  "goal_complete": false
+}

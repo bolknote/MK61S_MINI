@@ -1,0 +1,26 @@
+{
+  "status": "OBSERVED_FIRST_VALIDATED_STATUS_NOT_A_PRIOR_ADMISSION",
+  "physical_keys": 0,
+  "epoch": [
+    "15",
+    "00010001"
+  ],
+  "settings": {
+    "UI_FONT_FAMILY=": "UI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000",
+    "UI=": "UI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED",
+    "SETTINGS_WRITES": 0,
+    "SETTINGS_ERASES": 0,
+    "SETTINGS_SEQUENCE": 331,
+    "RTC_SET": 0,
+    "RTC_PPM": 0
+  },
+  "initial_terminal": "COMMAND",
+  "status_raw": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r63-smoke-resident-capture-001/baseline/status-001.raw",
+    "bytes": 3242,
+    "sha256": "ad35ccd0198d1bd3650b532fd04e9ccc081298c0d656295ca6be5d03930f49c3"
+  },
+  "first_status_only_discovery": true,
+  "all_following_statuses_require_same_epoch_and_counter": true,
+  "RAM_or_ROM_transition_authorized": false
+}

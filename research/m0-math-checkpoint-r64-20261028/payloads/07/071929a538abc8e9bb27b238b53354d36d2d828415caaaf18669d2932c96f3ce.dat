@@ -1,0 +1,24 @@
+from pathlib import Path
+import hashlib,json
+
+H=Path('/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001')
+RAM=H.parent/'m0-math-r64-ram-hil-host-20261028-001'
+def pin(p):
+ b=p.read_bytes();return dict(bytes=len(b),sha256=hashlib.sha256(b).hexdigest())
+tests=json.loads((H/'HOST-OPERATOR-TESTS.json').read_text())
+assert len(tests['receipts'])==15 and all(r['exit_code']==0 and r['reaped'] for r in tests['receipts'])
+changes=[]
+for path in sorted((H/'preflight-d6').glob('TEMPLATE-*.json')):
+ g=json.loads(path.read_text());role=g['runtime_role'];expected=pin(RAM/('runtime-'+role)/'FROZEN.json')['sha256']
+ if g['payload_FROZEN_sha256']!=expected:
+  changes.append(dict(path=str(path),old=g['payload_FROZEN_sha256'],new=expected))
+  g['payload_FROZEN_sha256']=expected;path.write_text(json.dumps(g,indent=2)+'\n')
+with (H/'CAPTURE-METADATA-ROLE-FIX.json').open('x') as f:f.write(json.dumps(dict(status='CAPTURE_TEMPLATES_BIND_CORRESPONDING_FUTURE_ROLE_METADATA_ONLY',changes=changes,actual_device_IO=0),indent=2)+'\n')
+for folder in ['preflight-d6','operator-R64','operator-R63']:
+ w=H/folder;deps=json.loads((w/'envelope-dependencies.json').read_text())
+ result=dict(status='FROZEN_D6_HOST_OPERATOR_COMPONENT_NOT_DEVICE_AUTHORITY',
+  files={str(p.relative_to(w)):pin(p) for p in sorted(w.rglob('*')) if p.is_file()},
+  external_frozen_packets=deps['external_frozen_packets'],external_file_refs=deps['external_file_refs'],
+  all_producers_terminal=True,actual_device_IO=0,hardware_grant=False)
+ with (w/'ENVELOPE-FROZEN.json').open('x') as f:f.write(json.dumps(result,indent=2)+'\n')
+ print(folder,pin(w/'ENVELOPE-FROZEN.json'))

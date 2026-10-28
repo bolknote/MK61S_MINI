@@ -1,0 +1,48 @@
+{
+  "status": "PASS_COMPLETE_EXISTING_AUDIT",
+  "complete_existing_audit": true,
+  "tested_states": 49410,
+  "planned_states": 49410,
+  "actual_completed_ARM_calls": {
+    "candidate": 49410,
+    "parent_R63": 49410,
+    "Qfplib": 148230
+  },
+  "actual_loader_calls_excluded": 2,
+  "state_comparison_classes": {
+    "no_slower": 18702,
+    "no_correct_reference": 30708
+  },
+  "candidate_minus_R63_instruction_histogram": {
+    "-3": 18,
+    "-2": 3862,
+    "-1": 7695,
+    "0": 35872,
+    "1": 1963
+  },
+  "new_losing_states": [],
+  "fixed_states": [],
+  "wrong_reference_outputs_and_costs_retained": 127943,
+  "observed_stack_bytes": 440,
+  "universal_stack_bound": false,
+  "selected": false,
+  "actual_device_IO": 0,
+  "Git_writes": 0,
+  "MPFR_calls": 0,
+  "SDK_builds": 0,
+  "elapsed_seconds": 131.66357837500982,
+  "error": null,
+  "last_input": {
+    "x": "8008000000000000",
+    "y": "3FF0D0340D0340D1",
+    "SIO": "PENDING",
+    "previously_losing": false,
+    "R63_joined_line": 324446,
+    "expected": "7FF8000000000000",
+    "gold_evidence": {
+      "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-powerzero-r63-20261028/boundary-call-records.jsonl.gz",
+      "sha256": "a30ffcb3c19280dbaa18a363a89e49904e4f2b8f4ebc59b29dde2837fbcb264d",
+      "line": 10021
+    }
+  }
+}

@@ -1,0 +1,13 @@
+.section .math_main_blob,"ax",%progbits
+.balign 4
+.incbin "/private/tmp/m0-math-r64-ram-hil-host-20261028-001/math_main.bin"
+.section .math_hot_blob,"ax",%progbits
+.balign 4
+.incbin "/private/tmp/m0-math-r64-ram-hil-host-20261028-001/math_hot.bin"
+.section .math_data_blob,"aw",%progbits
+.balign 4
+.incbin "/private/tmp/m0-math-r64-ram-hil-host-20261028-001/math_data.bin"
+.section .qfplib_blob,"ax",%progbits
+.balign 4
+.incbin "/private/tmp/m0-math-r64-ram-hil-host-20261028-001/qfplib.bin"
+.section .note.GNU-stack,"",%progbits

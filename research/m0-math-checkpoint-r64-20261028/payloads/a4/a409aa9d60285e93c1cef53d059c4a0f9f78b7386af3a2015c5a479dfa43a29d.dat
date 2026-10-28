@@ -1,0 +1,20 @@
+{
+  "status": "UNCHANGED_FLASH_VERIFIED_AND_SELECTED249_BOOT_REQUESTED_DATA_VERIFY_PENDING",
+  "stage": "rom-return",
+  "pid": 23378,
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "goal_complete": false,
+  "Flash_after": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r63-smoke-rom-return-001/flash-after-math.bin",
+    "bytes": 2097152,
+    "sha256": "a05379163123d8f634ad1c81e82daf1d48afd5ea500139201f3503b96ee8f126"
+  },
+  "resident_boot_attempts": 1,
+  "clock_trajectory_status": "KNOWN_SET0_PLACEHOLDER_RETURN_HOLD",
+  "child_pids": [
+    23379,
+    23380,
+    23390
+  ]
+}

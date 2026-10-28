@@ -1,0 +1,8 @@
+{
+  "status": "STATIC_READER_ASSUMPTION_FIXED_BEFORE_GUEST_OR_DEVICE",
+  "failure": "math-only ELF reader assumed all mapping markers even; worker includes odd byte-data markers",
+  "resolution": "Fresh consumer allows odd $d markers, still requires aligned Thumb code and seven data-only patch sites",
+  "failed_consumer_sha256": "d942d5642c445a4ee3a4aea4c7e33c2da1949f277977f196b31bf3b974a8fa87",
+  "ARM_calls": 0,
+  "device_IO": 0
+}

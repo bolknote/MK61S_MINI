@@ -1,0 +1,59 @@
+{
+  "status": "PASS_POSTSEAL_VALID_BINDINGS_AND_ALL_PREFD_REJECTIONS",
+  "directory": "preflight-d6",
+  "template_count": 4,
+  "rejected": [
+    {
+      "test": "disabled-template-TEMPLATE-r63-smoke-resident-capture.json",
+      "reason": "Different stage/status"
+    },
+    {
+      "test": "disabled-template-TEMPLATE-r63-tail-resident-capture.json",
+      "reason": "Different stage/status"
+    },
+    {
+      "test": "disabled-template-TEMPLATE-r64-smoke-resident-capture.json",
+      "reason": "Different stage/status"
+    },
+    {
+      "test": "disabled-template-TEMPLATE-r64-tail-resident-capture.json",
+      "reason": "Different stage/status"
+    },
+    {
+      "test": "old-scope",
+      "reason": "Different owner/scope/UID"
+    },
+    {
+      "test": "foreign-owner",
+      "reason": "Different owner/scope/UID"
+    },
+    {
+      "test": "wrong-UID",
+      "reason": "Different owner/scope/UID"
+    },
+    {
+      "test": "expired",
+      "reason": "Root lease expired"
+    },
+    {
+      "test": "HOST-fixture",
+      "reason": "A HOST fixture is not hardware authority"
+    },
+    {
+      "test": "wrong-stage",
+      "reason": "Different stage/status"
+    },
+    {
+      "test": "too-long-session",
+      "reason": "Root continuous budget expired"
+    },
+    {
+      "test": "wrong-operator-envelope",
+      "reason": "Root binds a different operator envelope"
+    }
+  ],
+  "NativeIO_calls": [],
+  "actual_device_IO": 0,
+  "actual_children_started": 0,
+  "synthetic_canonical_never_the_real_canonical": true
+}

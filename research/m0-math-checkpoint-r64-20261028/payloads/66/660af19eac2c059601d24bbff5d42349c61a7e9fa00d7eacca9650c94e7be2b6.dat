@@ -1,0 +1,54 @@
+{
+  "status": "TERMINAL_NATIVE_HOST_STARTUP_SIGILL_BEFORE_GUEST_EXECUTION",
+  "command_exit_code": 132,
+  "original_producer": {
+    "path": "/private/tmp/m0-math-r64-final-host-20261028-001/qualify_positive.py",
+    "bytes": 6846,
+    "sha256": "c357eb3db752d7815f94325d8a036433b2800c7f8eb4e2f84e9541d9e375e3e6"
+  },
+  "crash_report": {
+    "path": "/Users/bolk/Library/Logs/DiagnosticReports/Python-2026-10-28-162024.ips",
+    "bytes": 14493,
+    "sha256": "f322c5a9ed011ea72128fab4b1d493bccf903d83d055b488c731a8cb80e24f71"
+  },
+  "exception": {
+    "codes": "0x0000000000000001, 0x00000000d53b0028",
+    "rawCodes": [
+      1,
+      3577413672
+    ],
+    "type": "EXC_BAD_INSTRUCTION",
+    "signal": "SIGILL"
+  },
+  "native_top_frames": [
+    {
+      "imageOffset": 68728,
+      "symbol": "init_cache_info",
+      "symbolLocation": 88,
+      "imageIndex": 18
+    },
+    {
+      "imageOffset": 37396,
+      "symbol": "machine_initialize",
+      "symbolLocation": 36,
+      "imageIndex": 18
+    },
+    {
+      "imageOffset": 12596,
+      "symbol": "uc_init_engine",
+      "symbolLocation": 164,
+      "imageIndex": 18
+    },
+    {
+      "imageOffset": 22060,
+      "symbol": "uc_mem_map",
+      "symbolLocation": 688,
+      "imageIndex": 18
+    }
+  ],
+  "diagnosis": "Unicorn init_cache_info traps on host MRS CTR_EL0 during first uc_mem_map, before any ARM guest loader or mathematical call. No ROM/device I/O.",
+  "completed_ARM_guest_calls": 0,
+  "completed_loader_calls": 0,
+  "output_directory_empty": true,
+  "next_action": "Fresh v2 output directory; same finite corpus/candidate, use approved HOST/JIT execution outside restricted sandbox."
+}

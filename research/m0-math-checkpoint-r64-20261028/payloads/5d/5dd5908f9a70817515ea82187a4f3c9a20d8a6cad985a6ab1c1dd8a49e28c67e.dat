@@ -1,0 +1,21 @@
+{
+  "status": "SAVED_PHYSICAL_RECORD_CONSUMER_ONLY",
+  "files": [
+    {
+      "path": "cycle_report.py",
+      "bytes": 8846,
+      "sha256": "6346861c02fb43bf22b41d37281b526cbb5613aeadb4410bff729d555215819a"
+    },
+    {
+      "path": "r64-smoke.json",
+      "bytes": 294672,
+      "sha256": "078ec4c5a26091ca337f565f12e667f6f1736935e60d5bd879a9abe690ed2c2d"
+    }
+  ],
+  "source_records_sha256": "9ea9a663e95f0d9b5d73cb05a39ab190028f1607b8c8afa2ed08743ed6c4baf8",
+  "device_IO": 0,
+  "new_math_calls": 0,
+  "runtime_changed": false,
+  "previous_goal_turn": "progress: fresh read-only resident capture completed",
+  "scope": "Fixed 24 pairs /72 SIO states; eight measured calls and two retained warmups per library. No blind overhead subtraction. No universal speed, correctness, stack or acceptance claim."
+}

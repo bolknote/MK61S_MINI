@@ -1,0 +1,13 @@
+{
+  "status": "ONE_RAW_ROM_REQUEST_NATIVE_DISCONNECT_SEEN_EXACT_ROM_PENDING",
+  "received_hex": "456e746572696e67205250323034302055534220424f4f5453454c0d0a",
+  "ack_complete": true,
+  "disconnect": {
+    "errno": 6
+  },
+  "raw_exclamation_attempts": 1,
+  "CMD_DFU_attempts": 0,
+  "Flash_writes_requested": 0,
+  "RTC_setters": 0,
+  "ROM_UID_not_yet_confirmed": true
+}

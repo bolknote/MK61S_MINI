@@ -1,0 +1,45 @@
+"""Exact integer-power rational oracle, rounded once to binary64 RNE."""
+SIGN=1<<63
+INF=0x7ff0000000000000
+QNAN=0x7ff8000000000000
+FRAC=(1<<52)-1
+def rounded_ratio(num,den,shift):
+ assert num>=0 and den>0
+ if shift>=0:num<<=shift
+ else:den<<=-shift
+ q,r=divmod(num,den)
+ return q+int(2*r>den or (2*r==den and q&1))
+def ratio_bits(num,den):
+ assert num>=0 and den>0
+ if not num:return 0
+ e=num.bit_length()-den.bit_length()
+ if (num<(den<<e)) if e>=0 else ((num<<-e)<den):e-=1
+ if e>1023:return INF
+ if e>=-1022:
+  q=rounded_ratio(num,den,52-e)
+  if q==1<<53:q>>=1;e+=1
+  if e>1023:return INF
+  assert 1<<52<=q<1<<53
+  return ((e+1023)<<52)|(q-(1<<52))
+ q=rounded_ratio(num,den,1074)
+ assert 0<=q<=1<<52
+ return q
+def power_ratio(xb,n,reciprocal):
+ """Magnitude rational for finite nonzero binary64 x and integer n>=0."""
+ assert isinstance(n,int) and n>=0
+ m=xb&~SIGN;e=m>>52;assert 0<m<INF
+ sig=(m&FRAC)|((1<<52) if e else 0)
+ scale=((e-1075) if e else -1074)*n
+ num,den=pow(sig,n),1
+ if scale>=0:num<<=scale
+ else:den<<=-scale
+ return (den,num) if reciprocal else (num,den)
+def power_bits(xb,n,reciprocal):
+ assert isinstance(n,int) and n>=0
+ if not n:return 0x3ff0000000000000
+ m=xb&~SIGN;sign=SIGN if xb&SIGN and n&1 else 0
+ if m>INF:return QNAN
+ if m==INF:return sign|(0 if reciprocal else INF)
+ if not m:return sign|(INF if reciprocal else 0)
+ num,den=power_ratio(xb,n,reciprocal)
+ return sign|ratio_bits(num,den)

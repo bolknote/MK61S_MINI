@@ -1,0 +1,26 @@
+{
+  "status": "EXACT_OTHER_DISPATCH_FUNCTION_NORMALIZED_INSTRUCTIONS",
+  "functions": {
+    "pow_rsqrt": {
+      "bytes": 836,
+      "raw_byteexact": true,
+      "changed_byte_offsets": [],
+      "normalized_instructions_identical": true,
+      "normalized_instruction_count": 399,
+      "normalized_trace_sha256": "155de76732810cf0eab32565c76643884f6f9794314e81a21a2ffdb1c52a40cf"
+    },
+    "mk61_m0_pow_dispatch": {
+      "bytes": 472,
+      "raw_byteexact": false,
+      "changed_byte_offsets": [
+        254,
+        255
+      ],
+      "normalized_instructions_identical": true,
+      "normalized_instruction_count": 202,
+      "normalized_trace_sha256": "07464b5c868691f8506d9065508f79a546f7bde0ae6772c5269f535ce65bf9d1"
+    }
+  },
+  "new_ARM_calls": 0,
+  "actual_device_IO": 0
+}

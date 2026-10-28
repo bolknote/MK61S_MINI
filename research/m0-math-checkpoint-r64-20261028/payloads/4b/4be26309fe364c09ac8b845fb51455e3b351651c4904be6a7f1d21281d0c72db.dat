@@ -1,0 +1,26 @@
+{
+  "status": "ROOT_ACCEPT_SLEEP_AWARE_OPERATORS_FOR_SEPARATELY_GRANTED_STAGES",
+  "pins_and_AST": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/development-next-root-20261028-001/ROOT-R64-OPERATORS-PIN-BODY-REVIEW.json",
+    "bytes": 738,
+    "sha256": "fc604f9fb6c42f0aa2c8dbb08e8d3c3c5169c315341825e456ae93fd7d475220"
+  },
+  "independent37controls": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/development-next-root-20261028-001/ROOT-R64-WAKE-CONTROLS.json",
+    "bytes": 7428,
+    "sha256": "84eb64c56a0790e0603e6292e37573bdce35ac20d2d14f9d12eef9060e849942"
+  },
+  "RAM_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/development-next-root-20261028-001/ROOT-R64-RAM-REVIEW.json",
+    "bytes": 1235,
+    "sha256": "0d9d60ef0f7dee46ae15b1f559ca4e79e2fb711c1bd82b7da76ecc9a6dd9cd46"
+  },
+  "FROZEN": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/FROZEN.json",
+    "bytes": 29033,
+    "sha256": "be6016a58976adaa997937b9ba9300e3482775dbe6fca1bb974c519fb8b3639a"
+  },
+  "device_IO": 0,
+  "all_future_stages_independent": true,
+  "first_capture_only": true
+}

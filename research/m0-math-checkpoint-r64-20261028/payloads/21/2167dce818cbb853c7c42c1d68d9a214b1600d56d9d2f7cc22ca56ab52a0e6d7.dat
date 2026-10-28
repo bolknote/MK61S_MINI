@@ -1,0 +1,15 @@
+{
+  "status": "PASS_THREE_INERT_EXACT_WORKER_CDC_PATH_CONTROLS",
+  "accepted_exact_worker_path": "/dev/cu.usbmodemM0R55POW011",
+  "accepted_only_with_math_stage_and_worker_serial": true,
+  "original_numeric_path_still_accepted": true,
+  "rejected": [
+    "worker-path-with-wrong-serial",
+    "worker-path-in-wrong-stage",
+    "foreign-worker-port-suffix"
+  ],
+  "rejected_before_native_stat_or_open": true,
+  "actual_device_opens": 0,
+  "new_ARM_MPFR_or_firmware_calls": 0,
+  "old_protocol_or_RAM_corpora_repeated": false
+}

@@ -1,0 +1,19 @@
+{
+  "pid": 14212,
+  "owned_process_group": 14212,
+  "supervisor_pid": 14211,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/operator-R64/rom_stage.py",
+    "--execute",
+    "--stage",
+    "rom-return",
+    "--grant",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/grants/r64-smoke-rom-return.json",
+    "--lease-sha256",
+    "1a03fb795614e416cf6bacf44129f98bf9c936a145ef367adbbe7f53fd6a1f4f",
+    "--output",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r64-smoke-rom-return-001"
+  ]
+}

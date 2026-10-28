@@ -1,0 +1,22 @@
+{
+  "pid": 12636,
+  "exit_code": 0,
+  "reaped": true,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-picotool/picotool",
+    "save",
+    "-a",
+    "-v",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r64-smoke-rom-load-001/flash-before-math.bin",
+    "-t",
+    "bin",
+    "--bus",
+    "2",
+    "--address",
+    "5",
+    "--ser",
+    "E6657CD423721C35"
+  ],
+  "stdout_sha256": "7d16c2c8165b1532aeb5aee19a3f34de74a964fa02c2b4e03eaa03bd0a4f30df",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

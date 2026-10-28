@@ -1,0 +1,7 @@
+{
+  "initial_portable_consumer_check": "stopped at HOST line745: expected positive qNaN, candidate/parent negative qNaN",
+  "cause": "portable reader initially used stricter raw equality than frozen original qualification equal()",
+  "resolution": "copied the exact quiet-NaN equivalence rule from frozen C1 verify_frozen.py; finite values remain bit-exact; all reference correct flags are independently recounted",
+  "runtime_or_frozen_source_changed": false,
+  "new_ARM_MPFR_or_device_calls": 0
+}

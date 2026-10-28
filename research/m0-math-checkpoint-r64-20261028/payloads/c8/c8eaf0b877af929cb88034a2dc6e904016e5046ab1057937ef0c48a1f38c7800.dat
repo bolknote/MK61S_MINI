@@ -1,0 +1,27 @@
+{
+  "status": "FROZEN_D6_QUALIFIED_IDENTITY_WAKE_METADATA_HELPER",
+  "files": {
+    "preflight.py": {
+      "bytes": 12106,
+      "sha256": "ddee3a3be3332225882192a63418aaf95acc21875e391d7e45acffcea93f11f6"
+    },
+    "vendor/clock_bridge.py": {
+      "bytes": 9385,
+      "sha256": "41f49a7134038cdc96ce523cc47a518a0a2b5c20178551e62297846c0c2ff963"
+    },
+    "vendor/status_frames.py": {
+      "bytes": 1132,
+      "sha256": "9db5fecce7034764e30bbdfe44c2244575fb261f6e7896092ef722d441c82eaa"
+    },
+    "vendor/transaction_core.py": {
+      "bytes": 112,
+      "sha256": "a428aa09ad4c1c6f3bb5794a1667f4aee4c1ae7cab36e222b3baf13aa23713f5"
+    },
+    "wake_admission.py": {
+      "bytes": 3810,
+      "sha256": "70fa6c4e5303a8c35c1d00297092417b8bcd1a094beb4daf5c5374660a8230a2"
+    }
+  },
+  "all_producers_terminal": true,
+  "actual_device_IO": 0
+}

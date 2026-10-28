@@ -1,0 +1,30 @@
+{
+  "status": "ROOT_R64_RAM_IMAGE_MATRIX_BINDING_REVIEW_PASS_INERT_OPERATOR_STILL_REQUIRED",
+  "utc": "2026-10-28T13:56:52.280895+00:00",
+  "frozen": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-ram-hil-host-20261028-001/FROZEN.json",
+    "bytes": 17368,
+    "sha256": "3868ef3cafab7fd8269f1f1b0c9e124ab2ba4931170ce25f1c1adb0160be8180"
+  },
+  "ready": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-ram-hil-host-20261028-001/READY-FOR-REVIEW.json",
+    "bytes": 7652,
+    "sha256": "0df362d16c7fd61dab3d1e1068c906b86a625a9d85e5f220ebb0b75189ba6399"
+  },
+  "internal_pins_verified": 113,
+  "independent_ELF_PT_LOAD_BIN_blob_CRC_regions_exact": true,
+  "worker_regions_only_seven_bound_data_words_changed": true,
+  "core0_stack_bank": "0x20040000..0x20041000; core1 bank untouched",
+  "reused_worker_functions": 184,
+  "unique_states_recounted": 84,
+  "worst_Flash_delta14_input_present_all3SIO": true,
+  "RAM_max_increase_instructions": 34,
+  "batches": 4,
+  "queries": 192,
+  "targetcalls": 6960,
+  "Flash_writes_allowed": 0,
+  "live_operator_grant": false,
+  "main_acceptance": false,
+  "Root_device_IO": 0,
+  "Root_ARM_calls": 0
+}

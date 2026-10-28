@@ -1,0 +1,23 @@
+{
+  "status": "FIXED_CORRECTED28_PAIR84_STATE_HIL_DATASET",
+  "unique_pairs": 28,
+  "unique_state_cases": 84,
+  "dataset_sha256": "442846df389ac8f28e50a455600a2546f943894e5d5e8bcce880e31b1f0286f2",
+  "changed_from_frozen_proposal": {
+    "removed": [
+      "8000000000000001",
+      "C000000000000000"
+    ],
+    "inserted": [
+      "A469CB755EAD238A",
+      "C000000000000000"
+    ],
+    "reason": "include true global maximum +14, not only already-three-state maximum +8"
+  },
+  "old_union324446_unchanged": true,
+  "source_matrix": {
+    "path": "/private/tmp/m0-math-r64-ram-hil-host-20261028-001/HIL-MATRIX-CORRECTED.json",
+    "bytes": 105444,
+    "sha256": "88cdcea994bc1ad72c9adf46c06a6385304030b9c672edee423e2b021bf3e30a"
+  }
+}

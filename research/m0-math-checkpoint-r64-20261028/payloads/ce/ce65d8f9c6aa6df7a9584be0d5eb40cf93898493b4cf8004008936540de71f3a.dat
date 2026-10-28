@@ -1,0 +1,14 @@
+{
+  "status": "ROOT_FRESH_ZERO_D6_CAPTURE_ACCEPTED_FOR_RAM_ONLY_TRANSITION",
+  "state_sha256": "48860a391c2ad97ab8c97badbb1cf126b358cd73b7d859de7b051571f1986833",
+  "registers15_stack5_program105_zero": true,
+  "IP": 0,
+  "physical_keys": 0,
+  "epoch": [
+    "14",
+    "00010001"
+  ],
+  "settings_sequence": 331,
+  "RTC_SET0_placeholder_no_trajectory_claim": true,
+  "Root_device_IO": 0
+}

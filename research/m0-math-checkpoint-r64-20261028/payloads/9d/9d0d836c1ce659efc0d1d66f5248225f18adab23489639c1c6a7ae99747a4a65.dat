@@ -1,0 +1,11 @@
+{
+  "status": "STARTED_ROOT_RESIDENT_RETURN_STAGE",
+  "stage": "resident-verify",
+  "pid": 23897,
+  "Flash_writes_requested": 0,
+  "RTC_setters": 0,
+  "APP_opens": 0,
+  "physical_key_actions_sent": 0,
+  "UI_setters": 0,
+  "goal_complete": false
+}

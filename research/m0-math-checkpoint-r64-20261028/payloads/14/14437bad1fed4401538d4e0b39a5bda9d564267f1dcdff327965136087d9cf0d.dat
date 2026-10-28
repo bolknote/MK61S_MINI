@@ -1,0 +1,22 @@
+{
+  "status": "ROOT_BATCH_WIRE_AND_FULL_FLASH_TYPED_SETTINGS_UI_RETURN_PASS",
+  "batch": "r64-tail",
+  "wire_review": "/Users/bolk/Projects/MK61S_MINI/.build/development-next-root-20261028-001/ROOT-r64-tail-WIRE-RECOUNT.json",
+  "source_capture": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r64-tail-resident-capture-001/current-state.json",
+  "full_Flash_three_exact_sha256": "a05379163123d8f634ad1c81e82daf1d48afd5ea500139201f3503b96ee8f126",
+  "state_after_sha256": "f7309d9970ca9cdd0259c71424390753530cd95586c2560bb1de5303942b84a2",
+  "typed_settings_UI_exact": true,
+  "epoch_before": [
+    "16",
+    "00010001"
+  ],
+  "epoch_after": [
+    "17",
+    "00010001"
+  ],
+  "physical_keys_before": 0,
+  "physical_keys_after": 0,
+  "RTC_SET0_placeholder_no_setter_or_trajectory_claim": true,
+  "Root_device_IO": 0,
+  "process_ownership_barrier_is_checked_separately_by_stage_issuer": true
+}

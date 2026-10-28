@@ -1,0 +1,27 @@
+{
+  "status": "PASS_EXACT_UIV6_FUNCTION_AST_REUSE",
+  "methods": [
+    "_guard",
+    "_closed_cache",
+    "admit",
+    "to_command"
+  ],
+  "Mode_AST_exact": true,
+  "source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-ui-final-20261028-001/ui-operator-v6/resident.py",
+    "bytes": 19318,
+    "sha256": "393d916e2034eaab064fadfc08c37fcde3cb31637be66a74d9a3159c42bbdebe"
+  },
+  "mode_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-ui-final-20261028-001/ui-operator-v6/ui_stage.py",
+    "bytes": 16926,
+    "sha256": "05853754ae1c2282a0a6610162fd8f5d7b013bcfe887444ec926ee5de7036c10"
+  },
+  "identity_metadata": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-ui-final-20261028-001/ui-operator-v6/stage-outputs/v6-final-park-001/current-state.json",
+    "bytes": 1971,
+    "sha256": "8ca6b01d8f4b7f7306a56f2ee7f84c1d5118be4ca93e684fc6c548d33eacb31a"
+  },
+  "identity_is_not_prior_userdata_or_new_physical_evidence": true,
+  "actual_device_IO": 0
+}

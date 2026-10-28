@@ -1,0 +1,18 @@
+{
+  "status": "PASS_INERT_INSTANCE_LOCAL_LIVE_LEASE_IO_CHECKS",
+  "rejected": [
+    "reject-before-FD",
+    "revoke-between-wait-and-read",
+    "revoke-between-wait-and-write",
+    "partial-send-no-continuation",
+    "revoked-after-partial-before-read",
+    "revoked-before-X",
+    "revoked-before-buffered-response",
+    "expiry-or-exact-hash-change",
+    "actual-expiry-with-unchanged-authority-bytes"
+  ],
+  "actual_device_opens": 0,
+  "global_os_or_foreign_port_substitutions": 0,
+  "own_FD_close_allowed_after_revocation": true,
+  "ROOT_stage_not_granted": true
+}

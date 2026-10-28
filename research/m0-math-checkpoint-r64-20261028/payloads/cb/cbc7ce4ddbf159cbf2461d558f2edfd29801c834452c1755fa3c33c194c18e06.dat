@@ -1,0 +1,28 @@
+"""Prepare all 9701 normal predecessor-power pairs using an independent rational oracle."""
+from pathlib import Path
+from fractions import Fraction
+import gzip,hashlib,importlib.util,json,struct,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent
+s=importlib.util.spec_from_file_location('r64_exact_oracle',W/'exact_oracle.py');o=importlib.util.module_from_spec(s);s.loader.exec_module(o)
+def bits(v):return struct.unpack('<Q',struct.pack('<d',v))[0]
+rows=[]
+for E in range(1,2047):
+ for n in range(1,65):
+  p=(1022-E)*n
+  if not -1022<=p<=1023:continue
+  x=o.SIGN|(E<<52)|o.FRAC;y=bits(-float(n));gold=o.power_bits(x,n,True)
+  num,den=o.power_ratio(x,n,True)
+  independent=bits(float(Fraction(num,den)))|(o.SIGN if n&1 else 0)
+  assert gold==independent,(E,n)
+  # Check the already-proved enclosure formula against the separate rational rounding.
+  enclosed=((p+1023)<<52)|((n+1)//2)|(o.SIGN if n&1 else 0)
+  assert gold==enclosed,(E,n)
+  rows.append(dict(x=f'{x:016X}',y=f'{y:016X}',expected=f'{gold:016X}',E=E,n=n,p=p))
+assert len(rows)==9701
+p=W/'normal-family-inputs.jsonl.gz';assert not p.exists()
+with p.open('xb') as raw:
+ with gzip.GzipFile(filename='',fileobj=raw,mode='wb',compresslevel=9,mtime=0) as f:
+  for r in rows:f.write((json.dumps(r,separators=(',',':'))+'\n').encode())
+j=dict(status='EXACT_RATIONAL_GOLD_ALL9701_NARROW_NORMAL_PAIRS',pairs=len(rows),planned_all3_SIO_states=3*len(rows),rounding='exact integer ratio to binary64 RNE; crosschecked with CPython Fraction conversion',independent_exact_rational_evaluations=len(rows),inputs_sha256=hashlib.sha256(p.read_bytes()).hexdigest(),oracle_sha256=hashlib.sha256((W/'exact_oracle.py').read_bytes()).hexdigest(),ARM_MPFR_device_Git_SDK_calls=0,selected=False)
+(W/'normal-family-inputs.json').write_text(json.dumps(j,indent=2)+'\n');print(json.dumps(j,indent=2))

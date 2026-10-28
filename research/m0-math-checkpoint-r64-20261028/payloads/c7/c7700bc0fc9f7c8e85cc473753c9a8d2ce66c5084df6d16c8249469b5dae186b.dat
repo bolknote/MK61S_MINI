@@ -1,0 +1,19 @@
+{
+  "status": "ROOT_FIRST_BATCH_WIRE_AND_FULL_FLASH_TYPED_SETTINGS_UI_RETURN_PASS",
+  "batch": "r64-smoke",
+  "wire_review": "/Users/bolk/Projects/MK61S_MINI/.build/development-next-root-20261028-001/ROOT-r64-smoke-WIRE-RECOUNT.json",
+  "full_Flash_three_exact_sha256": "a05379163123d8f634ad1c81e82daf1d48afd5ea500139201f3503b96ee8f126",
+  "state_after_sha256": "c1b30b9d14d844d5927880d55fe0402e7b705887e1ee6f9f27e75f2ec8fddcbf",
+  "typed_settings_UI_exact": true,
+  "epoch_before": [
+    "14",
+    "00010001"
+  ],
+  "epoch_after": [
+    "15",
+    "00010001"
+  ],
+  "physical_keys": 0,
+  "RTC_SET0_placeholder_no_setter_or_trajectory_claim": true,
+  "Root_device_IO": 0
+}

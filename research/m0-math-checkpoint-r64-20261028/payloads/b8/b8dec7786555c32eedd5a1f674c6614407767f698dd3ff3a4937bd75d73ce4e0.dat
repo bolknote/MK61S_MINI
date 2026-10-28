@@ -1,0 +1,8 @@
+{
+  "exec_session": 17157,
+  "terminal": true,
+  "exit_code": 0,
+  "evidence": "write_stdin returned terminal exit_code=0 after final PASS result",
+  "fresh_math_calls": 484800,
+  "device_IO": 0
+}

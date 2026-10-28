@@ -1,0 +1,38 @@
+{
+  "status": "PURE_SAVED_RECORD_PAIRED_PHYSICAL_ANALYSIS",
+  "files": [
+    {
+      "path": "paired-report.json",
+      "bytes": 615516,
+      "sha256": "bb1aa76a60a3a5f0b79175e4673c68a900ca18e1f9bcefd231437a9a2a2eb161"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 9797,
+      "sha256": "1f636ffe5dfa9d5bf915388c5ff40e4dbbafc1190ed72069a4b04bdbc40d37b3"
+    },
+    {
+      "path": "cycle_report.py",
+      "bytes": 8846,
+      "sha256": "6346861c02fb43bf22b41d37281b526cbb5613aeadb4410bff729d555215819a"
+    }
+  ],
+  "candidate_records_sha256": "9ea9a663e95f0d9b5d73cb05a39ab190028f1607b8c8afa2ed08743ed6c4baf8",
+  "baseline_records_sha256": "64d83e6e1f47e3967c0db6d953a83a30d70b3b1281f9d75b62bdde50af0098b2",
+  "Qfplib_median_cycle_drift_histogram": {
+    "0.0": 216
+  },
+  "math_state_cases": 72,
+  "our_calls": 1440,
+  "our_wrong": 0,
+  "paired": {
+    "equal": 18,
+    "slower": 21,
+    "faster": 33
+  },
+  "new_Qfplib_losing_states": 0,
+  "device_IO": 0,
+  "new_math_calls": 0,
+  "source_runtime_changed": false,
+  "scope": "One fixed 24-pair batch, three SIO states per pair, eight measured and two retained warmup calls per library. Raw cycles include wrapper. No whole-library acceptance, universal speed, correct-rounding or stack claim."
+}

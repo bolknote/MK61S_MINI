@@ -1,0 +1,13 @@
+{
+  "status": "HOST_INERT_D6_ENVELOPE_PENDING_TESTS_FREEZE",
+  "scope": "PICO_R64_D6_MATH_RAM_R63_ONCE",
+  "role": "R63",
+  "physical_IO": 0,
+  "Flash_programming_allowed": false,
+  "SD_writes_allowed": false,
+  "RTC_setters_allowed": false,
+  "arbitrary_nonzero_data_return_not_implemented": true,
+  "configured_clock_return_not_implemented": true,
+  "current_data_requires_fresh_capture_and_Root_admission": true,
+  "fixed_historical_fullFlash_hash_is_gate_not_backup": true
+}
