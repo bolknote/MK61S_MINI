@@ -3,6 +3,7 @@ set -euo pipefail
 python3 "$(dirname "$0")/picocalc_psram_pio_self_test.py"
 python3 "$(dirname "$0")/picocalc_psram_qpi_self_test.py"
 python3 "$(dirname "$0")/picocalc_power_self_test.py"
+python3 "$(dirname "$0")/picocalc_panel_recovery_self_test.py"
 bash "$(dirname "$0")/run_shared_memory_buffer_tests.sh"
 root="$(cd "$(dirname "$0")/.." && pwd)"
 build="$(mktemp -d "${TMPDIR:-/tmp}/mk61-pico-hardware.XXXXXX")"

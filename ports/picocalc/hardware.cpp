@@ -326,6 +326,9 @@ void Panel::transfer() {
         const unsigned bottom=lcd::HEIGHT-physical.top-physical.height;
         const u8 definition[]={(u8)(physical.top>>8),(u8)physical.top,(u8)(physical.height>>8),(u8)physical.height,(u8)(bottom>>8),(u8)bottom};
         command(0x33,definition,sizeof(definition));
+        // The controller already sees this definition if pixel DMA fails.
+        // Keep scroll management active so the full retry restores its origin.
+        scroll_configured_=true;
     }
     for(unsigned index=0;index<update_.count;++index) {
       const auto& area=update_.rectangles[index];
