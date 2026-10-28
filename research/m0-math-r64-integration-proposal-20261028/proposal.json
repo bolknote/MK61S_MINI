@@ -1,0 +1,422 @@
+{
+  "status": "UNAPPLIED_GUARD_ONLY_INTEGRATION_PROPOSAL_NOT_QUALIFIED_RUNTIME",
+  "base_main": "65d698caabfef4c09cf925b329e139c7d9a2f1c6",
+  "last_Root_accepted_full_base": "e2ac532a6f0b12d6ed967699457b2abbb92f3014",
+  "private_checkpoint": "985d7a95ede112fa31e5606bb610ac8db3f21a37",
+  "source_and_test_paths": [
+    "code/native_eabi_m0_pow_fast.inc",
+    "tests/native_eabi_m0_arm_self_test.py",
+    "tests/fixtures/m0_pow_nearpower_r64.json"
+  ],
+  "public_entry": "_ZN12compact_math3powEdd -> mk61_m0_pow_fast -> pow_negative_integer",
+  "changed_provider": "Existing owned RP2040 M0 EABI implementation; MK61_USE_M0_EABI=1 and MK61_M0_RP2040_EABI=1",
+  "provider_selection_or_default_flags_changed": false,
+  "SDK_or_APP_API_changes": false,
+  "full_private_R63_runtime_imported": false,
+  "full_runtime_transitive_changes": [
+    {
+      "path": "code/candidate-inline-seed.inc",
+      "kind": "new",
+      "candidate_sha256": "f64dcdbcf5a189167fea00c9dbf3e6ebe9e32575369bf83ae9209bfae4bba571",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/candidate-remainder-certificate.inc",
+      "kind": "new",
+      "candidate_sha256": "60b7749266b8648f8b51283766029cb00c9f9b128313d6e36db539ac3af7a16e",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/control-inline-seed.inc",
+      "kind": "new",
+      "candidate_sha256": "68044000ef21864dc29a16bd2bb922ea69f89a1083141e22f16ff7fd71d7f755",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/inline-seed-table.inc",
+      "kind": "new",
+      "candidate_sha256": "5217c6606f81bf09f2a4de286a82caf751036ba3af26ca5b9d8a019ae9d4d81a",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0.S",
+      "kind": "changed",
+      "candidate_sha256": "bc36ae7d3eaa7b3f55d11cebe22510cc8e4c4da42bf4f028e34f216383bba2e3",
+      "main_sha256": "2d79cfd971ec0072986f6bf0ccddad6f2e8f1e89662ad2f7b58405644b36cecb",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0.cpp",
+      "kind": "changed",
+      "candidate_sha256": "13722790e081bed28d399f9af1c7f0a560676558588daa714e1e97146ac73e8e",
+      "main_sha256": "42214335d061c486a4a918c3dca4179954b756fda9d3899f773e8f9f50461760",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0.hpp",
+      "kind": "changed",
+      "candidate_sha256": "bf47da16fb5264994cf1bf4f471f846efe5dc66ec776f0631704755e84d7818a",
+      "main_sha256": "bf7607738125c122c509ce552f3d5f29ae40cc0d9ae481cd4e6c0c2d021a21f2",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_asin.inc",
+      "kind": "changed",
+      "candidate_sha256": "13423ab94f8ded5e52e80c93d2b44bf59aeea3c62ea0afad22d896be09eefad3",
+      "main_sha256": "793f4c563cc1857c18ffe1bc1aacc55a296215470b1369fa7e2a8de9024ed17a",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_atan_fast.inc",
+      "kind": "changed",
+      "candidate_sha256": "a85bbc49f2366ae64d025b36dfd27e86abf63c118e447cd43cedd060cdf87e2e",
+      "main_sha256": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_atan_refine.inc",
+      "kind": "changed",
+      "candidate_sha256": "35b099f5ebfc6219245329b285bb46696e8ca2186ebbeb97e5135e0efc66dbe1",
+      "main_sha256": "33313dafb0722684cc331fdf22c5254f0f5e7d941614348121a83c295c3c5dcd",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_boundary128.cpp",
+      "kind": "new",
+      "candidate_sha256": "f5f6428bd0a5c964af095d987b794548d1143f9603147eeb178cef8dd3e38795",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_convert.inc",
+      "kind": "changed",
+      "candidate_sha256": "5f8ff5f57b398a451fa4d023e8b7b10462afd844f2472ebab005c04bc04f9204",
+      "main_sha256": "1210b33d2d7a7002c70254834faaea82dccc6c5c394ec8635abf87a91a551550",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_cr.cpp",
+      "kind": "changed",
+      "candidate_sha256": "c89cc8c956a2f1bb89060cc21ef0fff28d66c08dba820100d35a60370ab1caa5",
+      "main_sha256": "9108c5ae5c229e198a8db5429aec6ef732f1defbb9a6b49df5d4f963e7630873",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_d2f.inc",
+      "kind": "new",
+      "candidate_sha256": "c55f20f8a4df39b6619180b28c79d813329e94cec5b4491ba248d40b6f574681",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_exp.S",
+      "kind": "new",
+      "candidate_sha256": "ff045534cb051a1e7d88a37052c93e0c1d30f08d30b0ca930563d71276341fe4",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_f2d.inc",
+      "kind": "new",
+      "candidate_sha256": "deef395b1aa64fc9164bfa0511cca60ef8014ba66cda0f69a603dbf748ed2ca8",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_log10.inc",
+      "kind": "changed",
+      "candidate_sha256": "8bf2015e8966820d202ccd80bdcd64b2440854c5c12daa4bf791d14738f6eb99",
+      "main_sha256": "3d48da78c07991b1bc8987850f33715c10f3d74737abdfa8418e197838139747",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_log70.inc",
+      "kind": "changed",
+      "candidate_sha256": "2417196b90f3c3691ebc537bfd9f5552bbf3d69ab789e5095201716a726c2b6c",
+      "main_sha256": "2d4f5a95669b05442cba2dc4f1fb4fa9c4ba013751c46f2e198be46230fd8aef",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_log70_center.inc",
+      "kind": "changed",
+      "candidate_sha256": "af83817a78b261621a638c5cc3436bfd63ef57371d999766dfad2a50733dcef7",
+      "main_sha256": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_log70_isolated.inc",
+      "kind": "new",
+      "candidate_sha256": "d11c594d2fd5aa91bee90131b70c082167c1ebfed50a69393dbef6c9922a5655",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_log70_ratio.inc",
+      "kind": "changed",
+      "candidate_sha256": "30fd45e3489f1f09a45388915c18e7f0c93015033187969509260316480b48ce",
+      "main_sha256": "5451f32a046b9f69006dede642b190b3bd9403a8e7a7e54989a7d81c972153fa",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_log_subnormal.inc",
+      "kind": "new",
+      "candidate_sha256": "1b86940454b8ca9c733e3d8e59f72d67b499ac3c59cbb61dd6d231d4c92bc13f",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_argument_select.inc",
+      "kind": "new",
+      "candidate_sha256": "d6ecddcb8b3d6aec0f7085edb3ce02b5604e32af974bce50ff801ed6446129fd",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_dyadic128.inc",
+      "kind": "new",
+      "candidate_sha256": "edd8f8acb0857ebf03d3f81833d4c4427b383401131d543c10c9af4da9982909",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_exp_body.inc",
+      "kind": "new",
+      "candidate_sha256": "2aabe86966659531b31865977fb53aa5b67de7600f070cd372371c96dad7451f",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_exp_product.inc",
+      "kind": "changed",
+      "candidate_sha256": "0204bc708e5e743b0f274da99a2b62cefe2a6d0a271fc0cefee8d09160747dfe",
+      "main_sha256": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_exp_table_transition.inc",
+      "kind": "new",
+      "candidate_sha256": "d43f750eb676b398878d74af752282ba877901489e9b55b98db6bfbc621ce12b",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_fast.inc",
+      "kind": "changed",
+      "candidate_sha256": "3209fae69fb3554fc2ff6f85cc8eb12ec91e3617bacc5e93e1350e1fe58ca50a",
+      "main_sha256": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e",
+      "included_in_guard_only_proposal": true
+    },
+    {
+      "path": "code/native_eabi_m0_pow_integer.inc",
+      "kind": "changed",
+      "candidate_sha256": "0f8d00040ccbd2ac1e208d45db3262ba56fb1fb0eff5526f542f67e7953478f7",
+      "main_sha256": "7016e18c10c3994256279930c0324c9976280e88c8553511747afed2d95d0f5a",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_integer128.inc",
+      "kind": "new",
+      "candidate_sha256": "e82445b187965999e09a314b9e39e9f5036e587862e8e8571b0930f0d5a4ebd2",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_kernels.inc",
+      "kind": "new",
+      "candidate_sha256": "8196b4a475d6d144fd6b2403a9ccdbccea10ea37f32a900049ef2f075af0adfa",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_log6.inc",
+      "kind": "new",
+      "candidate_sha256": "dc8bd84a6b4c6beda0e3a3e136c96a643364d3cb28011d227001b6a1a8b2534b",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_log_select.inc",
+      "kind": "new",
+      "candidate_sha256": "10d64ca3239c00f87da4fcbc97f17ccd7eafa1075e327f1bb8e53aebc5309877",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_middle.inc",
+      "kind": "new",
+      "candidate_sha256": "3b93e0e022bd00615b25d14e40909986b51d343573fbf591b9d7ac605f052322",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_ordinary.inc",
+      "kind": "new",
+      "candidate_sha256": "ac6e252421307308bf07a48f77a451f91755ddf5e88046a25e2dc1c60ebe3cf3",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_root64.inc",
+      "kind": "new",
+      "candidate_sha256": "9d0c5d40421caba060765e524753d24d1600dde8ac4a05f8ba207109a7029ef7",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_root_prefix.inc",
+      "kind": "new",
+      "candidate_sha256": "3254978cb21ed37d0c9af0046e832da615eff4b515dc7880fc1013343e211bc1",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_rsqrt.inc",
+      "kind": "new",
+      "candidate_sha256": "af038897433360881ca7897d551191039612e767ff913dc0efe72ced9da72d93",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_pow_square.inc",
+      "kind": "new",
+      "candidate_sha256": "aa240bc7e13b0309bafd573be3deda25a34e6f7fb8906cca1326aa972184a60c",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_reciprocal1.S",
+      "kind": "new",
+      "candidate_sha256": "62ffed0fa673d0fbf7883ec998d097ee3666ddda8c26b31c5999aa3bd8e52e71",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_reciprocal1_sw.S",
+      "kind": "new",
+      "candidate_sha256": "61100a88743c24af20eac64b524473611d31d0b8f02654c68784390b1a420dda",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_refine.inc",
+      "kind": "changed",
+      "candidate_sha256": "53a0b94bee3be0d93a27283a2d06fb67838be4fe62f924f10f0383b1b9817dfe",
+      "main_sha256": "1800428641ddf489fdce847ee0d7df4acef844902b9604fb3d2156a32eced0ce",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_rp2040.S",
+      "kind": "changed",
+      "candidate_sha256": "68b9e2aad4b7c2bba58d9797b8fea96f14e5a40938ff2f590f336468155be05a",
+      "main_sha256": "e351fe2956fb2753674fe94c36465836cd983837f65f87e5797bd602c7d123b6",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_sqrt_special.S.inc",
+      "kind": "new",
+      "candidate_sha256": "5a18d6553f4987a5ae173dacd02440165295ec66ebba896aa27a1644ebea4552",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_trig_checked.inc",
+      "kind": "changed",
+      "candidate_sha256": "7e4c6d571ebf1d44df121b127b10db27262dcc861d3078f32ad218f7e1396207",
+      "main_sha256": "2421fa930fff21ff59652a899937b4c7ba500b77e8566eb8e971a3ffa8efa53a",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_trig_large.S.inc",
+      "kind": "new",
+      "candidate_sha256": "84d505152b894178b9ab90f7bfa348b24260875d4b501f5e0accd33f8b871503",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_trig_large.inc",
+      "kind": "new",
+      "candidate_sha256": "d4ed18ca6cdc55898a8bd00f45efbbec62eb27288975afb7bdf1981f1bd98199",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/native_eabi_m0_trig_refine.inc",
+      "kind": "changed",
+      "candidate_sha256": "559094ec98ac8c01693fd65bec7b1212b22115026806bfdf3b96770f2b543e5f",
+      "main_sha256": "0cf476331b0590948aaa6aeebb035949954738af9b61c79b2599aaca36481a28",
+      "included_in_guard_only_proposal": false
+    },
+    {
+      "path": "code/public-div-polynomial-table.inc",
+      "kind": "new",
+      "candidate_sha256": "1855038f55bcde0fb0e2fb2e7e79706357d4dd644a6e4ebfc0a77514b1c28ebc",
+      "main_sha256": null,
+      "included_in_guard_only_proposal": false
+    }
+  ],
+  "guard_only_R63_dependencies": [
+    "Existing finite/integer validation of m/ym/e/odd already in main",
+    "Existing U, D, bits/real definitions already in main",
+    "Exact normal-result certificate copied from R64; local high-word extraction replaces R63-only yh",
+    "R63 saturation path and normal-saturation-skip are not present in main and are not imported"
+  ],
+  "original_file_pins": {
+    "code/native_eabi_m0_pow_fast.inc": {
+      "bytes": 24129,
+      "sha256": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e"
+    },
+    "tests/native_eabi_m0_arm_self_test.py": {
+      "bytes": 25185,
+      "sha256": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3"
+    }
+  },
+  "proposed_file_pins": {
+    "code/native_eabi_m0_pow_fast.inc": {
+      "bytes": 24916,
+      "sha256": "a246081ce4d2bcb76fb6f68daff57e114b1c77f75a165e10d29e3ec4ce47f3bc"
+    },
+    "tests/native_eabi_m0_arm_self_test.py": {
+      "bytes": 25759,
+      "sha256": "6a9ea9b98e8432bc10c27cf18b755897161feecb5a8fa6a53de444a69345a910"
+    },
+    "tests/fixtures/m0_pow_nearpower_r64.json": {
+      "bytes": 5529,
+      "sha256": "e12aff6c28ebae2bb95b33519f6f54e9f69ad4b5d3ce7bda70a8572ccc5a0998"
+    }
+  },
+  "validations_performed": {
+    "patch_applies_to_exact_main": true,
+    "shadow_result_byte_exact": true,
+    "Python_AST_parse": true,
+    "old_R63_delta_inapplicable_to_main": true,
+    "ARM_calls": 0,
+    "MPFR_calls": 0,
+    "SDK_builds": 0,
+    "device_IO": 0
+  },
+  "qualifications_pending": [
+    "Strict Cortex-M0+ compile/link -Os -ffp-contract=off -fno-lto; no fast-math",
+    "Exact finite/gold replay of 9701 normal-family pairs, frozen boundary/decline inputs and the 324446-state baseline; same no-new-correct-Qfplib-loss gate",
+    "Ready/dirty/pending SIO preservation, public entry R4-R11/SP, arbitrary NZCV, writes only stack/allowed SIO; failed guard controls remain required",
+    "M4 and generic M0 disabled byte/symbol/semantic-relocation controls against the same fresh main",
+    "PicoCalc full strict SDK build and memory layout/stack/scratch/binary footer checks; no HIL without a new separate authorization",
+    "Full strict release matrix including F401 reserve >=4096; existing 2256<4096 reported by Root must be resolved separately, never waived",
+    "Rebase/recheck exact main at integration time; preserve unrelated M61 work"
+  ],
+  "baseline_F401": {
+    "Root_reported_reserve_bytes": 2256,
+    "required_bytes": 4096,
+    "build_repeated_by_this_proposal": false,
+    "waiver_allowed": false
+  },
+  "binary_identity_with_qualified_R64": false,
+  "old_R64_performance_claim_transferred_to_port": false,
+  "actual_runtime_or_primary_Git_changed": false,
+  "hardware_window_closed": true,
+  "new_candidate_selected": false,
+  "goal_complete": false
+}

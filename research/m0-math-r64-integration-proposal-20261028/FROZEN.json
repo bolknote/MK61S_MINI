@@ -1,0 +1,40 @@
+{
+  "status": "HOST_STATIC_INTEGRATION_PROPOSAL_ONLY",
+  "base_main": "65d698caabfef4c09cf925b329e139c7d9a2f1c6",
+  "private_checkpoint": "985d7a95ede112fa31e5606bb610ac8db3f21a37",
+  "files": {
+    ".gitattributes": {
+      "bytes": 20,
+      "sha256": "fb25a78a6381f5646d71aacea4486f6aeeeb03c4d71740227011024be0d20a8f"
+    },
+    "README.md": {
+      "bytes": 6526,
+      "sha256": "1fb2a1156ec01b36e7a0e403e9492f775da82bf11a0b07fc57c785d2a2086fba"
+    },
+    "main-guard-only.patch": {
+      "bytes": 9031,
+      "sha256": "9ec654205af622764a65a0325e162215067e8144f092160cd017383031af74e4"
+    },
+    "proposal.json": {
+      "bytes": 17306,
+      "sha256": "a990f59517b9f894bc0410e28dd5809e25621427bd088e922accf760858824ae"
+    },
+    "qualified-R63-to-R64.patch": {
+      "bytes": 1639,
+      "sha256": "701a0f948d46665c7832e0fce6cff7364895c022971e33320f0381349f11b495"
+    },
+    "regression-fixture.json": {
+      "bytes": 5529,
+      "sha256": "e12aff6c28ebae2bb95b33519f6f54e9f69ad4b5d3ce7bda70a8572ccc5a0998"
+    },
+    "validation.json": {
+      "bytes": 735,
+      "sha256": "e22396719c8573f0233cc77f01724a904f35081289298284067f510f5a76d731"
+    }
+  },
+  "ARM_MPFR_SDK_device_calls": 0,
+  "applied_to_main": false,
+  "provider_selection_changed": false,
+  "integration_GO": false,
+  "goal_complete": false
+}

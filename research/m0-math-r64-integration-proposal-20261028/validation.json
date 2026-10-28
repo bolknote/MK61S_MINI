@@ -1,0 +1,11 @@
+{
+  "status": "STATIC_PROPOSAL_CHECKS_ONLY",
+  "base_main": "65d698caabfef4c09cf925b329e139c7d9a2f1c6",
+  "main_guard_only_patch_apply_check": "PASS against exact main source/test bytes",
+  "shadow_patch_result": "all three output files byte-exact to proposed pins",
+  "qualified_R63_delta_direct_apply": "FAIL as expected against separate unmodified main source",
+  "qualified_delta_failure": "error: patch failed: code/native_eabi_m0_pow_fast.inc:793\nerror: code/native_eabi_m0_pow_fast.inc: patch does not apply\n",
+  "prospective_test_Python_AST": "PASS",
+  "runtime_build_ARM_MPFR_SDK_HIL": "NOT RUN; separate Root task required",
+  "current_main_F401_reserve": "Root reports2256; mandatory4096 unchanged; gate remains closed"
+}
