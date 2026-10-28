@@ -1,0 +1,165 @@
+{
+  "occupied_bytes": 1482,
+  "free_bytes": 2102,
+  "labels": {
+    "start": 0,
+    "tick": 25,
+    "choose_action": 112,
+    "held": 122,
+    "held_right": 132,
+    "held_vertical": 140,
+    "held_down": 149,
+    "idle": 157,
+    "left": 224,
+    "right": 238,
+    "horizontal_done": 251,
+    "gravity": 252,
+    "gravity_done": 275,
+    "restart": 276,
+    "up": 336,
+    "climb_up": 360,
+    "up_lower": 365,
+    "down": 376,
+    "climb_down": 400,
+    "down_middle": 406,
+    "ladder_done": 416,
+    "burn_left": 448,
+    "burn_right": 454,
+    "burn": 458,
+    "burn_upper": 490,
+    "burn_done": 514,
+    "age_hole": 515,
+    "age_done": 526,
+    "draw": 560,
+    "draw_hole": 602,
+    "draw_hole_done": 645,
+    "hole_0": 672,
+    "hole_1": 677,
+    "hole_2": 685,
+    "hole_3": 695,
+    "hole_4": 700,
+    "hole_5": 708,
+    "hole_6": 718,
+    "hole_7": 723,
+    "hole_8": 731,
+    "hole_9": 741,
+    "hole_10": 746,
+    "hole_11": 754,
+    "frame_gate": 784,
+    "frame_pause": 895,
+    "frame_1_1": 896,
+    "frame_1_2": 913,
+    "frame_1_3": 930,
+    "frame_1_4": 947,
+    "frame_1_5": 964,
+    "frame_1_6": 981,
+    "frame_1_7": 1008,
+    "frame_1_8": 1025,
+    "frame_1_9": 1042,
+    "frame_1_10": 1059,
+    "frame_1_11": 1076,
+    "frame_1_12": 1093,
+    "frame_2_1": 1120,
+    "frame_2_2": 1137,
+    "frame_2_3": 1154,
+    "frame_2_4": 1171,
+    "frame_2_5": 1188,
+    "frame_2_6": 1205,
+    "frame_2_7": 1232,
+    "frame_2_8": 1249,
+    "frame_2_9": 1266,
+    "frame_2_10": 1283,
+    "frame_2_11": 1300,
+    "frame_2_12": 1317,
+    "frame_3_1": 1344,
+    "frame_3_2": 1361,
+    "frame_3_3": 1378,
+    "frame_3_4": 1395,
+    "frame_3_5": 1412,
+    "frame_3_6": 1429,
+    "frame_3_7": 1456,
+    "frame_3_8": 1473,
+    "frame_3_9": 1490,
+    "frame_3_10": 1507,
+    "frame_3_11": 1524,
+    "frame_3_12": 1541,
+    "frame_table": 3136,
+    "hole_table": 3360,
+    "action_table": 3408,
+    "palette": 3472
+  },
+  "banks": {
+    "0": {
+      "module": "startup and frame loop",
+      "used": 62
+    },
+    "1": {
+      "module": "input sampling",
+      "used": 46
+    },
+    "2": {
+      "module": "horizontal movement and falling",
+      "used": 60
+    },
+    "3": {
+      "module": "ladders",
+      "used": 81
+    },
+    "4": {
+      "module": "burning and restoration",
+      "used": 79
+    },
+    "5": {
+      "module": "frame composition",
+      "used": 86
+    },
+    "6": {
+      "module": "clear an open cell in the frame",
+      "used": 92
+    },
+    "7": {
+      "module": "frame pacing gate",
+      "used": 112
+    },
+    "8": {
+      "module": "floor and hero sprites",
+      "used": 102
+    },
+    "9": {
+      "module": " / floor and hero sprites",
+      "used": 102
+    },
+    "10": {
+      "module": " / floor and hero sprites",
+      "used": 102
+    },
+    "11": {
+      "module": " / floor and hero sprites",
+      "used": 102
+    },
+    "12": {
+      "module": " / floor and hero sprites",
+      "used": 102
+    },
+    "13": {
+      "module": " / floor and hero sprites",
+      "used": 102
+    },
+    "28": {
+      "module": "frame jump table",
+      "used": 112
+    },
+    "29": {
+      "module": "frame jump table",
+      "used": 32
+    },
+    "30": {
+      "module": "cell and action jump tables",
+      "used": 92
+    },
+    "31": {
+      "module": "segment palette",
+      "used": 16
+    }
+  }
+}

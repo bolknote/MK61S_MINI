@@ -1,0 +1,72 @@
+open? manual.md
+reinit
+bind key 04 down run :left
+bind key 04 up run :left_up
+bind key 06 down run :right
+bind key 06 up run :right_up
+bind key 08 down run :up
+bind key 08 up run :up_up
+bind key 02 down run :down
+bind key 02 up run :down_up
+bind key 07 down run :burn_l
+bind key 09 down run :burn_r
+bind key 00 down run :restart
+bind key 13 down run :help
+bind key 14 down run :exit
+load 0000 runner.bin
+trap 111 run :frame
+run
+ret
+:frame
+if re==9999 wait 120
+ret
+:left
+R6= 1
+if rc==4 RA= -4
+if rc!=4 RA= 4
+ret
+:left_up
+R6= 0
+ret
+:right
+R7= 1
+if rc==6 RA= -6
+if rc!=6 RA= 6
+ret
+:right_up
+R7= 0
+ret
+:up
+R8= 1
+if rc==8 RA= -8
+if rc!=8 RA= 8
+ret
+:up_up
+R8= 0
+ret
+:down
+R9= 1
+if rc==2 RA= -2
+if rc!=2 RA= 2
+ret
+:down_up
+R9= 0
+ret
+:burn_l
+if rc==7 RA= -7
+if rc!=7 RA= 7
+ret
+:burn_r
+if rc==9 RA= -9
+if rc!=9 RA= 9
+ret
+:restart
+if rc==10 RA= -10
+if rc!=10 RA= 10
+ret
+:help
+open? manual.md
+ret
+:exit
+reinit
+ret

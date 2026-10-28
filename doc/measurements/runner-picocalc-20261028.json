@@ -1,0 +1,196 @@
+{
+  "date": "2026-10-28",
+  "target": "PicoCalc / Pico H / RP2040 125 MHz",
+  "source_commit": "65d698caa",
+  "candidate_build": "C19CE800",
+  "candidate_crc32": "A67BC1C7",
+  "speed": "MAXIMUM",
+  "framebuffer": [
+    320,
+    320
+  ],
+  "game_sha256": {
+    "autoexec.m61": "d0b7eed5db916fb9bf2f453c6844ce12cbff0187fb215a53cf9241653c7e001d",
+    "runner.bin": "ae1ea42c67d1742ef162754271d9218e6dbf214fbff7edf052c4ff93aebd369c"
+  },
+  "hardware_game_checks_passed": true,
+  "case_count": 18,
+  "elapsed_seconds": 176.337,
+  "cases": [
+    {
+      "case": "start",
+      "seconds": 2.006,
+      "column": 1,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "tap-right",
+      "seconds": 7.107,
+      "column": 2,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "ladder-entry",
+      "seconds": 6.776,
+      "column": 3,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "lower-floor",
+      "seconds": 7.052,
+      "column": 3,
+      "floor": 1,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "middle-floor",
+      "seconds": 6.832,
+      "column": 3,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "walk-4",
+      "seconds": 6.976,
+      "column": 4,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "walk-5",
+      "seconds": 3.85,
+      "column": 5,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "walk-6",
+      "seconds": 7.116,
+      "column": 6,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "walk-7",
+      "seconds": 6.974,
+      "column": 7,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "upper-floor",
+      "seconds": 7.078,
+      "column": 7,
+      "floor": 3,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "burn-right",
+      "seconds": 9.193,
+      "column": 7,
+      "floor": 3,
+      "hole": 32,
+      "timer": 18
+    },
+    {
+      "case": "fall",
+      "seconds": 4.257,
+      "column": 8,
+      "floor": 2,
+      "hole": 32,
+      "timer": 17
+    },
+    {
+      "case": "restored",
+      "seconds": 67.736,
+      "column": 8,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "restart",
+      "seconds": 6.947,
+      "column": 1,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "held-right",
+      "seconds": 0.335,
+      "column": 3,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "hold-release",
+      "columns_in_five_seconds": 2
+    },
+    {
+      "case": "tap-left",
+      "seconds": 5.311,
+      "column": 2,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    },
+    {
+      "case": "help-return",
+      "seconds": 3.074,
+      "column": 2,
+      "floor": 2,
+      "hole": 0,
+      "timer": 0
+    }
+  ],
+  "profile": {
+    "elapsed_us": 8087109,
+    "core": {
+      "calls": 185,
+      "total_us": 6802002,
+      "mean_us": 36767
+    },
+    "usb": {
+      "calls": 458,
+      "total_us": 1025713
+    },
+    "display": {
+      "calls": 24,
+      "total_us": 200154
+    },
+    "m61": {
+      "calls": 458,
+      "total_us": 80137
+    }
+  },
+  "restored": {
+    "passed": true,
+    "original_build": "D6FABB43",
+    "firmware_crc32": "EFBF5584",
+    "program_registers_stack_and_cwd_verified": true,
+    "settings_sequence": 331,
+    "test_files_removed": true,
+    "clock": "date ms\r\nERROR\r\nmk61> "
+  },
+  "full_flash_verification": {
+    "full_flash_identical": true,
+    "sha256": "a05379163123d8f634ad1c81e82daf1d48afd5ea500139201f3503b96ee8f126",
+    "bytes": 2097152
+  },
+  "scope": "Real USB Screen key events and received device frames; no game-state fixtures. Latencies include serial observation and the complete-frame sampling window."
+}
