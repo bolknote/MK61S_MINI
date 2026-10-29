@@ -373,6 +373,16 @@ def multiplication_division(m,samples):
         b=(rng.randrange(990,1055)<<52)|rng.getrandbits(52)
         check(a,b)
 
+def pow_nearpower_r64_vectors(m):
+    # Gold comes from the frozen independent corpus, not this implementation.
+    fixture=json.loads((ROOT/'tests/fixtures/m0_pow_nearpower_r64.json').read_text())
+    assert fixture['schema']==1 and len(fixture['cases'])==28
+    before=m.calls
+    for row in fixture['cases']:
+        m.floating('_ZN12compact_math3powEdd',int(row['x'],16),int(row['y'],16),
+                   int(row['expected'],16))
+    return m.calls-before
+
 def build(toolchain,out,rp2040=False):
     out.mkdir(parents=True,exist_ok=True)
     flags=['-mcpu=cortex-m0plus','-mthumb','-mfloat-abi=soft','-Os','-ffunction-sections','-fdata-sections',
@@ -412,6 +422,7 @@ def main():
         before=m.calls;mixed_sign_nearby(m);nearby_calls=m.calls-before
         before=m.calls;multiplication_division(m,a.samples);muldiv_calls=m.calls-before
     worst=math_vectors(m)
+    nearpower_calls=pow_nearpower_r64_vectors(m) if a.rp2040 else 0
     if a.rp2040:
         # A caller with pending divider state must get the full software path,
         # preserving every SIO operand/result/CSR bit.
@@ -425,7 +436,7 @@ def main():
     report={'status':'PASS','elf_sha256':hashlib.sha256(elf.read_bytes()).hexdigest(),'actual_arm_calls':m.calls,
         'nearby_addition_calls':nearby_calls,
         'multiplication_division_calls':muldiv_calls,
-        'math_vectors':1897,'math_worst_ulp':worst,'sample_instructions':counts,
+        'math_vectors':1897,'pow_nearpower_r64_calls':nearpower_calls,'math_worst_ulp':worst,'sample_instructions':counts,
         'abi':'Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes '+('stack and SIO divider only' if a.rp2040 else 'stack only'),
         'timing_note':'Instruction counts are emulator diagnostics, not measured RP2040 cycles.'}
     if m.rom_models:report['sdk_rom_intrinsic_models']=m.rom_models

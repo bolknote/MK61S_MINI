@@ -1,0 +1,232 @@
+{
+  "schema": 1,
+  "source_matrix_sha256": "88cdcea994bc1ad72c9adf46c06a6385304030b9c672edee423e2b021bf3e30a",
+  "source": "R64 frozen 28-pair matrix; the source contains all three qualified SIO states",
+  "scope": "Existing regression inputs only; this proposal has not executed ARM or measured its speed.",
+  "cases": [
+    {
+      "x": "001FFFFFFFFFFFFF",
+      "y": "C050000000000000",
+      "expected": "7FF0000000000000",
+      "reasons": [
+        "sign-clear route control"
+      ]
+    },
+    {
+      "x": "001FFFFFFFFFFFFF",
+      "y": "C050400000000000",
+      "expected": "7FF0000000000000",
+      "reasons": [
+        "n65 declined endpoint"
+      ]
+    },
+    {
+      "x": "3FCFFFFFFFFFFFFF",
+      "y": "C008000000000000",
+      "expected": "4050000000000002",
+      "reasons": [
+        "retained directed slow control"
+      ]
+    },
+    {
+      "x": "3FFFFFFFFFFFFFFF",
+      "y": "C031000000000000",
+      "expected": "3EE0000000000009",
+      "reasons": [
+        "retained directed slow control"
+      ]
+    },
+    {
+      "x": "400FFFFFFFFFFFFF",
+      "y": "C008000000000000",
+      "expected": "3F90000000000002",
+      "reasons": [
+        "retained directed slow control"
+      ]
+    },
+    {
+      "x": "402FFFFFFFFFFFFF",
+      "y": "C02E000000000000",
+      "expected": "3C30000000000008",
+      "reasons": [
+        "retained directed slow control"
+      ]
+    },
+    {
+      "x": "801FFFFFFFFFFFFE",
+      "y": "C050000000000000",
+      "expected": "7FF0000000000000",
+      "reasons": [
+        "second predecessor declines result shortcut"
+      ]
+    },
+    {
+      "x": "801FFFFFFFFFFFFF",
+      "y": "3FEFFFFFFFFFFFFF",
+      "expected": "7FF8000000000000",
+      "reasons": [
+        "noninteger exponent decline"
+      ]
+    },
+    {
+      "x": "9FEFFFFFFFFFFFFF",
+      "y": "C000000000000000",
+      "expected": "7FF0000000000000",
+      "reasons": [
+        "overflow result boundary"
+      ]
+    },
+    {
+      "x": "A469CB755EAD238A",
+      "y": "C000000000000000",
+      "expected": "76F89FB863735B8B",
+      "reasons": [
+        "global maximum +14 Flash instruction increase over R63; no correct Qfplib on this input"
+      ]
+    },
+    {
+      "x": "BFC2000000000000",
+      "y": "4031000000000000",
+      "expected": "BCED9FE779881944",
+      "reasons": [
+        "retained old-union slow control"
+      ]
+    },
+    {
+      "x": "BFCFFFFEFFFFFFFF",
+      "y": "C008000000000000",
+      "expected": "C050000180001802",
+      "reasons": [
+        "retained directed slow control"
+      ]
+    },
+    {
+      "x": "BFCFFFFFFFFFFFFF",
+      "y": "C008000000000000",
+      "expected": "C050000000000002",
+      "reasons": [
+        "measured corrected speed deficit"
+      ]
+    },
+    {
+      "x": "BFCFFFFFFFFFFFFF",
+      "y": "C050000000000000",
+      "expected": "47F0000000000020",
+      "reasons": [
+        "n64 admitted normal endpoint"
+      ]
+    },
+    {
+      "x": "BFE0000000000000",
+      "y": "C04F800000000000",
+      "expected": "C3E0000000000000",
+      "reasons": [
+        "exact power shortcut retained; all incorrect Qfplib outputs also retained"
+      ]
+    },
+    {
+      "x": "BFE1FFFFFFFFFFFF",
+      "y": "402E000000000000",
+      "expected": "BF276838794F170C",
+      "reasons": [
+        "retained old-union slow control"
+      ]
+    },
+    {
+      "x": "BFEFFFFEFFFFFFFF",
+      "y": "C030000000000000",
+      "expected": "3FF0000800022008",
+      "reasons": [
+        "retained directed slow control"
+      ]
+    },
+    {
+      "x": "BFEFFFFEFFFFFFFF",
+      "y": "C031000000000000",
+      "expected": "BFF0000880026409",
+      "reasons": [
+        "retained directed slow control"
+      ]
+    },
+    {
+      "x": "BFEFFFFEFFFFFFFF",
+      "y": "C04F800000000000",
+      "expected": "BFF0001F801F8035",
+      "reasons": [
+        "original R64 regression counterexample; repaired decline guard"
+      ]
+    },
+    {
+      "x": "BFEFFFFEFFFFFFFF",
+      "y": "C050000000000000",
+      "expected": "3FF0002000208036",
+      "reasons": [
+        "retained directed slow control"
+      ]
+    },
+    {
+      "x": "BFEFFFFEFFFFFFFF",
+      "y": "C050400000000000",
+      "expected": "BFF0002080218438",
+      "reasons": [
+        "measured corrected speed deficit"
+      ]
+    },
+    {
+      "x": "BFF1FFFFFFFFFFFF",
+      "y": "402E000000000000",
+      "expected": "C0176838794F170C",
+      "reasons": [
+        "retained old-union slow control"
+      ]
+    },
+    {
+      "x": "BFF2000000000000",
+      "y": "4031000000000000",
+      "expected": "C01D9FE779881944",
+      "reasons": [
+        "retained old-union slow control"
+      ]
+    },
+    {
+      "x": "BFFFFFFFFFFFFFFF",
+      "y": "C031000000000000",
+      "expected": "BEE0000000000009",
+      "reasons": [
+        "measured corrected speed deficit"
+      ]
+    },
+    {
+      "x": "C00FFFFEFFFFFFFF",
+      "y": "C008000000000000",
+      "expected": "BF90000180001802",
+      "reasons": [
+        "retained directed slow control"
+      ]
+    },
+    {
+      "x": "C00FFFFFFFFFFFFF",
+      "y": "C008000000000000",
+      "expected": "BF90000000000002",
+      "reasons": [
+        "measured corrected speed deficit"
+      ]
+    },
+    {
+      "x": "C02FFFFFFFFFFFFF",
+      "y": "C02E000000000000",
+      "expected": "BC30000000000008",
+      "reasons": [
+        "measured corrected speed deficit"
+      ]
+    },
+    {
+      "x": "C1DFFFFFFFFFFFFF",
+      "y": "C040800000000000",
+      "expected": "8008000000000008",
+      "reasons": [
+        "first subnormal result boundary"
+      ]
+    }
+  ]
+}

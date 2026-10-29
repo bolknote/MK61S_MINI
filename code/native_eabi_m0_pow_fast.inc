@@ -334,6 +334,24 @@ __attribute__((optimize("Os"),noinline,section(MK61_M0_POW_HOT_SECTION))) static
 __attribute__((optimize("Os"),noinline,section(".m0_pow_dispatch_extension"))) static double pow_negative_integer(double x,double y) {
   const U xb=bits(x),yb=bits(y),m=xb&D::Magnitude,ym=yb&D::Magnitude;
   if(!m || m>=D::Infinity || ym>=D::Infinity) return mk61_m0_cr_pow(x,y);
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  const uint32_t yh=uint32_t(ym>>32),yl=uint32_t(ym);
+  const int e=int(yh>>20)-1023;bool odd=false;
+  if(e<=52) {
+    if(e<0) return mk61_m0_cr_pow(x,y);
+    if(e<=20) {
+      // 20-e is in [0,20]; exponent bits cannot enter the low-bit mask.
+      const unsigned shift=20-unsigned(e);
+      if(yl || (yh&((1U<<shift)-1U))) return mk61_m0_cr_pow(x,y);
+      odd=bool((yh>>shift)&1U);
+    } else {
+      // 52-e is in [0,31], so no C++ shift ever equals the word width.
+      const unsigned shift=52-unsigned(e);
+      if(yl&((1U<<shift)-1U)) return mk61_m0_cr_pow(x,y);
+      odd=bool((yl>>shift)&1U);
+    }
+  }
+#else
   const int e=int(ym>>52)-1023;bool odd=false;
   if(e<=52) {
     if(e<0) return mk61_m0_cr_pow(x,y);
@@ -342,6 +360,25 @@ __attribute__((optimize("Os"),noinline,section(".m0_pow_dispatch_extension"))) s
     if(significand&((U(1)<<shift)-1)) return mk61_m0_cr_pow(x,y);
     odd=bool((significand>>shift)&1);
   }
+#endif
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  // R64 normal-result certificate: |x| immediately below a power of two,
+  // y=-n, 1<=n<=64. The exact normalized magnitude is strictly between
+  // 1+n/2^53 and 1+(n+1)/2^53; nearest-even adds ceil(n/2) ulps.
+  // The existing finite/integer checks above supply e>=0 and exact odd.
+  const unsigned E=unsigned(m>>52);
+  if((yb&D::Sign) && unsigned(e)<=6U && E &&
+     uint32_t(m)==0xFFFFFFFFU &&
+     (uint32_t(m>>32)&0xFFFFFU)==0xFFFFFU) {
+    const unsigned n=((uint32_t(ym>>32)&0xFFFFFU)|0x100000U)>>unsigned(20-e);
+    if(n<=64U) {
+      const int p=(1022-int(E))*int(n);
+      if(unsigned(p+1022)<=2045U)
+        return real((U(uint32_t(p+1023))<<52)|U((n+1U)>>1)|
+                    (odd?D::Sign:U(0)));
+    }
+  }
+#endif
   const U result=m==UINT64_C(0x3FF0000000000000)?m:bits(pow_positive_checked(real(m),y));
   return real(result|(odd?D::Sign:0));
 }
