@@ -34,7 +34,7 @@ using terminal_protocol::Result;using terminal_protocol::ResultKind;
 constexpr usize MAX_INPUT_CHAR=terminal_core::INPUT_CAPACITY;constexpr u8 CR=13;
 enum class stack {X1,X,Y,Z,T};
 namespace core_61 {static bool expanded=false;bool expanded_program_is_on(){return expanded;}}
-namespace m61_text {static bool suspended=false;bool calculator_suspended(){return suspended;}}
+namespace m61_text {static bool suspended=false;bool calculator_suspended(){return suspended;}bool trap_handler_active(){return suspended;}}
 static const char* terminal_symbols="0123456789";
 static const char* regtext=" 0.0000000  00";static unsigned reads=0;
 static unsigned cancellations=0,idle_resets=0,dispatches=0;

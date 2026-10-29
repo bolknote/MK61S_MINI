@@ -348,6 +348,11 @@ Result execute(const char *line, bool trap) {
     else if (value.kind == mk61_register_init::Kind::RANDOM)
       ok = mk61_ref::write_fraction7(
           target, terminal_script_backend::random_decimal7());
+    else if (value.kind == mk61_register_init::Kind::REGISTER) {
+      double number = 0;
+      ok = read_reference(value.source_register + 1, number) && fits(number) &&
+           mk61_ref::write(target, number);
+    }
     else
       ok = mk61_ref::write_raw_register(reg, value.raw);
     return ok ? Result::ok() : fail("Cannot write register");

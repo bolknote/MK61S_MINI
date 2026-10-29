@@ -1,68 +1,80 @@
 open? manual.md
 reinit
+R3= 3
 bind key 04 down run :left
-bind key 04 up run :left_up
+bind key 04 up run :u4
 bind key 06 down run :right
-bind key 06 up run :right_up
+bind key 06 up run :u6
 bind key 08 down run :up
-bind key 08 up run :up_up
+bind key 08 up run :u8
 bind key 02 down run :down
-bind key 02 up run :down_up
+bind key 02 up run :u2
 bind key 07 down run :burn_l
 bind key 09 down run :burn_r
 bind key 00 down run :restart
 bind key 13 down run :help
 bind key 14 down run :exit
 load 0000 runner.bin
-trap 111 run :frame
 run
-ret
-:frame
-if re==9999 wait 120
-ret
+:loop
+wait 30
+if r5==0 ret
+R0= 113
+if r6!=r7 R0= 243
+if r6>r7 R0= 225
+if r8!=r9 R0= 390
+if r8>r9 R0= 337
+if ra>0 R0= RA
+RA= 0
+if r0==113 if rd==0 run :loop
+if rd>0 run :active
+run 24
+run :after
+:active
+if r0==113 run :timer
+run 60
+run :after
+:timer
+run 40
+:after
+if r5==0 ret
+run :loop
 :left
 R6= 1
-if rc==4 RA= -4
-if rc!=4 RA= 4
+RA= 225
 ret
-:left_up
+:u4
 R6= 0
 ret
 :right
 R7= 1
-if rc==6 RA= -6
-if rc!=6 RA= 6
+RA= 243
 ret
-:right_up
+:u6
 R7= 0
 ret
 :up
 R8= 1
-if rc==8 RA= -8
-if rc!=8 RA= 8
+RA= 337
 ret
-:up_up
+:u8
 R8= 0
 ret
 :down
 R9= 1
-if rc==2 RA= -2
-if rc!=2 RA= 2
+RA= 390
 ret
-:down_up
+:u2
 R9= 0
 ret
 :burn_l
-if rc==7 RA= -7
-if rc!=7 RA= 7
+RA= 449
 ret
 :burn_r
-if rc==9 RA= -9
-if rc!=9 RA= 9
+RA= 466
 ret
 :restart
-if rc==10 RA= -10
-if rc!=10 RA= 10
+RA= 289
 ret
 :help
 open? manual.md

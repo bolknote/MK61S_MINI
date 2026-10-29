@@ -3310,6 +3310,10 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
             break;
           case  CMD_REG_SET: {
 #if MK61_TERMINAL_COMMANDS_AS_APP
+              mk61_register_init::Value initialization{};
+              if(mk61_register_init::parse(command_args(), initialization) &&
+                 initialization.kind == mk61_register_init::Kind::REGISTER)
+                return terminal_script::execute((const char*)input_buffer, trap_mode);
               return exec_external(command_id);
 #endif
               // Индекс - hex-цифра: R0..RE, RF только в расширенной памяти

@@ -1,15 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
-build_dir="$(mktemp -d "${TMPDIR:-/tmp}/mk61-runner.XXXXXX")"
-trap 'rm -rf "$build_dir"' EXIT
+if [[ -n "${MK61_RUNNER_BUILD_DIR:-}" ]]; then
+  build_dir="$MK61_RUNNER_BUILD_DIR"
+  mkdir -p "$build_dir"
+else
+  build_dir="$(mktemp -d "${TMPDIR:-/tmp}/mk61-runner.XXXXXX")"
+  trap 'rm -rf "$build_dir"' EXIT
+fi
 python3 "$root/tools/runner/build.py" --check
 sanitizers=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   sanitizers=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 for profile in native mini; do
-  profile_flags=(-DMK61_CORE_NATIVE_HOT_PATHS=1 -DMK61_CORE_PACKED_AMK=1 -DMK61_DISPLAY_UC1609)
+  profile_flags=(-DMK61_CORE_NATIVE_HOT_PATHS=1 -DMK61_CORE_PACKED_AMK=1 -DMK61_DISPLAY_UC1609 -DMK61_M61_READ_CACHE_BYTES=1024)
   if [[ "$profile" == mini ]]; then
     profile_flags=(-DMK61_CORE_NATIVE_HOT_PATHS=0 -DMK61_CORE_PACKED_AMK=0 -DMK61_LCD1602_A00)
   fi

@@ -13,7 +13,7 @@ from program_pack import program_binary
 
 def outputs():
     banks, info = create_game().link()
-    check_layout(info)
+    check_layout(info, banks)
     image = b''.join(banks.get(bank, bytes(112)) for bank in range(32))
     out = ROOT / 'programs/games/Runner'
     return {

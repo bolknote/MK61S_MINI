@@ -252,6 +252,8 @@ def qualify(m, terminal, clock, commands):
     assert m.memory[104] == 255
     m.execute(c('INS'), '105 FF', 0)
     m.execute(c('REG_SET'), 'R0= -123.25')
+    m.execute(c('REG_SET'), 'R1= R0')
+    assert m.refs[4, 1] == -123.25
     assert -123.25 in m.refs.values(), m.refs
     m.execute(c('REG_SET'), 'R0= random')
     assert m.fractions == [(0, 1234)]

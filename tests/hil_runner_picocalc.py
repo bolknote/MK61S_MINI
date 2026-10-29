@@ -51,15 +51,23 @@ def registers(port):
 
 def complete_frame(state):
     column, floor = state[4:6]
-    if not (1 <= column <= 12 and 1 <= floor <= 3 and state[14] == 9999):
+    if not (1 <= column <= 12 and 1 <= floor <= 3):
+        return False
+    if state[14] != 16*112 + (floor-1)*336 - 27:
         return False
     masks = [126 if x in LADDERS[floor] else 8 for x in range(1, 13)]
     masks[column - 1] = 107
-    hole = state[11]
+    hole = hole_cell(state)
     if hole and (hole - 1) // 12 + 1 == floor:
         masks[(hole - 1) % 12] = 0
-    return state[:4] == [sum(masks[base + i] << (i * 8) for i in range(3))
-                         for base in (0, 3, 6, 9)]
+    words = [sum(masks[base+i] << (i*8) for i in range(3)) for base in (0,3,6,9)]
+    if state[15] == 8*112+(floor-1)*144-12:
+        return state[3] in (1,2) and state[1:3] == words[1:3]
+    return state[:4] == words
+
+
+def hole_cell(state):
+    return 0 if state[11] == 0 else (state[11]-16*112-12)//28 + 1
 
 
 def main():
@@ -88,17 +96,17 @@ def main():
         last = None
         while time.monotonic() - begin < timeout:
             last = registers(p)
-            if last[4:6] == [column, floor] and (hole is None or last[11] == hole) and complete_frame(last):
+            if last[4:6] == [column, floor] and (hole is None or hole_cell(last) == hole) and complete_frame(last):
                 p.pump(.25)
                 assert p.frames
                 png(p.frames[-1], args.output / (name + '.png'))
                 record = dict(case=name, seconds=round(time.monotonic() - begin, 3),
-                              column=column, floor=floor, hole=last[11], timer=last[13], registers=last)
+                              column=column, floor=floor, hole=hole_cell(last), timer=last[13], registers=last)
                 cases.append(record)
                 print(json.dumps(record), flush=True)
                 return last
             if time.monotonic() - progress >= 5:
-                print(f'Waiting {name}: column={last[4]} floor={last[5]} hole={last[11]} timer={last[13]}', flush=True)
+                print(f'Waiting {name}: column={last[4]} floor={last[5]} hole={hole_cell(last)} timer={last[13]}', flush=True)
                 progress = time.monotonic()
             p.pump(.15)
         raise AssertionError((name, column, floor, hole, last))

@@ -1,0 +1,167 @@
+{
+  "date": "2026-10-28",
+  "baseline_commit": "7a01beb48",
+  "identity": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "770D2ADF",
+    "profile": "classic-v3-uc1609"
+  },
+  "firmware_unchanged": true,
+  "hardware": {
+    "before": {
+      "walk_seconds": [
+        2.985,
+        3.015,
+        3.102,
+        3.137
+      ],
+      "walk_median_seconds": 3.0585,
+      "burn_seconds": 4.138,
+      "restore_seconds": 38.246,
+      "restore_ticks": 18,
+      "hold_seconds": 3,
+      "hold_columns_after_release": 2
+    },
+    "after": {
+      "walk_seconds": [
+        1.115,
+        1.176,
+        1.143,
+        1.149
+      ],
+      "walk_median_seconds": 1.146,
+      "burn_seconds": 1.555,
+      "restore_seconds": 8.661,
+      "restore_ticks": 18,
+      "hold_seconds": 3,
+      "hold_columns_after_release": 4
+    },
+    "validated_cases": 23,
+    "scope": "Physical Classic; ordinary USB Screen keys; no game-state fixtures. Timings include register polling and 150 ms framebuffer delivery allowance; they do not depend on a version-specific frame marker."
+  },
+  "differential": {
+    "seed": 97,
+    "frames": 1200,
+    "states": 2956,
+    "equal_gameplay": true,
+    "baseline_steps": 111845,
+    "optimized_steps": 48005,
+    "faster_states": 1201,
+    "equal_states": 1755,
+    "slower_states": 0
+  },
+  "host_checks": {
+    "profiles": [
+      "native/packed UC1609",
+      "scalar LCD1602 A00"
+    ],
+    "states_per_profile": 372,
+    "sprites": 36,
+    "burn_transitions": 72,
+    "sanitizers": [
+      "ASan",
+      "UBSan"
+    ]
+  },
+  "program": {
+    "occupied_bytes": 2184,
+    "capacity": 3584,
+    "files": {
+      "autoexec.m61": {
+        "bytes": 943,
+        "sha256": "207b0a7536d1cdf89bd464971d59906d2a9559ced66483c3d45986aa745b13ba"
+      },
+      "runner.bin": {
+        "bytes": 911,
+        "sha256": "2b87bc9d684a12e8f92cd8cb1e404719e3af2e1ec15abee4e373962dcbd3b75a"
+      },
+      "manual.md": {
+        "bytes": 1572,
+        "sha256": "aff573fe408cdafadb06fe0c052119ef4ecea763ffe32268770ea049daaab0ac"
+      }
+    }
+  },
+  "core_steps": [
+    {
+      "case": "startup",
+      "before": 55,
+      "after": 45
+    },
+    {
+      "case": "frame",
+      "before": 77,
+      "after": 13
+    },
+    {
+      "case": "frame",
+      "before": 80,
+      "after": 40
+    },
+    {
+      "case": "frame",
+      "before": 79,
+      "after": 13
+    },
+    {
+      "case": "frame",
+      "before": 82,
+      "after": 40
+    },
+    {
+      "case": "frame",
+      "before": 80,
+      "after": 13
+    },
+    {
+      "case": "frame",
+      "before": 80,
+      "after": 50
+    },
+    {
+      "case": "frame",
+      "before": 86,
+      "after": 49
+    },
+    {
+      "case": "frame",
+      "before": 77,
+      "after": 43
+    },
+    {
+      "case": "frame",
+      "before": 142,
+      "after": 66
+    },
+    {
+      "case": "frame 18",
+      "before": 2039,
+      "after": 365
+    },
+    {
+      "case": "frame",
+      "before": 1,
+      "after": 1
+    }
+  ],
+  "installed_files": [
+    {
+      "name": "autoexec.m61",
+      "bytes": 943,
+      "sha256": "207b0a7536d1cdf89bd464971d59906d2a9559ced66483c3d45986aa745b13ba"
+    },
+    {
+      "name": "runner.bin",
+      "bytes": 911,
+      "sha256": "2b87bc9d684a12e8f92cd8cb1e404719e3af2e1ec15abee4e373962dcbd3b75a"
+    },
+    {
+      "name": "manual.md",
+      "bytes": 934,
+      "sha256": "df7dde5c98e188f7247b89a6254462ef10e8c053330f879af6dd20405a31e39c"
+    }
+  ],
+  "final_start_verified": true
+}

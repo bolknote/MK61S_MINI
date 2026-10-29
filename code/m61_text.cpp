@@ -125,6 +125,7 @@ struct ReturnFrame {
   ReturnKind kind;
   RunnerState runner_state;
   ScriptFrame script;
+  u32 wait_deadline;
 };
 
 struct LabelEntry {
@@ -168,12 +169,12 @@ static bool prepare_runtime() {
 static void release_runtime() { runtime_storage.reset(); }
 #if defined(ARDUINO_ARCH_STM32)
 // Keep the full live-script cost in APP qualification after removing its BSS.
-static_assert(sizeof(RuntimeBuffers) == READ_CACHE_SIZE + 1236U,
+static_assert(sizeof(RuntimeBuffers) == READ_CACHE_SIZE + 1272U,
               "update the scoped M61 ELF reserve when runtime shapes change");
 #define MK61_M61_STRING_IMPL(x) #x
 #define MK61_M61_STRING(x) MK61_M61_STRING_IMPL(x)
 __asm__(".global mk61_m61_runtime_bytes\n.set mk61_m61_runtime_bytes, (("
-        MK61_M61_STRING(MK61_M61_READ_CACHE_BYTES) "+1236+31)&-32)");
+        MK61_M61_STRING(MK61_M61_READ_CACHE_BYTES) "+1272+31)&-32)");
 #undef MK61_M61_STRING
 #undef MK61_M61_STRING_IMPL
 #endif
@@ -627,6 +628,7 @@ static bool push_current_frame(ReturnKind kind) {
   ReturnFrame& frame = return_stack()[return_stack_depth++];
   frame.kind = kind;
   frame.runner_state = runner_state;
+  frame.wait_deadline = wait_until_ms;
   store_current_frame(frame.script);
   if(kind == ReturnKind::SCRIPT) script_stack_depth++;
   return true;
@@ -643,6 +645,12 @@ bool calculator_suspended(void) {
 }
 
 bool trap_handler_active(void) { return trap_pending || trap_context_valid(); }
+#if defined(M61_TEXT_HOST_TEST)
+bool test_waiting_for_time(void) {
+  return runner_state == RunnerState::WAIT_TIME &&
+      !time_reached(runner_millis(), wait_until_ms);
+}
+#endif
 
 bool captures_key(u8 code) {
   return active() && !key_input_blocked &&
@@ -1363,6 +1371,7 @@ static bool return_from_script(void) {
     key_bind_active = false;
     if(!key_queue_count) key_boundary_ready = false;
     runner_state = returned.runner_state;
+    wait_until_ms = returned.wait_deadline;
     if(redraw) lcd_std_display_redraw();
     if(runner_state == RunnerState::WATCH_EVENTS &&
        !any_trap_is_active() && !any_bind_is_active()) {
@@ -1378,6 +1387,7 @@ static bool return_from_script(void) {
     if(returned.kind == ReturnKind::SCRIPT) clear_key_runtime();
     if(!restore_return_frame(returned)) return false;
     runner_state = returned.runner_state;
+    wait_until_ms = returned.wait_deadline;
     if(returned.kind == ReturnKind::SCRIPT) {
       // A nested program owned the input. End the parent's old gestures on
       // return, before its calculator can advance, rather than leave a flag
@@ -1400,6 +1410,7 @@ static bool return_from_script(void) {
   suspended_trap_address = 0;
   if(!restore_return_frame(returned)) return false;
   runner_state = returned.runner_state;
+  wait_until_ms = returned.wait_deadline;
   if(runner_state == RunnerState::WATCH_EVENTS &&
      !any_trap_is_active() && !any_bind_is_active()) {
     stop_runner();
@@ -2133,9 +2144,16 @@ void service(void) {
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_RUNNER);
 #endif
   if(runner_state == RunnerState::WAIT_TIME) {
-    if(!time_reached(runner_millis(), wait_until_ms)) return;
-    wait_until_ms = 0;
-    runner_state = RunnerState::EXECUTING;
+    // A stopped calculator is already at a safe input boundary. Let bound
+    // keys preempt an ordinary WAIT; a bind's own WAIT and read-only traps
+    // keep their existing serialization. Its return frame owns the deadline.
+    const bool waiting_key = key_queue_count && !trap_context_valid() &&
+        !bind_handler_active && !bind_pending && !core_61::is_RUN();
+    if(!waiting_key) {
+      if(!time_reached(runner_millis(), wait_until_ms)) return;
+      wait_until_ms = 0;
+      runner_state = RunnerState::EXECUTING;
+    }
   }
 
   if(trap_pending) {
@@ -2149,7 +2167,8 @@ void service(void) {
 
   if(key_queue_count && !trap_context_valid() && !bind_handler_active && !bind_pending &&
      (runner_state == RunnerState::WATCH_EVENTS ||
-      runner_state == RunnerState::WAIT_RUN_STOP) &&
+      runner_state == RunnerState::WAIT_RUN_STOP ||
+      (runner_state == RunnerState::WAIT_TIME && !core_61::is_RUN())) &&
      (key_boundary_ready || !core_61::is_RUN())) {
     const u8 event = key_queue[key_queue_head];
     key_queue_head = (u8)((key_queue_head + 1U) % KEY_QUEUE_CAPACITY);

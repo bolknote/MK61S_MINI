@@ -1,165 +1,161 @@
 {
-  "occupied_bytes": 1482,
-  "free_bytes": 2102,
+  "occupied_bytes": 2053,
+  "free_bytes": 1531,
   "labels": {
     "start": 0,
-    "tick": 25,
-    "choose_action": 112,
-    "held": 122,
-    "held_right": 132,
-    "held_vertical": 140,
-    "held_down": 149,
-    "idle": 157,
+    "frame_ready": 21,
+    "tick_fast": 24,
+    "tick_timer": 40,
+    "tick": 60,
+    "age_hole": 67,
+    "age_done": 82,
+    "quiet_tick": 97,
+    "changed": 103,
+    "draw_ready": 788,
+    "idle": 112,
+    "left_key": 224,
     "left": 224,
-    "right": 238,
-    "horizontal_done": 251,
-    "gravity": 252,
-    "gravity_done": 275,
-    "restart": 276,
+    "right_key": 242,
+    "right": 242,
+    "horizontal_done": 259,
+    "gravity": 260,
+    "gravity_done": 287,
+    "restart_key": 288,
+    "restart": 288,
+    "up_key": 336,
     "up": 336,
-    "climb_up": 360,
-    "up_lower": 365,
-    "down": 376,
-    "climb_down": 400,
-    "down_middle": 406,
-    "ladder_done": 416,
+    "up_lower": 374,
+    "down_key": 389,
+    "down": 389,
+    "down_middle": 427,
+    "ladder_done": 441,
+    "burn_left_key": 448,
     "burn_left": 448,
-    "burn_right": 454,
-    "burn": 458,
-    "burn_upper": 490,
-    "burn_done": 514,
-    "age_hole": 515,
-    "age_done": 526,
+    "burn_right_key": 465,
+    "burn_right": 465,
+    "burn_done": 482,
+    "burn_publish": 484,
     "draw": 560,
-    "draw_hole": 602,
-    "draw_hole_done": 645,
-    "hole_0": 672,
-    "hole_1": 677,
-    "hole_2": 685,
-    "hole_3": 695,
-    "hole_4": 700,
-    "hole_5": 708,
-    "hole_6": 718,
-    "hole_7": 723,
-    "hole_8": 731,
-    "hole_9": 741,
-    "hole_10": 746,
-    "hole_11": 754,
-    "frame_gate": 784,
-    "frame_pause": 895,
-    "frame_1_1": 896,
-    "frame_1_2": 913,
-    "frame_1_3": 930,
-    "frame_1_4": 947,
-    "frame_1_5": 964,
-    "frame_1_6": 981,
-    "frame_1_7": 1008,
-    "frame_1_8": 1025,
-    "frame_1_9": 1042,
-    "frame_1_10": 1059,
-    "frame_1_11": 1076,
-    "frame_1_12": 1093,
-    "frame_2_1": 1120,
-    "frame_2_2": 1137,
-    "frame_2_3": 1154,
-    "frame_2_4": 1171,
-    "frame_2_5": 1188,
-    "frame_2_6": 1205,
-    "frame_2_7": 1232,
-    "frame_2_8": 1249,
-    "frame_2_9": 1266,
-    "frame_2_10": 1283,
-    "frame_2_11": 1300,
-    "frame_2_12": 1317,
-    "frame_3_1": 1344,
-    "frame_3_2": 1361,
-    "frame_3_3": 1378,
-    "frame_3_4": 1395,
-    "frame_3_5": 1412,
-    "frame_3_6": 1429,
-    "frame_3_7": 1456,
-    "frame_3_8": 1473,
-    "frame_3_9": 1490,
-    "frame_3_10": 1507,
-    "frame_3_11": 1524,
-    "frame_3_12": 1541,
-    "frame_table": 3136,
-    "hole_table": 3360,
-    "action_table": 3408,
-    "palette": 3472
+    "publish": 569,
+    "burn_2_1": 672,
+    "burn_2_2": 684,
+    "burn_2_4": 696,
+    "burn_2_5": 708,
+    "burn_2_6": 720,
+    "burn_2_8": 732,
+    "burn_2_10": 744,
+    "burn_2_12": 756,
+    "burn_3_1": 1568,
+    "burn_3_2": 1580,
+    "burn_3_3": 1592,
+    "burn_3_4": 1604,
+    "burn_3_5": 1616,
+    "burn_3_6": 1628,
+    "burn_3_8": 1640,
+    "burn_3_9": 1652,
+    "burn_3_10": 1680,
+    "burn_3_12": 1692,
+    "floor_1": 1344,
+    "floor_2": 1356,
+    "floor_3": 1369,
+    "frame_table": 1792
   },
   "banks": {
     "0": {
       "module": "startup and frame loop",
-      "used": 62
+      "used": 112
+    },
+    "7": {
+      "module": " / startup and frame loop",
+      "used": 12
     },
     "1": {
-      "module": "input sampling",
-      "used": 46
+      "module": "idle action",
+      "used": 2
     },
     "2": {
       "module": "horizontal movement and falling",
-      "used": 60
+      "used": 73
     },
     "3": {
       "module": "ladders",
-      "used": 81
+      "used": 106
     },
     "4": {
       "module": "burning and restoration",
-      "used": 79
+      "used": 42
     },
     "5": {
       "module": "frame composition",
-      "used": 86
+      "used": 12
     },
     "6": {
-      "module": "clear an open cell in the frame",
-      "used": 92
+      "module": "valid burn destinations",
+      "used": 96
     },
-    "7": {
-      "module": "frame pacing gate",
-      "used": 112
+    "14": {
+      "module": "valid burn destinations",
+      "used": 96
     },
-    "8": {
-      "module": "floor and hero sprites",
-      "used": 102
-    },
-    "9": {
-      "module": " / floor and hero sprites",
-      "used": 102
-    },
-    "10": {
-      "module": " / floor and hero sprites",
-      "used": 102
-    },
-    "11": {
-      "module": " / floor and hero sprites",
-      "used": 102
+    "15": {
+      "module": "valid burn destinations",
+      "used": 24
     },
     "12": {
-      "module": " / floor and hero sprites",
-      "used": 102
+      "module": "floor metadata",
+      "used": 38
     },
-    "13": {
-      "module": " / floor and hero sprites",
-      "used": 102
-    },
-    "28": {
-      "module": "frame jump table",
+    "8": {
+      "module": "raw segment sprite atlas",
       "used": 112
     },
-    "29": {
-      "module": "frame jump table",
-      "used": 32
+    "9": {
+      "module": "raw segment sprite atlas",
+      "used": 112
     },
-    "30": {
-      "module": "cell and action jump tables",
-      "used": 92
+    "10": {
+      "module": "raw segment sprite atlas",
+      "used": 112
     },
-    "31": {
-      "module": "segment palette",
-      "used": 16
+    "11": {
+      "module": "raw segment sprite atlas",
+      "used": 96
+    },
+    "16": {
+      "module": "cell records",
+      "used": 112
+    },
+    "17": {
+      "module": "cell records",
+      "used": 112
+    },
+    "18": {
+      "module": "cell records",
+      "used": 112
+    },
+    "19": {
+      "module": "cell records",
+      "used": 112
+    },
+    "20": {
+      "module": "cell records",
+      "used": 112
+    },
+    "21": {
+      "module": "cell records",
+      "used": 112
+    },
+    "22": {
+      "module": "cell records",
+      "used": 112
+    },
+    "23": {
+      "module": "cell records",
+      "used": 112
+    },
+    "24": {
+      "module": "cell records",
+      "used": 112
     }
   }
 }

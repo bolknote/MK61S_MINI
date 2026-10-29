@@ -41,7 +41,7 @@ void paused_frame() {
     m61_text::service();
     check();
     if(!m61_text::active()) return;
-    if(m61_text::trap_handler_active() && m61_text::calculator_suspended()) return;
+    if(m61_text::test_waiting_for_time()) return;
     if(!m61_text::calculator_suspended()) step();
   }
   std::cerr << "Frame timeout: IP=" << core_61::active_program_bank() * 112 + core_61::get_IP() << '\n';
@@ -215,13 +215,17 @@ int main(int argc, char** argv) {
     } else if(command == "fixture") {
       // Fixture only: expose every frame and hole word to the independent
       // art oracle. Normal input tests never write game state from the host.
-      now_ms += 120; m61_text::service();
-      assert(!m61_text::calculator_suspended());
-      unsigned column, floor, hole = 0, timer = 0;
-      input >> column >> floor >> hole >> timer;
-      for(auto entry : {std::pair<unsigned, double>{4, column}, {5, floor}, {0xB, hole}, {0xD, timer}})
+      unsigned column, floor, hole = 0, timer = 0, redraw_request = 0;
+      input >> column >> floor >> hole >> timer >> redraw_request;
+      assert(redraw_request);
+      // Request the existing no-op action through the normal input decoder.
+      // A stationary production tick deliberately retains its old picture.
+      for(auto entry : {std::pair<unsigned, double>{4, column}, {5, floor},
+                        {0xB, hole ? 16*112 + (hole-1)*28 + 12 : 0}, {0xD, timer},
+                        {0, redraw_request}, {0xA, redraw_request},
+                        {0xE, 16*112 + (floor-1)*336 - 27}, {0xF, 8*112 + (floor-1)*144 - 12}})
         assert(mk61_ref::write({mk61_ref::Kind::R, (u8)entry.first}, entry.second));
-      paused_frame();
+      next_frame();
     } else if(command == "cancel") {
       m61_text::cancel();
     } else return 6;

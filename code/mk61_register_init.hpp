@@ -11,7 +11,8 @@ namespace mk61_register_init {
 enum class Kind : u8 {
   NUMBER,
   RANDOM,
-  RAW
+  RAW,
+  REGISTER
 };
 
 struct Value {
@@ -20,6 +21,7 @@ struct Value {
   // Логический порядок тетрад регистра:
   // M0..M7, знак мантиссы, знак порядка, десятки и единицы порядка.
   u8 raw[12];
+  u8 source_register;
 };
 
 inline bool exact_word(const char* text, const char* word) {
@@ -52,6 +54,16 @@ inline bool parse(const char* text, Value& out) {
   } else if(parse_raw(text, parsed.raw)) {
     parsed.kind = Kind::RAW;
   } else {
+    const char* source = terminal_core::skip_spaces(text);
+    if(source && (source[0] == 'r' || source[0] == 'R')) {
+      const int reg = terminal_core::digit_value(source[1], 16);
+      if(reg >= 0 && terminal_core::at_end(source + 2)) {
+        parsed.kind = Kind::REGISTER;
+        parsed.source_register = (u8) reg;
+        out = parsed;
+        return true;
+      }
+    }
     if(!terminal_core::parse_single_decimal(text, parsed.number)) return false;
     parsed.kind = Kind::NUMBER;
   }

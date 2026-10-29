@@ -1684,6 +1684,34 @@ static void test_key_bind_queue_while_handler_waits(void) {
   assert(!m61_text::calculator_suspended());
 }
 
+static void test_key_bind_preempts_wait_and_preserves_deadline(void) {
+  for(u32 start : {0U, 0xFFFFFF00U}) {
+    reset_host();
+    fake_millis = start;
+    add_script("WAITKEY", "bind key 04 down run :key\nwait 500\nresumed\nret\n"
+        ":key\npressed\nret\n");
+    assert(m61_text::load_program("WAITKEY"));
+    fake_millis = start+100;
+    assert(m61_text::handle_key_event(4,true));
+    drain_keys();
+    assert(occurrences("pressed")==1 && !occurrences("resumed"));
+    fake_millis = start+499; drain_keys();
+    assert(!occurrences("resumed"));
+    fake_millis = start+500; drain_keys();
+    assert(occurrences("resumed")==1);
+  }
+  reset_host();
+  add_script("WAITKEY", "bind key 04 down run :key\nwait 500\nresumed\nret\n"
+      ":key\npressed\nwait 500\nfinished\nret\n");
+  assert(m61_text::load_program("WAITKEY"));
+  fake_millis=100;
+  assert(m61_text::handle_key_event(4,true)); drain_keys();
+  assert(occurrences("pressed")==1 && !occurrences("finished"));
+  fake_millis=599; drain_keys(); assert(!occurrences("finished"));
+  fake_millis=600; drain_keys();
+  assert(occurrences("finished")==1 && occurrences("resumed")==1);
+}
+
 static void test_key_bind_release_reserved_under_pressure(void) {
   reset_host();
   add_script("GAME", "bind key 04 down run :left\nbind key 04 up run :left_up\n"
@@ -2213,6 +2241,7 @@ int main(void) {
   test_bind_is_validated_and_activated_only_when_executed();
   test_bind_handler_requires_ret();
   test_key_bind_run_boundary_and_edges();
+  test_key_bind_preempts_wait_and_preserves_deadline();
   test_key_bind_queue_while_handler_waits();
   test_key_bind_release_reserved_under_pressure();
   test_key_bind_trap_defers_events();

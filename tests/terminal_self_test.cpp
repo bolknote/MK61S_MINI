@@ -393,6 +393,16 @@ static void test_register_initializer_parser_is_atomic(void) {
   assert(value.kind == Kind::RANDOM);
   assert(!mk61_register_init::parse("random trailing", value));
 
+  for(unsigned index = 0; index < 16; ++index) {
+    char source[] = {'R', "0123456789ABCDEF"[index], 0};
+    assert(mk61_register_init::parse(source, value));
+    assert(value.kind == Kind::REGISTER && value.source_register == index);
+  }
+  assert(mk61_register_init::parse(" ra ", value) && value.source_register == 10);
+  assert(!mk61_register_init::parse("R0 trailing", value));
+  assert(!mk61_register_init::parse("R", value));
+  assert(!mk61_register_init::parse("RG", value));
+
   assert(mk61_register_init::parse("raw 8cEc6aBa9907", value));
   assert(value.kind == Kind::RAW);
   const u8 expected[12] = {

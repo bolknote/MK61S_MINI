@@ -2219,6 +2219,65 @@ static void test_packed_segment_frames(void) {
   }
 }
 
+static void test_segment_sprite_load(void) {
+  std::printf("indexed segment sprite loads:\n");
+  const u8 load[] = {0x2F,0x50,0x2F,0x2A,0x2F,0x05,0x2F,0x8C,0x50};
+  const u8 publish[] = {0x2F,0x53,0x50};
+  for(u8 reg = 0; reg < 16; ++reg) {
+    core_61::enable(); core_61::clear_extended_program_banks();
+    for(u8 w=0; w<4; ++w) set_register_integer(w,0x1000000U);
+    const u16 base = reg == 15 ? 256 : 206;
+    const u16 index = reg == 15 ? base : 1;
+    set_register_integer(15,base); set_register_integer(reg,index);
+    u8 expected[12];
+    for(u8 i=0;i<12;++i) {
+      expected[i]=(u8)(i*23+reg*17);
+      core_61::write_absolute_program(base+12*index+i,expected[i]);
+    }
+    set_x_bcd(0x00000007U);
+    u8 program[sizeof(load)]; std::memcpy(program,load,sizeof(load));
+    program[7]=0x80+reg;
+    run_program(program,sizeof(program));
+    const u8 blank[12]={};
+    check_true("sprite load validates aliases and stays off-screen",
+        !core_61::extended_program_error() &&
+        std::memcmp(core_61::segment_display_frame(),blank,12)==0 &&
+        core_61::extended_display_cursor()==5);
+    check_near("sprite load preserves X",read_live_x(),7,0);
+    run_program(publish,sizeof(publish));
+    check_true("sprite load matches all twelve program mask bytes",
+        std::memcmp(core_61::segment_display_frame(),expected,12)==0);
+  }
+  for(unsigned first=0; first<256; first+=12) {
+    core_61::enable(); core_61::clear_extended_program_banks();
+    set_register_integer(15,9988);set_register_integer(12,0);
+    u8 expected[12];
+    for(u8 i=0;i<12;++i) {
+      expected[i]=(u8)(first+i);
+      core_61::write_absolute_program(9988+i,expected[i]);
+    }
+    run_program(load,sizeof(load));run_program(publish,sizeof(publish));
+    check_true("sprite load covers all mask values and last valid record",
+        !core_61::extended_program_error() &&
+        std::memcmp(core_61::segment_display_frame(),expected,12)==0);
+  }
+  for(unsigned bad=0;bad<8;++bad) {
+    core_61::enable();core_61::clear_extended_program_banks();
+    for(u8 w=0;w<4;++w)set_register_integer(w,0x123456);
+    set_register_integer(15,bad==0?9989:112);
+    set_register_integer(12,bad==1?9999:1);
+    const usize operand=(bad>=5?15:12)*MK61_MEMORY_PAGE_TETRADES;
+    if(bad==2 || bad==5) ringM[operand+24]=9;
+    if(bad==3 || bad==6) {ringM[operand+27]=1;ringM[operand+33]=9;}
+    if(bad==4 || bad==7) ringM[operand+21]=0xA;
+    run_program(load,sizeof(load));
+    check_true("invalid sprite read leaves buffers and cursor unchanged",
+        core_61::extended_program_error() &&
+        read_register_decimal(0)==0x123456 && read_register_decimal(3)==0x123456 &&
+        core_61::extended_display_cursor()==5);
+  }
+}
+
 static double first_random(bool enhanced, u32 seed) {
   const MatrixKey key_k = {10, 9};
   const MatrixKey key_bx = {11, 8};
@@ -2867,6 +2926,7 @@ int main(void) {
   test_display_strobe_writeback();
   test_extended_opcode_matrix();
   test_packed_segment_frames();
+  test_segment_sprite_load();
   test_rom_command_hooks();
   test_mk61_command_lengths();
   test_mk61_command_hooks();

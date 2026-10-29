@@ -20,6 +20,9 @@ bool open_program(u16 id);
 bool loading_program(void);
 bool active(void);
 bool calculator_suspended(void);
+#if defined(M61_TEXT_HOST_TEST)
+  bool test_waiting_for_time(void);
+#endif
 // A saved trap snapshot forbids writes; an input handler deliberately allows them.
 bool trap_handler_active(void);
 // Stable logical key numbers from m61_keys.hpp, before native key dispatch.

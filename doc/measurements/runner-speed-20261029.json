@@ -1,0 +1,878 @@
+{
+  "date": "2026-10-29",
+  "target": "Classic V3 UC1609 / STM32F411 / 96 MHz",
+  "before": {
+    "walk_seconds": [
+      1.13,
+      1.192,
+      1.146,
+      1.14
+    ],
+    "walk_median_seconds": 1.1429999999999998,
+    "burn_seconds": 1.622,
+    "restore_seconds": 8.617,
+    "restore_remaining_ticks": 18,
+    "held_columns": 4,
+    "released_columns": 4
+  },
+  "after": {
+    "walk_seconds": [
+      0.767,
+      0.712,
+      0.71,
+      0.765
+    ],
+    "walk_median_seconds": 0.7384999999999999,
+    "burn_seconds": 1.056,
+    "restore_seconds": 8.952,
+    "restore_remaining_ticks": 18,
+    "held_columns": 6,
+    "released_columns": 6
+  },
+  "hardware_before": {
+    "passed": true,
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "770D2ADF",
+      "profile": "classic-v3-uc1609"
+    },
+    "cases": [
+      {
+        "case": "start",
+        "seconds": 1.168,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          556552,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-2",
+        "seconds": 1.13,
+        "registers": [
+          8284936,
+          526344,
+          8259710,
+          556552,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          243,
+          0,
+          243,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-3",
+        "seconds": 1.192,
+        "registers": [
+          7014408,
+          526344,
+          8259710,
+          556552,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          -243,
+          0,
+          -243,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-4",
+        "seconds": 1.146,
+        "registers": [
+          8259592,
+          526443,
+          8259710,
+          556552,
+          4,
+          2,
+          0,
+          0,
+          0,
+          0,
+          243,
+          0,
+          243,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-5",
+        "seconds": 1.14,
+        "registers": [
+          8259592,
+          551688,
+          8259710,
+          556552,
+          5,
+          2,
+          0,
+          0,
+          0,
+          0,
+          -243,
+          0,
+          -243,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-hold",
+        "seconds": 3,
+        "columns": 4,
+        "columns_after_release": 4,
+        "released_registers": [
+          8259592,
+          526344,
+          7014526,
+          556552,
+          9,
+          2,
+          0,
+          0,
+          0,
+          0,
+          243,
+          0,
+          243,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-restart",
+        "seconds": 1.001,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          556552,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          290,
+          0,
+          290,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-burn",
+        "seconds": 1.622,
+        "registers": [
+          8257643,
+          526344,
+          8259710,
+          556552,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          466,
+          2168,
+          466,
+          18,
+          2101
+        ]
+      },
+      {
+        "case": "bench-restored",
+        "seconds": 8.617,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          556552,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          466,
+          0,
+          466,
+          0,
+          2101
+        ],
+        "remaining_ticks_at_start": 18
+      },
+      {
+        "case": "exit",
+        "registers": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "elapsed_seconds": 24.981,
+    "left_at_start": false,
+    "scope": "Physical Classic; ordinary USB Screen keys; no game-state fixtures. Timings include register polling and 150 ms framebuffer delivery allowance; they do not depend on a version-specific frame marker."
+  },
+  "hardware_after": {
+    "passed": true,
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "1EA55695",
+      "profile": "classic-v3-uc1609"
+    },
+    "cases": [
+      {
+        "case": "start",
+        "seconds": 0.881,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-2",
+        "seconds": 0.767,
+        "registers": [
+          8284936,
+          526344,
+          8259710,
+          1,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-3",
+        "seconds": 0.712,
+        "registers": [
+          7014408,
+          526344,
+          8259710,
+          1,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-4",
+        "seconds": 0.71,
+        "registers": [
+          8259592,
+          526443,
+          8259710,
+          1,
+          4,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-5",
+        "seconds": 0.765,
+        "registers": [
+          8259592,
+          551688,
+          8259710,
+          1,
+          5,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-hold",
+        "seconds": 3,
+        "columns": 6,
+        "columns_after_release": 6,
+        "released_registers": [
+          113,
+          526344,
+          8259710,
+          1,
+          11,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-restart",
+        "seconds": 0.812,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-burn",
+        "seconds": 1.056,
+        "registers": [
+          8257643,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          18,
+          2101
+        ]
+      },
+      {
+        "case": "bench-restored",
+        "seconds": 8.952,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ],
+        "remaining_ticks_at_start": 18
+      },
+      {
+        "case": "ladder-walk-2",
+        "seconds": 0.709,
+        "registers": [
+          8284936,
+          526344,
+          8259710,
+          1,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "ladder-walk-3",
+        "seconds": 0.763,
+        "registers": [
+          7014408,
+          526344,
+          8259710,
+          1,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "lower-floor",
+        "seconds": 0.941,
+        "registers": [
+          7014408,
+          526344,
+          8259592,
+          1,
+          3,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1765
+        ]
+      },
+      {
+        "case": "middle-floor",
+        "seconds": 0.938,
+        "registers": [
+          113,
+          526344,
+          8259710,
+          1,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-4",
+        "seconds": 0.766,
+        "registers": [
+          8259592,
+          526443,
+          8259710,
+          1,
+          4,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-5",
+        "seconds": 0.715,
+        "registers": [
+          8259592,
+          551688,
+          8259710,
+          1,
+          5,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-6",
+        "seconds": 0.71,
+        "registers": [
+          8259592,
+          7014408,
+          8259710,
+          1,
+          6,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-7",
+        "seconds": 0.758,
+        "registers": [
+          8259592,
+          526344,
+          8259691,
+          1,
+          7,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-floor",
+        "seconds": 0.945,
+        "registers": [
+          113,
+          526344,
+          526443,
+          1,
+          7,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2437
+        ]
+      },
+      {
+        "case": "burn-right",
+        "seconds": 1.103,
+        "registers": [
+          526344,
+          526344,
+          524395,
+          1,
+          7,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          18,
+          2437
+        ]
+      },
+      {
+        "case": "fall",
+        "seconds": 1.687,
+        "registers": [
+          8259592,
+          526344,
+          8285054,
+          1,
+          8,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          16,
+          2101
+        ]
+      },
+      {
+        "case": "tap-left",
+        "seconds": 1.503,
+        "registers": [
+          8259592,
+          526344,
+          8259691,
+          1,
+          7,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          14,
+          2101
+        ]
+      },
+      {
+        "case": "help-return",
+        "seconds": 0.549,
+        "registers": [
+          113,
+          526344,
+          8259691,
+          1,
+          7,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          12,
+          2101
+        ]
+      },
+      {
+        "case": "exit",
+        "registers": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "case": "ready",
+        "seconds": 0.886,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      }
+    ],
+    "elapsed_seconds": 37.897,
+    "left_at_start": true,
+    "scope": "Physical Classic; ordinary USB Screen keys; no game-state fixtures. Timings include register polling and 150 ms framebuffer delivery allowance; they do not depend on a version-specific frame marker."
+  },
+  "firmware_before": {
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "770D2ADF",
+      "profile": "classic-v3-uc1609"
+    },
+    "bytes": 524288,
+    "sha256": "02beb2d06647d05ddf1d0d808d656e09c291ae5d4c9daec078929ed2ddcf98a2",
+    "validated_current_image": true
+  },
+  "firmware_after": {
+    "public": "AEB505B6E0067623",
+    "usb": "2068336B4731",
+    "build": "1EA55695",
+    "sha256": "03f62432c5f42e0b344d041241c462d36ad20c0ba101accf10359eb9e42a14fb",
+    "bytes": 393284,
+    "readback_exact": true
+  },
+  "deployment": {
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "1EA55695",
+      "profile": "classic-v3-uc1609"
+    },
+    "files": [
+      {
+        "name": "autoexec.m61",
+        "bytes": 936,
+        "sha256": "eca516833582eec3a39d5c0df121f35478290fa475b07e0645b2123ddfa76a4f"
+      },
+      {
+        "name": "runner.bin",
+        "bytes": 703,
+        "sha256": "16f199e0452523b0b001e4b367695fc1ef1985d11e0520ff110cd33fd94a5868"
+      },
+      {
+        "name": "manual.md",
+        "bytes": 994,
+        "sha256": "3f441f861be152ace898bad21eb93b42527bce91a5a49b731da68c17b86e158c"
+      }
+    ]
+  },
+  "differential": {
+    "seed": 97,
+    "frames": 1200,
+    "states": 2956,
+    "equal_gameplay": true,
+    "baseline_steps": 48005,
+    "optimized_steps": 24967,
+    "faster_states": 1193,
+    "equal_states": 1757,
+    "slower_states": 6
+  },
+  "source": {
+    "base_commit": "1a26f35cf7416d2bf7a12569c3b0db88fc2aae84",
+    "changed_production_sha256": {
+      "code/mk61emu_core.cpp": "b1a5442c2c9fc35d73139fbcd16c0e809b36b7931728e073a9c7b34f51fbb96f",
+      "code/mk61_register_init.hpp": "702e8848b34f5c430f3f1383b5b86693b011a3e043d109bdac6b674d4741e6e1",
+      "code/terminal_script_runtime.cpp": "3dacf29d2f0428166465ca2a6a2ba777fd043d53f213c228251475e41bcc82bd",
+      "code/terminal_command_functions.inc": "03b51f2c2ec746af3ea815d09e951c674a5172f97225b71e25f1a8c4c956157c",
+      "code/terminal.cpp": "05bb4835504440833277a281d16fe5913374ae510c6e13055e770f69dab177cd",
+      "code/m61_text.cpp": "cecd7f68a414e9f1a5b301b476193b095d0f26d5186513d9ab516906f7b5a31b",
+      "code/m61_text.hpp": "af0cc8efebc2cb44dd89fc076557284de41e8532c549d85e92d27e604b7500bf"
+    },
+    "build": "Clean git archive of base_commit, overlaid with only the listed production files; unrelated working tree changes excluded.",
+    "verified_unchanged_archive_files": 12891,
+    "archive_sha256": "59e88b182886ff5b6bf868f9e1f9b37a09e6a480cdaf20de946ad5a87069be69"
+  },
+  "checks": {
+    "runner": "native/packed UC1609 and scalar LCD1602 A00; ASan/UBSan; 372 states each",
+    "core": "Full mk_math self-test, flash and evictable SRAM hot tables, ASan/UBSan",
+    "m61": "10 cache/scoped configurations, controls and game manuals",
+    "terminal": "terminal parser, conditions and scripts",
+    "terminal_arm": "TERMINAL.APP and CLOCK.APP; three legal relocation addresses",
+    "hardware": "24 checks; physical keys via USB Screen; no game state fixtures",
+    "target_build": "Classic STM32F411: 393284/524288 bytes; full flash readback matches",
+    "limitation": "Additional F401 product build linked (260272 bytes) but failed its minimum 4096-byte Flash headroom budget (1872 bytes available). It was used only for ARM command emulation, and was not installed or qualified as a release. PicoCalc hardware was not tested this pass."
+  },
+  "performance_budget": {
+    "idle_max": 2,
+    "walk_max": 20,
+    "timer_17_max": 200,
+    "observed": {
+      "idle": 0,
+      "walk": 18,
+      "timer_17": 187
+    }
+  },
+  "artifacts": ".build/runner-fast-20261029",
+  "method": "Same Classic and test for before/after. Timings include register polling and a fixed 150 ms framebuffer allowance. Four consecutive taps, not repeated-run statistics. Hold counts include completion of an in-flight step after release."
+}

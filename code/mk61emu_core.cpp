@@ -1358,6 +1358,28 @@ static bool format_segment_register(u8 reg, bool hexadecimal) {
   return true;
 }
 
+// Twelve-byte sprite records are addressed by RF + 12*Rn. Stage and validate
+// the complete read before touching R0..R3, including index/base aliases.
+static bool load_segment_sprite(u8 reg) {
+  constexpr u16 width = core_61::EXTENDED_DISPLAY_CELLS;
+  u16 base = 0, index = 0;
+  if(!read_register_unsigned(0x0F, core_61::EXTENDED_ADDRESS_LIMIT, base) ||
+     !read_register_unsigned(reg, core_61::EXTENDED_ADDRESS_LIMIT, index))
+    return false;
+  const u32 address = (u32) base + (u32) index * width;
+  if(address + width > core_61::EXTENDED_ADDRESS_LIMIT) return false;
+  u8 frame[width];
+  for(u16 cell = 0; cell < width; ++cell)
+    if(!core_61::read_absolute_program((u16) (address + cell), frame[cell]))
+      return false;
+  for(u8 word = 0; word < 4; ++word) {
+    const u8* masks = frame + word * 3U;
+    write_register_unsigned(word, (u32) masks[0] | ((u32) masks[1] << 8) |
+                                   ((u32) masks[2] << 16));
+  }
+  return true;
+}
+
 static bool read_bcd_absolute_address(u16 address, u16& target) {
   u8 high = 0;
   u8 low = 0;
@@ -1538,6 +1560,8 @@ static bool execute_display_prefix(u16 absolute) {
   } else if((opcode & 0xE0U) == 0x60U) {
     if(!format_segment_register((u8) (opcode & 0x0FU), (opcode & 0x10U) != 0))
       return false;
+  } else if((opcode & 0xF0U) == 0x80U) {
+    if(!load_segment_sprite((u8) (opcode & 0x0FU))) return false;
   } else {
     switch(opcode) {
       case 0x0D: // Cx: clear the display, not the arithmetic X.

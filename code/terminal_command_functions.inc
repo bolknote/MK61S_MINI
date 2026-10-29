@@ -947,6 +947,11 @@ bool MK61_TERMINAL_COMMAND_CLASS::write_register_value(u8 reg, const char* args)
 #else
           return mk61_ref::write_raw_register(reg, value.raw);
 #endif
+        case mk61_register_init::Kind::REGISTER: {
+          double number = 0;
+          return mk61_ref::read({mk61_ref::Kind::R, value.source_register}, number) &&
+                 mk61_ref::write(ref, number);
+        }
       }
       return false;
     }
