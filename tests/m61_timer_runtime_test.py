@@ -39,7 +39,28 @@ def main():
                     'timer 50 junk', 'timer pause junk', 'timer resume junk'):
         result, _ = run_case(binary, command+'\nwait 500\n')
         assert result.returncode == 3 and 'Invalid TIMER' in result.stderr, (command, result)
-    print('M61 timer runtime: boundaries, prepared conditions, invalid syntax and clock wrap: OK')
+    callback = ('bind timer run :expired\ntimer 100\n:loop\nwait 500\nrun :loop\n'
+                ':expired\nif r0==7 R1= 8\nR0= 7\nret\n')
+    for start in (0, 0xFFFFFF00):
+        result, states = run_case(binary, callback,
+            ('advance 99', 'advance 1', 'advance 1000'), start)
+        assert result.returncode == 0, result.stderr
+        assert states[1]['regs'][0] == 0 and states[2]['regs'][0] == 7
+        assert states[-1]['regs'][1] == 0, states[-1]  # Exactly one callback.
+    result, states = run_case(binary, callback.replace('R0= 7\nret', 'R0= 7\ntimer 100\nret'),
+        ('advance 100', 'advance 99', 'advance 1'))
+    assert result.returncode == 0, result.stderr
+    assert states[1]['regs'][0] == 7 and states[2]['regs'][1] == 0 and states[3]['regs'][1] == 8
+    result, states = run_case(binary, callback,
+        ('advance 99', 'clear-bindings', 'advance 1', 'advance 1000'))
+    assert result.returncode == 0, result.stderr
+    assert all(s['regs'][0] == 0 for s in states) and not states[-1]['timer_ms'], states
+    for declaration in ('bind timer', 'bind timer 100 run :expired',
+                        'bind timer run :expired junk', 'bind timer run :missing',
+                        'bind timer run :expired\nbind timer run :expired'):
+        result, _ = run_case(binary, declaration+'\nwait 500\n:expired\nret\n')
+        assert result.returncode == 3, (declaration,result)
+    print('M61 timer runtime: time bounds/wrap, callback, one shot/rearm, clear and invalid syntax: OK')
 
 
 if __name__ == '__main__':

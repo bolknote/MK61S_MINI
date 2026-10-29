@@ -3,7 +3,7 @@
 R0..R3 compose the segment frame; between frames R0 selects an action and
 R3 marks publication. R4/R5 are the one-based column/floor. R6..R9 are held
 left/right/up/down. M61 owns these flags and the one-shot mailbox RA; RC marks
-a restored frame to redraw. RB/RD hold the open cell's pointer and state
+an expiration request (1) or restored frame to redraw (2). RB/RD hold the open cell's pointer and state
 (0: none, 1: newly published, 2: the monotonic timer is armed).
 RE caches the floor's cell table base; RF caches its raw sprite atlas base.
 """
@@ -150,12 +150,12 @@ def launcher(info):
         lines += [f'bind key {key:02X} down run :{name}',
                   f'bind key {key:02X} up run :u{key}']
     for key, name in ((7, 'bl'), (9, 'br'), (0, 'restart'),
-                      (0x13, 'help'), (0x14, 'exit')):
+                      (0x13, 'h'), (0x14, 'x')):
         lines.append(f'bind key {key:02X} down run :{name}')
-    # Only M61 owns the mailbox. Bound handlers cannot preempt this EXECUTING
-    # block, so reading and clearing RA is safe; a quick DOWN/UP keeps its edge.
-    lines += ['load 0000 runner.bin', 'run', ':l', f'wait {FRAME_MS}',
-              'if r5==0 ret', 'if rd==2 if timer==0 run :e', ':i',
+    # Key handlers cannot preempt the input block. The timer handler only
+    # latches RC, leaving the one-shot RA mailbox and core operands intact.
+    lines += ['bind timer run :t', 'load 0000 runner.bin', 'run', ':l', f'wait {FRAME_MS}',
+              'if r5==0 ret', 'if rc==1 run :e', ':i',
               f'R0= {info["labels"]["idle"]+1}',
               f'if r6!=r7 R0= {info["labels"]["right"]+1}',
               f'if r6>r7 R0= {info["labels"]["left"]+1}',
@@ -165,9 +165,10 @@ def launcher(info):
               f'if r0=={info["labels"]["idle"]+1} if rc==0 run :l',
               'if rd>0 run :a', f'run {info["labels"]["tick_fast"]}', 'run :d',
               ':a', f'run {info["labels"]["tick"]}',
-              ':d', 'if r5==0 ret', 'RC= 0', f'if rd==1 timer {HOLE_MS}',
+              ':d', 'if r5==0 ret', 'if rc==2 RC= 0', f'if rd==1 timer {HOLE_MS}',
               'if rd==1 RD= 2', 'if rd==0 timer 0', 'run :l',
-              ':e', 'R3= 3', 'RB= 0', 'RD= 0', 'RC= 1', 'run :i']
+              ':e', 'R3= 3', 'RB= 0', 'RD= 0', 'RC= 2', 'run :i',
+              ':t', 'RC= 1', 'ret']
     for key, name, reg in directions:
         target = info['labels'][name+'_key'] + 1
         lines += [f':{name}', f'R{reg}= 1', f'RA= {target}',
@@ -175,8 +176,8 @@ def launcher(info):
     for key, name in ((7, 'bl'), (9, 'br'), (10, 'restart')):
         target = info['labels'][{'bl': 'burn_left', 'br': 'burn_right'}.get(name, name)+'_key'] + 1
         lines += [f':{name}', f'RA= {target}', 'ret']
-    lines += [':help', 'timer pause', 'open? manual.md', 'timer resume', 'ret',
-              ':exit', 'reinit', 'ret']
+    lines += [':h', 'timer pause', 'open? manual.md', 'timer resume', 'ret',
+              ':x', 'reinit', 'ret']
     source = ('\n'.join(lines) + '\n').encode('ascii')
     assert len(source) <= 1536, len(source)
     return source

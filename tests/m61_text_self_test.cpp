@@ -1770,6 +1770,132 @@ static void test_monotonic_timer(void) {
   m61_text::cancel();
 }
 
+static void test_timer_bind_dispatch_and_validation(void) {
+  for(u32 start : {0U, 0xFFFFFF00U}) {
+    reset_host(); fake_millis = start;
+    add_script("TIMER", "bind timer run :tick\ntimer 100\nret\n:tick\nfired\nret\n");
+    assert(m61_text::load_program("TIMER")); drain_keys();
+    assert(m61_text::active() && !occurrences("fired"));
+    fake_millis = start + 99; drain_keys(); assert(!occurrences("fired"));
+    fake_millis = start + 100; drain_keys(); assert(occurrences("fired") == 1);
+    fake_millis = start + 5000; drain_keys(); assert(occurrences("fired") == 1);
+    assert(context_saves == 0 && context_restores == 0);
+  }
+  for(const char* declaration : {"bind timer", "bind timer 100 run :tick",
+      "bind timer run :tick junk", "bind timer run :missing",
+      "bind timer run :tick\nbind timer run :tick"}) {
+    reset_host();
+    add_script("BAD", std::string(declaration)+"\nret\n:tick\nret\n");
+    assert(!m61_text::load_program("BAD"));
+    assert(!m61_text::active());
+  }
+  reset_host();
+  add_script("SKIP", "run :done\nbind timer run :tick\n:done\ntimer 100\nwait 500\nret\n:tick\nfired\nret\n");
+  assert(m61_text::load_program("SKIP"));
+  fake_millis=100; drain_keys(); assert(!occurrences("fired"));
+
+  // A busy script can receive the event between service slices, without IF polling.
+  reset_host();
+  add_script("BUSY", "bind timer run :tick\ntimer 100\n:loop\nok\nrun :loop\n:tick\nfired\nret\n");
+  assert(m61_text::load_program("BUSY"));
+  fake_millis=100; drain_keys(); assert(occurrences("fired")==1);
+}
+
+static void test_timer_bind_boundaries_and_serialization(void) {
+  reset_host();
+  add_script("RUN", "bind timer run :tick\ntimer 100\nrun\nret\n:tick\nfired\nret\n");
+  assert(m61_text::load_program("RUN"));
+  const auto cpu = m_IK1302;
+  fake_millis=100; m61_text::service();
+  assert(!occurrences("fired") && !m61_text::calculator_suspended());
+  assert(fire_program_boundary(37));
+  assert(m61_text::calculator_suspended());
+  drain_keys();
+  assert(occurrences("fired")==1 && !m61_text::calculator_suspended());
+  assert(std::memcmp(&cpu,&m_IK1302,sizeof(cpu))==0);
+  assert(!fire_program_boundary(37));
+  assert(context_saves==0 && context_restores==0);
+
+  // A timer callback's WAIT keeps the parent's original deadline.
+  reset_host();
+  add_script("WAIT", "bind timer run :tick\ntimer 100\nwait 500\nparent_done\nret\n"
+      ":tick\nfired\nwait 500\nret\n");
+  assert(m61_text::load_program("WAIT"));
+  fake_millis=100; drain_keys(); assert(occurrences("fired")==1);
+  fake_millis=599; drain_keys(); assert(!occurrences("parent_done"));
+  fake_millis=600; drain_keys(); assert(occurrences("parent_done")==1);
+
+  // Physical bindings and timer bindings never enter each other.
+  reset_host();
+  add_script("KEY", "bind timer run :tick\nbind key 04 down run :key\ntimer 100\nret\n"
+      ":key\npressed\nwait 500\nret\n:tick\nfired\nret\n");
+  assert(m61_text::load_program("KEY")); drain_keys();
+  fake_millis=50; assert(m61_text::handle_key_event(4,true)); drain_keys();
+  fake_millis=100; drain_keys(); assert(!occurrences("fired"));
+  fake_millis=550; drain_keys(); assert(occurrences("fired")==1);
+
+  reset_host();
+  add_script("TRAP", "bind timer run :tick\ntrap 10 run :frame\ntimer 100\nrun\nret\n"
+      ":frame\nwait 500\nret\n:tick\nfired\nret\n");
+  assert(m61_text::load_program("TRAP")); assert(fire_program_boundary(10));
+  drain_keys(); fake_millis=100; drain_keys(); assert(!occurrences("fired"));
+  fake_millis=500; drain_keys(); assert(context_restores==1);
+  assert(fire_program_boundary(11)); drain_keys();
+  assert(occurrences("fired")==1 && !executed_in_trap[executed_lines.size()-2]);
+}
+
+static void test_timer_bind_scope_rearm_and_clear(void) {
+  reset_host();
+  add_script("REARM", "bind timer run :tick\ntimer 100\nret\n"
+      ":tick\nfired\ntimer 100\nret\n");
+  assert(m61_text::load_program("REARM")); drain_keys();
+  fake_millis=100; drain_keys(); assert(occurrences("fired")==1);
+  fake_millis=199; drain_keys(); assert(occurrences("fired")==1);
+  fake_millis=200; drain_keys(); assert(occurrences("fired")==2);
+  assert(m61_text::clear_bindings_and_traps());
+  assert(!m61_text::active() && !m61_text::timer_remaining_ms());
+  fake_millis=1000; drain_keys(); assert(occurrences("fired")==2);
+
+  reset_host();
+  add_script("PARENT", "bind timer run :parent\ntimer 100\nopen CHILD\nwait 500\nret\n:parent\nparent_fired\nret\n");
+  add_script("CHILD", "bind timer run :child\ntimer 200\nwait 500\nret\n:child\nchild_fired\nret\n");
+  assert(m61_text::load_program("PARENT")); drain_keys();
+  fake_millis=100; drain_keys(); assert(!occurrences("parent_fired"));
+  fake_millis=200; drain_keys(); assert(occurrences("child_fired")==1);
+  fake_millis=500; drain_keys(); assert(occurrences("parent_fired")==1);
+
+  // The long-Cx reset cancels a boundary event before its callback enters.
+  reset_host();
+  add_script("CLEAR", "bind timer run :tick\ntimer 100\nrun\nret\n:tick\nfired\nret\n");
+  assert(m61_text::load_program("CLEAR"));
+  fake_millis=100; assert(fire_program_boundary(3));
+  assert(m61_text::calculator_suspended());
+  assert(m61_text::clear_bindings_and_traps());
+  assert(!m61_text::calculator_suspended() && !m61_text::timer_remaining_ms());
+  drain_keys(); assert(!occurrences("fired"));
+
+  // Clear all kinds of binding in a child and in the saved parent frame.
+  reset_host();
+  add_script("PARENT", "bind AE run :key\nbind key 04 down run :key\ntrap 10 run :key\n"
+      "bind timer run :tick\ntimer 100\nopen CHILD\nret\n:key\nret\n:tick\nparent_fired\nret\n");
+  add_script("CHILD", "bind timer run :tick\ntimer 100\nwait 500\nret\n:tick\nchild_fired\nret\n");
+  assert(m61_text::load_program("PARENT")); drain_keys();
+  assert(m61_text::clear_bindings_and_traps());
+  assert(!m61_text::captures_key(4) && !m61_text::timer_remaining_ms());
+  fake_millis=500; drain_keys();
+  assert(!m61_text::active() && !occurrences("parent_fired") && !occurrences("child_fired"));
+  assert(core_61::registered_mk61_command_hook_count()==0 && boundary_hook==nullptr);
+
+  // Returning from an already running handler must not restore the binding.
+  reset_host();
+  add_script("HANDLER", "bind timer run :tick\ntimer 100\nret\n:tick\nfired\nwait 500\nret\n");
+  assert(m61_text::load_program("HANDLER")); drain_keys();
+  fake_millis=100; drain_keys(); assert(occurrences("fired")==1);
+  assert(m61_text::clear_bindings_and_traps());
+  fake_millis=600; drain_keys(); assert(!m61_text::active());
+  assert(!m61_text::timer_remaining_ms() && occurrences("fired")==1);
+}
+
 static void test_key_bind_release_reserved_under_pressure(void) {
   reset_host();
   add_script("GAME", "bind key 04 down run :left\nbind key 04 up run :left_up\n"
@@ -1850,7 +1976,7 @@ static void test_key_bind_validation_and_capacity(void) {
   for(unsigned code=0;code<8;++code) {
     char line[40];std::snprintf(line,sizeof(line),"bind %02X run :h\n",code);all+=line;
   }
-  add_script("ALL",all+"ret\n:h\nret\n");
+  add_script("ALL",all+"bind timer run :h\nret\n:h\nret\n");
   assert(m61_text::load_program("ALL"));
   drain_keys();
   assert(core_61::registered_mk61_command_hook_count()==16);
@@ -2301,6 +2427,9 @@ int main(void) {
   test_key_bind_run_boundary_and_edges();
   test_key_bind_preempts_wait_and_preserves_deadline();
   test_monotonic_timer();
+  test_timer_bind_dispatch_and_validation();
+  test_timer_bind_boundaries_and_serialization();
+  test_timer_bind_scope_rearm_and_clear();
   test_key_bind_queue_while_handler_waits();
   test_key_bind_release_reserved_under_pressure();
   test_key_bind_trap_defers_events();

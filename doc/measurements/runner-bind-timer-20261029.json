@@ -1,0 +1,946 @@
+{
+  "date": "2026-10-29",
+  "syntax": [
+    "bind timer run :label",
+    "timer 4000"
+  ],
+  "policy": "One callback per explicit timer start; serialized with other handlers; active ROM yields at a command boundary. Runner latches RC=1 and applies restoration between frames.",
+  "reset": "Long Cx clears opcode/key/timer bindings, traps, pending timer event, and saved parent frames; control rows include Cx while a handler suspends the core.",
+  "firmware": {
+    "public": "AEB505B6E0067623",
+    "usb": "2068336B4731",
+    "build": "27FB2CE5",
+    "bytes": 395336,
+    "sha256": "e25c97cbc4e2fdae3cbb45e85c86abe8ccec2d7149862635af3650229a74b543",
+    "readback_exact": true
+  },
+  "backup": {
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "5E9479ED",
+      "profile": "classic-v3-uc1609"
+    },
+    "bytes": 524288,
+    "sha256": "91894b92f543219406602f33af8dc383faef267e92581f418ad777c027594638",
+    "validated_current_image": true
+  },
+  "source": {
+    "base": "7bfc7cfed4db325d9134f81aca8270b6ed1dde3d",
+    "sha256": {
+      "code/m61_text.cpp": "e564ba1e705896c77fee49ecd459066770ffdcbe137790f12d5cee55ea83a5c3",
+      "code/m61_text.hpp": "5bfdd338ad187f600f87cdce1c84c3ac9ca59466b9a3d8e48911e44584e4bf67",
+      "code/keyboard.cpp": "04232c915fb40baa912da774cfb699e250de2f2dcb049553509b9b32be4c359e"
+    }
+  },
+  "deployment": {
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "27FB2CE5",
+      "profile": "classic-v3-uc1609"
+    },
+    "files": [
+      {
+        "path": "/games/Runner/autoexec.m61",
+        "bytes": 1004,
+        "sha256": "67b99ac7d37a6533a68408a7905a23c048cf477611f56bdf9b22529ce837a7aa"
+      },
+      {
+        "path": "/games/Runner/runner.bin",
+        "bytes": 677,
+        "sha256": "b83018ceff2b9a0e672c123f9cbf7070e1504942ea5a3758d997dc6056f37d38"
+      },
+      {
+        "path": "/games/Runner/manual.md",
+        "bytes": 1036,
+        "sha256": "a44db08145ae4d1f8ee1190c1f6df65001c0c42aa6cd6e2bd834e5f28909ba1b"
+      }
+    ]
+  },
+  "hardware": {
+    "passed": true,
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "27FB2CE5",
+      "profile": "classic-v3-uc1609"
+    },
+    "cases": [
+      {
+        "case": "start",
+        "seconds": 0.896,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-2",
+        "seconds": 0.762,
+        "registers": [
+          8284936,
+          526344,
+          8259710,
+          1,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-3",
+        "seconds": 0.759,
+        "registers": [
+          7014408,
+          526344,
+          8259710,
+          1,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-4",
+        "seconds": 0.767,
+        "registers": [
+          8259592,
+          526443,
+          8259710,
+          1,
+          4,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-5",
+        "seconds": 0.762,
+        "registers": [
+          8259592,
+          551688,
+          8259710,
+          1,
+          5,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-hold",
+        "seconds": 3,
+        "columns": 6,
+        "columns_after_release": 6,
+        "released_registers": [
+          113,
+          526344,
+          8259710,
+          1,
+          11,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-restart",
+        "seconds": 0.817,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-burn",
+        "seconds": 1.053,
+        "registers": [
+          8257643,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          1,
+          2101
+        ]
+      },
+      {
+        "case": "bench-restored",
+        "seconds": 4.522,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          2101
+        ],
+        "hole_state_at_start": 1
+      },
+      {
+        "case": "timer-moving-burn",
+        "seconds": 1.057,
+        "registers": [
+          8257643,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          1,
+          2101
+        ]
+      },
+      {
+        "case": "timer-moving-restored",
+        "seconds": 4.481,
+        "registers": [
+          8259592,
+          7014408,
+          8259592,
+          1,
+          6,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          1765
+        ],
+        "released_registers": [
+          113,
+          526344,
+          8259691,
+          1,
+          7,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1765
+        ]
+      },
+      {
+        "case": "timer-moving-reset",
+        "seconds": 0.822,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "timer-blocked-burn",
+        "seconds": 1.06,
+        "registers": [
+          8257643,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          1,
+          2101
+        ]
+      },
+      {
+        "case": "timer-blocked-restored",
+        "seconds": 4.864,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          2101
+        ],
+        "released_registers": [
+          113,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "timer-blocked-reset",
+        "seconds": 0.815,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "timer-help-burn",
+        "seconds": 1.06,
+        "registers": [
+          8257643,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          1,
+          2101
+        ]
+      },
+      {
+        "case": "timer-help-return",
+        "seconds": 0.233,
+        "registers": [
+          113,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          2,
+          2101
+        ]
+      },
+      {
+        "case": "timer-help-restored",
+        "seconds": 2.392,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "ladder-walk-2",
+        "seconds": 0.752,
+        "registers": [
+          8284936,
+          526344,
+          8259710,
+          1,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "ladder-walk-3",
+        "seconds": 0.731,
+        "registers": [
+          7014408,
+          526344,
+          8259710,
+          1,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "lower-floor",
+        "seconds": 0.899,
+        "registers": [
+          7014408,
+          526344,
+          8259592,
+          1,
+          3,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1765
+        ]
+      },
+      {
+        "case": "middle-floor",
+        "seconds": 0.922,
+        "registers": [
+          7014408,
+          526344,
+          8259710,
+          1,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-4",
+        "seconds": 0.736,
+        "registers": [
+          8259592,
+          526443,
+          8259710,
+          1,
+          4,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-5",
+        "seconds": 0.753,
+        "registers": [
+          8259592,
+          551688,
+          8259710,
+          1,
+          5,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-6",
+        "seconds": 0.746,
+        "registers": [
+          8259592,
+          7014408,
+          8259710,
+          1,
+          6,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-7",
+        "seconds": 0.748,
+        "registers": [
+          8259592,
+          526344,
+          8259691,
+          1,
+          7,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-floor",
+        "seconds": 0.933,
+        "registers": [
+          526344,
+          526344,
+          526443,
+          1,
+          7,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2437
+        ]
+      },
+      {
+        "case": "burn-right",
+        "seconds": 1.14,
+        "registers": [
+          526344,
+          526344,
+          524395,
+          1,
+          7,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          1,
+          2437
+        ]
+      },
+      {
+        "case": "fall",
+        "seconds": 1.256,
+        "registers": [
+          8259592,
+          526344,
+          8285054,
+          1,
+          8,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          2,
+          2101
+        ]
+      },
+      {
+        "case": "tap-left",
+        "seconds": 1.046,
+        "registers": [
+          8259592,
+          526344,
+          8259691,
+          1,
+          7,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          2,
+          2101
+        ]
+      },
+      {
+        "case": "help-return",
+        "seconds": 0.232,
+        "registers": [
+          113,
+          526344,
+          8259691,
+          1,
+          7,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          2,
+          2101
+        ]
+      },
+      {
+        "case": "exit",
+        "registers": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "case": "cx-start",
+        "seconds": 0.88,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "cx-timer-armed",
+        "seconds": 1.053,
+        "registers": [
+          8257643,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          1,
+          2101
+        ]
+      },
+      {
+        "case": "long-cx-cleared-key-and-timer",
+        "registers": [
+          113,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          77,
+          2,
+          2101
+        ]
+      },
+      {
+        "case": "ready",
+        "seconds": 0.893,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      }
+    ],
+    "timer_ms": 4000,
+    "long_cx": true,
+    "elapsed_seconds": 67.39,
+    "left_at_start": true,
+    "scope": "Physical Classic; ordinary USB Screen keys; no game-state fixtures. Timings include register polling and 150 ms framebuffer delivery allowance; they do not depend on a version-specific frame marker."
+  },
+  "long_cx": {
+    "passed": true,
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "27FB2CE5",
+      "profile": "classic-v3-uc1609"
+    },
+    "armed_registers": [
+      113,
+      526344,
+      8259710,
+      1,
+      1,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2168,
+      0,
+      2,
+      2101
+    ],
+    "after_clear": [
+      113,
+      526344,
+      8259710,
+      1,
+      1,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2168,
+      77,
+      2,
+      2101
+    ],
+    "wait_after_clear_seconds": 5,
+    "crash": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+    "left_at_start": false
+  },
+  "measured": {
+    "idle_restore_seconds": 4.522,
+    "moving_restore_seconds": 4.481,
+    "blocked_restore_seconds": 4.864,
+    "walk_median_seconds": 0.762
+  },
+  "checks": {
+    "hardware_cases": 36,
+    "focused_long_cx": true,
+    "m61": "10 cache/scoped variants, one-shot/rearm, nested files, boundary yield, serialized handlers, pending/saved-frame cancellation and clock wrap",
+    "controls": "actual hold/scan handlers on Mini/Classic/40TH with ASan/UBSan",
+    "runner": "native/packed UC1609 and scalar LCD1602 A00, ASan/UBSan, 372 base states each plus clock/callback tests",
+    "keyboard": "full keyboard and handoff tests with ASan/UBSan"
+  },
+  "build": {
+    "image_bytes": 395336,
+    "flash_capacity": 524288,
+    "globals_bytes": 22024,
+    "max_stack_frame": 1928,
+    "stack_frame_limit": 5120
+  },
+  "scope": "Physical Classic only; PicoCalc hardware and F401 release matrix not tested. Existing System help files verified identical to new ELF help resources.",
+  "method": "Action samples include register polling and a 150 ms framebuffer allowance; timed-hold samples end at the first restored complete frame without an extra allowance. One hardware route, not repeated-run statistics.",
+  "artifacts": ".build/runner-bind-timer-20261029"
+}

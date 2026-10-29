@@ -11,14 +11,15 @@ bind key 02 up run :u2
 bind key 07 down run :bl
 bind key 09 down run :br
 bind key 00 down run :restart
-bind key 13 down run :help
-bind key 14 down run :exit
+bind key 13 down run :h
+bind key 14 down run :x
+bind timer run :t
 load 0000 runner.bin
 run
 :l
 wait 30
 if r5==0 ret
-if rd==2 if timer==0 run :e
+if rc==1 run :e
 :i
 R0= 113
 if r6!=r7 R0= 243
@@ -35,7 +36,7 @@ run :d
 run 55
 :d
 if r5==0 ret
-RC= 0
+if rc==2 RC= 0
 if rd==1 timer 4000
 if rd==1 RD= 2
 if rd==0 timer 0
@@ -44,8 +45,11 @@ run :l
 R3= 3
 RB= 0
 RD= 0
-RC= 1
+RC= 2
 run :i
+:t
+RC= 1
+ret
 :left
 R6= 1
 RA= 225
@@ -83,11 +87,11 @@ ret
 :restart
 RA= 289
 ret
-:help
+:h
 timer pause
 open? manual.md
 timer resume
 ret
-:exit
+:x
 reinit
 ret

@@ -87,6 +87,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--benchmark-only', action='store_true')
     parser.add_argument('--timer-ms', type=int, help='also check monotonic expiration and manual pause')
+    parser.add_argument('--long-cx', action='store_true', help='check system escape with a timer armed')
     parser.add_argument('--leave-calculator', action='store_true')
     parser.add_argument('--confirm-game-reset', action='store_true', required=True)
     args = parser.parse_args()
@@ -222,11 +223,29 @@ def main():
             assert not any(registers(p)), 'ESC did not clear calculator'
             assert 'CRASH none' in p.command('crash show')
             cases.append(dict(case='exit', registers=registers(p)))
+            if args.long_cx:
+                p.open(args.directory.rstrip('/')+'/autoexec.m61'); p.pump(.8)
+                p.key(39); sample('cx-start', 1, 2, 0)
+                tap(9); sample('cx-timer-armed', 1, 2, 14)
+                assert registers(p)[13] == 2, 'Long-Cx check requires an armed timer'
+                p.send(0x30, bytes((0, 1))); p.pump(1.8)  # Classic raw Cx; hold threshold is 1500 ms.
+                p.send(0x30, bytes((0, 0))); p.pump(.3)
+                before = registers(p)
+                p.command('RC= 77')
+                tap(6); p.pump(5)
+                after = registers(p)
+                assert after[4:6] == before[4:6], ('Cx left key bindings active', before, after)
+                assert after[12] == 77, ('Cx left timer binding or pending event active', after)
+                assert 'CRASH none' in p.command('crash show')
+                png(p.frames[-1], args.output/'long-cx.png')
+                cases.append(dict(case='long-cx-cleared-key-and-timer', registers=after))
+                assert 'Calculator reinitialized.' in p.command('reinit')
             if not args.leave_calculator:
                 p.open(args.directory.rstrip('/')+'/autoexec.m61'); p.pump(.8)
                 p.key(39); sample('ready', 1, 2, 0)
             result = dict(passed=True, identity=identity.__dict__, cases=cases,
                           timer_ms=args.timer_ms,
+                          long_cx=args.long_cx,
                           elapsed_seconds=round(time.monotonic()-started, 3),
                           left_at_start=not args.leave_calculator,
                           scope='Physical Classic; ordinary USB Screen keys; no game-state fixtures. '

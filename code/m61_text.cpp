@@ -112,6 +112,7 @@ struct ScriptFrame {
   u8 active_bind_opcodes[MAX_BINDS];
   u8 active_keys[2][m61_keys::MASK_BYTES];
   u8 held_keys[m61_keys::MASK_BYTES];
+  bool active_timer;
 };
 
 enum class ReturnKind : u8 {
@@ -123,8 +124,11 @@ enum class ReturnKind : u8 {
 
 struct TimerState {
   u32 started;
-  u32 duration; // Bit 31 pauses the remaining duration; values are <= 60000 ms.
+  u32 duration; // Low bits: <=60000 ms; upper bits: paused and armed event.
 };
+static constexpr u32 TIMER_PAUSED = 0x80000000U;
+static constexpr u32 TIMER_ARMED = 0x40000000U;
+static constexpr u32 TIMER_DURATION = 0x3FFFFFFFU;
 
 struct ReturnFrame {
   ReturnKind kind;
@@ -176,12 +180,12 @@ static bool prepare_runtime() {
 static void release_runtime() { runtime_storage.reset(); }
 #if defined(ARDUINO_ARCH_STM32)
 // Keep the full live-script cost in APP qualification after removing its BSS.
-static_assert(sizeof(RuntimeBuffers) == READ_CACHE_SIZE + 1352U,
+static_assert(sizeof(RuntimeBuffers) == READ_CACHE_SIZE + 1388U,
               "update the scoped M61 ELF reserve when runtime shapes change");
 #define MK61_M61_STRING_IMPL(x) #x
 #define MK61_M61_STRING(x) MK61_M61_STRING_IMPL(x)
 __asm__(".global mk61_m61_runtime_bytes\n.set mk61_m61_runtime_bytes, (("
-        MK61_M61_STRING(MK61_M61_READ_CACHE_BYTES) "+1352+31)&-32)");
+        MK61_M61_STRING(MK61_M61_READ_CACHE_BYTES) "+1388+31)&-32)");
 #undef MK61_M61_STRING
 #undef MK61_M61_STRING_IMPL
 #endif
@@ -241,6 +245,9 @@ static u8 trap_targets[TRAP_ADDRESS_COUNT];
 static BindEntry binds[MAX_BINDS];
 static u8 bind_count = 0;
 static u8 active_bind_opcodes[MAX_BINDS];
+static u8 timer_bind_target = INVALID_BIND_TARGET;
+static bool timer_bind_active = false;
+static bool timer_boundary_ready = false;
 static core_61::Mk61CommandHookHandle bind_before_hooks[MAX_BINDS];
 static core_61::Mk61CommandHookHandle bind_after_hooks[MAX_BINDS];
 static bool trap_pending = false;
@@ -254,7 +261,7 @@ static bool bind_ready = false;
 static u8 pending_bind_target = INVALID_BIND_TARGET;
 static u32 pending_bind_sequence = 0;
 static bool bind_handler_active = false;
-static bool key_bind_active = false;
+static bool event_bind_active = false;
 static u8 key_targets[2][m61_keys::COUNT];
 static u8 active_keys[2][m61_keys::MASK_BYTES];
 static constexpr u8 KEY_QUEUE_CAPACITY = 128;
@@ -327,6 +334,8 @@ static void clear_active_traps(void) {
 }
 
 static void clear_active_binds(void) {
+  timer_bind_active = false;
+  timer_boundary_ready = false;
   memset(active_keys, 0, sizeof(active_keys));
   for(u8 i = 0; i < MAX_BINDS; i++) {
     active_bind_opcodes[i] = INVALID_BIND_OPCODE;
@@ -363,6 +372,7 @@ bool key_bindings_active(void) {
 }
 
 static bool any_bind_is_active(void) {
+  if(timer_bind_active) return true;
   if(key_bindings_active()) return true;
   for(u8 i = 0; i < MAX_BINDS; i++) {
     if(active_bind_opcodes[i] != INVALID_BIND_OPCODE) return true;
@@ -480,9 +490,19 @@ static bool time_reached(u32 now, u32 deadline) {
 u32 timer_remaining_ms(void) {
   if(!active()) return 0;
   const TimerState timer = runtime_buffers().timer;
-  if(timer.duration & 0x80000000U) return timer.duration & 0x7FFFFFFFU;
+  const u32 duration = timer.duration & TIMER_DURATION;
+  if(timer.duration & TIMER_PAUSED) return duration;
   const u32 elapsed = runner_millis() - timer.started;
-  return elapsed < timer.duration ? timer.duration - elapsed : 0;
+  return elapsed < duration ? duration - elapsed : 0;
+}
+
+static bool timer_bind_due(void) {
+  if(!active() || loading || key_input_blocked ||
+     !timer_bind_active || timer_bind_target == INVALID_BIND_TARGET ||
+     trap_pending || trap_context_valid() || bind_handler_active || bind_pending)
+    return false;
+  const u32 state = runtime_buffers().timer.duration;
+  return (state & TIMER_ARMED) && !(state & TIMER_PAUSED) && !timer_remaining_ms();
 }
 
 static void clear_error(void) {
@@ -540,6 +560,7 @@ static void store_current_frame(ScriptFrame& frame) {
   save_active_traps(frame.active_traps);
   save_active_binds(frame.active_bind_opcodes);
   memcpy(frame.active_keys, active_keys, sizeof(active_keys));
+  frame.active_timer = timer_bind_active;
   for(u8 i=0;i<m61_keys::MASK_BYTES;++i)
     frame.held_keys[i]=(u8)((key_pressed & ~key_ignored) >> (8U*i));
 }
@@ -559,6 +580,7 @@ static bool restore_frame(const ScriptFrame& frame) {
   restore_active_traps(frame.active_traps);
   restore_active_binds(frame.active_bind_opcodes);
   memcpy(active_keys, frame.active_keys, sizeof(active_keys));
+  timer_bind_active = frame.active_timer;
   invalidate_read_cache();
   return true;
 }
@@ -578,6 +600,7 @@ static bool make_store_frame(u16 id, ScriptFrame& frame) {
          sizeof(frame.active_bind_opcodes));
   memset(frame.active_keys, 0, sizeof(frame.active_keys));
   memset(frame.held_keys, 0, sizeof(frame.held_keys));
+  frame.active_timer = false;
   return true;
 }
 
@@ -655,8 +678,8 @@ bool active(void) {
 }
 
 bool calculator_suspended(void) {
-  return trap_pending || trap_context_valid() ||
-      (key_bind_active && runner_state != RunnerState::WAIT_RUN_STOP) ||
+  return timer_boundary_ready || trap_pending || trap_context_valid() ||
+      (event_bind_active && runner_state != RunnerState::WAIT_RUN_STOP) ||
       (!bind_handler_active && !bind_pending && key_queue_count && key_boundary_ready);
 }
 
@@ -732,12 +755,13 @@ static void clear_trap_runtime(bool restore_calculator) {
 }
 
 static void clear_bind_runtime(void) {
+  timer_boundary_ready = false;
   bind_pending = false;
   bind_ready = false;
   pending_bind_target = INVALID_BIND_TARGET;
   pending_bind_sequence = 0;
   bind_handler_active = false;
-  key_bind_active = false;
+  event_bind_active = false;
   key_input_blocked = 0;
   clear_key_runtime();
 }
@@ -1038,6 +1062,7 @@ enum class BindParse : u8 { NONE, VALID, INVALID };
 
 struct ParsedBind {
   bool key;
+  bool timer;
   u8 event;
   u8 opcode;
   const char* label;
@@ -1058,6 +1083,10 @@ static BindParse parse_bind(const char* line, ParsedBind& out) {
   p = skip_spaces(p);
 
   if(is_line_end(*p)) return BindParse::INVALID;
+  out.timer = strncmp(p, "timer", 5) == 0 && is_space(p[5]);
+  if(out.timer)
+    return parse_handler_target(skip_spaces(p + 5), out.label, out.label_len)
+        ? BindParse::VALID : BindParse::INVALID;
   out.key = strncmp(p, "key", 3) == 0 && is_space(p[3]);
   out.event = 0;
   if(out.key) p = skip_spaces(p + 3);
@@ -1218,6 +1247,7 @@ static bool build_bind_index(const char*& error_message, u16& error_line) {
   script_pos = 0;
   script_line = 1;
   bind_count = 0;
+  timer_bind_target = INVALID_BIND_TARGET;
   memset(key_targets, INVALID_BIND_TARGET, sizeof(key_targets));
   invalidate_read_cache();
 
@@ -1237,6 +1267,21 @@ static bool build_bind_index(const char*& error_message, u16& error_line) {
       error_message = "invalid bind (use: bind key <code> down/up run :label)";
       error_line = line_number;
       return false;
+    }
+    if(parsed.timer) {
+      if(timer_bind_target != INVALID_BIND_TARGET) {
+        error_message = "duplicate bind timer";
+        error_line = line_number;
+        return false;
+      }
+      const i16 target = find_label_index(parsed.label, parsed.label_len);
+      if(target < 0) {
+        error_message = "bind label not found";
+        error_line = line_number;
+        return false;
+      }
+      timer_bind_target = (u8)target;
+      continue;
     }
     if(parsed.key) {
       u8& target = key_targets[parsed.event][parsed.opcode];
@@ -1288,6 +1333,7 @@ static void discard_undefined_active_traps(void) {
 }
 
 static void discard_undefined_active_binds(void) {
+  if(timer_bind_target == INVALID_BIND_TARGET) timer_bind_active = false;
   for(u8 event = 0; event < 2; ++event)
     for(u8 code = 0; code < m61_keys::COUNT; ++code)
       if(key_targets[event][code] == INVALID_BIND_TARGET)
@@ -1383,8 +1429,8 @@ static bool return_from_script(void) {
     }
     if(!restore_return_frame(returned)) return false;
     bind_handler_active = false;
-    const bool redraw = key_bind_active && !display_owned();
-    key_bind_active = false;
+    const bool redraw = event_bind_active && !display_owned();
+    event_bind_active = false;
     if(!key_queue_count) key_boundary_ready = false;
     runner_state = returned.runner_state;
     wait_until_ms = returned.wait_deadline;
@@ -1612,6 +1658,10 @@ static bool enter_pending_bind(void) {
 
 static bool program_boundary_hook(
     const core_61::Mk61ProgramBoundaryContext& context, void* user_data) {
+  if(core_61::is_RUN() && timer_bind_due()) {
+    timer_boundary_ready = true;
+    return true;
+  }
   if((runner_state != RunnerState::WAIT_RUN_STOP &&
       runner_state != RunnerState::WATCH_EVENTS) ||
      !core_61::is_RUN()) {
@@ -1895,6 +1945,7 @@ static bool execute_loadfont(const char* args) {
 #endif
 
 static void clear_frame_handlers(ScriptFrame& frame) {
+  frame.active_timer = false;
   memset(frame.active_traps, 0, sizeof(frame.active_traps));
   memset(frame.active_bind_opcodes, INVALID_BIND_OPCODE,
          sizeof(frame.active_bind_opcodes));
@@ -1903,11 +1954,13 @@ static void clear_frame_handlers(ScriptFrame& frame) {
 }
 
 static void clear_active_handlers(void) {
+  runtime_buffers().timer = {};
   clear_bind_hooks();
   clear_active_traps();
   clear_active_binds();
   for(u8 i = 0; i < return_stack_depth; i++) {
     clear_frame_handlers(return_stack()[i].script);
+    return_stack()[i].timer = {};
   }
 
   trap_pending = false;
@@ -1923,6 +1976,7 @@ static void clear_active_handlers(void) {
 }
 
 static bool frame_has_active_handlers(const ScriptFrame& frame) {
+  if(frame.active_timer) return true;
   for(const auto& events : frame.active_keys)
     for(u8 bits : events) if(bits) return true;
   for(u8 i = 0; i < TRAP_BITMAP_SIZE; i++) {
@@ -2026,6 +2080,10 @@ static bool execute_script_line(const char* raw_line,
   ParsedBind parsed_bind = {};
   const BindParse bind_result = parse_bind(line, parsed_bind);
   if(bind_result == BindParse::VALID) {
+    if(parsed_bind.timer) {
+      timer_bind_active = true;
+      return true;
+    }
     if(parsed_bind.key) {
       set_key_active(parsed_bind.opcode, parsed_bind.event, true);
       return true;
@@ -2111,14 +2169,14 @@ static bool execute_script_result(const terminal_protocol::Result& result,
     case terminal_protocol::ResultKind::TIMER: {
       TimerState& timer = runtime_buffers().timer;
       if(result.key == -2) {
-        timer.duration = timer_remaining_ms() | 0x80000000U;
+        timer.duration = timer_remaining_ms() | TIMER_PAUSED | (timer.duration & TIMER_ARMED);
       } else if(result.key == -3) {
-        if(timer.duration & 0x80000000U) {
-          timer.duration &= 0x7FFFFFFFU;
+        if(timer.duration & TIMER_PAUSED) {
+          timer.duration &= ~TIMER_PAUSED;
           timer.started = runner_millis();
         }
       } else if(result.key >= 0 && result.key <= 60000) {
-        timer = {runner_millis(), (u32)result.key};
+        timer = {runner_millis(), (u32)result.key | (result.key ? TIMER_ARMED : 0U)};
       } else {
         line_error_message = "invalid timer duration";
         return false;
@@ -2180,13 +2238,15 @@ void service(void) {
 #if !defined(M61_TEXT_HOST_TEST) && !defined(MK61_CORE_STANDALONE)
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_RUNNER);
 #endif
+  const bool dispatch_timer = timer_bind_due() &&
+      (!core_61::is_RUN() || timer_boundary_ready);
   if(runner_state == RunnerState::WAIT_TIME) {
     // A stopped calculator is already at a safe input boundary. Let bound
     // keys preempt an ordinary WAIT; a bind's own WAIT and read-only traps
     // keep their existing serialization. Its return frame owns the deadline.
     const bool waiting_key = key_queue_count && !trap_context_valid() &&
         !bind_handler_active && !bind_pending && !core_61::is_RUN();
-    if(!waiting_key) {
+    if(!waiting_key && !dispatch_timer) {
       if(!time_reached(runner_millis(), wait_until_ms)) return;
       wait_until_ms = 0;
       runner_state = RunnerState::EXECUTING;
@@ -2200,6 +2260,15 @@ void service(void) {
                   trap_line);
       return;
     }
+  }
+
+  if(dispatch_timer) {
+    runtime_buffers().timer.duration &= ~TIMER_ARMED;
+    timer_boundary_ready = false;
+    pending_bind_target = timer_bind_target;
+    pending_bind_sequence = 0;
+    bind_pending = bind_ready = true;
+    event_bind_active = true;
   }
 
   if(key_queue_count && !trap_context_valid() && !bind_handler_active && !bind_pending &&
@@ -2217,7 +2286,7 @@ void service(void) {
       pending_bind_target = target;
       pending_bind_sequence = 0;
       bind_pending = bind_ready = true;
-      key_bind_active = true;
+      event_bind_active = true;
     }
   }
 
@@ -2302,6 +2371,7 @@ static bool load_frame(const ScriptFrame& frame) {
     save_active_traps(next.active_traps);
     save_active_binds(next.active_bind_opcodes);
     memcpy(next.active_keys, active_keys, sizeof(active_keys));
+    next.active_timer = timer_bind_active;
   }
   if(active()) stop_runner();
   clear_error();

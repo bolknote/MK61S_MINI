@@ -622,11 +622,12 @@ isize scan(void) {return scan_impl(true);}
 isize scan_during_storage(void) {return scan_impl(false);}
 
 isize scan_m61_controls(void) {
-  // Angle keys and ESC share the top matrix row. OK is on that row on mini,
-  // but on another row on Classic. Alternate just these control rows while
-  // a trap/bind pauses the calculator; scan() still owns settle/debounce.
+  // Keep ESC/angle, OK and the long-Cx escape available while a handler
+  // pauses the calculator. scan() still owns settle/debounce.
   constexpr u8 ok_row = keyboard_layout::ACTIVE.ok % KEY_IN_ROW;
-  if(scan_line != LAST_SCAN_ROW && scan_line != ok_row) {
+  constexpr u8 cx_row = keyboard_layout::ACTIVE.cx % KEY_IN_ROW;
+  constexpr u8 rows = (1U << LAST_SCAN_ROW) | (1U << ok_row) | (1U << cx_row);
+  if(!(rows & (1U << scan_line))) {
     stm32f4_gpio::configure(scan_pins[scan_line], INPUT);
     scan_line = LAST_SCAN_ROW;
     activate_scan_line();
@@ -637,7 +638,9 @@ isize scan_m61_controls(void) {
   const isize result = scan();
   if(scan_line != previous) {
     stm32f4_gpio::configure(scan_pins[scan_line], INPUT);
-    scan_line = previous == LAST_SCAN_ROW ? ok_row : LAST_SCAN_ROW;
+    scan_line = previous;
+    do { scan_line = (scan_line + 1U) % KEY_IN_ROW; }
+    while(!(rows & (1U << scan_line)));
     activate_scan_line();
   }
   return result;

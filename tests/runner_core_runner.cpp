@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
     } else if(command == "advance") {
       unsigned ms = 0; input >> ms; now_ms += ms;
       m61_text::service();
-      if(!m61_text::calculator_suspended()) paused_frame();
+      paused_frame(); // Drain serialized timer/key callbacks without advancing a suspended core.
     } else if(command == "step-ms") {
       input >> step_ms;
     } else if(command == "manual-ms") {
@@ -236,6 +236,8 @@ int main(int argc, char** argv) {
       next_frame();
     } else if(command == "cancel") {
       m61_text::cancel();
+    } else if(command == "clear-bindings") {
+      m61_text::clear_bindings_and_traps();
     } else return 6;
     assert(!backend_error);
     dump();

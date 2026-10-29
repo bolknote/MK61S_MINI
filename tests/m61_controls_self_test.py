@@ -18,6 +18,8 @@ def main():
             body(CODE / "keyboard.cpp", "isize scan_m61_controls(void) {"))
         (work / "m61_controls_surface.inc").write_text(
             body(CODE / "mk61s-M.ino", "static void service_m61_controls(void) {"))
+        (work / "m61_hold_surface.inc").write_text(
+            body(CODE / "mk61s-M.ino", "void event_hold_key(i32 holded_key, i32 hold_quant) {"))
         (work / "m61_viewer_surface.inc").write_text(
             body(CODE / "markdown_viewer.cpp", "static i32 scan_key(void) {"))
         flags = (["-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
