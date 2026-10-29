@@ -33,4 +33,5 @@ for profile in native mini; do
     "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" "$root/code/zx0_stream.cpp" \
     "$root/code/program_load.cpp" -o "$build_dir/runner-$profile"
   python3 "$root/tests/runner_game_test.py" "$build_dir/runner-$profile"
+  python3 "$root/tests/m61_timer_runtime_test.py" "$build_dir/runner-$profile"
 done

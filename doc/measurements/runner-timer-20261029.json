@@ -1,0 +1,866 @@
+{
+  "date": "2026-10-29",
+  "policy": {
+    "duration_ms": 4000,
+    "clock": "monotonic unsigned 32-bit millis; wrap safe for bounded intervals",
+    "manual": "pause/resume remaining duration",
+    "publication": "on the next completed calculator frame; the deadline itself is not extended"
+  },
+  "firmware": {
+    "public": "AEB505B6E0067623",
+    "usb": "2068336B4731",
+    "build": "5E9479ED",
+    "bytes": 394740,
+    "sha256": "684acd4f303fbbf7529cf3e1c88f4887e8a9154c65c9d1539a014a2bb4de1a6c",
+    "readback_exact": true
+  },
+  "backup": {
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "1EA55695",
+      "profile": "classic-v3-uc1609"
+    },
+    "bytes": 524288,
+    "sha256": "cc5c6c669ff6837db885ddad4f61b8a9269cdfe2751ccdb945e527992a18c4a0",
+    "validated_current_image": true
+  },
+  "source": {
+    "base": "30877f6d49ec9568495886c0e391117a50f01bdd",
+    "sha256": {
+      "code/m61_text.cpp": "aa0219c4bd40940b1bbc46c396a1de78cdddfd0959797f215bd2948914f7ade2",
+      "code/m61_text.hpp": "c0d88ea91eaee36bce5ae008008c3a2ca78940c83c02918395e8d3515de8b300",
+      "code/terminal.cpp": "16767c1177a110a7cf33291584d623207c17d21a511cf9def339b2b7d3366490",
+      "code/terminal_command_ids.hpp": "655e07a0c5fe6d514ecac35f4ab961dac84c37295b58af45c5c33c9539d85036",
+      "code/terminal_commands.inc": "202a541e068ee32a3146e3dc49fd1f5c72a58d5c9f8caae020e5eb4963d1d38f",
+      "code/terminal_protocol.hpp": "99d9804c233c3284ae3a7fd6a0b80a81eb259225a70cdf22c226200505168f36",
+      "code/terminal_script_runtime.cpp": "6a0f802fd8bbeccfee934ef9f6ad48f6c36b57a37ba30626d6e1799eee374b47"
+    }
+  },
+  "deployment": {
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "5E9479ED",
+      "profile": "classic-v3-uc1609"
+    },
+    "files": [
+      {
+        "path": "/games/Runner/autoexec.m61",
+        "bytes": 988,
+        "sha256": "6968600a96b258b47de2fe412966bb3f08734e3b0c8936992664f9f920af6615"
+      },
+      {
+        "path": "/games/Runner/runner.bin",
+        "bytes": 677,
+        "sha256": "b83018ceff2b9a0e672c123f9cbf7070e1504942ea5a3758d997dc6056f37d38"
+      },
+      {
+        "path": "/games/Runner/manual.md",
+        "bytes": 1036,
+        "sha256": "a7b91c760a14fa4170b67e3bac31b6496e81f75f38a539f958e419c7e9e9110d"
+      },
+      {
+        "path": "/System/HELP0.TXT",
+        "bytes": 1523,
+        "sha256": "628d660ef3840b4b6ef95ea9f34ba814e175fb1867da2480d2f2a57c905e98d9"
+      },
+      {
+        "path": "/System/HELP1.TXT",
+        "bytes": 1405,
+        "sha256": "589eae8159516af704c01de110b8cda56058697a27e4fc44dcb25ec982b1009b"
+      }
+    ]
+  },
+  "hardware": {
+    "passed": true,
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "5E9479ED",
+      "profile": "classic-v3-uc1609"
+    },
+    "cases": [
+      {
+        "case": "start",
+        "seconds": 0.894,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-2",
+        "seconds": 0.761,
+        "registers": [
+          8284936,
+          526344,
+          8259710,
+          1,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-3",
+        "seconds": 0.712,
+        "registers": [
+          7014408,
+          526344,
+          8259710,
+          1,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-4",
+        "seconds": 0.718,
+        "registers": [
+          8259592,
+          526443,
+          8259710,
+          1,
+          4,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-walk-5",
+        "seconds": 0.769,
+        "registers": [
+          8259592,
+          551688,
+          8259710,
+          1,
+          5,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-hold",
+        "seconds": 3,
+        "columns": 5,
+        "columns_after_release": 6,
+        "released_registers": [
+          113,
+          526344,
+          8259710,
+          1,
+          11,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-restart",
+        "seconds": 0.814,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "bench-burn",
+        "seconds": 1.061,
+        "registers": [
+          8257643,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          1,
+          2101
+        ]
+      },
+      {
+        "case": "bench-restored",
+        "seconds": 4.576,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          2101
+        ],
+        "hole_state_at_start": 1
+      },
+      {
+        "case": "timer-moving-burn",
+        "seconds": 1.022,
+        "registers": [
+          8257643,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          1,
+          2101
+        ]
+      },
+      {
+        "case": "timer-moving-restored",
+        "seconds": 4.478,
+        "registers": [
+          8259592,
+          7014408,
+          8259592,
+          1,
+          6,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1765
+        ],
+        "released_registers": [
+          113,
+          526344,
+          8259691,
+          1,
+          7,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1765
+        ]
+      },
+      {
+        "case": "timer-moving-reset",
+        "seconds": 0.832,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "timer-blocked-burn",
+        "seconds": 1.032,
+        "registers": [
+          8257643,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          1,
+          2101
+        ]
+      },
+      {
+        "case": "timer-blocked-restored",
+        "seconds": 4.862,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          2101
+        ],
+        "released_registers": [
+          113,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "timer-blocked-reset",
+        "seconds": 0.824,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "timer-help-burn",
+        "seconds": 1.038,
+        "registers": [
+          8257643,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          1,
+          2101
+        ]
+      },
+      {
+        "case": "timer-help-return",
+        "seconds": 0.241,
+        "registers": [
+          113,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2168,
+          0,
+          2,
+          2101
+        ]
+      },
+      {
+        "case": "timer-help-restored",
+        "seconds": 2.381,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "ladder-walk-2",
+        "seconds": 0.735,
+        "registers": [
+          8284936,
+          526344,
+          8259710,
+          1,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "ladder-walk-3",
+        "seconds": 0.708,
+        "registers": [
+          7014408,
+          526344,
+          8259710,
+          1,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "lower-floor",
+        "seconds": 0.919,
+        "registers": [
+          7014408,
+          526344,
+          8259592,
+          1,
+          3,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1765
+        ]
+      },
+      {
+        "case": "middle-floor",
+        "seconds": 0.97,
+        "registers": [
+          113,
+          526344,
+          8259710,
+          1,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-4",
+        "seconds": 0.747,
+        "registers": [
+          8259592,
+          526443,
+          8259710,
+          1,
+          4,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-5",
+        "seconds": 0.733,
+        "registers": [
+          8259592,
+          551688,
+          8259710,
+          1,
+          5,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-6",
+        "seconds": 0.726,
+        "registers": [
+          8259592,
+          7014408,
+          8259710,
+          1,
+          6,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-walk-7",
+        "seconds": 0.774,
+        "registers": [
+          8259592,
+          526344,
+          8259691,
+          1,
+          7,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      },
+      {
+        "case": "upper-floor",
+        "seconds": 0.929,
+        "registers": [
+          526344,
+          526344,
+          526443,
+          1,
+          7,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2437
+        ]
+      },
+      {
+        "case": "burn-right",
+        "seconds": 1.091,
+        "registers": [
+          526344,
+          526344,
+          524395,
+          1,
+          7,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          1,
+          2437
+        ]
+      },
+      {
+        "case": "fall",
+        "seconds": 1.236,
+        "registers": [
+          8259592,
+          526344,
+          8285054,
+          1,
+          8,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          2,
+          2101
+        ]
+      },
+      {
+        "case": "tap-left",
+        "seconds": 1.079,
+        "registers": [
+          8259592,
+          526344,
+          8259691,
+          1,
+          7,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          2,
+          2101
+        ]
+      },
+      {
+        "case": "help-return",
+        "seconds": 0.239,
+        "registers": [
+          113,
+          526344,
+          8259691,
+          1,
+          7,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2672,
+          0,
+          2,
+          2101
+        ]
+      },
+      {
+        "case": "exit",
+        "registers": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "case": "ready",
+        "seconds": 0.882,
+        "registers": [
+          8259691,
+          526344,
+          8259710,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2101
+        ]
+      }
+    ],
+    "timer_ms": 4000,
+    "elapsed_seconds": 57.412,
+    "left_at_start": true,
+    "scope": "Physical Classic; ordinary USB Screen keys; no game-state fixtures. Timings include register polling and 150 ms framebuffer delivery allowance; they do not depend on a version-specific frame marker."
+  },
+  "measured": {
+    "idle_restore_seconds": 4.576,
+    "moving_restore_seconds": 4.478,
+    "blocked_restore_seconds": 4.862,
+    "walk_median_seconds": 0.7395,
+    "manual_paused_seconds": 5,
+    "manual_restore_after_return_seconds": 2.381
+  },
+  "checks": {
+    "hardware_cases": 33,
+    "runner_profiles": [
+      "native/packed UC1609",
+      "scalar LCD1602 A00"
+    ],
+    "base_states_per_profile": 372,
+    "sanitizers": [
+      "ASan",
+      "UBSan"
+    ],
+    "clock": [
+      "3999/4000 ms boundary",
+      "u32 wrap",
+      "manual pauses for ten fake seconds",
+      "restart cancels",
+      "blocked movement redraws",
+      "new burn at expiration",
+      "different ROM step latency"
+    ],
+    "m61": "10 cache/scoped combinations; separate nested timers and bind pause/resume",
+    "terminal": "full parser, catalog and permissions suite"
+  },
+  "build": {
+    "image_bytes": 394740,
+    "flash_capacity": 524288,
+    "globals_bytes": 22024,
+    "max_stack_frame": 1928,
+    "stack_frame_limit": 5120
+  },
+  "scope": "Physical Classic only; PicoCalc hardware and the F401 release matrix were not tested this pass.",
+  "method": "Per-action samples include register polling and a 150 ms framebuffer allowance. Timed hold samples measure the first completed restored frame after a burn sample, without an extra 150 ms at the end. These are one-run observations, not a frame-rate guarantee.",
+  "artifacts": ".build/runner-timer-20261029"
+}

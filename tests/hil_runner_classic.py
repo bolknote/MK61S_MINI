@@ -86,6 +86,7 @@ def main():
     parser.add_argument('--directory', default='/games/Runner')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--benchmark-only', action='store_true')
+    parser.add_argument('--timer-ms', type=int, help='also check monotonic expiration and manual pause')
     parser.add_argument('--leave-calculator', action='store_true')
     parser.add_argument('--confirm-game-reset', action='store_true', required=True)
     args = parser.parse_args()
@@ -152,7 +153,48 @@ def main():
             tap(9); state = sample('bench-burn', 1, 2, 14)
             remaining = state[13]
             sample('bench-restored', 1, 2, 0, timeout=100)
-            cases[-1]['remaining_ticks_at_start'] = remaining
+            if args.timer_ms:
+                cases[-1]['hole_state_at_start'] = remaining
+                assert abs(cases[-1]['seconds']-args.timer_ms/1000) < .7, cases[-1]
+                for digit, label, flag in ((6, 'moving', 7), (4, 'blocked', 6)):
+                    tap(9); sample('timer-'+label+'-burn', 1, 2, 14)
+                    born = time.monotonic()
+                    p.send(0x30, bytes((DIGITS[digit], 1)))
+                    deadline = born + args.timer_ms/1000 + 2
+                    while time.monotonic() < deadline:
+                        state = registers(p)
+                        if not hole_cell(state) and complete_frame(state): break
+                        p.pump(.04)
+                    else:
+                        raise AssertionError(('timer extended by '+label, state))
+                    elapsed = time.monotonic()-born
+                    assert args.timer_ms/1000-.5 <= elapsed <= args.timer_ms/1000+1.5, elapsed
+                    if label == 'blocked': assert state[4:6] == [1, 2], state
+                    p.send(0x30, bytes((DIGITS[digit], 0))); p.pump(.1)
+                    deadline = time.monotonic()+10
+                    while time.monotonic() < deadline:
+                        released = registers(p)
+                        if released[flag] == 0 and complete_frame(released): break
+                        p.pump(.04)
+                    assert released[flag] == 0 and complete_frame(released), released
+                    cases.append(dict(case='timer-'+label+'-restored', seconds=round(elapsed,3),
+                                      registers=state, released_registers=released))
+                    print(json.dumps(cases[-1]), flush=True)
+                    tap(0); sample('timer-'+label+'-reset', 1, 2, 0)
+                tap(9); sample('timer-help-burn', 1, 2, 14)
+                p.pump(1.8)
+                frame_start = len(p.frames); p.key(37)
+                deadline = time.monotonic()+10
+                while opening_manual not in p.frames[frame_start:] and time.monotonic() < deadline:
+                    p.pump(.04)
+                assert opening_manual in p.frames[frame_start:], 'Timed manual did not open'
+                p.pump(5)
+                assert hole_cell(registers(p)) == 14, 'Timer ran through the manual'
+                p.key(39); sample('timer-help-return', 1, 2, 14)
+                sample('timer-help-restored', 1, 2, 0, timeout=10)
+                assert 1.5 < cases[-1]['seconds'] < 3.3, cases[-1]
+            else:
+                cases[-1]['remaining_ticks_at_start'] = remaining
             if not args.benchmark_only:
                 for column in (2, 3):
                     tap(6); sample('ladder-walk-'+str(column), column, 2)
@@ -184,6 +226,7 @@ def main():
                 p.open(args.directory.rstrip('/')+'/autoexec.m61'); p.pump(.8)
                 p.key(39); sample('ready', 1, 2, 0)
             result = dict(passed=True, identity=identity.__dict__, cases=cases,
+                          timer_ms=args.timer_ms,
                           elapsed_seconds=round(time.monotonic()-started, 3),
                           left_at_start=not args.leave_calculator,
                           scope='Physical Classic; ordinary USB Screen keys; no game-state fixtures. '
@@ -193,7 +236,7 @@ def main():
             print('Classic Runner checks PASS', flush=True)
         finally:
             if p.attached:
-                p.send(0x31); p.send(0x13); p.attached=False; p.pump(.2)
+                p.send(0x31); p.send(0x13); p.attached=False; p.accept_frames=False; p.pump(.2)
             (args.output/'transcript.txt').write_text(p.text.decode('cp1251','replace'))
 
 

@@ -121,11 +121,17 @@ enum class ReturnKind : u8 {
   BIND
 };
 
+struct TimerState {
+  u32 started;
+  u32 duration; // Bit 31 pauses the remaining duration; values are <= 60000 ms.
+};
+
 struct ReturnFrame {
   ReturnKind kind;
   RunnerState runner_state;
   ScriptFrame script;
   u32 wait_deadline;
+  TimerState timer;
 };
 
 struct LabelEntry {
@@ -147,6 +153,7 @@ struct RuntimeBuffers {
   alignas(LabelEntry) u8 label_bytes[sizeof(LabelEntry) * MAX_LABELS];
   u8 cache_bytes[READ_CACHE_SIZE];
   ReturnFrame frames[RETURN_STACK_DEPTH];
+  TimerState timer;
 };
 #if MK61_SCOPED_RESIDENT_BUFFERS
 static shared_memory::LifetimeBuffer runtime_storage;
@@ -169,12 +176,12 @@ static bool prepare_runtime() {
 static void release_runtime() { runtime_storage.reset(); }
 #if defined(ARDUINO_ARCH_STM32)
 // Keep the full live-script cost in APP qualification after removing its BSS.
-static_assert(sizeof(RuntimeBuffers) == READ_CACHE_SIZE + 1272U,
+static_assert(sizeof(RuntimeBuffers) == READ_CACHE_SIZE + 1352U,
               "update the scoped M61 ELF reserve when runtime shapes change");
 #define MK61_M61_STRING_IMPL(x) #x
 #define MK61_M61_STRING(x) MK61_M61_STRING_IMPL(x)
 __asm__(".global mk61_m61_runtime_bytes\n.set mk61_m61_runtime_bytes, (("
-        MK61_M61_STRING(MK61_M61_READ_CACHE_BYTES) "+1272+31)&-32)");
+        MK61_M61_STRING(MK61_M61_READ_CACHE_BYTES) "+1352+31)&-32)");
 #undef MK61_M61_STRING
 #undef MK61_M61_STRING_IMPL
 #endif
@@ -470,6 +477,14 @@ static bool time_reached(u32 now, u32 deadline) {
   return (i32) (now - deadline) >= 0;
 }
 
+u32 timer_remaining_ms(void) {
+  if(!active()) return 0;
+  const TimerState timer = runtime_buffers().timer;
+  if(timer.duration & 0x80000000U) return timer.duration & 0x7FFFFFFFU;
+  const u32 elapsed = runner_millis() - timer.started;
+  return elapsed < timer.duration ? timer.duration - elapsed : 0;
+}
+
 static void clear_error(void) {
   has_error = false;
   memset(&last_error_info, 0, sizeof(last_error_info));
@@ -629,6 +644,7 @@ static bool push_current_frame(ReturnKind kind) {
   frame.kind = kind;
   frame.runner_state = runner_state;
   frame.wait_deadline = wait_until_ms;
+  frame.timer = runtime_buffers().timer;
   store_current_frame(frame.script);
   if(kind == ReturnKind::SCRIPT) script_stack_depth++;
   return true;
@@ -1389,6 +1405,7 @@ static bool return_from_script(void) {
     runner_state = returned.runner_state;
     wait_until_ms = returned.wait_deadline;
     if(returned.kind == ReturnKind::SCRIPT) {
+      runtime_buffers().timer = returned.timer;
       // A nested program owned the input. End the parent's old gestures on
       // return, before its calculator can advance, rather than leave a flag
       // held forever when the physical UP was consumed by the child.
@@ -1449,6 +1466,7 @@ static bool open_store_script(const char* name) {
   }
   terminal_script::reset();
   // Nested scripts share the caller's program, just as they share registers.
+  runtime_buffers().timer = {};
   // Only a new root script or an explicit reinit starts with empty banks.
   runner_state = RunnerState::EXECUTING;
   return true;
@@ -1469,6 +1487,7 @@ static bool open_store_script(u16 id) {
     return false;
   }
   terminal_script::reset();
+  runtime_buffers().timer = {};
   runner_state = RunnerState::EXECUTING;
   return true;
 }
@@ -2089,6 +2108,23 @@ static bool execute_script_result(const terminal_protocol::Result& result,
       wait_until_ms = runner_millis() + (u32) result.key;
       runner_state = RunnerState::WAIT_TIME;
       return true;
+    case terminal_protocol::ResultKind::TIMER: {
+      TimerState& timer = runtime_buffers().timer;
+      if(result.key == -2) {
+        timer.duration = timer_remaining_ms() | 0x80000000U;
+      } else if(result.key == -3) {
+        if(timer.duration & 0x80000000U) {
+          timer.duration &= 0x7FFFFFFFU;
+          timer.started = runner_millis();
+        }
+      } else if(result.key >= 0 && result.key <= 60000) {
+        timer = {runner_millis(), (u32)result.key};
+      } else {
+        line_error_message = "invalid timer duration";
+        return false;
+      }
+      return true;
+    }
     case terminal_protocol::ResultKind::RETURN_SCRIPT:
       return return_from_script();
     case terminal_protocol::ResultKind::REINIT_CALCULATOR:
@@ -2099,6 +2135,7 @@ static bool execute_script_result(const terminal_protocol::Result& result,
       clear_active_handlers();
       display_claimed = false;
       program_load::reset();
+      runtime_buffers().timer = {};
       reinit_mk61_calculator_state();
       return true;
     case terminal_protocol::ResultKind::ERROR:
@@ -2284,6 +2321,7 @@ static bool load_frame(const ScriptFrame& frame) {
   script_stack_depth = 0;
   display_claimed = false;
   wait_until_ms = 0;
+  runtime_buffers().timer = {};
   clear_trap_runtime(false);
   clear_bind_runtime();
   if(!core_61::set_mk61_program_boundary_hook(

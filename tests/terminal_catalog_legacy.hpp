@@ -28,6 +28,7 @@ static constexpr TerminalCommand legacy_commands[] = {
   { "if",      CMD_IF,            "if <reg><op><val> <cmd> - conditional" },
   { "print",   CMD_PRINT,          "print \"text {X}\"|off|on - M61 display" },
   { "wait",    CMD_WAIT,           "wait <1..60000> - pause M61 script (ms)" },
+  { "timer",   CMD_TIMER,          "timer <0..60000|pause|resume> - M61 timer (ms)" },
   { "ret",     CMD_RET,            "return from an M61 script/trap" },
   { "reinit",  CMD_REINIT,         "clear calculator state and M61 handlers" },
   { "cmd",     CMD_CMD,           "cmd <hex opcode> - press keys of opcode" },

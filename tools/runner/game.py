@@ -2,8 +2,9 @@
 
 R0..R3 compose the segment frame; between frames R0 selects an action and
 R3 marks publication. R4/R5 are the one-based column/floor. R6..R9 are held
-left/right/up/down. M61 owns these flags and the one-shot mailbox RA; RC is
-reserved. RB/RD hold the open cell's clear-routine pointer and lifetime.
+left/right/up/down. M61 owns these flags and the one-shot mailbox RA; RC marks
+a restored frame to redraw. RB/RD hold the open cell's pointer and state
+(0: none, 1: newly published, 2: the monotonic timer is armed).
 RE caches the floor's cell table base; RF caches its raw sprite atlas base.
 """
 from pathlib import Path
@@ -13,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'elite'))
 from assembler import Assembler
 
 WIDTH, FLOORS = 12, 3
-FRAME_MS, HOLE_TICKS = 30, 18
+FRAME_MS, HOLE_MS = 30, 4000
 LADDERS = {1: (3, 9), 2: (3, 7, 9, 11), 3: (7, 11)}
 FRAME_TABLE_BANK, ATLAS_BANK = 16, 8
 CELL_STRIDE, CLEAR_OFFSET = 28, 12
@@ -40,27 +41,22 @@ def frame(floor, column):
 def create_game():
     a = Assembler()
     a.far_conditions = {0x51, 0x53, 0x57, 0x59, 0x5C, 0x5E}
-    a.inline_helpers = ('age_hole',)
     m = a.module(0, 'startup and frame loop')
-    m.label('start').raw(0x2F, 0x50, 0x2F, 0x2A)
+    m.label('start').set(3, 3).raw(0x2F, 0x50, 0x2F, 0x2A)
     m.op('cx')
     for reg in (6, 7, 8, 9, 'A', 'B', 'C', 'D'):
         m.st(reg)
     m.call('restart').call('draw')
     m.label('frame_ready').set(3, 1).op('stop')
-    # The M61 scheduler selects these entries from the already known timer
-    # and input. The common no-hole move needs neither aging nor gravity.
-    m.label('tick_fast').set(3,3).raw(0x1F,0xA0).jz('frame_ready')
+    # The M61 scheduler selects these entries from the hole state and input.
+    # The common no-hole move needs no gravity. The timer lives in M61.
+    m.label('tick_fast').set(3,3).raw(0x1F,0xA0).jnz('fast_draw')
+    # Expiration still redraws when the requested move was blocked. A burn
+    # may have reopened the cell in the same tick, so use the complete draw.
+    m.ld('C').jz('frame_ready').call('draw').jump('frame_ready')
+    m.label('fast_draw')
     m.raw(0x2F,0x84,0x2F,0x53).jump('frame_ready')
-    m.label('tick_timer').set(3,3).ld('D').n(1).op('-').st('D').jnz('frame_ready')
-    m.set('B',0).raw(0x2F,0x84,0x2F,0x53).jump('frame_ready')
-    m.label('tick').set(3, 3).ld('D').jz('quiet_tick')
-    m.call('age_hole').raw(0x1F, 0xA0).jnz('changed')
-    # An unchanged position cannot fall through a new hole: burns are
-    # adjacent, and the sole open cell already dropped the hero on entry.
-    # Only expiration needs a fresh picture while no action is pending.
-    m.ld('D').jnz('frame_ready').jump('draw_ready')
-    m.label('quiet_tick').raw(0x1F, 0xA0).jz('frame_ready')
+    m.label('tick').set(3, 3).raw(0x1F, 0xA0).jz('frame_ready')
     m.label('changed').ld('B').jz('draw_ready').call('gravity')
     m.label('draw_ready').call('draw').jump('frame_ready')
 
@@ -103,9 +99,6 @@ def create_game():
         m.ld(4).n(CELL_STRIDE).op('*').ld('E').op('+').n(offset).op('+').st(0).raw(0x1F, 0x80)
     m.label('burn_done').op('cx','ret')
     m.label('burn_publish').call('draw').op('cx','ret')
-    m.label('age_hole').ld('D').jz('age_done').n(1).op('-').st('D')
-    m.jnz('age_done').set('B', 0)
-    m.label('age_done').op('ret')
 
     m = a.module(5, 'frame composition')
     m.label('draw').raw(0x2F, 0x84).ld('D').jz('publish')
@@ -117,7 +110,7 @@ def create_game():
     for index, (floor, column) in enumerate(burnable):
         if index % 8 == 0:
             m = a.module((6, 14, 15)[index//8], 'valid burn destinations')
-        m.label(f'burn_{floor}_{column}').set('B', hole_pointer(floor, column)).set('D', HOLE_TICKS).jump('burn_publish')
+        m.label(f'burn_{floor}_{column}').set('B', hole_pointer(floor, column)).set('D', 1).jump('burn_publish')
 
     m=a.module(12,'floor metadata')
     for floor in range(1,FLOORS+1):
@@ -151,37 +144,39 @@ def create_game():
 
 
 def launcher(info):
-    lines = ['open? manual.md', 'reinit', 'R3= 3']
+    lines = ['open? manual.md', 'reinit']
     directions = ((4, 'left', 6), (6, 'right', 7), (8, 'up', 8), (2, 'down', 9))
     for key, name, _ in directions:
         lines += [f'bind key {key:02X} down run :{name}',
                   f'bind key {key:02X} up run :u{key}']
-    for key, name in ((7, 'burn_l'), (9, 'burn_r'), (0, 'restart'),
+    for key, name in ((7, 'bl'), (9, 'br'), (0, 'restart'),
                       (0x13, 'help'), (0x14, 'exit')):
         lines.append(f'bind key {key:02X} down run :{name}')
     # Only M61 owns the mailbox. Bound handlers cannot preempt this EXECUTING
     # block, so reading and clearing RA is safe; a quick DOWN/UP keeps its edge.
-    lines += ['load 0000 runner.bin', 'run', ':loop', f'wait {FRAME_MS}',
-              'if r5==0 ret', f'R0= {info["labels"]["idle"]+1}',
+    lines += ['load 0000 runner.bin', 'run', ':l', f'wait {FRAME_MS}',
+              'if r5==0 ret', 'if rd==2 if timer==0 run :e', ':i',
+              f'R0= {info["labels"]["idle"]+1}',
               f'if r6!=r7 R0= {info["labels"]["right"]+1}',
               f'if r6>r7 R0= {info["labels"]["left"]+1}',
               f'if r8!=r9 R0= {info["labels"]["down"]+1}',
               f'if r8>r9 R0= {info["labels"]["up"]+1}',
               'if ra>0 R0= RA', 'RA= 0',
-              f'if r0=={info["labels"]["idle"]+1} if rd==0 run :loop',
-              'if rd>0 run :active', f'run {info["labels"]["tick_fast"]}', 'run :after',
-              ':active', f'if r0=={info["labels"]["idle"]+1} run :timer',
-              f'run {info["labels"]["tick"]}', 'run :after',
-              ':timer', f'run {info["labels"]["tick_timer"]}',
-              ':after', 'if r5==0 ret', 'run :loop']
+              f'if r0=={info["labels"]["idle"]+1} if rc==0 run :l',
+              'if rd>0 run :a', f'run {info["labels"]["tick_fast"]}', 'run :d',
+              ':a', f'run {info["labels"]["tick"]}',
+              ':d', 'if r5==0 ret', 'RC= 0', f'if rd==1 timer {HOLE_MS}',
+              'if rd==1 RD= 2', 'if rd==0 timer 0', 'run :l',
+              ':e', 'R3= 3', 'RB= 0', 'RD= 0', 'RC= 1', 'run :i']
     for key, name, reg in directions:
         target = info['labels'][name+'_key'] + 1
         lines += [f':{name}', f'R{reg}= 1', f'RA= {target}',
                   'ret', f':u{key}', f'R{reg}= 0', 'ret']
-    for key, name in ((7, 'burn_l'), (9, 'burn_r'), (10, 'restart')):
-        target = info['labels'][{'burn_l': 'burn_left', 'burn_r': 'burn_right'}.get(name, name)+'_key'] + 1
+    for key, name in ((7, 'bl'), (9, 'br'), (10, 'restart')):
+        target = info['labels'][{'bl': 'burn_left', 'br': 'burn_right'}.get(name, name)+'_key'] + 1
         lines += [f':{name}', f'RA= {target}', 'ret']
-    lines += [':help', 'open? manual.md', 'ret', ':exit', 'reinit', 'ret']
+    lines += [':help', 'timer pause', 'open? manual.md', 'timer resume', 'ret',
+              ':exit', 'reinit', 'ret']
     source = ('\n'.join(lines) + '\n').encode('ascii')
     assert len(source) <= 1536, len(source)
     return source
@@ -192,7 +187,7 @@ def check_layout(info, banks):
     assert labels['start'] == 0
     assert labels['frame_table'] == FRAME_TABLE_BANK * 112
     assert labels['tick'] < 112
-    assert labels['tick_fast'] < 112 and labels['tick_timer'] < 112
+    assert labels['tick_fast'] < 112
     # Every conditional clear returns before its padding. There are no
     # address traps: the scheduler resumes only after a bank-zero STOP.
     for bank in range(FRAME_TABLE_BANK, FRAME_TABLE_BANK + WIDTH*FLOORS//4):

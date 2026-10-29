@@ -19,6 +19,8 @@ bool open_program(u16 id);
 // memory-only input progress while source/font reads own C9 temporaries.
 bool loading_program(void);
 bool active(void);
+// Remaining monotonic milliseconds of this script's timer; zero when inactive.
+u32 timer_remaining_ms(void);
 bool calculator_suspended(void);
 #if defined(M61_TEXT_HOST_TEST)
   bool test_waiting_for_time(void);

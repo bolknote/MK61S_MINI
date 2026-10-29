@@ -432,6 +432,19 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
   if(std::strcmp(line, "wait 500") == 0) {
     return terminal_protocol::Result::wait(500);
   }
+  if(std::strncmp(line, "timer ", 6) == 0) {
+    const char* args = line + 6;
+    i32 value = 0;
+    if(std::strcmp(args, "pause") == 0) value = -2;
+    else if(std::strcmp(args, "resume") == 0) value = -3;
+    else {
+      usize duration = 0;
+      if(!terminal_core::parse_single_unsigned(args, 10, 60000, duration))
+        return terminal_protocol::Result::error();
+      value = duration;
+    }
+    return {terminal_protocol::ResultKind::TIMER, value, ""};
+  }
   if(std::strcmp(line, "bad") == 0) return terminal_protocol::Result::error();
   if(std::strncmp(line,"load ",5)==0) {
     program_load::Request request={};
@@ -1712,6 +1725,51 @@ static void test_key_bind_preempts_wait_and_preserves_deadline(void) {
   assert(occurrences("finished")==1 && occurrences("resumed")==1);
 }
 
+static void test_monotonic_timer(void) {
+  for(u32 start : {0U, 0xFFFFFF00U}) {
+    reset_host(); fake_millis = start;
+    add_script("TIMER", "timer 4000\nwait 500\nret\n");
+    assert(m61_text::load_program("TIMER"));
+    assert(m61_text::timer_remaining_ms() == 4000);
+    fake_millis = start + 3999;
+    assert(m61_text::timer_remaining_ms() == 1);
+    fake_millis = start + 4000;
+    assert(m61_text::timer_remaining_ms() == 0);
+    m61_text::cancel();
+    assert(m61_text::timer_remaining_ms() == 0);
+  }
+  reset_host();
+  add_script("TIMER", "bind key 04 down run :pause\nbind key 06 down run :resume\n"
+      "bind key 08 down run :reset\ntimer 4000\nret\n"
+      ":pause\ntimer pause\ntimer pause\nret\n"
+      ":resume\ntimer resume\ntimer resume\nret\n"
+      ":reset\ntimer 3000\nret\n");
+  assert(m61_text::load_program("TIMER")); drain_keys();
+  fake_millis = 1000;
+  assert(m61_text::handle_key_event(4, true)); drain_keys();
+  assert(m61_text::timer_remaining_ms() == 3000);
+  fake_millis = 11000;
+  assert(m61_text::timer_remaining_ms() == 3000);
+  assert(m61_text::handle_key_event(6, true)); drain_keys();
+  fake_millis = 13999;
+  assert(m61_text::timer_remaining_ms() == 1);
+  fake_millis = 14000;
+  assert(m61_text::timer_remaining_ms() == 0);
+  assert(m61_text::handle_key_event(8, true)); drain_keys();
+  assert(m61_text::timer_remaining_ms() == 3000); // A bind changes its script's timer.
+  m61_text::cancel();
+  assert(m61_text::timer_remaining_ms() == 0);
+
+  reset_host();
+  add_script("PARENT", "timer 4000\nrun CHILD\nwait 500\nret\n");
+  add_script("CHILD", "timer 1000\nwait 500\nret\n");
+  assert(m61_text::load_program("PARENT")); drain_keys();
+  assert(m61_text::timer_remaining_ms() == 1000);
+  fake_millis = 600; drain_keys();
+  assert(m61_text::timer_remaining_ms() == 3400); // Parent time includes the child.
+  m61_text::cancel();
+}
+
 static void test_key_bind_release_reserved_under_pressure(void) {
   reset_host();
   add_script("GAME", "bind key 04 down run :left\nbind key 04 up run :left_up\n"
@@ -2242,6 +2300,7 @@ int main(void) {
   test_bind_handler_requires_ret();
   test_key_bind_run_boundary_and_edges();
   test_key_bind_preempts_wait_and_preserves_deadline();
+  test_monotonic_timer();
   test_key_bind_queue_while_handler_waits();
   test_key_bind_release_reserved_under_pressure();
   test_key_bind_trap_defers_events();

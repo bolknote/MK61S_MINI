@@ -3945,6 +3945,11 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 return terminal_protocol::Result::error();
               }
             break;
+          case CMD_TIMER:
+              if(script_mode)
+                return terminal_script::execute((const char*)input_buffer, trap_mode);
+              Serial.println("TIMER works in m61 scripts only!");
+              return terminal_protocol::Result::error();
           case CMD_WAIT: {
               usize milliseconds = 0;
               if(!script_mode ||

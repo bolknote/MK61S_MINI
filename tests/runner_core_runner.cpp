@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -25,9 +26,10 @@ struct File { std::string name, bytes; program_store::ProgramType type; };
 std::vector<File> files;
 u32 now_ms = 0;
 unsigned steps = 0, manuals = 0;
+u32 step_ms = 0, manual_ms = 0;
 bool backend_error = false;
 
-void step() { core_61::step(); ++steps; }
+void step() { core_61::step(); ++steps; now_ms += step_ms; }
 void check() {
   m61_text::Error problem{};
   if(m61_text::last_error(problem)) {
@@ -57,6 +59,7 @@ void dump() {
   check();
   std::cout << "{\"steps\":" << steps << ",\"ms\":" << now_ms
             << ",\"manuals\":" << manuals
+            << ",\"timer_ms\":" << m61_text::timer_remaining_ms()
             << ",\"running\":" << (core_61::is_RUN() ? "true" : "false")
             << ",\"active\":" << (m61_text::active() ? "true" : "false")
             << ",\"auto\":" << (core_61::extended_display_auto() ? "true" : "false")
@@ -133,7 +136,7 @@ bool m61_text_host_resolve_file(u16 parent, const char* name, program_store::Ent
   return false;
 }
 u8 m61_text_host_open_entry(const program_store::Entry& entry) {
-  if(entry.type == program_store::ProgramType::MARKDOWN) { ++manuals; return 0; }
+  if(entry.type == program_store::ProgramType::MARKDOWN) { ++manuals; now_ms += manual_ms; return 0; }
   return entry.type == program_store::ProgramType::MK61 && m61_text::open_program(entry.id) ? 0 : 2;
 }
 u8 m61_text_host_open_file(const char* name, u16 directory) {
@@ -184,6 +187,7 @@ void error(const char* message) { std::cerr << message << '\n'; backend_error = 
 
 int main(int argc, char** argv) {
   if(argc != 2) return 2;
+  if(const char* start = std::getenv("MK61_RUNNER_START_MS")) now_ms = std::strtoul(start, nullptr, 0);
   for(const auto& path : std::filesystem::directory_iterator(argv[1])) {
     const auto extension = path.path().extension();
     if(extension != ".m61" && extension != ".bin" && extension != ".md") continue;
@@ -193,7 +197,7 @@ int main(int argc, char** argv) {
       extension == ".md" ? program_store::ProgramType::MARKDOWN : program_store::ProgramType::MK61});
   }
   core_61::set_expanded_program_mode(true); core_61::enable();
-  assert(m61_text::load_program("autoexec.m61"));
+  if(!m61_text::load_program("autoexec.m61")) { check(); return 3; }
   paused_frame(); dump();
   std::string line;
   while(std::getline(std::cin, line)) {
@@ -212,6 +216,10 @@ int main(int argc, char** argv) {
       unsigned ms = 0; input >> ms; now_ms += ms;
       m61_text::service();
       if(!m61_text::calculator_suspended()) paused_frame();
+    } else if(command == "step-ms") {
+      input >> step_ms;
+    } else if(command == "manual-ms") {
+      input >> manual_ms;
     } else if(command == "fixture") {
       // Fixture only: expose every frame and hole word to the independent
       // art oracle. Normal input tests never write game state from the host.
@@ -221,7 +229,7 @@ int main(int argc, char** argv) {
       // Request the existing no-op action through the normal input decoder.
       // A stationary production tick deliberately retains its old picture.
       for(auto entry : {std::pair<unsigned, double>{4, column}, {5, floor},
-                        {0xB, hole ? 16*112 + (hole-1)*28 + 12 : 0}, {0xD, timer},
+                        {0xB, hole ? 16*112 + (hole-1)*28 + 12 : 0}, {0xD, hole ? 1 : 0},
                         {0, redraw_request}, {0xA, redraw_request},
                         {0xE, 16*112 + (floor-1)*336 - 27}, {0xF, 8*112 + (floor-1)*144 - 12}})
         assert(mk61_ref::write({mk61_ref::Kind::R, (u8)entry.first}, entry.second));

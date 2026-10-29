@@ -1,6 +1,5 @@
 open? manual.md
 reinit
-R3= 3
 bind key 04 down run :left
 bind key 04 up run :u4
 bind key 06 down run :right
@@ -9,16 +8,18 @@ bind key 08 down run :up
 bind key 08 up run :u8
 bind key 02 down run :down
 bind key 02 up run :u2
-bind key 07 down run :burn_l
-bind key 09 down run :burn_r
+bind key 07 down run :bl
+bind key 09 down run :br
 bind key 00 down run :restart
 bind key 13 down run :help
 bind key 14 down run :exit
 load 0000 runner.bin
 run
-:loop
+:l
 wait 30
 if r5==0 ret
+if rd==2 if timer==0 run :e
+:i
 R0= 113
 if r6!=r7 R0= 243
 if r6>r7 R0= 225
@@ -26,19 +27,25 @@ if r8!=r9 R0= 390
 if r8>r9 R0= 337
 if ra>0 R0= RA
 RA= 0
-if r0==113 if rd==0 run :loop
-if rd>0 run :active
-run 24
-run :after
-:active
-if r0==113 run :timer
-run 60
-run :after
-:timer
-run 40
-:after
+if r0==113 if rc==0 run :l
+if rd>0 run :a
+run 26
+run :d
+:a
+run 55
+:d
 if r5==0 ret
-run :loop
+RC= 0
+if rd==1 timer 4000
+if rd==1 RD= 2
+if rd==0 timer 0
+run :l
+:e
+R3= 3
+RB= 0
+RD= 0
+RC= 1
+run :i
 :left
 R6= 1
 RA= 225
@@ -67,17 +74,19 @@ ret
 :u2
 R9= 0
 ret
-:burn_l
+:bl
 RA= 449
 ret
-:burn_r
+:br
 RA= 466
 ret
 :restart
 RA= 289
 ret
 :help
+timer pause
 open? manual.md
+timer resume
 ret
 :exit
 reinit

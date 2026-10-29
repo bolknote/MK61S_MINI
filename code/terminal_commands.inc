@@ -27,6 +27,7 @@ COMMAND("beep", CMD_BEEP, "beep <Гц>,<мс>[,…] — звуковой сце�
 COMMAND("if", CMD_IF, "if <регистр><условие><число> <команда>")
 COMMAND("print", CMD_PRINT, "print \"текст {X}\"|off|on — экран M61")
 COMMAND("wait", CMD_WAIT, "wait <1..60000> — пауза сценария, мс")
+COMMAND("timer", CMD_TIMER, "timer <0..60000|pause|resume> — таймер M61, мс")
 COMMAND("ret", CMD_RET, "возврат из сценария или ловушки M61")
 COMMAND("reinit", CMD_REINIT, "очистить калькулятор и обработчики M61")
 COMMAND("cmd", CMD_CMD, "cmd <код> — набрать команду клавишами")

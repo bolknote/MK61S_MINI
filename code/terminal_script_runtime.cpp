@@ -33,6 +33,10 @@ bool delimiter(char c) {
 u8 reference(const char *&p) {
   p = terminal_core::skip_spaces(p);
   const char c = *p | 32;
+  if(c == 't' && std::strncmp(p, "timer", 5) == 0 && delimiter(p[5])) {
+    p += 5;
+    return 22;
+  }
   if (c == 'r') {
     const int digit = terminal_core::digit_value(p[1], 16);
     if (digit >= 0 && delimiter(p[2])) {
@@ -56,6 +60,11 @@ u8 reference(const char *&p) {
   return x1 ? 17 : ref;
 }
 bool read_reference(u8 ref, double &number) {
+  if(ref == 22) {
+    if(!m61_text::active()) return false;
+    number = m61_text::timer_remaining_ms();
+    return true;
+  }
   if (!ref || ref > 21)
     return false;
   char text[15]{};
@@ -252,6 +261,7 @@ bool command_supported(u8 id) {
   case CMD_IF:
   case CMD_PRINT:
   case CMD_WAIT:
+  case CMD_TIMER:
   case CMD_RET:
   case CMD_REINIT:
 #if defined(MK61_CORE_STANDALONE)
@@ -293,6 +303,18 @@ Result execute(const char *line, bool trap) {
        id == CMD_KBD || id == CMD_CMD))
     return fail(program_load::error());
   switch (id) {
+  case CMD_TIMER: {
+    i32 value = 0;
+    if(mk61_register_init::exact_word(args, "pause")) value = -2;
+    else if(mk61_register_init::exact_word(args, "resume")) value = -3;
+    else {
+      usize duration = 0;
+      if(!terminal_core::parse_single_unsigned(args, 10, 60000, duration))
+        return fail("Invalid TIMER duration");
+      value = (i32)duration;
+    }
+    return {Kind::TIMER, value, ""};
+  }
   case CMD_RUN: {
     if (*args == ':')
       return Result::action(Kind::GOTO_LABEL, args + 1);

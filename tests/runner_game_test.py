@@ -19,10 +19,10 @@ def hole_cell(state):
 
 
 class Game:
-    def __init__(self, binary):
+    def __init__(self, binary, start=0):
         self.process = subprocess.Popen([binary, str(ROOT / 'programs/games/Runner')],
                                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                        text=True)
+                                        text=True, env={**os.environ, 'MK61_RUNNER_START_MS': str(start)})
         self.count, self.max_steps = 0, 0
         self.samples = {}
         self.redraw_request = json.loads((ROOT / 'tools/runner/runner.map.json').read_text())['labels']['draw'] + 1
@@ -117,14 +117,15 @@ def main():
         game.tap(2); game.check(7, 2)
         game.tap(2); game.check(7, 2)  # this ladder does not reach bottom
         game.send('down 9'); game.frame(); game.check(7, 2)
-        assert hole_cell(game.state) == 20 and game.state['regs'][13] == 18
+        assert hole_cell(game.state) == 20 and game.state['regs'][13] == 2
+        assert game.state['timer_ms'] == 4000
         game.sample('burn_right')
         game.frame(2)
-        assert game.state['regs'][13] == 16  # held fire does not reopen it
+        assert game.state['regs'][13] == 2 and game.state['timer_ms'] == 3760
         game.send('up 9')
         game.tap(6); game.check(8, 1)
         game.sample('fall')
-        game.frame(15)
+        game.send('advance 4000')
         assert game.state['regs'][11] == game.state['regs'][13] == 0
         game.tap(9); game.check(8, 1)  # solid bottom
         assert game.state['regs'][11] == 0
@@ -168,7 +169,7 @@ def main():
                 hole = (floor - 1) * 12 + column
                 game.send(f'fixture {hero} {floor} {hole} 18')
                 game.check(hero, floor)
-                assert game.state['regs'][13] == 17
+                assert game.state['regs'][13] == 2 and game.state['timer_ms'] == 4000
         # All 72 generated burn transitions: boundaries, lower floor and
         # every protected ladder are checked against the independent map.
         for floor in (1, 2, 3):
@@ -189,14 +190,14 @@ def main():
         assert game.state['regs'][11] == 0
         game.send('fixture 8 3 0 0'); game.tap(7); game.check(8, 3)
         assert game.state['regs'][11] == 0
-        # The 18-frame timer restores the actual visible floor.
+        # The clock expires even when no ROM frame is needed for the countdown.
         game.send('fixture 5 2 0 0'); game.tap(9); game.check(5, 2)
         game.frame(17)
         timer_steps = game.state['steps']
-        assert timer_steps <= 200, game.state
-        assert game.state['regs'][13] == 1
+        assert timer_steps <= 2, game.state
+        assert game.state['regs'][13] == 2 and game.state['timer_ms'] == 1960
         game.check(5, 2)
-        game.frame(); game.check(5, 2)
+        game.send('advance 1960'); game.check(5, 2)
         assert game.state['regs'][11] == game.state['regs'][13] == 0
         if os.environ.get('MK61_RUNNER_FRAMES'):
             Path(os.environ['MK61_RUNNER_FRAMES']).write_text(json.dumps(game.samples, indent=2) + '\n')
@@ -206,7 +207,61 @@ def main():
         assert stopped['auto'] and stopped['regs'] == [0] * 16, stopped
         print(f'Runner real ROM: {game.count} states; 36 sprites; hold/tap, '
               f'ladders, burn/fall/restore, help, restart and exit: OK; max batch {game.max_steps} core steps')
-        print(f'Runner cost: idle={idle_steps}, walk={walk_steps}, timer17={timer_steps} core steps')
+        print(f'Runner cost: idle={idle_steps}, walk={walk_steps}, timer-wait={timer_steps} core steps')
+    finally:
+        game.close()
+    # Timing uses the monotonic clock, including time spent executing the ROM.
+    for start in (0, 0xFFFFFF00):
+        game = Game(sys.argv[1], start)
+        try:
+            game.tap(9)
+            assert game.state['timer_ms'] == 4000
+            game.send('advance 3999'); game.check(1, 2, 14)
+            assert game.state['timer_ms'] == 1
+            game.send('advance 31'); game.check(1, 2, 0)
+            assert not game.state['timer_ms']
+            game.tap(9); game.send('advance 1000')
+            remaining = game.state['timer_ms']
+            game.send('manual-ms 10000'); game.tap(0x13)
+            assert game.state['timer_ms'] == remaining-120
+            game.check(1, 2, 14)
+            game.tap(0)
+            assert not game.state['timer_ms'] and not hole_cell(game.state)
+        finally:
+            game.close()
+    for latency in (0, 20):
+        game = Game(sys.argv[1])
+        try:
+            game.send(f'step-ms {latency}')
+            game.tap(9)
+            born = game.state['ms']
+            game.send('down 6')
+            frames = 0
+            while hole_cell(game.state):
+                game.frame(); frames += 1
+                assert frames < 40, game.state
+            elapsed = (game.state['ms']-born) & 0xFFFFFFFF
+            assert 4000 <= elapsed <= 5500, (latency, frames, elapsed, game.state)
+            assert not game.state['timer_ms']
+            print(f'Runner clock: ROM step {latency} ms, restored after {elapsed} ms / {frames} frames: OK')
+        finally:
+            game.close()
+    for blocked_key in (4, 8, 7):
+        game = Game(sys.argv[1])
+        try:
+            game.tap(9)
+            game.send(f'down {blocked_key:X}')
+            game.send('advance 4000')
+            game.check(1, 2, 0)  # A wall, absent ladder or invalid burn cannot retain the old pixels.
+            assert not game.state['timer_ms']
+        finally:
+            game.close()
+    game = Game(sys.argv[1])
+    try:
+        game.tap(9)
+        game.send('tap 9'); game.send('advance 4000')
+        game.check(1, 2, 14)
+        assert game.state['timer_ms'] == 4000  # A valid new burn can replace the expired one.
     finally:
         game.close()
 

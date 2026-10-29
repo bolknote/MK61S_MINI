@@ -16,7 +16,8 @@ enum class ResultKind : u8 {
   GOTO_LABEL,
   WAIT,
   RETURN_SCRIPT,
-  REINIT_CALCULATOR
+  REINIT_CALCULATOR,
+  TIMER
 };
 
 struct Result {
