@@ -11,6 +11,8 @@ enum class View : u8 { STACK, REGISTERS, PROGRAM, HELP };
 
 class Ui {
 public:
+    static constexpr unsigned REGISTER_COUNT=15, REGISTER_ROWS=6, REGISTER_COLUMNS=2;
+    static constexpr unsigned VISIBLE_REGISTERS=REGISTER_ROWS*REGISTER_COLUMNS;
     void init(const Settings& value = Settings{});
     bool input(u8 code, Calculator& calculator);
     Page page() const { return page_; }

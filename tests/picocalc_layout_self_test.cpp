@@ -48,8 +48,8 @@ struct Text {
         return true;
     }
 };
-int find_x(const Text& text,const Screen& screen,unsigned top) {
-    for(unsigned x=18;x<=96;++x) if(text.matches(screen,x,top)) return (int)x;
+int find_x(const Text& text,const Screen& screen,unsigned top,unsigned first=18,unsigned last=96) {
+    for(unsigned x=first;x<=last;++x) if(text.matches(screen,x,top)) return (int)x;
     return -1;
 }
 int find_y(const Text& text,const Screen& screen) {
@@ -78,6 +78,14 @@ void fixture(Calculator& calc) {
         require(MK61Emu_UnpackRegster((u8)i,packed)!=nullptr,"memory fixture");
     }
 }
+void preview(const Screen& screen,const char* suffix) {
+    const char* prefix=std::getenv("MK61_LAYOUT_PREVIEW_PREFIX");if(!prefix) return;
+    const std::string path=std::string(prefix)+suffix+".pbm";
+    FILE* file=std::fopen(path.c_str(),"wb");require(file,"preview output");
+    std::fprintf(file,"P4\n320 320\n");
+    require(std::fwrite(screen.data(),1,Screen::BYTES,file)==Screen::BYTES,"preview raster");
+    std::fclose(file);
+}
 void menu(Services& services,Ui& ui,Calculator& calc,unsigned count) {
     Screen screen;int previous=-1;
     const auto metrics=fonts::info(ui.settings());
@@ -103,17 +111,20 @@ void menu(Services& services,Ui& ui,Calculator& calc,unsigned count) {
 void check_choice(const Settings& settings,Calculator& calc) {
     Ui ui;ui.init(settings);
     require(ui.settings().ui_font_family==settings.ui_font_family,"requested font remains selected");
+    u8 saved_settings[SETTINGS_PAGE_BYTES];encode_settings(ui.settings(),0,saved_settings);
     const auto before=core_values();const auto model=calc.snapshot();
     Screen screen;BatteryStatus battery;battery.decode(0x0B,73);
     screen.render(model,true,&ui,nullptr,battery);
     require(Text(ui.settings(),"X2",16).matches(screen,10,72),"large display latch is labelled X2 at readable size");
-    static const stack slots[]={X,Y,Z,T,X1};static const char* labels[]={"X","Y","Z","T","X1"};
+    static const stack slots[]={X,Y,Z,T,X1};static const char* labels[]={"X","Y","Z","T","X1","X2"};
     int column=-1;
-    for(unsigned i=0;i<5;++i) {
-        char raw[INDICATOR_STRING_LENGTH];read_stack_register(slots[i],raw,nullptr);
+    for(unsigned i=0;i<6;++i) {
+        char raw[INDICATOR_STRING_LENGTH];
+        if(i<5) read_stack_register(slots[i],raw,nullptr);
+        else std::snprintf(raw,sizeof(raw),"%s",model.indicator);
         const Text number(ui.settings(),raw,16),label(ui.settings(),labels[i],16);
-        const unsigned top=154+i*24;
-        require(label.matches(screen,18,top),"all five stack labels are visible");
+        const unsigned top=154+i*20;
+        require(label.matches(screen,18,top),"all six X/Y/Z/T/X1/X2 labels are visible");
         const int left=find_x(number,screen,top);
         require(left>=0,"complete signed mantissa and exponent fit");
         if(column<0) column=left;else require(left==column,"X1 and one-character labels share the same numeric column");
@@ -122,26 +133,50 @@ void check_choice(const Settings& settings,Calculator& calc) {
     const Text longest_label(ui.settings(),"X1",16);
     require(column>=(int)(18+longest_label.width+4) && column<=(int)(18+longest_label.width+10),"label gap remains compact and clear");
     require(!screen.scroll_region().valid(),"calculator view does not change hardware scroll region");
+    const bool save=settings.ui_font_family==1 && settings.ui_font_size==14 && settings.russian;
+    if(save) preview(screen,"-stack");
     ui.input(0xB6,calc);require(ui.view()==View::REGISTERS,"Down enters register view");
     bool seen[15]{};
-    for(unsigned offset=0;offset<=9;++offset) {
+    for(unsigned offset=0;offset<=3;++offset) {
         require(ui.offset()==offset,"PgDn advances the register window");
-        screen.render(model,true,&ui,nullptr,battery);int value_column=-1;
-        for(unsigned row=0;row<6;++row) {
-            const unsigned index=offset+row;char label[4],raw[INDICATOR_STRING_LENGTH];
+        screen.render(model,true,&ui,nullptr,battery);
+        // A selected face that cannot fit the table falls back locally to a
+        // native strike. Verify complete glyph rasters, not just lit pixels.
+        Settings fallback;fallback.ui_font_family=1;fallback.ui_font_size=14;
+        Settings font;bool found=false;
+        for(const auto& candidate:{ui.settings(),fallback}) {
+            char raw[INDICATOR_STRING_LENGTH];MK61Emu_ReadRegister((int)offset,raw,nullptr);
+            if(find_x(Text(candidate,raw,candidate.ui_font_size),screen,154,8,64)>=0) {
+                font=candidate;found=true;break;
+            }
+        }
+        require(found,"table uses selected or native unscaled font");
+        int value_columns[2]={-1,-1};
+        for(unsigned cell=0;cell<12;++cell) {
+            const unsigned index=offset+cell,side=cell/6,top=154+(cell%6)*20;
+            const unsigned left=8+side*160,right=left+144;
+            char label[4],raw[INDICATOR_STRING_LENGTH];
             std::snprintf(label,sizeof(label),"R%X",index);MK61Emu_ReadRegister((int)index,raw,nullptr);
-            require(Text(ui.settings(),label,ui.settings().ui_font_size).matches(screen,18,154+row*20),"register label is complete");
-            const int left=find_x(Text(ui.settings(),raw,ui.settings().ui_font_size),screen,154+row*20);
-            require(left>=0,"register number is complete");
-            if(value_column<0) value_column=left;else require(left==value_column,"register values share a column");
+            const Text number(font,raw,font.ui_font_size),name(font,label,font.ui_font_size);
+            require(name.matches(screen,left,top),"both columns have complete register labels");
+            const int value_left=find_x(number,screen,top,left,left+64);
+            require(value_left>=0 && value_left+(int)number.width<=(int)right,"full signed mantissa and exponent fit their own column");
+            require(value_left>=(int)(left+name.width+4),"register label and value stay apart");
+            require(top+number.height<280,"both register columns stay clear of status and footer");
+            if(value_columns[side]<0) value_columns[side]=value_left;
+            else require(value_left==value_columns[side],"register values share a numeric column");
             seen[index]=true;
         }
+        require(value_columns[1]-value_columns[0]==160,"both columns have equal width and label spacing");
+        u8 current_settings[SETTINGS_PAGE_BYTES];encode_settings(ui.settings(),0,current_settings);
+        require(!std::memcmp(current_settings,saved_settings,sizeof(saved_settings)),"local table font keeps saved settings unchanged");
         require(Text(ui.settings(),M8("Shift+↑/↓: R0-RE"),12).matches(screen,10,280),"physical register paging keys and range fit");
         require(Text(ui.settings(),ui.footer(),12).matches(screen,10,301),"Tab and view navigation hint fits without truncation");
         require(std::strstr(ui.footer(),"Tab")!=nullptr,"menu navigation stays discoverable");
+        if(save && (offset==0 || offset==3)) preview(screen,offset?"-registers-last":"-registers");
         ui.input(0xD7,calc);
     }
-    require(ui.offset()==9,"PgDn clamps at RE");
+    require(ui.offset()==3,"PgDn clamps when RE is in the second column");
     for(bool value:seen) require(value,"every R0-RE register is reachable");
     for(unsigned i=0;i<12;++i) ui.input(0xD6,calc);
     require(ui.offset()==0,"PgUp clamps at R0");

@@ -31,6 +31,35 @@ const char* key_label(const char* label,bool russian) {
     for(const auto& item:labels) if(!std::strcmp(label,item.en)) return item.ru;
     return label;
 }
+struct RegisterStyle { Settings font;unsigned label_width=0; };
+RegisterStyle register_style(const Settings& selected) {
+    RegisterStyle style{selected};
+    const auto fits=[&]() {
+        style.label_width=0;
+        for(unsigned index=0;index<Ui::REGISTER_COUNT;++index) {
+            char label[4];std::snprintf(label,sizeof(label),"R%X",index);
+            const unsigned width=fonts::text_width(style.font,label,2);
+            if(width>style.label_width) style.label_width=width;
+        }
+        unsigned cell=0;
+        for(const char* p="0123456789 .-LCrE";*p;++p) {
+            mk61_service_ui_glyph glyph{};
+            if(!fonts::glyph(style.font,(u8)*p,glyph) || glyph.bearing_x<0) return false;
+            const unsigned extent=glyph.bearing_x+glyph.width;
+            if(glyph.advance>cell) cell=glyph.advance;
+            if(extent>cell) cell=extent;
+        }
+        return fonts::info(style.font).height<=18 &&
+            style.label_width+6+(INDICATOR_STRING_LENGTH-1)*cell<=144;
+    };
+    // Keep complete signed mantissas and exponents in each 144-pixel column.
+    // A wide selected face uses a native strike here, never resampled glyphs.
+    if(!fits()) {
+        style.font.ui_font_family=1;style.font.ui_font_size=14;style.font.ui_font_key=0;
+        (void)fits();
+    }
+    return style;
+}
 } // namespace
 // Keep zero-filled rasters in BSS.
 Screen::Screen() {}
@@ -205,33 +234,31 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
     if(ui.view() == View::STACK) {
         auto font=ui.settings();if(font.ui_font_family==1) font.ui_font_size=16;
         const unsigned value_left=18+fonts::text_width(font,"X1",2)+8;
-        static constexpr const char* labels[]={"X","Y","Z","T","X1"};
-        for(unsigned i = 0; i < 5; ++i) {
+        static constexpr const char* labels[]={"X","Y","Z","T","X1","X2"};
+        for(unsigned i = 0; i < 6; ++i) {
             char raw[INDICATOR_STRING_LENGTH];
             const char* number = i==0 ? read_stack_register(X,raw,nullptr) :
-                i<4 ? model.stack_values[i-1] : read_stack_register(X1,raw,nullptr);
-            const unsigned y=154+i*24;
+                i<4 ? model.stack_values[i-1] : i==4 ? read_stack_register(X1,raw,nullptr) : model.indicator;
+            const unsigned y=154+i*20;
             text(18,y,labels[i],16,value_left-4);
             text(value_left,y,number,16);
         }
     } else if(ui.view() == View::REGISTERS) {
-        unsigned label_width=0;
-        for(unsigned index=0;index<15;++index) {
-            char label[4];std::snprintf(label,sizeof(label),"R%X",index);
-            const unsigned width=fonts::text_width(ui.settings(),label,2);
-            if(width>label_width) label_width=width;
-        }
-        const unsigned value_left=18+label_width+8;
-        for(unsigned row = 0; row < 6; ++row) {
-            const unsigned index = ui.offset() + row;
+        const auto style=register_style(ui.settings());
+        const auto* saved=font_settings_;font_settings_=&style.font;
+        for(unsigned n = 0; n < Ui::VISIBLE_REGISTERS; ++n) {
+            const unsigned index = ui.offset() + n;
             char raw[INDICATOR_STRING_LENGTH],label[4];
-            if(index >= 15) break;
+            if(index >= Ui::REGISTER_COUNT) break;
             MK61Emu_ReadRegister((int)index, raw, nullptr);
             std::snprintf(label,sizeof(label),"R%X",index);
-            const unsigned y=154+row*20;
-            text(18,y,label,font_size,value_left-4);
-            text(value_left,y,raw,font_size);
+            const unsigned left=8+(n/Ui::REGISTER_ROWS)*160;
+            const unsigned value_left=left+style.label_width+6;
+            const unsigned y=154+(n%Ui::REGISTER_ROWS)*20;
+            text(left,y,label,style.font.ui_font_size,value_left-4);
+            text(value_left,y,raw,style.font.ui_font_size,left+144);
         }
+        font_settings_=saved;
     } else if(ui.view() == View::PROGRAM) {
         for(unsigned row = 0; row < 6; ++row) {
             const unsigned address = ui.offset() + row;
@@ -299,7 +326,7 @@ Screen::RenderKey Screen::key(const Snapshot& m,bool keyboard,const Ui& ui,const
         out.data(m.segments,sizeof(m.segments));out.number(m.segmented);out.number(m.angle);out.number(m.ip);
         out.number(m.running);out.number(m.programming);out.number(m.idle);out.number(core_61::program_steps());
         if(ui.view()==View::STACK) { char text[INDICATOR_STRING_LENGTH];read_stack_register(X,text,nullptr);out.text(text);read_stack_register(X1,text,nullptr);out.text(text); }
-        if(ui.view()==View::REGISTERS) for(unsigned n=0;n<6 && ui.offset()+n<15;++n) {
+        if(ui.view()==View::REGISTERS) for(unsigned n=0;n<Ui::VISIBLE_REGISTERS && ui.offset()+n<Ui::REGISTER_COUNT;++n) {
             char text[INDICATOR_STRING_LENGTH];MK61Emu_ReadRegister(ui.offset()+n,text,nullptr);out.text(text);
         }
         if(ui.view()==View::PROGRAM) for(unsigned n=0;n<6 && ui.offset()+n<core_61::program_steps();++n)
