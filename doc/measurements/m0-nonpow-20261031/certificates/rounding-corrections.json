@@ -1,0 +1,99 @@
+{
+  "status": "PASS_RATIONAL_CORRECTION_BOUNDS",
+  "source_sha256": {
+    "native_eabi_m0_exp_round.inc": "354264000afa0de2f75641cacdf9f026cfc10d96fedfc0556fdfe769f6821058",
+    "native_eabi_m0_atan_correct.inc": "bd8bf1d76f301f34fb6f0ae15dd5548eb799777a5f38e103266a881c7d4a08dd",
+    "native_eabi_m0.cpp": "7bd5f65c64458d946ed720055fb478717183534e4ca55065189c6d087dd457de",
+    "native_eabi_m0_atan_fast.inc": "419c323c33eb8116915133db1505188dfefab53b800e70cc6451f2fa1308a105",
+    "native_eabi_m0_exp_table.inc": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+    "native_eabi_m0_refine_table.inc": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+    "native_eabi_m0_log70.inc": "ec35365db88a487d36c55600f76f01d9aa135f828dc164580cf426e5f73d693c"
+  },
+  "exp": {
+    "parent": {
+      "status": "PASS",
+      "coefficient_error": "27844083144382133672769159820525805063036089/11150372599265311570767859136324180752990208",
+      "coefficient_error_float": 2.4971437408483332,
+      "scaled_error": "34668214370154372027613190496324720899883946526059618249184904661311409139477078633487288453355757359/7465385227872689645120498553008384672084787860628440025398200883145354558376061850967595295755468800",
+      "scaled_error_float": 4.64386140995343,
+      "returned_interval_q62": 5,
+      "high64_error": 2,
+      "square_high64_error": 1,
+      "split_reduction_error": "8193/8192",
+      "maximum_segment_index": 756388,
+      "segment_rounding_high_word_shift_range": [
+        11,
+        31
+      ],
+      "scope": "Exact rational bounds for Q96 split reduction, Q44 polynomial quantization, Taylor tail, compensated high products and table rounding."
+    },
+    "exact_final_absolute_error": "23470364353822262385666241510151774274589775135137118991117675303173063134266451923376562245418835759/7465385227872689645120498553008384672084787860628440025398200883145354558376061850967595295755468800",
+    "exact_final_absolute_error_float": 3.143891927531554,
+    "tightened_absolute_error": "22302608149438745322103163726147807713509734774473129398808841886724766750968046980093482666508115759/7465385227872689645120498553008384672084787860628440025398200883145354558376061850967595295755468800",
+    "tightened_absolute_error_float": 2.9874691618283733,
+    "checked_Q94_table_rows": 512,
+    "strict_error_bounds": [
+      4,
+      3
+    ],
+    "midpoint_reject_radii": [
+      3,
+      2
+    ],
+    "input_precondition": "Tightened mode uses n!=0, which implies e>=-11 and exact input scaling; known table/reduction fractions bound the uncertainty sum below27/32.",
+    "error_argument": "One half unit for final-product half-up rounding plus<2^-15 from dropping low16-bit partial products; the existing polynomial bound; Q94-derived table distance and exact reduction low word. The uncertainty sum includes outward integer rounding and n/4 step error."
+  },
+  "atan": {
+    "parent": {
+      "status": "PASS",
+      "selection_endpoint_checks": 458752,
+      "reciprocal_error": "249230325401261187232401061025710081/20769187434139310514121985316880384",
+      "ratio_error": "316730184562213946403297513305571329/10384593717069655257060992658440192",
+      "polynomial_error": "16117171951309105189533991288336452743329665623351492433315148262045533/303280888079174834122029676325667074885236818975093062638952943452160",
+      "polynomial_error_float": 53.14272209299763,
+      "returned_interval_q70": 64,
+      "reduction_cap": "131071/16777216",
+      "refinement_error": "4286595616187310594411393662577983619122653955558010485684875253455421843571149796476081/427361070647797013009776597429671402249448319929325219169131921138033640075300584816640",
+      "refinement_error_float": 10.030383931998434,
+      "refinement_interval_q70": 16,
+      "scope": "Exact rational Newton, discarded-product, fixed-point rounding, table rounding, optional denominator truncation and atan-series bounds."
+    },
+    "quotient_estimate_error_exclusive": 33,
+    "corrected_quotient_error_exclusive": "262179/262144",
+    "ninth_error": "289836452393847188830050765764890996210320307153442552553385377781905554874896329/474284397516047136454946754595585670566993857190463750305618264096412179005177856",
+    "derivative_correction_error": "35/16384",
+    "corrected_error": "4288015805065346756515916757723017387954522133068146191212950131652350076414883953204177/427361070647797013009776597429671402249448319929325219169131921138033640075300584816640",
+    "corrected_error_float": 10.033707091208708,
+    "guard": 12,
+    "error_argument": "Correct the approximate ratio using the exact128-bit remainder and a24-bit denominator head. Ratio error is below1+35/2^18; reuse the polynomial, compensate the linear term, add r^9/9. The old table/rounding bounds remain, with a new r^11 tail."
+  },
+  "ln": {
+    "parent": {
+      "status": "PASS",
+      "rows": 1024,
+      "row_bytes": 16,
+      "table_bytes": 16384,
+      "rp2040_table_bytes": 9216,
+      "rp2040_residual_error": 1,
+      "product46_error": "73729/16384",
+      "product54_error": "2228225/4194304",
+      "main_error": "12143881388354481213264281/906251642853202851790848",
+      "main_error_float": 13.400120688467078,
+      "main_enclosure": 16,
+      "near_error": "23355077934092334177353737597195802241452043499/6337856860328575685795548307128320000000000000",
+      "near_error_float": 3.6850118973626564,
+      "near_enclosure": 8,
+      "arithmetic": "Exact rational propagation, all discarded products, fixed-point rounding, log series remainders and reciprocal/table quantization."
+    },
+    "RP_main_error": "7157007042211914738946457/906251642853202851790848",
+    "RP_main_error_float": 7.897372764676165,
+    "parent_Q70_near_error": "23355077934092334177353737597195802241452043499/6337856860328575685795548307128320000000000000",
+    "strict_main_error_bound": 8,
+    "main_midpoint_reject_radius": 7,
+    "argument": "RP2040 exact dyadic residual plus one has error<=1, replacing generic reciprocal/product error. Integer midpoint distances>=8 are safe. n*ln2 adds n/2 to the bound. The final RP2040 near-one implementation has a separate Q77 certificate; parent Q70 near bounds are retained only for provenance."
+  },
+  "new_tables": 0,
+  "new_static_RAM": 0,
+  "pow_algorithm_changed": false,
+  "scope": "Algebraic rational/width/table certificate, not a machine-checked proof of C++, compiler or all-input implementation. Actual ARM tests remain required."
+}

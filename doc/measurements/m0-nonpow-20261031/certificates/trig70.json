@@ -1,0 +1,15 @@
+{
+  "status": "PASS_RATIONAL_EXISTING_TRIG70",
+  "source_sha256": {
+    "native_eabi_m0_trig_checked.inc": "8705c5189e7429009a15b217e41df44670fa9edee5dfb55cfcb54113926e4e36",
+    "native_eabi_m0_trig_checked_table.inc": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad"
+  },
+  "checked_Q94_rows": 806,
+  "total_Q70_error": "204209614351344886905085912970729104012292426659133168117350742921570556322772744322754957255638280389180926964991553317643647735090381/22358808413390251027640331980929826984511428575830584862174747338076306226144565024194353610823781557777362725192758403228847608692736",
+  "total_Q70_error_float": 9.133295951006394,
+  "guard": 12,
+  "new_tables": 0,
+  "new_static_RAM": 0,
+  "argument": "Same exact rational error propagation and table intervals as the existing generator, replayed without writing tables. The pre-existing argument error is added separately.",
+  "scope": "Algebraic/table certificate, not a machine-checked C++ or compiler proof; actual public-function ARM tests remain required."
+}

@@ -1,0 +1,31 @@
+{
+  "status": "PASS_RATIONAL_NEAR77",
+  "source_sha256": {
+    "native_eabi_m0_ln_near77.inc": "a6adddf3c438b05bf4967000b59e0394f43773cf004a42fed76c1a7bba169e48",
+    "native_eabi_m0_log70.inc": "ec35365db88a487d36c55600f76f01d9aa135f828dc164580cf426e5f73d693c",
+    "native_eabi_m0_log_table.inc": "cb81bc9674980479d185233b814f0fa2e326d2b7b030f9786fabaee95e0b2a71",
+    "native_eabi_m0_log10.inc": "857bb0cb5134c400711e9497668c392a1e03c5d14670b649c69266b7c754c243"
+  },
+  "table_rows": 256,
+  "table_bytes": 4096,
+  "table_growth": 0,
+  "reciprocal_values_exactly_retained": true,
+  "old_Q70_log_values_exactly_reconstructed": true,
+  "argument_error": "1/2",
+  "square_error": "2438394007216717600930144129/4874993367595992147002654720",
+  "cube_error": "17850648399622760936152613553456958143389040178725158657/11882780167052456108099634011035659236772487363769139200",
+  "fourth_error": "14511301962105516070750578353612823382307808964930755974072443177684514005279907457/28964237251490959566083254105290543020084408444476031199525935170902103804608512000",
+  "fifth_error": "7117378999073076760075108009125421742145486254004878759128880226867879420713337964684788701219619008158708429/14120046449849519669093142981586334190587758627661380750858846610804993434804672229568229679436743430897664000",
+  "total_Q77_error": "116036858609951001736055503605848278148772772458510574339638161013209676794055437567762025709901241598380010246885940711/27551116176214630659310629598571973933754785278598960865549617716841880588827962451315655507043372529560835430809600000",
+  "total_Q77_error_float": 4.211693561443717,
+  "strict_error_bound": 5,
+  "midpoint_reject_radius": 4,
+  "new_static_RAM": 0,
+  "argument": [
+    "Four exact radix2^16 divisions form delta*2^28/(8065+index), using numerators below2^30. Rounding once from the exact remainder gives error<=1/2 Q77 unit; interrupted SIO state uses the established safe division wrapper.",
+    "All256 floor Q77 logs are independently enclosed by100 exact rational atanh-series terms. The known reciprocal prefix is verified for every row, and all original Q70 log values are recovered exactly.",
+    "The high-square kernel supplies z. Rounded32-bit heads supply a coarse cube; two signed16-bit products correct the discarded linear terms with total cube error<1.503. The fourth uses a rounded32x32 square, the fifth uses16-bit heads. All truncations, coefficient divisions, table flooring and degree6 remainder are bounded.",
+    "The complete enclosure must lie in a single binary64 rounding cell. Ambiguous cells retain the original independent refinement."
+  ],
+  "scope": "Algebraic/table/width certificate, not a machine-checked C++ or compiler proof; actual ARM tests remain required."
+}

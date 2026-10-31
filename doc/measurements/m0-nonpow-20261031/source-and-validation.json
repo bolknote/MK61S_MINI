@@ -1,0 +1,342 @@
+{
+  "status": "PASS_READY_SOURCE_EQUALS_TESTED_NEXT",
+  "base_main": "37ea649377b717f47e06c80234be5fd56a27377c",
+  "tested_SDK_base": "eaaff37349149f86ebe7c25275a09da3f6ae906d",
+  "changed_source_paths": [
+    "code/native_eabi_m0.S",
+    "code/native_eabi_m0.cpp",
+    "code/native_eabi_m0_atan_correct.inc",
+    "code/native_eabi_m0_atan_fast.inc",
+    "code/native_eabi_m0_convert.inc",
+    "code/native_eabi_m0_exp_round.inc",
+    "code/native_eabi_m0_ln_near77.inc",
+    "code/native_eabi_m0_log10.inc",
+    "code/native_eabi_m0_log70.inc",
+    "code/native_eabi_m0_log_table.inc",
+    "code/native_eabi_m0_rp2040.S",
+    "code/native_eabi_m0_trig_checked.inc"
+  ],
+  "math_source_files": {
+    "code/native_eabi_m0_log10.inc": {
+      "bytes": 10532,
+      "sha256": "857bb0cb5134c400711e9497668c392a1e03c5d14670b649c69266b7c754c243"
+    },
+    "code/native_eabi_m0.S": {
+      "bytes": 20501,
+      "sha256": "87d974566b539a1313f117798413fe90c799b80498d4f4c011406582a038e6a3"
+    },
+    "code/native_eabi_m0_sqrt64_table.inc": {
+      "bytes": 26047,
+      "sha256": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3"
+    },
+    "code/native_eabi_m0_log10_table.inc": {
+      "bytes": 53832,
+      "sha256": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99"
+    },
+    "code/native_eabi_m0_rp2040.S": {
+      "bytes": 27685,
+      "sha256": "12ab79d8d1639a49c7c8a1b7875cd7bee114267efddb349297cfbf02078bf0e2"
+    },
+    "code/compact_math_tables.hpp": {
+      "bytes": 3709,
+      "sha256": "871fccfe4eac39b4b286e088b46c0a3ef8d5709b71aa7da211627a23639024e9"
+    },
+    "code/native_eabi_m0_trig_checked.inc": {
+      "bytes": 15673,
+      "sha256": "8705c5189e7429009a15b217e41df44670fa9edee5dfb55cfcb54113926e4e36"
+    },
+    "code/native_eabi_m0_convert.inc": {
+      "bytes": 8475,
+      "sha256": "7a149301d6ac2cf1c2bce3564fc3df14f48a1374c8defb2cbe5518f6b14fc4a7"
+    },
+    "code/native_eabi_m0_ln_near77.inc": {
+      "bytes": 3811,
+      "sha256": "a6adddf3c438b05bf4967000b59e0394f43773cf004a42fed76c1a7bba169e48"
+    },
+    "code/native_eabi_m0_log70.inc": {
+      "bytes": 6196,
+      "sha256": "ec35365db88a487d36c55600f76f01d9aa135f828dc164580cf426e5f73d693c"
+    },
+    "code/native_eabi_m0_asin.inc": {
+      "bytes": 15726,
+      "sha256": "793f4c563cc1857c18ffe1bc1aacc55a296215470b1369fa7e2a8de9024ed17a"
+    },
+    "code/compact_math.hpp": {
+      "bytes": 327,
+      "sha256": "79cc88f6a8c67642b7f035e8157f3064fa518d39c853e30cfb4b350caa4f19ab"
+    },
+    "code/native_eabi_m0_exp_round.inc": {
+      "bytes": 1560,
+      "sha256": "354264000afa0de2f75641cacdf9f026cfc10d96fedfc0556fdfe769f6821058"
+    },
+    "code/native_eabi_m0.hpp": {
+      "bytes": 2990,
+      "sha256": "bf7607738125c122c509ce552f3d5f29ae40cc0d9ae481cd4e6c0c2d021a21f2"
+    },
+    "code/native_eabi_m0_trig_tan.inc": {
+      "bytes": 6670,
+      "sha256": "4c5f7e6113a4f3577c6feeca84e707f64c58bb20d90a030ae194ee81c9ff3217"
+    },
+    "code/native_eabi_m0_pow_integer.inc": {
+      "bytes": 2682,
+      "sha256": "7016e18c10c3994256279930c0324c9976280e88c8553511747afed2d95d0f5a"
+    },
+    "code/native_eabi_m0_uint128.hpp": {
+      "bytes": 5325,
+      "sha256": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7"
+    },
+    "code/native_eabi_m0_pow_ln2.inc": {
+      "bytes": 703,
+      "sha256": "3aba7e9d4efb1ff819af04ef6578de2eb0b42e0ba1bfe245ad8cf22dd1f4bdb8"
+    },
+    "code/native_eabi_m0_trig_cos70.inc": {
+      "bytes": 1370,
+      "sha256": "54771228e6d411181859c37c5dc43e411e68385f5802418bc4732ed13b65cdc5"
+    },
+    "code/native_eabi_m0_pow_third.inc": {
+      "bytes": 985,
+      "sha256": "92e6b5ed3c21a37098a32836fc31aefb4d9ef790e0ca045b2e13c58ab1d4dd50"
+    },
+    "code/native_eabi_m0_pow_fast.inc": {
+      "bytes": 25598,
+      "sha256": "5165c52d386046337d840ac36f35eb4bba44d994b738b2145998ab3482ae9383"
+    },
+    "code/native_eabi_m0_sqrt_table.inc": {
+      "bytes": 3884,
+      "sha256": "e72b7cbe8d959a2cedb7320d0a3cb76ad81d7419fb8ea6aebf734d8c9eade921"
+    },
+    "code/native_eabi_m0_log70_ratio.inc": {
+      "bytes": 1180,
+      "sha256": "5451f32a046b9f69006dede642b190b3bd9403a8e7a7e54989a7d81c972153fa"
+    },
+    "code/native_eabi_m0_trig_checked_table.inc": {
+      "bytes": 155696,
+      "sha256": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad"
+    },
+    "code/native_eabi_m0_cr.cpp": {
+      "bytes": 4370,
+      "sha256": "9108c5ae5c229e198a8db5429aec6ef732f1defbb9a6b49df5d4f963e7630873"
+    },
+    "code/native_eabi_m0_rsqrt_table.inc": {
+      "bytes": 7876,
+      "sha256": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6"
+    },
+    "code/native_eabi_m0_refine_table.inc": {
+      "bytes": 99755,
+      "sha256": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883"
+    },
+    "code/native_eabi_m0_kernels.inc": {
+      "bytes": 12001,
+      "sha256": "dc9e0f57cf747675e2a71df049300307f8368e0f2e869f50bf1d69cd52b5d8ed"
+    },
+    "code/compact_math.cpp": {
+      "bytes": 42914,
+      "sha256": "e83782e89a951efaad0dbbe3b9c99eb198f9375f88fbbef041f29f17d166c857"
+    },
+    "code/native_eabi_m0.cpp": {
+      "bytes": 34702,
+      "sha256": "7bd5f65c64458d946ed720055fb478717183534e4ca55065189c6d087dd457de"
+    },
+    "code/native_eabi_m0_trig_small_refine.inc": {
+      "bytes": 1798,
+      "sha256": "cf50c17c713e7a0f5d6b15c6644540455be1cf15b501c5c621af7ad61d75355b"
+    },
+    "code/native_eabi_m0_fma.inc": {
+      "bytes": 2259,
+      "sha256": "2404eee35c3d2ed60b95464519eabf627bc58eafec4a4f5e366d38408c129c5c"
+    },
+    "code/native_eabi_m0_atan.inc": {
+      "bytes": 3057,
+      "sha256": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5"
+    },
+    "code/native_eabi_m0_pow_exact.inc": {
+      "bytes": 5677,
+      "sha256": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8"
+    },
+    "code/native_eabi_m0_atan_fast.inc": {
+      "bytes": 4052,
+      "sha256": "419c323c33eb8116915133db1505188dfefab53b800e70cc6451f2fa1308a105"
+    },
+    "code/native_eabi_m0_cr_types.hpp": {
+      "bytes": 657,
+      "sha256": "55056af4c32208c1208ac54070c9853088d66a2450c081ceac141c237ac90df9"
+    },
+    "code/native_eabi_m0_refine.inc": {
+      "bytes": 9692,
+      "sha256": "1800428641ddf489fdce847ee0d7df4acef844902b9604fb3d2156a32eced0ce"
+    },
+    "code/native_eabi_m0_pow_interval.inc": {
+      "bytes": 12546,
+      "sha256": "bf7b776af71fd3c50708c8955651487fee468351e1e63b835a42bdf3572c56e6"
+    },
+    "code/native_eabi_m0_pow_exp_product.inc": {
+      "bytes": 2100,
+      "sha256": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc"
+    },
+    "code/native_eabi_m0_trig_refine.inc": {
+      "bytes": 7167,
+      "sha256": "0cf476331b0590948aaa6aeebb035949954738af9b61c79b2599aaca36481a28"
+    },
+    "code/native_eabi_m0_atan_refine.inc": {
+      "bytes": 3799,
+      "sha256": "33313dafb0722684cc331fdf22c5254f0f5e7d941614348121a83c295c3c5dcd"
+    },
+    "code/native_eabi_m0_log10_constants.inc": {
+      "bytes": 331,
+      "sha256": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8"
+    },
+    "code/native_eabi_m0_atan_correct.inc": {
+      "bytes": 2349,
+      "sha256": "bd8bf1d76f301f34fb6f0ae15dd5548eb799777a5f38e103266a881c7d4a08dd"
+    },
+    "code/native_eabi_m0_pow_tail.inc": {
+      "bytes": 657,
+      "sha256": "c4b406ce7f01d96c3f62cb97e60d69565f4d01fe1203109571b8343660953048"
+    },
+    "code/native_eabi_m0_cr_shim.inc": {
+      "bytes": 1557,
+      "sha256": "6b9cc79cecdc4fb2df5ee203228b114b1da25401ed7072d24dd0db84647a7c79"
+    },
+    "code/native_eabi_m0_pow_interval_table.inc": {
+      "bytes": 586,
+      "sha256": "e78e02c26ee64c2b9fdd883c26b31315e0cded2ca02ea4177c2f7576b239a414"
+    },
+    "code/native_eabi_m0_log_table.inc": {
+      "bytes": 51108,
+      "sha256": "cb81bc9674980479d185233b814f0fa2e326d2b7b030f9786fabaee95e0b2a71"
+    },
+    "code/native_eabi_m0_trig_table.inc": {
+      "bytes": 52415,
+      "sha256": "d7b383e977fdfd366febc9e9b6b14eb091f046087f68677901d6d8015801e551"
+    },
+    "code/native_eabi_m0_product.inc": {
+      "bytes": 4740,
+      "sha256": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b"
+    },
+    "code/native_eabi_m0_pow_argument.inc": {
+      "bytes": 3096,
+      "sha256": "33d26fae891145e4ac9a638a9f18ca8ebcb8491816806c78c49fcf2020f8eee3"
+    },
+    "code/native_eabi_m0_log70_center.inc": {
+      "bytes": 1518,
+      "sha256": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064"
+    },
+    "code/native_eabi_m0_exp_table.inc": {
+      "bytes": 17117,
+      "sha256": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337"
+    },
+    "code/native_eabi_m0_log70_table.inc": {
+      "bytes": 92104,
+      "sha256": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb"
+    }
+  },
+  "all53_math_sources_exact_to_tested_NEXT": true,
+  "all12_changes_exact_to_tested_NEXT": true,
+  "source_provenance": {
+    "SOURCE_PREPARED": {
+      "artifact": "SOURCE-PREPARED.json",
+      "bytes": 536251,
+      "sha256": "4baa69419c61fe4e421f544b882f70a1880632ebb285da42199b996d8f7fd13c"
+    },
+    "SDK_PAIR": {
+      "artifact": "SDK-PAIR-RESULT.json",
+      "bytes": 22368,
+      "sha256": "08d4aa5339001c46b40429b035027ed9e91371b5f37c5cc0011f7bfb6b782d7a"
+    },
+    "HOST_FINAL_FROZEN": {
+      "artifact": "FINAL-FROZEN.json",
+      "bytes": 184043,
+      "sha256": "e4db9aaecf515a1e2ef61fafbf71dbc4c42424ee1342506129c05e2a4783deaf"
+    }
+  },
+  "fresh_ready_checks": {
+    "Python_syntax_files": [
+      "tools/generate_m0_log_table.py",
+      "tests/m0_conversion_boundaries_arm_self_test.py",
+      "tests/m0_fma_exact_reference.py",
+      "tests/m0_near77_arm_self_test.py",
+      "tests/profile_m0_nonpow.py",
+      "tests/qualify_m0_fma_exact.py",
+      "tests/qualify_m0_runtime_only.py",
+      "tools/certify_m0_near77.py",
+      "tools/certify_m0_rounding_corrections.py",
+      "tools/certify_m0_trig_table70.py"
+    ],
+    "FMA_integer_oracle_self_test": "PASS",
+    "table_generator_check": "PASS",
+    "rational_certificates": [
+      "certificates/near77.json",
+      "certificates/rounding-corrections.json",
+      "certificates/trig70.json"
+    ],
+    "compiler_version": "GNU Arm14.2.1",
+    "object_checks": [
+      {
+        "label": "compile-native_eabi_m0.cpp",
+        "exit_code": 0,
+        "object_bytes": 276432,
+        "object_sha256": "c147f03e11a396541683b1ed08182b5d1ba4116d0f0b8089fc604680a04f8248",
+        "exact_to_previously_qualified_object": true
+      },
+      {
+        "label": "control-genericM0",
+        "exit_code": 0,
+        "object_bytes": 280624,
+        "object_sha256": "2955bf9236af6cef44cb10c749be350efe6469093c47b9012eda7257a60973b5",
+        "exact_to_previously_qualified_object": true
+      },
+      {
+        "label": "control-M4soft_forced_generic",
+        "exit_code": 0,
+        "object_bytes": 259708,
+        "object_sha256": "ba747a305db71726b09e8f27cda7757e3ac37c620e65f48eeb66be0314aa46ef",
+        "exact_to_previously_qualified_object": true
+      },
+      {
+        "label": "control-M4hard_forced_generic",
+        "exit_code": 0,
+        "object_bytes": 260012,
+        "object_sha256": "34a3189feb1020f50a986849a1f807f78e29c13c7e683b1e5de3269af8bdf880",
+        "exact_to_previously_qualified_object": true
+      },
+      {
+        "label": "control-M4soft_product_disabled",
+        "exit_code": 0,
+        "object_bytes": 720,
+        "object_sha256": "27eba77c911504ceae3d1d42fe7a0f9fbfed02f7b07d5d9ac6f376ec58283c8b",
+        "exact_to_previously_qualified_object": true
+      },
+      {
+        "label": "control-M4hard_product_disabled",
+        "exit_code": 0,
+        "object_bytes": 728,
+        "object_sha256": "faf93cd522aa92bd3704b7adef38f3b87c287d85430952ae26cb6ecb58a18957",
+        "exact_to_previously_qualified_object": true
+      }
+    ],
+    "FW_APP_SDK_builds": 0,
+    "new_hardware_operations": 0
+  },
+  "earlier_unchanged_source_qualification": {
+    "scientific_MPFR_interval_calls": 220461,
+    "runtime_calls": 349657,
+    "FMA_triples": 73990,
+    "FMA_ARM_calls": 221970,
+    "FMA_oracle_MPFR_cross_checks": 8030,
+    "additional_scientific_context_calls": 129,
+    "near77_parent_boundary_calls": 54672,
+    "owned_wrong": 0,
+    "universal_all_input_RNE_proof": false
+  },
+  "size_delta_on_matched_full_SDK_pair": {
+    "GNU_text_bytes": 224,
+    "BIN_bytes": 48,
+    "static_RAM_bytes": 0,
+    "new_table_bytes": 0,
+    "changed_existing_log_near_table_bytes": 4096
+  },
+  "pow_direct_sources_unchanged": true,
+  "M4_and_generic_controls_byteexact": true,
+  "private_Flash_SD_payloads_committed": false,
+  "source_commit": "f953aa73d4169270ce4012a5c9eac7395f1dc847"
+}
