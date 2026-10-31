@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <initializer_list>
 #include <cstdlib>
+#include <cmath>
 using namespace basic_graphics;
 struct Screen {
   uint16_t w = 80, h = 16;
@@ -55,7 +56,93 @@ static bool pixel(Session &s, double x, double y) {
   assert(s.apply(r) == Result::OK);
   return r.value != 0;
 }
+static void box_clipping_oracle() {
+  Screen screen;
+  Session canvas(screen.backend());
+  const double edge[] = {
+      -std::numeric_limits<double>::max(), -1e100, -80.5, -16.5,
+      -1.51, -1.5, -.51, -.5, -.49, 0, .49, .5, 1.49, 1.5,
+      14.49, 14.5, 15.49, 15.5, 16.5, 78.5, 79.49, 79.5, 80.5,
+      1e100, std::numeric_limits<double>::max()};
+  uint32_t random = 0x61F401U;
+  const auto rounded = [](double v) {
+    return v < 0 ? -std::floor(-v + .5) : std::floor(v + .5);
+  };
+  for (unsigned sample = 0; sample < 2048; ++sample) {
+    double coordinates[4];
+    for (double &v : coordinates) {
+      random = random * 1664525U + 1013904223U;
+      v = edge[random % (sizeof(edge) / sizeof(*edge))];
+    }
+    // The oracle tests the original geometric predicate at every pixel. It
+    // does not clip or convert any coordinate to an integer.
+    const double x0 = rounded(coordinates[0]), y0 = rounded(coordinates[1]);
+    const double x1 = rounded(coordinates[2]), y1 = rounded(coordinates[3]);
+    const double left = x0 < x1 ? x0 : x1, right = x0 < x1 ? x1 : x0;
+    const double top = y0 < y1 ? y0 : y1, bottom = y0 < y1 ? y1 : y0;
+    for (unsigned fill = 0; fill < 2; ++fill)
+      for (unsigned mode = 0; mode < 3; ++mode) {
+        run(canvas, Operation::CLEAR);
+        if (mode == 0)
+          run(canvas, Operation::BOX, {0, 0, 79, 15, 1, 1});
+        run(canvas, Operation::BOX,
+            {coordinates[0], coordinates[1], coordinates[2], coordinates[3],
+             (double)mode, (double)fill});
+        uint8_t expected[160] = {};
+        for (int y = 0; y < 16; ++y)
+          for (int x = 0; x < 80; ++x) {
+            const bool covered = x >= left && x <= right && y >= top && y <= bottom &&
+                (fill || x == left || x == right || y == top || y == bottom);
+            if (mode == 0 ? !covered : covered)
+              expected[(y >> 3) * 80 + x] |= (uint8_t)(1U << (y & 7));
+          }
+        assert(std::memcmp(canvas.frame(), expected, sizeof(expected)) == 0);
+      }
+  }
+}
+static void text_clipping_oracle() {
+  Screen screen;
+  Session canvas(screen.backend());
+  const double edge[] = {-std::numeric_limits<double>::max(), -1e100,
+      -97, -96, -17, -9, -8, -7.5, -7, -6, -5.5, -1.5, -.5, 0, .5,
+      7.5, 8, 14.5, 15, 15.5, 16, 74, 79, 79.5, 80, 1e100,
+      std::numeric_limits<double>::max()};
+  const char text[] = "A AAAAAAAAAAAAAA";
+  const auto rounded = [](double v) {
+    return v < 0 ? -std::floor(-v + .5) : std::floor(v + .5);
+  };
+  for (double x : edge)
+    for (double y : edge)
+      for (unsigned length : {0U, 1U, 3U, 16U}) {
+        run(canvas, Operation::BOX, {0, 0, 79, 15, 1, 1});
+        auto r = request(Operation::TEXT, {x, y});
+        r.text = text;
+        r.length = (uint16_t)length;
+        assert(canvas.apply(r) == Result::OK);
+        uint8_t expected[160];
+        std::memset(expected, 255, sizeof(expected));
+        double left = rounded(x);
+        const double top = rounded(y);
+        if (top > -8 && top < 16 && left < 80)
+          for (unsigned i = 0; i < length && left < 80; ++i, left += 6) {
+            if (left <= -6) continue;
+            const uint8_t* glyph = Screen::glyph((uint8_t)text[i]);
+            for (int row = 0; row < 8; ++row)
+              for (int col = 0; col < 6; ++col) {
+                const int px = (int)left + col, py = (int)top + row;
+                if (px < 0 || px >= 80 || py < 0 || py >= 16) continue;
+                const auto mask = (uint8_t)(1U << (py & 7));
+                if (col < 5 && (glyph[row] & (1U << (4 - col))))
+                  expected[(py >> 3) * 80 + px] |= mask;
+                else expected[(py >> 3) * 80 + px] &= (uint8_t)~mask;
+              }
+          }
+        assert(std::memcmp(canvas.frame(), expected, sizeof(expected)) == 0);
+      }
+}
 int main() {
+  box_clipping_oracle();
+  text_clipping_oracle();
   {
     Screen panel;
     auto backend=panel.backend();

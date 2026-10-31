@@ -12,6 +12,10 @@ double rounded(double value) {
 bool flag(double value, unsigned maximum) {
   return value >= 0 && value <= maximum && value == mk_math::floor(value);
 }
+int bounded_coordinate(double value, int low, int high) {
+  value = rounded(value);
+  return value < low ? low : value > high ? high : (int)value;
+}
 unsigned outside(double x, double y, unsigned w, unsigned h) {
   return (x < 0 ? 1U : x > w - 1 ? 2U : 0U) | (y < 0 ? 4U : y > h - 1 ? 8U : 0U);
 }
@@ -165,24 +169,25 @@ void Session::line(double x0, double y0, double x1, double y1, uint8_t mode) {
   }
 }
 void Session::box(double x0, double y0, double x1, double y1, uint8_t mode, bool fill) {
-  x0 = rounded(x0);
-  y0 = rounded(y0);
-  x1 = rounded(x1);
-  y1 = rounded(y1);
-  if (x0 > x1) {
-    const double t = x0;
-    x0 = x1;
-    x1 = t;
+  // One off-screen sentinel on either side preserves clipped outlines. Bound
+  // before conversion so every finite coordinate, including DBL_MAX, is safe.
+  int left = bounded_coordinate(x0, -1, width_);
+  int right = bounded_coordinate(x1, -1, width_);
+  int top = bounded_coordinate(y0, -1, height_);
+  int bottom = bounded_coordinate(y1, -1, height_);
+  if (left > right) {
+    const int t = left;
+    left = right;
+    right = t;
   }
-  if (y0 > y1) {
-    const double t = y0;
-    y0 = y1;
-    y1 = t;
+  if (top > bottom) {
+    const int t = top;
+    top = bottom;
+    bottom = t;
   }
-  for (int y = 0; y < height_; ++y)
-    if (y >= y0 && y <= y1)
-      for (int x = 0; x < width_; ++x)
-        if (x >= x0 && x <= x1 && (fill || x == x0 || x == x1 || y == y0 || y == y1))
+  for (int y = top < 0 ? 0 : top; y <= bottom && y < height_; ++y)
+    for (int x = left < 0 ? 0 : left; x <= right && x < width_; ++x)
+      if (fill || x == left || x == right || y == top || y == bottom)
           pixel(x, y, mode);
 }
 void Session::circle(double cx, double cy, double radius, uint8_t mode) {
@@ -242,13 +247,9 @@ Result Session::apply(Request &r) {
       return Result::FULL;
     auto *context = &prints_[print_depth_];
     context->mark = print_used_;
-    const auto coordinate = [](double value, int low, int high) -> int16_t {
-      value = rounded(value);
-      return (int16_t)(value < low ? low : value > high ? high : value);
-    };
     uint16_t w=0,h=0;backend_.geometry(backend_.context,w,h);
-    context->x = coordinate(r.args[0], -3*(int)w, w);
-    context->y = coordinate(r.args[1], -8, h);
+    context->x = (int16_t)bounded_coordinate(r.args[0], -3*(int)w, w);
+    context->y = (int16_t)bounded_coordinate(r.args[1], -8, h);
     context->cursor = (uint8_t)r.args[3];
     context->flags = (uint8_t)((r.args[2] != 0 ? 1 : 0) | (r.args[4] != 0 ? 2 : 0));
     memcpy(print_text_ + print_used_, r.text, r.length);
@@ -377,8 +378,8 @@ Result Session::apply(Request &r) {
     const auto valid = check();
     if (valid != Result::OK)
       return valid;
-    const double x = rounded(r.args[0]), y = rounded(r.args[1]);
-    r.value = x >= 0 && y >= 0 && x < width_ && y < height_ && point((int)x, (int)y) ? 1 : 0;
+    r.value = point(bounded_coordinate(r.args[0], -1, width_),
+                    bounded_coordinate(r.args[1], -1, height_)) ? 1 : 0;
     return Result::OK;
   }
   if (r.operation == Operation::TEXT && (!r.text && r.length))
@@ -388,9 +389,8 @@ Result Session::apply(Request &r) {
     return valid;
   switch (r.operation) {
   case Operation::PSET: {
-    const double x = rounded(r.args[0]), y = rounded(r.args[1]);
-    if (x >= 0 && y >= 0 && x < width_ && y < height_)
-      pixel((int)x, (int)y, mode);
+    pixel(bounded_coordinate(r.args[0], -1, width_),
+          bounded_coordinate(r.args[1], -1, height_), mode);
     break;
   }
   case Operation::LINE:
@@ -410,10 +410,12 @@ Result Session::apply(Request &r) {
                               rounded(r.args[1]), r.text, r.length);
       if (r.value) { dirty_ = true; break; }
     }
-    double left = rounded(r.args[0]);
-    const double top = rounded(r.args[1]);
-    if (top <= -8 || top >= height_ || left >= width_)
+    const double rounded_left = rounded(r.args[0]);
+    const int top = bounded_coordinate(r.args[1], -8, height_);
+    if (top <= -8 || top >= height_ || rounded_left >= width_ ||
+        rounded_left <= -6.0 * r.length)
       break;
+    int left = (int)rounded_left;
     for (unsigned i = 0; i < r.length && left < width_; ++i, left += 6) {
       if (left <= -6)
         continue;
@@ -422,7 +424,7 @@ Result Session::apply(Request &r) {
         glyph = backend_.glyph('?');
       for (int y = 0; y < 8; ++y)
         for (int x = 0; x < 6; ++x)
-          pixel((int)left + x, (int)top + y,
+          pixel(left + x, top + y,
                 glyph && x < 5 && (glyph[y] & (1U << (4 - x))) ? 1 : 0);
     }
     break;
