@@ -1,0 +1,123 @@
+{
+  "completed_utc": "2026-10-29T21:16:51.217309+00:00",
+  "scope": [
+    "enemies, pathfinding and traps",
+    "loss and restart",
+    "treasures, count and win",
+    "three distinct levels and campaign progression",
+    "balance playthroughs and instruction-count optimization"
+  ],
+  "host_tests": {
+    "asan_ubsan": true,
+    "profiles": [
+      "native/packed UC1609, M61 cache 1024",
+      "scalar LCD1602 A00, M61 cache 64"
+    ],
+    "art_and_transition_states_per_profile": 7908,
+    "ordinary_key_campaigns_per_profile": 3,
+    "two_successive_guard_turn_before_every_hero_action_campaigns": true,
+    "short_input_injected_during_enemy_calculation": true,
+    "timer_expiration_during_busy_cpu_frame": true,
+    "timer_wrap_help_and_hud_pause": true,
+    "core_tests_hot_tables": [
+      0,
+      2
+    ],
+    "core_sanitized_pass": true,
+    "terminal_tests_pass": true,
+    "walk_core_steps_max_observed": 32
+  },
+  "balance_routes": [
+    "66244668666666666484444444444",
+    "669666644444444448668667644474484",
+    "44844446964426666666666684"
+  ],
+  "firmware": {
+    "build": "720DFE6C",
+    "profile": "classic-v3-uc1609",
+    "mcu": "STM32F411",
+    "image_bytes": 395796,
+    "globals_bytes": 22024,
+    "max_stack_frame_bytes": 1928,
+    "stack_frame_limit_bytes": 5120,
+    "source": {
+      "base": "eaaff37349149f86ebe7c25275a09da3f6ae906d",
+      "overlays": {
+        "code/mk61emu_core.cpp": "a8ad25660294e82b993a5c91ec89e6f2a50e963eed9fc59c0463f494fe3359a1",
+        "code/terminal_listing.hpp": "4c6312769a5e4c254d672522b55bd5d6c188b9de1ab70dbc3afc7caebd3b5a1d",
+        "code/m61_text.cpp": "c43ba225419f4933237e41e7f2e1984c5e58cc6caa8d7cc46d46f3d8f4470f38",
+        "code/m61_text.hpp": "9437a77b2b6ca0336c7c608a8025b391cd00704d57855b5cd23715ad66176a20"
+      },
+      "unrelated_worktree_changes_excluded": true
+    },
+    "sha256": "0ab2c901724731fb3c77fb895e2fb588e9b19d0d24afd636c95b8ef8c99a4da7"
+  },
+  "payload": [
+    {
+      "source": "programs/games/Runner/autoexec.m61",
+      "destination": "/games/Runner/autoexec.m61",
+      "bytes": 237,
+      "encoding": "M8",
+      "sha256": "0fd4f0b09d8969996d420c01b40a7cb7774116c6ec93cd049b92c9f8d8f92298"
+    },
+    {
+      "source": "programs/games/Runner/level1.m61",
+      "destination": "/games/Runner/level1.m61",
+      "bytes": 1426,
+      "encoding": "M8",
+      "sha256": "1f5da3291ea04add4583bb1e6cc34ad495ebfa49ce76a35542c1edccd1d73293"
+    },
+    {
+      "source": "programs/games/Runner/level2.m61",
+      "destination": "/games/Runner/level2.m61",
+      "bytes": 1467,
+      "encoding": "M8",
+      "sha256": "72f49041134b9851b8cef90e6cad957ccd40e92c3b5766429a7783092c38d492"
+    },
+    {
+      "source": "programs/games/Runner/level3.m61",
+      "destination": "/games/Runner/level3.m61",
+      "bytes": 1467,
+      "encoding": "M8",
+      "sha256": "4e09a74b008fe1b0e9083cafd1acbde375340bf8b7a0cd88ccf9f58036777a9e"
+    },
+    {
+      "source": "programs/games/Runner/manual.md",
+      "destination": "/games/Runner/manual.md",
+      "bytes": 1101,
+      "encoding": "M8",
+      "sha256": "621635c13d1cd7a421a79341779d7b0fce609153e0adacd55906af2423f9be40"
+    },
+    {
+      "source": "programs/games/Runner/runner1.bin",
+      "destination": "/games/Runner/runner1.bin",
+      "bytes": 767,
+      "encoding": "binary",
+      "sha256": "ae46dc8961e2a064213c1a30b089e7f4f821ef0b92410e3827c1b22a93b7c613"
+    },
+    {
+      "source": "programs/games/Runner/runner2.bin",
+      "destination": "/games/Runner/runner2.bin",
+      "bytes": 792,
+      "encoding": "binary",
+      "sha256": "5bffb1ff5a0fb28a031223280bc22715c2b237cd022e8281def6392a1f6967a4"
+    },
+    {
+      "source": "programs/games/Runner/runner3.bin",
+      "destination": "/games/Runner/runner3.bin",
+      "bytes": 801,
+      "encoding": "binary",
+      "sha256": "e7bccb613d30d95f53e2cfde2d7dcb976f34d3ba3bbfe0ae32d0c0bc9b92f99a"
+    }
+  ],
+  "visual_preview": "runner-complete-20261029.png",
+  "preview_frames": "runner-complete-20261029.frames.json",
+  "hardware": {
+    "performed_this_task": false,
+    "installed_this_task": false,
+    "constraint": "Classic reserved for Bytecode; PicoCalc reserved for M0+ Math",
+    "actual_wall_clock_speed_not_yet_measured": true,
+    "F401_and_PicoCalc_release_not_qualified": true
+  },
+  "local_artifacts": ".build/runner-complete-20261029"
+}

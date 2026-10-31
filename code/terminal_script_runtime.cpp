@@ -151,6 +151,50 @@ bool fits(double number) {
   isize exponent;
   return mk61_ref::double_to_parts(number, sign, mantissa, exponent);
 }
+bool lookup_unsigned(const char* text, u32& value) {
+  double number = 0;
+  if(!operand(text, number) || !terminal_core::at_end(text) ||
+     !(number >= 0 && number <= core_61::EXTENDED_ADDRESS_LIMIT)) return false;
+  value = (u32)number;
+  return number == value;
+}
+
+Result lookup(const char* args, bool trap) {
+  // Generic unsigned program-table read. No CPU/stack operation is executed.
+  // lookup Rdst base index [row stride] [u24]
+  if(trap) return fail("LOOKUP is not allowed in a trap handler");
+  if(program_load::blocked()) return fail(program_load::error());
+  if(!core_61::expanded_program_is_on()) return fail("LOOKUP needs expanded program memory");
+  char words[6][20]{};
+  unsigned count = 0;
+  while(!terminal_core::at_end(args)) {
+    if(count == 6 || !terminal_core::parse_token(args, words[count], sizeof(words[count])))
+      return fail("Invalid LOOKUP arguments");
+    ++count;
+  }
+  u32 width = 1;
+  if(count && mk61_ref::streq(words[count-1], "u24")) { width = 3; --count; }
+  if(count != 3 && count != 5) return fail("Invalid LOOKUP arguments");
+  mk61_ref::Ref target{};
+  if(!mk61_ref::parse_name(words[0], target) || target.kind != mk61_ref::Kind::R ||
+     !mk61_ref::register_available(target.reg)) return fail("Invalid LOOKUP destination");
+  u32 base = 0, index = 0, row = 0, stride = 0;
+  if(!lookup_unsigned(words[1], base) || !lookup_unsigned(words[2], index) ||
+     (count == 5 && (!lookup_unsigned(words[3], row) || !lookup_unsigned(words[4], stride))))
+    return fail("Invalid LOOKUP index");
+  const u32 address = base + width * (index + row * stride);
+  if(address > core_61::EXTENDED_ADDRESS_LIMIT ||
+     width > core_61::EXTENDED_ADDRESS_LIMIT-address) return fail("LOOKUP outside program memory");
+  u32 value = 0;
+  for(u32 byte = 0; byte < width; ++byte) {
+    u8 part = 0;
+    if(!core_61::read_absolute_program((u16)(address+byte), part))
+      return fail("Cannot read LOOKUP table");
+    value |= (u32)part << (8*byte);
+  }
+  return fits(value) && mk61_ref::write(target, value)
+      ? Result::ok() : fail("Cannot write LOOKUP destination");
+}
 bool hin(const char *args) {
   args = terminal_core::skip_spaces(args);
   if (!args || std::strlen(args) < 5)
@@ -290,13 +334,24 @@ Result execute(const char *line, bool trap) {
       return Result::ok();
     line = tail;
   }
-  const u8 id = terminal_catalog::lookup((const u8 *)line);
+  if(line[0]=='@')
+    return lookup(terminal_core::skip_spaces(line+1), trap);
+  if((line[0]=='l'||line[0]=='L') && (line[1]=='o'||line[1]=='O') &&
+     (line[2]=='o'||line[2]=='O') && (line[3]=='k'||line[3]=='K') &&
+     (line[4]=='u'||line[4]=='U') && (line[5]=='p'||line[5]=='P') &&
+     terminal_core::is_space(line[6]))
+    return lookup(terminal_core::skip_spaces(line+6), trap);
+  const bool register_assignment = line[0] == 'R' &&
+      terminal_core::digit_value(line[1], 16) >= 0 && line[2] == '=';
+  const u8 id = register_assignment ? (u8)CMD_REG_SET
+                                     : terminal_catalog::lookup((const u8 *)line);
   if (!terminal_command_allowed_in_script(id) ||
       (trap && !terminal_command_allowed_in_trap(id)))
     return fail("Command is not allowed in this M61 context");
-  const char *args = line;
-  while (!terminal_core::is_end(*args) && !terminal_core::is_space(*args))
-    ++args;
+  const char *args = line + (register_assignment ? 3 : 0);
+  if (!register_assignment)
+    while (!terminal_core::is_end(*args) && !terminal_core::is_space(*args))
+      ++args;
   args = terminal_core::skip_spaces(args);
   if (program_load::blocked() &&
       (id == CMD_HIN || id == CMD_SET_CODE || id == CMD_ASM || id == CMD_INS ||

@@ -55,6 +55,11 @@ def main():
         ('advance 99', 'clear-bindings', 'advance 1', 'advance 1000'))
     assert result.returncode == 0, result.stderr
     assert all(s['regs'][0] == 0 for s in states) and not states[-1]['timer_ms'], states
+    # A root RET with a timer binding watches events without a core RUN.
+    watch = 'bind timer run :t\ntimer 100\nret\n:t\nR0= 7\nret\n'
+    result, states = run_case(binary, watch, ('advance 99', 'advance 1', 'advance 1000'))
+    assert result.returncode == 0 and states[1]['regs'][0] == 0, result.stderr
+    assert states[2]['regs'][0] == states[3]['regs'][0] == 7 and states[-1]['active']
     for declaration in ('bind timer', 'bind timer 100 run :expired',
                         'bind timer run :expired junk', 'bind timer run :missing',
                         'bind timer run :expired\nbind timer run :expired'):

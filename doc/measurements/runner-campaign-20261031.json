@@ -1,0 +1,377 @@
+{
+  "status": "HOST_QUALIFIED_CLASSIC_PENDING",
+  "base": "eaaff37349149f86ebe7c25275a09da3f6ae906d",
+  "generic_opcodes_commit": "918f8f022",
+  "device_IO": 0,
+  "selected": {
+    "code/m61_text.cpp": {
+      "bytes": 87069,
+      "sha256": "aa81bd96b40f9e8ef0e2224857687f9bb0ad17996c1937d1098133031a565ded"
+    },
+    "code/m61_text.hpp": {
+      "bytes": 1795,
+      "sha256": "37004b379231b6d9c0f52797f8435a637987a159013d134cfee7052959d28564"
+    },
+    "code/mk61emu_core.cpp": {
+      "bytes": 233018,
+      "sha256": "2975d501fab4f1f0af1689edbfccd43aa5289d2feaeb928ab1ce58c160c75c80"
+    },
+    "code/terminal_listing.hpp": {
+      "bytes": 1538,
+      "sha256": "4c6312769a5e4c254d672522b55bd5d6c188b9de1ab70dbc3afc7caebd3b5a1d"
+    },
+    "code/terminal_script_runtime.cpp": {
+      "bytes": 17292,
+      "sha256": "26bb8d3522813e25bedfbd8aced13b4642e830a0a5337764b40cc49938368a19"
+    },
+    "tools/runner/game.py": {
+      "bytes": 14905,
+      "sha256": "abc77dcc4138bb35e78f47c694b93b8e217b2b908491a0647d64ca7d9a5e896f"
+    },
+    "tools/runner/build.py": {
+      "bytes": 2026,
+      "sha256": "b0152bc36ee8e7ac60c93fe721d720c53a8bfdb85e8d9694a73961b4188fb149"
+    },
+    "tests/runner_frame_campaign.py": {
+      "bytes": 5384,
+      "sha256": "17b6f819160c8f79c421b4f6c3fbe2671d2280d89cb05ccb0d4de85ae6aac3d9"
+    },
+    "tests/runner_frame_player.py": {
+      "bytes": 6210,
+      "sha256": "fea7e3eda5944305eff86399499564113c5232328d30250f02aa2f92fc300837"
+    },
+    "tests/runner_core_runner.cpp": {
+      "bytes": 12667,
+      "sha256": "ace7cfea6db48a49ff9ed625331e0c6b429a3197a282bc12e4c39faf1cc5b13e"
+    },
+    "programs/games/Runner/autoexec.m61": {
+      "bytes": 237,
+      "sha256": "0fd4f0b09d8969996d420c01b40a7cb7774116c6ec93cd049b92c9f8d8f92298"
+    },
+    "programs/games/Runner/level1.m61": {
+      "bytes": 1501,
+      "sha256": "c2d45c0567359c354adcfae83deef2d7cfc07c8e144cbc38004da6eebb85586a"
+    },
+    "programs/games/Runner/level2.m61": {
+      "bytes": 1534,
+      "sha256": "8e1455d54b030bcf2aed63a01a9cd4ea864df42b711d63ee1fd947455bde4388"
+    },
+    "programs/games/Runner/level3.m61": {
+      "bytes": 1534,
+      "sha256": "4bd57326d481c40d4dd81609182dabf5ee277a13566f514f70a45a45525166f3"
+    },
+    "programs/games/Runner/manual.md": {
+      "bytes": 1684,
+      "sha256": "48636b77d456def479be97b50c21fb627277258dcec2bd20042b913d89b031cf"
+    },
+    "programs/games/Runner/runner1.bin": {
+      "bytes": 937,
+      "sha256": "ff74e806646da50d42aaf43fa783a21268c5bb3f91c798024f0909f21656746b"
+    },
+    "programs/games/Runner/runner2.bin": {
+      "bytes": 962,
+      "sha256": "856889dfc4d727837914452068338e284f2b01cdcac58729a83b9b993953421c"
+    },
+    "programs/games/Runner/runner3.bin": {
+      "bytes": 971,
+      "sha256": "2cb9c9789da8d1d5a803edfb1def64407d4e88c9ea90778202344f026605736d"
+    }
+  },
+  "tests": {
+    "profiles": [
+      "native/packed UC1609",
+      "scalar LCD1602 A00"
+    ],
+    "runner_states_per_profile": 7890,
+    "loaded_table_entries_per_profile": 6264,
+    "generic_lookup_controls_per_profile": 35,
+    "input_controls": 113,
+    "counterexample_phases_ms": [
+      0,
+      125,
+      250,
+      375,
+      500,
+      625,
+      750,
+      875
+    ],
+    "async_full_campaigns_per_profile": [
+      {
+        "core_step_ms": 31,
+        "lcd_observer_ms": 80
+      },
+      {
+        "core_step_ms": 28,
+        "lcd_observer_ms": 40
+      }
+    ],
+    "scheduler_configurations": 10,
+    "production_UI_layouts": [
+      "MINI",
+      "CLASSIC",
+      "40TH"
+    ],
+    "sanitizers": "ASan+UBSan, both profiles PASS",
+    "clock_wrap_pause_cancel": true
+  },
+  "latency": {
+    "status": "HOST_PASS",
+    "device_IO": 0,
+    "not_physical_USB_model": true,
+    "step_ms": 31,
+    "observer_ms": 80,
+    "levels": [
+      {
+        "level": 1,
+        "observed_steps": [
+          {
+            "phase_ms": 0,
+            "latency_ms": 310
+          },
+          {
+            "phase_ms": 125,
+            "latency_ms": 309
+          },
+          {
+            "phase_ms": 250,
+            "latency_ms": 308
+          },
+          {
+            "phase_ms": 375,
+            "latency_ms": 307
+          },
+          {
+            "phase_ms": 500,
+            "latency_ms": 306
+          },
+          {
+            "phase_ms": 625,
+            "latency_ms": 305
+          },
+          {
+            "phase_ms": 750,
+            "latency_ms": 304
+          },
+          {
+            "phase_ms": 875,
+            "latency_ms": 303
+          },
+          {
+            "phase_ms": 1000,
+            "latency_ms": 302
+          },
+          {
+            "phase_ms": 1125,
+            "latency_ms": 301
+          },
+          {
+            "phase_ms": 1250,
+            "latency_ms": 300
+          },
+          {
+            "phase_ms": 1375,
+            "latency_ms": 299
+          },
+          {
+            "phase_ms": 1500,
+            "latency_ms": 298
+          },
+          {
+            "phase_ms": 1625,
+            "latency_ms": 297
+          },
+          {
+            "phase_ms": 1750,
+            "latency_ms": 455
+          },
+          {
+            "phase_ms": 1875,
+            "latency_ms": 454
+          }
+        ],
+        "median_ms": 304.5,
+        "max_ms": 455,
+        "held_cells_in_3_seconds": 11,
+        "hole_visible_ms": 4374
+      },
+      {
+        "level": 2,
+        "observed_steps": [
+          {
+            "phase_ms": 0,
+            "latency_ms": 310
+          },
+          {
+            "phase_ms": 125,
+            "latency_ms": 309
+          },
+          {
+            "phase_ms": 250,
+            "latency_ms": 308
+          },
+          {
+            "phase_ms": 375,
+            "latency_ms": 307
+          },
+          {
+            "phase_ms": 500,
+            "latency_ms": 306
+          },
+          {
+            "phase_ms": 625,
+            "latency_ms": 305
+          },
+          {
+            "phase_ms": 750,
+            "latency_ms": 463
+          },
+          {
+            "phase_ms": 875,
+            "latency_ms": 462
+          },
+          {
+            "phase_ms": 1000,
+            "latency_ms": 302
+          },
+          {
+            "phase_ms": 1125,
+            "latency_ms": 373
+          },
+          {
+            "phase_ms": 1250,
+            "latency_ms": 302
+          },
+          {
+            "phase_ms": 1375,
+            "latency_ms": 301
+          },
+          {
+            "phase_ms": 1500,
+            "latency_ms": 300
+          },
+          {
+            "phase_ms": 1625,
+            "latency_ms": 299
+          },
+          {
+            "phase_ms": 1750,
+            "latency_ms": 457
+          },
+          {
+            "phase_ms": 1875,
+            "latency_ms": 456
+          }
+        ],
+        "median_ms": 307.5,
+        "max_ms": 463,
+        "held_cells_in_3_seconds": 6,
+        "hole_visible_ms": 4347
+      },
+      {
+        "level": 3,
+        "observed_steps": [
+          {
+            "phase_ms": 0,
+            "latency_ms": 310
+          },
+          {
+            "phase_ms": 125,
+            "latency_ms": 309
+          },
+          {
+            "phase_ms": 250,
+            "latency_ms": 308
+          },
+          {
+            "phase_ms": 375,
+            "latency_ms": 307
+          },
+          {
+            "phase_ms": 500,
+            "latency_ms": 306
+          },
+          {
+            "phase_ms": 625,
+            "latency_ms": 305
+          },
+          {
+            "phase_ms": 750,
+            "latency_ms": 463
+          },
+          {
+            "phase_ms": 875,
+            "latency_ms": 462
+          },
+          {
+            "phase_ms": 1000,
+            "latency_ms": 302
+          },
+          {
+            "phase_ms": 1125,
+            "latency_ms": 373
+          },
+          {
+            "phase_ms": 1250,
+            "latency_ms": 302
+          },
+          {
+            "phase_ms": 1375,
+            "latency_ms": 301
+          },
+          {
+            "phase_ms": 1500,
+            "latency_ms": 300
+          },
+          {
+            "phase_ms": 1625,
+            "latency_ms": 299
+          },
+          {
+            "phase_ms": 1750,
+            "latency_ms": 457
+          },
+          {
+            "phase_ms": 1875,
+            "latency_ms": 456
+          }
+        ],
+        "median_ms": 307.5,
+        "max_ms": 463,
+        "held_cells_in_3_seconds": 5,
+        "hole_visible_ms": 4347
+      }
+    ]
+  },
+  "physical": {
+    "new_candidate": "NOT_RUN",
+    "last_window": "Window7",
+    "game_result": "FAIL_SAFE_ABORT_L2",
+    "return_result": "PASS",
+    "L1": {
+      "complete": true,
+      "median_seconds": 0.622228167,
+      "max_seconds": 0.786221792,
+      "held_cells": 4,
+      "hole_seconds": 4.703025458
+    },
+    "L2": {
+      "complete": false,
+      "median_seconds": 0.612335,
+      "max_seconds": 1.473986333,
+      "held_cells": 4,
+      "hole_seconds": 4.703363958
+    },
+    "actual_close": {
+      "path": ".build/runner-finish-20261030/window7-actual-20261031-001/ACTUAL-CLOSE.json",
+      "bytes": 7319,
+      "sha256": "504297bf66fd09b3eb45549636926c5fcfba329fb4bd571249f9d5ffe8e231ad"
+    },
+    "pins_sha256": "7251360167b47836538f08ebf05a55451b0e777c626cd64d5250b258d03594c9"
+  },
+  "model_limits": [
+    "no serial or USB emulation",
+    "no reconstruction of hidden physical CPU phase",
+    "world fixtures only in separately named unit controls; complete campaign uses ordinary keys"
+  ]
+}

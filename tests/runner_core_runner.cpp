@@ -21,15 +21,27 @@
 #include <string>
 #include <vector>
 
+namespace m61_text { bool test_jump_root_label(const char*); }
+
 namespace {
 struct File { std::string name, bytes; program_store::ProgramType type; };
 std::vector<File> files;
 u32 now_ms = 0;
 unsigned steps = 0, manuals = 0;
 u32 step_ms = 0, manual_ms = 0;
+int inject_key = -1;
+unsigned inject_step = 0;
 bool backend_error = false;
+int eval_kind = -1; bool eval_failed = false;
 
-void step() { core_61::step(); ++steps; now_ms += step_ms; }
+void step() {
+  if(inject_key >= 0 && steps == inject_step) {
+    assert(m61_text::handle_key_event((u8)inject_key, true));
+    assert(m61_text::handle_key_event((u8)inject_key, false));
+    inject_key = -1;
+  }
+  core_61::step(); ++steps; now_ms += step_ms;
+}
 void check() {
   m61_text::Error problem{};
   if(m61_text::last_error(problem)) {
@@ -43,13 +55,26 @@ void paused_frame() {
     m61_text::service();
     check();
     if(!m61_text::active()) return;
-    if(m61_text::test_waiting_for_time()) return;
+    if(m61_text::test_waiting_for_time() || m61_text::test_waiting_for_events()) return;
     if(!m61_text::calculator_suspended()) step();
   }
   std::cerr << "Frame timeout: IP=" << core_61::active_program_bank() * 112 + core_61::get_IP() << '\n';
   std::exit(5);
 }
 void next_frame() { now_ms += 120; m61_text::service(); paused_frame(); }
+// Observe a published frame while the real calculator may still be running.
+// Unlike advance(), this intentionally does not drain a whole native frame.
+void observe_for(unsigned duration) {
+  assert(step_ms > 0);
+  const u32 until = now_ms + duration;
+  for(unsigned limit = 0; (i32)(now_ms - until) < 0; ++limit) {
+    assert(limit < 1000000);
+    m61_text::service(); check();
+    if(m61_text::test_waiting_for_time() || m61_text::test_waiting_for_events()) ++now_ms;
+    else if(!m61_text::calculator_suspended()) step();
+    else ++now_ms;
+  }
+}
 double reg(unsigned index) {
   double value = 0;
   assert(mk61_ref::read({mk61_ref::Kind::R, (u8)index}, value));
@@ -58,6 +83,7 @@ double reg(unsigned index) {
 void dump() {
   check();
   std::cout << "{\"steps\":" << steps << ",\"ms\":" << now_ms
+            << ",\"eval_kind\":" << eval_kind << ",\"eval_failed\":" << (eval_failed ? "true" : "false")
             << ",\"manuals\":" << manuals
             << ",\"timer_ms\":" << m61_text::timer_remaining_ms()
             << ",\"running\":" << (core_61::is_RUN() ? "true" : "false")
@@ -69,6 +95,13 @@ void dump() {
     if(i) std::cout << ',';
     std::cout << std::setprecision(12) << reg(i);
   }
+  std::cout << "],\"stack\":[";
+  unsigned stack_index = 0;
+  for(auto which : {X1,T,Z,Y,X}) {
+    double value = 0; const bool valid = mk61_ref::try_read_stack_number(which,value);
+    if(stack_index++) std::cout << ',';
+    if(valid) std::cout << std::setprecision(12) << value; else std::cout << "null";
+  }
   std::cout << "],\"frame\":[";
   const u8 empty[12]{};
   const u8* frame = core_61::segment_display_frame();
@@ -78,11 +111,11 @@ void dump() {
     std::cout << (frame ? (unsigned)frame[i] : 0);
   }
   const auto lcd = segment_lcd1602::plan(frame);
-  assert(!lcd.overflow_count && lcd.custom_count <= 2);
+  assert(!lcd.overflow_count && lcd.custom_count <= 8);
   std::cout << "],\"lcd_custom\":" << (unsigned)lcd.custom_count << ",\"lcd_rows\":[";
   for(unsigned cell = 0; cell < 12; ++cell) {
     u8 rows[8]{}, native = 0;
-    if(segment_lcd1602::native_character(frame[cell], native)) {
+    if(segment_lcd1602::native_character(frame[cell], native) && (native == '_' || native == ' ')) {
       if(native == '_') rows[7] = 31;
       else assert(native == ' ');
     } else segment_lcd1602::custom_rows(frame[cell], rows);
@@ -209,9 +242,26 @@ int main(int argc, char** argv) {
       const bool captured = m61_text::handle_key_event(key, command != "up");
       assert(captured);
       if(command == "tap") assert(m61_text::handle_key_event(key, false));
+    } else if(command == "eval") {
+      unsigned trapped = 0; input >> trapped; std::string text; std::getline(input,text);
+      while(!text.empty() && text.front()==' ') text.erase(text.begin());
+      const bool saved_expanded = core_61::expanded_program_is_on();
+      if(trapped & 2) core_61::set_expanded_program_mode(false);
+      const auto result = terminal_script::execute(text.c_str(), (trapped & 1) != 0);
+      core_61::set_expanded_program_mode(saved_expanded);
+      eval_kind = (int)result.kind; eval_failed = backend_error; backend_error = false;
+    } else if(command == "world") {
+      unsigned hero,first,mask,hole,second; input >> hero >> first >> mask >> hole >> second;
+      for(auto v : {std::pair<unsigned,double>{4,hero},{5,first},{6,mask*36},{7,hole},{8,second},{9,0},{10,0},{11,0},{12,0},{13,0}})
+        assert(mk61_ref::write({mk61_ref::Kind::R,(u8)v.first},v.second));
+      assert(m61_text::test_jump_root_label("v"));
+    } else if(command == "block") {
+      assert(!load_binary_program(program_store::ROOT_ID,"0000 invalid.bin") && program_load::blocked());
     } else if(command == "frame") {
       unsigned count = 1; input >> count;
       for(unsigned i = 0; i < count; ++i) next_frame();
+    } else if(command == "observe") {
+      unsigned ms = 0; input >> ms; observe_for(ms);
     } else if(command == "advance") {
       unsigned ms = 0; input >> ms; now_ms += ms;
       m61_text::service();
@@ -220,20 +270,22 @@ int main(int argc, char** argv) {
       input >> step_ms;
     } else if(command == "manual-ms") {
       input >> manual_ms;
+    } else if(command == "inject") {
+      input >> inject_step >> std::hex >> inject_key;
     } else if(command == "fixture") {
-      // Fixture only: expose every frame and hole word to the independent
-      // art oracle. Normal input tests never write game state from the host.
-      unsigned column, floor, hole = 0, timer = 0, redraw_request = 0;
-      input >> column >> floor >> hole >> timer >> redraw_request;
-      assert(redraw_request);
-      // Request the existing no-op action through the normal input decoder.
-      // A stationary production tick deliberately retains its old picture.
-      for(auto entry : {std::pair<unsigned, double>{4, column}, {5, floor},
-                        {0xB, hole ? 16*112 + (hole-1)*28 + 12 : 0}, {0xD, hole ? 1 : 0},
-                        {0, redraw_request}, {0xA, redraw_request},
-                        {0xE, 16*112 + (floor-1)*336 - 27}, {0xF, 8*112 + (floor-1)*144 - 12}})
+      // Art/transition fixture only. End-to-end games use ordinary keys.
+      unsigned hero, enemy, gold, hole, second, action;
+      input >> hero >> enemy >> gold >> hole >> second >> action;
+      for(auto entry : {std::pair<unsigned, double>{4, hero}, {5, enemy},
+                        {6, gold*36}, {7, hole}, {8, second}, {0, action}, {0xD, 0}, {0xE, 0}})
         assert(mk61_ref::write({mk61_ref::Kind::R, (u8)entry.first}, entry.second));
+      assert(m61_text::test_jump_root_label("F"));
       next_frame();
+    } else if(command == "unbound") {
+      unsigned key = 0; input >> std::hex >> key;
+      assert(!m61_text::captures_key((u8)key));
+      assert(!m61_text::handle_key_event((u8)key, true));
+      assert(!m61_text::handle_key_event((u8)key, false));
     } else if(command == "cancel") {
       m61_text::cancel();
     } else if(command == "clear-bindings") {

@@ -24,6 +24,8 @@ u32 timer_remaining_ms(void);
 bool calculator_suspended(void);
 #if defined(M61_TEXT_HOST_TEST)
   bool test_waiting_for_time(void);
+  bool test_waiting_for_events(void);
+  bool test_jump_root_label(const char* name);
 #endif
 // A saved trap snapshot forbids writes; an input handler deliberately allows them.
 bool trap_handler_active(void);

@@ -678,7 +678,8 @@ bool active(void) {
 }
 
 bool calculator_suspended(void) {
-  return timer_boundary_ready || trap_pending || trap_context_valid() ||
+  return (runner_state == RunnerState::EXECUTING && !core_61::is_RUN()) ||
+      timer_boundary_ready || trap_pending || trap_context_valid() ||
       (event_bind_active && runner_state != RunnerState::WAIT_RUN_STOP) ||
       (!bind_handler_active && !bind_pending && key_queue_count && key_boundary_ready);
 }
@@ -689,6 +690,7 @@ bool test_waiting_for_time(void) {
   return runner_state == RunnerState::WAIT_TIME &&
       !time_reached(runner_millis(), wait_until_ms);
 }
+bool test_waiting_for_events(void) { return runner_state == RunnerState::WATCH_EVENTS; }
 #endif
 
 bool captures_key(u8 code) {
@@ -2495,5 +2497,14 @@ bool format_current_program(u8* out, u16 capacity, u16* out_len) {
   if(out_len != NULL) *out_len = pos;
   return true;
 }
+
+#if defined(M61_TEXT_HOST_TEST)
+// Fixture entry only: no production state mutation API is added.
+bool test_jump_root_label(const char* name) {
+  if(bind_handler_active || trap_context_valid() || core_61::is_RUN()) return false;
+  if(!goto_label(name)) return false;
+  wait_until_ms = 0; runner_state = RunnerState::EXECUTING; return true;
+}
+#endif
 
 } // пространство имён m61_text

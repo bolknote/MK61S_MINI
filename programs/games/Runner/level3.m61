@@ -1,0 +1,149 @@
+bind key 04 down run :a
+bind key 04 up run :A
+bind key 06 down run :b
+bind key 06 up run :B
+bind key 08 down run :c
+bind key 08 up run :C
+bind key 02 down run :d
+bind key 02 up run :D
+bind key 07 down run :f
+bind key 09 down run :g
+bind key 00 down run :r
+bind key 05 down run :s
+bind key 13 down run :h
+bind key 14 down run :x
+bind timer run :t
+load 0000 runner3.bin
+run
+:z
+RD=0
+R0=449
+run 17
+:v
+RE=3e3
+timer 4000
+run :L
+:l
+wait 30
+if r7<1ret
+if rd==-1run :z
+if rd==-2run :q
+if r4<0run :l
+R0=0
+if r9>ra R0=672
+if ra>r9 R0=708
+if rb>rc R0=744
+if rc>rb R0=780
+if rd!=0R0=RD
+RD=0
+if re<0run :e
+if timer<=re run :n
+if r0==0run :l
+run :J
+:e
+if r5==r7 R5=5
+if r8==r7 R8=35
+R7=36
+RE=3e3
+timer 4000
+run :U
+:n
+if re==1e3RE=0
+if re==2e3RE=1e3
+if re==3e3RE=2e3
+:U
+if r5!=r7 @R5 888 R5 R4 37
+if r4==r5 if r5!=r7 run :o
+if r8!=r7 @R8 888 R8 R4 37
+if r4==r8 if r8!=r7 run :o
+:J
+if r0>0if r0<112run :F
+if r0>0@R4 R0 R4
+if r4==r7 @R4 3533 R4
+@R6 2328 R4 R6 1
+if r4==r5 if r5!=r7 run :o
+if r4==r8 if r8!=r7 run :o
+:L
+@R0 2616 R4 R6 1
+RF=3417
+run 35
+timer resume
+if r6>251run :w
+run :l
+:F
+run 17
+if rf==-1run :v
+run :l
+:q
+RD=0
+timer pause
+R0=470
+run 17
+wait 900
+run :L
+:o
+R0=32
+run :E
+:w
+R0=508
+:E
+timer 0
+run 17
+if r4==-2wait 1500
+if r4==-2ret
+run :l
+:t
+RE=-1
+ret
+:a
+R9=1
+RD=672
+if ra>0RD=0
+ret
+:A
+R9=0
+ret
+:b
+RA=1
+RD=708
+if r9>0RD=0
+ret
+:B
+RA=0
+ret
+:c
+RB=1
+RD=744
+if rc>0RD=0
+ret
+:C
+RB=0
+ret
+:d
+RC=1
+RD=780
+if rb>0RD=0
+ret
+:D
+RC=0
+ret
+:f
+RD=60
+ret
+:g
+RD=64
+ret
+:r
+RD=-1
+ret
+:s
+RD=-2
+ret
+:h
+timer pause
+open? manual.md
+timer resume
+ret
+:x
+reinit
+ret

@@ -1,0 +1,183 @@
+{
+  "status": "INSTALLED_L1_QUALIFIED_FULL_HARDWARE_CAMPAIGN_INCOMPLETE",
+  "firmware": {
+    "build": "28FBFF7A",
+    "bytes": 396232,
+    "sha256": "8335bff8622181adbd3c5d5160b1d8d96083d095c158bb9ef234cd05233e0560",
+    "installed": true,
+    "full_flash_readback_bytes": 524288,
+    "full_flash_sha256": "ffa6757dc38c56b1be1f2956068ae084039566b506c6f0cd5f39b65d8dd6a950",
+    "image_prefix_byteexact": true,
+    "source": {
+      "base": "eaaff37349149f86ebe7c25275a09da3f6ae906d",
+      "overlays": {
+        "code/mk61emu_core.cpp": "2975d501fab4f1f0af1689edbfccd43aa5289d2feaeb928ab1ce58c160c75c80",
+        "code/m61_text.cpp": "c43ba225419f4933237e41e7f2e1984c5e58cc6caa8d7cc46d46f3d8f4470f38",
+        "code/m61_text.hpp": "9437a77b2b6ca0336c7c608a8025b391cd00704d57855b5cd23715ad66176a20",
+        "code/terminal_listing.hpp": "4c6312769a5e4c254d672522b55bd5d6c188b9de1ab70dbc3afc7caebd3b5a1d"
+      },
+      "unrelated_worktree_changes_excluded": true
+    }
+  },
+  "host": {
+    "native": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/runner-finish-20261030/late-input-native.log",
+      "bytes": 238,
+      "sha256": "a9a391a50b9c90b6abcdff6696c2f64943cd2be63548d5b60533523d98bad40c",
+      "passed": true
+    },
+    "mini": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/runner-finish-20261030/late-input-mini.log",
+      "bytes": 238,
+      "sha256": "a9a391a50b9c90b6abcdff6696c2f64943cd2be63548d5b60533523d98bad40c",
+      "passed": true
+    },
+    "sanitized-native": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/runner-finish-20261030/late-input-sanitized-native.log",
+      "bytes": 238,
+      "sha256": "a9a391a50b9c90b6abcdff6696c2f64943cd2be63548d5b60533523d98bad40c",
+      "passed": true
+    },
+    "sanitized-mini": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/runner-finish-20261030/late-input-sanitized-mini.log",
+      "bytes": 238,
+      "sha256": "a9a391a50b9c90b6abcdff6696c2f64943cd2be63548d5b60533523d98bad40c",
+      "passed": true
+    }
+  },
+  "host_walk_max_steps": 20,
+  "art_transition_states": 7890,
+  "ordinary_campaigns_per_profile": 1,
+  "successive_guard_per_action_campaigns_per_profile": 2,
+  "program_occupied_max_bytes": 3432,
+  "payload": [
+    {
+      "path": "/games/Runner/autoexec.m61",
+      "bytes": 237,
+      "sha256": "0fd4f0b09d8969996d420c01b40a7cb7774116c6ec93cd049b92c9f8d8f92298"
+    },
+    {
+      "path": "/games/Runner/level1.m61",
+      "bytes": 1496,
+      "sha256": "29c58fd31feff8513609efe20ad8ad382470e899aa416c8fb759b1946e583ab3"
+    },
+    {
+      "path": "/games/Runner/level2.m61",
+      "bytes": 1533,
+      "sha256": "36af61d11fd304dfdbb286956a6a1168b815b3f8d6e47bef7e3ad19511a8026e"
+    },
+    {
+      "path": "/games/Runner/level3.m61",
+      "bytes": 1533,
+      "sha256": "1057e415081f9fc9c22b4de7ecda80e9ffcb53c5b9e37991684e696ce3b51194"
+    },
+    {
+      "path": "/games/Runner/manual.md",
+      "bytes": 1006,
+      "sha256": "68051df910ebf36a4be6c68a409deabc569ce03c26350b059fc30e456e998f22"
+    },
+    {
+      "path": "/games/Runner/runner1.bin",
+      "bytes": 933,
+      "sha256": "e812c508f555a5ec91363a44e7334c7ff38bdecd086df4fd7b8616ac9040b14e"
+    },
+    {
+      "path": "/games/Runner/runner2.bin",
+      "bytes": 958,
+      "sha256": "3320e3381cb8dd9a4a7db03e8959565815d0158511b0cdf48b5e27feeff96c7e"
+    },
+    {
+      "path": "/games/Runner/runner3.bin",
+      "bytes": 967,
+      "sha256": "7a509db909d5180179dd7a746e6b6de673b8e484d6d360b6ac25985425da0d2a"
+    }
+  ],
+  "payload_total_bytes": 8663,
+  "M61_max_bytes": 1533,
+  "previous_hardware": {
+    "firmware": "28FBFF7A",
+    "game": "22-step, separate NPC and hero frames; superseded HOST payload",
+    "level2_median_seconds": 1.0064913334790617,
+    "level2_max_seconds": 1.3816452500177547,
+    "held_cells_per3s": 3,
+    "hole_seconds": 4.767718957969919,
+    "comfortable": false
+  },
+  "current_hardware": {
+    "firmware": "28FBFF7A",
+    "payload_manifest_sha256": "1500382bb3cca9948187184d31ff5ad908f3eebec11ae8b689d3e35632d7c2d1",
+    "installed_files": 8,
+    "level1_responsiveness": {
+      "case": "responsiveness",
+      "at": 18.2922,
+      "median_walk_seconds": 0.6199193545035087,
+      "max_walk_seconds": 0.7874628329882398,
+      "held_cells": 4,
+      "hole_seconds": 4.700518666999415
+    },
+    "level1_functional_cases": [
+      "paused-hole-restored",
+      "fall",
+      "gold-collected",
+      "score",
+      "help",
+      "trapped-guard",
+      "guard-respawned",
+      "lost",
+      "escape-cancelled"
+    ],
+    "full_campaign_passed": false,
+    "levels2_3_latency_measured": false,
+    "original_HIL_failure": "AssertionError(('guard clock stalled', 1, 0, [8259691, 526344, 8288126, 13205000, 12, 19, 0, 36, 36, 0, 0, 0, 0, 0, 0]))",
+    "original_cleanup": {
+      "reinit_reply": "reinit\r\nCalculator reinitialized.\r\n/> ",
+      "detached": false
+    },
+    "client_fixes": "Clock-phase test no longer requires an unobservable transient R3; host DETACH is proven by server OFFER/WAITING or server DETACH, with HOST packet regressions. Fixed client not yet rerun on hardware.",
+    "next_hardware_window": "After Bytecode, subject to Coordinator allocation"
+  },
+  "final32file_RTC_audit": {
+    "passed": true,
+    "files": 32,
+    "total_bytes": 137771,
+    "nonRunner24_byteexact": true,
+    "firmware": "28FBFF7A",
+    "domain": "strictzero105",
+    "boot": 8,
+    "MCU_final_resets": 1,
+    "RTC_setters": 0,
+    "SET": "unset preserved",
+    "alarms": "both off",
+    "local_continuity": {
+      "calendar_delta_seconds": 1551.254,
+      "host_elapsed_low_seconds": 1550.996129417,
+      "host_elapsed_high_seconds": 1551.131380584,
+      "midpoint_residual_seconds": 0.19024499950000973,
+      "unchanged_bound_seconds": 0.5
+    },
+    "all_actors_reaped_groups_gone": true,
+    "closed_ports_all_minus1": true
+  },
+  "source_sha256": {
+    "tools/runner/game.py": "5e920ff633eb4f6879471694538e291fedb36386b901c5daff740d3d07403f16",
+    "tools/runner/build.py": "1e416848f3e72b829b70ad0a8fcdbca9072e21a3b36e81e159d942305fd70034",
+    "tools/runner/runner.map.json": "7b62b80c7d2fb5b3ba246de70aa331b22e4e2dcf07263a761c9d41760f8d9f10",
+    "tests/runner_game_test.py": "8f2e4ad5ee8e9a3a170fb9068e12fe9de6156322bf747a6b1d03b6a14790ad95",
+    "tests/hil_runner_campaign.py": "f333d786accdfdfa4995bd94f81c929d33a10f938f9d3d74496f67b0e5cec511",
+    "tests/runner_screen_oracle.py": "6b78662f1ded09035990b9300cc65fad6cbae088d8f8fb4b43ad5c76d4f70d28"
+  },
+  "limits": {
+    "classic_only_hardware": true,
+    "F401_and_PicoCalc_hardware_qualified": false
+  },
+  "local_evidence": "/Users/bolk/Projects/MK61S_MINI/.build/runner-finish-20261030",
+  "hardware_game_passed": false,
+  "current_HIL_client_sha256": "7c8fbf0ec22cded115b40ca6313f1b5891c2b784761c7f27969d041c17404471",
+  "host_nonzero_calculation_time_campaign": {
+    "core_step_ms": 28,
+    "all_three_levels_passed": true,
+    "hardware_measurement": false,
+    "moves": 88,
+    "evidence_sha256": "0e44d3969390b7f2ca40d5599b7696b60d4da9819bca394b8147afacbe064ba2"
+  }
+}

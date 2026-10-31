@@ -34,4 +34,10 @@ for profile in native mini; do
     "$root/code/program_load.cpp" -o "$build_dir/runner-$profile"
   python3 "$root/tests/runner_game_test.py" "$build_dir/runner-$profile"
   python3 "$root/tests/m61_timer_runtime_test.py" "$build_dir/runner-$profile"
+  python3 "$root/tests/m61_lookup_runtime_test.py" "$build_dir/runner-$profile"
+  python3 "$root/tests/runner_tables_test.py" "$build_dir/runner-$profile"
+  python3 "$root/tests/runner_input_test.py" "$build_dir/runner-$profile"
+  python3 "$root/tests/runner_counterexample_test.py" "$build_dir/runner-$profile"
+  python3 "$root/tests/runner_async_campaign_test.py" "$build_dir/runner-$profile" --step 31 --observer 80
+  python3 "$root/tests/runner_async_campaign_test.py" "$build_dir/runner-$profile" --step 28 --observer 40
 done
