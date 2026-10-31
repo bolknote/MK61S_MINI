@@ -2265,6 +2265,63 @@ static_assert(dcw_fields_match(ROM.IK1306.microinstructions, IK1306_DCW),
               "IK1306 DCW no longer matches its microinstruction field");
 #endif
 
+#if defined(STM32F401xC) || defined(STM32F401xE) || \
+    (!defined(ARDUINO) && !defined(__arm__) && !defined(__thumb__) && \
+     defined(MK61_TEST_AND_AMK_6BIT))
+#define MK61_CORE_AND_AMK_6BIT 1
+#include "little_endian.hpp"
+// Six-bit Flash rows retain one address per body and the old logical values.
+// Conditional 60/62/64/66 tokens map reversibly to the four codes 60..63.
+// The trailing byte permits the last bounded two-byte column read.
+static constexpr usize AND_AMK_BODY_COUNT = 128;
+static constexpr usize AND_AMK_PACKED_STRIDE = 7;
+static constexpr usize AND_AMK_COLUMNS = 9;
+static constexpr usize AND_AMK_RUNTIME_STRIDE = 16;
+static constexpr usize AND_AMK_PACKED_SIZE = AND_AMK_BODY_COUNT*AND_AMK_PACKED_STRIDE;
+static constexpr usize AND_AMK_RUNTIME_SIZE = AND_AMK_BODY_COUNT*AND_AMK_RUNTIME_STRIDE;
+struct PackedAndAmkTable { u8 bytes[AND_AMK_PACKED_SIZE+1]; };
+constexpr u8 unpack_and_amk_column(const u8* source, usize column) {
+  const usize bit = column*6U, offset = bit/8U;
+  unsigned word = __builtin_is_constant_evaluated()
+      ? (unsigned)source[offset] | ((unsigned)source[offset+1] << 8U)
+      : little_endian::read16(source+offset);
+  const unsigned value = (word >> (bit&7U)) & 63U;
+  return (u8)(value < 60 ? value : 60U+(value-60U)*2U);
+}
+constexpr bool and_amk_padding_is_zero(const u8 (&source)[AND_AMK_RUNTIME_SIZE]) {
+  for(usize body=0;body<AND_AMK_BODY_COUNT;++body)
+    for(usize column=AND_AMK_COLUMNS;column<AND_AMK_RUNTIME_STRIDE;++column)
+      if(source[body*AND_AMK_RUNTIME_STRIDE+column]!=0)return false;
+  return true;
+}
+constexpr PackedAndAmkTable pack_and_amk_table(const u8 (&source)[AND_AMK_RUNTIME_SIZE]) {
+  PackedAndAmkTable result={};
+  for(usize body=0;body<AND_AMK_BODY_COUNT;++body) {
+    for(usize column=0;column<AND_AMK_COLUMNS;++column) {
+      unsigned value=source[body*AND_AMK_RUNTIME_STRIDE+column];
+      if(value>=60) {
+        if(value>66 || (value&1U))__builtin_trap();
+        value=60U+(value-60U)/2U;
+      }
+      const usize bit=column*6U, offset=body*AND_AMK_PACKED_STRIDE+bit/8U;
+      result.bytes[offset] |= (u8)(value << (bit&7U));
+      result.bytes[offset+1] |= (u8)(value >> (8U-(bit&7U)));
+    }
+  }
+  return result;
+}
+
+constexpr bool and_amk_pack_roundtrip(
+    const u8 (&source)[AND_AMK_RUNTIME_SIZE], const PackedAndAmkTable& packed) {
+  for(usize body=0;body<AND_AMK_BODY_COUNT;++body)
+    for(usize column=0;column<AND_AMK_COLUMNS;++column)
+      if(unpack_and_amk_column(packed.bytes+body*AND_AMK_PACKED_STRIDE,column) !=
+         source[body*AND_AMK_RUNTIME_STRIDE+column]) return false;
+  return packed.bytes[AND_AMK_PACKED_SIZE] == 0;
+}
+
+#else
+#define MK61_CORE_AND_AMK_6BIT 0
 // The historical source spells each nine-byte microprogram as a 16-byte row
 // so it remains auditable against the original ROM transcription. Only the
 // meaningful nine bytes are emitted in Flash; the hot SRAM cache expands them
@@ -2303,6 +2360,8 @@ constexpr PackedAndAmkTable pack_and_amk_table(
   }
   return result;
 }
+
+#endif
 
 // ПЗУ микропрограмм ИК1302 (3*3*128 микропрограмм).
 static constexpr u8 IK1302_AND_AMK_EXPANDED[AND_AMK_RUNTIME_SIZE] = {
@@ -2440,6 +2499,11 @@ static_assert(and_amk_padding_is_zero(IK1302_AND_AMK_EXPANDED),
               "IK1302 AND_AMK padding contains data");
 static constexpr PackedAndAmkTable IK1302_AND_AMK_STORAGE =
     pack_and_amk_table(IK1302_AND_AMK_EXPANDED);
+#if MK61_CORE_AND_AMK_6BIT
+static_assert(and_amk_pack_roundtrip(IK1302_AND_AMK_EXPANDED,
+                                    IK1302_AND_AMK_STORAGE),
+              "IK1302 six-bit AND_AMK roundtrip failed");
+#endif
 
 static constexpr u8 IK1303_AND_AMK_EXPANDED[AND_AMK_RUNTIME_SIZE] = {
 // 1     2     3     4     5     6     7     8     9     10    11    12    13    14    15    16  
@@ -2576,6 +2640,11 @@ static_assert(and_amk_padding_is_zero(IK1303_AND_AMK_EXPANDED),
               "IK1303 AND_AMK padding contains data");
 static constexpr PackedAndAmkTable IK1303_AND_AMK_STORAGE =
     pack_and_amk_table(IK1303_AND_AMK_EXPANDED);
+#if MK61_CORE_AND_AMK_6BIT
+static_assert(and_amk_pack_roundtrip(IK1303_AND_AMK_EXPANDED,
+                                    IK1303_AND_AMK_STORAGE),
+              "IK1303 six-bit AND_AMK roundtrip failed");
+#endif
 
 static constexpr u8 IK1306_AND_AMK_EXPANDED[AND_AMK_RUNTIME_SIZE] = {
 // 1     2     3     4     5     6     7     8     9     10    11    12    13    14    15    16  
@@ -2712,6 +2781,11 @@ static_assert(and_amk_padding_is_zero(IK1306_AND_AMK_EXPANDED),
               "IK1306 AND_AMK padding contains data");
 static constexpr PackedAndAmkTable IK1306_AND_AMK_STORAGE =
     pack_and_amk_table(IK1306_AND_AMK_EXPANDED);
+#if MK61_CORE_AND_AMK_6BIT
+static_assert(and_amk_pack_roundtrip(IK1306_AND_AMK_EXPANDED,
+                                    IK1306_AND_AMK_STORAGE),
+              "IK1306 six-bit AND_AMK roundtrip failed");
+#endif
 
 #define IK1302_AND_AMK IK1302_AND_AMK_STORAGE.bytes
 #define IK1303_AND_AMK IK1303_AND_AMK_STORAGE.bytes
@@ -2770,9 +2844,15 @@ __attribute__((noinline))
 static void expand_core_hot_and_amk(u8* destination, const u8* source) {
   memset(destination, 0, AND_AMK_RUNTIME_SIZE);
   for(usize body = 0; body < AND_AMK_BODY_COUNT; body++) {
+#if MK61_CORE_AND_AMK_6BIT
+    for(usize column=0;column<AND_AMK_COLUMNS;++column)
+      destination[body*AND_AMK_RUNTIME_STRIDE+column] =
+          unpack_and_amk_column(source+body*AND_AMK_PACKED_STRIDE,column);
+#else
     memcpy(destination + body * AND_AMK_RUNTIME_STRIDE,
            source + body * AND_AMK_PACKED_STRIDE,
            AND_AMK_PACKED_STRIDE);
+#endif
   }
 }
 #endif
@@ -2979,6 +3059,24 @@ static inline bool ensure_core_hot_tables(void) { return false; }
 static inline void select_core_hot_table_view(bool) {}
 static inline void prepare_core_hot_tables_for_step(void) {}
 static inline bool core_hot_tables_view_cached(void) { return false; }
+#endif
+
+#if MK61_CORE_AND_AMK_6BIT
+static inline __attribute__((always_inline)) u8 and_amk_column(const u8* body, usize column) {
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
+#if MK61_STM32_SRAM_BIT_BAND_AVAILABLE
+  // Active bodies are either resident Flash or the SRAM hot-table image.
+  if((uintptr_t)body & stm32_sram_bit_band::REGION_BASE) return body[column];
+#else
+  if(AND_AMK_ACTIVE_STRIDE==AND_AMK_RUNTIME_STRIDE) return body[column];
+#endif
+#endif
+  return unpack_and_amk_column(body,column);
+}
+
+#define MK61_AND_AMK_COLUMN(chip,column) and_amk_column(chip.pAND_AMK,column)
+#else
+#define MK61_AND_AMK_COLUMN(chip,column) chip.pAND_AMK[column]
 #endif
 
 static inline const u8* and_amk_body(const u8* base, usize body) {
@@ -3711,7 +3809,7 @@ MK61_CORE_TICK_FUNCTION IK1302_Tick(
     tmp = selected_amk;
     microinstruction = selected_microinstruction;
   #else
-    tmp = (uint8_t) m_IK1302.pAND_AMK[J_signal_I]; // чтение из pAND_AMK: 3D(61) => 3E(62), 3E(62) => 40(64), 3F(63) => 42(66) замены в оригинальном ПЗУ
+    tmp = (uint8_t) MK61_AND_AMK_COLUMN(m_IK1302,J_signal_I); // чтение из pAND_AMK: 3D(61) => 3E(62), 3E(62) => 40(64), 3F(63) => 42(66) замены в оригинальном ПЗУ
     if (tmp > 59 && m_IK1302.L == 0){ // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
        tmp++;
     }
@@ -3893,7 +3991,7 @@ MK61_CORE_TICK_FUNCTION IK1303_Tick(
  tmp = selected_amk;
  microinstruction = selected_microinstruction;
  #else
- tmp = (uint8_t) m_IK1303.pAND_AMK[J_signal_I];
+ tmp = (uint8_t) MK61_AND_AMK_COLUMN(m_IK1303,J_signal_I);
  if (tmp > 59 && m_IK1303.L == 0){ // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
       tmp++;
  }
@@ -4082,7 +4180,7 @@ MK61_CORE_TICK_FUNCTION IK1306_Tick(
     tmp = selected_amk;
     microinstruction = selected_microinstruction;
   #else
-    tmp = (uint8_t) m_IK1306.pAND_AMK[J_signal_I];            //    AMK = AND_AMK[ASPx9 + J_signal_I];
+    tmp = (uint8_t) MK61_AND_AMK_COLUMN(m_IK1306,J_signal_I);            //    AMK = AND_AMK[ASPx9 + J_signal_I];
     if (tmp > 59 && m_IK1306.L == 0){                         // Если AMK больше 59 (60,61,62,63), то пересчитываются (60,62,64,66) или (61,63,65,67) при L=0
         tmp++;
     }
@@ -4148,9 +4246,9 @@ static void MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))
 IK130X_Tick_All(mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
 #if MK61_CORE_PACKED_AMK
   const core_packed_amk::Selection selected = select_amk_lanes(
-      m_IK1302.pAND_AMK[J_signal_I],
-      m_IK1303.pAND_AMK[J_signal_I],
-      m_IK1306.pAND_AMK[J_signal_I]);
+      MK61_AND_AMK_COLUMN(m_IK1302,J_signal_I),
+      MK61_AND_AMK_COLUMN(m_IK1303,J_signal_I),
+      MK61_AND_AMK_COLUMN(m_IK1306,J_signal_I));
 #if MK61_CORE_NATIVE_HOT_PATHS
   IK1302_1303_Execute_All(signal_I, J_signal_I, signal_div3, selected);
 #else
@@ -4177,8 +4275,8 @@ static void MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))
 IK1302_1303_Tick_All(mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
 #if MK61_CORE_PACKED_AMK
   const core_packed_amk::Selection selected = select_amk_lanes_1302_1303(
-      m_IK1302.pAND_AMK[J_signal_I],
-      m_IK1303.pAND_AMK[J_signal_I]);
+      MK61_AND_AMK_COLUMN(m_IK1302,J_signal_I),
+      MK61_AND_AMK_COLUMN(m_IK1303,J_signal_I));
   IK1302_1303_Execute_All(signal_I, J_signal_I, signal_div3, selected);
 #else
   IK1302_1303_Execute_All(signal_I, J_signal_I, signal_div3);
@@ -4194,9 +4292,9 @@ IK130X_Tick_All(
     mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
 #if MK61_CORE_PACKED_AMK
   const core_packed_amk::Selection selected = select_amk_lanes(
-      m_IK1302.pAND_AMK[J_signal_I],
-      m_IK1303.pAND_AMK[J_signal_I],
-      m_IK1306.pAND_AMK[J_signal_I]);
+      MK61_AND_AMK_COLUMN(m_IK1302,J_signal_I),
+      MK61_AND_AMK_COLUMN(m_IK1303,J_signal_I),
+      MK61_AND_AMK_COLUMN(m_IK1306,J_signal_I));
   IK1302_Tick(signal_I, J_signal_I, signal_div3,
       selected.ik1302, IK1302_MICROINSTRUCTIONS_ACTIVE[selected.ik1302]);
   IK1303_Tick(signal_I, J_signal_I, signal_div3,
@@ -4216,8 +4314,8 @@ IK1302_1303_Tick_All(
     mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
 #if MK61_CORE_PACKED_AMK
   const core_packed_amk::Selection selected = select_amk_lanes_1302_1303(
-      m_IK1302.pAND_AMK[J_signal_I],
-      m_IK1303.pAND_AMK[J_signal_I]);
+      MK61_AND_AMK_COLUMN(m_IK1302,J_signal_I),
+      MK61_AND_AMK_COLUMN(m_IK1303,J_signal_I));
   IK1302_Tick(signal_I, J_signal_I, signal_div3,
       selected.ik1302, IK1302_MICROINSTRUCTIONS_ACTIVE[selected.ik1302]);
   IK1303_Tick(signal_I, J_signal_I, signal_div3,

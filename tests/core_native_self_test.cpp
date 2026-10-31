@@ -57,6 +57,68 @@ static void initialize(bool expanded) {
   core_61::enable();
 }
 
+// The public snapshot always uses 16-byte logical body offsets, regardless
+// of Flash packing or cache residency. Exercise every body in all six lanes.
+static void check_and_amk_context_offsets(bool expanded) {
+  scenario = "AND_AMK context offsets";
+  initialize(expanded);
+  const State initial = snapshot();
+  const bool cached = core_hot_tables_view_cached();
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
+  require(cached && core_hot_tables_memory != nullptr, "RAM table view was not exercised");
+#endif
+  for(unsigned body = 0; body < 128; ++body) {
+    m_IK1302.pAND_AMK = and_amk_body(IK1302_AND_AMK_ACTIVE, body);
+    m_IK1302.pAND_AMK1 = and_amk_body(IK1302_AND_AMK_ACTIVE, (body+1)%128);
+    m_IK1303.pAND_AMK = and_amk_body(IK1303_AND_AMK_ACTIVE, (body+2)%128);
+    m_IK1303.pAND_AMK1 = and_amk_body(IK1303_AND_AMK_ACTIVE, (body+3)%128);
+    m_IK1306.pAND_AMK = and_amk_body(IK1306_AND_AMK_ACTIVE, (body+4)%128);
+    m_IK1306.pAND_AMK1 = and_amk_body(IK1306_AND_AMK_ACTIVE, (body+5)%128);
+    const State expected = snapshot();
+    core_61::CoreContextSnapshot decoded = {};
+    std::memcpy(&decoded, expected.bytes, sizeof(decoded));
+    require(decoded.ik1302.p_and_amk == body*16 &&
+        decoded.ik1302.p_and_amk1 == ((body+1)%128)*16 &&
+        decoded.ik1303.p_and_amk == ((body+2)%128)*16 &&
+        decoded.ik1303.p_and_amk1 == ((body+3)%128)*16 &&
+        decoded.ik1306.p_and_amk == ((body+4)%128)*16 &&
+        decoded.ik1306.p_and_amk1 == ((body+5)%128)*16,
+        "snapshot leaked a physical body stride");
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
+    select_core_hot_table_view(!cached);
+    require(same(expected, snapshot()), "cache migration changed logical body offsets");
+#endif
+    restore(expected);
+    require(same(expected, snapshot()), "body offsets changed across restore");
+#if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
+    select_core_hot_table_view(cached);
+    restore(expected);
+    require(same(expected, snapshot()), "reverse cache migration changed offsets");
+#endif
+    if(body == 127) {
+      for(unsigned field = 0; field < 6; ++field) {
+        for(u16 offset : {u16(1), u16(2048)}) {
+          auto invalid = decoded;
+          switch(field) {
+            case 0: invalid.ik1302.p_and_amk = offset; break;
+            case 1: invalid.ik1302.p_and_amk1 = offset; break;
+            case 2: invalid.ik1303.p_and_amk = offset; break;
+            case 3: invalid.ik1303.p_and_amk1 = offset; break;
+            case 4: invalid.ik1306.p_and_amk = offset; break;
+            case 5: invalid.ik1306.p_and_amk1 = offset; break;
+          }
+          State rejected = expected;
+          std::memcpy(rejected.bytes, &invalid, sizeof(invalid));
+          require(!core_61::restore_context(rejected), "invalid logical body offset accepted");
+          require(same(expected, snapshot()), "invalid snapshot mutated live state");
+        }
+      }
+    }
+  }
+  restore(initial);
+  std::printf("PASS AND_AMK context offsets: 128 bodies, six lanes, cache migration, invalid offsets\n");
+}
+
 static void native_body(unsigned body) {
   switch(body) {
     case 0: native_ik1306_zero_body(Path::IK1306_ZERO_REGION1); break;
@@ -884,6 +946,7 @@ int main() {
   using namespace native_test;
   std::setvbuf(stdout, nullptr, _IONBF, 0);
   for(bool expanded : {false, true}) {
+    check_and_amk_context_offsets(expanded);
 #if MK61_CORE_PREDECODED_ROM
     check_predecoded_microinstructions(expanded);
     check_sequences<0, 0x13>(expanded);

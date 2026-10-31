@@ -108,6 +108,10 @@ bool Session::point(int x, int y) const {
   return frame_ && x >= 0 && y >= 0 && x < width_ && y < height_ &&
          (frame_[(size_t)(y >> 3) * width_ + x] & (1U << (y & 7)));
 }
+#if defined(STM32F401xC) || defined(STM32F401xE)
+// Keep clipping temporaries in this cold primitive's frame on the small MCU.
+__attribute__((noinline))
+#endif
 void Session::line(double x0, double y0, double x1, double y1, uint8_t mode) {
   x0 = rounded(x0);
   y0 = rounded(y0);
