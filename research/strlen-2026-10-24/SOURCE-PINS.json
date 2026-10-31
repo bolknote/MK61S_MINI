@@ -1,0 +1,74 @@
+{
+  "status": "HISTORICAL_EXPERIMENT_SOURCE_CHECKPOINT_NO_NEW_HARDWARE_PASS",
+  "source_base": "92be3a44c784238ebf76429c9e9230059dbdc910",
+  "integration_base": "ed2ac8e892ff1c018345eb5781e00331b33f1f8e",
+  "physical_IO_this_checkpoint": 0,
+  "source_byte_exact": true,
+  "files": [
+    {
+      "path": "research/strlen-2026-10-24/adapter-test.py",
+      "bytes": 5172,
+      "sha256": "d02d7108f26dc98dd551876f04adfb8609cc83a7218f5c84b5d8227f07bb68e8"
+    },
+    {
+      "path": "research/strlen-2026-10-24/adapter.py",
+      "bytes": 4196,
+      "sha256": "5d4bb25c1aa0e09d293207f5484c69358880c107eabf4236f1f8b4061e7bba0d"
+    },
+    {
+      "path": "research/strlen-2026-10-24/analyze.py",
+      "bytes": 5686,
+      "sha256": "f295ee95505334c13c232a8e6a036b5ae7e2effa6c1a5d6b98d89b354ed0b382"
+    },
+    {
+      "path": "research/strlen-2026-10-24/benchmark.c",
+      "bytes": 9256,
+      "sha256": "1e485ab80df908127d7d19157ab79c08ae3fbc56273ddd0e47eb75c3cd3bc6d4"
+    },
+    {
+      "path": "research/strlen-2026-10-24/build-experiment.py",
+      "bytes": 16038,
+      "sha256": "d6ccc05a1d914d821ba7aac522852a45cd4afcb5d083eac673d290cd84a028cc"
+    },
+    {
+      "path": "research/strlen-2026-10-24/build-kernels.py",
+      "bytes": 5204,
+      "sha256": "799d070c6ecafbebca5e3594786c9240fd3b2d35ee03367081eaa73e60b8b29f"
+    },
+    {
+      "path": "research/strlen-2026-10-24/candidates.S",
+      "bytes": 2650,
+      "sha256": "94acff2027ad7e305eda310a41965c7957bfc29d9804ae5cfc673122df53b9d5"
+    },
+    {
+      "path": "research/strlen-2026-10-24/decode.py",
+      "bytes": 9554,
+      "sha256": "15c0c097363d3a044b30473a83821f20a4b7d70dda26fb690b818c5e8c2875e9"
+    },
+    {
+      "path": "research/strlen-2026-10-24/decoder-test.py",
+      "bytes": 3852,
+      "sha256": "deb4d490282a5b47eeebafad122d9fb5bc6c113ccbefb558af0c839e8afa8e60"
+    },
+    {
+      "path": "research/strlen-2026-10-24/freeze.py",
+      "bytes": 8443,
+      "sha256": "88210d040f42e3dd959d3ed5d7e8af8dd1fb100354ce3a674bc2c20695ed9463"
+    },
+    {
+      "path": "research/strlen-2026-10-24/prepare-fixture.py",
+      "bytes": 6338,
+      "sha256": "e6ba22e982ae7a4f02b798ef7e4d1f73aa4efebcf8e220587b7f2d3dfaaa32db"
+    },
+    {
+      "path": "research/strlen-2026-10-24/proof.py",
+      "bytes": 19280,
+      "sha256": "4dca00158fdb0d40166e522bd954728ff067cfe462ebf9829fc17201044d5df7"
+    },
+    {
+      "path": "research/strlen-2026-10-24/runtime_binding.c",
+      "bytes": 392,
+      "sha256": "babdaba01ad00f0959eaeb252cdfe860fbce10736d4367277aa50a1cb75ebf3c"
+    }
+  ]
+}
