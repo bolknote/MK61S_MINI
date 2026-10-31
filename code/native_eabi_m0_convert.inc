@@ -16,7 +16,13 @@ __aeabi_l2d:
  movs r3,#0
  adcs r1,r3
  bne .Ll2d_high
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ // A negative input has nonzero magnitude: skip the unsigned zero test.
+ mov r1,r2
+ b .Li2d_normalize
+#else
  b .Ll2d_narrow
+#endif
 .global __aeabi_ul2d
 .type __aeabi_ul2d,%function
 .thumb_func

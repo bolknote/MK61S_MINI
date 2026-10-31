@@ -55,9 +55,9 @@ __attribute__((optimize("Os"),noinline,section(".m0_math_extension"))) static do
   const U center=U(n)<<49;
   const bool small=a<center,subtract=negative^small;
   const U delta=small?center-a:a-center;
-  U low=log_near_table[index-1][1];uint32_t high=0;
+  U low=log_near_value70(index-1);uint32_t high=0;
   if(delta) {
-    const U h=mk61_m0_log_product54(delta,log_near_table[index-1][0]);
+    const U h=mk61_m0_log_product54(delta,log_near_inverse(index-1));
     const uint32_t t=uint32_t(h>>26);
     const U z=(wide32(t,t)>>18)+(wide32(t,uint32_t(h)&0x3FFFFFFU)>>43)+1;
     const uint32_t hr=uint32_t((h+(1U<<25))>>26),zr=uint32_t((z+(1U<<12))>>13);

@@ -38,6 +38,9 @@ __attribute__((optimize("Os"),noinline)) static double ln_near_one(double x,U b)
   }
   return ln_pack_relative(math62_product(q,factor),2-int(leading),negative?D::Sign:0,error,x);
 }
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+#include "native_eabi_m0_ln_near77.inc"
+#else
 __attribute__((optimize("Os"),noinline)) static double ln_near_interval(double x,U b) {
   const bool negative=b<UINT64_C(0x3FF0000000000000);
   const U s=(b&D::Fraction)|D::Hidden;
@@ -67,8 +70,14 @@ __attribute__((optimize("Os"),noinline)) static double ln_near_interval(double x
     if(subtract==negative) {const U before=low;low+=correction;high=low<before;}
     else low-=correction;
   }
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  // Strict bounds<4 (near) and<8 (main), certified with the RP exact residual.
+  return ln_pack70(low,high,negative?D::Sign:0,3,x);
+#else
   return ln_pack70(low,high,negative?D::Sign:0,8,x);
+#endif
 }
+#endif
 __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_ln(double x) {
   const U b=bits(x);
   if(b<UINT64_C(0x0010000000000000) || b>=D::Infinity) return mk61_m0_cr_ln(x);
@@ -95,12 +104,22 @@ __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_ln(double x) {
   U low=center.low;uint32_t high=center.high;
   if(negative) {const U old=low;low+=correction;high-=low>old;}
   else {const U old=low;low+=correction;high+=low<old;}
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  // Strict bounds<4 (near) and<8 (main), certified with the RP exact residual.
+  if(!k) return ln_pack70(low,high,0,7,x);
+#else
   if(!k) return ln_pack70(low,high,0,16,x);
+#endif
   const uint32_t n=uint16_t(k<0?-k:k);
   const U p0=wide32(uint32_t(log70_two_low),n),p1=wide32(uint32_t(log70_two_low>>32),n)+(p0>>32);
   U result=(p1<<32)|uint32_t(p0);uint32_t upper=uint32_t(p1>>32)+log70_two_high*n;
   const U old=result;
   if(k<0) {result-=low;upper-=high+uint32_t(old<low);}
   else {result+=low;upper+=high+uint32_t(result<old);}
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  // Strict bounds<4 (near) and<8 (main), certified with the RP exact residual.
+  return ln_pack70(result,upper,k<0?D::Sign:0,7+(n+1)/2,x);
+#else
   return ln_pack70(result,upper,k<0?D::Sign:0,16+(n+1)/2,x);
+#endif
 }

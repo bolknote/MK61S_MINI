@@ -349,189 +349,105 @@ da_entry:
  movs r1,r3
  pop {r4-r7,pc}
 .Lda_mixed_general:
- // Reuse the decoded gap: with at least 55 exponent steps the smaller
- // magnitude cannot change nearest-even, even below a power of two.
- adds r7,#53                  @ delta + 54, using the earlier delta + 1
+ // Only opposite signs and |exponent gap|>=2 arrive here. Keep unsigned
+ // magnitudes: the dominant operand fixes the result sign, and cancellation
+ // can require at most one normalization bit.
+ adds r7,#53                  @ original delta+1 becomes delta+54
  cmp r7,#108
  bhi .Lda_far_return
- mdunpacks_normal r0,r1,r4,r6
- mdunpacks_normal r2,r3,r5,r6
- subs r7,r5,r4                 @ ye-xe
- subs r6,r4,r5                 @ xe-ye
- bmi da_ygtx
-@ here xe>=ye: need to shift y down r6 places
- mov r12,r4                    @ save exponent
+
+.macro da_gap_align lo,hi
  cmp r6,#32
- bge da_xrgty                  @ xe rather greater than ye?
- adds r7,#32
- movs r4,r2
- lsls r4,r4,r7                 @ rounding bit + sticky bits
-da_xgty0:
- movs r5,r3
- lsls r5,r5,r7
- lsrs r2,r6
- asrs r3,r6
- orrs r2,r5
-da_add:
- adds r0,r2
- adcs r1,r3
-da_pack:
-@ here unnormalised signed result (possibly 0) is in r0:r1 with exponent r12, rounding + sticky bits in r4
-@ Note that if a large normalisation shift is required then the arguments were close in magnitude and so we
-@ cannot have not gone via the xrgty/yrgtx paths. There will therefore always be enough high bits in r4
-@ to provide a correct continuation of the exact result.
-@ now pack result back up
- lsrs r3,r1,#31                @ get sign bit
- beq 1f                        @ skip on positive
- mvns r1,r1                    @ negate mantissa
- mvns r0,r0
- movs r2,#0
- negs r4,r4
- adcs r0,r2
- adcs r1,r2
+ bhs .Lda_gap_large_\@
+ movs r7,#32
+ subs r7,r7,r6
+ movs r4,\lo
+ lsls r4,r7
+ movs r5,\hi
+ lsls r5,r7
+ lsrs \lo,r6
+ lsrs \hi,r6
+ orrs \lo,r5
+ b .Lda_gap_aligned_\@
+.Lda_gap_large_\@:
+ movs r7,#64
+ subs r7,r7,r6
+ movs r4,\lo
+ lsls r4,r7
+ beq 1f
+ movs r4,#1
 1:
- mov r2,r12                    @ get exponent
- // Opposite signs reduce magnitude, so a carry normalization is impossible.
+ subs r6,#32
+ lsrs \lo,r6
+ orrs r4,\lo
+ movs \lo,\hi
+ lsls \hi,r7
+ orrs r4,\hi
+ lsrs \lo,r6
+ movs \hi,#0
+.Lda_gap_aligned_\@:
+.endm
+
+ cmp r6,#0
+ bmi .Lda_gap_y
+ subs r7,r4,#1
+ lsls r7,#20
+ subs r1,r7
+ mov r12,r7                   @ sign:(dominant exponent-1):0
+ subs r7,r5,#1
+ lsls r7,#20
+ subs r3,r7
+ da_gap_align r2,r3
+ // Negating the fractional word supplies exactly the borrow needed by
+ // the integer subtraction. Lost low fractional bits are retained as jam.
+ negs r4,r4
+ sbcs r0,r2
+ sbcs r1,r3
+ b .Lda_gap_normalize
+.Lda_gap_y:
+ negs r6,r6
+ subs r7,r5,#1
+ lsls r7,#20
+ subs r3,r7
+ mov r12,r7
+ subs r7,r4,#1
+ lsls r7,#20
+ subs r1,r7
+ da_gap_align r0,r1
+ negs r4,r4
+ sbcs r2,r0
+ sbcs r3,r1
+ movs r0,r2
+ movs r1,r3
+.Lda_gap_normalize:
  lsrs r5,r1,#20
- bne da_1                      @ normalised?
- cmp r0,#0
- beq da_5                      @ could mantissa be zero?
-da_2:
- // Large cancellation shifts are common in argument reduction. Move 16,
- // 8, and 4 bits at a time through the 96-bit significand/rounding state.
- cmp r1,#16
- bhs .Lrp_normalize_eight
- lsls r1,#16
- lsrs r5,r0,#16
- orrs r1,r5
- lsls r0,#16
- lsrs r5,r4,#16
- orrs r0,r5
- lsls r4,#16
- subs r2,#16
- b da_2
-.Lrp_normalize_eight:
- lsrs r5,r1,#12
- bne .Lrp_normalize_four
- lsls r1,#8
- lsrs r5,r0,#24
- orrs r1,r5
- lsls r0,#8
- lsrs r5,r4,#24
- orrs r0,r5
- lsls r4,#8
- subs r2,#8
-.Lrp_normalize_four:
- lsrs r5,r1,#16
- bne .Lrp_normalize_one
- lsls r1,#4
- lsrs r5,r0,#28
- orrs r1,r5
- lsls r0,#4
- lsrs r5,r4,#28
- orrs r0,r5
- lsls r4,#4
- subs r2,#4
-.Lrp_normalize_one:
+ bne .Lda_gap_round
  adds r4,r4
  adcs r0,r0
  adcs r1,r1
- subs r2,#1                    @ adjust exponent
- lsrs r5,r1,#20
- beq .Lrp_normalize_one
-da_1:
- lsls r4,#1                    @ check rounding bit
- bcc da_3
-da_4:
- adds r0,#1                    @ round up
- bcc 2f
+ mov r5,r12
+ movs r7,#1
+ lsls r7,#20
+ subs r5,r7
+ mov r12,r5
+.Lda_gap_round:
+ lsls r4,#1
+ bcc .Lda_gap_pack
+ adds r0,#1
+ bcc 1f
  adds r1,#1
-2:
- cmp r4,#0                     @ sticky bits zero?
- bne da_3
- lsrs r0,#1                    @ round to even
- lsls r0,#1
-da_3:
- // The entry guard already excludes underflow and overflow. Do not repeat
- // those checks after the exact signed sum and nearest-even rounding.
- subs r2,#1
- lsls r2,#20                   @ pack exponent and sign
- add r1,r2
- lsls r3,#31
- add r1,r3
- pop {r4-r7,r15}
-
-da_5:
-@ here mantissa could be zero
- cmp r1,#0
- bne da_2
+1:
  cmp r4,#0
- bne da_2
-@ inputs must have been of identical magnitude and opposite sign, so return +0
- pop {r4-r7,r15}
-
-da_xrgty:                      @ xe>ye and shift>=32 places
- cmp r6,#60
- bge da_xmgty                  @ xe much greater than ye?
- subs r6,#32
- adds r7,#64
-
- movs r4,r2
- lsls r4,r4,r7                 @ these would be shifted off the bottom of the sticky bits
- beq 1f
- movs r4,#1
-1:
- lsrs r2,r2,r6
- orrs r4,r2
- movs r2,r3
- lsls r3,r3,r7
- orrs r4,r3
- asrs r3,r2,#31                @ propagate sign bit
- b da_xgty0
-
-da_ygtx:
-@ here ye>xe: need to shift x down r7 places
- mov r12,r5                    @ save exponent
- cmp r7,#32
- bge da_yrgtx                  @ ye rather greater than xe?
- adds r6,#32
- movs r4,r0
- lsls r4,r4,r6                 @ rounding bit + sticky bits
-da_ygtx0:
- movs r5,r1
- lsls r5,r5,r6
- lsrs r0,r7
- asrs r1,r7
- orrs r0,r5
- b da_add
-
-da_yrgtx:
- cmp r7,#60
- bge da_ymgtx                  @ ye much greater than xe?
- subs r7,#32
- adds r6,#64
-
- movs r4,r0
- lsls r4,r4,r6                 @ these would be shifted off the bottom of the sticky bits
- beq 1f
- movs r4,#1
-1:
- lsrs r0,r0,r7
- orrs r4,r0
- movs r0,r1
- lsls r1,r1,r6
- orrs r4,r1
- asrs r1,r0,#31                @ propagate sign bit
- b da_ygtx0
-
-da_ymgtx:                      @ result is just y
- movs r0,r2
- movs r1,r3
-da_xmgty:                      @ result is just x
- movs r4,#0                    @ clear sticky bits
- b da_pack
-
+ bne .Lda_gap_pack
+ lsrs r0,#1                   @ exact midpoint rounds to even
+ lsls r0,#1
+.Lda_gap_pack:
+ mov r2,r12
+ adds r1,r2
+ pop {r4-r7,pc}
+.purgem da_gap_align
 .ltorg
+
 mk61_m0_dadd_end:
 
 @ equivalent of UMULL
@@ -1135,5 +1051,53 @@ dd_2:
  .word 0x40000000,0x38e38e39,0x33333333,0x2e8ba2e9,0x2aaaaaab,0x27627627,0x24924925,0x22222222
 
 .ltorg
+// Exact truncation toward zero, preserving the existing uint32 saturation
+// policy. Only positive finite inputs with exponent 0..31 reach the shifts.
+.section .text.__aeabi_d2uiz,"ax",%progbits
+regular_func __aeabi_d2uiz
+ cmp r1,#0
+ bmi .Lduiz_zero
+ lsrs r2,r1,#20
+ ldr r3,=1023
+ subs r2,r3
+ bmi .Lduiz_zero
+ cmp r2,#31
+ bhi .Lduiz_large
+ lsls r1,#12
+ lsrs r1,#12
+ movs r3,#1
+ lsls r3,#20
+ orrs r1,r3
+ subs r2,#20
+ bpl .Lduiz_left
+ negs r2,r2
+ lsrs r1,r2
+ mov r0,r1
+ bx lr
+.Lduiz_left:
+ movs r3,#32
+ subs r3,r2
+ lsrs r0,r3
+ lsls r1,r2
+ orrs r0,r1
+ bx lr
+.Lduiz_large:
+ // e=1024 is Inf/NaN. A NaN returns0; positive Inf saturates.
+ ldr r3,=1024
+ cmp r2,r3
+ bne .Lduiz_saturate
+ lsls r1,#12
+ orrs r0,r1
+ bne .Lduiz_zero
+.Lduiz_saturate:
+ movs r0,#0
+ mvns r0,r0
+ bx lr
+.Lduiz_zero:
+ movs r0,#0
+ bx lr
+.size __aeabi_d2uiz,.-__aeabi_d2uiz
+.ltorg
+
 #endif
 .section .note.GNU-stack,"",%progbits

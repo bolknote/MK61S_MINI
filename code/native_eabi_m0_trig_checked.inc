@@ -194,6 +194,7 @@ static CheckedTrigValue checked_trig_small(CheckedTrigArgument a,unsigned op) {
 }
 #include "native_eabi_m0_trig_small_refine.inc"
 #include "native_eabi_m0_trig_tan.inc"
+#if !defined(MK61_M0_RP2040_EABI) || !MK61_M0_RP2040_EABI
 // Try the cheaper Q62 evaluation before Q70. Both passes use the same
 // Q94 table, so this does not enlarge the data working set. The Q62
 // truncations (instead of rounded table entries) fit a seven-unit bound.
@@ -228,6 +229,7 @@ __attribute__((optimize("Os"),noinline)) static U checked_trig_fast_table(Checke
   const U retained=(U(hi>>shift)<<32)|uint32_t((lo>>shift)|(hi<<(32-shift)));
   return sign+(U(shift+1012)<<52)+retained+U(tail>half || (tail==half && (retained&1)));
 }
+#endif
 // Evaluate the ordinary sin/cos cells in Q70. The Q94 refinement table
 // supplies both the Q70 base and Q62 coefficients without another table.
 // Retaining these eight guard bits avoids most calls to the middle pass.
@@ -299,8 +301,14 @@ __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_trig(double x,unsig
     if(a.e==1) {
       // Very small sine values have narrow Q62 rounding cells; go
       // directly to Q70 there instead of paying for a rejected pass.
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+      // One Q70 evaluation gives enough guard bits for the ordinary cells.
+      // Avoid paying for a rejected Q62 pass before evaluating it again.
+      result=checked_trig_table(a,selected,U(flip)<<63);
+#else
       result=selected || a.q>=(U(1)<<59)?checked_trig_fast_table(a,selected,U(flip)<<63):0;
       if(!result) result=checked_trig_table(a,selected,U(flip)<<63);
+#endif
       if(result) return real(result);
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
     } else {

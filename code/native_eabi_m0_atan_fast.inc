@@ -1,3 +1,6 @@
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+#include "native_eabi_m0_atan_correct.inc"
+#endif
 // Bounded integer argument reduction for 1/64 <= |x| <= 64. The exact
 // dyadic geometry is shared with the independent refinement. No rounded
 // binary64 reciprocal, multiplication, addition or division is needed.
@@ -73,6 +76,13 @@ __attribute__((optimize("Os"),noinline)) static double atan_fast(double original
   q=negative?r96_sub_low(q,correction):r96_add_low(q,correction);
   if(invert) q=r96_sub({(U(refine_atan_half_pi[1])<<32)|refine_atan_half_pi[0],refine_atan_half_pi[2]},q);
   U result;
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  result=atan_pack70(q,sign,64);
+  if(result) return real(result);
+  result=atan_round_correct(sign,q,numerator,denominator,h,z,c7,negative!=invert);
+  if(result) return real(result);
+#else
   if(r96_pack(q,24,sign,64,result)) return real(result);
+#endif
   return atan_refine(original,index);
 }

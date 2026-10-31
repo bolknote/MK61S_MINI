@@ -52,6 +52,12 @@ __aeabi_ui2d:
  bne .Li2d_exact20
  lsrs r3,r0,#18
  bne .Li2d_exact19
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ lsrs r3,r0,#17
+ bne .Li2d_exact18
+ // Nonzero input and the preceding16-bit shift guarantee at least17 bits.
+ b .Li2d_exact17
+#endif
 .Li2d_byte:
  lsls r0,#8
  subs r2,#8
@@ -97,6 +103,10 @@ end __aeabi_i2d
 i2d_middle 21
 i2d_middle 20
 i2d_middle 19
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+i2d_middle 18
+i2d_middle 17
+#endif
 
 #include "native_eabi_m0_convert.inc"
 #include "native_eabi_m0_product.inc"

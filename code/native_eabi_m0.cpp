@@ -333,7 +333,9 @@ MK61_SOFT_PCS int32_t mk61_m0_d2iz_slow(double x) {return D::signed32(bits(x));}
 #else
 MK61_SOFT_PCS int32_t __aeabi_d2iz(double x) {return D::signed32(bits(x));}
 #endif
+#if !(defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__)))
 MK61_SOFT_PCS uint32_t __aeabi_d2uiz(double x) {return D::unsigned32(bits(x));}
+#endif
 MK61_SOFT_PCS int32_t __aeabi_f2iz(float x) {return S::signed32(bits(x));}
 MK61_SOFT_PCS uint32_t __aeabi_f2uiz(float x) {return S::unsigned32(bits(x));}
 #if defined(__arm__) || defined(__thumb__)
@@ -610,6 +612,9 @@ __attribute__((optimize("Os"))) U mk61_m0_mul_q62(U a,U b) {
   const U tail=p.low&((U(1)<<62)-1),half=U(1)<<61;
   return q+(tail>half || (tail==half && (q&1)));
 }
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+#include "native_eabi_m0_exp_round.inc"
+#endif
 // On ARMv6-M, -O3 expands wide products into substantially more spills than
 // -Os. Keep this kernel's measured register allocation in release builds.
 MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_exp(double x) {
@@ -660,10 +665,20 @@ MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_ex
   const U c=(wide32(uint32_t(z>>32),tail_magnitude)+(p>>32))>>12;
   const U delta=r+(z>>1)+(tail<0?U(0)-c:c);
   const unsigned index=unsigned(k)&511U;
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  // k-index is an exact multiple of512; ARM GCC arithmetic shift is exact.
+  k=(k-int(index))>>9;
+#else
   k=(k-int(index))/512;
+#endif
   U q=exp_table[index];
   const bool below=(delta>>63)!=0;
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  const U final_magnitude=below?U(0)-delta:delta;
+  const U correction=exp_high_product(q,final_magnitude)+1;
+#else
   const U correction=exp_high_product(q,below?U(0)-delta:delta)+1;
+#endif
   q=below?q-correction:q+correction;
   unsigned error=5;
   if(q<(U(1)<<62)) {q<<=1;--k;error*=2;}
@@ -671,7 +686,15 @@ MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_ex
     // The complete interval [q-error,q+error] must lie in one rounding
     // cell. Ambiguous results are evaluated by the correctly rounded path.
     const uint32_t tail=uint32_t(q)&1023U;
-    if(uint32_t(tail-(512U-error))<=2*error) return exp_refine(x,n);
+    if(uint32_t(tail-(512U-error))<=2*error) {
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+      const unsigned decision=exp_round_decide(index,n,final_magnitude,tail|(error==10?1024U:0U)|(below?2048U:0U));
+      if(!decision) return exp_refine(x,n);
+      return real((U(k+1022)<<52)+(q>>10)+(decision-1U));
+#else
+      return exp_refine(x,n);
+#endif
+    }
     const U rounded=(q+511+((q>>10)&1))>>10;
     return real((U(k+1022)<<52)+rounded);
   }
