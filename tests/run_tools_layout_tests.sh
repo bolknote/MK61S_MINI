@@ -31,6 +31,7 @@ expected="$(
     certify_m0_exp_fast.py \
     certify_m0_ln_refine.py \
     certify_m0_log10_fast.py \
+    certify_m0_near77.py \
     certify_m0_pow_boundary.py \
     certify_m0_pow_exact_small.py \
     certify_m0_pow_fast.py \
@@ -41,8 +42,10 @@ expected="$(
     certify_m0_pow_short.py \
     certify_m0_pow_tiny.py \
     certify_m0_pow_tiny32.py \
+    certify_m0_rounding_corrections.py \
     certify_m0_small_sine.py \
     certify_m0_trig_inverse.py \
+    certify_m0_trig_table70.py \
     font_preview_study.py \
     generate_compact_math_tables.py \
     generate_compact_math_vectors.py \
