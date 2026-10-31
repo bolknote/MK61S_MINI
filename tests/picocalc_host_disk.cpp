@@ -7,7 +7,9 @@ extern "C" {
 #include "ff.h"
 #include "diskio.h"
 }
-// The weak embedded USB transport hook has no host implementation.
+// The shared USB surface optionally samples the embedded storage/input
+// transport. Host FatFs has no device transport (Darwin needs a definition
+// even for the surface's weak declaration).
 void storage_io_process() {}
 namespace {
 std::vector<u8> disk(16 * 1024 * 1024);
