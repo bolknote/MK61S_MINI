@@ -292,11 +292,16 @@ static bool decodeRows5x8(const u8* rows, Raster& out) {
   out.width = 5;
   out.height = 8;
   memset(out.data, 0, sizeof(out.data));
+#if defined(STM32F401xC) || defined(STM32F401xE)
+  // The five source bits become the five leftmost raster pixels.
+  for(u8 y = 0; y < 8; ++y) out.data[y] = (u8)(rows[y] << 3);
+#else
   for(u8 y = 0; y < out.height; y++) {
     for(u8 x = 0; x < out.width; x++) {
       if((rows[y] & ((u8) 1 << (4 - x))) != 0) setPixel(out, x, y);
     }
   }
+#endif
   return true;
 }
 
@@ -397,6 +402,24 @@ bool copyRows5x8(u16 codepoint,u8 rows[8]) {
 bool scale2x(const Raster& source, Raster& out) {
   if(source.width == 0 || source.height == 0 || source.width > 8 ||
      source.height > 8) return false;
+#if defined(STM32F401xC) || defined(STM32F401xE)
+  const u8 width = source.width, height = source.height;
+  out.width = (u8)(width * 2U);
+  out.height = (u8)(height * 2U);
+  memset(out.data, 0, sizeof(out.data));
+  const usize stride = (out.width + 7U) / 8U;
+  for(u8 y = 0; y < height; ++y) {
+    // Spread the visible source bits, duplicate horizontally, then copy rows.
+    u32 bits = source.data[y] & (0xFFU << (8U - width));
+    bits = (bits | (bits << 4)) & 0x0F0FU;
+    bits = (bits | (bits << 2)) & 0x3333U;
+    bits = (bits | (bits << 1)) & 0x5555U;
+    bits |= bits << 1;
+    u8* first = out.data + (usize)y * 2U * stride;
+    first[0] = first[stride] = (u8)(bits >> 8);
+    if(stride == 2) first[1] = first[stride + 1] = (u8)bits;
+  }
+#else
   out.width = (u8) (source.width * 2U);
   out.height = (u8) (source.height * 2U);
   memset(out.data, 0, sizeof(out.data));
@@ -416,6 +439,7 @@ bool scale2x(const Raster& source, Raster& out) {
       }
     }
   }
+#endif
   return true;
 }
 

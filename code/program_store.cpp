@@ -282,7 +282,12 @@ static CatalogMeta g_meta;
 static u16 g_overlay_ids[OVERLAY_CAPACITY];
 static Inode g_overlay_inodes[OVERLAY_CAPACITY];
 static u8 g_overlay_count;
+#if defined(ARDUINO_BLACKPILL_F401CC)
+static constexpr usize TABLE_CACHE_BYTES = 512;
+static shared_memory::Lease g_table_cache_lease;
+#else
 static u8 g_table_cache[512];
+#endif
 static u32 g_table_cache_address = EMPTY_ADDRESS;
 #if !defined(ARDUINO_BLACKPILL_F401CC)
 // Keep the parent inode block alongside the sequential child block on F411.
@@ -296,6 +301,25 @@ static void invalidate_table_cache(void) {
   g_table_other_address = EMPTY_ADDRESS;
 #endif
 }
+#if defined(ARDUINO_BLACKPILL_F401CC)
+static shared_memory::EvictionDecision prepare_table_cache_eviction(void) {
+  invalidate_table_cache();
+  return shared_memory::EvictionDecision::RELEASE;
+}
+static u8* table_cache(void) {
+  if(!g_table_cache_lease.ok()) {
+    // Metadata caching must never evict a loading, idle or pinned APP.
+    if(shared_memory::active_owner(shared_memory::Arena::APP) != shared_memory::Owner::NONE ||
+       !g_table_cache_lease.acquire_cache(shared_memory::Arena::APP,
+           shared_memory::Owner::PROGRAM_STORE_READ_CACHE, TABLE_CACHE_BYTES)) return nullptr;
+    if(!g_table_cache_lease.set_evictable(prepare_table_cache_eviction)) {
+      g_table_cache_lease.reset();
+      return nullptr;
+    }
+  }
+  return g_table_cache_lease.data();
+}
+#endif
 static u8 g_disk_activity_depth;
 static u8 g_disk_led_poll_divider;
 
@@ -469,6 +493,9 @@ static bool write_bytes(u32 address, const u8* data, usize len) {
 }
 
 static bool write_byte(u32 address, u8 value) {
+#if defined(ARDUINO_BLACKPILL_F401CC)
+  return write_bytes(address, &value, 1);
+#else
   invalidate_read_cache();
 #ifdef SPI_FLASH
   if(flash_is_ok) {
@@ -486,6 +513,7 @@ static bool write_byte(u32 address, u8 value) {
   (void) value;
 #endif
   return false;
+#endif
 }
 
 static bool erase_sector(u32 sector) {
@@ -856,6 +884,41 @@ static bool overlay_set(u16 id, const Inode& inode) {
 }
 
 __attribute__((noinline))
+#if defined(ARDUINO_BLACKPILL_F401CC)
+static bool read_table_bytes(u32 offset, u8* out, u32 len) {
+  u8* const cached = table_cache();
+  while(len != 0) {
+    const u32 page = offset / storage_geometry::PHYSICAL_SECTOR_SIZE;
+    if(page >= g_geometry.catalog_table_sectors) return false;
+    // A cache line divides the physical page exactly, including empty pages.
+    const u32 in_cache = offset & (TABLE_CACHE_BYTES - 1U);
+    const u32 room = TABLE_CACHE_BYTES - in_cache;
+    const u32 count = len < room ? len : room;
+    const u32 sector = g_catalog_pages.sector(page);
+    if(sector == EMPTY_ADDRESS) {
+      memset(out, 0xFF, count);
+    } else {
+      const u32 address = sector_address(sector) +
+          offset % storage_geometry::PHYSICAL_SECTOR_SIZE;
+      if(cached == nullptr) {
+        if(!read_bytes(address, out, count)) return false;
+      } else {
+        const u32 cache_address = address - in_cache;
+        if(g_table_cache_address != cache_address) {
+          invalidate_table_cache();
+          if(!read_bytes(cache_address, cached, TABLE_CACHE_BYTES)) return false;
+          g_table_cache_address = cache_address;
+        }
+        memcpy(out, cached + in_cache, count);
+      }
+    }
+    out += count;
+    offset += count;
+    len -= count;
+  }
+  return true;
+}
+#else
 static bool read_table_bytes(u32 offset, u8* out, u16 len) {
   while(len != 0) {
     const u32 page = offset / storage_geometry::PHYSICAL_SECTOR_SIZE;
@@ -902,6 +965,7 @@ static bool read_table_bytes(u32 offset, u8* out, u16 len) {
   }
   return true;
 }
+#endif
 
 static bool get_inode(u16 id, Inode& out) {
   if(id >= g_geometry.max_nodes) return false;

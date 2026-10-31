@@ -786,6 +786,11 @@ bool LifetimeBuffer::acquire(Owner owner, usize required) {
   if(ok()) return owner == owner_ && required <= size_;
   for(const LifetimeBuffer* live = lifetime_buffers; live; live = live->next())
     if(live->owner() == owner) return false;
+#if defined(ARDUINO_BLACKPILL_F401CC)
+  // Release a read cache before a long-lived buffer can strand its upper gap.
+  if(arenas[(usize)Arena::APP].active == Owner::PROGRAM_STORE_READ_CACHE &&
+     !detail_try_reclaim(Arena::APP)) return false;
+#endif
   const uintptr_t address = high_gap((required + 31U) & ~(usize)31U, false);
   if(!address) return false;
   memory_ = (u8*)address; size_ = required; owner_ = owner;

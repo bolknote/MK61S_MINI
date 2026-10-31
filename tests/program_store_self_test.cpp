@@ -3550,6 +3550,119 @@ static void test_inode_cache_reuses_parent_and_child_blocks(void) {
 #endif
 }
 
+static void test_inode_cache_yields_to_app(void) {
+#if defined(ARDUINO_BLACKPILL_F401CC)
+  using namespace shared_memory;
+  for(u32 capacity : {512U * 1024U, 16U * 1024U * 1024U}) {
+    fresh(capacity);
+    // These 26-byte inodes straddle a 512-byte cache line and a 4-KiB page.
+    assert(program_store::write_file(program_store::ROOT_ID, 19,
+        ProgramType::TEXT, "LINE", nullptr, 0));
+    assert(program_store::write_file(program_store::ROOT_ID, 157,
+        ProgramType::TEXT, "PAGE", nullptr, 0));
+    assert(program_store::test_catalog_checkpoint());
+    SPIFlash::resetOperationCounts();
+    assert(program_store::node_id_available(2));
+    assert(SPIFlash::readOperations() == 1 && SPIFlash::readBytes() == 512);
+    assert(active_owner(Arena::APP) == Owner::PROGRAM_STORE_READ_CACHE);
+    SPIFlash::resetOperationCounts();
+    for(u8 repeat = 0; repeat < 32; ++repeat)
+      assert(program_store::node_id_available(2));
+    assert(SPIFlash::readOperations() == 0);
+
+    // Use the real loader: it must reclaim the complete metadata cache.
+    u8* const image = app_memory_test::acquire_app_memory({APP_MAX_SIZE});
+    assert(image != nullptr);
+    memset(image, 0xA7, APP_MAX_SIZE);
+    Entry entry;
+    assert(program_store::entry_by_id(19, entry) && !strcmp(entry.name, "LINE"));
+    assert(program_store::entry_by_id(157, entry) && !strcmp(entry.name, "PAGE"));
+    SPIFlash::resetOperationCounts();
+    for(u8 repeat = 0; repeat < 32; ++repeat)
+      assert(program_store::node_id_available(2));
+    assert(SPIFlash::readOperations() == 32 && SPIFlash::readBytes() == 32U * 26U);
+    printf("F401 inode reads: capacity=%u cold=1/512 warm32=0/0 liveAPP32=%u/%llu operations/bytes\n",
+        (unsigned)capacity, (unsigned)SPIFlash::readOperations(),
+        (unsigned long long)SPIFlash::readBytes());
+    SPIFlash::resetOperationCounts();
+    assert(!program_store::node_id_available(19));
+    assert(!program_store::node_id_available(157));
+    assert(SPIFlash::readOperations() == 4 && SPIFlash::readBytes() == 52);
+    assert(active_owner(Arena::APP) == Owner::LOADABLE_MODULE);
+    for(usize byte = 0; byte < APP_MAX_SIZE; ++byte) assert(image[byte] == 0xA7);
+    SPIFlash::failReadsAfterOperations(0);
+    assert(!program_store::node_id_available(2));
+    SPIFlash::clearFailure();
+    assert(program_store::node_id_available(2));
+    app_memory_test::g_app_cache.reset();
+
+    // A reclaimed cache must be refilled, and a failed fill must be retried.
+    SPIFlash::failReadsAfterOperations(0);
+    assert(!program_store::node_id_available(2));
+    SPIFlash::clearFailure();
+    assert(program_store::node_id_available(2));
+    assert(program_store::entry_by_id(157, entry) && !strcmp(entry.name, "PAGE"));
+    assert(validate_invariants());
+  }
+  puts("F401 inode cache: warm hits, real APP eviction, live APP fallback, boundaries and I/O retry PASS");
+#endif
+}
+
+static void test_inode_cache_before_lifetime_buffers(void) {
+#if defined(ARDUINO_BLACKPILL_F401CC) && MK61_SCOPED_RESIDENT_BUFFERS
+  using namespace shared_memory;
+  fresh(512U * 1024U);
+  assert(program_store::write_file(program_store::ROOT_ID, 19,
+      ProgramType::TEXT, "PIN", nullptr, 0));
+  assert(program_store::test_catalog_checkpoint());
+  assert(program_store::vfat_stage_release_cache());
+  assert(program_store::node_id_available(2));
+  assert(active_owner(Arena::APP) == Owner::PROGRAM_STORE_READ_CACHE);
+  const usize gap = capacity(Arena::OVERLAY) + 512U - 25672U;
+  assert(adjust_heap((i32)gap) != nullptr);
+  {
+    LifetimeBuffer script, graphics;
+    assert(script.acquire(Owner::M61_RUNTIME, 1472));
+    assert(program_store::node_id_available(2));
+    assert(graphics.acquire(Owner::BASIC_GRAPHICS, 3412));
+    assert(program_store::node_id_available(2));
+    memset(script.data(), 0x53, script.size());
+    memset(graphics.data(), 0x47, graphics.size());
+    u8* const image = app_memory_test::acquire_app_memory({APP_MAX_SIZE});
+    assert(image != nullptr);
+    memset(image, 0xA7, APP_MAX_SIZE);
+    assert(program_store::node_id_available(2));
+    for(usize byte = 0; byte < APP_MAX_SIZE; ++byte) assert(image[byte] == 0xA7);
+    for(usize byte = 0; byte < script.size(); ++byte) assert(script.data()[byte] == 0x53);
+    for(usize byte = 0; byte < graphics.size(); ++byte) assert(graphics.data()[byte] == 0x47);
+    app_memory_test::g_app_cache.reset();
+  }
+  assert(adjust_heap(-(i32)gap) != nullptr && validate_invariants());
+  {
+    // Exercise the allocator's KEEP protocol without a reentrant NOR callback.
+    Lease busy(Arena::APP, Owner::PROGRAM_STORE_READ_CACHE, 512);
+    assert(busy.ok() && busy.set_evictable(+[] { return EvictionDecision::KEEP; }));
+    memset(busy.data(), 0x59, busy.size());
+    LifetimeBuffer pending;
+    assert(!pending.acquire(Owner::M61_RUNTIME, 1472));
+    assert(busy.ok() && !pending.ok());
+    for(usize byte = 0; byte < busy.size(); ++byte) assert(busy.data()[byte] == 0x59);
+  }
+  {
+    // An idle, evictable real APP owner is not a metadata cache.
+    Lease app(Arena::APP, Owner::LOADABLE_MODULE, 512);
+    assert(app.ok() && app.set_evictable(+[] { return EvictionDecision::RELEASE; }));
+    memset(app.data(), 0x41, app.size());
+    LifetimeBuffer script;
+    assert(script.acquire(Owner::M61_RUNTIME, 1472));
+    assert(app.ok());
+    for(usize byte = 0; byte < app.size(); ++byte) assert(app.data()[byte] == 0x41);
+  }
+  assert(validate_invariants());
+  puts("F401 inode cache: cold script/graphics placement and full APP in native-sized pool PASS");
+#endif
+}
+
 static void test_import_plan_erases_only_touched_scratch_pages(void) {
 #if !defined(ARDUINO_BLACKPILL_F401CC)
   for(u32 capacity : {512U * 1024U, 16U * 1024U * 1024U}) {
@@ -4610,6 +4723,11 @@ static void test_fs_temporaries_with_pinned_usb_app_and_stage(void) {
 #if MK61_STORAGE_SHARED_TEMP
   using namespace shared_memory;
   fresh(512U * 1024U);assert(program_store::vfat_stage_release_cache());
+  {
+    // Start from an empty APP arena, including any opportunistic inode cache.
+    Lease clear_cache(Arena::APP, Owner::LOADABLE_MODULE, APP_MAX_SIZE);
+    assert(clear_cache.ok());
+  }
   const usize original = capacity(Arena::OVERLAY);
   auto* heap = adjust_heap(0);
   {
@@ -4716,6 +4834,9 @@ static void test_source_draft_banks_on_small_flash() {
 #endif
 int main(int argc, char** argv) {
   test_bounded_le_fields();
+  if(argc == 2 && !strcmp(argv[1], "--inode-cache")) {
+    test_inode_cache_yields_to_app(); test_inode_cache_before_lifetime_buffers(); return 0;
+  }
   if(argc==2 && !strcmp(argv[1],"--catalog-lookup")){test_catalog_only_child_lookup();return 0;}
 #if defined(LANGUAGE_FLASH_FS_COMPILER_TEST)
   if(argc==2 && strcmp(argv[1],"--language-flash")==0){test_language_flash_store();test_language_flash_repeated_run_io();
@@ -4821,6 +4942,8 @@ int main(int argc, char** argv) {
   test_corrupt_catalog_requires_explicit_format();
   test_catalog_rotation_protects_app_and_borrowed_stage();
   test_inode_cache_reuses_parent_and_child_blocks();
+  test_inode_cache_yields_to_app();
+  test_inode_cache_before_lifetime_buffers();
   test_import_plan_erases_only_touched_scratch_pages();
   test_catalog_cow_updates_only_dirty_pages();
   test_catalog_split_page_torn_checkpoint();
