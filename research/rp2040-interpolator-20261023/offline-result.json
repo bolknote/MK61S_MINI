@@ -1,0 +1,178 @@
+{
+  "status": "OFFLINE_DELTA_PASS_INDEPENDENT_REVIEW_PENDING_HARDWARE_HELD",
+  "hardware_verified": false,
+  "physical_timing": false,
+  "reference_v2_manifest_sha256": "849885aa360bf83cd45f21163a3079ba37b78c34fcd4dd9e822bea32197eccf0",
+  "v2_status": "HISTORICAL_TIMED_INTEGRITY_HOLD; previous regression covered low-word bit0 at position7 only",
+  "result_schema": 3,
+  "mathematical_source_unchanged": {
+    "kernels.cpp": "cf785c885459bfbbff79fb9ab3ed927ee508a7f8caa63af794d7537de09e7fa5",
+    "divide.S": "70a39ba931d7dcb6d1918858f4574a4acdebd5605a0c99163e7aad90e7f2adc2",
+    "root_seed.S": "a3f2f66479f07371e140b2fb94cd20866ee82d7bdebdfc88bdbeb849d283c7b7",
+    "tables.inc": "85da6b6844cbd6f1efe4b011cd01c82370a415b92401da60783a568195a81e43",
+    "baseline_sqrt_table.inc": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+    "seed-certificate.json": "ec0292f6d5153790e9eaea49564fccdd8f92e627cd4d09608bcc86bdd70def6c",
+    "generate.py": "5110e59ab591c79f7e84b22c4614708edea88e2ee24886f451c38687ed039021",
+    "verify.py": "796254b1a9ef8e0c8a113e9334fe2819a4bd80e92ab492de378c80f368f6a915"
+  },
+  "current_external_dependencies": {
+    "tools/build_portable_app.py": "eeb3b265e71f830eac6f8364b1331a17a0f5dfa5007b44ba9fcb5fc322ed58ab",
+    "tools/build_picocalc.py": "ac8f1953cff8555c5f3b3298854ad0d1cad89876a357a0b1d629df19f75d0b47",
+    "tools/.mk61-app/app_relocations.py": "2add68e6a1827f371778e5207966a416fdad3795d020ab3fa5b30729c5e6f415",
+    "tests/native_eabi_m0_arm_self_test.py": "cdc8ac6c98bad5db3539a494207c556ce4ae49146c8a76b88cf58c4a5c79bee3",
+    "tests/check_stm32_vectors.py": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708",
+    "tests/m0_math_compare_app_self_test.py": "6447c7b89c4f91dfa6e4fbb0cf7e871dbee138a33ec9d0ed936a4bb165eccd38",
+    "code/native_eabi_m0.cpp": "42214335d061c486a4a918c3dca4179954b756fda9d3899f773e8f9f50461760",
+    "code/native_eabi_m0.S": "2d79cfd971ec0072986f6bf0ccddad6f2e8f1e89662ad2f7b58405644b36cecb",
+    "code/native_eabi_m0_rp2040.S": "e351fe2956fb2753674fe94c36465836cd983837f65f87e5797bd602c7d123b6",
+    "code/native_eabi_m0_pow_fast.inc": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e",
+    "code/native_eabi_m0_log70_center.inc": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064",
+    "code/native_eabi_m0_log70_table.inc": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb",
+    "code/native_eabi_m0_rsqrt_table.inc": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+    "code/native_eabi_m0_sqrt64_table.inc": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+    "sdk/portable/start.c": "863f79308b9bcaf13dbc531df499f29a68d605d3bc574bb9f5661ee945591a8c",
+    "sdk/portable/memory.c": "cb4546e2ceaf62d8396dc83e4b68f2b78e8076f900315c5108e8800b47970e13"
+  },
+  "actual_arm_kernel_calls": 138625,
+  "actual_arm_checksum_stream_calls": 2049,
+  "checksum_negative_cases": 2048,
+  "protocol_cases": 16,
+  "decoder_negative_cases": 24,
+  "checksum_counterexample_closed": true,
+  "checksum_report_sha256": "9f10485c3cf241ae29636064201a576cc758cc73106272d3a0b8b7aa6f32d0b8",
+  "checksum_overhead": {
+    "checksum_step_v2_formula": [
+      {
+        "value": "0000000000000000",
+        "state": "00000000",
+        "index": 0,
+        "result": "00000000",
+        "ARM_instructions": 7
+      },
+      {
+        "value": "8000000080000000",
+        "state": "FFFFFFFF",
+        "index": 4095,
+        "result": "FF000E6C",
+        "ARM_instructions": 7
+      },
+      {
+        "value": "123456789ABCDEF0",
+        "state": "76543210",
+        "index": 123,
+        "result": "CD79BDC3",
+        "ARM_instructions": 7
+      }
+    ],
+    "checksum_step_v3": [
+      {
+        "value": "0000000000000000",
+        "state": "00000000",
+        "index": 0,
+        "result": "00000000",
+        "ARM_instructions": 13
+      },
+      {
+        "value": "8000000080000000",
+        "state": "FFFFFFFF",
+        "index": 4095,
+        "result": "FE37ABE0",
+        "ARM_instructions": 13
+      },
+      {
+        "value": "123456789ABCDEF0",
+        "state": "76543210",
+        "index": 123,
+        "result": "A3DF75BE",
+        "ARM_instructions": 13
+      }
+    ]
+  },
+  "apps": {
+    "alu": {
+      "app_sha256": "57ac9b392fd3fc643f648d353f65de53bda12867450de926aa86acaf5b8d1731",
+      "elf_sha256": "edd026ca1d6336330a5944d5dd7277d51aff037dc5c6471b4dddbfbbaea3acf0",
+      "app_bytes": 3792,
+      "memory_bytes": 10724,
+      "loaded_delta_bytes": 8,
+      "old_time_batch": {
+        "prologue": "f0b597b0",
+        "own_stack_bytes": 112,
+        "code_bytes": 272
+      },
+      "new_time_batch": {
+        "prologue": "f0b597b0",
+        "own_stack_bytes": 112,
+        "code_bytes": 280
+      },
+      "protocol_stack_bytes": 376,
+      "actual_arm_calls": 35522,
+      "identical_numerical_output_digest": "6640eaafdedd32624efb3cd4872b847577f2e96e554932da26369047e0de78ce"
+    },
+    "rsqrt": {
+      "app_sha256": "152c51ea217bc24c0398f8505ebe47a883f6301adfd19e3896f855816d351c0d",
+      "elf_sha256": "8448d8f93a0baae818e4a11d66fc2d5d22bfd7a3e96a781d49d7e4692be375ec",
+      "app_bytes": 7005,
+      "memory_bytes": 11860,
+      "loaded_delta_bytes": 8,
+      "old_time_batch": {
+        "prologue": "f0b597b0",
+        "own_stack_bytes": 112,
+        "code_bytes": 272
+      },
+      "new_time_batch": {
+        "prologue": "f0b597b0",
+        "own_stack_bytes": 112,
+        "code_bytes": 280
+      },
+      "protocol_stack_bytes": 340,
+      "actual_arm_calls": 33456,
+      "identical_numerical_output_digest": "51370a424918ee3f5e2e6640dd0f3d68cf95b8f48bc333389c63c9a03a2c2ab2"
+    },
+    "sqrt": {
+      "app_sha256": "3505ae8b84d318d113eadbc3212d6337f19f52bdebc6c9244b37dae269bb6070",
+      "elf_sha256": "989e52738b076b28efd09f9237a2013658e5548cfb7f9c7bbdd074337da2e75f",
+      "app_bytes": 15362,
+      "memory_bytes": 20404,
+      "loaded_delta_bytes": 8,
+      "old_time_batch": {
+        "prologue": "f0b597b0",
+        "own_stack_bytes": 112,
+        "code_bytes": 272
+      },
+      "new_time_batch": {
+        "prologue": "f0b597b0",
+        "own_stack_bytes": 112,
+        "code_bytes": 280
+      },
+      "protocol_stack_bytes": 388,
+      "actual_arm_calls": 33451,
+      "identical_numerical_output_digest": "7c31c84d0ad9f35b06a9b98253d2bc67c9df334746fac673f0989068aaa39a16"
+    },
+    "address": {
+      "app_sha256": "a90eb9b793affce2b91ba24315fe1e7a35cce09b6d42e616a5c32e5187f93e46",
+      "elf_sha256": "0f9aa0bdc2e6403946b98a30129ad2af0c6d80e6e047b5f306c01b7efb33a37e",
+      "app_bytes": 2661,
+      "memory_bytes": 9500,
+      "loaded_delta_bytes": 8,
+      "old_time_batch": {
+        "prologue": "f0b597b0",
+        "own_stack_bytes": 112,
+        "code_bytes": 272
+      },
+      "new_time_batch": {
+        "prologue": "f0b597b0",
+        "own_stack_bytes": 112,
+        "code_bytes": 280
+      },
+      "protocol_stack_bytes": 304,
+      "actual_arm_calls": 36196,
+      "identical_numerical_output_digest": "333c9287658a13bf4b42def548899d2dc9584dc5eebf499f709fef35e59ecc32"
+    }
+  },
+  "stack_scope": "time_batch own frame112B unchanged in exact shipping ELFs; observed short-loop fixture stacks304-388B exclude firmware loader, IRQs and real service implementations",
+  "timing_scope": "Raw loop+function+checksum plus applicable setup/restore. Empty references retained without subtraction. No kernel-only speed or physical cycle claim.",
+  "integrity_limit": "2048 specified repeated single-bit faults on this deterministic stream are detected. A finite 32-bit checksum cannot prove detection of arbitrary corruption or every input stream.",
+  "carrier": "Separate adapter-packet-v1 is immutable V2 context and pins V2; no V3 carrier binding exists. All five lease/base/fullstate/ALL-SD/environment bindings remain absent.",
+  "next": "Independent review of this V3 delta; new accepted firmware source/ELF/ABI/ownership/loader and real preservation bindings before any hardware lease"
+}

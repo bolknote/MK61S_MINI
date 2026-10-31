@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "status": "ARCHIVED_CONTRACTS_NOT_CURRENT_INTERP_DEPENDENCIES",
+  "hardware_enabled": false,
+  "reference_target": {
+    "uid": "E6657CD423721C35",
+    "build": "A7483AE6",
+    "source_sha256": "90a4871c91e7f35b6061c5421b18c9c91d57645c1c8d2cff96d3dd6dd4c2dc34",
+    "elf_sha256": "f4102481286847ff0d17872a43c46f6c0d9749b7d4c1574814a2ee659f70e05a",
+    "candidate_manifest_sha256": "849885aa360bf83cd45f21163a3079ba37b78c34fcd4dd9e822bea32197eccf0"
+  },
+  "binding_rule": "JSON labels such as fresh/complete/coverage are provider assertions, not implementation evidence. The hardware entry point remains absent until exact implementations, source proofs and independent reviews are bound and checked before construction of a port.",
+  "contracts": {
+    "exclusive_lease": {
+      "required": [
+        "Fresh coordinator grant naming this operator, UID, accepted firmware base, exact APP packet, namespace and time window",
+        "Accepted advisory lock and TIOCEXCL; no concurrent UI/serial/SD operator",
+        "Only the granted APP transaction; no Flash, reset, bootloader, firmware installation or publication"
+      ],
+      "gap": "No lease granted. Pico queue is CURRENTALL SD, cold-RAM cause/fix, USB/preservation, M0 memory, mathematics, then ELITE/INTERP."
+    },
+    "post_cold_anchor": {
+      "required": [
+        "First complete unmodified status frame and entire received exchange saved before follow-up",
+        "Observed identity, boot counter, firmware CRC/extent, idle command mode, current IP/RTC_SET/settings and health; no historical defaults",
+        "Observed largest free allocator block sufficient for 20396-byte APP plus alignment and actual live loader allocations",
+        "Exact accepted source/ELF/ABI, core/privilege, divider and INTERP ownership proof for that firmware base"
+      ],
+      "gap": "A748 is the immutable arithmetic reference. The post-fix accepted base is not yet known; its addresses and ownership must not be inferred from A748."
+    },
+    "full_calculator_provider": {
+      "methods": [
+        "capture_full(wire) -> coverage, fresh, uid, build, data bytes",
+        "restore_full(wire, original_snapshot)",
+        "verify_full(wire, original_snapshot)"
+      ],
+      "required": [
+        "Source-proven atomic capture before any APP loader, graph reset, handler/mode change or other destructive bootstrap",
+        "Every register bank, stack/LAST X, program, bank map, return stack, input flags, handlers, IP, terminal and UI context",
+        "All referenced storage and pointer ownership, relevant live call stack, allocation lifetimes, entry/bootstrap and return/postlude must be preserved",
+        "Persist original bytes and digest before mutation; independently verify semantic restoration without a later destructive mode change",
+        "No substitution of reg/stk/hout/dump/IP or a synthetic test provider"
+      ],
+      "gap": "CALCAP and opaque full-capsule helper dependency withdrawn by explicit human request; no replacement generic preservation project.",
+      "dependency_active": false
+    },
+    "all_sd_provider": {
+      "methods": [
+        "capture_all_sd(wire) -> fresh complete anchor with UID/build and hidden/large coverage",
+        "verify_all_sd(wire, original_anchor)"
+      ],
+      "required": [
+        "Fresh complete current tree and every original file byte including hidden/large files, canonical paths and FAT metadata",
+        "Source-proven APP-only capture/verification preserving calculator and environment through helper bootstrap and return",
+        "Only proven-absent /INTRP01, exact owned-object cleanup and no recursive removal",
+        "Existing Reader.install backup guards remain intact; no relabelled historical snapshots or partial inventory equality"
+      ],
+      "gap": "The coordinator's fresh SD verifier uses a restricted quiet-boot admission. It is not a generic arbitrary-state preservation provider for this adapter."
+    },
+    "environment_provider": {
+      "methods": [
+        "capture_environment(wire) -> fresh serializable anchor",
+        "restore_environment(wire, original_anchor)",
+        "verify_environment(wire, original_anchor)"
+      ],
+      "required": [
+        "Preserve all settings, all alarms, current directory, RTC_SET and calibrated RTC trajectory across actual wall elapsed time",
+        "Observe and retain the original clock/calibration state; never apply a historical date or turn RTC_SET=0 into 1 through date",
+        "Final verification after full calculator restoration must not alter its handlers or mode",
+        "Capture/restore/readback source proofs and independent review for the exact accepted firmware base"
+      ],
+      "gap": "No complete implementation is bound. Mock equality in fault tests is not physical environment restoration evidence."
+    }
+  },
+  "unreturned_app": {
+    "behavior": "Adapter V2 pump is always receive-only with screen-packet send disabled, including after a valid asynchronous CAPS packet changes attached. Preserve raw binary RX. No status query, ESC, command, keepalive or cleanup while no fresh return prompt exists.",
+    "failure": "HOLD with original snapshot, transcript, owned ledger and pending restoration; close serial and refer recovery to coordinator. No restored-state or completed-benchmark claim.",
+    "gap": "The actual hardware recovery procedure must be assigned by the coordinator for the accepted firmware. This offline adapter does not improvise one."
+  },
+  "after_base_change": [
+    "Keep mathematical packet-v2 immutable as A748 reference",
+    "Review the exact new source, ELF, loader, ABI, privilege, INTERP/divider clients and allocation headroom",
+    "Bind the newly reviewed preservation providers and exclusive lease",
+    "Only then prepare a separately identified hardware execution packet"
+  ],
+  "current_dependency_scope": {
+    "CALCAP_or_opaque_capsule_helper": "EXCLUDED_BY_EXPLICIT_HUMAN_REQUEST",
+    "replacement_generic_preservation_project": "NOT_AUTHORIZED",
+    "extra_quiet_carrier_integration": "STOPPED",
+    "operator_responsibility": "Preserve and restore data actually affected by a future concrete test; this does not authorize execution now."
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "status": "STOPPED_ARCHIVED_DRAFT_NOT_CURRENT_DEPENDENCY_PLAN",
+  "scope": "INTERP_QUIET_BOOT_V3",
+  "combined_manifest_sha256": "1a71e2fc0b5f86512945aba7b4b078071c961a551a6658f2da536aea0b427afc",
+  "base": "No repaired base bound; A748 source/SDK formulas are references requiring explicit requalification.",
+  "source_references": {
+    "sd_sourceproof": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-fresh-sd-verifier-20261023/sd-only-v2/ADMISSION-SOURCE-PROOF.json",
+      "sha256": "92cb1e874df0060187bfc6a343b02b41500eafb0214c3a67cfadfe7f5f57b06e",
+      "classification": "Source reference only; not live INTERP authority or future repaired-base proof",
+      "mutable_upstream_draft": false
+    },
+    "sd_only": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-fresh-sd-verifier-20261023/sd-only-v2/sd_only.py",
+      "sha256": "69d7ff84d9650cbf3ddd5e08de5b23f62f65faa58bcd5524c1ca77ff0ab75f7e",
+      "classification": "Source reference only; not live INTERP authority or future repaired-base proof",
+      "mutable_upstream_draft": false
+    },
+    "sd_reader": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-fresh-sd-verifier-20261023/sd-only-v2/lib/sd_backup.py",
+      "sha256": "619decfb57b6e357eb7c18d599b54dcb44436eeca032c972777977d34c24e549",
+      "classification": "Source reference only; not live INTERP authority or future repaired-base proof",
+      "mutable_upstream_draft": false
+    },
+    "sd_transport": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-fresh-sd-verifier-20261023/sd-only-v2/transport.py",
+      "sha256": "9ae67825cfa3393afdc4e2241807487ac1467f2791490630cb647c3c7e7166a8",
+      "classification": "Source reference only; not live INTERP authority or future repaired-base proof",
+      "mutable_upstream_draft": false
+    },
+    "cold_runtime_draft": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-cold-current-20261023/hardware-v2/runtime.py",
+      "sha256": "31747dfb75dc72189ad0346e65b058350f426f80c397a44c78ca74d1367f9ebc",
+      "classification": "Source reference only; not live INTERP authority or future repaired-base proof",
+      "mutable_upstream_draft": true
+    },
+    "cold_binding_draft": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-cold-current-20261023/hardware-v2/carrier.py",
+      "sha256": "3b27120a856aecd34082322c909893b91c6ab776b2102571ba3274d8563a71a1",
+      "classification": "Source reference only; not live INTERP authority or future repaired-base proof",
+      "mutable_upstream_draft": true
+    },
+    "SET0_design_only": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-cold-current-20261023/hardware-v2/RTC-SET0-DESIGN.json",
+      "sha256": "a68503bbc1a0a15bf79ea6b41ea68300aaa06d2fc7ebb8b3ae95bb0a424685ae",
+      "classification": "Source reference only; not live INTERP authority or future repaired-base proof",
+      "mutable_upstream_draft": false
+    }
+  },
+  "providers": {
+    "exclusive_lease": {
+      "reuse": "sd_only.validate_activation and cold carrier.validate_binding patterns: exact UID, scope, package SHA, owner, physical port, no active foreign operator",
+      "implement": "New INTERP_QUIET_BOOT_V3 coordinator authority/handoff/lease binding covering benchmark APPs plus approved read-only helper; lock/exclusivity via reviewed RX-only transport",
+      "actual_evidence": "New scoped lease and same-device first actual identity; old P0ALL002 scope is SD-only and cannot be reused",
+      "status": "MISSING_NEW_AUTHORITY"
+    },
+    "post_cold_anchor": {
+      "reuse": "cold Runtime.capture_current: first status/crash/identity, raw public replies, current settings and fresh clock read intervals; SD Session.health source-domain checks",
+      "implement": "Requalify exact accepted RAM/USB/memory-fixed source/ELF/ABI/clock/allocator/INTERP ownership. New quiet boot history and raw first-evidence adapter; no fixed historical BOOT1/IP/settings/date assumption",
+      "actual_evidence": "Actual current IP0/105steps/zero regs/stack/LASTX/program/physicalkeys0/CLOSED/NONE/COMMAND/no foreign owners, settings sequence331 plus unchanged full public fingerprint, RTC_SET0",
+      "status": "MISSING_ACCEPTED_BASE_AND_FRESH_READOUTS"
+    },
+    "full_calculator_provider": {
+      "reuse": "Quiet full-power/no-input source proof from SD helper domain; reviewed INTERP APP code has no calculator-entry/reset/clock-setting call",
+      "implement": "New separate scoped compare-only carrier and normalized read-only observer. Extend exact-base semantic proof across benchmark loading, service callbacks and known owned UI return. Before/after every APP reject nonzero state, owners, keys, reboot or settings change",
+      "actual_evidence": "Pre/post public equality plus source-inferred dormant bank/return/input/handler defaults tied to uninterrupted audited quiet history. Ring/chip phase/strobes may advance normally",
+      "no_substitution": "Never fill FULL_FIELDS with a synthetic capsule. Do not invoke frozen Lifecycle.restore_full for quiet mode; no zeroing, poke, reinit, partial restore or generic ESC loop",
+      "status": "DRAFT_COMPARE_ONLY_NOT_ARBITRARY_CONTEXT",
+      "dependency_active": false
+    },
+    "all_sd_provider": {
+      "reuse": "CurrentReader/Reader.scan_inventory,snapshot,verify_snapshot; complete hidden/large/FAT/casefold byte blobs, own namespace and validated journal handling",
+      "implement": "Bind a COMPLETE independently reviewed post-Cold current ALL baseline and proven no-original-write lineage; bind_current_all is read-only receipt/inventory admission, not hidden helper install. If lineage is absent, perform an upstream fresh full snapshot first",
+      "actual_evidence": "Current copy result is still pending; after all bytes require independent verification, exact owned cleanup, logical/RTC compare and port close. At INTERP end reverify every original byte and metadata through separately scoped owned read-only helper, with exact helper UI return/cleanup",
+      "no_substitution": "No stale842/old receipts, no metadata-only content proof, no Reader.install guard bypass. New helper delivery domain must be independently reviewed for INTERP scope",
+      "status": "MISSING_COMPLETE_POSTCOLD_BASELINE_AND_HELPER_SCOPE"
+    },
+    "environment_provider": {
+      "reuse": "SD settings_fingerprint,alarm_guard,clock_sample,clock_compare; fresh RTC_PPM and divider/quantization trajectory, no historical date correction",
+      "implement": "Compare-only observer for fresh SET0/calendar/PPM/settings/alarms/CWD before and after every APP and final helper. Own APP-only path never sets clock, resets or writes Flash. On mismatch retain HOLD/evidence instead of corrective setter",
+      "actual_evidence": "Same RTC_SET0, same calibration/settings fingerprint/alarm config; fresh date advances according to current source-qualified rate and host intervals. Host-clock-origin discontinuity is HOLD",
+      "upstream_only": "Mutating SDK SET0 restore provider is needed for cold/recovery return if clock is lost; it is not an automatic extra APP in an otherwise non-resetting INTERP window",
+      "status": "DRAFT_READONLY_COMPARE_NOT_CLOCK_RESTORE"
+    }
+  },
+  "separate_carrier": {
+    "source": "scoped.py",
+    "status": "ORCHESTRATION_DRAFT_ONLY",
+    "real_interfaces_missing": [
+      "observer.capture: raw-first durable capture + source-qualified normalized public parsing",
+      "storage.bind_current_all: sealed post-Cold ALL receipt/review and write-lineage admission without mutations",
+      "storage.prepare_owned/run_owned_v3/cleanup_owned: reviewed Wire upload/read/run/ledger and source-proven UI close",
+      "storage.verify_all_originals: every original byte+metadata after own benchmark cleanup, with its own helper lifecycle",
+      "context authority: verify original human/boot/TX history, accepted base and fresh scoped lease, not boolean assertions"
+    ],
+    "reuse": "Verified combined BoundSet provides unchanged RX-only adapter.Wire and V3 decoder. No hardware factory is provided here."
+  },
+  "failure_policy": "Unknown initial admission: no delivery. Nonzero/foreign owner/reboot/clock drift/incomplete ALL: HOLD. Unreturned APP: RX-only passive wait; no cleanup/query/setter until confirmed return; retain pending ownership/recovery and close.",
+  "current_provider_bindings": {
+    "exclusive_lease": null,
+    "post_cold_anchor": null,
+    "full_calculator_provider": null,
+    "all_sd_provider": null,
+    "environment_provider": null
+  },
+  "hardware_GO": false,
+  "real_preservation_PASS": false,
+  "next": "No further work pending direct human scope decision.",
+  "current_dependency_scope": {
+    "CALCAP_or_opaque_capsule_helper": "EXCLUDED_BY_EXPLICIT_HUMAN_REQUEST",
+    "replacement_generic_preservation_project": "NOT_AUTHORIZED",
+    "extra_quiet_carrier_integration": "STOPPED",
+    "operator_responsibility": "Preserve and restore data actually affected by a future concrete test; this does not authorize execution now."
+  }
+}

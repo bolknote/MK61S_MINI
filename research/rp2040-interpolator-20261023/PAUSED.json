@@ -1,0 +1,111 @@
+{
+  "status": "PAUSED_BY_USER",
+  "recorded_utc": "2026-10-23T11:34:13.446827+00:00",
+  "pause_source": {
+    "thread": "01a164b7-9caa-7011-90d1-807e9630921c",
+    "user_message": "01a16884-9128-7b01-bacc-d79a1a45d857",
+    "instruction": "полностью останови все задачи по этому проекту (на паузу). представь мне полный отчёт — что остаётся доделать"
+  },
+  "resume_policy": "No automatic resume. No new candidate, build, test, commit, hardware access or release until explicit human resumption.",
+  "own_processes": "Last running adapter test completed with exit0 before pause checkpoint; no subagents were created. No USB/lease was opened by this chat.",
+  "immutable_candidate": {
+    "status": "OFFLINE_PASS_HARDWARE_PENDING",
+    "hardware_verified": false,
+    "packet": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/packet-v2",
+    "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/packet-v2/packet-manifest.json",
+    "manifest_sha256": "849885aa360bf83cd45f21163a3079ba37b78c34fcd4dd9e822bea32197eccf0",
+    "actual_arm_calls": 138625,
+    "apps": {
+      "alu": {
+        "app_sha256": "8b99dd9c16b1785be5285d4e0fdae6d529a62f48ddbadbfecc419ea8229ed5b2",
+        "memory_bytes": 10716
+      },
+      "rsqrt": {
+        "app_sha256": "1a0a1ee1fc8a85c90244177bfa917d4897861b4ecaf5ebad52677487945f18c1",
+        "memory_bytes": 11852
+      },
+      "sqrt": {
+        "app_sha256": "4b31c35a9023e6f2bf43eceadcf0f14811894abd546739fe501344d18831141d",
+        "memory_bytes": 20396
+      },
+      "address": {
+        "app_sha256": "2382cff53c837c2820d1aae2411e2c239c3fcfe6ae6eb45d49ffb78bc288472d",
+        "memory_bytes": 9492
+      }
+    },
+    "next": "Independent review, reviewed transport/restore binding, then coordinator hardware lease. This packet grants neither hardware access nor production adoption.",
+    "manifest_observed_sha256": "849885aa360bf83cd45f21163a3079ba37b78c34fcd4dd9e822bea32197eccf0"
+  },
+  "apps": {
+    "alu": {
+      "name": "IALU",
+      "app_bytes": 3783,
+      "memory_bytes": 10716,
+      "app_sha256": "8b99dd9c16b1785be5285d4e0fdae6d529a62f48ddbadbfecc419ea8229ed5b2"
+    },
+    "rsqrt": {
+      "name": "IRSQ",
+      "app_bytes": 6993,
+      "memory_bytes": 11852,
+      "app_sha256": "1a0a1ee1fc8a85c90244177bfa917d4897861b4ecaf5ebad52677487945f18c1"
+    },
+    "sqrt": {
+      "name": "ISQRT",
+      "app_bytes": 15355,
+      "memory_bytes": 20396,
+      "app_sha256": "4b31c35a9023e6f2bf43eceadcf0f14811894abd546739fe501344d18831141d"
+    },
+    "address": {
+      "name": "IADDR",
+      "app_bytes": 2652,
+      "memory_bytes": 9492,
+      "app_sha256": "2382cff53c837c2820d1aae2411e2c239c3fcfe6ae6eb45d49ffb78bc288472d"
+    }
+  },
+  "completed": {
+    "actual_arm_calls": 138625,
+    "app_protocol_cases": 16,
+    "damaged_admission_cases": 20,
+    "full4096_checksum_perturbation": "PASS",
+    "seed_certificate": "PASS across131072index/alpha cells",
+    "accepted_A748_loader": "All4actualcompressedAPPs decoded and relocated at2validaddresses; damagedpayloadrejected",
+    "frozen_source_ABI_privilege_audit": "PASS_OFFLINE; source90a4871c…; ELFf4102481…; noINTERPclients/noMSRCONTROL; usedABIfields match",
+    "physical_timing": false,
+    "production_changes": false,
+    "git_index_commit_push_release": "None performed by this chat"
+  },
+  "adapter": {
+    "status": "OFFLINE_TESTED_NOT_HARDWARE_ENABLED",
+    "report": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/adapter-tests-v8/report.json",
+    "report_sha256": "0e2bf8bef71498e5d9c0f3315667da4df2954a7e83dd3205352089090b78b041",
+    "tests": 23,
+    "test_status": "PASS_OFFLINE",
+    "scope": "Actual accepted CDC framing/32-byteput/get/CRC and preservation/finally/cleanup code; CDC hardware, APP execution and fullstate/ALL-SD/environment providers mocked. All5hardwarebindings null. Not frozen or independently reviewed yet.",
+    "source_sha256": {
+      "research/rp2040-interpolator-20261023/adapter/README.md": "d8e0a9adff074468878bc5dee7f376d96d1f48fbcd0851ce282d3463305e50bd",
+      "research/rp2040-interpolator-20261023/adapter/bindings.template.json": "aad67544e9dadc22e85f3cfb187036b9b105c562feca97196b76027d3110e4eb",
+      "research/rp2040-interpolator-20261023/adapter/lifecycle.py": "9b7cf6100913b7bb2893c06c51d141cf46d73c922853e8a96b8de0286afb924f",
+      "research/rp2040-interpolator-20261023/adapter/test_lifecycle.py": "b63c8ebeba58e3727e96cc0c82fc950b48f0417cf4080402a035bb3a1b313006"
+    }
+  },
+  "preliminary_speed": {
+    "units": "ARM emulator instructions only; no RP2040 cycles/time",
+    "wide32": "CPU22 vsINTERP77",
+    "q62": "CPU152-158 vsINTERP369-374",
+    "sqrt_seed_pair": "CPU56 vsINTERPabout296",
+    "mul32x8": "12vs12",
+    "rsqrt_seed": "Newpipeline longer than existing seed",
+    "table_addresses": "PreparedINTERP saves1-3instructions; setup/restore and fullfunction benefit unmeasured"
+  },
+  "remaining": [
+    "Focused independent review of immutable V2, already assigned by coordinator; no hardware approval exists.",
+    "Source-proven A748 complete calculator snapshot/restore/readback: register banks, stack/LAST X, program, bank map, return stack, input flags, handlers, IP and UI/terminal context. Legacy partial restore must not substitute.",
+    "Complete environment preservation: all settings/alarms, RTC trajectory and RTC_SET, including originally unset RTC; no handler/mode changes after final full-state verification.",
+    "Reviewed APP-only ALL-SD provider and fresh post-Cold anchor, without bypassing Reader.install backup guards or relabelling old receipts fresh.",
+    "Freeze/review the separate adapter, bind exact reviewed providers, then a fresh exclusive coordinator lease after the existing Cold/V138 queue. All bindings remain null and no automatic continuation is scheduled.",
+    "Confirm live largest heap block and loader/stack/other live allocations, actual ABI/privilege/core0 and exclusive INTERP/IRQ context on matching UID E6657CD423721C35 buildA7483AE6.",
+    "Physical4APP ABBA/BAAB timing with rawmicroseconds/clockreadback, exact correctness, fullSD/state/RTC/settings/alarms restoration and portclose. No physical result exists.",
+    "Only if a real benefit is demonstrated: assess full arithmetic-function integration and rounding/ABI/regression/M4 isolation. No production adoption or release is prepared."
+  ],
+  "known_superseded": "MonolithicAPP and packet-v1 are historical NOHIL; V1 rotate/XOR checksum cancelled repeated results. Immutable V2 fixes this and remains unchanged."
+}

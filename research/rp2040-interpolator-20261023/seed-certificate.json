@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "subcells": 131072,
+  "rsqrt_table_bytes": 2056,
+  "sqrt_pair_table_bytes": 4112,
+  "exact_endpoint_checks": 1540,
+  "epsilon_numerator": "375486837675166013634029551616",
+  "epsilon_denominator": "20769187434139310514121985316880384",
+  "epsilon": 1.8079033610046787e-05,
+  "seed_error_bound_q32": 10.403816315343374,
+  "required_bound_q32": 13,
+  "sqrt_root_error_bound_q31": 1.5850201051216573,
+  "sqrt_inverse_error_bound_q31": 5.201908157671687,
+  "initial_root_error_q31": 24593,
+  "initial_inverse_error_q31": 19394,
+  "proof": "Monotone exact M bounds within every alpha cell; analytic Newton/rounding bound, not random sampling.",
+  "witness": [
+    1,
+    0,
+    128,
+    1517021670
+  ],
+  "reference_sha256": {
+    "code/native_eabi_m0_pow_fast.inc": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e",
+    "code/native_eabi_m0_rsqrt_table.inc": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6"
+  }
+}

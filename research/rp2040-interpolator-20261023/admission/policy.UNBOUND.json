@@ -1,0 +1,17 @@
+{
+  "status": "UNBOUND_DRAFT_NOT_HARDWARE_ADMISSION",
+  "scope": "INTERP_QUIET_BOOT_V3",
+  "uid": "E6657CD423721C35",
+  "accepted_base": null,
+  "required_settings_sequence": 331,
+  "reference_rtc_hz": 46875,
+  "allowed_app_sha256": [
+    "57ac9b392fd3fc643f648d353f65de53bda12867450de926aa86acaf5b8d1731",
+    "152c51ea217bc24c0398f8505ebe47a883f6301adfd19e3896f855816d351c0d",
+    "3505ae8b84d318d113eadbc3212d6337f19f52bdebc6c9244b37dae269bb6070",
+    "a90eb9b793affce2b91ba24315fe1e7a35cce09b6d42e616a5c32e5187f93e46",
+    "ba49101a33b4e0d22f50edcb9c110b3714df2bf12f140e0b66e987ec09df1cdc"
+  ],
+  "constraint_note": "IP0/zero public regs+105-step program/settings331/SET0 are proposed fail-closed domain constraints, never current observations or values to write back. Fresh actual evidence and repaired-base source proof remain required.",
+  "hardware_GO": false
+}

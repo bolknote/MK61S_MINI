@@ -1,0 +1,178 @@
+{
+  "status": "PHYSICAL_MEASUREMENTS_COMPLETE_CLOSED",
+  "packet": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1",
+  "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1/combined-manifest.json",
+  "manifest_sha256": "1a71e2fc0b5f86512945aba7b4b078071c961a551a6658f2da536aea0b427afc",
+  "files": 150,
+  "content_bytes": 1152177,
+  "math_manifest_sha256": "633ee492b2c57d746507920613b144135b01516fad8ec50d73a3ed62bb3aa979",
+  "adapter_manifest_sha256": "8a763f8c196fd8c0e262954264b9a664d73b30ee32ec75cd266722afa38fc36e",
+  "math_review_sha256": "0879ae7e38636e0ce6345b0940f98adfa79b79baed9a9461d750b1453953207a",
+  "adapter_review_sha256": "e9942c8525b47721da7aa3ababac00dfb6b6036f906f6cd8bb4cb1839eed5c8e",
+  "inspect_command": [
+    "python3",
+    "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1/source/bind.py",
+    "--packet",
+    "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1",
+    "--manifest-sha",
+    "1a71e2fc0b5f86512945aba7b4b078071c961a551a6658f2da536aea0b427afc"
+  ],
+  "hardware_enabled": false,
+  "next": "Physical INTERP task completed. Review measured results; no new hardware work or production adoption implied. Pico returned CLOSED to coordinator for Memset.",
+  "recorded_utc": "2026-10-23T17:36:11.285454+00:00",
+  "independent_reviews": {
+    "math": {
+      "status": "TECHNICAL_GO_FOCUSED_OFFLINE_INTERP_V3_DELTA",
+      "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/interp-independent-review-20261023/v3-delta/receipt.json",
+      "receipt_sha256": "0879ae7e38636e0ce6345b0940f98adfa79b79baed9a9461d750b1453953207a",
+      "reviewed_manifest_sha256": "633ee492b2c57d746507920613b144135b01516fad8ec50d73a3ed62bb3aa979",
+      "hardware_GO": false
+    },
+    "adapter": {
+      "status": "TECHNICAL_GO_FOCUSED_OFFLINE_RX_ONLY_ADAPTER_V2_DELTA",
+      "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/interp-independent-review-20261023/adapter-v2-delta/receipt.json",
+      "receipt_sha256": "e9942c8525b47721da7aa3ababac00dfb6b6036f906f6cd8bb4cb1839eed5c8e",
+      "reviewed_manifest_sha256": "8a763f8c196fd8c0e262954264b9a664d73b30ee32ec75cd266722afa38fc36e",
+      "hardware_GO": false
+    },
+    "join": {
+      "status": "TECHNICAL_GO_FOCUSED_OFFLINE_COMBINED_INTERP_V3_ADAPTER_V2_JOIN",
+      "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/interp-independent-review-20261023/combined-v3-v1/receipt.json",
+      "receipt_sha256": "f9b493451851a20992d368d2f359c07f544ceb41c5b23bee72b87e713eb902e3",
+      "reviewed_manifest_sha256": "1a71e2fc0b5f86512945aba7b4b078071c961a551a6658f2da536aea0b427afc",
+      "hardware_GO": false
+    }
+  },
+  "preparation_complete": true,
+  "physical_measurement": "PASS_4_APPS_60_ROWS_768_CHECKS_CLOSED",
+  "real_preservation_PASS": false,
+  "production_GO": false,
+  "accepted_repaired_base": null,
+  "provider_bindings": {
+    "exclusive_lease": null,
+    "post_cold_anchor": null,
+    "full_calculator_provider": null,
+    "all_sd_provider": null,
+    "environment_provider": null
+  },
+  "operator_plan": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1/operator-plan.json",
+  "separate_quiet_admission_draft": {
+    "status": "STOPPED_NOT_AN_ACTIVE_INTERP_DEPENDENCY",
+    "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/quiet-draft-v2/draft-manifest.json",
+    "manifest_sha256": "fb0382322f2ea7bd3d2c866823d0445abca62639d11319a252112c1a2366be4a",
+    "files": 27,
+    "hardware_GO": false,
+    "provider_plan": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/quiet-draft-v2/source/integration-plan.json",
+    "next": "No further work pending direct human scope decision."
+  },
+  "current_dependency_scope": {
+    "CALCAP_or_opaque_capsule_helper": "EXCLUDED_BY_EXPLICIT_HUMAN_REQUEST",
+    "replacement_generic_preservation_project": "NOT_AUTHORIZED",
+    "extra_quiet_carrier_integration": "STOPPED",
+    "operator_responsibility": "Preserve and restore data actually affected by a future concrete test; this does not authorize execution now."
+  },
+  "physical_result": {
+    "summary": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP001/summary.json",
+      "bytes": 18925,
+      "sha256": "abb7cbc956cc66570c49fc953b4fb1389e66d5caa4a50dd5b116fe62ba38a241"
+    },
+    "receipt": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP001/receipt.json",
+      "bytes": 969,
+      "sha256": "2708cdf1e6271c029514ea6097512b646330c8a7d50961c1d7e05c54a11e596d"
+    },
+    "process_exit": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP001/process-exit-proof.json",
+      "bytes": 416,
+      "sha256": "1b8e70e1659faf41574578fddb6144aca6a33386d1400dd490b3ca2c1c15f1c0"
+    },
+    "base": "Existing A7483AE6, no reset/Flash",
+    "scope": "INTERP001 sole-owner window granted by coordinator; specific affected data compared/preserved"
+  },
+  "followon_physical_campaign": {
+    "status": "PHYSICAL_FOLLOWON_COMPLETE_CLOSED",
+    "hardware_verified": true,
+    "rows": 42,
+    "checks": 672,
+    "rounds": 7,
+    "scope": "Three requested follow-on directions all tested; canonical production math unchanged",
+    "ready_sha256": "146cccf64ccb9402bf9c516e2979622dc4cafb2e2553a89084e12f18b1440afc",
+    "receipt": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/receipt.json",
+      "sha256": "3faddf9c7defe9aba6080a7977e1dd2b7b76bc2d8616aad665475bee6635813f"
+    },
+    "closed_handoff": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/closed-handoff.json",
+      "sha256": "51164cec1abc5a8083afd4e6c3957b5e1eb5e1f7249fb1d121b2790124b9a190"
+    },
+    "process_exit_proof": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/process-exit-proof.json",
+      "sha256": "bbee25e234c4bfb531b92bcd6c0041876d7a895dc09ccf208ca4e87a7343f871"
+    },
+    "summary": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/summary.json",
+      "sha256": "09e681b3a363f6748ad0372a23f68092f3e2792269493fa99a261de6225aa565"
+    },
+    "findings": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/FINDINGS.txt",
+      "sha256": "3199dc3ad8454d80a0be91e7acd8cddbe85ea9cb13eef51b03da0a87e4a1d7bb"
+    },
+    "wins": {
+      "texture1024": {
+        "group": "texture_pop",
+        "mode": "per_call_transaction",
+        "block_items": 1024,
+        "input_streams": 1,
+        "paired_rounds": 7,
+        "cpu_us_per_item": 0.2569122314453125,
+        "candidate_us_per_item": 0.0925750732421875,
+        "candidate_over_cpu": 0.36033735225990376,
+        "median_paired_delta_us_per_item": -0.164337158203125,
+        "empirical_delta_range": [
+          -0.164398193359375,
+          -0.164276123046875
+        ],
+        "per_input": [
+          {
+            "input": 2,
+            "cpu_us_per_item": 0.2569122314453125,
+            "candidate_us_per_item": 0.0925750732421875
+          }
+        ],
+        "cpu_us_per_block": 263.078125,
+        "candidate_us_per_block": 94.796875
+      },
+      "audio1024": {
+        "group": "audio_resample",
+        "mode": "per_call_transaction",
+        "block_items": 1024,
+        "input_streams": 1,
+        "paired_rounds": 7,
+        "cpu_us_per_item": 0.2488250732421875,
+        "candidate_us_per_item": 0.124481201171875,
+        "candidate_over_cpu": 0.5002759551113019,
+        "median_paired_delta_us_per_item": -0.124359130859375,
+        "empirical_delta_range": [
+          -0.12451171875,
+          -0.1242218017578125
+        ],
+        "per_input": [
+          {
+            "input": 2,
+            "cpu_us_per_item": 0.2488250732421875,
+            "candidate_us_per_item": 0.124481201171875
+          }
+        ],
+        "cpu_us_per_block": 254.796875,
+        "candidate_us_per_block": 127.46875
+      }
+    },
+    "scalar_wins": false,
+    "seed_refinement_omission_wrong_cases": {
+      "sqrt": 1387,
+      "rsqrt": 892
+    },
+    "original_IO4_cause_proven": false
+  }
+}

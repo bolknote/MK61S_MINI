@@ -1,0 +1,85 @@
+{
+  "status": "PHYSICAL_FOLLOWON_COMPLETE_CLOSED",
+  "hardware_verified": true,
+  "rows": 42,
+  "checks": 672,
+  "rounds": 7,
+  "scope": "Three requested follow-on directions all tested; canonical production math unchanged",
+  "ready_sha256": "146cccf64ccb9402bf9c516e2979622dc4cafb2e2553a89084e12f18b1440afc",
+  "receipt": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/receipt.json",
+    "sha256": "3faddf9c7defe9aba6080a7977e1dd2b7b76bc2d8616aad665475bee6635813f"
+  },
+  "closed_handoff": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/closed-handoff.json",
+    "sha256": "51164cec1abc5a8083afd4e6c3957b5e1eb5e1f7249fb1d121b2790124b9a190"
+  },
+  "process_exit_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/process-exit-proof.json",
+    "sha256": "bbee25e234c4bfb531b92bcd6c0041876d7a895dc09ccf208ca4e87a7343f871"
+  },
+  "summary": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/summary.json",
+    "sha256": "09e681b3a363f6748ad0372a23f68092f3e2792269493fa99a261de6225aa565"
+  },
+  "findings": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/FINDINGS.txt",
+    "sha256": "3199dc3ad8454d80a0be91e7acd8cddbe85ea9cb13eef51b03da0a87e4a1d7bb"
+  },
+  "wins": {
+    "texture1024": {
+      "group": "texture_pop",
+      "mode": "per_call_transaction",
+      "block_items": 1024,
+      "input_streams": 1,
+      "paired_rounds": 7,
+      "cpu_us_per_item": 0.2569122314453125,
+      "candidate_us_per_item": 0.0925750732421875,
+      "candidate_over_cpu": 0.36033735225990376,
+      "median_paired_delta_us_per_item": -0.164337158203125,
+      "empirical_delta_range": [
+        -0.164398193359375,
+        -0.164276123046875
+      ],
+      "per_input": [
+        {
+          "input": 2,
+          "cpu_us_per_item": 0.2569122314453125,
+          "candidate_us_per_item": 0.0925750732421875
+        }
+      ],
+      "cpu_us_per_block": 263.078125,
+      "candidate_us_per_block": 94.796875
+    },
+    "audio1024": {
+      "group": "audio_resample",
+      "mode": "per_call_transaction",
+      "block_items": 1024,
+      "input_streams": 1,
+      "paired_rounds": 7,
+      "cpu_us_per_item": 0.2488250732421875,
+      "candidate_us_per_item": 0.124481201171875,
+      "candidate_over_cpu": 0.5002759551113019,
+      "median_paired_delta_us_per_item": -0.124359130859375,
+      "empirical_delta_range": [
+        -0.12451171875,
+        -0.1242218017578125
+      ],
+      "per_input": [
+        {
+          "input": 2,
+          "cpu_us_per_item": 0.2488250732421875,
+          "candidate_us_per_item": 0.124481201171875
+        }
+      ],
+      "cpu_us_per_block": 254.796875,
+      "candidate_us_per_block": 127.46875
+    }
+  },
+  "scalar_wins": false,
+  "seed_refinement_omission_wrong_cases": {
+    "sqrt": 1387,
+    "rsqrt": 892
+  },
+  "original_IO4_cause_proven": false
+}

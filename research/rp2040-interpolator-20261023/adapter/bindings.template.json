@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "status": "HELD_NO_HARDWARE_ENTRY_POINT",
+  "candidate_status": "Historical V2 reference has timed-integrity HOLD. Mathematical V3 is separate; no combined V3 carrier binding exists.",
+  "uid": "E6657CD423721C35",
+  "build": "A7483AE6",
+  "candidate_manifest_sha256": "849885aa360bf83cd45f21163a3079ba37b78c34fcd4dd9e822bea32197eccf0",
+  "transport_reference_sha256": "bf1f1eabc52233f8b364c4eec56f98f1e442ebe369f97471f396b7bd156a12ae",
+  "exclusive_lease": null,
+  "post_cold_anchor": null,
+  "full_calculator_provider": null,
+  "all_sd_provider": null,
+  "environment_provider": null,
+  "forbidden": ["Flash write", "reset", "bootloader", "recursive cleanup", "legacy partial calculator restore", "stale snapshots relabelled fresh", "Reader.install guard bypass"],
+  "next": "Bind source-proven A748 full-state capture/restore, reviewed APP-only ALL-SD/environment routes and a fresh exclusive coordinator lease. Review the concrete binding before enabling a hardware constructor."
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "status": "HISTORICAL_TEMPLATE_NOT_CURRENT_DEPENDENCY_PLAN",
+  "math_manifest_sha256": "633ee492b2c57d746507920613b144135b01516fad8ec50d73a3ed62bb3aa979",
+  "adapter_manifest_sha256": "8a763f8c196fd8c0e262954264b9a664d73b30ee32ec75cd266722afa38fc36e",
+  "reference_base": "A7483AE6 / E6657CD423721C35; offline reference only",
+  "accepted_repaired_base": null,
+  "exclusive_lease": null,
+  "post_cold_anchor": null,
+  "full_calculator_provider": null,
+  "all_sd_provider": null,
+  "environment_provider": null,
+  "next": "Read-only scope audit only. Remaining original goal: physical INTERP timings including setup/restore, in a later concrete coordinator-granted window. CALCAP/opaque full-capsule helpers and replacement generic preservation projects are excluded. The operator preserves data actually affected by that specific test. No present hardware authorization.",
+  "withdrawn_dependency_bindings": [
+    "full_calculator_provider"
+  ]
+}

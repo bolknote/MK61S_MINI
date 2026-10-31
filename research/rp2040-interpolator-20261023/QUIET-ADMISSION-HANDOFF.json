@@ -1,0 +1,9 @@
+{
+  "status": "STOPPED_NOT_AN_ACTIVE_INTERP_DEPENDENCY",
+  "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/quiet-draft-v2/draft-manifest.json",
+  "manifest_sha256": "fb0382322f2ea7bd3d2c866823d0445abca62639d11319a252112c1a2366be4a",
+  "files": 27,
+  "hardware_GO": false,
+  "provider_plan": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/quiet-draft-v2/source/integration-plan.json",
+  "next": "No further work pending direct human scope decision."
+}

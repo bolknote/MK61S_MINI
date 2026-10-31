@@ -1,0 +1,361 @@
+{
+  "schema": 1,
+  "status": "OFFLINE_HANDOFF_COMPLETE_HARDWARE_HELD",
+  "recorded_utc": "2026-10-23T17:36:11.285454+00:00",
+  "human_resume": "User in this chat explicitly wrote «дальше». Historical PAUSED.json is retained as a past checkpoint, not the active instruction.",
+  "coordinator_thread": "01a164b7-9caa-7011-90d1-807e9630921c",
+  "immutable_arithmetic_packet": {
+    "status": "OFFLINE_DELTA_PASS_INDEPENDENT_REVIEW_PENDING_HARDWARE_HELD",
+    "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/packet-v3/packet-manifest.json",
+    "manifest_sha256": "633ee492b2c57d746507920613b144135b01516fad8ec50d73a3ed62bb3aa979",
+    "hardware_verified": false,
+    "mathematical_sources_unchanged": true,
+    "actual_arm_kernel_calls": 138625,
+    "checksum_negative_cases": 2048,
+    "result_schema": 3,
+    "independent_focused_review": "TECHNICAL_GO_FOCUSED_OFFLINE_INTERP_V3_DELTA"
+  },
+  "adapter": {
+    "status": "OFFLINE_PASS_REVIEW_PENDING_HARDWARE_HELD",
+    "packet": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/adapter-packet-v2",
+    "manifest_sha256": "8a763f8c196fd8c0e262954264b9a664d73b30ee32ec75cd266722afa38fc36e",
+    "files": 56,
+    "content_bytes": 240847,
+    "lifecycle_cases": 27,
+    "actual_transport_passive_cases": 3,
+    "hardware_enabled": false,
+    "hardware_verified": false,
+    "scope_note": "Always receive-only pump and disabled screen packet send. V2 math remains historical context; no combined V3 carrier binding exists, 5 providers null.",
+    "independent_review": "TECHNICAL_GO_FOCUSED_OFFLINE_RX_ONLY_ADAPTER_V2_DELTA"
+  },
+  "new_change": "After APP timeout, transmit no further command until a fresh prompt after the exact accepted open_text_start boundary. Passive receive only; no status/escape/keepalive. Unreturned APP retains snapshot, files, pending restoration and HOLD; late return permits finally but never erases the timeout.",
+  "contracts": "/Users/bolk/Projects/MK61S_MINI/research/rp2040-interpolator-20261023/adapter/provider-contracts.json",
+  "coordinator_reported_queue": [
+    "CURRENTALL SD",
+    "cold-RAM cause/fix",
+    "USB no-UART-wait and preservation",
+    "M0 memory SRAM/Flash/runtime/APP",
+    "mathematics on accepted fixed base",
+    "ELITE/INTERP"
+  ],
+  "binding_gaps": [
+    "Concrete coordinator-granted hardware window and accepted exact target base",
+    "Operator-defined preservation of data actually affected by that concrete timing test"
+  ],
+  "known_limits": [
+    "Mocks are not a real full-state provider.",
+    "A748 packet is an exact reference; a later accepted firmware requires new source/ELF/ABI/loader/ownership/provider review.",
+    "Current historical IP, RTC/date, settings and SD counts are not fresh observations.",
+    "No physical timings or production selection exist."
+  ],
+  "next": "Physical INTERP task completed. Review measured results; no new hardware work or production adoption implied. Pico returned CLOSED to coordinator for Memset.",
+  "actions": {
+    "serial_opened": false,
+    "firmware_changed": false,
+    "production_changed": false,
+    "git_index_changed": false,
+    "commit_push_release": false,
+    "subagents_created": false,
+    "background_processes_running": false
+  },
+  "independent_review": {
+    "status": "COMPLETE_FOCUSED_OFFLINE_REVIEWS",
+    "thread_id": "01a1222f-84fb-75b1-8a27-62e859cf7712",
+    "thread_title": "Ошибки сборки",
+    "observed_utc": "2026-10-23T16:18:18.711605+00:00",
+    "scope": "Offline immutable INTERP V2 kernels/protocol/checksum/peripherals and separate adapter/provider contracts",
+    "pins_forwarding": "Exact final adapter-packet-v1 / adapter-tests-v10 and V2 manifest hashes sent to authorized coordinator for forwarding",
+    "permission_route": "Only coordinator directly messaged by this chat; read-only reviewer inspection does not authorize messaging it.",
+    "hardware_queue_unchanged": true,
+    "review_result": "Both component deltas and the explicit combined join independently GO; hardware and real preservation remain HELD.",
+    "mathematical_v3": {
+      "status": "TECHNICAL_GO_FOCUSED_OFFLINE_INTERP_V3_DELTA",
+      "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/interp-independent-review-20261023/v3-delta/receipt.json",
+      "receipt_sha256": "0879ae7e38636e0ce6345b0940f98adfa79b79baed9a9461d750b1453953207a",
+      "artifact_hashes_verified": 6,
+      "finite_scope_only": true,
+      "hardware_GO": false,
+      "production_GO": false
+    },
+    "adapter_v2": {
+      "status": "TECHNICAL_GO_FOCUSED_OFFLINE_RX_ONLY_ADAPTER_V2_DELTA",
+      "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/interp-independent-review-20261023/adapter-v2-delta/receipt.json",
+      "receipt_sha256": "e9942c8525b47721da7aa3ababac00dfb6b6036f906f6cd8bb4cb1839eed5c8e",
+      "supporting_artifacts_verified": 8,
+      "hardware_GO": false,
+      "real_preservation_PASS": false
+    },
+    "join": {
+      "status": "TECHNICAL_GO_FOCUSED_OFFLINE_COMBINED_INTERP_V3_ADAPTER_V2_JOIN",
+      "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/interp-independent-review-20261023/combined-v3-v1/receipt.json",
+      "receipt_sha256": "f9b493451851a20992d368d2f359c07f544ceb41c5b23bee72b87e713eb902e3",
+      "reviewed_manifest_sha256": "1a71e2fc0b5f86512945aba7b4b078071c961a551a6658f2da536aea0b427afc",
+      "hardware_GO": false
+    }
+  },
+  "immutable_reference_v2": {
+    "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/packet-v2/packet-manifest.json",
+    "manifest_sha256": "849885aa360bf83cd45f21163a3079ba37b78c34fcd4dd9e822bea32197eccf0",
+    "unchanged": true,
+    "actual_arm_calls": 138625,
+    "hardware_verified": false,
+    "status": "HISTORICAL_TIMED_INTEGRITY_HOLD_MSB_COUNTEREXAMPLE"
+  },
+  "checksum_correction": {
+    "upstream_counterexample": "/Users/bolk/Projects/MK61S_MINI/.build/interp-independent-review-20261023/checksum-bit-boundary.json",
+    "checksum_report": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/packet-v3/checksum/report.json",
+    "checksum_report_sha256": "9f10485c3cf241ae29636064201a576cc758cc73106272d3a0b8b7aa6f32d0b8",
+    "old_MSB": "586F7800 = old baseline",
+    "new_baseline": "F381A64F",
+    "new_MSB": "8F9EF5F2",
+    "scope": "All64resultbits ×32repeatedpositions on4096-step deterministicstream; no proof of arbitrary32bit-checksum fault detection",
+    "time_cost": "Scalar step13vs7 ARM instructions includingwrapper; raw APP timings retain checksum andloop; noempty subtraction",
+    "loaded_image_delta": 8,
+    "max_loaded_bytes": 20404,
+    "time_batch_own_stack_bytes": 112
+  },
+  "historical_adapter_v1": {
+    "packet": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/adapter-packet-v1",
+    "manifest_sha256": "45d9f637355b936b55e0264a1f96bb50719486bb70b2216d442776c7df3a6960",
+    "files": 47,
+    "content_bytes": 219693,
+    "test_report": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/adapter-tests-v10/report.json",
+    "test_report_sha256": "06e95701b3ca78dfd52706cb53bfe9001accd585af96d222471e5e3aaf047939",
+    "cases": 27,
+    "status": "HISTORICAL_PASSIVE_WAIT_HOLD_LATE_CAPS_COUNTEREXAMPLE",
+    "hardware_enabled": false,
+    "hardware_verified": false,
+    "scope_note": "Historical immutable adapter-v1 pins V2. V3 has no reviewed carrier binding; 5 providers remain null."
+  },
+  "late_attach_correction": {
+    "upstream_counterexample": "/Users/bolk/Projects/MK61S_MINI/.build/interp-independent-review-20261023/carrier-late-attach.json",
+    "report": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/adapter-packet-v2/evidence/passive-report.json",
+    "report_sha256": "9c54317cb09fdb147ad4603d441e9da3ae7772795d5909bce9c9ef461baf78a3",
+    "valid_CAPS_decoded": true,
+    "post_open_TX_bytes": 0,
+    "pending_restoration_honest": true,
+    "both_descriptors_closed": true,
+    "shared_transport_files_changed": false,
+    "scope": "Actual accepted open/wait/frame decoder/close; narrow adapter pump override; OS/preflight/files/providers faked."
+  },
+  "combined_packet": {
+    "status": "OFFLINE_HANDOFF_COMPLETE_HARDWARE_HELD",
+    "packet": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1",
+    "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1/combined-manifest.json",
+    "manifest_sha256": "1a71e2fc0b5f86512945aba7b4b078071c961a551a6658f2da536aea0b427afc",
+    "files": 150,
+    "content_bytes": 1152177,
+    "math_manifest_sha256": "633ee492b2c57d746507920613b144135b01516fad8ec50d73a3ed62bb3aa979",
+    "adapter_manifest_sha256": "8a763f8c196fd8c0e262954264b9a664d73b30ee32ec75cd266722afa38fc36e",
+    "math_review_sha256": "0879ae7e38636e0ce6345b0940f98adfa79b79baed9a9461d750b1453953207a",
+    "adapter_review_sha256": "e9942c8525b47721da7aa3ababac00dfb6b6036f906f6cd8bb4cb1839eed5c8e",
+    "inspect_command": [
+      "python3",
+      "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1/source/bind.py",
+      "--packet",
+      "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1",
+      "--manifest-sha",
+      "1a71e2fc0b5f86512945aba7b4b078071c961a551a6658f2da536aea0b427afc"
+    ],
+    "hardware_enabled": false,
+    "next": "Read-only scope audit only. Remaining original goal: physical INTERP timings including setup/restore, in a later concrete coordinator-granted window. CALCAP/opaque full-capsule helpers and replacement generic preservation projects are excluded. The operator preserves data actually affected by that specific test. No present hardware authorization.",
+    "recorded_utc": "2026-10-23T17:36:11.285454+00:00",
+    "independent_reviews": {
+      "math": {
+        "status": "TECHNICAL_GO_FOCUSED_OFFLINE_INTERP_V3_DELTA",
+        "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/interp-independent-review-20261023/v3-delta/receipt.json",
+        "receipt_sha256": "0879ae7e38636e0ce6345b0940f98adfa79b79baed9a9461d750b1453953207a",
+        "reviewed_manifest_sha256": "633ee492b2c57d746507920613b144135b01516fad8ec50d73a3ed62bb3aa979",
+        "hardware_GO": false
+      },
+      "adapter": {
+        "status": "TECHNICAL_GO_FOCUSED_OFFLINE_RX_ONLY_ADAPTER_V2_DELTA",
+        "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/interp-independent-review-20261023/adapter-v2-delta/receipt.json",
+        "receipt_sha256": "e9942c8525b47721da7aa3ababac00dfb6b6036f906f6cd8bb4cb1839eed5c8e",
+        "reviewed_manifest_sha256": "8a763f8c196fd8c0e262954264b9a664d73b30ee32ec75cd266722afa38fc36e",
+        "hardware_GO": false
+      },
+      "join": {
+        "status": "TECHNICAL_GO_FOCUSED_OFFLINE_COMBINED_INTERP_V3_ADAPTER_V2_JOIN",
+        "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/interp-independent-review-20261023/combined-v3-v1/receipt.json",
+        "receipt_sha256": "f9b493451851a20992d368d2f359c07f544ceb41c5b23bee72b87e713eb902e3",
+        "reviewed_manifest_sha256": "1a71e2fc0b5f86512945aba7b4b078071c961a551a6658f2da536aea0b427afc",
+        "hardware_GO": false
+      }
+    },
+    "preparation_complete": true,
+    "physical_measurement": "NOT_RUN",
+    "real_preservation_PASS": false,
+    "production_GO": false,
+    "accepted_repaired_base": null,
+    "provider_bindings": {
+      "exclusive_lease": null,
+      "post_cold_anchor": null,
+      "full_calculator_provider": null,
+      "all_sd_provider": null,
+      "environment_provider": null
+    },
+    "operator_plan": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1/operator-plan.json",
+    "frozen_join_tests": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-frozen-tests-v1/report.json",
+    "frozen_join_tests_sha256": "62df79459cfc109bb55eccd36d6e11d1f40a1f41f346c3e8c0c9d019a111e4b0",
+    "independent_join_review": "TECHNICAL_GO_FOCUSED_OFFLINE_COMBINED_INTERP_V3_ADAPTER_V2_JOIN",
+    "current_dependency_scope": {
+      "CALCAP_or_opaque_capsule_helper": "EXCLUDED_BY_EXPLICIT_HUMAN_REQUEST",
+      "replacement_generic_preservation_project": "NOT_AUTHORIZED",
+      "extra_quiet_carrier_integration": "STOPPED",
+      "operator_responsibility": "Preserve and restore data actually affected by a future concrete test; this does not authorize execution now."
+    }
+  },
+  "quiet_admission_draft": {
+    "status": "STOPPED_NOT_AN_ACTIVE_INTERP_DEPENDENCY",
+    "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/quiet-draft-v2/draft-manifest.json",
+    "manifest_sha256": "fb0382322f2ea7bd3d2c866823d0445abca62639d11319a252112c1a2366be4a",
+    "files": 27,
+    "hardware_GO": false,
+    "provider_plan": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/quiet-draft-v2/source/integration-plan.json",
+    "next": "No further work pending direct human scope decision.",
+    "guard_negatives": 20,
+    "guard_positives": 2,
+    "carrier_cases": 7,
+    "real_interfaces_bound": false
+  },
+  "scope_audit_checkpoint": {
+    "recorded_utc": "2026-10-23T18:07:12.465082+00:00",
+    "reason": "Coordinator relayed human objection to scope creep and directed stop of added quiet-carrier/provider integration pending a read-only scope audit.",
+    "added_draft_work": "STOPPED_PENDING_READ_ONLY_SCOPE_AUDIT",
+    "frozen_original_results": "Preserve mathematical V3, adapter-v2 and combined-v3-v1 unchanged; their three scoped independent GO reviews remain valid.",
+    "direct_human_requests": [
+      "Try the Cortex-M0+/RP2040 interpolator arithmetic experiments and coordinate with Координатор.",
+      "Continue with coordinator, finish adapter review and prepare a combined V3 packet for hardware timing."
+    ],
+    "completed_original": [
+      "Four benchmark APPs and exact numerical/kernel qualification.",
+      "Checksum and passive-transport findings corrected; mathematical V3 and adapter-v2 independently reviewed.",
+      "Combined V3 measurement packet prepared and independently reviewed, 150 sealed files; no physical measurements."
+    ],
+    "root_added_after_combined_completion": [
+      "Five-provider executable integration plan.",
+      "Separate quiet-boot compare-only admission/carrier draft with normalized guard models and focused tests."
+    ],
+    "unfinished_original": "Actual RP2040 hardware timings and conclusion about real benefit, including setup/state-preservation costs.",
+    "own_running_processes": "None; previous own tests/seals already exited. No device or lease was opened by this chat.",
+    "next": "Read-only scope audit only. No new development, tests, versions, USB or lease actions; no WIP rollback.",
+    "CALCAP_exclusion": {
+      "CALCAP_or_opaque_capsule_helper": "EXCLUDED_BY_EXPLICIT_HUMAN_REQUEST",
+      "replacement_generic_preservation_project": "NOT_AUTHORIZED",
+      "extra_quiet_carrier_integration": "STOPPED",
+      "operator_responsibility": "Preserve and restore data actually affected by a future concrete test; this does not authorize execution now."
+    }
+  },
+  "current_dependency_scope": {
+    "CALCAP_or_opaque_capsule_helper": "EXCLUDED_BY_EXPLICIT_HUMAN_REQUEST",
+    "replacement_generic_preservation_project": "NOT_AUTHORIZED",
+    "extra_quiet_carrier_integration": "STOPPED",
+    "operator_responsibility": "Preserve and restore data actually affected by a future concrete test; this does not authorize execution now."
+  },
+  "physical_measurement": "PASS_4_APPS_60_ROWS_768_CHECKS_CLOSED",
+  "physical_result": {
+    "summary": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP001/summary.json",
+      "bytes": 18925,
+      "sha256": "abb7cbc956cc66570c49fc953b4fb1389e66d5caa4a50dd5b116fe62ba38a241"
+    },
+    "receipt": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP001/receipt.json",
+      "bytes": 969,
+      "sha256": "2708cdf1e6271c029514ea6097512b646330c8a7d50961c1d7e05c54a11e596d"
+    },
+    "process_exit": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP001/process-exit-proof.json",
+      "bytes": 416,
+      "sha256": "1b8e70e1659faf41574578fddb6144aca6a33386d1400dd490b3ca2c1c15f1c0"
+    },
+    "base": "Existing A7483AE6, no reset/Flash",
+    "scope": "INTERP001 sole-owner window granted by coordinator; specific affected data compared/preserved"
+  },
+  "followon_physical_campaign": {
+    "status": "PHYSICAL_FOLLOWON_COMPLETE_CLOSED",
+    "hardware_verified": true,
+    "rows": 42,
+    "checks": 672,
+    "rounds": 7,
+    "scope": "Three requested follow-on directions all tested; canonical production math unchanged",
+    "ready_sha256": "146cccf64ccb9402bf9c516e2979622dc4cafb2e2553a89084e12f18b1440afc",
+    "receipt": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/receipt.json",
+      "sha256": "3faddf9c7defe9aba6080a7977e1dd2b7b76bc2d8616aad665475bee6635813f"
+    },
+    "closed_handoff": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/closed-handoff.json",
+      "sha256": "51164cec1abc5a8083afd4e6c3957b5e1eb5e1f7249fb1d121b2790124b9a190"
+    },
+    "process_exit_proof": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/process-exit-proof.json",
+      "sha256": "bbee25e234c4bfb531b92bcd6c0041876d7a895dc09ccf208ca4e87a7343f871"
+    },
+    "summary": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/summary.json",
+      "sha256": "09e681b3a363f6748ad0372a23f68092f3e2792269493fa99a261de6225aa565"
+    },
+    "findings": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/FINDINGS.txt",
+      "sha256": "3199dc3ad8454d80a0be91e7acd8cddbe85ea9cb13eef51b03da0a87e4a1d7bb"
+    },
+    "wins": {
+      "texture1024": {
+        "group": "texture_pop",
+        "mode": "per_call_transaction",
+        "block_items": 1024,
+        "input_streams": 1,
+        "paired_rounds": 7,
+        "cpu_us_per_item": 0.2569122314453125,
+        "candidate_us_per_item": 0.0925750732421875,
+        "candidate_over_cpu": 0.36033735225990376,
+        "median_paired_delta_us_per_item": -0.164337158203125,
+        "empirical_delta_range": [
+          -0.164398193359375,
+          -0.164276123046875
+        ],
+        "per_input": [
+          {
+            "input": 2,
+            "cpu_us_per_item": 0.2569122314453125,
+            "candidate_us_per_item": 0.0925750732421875
+          }
+        ],
+        "cpu_us_per_block": 263.078125,
+        "candidate_us_per_block": 94.796875
+      },
+      "audio1024": {
+        "group": "audio_resample",
+        "mode": "per_call_transaction",
+        "block_items": 1024,
+        "input_streams": 1,
+        "paired_rounds": 7,
+        "cpu_us_per_item": 0.2488250732421875,
+        "candidate_us_per_item": 0.124481201171875,
+        "candidate_over_cpu": 0.5002759551113019,
+        "median_paired_delta_us_per_item": -0.124359130859375,
+        "empirical_delta_range": [
+          -0.12451171875,
+          -0.1242218017578125
+        ],
+        "per_input": [
+          {
+            "input": 2,
+            "cpu_us_per_item": 0.2488250732421875,
+            "candidate_us_per_item": 0.124481201171875
+          }
+        ],
+        "cpu_us_per_block": 254.796875,
+        "candidate_us_per_block": 127.46875
+      }
+    },
+    "scalar_wins": false,
+    "seed_refinement_omission_wrong_cases": {
+      "sqrt": 1387,
+      "rsqrt": 892
+    },
+    "original_IO4_cause_proven": false
+  }
+}

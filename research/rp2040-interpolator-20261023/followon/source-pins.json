@@ -1,0 +1,12 @@
+{
+  "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/source/code/native_eabi_m0.cpp": "141ca0679032690fe3633fd54317b87f4422ae977049063efd60f398c2eabfc3",
+  "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/source/code/native_eabi_m0_kernels.inc": "25cff32ace9ce238c291455eb070f0be38d2129f6b54de42f90d0b2ac361d32b",
+  "/Users/bolk/Projects/MK61S_MINI/code/native_eabi_m0.S": "2d79cfd971ec0072986f6bf0ccddad6f2e8f1e89662ad2f7b58405644b36cecb",
+  "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/source/code/native_eabi_m0_log_table.inc": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+  "/Users/bolk/Projects/MK61S_MINI/code/native_eabi_m0_pow_fast.inc": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e",
+  "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1/math/source/kernels.cpp": "cf785c885459bfbbff79fb9ab3ed927ee508a7f8caa63af794d7537de09e7fa5",
+  "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1/math/source/tables.inc": "85da6b6844cbd6f1efe4b011cd01c82370a415b92401da60783a568195a81e43",
+  "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1/math/source/kernels.h": "335c8f7b6a453e3b14b6f2156a6bc0216483c6c8131b3c6672d3a4f3fb3f80c3",
+  "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1/math/source/baseline_sqrt_table.inc": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+  "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/combined-v3-v1/math/source/divide.S": "70a39ba931d7dcb6d1918858f4574a4acdebd5605a0c99163e7aad90e7f2adc2"
+}

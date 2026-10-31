@@ -1,0 +1,183 @@
+{
+  "status": "PHYSICAL_FOLLOWON_COMPLETE_CLOSED",
+  "goal": "Try fused whole-function lookup, POP texture/audio streams and full sqrt/rsqrt seed/refinement/rounding; obtain physical results.",
+  "packet": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/followon/READY.json",
+  "packet_sha256": "25d9a8c071dbd2a9ba049acbe9bcdb99423ec6934a36864915c5ebdcf11de9d5",
+  "output": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002",
+  "runner": "/Users/bolk/Projects/MK61S_MINI/research/rp2040-interpolator-20261023/followon/run-pico.py",
+  "runner_arguments": [
+    "--run",
+    "FRESH_COORDINATOR_GRANTED_CLOSED_HANDOFF_SHA",
+    "25d9a8c071dbd2a9ba049acbe9bcdb99423ec6934a36864915c5ebdcf11de9d5"
+  ],
+  "coordinator": "01a164b7-9caa-7011-90d1-807e9630921c",
+  "scope": "No reset/Flash/BOOTSEL, original A748 / UID E6657CD423721C35, exact new /INTRP02 namespace. Keep canonical math and frozen INTERP001/V3 unchanged.",
+  "queue": "Device returned CLOSED to coordinator for baseline RAMHIL2870; no more own USB access",
+  "port_opened": true,
+  "rows": 42,
+  "checks": 672,
+  "apps": [
+    "FLOOK",
+    "FPOP",
+    "FSQRT",
+    "FRSQRT"
+  ],
+  "qualified": "1420 bounded cases/17186 ARM calls; four shipping kernel sets and four reduced-source APP protocols PASS;24 decoder negatives. Shortcut omission sqrt1387/rsqrt892 wrong, excluded from device.",
+  "next": "Requested experiments complete. Review real results; streaming prototypes useful, tested scalar alternatives not faster. No automatic production adoption.",
+  "independent_prefix_review": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/interp002-independent-review-20261023/prefix-fix-delta/receipt.json",
+    "sha256": "0b817cd232b431fc91b01f37180f741c2e0dfca7cdd4976d839eebae7c6de6c4"
+  },
+  "physical_results_available": true,
+  "completed": [
+    "lookup",
+    "pop",
+    "sqrt",
+    "rsqrt"
+  ],
+  "actual_attempt": {
+    "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002/receipt.json",
+    "exit_code": 1,
+    "app": "FLOOK",
+    "app_flow_result": 4,
+    "meaning": "APP main MK61_APP_IO_ERROR, FILE_RESOLVE or FILE_WRITE; no result was created",
+    "serial_closed": true,
+    "operator_exited": true,
+    "cleanup_verified": true,
+    "foreground": "MESSAGE",
+    "first_status_retained": true
+  },
+  "recovery": {
+    "status": "PASS_CLOSED",
+    "path": ".build/rp2040-interpolator-20261023/hardware-INTERP002-recovery-2",
+    "receipt_sha256": "838962b1b31f9b52e0db148cba52ee284ea28588bd7d9eed7ba4b6846608792a",
+    "handoff_sha256": "4e158ad4b4df823498b8e5d9d9cfe431b88aeb994f4646ea8fa9ac3259c52333",
+    "data_settings_clock_verified": true
+  },
+  "io_probe": {
+    "ready": ".build/rp2040-interpolator-20261023/followon/io-probe/READY.json",
+    "ready_sha256": "af686f4fa092c11ce9db0be6b0b615c0ced59fd6d54cdbdcbf395d7653047658",
+    "runner": "research/rp2040-interpolator-20261023/followon/run-io-probe.py",
+    "runner_sha256": "3a30ef3be04841968d65ecb8733dd1730e6d04335908435b2c53af5d1ebc3958",
+    "hardware_queued": false,
+    "decision": "Coordinator removed standalone64/65 hardware probe; originalIOcause remains unproven."
+  },
+  "cdc_output": {
+    "ready": ".build/rp2040-interpolator-20261023/followon/cdc-output/READY.json",
+    "ready_sha256": "ae2fc30c03ac8ee524bdef3863770ce118963c0e948c3357ce4501d14ea40faf",
+    "runner": "research/rp2040-interpolator-20261023/followon/run-cdc.py",
+    "runner_sha256": "5d6c2ac7e49b161bd8574241016cbb069d3de8d19d18d9b4247188d2d188401a",
+    "physical_measurements": false,
+    "checks": "All4 exact-C reduced ARM output paths and48 malformed frames PASS; old numerical qualification reused"
+  },
+  "cdc_output_v2": {
+    "ready": ".build/rp2040-interpolator-20261023/followon/cdc-output-v2/READY.json",
+    "ready_sha256": "2ca1103556114a3dfcf92a606abbcf267ac29915d039cf60d16294f5054bcdeb",
+    "runner": "research/rp2040-interpolator-20261023/followon/run-cdc-v2.py",
+    "runner_sha256": "354dabcb605b30064355f2c10c170db6c470fa03fc963094e9d0c5c3258f91d9",
+    "output": ".build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-v2",
+    "physical_measurements": false,
+    "host_tests": "Actual original envelope, one modelledCDCenvelope,11malformed,12postcontroldriftPASS"
+  },
+  "cdc_output_final": {
+    "ready": ".build/rp2040-interpolator-20261023/followon/cdc-output-final/READY.json",
+    "ready_sha256": "146cccf64ccb9402bf9c516e2979622dc4cafb2e2553a89084e12f18b1440afc",
+    "runner": "research/rp2040-interpolator-20261023/followon/run-cdc-final.py",
+    "runner_sha256": "57c80334fc4e26e8a1af4e38088e9af85ee8420a361898549af3f0cbbfb32ed4",
+    "output": ".build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final",
+    "physical_measurements": false,
+    "host_tests": "Actual envelope/modelCDC+11negative+24postcontroldrifts+2finally OFF/OFFER PASS",
+    "component_review_sha256": "c1b35e72e026a3445d640e116efda89669747e4840af8065a13986f21a654771",
+    "review": {
+      "path": ".build/interp002-independent-review-20261023/cdc-output-final/receipt.json",
+      "sha256": "0225e94e3618e60b4f2c8c87aa8f1f606580514e27c4c8031bbea5d9dec5916e",
+      "status": "TECHNICAL_GO_CDC_FINAL_WHOLE_FIELD_DELTA",
+      "hardware_execution_granted": false
+    }
+  },
+  "physical_campaign": {
+    "status": "PHYSICAL_FOLLOWON_COMPLETE_CLOSED",
+    "hardware_verified": true,
+    "rows": 42,
+    "checks": 672,
+    "rounds": 7,
+    "scope": "Three requested follow-on directions all tested; canonical production math unchanged",
+    "ready_sha256": "146cccf64ccb9402bf9c516e2979622dc4cafb2e2553a89084e12f18b1440afc",
+    "receipt": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/receipt.json",
+      "sha256": "3faddf9c7defe9aba6080a7977e1dd2b7b76bc2d8616aad665475bee6635813f"
+    },
+    "closed_handoff": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/closed-handoff.json",
+      "sha256": "51164cec1abc5a8083afd4e6c3957b5e1eb5e1f7249fb1d121b2790124b9a190"
+    },
+    "process_exit_proof": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/process-exit-proof.json",
+      "sha256": "bbee25e234c4bfb531b92bcd6c0041876d7a895dc09ccf208ca4e87a7343f871"
+    },
+    "summary": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/summary.json",
+      "sha256": "09e681b3a363f6748ad0372a23f68092f3e2792269493fa99a261de6225aa565"
+    },
+    "findings": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/rp2040-interpolator-20261023/hardware-INTERP002-cdc-final/FINDINGS.txt",
+      "sha256": "3199dc3ad8454d80a0be91e7acd8cddbe85ea9cb13eef51b03da0a87e4a1d7bb"
+    },
+    "wins": {
+      "texture1024": {
+        "group": "texture_pop",
+        "mode": "per_call_transaction",
+        "block_items": 1024,
+        "input_streams": 1,
+        "paired_rounds": 7,
+        "cpu_us_per_item": 0.2569122314453125,
+        "candidate_us_per_item": 0.0925750732421875,
+        "candidate_over_cpu": 0.36033735225990376,
+        "median_paired_delta_us_per_item": -0.164337158203125,
+        "empirical_delta_range": [
+          -0.164398193359375,
+          -0.164276123046875
+        ],
+        "per_input": [
+          {
+            "input": 2,
+            "cpu_us_per_item": 0.2569122314453125,
+            "candidate_us_per_item": 0.0925750732421875
+          }
+        ],
+        "cpu_us_per_block": 263.078125,
+        "candidate_us_per_block": 94.796875
+      },
+      "audio1024": {
+        "group": "audio_resample",
+        "mode": "per_call_transaction",
+        "block_items": 1024,
+        "input_streams": 1,
+        "paired_rounds": 7,
+        "cpu_us_per_item": 0.2488250732421875,
+        "candidate_us_per_item": 0.124481201171875,
+        "candidate_over_cpu": 0.5002759551113019,
+        "median_paired_delta_us_per_item": -0.124359130859375,
+        "empirical_delta_range": [
+          -0.12451171875,
+          -0.1242218017578125
+        ],
+        "per_input": [
+          {
+            "input": 2,
+            "cpu_us_per_item": 0.2488250732421875,
+            "candidate_us_per_item": 0.124481201171875
+          }
+        ],
+        "cpu_us_per_block": 254.796875,
+        "candidate_us_per_block": 127.46875
+      }
+    },
+    "scalar_wins": false,
+    "seed_refinement_omission_wrong_cases": {
+      "sqrt": 1387,
+      "rsqrt": 892
+    },
+    "original_IO4_cause_proven": false
+  }
+}
