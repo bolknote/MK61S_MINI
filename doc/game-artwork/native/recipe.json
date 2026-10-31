@@ -20,7 +20,7 @@
     "tools/.fmk-font/ui-atlases/pixel-16.json": "2f4720dd48f2ce5f6c4c790f5562efc9a1f084e5b52412fab74024f4712b4bda",
     "tools/generate_highnoon_font.py": "c295acf51ae433b36f771dd5a795d504e7efbe5b79d7f54fc992220072892127",
     "tools/generate_picocalc_game_assets.py": "a9e27beecfffcf703e3ae9de654339ab0c19447db70bd98333dfdc9c1816dd08",
-    "tools/generate_ui_fonts.py": "3a33caedd82ef7fb597aaa89103cd71105eb852b9803d1f4f74d1284fd8ccfc2",
+    "tools/generate_ui_fonts.py": "d971ee881abb62e02d5cc4982d397ca75e98928d8cf151413fece2c4e1c7d109",
     "tools/m8_codec.py": "4db88bdfdf23deedcca946dbe387ccedc972c7e03294998b2f8e7397af513a6d"
   },
   "outputs_sha256": {
