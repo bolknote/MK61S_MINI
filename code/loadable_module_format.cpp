@@ -1,3 +1,4 @@
+#include "little_endian.hpp"
 #include "loadable_module_format.hpp"
 
 #include "crc32.hpp"
@@ -36,27 +37,17 @@ static constexpr u16 HEADER_CRC_OFFSET = 60;
 // F401 while reducing that fixed I/O overhead eightfold.
 static constexpr usize INPUT_BUFFER_SIZE = 512;
 
-static u16 get_le16(const u8* data, u16 offset) {
-  return (u16) (data[offset] | ((u16) data[offset + 1] << 8));
+static inline __attribute__((always_inline)) u16 get_le16(const u8* data, u16 offset) {
+  return little_endian::read16(data + offset);
 }
-
-static u32 get_le32(const u8* data, u16 offset) {
-  return (u32) data[offset] |
-         ((u32) data[offset + 1] << 8) |
-         ((u32) data[offset + 2] << 16) |
-         ((u32) data[offset + 3] << 24);
+static inline __attribute__((always_inline)) u32 get_le32(const u8* data, u16 offset) {
+  return little_endian::read32(data + offset);
 }
-
-static void put_le16(u8* data, u16 offset, u16 value) {
-  data[offset] = (u8) value;
-  data[offset + 1] = (u8) (value >> 8);
+static inline __attribute__((always_inline)) void put_le16(u8* data, u16 offset, u16 value) {
+  little_endian::write16(data + offset, value);
 }
-
-static void put_le32(u8* data, u16 offset, u32 value) {
-  data[offset] = (u8) value;
-  data[offset + 1] = (u8) (value >> 8);
-  data[offset + 2] = (u8) (value >> 16);
-  data[offset + 3] = (u8) (value >> 24);
+static inline __attribute__((always_inline)) void put_le32(u8* data, u16 offset, u32 value) {
+  little_endian::write32(data + offset, value);
 }
 
 static HeaderStatus validate_header(const Header& header, u32 slot_size,

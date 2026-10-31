@@ -1,6 +1,7 @@
 #ifndef MK61_C9_INODE_WIRE_HPP
 #define MK61_C9_INODE_WIRE_HPP
 #include "rust_types.h"
+#include "little_endian.hpp"
 #include <stddef.h>
 #include <string.h>
 
@@ -29,10 +30,17 @@ static_assert(sizeof(Inode) == 28 && offsetof(Inode,address) == 0 &&
   offsetof(Inode,name_hash) == 16 && offsetof(Inode,kind_type) == 18 &&
   offsetof(Inode,flags) == 19 && offsetof(Inode,exported_size) == 20 &&
   offsetof(Inode,fat_address) == 24, "C9 RAM prefix layout changed");
+#if defined(MK61_C9_SCALAR_CODEC)
 inline u16 read16(const u8* p) { return (u16)(p[0] | (u16)p[1]<<8); }
 inline u32 read32(const u8* p) { return (u32)read16(p) | (u32)read16(p+2)<<16; }
 inline void write16(u8* p,u16 v) { p[0]=(u8)v; p[1]=(u8)(v>>8); }
 inline void write32(u8* p,u32 v) { write16(p,(u16)v); write16(p+2,(u16)(v>>16)); }
+#else
+inline u16 read16(const u8* p) { return little_endian::read16(p); }
+inline u32 read32(const u8* p) { return little_endian::read32(p); }
+inline void write16(u8* p, u16 v) { little_endian::write16(p, v); }
+inline void write32(u8* p, u32 v) { little_endian::write32(p, v); }
+#endif
 inline void encode(const Inode& v,u8* out) {
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ && !defined(MK61_C9_SCALAR_CODEC)
   memcpy(out,&v,22);

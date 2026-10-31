@@ -1,3 +1,4 @@
+#include "little_endian.hpp"
 #include "program_store.hpp"
 #include "fat_cluster_chain.hpp"
 #include "c9_inode_wire.hpp"
@@ -515,27 +516,17 @@ static bool erase_sector(u32 sector) {
 #endif
 }
 
-static u16 get_le16(const u8* data, u16 offset) {
-  return (u16) (data[offset] | ((u16) data[offset + 1] << 8));
+static inline __attribute__((always_inline)) u16 get_le16(const u8* data, u16 offset) {
+  return little_endian::read16(data + offset);
 }
-
-static u32 get_le32(const u8* data, u16 offset) {
-  return (u32) data[offset] |
-         ((u32) data[offset + 1] << 8) |
-         ((u32) data[offset + 2] << 16) |
-         ((u32) data[offset + 3] << 24);
+static inline __attribute__((always_inline)) u32 get_le32(const u8* data, u16 offset) {
+  return little_endian::read32(data + offset);
 }
-
-static void put_le16(u8* data, u16 offset, u16 value) {
-  data[offset] = (u8) value;
-  data[offset + 1] = (u8) (value >> 8);
+static inline __attribute__((always_inline)) void put_le16(u8* data, u16 offset, u16 value) {
+  little_endian::write16(data + offset, value);
 }
-
-static void put_le32(u8* data, u16 offset, u32 value) {
-  data[offset] = (u8) value;
-  data[offset + 1] = (u8) (value >> 8);
-  data[offset + 2] = (u8) (value >> 16);
-  data[offset + 3] = (u8) (value >> 24);
+static inline __attribute__((always_inline)) void put_le32(u8* data, u16 offset, u32 value) {
+  little_endian::write32(data + offset, value);
 }
 
 static u32 crc32_bytes(const u8* data, usize len, u32 crc = 0xFFFFFFFFUL) {
@@ -3431,19 +3422,14 @@ static bool select_large_sector(u32& output) {
   }
 }
 
-// Keep large-file work buffers out of the caller's small-file/encoder paths.
-// GCC otherwise inlines them and reserves their stack for every C9 write.
-__attribute__((noinline))
-static bool program_large_source(u16 id, const FileSource& source,
-                                 u16 data_len,
-                                 LargeDescriptor& descriptor) {
+static __attribute__((noinline)) bool initialize_large_descriptor(
+    LargeDescriptor& descriptor, u16 data_len, u16 stored_len) {
   memset(&descriptor, 0, sizeof(descriptor));
   descriptor.data_len = data_len;
-  descriptor.stored_len = data_len;
+  descriptor.stored_len = stored_len;
   descriptor.version = LARGE_DESCRIPTOR_VERSION;
   descriptor.block_count = (u8) (
-      (descriptor.stored_len + LARGE_BLOCK_DATA_SIZE - 1U) /
-          LARGE_BLOCK_DATA_SIZE);
+      (stored_len + LARGE_BLOCK_DATA_SIZE - 1U) / LARGE_BLOCK_DATA_SIZE);
   if(descriptor.block_count == 0 ||
      descriptor.block_count > LARGE_BLOCK_COUNT) return false;
   descriptor.generation = ++g_meta.data_sequence;
@@ -3451,6 +3437,34 @@ static bool program_large_source(u16 id, const FileSource& source,
      descriptor.generation == 0xFFFFFFFFUL) {
     descriptor.generation = ++g_meta.data_sequence;
   }
+  return true;
+}
+
+static __attribute__((noinline)) void encode_large_block_header(
+    u8* header, const LargeDescriptor& descriptor, u16 id,
+    u8 block, u16 block_len, u32 block_crc) {
+  memset(header, 0xFF, LARGE_BLOCK_HEADER_SIZE);
+  memcpy(header, "C9B0", 4);
+  header[4] = descriptor.version;
+  header[5] = STATE_WRITING;
+  put_le16(header, 6, LARGE_BLOCK_HEADER_SIZE);
+  put_le32(header, 8, g_format_epoch);
+  put_le16(header, 12, id);
+  put_le16(header, 14, block);
+  put_le32(header, 16, descriptor.generation);
+  put_le16(header, 20, block_len);
+  put_le32(header, 24, ~block_crc);
+  put_le32(header, 28,
+           normalized_record_crc(header, LARGE_BLOCK_HEADER_SIZE, 28, 5));
+}
+
+// Keep large-file work buffers out of the caller's small-file/encoder paths.
+// GCC otherwise inlines them and reserves their stack for every C9 write.
+__attribute__((noinline))
+static bool program_large_source(u16 id, const FileSource& source,
+                                 u16 data_len,
+                                 LargeDescriptor& descriptor) {
+  if(!initialize_large_descriptor(descriptor, data_len, data_len)) return false;
 
   u32 file_crc = mk61_crc32::INITIAL_STATE;
   u8 buffer[64];
@@ -3479,19 +3493,7 @@ static bool program_large_source(u16 id, const FileSource& source,
     }
 
     u8 header[LARGE_BLOCK_HEADER_SIZE];
-    memset(header, 0xFF, sizeof(header));
-    memcpy(header, "C9B0", 4);
-    header[4] = descriptor.version;
-    header[5] = STATE_WRITING;
-    put_le16(header, 6, LARGE_BLOCK_HEADER_SIZE);
-    put_le32(header, 8, g_format_epoch);
-    put_le16(header, 12, id);
-    put_le16(header, 14, block);
-    put_le32(header, 16, descriptor.generation);
-    put_le16(header, 20, block_len);
-    put_le32(header, 24, ~block_crc);
-    put_le32(header, 28,
-             normalized_record_crc(header, sizeof(header), 28, 5));
+    encode_large_block_header(header, descriptor, id, block, block_len, block_crc);
     const u32 address = sector_address(sector);
     u32 verified_crc = 0;
     if(!write_bytes(address, header, sizeof(header)) ||
@@ -3553,19 +3555,7 @@ static bool finish_large_zx0_output(LargeZx0Output& output) {
   for(u8 block = 0; block < output.descriptor->block_count; block++) {
     const u16 block_len = large_block_length(*output.descriptor, block);
     u8 header[LARGE_BLOCK_HEADER_SIZE];
-    memset(header, 0xFF, sizeof(header));
-    memcpy(header, "C9B0", 4);
-    header[4] = output.descriptor->version;
-    header[5] = STATE_WRITING;
-    put_le16(header, 6, LARGE_BLOCK_HEADER_SIZE);
-    put_le32(header, 8, g_format_epoch);
-    put_le16(header, 12, output.id);
-    put_le16(header, 14, block);
-    put_le32(header, 16, output.descriptor->generation);
-    put_le16(header, 20, block_len);
-    put_le32(header, 24, ~output.block_crc[block]);
-    put_le32(header, 28,
-             normalized_record_crc(header, sizeof(header), 28, 5));
+    encode_large_block_header(header, *output.descriptor, output.id, block, block_len, output.block_crc[block]);
     const u32 address =
         sector_address(output.descriptor->sectors[block]);
     u32 verified_crc = 0;
@@ -3588,19 +3578,7 @@ static bool program_large_zx0(u16 id,
                               LargeDescriptor& descriptor) {
   if(prepared.input_size != data_len ||
      prepared.output_size != stored_len) return false;
-  memset(&descriptor, 0, sizeof(descriptor));
-  descriptor.data_len = data_len;
-  descriptor.stored_len = stored_len;
-  descriptor.version = LARGE_DESCRIPTOR_VERSION;
-  descriptor.block_count = (u8) (
-      (stored_len + LARGE_BLOCK_DATA_SIZE - 1U) / LARGE_BLOCK_DATA_SIZE);
-  if(descriptor.block_count == 0 ||
-     descriptor.block_count > LARGE_BLOCK_COUNT) return false;
-  descriptor.generation = ++g_meta.data_sequence;
-  if(descriptor.generation == 0 ||
-     descriptor.generation == 0xFFFFFFFFUL) {
-    descriptor.generation = ++g_meta.data_sequence;
-  }
+  if(!initialize_large_descriptor(descriptor, data_len, stored_len)) return false;
   for(u8 block = 0; block < descriptor.block_count; block++) {
     u32 sector = EMPTY_ADDRESS;
     if(!select_large_sector(sector)) return false;
@@ -5128,6 +5106,11 @@ void vfat_stage_clear(void) {
 }
 
 #if defined(PROGRAM_STORE_HOST_TEST)
+u16 test_get_le16(const u8* data, u16 offset) { return get_le16(data, offset); }
+u32 test_get_le32(const u8* data, u16 offset) { return get_le32(data, offset); }
+void test_put_le16(u8* data, u16 offset, u16 value) { put_le16(data, offset, value); }
+void test_put_le32(u8* data, u16 offset, u32 value) { put_le32(data, offset, value); }
+
 void test_reset_stage_index_stats(void) {
   g_stage_index_stats = {};
 }

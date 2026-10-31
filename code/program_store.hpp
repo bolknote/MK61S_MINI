@@ -356,6 +356,10 @@ bool vfat_stage_release_cache(void);
 bool read_cache_release(void);
 
 #if defined(PROGRAM_STORE_HOST_TEST)
+u16 test_get_le16(const u8* data, u16 offset);
+u32 test_get_le32(const u8* data, u16 offset);
+void test_put_le16(u8* data, u16 offset, u16 value);
+void test_put_le32(u8* data, u16 offset, u32 value);
 struct StageIndexStats {
   u64 lookups;
   u64 probes;

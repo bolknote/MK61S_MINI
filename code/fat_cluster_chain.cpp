@@ -1,3 +1,4 @@
+#include "little_endian.hpp"
 #include "fat_cluster_chain.hpp"
 
 #include "crc32.hpp"
@@ -8,19 +9,17 @@
 namespace fat_cluster_chain {
 namespace {
 
-static u16 get16(const u8* bytes) {
-  return (u16) ((u16) bytes[0] | ((u16) bytes[1] << 8));
+static inline __attribute__((always_inline)) u16 get16(const u8* bytes) {
+  return little_endian::read16(bytes);
 }
-static u32 get32(const u8* bytes) {
-  return (u32) bytes[0] | ((u32) bytes[1] << 8) |
-         ((u32) bytes[2] << 16) | ((u32) bytes[3] << 24);
+static inline __attribute__((always_inline)) u32 get32(const u8* bytes) {
+  return little_endian::read32(bytes);
 }
-static void put16(u8* bytes, u16 value) {
-  bytes[0] = (u8) value;
-  bytes[1] = (u8) (value >> 8);
+static inline __attribute__((always_inline)) void put16(u8* bytes, u16 value) {
+  little_endian::write16(bytes, value);
 }
-static void put32(u8* bytes, u32 value) {
-  for(u8 index = 0; index < 4; ++index) bytes[index] = (u8) (value >> (index * 8));
+static inline __attribute__((always_inline)) void put32(u8* bytes, u32 value) {
+  little_endian::write32(bytes, value);
 }
 static bool valid_shape(u16 owner, u16 count, u16 capacity) {
   return owner != 0xFFFFU && capacity != 0 && capacity <= MAX_CLUSTERS &&

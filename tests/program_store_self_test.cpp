@@ -82,6 +82,31 @@ static bool read_test_source(void* context, u32 offset,
   return true;
 }
 
+static void test_bounded_le_fields() {
+  // End each allocation exactly after the field: sanitizers catch an access
+  // beyond its width, including at every unaligned address and the u16 limit.
+  for (unsigned offset : {0U, 1U, 2U, 3U, 4U, 5U, 6U, 7U, 8U,
+                          9U, 10U, 11U, 12U, 13U, 14U, 15U, 65534U, 65535U}) {
+    for (unsigned width : {2U, 4U}) {
+      const usize size = offset + width;
+      u8* bytes = new u8[size];
+      for (u32 value : {0U, 1U, 0xFFU, 0x100U, 0xFFFFU, 0x10000U,
+                        0x80000000U, 0x12345678U, 0xFFFFFFFFU}) {
+        memset(bytes, 0xA5, size);
+        if (width == 2) program_store::test_put_le16(bytes, (u16)offset, (u16)value);
+        else program_store::test_put_le32(bytes, (u16)offset, value);
+        for (unsigned i = 0; i < offset; ++i) assert(bytes[i] == 0xA5);
+        for (unsigned i = 0; i < width; ++i)
+          assert(bytes[offset + i] == (u8)(value >> (8U * i)));
+        assert((width == 2 ? program_store::test_get_le16(bytes, (u16)offset)
+                           : program_store::test_get_le32(bytes, (u16)offset)) ==
+               (width == 2 ? (u16)value : value));
+      }
+      delete[] bytes;
+    }
+  }
+}
+
 static void fresh(u32 capacity = SPIFlash::DEFAULT_CAPACITY) {
   SPIFlash::reset(capacity);
   program_store::init();
@@ -4690,6 +4715,7 @@ static void test_source_draft_banks_on_small_flash() {
 #include "language_flash_fs_cases.inc"
 #endif
 int main(int argc, char** argv) {
+  test_bounded_le_fields();
   if(argc==2 && !strcmp(argv[1],"--catalog-lookup")){test_catalog_only_child_lookup();return 0;}
 #if defined(LANGUAGE_FLASH_FS_COMPILER_TEST)
   if(argc==2 && strcmp(argv[1],"--language-flash")==0){test_language_flash_store();test_language_flash_repeated_run_io();

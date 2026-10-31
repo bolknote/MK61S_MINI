@@ -35,10 +35,14 @@ if [[ "${1:-}" == --language-flash ]]; then
   flash_sources=("$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp")
 fi
 
-for backend in software stm32; do
+for backend in software stm32 words; do
   backend_flags=()
   if [[ "$backend" == "stm32" ]]; then
     backend_flags=(-DMK61_CRC32_EMULATE_STM32)
+  elif [[ "$backend" == "words" ]]; then
+    # Run the same C9/power-cut/large-file cases through M4's alias-safe,
+    # byte-aligned LE fields. The other builds retain the scalar fallback.
+    backend_flags=(-DMK61_MEMORY_TEST_WORDS)
   else
     # Exercise graphical activity scopes as well as the no-graphics build.
     backend_flags=(-DMK61_ENABLE_USB_SCREEN=1)
