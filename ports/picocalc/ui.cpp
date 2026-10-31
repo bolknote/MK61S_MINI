@@ -105,7 +105,7 @@ bool Ui::input(u8 code, Calculator &calculator) {
     }
     if (code == 0xD6 || code == 0xD7) {
       const unsigned limit =
-          view_ == View::REGISTERS ? 9 : core_61::program_steps() - 6;
+          view_ == View::REGISTERS ? REGISTER_COUNT - VISIBLE_REGISTERS : core_61::program_steps() - 6;
       offset_ = (u8)menu_model::step(offset_, limit + 1, code == 0xD6 ? -1 : 1);
       return true;
     }

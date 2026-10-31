@@ -84,6 +84,9 @@ void render_changes_test() {
     core_61::get_stack_register(X,value);value.mantissa=0x12345678;
     core_61::set_stack_register(X,&value);check(true);check(false); // Stack X may change independently of the display latch X2.
     ui.input(0xB6,calc);check(true);check(false); // Registers.
+    const u8 packed[]={4,0x02,0x12,0x34,0x56,0x78};
+    require(MK61Emu_UnpackRegster(6,packed)!=nullptr,"second-column register mutation");
+    check(true);check(false); // R6 is visible in the second column; include it in the raster key.
     ui.input(0xB6,calc);check(true);
     MK61Emu_SetCode(core_61::get_ring_address(0),0x12);check(true);check(false); // Direct program mutation, without a key event.
     ui.input('\t',calc);check(true);ui.input(0xB6,calc);check(true);check(false);
