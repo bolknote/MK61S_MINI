@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "date": "2026-10-31",
+  "profile": "picocalc-pico-h",
+  "status": "UI_HIL_PASS",
+  "source_commit": "9b3f8807005117125c8bab4076dd4f0fd4041f91",
+  "implementation_commits": [
+    "54bd71fa1e4382b9f5e344241451075a4f3fb5a6",
+    "9b3f8807005117125c8bab4076dd4f0fd4041f91"
+  ],
+  "firmware": {
+    "version": "0.8.16",
+    "build_id": "B1E19FDC",
+    "crc32": "1871729E",
+    "uf2_bytes": 3074560,
+    "uf2_sha256": "df22571897bda0d935d03efcd7346da5dc61fa1a4f99b4cd2948a302f420bf60",
+    "bin_bytes": 1537056,
+    "bin_sha256": "335fe01ed0575afb237d2b415340ab2ee4920065c68a28791c3523a4a6394482"
+  },
+  "behavior": {
+    "register_columns": 2,
+    "rows_per_column": 6,
+    "first_window": [
+      "R0-R5",
+      "R6-RB"
+    ],
+    "last_window": [
+      "R3-R8",
+      "R9-RE"
+    ],
+    "offset_range": [
+      0,
+      3
+    ],
+    "stack_labels": [
+      "X",
+      "Y",
+      "Z",
+      "T",
+      "X1",
+      "X2"
+    ],
+    "X2": "Published numeric face with clear/hold/resume; all12 published segment masks, including decimal points, rendered as native7x13 cells"
+  },
+  "host": {
+    "ASan_UBSan": "PASS",
+    "layout_assertions": 771348,
+    "font_choices": 8,
+    "languages": [
+      "EN",
+      "RU"
+    ],
+    "real_core_clear_hold_resume": "PASS",
+    "all256_masks_each12_slots": "PASS"
+  },
+  "STM32": {
+    "F411_case": "f411-classic-v3",
+    "build": "PASS",
+    "independent_SDK_headers_gate": "PASS",
+    "owned_source_gate": "PASS",
+    "no_system_runtime_archives_gate": "PASS",
+    "flash_bytes": 381028,
+    "flash_free_bytes": 143260,
+    "globals_bytes": 21752,
+    "shared_source_config_math_font_ABI_changes": false
+  },
+  "hardware": {
+    "native_frame_count": 15,
+    "exact_body_pixels": 547200,
+    "register_navigation_and_full_values": "PASS",
+    "distinct_X1_X2": "PASS",
+    "numeric_and_segment_publication": "PASS",
+    "LCD_DMA_source_crc_matches": true,
+    "application_flash_readback_equal": true,
+    "settings_journal_preserved": true,
+    "new_LCD_DMA_I2C_USB_screen_errors": 0,
+    "MCU_resets_during_test": 0,
+    "optical_panel_readback": false
+  },
+  "restoration": {
+    "program_15_memory_5_stack_cwd_alarms": "exact",
+    "IP_view_memory_steps_fonts": "original",
+    "settings_writes": 0,
+    "settings_erases": 0,
+    "RTC_SET_preserved": true,
+    "elapsed_clock_max_abs_delta_seconds": 0.38,
+    "RTC_advancement_verified": true,
+    "port_closed": true
+  },
+  "historical_crash": {
+    "stored_build": "1940130E",
+    "sequence": 2,
+    "present_before_flash": true,
+    "unchanged_during_test": true,
+    "record_cleared": false
+  },
+  "operational_limit": "Post-install number entry before qualification was not separately exported and was replaced by the saved baseline. The owner confirmed those numbers were unimportant and did not request recovery. Input after the successful qualification was preserved.",
+  "evidence": {
+    "qualification_result_sha256": "b5639cad1e65fb74de7a8f28be41b63b8ba41ea8d4238ada6edaa199eedb3fd6",
+    "F411_proof_sha256": "0797f56887365a821f075a4b22a9399b2b107adcb497dbb794e0846b9d658319",
+    "HIL_complete_sha256": "842458f9e1570609767b29857c7420db4d5f80ad162b7abbc40b4c72a5100448",
+    "data_clarification_sha256": "291269c7326313dfbd6a84836f49ae976acd9786e1a59fea72fadab3d0774e1c",
+    "local_directory": ".build/picocalc-register-columns-20261031-001",
+    "raw_user_data_in_repository": false
+  }
+}
