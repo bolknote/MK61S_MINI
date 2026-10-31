@@ -110,6 +110,55 @@ static constexpr u16 SEGMENT_ROWS[8][SOURCE_HEIGHT] = {
   { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0003,0x0003,0x0003,0x0007,0x0007,0x0007,0x0007 },
 };
 
+// F401 trades its sparse source storage for compile-time scaled planes.
+// Other boards retain their existing renderer; the private selector is HOST-only.
+#if defined(STM32F401xC) || defined(STM32F401xE) || \
+    (!defined(__arm__) && !defined(__thumb__) && defined(MK61_TEST_SCALED_SEGMENTS))
+// Compile the unchanged source strike to the glass's 10x21 integer grid.
+// Multiple source pixels which round to one output pixel are combined by OR.
+struct ScaledSegment {
+  u8 first, count;
+  u16 rows[7];
+};
+struct ScaledSegments { ScaledSegment planes[8]; };
+constexpr ScaledSegments scaleSegments() {
+  ScaledSegments result = {};
+  for(unsigned segment = 0; segment < 8; ++segment) {
+    u16 rows[DIGIT_HEIGHT] = {};
+    for(unsigned row = 0; row < SOURCE_HEIGHT; ++row)
+      for(unsigned col = 0; col < SOURCE_WIDTH; ++col)
+        if(SEGMENT_ROWS[segment][row] & (0x8000U >> col))
+          rows[(row * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP] |=
+              (u16)(1U << ((col * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP));
+    unsigned first = 0, last = DIGIT_HEIGHT;
+    while(first < last && !rows[first]) ++first;
+    while(last > first && !rows[last-1]) --last;
+    if(last - first > 7) __builtin_trap();
+    result.planes[segment].first = (u8)first;
+    result.planes[segment].count = (u8)(last-first);
+    for(unsigned i = first; i < last; ++i)
+      result.planes[segment].rows[i-first] = rows[i];
+  }
+  return result;
+}
+static constexpr ScaledSegments SCALED_SEGMENTS = scaleSegments();
+void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask, bool dot = false) {
+  if(dot) mask |= 0x80;
+  for(u8 segment = 0; segment < 8; ++segment) {
+    if(!(mask & (1U << segment))) continue;
+    const ScaledSegment& plane = SCALED_SEGMENTS.planes[segment];
+    for(u8 row = 0; row < plane.count; ++row) {
+      const i16 y = DIGIT_TOP + plane.first + row;
+      if((u8)(y / PAGE_HEIGHT) != page) continue;
+      const u16 pixels = plane.rows[row];
+      const u8 page_bit = (u8)(1U << (y & 7));
+      for(u8 col = 0; col < DIGIT_WIDTH; ++col)
+        if(pixels & (1U << col)) out[x + DIGIT_INSET + col] |= page_bit;
+    }
+  }
+}
+
+#else
 void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask, bool dot = false) {
   for(u8 row = 0; row < SOURCE_HEIGHT; ++row) {
     const i16 y = DIGIT_TOP +
@@ -129,6 +178,8 @@ void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask, bool dot = false) {
     }
   }
 }
+
+#endif
 
 static constexpr u8 ARROW_PAGE4[10] = {
     0x00, 0x38, 0x38, 0x38, 0x38, 0x38, 0x39, 0xBA, 0x54, 0x38

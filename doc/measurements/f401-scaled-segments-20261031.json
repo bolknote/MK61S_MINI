@@ -1,0 +1,36 @@
+{
+  "status": "SOURCE_REVIEW_READY_NOT_RELEASE",
+  "base_commit": "19f0a0136ffe8c8bceda1bc0a3e351a57ecad38f",
+  "source_sha256": "90a165c2e0ecf37d3cc16949541e3ba72eb222e048662b56644e8b5fce078e1e",
+  "case": "f401-product-classic-v3",
+  "bin": 259016,
+  "gain": 448,
+  "free": 3128,
+  "reserve_remaining": 968,
+  "maximum_function_stack": 1304,
+  "stack_limit": 2048,
+  "proofs": {
+    "f411_tokens_equal": true,
+    "f401_tokens_equal": false,
+    "actual_pico_tokens_equal": true,
+    "raw_original_planes_byte_equal": true,
+    "original_sourceRow_and_suffix_byte_equal": true
+  },
+  "files": {
+    "code/calculator_face.cpp": "90a165c2e0ecf37d3cc16949541e3ba72eb222e048662b56644e8b5fce078e1e",
+    "tests/calculator_segment_reference.hpp": "2189b04e9cfeaecc2364c290f44a5935f516b9be748db5b9cd656ea41aaaf82b",
+    "tests/ui_display_self_test.cpp": "dd3fefdad0a2dcf436f4bbd66d2ae07e6287841337a2956da9dc617b8de59cc3",
+    "tests/run_ui_display_tests.sh": "a34dd96f54c1d160a9f3d8f91e7612025f98314171581f34c4bbcf26f25b485f"
+  },
+  "tests": {
+    "ASAN_UBSAN_UI": "PASS: legacy/F401 x5 surface/ownership configurations;256 masks x256 sourceRows and256 complete frames x12 slots against frozen old planes",
+    "ASAN_UBSAN_Pico": "PASS: complete existing Pico suite",
+    "runner_oracle": "raw SEGMENT_ROWS and runner_screen_oracle.py unchanged"
+  },
+  "logs": [
+    "f401-segment-display-asan.log",
+    "f401-scaled-segment-pico-asan.log",
+    "f401-scaled-segment-build.log"
+  ],
+  "hardware_access": false
+}

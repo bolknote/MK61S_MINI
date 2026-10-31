@@ -1,6 +1,7 @@
 #include "display.hpp"
 #include "display_buffer_loan.hpp"
 #include "calculator_face.hpp"
+#include "calculator_segment_reference.hpp"
 #include "display_symbols.hpp"
 #include "exclusive_buffer.hpp"
 #include "lcd_ru.hpp"
@@ -657,6 +658,50 @@ void writeDisplayLine(MK61Display& display, u8 row, u8 column,
 
 bool framePixel(const Frame& frame, unsigned x, unsigned y) {
   return (frame[y / 8U * 192U + x] & (1U << (y & 7U))) != 0;
+}
+
+void test_segment_source_and_scaled_pixels() {
+  using calculator_segment_reference::planes;
+  for(unsigned mask = 0; mask < 256; ++mask) {
+    for(unsigned row = 0; row < 256; ++row) {
+      u16 expected = 0;
+      if(row < 35)
+        for(unsigned segment = 0; segment < 8; ++segment)
+          if(mask & (1U << segment)) expected |= planes[segment][row];
+      assert(calculator_face::sourceRow((u8)mask, (u8)row) == expected);
+    }
+  }
+  calculator_face::setFont(calculator_face::Font::MK61);
+  text_screen::Grid model;
+  model.reset(6);
+  for(unsigned mask = 0; mask < 256; ++mask) {
+    u8 masks[12];
+    Frame expected{}, actual{};
+    // The blank service row's three rails occupy only rows 11 and 12.
+    const unsigned rails[3][2] = {{1,61}, {65,45}, {113,78}};
+    for(const auto& rail : rails) {
+      for(unsigned x = rail[0]+2; x < rail[0]+rail[1]-2; ++x)
+        putPixel(expected, (int)x, 12);
+      putPixel(expected, (int)(rail[0]+1), 11);
+      putPixel(expected, (int)(rail[0]+rail[1]-2), 11);
+    }
+    for(unsigned slot = 0; slot < 12; ++slot) {
+      masks[slot] = (u8)(mask + slot*37);
+      for(unsigned row = 0; row < 35; ++row) {
+        u16 bits = 0;
+        for(unsigned segment = 0; segment < 8; ++segment)
+          if(masks[slot] & (1U << segment)) bits |= planes[segment][row];
+        for(unsigned col = 0; col < 16; ++col)
+          if(bits & (0x8000U >> col))
+            putPixel(expected, (int)(slot*16+3+(col*16+13)/27),
+                     (int)(31+(row*16+13)/27));
+      }
+    }
+    calculator_face::setSegmentFrame(masks);
+    calculator_face::renderFrame(model, actual.data());
+    assert(actual == expected);
+  }
+  calculator_face::setSegmentFrame(nullptr);
 }
 
 void test_fixed_calculator_face() {
@@ -2131,6 +2176,7 @@ int main() {
   test_mono_ui_is_fixed_and_independent();
   test_classic_ui_is_exact_2x_builtin();
   test_compact_ui_uses_builtin_3x5();
+  test_segment_source_and_scaled_pixels();
   test_fixed_calculator_face();
   test_calculator_face_after_fullscreen_bitmap();
   test_classic_calculator_font();
