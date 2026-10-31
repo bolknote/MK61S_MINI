@@ -1,0 +1,241 @@
+{
+  "schema": 1,
+  "report": "runner-hil-20261031",
+  "date": "2026-10-31",
+  "date_timezone": "Europe/Moscow",
+  "status": "PASS_ROOT_ACCEPTED_FINAL_RETURN",
+  "source": {
+    "main": "3f1ee789b1bcb14c83d3ea98e68a5e6be0aae7c2",
+    "runner_source_commit": "0e97e2ac20ce3613ac7bc590c3daa5c6a3a11ecf",
+    "runner_main_commit": "13611466d917a4093f5fffc85aeef88afc22dcc8",
+    "firmware_build": "0B1BEBF0",
+    "public_code_paths": [
+      "tools/runner/game.py",
+      "tests/hil_runner_campaign.py",
+      "tests/runner_frame_campaign.py",
+      "tests/runner_frame_player.py",
+      "tests/runner_screen_oracle.py",
+      "code/calculator_face.cpp"
+    ],
+    "frozen_operator_sha256": "3458bb769783c0c6bb7d6800693590d564d83f77afd3bb83dbb01e28ecd677b7",
+    "frozen_packet_pins_sha256": "ea082d4a6e72f64210b7260eaca1d2b4b0d3cfbedcee15b2f48765031d5923fa"
+  },
+  "platform": {
+    "MCU": "STM32F411CE",
+    "board": "Classic V3",
+    "display": "UC1609 192x64",
+    "CPU_frequency_Hz": 96000000,
+    "math_backend": 0,
+    "USB_Screen_enabled": true,
+    "input_method": "USB Screen virtual key events on actual Classic firmware"
+  },
+  "measurement": {
+    "timing": "HOST elapsed time to arrival of complete decoded USB Screen framebuffer",
+    "CPU_cycles_measured": false,
+    "runs": 1,
+    "HIL_body_seconds": 262.36,
+    "HIL_child_process_seconds": 262.43394499993883,
+    "supervised_parent_seconds": 324.52374482154846,
+    "levels": [
+      {
+        "level": 1,
+        "median_walk_seconds": 0.42045397899346426,
+        "max_walk_seconds": 0.4209655000595376,
+        "held_cells": 7,
+        "hold_duration_seconds": 3.001928040990606,
+        "hole_restoration_seconds": 4.0270377499982715
+      },
+      {
+        "level": 2,
+        "median_walk_seconds": 0.43005772947799414,
+        "max_walk_seconds": 0.4349758749594912,
+        "held_cells": 6,
+        "hold_duration_seconds": 3.0060289159882814,
+        "hole_restoration_seconds": 4.017336749937385
+      },
+      {
+        "level": 3,
+        "median_walk_seconds": 0.4200007499894127,
+        "max_walk_seconds": 0.7393036249559373,
+        "held_cells": 5,
+        "hold_duration_seconds": 3.0102109169820324,
+        "hole_restoration_seconds": 4.007471665972844
+      }
+    ]
+  },
+  "qualification": {
+    "status": "PASS",
+    "required_cases": 17,
+    "recorded_cases": 38,
+    "cases": [
+      {
+        "case": "paused-hole-restored",
+        "status": "PASS"
+      },
+      {
+        "case": "fall",
+        "status": "PASS"
+      },
+      {
+        "case": "gold-collected",
+        "status": "PASS"
+      },
+      {
+        "case": "score",
+        "status": "PASS"
+      },
+      {
+        "case": "help",
+        "status": "PASS"
+      },
+      {
+        "case": "trapped-guard",
+        "status": "PASS"
+      },
+      {
+        "case": "guard-respawned",
+        "status": "PASS"
+      },
+      {
+        "case": "lost",
+        "status": "PASS"
+      },
+      {
+        "case": "escape-cancelled",
+        "status": "PASS"
+      },
+      {
+        "case": "responsiveness",
+        "status": "PASS"
+      },
+      {
+        "case": "level2-responsiveness",
+        "status": "PASS"
+      },
+      {
+        "case": "level3-responsiveness",
+        "status": "PASS"
+      },
+      {
+        "case": "level-1-clear",
+        "status": "PASS"
+      },
+      {
+        "case": "level-2-clear",
+        "status": "PASS"
+      },
+      {
+        "case": "level-3-clear",
+        "status": "PASS"
+      },
+      {
+        "case": "campaign-restarted",
+        "status": "PASS"
+      },
+      {
+        "case": "long-cx-cancelled",
+        "status": "PASS"
+      }
+    ],
+    "CRC_valid_RX_packets": 5870,
+    "complete_actual_frames": 550,
+    "score": {
+      "status": "PASS",
+      "level": 1,
+      "collected_gold_encoding": 36,
+      "expected_text": "L1  GOLd 2",
+      "expected_12_masks": [
+        56,
+        6,
+        0,
+        0,
+        61,
+        63,
+        56,
+        94,
+        0,
+        91,
+        0,
+        0
+      ],
+      "first_frame_index_after_input": 83,
+      "observed_frame_index": 84,
+      "actual_frame_sha256": "695a66b6f24c676850bb03216c26a164026b0032b47abcce7644f72960b6bc6a",
+      "raw_frame_matched_wire": true
+    },
+    "level_clears": [
+      {
+        "level": 1,
+        "label": "L1 CLEAr",
+        "status": "PASS",
+        "actual_clear_frame_index": 274
+      },
+      {
+        "level": 2,
+        "label": "L2 CLEAr",
+        "status": "PASS",
+        "route_rows": 33,
+        "actual_clear_frame_indices": [
+          412,
+          413
+        ],
+        "actual_CLI_requests_during_route": 0
+      },
+      {
+        "level": 3,
+        "label": "ALL CLEAr",
+        "status": "PASS",
+        "route_rows": 28,
+        "actual_clear_frame_indices": [
+          534,
+          535,
+          536,
+          537,
+          538,
+          539
+        ],
+        "actual_CLI_requests_during_route": 0
+      }
+    ],
+    "campaign_restart": "PASS",
+    "long_Cx": {
+      "status": "PASS",
+      "input_method": "USB Screen virtual key events, not a mechanically pressed front-panel key",
+      "key_hold_seconds": 1.807578958,
+      "unchanged_register_observation_seconds": 5.067072250065394,
+      "ordinary_calculator_display_restored": true,
+      "register_domain_checked": [
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "RA",
+        "RB",
+        "RC",
+        "RD",
+        "RE"
+      ],
+      "observation_method": "Two post-cancel snapshots of R4..RE compared across the interval, with an intervening virtual movement key; not continuous register sampling."
+    },
+    "transport_HOLD": false,
+    "resource_HOLD": false,
+    "normal_cleanup_and_detach": "PASS"
+  },
+  "final_original_return": {
+    "status": "PASS_ROOT_ACCEPTED_FINAL_RETURN",
+    "original_firmware_and_data_return": "PASS_ROOT_ACCEPTED",
+    "original_firmware_build": "28FBFF7A",
+    "clock_preservation": "PASS_ROOT_ACCEPTED",
+    "verification": "Root accepted two complete readbacks against the saved original image and the original data/state return.",
+    "Root_final_close_sha256": "0310065efc52482e00372c68978f410cb5d1dc53b6e2c536a89f2443af4966e6"
+  },
+  "limitations": [
+    "F401 compatibility remains OPEN; its resource gate is unchanged.",
+    "New physical APP launches were not tested in this campaign.",
+    "The input was virtual USB Screen key events; this is not mechanical-key qualification.",
+    "Timing was measured with USB Screen enabled, not with USB disconnected.",
+    "This is one complete campaign run, not an endurance campaign."
+  ]
+}

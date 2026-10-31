@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "report": "runner-hil-20261031",
+  "qualification": "ACCEPTED_ACTUAL_HARDWARE_SEMANTIC_EVIDENCE",
+  "source_main": "3f1ee789b1bcb14c83d3ea98e68a5e6be0aae7c2",
+  "firmware_build": "0B1BEBF0",
+  "required_cases_passed": 17,
+  "decoded_protocol_packets": 5870,
+  "reconstructed_complete_frames": 550,
+  "score_frame_sha256": "695a66b6f24c676850bb03216c26a164026b0032b47abcce7644f72960b6bc6a",
+  "artifacts": [
+    {
+      "artifact": "hil/result.json",
+      "bytes": 40355,
+      "sha256": "84570210a5ca732d80a76bde46468c6170edbce688975428467564dd5059084f",
+      "contents_included": false
+    },
+    {
+      "artifact": "hil-wire.jsonl",
+      "bytes": 2047204,
+      "sha256": "1f5d537642c81244d1cdfd8c6b313d1df3657cf148b0f70635e83e41ade67d20",
+      "contents_included": false
+    },
+    {
+      "artifact": "result.json",
+      "bytes": 5390,
+      "sha256": "ec752325cff701ef908e7a49698a3d3f36e756ff173b0f5c74d3021763f379db",
+      "contents_included": false
+    },
+    {
+      "artifact": "LOCAL-CLOSE-SUMMARY.json",
+      "bytes": 11035,
+      "sha256": "068453c91cc40cb9b1cedb19a6551e390ebcbf8b9a3a1570a5a8401cb0706d37",
+      "contents_included": false
+    }
+  ],
+  "review_checks": [
+    "All17requiredcases occur once in actual HIL result.",
+    "All5870RXpackets pass COBS/header/CRC;550complete framebuffers reconstruct.",
+    "Score raw frame84 equals wire and its recorded SHA, with12expected HUD cells.",
+    "Recorded clear/restart/long-Cx PNG bitmaps match actual wire frames.",
+    "L2/L3 route windows contain zero actual terminal TX requests.",
+    "Three metric groups agree with their walk/hold/hole cases.",
+    "LongCxUSBdown/up hold1.807578958s; two post-cancel R4..RE snapshots unchanged across5.067072250065394s, including an intervening virtual movement key.",
+    "Normal cleanup/detach has actual wire proof; no transport/resource HOLD."
+  ],
+  "final_original_return_status": "PASS_ROOT_ACCEPTED_FINAL_RETURN",
+  "Root_final_close_sha256": "0310065efc52482e00372c68978f410cb5d1dc53b6e2c536a89f2443af4966e6",
+  "scope_note": "Raw journals, device identifiers and backup payloads are not included. Final firmware/data/clock return was separately accepted by Root.",
+  "final_original_return_summary": {
+    "original_firmware_build": "28FBFF7A",
+    "firmware_and_data_return": "PASS_ROOT_ACCEPTED",
+    "clock_preservation": "PASS_ROOT_ACCEPTED"
+  }
+}
