@@ -1,0 +1,250 @@
+{
+  "schema": 1,
+  "date": "2026-10-31",
+  "status": "INCOMPLETE_HIL_ABA_NO_CHESS_MEASUREMENT_RETURN_INDEPENDENTLY_ACCEPTED",
+  "report_scope": "Measured A1 BASIC large source, stopped USB reset route, and accepted finite original28 return",
+  "product_code_changed": false,
+  "new_firmware_builds": 0,
+  "hardware": "Classic F411",
+  "profile": "classic-v3-uc1609",
+  "CPU_MHz": 96,
+  "APP_ABI": 6,
+  "frozen_source_commit": "eaaff37349149f86ebe7c25275a09da3f6ae906d",
+  "frozen_builds": {
+    "A": "07F26E25",
+    "B": "B8DFE53B"
+  },
+  "hardware_math_backend": 0,
+  "USB_Screen": true,
+  "planned": {
+    "functional_cases": 15,
+    "frames": 30,
+    "chess_searches": 3
+  },
+  "actual": {
+    "functional_cases": 1,
+    "frames": 2,
+    "chess_searches": 0,
+    "hardware_roles": [
+      "A1"
+    ]
+  },
+  "source": {
+    "path": "/VMHIL_20261030/PixelLarge.tbi",
+    "bytes": 12295,
+    "sha256": "275b6d5574efcfdd27d7707ad9999e44b09248f7d3fc7ac0e2dd48ae312c16c6",
+    "full_bytecode_image_bytes": 836,
+    "full_bytecode_image_sha256": "e6ac0afaed1d21616acfa54784b138db43a28fe8beb502f637206b5c6351cf1b",
+    "cache_files": {
+      "/System/VMCache/Pages/0042/Manifest.bin": {
+        "bytes": 64,
+        "sha256": "02caae60bab88d787b737fc296f82c8286ea6a495c5faec1bb21af62f9973470"
+      },
+      "/System/VMCache/Pages/0042/Owner.bin": {
+        "bytes": 16,
+        "sha256": "5a57c7302f1c5b54f9d95d247fb2b6a3d4e4bbd8cb163ae078bd355fd330e24a"
+      },
+      "/System/VMCache/Pages/0042/Image0/00000000.bin": {
+        "bytes": 1024,
+        "sha256": "27d00c4d483f29ff82892b0bb2d290c98390e8a04187c6275faf0bd18481ba0e"
+      }
+    },
+    "cache_file_payload_bytes": 1104,
+    "FS_metadata_bytes": "NOT_MEASURED",
+    "source_id": 66,
+    "source_ID_kind": "inferred-from-trusted-producer",
+    "compiler_fingerprint": 1261439389
+  },
+  "frame_observations": [
+    {
+      "temperature": "cold",
+      "host_observed_request_to_correct_complete_frame_ms": 1187.819625,
+      "limit_ms": 100.0,
+      "status": "NOT_UNDER_LIMIT",
+      "full_pixel_oracle": true,
+      "frame": {
+        "path": "/Users/bolk/.codex/worktrees/vm-crc-startup/MK61S_MINI/.build/classic-full15-named-probe-20261031-001/actual-hil-cf98315d23ee552a150c68bcbc3436f8e842784373c3bc078b7104b849d48158/capture/boot-A1/frame-00031.bin",
+        "bytes": 1536,
+        "sha256": "35585124d245f9067a73fa07abfafbc2e3eabdff9629bb32c69b6dcc359ab1e2"
+      }
+    },
+    {
+      "temperature": "warm",
+      "host_observed_request_to_correct_complete_frame_ms": 78.599458,
+      "limit_ms": 30.0,
+      "status": "NOT_UNDER_LIMIT",
+      "full_pixel_oracle": true,
+      "frame": {
+        "path": "/Users/bolk/.codex/worktrees/vm-crc-startup/MK61S_MINI/.build/classic-full15-named-probe-20261031-001/actual-hil-cf98315d23ee552a150c68bcbc3436f8e842784373c3bc078b7104b849d48158/capture/boot-A1/frame-00032.bin",
+        "bytes": 1536,
+        "sha256": "1c49dc49b3dc24fd7399eaad825d00edd4d65bcb215b220697459b498f53b6ab"
+      }
+    }
+  ],
+  "PONG": {
+    "count": 19,
+    "host_observed_max_ms": 5.16175
+  },
+  "measurement_kind": "actual host request-write begin to complete correct CRC-checked frame; transport included",
+  "legacy_latency_file_status": "HOST_MODEL_EVIDENCE_NOT_DEVICE_LATENCY",
+  "legacy_status_interpretation": "generic retained file label; actual raw-wire observations are not firmware poll-gap measurements",
+  "failure": {
+    "reason": "Exact CDC path disappeared between pre-probe lstat and unchanged qualifier stat after owned reset",
+    "raw_error": "FileNotFoundError",
+    "hypothesis": "Old complete normal IORegistry publication accepted before actual USB detach",
+    "lsof_elapsed_seconds": 0.13237841695081443,
+    "last_observed_pre_reset_boot": 23,
+    "post_reset_boot_at_HOLD": "UNKNOWN",
+    "later_return_actual_initial_boot": 24,
+    "effects": {
+      "CDC_open": 2,
+      "dfu": 1,
+      "test_download": 1,
+      "return_download": 0,
+      "download_leave": 1,
+      "upload": 0,
+      "leave": 0,
+      "soft_reset": 1
+    },
+    "retries": 0,
+    "isolated_probe_groups_closed": 6
+  },
+  "HOST_checks": {
+    "named_probe": 16,
+    "default_constructor": 2,
+    "finite_return_new_delta": 24,
+    "Root_independently_repeated_return_delta": 24,
+    "old_suites_rerun": false,
+    "HOST_checks_are_not_device_performance": true
+  },
+  "return_result": {
+    "status": "ROOT_ACCEPTED_CLASSIC_ORIGINAL28_FULL_RETURN_AND_ALL_OWNED_PROCESSES_CLOSED",
+    "Root_acceptance_utc": "2026-10-31T05:59:30.728673+00:00",
+    "firmware": "28FBFF7A",
+    "actual_initial_boot": 24,
+    "actual_final_boot": 27,
+    "observed_controlled_boots": [
+      24,
+      25,
+      26,
+      27
+    ],
+    "effects": {
+      "CDC_open": 4,
+      "dfu": 3,
+      "return_download": 1,
+      "download_leave": 1,
+      "upload": 2,
+      "leave": 2,
+      "file_remove": 35,
+      "directory_remove": 7,
+      "soft_reset": 0
+    },
+    "full_readback_count": 2,
+    "full_readback_bytes": 524288,
+    "full_readback_sha256": "ffa6757dc38c56b1be1f2956068ae084039566b506c6f0cd5f39b65d8dd6a950",
+    "both_equal_both_saved_originals": true,
+    "original_files": 32,
+    "original_bytes": 137771,
+    "original_nonroot_directories": 4,
+    "strict_zero105": true,
+    "registers_stack_IP_pwd_and_firmware_CRC": "PASS",
+    "RTC_unset_and_alarms_off": "PRESERVED",
+    "DATE_bound_seconds": 0.5,
+    "DATE_worst_seconds": 0.040575582999991866,
+    "DATE_checks": 7,
+    "checked_actual_files": 287,
+    "checked_portable_files": 84,
+    "checked_full_file_backups": 195,
+    "checked_raw_fsget_receipts": 195,
+    "isolated_probe_groups_closed": 11,
+    "supervisor_and_driver_independently_closed": true,
+    "hardware_window_closed": true
+  },
+  "remaining": {
+    "chess_speedup": "NOT_MEASURED",
+    "hardware_ABA": "INCOMPLETE",
+    "FOCAL_hardware": "NOT_RUN",
+    "exact_USB_off_time": "NOT_MEASURED",
+    "physical_keyboard": "NOT_MEASURED",
+    "internal_service_gaps": "NOT_MEASURED",
+    "frame_100_30_ms": "FAIL_PRESERVED",
+    "separate131072_flash_headroom": "FAIL_UNCHANGED",
+    "prior_HOLDs": "PRESERVED",
+    "production_change_accepted_by_this_return": false
+  },
+  "artifacts": {
+    "failed_HIL_actual_close": {
+      "path": "/Users/bolk/.codex/worktrees/vm-crc-startup/MK61S_MINI/.build/classic-named-probe-noholder-hold-20261031-001/ACTUAL-CLOSE.json",
+      "bytes": 22957,
+      "sha256": "63d8e532a44b8964d169237db5e1128c38a2b6aa662d90aff61d0cb8ee1f0d9c"
+    },
+    "actual_frame_latency": {
+      "path": "/Users/bolk/.codex/worktrees/vm-crc-startup/MK61S_MINI/.build/classic-full15-named-probe-20261031-001/actual-hil-cf98315d23ee552a150c68bcbc3436f8e842784373c3bc078b7104b849d48158/capture/latency-HOST.json",
+      "bytes": 7989,
+      "sha256": "a7b5acc6f84e3d60164262a63acab715ae2463bff8c22d50446d5ebf2a22df23"
+    },
+    "actual_producer_group": {
+      "path": "/Users/bolk/.codex/worktrees/vm-crc-startup/MK61S_MINI/.build/classic-full15-named-probe-20261031-001/actual-hil-cf98315d23ee552a150c68bcbc3436f8e842784373c3bc078b7104b849d48158/capture/after-owned-2-page-groups.json",
+      "bytes": 2492,
+      "sha256": "1fcc5fc3b28c077d90bc5d5e45dc5957f8ad2b5f5f2881eaf815b5956194f420"
+    },
+    "Root_failed_HIL_close": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/development-reconnect-root-20261030-001/ROOT-CLASSIC-NAMED-PROBE-HOLD-ACTUAL-CLOSE-001.json",
+      "bytes": 4134,
+      "sha256": "fd0c9129f2e7658d8fecb1c2ab7c67dd1bbbb2e1e600e61ede9563b7871d0378"
+    },
+    "named_probe_HOST_controls": {
+      "path": "/Users/bolk/.codex/worktrees/vm-crc-startup/MK61S_MINI/.build/classic-full15-named-probe-20261031-001/NAMED-PROBE-CHECKS.json",
+      "bytes": 4120,
+      "sha256": "159315b6c7872d06166ace98f91bf4a39fb37c1c619ec00148a5bba4cceacd27"
+    },
+    "named_probe_constructor_controls": {
+      "path": "/Users/bolk/.codex/worktrees/vm-crc-startup/MK61S_MINI/.build/classic-full15-named-probe-20261031-001/CONSTRUCTOR-CHECKS.json",
+      "bytes": 463,
+      "sha256": "3d3404f1dc0a344d10daf8c5b32524587f40a9bd7e866c9abc2e3cd31bda54c8"
+    },
+    "return_HOST_controls": {
+      "path": "/Users/bolk/.codex/worktrees/vm-crc-startup/MK61S_MINI/.build/classic-named-probe-return28-20261031-001/DELTA-CHECKS.json",
+      "bytes": 3202,
+      "sha256": "db5b7c3b75abfb43e5d3843e1d8795af1599264d582a0db5b8c00f289affc863"
+    },
+    "return_native_close": {
+      "path": "/Users/bolk/.codex/worktrees/vm-crc-startup/MK61S_MINI/.build/classic-named-return28-actual-close-20261031-001/ACTUAL-CLOSE.json",
+      "bytes": 7361,
+      "sha256": "79829f8ae81825dfe51c7ff20fd0a6a2776705b7055b2d7f0fa4f28faf60ac94"
+    },
+    "return_actual_exit": {
+      "path": "/Users/bolk/.codex/worktrees/vm-crc-startup/MK61S_MINI/.build/classic-named-probe-return28-20261031-001/actual-recover-d4f210ac3f1831634eec2e42ca45b57c9112046f4741925d615a98277bb7d9b6/ACTUAL-EXIT.json",
+      "bytes": 1325,
+      "sha256": "60cd327c7439b82740bd941eaf7b80e079939d3607ac3ce8bdc16423406e6f19"
+    },
+    "return_actual_result": {
+      "path": "/Users/bolk/.codex/worktrees/vm-crc-startup/MK61S_MINI/.build/classic-named-probe-return28-20261031-001/actual-recover-d4f210ac3f1831634eec2e42ca45b57c9112046f4741925d615a98277bb7d9b6/capture/RESULT.json",
+      "bytes": 19359,
+      "sha256": "33c076bedbcc10a9319450f846eeda001c1ba86675be286fdbecb954c83c038e"
+    },
+    "return_Root_acceptance": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/development-reconnect-root-20261030-001/ROOT-CLASSIC-NAMED-RETURN28-ACTUAL-CLOSE-001.json",
+      "bytes": 4627,
+      "sha256": "a10b703b1ad4f312223d1efe3a06074b4c76a152fc93a373212551bf637d4dc1"
+    },
+    "return_Root_process_close": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/development-reconnect-root-20261030-001/ROOT-CLASSIC-NAMED-RETURN28-PROCESS-CLOSE-001.json",
+      "bytes": 2036,
+      "sha256": "a5cda26bbde1e542ef9ed4430ea73c04fff31617ee8d1eff49da2c1651aec79b"
+    },
+    "return_portable_handoff": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/classic-named-return28-actual-portable-20261031-001/HANDOFF.json",
+      "bytes": 3368,
+      "sha256": "06969cd72a05c846e56f8fc0a7b73ec4bb367883b460c65878f90db773325780"
+    },
+    "return_Root_current_handoff": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/development-reconnect-root-20261030-001/ROOT-CLASSIC-ORIGINAL28-BOOT27-CURRENT-HANDOFF-001.json",
+      "bytes": 3406,
+      "sha256": "1f9275b7b628fc01aa9e6959a6b1802d059ee1428d61543d9247a7be5d026e8d"
+    }
+  },
+  "raw_user_files_or_flash_in_Git": false,
+  "plans_in_Git": false
+}
