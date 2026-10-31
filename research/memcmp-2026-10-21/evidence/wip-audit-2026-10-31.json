@@ -1,0 +1,52 @@
+{
+  "status": "FUNCTIONAL_PASS_NOT_PRODUCTION_SELECTION",
+  "date": "2026-10-31",
+  "base_commit": "ed2ac8e892ff1c018345eb5781e00331b33f1f8e",
+  "scope": "HOST GCC/Unicorn-only provenance and readiness audit; no device I/O, new hardware timings, state restoration or production integration",
+  "accepted_product": {
+    "m4_backend_enabled": true,
+    "m0_backend_enabled": false,
+    "runtime_slots": 26
+  },
+  "wip": {
+    "m0_include_sha256": "785d955838d2f36bfa4ad8f6d5acc827e7e754600f3a95a50cf9272655f1bfba",
+    "m0_include_bytes": 834,
+    "matches_include_in": "evidence/m0-prepared/prototype.patch",
+    "code_proof_exact_duplicate_of": "evidence/m0-prepared/prototype-code-proof.json",
+    "production_validation_exact_duplicate_of": "evidence/m0-prepared/prototype-arm-validation.json"
+  },
+  "rerun": {
+    "status": "PASS",
+    "builds": 8,
+    "calls": 426856,
+    "lto_variants": [
+      false,
+      true
+    ],
+    "checks": [
+      "unsigned lexicographic sign",
+      "exact read bounds",
+      "read-only inputs",
+      "natural M0+ load alignment",
+      "overlapping input spans",
+      "SP and callee-saved registers"
+    ],
+    "result_sha256": "bb8e8d0cb385924598a0ba2652938177f0d4c42001c24ed752c4f430de3bda7e",
+    "matches_saved_prototype_result_byte_for_byte": true
+  },
+  "baseline_rerun": {
+    "status": "PASS",
+    "builds": 6,
+    "calls": 320142,
+    "m0_bytes": 44
+  },
+  "production_blockers": [
+    "The preserved M0+ hardware result is a preliminary SRAM scout, explicitly not a final selection (evidence/m0-scout-20261022/scope.json).",
+    "This 834-byte v1 prototype is not a newly selected candidate. Later scout v2/v3 variants are separate historical artifacts; short/early regression work remained incomplete.",
+    "Identical final M0+ candidate was not timed in Flash versus SRAM and final standalone/actual-runtime repetitions are absent.",
+    "The older full SRAM prototype failed its heap gate; the prepared Flash alternative and its diagnostic base were not physically qualified. This is not a result for the current main build.",
+    "Current-platform full firmware placement and large-APP resource acceptance remain unconfirmed."
+  ],
+  "integration_decision": "Retain accepted M4 implementation and existing M0+ fallback; do not apply the prototype code/wrapper/test/evidence replacement to production.",
+  "evidence_policy": "The existing selected-production-validation.json, code-proof.json and sha256.json remain unchanged. Their prototype duplicates already exist in m0-prepared. Historical pending, FAIL and restoration statuses are not relabeled."
+}
