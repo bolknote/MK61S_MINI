@@ -1,0 +1,64 @@
+{
+  "status": "PASS",
+  "cpu": "m4",
+  "scope": "Functional early-hit/object-end/guard tests, not hardware timing",
+  "guard": "0x20080000",
+  "full_cases_per_body": 20689,
+  "elf_sha256": "d27d5af67487961e5613fb0d5d982808d62dc6a7e40a88d54e71ef1367adf3d8",
+  "results": [
+    {
+      "name": "baseline",
+      "body_bytes": 28,
+      "body_sha256": "0164e0f86c70994f372df3a64581b4754eb33dd17d5fcd2a3ab73f41a3e07c13",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    },
+    {
+      "name": "libc_search",
+      "body_bytes": 160,
+      "body_sha256": "aa741c51cc7147792fbfa5cb80b2971e17177a167e348fa85f38ffea23c3d1cc",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    },
+    {
+      "name": "byte_search",
+      "body_bytes": 22,
+      "body_sha256": "f20563c6cc916bfb3cea97e86bd59ac06ff8c6754e5840c8404231b5fec3664b",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    },
+    {
+      "name": "own4",
+      "body_bytes": 144,
+      "body_sha256": "7d884682a3b7e6cbe883f73faea9a78e45137ad843d86c08dcd1735c2a53ea1d",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    },
+    {
+      "name": "own64",
+      "body_bytes": 512,
+      "body_sha256": "bb53d5b27f6c0a6705feba13b841ff8ccfc650d5f7f512184200915171993b0d",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    },
+    {
+      "name": "compact8",
+      "body_bytes": 168,
+      "body_sha256": "baada85ad506a37c5bb39e4922fb5c9bce76b8ac1ce63e1f3d7ac46027f871c4",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    }
+  ]
+}

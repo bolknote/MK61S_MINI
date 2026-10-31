@@ -1,0 +1,30 @@
+{
+  "recorded_at": "2026-10-23T16:21:30.385805+00:00",
+  "device_opened": false,
+  "ps": {
+    "command": [
+      "/bin/ps",
+      "-p",
+      "14665",
+      "-o",
+      "pid=,stat=,command="
+    ],
+    "returncode": 1,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "lsof": {
+    "command": [
+      "/usr/sbin/lsof",
+      "-nP",
+      "-w",
+      "/dev/cu.usbmodem2068336B47311"
+    ],
+    "returncode": 1,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "status": "PASS",
+  "operator_PID_exited": true,
+  "Classic_port_closed": true
+}

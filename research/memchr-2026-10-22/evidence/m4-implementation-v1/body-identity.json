@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "bodies": [
+    {
+      "name": "native-f411",
+      "elf": ".build/memchr-20261023/m4-implementation-v1/f411/resident.elf",
+      "address": "0x8050a75",
+      "bytes": 450,
+      "sha256": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521"
+    },
+    {
+      "name": "native-f401",
+      "elf": ".build/memchr-20261023/m4-implementation-v1/f401/resident.elf",
+      "address": "0x803669d",
+      "bytes": 270,
+      "sha256": "e5ce46b95e76623993455cd0ad24c51ca1d4a0e5a1bfcab2fbf7634db3c98a78"
+    },
+    {
+      "name": "SDK-normal",
+      "elf": ".build/memchr-20261023/m4-implementation-v1/sdk-normal/SEARCH.elf",
+      "address": "0x20000061",
+      "bytes": 450,
+      "sha256": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521"
+    },
+    {
+      "name": "SDK-shared-local",
+      "elf": ".build/memchr-20261023/m4-implementation-v1/sdk-shared/SEARCH.elf",
+      "address": "0x200000c5",
+      "bytes": 450,
+      "sha256": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521"
+    }
+  ],
+  "ABI_runtime_count_unchanged": 26,
+  "M0_backend_unchanged": true
+}

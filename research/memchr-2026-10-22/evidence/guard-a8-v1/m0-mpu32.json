@@ -1,0 +1,65 @@
+{
+  "status": "PASS",
+  "cpu": "m0",
+  "scope": "Functional early-hit/object-end/guard tests, not hardware timing",
+  "guard": "0x2007ffe0",
+  "boundary": "read hook emulates MPU boundary",
+  "full_cases_per_body": 20689,
+  "elf_sha256": "2f7b822a651fa2a5c9c720846c7d1cda377eed36b39b52879a7abaf898ec3205",
+  "results": [
+    {
+      "name": "pair16",
+      "body_bytes": 244,
+      "body_sha256": "f2e7f8faac840e7ca408cb3e4aa6e9fef4255ed392831f824f9fe7cfac96105c",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    },
+    {
+      "name": "pair64",
+      "body_bytes": 400,
+      "body_sha256": "85b442239ce66690453b392f9a35045f5d0cf4de35467a57d73aa4beb65a2d97",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    },
+    {
+      "name": "fast16",
+      "body_bytes": 244,
+      "body_sha256": "2359d57722e509692d8565ff3e8bc342508c3cb726f3ec0b8401567c9864cb90",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    },
+    {
+      "name": "fast64",
+      "body_bytes": 400,
+      "body_sha256": "2b68dfc8f2aa12c7931fdc3c477f2ca9852ac0e907fc1850830c7ca250b6b97c",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    },
+    {
+      "name": "balanced16",
+      "body_bytes": 248,
+      "body_sha256": "994fda5135a4299795f49ab6d2f71150f0e07bbc487d44a65c75be9feebfc595",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    },
+    {
+      "name": "balanced64",
+      "body_bytes": 404,
+      "body_sha256": "b279c07b519dc6ad8369bc8ed803c68dfee0855165186110c73e3cce19aa4e80",
+      "cases": 20689,
+      "failures": 0,
+      "examples": [],
+      "status": "PASS"
+    }
+  ]
+}

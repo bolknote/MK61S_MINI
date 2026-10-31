@@ -1,0 +1,30 @@
+{
+  "scope": "First 12 M4 SRAM rows and separate successful recovery; complete selection still pending",
+  "app_sha256": "e322183988519bbac254773f9e73b32c03cc930b191d61e7031bc68e25aa2e1a",
+  "elf_sha256": "bac57f558c0a72e7e8539e644e85bb2bd23bbfbcc9840857a6422f3d82271984",
+  "timing_rows": 12,
+  "hardware_checks": 96904,
+  "hardware_failures": 0,
+  "original_run_status": "HOLD: host absolute-pointer oracle and canonical .app extension",
+  "recovery_status": "PASS_RESTORED; exact original files/calc/IP/RTC preserved; no firmware/Flash changes",
+  "public_runtime_measured": false,
+  "production_selected": false,
+  "files": {
+    "00-00.bin": {
+      "bytes": 3568,
+      "sha256": "b3a28fc0a8949eb2cdf881606eea749f31f8920262b022a40e177b22d576d996"
+    },
+    "decoded.json": {
+      "bytes": 47124,
+      "sha256": "38acf26eea6fee4c631a6e1e3cb1ebcf31e40b70759353ce852b6df01f30706b"
+    },
+    "bounded-relocation-proof.json": {
+      "bytes": 1826,
+      "sha256": "55025b09a5ed0213703ee8cac7f9d3ece83598e0aa8f89e68f6c50e66971a26f"
+    },
+    "recovery-receipt.json": {
+      "bytes": 6735,
+      "sha256": "eb8d7f30a0ff9a753c747ab038f33d33c82e3cc6440b43fc091b93a7b1aa5b68"
+    }
+  }
+}

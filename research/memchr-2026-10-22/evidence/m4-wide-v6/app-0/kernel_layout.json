@@ -1,0 +1,104 @@
+{
+  "cpu": "m4",
+  "base": 134619136,
+  "bytes": 8208,
+  "data": 134623232,
+  "code_bytes": 3312,
+  "sha256": "0cf9b2827753dc82b319305d705477149d70d6a3acaaeebd3d216df4ff8e3d0e",
+  "crc32": "103070E0",
+  "elf_sha256": "f61979752d410f689ea21bee3387acde11f987835a05437286af38928672cd06",
+  "functions": {
+    "baseline": {
+      "address": 134620853,
+      "bytes": 28,
+      "sha256": "0164e0f86c70994f372df3a64581b4754eb33dd17d5fcd2a3ab73f41a3e07c13"
+    },
+    "libc_search": {
+      "address": 134622353,
+      "bytes": 160,
+      "sha256": "aa741c51cc7147792fbfa5cb80b2971e17177a167e348fa85f38ffea23c3d1cc"
+    },
+    "byte_search": {
+      "address": 134619201,
+      "bytes": 22,
+      "sha256": "f20563c6cc916bfb3cea97e86bd59ac06ff8c6754e5840c8404231b5fec3664b"
+    },
+    "own4": {
+      "address": 134619225,
+      "bytes": 144,
+      "sha256": "7d884682a3b7e6cbe883f73faea9a78e45137ad843d86c08dcd1735c2a53ea1d"
+    },
+    "own16": {
+      "address": 134619369,
+      "bytes": 246,
+      "sha256": "4d82bf35854fabec2ff51057b40e6c1f521361b7922020f05704a8d2daafdab7"
+    },
+    "own64": {
+      "address": 134619617,
+      "bytes": 512,
+      "sha256": "bb53d5b27f6c0a6705feba13b841ff8ccfc650d5f7f512184200915171993b0d"
+    },
+    "pair16": {
+      "address": 134620881,
+      "bytes": 268,
+      "sha256": "7a5e78ef120363ff8aae05b972ee2caaeeef1bc45b92314abcda2d7256b6ed0a"
+    },
+    "balanced16": {
+      "address": 134620129,
+      "bytes": 270,
+      "sha256": "e5ce46b95e76623993455cd0ad24c51ca1d4a0e5a1bfcab2fbf7634db3c98a78"
+    },
+    "pair64": {
+      "address": 134621149,
+      "bytes": 448,
+      "sha256": "c154a42f4784da26dd8dafbada03bfc6bc180dc9447dafcefb381e814ee65417"
+    },
+    "balanced64": {
+      "address": 134620401,
+      "bytes": 450,
+      "sha256": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521"
+    },
+    "dsp16": {
+      "address": 134621597,
+      "bytes": 264,
+      "sha256": "c96588267293cc2c1f2def3b57ab599e0bdc53087996b17ef09b9dc1e53493dc"
+    },
+    "dsp32": {
+      "address": 134621861,
+      "bytes": 320,
+      "sha256": "314cc955fd288dd5562b76414e2f0cb5f7d6098dc5b273978197384d08dad30c"
+    },
+    "compact8": {
+      "address": 134622181,
+      "bytes": 168,
+      "sha256": "baada85ad506a37c5bb39e4922fb5c9bce76b8ac1ce63e1f3d7ac46027f871c4"
+    },
+    "memchr": {
+      "bytes": 450,
+      "reference_symbol": "balanced64"
+    },
+    "mk61_memchr_fallback": {
+      "bytes": 450,
+      "reference_symbol": "balanced64"
+    }
+  },
+  "command": [
+    "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+    "-mcpu=cortex-m4",
+    "-mthumb",
+    "-mfpu=fpv4-sp-d16",
+    "-mfloat-abi=hard",
+    "-nostdlib",
+    "-Wl,--gc-sections,-Ttext=0x8062040,-e,baseline,--defsym,libc_search_end=libc_search+160,-u,baseline,-u,libc_search,-u,byte_search,-u,own4,-u,own16,-u,own64,-u,pair16,-u,balanced16,-u,pair64,-u,balanced64,-u,dsp16,-u,dsp32,-u,compact8",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-a8-kernels-v1/app/3-candidates.S.o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-a8-kernels-v1/app/7-balanced-candidates.S.o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-a8-kernels-v1/app/2-baseline.c.o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-a8-kernels-v1/app/4-pair-candidates.S.o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-a8-kernels-v1/app/6-dsp-candidates.S.o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-a8-kernels-v1/app/5-fast-candidates.S.o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-a8-kernels-v1/app/8-compact-candidates.S.o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-a8-kernels-v1/libc.o",
+    "-o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-a8-flash-v1/kernels.elf"
+  ]
+}

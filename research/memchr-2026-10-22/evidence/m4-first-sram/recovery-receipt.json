@@ -1,0 +1,52 @@
+{
+  "status": "PASS_RESTORED",
+  "scope": "recovery-only",
+  "plan_sha256": "6aced166b74f75617a86f6922058ddd1e4cc430900306f02fb4288cfcc965f8b",
+  "recorded_at": "2026-10-23T07:25:20.309132+00:00",
+  "serial_closed": true,
+  "cleanup_pending": false,
+  "filesystem_mutation_attempted": true,
+  "initial_health": {
+    "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 30 used, 994 free, 1024 total\r\nVisible: 27 files, 3 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=449/18 raw(v/t/b)=1492/936/1020 val(mV/dC/mV)=3331/274/3319 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1090850\r\n/> ",
+    "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+    "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=11576 observed_remaining=11576 sram_xn=1\r\n/> ",
+    "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+    "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+    "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+    "pwd": "pwd\r\n/\r\n/> "
+  },
+  "cleanup": {
+    "status": "PASS",
+    "files_preserved": true,
+    "files_restored": false,
+    "state": {
+      "status": "PASS",
+      "preserved": true,
+      "restored": false,
+      "actions": [],
+      "after": {
+        "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/>",
+        "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/>",
+        "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/>",
+        "hout": "hout 0 105\r\nhin 0000 000000000000000000000000000000000000000000000000\r\nhin 0024 000000000000000000000000000000000000000000000000\r\nhin 0048 000000000000000000000000000000000000000000000000\r\nhin 0072 000000000000000000000000000000000000000000000000\r\nhin 0096 000000000000000000\r\n/>",
+        "pwd": "pwd\r\n/\r\n/>",
+        "rtc": {
+          "raw": "date ms\r\n2001-01-01 01:34:38.351\r\nSet the date.\r\n/> ",
+          "alarm": "alarm\r\nRTC META valid=1 boot-valid=1 boot=9 reset=0x0 wake=reset power-fail=0 arm-fail=0\r\nRTC ALARM A off\r\nRTC ALARM B off\r\n/> ",
+          "calendar": "2001-01-01 01:34:38.351",
+          "unset": true,
+          "wall_utc": 1792740357.221201
+        }
+      }
+    }
+  },
+  "final_health": {
+    "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=431/18 raw(v/t/b)=1492/938/1019 val(mV/dC/mV)=3331/280/3316 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1089990\r\n/> ",
+    "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+    "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=11576 observed_remaining=11576 sram_xn=1\r\n/> ",
+    "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+    "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+    "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+    "pwd": "pwd\r\n/\r\n/> "
+  }
+}

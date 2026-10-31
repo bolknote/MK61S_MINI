@@ -1,0 +1,30 @@
+{
+  "cpu": "m4",
+  "elf_sha256": "88f4d12b0ba069e1368e3caa7256bef1af4aacf0fb7848bd1b8c25f114a4aeb5",
+  "results": [
+    {
+      "name": "own4",
+      "cases": 80913,
+      "bytes": 144,
+      "status": "PASS"
+    },
+    {
+      "name": "own16",
+      "cases": 80913,
+      "bytes": 246,
+      "status": "PASS"
+    },
+    {
+      "name": "own64",
+      "cases": 80913,
+      "bytes": 512,
+      "status": "PASS"
+    },
+    {
+      "name": "swar16",
+      "cases": 80913,
+      "bytes": 262,
+      "status": "PASS"
+    }
+  ]
+}

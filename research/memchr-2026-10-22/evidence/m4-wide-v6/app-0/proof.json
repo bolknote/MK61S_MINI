@@ -1,0 +1,130 @@
+{
+  "base": 536971040,
+  "delta": 100128,
+  "image_end": 536977364,
+  "memory_end": 536985332,
+  "capacity": 14304,
+  "static_end": 536892408,
+  "guard": 536985344,
+  "pointers": [
+    536971289,
+    536977025,
+    536973261,
+    536973285,
+    536973429,
+    536973677,
+    536974189,
+    536975489,
+    536974457,
+    536975761,
+    536974905,
+    536975169,
+    536976213,
+    536976561,
+    134548085,
+    536973245
+  ],
+  "bodies": {
+    "baseline": {
+      "bytes": 28,
+      "sha256": "0164e0f86c70994f372df3a64581b4754eb33dd17d5fcd2a3ab73f41a3e07c13",
+      "linked": "0x200000f9",
+      "actual": "0x20018819"
+    },
+    "libc_search": {
+      "bytes": 160,
+      "sha256": "aa741c51cc7147792fbfa5cb80b2971e17177a167e348fa85f38ffea23c3d1cc",
+      "linked": "0x20001761",
+      "actual": "0x20019e81"
+    },
+    "byte_search": {
+      "bytes": 22,
+      "sha256": "f20563c6cc916bfb3cea97e86bd59ac06ff8c6754e5840c8404231b5fec3664b",
+      "linked": "0x200008ad",
+      "actual": "0x20018fcd"
+    },
+    "own4": {
+      "bytes": 144,
+      "sha256": "7d884682a3b7e6cbe883f73faea9a78e45137ad843d86c08dcd1735c2a53ea1d",
+      "linked": "0x200008c5",
+      "actual": "0x20018fe5"
+    },
+    "own16": {
+      "bytes": 246,
+      "sha256": "4d82bf35854fabec2ff51057b40e6c1f521361b7922020f05704a8d2daafdab7",
+      "linked": "0x20000955",
+      "actual": "0x20019075"
+    },
+    "own64": {
+      "bytes": 512,
+      "sha256": "bb53d5b27f6c0a6705feba13b841ff8ccfc650d5f7f512184200915171993b0d",
+      "linked": "0x20000a4d",
+      "actual": "0x2001916d"
+    },
+    "pair16": {
+      "bytes": 268,
+      "sha256": "7a5e78ef120363ff8aae05b972ee2caaeeef1bc45b92314abcda2d7256b6ed0a",
+      "linked": "0x20000c4d",
+      "actual": "0x2001936d"
+    },
+    "balanced16": {
+      "bytes": 270,
+      "sha256": "e5ce46b95e76623993455cd0ad24c51ca1d4a0e5a1bfcab2fbf7634db3c98a78",
+      "linked": "0x20001161",
+      "actual": "0x20019881"
+    },
+    "pair64": {
+      "bytes": 448,
+      "sha256": "c154a42f4784da26dd8dafbada03bfc6bc180dc9447dafcefb381e814ee65417",
+      "linked": "0x20000d59",
+      "actual": "0x20019479"
+    },
+    "balanced64": {
+      "bytes": 450,
+      "sha256": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521",
+      "linked": "0x20001271",
+      "actual": "0x20019991"
+    },
+    "dsp16": {
+      "bytes": 264,
+      "sha256": "c96588267293cc2c1f2def3b57ab599e0bdc53087996b17ef09b9dc1e53493dc",
+      "linked": "0x20000f19",
+      "actual": "0x20019639"
+    },
+    "dsp32": {
+      "bytes": 320,
+      "sha256": "314cc955fd288dd5562b76414e2f0cb5f7d6098dc5b273978197384d08dad30c",
+      "linked": "0x20001021",
+      "actual": "0x20019741"
+    },
+    "compact8": {
+      "bytes": 168,
+      "sha256": "baada85ad506a37c5bb39e4922fb5c9bce76b8ac1ce63e1f3d7ac46027f871c4",
+      "linked": "0x20001435",
+      "actual": "0x20019b55"
+    },
+    "memchr": {
+      "bytes": 450,
+      "sha256": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521",
+      "linked": "0x20001591",
+      "actual": "0x20019cb1"
+    },
+    "indirect_search": {
+      "bytes": 12,
+      "sha256": "f39c1aba5038b85b23965d348e5ea1f7752d95fdcc48e1811c467d958383bffb",
+      "linked": "0x2000089d",
+      "actual": "0x20018fbd"
+    }
+  },
+  "sdk_local_body": {
+    "memchr": {
+      "bytes": 450,
+      "sha256": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521",
+      "linked": "0x20001591",
+      "actual": "0x20019cb1"
+    }
+  },
+  "sdk_cached_target": 536976561,
+  "runtime_table": 134553184,
+  "payload_crc32": 271610080
+}

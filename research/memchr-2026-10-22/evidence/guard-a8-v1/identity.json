@@ -1,0 +1,32 @@
+{
+  "build": "2CC0B4D1",
+  "prefix_sha256": "0931d4d63125cb8f7bc64dfb0e937a4c786c6105e52dd87dd2856d25e739f783",
+  "resident_elf_sha256": "e091d2be318d229d1023466b1ccb50ee2b1188f0c0e2cf4f9eb1ad65b02bda26",
+  "full_sha256": "41b59c1f927dc8cfc4d91d19db0bc902cce2d5fcfe774a56bbe011f85b948c10",
+  "payload_sha256": "0cf9b2827753dc82b319305d705477149d70d6a3acaaeebd3d216df4ff8e3d0e",
+  "body": {
+    "address": "0x8050a75",
+    "bytes": 450,
+    "sha256": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521"
+  },
+  "apps": [
+    {
+      "directory": "/MCHR-X01",
+      "app_sha256": "635338b5450584204291874373fdaaab3d41312fb067c20169a87b57c09dda06",
+      "shared": false,
+      "placement": "sram"
+    },
+    {
+      "directory": "/MCHR-X02",
+      "app_sha256": "4cd9c5fdc7aabf4890cc923cbea6b984a7d184b78aeab9a2812bf1c87b8010d6",
+      "shared": true,
+      "placement": "sram"
+    },
+    {
+      "directory": "/MCHR-X03",
+      "app_sha256": "c3408339943a0734a420f1db5e35829f5ad0b6d97a08e52bc28d0c944f0a2b94",
+      "shared": false,
+      "placement": "flash"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "compiled_units": 165,
+  "dynamic_bounded": 0,
+  "limit": 2048,
+  "max_frame": 1304,
+  "max_function": "language_vm.cpp:866:7:language_vm::Error language_vm::inspect_flash(const flash::Reader&, flash::IO, View&)",
+  "records": 2790,
+  "schema": 1,
+  "status": "ok",
+  "unbounded": 0
+}

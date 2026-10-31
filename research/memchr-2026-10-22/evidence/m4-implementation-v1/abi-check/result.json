@@ -1,0 +1,54 @@
+{
+  "status": "PASS",
+  "commands": [
+    {
+      "command": [
+        "clang",
+        "-std=c11",
+        "-O1",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Icode",
+        "-Isdk/portable/include",
+        "-fsanitize=address,undefined",
+        "tests/app_services_self_test.c",
+        "sdk/portable/shared_runtime.c",
+        "-o",
+        ".build/memchr-20261023/m4-implementation-v1/abi-check/services"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".build/memchr-20261023/m4-implementation-v1/abi-check/services"
+      ],
+      "returncode": 0,
+      "stdout": "APP services: truncated tables, versions, capabilities and runtime validation PASS\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "clang",
+        "--target=arm-none-eabi",
+        "-mcpu=cortex-m4",
+        "-mthumb",
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-ffreestanding",
+        "-Icode",
+        "-c",
+        "tests/portable_system_abi_self_test.c",
+        "-o",
+        ".build/memchr-20261023/m4-implementation-v1/abi-check/system-api.o"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

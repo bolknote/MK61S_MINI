@@ -1,0 +1,27 @@
+{
+  "status": "PASS_M4_SOURCE_INTEGRATION",
+  "hardware_scope": "ClassicF41196MHz; no F401 timing claim",
+  "production_scope": "M4 native and local SDK only",
+  "public_runtime_count": 26,
+  "optional_public_runtime_shipped": false,
+  "M0_backend": "unchanged 26-byte SDK",
+  "M0_hardware_selection": false,
+  "hardware_receipt_sha256": "1a9f3f1e7d1c177ed0fe8c646053a10cd51896f8991848c30baa22a0f36eb8ff",
+  "source_patch_sha256": "62ebe5ffffe4e7f57f33167f2f46421d05061a7338a8e98e592e81322ed677b6",
+  "functional_ARM_calls": 714900,
+  "APP_limit_bytes": 20480,
+  "release": {
+    "f411": {
+      "image_bytes": 376140,
+      "free_bytes": 148148,
+      "required_free_bytes": 16384
+    },
+    "f401": {
+      "image_bytes": 258008,
+      "free_bytes": 4136,
+      "required_free_bytes": 4096
+    }
+  },
+  "files_not_installed": true,
+  "committed": false
+}

@@ -1,0 +1,230 @@
+[
+  {
+    "cpu": "m4",
+    "name": "pair16",
+    "bytes": 268,
+    "before": "af84a160a03c1f7b276ce028bde4d0e0b53404785809fca25c0d26eb890042cc",
+    "after": "7a5e78ef120363ff8aae05b972ee2caaeeef1bc45b92314abcda2d7256b6ed0a",
+    "changes": [
+      {
+        "offset": 38,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 46,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  },
+  {
+    "cpu": "m4",
+    "name": "pair64",
+    "bytes": 448,
+    "before": "f65116291f35b44142e9c472f4afec873f86fe06cfba361542911bc0ad781ee6",
+    "after": "c154a42f4784da26dd8dafbada03bfc6bc180dc9447dafcefb381e814ee65417",
+    "changes": [
+      {
+        "offset": 38,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 46,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  },
+  {
+    "cpu": "m4",
+    "name": "balanced16",
+    "bytes": 270,
+    "before": "8fcf64b06124c4b26eb854bb5df38223a8e9cb16f6f15d3cc88afd64068e2964",
+    "after": "e5ce46b95e76623993455cd0ad24c51ca1d4a0e5a1bfcab2fbf7634db3c98a78",
+    "changes": [
+      {
+        "offset": 40,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 48,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  },
+  {
+    "cpu": "m4",
+    "name": "balanced64",
+    "bytes": 450,
+    "before": "4182df4757671c5be02308da07890930126db32b8b98c115cd092759113a8d1c",
+    "after": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521",
+    "changes": [
+      {
+        "offset": 40,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 48,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  },
+  {
+    "cpu": "m4",
+    "name": "dsp16",
+    "bytes": 264,
+    "before": "616298ccb287f426366b6b4705578cc88e3ce6006f3d1ddf4e7ea97988b1cfee",
+    "after": "c96588267293cc2c1f2def3b57ab599e0bdc53087996b17ef09b9dc1e53493dc",
+    "changes": [
+      {
+        "offset": 38,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 46,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  },
+  {
+    "cpu": "m4",
+    "name": "dsp32",
+    "bytes": 320,
+    "before": "fa0afeba164e3477b7d0771751d9628af95b3796cd2207e681e5f9dffe159e44",
+    "after": "314cc955fd288dd5562b76414e2f0cb5f7d6098dc5b273978197384d08dad30c",
+    "changes": [
+      {
+        "offset": 38,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 46,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  },
+  {
+    "cpu": "m0",
+    "name": "pair16",
+    "bytes": 244,
+    "before": "4f52bea15acedd0238c38f9973073ea1392f740ad2d6abdca86743590140ab1f",
+    "after": "f2e7f8faac840e7ca408cb3e4aa6e9fef4255ed392831f824f9fe7cfac96105c",
+    "changes": [
+      {
+        "offset": 38,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 46,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  },
+  {
+    "cpu": "m0",
+    "name": "pair64",
+    "bytes": 400,
+    "before": "f55680b3b41dc192ffcd57e9e3f6717af843afe03ed811926f3a580c0456dc29",
+    "after": "85b442239ce66690453b392f9a35045f5d0cf4de35467a57d73aa4beb65a2d97",
+    "changes": [
+      {
+        "offset": 38,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 46,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  },
+  {
+    "cpu": "m0",
+    "name": "fast16",
+    "bytes": 244,
+    "before": "56a947ac124f5366110693291c564c5ad88176eefba4513643738c8f3c0ea38f",
+    "after": "2359d57722e509692d8565ff3e8bc342508c3cb726f3ec0b8401567c9864cb90",
+    "changes": [
+      {
+        "offset": 38,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 46,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  },
+  {
+    "cpu": "m0",
+    "name": "fast64",
+    "bytes": 400,
+    "before": "e3ac9871b55102002a283c047e46cc7a8bfcb1efcb3c94527e6671504c1c48f7",
+    "after": "2b68dfc8f2aa12c7931fdc3c477f2ca9852ac0e907fc1850830c7ca250b6b97c",
+    "changes": [
+      {
+        "offset": 38,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 46,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  },
+  {
+    "cpu": "m0",
+    "name": "balanced16",
+    "bytes": 248,
+    "before": "2910fe599c65409c60e0a634aa49a943837ab8fe8d63df11854134dbb570206a",
+    "after": "994fda5135a4299795f49ab6d2f71150f0e07bbc487d44a65c75be9feebfc595",
+    "changes": [
+      {
+        "offset": 40,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 48,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  },
+  {
+    "cpu": "m0",
+    "name": "balanced64",
+    "bytes": 404,
+    "before": "27a49f7dea0bff80a865412be7b2f0462c3d4366446fac897b910fde84cf697c",
+    "after": "b279c07b519dc6ad8369bc8ed803c68dfee0855165186110c73e3cce19aa4e80",
+    "changes": [
+      {
+        "offset": 40,
+        "before": 131,
+        "after": 67
+      },
+      {
+        "offset": 48,
+        "before": 131,
+        "after": 67
+      }
+    ]
+  }
+]

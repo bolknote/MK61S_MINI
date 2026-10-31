@@ -1,0 +1,2 @@
+ISO strings: unsigned bytes, return values, bounds/padding/terminators, alignments and exact guard-page tails PASS
+Retained allocation: 8-byte alignment, zeroing, padding, atomic heap OOM, pinned APP/cache, eviction callback isolation PASS

@@ -1,0 +1,69 @@
+{
+  "base": 536973696,
+  "delta": 102784,
+  "image_end": 536977444,
+  "memory_end": 536985332,
+  "capacity": 11648,
+  "static_end": 536892472,
+  "guard": 536985344,
+  "pointers": [
+    536973881,
+    536977137,
+    536975765,
+    536975789,
+    536975933,
+    536976181,
+    536975749,
+    536976693
+  ],
+  "bodies": {
+    "baseline": {
+      "bytes": 28,
+      "sha256": "0164e0f86c70994f372df3a64581b4754eb33dd17d5fcd2a3ab73f41a3e07c13",
+      "linked": "0x200000b9",
+      "actual": "0x20019239"
+    },
+    "libc_search": {
+      "bytes": 160,
+      "sha256": "aa741c51cc7147792fbfa5cb80b2971e17177a167e348fa85f38ffea23c3d1cc",
+      "linked": "0x20000d71",
+      "actual": "0x20019ef1"
+    },
+    "byte_search": {
+      "bytes": 22,
+      "sha256": "f20563c6cc916bfb3cea97e86bd59ac06ff8c6754e5840c8404231b5fec3664b",
+      "linked": "0x20000815",
+      "actual": "0x20019995"
+    },
+    "own4": {
+      "bytes": 144,
+      "sha256": "7d884682a3b7e6cbe883f73faea9a78e45137ad843d86c08dcd1735c2a53ea1d",
+      "linked": "0x2000082d",
+      "actual": "0x200199ad"
+    },
+    "own16": {
+      "bytes": 246,
+      "sha256": "4d82bf35854fabec2ff51057b40e6c1f521361b7922020f05704a8d2daafdab7",
+      "linked": "0x200008bd",
+      "actual": "0x20019a3d"
+    },
+    "own64": {
+      "bytes": 512,
+      "sha256": "bb53d5b27f6c0a6705feba13b841ff8ccfc650d5f7f512184200915171993b0d",
+      "linked": "0x200009b5",
+      "actual": "0x20019b35"
+    },
+    "indirect_search": {
+      "bytes": 12,
+      "sha256": "9c66523039991f2ad85c6c6d5d367bbebbe0b316f45c206b40cb40a59ccc0210",
+      "linked": "0x20000805",
+      "actual": "0x20019985"
+    },
+    "swar16": {
+      "bytes": 262,
+      "sha256": "54409ea2c1980c5254ec4630a6acb97270f901f56daf71e80cad4cd4d1b25b45",
+      "linked": "0x20000bb5",
+      "actual": "0x20019d35"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "cpu": "m0",
+  "elf_sha256": "284b75825734808393d438c0d8e13598b2b6370a7aa85b7ac76365ecf126ae32",
+  "results": [
+    {
+      "name": "baseline",
+      "cases": 80913,
+      "bytes": 26,
+      "status": "PASS"
+    },
+    {
+      "name": "libc_search",
+      "cases": 80913,
+      "bytes": 124,
+      "status": "PASS"
+    },
+    {
+      "name": "byte_search",
+      "cases": 80913,
+      "bytes": 22,
+      "status": "PASS"
+    },
+    {
+      "name": "own4",
+      "cases": 80913,
+      "bytes": 140,
+      "status": "PASS"
+    },
+    {
+      "name": "own16",
+      "cases": 80913,
+      "bytes": 224,
+      "status": "PASS"
+    },
+    {
+      "name": "own64",
+      "cases": 80913,
+      "bytes": 440,
+      "status": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "status": "PASS",
+  "phase": "full-image-verified-health-deferred",
+  "operation": "read-full-and-leave-without-download",
+  "command": [
+    "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+    "-d",
+    "0483:df11",
+    "-S",
+    "2068336B4731",
+    "-a",
+    "0",
+    "-s",
+    "0x08000000:524288:leave",
+    "-U",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restored-full.bin"
+  ],
+  "expected_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+  "recovery": true,
+  "before": {
+    "source": "exact pinned ROM DFU",
+    "serial_closed": true
+  },
+  "listings": [
+    {
+      "index": 0,
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+        "-d",
+        "0483:df11",
+        "-S",
+        "2068336B4731",
+        "-l"
+      ],
+      "status": "VALID",
+      "returncode": 0,
+      "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=0, name=\"@Internal Flash  /0x08000000/04*016Kg,01*064Kg,03*128Kg\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=1, name=\"@Option Bytes  /0x1FFFC000/01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=2, name=\"@OTP Memory /0x1FFF7800/01*512 e,01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=3, name=\"@Device Feature/0xFFFF0000/01*004 e\", serial=\"2068336B4731\"\n",
+      "stdout_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restored-full.transfer.listing-000.stdout.bin",
+        "bytes": 877,
+        "sha256": "3ed85b33374af444ec75588c2f0e86f1455c23bd68e09229c933db0774715e93"
+      },
+      "stderr": "",
+      "stderr_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restored-full.transfer.listing-000.stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "listing": {
+    "index": 0,
+    "command": [
+      "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+      "-d",
+      "0483:df11",
+      "-S",
+      "2068336B4731",
+      "-l"
+    ],
+    "status": "VALID",
+    "returncode": 0,
+    "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=0, name=\"@Internal Flash  /0x08000000/04*016Kg,01*064Kg,03*128Kg\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=1, name=\"@Option Bytes  /0x1FFFC000/01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=2, name=\"@OTP Memory /0x1FFF7800/01*512 e,01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=3, name=\"@Device Feature/0xFFFF0000/01*004 e\", serial=\"2068336B4731\"\n",
+    "stdout_raw": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restored-full.transfer.listing-000.stdout.bin",
+      "bytes": 877,
+      "sha256": "3ed85b33374af444ec75588c2f0e86f1455c23bd68e09229c933db0774715e93"
+    },
+    "stderr": "",
+    "stderr_raw": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restored-full.transfer.listing-000.stderr.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\nOpening DFU capable USB device...\nDevice ID 0483:df11\nDevice DFU version 011a\nClaiming USB DFU Interface...\nSetting Alternate Interface #0 ...\nDetermining device status...\nDFU state(2) = dfuIDLE, status(0) = No error condition is present\nDFU mode device DFU version 011a\nDevice returned transfer size 2048\nDfuSe interface name: \"Internal Flash  \"\n\rUpload\t[                         ]   0%            0 bytes\rUpload\t[=                        ]   4%        22528 bytes\rUpload\t[==                       ]   8%        43008 bytes\rUpload\t[===                      ]  12%        63488 bytes\rUpload\t[====                     ]  16%        83968 bytes\rUpload\t[=====                    ]  20%       106496 bytes\rUpload\t[======                   ]  24%       126976 bytes\rUpload\t[=======                  ]  28%       147456 bytes\rUpload\t[========                 ]  32%       167936 bytes\rUpload\t[=========                ]  36%       190464 bytes\rUpload\t[=========                ]  39%       206848 bytes\rUpload\t[==========               ]  40%       210944 bytes\rUpload\t[===========              ]  44%       231424 bytes\rUpload\t[============             ]  48%       251904 bytes\rUpload\t[=============            ]  52%       274432 bytes\rUpload\t[==============           ]  56%       294912 bytes\rUpload\t[===============          ]  60%       315392 bytes\rUpload\t[================         ]  64%       335872 bytes\rUpload\t[=================        ]  68%       358400 bytes\rUpload\t[==================       ]  72%       378880 bytes\rUpload\t[===================      ]  76%       399360 bytes\rUpload\t[====================     ]  80%       419840 bytes\rUpload\t[=====================    ]  84%       442368 bytes\rUpload\t[======================   ]  88%       462848 bytes\rUpload\t[=======================  ]  92%       483328 bytes\rUpload\t[======================== ]  96%       503808 bytes\rUpload\t[=========================] 100%       524288 bytes\nUpload done.\nSubmitting leave request...\nTransitioning to dfuMANIFEST state\n",
+  "stdout_raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restored-full.transfer.stdout.bin",
+    "bytes": 2288,
+    "sha256": "d5a336a633e9f64a16b35b5ecace515b8ffb1dc40121ced8d8fa0e1fb88d7731"
+  },
+  "stderr": "",
+  "stderr_raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restored-full.transfer.stderr.bin",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "returncode": 0,
+  "bytes": 524288,
+  "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+  "serial_closed": true,
+  "health_qualification_deferred": true
+}

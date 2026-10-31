@@ -1,0 +1,11 @@
+{
+  "compiled_units": 165,
+  "dynamic_bounded": 0,
+  "limit": 5120,
+  "max_frame": 1928,
+  "max_function": "terminal.cpp:2050:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+  "records": 3066,
+  "schema": 1,
+  "status": "ok",
+  "unbounded": 0
+}

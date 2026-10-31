@@ -1,0 +1,197 @@
+-- The C compiler identification is GNU 14.2.1
+-- The CXX compiler identification is GNU 14.2.1
+-- The ASM compiler identification is GNU
+-- Found assembler: /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found Python3: /opt/homebrew/Frameworks/Python.framework/Versions/3.15/bin/python3.15 (found suitable version "3.15.0", minimum required is "3") found components: Interpreter
+-- Verified pinned native SDK: /Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/third_party/stm32f4
+-- Configuring done (0.7s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-implementation-v1/f411
+[0/2] Re-checking globbed directories...
+[1/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/app_flow.cpp.obj
+[2/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/app_flow_transfer.cpp.obj
+[3/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/ERM19264_graphics_font.cpp.obj
+[4/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/basic_graphics.cpp.obj
+[5/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/ERM19264_UC1609.cpp.obj
+[6/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/basic_native_io.cpp.obj
+[7/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/calculator_control.cpp.obj
+[8/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/builtin_font.cpp.obj
+[9/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/basic_graphics_runtime.cpp.obj
+[10/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/chip8_module_entry.cpp.obj
+[11/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/calculator_face.cpp.obj
+[12/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/chip8.cpp.obj
+[13/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/compact_format.cpp.obj
+[14/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/chip8_runner.cpp.obj
+[15/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/classic_timer.cpp.obj
+[16/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/compact_math.cpp.obj
+[17/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/crash_dump_format.cpp.obj
+[18/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/crash_dump.cpp.obj
+[19/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/cross_hal.cpp.obj
+[20/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/debug.cpp.obj
+[21/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/deep_idle.cpp.obj
+[22/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/dfu_splash.cpp.obj
+[23/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/device_identity.cpp.obj
+[24/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/disk_activity.cpp.obj
+[25/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/development.cpp.obj
+[26/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/display.cpp.obj
+[27/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/dwt_profiler.cpp.obj
+[28/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/display_buffer_loan.cpp.obj
+[29/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/exclusive_buffer.cpp.obj
+[30/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/display_ui.cpp.obj
+[31/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/explorer_autoexec.cpp.obj
+[32/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/entropy_pool.cpp.obj
+[33/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/explorer_module_entry.cpp.obj
+[34/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/early_dfu.cpp.obj
+[35/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/fmk_font.cpp.obj
+[36/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/fat_cluster_chain.cpp.obj
+[37/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/file_handlers.cpp.obj
+[38/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/fmk_prepare.cpp.obj
+[39/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/explorer_ui.cpp.obj
+[40/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/focal_module_entry.cpp.obj
+[41/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/focal.cpp.obj
+[42/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/focal_module_proxy.cpp.obj
+[43/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/hardware_info.cpp.obj
+[44/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/idle_sleep.cpp.obj
+[45/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/image1_viewer_module_entry.cpp.obj
+[46/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/key_wait_benchmark.cpp.obj
+[47/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/image1_viewer.cpp.obj
+[48/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/image1_viewer_module_proxy.cpp.obj
+[49/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/independent_watchdog.cpp.obj
+[50/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_linked_loader.cpp.obj
+[51/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_compiler_flow.cpp.obj
+[52/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/keyboard.cpp.obj
+[53/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_source_editor_entry.cpp.obj
+[54/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_linked_program.cpp.obj
+[55/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_linked_resident.cpp.obj
+[56/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_bytecode.cpp.obj
+[57/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_vm_file_cache_entry.cpp.obj
+[58/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_vm_file_cache.cpp.obj
+[59/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_vm_frontend.cpp.obj
+[60/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_vm_flow.cpp.obj
+[61/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_vm_input_entry.cpp.obj
+[62/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_vm.cpp.obj
+[63/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_vm_overlay_entry.cpp.obj
+[64/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_vm_validation.cpp.obj
+[65/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_vm_module_entry.cpp.obj
+[66/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_workspace.cpp.obj
+[67/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_vm_resident.cpp.obj
+[68/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/ledcontrol.cpp.obj
+[69/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/loadable_module_system_app.cpp.obj
+[70/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/loadable_app_api.cpp.obj
+[71/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/loadable_module_format.cpp.obj
+[72/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/m61_ansi.cpp.obj
+[73/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/loadable_module_runtime.cpp.obj
+[74/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/m61_print.cpp.obj
+[75/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/loadable_system_api.cpp.obj
+[76/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/m61_text.cpp.obj
+[77/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/markdown_document.cpp.obj
+[78/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/markdown_viewer_module_entry.cpp.obj
+[79/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/markdown_viewer.cpp.obj
+[80/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/mk61_io.cpp.obj
+[81/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/mk61_usb_serial.cpp.obj
+[82/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/mk_math_core.cpp.obj
+[83/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/menu.cpp.obj
+[84/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/native_eabi_m0.cpp.obj
+[85/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/mpu_guard.cpp.obj
+[86/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/native_eabi.cpp.obj
+[87/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/native_eabi_m0_cr.cpp.obj
+[88/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/prepared_font.cpp.obj
+[89/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/power_monitor.cpp.obj
+[90/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/program_load.cpp.obj
+[91/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/resident_firmware.cpp.obj
+[92/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/rtc_clock.cpp.obj
+[93/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/rtc_idle_clock.cpp.obj
+[94/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/program_store.cpp.obj
+[95/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/setup_font_compiler.cpp.obj
+[96/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/setup_module_entry.cpp.obj
+[97/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/setup_module.cpp.obj
+[98/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/setup_service.cpp.obj
+[99/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/setup_ui.cpp.obj
+[100/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/shared_memory_buffer.cpp.obj
+[101/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/shared_memory.cpp.obj
+[102/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/shared_scratch.cpp.obj
+[103/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/spi1_bus.cpp.obj
+[104/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/sound_driver.cpp.obj
+[105/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/spi1_dma.cpp.obj
+[106/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/spi1_transport.cpp.obj
+[107/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/spi_nor_flash.cpp.obj
+[108/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/startup_splash.cpp.obj
+[109/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_cdc_if.c.obj
+[110/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_cdc_queue.c.obj
+[111/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_adc.cpp.obj
+[112/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_gpio.cpp.obj
+[113/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/mk61emu_core.cpp.obj
+[114/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_rtc.cpp.obj
+[115/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_runtime.cpp.obj
+[116/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_usb_ll.c.obj
+[117/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_usb_serial_stub.cpp.obj
+[118/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_systick.cpp.obj
+[119/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_usb_device.cpp.obj
+[120/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_usbd_cdc.c.obj
+[121/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_usbd_ctlreq.c.obj
+[122/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_usbd_core.c.obj
+[123/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_usbd_desc.c.obj
+[124/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_usbd_ioreq.c.obj
+[125/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/storage_geometry.cpp.obj
+[126/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/storage_workspace.cpp.obj
+[127/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/system_memory.c.obj
+[128/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/storage_path.cpp.obj
+[129/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/system_memory_fill_move.c.obj
+[130/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/system_strings.c.obj
+[131/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/terminal_command_module.cpp.obj
+[132/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/terminal_catalog.cpp.obj
+[133/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/terminal_key_sequence.cpp.obj
+[134/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/terminal_script.cpp.obj
+[135/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/terminal_script_runtime.cpp.obj
+[136/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/text_screen.cpp.obj
+[137/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/terminal.cpp.obj
+[138/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/tinybasic_module_entry.cpp.obj
+[139/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/tinybasic.cpp.obj
+[140/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/tinybasic_module_proxy.cpp.obj
+[141/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/ui_font.cpp.obj
+[142/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/ui_text_renderer.cpp.obj
+[143/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usb_cdc_rx_guard.cpp.obj
+[144/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/tools.cpp.obj
+[145/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usb_screen_protocol.cpp.obj
+[146/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usb_screen.cpp.obj
+[147/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usb_power.cpp.obj
+[148/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usb_mass_storage.cpp.obj
+[149/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usbd_msc.c.obj
+[150/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usbd_msc_data.c.obj
+[151/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usbd_msc_bot.c.obj
+[152/168] Building C object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usbd_msc_scsi.c.obj
+[153/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usbdisk_module_entry.cpp.obj
+[154/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usb_screen_surface.cpp.obj
+[155/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/virtual_fat_diagnostic.cpp.obj
+[156/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/usbdisk_backend.cpp.obj
+[157/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/zx0.cpp.obj
+[158/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/wbmp.cpp.obj
+[159/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/workspace_swap.cpp.obj
+[160/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/zx0_stream.cpp.obj
+[161/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/zx0_encode.cpp.obj
+[162/168] Building CXX object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/virtual_fat.cpp.obj
+[163/168] Building ASM object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/stm32f4_startup.S.obj
+[164/168] Building ASM object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/native_eabi_arm.S.obj
+[165/168] Building ASM object CMakeFiles/resident.dir/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/native_eabi_fixed.S.obj
+[166/168] Building CXX object CMakeFiles/resident.dir/generated/firmware_main.cpp.obj
+[167/168] Linking CXX executable resident.elf
+stack analysis: compiled=165 shipping_artifact=untouched
+STACK frame=1928 qualifier=static function=/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/terminal.cpp:2050:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)
+STACK frame=1544 qualifier=static function=/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/storage_workspace.cpp:42:13:bool storage_workspace::{anonymous}::run_with_stack(const BufferRequest&)
+STACK frame=1320 qualifier=static function=/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/source-m4-only-v1/code/language_vm.cpp:866:7:language_vm::Error language_vm::inspect_flash(const flash::Reader&, flash::IO, View&)
+stack usage: OK files=162 records=3066 max=1928 limit=5120 dynamic_bounded=0
+-- MK61 Flash: image 376140/524288, free 148148, minimum headroom 16384
+-- MK61 RAM: globals 21496/131072, linker heap/stack minimum 1536, free after that check 108040; APP reserve 0
+   text	   data	    bss	    dec	    hex	filename
+ 374480	   1648	  21384	 397512	  610c8	/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-implementation-v1/f411/resident.elf
+Owned runtime built; seal resident.bin before installation.

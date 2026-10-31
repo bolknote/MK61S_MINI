@@ -1,0 +1,16 @@
+{
+  "head": "a9a434a188bdd4e89ada9db6c3cd88e1b7fdb4aa",
+  "scope": "M4 canonical native/local SDK only; M0 and public ABI unchanged",
+  "files": {
+    "code/system_memory.c": "58ca3bf80dc6fedd1fde6b5205e459c588d9c47203a286f28c169807762274be",
+    "code/system_strings.c": "ac48109e77c2acf54be29ac58551e36379b90de7edb311cab3d235be90822125",
+    "sdk/portable/memory.c": "75e484aa70deca65e7be5e8d7ab7a330ee032ee5424909acc938592d8cb82596",
+    "tools/build_portable_app.py": "2a2c0ae5d22a7670cfc6ee42a50ccaa3df5132ece28d60207d5e49ab7de8c0a8",
+    "code/memory_search_arm.h": "c338ae0e627dee75e7773ae1869b6f0d55041d5beaa84c6ad5f6bc2f8f0b865e",
+    "code/memchr_arm.inc": "15973f2bd8840b148273f8c2e4373be38356e71a5056262bf1e9e3fa18c72f65",
+    "tests/run_system_memchr_arm_tests.py": "f3ef4daa8d67fd0558e74d9025721a6441811ede1b4257659334a99d940b76a8",
+    "tests/system_memchr_arm_self_test.py": "61320d40c7f7889530ef761b38edc3261b88a7f1d7f9d7b8294d2b98cf4ffc1f",
+    "tests/system_memchr_guard_self_test.py": "766b1fe18c050c03fcabb74c3d28e350cceb5532181451a3f18f870339b0f324"
+  },
+  "patch_sha256": "62ebe5ffffe4e7f57f33167f2f46421d05061a7338a8e98e592e81322ed677b6"
+}

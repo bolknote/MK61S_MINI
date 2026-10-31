@@ -1,0 +1,26 @@
+--- a/pair-candidates.S
++++ b/pair-candidates.S
+@@ -1,5 +1,6 @@
+-/* Two naturally aligned words per LDM. The first match is still selected in
+- * byte order; loads never cross the supplied span. Candidate, not selected. */
++/* Align each two-word LDM to eight bytes. With an early match, n may extend
++ * past the object: the pair must not straddle a readable-memory boundary.
++ * The byte prefix stops at the first match. Candidate, not selected. */
+ .syntax unified
+ .thumb
+ .macro function name
+@@ -91,12 +92,12 @@
+ #if defined(MEMCHR_BALANCED_PREFIX)
+  adds r2,#1
+ #endif
+- lsls r3,r0,#30
++ lsls r3,r0,#29
+  beq .Laligned\name
+  adds r0,#1
+  subs r2,#1
+ .Lprefix\name:
+- lsls r3,r0,#30
++ lsls r3,r0,#29
+  beq .Laligned\name
+  ldrb r3,[r0]
+  cmp r3,r1

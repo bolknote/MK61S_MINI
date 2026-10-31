@@ -1,0 +1,26 @@
+{
+  "scope": "firmware-and-payload",
+  "cpu": "m4",
+  "uid": "AEB505B6E0067623",
+  "usb_serial": "2068336B4731",
+  "original_build": "3AB3DD45",
+  "candidate_build": "2CC0B4D1",
+  "plan_sha256": "bb09fece88cfdad86f335bd902349346a806401714f9c201ec94f2136b3453b2",
+  "runner_sha256": "fb128cc04aac348faefdec836b7e584922288224d8c84aab18a843ec3ed73410",
+  "original_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+  "candidate_sha256": "41b59c1f927dc8cfc4d91d19db0bc902cce2d5fcfe774a56bbe011f85b948c10",
+  "apps": [
+    {
+      "directory": "/MCHR-X01",
+      "app_sha256": "635338b5450584204291874373fdaaab3d41312fb067c20169a87b57c09dda06"
+    },
+    {
+      "directory": "/MCHR-X02",
+      "app_sha256": "4cd9c5fdc7aabf4890cc923cbea6b984a7d184b78aeab9a2812bf1c87b8010d6"
+    },
+    {
+      "directory": "/MCHR-X03",
+      "app_sha256": "c3408339943a0734a420f1db5e35829f5ad0b6d97a08e52bc28d0c944f0a2b94"
+    }
+  ]
+}

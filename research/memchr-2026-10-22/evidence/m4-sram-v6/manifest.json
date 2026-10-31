@@ -1,0 +1,125 @@
+{
+  "scope": "Physical Classic M4 SRAM first candidate matrix only; paired/runtime/Flash/M0+ selection pending",
+  "rows": 304,
+  "hardware_checks": 2640,
+  "status": "PASS",
+  "serial_closed": true,
+  "files_preserved": true,
+  "calculator_preserved": true,
+  "firmware_unchanged": true,
+  "public_runtime_measured": false,
+  "files": {
+    "00-00.bin": {
+      "bytes": 3568,
+      "sha256": "1c66c36756439b06f69517efce3c87ac41d5ba662a47cf599a03d6d9e9876f36"
+    },
+    "00-01.bin": {
+      "bytes": 3568,
+      "sha256": "747616a03bc0cce73a182f6fcc9d7fe7e1d81b33987986851f6426c2934f6cb8"
+    },
+    "00-02.bin": {
+      "bytes": 3568,
+      "sha256": "df4b45ac0498f6784e9fc71f16e3681a6cc32fa579a8ee1eb29d0b5970016ec3"
+    },
+    "00-03.bin": {
+      "bytes": 3568,
+      "sha256": "cbcc914adc36b69817be6e3bc7b7dc7a6127ba6828e0172469b720c3860024e6"
+    },
+    "00-04.bin": {
+      "bytes": 3568,
+      "sha256": "7479f28dfacf26261d00f798ff42d67192f59874cf54b41ab5062fcab81b2fdb"
+    },
+    "00-05.bin": {
+      "bytes": 3568,
+      "sha256": "d9ca54d94f099724f0bca870c6b1a74b981dd2b5a7e7cb49f5d535183757d779"
+    },
+    "00-06.bin": {
+      "bytes": 3568,
+      "sha256": "637bee2df80adede159a7795bd982679d4397b583d2d1d23e508577e903319fe"
+    },
+    "00-07.bin": {
+      "bytes": 3568,
+      "sha256": "f1a3e96f4c1ec63e69c0588b430dc0263110ec6a2ba044396a338c7ba4b4e479"
+    },
+    "00-08.bin": {
+      "bytes": 3568,
+      "sha256": "fa33861e7b2e7a3c028c56056834881dbc5e67b1a1205d79319b17d0737861d8"
+    },
+    "00-09.bin": {
+      "bytes": 3568,
+      "sha256": "f5b8f3799cdc700eb0a90e4813f26a4a0e69f096bc7adbbfbbefebe910f11e96"
+    },
+    "00-10.bin": {
+      "bytes": 3568,
+      "sha256": "5248e1348dfed39177e0031b62452e9b184495f58780d929c84172ac2fa41a39"
+    },
+    "00-11.bin": {
+      "bytes": 3568,
+      "sha256": "cad9abed4fa24744180457811b8d9bbc8733b5644ca05de11fbd62c310400c63"
+    },
+    "00-12.bin": {
+      "bytes": 3568,
+      "sha256": "ebf4bf6779337f99169e6b5eb85999a7a01dc8a1b348f9242fb5876e34ff2152"
+    },
+    "00-13.bin": {
+      "bytes": 3568,
+      "sha256": "002c8c60f5fbf16e83c384f2f232b0e1c49700e2335941c58f3a7085b61b15f5"
+    },
+    "00-14.bin": {
+      "bytes": 3568,
+      "sha256": "0d35d030955d34fd875340782b334d498e9490ec2a863fffd1f66f2422f01842"
+    },
+    "00-15.bin": {
+      "bytes": 3568,
+      "sha256": "4e07f422c52165227780404b1c0db023281c5ce963223aedf00e25516c0b0c05"
+    },
+    "00-16.bin": {
+      "bytes": 3568,
+      "sha256": "c1a7aaa8de3dfc6d93c3a55821cdc32a1513b1da16e988393ea897cfef088173"
+    },
+    "00-17.bin": {
+      "bytes": 3568,
+      "sha256": "89c18acb836229ee0487cddf4dffd8ff8a2e344faf60470375cab00f2a176429"
+    },
+    "00-18.bin": {
+      "bytes": 3568,
+      "sha256": "aeed2f4ba43273d9f4fb5382deb0a11c1a24e5ffd79e18b65f5e275a6c88a483"
+    },
+    "00-19.bin": {
+      "bytes": 3568,
+      "sha256": "0d2419a92c1b0aa71f75eec705f80026472feac9b77f985977b1c47d1eea96c5"
+    },
+    "00-20.bin": {
+      "bytes": 3568,
+      "sha256": "4fb832b4e5e6b719635e39c663b04b84ddb8328dca0815d4a0e85400e842ffde"
+    },
+    "00-21.bin": {
+      "bytes": 3568,
+      "sha256": "9dd5e198e4075af7b0f1fe64792c58135e57144fb87b7e1f5411ceccf2c62987"
+    },
+    "00-22.bin": {
+      "bytes": 3568,
+      "sha256": "4a3a2867bce91624f32bda7f58afce7e87a3c37ac6f0f2eb72d7810c302f58a8"
+    },
+    "00-23.bin": {
+      "bytes": 3568,
+      "sha256": "290e61721a90b3c11f1197ede0c8cac15a90cf6889e8b14177fc122a06ee646f"
+    },
+    "00-24.bin": {
+      "bytes": 3568,
+      "sha256": "661dde976b8cc86eac6be42eea931ceaf207213b2db9e59ab7bfd558435fea0b"
+    },
+    "00-25.bin": {
+      "bytes": 1360,
+      "sha256": "f5b88a59e8774c62c770f58f8a1edcefd69f182a813e63200d93e4e646d44ebb"
+    },
+    "bounded-relocation-proof.json": {
+      "bytes": 1826,
+      "sha256": "55025b09a5ed0213703ee8cac7f9d3ece83598e0aa8f89e68f6c50e66971a26f"
+    },
+    "result.json": {
+      "bytes": 1468570,
+      "sha256": "5bfd69d87d6bca5dbf659f3262323e4f1141776605fda07f9a31cb60a3a8d6ef"
+    }
+  }
+}

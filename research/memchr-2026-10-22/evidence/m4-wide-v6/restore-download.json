@@ -1,0 +1,210 @@
+{
+  "status": "READBACK_REQUIRED",
+  "phase": "subprocess",
+  "operation": "download-full-image",
+  "command": [
+    "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+    "-d",
+    "0483:df11",
+    "-S",
+    "2068336B4731",
+    "-a",
+    "0",
+    "-s",
+    "0x08000000",
+    "-D",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-a.bin"
+  ],
+  "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+  "recovery": true,
+  "leaves_rom": false,
+  "cdc_attempts": [
+    {
+      "port": "/dev/cu.usbmodem2068336B47311",
+      "requested_build": null,
+      "wait_seconds": 30,
+      "status": "ADMITTED",
+      "identity": {
+        "public": "AEB505B6E0067623",
+        "short": "E0067623",
+        "usb": "2068336B4731",
+        "volume": "AED647EB",
+        "build": "2CC0B4D1",
+        "profile": "classic-v3-uc1609"
+      },
+      "failure": null,
+      "serial_closed": false,
+      "index": 0,
+      "raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.cdc-000.serial.bin",
+        "bytes": 139,
+        "sha256": "4891165e7a1658232aa39ee8d8f557769f8032b5b63ed1d7c6e07d2ff93bf6dd"
+      }
+    }
+  ],
+  "before": {
+    "recovery": true,
+    "requested_build": "2CC0B4D1",
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "2CC0B4D1",
+      "profile": "classic-v3-uc1609"
+    },
+    "health": {
+      "qualification_skipped_for_original_recovery": true,
+      "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=431/18 raw(v/t/b)=1492/944/1018 val(mV/dC/mV)=3331/300/3312 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=376148 footer=374444 expected=0x2CC0B4D1 build=0x2CC0B4D1 actual=0x2CC0B4D1 backend=hardware cycles=1107965\r\n/> ",
+      "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+      "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x200053F8 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FCB0 observed_low=0x2001FCB0 sampled_remaining=15536 watermark=1 watermark_remaining=11688 observed_remaining=11688 sram_xn=1\r\n/> "
+    },
+    "dfu_request_attempted": true,
+    "dfu_request_issued": true,
+    "dfu_usb_disconnect": {
+      "errno": 6,
+      "failure": "OSError(6, 'Device not configured')"
+    },
+    "serial_closed": true
+  },
+  "listings": [
+    {
+      "index": 0,
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+        "-d",
+        "0483:df11",
+        "-S",
+        "2068336B4731",
+        "-l"
+      ],
+      "status": "REJECTED",
+      "returncode": 0,
+      "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\n",
+      "stdout_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.listing-000.stdout.bin",
+        "bytes": 271,
+        "sha256": "4c1d1054a7b796fd94cb0f20fa0dacf3427474707aceacbdb44c917dd4ceaafb"
+      },
+      "stderr": "",
+      "stderr_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.listing-000.stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "index": 1,
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+        "-d",
+        "0483:df11",
+        "-S",
+        "2068336B4731",
+        "-l"
+      ],
+      "status": "REJECTED",
+      "returncode": 0,
+      "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\n",
+      "stdout_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.listing-001.stdout.bin",
+        "bytes": 271,
+        "sha256": "4c1d1054a7b796fd94cb0f20fa0dacf3427474707aceacbdb44c917dd4ceaafb"
+      },
+      "stderr": "",
+      "stderr_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.listing-001.stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "index": 2,
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+        "-d",
+        "0483:df11",
+        "-S",
+        "2068336B4731",
+        "-l"
+      ],
+      "status": "REJECTED",
+      "returncode": 0,
+      "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\n",
+      "stdout_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.listing-002.stdout.bin",
+        "bytes": 271,
+        "sha256": "4c1d1054a7b796fd94cb0f20fa0dacf3427474707aceacbdb44c917dd4ceaafb"
+      },
+      "stderr": "",
+      "stderr_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.listing-002.stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "index": 3,
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+        "-d",
+        "0483:df11",
+        "-S",
+        "2068336B4731",
+        "-l"
+      ],
+      "status": "VALID",
+      "returncode": 0,
+      "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=0, name=\"@Internal Flash  /0x08000000/04*016Kg,01*064Kg,03*128Kg\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=1, name=\"@Option Bytes  /0x1FFFC000/01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=2, name=\"@OTP Memory /0x1FFF7800/01*512 e,01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=3, name=\"@Device Feature/0xFFFF0000/01*004 e\", serial=\"2068336B4731\"\n",
+      "stdout_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.listing-003.stdout.bin",
+        "bytes": 877,
+        "sha256": "3ed85b33374af444ec75588c2f0e86f1455c23bd68e09229c933db0774715e93"
+      },
+      "stderr": "",
+      "stderr_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.listing-003.stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "listing": {
+    "index": 3,
+    "command": [
+      "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+      "-d",
+      "0483:df11",
+      "-S",
+      "2068336B4731",
+      "-l"
+    ],
+    "status": "VALID",
+    "returncode": 0,
+    "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=0, name=\"@Internal Flash  /0x08000000/04*016Kg,01*064Kg,03*128Kg\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=1, name=\"@Option Bytes  /0x1FFFC000/01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=2, name=\"@OTP Memory /0x1FFF7800/01*512 e,01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=3, name=\"@Device Feature/0xFFFF0000/01*004 e\", serial=\"2068336B4731\"\n",
+    "stdout_raw": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.listing-003.stdout.bin",
+      "bytes": 877,
+      "sha256": "3ed85b33374af444ec75588c2f0e86f1455c23bd68e09229c933db0774715e93"
+    },
+    "stderr": "",
+    "stderr_raw": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.listing-003.stderr.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\nOpening DFU capable USB device...\nDevice ID 0483:df11\nDevice DFU version 011a\nClaiming USB DFU Interface...\nSetting Alternate Interface #0 ...\nDetermining device status...\nDFU state(10) = dfuERROR, status(10) = Device's firmware is corrupt. It cannot return to run-time (non-DFU) operations\nClearing status\nDetermining device status...\nDFU state(2) = dfuIDLE, status(0) = No error condition is present\nDFU mode device DFU version 011a\nDevice returned transfer size 2048\nDfuSe interface name: \"Internal Flash  \"\nDownloading element to address = 0x08000000, size = 524288\n\rErase   \t[                         ]   0%            0 bytes\rErase   \t[                         ]   3%        16384 bytes\rErase   \t[=                        ]   4%        22528 bytes\rErase   \t[==                       ]   8%        43008 bytes\rErase   \t[==                       ]   9%        49152 bytes\rErase   \t[===                      ]  12%        63488 bytes\rErase   \t[===                      ]  12%        65536 bytes\rErase   \t[====                     ]  16%        83968 bytes\rErase   \t[=====                    ]  20%       106496 bytes\rErase   \t[======                   ]  24%       126976 bytes\rErase   \t[======                   ]  25%       131072 bytes\rErase   \t[=======                  ]  28%       147456 bytes\rErase   \t[========                 ]  32%       167936 bytes\rErase   \t[=========                ]  36%       190464 bytes\rErase   \t[==========               ]  40%       210944 bytes\rErase   \t[===========              ]  44%       231424 bytes\rErase   \t[============             ]  48%       251904 bytes\rErase   \t[============             ]  50%       262144 bytes\rErase   \t[=============            ]  52%       274432 bytes\rErase   \t[==============           ]  56%       294912 bytes\rErase   \t[===============          ]  60%       315392 bytes\rErase   \t[================         ]  64%       335872 bytes\rErase   \t[=================        ]  68%       358400 bytes\rErase   \t[==================       ]  72%       378880 bytes\rErase   \t[==================       ]  75%       393216 bytes\rErase   \t[===================      ]  76%       399360 bytes\rErase   \t[====================     ]  80%       419840 bytes\rErase   \t[=====================    ]  84%       442368 bytes\rErase   \t[======================   ]  88%       462848 bytes\rErase   \t[=======================  ]  92%       483328 bytes\rErase   \t[======================== ]  96%       503808 bytes\rErase   \t[=========================] 100%       524288 bytes\nErase    done.\n\rDownload\t[                         ]   0%            0 bytes\rDownload\t[                         ]   1%         8192 bytes\rDownload\t[                         ]   3%        16384 bytes\rDownload\t[=                        ]   4%        22528 bytes\rDownload\t[=                        ]   5%        26624 bytes\rDownload\t[=                        ]   6%        34816 bytes\rDownload\t[==                       ]   8%        43008 bytes\rDownload\t[==                       ]   9%        51200 bytes\rDownload\t[==                       ]  11%        59392 bytes\rDownload\t[===                      ]  12%        63488 bytes\rDownload\t[===                      ]  12%        67584 bytes\rDownload\t[===                      ]  14%        75776 bytes\rDownload\t[====                     ]  16%        83968 bytes\rDownload\t[====                     ]  17%        92160 bytes\rDownload\t[====                     ]  19%       100352 bytes\rDownload\t[=====                    ]  20%       106496 bytes\rDownload\t[=====                    ]  20%       108544 bytes\rDownload\t[=====                    ]  22%       116736 bytes\rDownload\t[=====                    ]  23%       124928 bytes\rDownload\t[======                   ]  24%       126976 bytes\rDownload\t[======                   ]  25%       133120 bytes\rDownload\t[======                   ]  26%       141312 bytes\rDownload\t[=======                  ]  28%       147456 bytes\rDownload\t[=======                  ]  28%       149504 bytes\rDownload\t[=======                  ]  30%       157696 bytes\rDownload\t[=======                  ]  31%       165888 bytes\rDownload\t[========                 ]  32%       167936 bytes\rDownload\t[========                 ]  33%       174080 bytes\rDownload\t[========                 ]  34%       182272 bytes\rDownload\t[=========                ]  36%       190464 bytes\rDownload\t[=========                ]  38%       200704 bytes\rDownload\t[=========                ]  39%       208896 bytes\rDownload\t[==========               ]  40%       210944 bytes\rDownload\t[==========               ]  41%       217088 bytes\rDownload\t[==========               ]  42%       225280 bytes\rDownload\t[===========              ]  44%       231424 bytes\rDownload\t[===========              ]  44%       233472 bytes\rDownload\t[===========              ]  46%       241664 bytes\rDownload\t[===========              ]  47%       249856 bytes\rDownload\t[============             ]  48%       251904 bytes\rDownload\t[============             ]  49%       258048 bytes\rDownload\t[============             ]  50%       266240 bytes\rDownload\t[=============            ]  52%       274432 bytes\rDownload\t[=============            ]  53%       282624 bytes\rDownload\t[=============            ]  55%       290816 bytes\rDownload\t[==============           ]  56%       294912 bytes\rDownload\t[==============           ]  57%       299008 bytes\rDownload\t[==============           ]  58%       307200 bytes\rDownload\t[===============          ]  60%       315392 bytes\rDownload\t[===============          ]  60%       317440 bytes\rDownload\t[===============          ]  62%       325632 bytes\rDownload\t[===============          ]  63%       333824 bytes\rDownload\t[================         ]  64%       335872 bytes\rDownload\t[================         ]  65%       342016 bytes\rDownload\t[================         ]  66%       350208 bytes\rDownload\t[=================        ]  68%       358400 bytes\rDownload\t[=================        ]  69%       366592 bytes\rDownload\t[=================        ]  71%       374784 bytes\rDownload\t[==================       ]  72%       378880 bytes\rDownload\t[==================       ]  73%       382976 bytes\rDownload\t[==================       ]  74%       391168 bytes\rDownload\t[===================      ]  76%       399360 bytes\rDownload\t[===================      ]  77%       407552 bytes\rDownload\t[===================      ]  79%       415744 bytes\rDownload\t[====================     ]  80%       419840 bytes\rDownload\t[====================     ]  80%       423936 bytes\rDownload\t[====================     ]  82%       432128 bytes\rDownload\t[====================     ]  83%       440320 bytes\rDownload\t[=====================    ]  84%       442368 bytes\rDownload\t[=====================    ]  85%       450560 bytes\rDownload\t[=====================    ]  87%       458752 bytes\rDownload\t[======================   ]  88%       462848 bytes\rDownload\t[======================   ]  89%       466944 bytes\rDownload\t[======================   ]  90%       475136 bytes\rDownload\t[=======================  ]  92%       483328 bytes\rDownload\t[=======================  ]  93%       491520 bytes\rDownload\t[=======================  ]  95%       499712 bytes\rDownload\t[======================== ]  96%       503808 bytes\rDownload\t[======================== ]  96%       507904 bytes\rDownload\t[======================== ]  98%       516096 bytes\rDownload\t[=========================] 100%       524288 bytes\nDownload done.\nFile downloaded successfully\n",
+  "stdout_raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.stdout.bin",
+    "bytes": 7795,
+    "sha256": "8357dde85d01ea2ea95d7f724e6f9dd8d3ef5020d24557bf815c06543c7cc8a1"
+  },
+  "stderr": "",
+  "stderr_raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/restore-download.stderr.bin",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "returncode": 0
+}

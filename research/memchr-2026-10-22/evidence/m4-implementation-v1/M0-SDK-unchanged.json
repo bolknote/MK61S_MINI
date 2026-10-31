@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "body_identity": [
+    {
+      "name": "before",
+      "bytes": 26,
+      "sha256": "b0e7e8be7f9f6ce95ec7d9c86f2996103968641c0a917b3fe7fd8687994e0acf"
+    },
+    {
+      "name": "after",
+      "bytes": 26,
+      "sha256": "b0e7e8be7f9f6ce95ec7d9c86f2996103968641c0a917b3fe7fd8687994e0acf"
+    }
+  ],
+  "performance_selection": false
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "status": "PASS",
+    "cpu": "m0",
+    "scope": "Functional early-hit/object-end/guard tests, not hardware timing",
+    "guard": "0x20080000",
+    "boundary": "unmapped page",
+    "full_cases_per_body": 20689,
+    "elf_sha256": "ff7e636ab34dd166d164b49490368a187ad9bd344b8d3419e0efaa6d82f858ef",
+    "results": [
+      {
+        "name": "memchr",
+        "body_bytes": 26,
+        "body_sha256": "b0e7e8be7f9f6ce95ec7d9c86f2996103968641c0a917b3fe7fd8687994e0acf",
+        "cases": 20689,
+        "failures": 0,
+        "examples": [],
+        "status": "PASS"
+      }
+    ]
+  },
+  {
+    "status": "PASS",
+    "cpu": "m0",
+    "scope": "Functional early-hit/object-end/guard tests, not hardware timing",
+    "guard": "0x2007ffe0",
+    "boundary": "read hook emulates MPU boundary",
+    "full_cases_per_body": 20689,
+    "elf_sha256": "ff7e636ab34dd166d164b49490368a187ad9bd344b8d3419e0efaa6d82f858ef",
+    "results": [
+      {
+        "name": "memchr",
+        "body_bytes": 26,
+        "body_sha256": "b0e7e8be7f9f6ce95ec7d9c86f2996103968641c0a917b3fe7fd8687994e0acf",
+        "cases": 20689,
+        "failures": 0,
+        "examples": [],
+        "status": "PASS"
+      }
+    ]
+  },
+  {
+    "status": "PASS",
+    "cpu": "m0",
+    "scope": "Functional early-hit/object-end/guard tests, not hardware timing",
+    "guard": "0x2007ff00",
+    "boundary": "read hook emulates MPU boundary",
+    "full_cases_per_body": 20689,
+    "elf_sha256": "ff7e636ab34dd166d164b49490368a187ad9bd344b8d3419e0efaa6d82f858ef",
+    "results": [
+      {
+        "name": "memchr",
+        "body_bytes": 26,
+        "body_sha256": "b0e7e8be7f9f6ce95ec7d9c86f2996103968641c0a917b3fe7fd8687994e0acf",
+        "cases": 20689,
+        "failures": 0,
+        "examples": [],
+        "status": "PASS"
+      }
+    ]
+  }
+]

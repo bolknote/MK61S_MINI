@@ -1,0 +1,35 @@
+{
+  "status": "FAIL",
+  "cpu": "m4",
+  "scope": "Functional early-hit/object-end/guard tests, not hardware timing",
+  "guard": "0x20080000",
+  "boundary": "unmapped page",
+  "full_cases_per_body": 20689,
+  "elf_sha256": "5b3ce3f65f586382dd8a42d99cdb6aaba9af0bdc49a52f6d61ae69ce523ad330",
+  "results": [
+    {
+      "name": "memchr",
+      "body_bytes": 450,
+      "body_sha256": "4182df4757671c5be02308da07890930126db32b8b98c115cd092759113a8d1c",
+      "cases": 88,
+      "failures": 1,
+      "examples": [
+        {
+          "object_bytes": 4,
+          "pointer": "0x2007fffc",
+          "value": 0,
+          "first_match": 1,
+          "count": 12,
+          "expected": "0x2007fffd",
+          "pc": "0x8050bd2",
+          "failure": "UcError()",
+          "memory_fault": {
+            "address": "0x20080000",
+            "bytes": 4
+          }
+        }
+      ],
+      "status": "FAIL"
+    }
+  ]
+}

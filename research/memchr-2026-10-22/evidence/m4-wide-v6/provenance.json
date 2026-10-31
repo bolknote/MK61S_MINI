@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "scope": "Physical M4 ClassicF411 96MHz, paired7rounds; code/data SRAM+Flash, standalone/sharedSDK and actualnative/runtime",
+  "actual_result_sha256": "1a9f3f1e7d1c177ed0fe8c646053a10cd51896f8991848c30baa22a0f36eb8ff",
+  "actual_result_path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/result.json",
+  "result_exit_code": 0,
+  "raw_reports": 618,
+  "timing_rows": 4320,
+  "correctness_calls": 659808,
+  "independent_full_restore_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+  "original_files_preserved": true,
+  "original_state_preserved": true,
+  "logical_repair_performed": false,
+  "serial_closed": true,
+  "operator_PID": 14665,
+  "operator_session": 73405,
+  "original_lease_sha256": "de4daf38cf0ecad0a942805aa23cfee163278eb87838db1e71929546b0ff358c",
+  "note": "receipt.json retains all outcome fields but replaces decoded timing rows with raw-file SHA/counts. All7rounds remain in618binaryreports. Original user file contents and full serial transcripts are not exported.",
+  "production_selected": false,
+  "M0_hardware_tested": false
+}

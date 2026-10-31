@@ -1,0 +1,218 @@
+{
+  "status": "TECHNICAL_GO_FULL_CORRECTED_V6",
+  "recorded_at": "2026-10-23T15:46:26.952209+00:00",
+  "scope": "Independent offline full corrected Classic memchr V6 artifact, algorithm, guarded ARM/AAPCS, runtime and recovery applicability review; not hardware execution approval.",
+  "packet": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6",
+  "plan_sha256": "bb09fece88cfdad86f335bd902349346a806401714f9c201ec94f2136b3453b2",
+  "seal_sha256": "a48c8cdb63777f7a39699cabd5a3757c5e6f2c2b5210dccc986ff8b5e3516cc3",
+  "runner_sha256": "fb128cc04aac348faefdec836b7e584922288224d8c84aab18a843ec3ed73410",
+  "transport_sha256": "f3b7f93198e6076140d65ac6aa4ac5744f00c0aece8dcafeddfd915e982150ba",
+  "command_sha256": "153f4508dccd73e048e98fae4f71641b1e144000eca831c381300726b7612e53",
+  "requested_binding_sha256": "b3902d544ceec61de4f9f09641bc1fb952da8263a09476f62eac3b7539c44cc3",
+  "closure": {
+    "sealed_files": 218,
+    "pinned_artifacts": 210,
+    "pinned_runtime_dependencies": 25,
+    "all_sizes_SHA_and_live_frozen_closure_exact": true,
+    "metadata_binding_derived_from_exact_plan_runner": true,
+    "acyclic_current_lease_and_plan_binding": true,
+    "old_paused_lease_sha256": "96d72504ef89300d3f75be034473d39b41a96249f1e6240bcce1871c50a99279",
+    "old_paused_lease_rejected_before_USB": "No exclusive FW/rollback lease",
+    "nested_algorithm_seal_sha256": "6d327c61f3a5d9d4c64e63e095aa3d890bb3d3fe27f6940995e9af722cee0aac",
+    "nested_V5b_seal_sha256": "ddc5424784ffd2a3cd2a276cf3c1846880395c1b443a11b076e738778c120f21"
+  },
+  "candidate": {
+    "build": "2CC0B4D1",
+    "UID": "AEB505B6E0067623",
+    "usb_serial": "2068336B4731",
+    "port": "/dev/cu.usbmodem2068336B47311",
+    "full_bytes": 524288,
+    "full_sha256": "41b59c1f927dc8cfc4d91d19db0bc902cce2d5fcfe774a56bbe011f85b948c10",
+    "prefix_bytes": 376148,
+    "prefix_sha256": "0931d4d63125cb8f7bc64dfb0e937a4c786c6105e52dd87dd2856d25e739f783",
+    "ELF_sha256": "e091d2be318d229d1023466b1ccb50ee2b1188f0c0e2cf4f9eb1ad65b02bda26",
+    "footer": {
+      "offset": 374444,
+      "bytes": 376148,
+      "build": "2CC0B4D1",
+      "crc32": "2CC0B4D1",
+      "profile": "BE204470"
+    },
+    "payload_bytes": 8208,
+    "payload_sha256": "0cf9b2827753dc82b319305d705477149d70d6a3acaaeebd3d216df4ff8e3d0e",
+    "original_reference_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+    "all_other_original_flash_bytes_preserved": true,
+    "prefix_reconstructed_from_actual_new_ELF": true,
+    "payload_ELF_and_each_executable_body_verified": true
+  },
+  "algorithm": {
+    "fixed_rule": "Byte prefix stops at earliest match and aligns subsequent8-byte LDMIA pairs to8bytes; 4-byte tail remains naturally aligned and length-bounded. Counts exceeding object size are tested only when an early match is present.",
+    "selected_native_address": "0x08050a75",
+    "selected_native_bytes": 450,
+    "selected_native_SHA256": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521",
+    "actual_selected_old_to_new_delta": [
+      [
+        40,
+        131,
+        67
+      ],
+      [
+        48,
+        131,
+        67
+      ]
+    ],
+    "all_three_APP_balanced64_and_SDK_local_or_fallback_equal_selected_native": true,
+    "all_APP_header_stored_image_CRC_ZX0_BCJ_relocations_and_ELF_bytes_independently_verified": true,
+    "APPs": [
+      {
+        "directory": "/MCHR-X01",
+        "sha256": "635338b5450584204291874373fdaaab3d41312fb067c20169a87b57c09dda06",
+        "image_bytes": 6324,
+        "memory_bytes": 14292
+      },
+      {
+        "directory": "/MCHR-X02",
+        "sha256": "4cd9c5fdc7aabf4890cc923cbea6b984a7d184b78aeab9a2812bf1c87b8010d6",
+        "image_bytes": 6392,
+        "memory_bytes": 14360
+      },
+      {
+        "directory": "/MCHR-X03",
+        "sha256": "c3408339943a0734a420f1db5e35829f5ad0b6d97a08e52bc28d0c944f0a2b94",
+        "image_bytes": 6404,
+        "memory_bytes": 14372
+      }
+    ],
+    "source_and_body_sizes_unchanged_except_two_alignment_immediates": true,
+    "old_D4_status": "FORBIDDEN_KNOWN_GUARD_DEFECT",
+    "Pico_cold_causality_claim": false,
+    "production_selection_claim": false
+  },
+  "independent_checks": {
+    "new_ARM_guard_calls": 35415,
+    "directed_cases_per_body_boundary": 787,
+    "bodies": "14 corrected M4/M0 candidate bodies plus actual final resident, each at3boundaries",
+    "boundaries": [
+      "unmapped4KiB page0x20080000",
+      "32B MPU read-hook0x2007ffe0",
+      "256B MPU read-hook0x2007ff00"
+    ],
+    "actual_new_shared_APP_ELF_sha256": "3f1044a92f8621d66bbc0ae5fbc3767b6ba03c1cc56314938ac3f536aaae2c27",
+    "actual_shared_SDK_modes": 8,
+    "actual_shared_SDK_calls": 3364,
+    "checks": "earliest unsigned-byte return, legal early-hit n beyond object, short/long/tails,0/-1/large int conversion,n0,all pointer alignments,R4-R11/SP return ABI, bounded reads and stack-only writes. OldD4 linked negative remains failing.",
+    "frozen_host_and_wide_methods": 14,
+    "earlier_independent_host_V5_actual_connect_cases": 14,
+    "previous_host_receipt_sha256": "dda3dca0c981704084ae2032c1f76c70c96a72e25b7ceafd3d2e174843866e4c",
+    "large_unchanged_math_or_ARM_span_matrices_rerun": false
+  },
+  "producer_evidence_verified": {
+    "guard_span_MPU32_new_body_count": 14,
+    "span_calls_per_body": 80913,
+    "unmapped_guard_calls_per_body": 20689,
+    "MPU32_hook_calls_per_body": 20689,
+    "safe_controls": 11,
+    "native_and_standalone_MPU256_cases_each": 20689,
+    "shared_fallback_guard_cases": 20689,
+    "note": "Frozen producer report hashes and actual body identities verified; own directed replay is separate. Read hooks model protection boundaries; physical MPU behavior is not claimed."
+  },
+  "hardware_matrix": {
+    "future_rows": 4320,
+    "future_raw_reports": 618,
+    "rounds": 7,
+    "columns": 16,
+    "alignments": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "coverage": "SRAM/Flash instructions and data, standalone/shared SDK, native direct and actual runtime table/veneer",
+    "actual_hardware_rows_collected_by_this_review": 0
+  },
+  "ownership": {
+    "current10critical_sources_and_new_compile_macros_verified": true,
+    "newELF_no_internalFlash_program_erase_or_EEPROMClass_symbols": true,
+    "payload_region": "0x08062000..0x08064010",
+    "source_C9_and_settings_write_external_SPI_NOR_only": true,
+    "APP_arena": "0x200053f8..0x2001bf00",
+    "historical_JSON_not_relabelled_as_V6": [
+      "ownership/proof.json",
+      "review-fixes.json"
+    ],
+    "current_applicability_bridge": "Actual current critical source bytes equal pinned ownership sources; current actual compile-command macrosSPI_FLASH/fallback0/cache32768 reproduced; new final ELF/BIN and fullimage independently checked.",
+    "prefix_other_differences_vs_D4": "Only2memchr alignment bytes plus build-id literal/version/time strings and sealed footer29bytes total; no math recertification inferred."
+  },
+  "resources": {
+    "f411": {
+      "bin_bytes": 376148,
+      "sha256": "3a68f526d72d121265c65b374943eb07d32e821a68bd81dcba267b19f6e834d4",
+      "stack": {
+        "compiled_units": 165,
+        "dynamic_bounded": 0,
+        "limit": 5120,
+        "max_frame": 1928,
+        "max_function": "terminal.cpp:2050:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+        "records": 3066,
+        "schema": 1,
+        "status": "ok",
+        "unbounded": 0
+      }
+    },
+    "f401": {
+      "bin_bytes": 258016,
+      "sha256": "db6c237bf53a0dc630df85b3ca09e419975b1d084ff0025453767ef330b69b8c",
+      "stack": {
+        "compiled_units": 165,
+        "dynamic_bounded": 0,
+        "limit": 2048,
+        "max_frame": 1304,
+        "max_function": "language_vm.cpp:866:7:language_vm::Error language_vm::inspect_flash(const flash::Reader&, flash::IO, View&)",
+        "records": 2790,
+        "schema": 1,
+        "status": "ok",
+        "unbounded": 0
+      }
+    }
+  },
+  "recovery": {
+    "host_transport_f3b7_and_main_runner_fb128_retained": true,
+    "normal_candidate_CRC_and_noCrash_gates_not_weakened": true,
+    "candidate_badCRC_crash_unknownBuild_does_not_suppress_original_full_restore": true,
+    "strict_physical_UID_USB_profile_and_ROM_descriptor_checks_retained": true,
+    "each_U_D_preceded_by_exact_ROM_admission": true,
+    "fresh_original_double524288byte_backup_and_SHA412f_required_before_download": true,
+    "original_download_stays_ROM_then_independent_full_U_readback_before_leave": true,
+    "full_byte_proof_independent_of_candidate_health": true,
+    "strict_final_original_files_calc_IP0_RTC_health_and_closed_port_still_required": true,
+    "partial_write_read_failures_and_primary_failure_retained": true,
+    "fresh_output_append_only_attempts_and_historical_FAILs_preserved": true
+  },
+  "blockers": [],
+  "hardware_GO": false,
+  "hardware_preconditions": [
+    "Coordinator performs fresh exact V6 lease/handoff and explicit EXECUTE gate for this candidate/APP tuple.",
+    "Native owner revalidates all live pins and lease immediately before its authorized require_escalated operation.",
+    "Capture actual fresh original state and two full original backups; finally restore original3AB/fullSHA412f and strict24files/2dirs/calc/IP0/RTC/health/closed ports on every outcome."
+  ],
+  "USB_access": false,
+  "lease_mutation": false,
+  "Git_or_canonical_or_author_source_mutation": false,
+  "frozen_or_historical_packets_modified": false,
+  "network_access": false,
+  "artifacts": {
+    "static-review.py": "3afd7a790d1906b56d12c0ac4299e56e4c9ef9e9f1196679b83df7855fb52274",
+    "static-review.json": "bde81a9cce0f7c85f77e4dd16e4c78b578f671e21de4a799cf6541409dcc7c66",
+    "current-ownership-macros.txt": "7142a523764727f2efd9832fcc20e3a7d022d5d43669728dc5affffb0d801542",
+    "frozen-host-tests.log": "1541e1f716cdf06da03907d253d9c815e55643649f9d606fcf3fc6fd56344577",
+    "arm-review.py": "fd40cca9c5c751ca7e34508dede3ea29d68da244a14e5972da800bd3f3b3498e",
+    "arm-review.json": "6cbf84944d226157a3ca2d8abdb16c52013c66ea54f1aac90ff33c5e9cad4695",
+    "arm-review.log": "4d9e373b0d51d7c7db4b47c9b57a99f73f9ad7ac655c636dd79be2108822e89a",
+    "seal-footer-and-nested-proof.json": "f1cb61feaa1056c9923dbaaea6357f69caa830dd394c215e6c11941fef174e4f"
+  }
+}

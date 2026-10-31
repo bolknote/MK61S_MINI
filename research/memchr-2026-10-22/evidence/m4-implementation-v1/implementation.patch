@@ -1,0 +1,677 @@
+diff --git a/code/system_memory.c b/code/system_memory.c
+index f39f21799..9e849540f 100644
+--- a/code/system_memory.c
++++ b/code/system_memory.c
+@@ -16,6 +16,12 @@ void* memcpy(void* destination, const void* source, size_t size) {
+ }
+ #endif
+ 
++#include "native_libc.h"
++#if !MK61_USE_NATIVE_LIBC
++#define MK61_MEMCHR_M4_FLASH 1
++#include "memory_search_arm.h"
++#endif
++
+ #define MK61_MEMCMP_M4_FLASH 1
+ #include "memory_compare_arm.h"
+ #ifndef MK61_ARM_MEMCMP
+diff --git a/code/system_strings.c b/code/system_strings.c
+index 6f1480c5f..ccdffe8b8 100644
+--- a/code/system_strings.c
++++ b/code/system_strings.c
+@@ -5,12 +5,8 @@
+ #if defined(__GNUC__) && !defined(__clang__)
+ #pragma GCC optimize ("no-tree-loop-distribute-patterns")
+ #endif
+-void* memchr(const void* memory,int c,size_t n) {
+-  const unsigned char* p=(const unsigned char*)memory;
+-  const unsigned char target=(unsigned char)c;
+-  for(size_t i=0;i<n;++i)if(p[i]==target)return (void*)(p+i);
+-  return NULL;
+-}
++#define MK61_MEMCHR_M4_FLASH 1
++#include "memory_search_arm.h"
+ size_t strlen(const char* s) {
+   const char* p=s;while(*p)++p;return (size_t)(p-s);
+ }
+diff --git a/sdk/portable/memory.c b/sdk/portable/memory.c
+index 342814df4..dc49b7e9d 100644
+--- a/sdk/portable/memory.c
++++ b/sdk/portable/memory.c
+@@ -52,15 +52,9 @@ size_t strlen(const char* text) {
+ }
+ #endif
+ 
+-/* Source-page NUL checks also need memchr. Keep it freestanding even when
+- * the other memory functions use the resident runtime table. */
+-void* memchr(const void* data, int value, size_t size) {
+-  const unsigned char* bytes = (const unsigned char*) data;
+-  const unsigned char wanted = (unsigned char) value;
+-  for(size_t i = 0; i < size; ++i)
+-    if(bytes[i] == wanted) return (void*) (bytes + i);
+-  return NULL;
+-}
++/* The 26-slot runtime has no memchr. Keep the measured M4 body local to both
++ * standalone and shared APPs; the optional public extension is separate. */
++#include "memory_search_arm.h"
+ 
+ int strcmp(const char* left, const char* right) {
+   const unsigned char* a = (const unsigned char*) left;
+diff --git a/tools/build_portable_app.py b/tools/build_portable_app.py
+index 21f92ae22..ac5eb191a 100644
+--- a/tools/build_portable_app.py
++++ b/tools/build_portable_app.py
+@@ -315,6 +315,10 @@ def build(args: argparse.Namespace) -> dict:
+         plain_object = source == ROOT / "sdk/portable/memory.c" or (
+             has_rust and source == ROOT / "sdk/portable/start.c")
+         support = ["-fno-lto"] if plain_object else []
++        if system and args.system == "language-input" and source == ROOT / "sdk/portable/memory.c":
++            # INPUT compiles at most 64 source characters. Use the measured
++            # 270-byte M4 body to fit tight 20-KiB bundles, including BBS builds.
++            support += ["-DMK61_MEMCHR_WORDS=4"]
+         if shared_system_runtime and source == ROOT / "sdk/portable/memory.c":
+             # Keep SDK strcmp, which has no resident runtime slot. Its compact
+             # byte loop avoids linking newlib's much larger ARM routine.
+diff --git a/code/memory_search_arm.h b/code/memory_search_arm.h
+new file mode 100644
+index 000000000..c7053a24a
+--- /dev/null
++++ b/code/memory_search_arm.h
+@@ -0,0 +1,41 @@
++/* M4 backend measured on ClassicF411; naturally aligned paired loads stop
++ * safely at protection boundaries. Other targets retain the byte fallback
++ * until their hardware selection is complete. */
++#ifndef MK61_MEMORY_SEARCH_ARM_H
++#define MK61_MEMORY_SEARCH_ARM_H
++#include <stddef.h>
++#ifndef MK61_MEMCHR_NAME
++#define MK61_MEMCHR_NAME memchr
++#endif
++#ifndef MK61_MEMCHR_ATTRIBUTES
++#define MK61_MEMCHR_ATTRIBUTES
++#endif
++#ifndef MK61_MEMCHR_WORDS
++#if defined(MK61_MEMCHR_M4_FLASH) && (defined(STM32F401xC) || defined(STM32F401xE))
++#define MK61_MEMCHR_WORDS 4
++#else
++#define MK61_MEMCHR_WORDS 16
++#endif
++#endif
++#if defined(__GNUC__) && !defined(__clang__) && defined(__ARM_ARCH_7EM__)
++#define MK61_MEMCHR_STRINGIFY_(value) #value
++#define MK61_MEMCHR_STRINGIFY(value) MK61_MEMCHR_STRINGIFY_(value)
++__attribute__((naked, noipa, aligned(4))) MK61_MEMCHR_ATTRIBUTES
++void* MK61_MEMCHR_NAME(const void* data __attribute__((unused)),
++    int value __attribute__((unused)),size_t size __attribute__((unused))) {
++  __asm__(
++#include "memchr_arm.inc"
++  );
++}
++#undef MK61_MEMCHR_STRINGIFY
++#undef MK61_MEMCHR_STRINGIFY_
++#else
++MK61_MEMCHR_ATTRIBUTES
++void* MK61_MEMCHR_NAME(const void* data,int value,size_t size) {
++  const unsigned char* bytes=(const unsigned char*)data;
++  const unsigned char wanted=(unsigned char)value;
++  for(size_t i=0;i<size;++i) if(bytes[i]==wanted) return (void*)(bytes+i);
++  return NULL;
++}
++#endif
++#endif
+diff --git a/code/memchr_arm.inc b/code/memchr_arm.inc
+new file mode 100644
+index 000000000..e8ef614b8
+--- /dev/null
++++ b/code/memchr_arm.inc
+@@ -0,0 +1,214 @@
++/* Generated from the measured balanced candidate; exact spans only. */
++".syntax unified\n"
++".macro mk61_search_pair name,bulk=0\n"
++" ldmia r0!,{r3,r6}\n"
++#if defined(__ARM_ARCH_6M__)
++" eors r3,r1\n"
++" movs r7,r3\n"
++" subs r7,r4\n"
++" bics r7,r3\n"
++" tst r7,r5\n"
++" bne .Lfirst\\name\n"
++" eors r6,r1\n"
++" movs r7,r6\n"
++" subs r7,r4\n"
++" bics r7,r6\n"
++" tst r7,r5\n"
++" bne .Lsecond\\name\n"
++#else
++" eor r3,r3,r1\n"
++" eor r6,r6,r1\n"
++" usub8 r3,r3,r4\n"
++" sel r3,r5,r4\n"
++" usub8 r6,r6,r4\n"
++" /* If word two has no match in a lane, retain word one's mask. */\n"
++" sel r6,r3,r4\n"
++#if 0
++" .if \\bulk\n"
++" cbnz r6,.LpairHit\\name\n"
++" .else\n"
++" cmp r6,#0\n"
++" bne .LpairHit\\name\n"
++" .endif\n"
++#else
++" cmp r6,#0\n"
++" bne .LpairHit\\name\n"
++#endif
++#endif
++".endm\n"
++".macro mk61_search_body name,pairs\n"
++" cmp r2,#0\n"
++" beq .Lzero\\name\n"
++" uxtb r1,r1\n"
++" ldrb r3,[r0]\n"
++" cmp r3,r1\n"
++" beq .Lreturn\\name\n"
++#if 1
++" /* Keep the original pointer/alignment for long spans, but exhaust n==1\n"
++"  * before the length dispatch. Restore n only on the long path. */\n"
++" subs r2,#1\n"
++" beq .Lzero\\name\n"
++" cmp r2,#7\n"
++" bhs .LalignCheck\\name\n"
++" adds r0,#1\n"
++#elif 0
++" /* Consume the checked byte before dispatch: n==1 returns immediately. */\n"
++" subs r2,#1\n"
++" beq .Lzero\\name\n"
++" adds r0,#1\n"
++" cmp r2,#7\n"
++" bhs .Lprefix\\name\n"
++#else
++" cmp r2,#8\n"
++" bhs .LalignCheck\\name\n"
++" adds r0,#1\n"
++" subs r2,#1\n"
++" beq .Lzero\\name\n"
++#endif
++".Lsmall\\name:\n"
++" ldrb r3,[r0]\n"
++" cmp r3,r1\n"
++" beq .Lreturn\\name\n"
++" adds r0,#1\n"
++" subs r2,#1\n"
++" bne .Lsmall\\name\n"
++".Lzero\\name:\n"
++" movs r0,#0\n"
++".Lreturn\\name:\n"
++" bx lr\n"
++".LalignCheck\\name:\n"
++#if 1
++" adds r2,#1\n"
++#endif
++" lsls r3,r0,#29\n"
++" beq .Laligned\\name\n"
++" adds r0,#1\n"
++" subs r2,#1\n"
++".Lprefix\\name:\n"
++" lsls r3,r0,#29\n"
++" beq .Laligned\\name\n"
++" ldrb r3,[r0]\n"
++" cmp r3,r1\n"
++" beq .Lreturn\\name\n"
++" adds r0,#1\n"
++" subs r2,#1\n"
++" b .Lprefix\\name\n"
++".Laligned\\name:\n"
++#if defined(__ARM_ARCH_6M__)
++" push {r4,r5,r6,r7}\n"
++#else
++" push {r4,r5,r6}\n"
++#endif
++" ldr r4,=0x01010101\n"
++#if defined(__ARM_ARCH_6M__)
++" lsls r5,r4,#7\n"
++" muls r1,r4\n"
++#else
++" movs r5,#0\n"
++" mul r1,r1,r4\n"
++#endif
++" .if \\pairs>1\n"
++" cmp r2,#(8*\\pairs)\n"
++" bhs .Lbulk\\name\n"
++" b .LpairCheck\\name\n"
++".Lbulk\\name:\n"
++" .rept \\pairs\n"
++" mk61_search_pair \\name,1\n"
++" .endr\n"
++" b .LbulkNext\\name\n"
++" .endif\n"
++#if defined(__ARM_ARCH_6M__)
++".Lfirst\\name:\n"
++" subs r0,#8\n"
++" b .Lfound\\name\n"
++".Lsecond\\name:\n"
++" subs r0,#4\n"
++" b .Lfound\\name\n"
++#else
++".LpairHit\\name:\n"
++" cmp r3,#0\n"
++" bne .Lfirst\\name\n"
++" mov r3,r6\n"
++" subs r0,#4\n"
++" b .Lfound\\name\n"
++".Lfirst\\name:\n"
++" subs r0,#8\n"
++" b .Lfound\\name\n"
++#endif
++" .if \\pairs>1\n"
++".LbulkNext\\name:\n"
++" subs r2,#(8*\\pairs)\n"
++" cmp r2,#(8*\\pairs)\n"
++" blo .LpairCheck\\name\n"
++" b .Lbulk\\name\n"
++" .endif\n"
++".LpairCheck\\name:\n"
++" cmp r2,#8\n"
++" blo .LwordCheck\\name\n"
++".Lpair\\name:\n"
++" mk61_search_pair \\name\n"
++" subs r2,#8\n"
++" cmp r2,#8\n"
++" bhs .Lpair\\name\n"
++".LwordCheck\\name:\n"
++" cmp r2,#4\n"
++" blo .LtailCheck\\name\n"
++" ldr r3,[r0]\n"
++#if defined(__ARM_ARCH_6M__)
++" eors r3,r1\n"
++" movs r7,r3\n"
++" subs r7,r4\n"
++" bics r7,r3\n"
++" tst r7,r5\n"
++#else
++" eor r3,r3,r1\n"
++" usub8 r3,r3,r4\n"
++" sel r3,r5,r4\n"
++" cmp r3,#0\n"
++#endif
++" bne .Lfound\\name\n"
++" adds r0,#4\n"
++" subs r2,#4\n"
++".LtailCheck\\name:\n"
++" cmp r2,#0\n"
++" beq .LsavedZero\\name\n"
++" uxtb r1,r1\n"
++".Ltail\\name:\n"
++" ldrb r3,[r0]\n"
++" cmp r3,r1\n"
++" beq .LsavedReturn\\name\n"
++" adds r0,#1\n"
++" subs r2,#1\n"
++" bne .Ltail\\name\n"
++".LsavedZero\\name:\n"
++" movs r0,#0\n"
++".LsavedReturn\\name:\n"
++#if defined(__ARM_ARCH_6M__)
++" pop {r4,r5,r6,r7}\n"
++#else
++" pop {r4,r5,r6}\n"
++#endif
++" bx lr\n"
++".Lfound\\name:\n"
++#if defined(__ARM_ARCH_6M__)
++" uxtb r1,r1\n"
++".LfindByte\\name:\n"
++" ldrb r3,[r0]\n"
++" cmp r3,r1\n"
++" beq .LsavedReturn\\name\n"
++" adds r0,#1\n"
++" b .LfindByte\\name\n"
++#else
++" rbit r3,r3\n"
++" clz r3,r3\n"
++" add r0,r0,r3,lsr#3\n"
++" b .LsavedReturn\\name\n"
++#endif
++" .ltorg\n"
++".endm\n"
++".altmacro\n"
++"mk61_search_body mk61," MK61_MEMCHR_STRINGIFY(MK61_MEMCHR_WORDS) "/2\n"
++".noaltmacro\n"
++".purgem mk61_search_pair\n"
++".purgem mk61_search_body\n"
++".syntax divided\n"
+diff --git a/tests/run_system_memchr_arm_tests.py b/tests/run_system_memchr_arm_tests.py
+new file mode 100644
+index 000000000..5a9b27a3c
+--- /dev/null
++++ b/tests/run_system_memchr_arm_tests.py
+@@ -0,0 +1,77 @@
++#!/usr/bin/env python3
++"""Compile the actual memchr sources and check ARM bounds, early hits and ABI.
++
++These are functional Unicorn checks. Performance selection requires the
++separate hardware evidence in research/memchr-2026-10-22.
++"""
++import argparse
++import hashlib
++import json
++from pathlib import Path
++import subprocess
++
++from check_stm32_vectors import ElfImage
++import system_memchr_arm_self_test as spans
++import system_memchr_guard_self_test as guards
++
++ROOT=Path(__file__).resolve().parents[1]
++
++
++def main():
++    p=argparse.ArgumentParser(description=__doc__)
++    p.add_argument('--arm-toolchain-bin',type=Path,required=True)
++    p.add_argument('--output',type=Path,required=True)
++    a=p.parse_args();out=a.output.resolve();out.mkdir(parents=True,exist_ok=False)
++    cases=[
++        ('native-f411','m4','code/system_strings.c',['-DMK61_NATIVE_RUNTIME=1'],0x08010000,450),
++        ('native-f401','m4','code/system_strings.c',['-DMK61_NATIVE_RUNTIME=1','-DSTM32F401xC'],0x08018000,270),
++        ('sdk-normal','m4','sdk/portable/memory.c',[],0x20010000,450),
++        ('sdk-shared','m4','sdk/portable/memory.c',['-DMK61_APP_SHARED_RUNTIME=1'],0x20018000,450),
++        ('sdk-langin','m4','sdk/portable/memory.c',['-DMK61_APP_SHARED_RUNTIME=1','-DMK61_MEMCHR_WORDS=4'],0x20020000,270),
++        ('sdk-m0-unchanged','m0','sdk/portable/memory.c',[],0x20010000,26),
++    ]
++    hashes={450:'bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521',
++            270:'e5ce46b95e76623993455cd0ad24c51ca1d4a0e5a1bfcab2fbf7634db3c98a78'}
++    seen={};results=[]
++    for name,cpu,source,defines,address,expected_size in cases:
++        folder=out/name;folder.mkdir()
++        arch=['-mcpu='+('cortex-m4' if cpu=='m4' else 'cortex-m0plus'),'-mthumb']
++        if cpu=='m4':arch+=['-mfpu=fpv4-sp-d16','-mfloat-abi=hard']
++        common=[str(a.arm_toolchain_bin/'arm-none-eabi-gcc'),*arch]
++        command=common+['-Os','-fno-builtin','-fno-lto','-ffunction-sections','-fdata-sections',
++            '-Wall','-Wextra','-Werror','-I'+str(ROOT/'code'),*defines,'-c',str(ROOT/source),'-o',str(folder/'body.o')]
++        subprocess.run(command,check=True)
++        subprocess.run(common+['-nostdlib','-Wl,--gc-sections,-Ttext='+hex(address)+',-e,memchr',
++            str(folder/'body.o'),'-o',str(folder/'body.elf')],check=True)
++        elf=ElfImage(folder/'body.elf');section=elf.named_sections['.text'];raw=elf.bytes_at(section)
++        size=elf.sizes['memchr'];start=(elf.symbols['memchr']&~1)-section[3]
++        digest=hashlib.sha256(raw[start:start+size]).hexdigest()
++        assert size==expected_size,(name,size,expected_size)
++        expected_hash = hashes[size] if cpu=='m4' else 'b0e7e8be7f9f6ce95ec7d9c86f2996103968641c0a917b3fe7fd8687994e0acf'
++        assert digest==expected_hash,(name,digest,'measured or retained body changed')
++        row=dict(name=name,cpu=cpu,bytes=size,body_sha256=digest,command=command)
++        # Shared SDK exports the same local body while the public optional
++        # runtime extension is pending. Verify identity without repeating it.
++        key=(cpu,digest,address>>28)
++        if key in seen:
++            row.update(status='PASS',same_code_and_placement_as=seen[key])
++        else:
++            span=spans.verify(folder/'body.elf',cpu,['memchr'])
++            (folder/'span.json').write_text(json.dumps(span,indent=2)+'\n')
++            boundaries=[]
++            for boundary in (0x20080000,0x2007ffe0,0x2007ff00):
++                result=guards.verify(folder/'body.elf',cpu,['memchr'],guard=boundary)
++                assert result['status']=='PASS',(name,boundary,result)
++                boundaries.append(result)
++            (folder/'guards.json').write_text(json.dumps(boundaries,indent=2)+'\n')
++            row.update(status='PASS',span_cases=span['results'][0]['cases'],
++                       guard_cases=sum(x['results'][0]['cases'] for x in boundaries))
++            seen[key]=name
++        results.append(row)
++    report=dict(status='PASS',scope='Actual source ARM functional regression, not timing',results=results,
++        M0_performance_selection=False,optional_public_runtime_extension=False)
++    (out/'result.json').write_text(json.dumps(report,indent=2)+'\n')
++    print(json.dumps(dict(status='PASS',linked_bodies=len(results),functional_calls=sum(r.get('span_cases',0)+r.get('guard_cases',0) for r in results))))
++
++
++if __name__=='__main__':main()
+diff --git a/tests/system_memchr_arm_self_test.py b/tests/system_memchr_arm_self_test.py
+new file mode 100644
+index 000000000..daf498a63
+--- /dev/null
++++ b/tests/system_memchr_arm_self_test.py
+@@ -0,0 +1,109 @@
++#!/usr/bin/env python3
++"""Execute memchr ARM code: earliest unsigned-byte match, exact bounds, ABI."""
++import argparse
++import hashlib
++import json
++from pathlib import Path
++import random
++import struct
++from check_stm32_vectors import ElfImage
++from unicorn import Uc, UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS, UC_HOOK_MEM_READ, UC_HOOK_MEM_WRITE, UC_MEM_WRITE
++from unicorn.arm_const import (UC_CPU_ARM_CORTEX_M0, UC_CPU_ARM_CORTEX_M4,
++    UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R4, UC_ARM_REG_R11,
++    UC_ARM_REG_SP, UC_ARM_REG_LR, UC_ARM_REG_PC, UC_ARM_REG_XPSR)
++
++def verify(elf,cpu,names,input_address=0x20040000,indirect_target=None):
++    image=ElfImage(elf)
++    def function_size(name):
++        if image.sizes[name]:return image.sizes[name]
++        start=image.symbols[name]&~1
++        if name+'_end' in image.symbols:return (image.symbols[name+'_end']&~1)-start
++        section=next(s for s in image.sections if s[2]&4 and s[3]<=start<s[3]+s[5])
++        end=min([s&~1 for n,s in image.symbols.items() if image.sizes[n] and start<(s&~1)<section[3]+section[5]]+[section[3]+section[5]])
++        return end-start
++    sizes_by_name={n:function_size(n) for n in names}
++    machine=Uc(UC_ARCH_ARM,UC_MODE_THUMB|UC_MODE_MCLASS)
++    machine.ctl_set_cpu_model(UC_CPU_ARM_CORTEX_M0 if cpu=='m0' else UC_CPU_ARM_CORTEX_M4)
++    for address,size in ((0x20000000,0x100000),(0x08000000,0x100000),(0x10000000,0x200000),(0x30000000,4096)):
++        machine.mem_map(address,size)
++    image.load(machine)
++    stop,stack,buffer=0x30000000,0x200fe000,input_address
++    indirect_reads=[]
++    if indirect_target:
++        table=0x200f0000;global_pointer=image.symbols['bench_search_runtime']
++        machine.mem_write(global_pointer,struct.pack('<I',table))
++        machine.mem_write(table+104,struct.pack('<I',image.symbols[indirect_target]|1))
++        target=image.symbols[indirect_target]&~1
++        indirect_reads=[(global_pointer,global_pointer+4),(table,table+108),(target,target+function_size(indirect_target))]
++    sizes=[*range(130),255,256,257,511,512,513,1023,1024,1025,4095,4096,4097,16384,65536]
++    cases=[]
++    for n in sizes:
++        positions=range(n) if n<=16 else sorted({0,1,2,3,4,7,8,15,16,n//2,n-1})
++        for offset in range(8):
++            for value in (0,1,127,128,255):
++                cases.append((n,offset,value,-1,False))
++                for at in positions:cases.append((n,offset,value,at,True))
++    for value in [*range(256),-513,-1,256,511,0x123400A5]:
++        for offset in range(4):
++            for at in (-1,0,1,2,3,4,7,8,15,16,31,32,63):
++                cases.append((64,offset,value,at,True))
++    rng=random.Random(610422)
++    for _ in range(500):
++        n=rng.randrange(8193)
++        cases.append((n,rng.randrange(16),rng.randrange(-1024,1024),rng.randrange(n) if n else -1,False))
++    saved={reg:0x72816201+reg*314 for reg in range(UC_ARM_REG_R4,UC_ARM_REG_R11+1)}
++    active={}
++    def access(_machine,kind,address,size,_value,_user):
++        if cpu=='m0':assert size in (1,2,4) and address%size==0,('alignment',hex(address),size,active)
++        on_stack=stack-64<=address and address+size<=stack
++        if kind==UC_MEM_WRITE:
++            assert on_stack,('memchr wrote outside stack',hex(address),size,active)
++        else:
++            assert on_stack or any(a<=address and address+size<=b for a,b in active['read']),('read beyond input span',hex(address),size,active)
++    machine.hook_add(UC_HOOK_MEM_READ|UC_HOOK_MEM_WRITE,access)
++    def call(name,pointer,value,n,expected):
++        start=image.symbols[name]&~1
++        active.update(name=name,n=n,value=value,pointer=pointer,
++            read=[(pointer,pointer+n),(start,start+sizes_by_name[name])]+(indirect_reads if name=='indirect_search' else []))
++        for reg,initial in saved.items():machine.reg_write(reg,initial)
++        for reg,initial in ((UC_ARM_REG_R0,pointer),(UC_ARM_REG_R1,value&0xffffffff),(UC_ARM_REG_R2,n),
++                (UC_ARM_REG_SP,stack),(UC_ARM_REG_LR,stop|1),(UC_ARM_REG_XPSR,0x01000000)):
++            machine.reg_write(reg,initial)
++        try:machine.emu_start(start|1,stop,count=1500000)
++        except Exception:
++            print('FAIL',active,hex(machine.reg_read(UC_ARM_REG_PC)),flush=True)
++            raise
++        assert machine.reg_read(UC_ARM_REG_PC)==stop,(active,'return')
++        assert machine.reg_read(UC_ARM_REG_R0)==expected,(active,'result',hex(machine.reg_read(UC_ARM_REG_R0)),hex(expected))
++        assert machine.reg_read(UC_ARM_REG_SP)==stack,(active,'stack')
++        assert all(machine.reg_read(reg)==initial for reg,initial in saved.items()),(active,'callee saved')
++    results=[]
++    for name in names:
++        for n,offset,value,at,multiple in cases:
++            pointer=buffer+offset
++            # Alternating x=1 / x=0x80 catches borrow propagation in the SWAR mask.
++            wanted=value&255
++            data=bytearray(bytes((wanted^1,wanted^128))*(n//2+1))[:n]
++            if at>=0:
++                data[at]=wanted
++                if multiple and at+1<n:data[at+1:]=bytes([wanted])*(n-at-1)
++            machine.mem_write(pointer,bytes(data))
++            # Equal sentinel bytes immediately outside the span must be ignored.
++            machine.mem_write(pointer-1,bytes([wanted]));machine.mem_write(pointer+n,bytes([wanted]))
++            call(name,pointer,value,n,pointer+at if at>=0 else 0)
++        call(name,0,-1,0,0)
++        row=dict(name=name,cases=len(cases)+1,bytes=sizes_by_name[name],status='PASS')
++        results.append(row);print(row,flush=True)
++    return dict(cpu=cpu,input_address=hex(input_address),indirect_target=indirect_target,
++        elf_sha256=hashlib.sha256(elf.read_bytes()).hexdigest(),results=results)
++
++if __name__=='__main__':
++    p=argparse.ArgumentParser(description=__doc__)
++    p.add_argument('--elf',type=Path,required=True)
++    p.add_argument('--cpu',choices=('m0','m4'),required=True)
++    p.add_argument('--names',nargs='+',default=['memchr'])
++    p.add_argument('--output',type=Path)
++    p.add_argument('--input-address',type=lambda s:int(s,0),default=0x20040000)
++    p.add_argument('--indirect-target')
++    a=p.parse_args();result=verify(a.elf,a.cpu,a.names,a.input_address,a.indirect_target)
++    if a.output:a.output.write_text(json.dumps(result,indent=2)+'\n')
+diff --git a/tests/system_memchr_guard_self_test.py b/tests/system_memchr_guard_self_test.py
+new file mode 100644
+index 000000000..83f225509
+--- /dev/null
++++ b/tests/system_memchr_guard_self_test.py
+@@ -0,0 +1,132 @@
++#!/usr/bin/env python3
++"""ARM memchr early-hit/object-end tests at an unreadable memory boundary.
++
++C11 7.24.5.1 requires sequential-stop behavior: count may exceed the object
++when a match is found within it. These are functional tests, never timings.
++"""
++import argparse
++import hashlib
++import json
++from pathlib import Path
++
++from check_stm32_vectors import ElfImage
++from unicorn import (Uc, UcError, UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS,
++                     UC_HOOK_MEM_READ, UC_HOOK_MEM_WRITE,
++                     UC_HOOK_MEM_READ_UNMAPPED, UC_MEM_WRITE)
++from unicorn.arm_const import (UC_CPU_ARM_CORTEX_M0, UC_CPU_ARM_CORTEX_M4,
++    UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R4,
++    UC_ARM_REG_R11, UC_ARM_REG_SP, UC_ARM_REG_LR, UC_ARM_REG_PC,
++    UC_ARM_REG_XPSR)
++
++
++def cases():
++    for size in [*range(1, 130), 255, 256, 257, 511, 512, 513, 4096]:
++        hits = range(size) if size <= 16 else sorted({0, 1, 2, 3, 4, 5, 6, 7,
++                                                    8, 15, 16, size // 2, size - 1})
++        for value in (0, -1, 0x123400A5):
++            for hit in hits:
++                for count in sorted({size, size + 1, size + 8, 0xffffffff}):
++                    yield size, value, hit, count
++            # An absent character is defined only within the valid object.
++            yield size, value, -1, size
++    yield 0, -1, -1, 0
++
++
++def verify(path, cpu, names, keep_going=False, guard=0x20080000):
++    elf = ElfImage(path)
++    machine = Uc(UC_ARCH_ARM, UC_MODE_THUMB | UC_MODE_MCLASS)
++    machine.ctl_set_cpu_model(UC_CPU_ARM_CORTEX_M0 if cpu == 'm0' else UC_CPU_ARM_CORTEX_M4)
++    assert 0x20001000 <= guard <= 0x20080000 and guard % 32 == 0
++    stack, stop = 0x200fe000, 0x30000000
++    for address, size in ((0x20000000, 0x80000), (0x200f0000, 0x10000),
++                          (0x08000000, 0x100000), (0x10000000, 0x200000),
++                          (stop, 4096)):
++        machine.mem_map(address, size)
++    elf.load(machine)
++    saved = {reg: 0x72816201 + reg * 314 for reg in range(UC_ARM_REG_R4, UC_ARM_REG_R11 + 1)}
++    active = {}
++
++    def access(_machine, kind, address, size, _value, _user):
++        if cpu == 'm0':
++            assert size in (1, 2, 4) and address % size == 0, ('alignment', address, size)
++        on_stack = stack - 64 <= address and address + size <= stack
++        if kind == UC_MEM_WRITE:
++            assert on_stack, ('write outside stack', hex(address), size)
++        else:
++            assert on_stack or any(lo <= address and address + size <= hi
++                                   for lo, hi in active['read']), ('read outside object/code', hex(address), size)
++
++    def unmapped(_machine, _kind, address, size, _value, _user):
++        active['memory_fault'] = dict(address=hex(address), bytes=size)
++        return False
++
++    machine.hook_add(UC_HOOK_MEM_READ | UC_HOOK_MEM_WRITE, access)
++    machine.hook_add(UC_HOOK_MEM_READ_UNMAPPED, unmapped)
++    corpus = list(cases())
++    results = []
++    for name in names:
++        start = elf.symbols[name] & ~1
++        size = elf.sizes[name]
++        if not size:
++            size = (elf.symbols[name + '_end'] & ~1) - start
++        section = next(s for s in elf.sections if s[2] & 4 and s[3] <= start
++                       and start + size <= s[3] + s[5])
++        offset = section[4] + start - section[3]
++        row = dict(name=name, body_bytes=size,
++                   body_sha256=hashlib.sha256(elf.data[offset:offset + size]).hexdigest(),
++                   cases=0, failures=0, examples=[])
++        for object_size, value, hit, count in corpus:
++            pointer = guard - object_size
++            wanted = value & 255
++            data = bytearray(bytes((wanted ^ 1, wanted ^ 128)) * (object_size // 2 + 1))[:object_size]
++            if hit >= 0:
++                data[hit] = wanted
++            if data:
++                machine.mem_write(pointer, bytes(data))
++            expected = pointer + hit if hit >= 0 else 0
++            active.clear()
++            active.update(read=[(pointer, guard), (start, start + size)])
++            for reg, initial in saved.items():
++                machine.reg_write(reg, initial)
++            for reg, initial in ((UC_ARM_REG_R0, pointer), (UC_ARM_REG_R1, value & 0xffffffff),
++                                 (UC_ARM_REG_R2, count), (UC_ARM_REG_SP, stack),
++                                 (UC_ARM_REG_LR, stop | 1), (UC_ARM_REG_XPSR, 0x01000000)):
++                machine.reg_write(reg, initial)
++            row['cases'] += 1
++            try:
++                machine.emu_start(start | 1, stop, count=1500000)
++                assert machine.reg_read(UC_ARM_REG_PC) == stop, 'did not return'
++                assert machine.reg_read(UC_ARM_REG_R0) == expected, 'wrong first match'
++                assert machine.reg_read(UC_ARM_REG_SP) == stack, 'stack changed'
++                assert all(machine.reg_read(reg) == initial for reg, initial in saved.items()), 'callee-saved register changed'
++            except (UcError, AssertionError) as error:
++                row['failures'] += 1
++                if len(row['examples']) < 8:
++                    row['examples'].append(dict(object_bytes=object_size, pointer=hex(pointer),
++                        value=value, first_match=hit, count=count, expected=hex(expected),
++                        pc=hex(machine.reg_read(UC_ARM_REG_PC)), failure=repr(error),
++                        memory_fault=active.get('memory_fault')))
++                if not keep_going:
++                    break
++        row['status'] = 'FAIL' if row['failures'] else 'PASS'
++        results.append(row)
++        print(json.dumps(row), flush=True)
++    return dict(status='FAIL' if any(r['failures'] for r in results) else 'PASS',
++                cpu=cpu, scope='Functional early-hit/object-end/guard tests, not hardware timing',
++                guard=hex(guard), boundary='unmapped page' if guard==0x20080000 else 'read hook emulates MPU boundary',
++                full_cases_per_body=len(corpus),
++                elf_sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest(), results=results)
++
++
++if __name__ == '__main__':
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--elf', type=Path, required=True)
++    parser.add_argument('--cpu', choices=('m0', 'm4'), required=True)
++    parser.add_argument('--names', nargs='+', required=True)
++    parser.add_argument('--output', type=Path, required=True)
++    parser.add_argument('--keep-going', action='store_true')
++    parser.add_argument('--guard', type=lambda v:int(v,0), default=0x20080000)
++    args = parser.parse_args()
++    result = verify(args.elf, args.cpu, args.names, args.keep_going, args.guard)
++    args.output.write_text(json.dumps(result, indent=2) + '\n')
++    raise SystemExit(1 if result['status'] != 'PASS' else 0)

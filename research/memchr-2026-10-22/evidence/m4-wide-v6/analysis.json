@@ -1,0 +1,5495 @@
+{
+  "status": "PASS",
+  "scope": "Physical M4 raw reports re-decoded against exact code/pointers",
+  "plan_sha256": "bb09fece88cfdad86f335bd902349346a806401714f9c201ec94f2136b3453b2",
+  "raw_reports": 618,
+  "timing_rows": 4320,
+  "correctness_calls": 659808,
+  "comparison_note": "Unweighted case summaries are not an application workload. Keep short/long, data placement and call paths separate.",
+  "apps": [
+    {
+      "directory": "/MCHR-X01",
+      "shared": false,
+      "placement": "sram",
+      "rows": 1440,
+      "categories": [
+        {
+          "source": "SRAM",
+          "sizes": "0..16",
+          "cases": 200,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 42.034615384615385,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.4082871855413481,
+              "within_two_percent_of_best_cases": 5,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.609994870405004,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.7114312620240764,
+              "within_two_percent_of_best_cases": 5,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6957581450392816,
+              "within_two_percent_of_best_cases": 2,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.713801460522742,
+              "within_two_percent_of_best_cases": 9,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6557829770247257,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 28.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6425756275449244,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6565792523507827,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 28.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.641336197431943,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 26.002197802197802,
+              "unweighted_geomean_speedup_vs_baseline": 1.645226774776695,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6453979642398668,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 28.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.7029059918598834,
+              "within_two_percent_of_best_cases": 8,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 28.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6422567950332507,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 21.00989010989011,
+              "unweighted_geomean_speedup_vs_baseline": 2.1120033432414926,
+              "within_two_percent_of_best_cases": 190,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 30.014285714285712,
+              "unweighted_geomean_speedup_vs_baseline": 1.3787632651529438,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "SRAM",
+          "sizes": "17..255",
+          "cases": 264,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 402.20527859237535,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 177.19354838709677,
+              "unweighted_geomean_speedup_vs_baseline": 2.0978069404203223,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 386.19941348973606,
+              "unweighted_geomean_speedup_vs_baseline": 1.3214147888203571,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 194.19252873563218,
+              "unweighted_geomean_speedup_vs_baseline": 2.2354128416993286,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 176.09970674486803,
+              "unweighted_geomean_speedup_vs_baseline": 2.5692010019896787,
+              "within_two_percent_of_best_cases": 4,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 183.7023460410557,
+              "unweighted_geomean_speedup_vs_baseline": 2.524257841575368,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 181.10766398238007,
+              "unweighted_geomean_speedup_vs_baseline": 2.5991236914497757,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 181.19760479041915,
+              "unweighted_geomean_speedup_vs_baseline": 2.57647764168879,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 181.20099456259896,
+              "unweighted_geomean_speedup_vs_baseline": 2.6666374114055627,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 189.10179640718565,
+              "unweighted_geomean_speedup_vs_baseline": 2.580419523869436,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 193.19949755661094,
+              "unweighted_geomean_speedup_vs_baseline": 2.5431226292073488,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 195.19949755661094,
+              "unweighted_geomean_speedup_vs_baseline": 2.600749436720345,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 203.2044971640297,
+              "unweighted_geomean_speedup_vs_baseline": 2.521568236429724,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 189.10778443113773,
+              "unweighted_geomean_speedup_vs_baseline": 2.5806216651689398,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 132.17585417400494,
+              "unweighted_geomean_speedup_vs_baseline": 3.4540987048873566,
+              "within_two_percent_of_best_cases": 262,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 141.2314745508982,
+              "unweighted_geomean_speedup_vs_baseline": 2.6508418021586784,
+              "within_two_percent_of_best_cases": 14,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "SRAM",
+          "sizes": "256..4096",
+          "cases": 144,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 3100.0583333333334,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 745.0,
+              "unweighted_geomean_speedup_vs_baseline": 2.7549515485501113,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 3085.95,
+              "unweighted_geomean_speedup_vs_baseline": 1.3028323755306341,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 1213.1,
+              "unweighted_geomean_speedup_vs_baseline": 2.466829468229161,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 886.5833333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.0985539197594543,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 831.0666666666666,
+              "unweighted_geomean_speedup_vs_baseline": 3.3582754843404845,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 817.0166666666667,
+              "unweighted_geomean_speedup_vs_baseline": 3.3317721186981197,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 818.1333333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.3279076810877553,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 727.0,
+              "unweighted_geomean_speedup_vs_baseline": 3.689532412826839,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 740.125,
+              "unweighted_geomean_speedup_vs_baseline": 3.6634328241421703,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 800.6083333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.403210214582829,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 732.0,
+              "unweighted_geomean_speedup_vs_baseline": 3.6554075583925685,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 773.5666666666666,
+              "unweighted_geomean_speedup_vs_baseline": 3.487811669338884,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 740.1333333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.6638752822084197,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 504.43333333333334,
+              "unweighted_geomean_speedup_vs_baseline": 4.919898204934762,
+              "within_two_percent_of_best_cases": 144,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 513.4833333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.876002425736105,
+              "within_two_percent_of_best_cases": 88,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "Flash",
+          "sizes": "0..16",
+          "cases": 288,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 46.00696055684455,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 34.00348027842227,
+              "unweighted_geomean_speedup_vs_baseline": 1.5197955297384529,
+              "within_two_percent_of_best_cases": 9,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 34.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.5823780366565372,
+              "within_two_percent_of_best_cases": 15,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6249709955282663,
+              "within_two_percent_of_best_cases": 18,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6015793243806142,
+              "within_two_percent_of_best_cases": 3,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6156771946818311,
+              "within_two_percent_of_best_cases": 18,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.5848384941821414,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 40.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.5502776933555866,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.5841160606490656,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 40.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.5504213041403605,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.627450511131364,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6266348607044017,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.7405640228523191,
+              "within_two_percent_of_best_cases": 32,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 40.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.5506912551455971,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 29.016241299303946,
+              "unweighted_geomean_speedup_vs_baseline": 2.126465448967059,
+              "within_two_percent_of_best_cases": 258,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 38.019721577726216,
+              "unweighted_geomean_speedup_vs_baseline": 1.4102225603955965,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "Flash",
+          "sizes": "17..255",
+          "cases": 352,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 414.2365269461078,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 182.12874251497007,
+              "unweighted_geomean_speedup_vs_baseline": 2.0972403595939957,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 398.20958083832335,
+              "unweighted_geomean_speedup_vs_baseline": 1.1978259986089133,
+              "within_two_percent_of_best_cases": 55,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 197.2126099706745,
+              "unweighted_geomean_speedup_vs_baseline": 1.9221938246862214,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 179.21114369501467,
+              "unweighted_geomean_speedup_vs_baseline": 2.197858761260021,
+              "within_two_percent_of_best_cases": 6,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 187.2199413489736,
+              "unweighted_geomean_speedup_vs_baseline": 2.1403161832877005,
+              "within_two_percent_of_best_cases": 6,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 189.2163220076179,
+              "unweighted_geomean_speedup_vs_baseline": 2.3420010107531275,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 199.19154279165403,
+              "unweighted_geomean_speedup_vs_baseline": 2.189840376800684,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 189.6259296822177,
+              "unweighted_geomean_speedup_vs_baseline": 2.385772159910962,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 203.02970297029702,
+              "unweighted_geomean_speedup_vs_baseline": 2.1998511142069046,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 196.11876832844575,
+              "unweighted_geomean_speedup_vs_baseline": 2.3082539899450683,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 198.21700879765396,
+              "unweighted_geomean_speedup_vs_baseline": 2.364876089813354,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 200.21107784431138,
+              "unweighted_geomean_speedup_vs_baseline": 2.1843928036701956,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 203.02970297029702,
+              "unweighted_geomean_speedup_vs_baseline": 2.1998925201271957,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 144.13963810174118,
+              "unweighted_geomean_speedup_vs_baseline": 3.088296201041613,
+              "within_two_percent_of_best_cases": 305,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 153.15137418914304,
+              "unweighted_geomean_speedup_vs_baseline": 2.6057757156025563,
+              "within_two_percent_of_best_cases": 1,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "Flash",
+          "sizes": "256..4096",
+          "cases": 192,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 3155.1666666666665,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 786.1333333333333,
+              "unweighted_geomean_speedup_vs_baseline": 2.756656267403795,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 3104.0666666666666,
+              "unweighted_geomean_speedup_vs_baseline": 1.1830618417837284,
+              "within_two_percent_of_best_cases": 30,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 1237.1166666666668,
+              "unweighted_geomean_speedup_vs_baseline": 2.1239832046562,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 926.1333333333333,
+              "unweighted_geomean_speedup_vs_baseline": 2.654965502720561,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 872.1333333333333,
+              "unweighted_geomean_speedup_vs_baseline": 2.88125214395293,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 827.1333333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.015824886036176,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 860.125,
+              "unweighted_geomean_speedup_vs_baseline": 2.8399028249551264,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 748.5666666666666,
+              "unweighted_geomean_speedup_vs_baseline": 3.324037617024828,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 763.0,
+              "unweighted_geomean_speedup_vs_baseline": 3.2027858624307717,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 816.1333333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.0640223500403887,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 747.0,
+              "unweighted_geomean_speedup_vs_baseline": 3.3053500874508464,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 798.5666666666666,
+              "unweighted_geomean_speedup_vs_baseline": 2.99287446294084,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 763.0,
+              "unweighted_geomean_speedup_vs_baseline": 3.2027990491036693,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 566.2666666666667,
+              "unweighted_geomean_speedup_vs_baseline": 4.342315880070606,
+              "within_two_percent_of_best_cases": 168,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 578.2666666666667,
+              "unweighted_geomean_speedup_vs_baseline": 3.7736944244851554,
+              "within_two_percent_of_best_cases": 98,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        }
+      ],
+      "examples": [
+        {
+          "size": 0,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.0,
+            "libc": 10.06640625,
+            "byte": 6.0,
+            "own4": 6.0,
+            "own16": 6.001953125,
+            "own64": 6.0,
+            "pair16": 6.0625,
+            "balanced16": 6.0,
+            "pair64": 6.0,
+            "balanced64": 6.0625,
+            "dsp16": 6.0,
+            "dsp32": 6.0,
+            "compact8": 4.0625,
+            "sdk": 6.0,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.01171875
+          }
+        },
+        {
+          "size": 0,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.0,
+            "libc": 10.06640625,
+            "byte": 6.0,
+            "own4": 6.0,
+            "own16": 6.0625,
+            "own64": 6.0,
+            "pair16": 6.064453125,
+            "balanced16": 6.0,
+            "pair64": 6.0,
+            "balanced64": 6.064453125,
+            "dsp16": 6.0,
+            "dsp32": 6.0,
+            "compact8": 4.06640625,
+            "sdk": 6.0,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.0732421875
+          }
+        },
+        {
+          "size": 0,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.0,
+            "libc": 10.064453125,
+            "byte": 6.0,
+            "own4": 6.0,
+            "own16": 6.0,
+            "own64": 6.0,
+            "pair16": 6.064453125,
+            "balanced16": 6.0,
+            "pair64": 6.0,
+            "balanced64": 6.064453125,
+            "dsp16": 6.0,
+            "dsp32": 6.0,
+            "compact8": 4.064453125,
+            "sdk": 6.0,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.01171875
+          }
+        },
+        {
+          "size": 1,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.07061266874351,
+            "libc": 14.002076843198338,
+            "byte": 14.0,
+            "own4": 22.066458982346834,
+            "own16": 22.0,
+            "own64": 22.066458982346834,
+            "pair16": 22.0,
+            "balanced16": 14.0,
+            "pair64": 22.00207684319834,
+            "balanced64": 14.0,
+            "dsp16": 14.004153686396677,
+            "dsp32": 14.0,
+            "compact8": 12.0,
+            "sdk": 14.0,
+            "public_body": 11.003115264797508,
+            "public_veneer": 20.007268951194185
+          }
+        },
+        {
+          "size": 1,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.00207684319834,
+            "libc": 14.0,
+            "byte": 14.0,
+            "own4": 22.00207684319834,
+            "own16": 22.0,
+            "own64": 22.066458982346834,
+            "pair16": 22.0,
+            "balanced16": 14.0,
+            "pair64": 22.0,
+            "balanced64": 14.0,
+            "dsp16": 14.0,
+            "dsp32": 14.0,
+            "compact8": 12.0,
+            "sdk": 14.0,
+            "public_body": 11.003115264797508,
+            "public_veneer": 20.006230529595015
+          }
+        },
+        {
+          "size": 1,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.0,
+            "libc": 14.0,
+            "byte": 14.0,
+            "own4": 22.0,
+            "own16": 22.0,
+            "own64": 22.0,
+            "pair16": 22.0,
+            "balanced16": 14.004153686396677,
+            "pair64": 22.0,
+            "balanced64": 14.0,
+            "dsp16": 14.0,
+            "dsp32": 14.0,
+            "compact8": 12.002076843198338,
+            "sdk": 14.0,
+            "public_body": 11.003115264797508,
+            "public_veneer": 20.006230529595015
+          }
+        },
+        {
+          "size": 4,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.08058608058609,
+            "libc": 44.00732600732601,
+            "byte": 50.004884004884005,
+            "own4": 50.08058608058608,
+            "own16": 50.002442002442,
+            "own64": 50.004884004884005,
+            "pair16": 50.002442002442,
+            "balanced16": 52.0,
+            "pair64": 50.00610500610501,
+            "balanced64": 52.0,
+            "dsp16": 50.08058608058608,
+            "dsp32": 50.07814407814408,
+            "compact8": 46.002442002442,
+            "sdk": 52.08058608058608,
+            "public_body": 37.010989010989015,
+            "public_veneer": 46.095238095238095
+          }
+        },
+        {
+          "size": 4,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.08302808302808,
+            "libc": 44.08302808302808,
+            "byte": 50.07814407814408,
+            "own4": 50.08058608058608,
+            "own16": 50.081807081807085,
+            "own64": 50.08302808302808,
+            "pair16": 50.08058608058608,
+            "balanced16": 52.08058608058608,
+            "pair64": 50.08058608058608,
+            "balanced64": 52.08302808302808,
+            "dsp16": 50.08302808302808,
+            "dsp32": 50.081807081807085,
+            "compact8": 46.08058608058608,
+            "sdk": 52.08058608058608,
+            "public_body": 37.08913308913309,
+            "public_veneer": 46.095238095238095
+          }
+        },
+        {
+          "size": 4,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.08058608058609,
+            "libc": 44.08302808302808,
+            "byte": 50.08058608058608,
+            "own4": 50.081807081807085,
+            "own16": 50.081807081807085,
+            "own64": 50.08302808302808,
+            "pair16": 50.08302808302808,
+            "balanced16": 52.07692307692308,
+            "pair64": 50.08058608058608,
+            "balanced64": 52.07814407814408,
+            "dsp16": 50.07814407814408,
+            "dsp32": 50.08058608058608,
+            "compact8": 46.08058608058608,
+            "sdk": 52.08058608058608,
+            "public_body": 37.091575091575095,
+            "public_veneer": 46.014652014652015
+          }
+        },
+        {
+          "size": 16,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.134765625,
+            "libc": 77.00390625,
+            "byte": 194.12890625,
+            "own4": 105.0,
+            "own16": 93.1328125,
+            "own64": 105.130859375,
+            "pair16": 97.1328125,
+            "balanced16": 101.134765625,
+            "pair64": 93.0,
+            "balanced64": 103.134765625,
+            "dsp16": 177.1328125,
+            "dsp32": 177.130859375,
+            "compact8": 93.134765625,
+            "sdk": 103.1328125,
+            "public_body": 67.05078125,
+            "public_veneer": 76.18359375
+          }
+        },
+        {
+          "size": 16,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.134765625,
+            "libc": 141.1328125,
+            "byte": 194.12890625,
+            "own4": 129.1328125,
+            "own16": 135.0,
+            "own64": 127.1328125,
+            "pair16": 165.1328125,
+            "balanced16": 165.12890625,
+            "pair64": 165.12890625,
+            "balanced64": 165.1328125,
+            "dsp16": 169.1328125,
+            "dsp32": 169.12890625,
+            "compact8": 173.125,
+            "sdk": 165.12890625,
+            "public_body": 124.0546875,
+            "public_veneer": 133.0546875
+          }
+        },
+        {
+          "size": 16,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.13671875,
+            "libc": 135.1328125,
+            "byte": 194.1328125,
+            "own4": 105.12890625,
+            "own16": 93.130859375,
+            "own64": 105.1328125,
+            "pair16": 129.13671875,
+            "balanced16": 131.1328125,
+            "pair64": 129.1328125,
+            "balanced64": 131.1328125,
+            "dsp16": 133.12890625,
+            "dsp32": 133.1328125,
+            "compact8": 161.1328125,
+            "sdk": 131.1328125,
+            "public_body": 94.173828125,
+            "public_veneer": 103.1796875
+          }
+        },
+        {
+          "size": 64,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.6078431372549,
+            "libc": 197.0,
+            "byte": 770.5784313725491,
+            "own4": 321.3235294117647,
+            "own16": 243.0,
+            "own64": 215.33333333333334,
+            "pair16": 229.0,
+            "balanced16": 233.33333333333334,
+            "pair64": 199.3235294117647,
+            "balanced64": 203.0,
+            "dsp16": 303.3235294117647,
+            "dsp32": 295.3186274509804,
+            "compact8": 213.33333333333334,
+            "sdk": 203.0,
+            "public_body": 136.13235294117646,
+            "public_veneer": 145.14705882352942
+          }
+        },
+        {
+          "size": 64,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.5637254901961,
+            "libc": 261.3333333333333,
+            "byte": 770.5686274509804,
+            "own4": 345.3333333333333,
+            "own16": 283.3333333333333,
+            "own64": 319.3333333333333,
+            "pair16": 297.3333333333333,
+            "balanced16": 293.3235294117647,
+            "pair64": 297.3333333333333,
+            "balanced64": 309.3333333333333,
+            "dsp16": 295.3333333333333,
+            "dsp32": 287.3235294117647,
+            "compact8": 293.3333333333333,
+            "sdk": 309.3235294117647,
+            "public_body": 214.12254901960785,
+            "public_veneer": 223.45098039215685
+          }
+        },
+        {
+          "size": 64,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.6078431372549,
+            "libc": 255.33333333333334,
+            "byte": 770.5833333333334,
+            "own4": 321.3235294117647,
+            "own16": 243.3235294117647,
+            "own64": 215.0,
+            "pair16": 261.3333333333333,
+            "balanced16": 259.3333333333333,
+            "pair64": 261.0,
+            "balanced64": 275.3333333333333,
+            "dsp16": 259.0,
+            "dsp32": 251.33823529411765,
+            "compact8": 281.3235294117647,
+            "sdk": 275.3333333333333,
+            "public_body": 184.4313725490196,
+            "public_veneer": 193.12745098039215
+          }
+        },
+        {
+          "size": 128,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1555.0884955752213,
+            "libc": 357.0,
+            "byte": 1539.0353982300885,
+            "own4": 609.6017699115044,
+            "own16": 443.0,
+            "own64": 385.60176991150445,
+            "pair16": 405.0,
+            "balanced16": 409.5840707964602,
+            "pair64": 345.0,
+            "balanced64": 349.60176991150445,
+            "dsp16": 471.0,
+            "dsp32": 443.60176991150445,
+            "compact8": 373.60176991150445,
+            "sdk": 349.0,
+            "public_body": 235.2566371681416,
+            "public_veneer": 244.28318584070797
+          }
+        },
+        {
+          "size": 128,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1555.1061946902655,
+            "libc": 421.6194690265487,
+            "byte": 1539.0353982300885,
+            "own4": 633.5840707964602,
+            "own16": 483.0,
+            "own64": 489.60176991150445,
+            "pair16": 473.60176991150445,
+            "balanced16": 469.0,
+            "pair64": 443.0353982300885,
+            "balanced64": 451.0,
+            "dsp16": 463.57522123893807,
+            "dsp32": 435.0,
+            "compact8": 453.60176991150445,
+            "sdk": 451.5840707964602,
+            "public_body": 311.21238938053096,
+            "public_veneer": 320.23893805309734
+          }
+        },
+        {
+          "size": 128,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1555.0884955752213,
+            "libc": 415.0,
+            "byte": 1539.0442477876106,
+            "own4": 609.5840707964602,
+            "own16": 443.60176991150445,
+            "own64": 385.0,
+            "pair16": 437.5929203539823,
+            "balanced16": 435.60176991150445,
+            "pair64": 407.0,
+            "balanced64": 417.0,
+            "dsp16": 427.5929203539823,
+            "dsp32": 399.0,
+            "compact8": 441.5840707964602,
+            "sdk": 417.60176991150445,
+            "public_body": 281.1946902654867,
+            "public_veneer": 290.2212389380531
+          }
+        },
+        {
+          "size": 512,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6165.967741935484,
+            "libc": 1319.258064516129,
+            "byte": 6149.774193548387,
+            "own4": 2339.1935483870966,
+            "own16": 1643.0,
+            "own64": 1407.1935483870968,
+            "pair16": 1461.0,
+            "balanced16": 1465.0,
+            "pair64": 1221.0,
+            "balanced64": 1227.258064516129,
+            "dsp16": 1479.0,
+            "dsp32": 1333.225806451613,
+            "compact8": 1333.0,
+            "sdk": 1227.225806451613,
+            "public_body": 829.9354838709677,
+            "public_veneer": 839.0322580645161
+          }
+        },
+        {
+          "size": 512,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6165.967741935484,
+            "libc": 1381.0,
+            "byte": 6149.806451612903,
+            "own4": 2363.1290322580644,
+            "own16": 1685.1290322580646,
+            "own64": 1511.1935483870968,
+            "pair16": 1529.0,
+            "balanced16": 1527.1935483870968,
+            "pair64": 1319.0,
+            "balanced64": 1329.1935483870968,
+            "dsp16": 1473.225806451613,
+            "dsp32": 1323.0,
+            "compact8": 1413.0,
+            "sdk": 1327.0,
+            "public_body": 905.8387096774194,
+            "public_veneer": 914.9354838709677
+          }
+        },
+        {
+          "size": 512,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6165.935483870968,
+            "libc": 1377.258064516129,
+            "byte": 6149.774193548387,
+            "own4": 2339.1290322580644,
+            "own16": 1643.0,
+            "own64": 1407.1935483870968,
+            "pair16": 1493.0,
+            "balanced16": 1491.0,
+            "pair64": 1283.0,
+            "balanced64": 1295.1935483870968,
+            "dsp16": 1435.0,
+            "dsp32": 1289.258064516129,
+            "compact8": 1401.0,
+            "sdk": 1295.1935483870968,
+            "public_body": 875.7741935483871,
+            "public_veneer": 884.8709677419355
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49198.125,
+            "libc": 10284.75,
+            "byte": 49180.4375,
+            "own4": 18475.6875,
+            "own16": 12850.5625,
+            "own64": 10932.6875,
+            "pair16": 11324.5625,
+            "balanced16": 11328.6875,
+            "pair64": 9401.25,
+            "balanced64": 9408.625,
+            "dsp16": 10894.5,
+            "dsp32": 9623.375,
+            "compact8": 10300.75,
+            "sdk": 9408.4375,
+            "public_body": 6378.9375,
+            "public_veneer": 6388.1875
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49198.0,
+            "libc": 10348.75,
+            "byte": 49180.1875,
+            "own4": 18499.75,
+            "own16": 12890.6875,
+            "own64": 11036.5625,
+            "pair16": 11392.625,
+            "balanced16": 11388.625,
+            "pair64": 9502.4375,
+            "balanced64": 9510.6875,
+            "dsp16": 10886.625,
+            "dsp32": 9615.5,
+            "compact8": 10380.75,
+            "sdk": 9510.4375,
+            "public_body": 6454.8125,
+            "public_veneer": 6464.0
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49198.0,
+            "libc": 10342.8125,
+            "byte": 49180.1875,
+            "own4": 18475.8125,
+            "own16": 12850.5625,
+            "own64": 10932.6875,
+            "pair16": 11356.5625,
+            "balanced16": 11354.4375,
+            "pair64": 9466.5625,
+            "balanced64": 9476.5625,
+            "dsp16": 10850.625,
+            "dsp32": 9582.5625,
+            "compact8": 10368.625,
+            "sdk": 9476.4375,
+            "public_body": 6424.75,
+            "public_veneer": 6433.8125
+          }
+        },
+        {
+          "size": 0,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.0,
+            "libc": 10.0625,
+            "byte": 6.0,
+            "own4": 6.0,
+            "own16": 6.0625,
+            "own64": 6.0,
+            "pair16": 6.0,
+            "balanced16": 6.0,
+            "pair64": 6.0,
+            "balanced64": 6.06640625,
+            "dsp16": 6.0,
+            "dsp32": 6.0,
+            "compact8": 4.0625,
+            "sdk": 6.0,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.076171875
+          }
+        },
+        {
+          "size": 0,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.06640625,
+            "libc": 10.0,
+            "byte": 6.0,
+            "own4": 6.0,
+            "own16": 6.0,
+            "own64": 6.0,
+            "pair16": 6.0,
+            "balanced16": 6.0,
+            "pair64": 6.06640625,
+            "balanced64": 6.0,
+            "dsp16": 6.0,
+            "dsp32": 6.0625,
+            "compact8": 4.0,
+            "sdk": 6.0,
+            "public_body": 4.0712890625,
+            "public_veneer": 13.009765625
+          }
+        },
+        {
+          "size": 0,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.06640625,
+            "libc": 10.0,
+            "byte": 6.0,
+            "own4": 6.06640625,
+            "own16": 6.0,
+            "own64": 6.0,
+            "pair16": 6.0,
+            "balanced16": 6.0,
+            "pair64": 6.064453125,
+            "balanced64": 6.0,
+            "dsp16": 6.0,
+            "dsp32": 6.0625,
+            "compact8": 4.0,
+            "sdk": 6.0,
+            "public_body": 4.0712890625,
+            "public_veneer": 13.009765625
+          }
+        },
+        {
+          "size": 1,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.005192107995846,
+            "libc": 14.003115264797508,
+            "byte": 14.0,
+            "own4": 22.0,
+            "own16": 22.064382139148496,
+            "own64": 22.00207684319834,
+            "pair16": 22.0,
+            "balanced16": 14.004153686396677,
+            "pair64": 22.0,
+            "balanced64": 14.002076843198338,
+            "dsp16": 14.002076843198338,
+            "dsp32": 14.002076843198338,
+            "compact8": 12.002076843198338,
+            "sdk": 14.002076843198338,
+            "public_body": 11.007268951194185,
+            "public_veneer": 20.010384215991692
+          }
+        },
+        {
+          "size": 1,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.003115264797508,
+            "libc": 14.003115264797508,
+            "byte": 14.0,
+            "own4": 22.068535825545172,
+            "own16": 22.0,
+            "own64": 22.0,
+            "pair16": 22.0,
+            "balanced16": 14.002076843198338,
+            "pair64": 22.0,
+            "balanced64": 14.002076843198338,
+            "dsp16": 14.002076843198338,
+            "dsp32": 14.002076843198338,
+            "compact8": 12.002076843198338,
+            "sdk": 14.002076843198338,
+            "public_body": 11.007268951194185,
+            "public_veneer": 20.010384215991692
+          }
+        },
+        {
+          "size": 1,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.003115264797508,
+            "libc": 14.003115264797508,
+            "byte": 14.0,
+            "own4": 22.0,
+            "own16": 22.0,
+            "own64": 22.0,
+            "pair16": 22.0,
+            "balanced16": 14.002076843198338,
+            "pair64": 22.062305295950157,
+            "balanced64": 14.002076843198338,
+            "dsp16": 14.002076843198338,
+            "dsp32": 14.002076843198338,
+            "compact8": 12.002076843198338,
+            "sdk": 14.002076843198338,
+            "public_body": 11.007268951194185,
+            "public_veneer": 20.078920041536865
+          }
+        },
+        {
+          "size": 4,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.00366300366301,
+            "libc": 44.00610500610501,
+            "byte": 50.07814407814408,
+            "own4": 48.081807081807085,
+            "own16": 48.0,
+            "own64": 48.0,
+            "pair16": 48.081807081807085,
+            "balanced16": 52.07814407814408,
+            "pair64": 48.0,
+            "balanced64": 52.07692307692308,
+            "dsp16": 48.08058608058608,
+            "dsp32": 48.0,
+            "compact8": 46.08058608058608,
+            "sdk": 52.0,
+            "public_body": 37.01709401709402,
+            "public_veneer": 46.101343101343105
+          }
+        },
+        {
+          "size": 4,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.08669108669109,
+            "libc": 44.00610500610501,
+            "byte": 50.07814407814408,
+            "own4": 48.08058608058608,
+            "own16": 48.0,
+            "own64": 48.07814407814408,
+            "pair16": 48.08058608058608,
+            "balanced16": 52.0,
+            "pair64": 48.08058608058608,
+            "balanced64": 52.08058608058608,
+            "dsp16": 48.0,
+            "dsp32": 48.002442002442,
+            "compact8": 46.002442002442,
+            "sdk": 52.07448107448108,
+            "public_body": 37.01709401709402,
+            "public_veneer": 46.020757020757024
+          }
+        },
+        {
+          "size": 4,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.08424908424908,
+            "libc": 44.00610500610501,
+            "byte": 50.002442002442,
+            "own4": 48.08058608058608,
+            "own16": 48.08302808302808,
+            "own64": 48.08058608058608,
+            "pair16": 48.0,
+            "balanced16": 52.08058608058608,
+            "pair64": 48.08669108669109,
+            "balanced64": 52.07692307692308,
+            "dsp16": 48.08302808302808,
+            "dsp32": 48.07814407814408,
+            "compact8": 46.0,
+            "sdk": 52.08302808302808,
+            "public_body": 37.01709401709402,
+            "public_veneer": 46.1001221001221
+          }
+        },
+        {
+          "size": 16,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.142578125,
+            "libc": 77.00390625,
+            "byte": 194.1328125,
+            "own4": 105.00390625,
+            "own16": 93.140625,
+            "own64": 105.13671875,
+            "pair16": 94.1328125,
+            "balanced16": 100.99609375,
+            "pair64": 92.1328125,
+            "balanced64": 101.123046875,
+            "dsp16": 163.13671875,
+            "dsp32": 163.134765625,
+            "compact8": 91.12109375,
+            "sdk": 101.12109375,
+            "public_body": 67.052734375,
+            "public_veneer": 76.1875
+          }
+        },
+        {
+          "size": 16,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.14453125,
+            "libc": 141.146484375,
+            "byte": 194.1328125,
+            "own4": 125.138671875,
+            "own16": 131.13671875,
+            "own64": 123.138671875,
+            "pair16": 153.138671875,
+            "balanced16": 163.12890625,
+            "pair64": 153.146484375,
+            "balanced64": 163.130859375,
+            "dsp16": 157.134765625,
+            "dsp32": 157.142578125,
+            "compact8": 159.138671875,
+            "sdk": 163.12890625,
+            "public_body": 124.181640625,
+            "public_veneer": 133.189453125
+          }
+        },
+        {
+          "size": 16,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.1484375,
+            "libc": 135.140625,
+            "byte": 194.126953125,
+            "own4": 105.005859375,
+            "own16": 93.138671875,
+            "own64": 105.142578125,
+            "pair16": 123.017578125,
+            "balanced16": 129.1328125,
+            "pair64": 123.142578125,
+            "balanced64": 129.126953125,
+            "dsp16": 127.005859375,
+            "dsp32": 127.138671875,
+            "compact8": 153.138671875,
+            "sdk": 129.1328125,
+            "public_body": 94.056640625,
+            "public_veneer": 103.05859375
+          }
+        },
+        {
+          "size": 64,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.6666666666666,
+            "libc": 197.0392156862745,
+            "byte": 770.5784313725491,
+            "own4": 321.3578431372549,
+            "own16": 243.05392156862746,
+            "own64": 215.37254901960785,
+            "pair16": 217.38725490196077,
+            "balanced16": 233.01960784313727,
+            "pair64": 190.36274509803923,
+            "balanced64": 197.0343137254902,
+            "dsp16": 283.37745098039215,
+            "dsp32": 275.3872549019608,
+            "compact8": 211.33823529411765,
+            "sdk": 197.0343137254902,
+            "public_body": 136.1813725490196,
+            "public_veneer": 145.19607843137254
+          }
+        },
+        {
+          "size": 64,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.6715686274509,
+            "libc": 261.4019607843137,
+            "byte": 770.3529411764706,
+            "own4": 341.36764705882354,
+            "own16": 279.38235294117646,
+            "own64": 315.40686274509807,
+            "pair16": 276.4019607843137,
+            "balanced16": 291.01960784313724,
+            "pair64": 279.4117647058824,
+            "balanced64": 307.34313725490193,
+            "dsp16": 277.3921568627451,
+            "dsp32": 269.3872549019608,
+            "compact8": 279.36764705882354,
+            "sdk": 307.34313725490193,
+            "public_body": 214.5,
+            "public_veneer": 223.19117647058823
+          }
+        },
+        {
+          "size": 64,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.6715686274509,
+            "libc": 255.38725490196077,
+            "byte": 770.3529411764706,
+            "own4": 321.3529411764706,
+            "own16": 243.38235294117646,
+            "own64": 215.02941176470588,
+            "pair16": 246.40196078431373,
+            "balanced16": 257.3627450980392,
+            "pair64": 249.0686274509804,
+            "balanced64": 273.3529411764706,
+            "dsp16": 247.05882352941177,
+            "dsp32": 239.38235294117646,
+            "compact8": 273.36764705882354,
+            "sdk": 273.02941176470586,
+            "public_body": 184.1764705882353,
+            "public_veneer": 193.19117647058823
+          }
+        },
+        {
+          "size": 128,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1555.716814159292,
+            "libc": 357.88495575221236,
+            "byte": 1539.2477876106195,
+            "own4": 609.7345132743363,
+            "own16": 443.20353982300884,
+            "own64": 385.88495575221236,
+            "pair16": 381.20353982300884,
+            "balanced16": 409.1061946902655,
+            "pair64": 327.88495575221236,
+            "balanced64": 337.1592920353982,
+            "dsp16": 443.1858407079646,
+            "dsp32": 415.98230088495575,
+            "compact8": 371.1061946902655,
+            "sdk": 337.8938053097345,
+            "public_body": 235.46902654867256,
+            "public_veneer": 271.20353982300884
+          }
+        },
+        {
+          "size": 128,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1582.132743362832,
+            "libc": 441.60176991150445,
+            "byte": 1547.0884955752213,
+            "own4": 640.5840707964602,
+            "own16": 497.60176991150445,
+            "own64": 503.60176991150445,
+            "pair16": 466.0,
+            "balanced16": 479.60176991150445,
+            "pair64": 442.60176991150445,
+            "balanced64": 455.5929203539823,
+            "dsp16": 461.60176991150445,
+            "dsp32": 433.0,
+            "compact8": 454.60176991150445,
+            "sdk": 455.5840707964602,
+            "public_body": 338.12389380530976,
+            "public_veneer": 350.12389380530976
+          }
+        },
+        {
+          "size": 128,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1582.132743362832,
+            "libc": 435.60176991150445,
+            "byte": 1547.0796460176991,
+            "own4": 619.6017699115044,
+            "own16": 461.0,
+            "own64": 395.60176991150445,
+            "pair16": 436.0,
+            "balanced16": 447.6194690265487,
+            "pair64": 412.0,
+            "balanced64": 423.6106194690266,
+            "dsp16": 431.0,
+            "dsp32": 403.6106194690266,
+            "compact8": 448.0,
+            "sdk": 423.6106194690266,
+            "public_body": 308.12389380530976,
+            "public_veneer": 320.7079646017699
+          }
+        },
+        {
+          "size": 512,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6262.193548387097,
+            "libc": 1381.0,
+            "byte": 6181.032258064516,
+            "own4": 2372.1290322580644,
+            "own16": 1740.1935483870968,
+            "own64": 1476.0,
+            "pair16": 1460.0,
+            "balanced16": 1525.0,
+            "pair64": 1220.0,
+            "balanced64": 1261.0,
+            "dsp16": 1498.225806451613,
+            "dsp32": 1348.0,
+            "compact8": 1393.1935483870968,
+            "sdk": 1261.0,
+            "public_body": 927.8709677419355,
+            "public_veneer": 937.741935483871
+          }
+        },
+        {
+          "size": 512,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6265.129032258064,
+            "libc": 1449.0,
+            "byte": 6181.967741935484,
+            "own4": 2394.1290322580644,
+            "own16": 1747.225806451613,
+            "own64": 1547.0,
+            "pair16": 1524.1935483870968,
+            "balanced16": 1583.0,
+            "pair64": 1338.1935483870968,
+            "balanced64": 1343.0,
+            "dsp16": 1495.1935483870968,
+            "dsp32": 1345.0,
+            "compact8": 1462.0,
+            "sdk": 1343.0,
+            "public_body": 1004.516129032258,
+            "public_veneer": 1018.6129032258065
+          }
+        },
+        {
+          "size": 512,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6265.1612903225805,
+            "libc": 1443.0,
+            "byte": 6181.967741935484,
+            "own4": 2373.1935483870966,
+            "own16": 1711.258064516129,
+            "own64": 1439.0,
+            "pair16": 1494.1935483870968,
+            "balanced16": 1551.0,
+            "pair64": 1308.1935483870968,
+            "balanced64": 1311.0,
+            "dsp16": 1465.1935483870968,
+            "dsp32": 1315.0,
+            "compact8": 1458.1935483870968,
+            "sdk": 1311.0,
+            "public_body": 974.516129032258,
+            "public_veneer": 986.516129032258
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49968.5,
+            "libc": 10796.9375,
+            "byte": 49438.4375,
+            "own4": 18733.8125,
+            "own16": 13617.9375,
+            "own64": 11507.9375,
+            "pair16": 11324.0,
+            "balanced16": 11837.0625,
+            "pair64": 9400.25,
+            "balanced64": 9724.6875,
+            "dsp16": 11136.125,
+            "dsp32": 9867.875,
+            "compact8": 10807.125,
+            "sdk": 9724.9375,
+            "public_body": 7146.5625,
+            "public_veneer": 7158.75
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49971.5625,
+            "libc": 10864.9375,
+            "byte": 49439.1875,
+            "own4": 18755.5625,
+            "own16": 13401.0625,
+            "own64": 11299.0,
+            "pair16": 11385.875,
+            "balanced16": 11894.875,
+            "pair64": 9687.9375,
+            "balanced64": 9638.8125,
+            "dsp16": 11133.0625,
+            "dsp32": 9865.0,
+            "compact8": 10878.0625,
+            "sdk": 9638.9375,
+            "public_body": 7225.3125,
+            "public_veneer": 7237.125
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49971.5625,
+            "libc": 10858.9375,
+            "byte": 49439.0625,
+            "own4": 18734.75,
+            "own16": 13364.9375,
+            "own64": 11190.875,
+            "pair16": 11355.9375,
+            "balanced16": 11862.8125,
+            "pair64": 9658.0,
+            "balanced64": 9606.875,
+            "dsp16": 11103.0,
+            "dsp32": 9835.0,
+            "compact8": 10872.0,
+            "sdk": 9606.8125,
+            "public_body": 7195.125,
+            "public_veneer": 7207.3125
+          }
+        }
+      ]
+    },
+    {
+      "directory": "/MCHR-X02",
+      "shared": true,
+      "placement": "sram",
+      "rows": 1440,
+      "categories": [
+        {
+          "source": "SRAM",
+          "sizes": "0..16",
+          "cases": 200,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 42.0010989010989,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 26.0010989010989,
+              "unweighted_geomean_speedup_vs_baseline": 1.4086040410219203,
+              "within_two_percent_of_best_cases": 5,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6098682603907175,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.711537082584853,
+              "within_two_percent_of_best_cases": 5,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.696343793184165,
+              "within_two_percent_of_best_cases": 2,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.7136821234987993,
+              "within_two_percent_of_best_cases": 9,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.656845701183737,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 28.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6431477773348635,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6563823130521638,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 28.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.641853529109437,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.645246255289792,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 26.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6452771894924227,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 28.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.7034590051134615,
+              "within_two_percent_of_best_cases": 8,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 29.00989010989011,
+              "unweighted_geomean_speedup_vs_baseline": 1.4299889433967639,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 21.00989010989011,
+              "unweighted_geomean_speedup_vs_baseline": 2.111769393309244,
+              "within_two_percent_of_best_cases": 190,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 30.013186813186813,
+              "unweighted_geomean_speedup_vs_baseline": 1.3787535563271731,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "SRAM",
+          "sizes": "17..255",
+          "cases": 264,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 402.208211143695,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 177.19941348973606,
+              "unweighted_geomean_speedup_vs_baseline": 2.097573114280489,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 386.19941348973606,
+              "unweighted_geomean_speedup_vs_baseline": 1.3213185909077725,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 194.09970674486803,
+              "unweighted_geomean_speedup_vs_baseline": 2.23501798876401,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 176.10557184750732,
+              "unweighted_geomean_speedup_vs_baseline": 2.5688508852049314,
+              "within_two_percent_of_best_cases": 4,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 183.69941348973606,
+              "unweighted_geomean_speedup_vs_baseline": 2.5239141951733135,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 181.19961800536856,
+              "unweighted_geomean_speedup_vs_baseline": 2.599127654208656,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 181.19910179640718,
+              "unweighted_geomean_speedup_vs_baseline": 2.5761245894445515,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 181.19961800536856,
+              "unweighted_geomean_speedup_vs_baseline": 2.6662292423640883,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 189.10479041916167,
+              "unweighted_geomean_speedup_vs_baseline": 2.5800749486808074,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 193.19949755661094,
+              "unweighted_geomean_speedup_vs_baseline": 2.542680676353416,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 195.19806077500172,
+              "unweighted_geomean_speedup_vs_baseline": 2.6006175446532334,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 203.20150315205365,
+              "unweighted_geomean_speedup_vs_baseline": 2.5210456622088957,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 140.22347039791384,
+              "unweighted_geomean_speedup_vs_baseline": 2.7115700863384893,
+              "within_two_percent_of_best_cases": 16,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 132.13585151802658,
+              "unweighted_geomean_speedup_vs_baseline": 3.453433053727108,
+              "within_two_percent_of_best_cases": 262,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 141.34850886462368,
+              "unweighted_geomean_speedup_vs_baseline": 2.65023935492314,
+              "within_two_percent_of_best_cases": 14,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "SRAM",
+          "sizes": "256..4096",
+          "cases": 144,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 3100.0583333333334,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 746.1666666666666,
+              "unweighted_geomean_speedup_vs_baseline": 2.75477182453332,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 3085.95,
+              "unweighted_geomean_speedup_vs_baseline": 1.302741774313377,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 1213.1,
+              "unweighted_geomean_speedup_vs_baseline": 2.4671589023901395,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 886.55,
+              "unweighted_geomean_speedup_vs_baseline": 3.098236066359147,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 831.65,
+              "unweighted_geomean_speedup_vs_baseline": 3.3575592799027953,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 818.125,
+              "unweighted_geomean_speedup_vs_baseline": 3.331080772497668,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 818.1166666666667,
+              "unweighted_geomean_speedup_vs_baseline": 3.3275706841834887,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 727.0,
+              "unweighted_geomean_speedup_vs_baseline": 3.688506903045485,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 739.5666666666666,
+              "unweighted_geomean_speedup_vs_baseline": 3.663163200657989,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 800.0,
+              "unweighted_geomean_speedup_vs_baseline": 3.402075632193303,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 733.1333333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.6549759397989856,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 773.0,
+              "unweighted_geomean_speedup_vs_baseline": 3.4866723248086515,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 512.4333333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.953185451537429,
+              "within_two_percent_of_best_cases": 96,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 504.43333333333334,
+              "unweighted_geomean_speedup_vs_baseline": 4.9187654940037895,
+              "within_two_percent_of_best_cases": 144,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 513.4833333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.874683754311865,
+              "within_two_percent_of_best_cases": 91,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "Flash",
+          "sizes": "0..16",
+          "cases": 288,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 46.04350348027842,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 34.00348027842227,
+              "unweighted_geomean_speedup_vs_baseline": 1.5195118331201252,
+              "within_two_percent_of_best_cases": 9,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 34.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.5820773415849487,
+              "within_two_percent_of_best_cases": 15,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6249704921330623,
+              "within_two_percent_of_best_cases": 18,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6019309849198728,
+              "within_two_percent_of_best_cases": 3,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.615707462034492,
+              "within_two_percent_of_best_cases": 18,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.584753096678929,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 40.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.5501955533354,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.5846689977552457,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 40.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.5500056413614491,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6271677476492938,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.6271640907716804,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 36.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.7398993571656078,
+              "within_two_percent_of_best_cases": 32,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 37.01624129930394,
+              "unweighted_geomean_speedup_vs_baseline": 1.4595360740551044,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 29.016241299303946,
+              "unweighted_geomean_speedup_vs_baseline": 2.1272293639570936,
+              "within_two_percent_of_best_cases": 258,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 38.019721577726216,
+              "unweighted_geomean_speedup_vs_baseline": 1.4100005736780363,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "Flash",
+          "sizes": "17..255",
+          "cases": 352,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 414.2365269461078,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 182.12425149700601,
+              "unweighted_geomean_speedup_vs_baseline": 2.097297206269135,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 398.20958083832335,
+              "unweighted_geomean_speedup_vs_baseline": 1.1979238249344646,
+              "within_two_percent_of_best_cases": 55,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 197.20967741935485,
+              "unweighted_geomean_speedup_vs_baseline": 1.922251476668299,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 179.21114369501467,
+              "unweighted_geomean_speedup_vs_baseline": 2.1979187772071405,
+              "within_two_percent_of_best_cases": 6,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 187.22287390029325,
+              "unweighted_geomean_speedup_vs_baseline": 2.1405521697684695,
+              "within_two_percent_of_best_cases": 6,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 189.11948882596823,
+              "unweighted_geomean_speedup_vs_baseline": 2.3422523302244476,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 199.0977011494253,
+              "unweighted_geomean_speedup_vs_baseline": 2.1899250983299288,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 189.6273664638269,
+              "unweighted_geomean_speedup_vs_baseline": 2.385862877515011,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 203.1111158529646,
+              "unweighted_geomean_speedup_vs_baseline": 2.2000561716611307,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 196.12023460410558,
+              "unweighted_geomean_speedup_vs_baseline": 2.3084691046425916,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 198.21700879765396,
+              "unweighted_geomean_speedup_vs_baseline": 2.3652293021708832,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 200.11077844311376,
+              "unweighted_geomean_speedup_vs_baseline": 2.1846004895932962,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 152.13963810174118,
+              "unweighted_geomean_speedup_vs_baseline": 2.6556125801519377,
+              "within_two_percent_of_best_cases": 23,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 144.08620689655172,
+              "unweighted_geomean_speedup_vs_baseline": 3.0884162621284106,
+              "within_two_percent_of_best_cases": 305,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 153.15137418914304,
+              "unweighted_geomean_speedup_vs_baseline": 2.606065360101293,
+              "within_two_percent_of_best_cases": 1,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "Flash",
+          "sizes": "256..4096",
+          "cases": 192,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 3155.15,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 786.1166666666667,
+              "unweighted_geomean_speedup_vs_baseline": 2.7564454170090023,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 3104.0666666666666,
+              "unweighted_geomean_speedup_vs_baseline": 1.18307897549551,
+              "within_two_percent_of_best_cases": 30,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 1237.1,
+              "unweighted_geomean_speedup_vs_baseline": 2.123918360199313,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 925.0,
+              "unweighted_geomean_speedup_vs_baseline": 2.655127313960474,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 871.5666666666666,
+              "unweighted_geomean_speedup_vs_baseline": 2.8812302768989504,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 826.575,
+              "unweighted_geomean_speedup_vs_baseline": 3.015891915574012,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 859.0,
+              "unweighted_geomean_speedup_vs_baseline": 2.83964676296217,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 748.55,
+              "unweighted_geomean_speedup_vs_baseline": 3.323736545705031,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 763.0,
+              "unweighted_geomean_speedup_vs_baseline": 3.202365956698403,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 815.0,
+              "unweighted_geomean_speedup_vs_baseline": 3.0639715794009272,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 747.5583333333334,
+              "unweighted_geomean_speedup_vs_baseline": 3.3051274003012407,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 799.125,
+              "unweighted_geomean_speedup_vs_baseline": 2.992990737505885,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 574.2666666666667,
+              "unweighted_geomean_speedup_vs_baseline": 3.827803878076172,
+              "within_two_percent_of_best_cases": 138,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 566.8166666666666,
+              "unweighted_geomean_speedup_vs_baseline": 4.342393629741751,
+              "within_two_percent_of_best_cases": 168,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 578.2666666666667,
+              "unweighted_geomean_speedup_vs_baseline": 3.773381043235285,
+              "within_two_percent_of_best_cases": 94,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        }
+      ],
+      "examples": [
+        {
+          "size": 0,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.0,
+            "libc": 10.0,
+            "byte": 6.064453125,
+            "own4": 6.0,
+            "own16": 6.0,
+            "own64": 6.064453125,
+            "pair16": 6.0,
+            "balanced16": 6.0625,
+            "pair64": 6.0,
+            "balanced64": 6.0,
+            "dsp16": 6.064453125,
+            "dsp32": 6.0,
+            "compact8": 4.0,
+            "sdk": 12.0712890625,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.07421875
+          }
+        },
+        {
+          "size": 0,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.0,
+            "libc": 10.0,
+            "byte": 6.0,
+            "own4": 6.0,
+            "own16": 6.0,
+            "own64": 6.0,
+            "pair16": 6.064453125,
+            "balanced16": 6.0,
+            "pair64": 6.0,
+            "balanced64": 6.064453125,
+            "dsp16": 6.0,
+            "dsp32": 6.0,
+            "compact8": 4.06640625,
+            "sdk": 12.0068359375,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.009765625
+          }
+        },
+        {
+          "size": 0,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.064453125,
+            "libc": 10.0,
+            "byte": 6.064453125,
+            "own4": 6.0,
+            "own16": 6.0,
+            "own64": 6.0625,
+            "pair16": 6.0,
+            "balanced16": 6.0,
+            "pair64": 6.001953125,
+            "balanced64": 6.0,
+            "dsp16": 6.0,
+            "dsp32": 6.001953125,
+            "compact8": 4.0,
+            "sdk": 12.0068359375,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.009765625
+          }
+        },
+        {
+          "size": 1,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.0,
+            "libc": 14.0,
+            "byte": 14.0,
+            "own4": 22.066458982346834,
+            "own16": 22.0,
+            "own64": 22.0,
+            "pair16": 22.0,
+            "balanced16": 14.0,
+            "pair64": 22.0,
+            "balanced64": 14.0,
+            "dsp16": 14.0,
+            "dsp32": 14.0,
+            "compact8": 12.0,
+            "sdk": 19.003115264797508,
+            "public_body": 11.003115264797508,
+            "public_veneer": 20.006230529595015
+          }
+        },
+        {
+          "size": 1,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.00103842159917,
+            "libc": 14.0,
+            "byte": 14.0,
+            "own4": 22.066458982346834,
+            "own16": 22.0,
+            "own64": 22.0,
+            "pair16": 22.0,
+            "balanced16": 14.06853582554517,
+            "pair64": 22.0,
+            "balanced64": 14.0,
+            "dsp16": 14.0,
+            "dsp32": 14.0,
+            "compact8": 12.0,
+            "sdk": 19.007268951194185,
+            "public_body": 11.003115264797508,
+            "public_veneer": 20.006230529595015
+          }
+        },
+        {
+          "size": 1,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.0,
+            "libc": 14.0,
+            "byte": 14.0,
+            "own4": 22.0,
+            "own16": 22.0,
+            "own64": 22.0,
+            "pair16": 22.0,
+            "balanced16": 14.0,
+            "pair64": 22.067497403946003,
+            "balanced64": 14.0,
+            "dsp16": 14.0,
+            "dsp32": 14.0,
+            "compact8": 12.0,
+            "sdk": 19.003115264797508,
+            "public_body": 11.003115264797508,
+            "public_veneer": 20.006230529595015
+          }
+        },
+        {
+          "size": 4,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.08547008547009,
+            "libc": 44.0,
+            "byte": 50.0,
+            "own4": 50.08058608058608,
+            "own16": 50.081807081807085,
+            "own64": 50.0,
+            "pair16": 50.0,
+            "balanced16": 52.0,
+            "pair64": 50.081807081807085,
+            "balanced64": 52.0,
+            "dsp16": 50.07814407814408,
+            "dsp32": 50.0,
+            "compact8": 46.0,
+            "sdk": 45.08913308913309,
+            "public_body": 37.010989010989015,
+            "public_veneer": 46.01587301587302
+          }
+        },
+        {
+          "size": 4,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.08302808302808,
+            "libc": 44.08058608058608,
+            "byte": 50.0,
+            "own4": 50.0,
+            "own16": 50.08058608058608,
+            "own64": 50.08058608058608,
+            "pair16": 50.0,
+            "balanced16": 52.0,
+            "pair64": 50.0,
+            "balanced64": 52.08058608058608,
+            "dsp16": 50.002442002442,
+            "dsp32": 50.08058608058608,
+            "compact8": 46.0,
+            "sdk": 45.010989010989015,
+            "public_body": 37.091575091575095,
+            "public_veneer": 46.014652014652015
+          }
+        },
+        {
+          "size": 4,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.08302808302808,
+            "libc": 44.0,
+            "byte": 50.07814407814408,
+            "own4": 50.08058608058608,
+            "own16": 50.08058608058608,
+            "own64": 50.081807081807085,
+            "pair16": 50.08058608058608,
+            "balanced16": 52.0,
+            "pair64": 50.081807081807085,
+            "balanced64": 52.081807081807085,
+            "dsp16": 50.0,
+            "dsp32": 50.08058608058608,
+            "compact8": 46.002442002442,
+            "sdk": 45.010989010989015,
+            "public_body": 37.08913308913309,
+            "public_veneer": 46.014652014652015
+          }
+        },
+        {
+          "size": 16,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.12890625,
+            "libc": 77.0,
+            "byte": 194.125,
+            "own4": 105.00390625,
+            "own16": 93.0078125,
+            "own64": 105.0,
+            "pair16": 97.125,
+            "balanced16": 101.0,
+            "pair64": 93.0,
+            "balanced64": 103.1328125,
+            "dsp16": 177.125,
+            "dsp32": 177.12890625,
+            "compact8": 93.005859375,
+            "sdk": 75.05078125,
+            "public_body": 67.05078125,
+            "public_veneer": 76.056640625
+          }
+        },
+        {
+          "size": 16,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.13671875,
+            "libc": 141.13671875,
+            "byte": 194.12890625,
+            "own4": 129.1328125,
+            "own16": 135.1328125,
+            "own64": 127.1328125,
+            "pair16": 165.1328125,
+            "balanced16": 165.1328125,
+            "pair64": 165.13671875,
+            "balanced64": 165.13671875,
+            "dsp16": 169.126953125,
+            "dsp32": 169.13671875,
+            "compact8": 173.1328125,
+            "sdk": 132.177734375,
+            "public_body": 124.18359375,
+            "public_veneer": 133.18359375
+          }
+        },
+        {
+          "size": 16,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.13671875,
+            "libc": 135.13671875,
+            "byte": 194.130859375,
+            "own4": 105.1328125,
+            "own16": 93.0,
+            "own64": 105.134765625,
+            "pair16": 129.1328125,
+            "balanced16": 131.1328125,
+            "pair64": 129.12890625,
+            "balanced64": 131.134765625,
+            "dsp16": 133.1328125,
+            "dsp32": 133.1328125,
+            "compact8": 161.13671875,
+            "sdk": 102.044921875,
+            "public_body": 94.173828125,
+            "public_veneer": 103.181640625
+          }
+        },
+        {
+          "size": 64,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.6127450980392,
+            "libc": 197.3235294117647,
+            "byte": 770.5784313725491,
+            "own4": 321.3333333333333,
+            "own16": 243.3186274509804,
+            "own64": 215.33333333333334,
+            "pair16": 229.0,
+            "balanced16": 233.3235294117647,
+            "pair64": 199.0,
+            "balanced64": 203.33333333333334,
+            "dsp16": 303.3333333333333,
+            "dsp32": 295.3333333333333,
+            "compact8": 213.31372549019608,
+            "sdk": 144.13235294117646,
+            "public_body": 136.13235294117646,
+            "public_veneer": 145.14705882352942
+          }
+        },
+        {
+          "size": 64,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.5980392156863,
+            "libc": 261.3235294117647,
+            "byte": 770.5735294117648,
+            "own4": 345.3137254901961,
+            "own16": 283.3186274509804,
+            "own64": 319.3333333333333,
+            "pair16": 297.328431372549,
+            "balanced16": 293.3235294117647,
+            "pair64": 297.3382352941176,
+            "balanced64": 309.3333333333333,
+            "dsp16": 295.3333333333333,
+            "dsp32": 287.02941176470586,
+            "compact8": 293.3235294117647,
+            "sdk": 222.12254901960785,
+            "public_body": 214.12254901960785,
+            "public_veneer": 223.4607843137255
+          }
+        },
+        {
+          "size": 64,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.343137254902,
+            "libc": 255.34313725490196,
+            "byte": 770.5784313725491,
+            "own4": 321.3333333333333,
+            "own16": 243.0,
+            "own64": 215.3235294117647,
+            "pair16": 261.3235294117647,
+            "balanced16": 259.3137254901961,
+            "pair64": 261.3333333333333,
+            "balanced64": 275.0,
+            "dsp16": 259.3333333333333,
+            "dsp32": 251.33333333333334,
+            "compact8": 281.3235294117647,
+            "sdk": 192.43627450980392,
+            "public_body": 184.11274509803923,
+            "public_veneer": 193.45098039215685
+          }
+        },
+        {
+          "size": 128,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1555.0884955752213,
+            "libc": 357.0,
+            "byte": 1539.0442477876106,
+            "own4": 609.6017699115044,
+            "own16": 443.0,
+            "own64": 385.60176991150445,
+            "pair16": 405.0,
+            "balanced16": 409.6106194690266,
+            "pair64": 345.0,
+            "balanced64": 349.6194690265487,
+            "dsp16": 471.0,
+            "dsp32": 443.60176991150445,
+            "compact8": 373.0,
+            "sdk": 243.84070796460176,
+            "public_body": 235.2566371681416,
+            "public_veneer": 244.28318584070797
+          }
+        },
+        {
+          "size": 128,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1555.1061946902655,
+            "libc": 421.0,
+            "byte": 1539.0353982300885,
+            "own4": 633.6017699115044,
+            "own16": 483.5840707964602,
+            "own64": 489.60176991150445,
+            "pair16": 473.0,
+            "balanced16": 469.6194690265487,
+            "pair64": 443.5840707964602,
+            "balanced64": 451.0,
+            "dsp16": 463.6106194690266,
+            "dsp32": 435.0,
+            "compact8": 453.60176991150445,
+            "sdk": 319.21238938053096,
+            "public_body": 311.79646017699116,
+            "public_veneer": 320.23893805309734
+          }
+        },
+        {
+          "size": 128,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1555.0973451327434,
+            "libc": 415.0,
+            "byte": 1539.0442477876106,
+            "own4": 609.5840707964602,
+            "own16": 443.0,
+            "own64": 385.60176991150445,
+            "pair16": 437.0,
+            "balanced16": 435.60176991150445,
+            "pair64": 407.0,
+            "balanced64": 417.60176991150445,
+            "dsp16": 427.60176991150445,
+            "dsp32": 399.0,
+            "compact8": 441.5840707964602,
+            "sdk": 289.1946902654867,
+            "public_body": 281.1946902654867,
+            "public_veneer": 290.8053097345133
+          }
+        },
+        {
+          "size": 512,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6166.0,
+            "libc": 1317.0,
+            "byte": 6149.774193548387,
+            "own4": 2339.1935483870966,
+            "own16": 1643.0,
+            "own64": 1407.1935483870968,
+            "pair16": 1461.0,
+            "balanced16": 1467.1935483870968,
+            "pair64": 1221.0,
+            "balanced64": 1225.0,
+            "dsp16": 1481.225806451613,
+            "dsp32": 1331.0,
+            "compact8": 1335.1935483870968,
+            "sdk": 837.9354838709677,
+            "public_body": 829.9354838709677,
+            "public_veneer": 839.0322580645161
+          }
+        },
+        {
+          "size": 512,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6166.032258064516,
+            "libc": 1381.0,
+            "byte": 6149.806451612903,
+            "own4": 2363.1935483870966,
+            "own16": 1685.1935483870968,
+            "own64": 1509.0,
+            "pair16": 1531.1935483870968,
+            "balanced16": 1527.1935483870968,
+            "pair64": 1319.0,
+            "balanced64": 1327.0,
+            "dsp16": 1471.0,
+            "dsp32": 1323.0,
+            "compact8": 1415.1935483870968,
+            "sdk": 913.8387096774194,
+            "public_body": 905.8387096774194,
+            "public_veneer": 914.9354838709677
+          }
+        },
+        {
+          "size": 512,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6166.0,
+            "libc": 1375.0,
+            "byte": 6149.774193548387,
+            "own4": 2339.1935483870966,
+            "own16": 1643.0,
+            "own64": 1407.1935483870968,
+            "pair16": 1495.1935483870968,
+            "balanced16": 1491.0,
+            "pair64": 1285.258064516129,
+            "balanced64": 1293.0,
+            "dsp16": 1437.225806451613,
+            "dsp32": 1287.0,
+            "compact8": 1403.1935483870968,
+            "sdk": 883.7741935483871,
+            "public_body": 875.7741935483871,
+            "public_veneer": 887.0
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49198.0,
+            "libc": 10284.75,
+            "byte": 49180.1875,
+            "own4": 18475.8125,
+            "own16": 12850.5625,
+            "own64": 10932.5625,
+            "pair16": 11324.5625,
+            "balanced16": 11328.5,
+            "pair64": 9401.25,
+            "balanced64": 9408.6875,
+            "dsp16": 10894.625,
+            "dsp32": 9626.5625,
+            "compact8": 10300.625,
+            "sdk": 6386.9375,
+            "public_body": 6378.9375,
+            "public_veneer": 6388.1875
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49198.125,
+            "libc": 10345.375,
+            "byte": 49180.0625,
+            "own4": 18499.8125,
+            "own16": 12890.6875,
+            "own64": 11036.6875,
+            "pair16": 11392.5625,
+            "balanced16": 11388.6875,
+            "pair64": 9499.3125,
+            "balanced64": 9510.5625,
+            "dsp16": 10886.625,
+            "dsp32": 9615.25,
+            "compact8": 10380.75,
+            "sdk": 6462.75,
+            "public_body": 6454.75,
+            "public_veneer": 6464.0
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49198.0,
+            "libc": 10342.625,
+            "byte": 49180.25,
+            "own4": 18475.8125,
+            "own16": 12850.5625,
+            "own64": 10932.6875,
+            "pair16": 11356.5625,
+            "balanced16": 11354.5625,
+            "pair64": 9466.4375,
+            "balanced64": 9476.5625,
+            "dsp16": 10850.5625,
+            "dsp32": 9582.625,
+            "compact8": 10368.75,
+            "sdk": 6432.6875,
+            "public_body": 6424.6875,
+            "public_veneer": 6433.875
+          }
+        },
+        {
+          "size": 0,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.0,
+            "libc": 10.0,
+            "byte": 6.064453125,
+            "own4": 6.0,
+            "own16": 6.00390625,
+            "own64": 6.0,
+            "pair16": 6.0,
+            "balanced16": 6.064453125,
+            "pair64": 6.0,
+            "balanced64": 6.0,
+            "dsp16": 6.06640625,
+            "dsp32": 6.0,
+            "compact8": 4.0,
+            "sdk": 12.0751953125,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.015625
+          }
+        },
+        {
+          "size": 0,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.0,
+            "libc": 10.064453125,
+            "byte": 6.0,
+            "own4": 6.001953125,
+            "own16": 6.0,
+            "own64": 6.0,
+            "pair16": 6.0,
+            "balanced16": 6.0,
+            "pair64": 6.0,
+            "balanced64": 6.064453125,
+            "dsp16": 6.0,
+            "dsp32": 6.0,
+            "compact8": 4.06640625,
+            "sdk": 12.0068359375,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.01171875
+          }
+        },
+        {
+          "size": 0,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 18.0615234375,
+            "libc": 10.0,
+            "byte": 6.0,
+            "own4": 6.0,
+            "own16": 6.0,
+            "own64": 6.064453125,
+            "pair16": 6.0,
+            "balanced16": 6.0,
+            "pair64": 6.0625,
+            "balanced64": 6.0,
+            "dsp16": 6.0,
+            "dsp32": 6.001953125,
+            "compact8": 4.0,
+            "sdk": 12.0693359375,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.009765625
+          }
+        },
+        {
+          "size": 1,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.005192107995846,
+            "libc": 14.003115264797508,
+            "byte": 14.0,
+            "own4": 22.0,
+            "own16": 22.066458982346834,
+            "own64": 22.0,
+            "pair16": 22.0,
+            "balanced16": 14.07061266874351,
+            "pair64": 22.0,
+            "balanced64": 14.002076843198338,
+            "dsp16": 14.06853582554517,
+            "dsp32": 14.002076843198338,
+            "compact8": 12.002076843198338,
+            "sdk": 19.007268951194185,
+            "public_body": 11.007268951194185,
+            "public_veneer": 20.078920041536865
+          }
+        },
+        {
+          "size": 1,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.003115264797508,
+            "libc": 14.003115264797508,
+            "byte": 14.0,
+            "own4": 22.0,
+            "own16": 22.0,
+            "own64": 22.0,
+            "pair16": 22.0,
+            "balanced16": 14.002076843198338,
+            "pair64": 22.0,
+            "balanced64": 14.002076843198338,
+            "dsp16": 14.002076843198338,
+            "dsp32": 14.002076843198338,
+            "compact8": 12.002076843198338,
+            "sdk": 19.007268951194185,
+            "public_body": 11.007268951194185,
+            "public_veneer": 20.010384215991692
+          }
+        },
+        {
+          "size": 1,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 30.07165109034268,
+            "libc": 14.003115264797508,
+            "byte": 14.066458982346832,
+            "own4": 22.0,
+            "own16": 22.068535825545172,
+            "own64": 22.0,
+            "pair16": 22.0,
+            "balanced16": 14.07061266874351,
+            "pair64": 22.0,
+            "balanced64": 14.002076843198338,
+            "dsp16": 14.06853582554517,
+            "dsp32": 14.002076843198338,
+            "compact8": 12.002076843198338,
+            "sdk": 19.007268951194185,
+            "public_body": 11.007268951194185,
+            "public_veneer": 20.010384215991692
+          }
+        },
+        {
+          "size": 4,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.08424908424908,
+            "libc": 44.00366300366301,
+            "byte": 50.08058608058608,
+            "own4": 48.08058608058608,
+            "own16": 48.0,
+            "own64": 48.0,
+            "pair16": 48.081807081807085,
+            "balanced16": 52.08058608058608,
+            "pair64": 48.0,
+            "balanced64": 52.07814407814408,
+            "dsp16": 48.07814407814408,
+            "dsp32": 48.0,
+            "compact8": 46.07814407814408,
+            "sdk": 45.01709401709402,
+            "public_body": 37.01709401709402,
+            "public_veneer": 46.101343101343105
+          }
+        },
+        {
+          "size": 4,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.08791208791209,
+            "libc": 44.00366300366301,
+            "byte": 50.07814407814408,
+            "own4": 48.081807081807085,
+            "own16": 48.0,
+            "own64": 48.0,
+            "pair16": 48.081807081807085,
+            "balanced16": 52.081807081807085,
+            "pair64": 48.0,
+            "balanced64": 52.08058608058608,
+            "dsp16": 48.08058608058608,
+            "dsp32": 48.081807081807085,
+            "compact8": 46.0,
+            "sdk": 45.0976800976801,
+            "public_body": 37.01709401709402,
+            "public_veneer": 46.1001221001221
+          }
+        },
+        {
+          "size": 4,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 66.08424908424908,
+            "libc": 44.08913308913309,
+            "byte": 50.0,
+            "own4": 48.0,
+            "own16": 48.08058608058608,
+            "own64": 48.08058608058608,
+            "pair16": 48.0,
+            "balanced16": 52.07814407814408,
+            "pair64": 48.08058608058608,
+            "balanced64": 52.07814407814408,
+            "dsp16": 48.0,
+            "dsp32": 48.08302808302808,
+            "compact8": 46.002442002442,
+            "sdk": 45.01709401709402,
+            "public_body": 37.0976800976801,
+            "public_veneer": 46.020757020757024
+          }
+        },
+        {
+          "size": 16,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.142578125,
+            "libc": 77.00390625,
+            "byte": 194.12890625,
+            "own4": 105.13671875,
+            "own16": 93.1328125,
+            "own64": 105.1328125,
+            "pair16": 94.130859375,
+            "balanced16": 101.126953125,
+            "pair64": 92.00390625,
+            "balanced64": 101.12109375,
+            "dsp16": 163.12890625,
+            "dsp32": 163.13671875,
+            "compact8": 91.12109375,
+            "sdk": 75.052734375,
+            "public_body": 67.181640625,
+            "public_veneer": 76.05859375
+          }
+        },
+        {
+          "size": 16,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.146484375,
+            "libc": 141.1484375,
+            "byte": 194.126953125,
+            "own4": 125.13671875,
+            "own16": 131.140625,
+            "own64": 123.146484375,
+            "pair16": 153.146484375,
+            "balanced16": 163.125,
+            "pair64": 153.146484375,
+            "balanced64": 163.12890625,
+            "dsp16": 157.142578125,
+            "dsp32": 157.142578125,
+            "compact8": 159.134765625,
+            "sdk": 132.18359375,
+            "public_body": 124.18359375,
+            "public_veneer": 133.1875
+          }
+        },
+        {
+          "size": 16,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 210.14453125,
+            "libc": 135.140625,
+            "byte": 194.130859375,
+            "own4": 105.138671875,
+            "own16": 93.140625,
+            "own64": 105.142578125,
+            "pair16": 123.142578125,
+            "balanced16": 129.130859375,
+            "pair64": 123.142578125,
+            "balanced64": 129.1328125,
+            "dsp16": 127.130859375,
+            "dsp32": 127.140625,
+            "compact8": 153.13671875,
+            "sdk": 102.181640625,
+            "public_body": 94.052734375,
+            "public_veneer": 103.189453125
+          }
+        },
+        {
+          "size": 64,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.656862745098,
+            "libc": 197.0392156862745,
+            "byte": 770.5980392156863,
+            "own4": 321.3578431372549,
+            "own16": 243.39705882352942,
+            "own64": 215.0392156862745,
+            "pair16": 217.38725490196077,
+            "balanced16": 233.34803921568627,
+            "pair64": 190.3578431372549,
+            "balanced64": 197.0343137254902,
+            "dsp16": 283.37254901960785,
+            "dsp32": 275.04411764705884,
+            "compact8": 211.35294117647058,
+            "sdk": 144.1813725490196,
+            "public_body": 136.1813725490196,
+            "public_veneer": 145.19607843137254
+          }
+        },
+        {
+          "size": 64,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.6715686274509,
+            "libc": 261.05882352941177,
+            "byte": 770.343137254902,
+            "own4": 341.36764705882354,
+            "own16": 279.38235294117646,
+            "own64": 315.0686274509804,
+            "pair16": 276.4019607843137,
+            "balanced16": 291.01960784313724,
+            "pair64": 279.4117647058824,
+            "balanced64": 307.3333333333333,
+            "dsp16": 277.05882352941177,
+            "dsp32": 269.3921568627451,
+            "compact8": 279.3578431372549,
+            "sdk": 222.1764705882353,
+            "public_body": 214.5,
+            "public_veneer": 223.19117647058823
+          }
+        },
+        {
+          "size": 64,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 786.6715686274509,
+            "libc": 255.40196078431373,
+            "byte": 770.5833333333334,
+            "own4": 321.02941176470586,
+            "own16": 243.3921568627451,
+            "own64": 215.36274509803923,
+            "pair16": 246.0686274509804,
+            "balanced16": 257.37254901960785,
+            "pair64": 249.0686274509804,
+            "balanced64": 273.3627450980392,
+            "dsp16": 247.40196078431373,
+            "dsp32": 239.05882352941177,
+            "compact8": 273.3578431372549,
+            "sdk": 192.1764705882353,
+            "public_body": 184.5,
+            "public_veneer": 193.19117647058823
+          }
+        },
+        {
+          "size": 128,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1555.7079646017698,
+            "libc": 357.88495575221236,
+            "byte": 1539.274336283186,
+            "own4": 609.7522123893805,
+            "own16": 443.20353982300884,
+            "own64": 385.88495575221236,
+            "pair16": 381.20353982300884,
+            "balanced16": 409.8141592920354,
+            "pair64": 327.1504424778761,
+            "balanced64": 337.8938053097345,
+            "dsp16": 443.9646017699115,
+            "dsp32": 415.1858407079646,
+            "compact8": 371.8141592920354,
+            "sdk": 243.46902654867256,
+            "public_body": 235.46902654867256,
+            "public_veneer": 271.79646017699116
+          }
+        },
+        {
+          "size": 128,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1582.141592920354,
+            "libc": 441.6106194690266,
+            "byte": 1547.0884955752213,
+            "own4": 640.6017699115044,
+            "own16": 497.0,
+            "own64": 503.60176991150445,
+            "pair16": 466.60176991150445,
+            "balanced16": 479.5929203539823,
+            "pair64": 442.60176991150445,
+            "balanced64": 455.0,
+            "dsp16": 461.5840707964602,
+            "dsp32": 433.60176991150445,
+            "compact8": 454.6194690265487,
+            "sdk": 346.12389380530976,
+            "public_body": 338.12389380530976,
+            "public_veneer": 350.12389380530976
+          }
+        },
+        {
+          "size": 128,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1582.1504424778761,
+            "libc": 435.60176991150445,
+            "byte": 1547.0973451327434,
+            "own4": 619.6017699115044,
+            "own16": 461.5929203539823,
+            "own64": 395.5840707964602,
+            "pair16": 436.60176991150445,
+            "balanced16": 447.0,
+            "pair64": 412.60176991150445,
+            "balanced64": 423.5840707964602,
+            "dsp16": 431.0,
+            "dsp32": 403.57522123893807,
+            "compact8": 448.5840707964602,
+            "sdk": 316.12389380530976,
+            "public_body": 308.7079646017699,
+            "public_veneer": 320.12389380530976
+          }
+        },
+        {
+          "size": 512,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6262.1612903225805,
+            "libc": 1383.258064516129,
+            "byte": 6181.0,
+            "own4": 2372.1935483870966,
+            "own16": 1740.1290322580646,
+            "own64": 1478.1935483870968,
+            "pair16": 1460.0,
+            "balanced16": 1527.1290322580646,
+            "pair64": 1220.0,
+            "balanced64": 1263.1935483870968,
+            "dsp16": 1496.0,
+            "dsp32": 1350.1935483870968,
+            "compact8": 1391.0,
+            "sdk": 933.741935483871,
+            "public_body": 925.741935483871,
+            "public_veneer": 937.741935483871
+          }
+        },
+        {
+          "size": 512,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6265.129032258064,
+            "libc": 1451.1935483870968,
+            "byte": 6182.0,
+            "own4": 2394.1290322580644,
+            "own16": 1745.0,
+            "own64": 1549.1935483870968,
+            "pair16": 1522.0,
+            "balanced16": 1585.1935483870968,
+            "pair64": 1336.0,
+            "balanced64": 1345.225806451613,
+            "dsp16": 1493.0,
+            "dsp32": 1347.1935483870968,
+            "compact8": 1462.0,
+            "sdk": 1012.516129032258,
+            "public_body": 1004.516129032258,
+            "public_veneer": 1016.516129032258
+          }
+        },
+        {
+          "size": 512,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 6265.1612903225805,
+            "libc": 1443.0,
+            "byte": 6182.0,
+            "own4": 2373.1935483870966,
+            "own16": 1711.1935483870968,
+            "own64": 1439.0,
+            "pair16": 1494.1935483870968,
+            "balanced16": 1551.0,
+            "pair64": 1306.0,
+            "balanced64": 1311.0,
+            "dsp16": 1465.258064516129,
+            "dsp32": 1315.0,
+            "compact8": 1458.1290322580646,
+            "sdk": 982.516129032258,
+            "public_body": 974.516129032258,
+            "public_veneer": 988.6451612903226
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49968.375,
+            "libc": 10797.0,
+            "byte": 49438.375,
+            "own4": 18733.5625,
+            "own16": 13621.625,
+            "own64": 11508.0,
+            "pair16": 11324.0,
+            "balanced16": 11836.875,
+            "pair64": 9400.375,
+            "balanced64": 9725.0,
+            "dsp16": 11136.0625,
+            "dsp32": 9864.5,
+            "compact8": 10807.0,
+            "sdk": 7154.75,
+            "public_body": 7146.75,
+            "public_veneer": 7158.6875
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49975.1875,
+            "libc": 10861.375,
+            "byte": 49442.25,
+            "own4": 18755.625,
+            "own16": 13401.0,
+            "own64": 11299.0,
+            "pair16": 11386.0,
+            "balanced16": 11894.9375,
+            "pair64": 9688.0,
+            "balanced64": 9635.375,
+            "dsp16": 11133.0,
+            "dsp32": 9865.0,
+            "compact8": 10878.0,
+            "sdk": 7233.1875,
+            "public_body": 7225.1875,
+            "public_veneer": 7237.25
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 49975.1875,
+            "libc": 10858.9375,
+            "byte": 49439.0,
+            "own4": 18734.5625,
+            "own16": 13365.0625,
+            "own64": 11191.0625,
+            "pair16": 11356.0,
+            "balanced16": 11863.125,
+            "pair64": 9657.875,
+            "balanced64": 9603.375,
+            "dsp16": 11103.0625,
+            "dsp32": 9835.0625,
+            "compact8": 10872.0,
+            "sdk": 7203.3125,
+            "public_body": 7195.25,
+            "public_veneer": 7207.125
+          }
+        }
+      ]
+    },
+    {
+      "directory": "/MCHR-X03",
+      "shared": false,
+      "placement": "flash",
+      "rows": 1440,
+      "categories": [
+        {
+          "source": "SRAM",
+          "sizes": "0..16",
+          "cases": 200,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 34.005494505494504,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 21.00769230769231,
+              "unweighted_geomean_speedup_vs_baseline": 1.4273195538114125,
+              "within_two_percent_of_best_cases": 12,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 19.003296703296705,
+              "unweighted_geomean_speedup_vs_baseline": 1.8011879390934111,
+              "within_two_percent_of_best_cases": 160,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 20.00769230769231,
+              "unweighted_geomean_speedup_vs_baseline": 1.8957457600321508,
+              "within_two_percent_of_best_cases": 126,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 20.00769230769231,
+              "unweighted_geomean_speedup_vs_baseline": 1.880087747897015,
+              "within_two_percent_of_best_cases": 98,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 20.00989010989011,
+              "unweighted_geomean_speedup_vs_baseline": 1.8526849776631749,
+              "within_two_percent_of_best_cases": 96,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 20.00989010989011,
+              "unweighted_geomean_speedup_vs_baseline": 1.8122635851702802,
+              "within_two_percent_of_best_cases": 110,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 21.006593406593407,
+              "unweighted_geomean_speedup_vs_baseline": 1.8061420126744836,
+              "within_two_percent_of_best_cases": 92,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 21.005494505494507,
+              "unweighted_geomean_speedup_vs_baseline": 1.8024144947156402,
+              "within_two_percent_of_best_cases": 102,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 21.006593406593407,
+              "unweighted_geomean_speedup_vs_baseline": 1.8049645967331578,
+              "within_two_percent_of_best_cases": 92,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 20.00769230769231,
+              "unweighted_geomean_speedup_vs_baseline": 1.8046681282553623,
+              "within_two_percent_of_best_cases": 116,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 20.00989010989011,
+              "unweighted_geomean_speedup_vs_baseline": 1.7326859537059387,
+              "within_two_percent_of_best_cases": 44,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 21.006593406593407,
+              "unweighted_geomean_speedup_vs_baseline": 1.6878379628512463,
+              "within_two_percent_of_best_cases": 26,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 28.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.3452009890828072,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 21.00989010989011,
+              "unweighted_geomean_speedup_vs_baseline": 1.7315822440447302,
+              "within_two_percent_of_best_cases": 20,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 30.013186813186813,
+              "unweighted_geomean_speedup_vs_baseline": 1.1300952386513672,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "SRAM",
+          "sizes": "17..255",
+          "cases": 264,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 334.208211143695,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 131.72434017595307,
+              "unweighted_geomean_speedup_vs_baseline": 2.335985447826699,
+              "within_two_percent_of_best_cases": 63,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 259.2023460410557,
+              "unweighted_geomean_speedup_vs_baseline": 1.5392738162613344,
+              "within_two_percent_of_best_cases": 88,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 133.6300561229649,
+              "unweighted_geomean_speedup_vs_baseline": 2.5726564541898527,
+              "within_two_percent_of_best_cases": 92,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 125.14448292715812,
+              "unweighted_geomean_speedup_vs_baseline": 2.813904989388844,
+              "within_two_percent_of_best_cases": 117,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 144.66954022988506,
+              "unweighted_geomean_speedup_vs_baseline": 2.6500282043310204,
+              "within_two_percent_of_best_cases": 95,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 130.1286398976241,
+              "unweighted_geomean_speedup_vs_baseline": 2.930490535080984,
+              "within_two_percent_of_best_cases": 113,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 132.21494712188527,
+              "unweighted_geomean_speedup_vs_baseline": 2.911174607703184,
+              "within_two_percent_of_best_cases": 96,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 131.11190853586945,
+              "unweighted_geomean_speedup_vs_baseline": 2.9553179895761557,
+              "within_two_percent_of_best_cases": 118,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 132.13138440860217,
+              "unweighted_geomean_speedup_vs_baseline": 2.9721528362166647,
+              "within_two_percent_of_best_cases": 120,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 134.67385057471265,
+              "unweighted_geomean_speedup_vs_baseline": 2.889184608272978,
+              "within_two_percent_of_best_cases": 109,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 138.60666325253214,
+              "unweighted_geomean_speedup_vs_baseline": 2.82259524656088,
+              "within_two_percent_of_best_cases": 60,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 140.64606717902046,
+              "unweighted_geomean_speedup_vs_baseline": 2.7945694340914633,
+              "within_two_percent_of_best_cases": 9,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 189.2005988023952,
+              "unweighted_geomean_speedup_vs_baseline": 2.1352137845375725,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 132.22496740390187,
+              "unweighted_geomean_speedup_vs_baseline": 2.859004705264193,
+              "within_two_percent_of_best_cases": 34,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 141.1462286527514,
+              "unweighted_geomean_speedup_vs_baseline": 2.1935000707336005,
+              "within_two_percent_of_best_cases": 6,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "SRAM",
+          "sizes": "256..4096",
+          "cases": 144,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 2583.025,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 502.67499999999995,
+              "unweighted_geomean_speedup_vs_baseline": 3.2220010422247376,
+              "within_two_percent_of_best_cases": 23,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 2059.075,
+              "unweighted_geomean_speedup_vs_baseline": 1.5226273896692861,
+              "within_two_percent_of_best_cases": 48,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 814.2,
+              "unweighted_geomean_speedup_vs_baseline": 2.8772735170686525,
+              "within_two_percent_of_best_cases": 48,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 666.25,
+              "unweighted_geomean_speedup_vs_baseline": 3.329148502116617,
+              "within_two_percent_of_best_cases": 48,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 642.6166666666667,
+              "unweighted_geomean_speedup_vs_baseline": 3.5851311275103215,
+              "within_two_percent_of_best_cases": 48,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 564.975,
+              "unweighted_geomean_speedup_vs_baseline": 3.8218776490539996,
+              "within_two_percent_of_best_cases": 48,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 567.3333333333334,
+              "unweighted_geomean_speedup_vs_baseline": 3.8169996761582725,
+              "within_two_percent_of_best_cases": 48,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 508.10833333333335,
+              "unweighted_geomean_speedup_vs_baseline": 4.223889785975179,
+              "within_two_percent_of_best_cases": 139,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 504.4166666666667,
+              "unweighted_geomean_speedup_vs_baseline": 4.2364528567340125,
+              "within_two_percent_of_best_cases": 144,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 554.975,
+              "unweighted_geomean_speedup_vs_baseline": 3.8797158605560895,
+              "within_two_percent_of_best_cases": 48,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 508.9583333333333,
+              "unweighted_geomean_speedup_vs_baseline": 4.010106178601401,
+              "within_two_percent_of_best_cases": 54,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 511.825,
+              "unweighted_geomean_speedup_vs_baseline": 3.9607852954708878,
+              "within_two_percent_of_best_cases": 6,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 739.5666666666666,
+              "unweighted_geomean_speedup_vs_baseline": 3.033680101477879,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 504.975,
+              "unweighted_geomean_speedup_vs_baseline": 4.074596914537245,
+              "within_two_percent_of_best_cases": 96,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 513.4833333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.2096410129008404,
+              "within_two_percent_of_best_cases": 75,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "Flash",
+          "sizes": "0..16",
+          "cases": 288,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 38.009280742459396,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 28.013921113689094,
+              "unweighted_geomean_speedup_vs_baseline": 1.5232805295526959,
+              "within_two_percent_of_best_cases": 31,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 24.006960556844547,
+              "unweighted_geomean_speedup_vs_baseline": 1.8042297879825318,
+              "within_two_percent_of_best_cases": 231,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 28.01276102088167,
+              "unweighted_geomean_speedup_vs_baseline": 1.8067783437660274,
+              "within_two_percent_of_best_cases": 131,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 28.01276102088167,
+              "unweighted_geomean_speedup_vs_baseline": 1.7835136158563925,
+              "within_two_percent_of_best_cases": 90,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 28.011600928074245,
+              "unweighted_geomean_speedup_vs_baseline": 1.756551896786542,
+              "within_two_percent_of_best_cases": 87,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 28.011600928074245,
+              "unweighted_geomean_speedup_vs_baseline": 1.729911015292253,
+              "within_two_percent_of_best_cases": 107,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 29.01276102088167,
+              "unweighted_geomean_speedup_vs_baseline": 1.7332018498262667,
+              "within_two_percent_of_best_cases": 92,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 28.018561484918795,
+              "unweighted_geomean_speedup_vs_baseline": 1.7208674831496071,
+              "within_two_percent_of_best_cases": 108,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 29.01276102088167,
+              "unweighted_geomean_speedup_vs_baseline": 1.7332594490377857,
+              "within_two_percent_of_best_cases": 92,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 28.015081206496518,
+              "unweighted_geomean_speedup_vs_baseline": 1.7671803365398773,
+              "within_two_percent_of_best_cases": 133,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 28.015081206496518,
+              "unweighted_geomean_speedup_vs_baseline": 1.7689060936078296,
+              "within_two_percent_of_best_cases": 133,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 28.01740139211137,
+              "unweighted_geomean_speedup_vs_baseline": 1.7466772705959315,
+              "within_two_percent_of_best_cases": 121,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 40.0,
+              "unweighted_geomean_speedup_vs_baseline": 1.2620898805511835,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 29.016241299303946,
+              "unweighted_geomean_speedup_vs_baseline": 1.732841244651955,
+              "within_two_percent_of_best_cases": 92,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 38.019721577726216,
+              "unweighted_geomean_speedup_vs_baseline": 1.1480402757660746,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "Flash",
+          "sizes": "17..255",
+          "cases": 352,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 344.23952095808386,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 135.2131906739061,
+              "unweighted_geomean_speedup_vs_baseline": 2.3588869277166817,
+              "within_two_percent_of_best_cases": 97,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 267.23353293413174,
+              "unweighted_geomean_speedup_vs_baseline": 1.4282503079287427,
+              "within_two_percent_of_best_cases": 99,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 140.15689149560117,
+              "unweighted_geomean_speedup_vs_baseline": 2.228635926355906,
+              "within_two_percent_of_best_cases": 50,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 132.1642228739003,
+              "unweighted_geomean_speedup_vs_baseline": 2.4307043386438134,
+              "within_two_percent_of_best_cases": 86,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 151.2741935483871,
+              "unweighted_geomean_speedup_vs_baseline": 2.261145232069939,
+              "within_two_percent_of_best_cases": 54,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 143.6935905214548,
+              "unweighted_geomean_speedup_vs_baseline": 2.567452979498256,
+              "within_two_percent_of_best_cases": 77,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 146.56542201773013,
+              "unweighted_geomean_speedup_vs_baseline": 2.515272495040685,
+              "within_two_percent_of_best_cases": 48,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 141.30890804597703,
+              "unweighted_geomean_speedup_vs_baseline": 2.5825814303265604,
+              "within_two_percent_of_best_cases": 78,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 144.08045977011494,
+              "unweighted_geomean_speedup_vs_baseline": 2.56282466489156,
+              "within_two_percent_of_best_cases": 100,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 146.20821114369502,
+              "unweighted_geomean_speedup_vs_baseline": 2.606543699384759,
+              "within_two_percent_of_best_cases": 74,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 149.19354838709677,
+              "unweighted_geomean_speedup_vs_baseline": 2.6459261063325594,
+              "within_two_percent_of_best_cases": 131,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 145.16336633663366,
+              "unweighted_geomean_speedup_vs_baseline": 2.5254799716480827,
+              "within_two_percent_of_best_cases": 56,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 203.10680550813703,
+              "unweighted_geomean_speedup_vs_baseline": 1.8251449324897635,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 144.08620689655172,
+              "unweighted_geomean_speedup_vs_baseline": 2.561246598857964,
+              "within_two_percent_of_best_cases": 101,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 153.20792079207922,
+              "unweighted_geomean_speedup_vs_baseline": 2.1618813765672202,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        },
+        {
+          "source": "Flash",
+          "sizes": "256..4096",
+          "cases": 192,
+          "functions": {
+            "baseline": {
+              "median_cycles_across_cases": 2637.133333333333,
+              "unweighted_geomean_speedup_vs_baseline": 1.0,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "libc": {
+              "median_cycles_across_cases": 558.2166666666667,
+              "unweighted_geomean_speedup_vs_baseline": 3.1902314157953073,
+              "within_two_percent_of_best_cases": 38,
+              "negative_raw_paired_samples": 0
+            },
+            "byte": {
+              "median_cycles_across_cases": 2112.0916666666667,
+              "unweighted_geomean_speedup_vs_baseline": 1.406423941244103,
+              "within_two_percent_of_best_cases": 54,
+              "negative_raw_paired_samples": 0
+            },
+            "own4": {
+              "median_cycles_across_cases": 872.4166666666667,
+              "unweighted_geomean_speedup_vs_baseline": 2.4656983416921427,
+              "within_two_percent_of_best_cases": 24,
+              "negative_raw_paired_samples": 0
+            },
+            "own16": {
+              "median_cycles_across_cases": 724.1583333333333,
+              "unweighted_geomean_speedup_vs_baseline": 2.8457842163583122,
+              "within_two_percent_of_best_cases": 24,
+              "negative_raw_paired_samples": 0
+            },
+            "own64": {
+              "median_cycles_across_cases": 699.75,
+              "unweighted_geomean_speedup_vs_baseline": 3.0446590748812197,
+              "within_two_percent_of_best_cases": 24,
+              "negative_raw_paired_samples": 0
+            },
+            "pair16": {
+              "median_cycles_across_cases": 626.6,
+              "unweighted_geomean_speedup_vs_baseline": 3.3079887755475657,
+              "within_two_percent_of_best_cases": 24,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced16": {
+              "median_cycles_across_cases": 629.2333333333333,
+              "unweighted_geomean_speedup_vs_baseline": 3.265539515904836,
+              "within_two_percent_of_best_cases": 24,
+              "negative_raw_paired_samples": 0
+            },
+            "pair64": {
+              "median_cycles_across_cases": 570.3666666666667,
+              "unweighted_geomean_speedup_vs_baseline": 3.6463039932333063,
+              "within_two_percent_of_best_cases": 147,
+              "negative_raw_paired_samples": 0
+            },
+            "balanced64": {
+              "median_cycles_across_cases": 567.4333333333334,
+              "unweighted_geomean_speedup_vs_baseline": 3.612299541609454,
+              "within_two_percent_of_best_cases": 162,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp16": {
+              "median_cycles_across_cases": 612.5,
+              "unweighted_geomean_speedup_vs_baseline": 3.436117266070004,
+              "within_two_percent_of_best_cases": 24,
+              "negative_raw_paired_samples": 0
+            },
+            "dsp32": {
+              "median_cycles_across_cases": 567.4166666666666,
+              "unweighted_geomean_speedup_vs_baseline": 3.683040254296714,
+              "within_two_percent_of_best_cases": 119,
+              "negative_raw_paired_samples": 0
+            },
+            "compact8": {
+              "median_cycles_across_cases": 567.3166666666667,
+              "unweighted_geomean_speedup_vs_baseline": 3.5196509407162644,
+              "within_two_percent_of_best_cases": 39,
+              "negative_raw_paired_samples": 0
+            },
+            "sdk": {
+              "median_cycles_across_cases": 763.0,
+              "unweighted_geomean_speedup_vs_baseline": 2.663894488940001,
+              "within_two_percent_of_best_cases": 0,
+              "negative_raw_paired_samples": 0
+            },
+            "public_body": {
+              "median_cycles_across_cases": 566.8166666666666,
+              "unweighted_geomean_speedup_vs_baseline": 3.6122562140517855,
+              "within_two_percent_of_best_cases": 162,
+              "negative_raw_paired_samples": 0
+            },
+            "public_veneer": {
+              "median_cycles_across_cases": 578.2666666666667,
+              "unweighted_geomean_speedup_vs_baseline": 3.139120988312952,
+              "within_two_percent_of_best_cases": 92,
+              "negative_raw_paired_samples": 0
+            }
+          }
+        }
+      ],
+      "examples": [
+        {
+          "size": 0,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 14.0029296875,
+            "libc": 8.0078125,
+            "byte": 4.00390625,
+            "own4": 4.009765625,
+            "own16": 4.009765625,
+            "own64": 4.0068359375,
+            "pair16": 4.0068359375,
+            "balanced16": 4.0068359375,
+            "pair64": 4.0107421875,
+            "balanced64": 4.0068359375,
+            "dsp16": 4.0107421875,
+            "dsp32": 4.0068359375,
+            "compact8": 4.0087890625,
+            "sdk": 6.0,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.009765625
+          }
+        },
+        {
+          "size": 0,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 14.0029296875,
+            "libc": 8.0078125,
+            "byte": 4.00390625,
+            "own4": 4.009765625,
+            "own16": 4.009765625,
+            "own64": 4.0068359375,
+            "pair16": 4.0068359375,
+            "balanced16": 4.0068359375,
+            "pair64": 4.0107421875,
+            "balanced64": 4.0068359375,
+            "dsp16": 4.0107421875,
+            "dsp32": 4.0068359375,
+            "compact8": 4.0087890625,
+            "sdk": 6.0,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.009765625
+          }
+        },
+        {
+          "size": 0,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 14.0029296875,
+            "libc": 8.0078125,
+            "byte": 4.00390625,
+            "own4": 4.009765625,
+            "own16": 4.009765625,
+            "own64": 4.0693359375,
+            "pair16": 4.0068359375,
+            "balanced16": 4.0068359375,
+            "pair64": 4.0107421875,
+            "balanced64": 4.0068359375,
+            "dsp16": 4.0107421875,
+            "dsp32": 4.0068359375,
+            "compact8": 4.0087890625,
+            "sdk": 6.0,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.009765625
+          }
+        },
+        {
+          "size": 1,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 24.005192107995846,
+            "libc": 12.010384215991692,
+            "byte": 11.006230529595015,
+            "own4": 14.075804776739357,
+            "own16": 14.007268951194185,
+            "own64": 14.074766355140186,
+            "pair16": 14.008307372793354,
+            "balanced16": 11.003115264797508,
+            "pair64": 14.007268951194185,
+            "balanced64": 11.003115264797508,
+            "dsp16": 11.010384215991692,
+            "dsp32": 11.003115264797508,
+            "compact8": 11.003115264797508,
+            "sdk": 14.0,
+            "public_body": 11.003115264797508,
+            "public_veneer": 20.074766355140188
+          }
+        },
+        {
+          "size": 1,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 24.005192107995846,
+            "libc": 12.010384215991692,
+            "byte": 11.006230529595015,
+            "own4": 14.007268951194185,
+            "own16": 14.073727933541017,
+            "own64": 14.008307372793354,
+            "pair16": 14.076843198338526,
+            "balanced16": 11.003115264797508,
+            "pair64": 14.007268951194185,
+            "balanced64": 11.003115264797508,
+            "dsp16": 11.010384215991692,
+            "dsp32": 11.003115264797508,
+            "compact8": 11.003115264797508,
+            "sdk": 14.0,
+            "public_body": 11.003115264797508,
+            "public_veneer": 20.07268951194185
+          }
+        },
+        {
+          "size": 1,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 24.07165109034268,
+            "libc": 12.010384215991692,
+            "byte": 11.006230529595015,
+            "own4": 14.007268951194185,
+            "own16": 14.007268951194185,
+            "own64": 14.008307372793354,
+            "pair16": 14.008307372793354,
+            "balanced16": 11.071651090342678,
+            "pair64": 14.007268951194185,
+            "balanced64": 11.003115264797508,
+            "dsp16": 11.010384215991692,
+            "dsp32": 11.003115264797508,
+            "compact8": 11.003115264797508,
+            "sdk": 14.0,
+            "public_body": 11.003115264797508,
+            "public_veneer": 20.006230529595015
+          }
+        },
+        {
+          "size": 4,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 54.00610500610501,
+            "libc": 36.09279609279609,
+            "byte": 35.00366300366301,
+            "own4": 36.085470085470085,
+            "own16": 36.00854700854701,
+            "own64": 36.08791208791209,
+            "pair16": 36.00732600732601,
+            "balanced16": 37.08424908424909,
+            "pair64": 36.01587301587302,
+            "balanced64": 37.00732600732601,
+            "dsp16": 36.08913308913309,
+            "dsp32": 36.010989010989015,
+            "compact8": 36.091575091575095,
+            "sdk": 52.0,
+            "public_body": 37.091575091575095,
+            "public_veneer": 46.095238095238095
+          }
+        },
+        {
+          "size": 4,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 54.08669108669109,
+            "libc": 36.01221001221001,
+            "byte": 35.08302808302808,
+            "own4": 36.00854700854701,
+            "own16": 36.08913308913309,
+            "own64": 36.00976800976801,
+            "pair16": 36.08791208791209,
+            "balanced16": 37.00732600732601,
+            "pair64": 36.09279609279609,
+            "balanced64": 37.00976800976801,
+            "dsp16": 36.010989010989015,
+            "dsp32": 36.091575091575095,
+            "compact8": 36.010989010989015,
+            "sdk": 52.08058608058608,
+            "public_body": 37.010989010989015,
+            "public_veneer": 46.09279609279609
+          }
+        },
+        {
+          "size": 4,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 54.085470085470085,
+            "libc": 36.01221001221001,
+            "byte": 35.08424908424909,
+            "own4": 36.00854700854701,
+            "own16": 36.08791208791209,
+            "own64": 36.00732600732601,
+            "pair16": 36.00732600732601,
+            "balanced16": 37.00732600732601,
+            "pair64": 36.01587301587302,
+            "balanced64": 37.00732600732601,
+            "dsp16": 36.010989010989015,
+            "dsp32": 36.08913308913309,
+            "compact8": 36.010989010989015,
+            "sdk": 52.08058608058608,
+            "public_body": 37.09035409035409,
+            "public_veneer": 46.01953601953602
+          }
+        },
+        {
+          "size": 16,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 174.138671875,
+            "libc": 53.041015625,
+            "byte": 131.134765625,
+            "own4": 73.03515625,
+            "own16": 67.02734375,
+            "own64": 82.03515625,
+            "pair16": 65.046875,
+            "balanced16": 67.046875,
+            "pair64": 66.052734375,
+            "balanced64": 67.05078125,
+            "dsp16": 123.1875,
+            "dsp32": 123.1796875,
+            "compact8": 64.15625,
+            "sdk": 103.12890625,
+            "public_body": 67.05078125,
+            "public_veneer": 76.060546875
+          }
+        },
+        {
+          "size": 16,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 174.138671875,
+            "libc": 111.150390625,
+            "byte": 131.134765625,
+            "own4": 92.146484375,
+            "own16": 96.02734375,
+            "own64": 99.162109375,
+            "pair16": 121.171875,
+            "balanced16": 124.169921875,
+            "pair64": 121.05859375,
+            "balanced64": 124.173828125,
+            "dsp16": 120.185546875,
+            "dsp32": 120.1796875,
+            "compact8": 120.15234375,
+            "sdk": 165.125,
+            "public_body": 124.048828125,
+            "public_veneer": 133.18359375
+          }
+        },
+        {
+          "size": 16,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 174.138671875,
+            "libc": 105.15234375,
+            "byte": 131.1328125,
+            "own4": 73.03125,
+            "own16": 67.15625,
+            "own64": 82.0234375,
+            "pair16": 93.033203125,
+            "balanced16": 94.166015625,
+            "pair64": 93.044921875,
+            "balanced64": 94.037109375,
+            "dsp16": 92.044921875,
+            "dsp32": 92.16796875,
+            "compact8": 114.15234375,
+            "sdk": 131.125,
+            "public_body": 94.046875,
+            "public_veneer": 103.1796875
+          }
+        },
+        {
+          "size": 64,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 654.3529411764706,
+            "libc": 131.0735294117647,
+            "byte": 515.3382352941177,
+            "own4": 217.07843137254903,
+            "own16": 181.38725490196077,
+            "own64": 159.11274509803923,
+            "pair16": 155.12254901960785,
+            "balanced16": 157.45098039215685,
+            "pair64": 133.16176470588235,
+            "balanced64": 136.4313725490196,
+            "dsp16": 208.47058823529412,
+            "dsp32": 204.12745098039215,
+            "compact8": 142.07843137254903,
+            "sdk": 203.0,
+            "public_body": 136.13235294117646,
+            "public_veneer": 145.14705882352942
+          }
+        },
+        {
+          "size": 64,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 654.3529411764706,
+            "libc": 189.37254901960785,
+            "byte": 515.3382352941177,
+            "own4": 236.36274509803923,
+            "own16": 208.06372549019608,
+            "own64": 255.41666666666666,
+            "pair16": 209.4607843137255,
+            "balanced16": 212.0735294117647,
+            "pair64": 217.14705882352942,
+            "balanced64": 214.43627450980392,
+            "dsp16": 205.4656862745098,
+            "dsp32": 201.12254901960785,
+            "compact8": 198.07843137254903,
+            "sdk": 309.3235294117647,
+            "public_body": 214.12254901960785,
+            "public_veneer": 223.45098039215685
+          }
+        },
+        {
+          "size": 64,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 654.3529411764706,
+            "libc": 183.37745098039215,
+            "byte": 515.3382352941177,
+            "own4": 217.39705882352942,
+            "own16": 181.38235294117646,
+            "own64": 159.11274509803923,
+            "pair16": 181.4656862745098,
+            "balanced16": 182.1078431372549,
+            "pair64": 189.43627450980392,
+            "balanced64": 184.09313725490196,
+            "dsp16": 177.1078431372549,
+            "dsp32": 173.41176470588235,
+            "compact8": 192.07843137254903,
+            "sdk": 275.3137254901961,
+            "public_body": 184.43627450980392,
+            "public_veneer": 193.12745098039215
+          }
+        },
+        {
+          "size": 128,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1294.6283185840707,
+            "libc": 235.13274336283186,
+            "byte": 1027.6106194690265,
+            "own4": 409.14159292035396,
+            "own16": 333.12389380530976,
+            "own64": 288.20353982300884,
+            "pair16": 275.2212389380531,
+            "balanced16": 277.82300884955754,
+            "pair64": 232.2920353982301,
+            "balanced64": 235.2212389380531,
+            "dsp16": 324.8407079646018,
+            "dsp32": 306.2566371681416,
+            "compact8": 246.141592920354,
+            "sdk": 349.0,
+            "public_body": 235.2566371681416,
+            "public_veneer": 244.28318584070797
+          }
+        },
+        {
+          "size": 128,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1295.070796460177,
+            "libc": 293.1061946902655,
+            "byte": 1027.6194690265486,
+            "own4": 428.07964601769913,
+            "own16": 360.6991150442478,
+            "own64": 382.27433628318585,
+            "pair16": 329.83185840707966,
+            "balanced16": 332.13274336283183,
+            "pair64": 314.3185840707965,
+            "balanced64": 311.1946902654867,
+            "dsp16": 321.2566371681416,
+            "dsp32": 303.24778761061947,
+            "compact8": 302.14159292035396,
+            "sdk": 451.5840707964602,
+            "public_body": 311.21238938053096,
+            "public_veneer": 320.23893805309734
+          }
+        },
+        {
+          "size": 128,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1294.6283185840707,
+            "libc": 287.69026548672565,
+            "byte": 1027.6106194690265,
+            "own4": 409.6991150442478,
+            "own16": 333.12389380530976,
+            "own64": 288.20353982300884,
+            "pair16": 301.2566371681416,
+            "balanced16": 302.7787610619469,
+            "pair64": 286.3274336283186,
+            "balanced64": 281.1592920353982,
+            "dsp16": 293.7699115044248,
+            "dsp32": 275.1858407079646,
+            "compact8": 296.14159292035396,
+            "sdk": 417.5840707964602,
+            "public_body": 281.1946902654867,
+            "public_veneer": 290.2212389380531
+          }
+        },
+        {
+          "size": 512,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 5137.903225806452,
+            "libc": 859.483870967742,
+            "byte": 4101.258064516129,
+            "own4": 1561.516129032258,
+            "own16": 1245.4516129032259,
+            "own64": 1062.741935483871,
+            "pair16": 995.8064516129032,
+            "balanced16": 997.8709677419355,
+            "pair64": 827.0645161290323,
+            "balanced64": 829.8064516129032,
+            "dsp16": 1020.9677419354839,
+            "dsp32": 918.9354838709677,
+            "compact8": 870.516129032258,
+            "sdk": 1225.0,
+            "public_body": 829.9354838709677,
+            "public_veneer": 839.0322580645161
+          }
+        },
+        {
+          "size": 512,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 5137.903225806452,
+            "libc": 917.3870967741935,
+            "byte": 4102.8387096774195,
+            "own4": 1580.2903225806451,
+            "own16": 1272.4193548387098,
+            "own64": 1157.1935483870968,
+            "pair16": 1049.9032258064517,
+            "balanced16": 1052.483870967742,
+            "pair64": 909.1612903225806,
+            "balanced64": 905.8064516129032,
+            "dsp16": 1017.9354838709677,
+            "dsp32": 915.9032258064516,
+            "compact8": 926.516129032258,
+            "sdk": 1329.1935483870968,
+            "public_body": 905.8387096774194,
+            "public_veneer": 914.9354838709677
+          }
+        },
+        {
+          "size": 512,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 5137.903225806452,
+            "libc": 911.3870967741935,
+            "byte": 4101.225806451613,
+            "own4": 1561.516129032258,
+            "own16": 1247.5483870967741,
+            "own64": 1062.741935483871,
+            "pair16": 1021.9354838709677,
+            "balanced16": 1022.7096774193549,
+            "pair64": 881.1935483870968,
+            "balanced64": 875.6774193548387,
+            "dsp16": 989.7096774193549,
+            "dsp32": 887.6774193548387,
+            "compact8": 920.516129032258,
+            "sdk": 1293.0,
+            "public_body": 875.7741935483871,
+            "public_veneer": 884.8709677419355
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 0,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 40997.5,
+            "libc": 6688.0625,
+            "byte": 32791.1875,
+            "own4": 12321.3125,
+            "own16": 9765.1875,
+            "own64": 8291.625,
+            "pair16": 7720.75,
+            "balanced16": 7722.875,
+            "pair64": 6376.1875,
+            "balanced64": 6378.75,
+            "dsp16": 7522.0,
+            "dsp32": 6635.9375,
+            "compact8": 6699.125,
+            "sdk": 9408.4375,
+            "public_body": 6379.0625,
+            "public_veneer": 6388.1875
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 1,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 40997.5,
+            "libc": 6745.9375,
+            "byte": 32791.125,
+            "own4": 12339.875,
+            "own16": 9792.125,
+            "own64": 8386.4375,
+            "pair16": 7775.125,
+            "balanced16": 7777.1875,
+            "pair64": 6458.375,
+            "balanced64": 6454.6875,
+            "dsp16": 7518.9375,
+            "dsp32": 6633.0625,
+            "compact8": 6755.1875,
+            "sdk": 9507.5,
+            "public_body": 6454.75,
+            "public_veneer": 6463.9375
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 4,
+          "source": 0,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 40997.5,
+            "libc": 6739.9375,
+            "byte": 32788.0625,
+            "own4": 12321.3125,
+            "own16": 9765.125,
+            "own64": 8291.5625,
+            "pair16": 7746.9375,
+            "balanced16": 7747.5625,
+            "pair64": 6430.4375,
+            "balanced64": 6424.5625,
+            "dsp16": 7490.5,
+            "dsp32": 6604.4375,
+            "compact8": 6749.125,
+            "sdk": 9473.375,
+            "public_body": 6424.6875,
+            "public_veneer": 6433.875
+          }
+        },
+        {
+          "size": 0,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 14.0029296875,
+            "libc": 8.0078125,
+            "byte": 4.00390625,
+            "own4": 4.009765625,
+            "own16": 4.009765625,
+            "own64": 4.0068359375,
+            "pair16": 4.0068359375,
+            "balanced16": 4.0703125,
+            "pair64": 4.0107421875,
+            "balanced64": 4.0068359375,
+            "dsp16": 4.0107421875,
+            "dsp32": 4.0068359375,
+            "compact8": 4.0087890625,
+            "sdk": 6.0,
+            "public_body": 4.0068359375,
+            "public_veneer": 13.009765625
+          }
+        },
+        {
+          "size": 0,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 13.9990234375,
+            "libc": 8.005859375,
+            "byte": 4.00390625,
+            "own4": 3.947265625,
+            "own16": 3.947265625,
+            "own64": 3.9443359375,
+            "pair16": 3.9443359375,
+            "balanced16": 4.005859375,
+            "pair64": 3.9482421875,
+            "balanced64": 4.0048828125,
+            "dsp16": 4.0087890625,
+            "dsp32": 3.9443359375,
+            "compact8": 4.0068359375,
+            "sdk": 6.0,
+            "public_body": 3.9443359375,
+            "public_veneer": 13.009765625
+          }
+        },
+        {
+          "size": 0,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 0,
+          "cycles": {
+            "baseline": 14.0009765625,
+            "libc": 7.943359375,
+            "byte": 3.939453125,
+            "own4": 3.9453125,
+            "own16": 3.9453125,
+            "own64": 3.9423828125,
+            "pair16": 3.9423828125,
+            "balanced16": 3.9423828125,
+            "pair64": 3.9462890625,
+            "balanced64": 3.9423828125,
+            "dsp16": 3.9462890625,
+            "dsp32": 3.9423828125,
+            "compact8": 3.9443359375,
+            "sdk": 5.998046875,
+            "public_body": 3.9423828125,
+            "public_veneer": 13.0068359375
+          }
+        },
+        {
+          "size": 1,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 24.008307372793354,
+            "libc": 12.011422637590861,
+            "byte": 11.009345794392523,
+            "own4": 14.011422637590861,
+            "own16": 14.011422637590861,
+            "own64": 14.01246105919003,
+            "pair16": 14.078920041536865,
+            "balanced16": 11.007268951194185,
+            "pair64": 14.076843198338526,
+            "balanced64": 11.007268951194185,
+            "dsp16": 11.01453790238837,
+            "dsp32": 11.007268951194185,
+            "compact8": 11.008307372793354,
+            "sdk": 14.002076843198338,
+            "public_body": 11.007268951194185,
+            "public_veneer": 20.076843198338526
+          }
+        },
+        {
+          "size": 1,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 23.93977154724818,
+            "libc": 11.94288681204569,
+            "byte": 10.940809968847352,
+            "own4": 13.94288681204569,
+            "own16": 13.94288681204569,
+            "own64": 13.94392523364486,
+            "pair16": 13.94392523364486,
+            "balanced16": 10.938733125649014,
+            "pair64": 14.004153686396677,
+            "balanced64": 10.938733125649014,
+            "dsp16": 10.946002076843198,
+            "dsp32": 10.938733125649014,
+            "compact8": 10.939771547248183,
+            "sdk": 14.002076843198338,
+            "public_body": 10.938733125649014,
+            "public_veneer": 19.94184839044652
+          }
+        },
+        {
+          "size": 1,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 1,
+          "cycles": {
+            "baseline": 24.075804776739357,
+            "libc": 12.011422637590861,
+            "byte": 11.009345794392523,
+            "own4": 14.011422637590861,
+            "own16": 14.011422637590861,
+            "own64": 14.01246105919003,
+            "pair16": 14.01246105919003,
+            "balanced16": 11.007268951194185,
+            "pair64": 14.078920041536865,
+            "balanced64": 11.007268951194185,
+            "dsp16": 11.01453790238837,
+            "dsp32": 11.007268951194185,
+            "compact8": 11.008307372793354,
+            "sdk": 14.002076843198338,
+            "public_body": 11.007268951194185,
+            "public_veneer": 20.010384215991692
+          }
+        },
+        {
+          "size": 4,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 54.01221001221001,
+            "libc": 36.095238095238095,
+            "byte": 35.00732600732601,
+            "own4": 36.0940170940171,
+            "own16": 36.01343101343102,
+            "own64": 36.09035409035409,
+            "pair16": 36.01221001221001,
+            "balanced16": 37.01709401709402,
+            "pair64": 36.0964590964591,
+            "balanced64": 37.01343101343102,
+            "dsp16": 36.0964590964591,
+            "dsp32": 36.01587301587302,
+            "compact8": 36.0989010989011,
+            "sdk": 52.08058608058608,
+            "public_body": 37.01709401709402,
+            "public_veneer": 46.101343101343105
+          }
+        },
+        {
+          "size": 4,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 54.00976800976801,
+            "libc": 36.095238095238095,
+            "byte": 35.00732600732601,
+            "own4": 36.01343101343102,
+            "own16": 36.01343101343102,
+            "own64": 36.091575091575095,
+            "pair16": 36.01221001221001,
+            "balanced16": 37.0940170940171,
+            "pair64": 36.01953601953602,
+            "balanced64": 37.01343101343102,
+            "dsp16": 36.01587301587302,
+            "dsp32": 36.01587301587302,
+            "compact8": 36.01831501831502,
+            "sdk": 52.0,
+            "public_body": 37.01709401709402,
+            "public_veneer": 46.020757020757024
+          }
+        },
+        {
+          "size": 4,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4,
+          "cycles": {
+            "baseline": 54.00976800976801,
+            "libc": 36.09279609279609,
+            "byte": 35.00732600732601,
+            "own4": 36.01343101343102,
+            "own16": 36.01343101343102,
+            "own64": 36.01221001221001,
+            "pair16": 36.01221001221001,
+            "balanced16": 37.01343101343102,
+            "pair64": 36.01953601953602,
+            "balanced64": 37.01343101343102,
+            "dsp16": 36.095238095238095,
+            "dsp32": 36.01587301587302,
+            "compact8": 36.0976800976801,
+            "sdk": 52.0,
+            "public_body": 37.01709401709402,
+            "public_veneer": 46.1001221001221
+          }
+        },
+        {
+          "size": 16,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 174.14453125,
+            "libc": 53.03515625,
+            "byte": 131.140625,
+            "own4": 73.041015625,
+            "own16": 67.037109375,
+            "own64": 82.03125,
+            "pair16": 65.05078125,
+            "balanced16": 67.052734375,
+            "pair64": 66.052734375,
+            "balanced64": 67.056640625,
+            "dsp16": 123.189453125,
+            "dsp32": 123.1875,
+            "compact8": 64.037109375,
+            "sdk": 101.12109375,
+            "public_body": 67.052734375,
+            "public_veneer": 76.05859375
+          }
+        },
+        {
+          "size": 16,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 174.1484375,
+            "libc": 111.03515625,
+            "byte": 131.146484375,
+            "own4": 92.1640625,
+            "own16": 96.16796875,
+            "own64": 99.046875,
+            "pair16": 121.185546875,
+            "balanced16": 124.05078125,
+            "pair64": 121.19921875,
+            "balanced64": 124.18359375,
+            "dsp16": 120.19921875,
+            "dsp32": 120.193359375,
+            "compact8": 120.041015625,
+            "sdk": 163.125,
+            "public_body": 124.18359375,
+            "public_veneer": 133.189453125
+          }
+        },
+        {
+          "size": 16,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 16,
+          "cycles": {
+            "baseline": 174.150390625,
+            "libc": 105.1640625,
+            "byte": 131.146484375,
+            "own4": 73.17578125,
+            "own16": 67.04296875,
+            "own64": 82.166015625,
+            "pair16": 93.173828125,
+            "balanced16": 94.1796875,
+            "pair64": 93.185546875,
+            "balanced64": 94.1796875,
+            "dsp16": 92.1875,
+            "dsp32": 92.181640625,
+            "compact8": 114.166015625,
+            "sdk": 129.12890625,
+            "public_body": 94.1796875,
+            "public_veneer": 103.1875
+          }
+        },
+        {
+          "size": 64,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 654.406862745098,
+            "libc": 131.13725490196077,
+            "byte": 515.4019607843137,
+            "own4": 217.14705882352942,
+            "own16": 181.14705882352942,
+            "own64": 159.1813725490196,
+            "pair16": 155.18627450980392,
+            "balanced16": 157.19607843137254,
+            "pair64": 133.5441176470588,
+            "balanced64": 136.16666666666666,
+            "dsp16": 208.5343137254902,
+            "dsp32": 204.1764705882353,
+            "compact8": 142.1421568627451,
+            "sdk": 197.0343137254902,
+            "public_body": 136.1813725490196,
+            "public_veneer": 145.19607843137254
+          }
+        },
+        {
+          "size": 64,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 654.6715686274509,
+            "libc": 189.13725490196077,
+            "byte": 515.4117647058823,
+            "own4": 236.4558823529412,
+            "own16": 208.13725490196077,
+            "own64": 255.48039215686273,
+            "pair16": 209.55392156862746,
+            "balanced16": 212.14705882352942,
+            "pair64": 217.5441176470588,
+            "balanced64": 214.16666666666666,
+            "dsp16": 205.5392156862745,
+            "dsp32": 201.18627450980392,
+            "compact8": 198.49019607843138,
+            "sdk": 307.34313725490193,
+            "public_body": 214.5,
+            "public_veneer": 223.19117647058823
+          }
+        },
+        {
+          "size": 64,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 64,
+          "cycles": {
+            "baseline": 654.4215686274509,
+            "libc": 183.14705882352942,
+            "byte": 515.4117647058823,
+            "own4": 217.16176470588235,
+            "own16": 181.47058823529412,
+            "own64": 159.19117647058823,
+            "pair16": 181.22058823529412,
+            "balanced16": 182.18627450980392,
+            "pair64": 189.20098039215685,
+            "balanced64": 184.1764705882353,
+            "dsp16": 177.19117647058823,
+            "dsp32": 173.1764705882353,
+            "compact8": 192.16666666666666,
+            "sdk": 273.3529411764706,
+            "public_body": 184.1764705882353,
+            "public_veneer": 193.19607843137254
+          }
+        },
+        {
+          "size": 128,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1295.6106194690265,
+            "libc": 235.35398230088495,
+            "byte": 1028.0176991150443,
+            "own4": 410.14159292035396,
+            "own16": 333.37168141592923,
+            "own64": 288.4070796460177,
+            "pair16": 275.4424778761062,
+            "balanced16": 277.46017699115043,
+            "pair64": 232.53982300884957,
+            "balanced64": 235.44247787610618,
+            "dsp16": 324.4867256637168,
+            "dsp32": 306.4513274336283,
+            "compact8": 246.36283185840708,
+            "sdk": 337.1592920353982,
+            "public_body": 236.13274336283186,
+            "public_veneer": 271.20353982300884
+          }
+        },
+        {
+          "size": 128,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1321.6283185840707,
+            "libc": 320.6991150442478,
+            "byte": 1054.6106194690265,
+            "own4": 456.646017699115,
+            "own16": 388.070796460177,
+            "own64": 409.9026548672566,
+            "pair16": 356.30973451327435,
+            "balanced16": 359.65486725663715,
+            "pair64": 341.42477876106193,
+            "balanced64": 338.72566371681415,
+            "dsp16": 348.2654867256637,
+            "dsp32": 331.8053097345133,
+            "compact8": 329.16814159292034,
+            "sdk": 455.5840707964602,
+            "public_body": 338.12389380530976,
+            "public_veneer": 350.7079646017699
+          }
+        },
+        {
+          "size": 128,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 128,
+          "cycles": {
+            "baseline": 1322.132743362832,
+            "libc": 314.11504424778764,
+            "byte": 1054.6106194690265,
+            "own4": 437.69026548672565,
+            "own16": 361.0973451327434,
+            "own64": 316.83185840707966,
+            "pair16": 328.27433628318585,
+            "balanced16": 329.1504424778761,
+            "pair64": 313.3893805309734,
+            "balanced64": 308.14159292035396,
+            "dsp16": 320.76106194690266,
+            "dsp32": 303.1858407079646,
+            "compact8": 323.16814159292034,
+            "sdk": 423.5840707964602,
+            "public_body": 308.12389380530976,
+            "public_veneer": 320.12389380530976
+          }
+        },
+        {
+          "size": 512,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 5232.290322580645,
+            "libc": 955.516129032258,
+            "byte": 4199.032258064516,
+            "own4": 1658.4193548387098,
+            "own16": 1344.5483870967741,
+            "own64": 1159.6774193548388,
+            "pair16": 1092.8064516129032,
+            "balanced16": 1095.774193548387,
+            "pair64": 923.1935483870968,
+            "balanced64": 925.5806451612904,
+            "dsp16": 1119.1290322580646,
+            "dsp32": 1015.8387096774194,
+            "compact8": 966.5483870967741,
+            "sdk": 1263.1935483870968,
+            "public_body": 925.741935483871,
+            "public_veneer": 937.741935483871
+          }
+        },
+        {
+          "size": 512,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 5237.129032258064,
+            "libc": 1016.4193548387096,
+            "byte": 4200.258064516129,
+            "own4": 1680.225806451613,
+            "own16": 1374.3548387096773,
+            "own64": 1256.4193548387098,
+            "pair16": 1149.1290322580646,
+            "balanced16": 1153.4193548387098,
+            "pair64": 1008.5483870967741,
+            "balanced64": 1004.6129032258065,
+            "dsp16": 1116.967741935484,
+            "dsp32": 1015.8064516129032,
+            "compact8": 1025.6129032258063,
+            "sdk": 1343.0,
+            "public_body": 1004.516129032258,
+            "public_veneer": 1016.516129032258
+          }
+        },
+        {
+          "size": 512,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 512,
+          "cycles": {
+            "baseline": 5237.129032258064,
+            "libc": 1010.4193548387096,
+            "byte": 4202.032258064516,
+            "own4": 1661.4193548387098,
+            "own16": 1345.3548387096773,
+            "own64": 1165.0,
+            "pair16": 1121.0,
+            "balanced16": 1121.5483870967741,
+            "pair64": 982.5483870967741,
+            "balanced64": 974.6129032258065,
+            "dsp16": 1088.774193548387,
+            "dsp32": 987.6774193548387,
+            "compact8": 1019.6129032258065,
+            "sdk": 1313.1935483870968,
+            "public_body": 974.516129032258,
+            "public_veneer": 986.516129032258
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 0,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 41767.75,
+            "libc": 7456.1875,
+            "byte": 33561.1875,
+            "own4": 13090.5,
+            "own16": 10534.5,
+            "own64": 9064.0,
+            "pair16": 8489.6875,
+            "balanced16": 8493.9375,
+            "pair64": 7144.5,
+            "balanced64": 7146.375,
+            "dsp16": 8290.25,
+            "dsp32": 7404.8125,
+            "compact8": 7467.1875,
+            "sdk": 9724.8125,
+            "public_body": 7146.625,
+            "public_veneer": 7158.625
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 1,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 41770.6875,
+            "libc": 7517.0,
+            "byte": 33564.0625,
+            "own4": 13112.125,
+            "own16": 10564.1875,
+            "own64": 9161.4375,
+            "pair16": 8546.5,
+            "balanced16": 8548.0,
+            "pair64": 7230.125,
+            "balanced64": 7225.4375,
+            "dsp16": 8290.1875,
+            "dsp32": 7404.75,
+            "compact8": 7526.3125,
+            "sdk": 9639.0,
+            "public_body": 7225.25,
+            "public_veneer": 7237.25
+          }
+        },
+        {
+          "size": 4096,
+          "offset": 4,
+          "source": 1,
+          "mode": 0,
+          "prefix_bytes": 4096,
+          "cycles": {
+            "baseline": 41770.6875,
+            "libc": 7511.0,
+            "byte": 33564.0625,
+            "own4": 13093.5,
+            "own16": 10537.5,
+            "own64": 9067.375,
+            "pair16": 8518.0625,
+            "balanced16": 8521.75,
+            "pair64": 7201.875,
+            "balanced64": 7195.3125,
+            "dsp16": 8261.625,
+            "dsp32": 7376.625,
+            "compact8": 7520.3125,
+            "sdk": 9607.0625,
+            "public_body": 7195.3125,
+            "public_veneer": 7207.3125
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "status": "M4_HARDWARE_SELECTION",
+  "scope": "ClassicF41196MHz, provisional for production until both CPU integrations validated",
+  "plan_sha256": "bb09fece88cfdad86f335bd902349346a806401714f9c201ec94f2136b3453b2",
+  "actual_result_sha256": "1a9f3f1e7d1c177ed0fe8c646053a10cd51896f8991848c30baa22a0f36eb8ff",
+  "native": {
+    "family": "balanced64",
+    "placement": "Flash",
+    "body_bytes": 450,
+    "body_sha256": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521",
+    "reason": "Near best long-search throughput with the first-byte and n==1 paths; data SRAM and Flash both measured"
+  },
+  "standalone": {
+    "family": "balanced64",
+    "placement": "SRAM",
+    "reason": "Local fallback preserves the fast first-byte and n==1 paths; old26-slot hosts remain supported"
+  },
+  "shared": {
+    "provider": "optional publicmemchr slot26 only when services>=32/count>=27",
+    "dispatch": "once-resolved typedpointercache",
+    "reason": "Actual Flash resident faster than local SRAM on long scans; raw short-call overhead is retained"
+  },
+  "caveats": [
+    "No single body wins every tested length/alignment/hit position",
+    "pair64 is about0.08percent faster than balanced64 for aligned4096-byte SRAM data and about3.5percent for Flash data in a local SRAM APP, but n1absent costs22cycles instead of14",
+    "This does not select M0 or claim F401 hardware timings",
+    "F401 final body must respect its separate4KiB headroom gate"
+  ],
+  "hardware": {
+    "rows": 4320,
+    "reports": 618,
+    "checks": 659808,
+    "failures": 0,
+    "original_restored": true,
+    "files_state_preserved": true,
+    "ports_closed": true
+  },
+  "production_implemented": false
+}

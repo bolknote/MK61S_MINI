@@ -1,0 +1,49 @@
+{
+  "status": "PASS",
+  "scope": "Offline sealed resident ELF table/body identity, not installed",
+  "sealed_bin_sha256": "0931d4d63125cb8f7bc64dfb0e937a4c786c6105e52dd87dd2856d25e739f783",
+  "sealed_bin_bytes": 376148,
+  "build": "2CC0B4D1",
+  "static_end": "0x200053f8",
+  "services": {
+    "symbol": "_ZZN15loadable_module12app_servicesEvE3api",
+    "address": "0x805459c",
+    "struct_size": 32,
+    "runtime_count": 27,
+    "table": "0x8051e60",
+    "entries": [
+      "0x8050e4d",
+      "0x8050e49",
+      "0x80511b9",
+      "0x8050dad",
+      "0x8050231",
+      "0x805023f",
+      "0x805024d",
+      "0x805025d",
+      "0x805026d",
+      "0x805140d",
+      "0x805145d",
+      "0x80510e5",
+      "0x80510c5",
+      "0x805027b",
+      "0x805028f",
+      "0x805115d",
+      "0x805114d",
+      "0x8050e2d",
+      "0x8050c5b",
+      "0x8050c8b",
+      "0x8050c39",
+      "0x8050d01",
+      "0x80035d5",
+      "0x8009a29",
+      "0x80039a9",
+      "0x8003e09",
+      "0x8050a75"
+    ],
+    "memchr": {
+      "address": "0x8050a75",
+      "bytes": 450,
+      "sha256": "bd4502b3460e1d7c13ffdfe257d0106099e36111433ba9b0e1565cc5172de521"
+    }
+  }
+}

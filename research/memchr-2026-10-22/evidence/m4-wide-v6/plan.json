@@ -1,0 +1,1121 @@
+{
+  "scope": "firmware-and-payload",
+  "cpu": "m4",
+  "uid": "AEB505B6E0067623",
+  "usb_serial": "2068336B4731",
+  "original_build": "3AB3DD45",
+  "candidate_build": "2CC0B4D1",
+  "port": "/dev/cu.usbmodem2068336B47311",
+  "original_reference": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/original_reference.bin",
+  "sealed_prefix": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/sealed_prefix.bin",
+  "candidate": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/candidate.bin",
+  "payload": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/payload.bin",
+  "payload_elf": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/payload_elf.elf",
+  "payload_layout": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/payload_layout.json",
+  "runtime_proof": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/runtime_proof.json",
+  "apps": [
+    {
+      "directory": "/MCHR-X01",
+      "app_sha256": "635338b5450584204291874373fdaaab3d41312fb067c20169a87b57c09dda06",
+      "shared": false,
+      "placement": "sram",
+      "app": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/app.APP",
+      "elf": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/elf.elf",
+      "raw_image": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/raw_image.bin",
+      "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/manifest.json",
+      "kernel_layout": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/kernel_layout.json",
+      "corpus": {
+        "sizes": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          8,
+          15,
+          16,
+          17,
+          31,
+          32,
+          33,
+          63,
+          64,
+          65,
+          127,
+          128,
+          129,
+          255,
+          256,
+          257,
+          511,
+          512,
+          1024,
+          4096
+        ],
+        "alignments": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "modes": [
+          0,
+          1,
+          4
+        ],
+        "values": [
+          0
+        ],
+        "flash_values": [
+          0,
+          16,
+          28,
+          165
+        ],
+        "sources": [
+          0,
+          1
+        ],
+        "runs": 1,
+        "rounds": 7,
+        "full_hardware_correctness_sweep": true
+      }
+    },
+    {
+      "directory": "/MCHR-X02",
+      "app_sha256": "4cd9c5fdc7aabf4890cc923cbea6b984a7d184b78aeab9a2812bf1c87b8010d6",
+      "shared": true,
+      "placement": "sram",
+      "app": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/app.APP",
+      "elf": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/elf.elf",
+      "raw_image": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/raw_image.bin",
+      "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/manifest.json",
+      "kernel_layout": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/kernel_layout.json",
+      "corpus": {
+        "sizes": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          8,
+          15,
+          16,
+          17,
+          31,
+          32,
+          33,
+          63,
+          64,
+          65,
+          127,
+          128,
+          129,
+          255,
+          256,
+          257,
+          511,
+          512,
+          1024,
+          4096
+        ],
+        "alignments": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "modes": [
+          0,
+          1,
+          4
+        ],
+        "values": [
+          0
+        ],
+        "flash_values": [
+          0,
+          16,
+          28,
+          165
+        ],
+        "sources": [
+          0,
+          1
+        ],
+        "runs": 1,
+        "rounds": 7,
+        "full_hardware_correctness_sweep": true
+      }
+    },
+    {
+      "directory": "/MCHR-X03",
+      "app_sha256": "c3408339943a0734a420f1db5e35829f5ad0b6d97a08e52bc28d0c944f0a2b94",
+      "shared": false,
+      "placement": "flash",
+      "app": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/app.APP",
+      "elf": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/elf.elf",
+      "raw_image": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/raw_image.bin",
+      "manifest": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/manifest.json",
+      "kernel_layout": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/kernel_layout.json",
+      "corpus": {
+        "sizes": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          8,
+          15,
+          16,
+          17,
+          31,
+          32,
+          33,
+          63,
+          64,
+          65,
+          127,
+          128,
+          129,
+          255,
+          256,
+          257,
+          511,
+          512,
+          1024,
+          4096
+        ],
+        "alignments": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "modes": [
+          0,
+          1,
+          4
+        ],
+        "values": [
+          0
+        ],
+        "flash_values": [
+          0,
+          16,
+          28,
+          165
+        ],
+        "sources": [
+          0,
+          1
+        ],
+        "runs": 1,
+        "rounds": 7,
+        "full_hardware_correctness_sweep": true
+      }
+    }
+  ],
+  "schema": 1,
+  "dependencies": {
+    "research/memchr-2026-10-22/firmware.py": "f3b7f93198e6076140d65ac6aa4ac5744f00c0aece8dcafeddfd915e982150ba",
+    "research/memchr-2026-10-22/relocation.py": "12c1c75f507a09d928e481d91ce94fca0348380a13e5ef88c2a36007f84f7411",
+    "research/memchr-2026-10-22/run-wide-fw.py": "fb128cc04aac348faefdec836b7e584922288224d8c84aab18a843ec3ed73410",
+    "research/memchr-2026-10-22/run.py": "3ae906e9900355bfcadf69df41b0c48495288ef229ced06ed7ccf19369c3008c",
+    "research/memchr-2026-10-22/session.py": "4a0ef755c155ed50b8910a510f4327996632c1287beb091159c6f2deeba8d42c",
+    "research/memchr-2026-10-22/transfer.py": "74269af58e22a49d67486eb540d9ba8ccab21f18c9e79e9f0c0ef986373fe39e",
+    "research/memchr-2026-10-22/wide.py": "51a6a1d9d1bd1f4ed7fd76ffd5bcd816303bff28dbbfaa018986dfda8ec05f36",
+    "research/rp2040-memset-2026-10-21/run.py": "24068b803ac233f10a0e7c09b865b25629476e2dd2658f73e526507c4e9c8667",
+    "tests/check_stm32_vectors.py": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708",
+    "tests/hil_c5_stack.py": "6adc0587399afbaf2e62b8b73310a730fad352148cfa36255165c2b8231b54d7",
+    "tests/hil_c6_system_bootstrap.py": "dcf511ba5de809e5baf0925093fd226c887b1e3f3f73cd518e24f98651a4ac2c",
+    "tests/hil_multi_device_identity.py": "d48a047a7f93fd1b086884caa752e1ec0244fc1af86d8faafb14c8362fd17d56",
+    "tests/hil_packbits_firmware.py": "e2792e8d373366ebcfcdf56fb0fba4db69e2acd911ff337d411da7e273e0731d",
+    "tests/hil_picocalc_apps.py": "cf2266f9b4a67a0549eaeabe9f3ba866f6c0fb8718c68bb8fd9250b0c9978bf6",
+    "tests/hil_picocalc_parity.py": "c5e00f3cca7eb2959ba8cd24c3bbac30dfe86f6457d87706f8ff8c9c003a6ea3",
+    "tests/hil_portable_apps.py": "6080cf383f26af9e52d2dcb72bd164ae47c57a08657c3d0e41c5133b97466684",
+    "tests/hil_portable_system_apps.py": "dac2b640ffd6a0857f6508e40d4baa010a8f11f3d9ed9da623179c219cb00f15",
+    "tests/hil_rtc_alarm.py": "242bc861a5327c687125d0fa27d10cc0a528b0cb06cb8db80b429b1cbbbc42a3",
+    "tests/hil_system_memory.py": "d68b23b89bf6655ae18a4bbfc6b38d28f717fcad939af74443f67789f116865f",
+    "tests/hil_usb_disk_transaction.py": "5d1a0e8aca9eceea1039e9b2fd773454b1d895bd5bd837ee1cbe1f5cc340dc45",
+    "tools/build_picocalc.py": "ac8f1953cff8555c5f3b3298854ad0d1cad89876a357a0b1d629df19f75d0b47",
+    "tools/build_picocalc_apps.py": "f29150eebd1a12377c7932cf74d2ecb9ec87b2564b5335079f63ef534f08a244",
+    "tools/m8_codec.py": "4db88bdfdf23deedcca946dbe387ccedc972c7e03294998b2f8e7397af513a6d",
+    "tools/package_picocalc.py": "d79c90acb983a56cb05c5d2dfe31cad5dbc74f1350e20e9564e6cdf2890f65d2",
+    "tools/seal_picocalc.py": "6b70a5c685d8885936d24f56daee11e58da6555b7967b944c402962d8003ffd2"
+  },
+  "allowed": [
+    "Capture exact original files/empty calculator/IP0/unset ticking RTC before resets",
+    "Two fresh identical complete512KiB ROM backups and exact original SHA before any download",
+    "Install exact 2CC0B4D1 full candidate with8208B A8-fixed payload; sealed ELF/BIN/body and source-backed ownership validation; independent512KiB readback",
+    "Three exact A8-fixed APPs /MCHR-X01,X02,X03;4320cases/16functions/7rounds;alignments0..7;SRAM+Flash inputs,SRAM+Flash instructions,real publicruntime27",
+    "Pointcleanup known objects only; strict preserved-state qualification",
+    "Exact original-only download stays in ROM; independent512KiB readback after last write then :leave; byte proof independent of retained health; strict final files/calc/IP/RTC/health qualification"
+  ],
+  "forbidden": [
+    "Other devices/Pico/hub operations",
+    "OTP/option bytes/system ROM writes",
+    "Arbitrary image/download/UID/port overrides",
+    "Recursive deletion or deletion of unknown files",
+    "Date writes to the original unset RTC"
+  ],
+  "artifacts": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/algorithm-only.patch": {
+      "bytes": 755,
+      "sha256": "77e89d77b2ec6d0efbc00c476028ac4bcd1c07bd2098f9a660704b5f471597a5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/body-delta.json": {
+      "bytes": 4997,
+      "sha256": "17b127cc9683cf0d772d6534613b68b53a3d03063ccff9438088b264711d55db"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/guard-original-D4.json": {
+      "bytes": 876,
+      "sha256": "199b3348fff2641993b482656e421e87b6df0177b656e45b653d5bceec75bd14"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/guard-original-m0.json": {
+      "bytes": 3887,
+      "sha256": "df5031411a7334dc617533d3fd6c558b513df79814da7b0ba5087863b3cb3ff8"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/guard-original-m4.json": {
+      "bytes": 3879,
+      "sha256": "2c8c0cdf01c5c844578b9e11c3fbf7fb145f8938dbd0e0a896e438a1ff1ea940"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/identity.json": {
+      "bytes": 1085,
+      "sha256": "bebd53b7eee1e470dbd74f2498536a9cac42accbc49a1d5849d976cbd47532cb"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/m0-controls.json": {
+      "bytes": 1479,
+      "sha256": "d67d8a6307ba18ed52735a7764cc9262e38d8fe5e387faefc96e6e5ad146cedb"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/m0-guard.json": {
+      "bytes": 1719,
+      "sha256": "d7cffa2eb5f8b12d4e9b51eff1fcd9abc6934642dc4f925208bb19f3723d859c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/m0-mpu32.json": {
+      "bytes": 1768,
+      "sha256": "fae86e52723e1208ad6b27b5a240d5bad38d61b72ea42f863b927df64091d5b4"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/m0-span.json": {
+      "bytes": 801,
+      "sha256": "66e98f8b08202d05d04234ad0ea5ded6fb841688a0833bcc98af0f27818d41fa"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/m4-controls.json": {
+      "bytes": 1720,
+      "sha256": "f0124a3da489740a0f3bad2afe6cebcd9cbbbe9a933e0bf0bbc9a6216e78964b"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/m4-guard.json": {
+      "bytes": 2195,
+      "sha256": "856214f077c1c4b36374d8d3c2f5a8e6414736a4500edcab2c796f839dcc6a37"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/m4-mpu32.json": {
+      "bytes": 2244,
+      "sha256": "7e6af583f2f538698ae59fca5d8121ffa4c620ab2ebb4e2229eca179f91a4b47"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/m4-span.json": {
+      "bytes": 1003,
+      "sha256": "f3886693658e18bda8b7902693dff5d0bfad9a412edbfd5e05fedf880009ed5f"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/native-guard.json": {
+      "bytes": 565,
+      "sha256": "dd3d0bf91f0b7f3ba8a7ad0f4518783cae22632505448d4745cea94f4cfe9b01"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/negative-D4.json": {
+      "bytes": 907,
+      "sha256": "d5481b42c87dc2415c1f5658ba778e22dcbb1f0e6cffd2144e9b43cf5a7bebfe"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/negative-m0.json": {
+      "bytes": 3918,
+      "sha256": "706587621ce254630d48b45366694dbe0bfb2ac005d8147ddfb24dfb1d17c891"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/negative-m4.json": {
+      "bytes": 3910,
+      "sha256": "a667e76e55eed9abf853855b0761c3b740a52801af6cdca9b01b044660bab66c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/pair-fixed.S": {
+      "bytes": 3760,
+      "sha256": "8c1b8bb6725e55cab2cbb167f2a05a87df9e42742adbc67a0ee9a3dff0f277c1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/pair-original.S": {
+      "bytes": 3692,
+      "sha256": "62225a60d4c59db44dc667e3caa3622ffc78e31575fd681848a79446f36430fe"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/runtime-validation.json": {
+      "bytes": 1840,
+      "sha256": "78ba1b0703f63755dba456c55c75405130145bcd8059d67d727051d1f993a4f5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/shared-fallback-guard.json": {
+      "bytes": 561,
+      "sha256": "0573b76a05b641fe3c1523028511be3bbc7df5313d05bcaa26952ef991e16b84"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/standalone-guard.json": {
+      "bytes": 565,
+      "sha256": "8b6b733c97ef3ceb8ef02aaf5fe280769e2efefb79ec029caecc3ad895f96ca5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/summary.json": {
+      "bytes": 1092,
+      "sha256": "fc7d11f56a51e7195a1fa9a30df74e3fa682b00df868b56ae06969ecef0b7225"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/system_memchr_arm_self_test.py": {
+      "bytes": 6257,
+      "sha256": "61320d40c7f7889530ef761b38edc3261b88a7f1d7f9d7b8294d2b98cf4ffc1f"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/algorithm-a8-proof/system_memchr_guard_self_test.py": {
+      "bytes": 6779,
+      "sha256": "766b1fe18c050c03fcabb74c3d28e350cceb5532181451a3f18f870339b0f324"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/app.APP": {
+      "bytes": 2942,
+      "sha256": "635338b5450584204291874373fdaaab3d41312fb067c20169a87b57c09dda06"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/balanced-candidates.S": {
+      "bytes": 193,
+      "sha256": "43efe90f93b3b4c3dca2c32dcf850d5788f0583bc2aec8274fbbe573f6af0edc"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/baseline.c": {
+      "bytes": 460,
+      "sha256": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/benchmark.c": {
+      "bytes": 13270,
+      "sha256": "653219bff8ca96ea5d94d3a8e1f1534bcb21f9a30012e23c6a8aae6c0b2183a8"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/candidates.S": {
+      "bytes": 3372,
+      "sha256": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/compact-candidates.S": {
+      "bytes": 1383,
+      "sha256": "3f69e7babbc1088b6f5ed41da0c5b1a53ee367f1d98af23622d70f540cf598a5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/dsp-candidates.S": {
+      "bytes": 287,
+      "sha256": "50208e156ce1155c46033ba46eae89d9ad00c02870ab14d458a16923b33cb1c0"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/elf.elf": {
+      "bytes": 13648,
+      "sha256": "d31217cf04e0e81550d2c111701570c8ed3d4ba18edd4731d7c139298aa01552"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/fast-candidates.S": {
+      "bytes": 182,
+      "sha256": "89ba90bf0805c70b124496b046e51d1b9853a37faab4e5148d3aa5dfcc41a084"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/kernel_layout.json": {
+      "bytes": 3907,
+      "sha256": "76fa7c87b72fb6dbf7ba03415bf979a034bea7a8340aed2c49714414ece1c99a"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/manifest.json": {
+      "bytes": 4410,
+      "sha256": "e1ef0e8314daaa24ed030879fd7fd60fa9105d0eff649ad07c18f9b040176327"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/pair-candidates.S": {
+      "bytes": 3760,
+      "sha256": "8c1b8bb6725e55cab2cbb167f2a05a87df9e42742adbc67a0ee9a3dff0f277c1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/proof.json": {
+      "bytes": 3562,
+      "sha256": "4b8aebbbecf95fb680cff7d59ff7849184ed0db59a872771f29a2b3a27b2c6c0"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/raw_image.bin": {
+      "bytes": 6324,
+      "sha256": "e19e38c958dccf524df815006b12c417d4ed1b3e234bada9d61042bea38de6e8"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-0/wrapper.c": {
+      "bytes": 335,
+      "sha256": "942371ccc40c28e1589058463a5c67d482a7014cd464eddea0eb5f55968555c5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/app.APP": {
+      "bytes": 2991,
+      "sha256": "4cd9c5fdc7aabf4890cc923cbea6b984a7d184b78aeab9a2812bf1c87b8010d6"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/balanced-candidates.S": {
+      "bytes": 193,
+      "sha256": "43efe90f93b3b4c3dca2c32dcf850d5788f0583bc2aec8274fbbe573f6af0edc"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/baseline.c": {
+      "bytes": 460,
+      "sha256": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/benchmark.c": {
+      "bytes": 13270,
+      "sha256": "653219bff8ca96ea5d94d3a8e1f1534bcb21f9a30012e23c6a8aae6c0b2183a8"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/candidates.S": {
+      "bytes": 3372,
+      "sha256": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/compact-candidates.S": {
+      "bytes": 1383,
+      "sha256": "3f69e7babbc1088b6f5ed41da0c5b1a53ee367f1d98af23622d70f540cf598a5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/dsp-candidates.S": {
+      "bytes": 287,
+      "sha256": "50208e156ce1155c46033ba46eae89d9ad00c02870ab14d458a16923b33cb1c0"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/elf.elf": {
+      "bytes": 14028,
+      "sha256": "3f1044a92f8621d66bbc0ae5fbc3767b6ba03c1cc56314938ac3f536aaae2c27"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/fast-candidates.S": {
+      "bytes": 182,
+      "sha256": "89ba90bf0805c70b124496b046e51d1b9853a37faab4e5148d3aa5dfcc41a084"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/kernel_layout.json": {
+      "bytes": 3825,
+      "sha256": "b8f3cc83d381a1cc95385fe64b7f63bdc213c8db48a682668af09bb20b964ff2"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/manifest.json": {
+      "bytes": 4393,
+      "sha256": "68eb9f5c335a2e53bd67c4af08ab6f0b91e94a6aecff88e6233128ec86cd5be7"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/pair-candidates.S": {
+      "bytes": 3760,
+      "sha256": "8c1b8bb6725e55cab2cbb167f2a05a87df9e42742adbc67a0ee9a3dff0f277c1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/proof.json": {
+      "bytes": 3575,
+      "sha256": "f0451e3aea3447d567ac336cf7024ebe3f4541a66dd6cf7fb643aa5333cdc467"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/raw_image.bin": {
+      "bytes": 6392,
+      "sha256": "d210f415659caa04c90a1facaafd95f459af7d942a6ced01f63908313baeb2b6"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-1/wrapper.c": {
+      "bytes": 335,
+      "sha256": "741c0a882b0c301659b88a61e0f2e2c42722ab37618d647efc3d6def21decefe"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/app.APP": {
+      "bytes": 3006,
+      "sha256": "c3408339943a0734a420f1db5e35829f5ad0b6d97a08e52bc28d0c944f0a2b94"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/balanced-candidates.S": {
+      "bytes": 193,
+      "sha256": "43efe90f93b3b4c3dca2c32dcf850d5788f0583bc2aec8274fbbe573f6af0edc"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/baseline.c": {
+      "bytes": 460,
+      "sha256": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/benchmark.c": {
+      "bytes": 13270,
+      "sha256": "653219bff8ca96ea5d94d3a8e1f1534bcb21f9a30012e23c6a8aae6c0b2183a8"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/candidates.S": {
+      "bytes": 3372,
+      "sha256": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/compact-candidates.S": {
+      "bytes": 1383,
+      "sha256": "3f69e7babbc1088b6f5ed41da0c5b1a53ee367f1d98af23622d70f540cf598a5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/dsp-candidates.S": {
+      "bytes": 287,
+      "sha256": "50208e156ce1155c46033ba46eae89d9ad00c02870ab14d458a16923b33cb1c0"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/elf.elf": {
+      "bytes": 13760,
+      "sha256": "b99ef8a4c43c8d8806314965c77155918ce183a51cd6ec2f1df009a5a7dd9931"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/fast-candidates.S": {
+      "bytes": 182,
+      "sha256": "89ba90bf0805c70b124496b046e51d1b9853a37faab4e5148d3aa5dfcc41a084"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/kernel_layout.json": {
+      "bytes": 3907,
+      "sha256": "76fa7c87b72fb6dbf7ba03415bf979a034bea7a8340aed2c49714414ece1c99a"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/manifest.json": {
+      "bytes": 4401,
+      "sha256": "42a325704a25a1b3eb397bf2805588a339904ab1c1ce65164118fa7a7a75e07d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/pair-candidates.S": {
+      "bytes": 3760,
+      "sha256": "8c1b8bb6725e55cab2cbb167f2a05a87df9e42742adbc67a0ee9a3dff0f277c1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/proof.json": {
+      "bytes": 3562,
+      "sha256": "6b8b65a208bbc3b92032281cc5d1952e22d6f171594aa7d23e7701e267f76a8f"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/raw_image.bin": {
+      "bytes": 6404,
+      "sha256": "e73efe17952687813b7e8202f96e7d2a5b719d9da213c1bced2d01ba58ea2273"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/app-2/wrapper.c": {
+      "bytes": 303,
+      "sha256": "bca9c309a2ee6a4e5efc0cbe70856e6c50d2f8a7ef01ebeee2b0b6ea18542a58"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/f401/stack-usage.json": {
+      "bytes": 289,
+      "sha256": "617350dfa14ec57d4e9898b2f28b0da0a2a0f104d53e73ad2682642cb6107815"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/f401/standalone-profile.json": {
+      "bytes": 1266,
+      "sha256": "9c974615310ecbc4153cbec74f5e3d6f4dc661330bedb82733cc23028fcde849"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/f401-build.log": {
+      "bytes": 28729,
+      "sha256": "3448180f98813f0599ea146d442bb69a827af43e21ad5ded8c68ea8043ee00e9"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/f411/stack-usage.json": {
+      "bytes": 272,
+      "sha256": "92d0953403b844a45fe680b59e25c0ed2853e31657b861be4b9c583a37276581"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/f411/standalone-profile.json": {
+      "bytes": 1258,
+      "sha256": "bdef4861cec7a4a69ae4ed44a164eb471d4973defb9ebb8b03935fde4f37fa65"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/f411-build.log": {
+      "bytes": 28647,
+      "sha256": "6e076eb6ec48fbde26bb66c54b7c8bd16e1e45f2e6e10ce74c97595376764ca1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/research/memchr-2026-10-22/firmware.py": {
+      "bytes": 14410,
+      "sha256": "f3b7f93198e6076140d65ac6aa4ac5744f00c0aece8dcafeddfd915e982150ba"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/research/memchr-2026-10-22/relocation.py": {
+      "bytes": 3265,
+      "sha256": "12c1c75f507a09d928e481d91ce94fca0348380a13e5ef88c2a36007f84f7411"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/research/memchr-2026-10-22/run-wide-fw.py": {
+      "bytes": 16815,
+      "sha256": "fb128cc04aac348faefdec836b7e584922288224d8c84aab18a843ec3ed73410"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/research/memchr-2026-10-22/run.py": {
+      "bytes": 11399,
+      "sha256": "3ae906e9900355bfcadf69df41b0c48495288ef229ced06ed7ccf19369c3008c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/research/memchr-2026-10-22/session.py": {
+      "bytes": 12582,
+      "sha256": "4a0ef755c155ed50b8910a510f4327996632c1287beb091159c6f2deeba8d42c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/research/memchr-2026-10-22/transfer.py": {
+      "bytes": 297,
+      "sha256": "74269af58e22a49d67486eb540d9ba8ccab21f18c9e79e9f0c0ef986373fe39e"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/research/memchr-2026-10-22/wide.py": {
+      "bytes": 10325,
+      "sha256": "51a6a1d9d1bd1f4ed7fd76ffd5bcd816303bff28dbbfaa018986dfda8ec05f36"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/research/rp2040-memset-2026-10-21/run.py": {
+      "bytes": 8144,
+      "sha256": "24068b803ac233f10a0e7c09b865b25629476e2dd2658f73e526507c4e9c8667"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/check_stm32_vectors.py": {
+      "bytes": 3952,
+      "sha256": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/hil_c5_stack.py": {
+      "bytes": 5677,
+      "sha256": "6adc0587399afbaf2e62b8b73310a730fad352148cfa36255165c2b8231b54d7"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/hil_c6_system_bootstrap.py": {
+      "bytes": 6218,
+      "sha256": "dcf511ba5de809e5baf0925093fd226c887b1e3f3f73cd518e24f98651a4ac2c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/hil_multi_device_identity.py": {
+      "bytes": 12934,
+      "sha256": "d48a047a7f93fd1b086884caa752e1ec0244fc1af86d8faafb14c8362fd17d56"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/hil_packbits_firmware.py": {
+      "bytes": 18820,
+      "sha256": "e2792e8d373366ebcfcdf56fb0fba4db69e2acd911ff337d411da7e273e0731d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/hil_picocalc_apps.py": {
+      "bytes": 14223,
+      "sha256": "cf2266f9b4a67a0549eaeabe9f3ba866f6c0fb8718c68bb8fd9250b0c9978bf6"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/hil_picocalc_parity.py": {
+      "bytes": 10081,
+      "sha256": "c5e00f3cca7eb2959ba8cd24c3bbac30dfe86f6457d87706f8ff8c9c003a6ea3"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/hil_portable_apps.py": {
+      "bytes": 15165,
+      "sha256": "6080cf383f26af9e52d2dcb72bd164ae47c57a08657c3d0e41c5133b97466684"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/hil_portable_system_apps.py": {
+      "bytes": 9410,
+      "sha256": "dac2b640ffd6a0857f6508e40d4baa010a8f11f3d9ed9da623179c219cb00f15"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/hil_rtc_alarm.py": {
+      "bytes": 12592,
+      "sha256": "242bc861a5327c687125d0fa27d10cc0a528b0cb06cb8db80b429b1cbbbc42a3"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/hil_system_memory.py": {
+      "bytes": 22685,
+      "sha256": "d68b23b89bf6655ae18a4bbfc6b38d28f717fcad939af74443f67789f116865f"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tests/hil_usb_disk_transaction.py": {
+      "bytes": 23577,
+      "sha256": "5d1a0e8aca9eceea1039e9b2fd773454b1d895bd5bd837ee1cbe1f5cc340dc45"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tools/build_picocalc.py": {
+      "bytes": 11376,
+      "sha256": "ac8f1953cff8555c5f3b3298854ad0d1cad89876a357a0b1d629df19f75d0b47"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tools/build_picocalc_apps.py": {
+      "bytes": 4521,
+      "sha256": "f29150eebd1a12377c7932cf74d2ecb9ec87b2564b5335079f63ef534f08a244"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tools/m8_codec.py": {
+      "bytes": 3448,
+      "sha256": "4db88bdfdf23deedcca946dbe387ccedc972c7e03294998b2f8e7397af513a6d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tools/package_picocalc.py": {
+      "bytes": 9604,
+      "sha256": "d79c90acb983a56cb05c5d2dfe31cad5dbc74f1350e20e9564e6cdf2890f65d2"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/frozen/tools/seal_picocalc.py": {
+      "bytes": 4018,
+      "sha256": "6b70a5c685d8885936d24f56daee11e58da6555b7967b944c402962d8003ffd2"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/firmware.py": {
+      "bytes": 14410,
+      "sha256": "f3b7f93198e6076140d65ac6aa4ac5744f00c0aece8dcafeddfd915e982150ba"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/.build/memchr-20261023/m4-rom-read-recovery-v1/original-rom-readback.transfer.json": {
+      "bytes": 7556,
+      "sha256": "d4854e4a764e54e6ddac776df26cc01bbbca5108df99125ea04699010e34acd5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/.build/memchr-20261023/wide-fw-packet-v1/inputs/candidate.bin": {
+      "bytes": 524288,
+      "sha256": "d69246bc918de268414defe5ccbf2ed3d72f04e93234572adf7a6cc69856ebc1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/.build/memchr-20261023/wide-fw-packet-v4/inputs/candidate.bin": {
+      "bytes": 524288,
+      "sha256": "d69246bc918de268414defe5ccbf2ed3d72f04e93234572adf7a6cc69856ebc1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/.build/memmove-20261021/m4-v3-flash-hil/flash-original-a.bin": {
+      "bytes": 524288,
+      "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/research/memchr-2026-10-22/firmware.py": {
+      "bytes": 14410,
+      "sha256": "f3b7f93198e6076140d65ac6aa4ac5744f00c0aece8dcafeddfd915e982150ba"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/research/memchr-2026-10-22/relocation.py": {
+      "bytes": 3265,
+      "sha256": "12c1c75f507a09d928e481d91ce94fca0348380a13e5ef88c2a36007f84f7411"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/research/memchr-2026-10-22/run-wide-fw.py": {
+      "bytes": 16815,
+      "sha256": "fb128cc04aac348faefdec836b7e584922288224d8c84aab18a843ec3ed73410"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/research/memchr-2026-10-22/run.py": {
+      "bytes": 11399,
+      "sha256": "3ae906e9900355bfcadf69df41b0c48495288ef229ced06ed7ccf19369c3008c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/research/memchr-2026-10-22/session.py": {
+      "bytes": 12582,
+      "sha256": "4a0ef755c155ed50b8910a510f4327996632c1287beb091159c6f2deeba8d42c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/research/memchr-2026-10-22/test-firmware.py": {
+      "bytes": 32657,
+      "sha256": "3e7310cfb9cc15d8ce163703c7e54611df8b9d23e4f85a7e3718d277df9d44fa"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/research/memchr-2026-10-22/transfer.py": {
+      "bytes": 297,
+      "sha256": "74269af58e22a49d67486eb540d9ba8ccab21f18c9e79e9f0c0ef986373fe39e"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/research/memchr-2026-10-22/wide.py": {
+      "bytes": 10325,
+      "sha256": "e7d5ef0ed3c4fc9449e9dc15d6c4f19561d40344d782bef6ab10f6cdc643ce5e"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/research/rp2040-memset-2026-10-21/run.py": {
+      "bytes": 8144,
+      "sha256": "24068b803ac233f10a0e7c09b865b25629476e2dd2658f73e526507c4e9c8667"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/check_stm32_vectors.py": {
+      "bytes": 3952,
+      "sha256": "360413d0e17fd36154f91d53a83ea40e19326c7cde041a48a71b3d92748a7708"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/hil_c5_stack.py": {
+      "bytes": 5677,
+      "sha256": "6adc0587399afbaf2e62b8b73310a730fad352148cfa36255165c2b8231b54d7"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/hil_c6_system_bootstrap.py": {
+      "bytes": 6218,
+      "sha256": "dcf511ba5de809e5baf0925093fd226c887b1e3f3f73cd518e24f98651a4ac2c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/hil_multi_device_identity.py": {
+      "bytes": 12934,
+      "sha256": "d48a047a7f93fd1b086884caa752e1ec0244fc1af86d8faafb14c8362fd17d56"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/hil_packbits_firmware.py": {
+      "bytes": 18820,
+      "sha256": "e2792e8d373366ebcfcdf56fb0fba4db69e2acd911ff337d411da7e273e0731d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/hil_picocalc_apps.py": {
+      "bytes": 14223,
+      "sha256": "cf2266f9b4a67a0549eaeabe9f3ba866f6c0fb8718c68bb8fd9250b0c9978bf6"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/hil_picocalc_parity.py": {
+      "bytes": 10081,
+      "sha256": "c5e00f3cca7eb2959ba8cd24c3bbac30dfe86f6457d87706f8ff8c9c003a6ea3"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/hil_portable_apps.py": {
+      "bytes": 15165,
+      "sha256": "6080cf383f26af9e52d2dcb72bd164ae47c57a08657c3d0e41c5133b97466684"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/hil_portable_system_apps.py": {
+      "bytes": 9410,
+      "sha256": "dac2b640ffd6a0857f6508e40d4baa010a8f11f3d9ed9da623179c219cb00f15"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/hil_rtc_alarm.py": {
+      "bytes": 12592,
+      "sha256": "242bc861a5327c687125d0fa27d10cc0a528b0cb06cb8db80b429b1cbbbc42a3"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/hil_system_memory.py": {
+      "bytes": 22685,
+      "sha256": "d68b23b89bf6655ae18a4bbfc6b38d28f717fcad939af74443f67789f116865f"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tests/hil_usb_disk_transaction.py": {
+      "bytes": 23577,
+      "sha256": "5d1a0e8aca9eceea1039e9b2fd773454b1d895bd5bd837ee1cbe1f5cc340dc45"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tools/build_picocalc.py": {
+      "bytes": 11376,
+      "sha256": "ac8f1953cff8555c5f3b3298854ad0d1cad89876a357a0b1d629df19f75d0b47"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tools/build_picocalc_apps.py": {
+      "bytes": 4521,
+      "sha256": "f29150eebd1a12377c7932cf74d2ecb9ec87b2564b5335079f63ef534f08a244"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tools/m8_codec.py": {
+      "bytes": 3448,
+      "sha256": "4db88bdfdf23deedcca946dbe387ccedc972c7e03294998b2f8e7397af513a6d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tools/package_picocalc.py": {
+      "bytes": 9604,
+      "sha256": "d79c90acb983a56cb05c5d2dfe31cad5dbc74f1350e20e9564e6cdf2890f65d2"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/frozen/tools/seal_picocalc.py": {
+      "bytes": 4018,
+      "sha256": "6b70a5c685d8885936d24f56daee11e58da6555b7967b944c402962d8003ffd2"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/guard-original-D4.json": {
+      "bytes": 876,
+      "sha256": "199b3348fff2641993b482656e421e87b6df0177b656e45b653d5bceec75bd14"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/guard-original-m0.json": {
+      "bytes": 3887,
+      "sha256": "df5031411a7334dc617533d3fd6c558b513df79814da7b0ba5087863b3cb3ff8"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/guard-original-m4.json": {
+      "bytes": 3879,
+      "sha256": "2c8c0cdf01c5c844578b9e11c3fbf7fb145f8938dbd0e0a896e438a1ff1ea940"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/historical-v4/candidate-download.json": {
+      "bytes": 20092,
+      "sha256": "7a4370fc0ab05e7f18cef2f4db8b5f5aec4f738d6289640521f431bfa4633386"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/historical-v4/candidate-readback.transfer.json": {
+      "bytes": 739,
+      "sha256": "eff430e2f48d492ccff4272176faf2b8ec61464e40ee37fd8091d225e2a18176"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/historical-v4/restore-download.json": {
+      "bytes": 19002,
+      "sha256": "75be598750bdb41e939bf9672f640cea4efc2c3a5e653d988e8898e4c092e66a"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/historical-v4/restored-full.transfer.json": {
+      "bytes": 7291,
+      "sha256": "63da45e378c603964c1844afd14b45f3cd1f2fa579c09ea05b4ef880c54b3f8e"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/historical-v4/result.json": {
+      "bytes": 8226,
+      "sha256": "bbccdcaa8d81b0e0c8f10c850e9f477745d468d442447ceb2b58a961cd5b91c6"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/host-only.patch": {
+      "bytes": 4676,
+      "sha256": "f8298a8137d65a7d8b39cfbaaa5a355774c848e03b37ea85adde3edb10f9fa1b"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/review-note.json": {
+      "bytes": 981,
+      "sha256": "0a2073c821f412ade9346d2f29aeb9b78094de63d777b7d56aecfcdc183db037"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/test-firmware.py": {
+      "bytes": 32657,
+      "sha256": "3e7310cfb9cc15d8ce163703c7e54611df8b9d23e4f85a7e3718d277df9d44fa"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/test.stderr.bin": {
+      "bytes": 107,
+      "sha256": "e44ed32ed0250d4760f74abbe3e196ac6fdcc293a3e33d81015a18c2d1f1489d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/host-transport-v5b/test.stdout.bin": {
+      "bytes": 2233,
+      "sha256": "aecce82b0be7dce129f9b1c6ebc87a471e02db8d69c695033525cab8a60cbcfc"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/candidate.bin": {
+      "bytes": 524288,
+      "sha256": "41b59c1f927dc8cfc4d91d19db0bc902cce2d5fcfe774a56bbe011f85b948c10"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/original_reference.bin": {
+      "bytes": 524288,
+      "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/payload.bin": {
+      "bytes": 8208,
+      "sha256": "0cf9b2827753dc82b319305d705477149d70d6a3acaaeebd3d216df4ff8e3d0e"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/payload_elf.elf": {
+      "bytes": 9240,
+      "sha256": "f61979752d410f689ea21bee3387acde11f987835a05437286af38928672cd06"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/payload_layout.json": {
+      "bytes": 3729,
+      "sha256": "3edf85ce37cc1324a741117b33edeaabe7f55459d25e4fd53c76d5d810b11f52"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/resident_elf.elf": {
+      "bytes": 631736,
+      "sha256": "e091d2be318d229d1023466b1ccb50ee2b1188f0c0e2cf4f9eb1ad65b02bda26"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/runtime_proof.json": {
+      "bytes": 1148,
+      "sha256": "e3151e848f2173bfa30df4e90683438b1095e7031352aadd948a7c337dcf13e5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/sealed_prefix.bin": {
+      "bytes": 376148,
+      "sha256": "0931d4d63125cb8f7bc64dfb0e937a4c786c6105e52dd87dd2856d25e739f783"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/code/config.h": {
+      "bytes": 64126,
+      "sha256": "7b8df2931005a04926061793e52cc53b1fb2625e2eec0c50584330276eba0cc1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/code/language_flash_store.hpp": {
+      "bytes": 16053,
+      "sha256": "b493bb2266fe8d02df6ec3639068db671bb6774859ca90c8bd27d0931511d935"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/code/loadable_module_runtime.cpp": {
+      "bytes": 23274,
+      "sha256": "0716e657db903c69d286fe7019f680269dd2d2fb26975262aad85c6166bbbec2"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/code/program_store.cpp": {
+      "bytes": 209214,
+      "sha256": "aa7b861f14b7e235872daa0f9b0a1eb9f7f9a377f30f91380569b0e8555ce714"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/code/shared_memory.cpp": {
+      "bytes": 42943,
+      "sha256": "999d62a7212bb7fc01dc7e5a4a9c0464c1dbbcc3402dce342814609b4620abf5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/code/spi1_transport.cpp": {
+      "bytes": 4966,
+      "sha256": "4731920fcf8ca22f72380da0ea9b2ee033010269ab708256cf79ec4d35a25085"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/code/spi_nor_flash.cpp": {
+      "bytes": 19402,
+      "sha256": "5357e5746985c36a7c89b8fdd19d970867a46888a52726b511084582d1788102"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/code/spi_nor_flash.hpp": {
+      "bytes": 4376,
+      "sha256": "7754088718df6bde846f1b5479a4c4bd30150f1dff3aee917ccaaea640d71ee7"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/code/stm32f4_runtime.cpp": {
+      "bytes": 7475,
+      "sha256": "c33eb359601ee21752fe3a1b969c2bcca30509fc228a8bfa88e71047f7b104ac"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/code/tools.cpp": {
+      "bytes": 41730,
+      "sha256": "e1f8907038d191db4b8b70279653daa33b29a34625951d93105ebd3431235828"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/macros.txt": {
+      "bytes": 742833,
+      "sha256": "d32da51e77861c6e96b6ff9ee30049ea27140d7892ddb8d2245ee6cef55b676d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/ownership/proof.json": {
+      "bytes": 7641,
+      "sha256": "1f7b06e7120c22ccdcd469da6e6c37f2fec5a5199d581507cd4e0197f6617a3d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prior-hil/read-only-recovery/original-rom-readback.bin": {
+      "bytes": 524288,
+      "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prior-hil/read-only-recovery/original-rom-readback.transfer.json": {
+      "bytes": 7556,
+      "sha256": "d4854e4a764e54e6ddac776df26cc01bbbca5108df99125ea04699010e34acd5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prior-hil/read-only-recovery/result.json": {
+      "bytes": 8132,
+      "sha256": "9c4b17c024f58ffbba0d058815204602b277477c2b98553ec47370f27fa3d9f6"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prior-hil/v3/calculator-before.json": {
+      "bytes": 1668,
+      "sha256": "56e9d8b7711862f6a920d99f6689eecaf7bdcd5ed8d83ac73588612b0ddf0b4a"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prior-hil/v3/original-a.transfer.json": {
+      "bytes": 12331,
+      "sha256": "3c3c9ad5bb7d93b675ba9319a29d4caa435976f888ee133e884b31704aa2e260"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prior-hil/v3/original-b.transfer.json": {
+      "bytes": 3187,
+      "sha256": "91fae491fc0cd3f882d19e991a3e4391c5926e40a4dd881f7cc2135296659c61"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prior-hil/v3/original-b.transfer.serial.bin": {
+      "bytes": 2272,
+      "sha256": "64394638c42f3bb240b06c87658ef7dae97b72304199a6012bce689ecde568b4"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prior-hil/v3/original-files.json": {
+      "bytes": 3543,
+      "sha256": "8a1247605ebbbcd0d971f9471937f4f84baafc6dcb13e479b2904bce85513b54"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prior-hil/v3/result.json": {
+      "bytes": 2732,
+      "sha256": "0eec28cb20837cfee91dcbe66f0dbcf9dad0fa3435b2ed67a25a1cd659324fc2"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prior-readback-transport.py": {
+      "bytes": 26287,
+      "sha256": "6b6f004129a596fece7313aeef302597a52f38e20b8f588e78199e1925ad1c39"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/code/loadable_app_services.h": {
+      "bytes": 26029,
+      "sha256": "d23bd74e05c6f78c5d1ae2ecee908015d0125456a5ace31c2c6cada00f42aeee"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/code/loadable_system_api.cpp": {
+      "bytes": 29001,
+      "sha256": "93516348b3b48c60fe787ef43af9394858f1d197b88866daf18a485f670ca526"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/code/loadable_system_runtime.def": {
+      "bytes": 1906,
+      "sha256": "380d93701692dff07737ca1bb12c69218e10d541bd2373a01e5780c15b54f0a0"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/code/memchr_arm.inc": {
+      "bytes": 4235,
+      "sha256": "31636dcb0cff7b75c1696f1223fdfd13817aaeaeac24d18d17ab56c36ea86191"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/code/memory_search_arm.h": {
+      "bytes": 1168,
+      "sha256": "c4123df9bede5ece02bed4301de0f6f853819bf904a098c5973a14b8ddccf18e"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/code/system_memory.c": {
+      "bytes": 963,
+      "sha256": "bdc560254a305ce64acfe8c5fba3aaaf049b7ee043d747fa8a77731ab9a05aa0"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/code/system_strings.c": {
+      "bytes": 1576,
+      "sha256": "9fa8a8d0bb363c2c055685bca5387cb2797942cb74d4135e54600f674fdeeb96"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/ports/picocalc/CMakeLists.txt": {
+      "bytes": 10523,
+      "sha256": "c3057f978dfaf8a1c3c51f470a9e8725c9dbc67318fd86d98587ee46a611c111"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/ports/picocalc/memory.c": {
+      "bytes": 1382,
+      "sha256": "21c37e501beb205c7cd4b0760bf39deebd87dea4dd10509f8345896e51040294"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/ports/picocalc/native_app.cpp": {
+      "bytes": 52004,
+      "sha256": "3313c79f6d81428ac01a19eef60aff76f302d316d5de0195989f20c188f27ce2"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/sdk/portable/memory.c": {
+      "bytes": 3180,
+      "sha256": "d56f9b3e264764e22dc2dcffed70f5f5db801f01bba676dc6bfc1baa0b32b361"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/sdk/portable/shared_runtime.c": {
+      "bytes": 503,
+      "sha256": "72746dc67e3814fd2b86d89ea61d21d10e80b831cbeb501082db2e0021ebc448"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/sdk/portable/system/runtime.S": {
+      "bytes": 1627,
+      "sha256": "91078ed3450afc08e1ac5cfd8f84e41a09daae7a86600066d988b8409a649847"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/sdk/portable/system/system_compat.cpp": {
+      "bytes": 18685,
+      "sha256": "4392f6f92edcde37646985675f5aaabbc866da8244c03149b743981a37b72d7d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/tests/app_services_self_test.c": {
+      "bytes": 3087,
+      "sha256": "645868f256f8fb26b0030710105f79ef738d9e8c5f8d6f36089bd548a6d8163d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/tests/portable_shared_runtime_memory_stubs.c": {
+      "bytes": 742,
+      "sha256": "8493b0e3078981c02fed25193a6c9b1d25034b28cb416d2fbee1b042e052fa5c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/prototype/tests/portable_system_abi_self_test.c": {
+      "bytes": 10097,
+      "sha256": "2aecea9a5e5f6310a3b26b977ab5528b0defcb413f0a6dfe8aeb698614530c04"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/review-composition.json": {
+      "bytes": 456,
+      "sha256": "92c379d0008ea4dc8b1964e480cbb6570ce8eb62b4d9afd9391c088e6d7c590f"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/review-fixes.json": {
+      "bytes": 1633,
+      "sha256": "61c4180876de33eff3c758e1d0a527dcf1457ccbc87b4dbc5f6128cd1af8befc"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/runtime-prototype.json": {
+      "bytes": 3807,
+      "sha256": "3776e7321266da6ca0218521e4a8a11da6c2a84f9f4e9d51e1b56d4d784552e1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/runtime-prototype.patch": {
+      "bytes": 18459,
+      "sha256": "17cf019a3f459d759d3f45495ec71be1ea327dbbd8c81f5d2bddc016a23d1a5d"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/source-base.json": {
+      "bytes": 130,
+      "sha256": "065348a66a073b0aa30aa683a7c975e9697801c9fe61954c8cb14303326260e3"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/test-firmware.py": {
+      "bytes": 32651,
+      "sha256": "15a34aecdf72f7a931715bf0a228622e05d0e2329516bc75540e7f8b4a7e49f1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/test-runtime-arm.py": {
+      "bytes": 7311,
+      "sha256": "8c73ce6d14ba1f7acb37649b6f825a4382f7cbf711b41d7d704ea540996f041a"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/test-session.py": {
+      "bytes": 15853,
+      "sha256": "da2d231e6eab2972bc8f6c5919b986e7a586804951f4bb82f089c324d1595885"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/test-wide.py": {
+      "bytes": 3714,
+      "sha256": "c235f2c122dfd6a071370853208a017c465e91dd1cb82e246f42d0e390d92db9"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/validation/native-guard.json": {
+      "bytes": 565,
+      "sha256": "dd3d0bf91f0b7f3ba8a7ad0f4518783cae22632505448d4745cea94f4cfe9b01"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/validation/runtime-validation.json": {
+      "bytes": 1840,
+      "sha256": "78ba1b0703f63755dba456c55c75405130145bcd8059d67d727051d1f993a4f5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/validation/shared-fallback-guard.json": {
+      "bytes": 561,
+      "sha256": "0573b76a05b641fe3c1523028511be3bbc7df5313d05bcaa26952ef991e16b84"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/validation/standalone-guard.json": {
+      "bytes": 565,
+      "sha256": "8b6b733c97ef3ceb8ef02aaf5fe280769e2efefb79ec029caecc3ad895f96ca5"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/validation/test-firmware.py.stderr.bin": {
+      "bytes": 107,
+      "sha256": "0630db32e377e6bcdffd1f18bc1c927585f65efe062837572e0bd2e846adea54"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/validation/test-firmware.py.stdout.bin": {
+      "bytes": 2233,
+      "sha256": "aecce82b0be7dce129f9b1c6ebc87a471e02db8d69c695033525cab8a60cbcfc"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/validation/test-wide.py.stderr.bin": {
+      "bytes": 103,
+      "sha256": "6299c61ecefc2c6e262ba2dccd92b35e4ade4e41b723fe2eac602dbd7b324b98"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/validation/test-wide.py.stdout.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "resident_elf": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/inputs/resident_elf.elf",
+  "revision_note": "V6 composes separately sealed host-only V5 with A8 algorithm fix. Old D4 forbidden; historical V3 HOLD/V4 FAIL_RESTORED remain unchanged. Technical review and new Root lease/EXECUTE required."
+}

@@ -1,0 +1,154 @@
+{
+  "status": "FAIL",
+  "cpu": "m0",
+  "scope": "Functional early-hit/object-end/guard tests, not hardware timing",
+  "guard": "0x20080000",
+  "full_cases_per_body": 20689,
+  "elf_sha256": "c3f4b7678c5e3da1420aa74c6aa46e7851e73cbcbae62d98ede8754d1b7d1195",
+  "results": [
+    {
+      "name": "pair16",
+      "body_bytes": 244,
+      "body_sha256": "4f52bea15acedd0238c38f9973073ea1392f740ad2d6abdca86743590140ab1f",
+      "cases": 88,
+      "failures": 1,
+      "examples": [
+        {
+          "object_bytes": 4,
+          "pointer": "0x2007fffc",
+          "value": 0,
+          "first_match": 1,
+          "count": 12,
+          "expected": "0x2007fffd",
+          "pc": "0x101e042e",
+          "failure": "UcError()",
+          "memory_fault": {
+            "address": "0x20080000",
+            "bytes": 4
+          }
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "name": "pair64",
+      "body_bytes": 400,
+      "body_sha256": "f55680b3b41dc192ffcd57e9e3f6717af843afe03ed811926f3a580c0456dc29",
+      "cases": 88,
+      "failures": 1,
+      "examples": [
+        {
+          "object_bytes": 4,
+          "pointer": "0x2007fffc",
+          "value": 0,
+          "first_match": 1,
+          "count": 12,
+          "expected": "0x2007fffd",
+          "pc": "0x101e05be",
+          "failure": "UcError()",
+          "memory_fault": {
+            "address": "0x20080000",
+            "bytes": 4
+          }
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "name": "balanced16",
+      "body_bytes": 248,
+      "body_sha256": "2910fe599c65409c60e0a634aa49a943837ab8fe8d63df11854134dbb570206a",
+      "cases": 88,
+      "failures": 1,
+      "examples": [
+        {
+          "object_bytes": 4,
+          "pointer": "0x2007fffc",
+          "value": 0,
+          "first_match": 1,
+          "count": 12,
+          "expected": "0x2007fffd",
+          "pc": "0x101e0938",
+          "failure": "UcError()",
+          "memory_fault": {
+            "address": "0x20080000",
+            "bytes": 4
+          }
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "name": "balanced64",
+      "body_bytes": 404,
+      "body_sha256": "27a49f7dea0bff80a865412be7b2f0462c3d4366446fac897b910fde84cf697c",
+      "cases": 88,
+      "failures": 1,
+      "examples": [
+        {
+          "object_bytes": 4,
+          "pointer": "0x2007fffc",
+          "value": 0,
+          "first_match": 1,
+          "count": 12,
+          "expected": "0x2007fffd",
+          "pc": "0x101e0acc",
+          "failure": "UcError()",
+          "memory_fault": {
+            "address": "0x20080000",
+            "bytes": 4
+          }
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "name": "fast16",
+      "body_bytes": 244,
+      "body_sha256": "56a947ac124f5366110693291c564c5ad88176eefba4513643738c8f3c0ea38f",
+      "cases": 139,
+      "failures": 1,
+      "examples": [
+        {
+          "object_bytes": 5,
+          "pointer": "0x2007fffb",
+          "value": 0,
+          "first_match": 1,
+          "count": 13,
+          "expected": "0x2007fffc",
+          "pc": "0x101e06b2",
+          "failure": "UcError()",
+          "memory_fault": {
+            "address": "0x20080000",
+            "bytes": 4
+          }
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "name": "fast64",
+      "body_bytes": 400,
+      "body_sha256": "e3ac9871b55102002a283c047e46cc7a8bfcb1efcb3c94527e6671504c1c48f7",
+      "cases": 139,
+      "failures": 1,
+      "examples": [
+        {
+          "object_bytes": 5,
+          "pointer": "0x2007fffb",
+          "value": 0,
+          "first_match": 1,
+          "count": 13,
+          "expected": "0x2007fffc",
+          "pc": "0x101e0842",
+          "failure": "UcError()",
+          "memory_fault": {
+            "address": "0x20080000",
+            "bytes": 4
+          }
+        }
+      ],
+      "status": "FAIL"
+    }
+  ]
+}

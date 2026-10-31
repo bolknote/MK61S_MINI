@@ -1,0 +1,808 @@
+{
+  "status": "OFFLINE_PREPARED_HARDWARE_PENDING",
+  "arm_checks": 1780086,
+  "production_changed": false,
+  "public_memchr_runtime": false,
+  "hardware": {
+    "classic": "Release qualification owns the device; no serial/DFU access by memchr",
+    "pico": "Final memcmp V3 hardware qualification owns the device; no serial/DFU access by memchr"
+  },
+  "apps": {
+    "m0-app-v1": {
+      "target": "picocalc-pico-h",
+      "shared": false,
+      "directory": "/MCHR-P01",
+      "public_memchr_runtime": false,
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m0",
+        "base": 536870912,
+        "elf_sha256": "284b75825734808393d438c0d8e13598b2b6370a7aa85b7ac76365ecf126ae32",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v6-m/nofp/libc.a",
+          "member": "libc_a-memchr-stub.o",
+          "sha256": "dd1e47bf68ceefa5f672ec8345b765b0995dcf76d227779523c3d62e17a71493"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 26
+          },
+          "libc_search": {
+            "address": 536870941,
+            "bytes": 124
+          },
+          "byte_search": {
+            "address": 536871065,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871089,
+            "bytes": 140
+          },
+          "own16": {
+            "address": 536871229,
+            "bytes": 224
+          },
+          "own64": {
+            "address": 536871453,
+            "bytes": 440
+          }
+        }
+      },
+      "flash_header_sha256": null,
+      "sources": {
+        "benchmark.c": "0182a1e1736af4fc7fb0fdd539c730c43383dcfb810fc5dabd0508fa272125e6",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "63de7821577966de2cecbbc96bb046977996e186ea7b52f7a24b88437c66aba0"
+      },
+      "app_sha256": "8db8e7123b42e9eec6c06e19c7cc37aaee2e7936d8865c6f1216985c01429a37"
+    },
+    "m0-flash-shared-v1": {
+      "target": "picocalc-pico-h",
+      "shared": true,
+      "directory": "/MCHR-PXR01",
+      "public_memchr_runtime": false,
+      "placement": "flash",
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m0",
+        "base": 536870912,
+        "elf_sha256": "284b75825734808393d438c0d8e13598b2b6370a7aa85b7ac76365ecf126ae32",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v6-m/nofp/libc.a",
+          "member": "libc_a-memchr-stub.o",
+          "sha256": "dd1e47bf68ceefa5f672ec8345b765b0995dcf76d227779523c3d62e17a71493"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 26
+          },
+          "libc_search": {
+            "address": 536870941,
+            "bytes": 124
+          },
+          "byte_search": {
+            "address": 536871065,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871089,
+            "bytes": 140
+          },
+          "own16": {
+            "address": 536871229,
+            "bytes": 224
+          },
+          "own64": {
+            "address": 536871453,
+            "bytes": 440
+          }
+        }
+      },
+      "flash_header_sha256": "aab47e61e64834d9330f17674b14fd71628f30eeccc8661c6887d3effd1be915",
+      "sources": {
+        "benchmark.c": "ba9cc8da60daaf2de75bee5b518fc7a18059a628b9abd9189409f2e0becc7e3a",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "0467e51016ee4797b47084fa40f79803b1a4a09bc3f483ae03a081f181b5e11e"
+      },
+      "app_sha256": "fa9e81adaed1b9984ea16c524068337b44a6a82f2e59070730e78c3e00f93209"
+    },
+    "m0-flash-v1": {
+      "target": "picocalc-pico-h",
+      "shared": false,
+      "directory": "/MCHR-PXS01",
+      "public_memchr_runtime": false,
+      "placement": "flash",
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m0",
+        "base": 536870912,
+        "elf_sha256": "284b75825734808393d438c0d8e13598b2b6370a7aa85b7ac76365ecf126ae32",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v6-m/nofp/libc.a",
+          "member": "libc_a-memchr-stub.o",
+          "sha256": "dd1e47bf68ceefa5f672ec8345b765b0995dcf76d227779523c3d62e17a71493"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 26
+          },
+          "libc_search": {
+            "address": 536870941,
+            "bytes": 124
+          },
+          "byte_search": {
+            "address": 536871065,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871089,
+            "bytes": 140
+          },
+          "own16": {
+            "address": 536871229,
+            "bytes": 224
+          },
+          "own64": {
+            "address": 536871453,
+            "bytes": 440
+          }
+        }
+      },
+      "flash_header_sha256": "aab47e61e64834d9330f17674b14fd71628f30eeccc8661c6887d3effd1be915",
+      "sources": {
+        "benchmark.c": "ba9cc8da60daaf2de75bee5b518fc7a18059a628b9abd9189409f2e0becc7e3a",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "693e442827fc5ed495c49281b5308b07c141fd9741f4b34509b8e68bbfb7705a"
+      },
+      "app_sha256": "f994c98d63ff36d8e91345586b9e7d264b3719f6bb4fefcb0c244030c1d678fd"
+    },
+    "m0-shared-v1": {
+      "target": "picocalc-pico-h",
+      "shared": true,
+      "directory": "/MCHR-R01",
+      "public_memchr_runtime": false,
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m0",
+        "base": 536870912,
+        "elf_sha256": "284b75825734808393d438c0d8e13598b2b6370a7aa85b7ac76365ecf126ae32",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v6-m/nofp/libc.a",
+          "member": "libc_a-memchr-stub.o",
+          "sha256": "dd1e47bf68ceefa5f672ec8345b765b0995dcf76d227779523c3d62e17a71493"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 26
+          },
+          "libc_search": {
+            "address": 536870941,
+            "bytes": 124
+          },
+          "byte_search": {
+            "address": 536871065,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871089,
+            "bytes": 140
+          },
+          "own16": {
+            "address": 536871229,
+            "bytes": 224
+          },
+          "own64": {
+            "address": 536871453,
+            "bytes": 440
+          }
+        }
+      },
+      "flash_header_sha256": null,
+      "sources": {
+        "benchmark.c": "0182a1e1736af4fc7fb0fdd539c730c43383dcfb810fc5dabd0508fa272125e6",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "2ea30004112a0609ae3d57e77c8cf73a49ae4c2166a44ac62f0d7bb2c22be821"
+      },
+      "app_sha256": "db55bdaf360309900c4f3fbab67444f458fcdb0922cbd0190b8e17ac40de4660"
+    },
+    "m0-sram-flash-data-shared-v1": {
+      "target": "picocalc-pico-h",
+      "shared": true,
+      "directory": "/MCHR-PDR01",
+      "public_memchr_runtime": false,
+      "placement": "sram",
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m0",
+        "base": 536870912,
+        "elf_sha256": "284b75825734808393d438c0d8e13598b2b6370a7aa85b7ac76365ecf126ae32",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v6-m/nofp/libc.a",
+          "member": "libc_a-memchr-stub.o",
+          "sha256": "dd1e47bf68ceefa5f672ec8345b765b0995dcf76d227779523c3d62e17a71493"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 26
+          },
+          "libc_search": {
+            "address": 536870941,
+            "bytes": 124
+          },
+          "byte_search": {
+            "address": 536871065,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871089,
+            "bytes": 140
+          },
+          "own16": {
+            "address": 536871229,
+            "bytes": 224
+          },
+          "own64": {
+            "address": 536871453,
+            "bytes": 440
+          }
+        }
+      },
+      "flash_header_sha256": "aab47e61e64834d9330f17674b14fd71628f30eeccc8661c6887d3effd1be915",
+      "sources": {
+        "benchmark.c": "ba9cc8da60daaf2de75bee5b518fc7a18059a628b9abd9189409f2e0becc7e3a",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "eed7dc081c13484a22cb066928631f5e8de2a5ea424e68978b78e9174690acb1"
+      },
+      "app_sha256": "012fd7a58b89b55d031c574e3cf009438dc1df1c4e92b14fe97aea863cb830e1"
+    },
+    "m0-sram-flash-data-v1": {
+      "target": "picocalc-pico-h",
+      "shared": false,
+      "directory": "/MCHR-PDS01",
+      "public_memchr_runtime": false,
+      "placement": "sram",
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m0",
+        "base": 536870912,
+        "elf_sha256": "284b75825734808393d438c0d8e13598b2b6370a7aa85b7ac76365ecf126ae32",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v6-m/nofp/libc.a",
+          "member": "libc_a-memchr-stub.o",
+          "sha256": "dd1e47bf68ceefa5f672ec8345b765b0995dcf76d227779523c3d62e17a71493"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 26
+          },
+          "libc_search": {
+            "address": 536870941,
+            "bytes": 124
+          },
+          "byte_search": {
+            "address": 536871065,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871089,
+            "bytes": 140
+          },
+          "own16": {
+            "address": 536871229,
+            "bytes": 224
+          },
+          "own64": {
+            "address": 536871453,
+            "bytes": 440
+          }
+        }
+      },
+      "flash_header_sha256": "aab47e61e64834d9330f17674b14fd71628f30eeccc8661c6887d3effd1be915",
+      "sources": {
+        "benchmark.c": "ba9cc8da60daaf2de75bee5b518fc7a18059a628b9abd9189409f2e0becc7e3a",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "a87e53aef028d692b84e1c66488d572d9749803982405175521db264c14f481c"
+      },
+      "app_sha256": "e6128ed97bc0214a703645175579f15edf4b72b808eec0f18e1f7dfa7ca33a1d"
+    },
+    "m4-app-v1": {
+      "target": "stm32",
+      "shared": false,
+      "directory": "/MCHR-M01",
+      "public_memchr_runtime": false,
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m4",
+        "base": 536870912,
+        "elf_sha256": "f7f4f29d9febdf6680cb6a9aff93ce480312c2c2618a65ff3a0e90d178d2b0f2",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a",
+          "member": "libc_a-memchr.o",
+          "sha256": "469219781f21e55f7a7b54c8b3b8d025c4b18d4b1240c00411b279a569c29436"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 28
+          },
+          "libc_search": {
+            "address": 536870945,
+            "bytes": 160
+          },
+          "byte_search": {
+            "address": 536871105,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871129,
+            "bytes": 144
+          },
+          "own16": {
+            "address": 536871273,
+            "bytes": 246
+          },
+          "own64": {
+            "address": 536871521,
+            "bytes": 512
+          },
+          "swar16": {
+            "address": 536872033,
+            "bytes": 262
+          }
+        }
+      },
+      "flash_header_sha256": null,
+      "sources": {
+        "benchmark.c": "0182a1e1736af4fc7fb0fdd539c730c43383dcfb810fc5dabd0508fa272125e6",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "44c4e2a28e99e3901cc47d92ffa20d26919dd69b06231de70596652307eb7dfc"
+      },
+      "app_sha256": "e322183988519bbac254773f9e73b32c03cc930b191d61e7031bc68e25aa2e1a"
+    },
+    "m4-flash-shared-v1": {
+      "target": "stm32",
+      "shared": true,
+      "directory": "/MCHR-MXR01",
+      "public_memchr_runtime": false,
+      "placement": "flash",
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m4",
+        "base": 536870912,
+        "elf_sha256": "f7f4f29d9febdf6680cb6a9aff93ce480312c2c2618a65ff3a0e90d178d2b0f2",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a",
+          "member": "libc_a-memchr.o",
+          "sha256": "469219781f21e55f7a7b54c8b3b8d025c4b18d4b1240c00411b279a569c29436"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 28
+          },
+          "libc_search": {
+            "address": 536870945,
+            "bytes": 160
+          },
+          "byte_search": {
+            "address": 536871105,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871129,
+            "bytes": 144
+          },
+          "own16": {
+            "address": 536871273,
+            "bytes": 246
+          },
+          "own64": {
+            "address": 536871521,
+            "bytes": 512
+          },
+          "swar16": {
+            "address": 536872033,
+            "bytes": 262
+          }
+        }
+      },
+      "flash_header_sha256": "8acddce8ab8d7960340b7d45f193f74b79cacbaba114711425925a00f8b73890",
+      "sources": {
+        "benchmark.c": "ba9cc8da60daaf2de75bee5b518fc7a18059a628b9abd9189409f2e0becc7e3a",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "f8a92da7213e54aa58df28a28e71f5054c2ecc60b089cb287646a7224b308b1a"
+      },
+      "app_sha256": "ea871e3d6e14a6bc566c2b4cbe07b265c4ce49beb5e08743a900a8430cad1f77"
+    },
+    "m4-flash-v1": {
+      "target": "stm32",
+      "shared": false,
+      "directory": "/MCHR-MXS01",
+      "public_memchr_runtime": false,
+      "placement": "flash",
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m4",
+        "base": 536870912,
+        "elf_sha256": "f7f4f29d9febdf6680cb6a9aff93ce480312c2c2618a65ff3a0e90d178d2b0f2",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a",
+          "member": "libc_a-memchr.o",
+          "sha256": "469219781f21e55f7a7b54c8b3b8d025c4b18d4b1240c00411b279a569c29436"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 28
+          },
+          "libc_search": {
+            "address": 536870945,
+            "bytes": 160
+          },
+          "byte_search": {
+            "address": 536871105,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871129,
+            "bytes": 144
+          },
+          "own16": {
+            "address": 536871273,
+            "bytes": 246
+          },
+          "own64": {
+            "address": 536871521,
+            "bytes": 512
+          },
+          "swar16": {
+            "address": 536872033,
+            "bytes": 262
+          }
+        }
+      },
+      "flash_header_sha256": "8acddce8ab8d7960340b7d45f193f74b79cacbaba114711425925a00f8b73890",
+      "sources": {
+        "benchmark.c": "ba9cc8da60daaf2de75bee5b518fc7a18059a628b9abd9189409f2e0becc7e3a",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "c374389f4b81dcbd42d60a3d018f26a98245a1a033e79634c5fcaedb961ca29b"
+      },
+      "app_sha256": "7034b11146448f544cddd4b6cdf9e1f5a21e90d4487775cbdc3e64e461e87832"
+    },
+    "m4-shared-v1": {
+      "target": "stm32",
+      "shared": true,
+      "directory": "/MCHR-S01",
+      "public_memchr_runtime": false,
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m4",
+        "base": 536870912,
+        "elf_sha256": "f7f4f29d9febdf6680cb6a9aff93ce480312c2c2618a65ff3a0e90d178d2b0f2",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a",
+          "member": "libc_a-memchr.o",
+          "sha256": "469219781f21e55f7a7b54c8b3b8d025c4b18d4b1240c00411b279a569c29436"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 28
+          },
+          "libc_search": {
+            "address": 536870945,
+            "bytes": 160
+          },
+          "byte_search": {
+            "address": 536871105,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871129,
+            "bytes": 144
+          },
+          "own16": {
+            "address": 536871273,
+            "bytes": 246
+          },
+          "own64": {
+            "address": 536871521,
+            "bytes": 512
+          },
+          "swar16": {
+            "address": 536872033,
+            "bytes": 262
+          }
+        }
+      },
+      "flash_header_sha256": null,
+      "sources": {
+        "benchmark.c": "0182a1e1736af4fc7fb0fdd539c730c43383dcfb810fc5dabd0508fa272125e6",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "49de2e5725167ad61a0af02b03f65ef71ba8ce9cb118781bccc2835e3e410dab"
+      },
+      "app_sha256": "e8a0883785ceb3f8acbcd21a6c0e45012ebcf4e82cd72d50fe88c463bdd658cf"
+    },
+    "m4-sram-flash-data-shared-v1": {
+      "target": "stm32",
+      "shared": true,
+      "directory": "/MCHR-MDR01",
+      "public_memchr_runtime": false,
+      "placement": "sram",
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m4",
+        "base": 536870912,
+        "elf_sha256": "f7f4f29d9febdf6680cb6a9aff93ce480312c2c2618a65ff3a0e90d178d2b0f2",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a",
+          "member": "libc_a-memchr.o",
+          "sha256": "469219781f21e55f7a7b54c8b3b8d025c4b18d4b1240c00411b279a569c29436"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 28
+          },
+          "libc_search": {
+            "address": 536870945,
+            "bytes": 160
+          },
+          "byte_search": {
+            "address": 536871105,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871129,
+            "bytes": 144
+          },
+          "own16": {
+            "address": 536871273,
+            "bytes": 246
+          },
+          "own64": {
+            "address": 536871521,
+            "bytes": 512
+          },
+          "swar16": {
+            "address": 536872033,
+            "bytes": 262
+          }
+        }
+      },
+      "flash_header_sha256": "8acddce8ab8d7960340b7d45f193f74b79cacbaba114711425925a00f8b73890",
+      "sources": {
+        "benchmark.c": "ba9cc8da60daaf2de75bee5b518fc7a18059a628b9abd9189409f2e0becc7e3a",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "6f098885b7b300a6d8eefcde29b5ab5c3723fa6d2763b819f78ac9e6b51e7ba3"
+      },
+      "app_sha256": "31b08bec12a400c6a3758b9123337e675e09a310f17ee13266f3cadc16636af9"
+    },
+    "m4-sram-flash-data-v1": {
+      "target": "stm32",
+      "shared": false,
+      "directory": "/MCHR-MDS01",
+      "public_memchr_runtime": false,
+      "placement": "sram",
+      "indirect_target": "own64",
+      "kernels": {
+        "cpu": "m4",
+        "base": 536870912,
+        "elf_sha256": "f7f4f29d9febdf6680cb6a9aff93ce480312c2c2618a65ff3a0e90d178d2b0f2",
+        "libc": {
+          "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a",
+          "member": "libc_a-memchr.o",
+          "sha256": "469219781f21e55f7a7b54c8b3b8d025c4b18d4b1240c00411b279a569c29436"
+        },
+        "sources": {
+          "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+          "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+        },
+        "functions": {
+          "baseline": {
+            "address": 536870913,
+            "bytes": 28
+          },
+          "libc_search": {
+            "address": 536870945,
+            "bytes": 160
+          },
+          "byte_search": {
+            "address": 536871105,
+            "bytes": 22
+          },
+          "own4": {
+            "address": 536871129,
+            "bytes": 144
+          },
+          "own16": {
+            "address": 536871273,
+            "bytes": 246
+          },
+          "own64": {
+            "address": 536871521,
+            "bytes": 512
+          },
+          "swar16": {
+            "address": 536872033,
+            "bytes": 262
+          }
+        }
+      },
+      "flash_header_sha256": "8acddce8ab8d7960340b7d45f193f74b79cacbaba114711425925a00f8b73890",
+      "sources": {
+        "benchmark.c": "ba9cc8da60daaf2de75bee5b518fc7a18059a628b9abd9189409f2e0becc7e3a",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92",
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "wrapper.c": "02684af467101d5f8b470bc8a47b997c3b7581506c926c7fd932555fa7a8a4cb"
+      },
+      "app_sha256": "ddfc099f9edc6952fdd9a707ed48e5716ca537c12c3b747d981484bc8b6cebd9"
+    }
+  },
+  "payloads": {
+    "m0": {
+      "cpu": "m0",
+      "base": 270401536,
+      "elf_sha256": "2aa52296966885be71d2a8f86818250be7b9d33903ad7651a92581474da2ff8b",
+      "libc": {
+        "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v6-m/nofp/libc.a",
+        "member": "libc_a-memchr-stub.o",
+        "sha256": "dd1e47bf68ceefa5f672ec8345b765b0995dcf76d227779523c3d62e17a71493"
+      },
+      "sources": {
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+      },
+      "functions": {
+        "baseline": {
+          "address": 270401537,
+          "bytes": 26
+        },
+        "libc_search": {
+          "address": 270401565,
+          "bytes": 124
+        },
+        "byte_search": {
+          "address": 270401689,
+          "bytes": 22
+        },
+        "own4": {
+          "address": 270401713,
+          "bytes": 140
+        },
+        "own16": {
+          "address": 270401853,
+          "bytes": 224
+        },
+        "own64": {
+          "address": 270402077,
+          "bytes": 440
+        }
+      },
+      "bytes": 7952,
+      "sha256": "b9e557afb24f637be72169d64c0932bacc75ebc910739cf152c1ae8c7c74db50",
+      "crc32": 2460244222,
+      "code_bytes": 980,
+      "code_sha256": "2cbf56b6c21247f976025a51fee9d31b64fc80e6f28cdc70c1ac1fbc1ae16de9",
+      "data_address": 270405376,
+      "data_sha256": "1a002094a8a0a4fa47da30293c65c830badcdb909b1851ebfcb73d3d2551852c"
+    },
+    "m4": {
+      "cpu": "m4",
+      "base": 134619136,
+      "elf_sha256": "88f4d12b0ba069e1368e3caa7256bef1af4aacf0fb7848bd1b8c25f114a4aeb5",
+      "libc": {
+        "archive": "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a",
+        "member": "libc_a-memchr.o",
+        "sha256": "469219781f21e55f7a7b54c8b3b8d025c4b18d4b1240c00411b279a569c29436"
+      },
+      "sources": {
+        "candidates.S": "e20685074aab267d6ab75e74274f2a3ff2a7e04e836dd3f6600646e6bfaef239",
+        "baseline.c": "9bb6be0b171a303c704afdfaac8b4276fb6ef78e971862bcb564babb51579b92"
+      },
+      "functions": {
+        "baseline": {
+          "address": 134619137,
+          "bytes": 28
+        },
+        "libc_search": {
+          "address": 134619169,
+          "bytes": 160
+        },
+        "byte_search": {
+          "address": 134619329,
+          "bytes": 22
+        },
+        "own4": {
+          "address": 134619353,
+          "bytes": 144
+        },
+        "own16": {
+          "address": 134619497,
+          "bytes": 246
+        },
+        "own64": {
+          "address": 134619745,
+          "bytes": 512
+        },
+        "swar16": {
+          "address": 134620257,
+          "bytes": 262
+        }
+      },
+      "bytes": 7952,
+      "sha256": "3e537d39fc9bedb72369f05612abe242cc2a7ddcaee45d20336aa5b8cfa5a449",
+      "crc32": 3617667596,
+      "code_bytes": 1392,
+      "code_sha256": "7003d3e2d847577c6668db771801dee6580f3b9ba86098eb057bf5c387618a7e",
+      "data_address": 134622976,
+      "data_sha256": "1a002094a8a0a4fa47da30293c65c830badcdb909b1851ebfcb73d3d2551852c"
+    }
+  },
+  "checks": {
+    "report_decoder": "4 tests PASS",
+    "runner_disconnect": "PASS: ownership prevents serial open; recovery snapshot + original/cleanup errors retained"
+  }
+}

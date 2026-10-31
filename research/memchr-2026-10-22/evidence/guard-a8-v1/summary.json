@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "scope": "Offline correctness and exact same-size algorithm delta, never timing",
+  "fix": "Align 8-byte paired loads to8bytes, instead of4; two immediate fields change",
+  "standard": "WG14 N1548 7.23.5.1 sequential-stop semantics, https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1548.pdf",
+  "counterexample": {
+    "object_bytes": 4,
+    "pointer": "0x2007fffc",
+    "value": 0,
+    "first_hit": 1,
+    "count": 12,
+    "bad_load": "0x20080000"
+  },
+  "tests": {
+    "fixed_bodies": 14,
+    "span_calls_per_body": 80913,
+    "unmapped_guard_calls_per_body": 20689,
+    "mpu32_hook_calls_per_body": 20689,
+    "controls": 11,
+    "negative_controls": "12 old payload bodies + exact old D4 native fail as expected",
+    "actual_native_and_standalone_mpu256_hook": "20689 each PASS",
+    "actual_shared_fallback_unmapped_guard": "20689 PASS",
+    "actual_shared_sdk_abi_calls": 3364,
+    "actual_shared_sdk_abi_modes": 8
+  },
+  "hardware_tested": false,
+  "production_selected": false,
+  "host_transport_delta_separate": ".build/memchr-20261023/host-transport-v5"
+}

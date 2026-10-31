@@ -1,0 +1,339 @@
+{
+  "status": "PASS",
+  "phase": "post-read-health",
+  "operation": "read-full-and-leave-without-download",
+  "command": [
+    "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+    "-d",
+    "0483:df11",
+    "-S",
+    "2068336B4731",
+    "-a",
+    "0",
+    "-s",
+    "0x08000000:524288:leave",
+    "-U",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.bin"
+  ],
+  "expected_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+  "recovery": false,
+  "cdc_attempts": [
+    {
+      "port": "/dev/cu.usbmodem2068336B47311",
+      "requested_build": "3AB3DD45",
+      "wait_seconds": 30,
+      "status": "ADMITTED",
+      "identity": {
+        "public": "AEB505B6E0067623",
+        "short": "E0067623",
+        "usb": "2068336B4731",
+        "volume": "AED647EB",
+        "build": "3AB3DD45",
+        "profile": "classic-v3-uc1609"
+      },
+      "failure": null,
+      "serial_closed": false,
+      "index": 0,
+      "raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.cdc-000.serial.bin",
+        "bytes": 139,
+        "sha256": "2a32757334067d34a2f9834e2bef3ff43bf36ab6e54c16376f01001454eac21b"
+      }
+    },
+    {
+      "port": "/dev/cu.usbmodem2068336B47311",
+      "requested_build": "3AB3DD45",
+      "wait_seconds": 30,
+      "status": "RETRY",
+      "identity": null,
+      "failure": "FileNotFoundError(2, 'No such file or directory')",
+      "serial_closed": true,
+      "index": 1,
+      "raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.cdc-001.serial.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "port": "/dev/cu.usbmodem2068336B47311",
+      "requested_build": "3AB3DD45",
+      "wait_seconds": 30,
+      "status": "RETRY",
+      "identity": null,
+      "failure": "FileNotFoundError(2, 'No such file or directory')",
+      "serial_closed": true,
+      "index": 2,
+      "raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.cdc-002.serial.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "port": "/dev/cu.usbmodem2068336B47311",
+      "requested_build": "3AB3DD45",
+      "wait_seconds": 30,
+      "status": "RETRY",
+      "identity": null,
+      "failure": "FileNotFoundError(2, 'No such file or directory')",
+      "serial_closed": true,
+      "index": 3,
+      "raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.cdc-003.serial.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "port": "/dev/cu.usbmodem2068336B47311",
+      "requested_build": "3AB3DD45",
+      "wait_seconds": 30,
+      "status": "RETRY",
+      "identity": null,
+      "failure": "FileNotFoundError(2, 'No such file or directory')",
+      "serial_closed": true,
+      "index": 4,
+      "raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.cdc-004.serial.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "port": "/dev/cu.usbmodem2068336B47311",
+      "requested_build": "3AB3DD45",
+      "wait_seconds": 30,
+      "status": "ADMITTED",
+      "identity": {
+        "public": "AEB505B6E0067623",
+        "short": "E0067623",
+        "usb": "2068336B4731",
+        "volume": "AED647EB",
+        "build": "3AB3DD45",
+        "profile": "classic-v3-uc1609"
+      },
+      "failure": null,
+      "serial_closed": false,
+      "index": 5,
+      "raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.cdc-005.serial.bin",
+        "bytes": 139,
+        "sha256": "2a32757334067d34a2f9834e2bef3ff43bf36ab6e54c16376f01001454eac21b"
+      }
+    }
+  ],
+  "before": {
+    "recovery": false,
+    "requested_build": "3AB3DD45",
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "3AB3DD45",
+      "profile": "classic-v3-uc1609"
+    },
+    "health": {
+      "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=432/18 raw(v/t/b)=1492/944/1019 val(mV/dC/mV)=3331/300/3316 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1090846\r\n/> ",
+      "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+      "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=14484 observed_remaining=14484 sram_xn=1\r\n/> ",
+      "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+      "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+      "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+      "pwd": "pwd\r\n/\r\n/> "
+    },
+    "dfu_request_attempted": true,
+    "dfu_request_issued": true,
+    "dfu_usb_disconnect": {
+      "errno": 6,
+      "failure": "OSError(6, 'Device not configured')"
+    },
+    "serial_closed": true
+  },
+  "listings": [
+    {
+      "index": 0,
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+        "-d",
+        "0483:df11",
+        "-S",
+        "2068336B4731",
+        "-l"
+      ],
+      "status": "REJECTED",
+      "returncode": 0,
+      "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\n",
+      "stdout_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-000.stdout.bin",
+        "bytes": 271,
+        "sha256": "4c1d1054a7b796fd94cb0f20fa0dacf3427474707aceacbdb44c917dd4ceaafb"
+      },
+      "stderr": "",
+      "stderr_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-000.stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "index": 1,
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+        "-d",
+        "0483:df11",
+        "-S",
+        "2068336B4731",
+        "-l"
+      ],
+      "status": "REJECTED",
+      "returncode": 0,
+      "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\n",
+      "stdout_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-001.stdout.bin",
+        "bytes": 271,
+        "sha256": "4c1d1054a7b796fd94cb0f20fa0dacf3427474707aceacbdb44c917dd4ceaafb"
+      },
+      "stderr": "",
+      "stderr_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-001.stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "index": 2,
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+        "-d",
+        "0483:df11",
+        "-S",
+        "2068336B4731",
+        "-l"
+      ],
+      "status": "REJECTED",
+      "returncode": 0,
+      "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\n",
+      "stdout_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-002.stdout.bin",
+        "bytes": 271,
+        "sha256": "4c1d1054a7b796fd94cb0f20fa0dacf3427474707aceacbdb44c917dd4ceaafb"
+      },
+      "stderr": "",
+      "stderr_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-002.stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "index": 3,
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+        "-d",
+        "0483:df11",
+        "-S",
+        "2068336B4731",
+        "-l"
+      ],
+      "status": "REJECTED",
+      "returncode": 0,
+      "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\n",
+      "stdout_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-003.stdout.bin",
+        "bytes": 271,
+        "sha256": "4c1d1054a7b796fd94cb0f20fa0dacf3427474707aceacbdb44c917dd4ceaafb"
+      },
+      "stderr": "",
+      "stderr_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-003.stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "index": 4,
+      "command": [
+        "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+        "-d",
+        "0483:df11",
+        "-S",
+        "2068336B4731",
+        "-l"
+      ],
+      "status": "VALID",
+      "returncode": 0,
+      "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=0, name=\"@Internal Flash  /0x08000000/04*016Kg,01*064Kg,03*128Kg\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=1, name=\"@Option Bytes  /0x1FFFC000/01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=2, name=\"@OTP Memory /0x1FFF7800/01*512 e,01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=3, name=\"@Device Feature/0xFFFF0000/01*004 e\", serial=\"2068336B4731\"\n",
+      "stdout_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-004.stdout.bin",
+        "bytes": 877,
+        "sha256": "3ed85b33374af444ec75588c2f0e86f1455c23bd68e09229c933db0774715e93"
+      },
+      "stderr": "",
+      "stderr_raw": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-004.stderr.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "listing": {
+    "index": 4,
+    "command": [
+      "/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util",
+      "-d",
+      "0483:df11",
+      "-S",
+      "2068336B4731",
+      "-l"
+    ],
+    "status": "VALID",
+    "returncode": 0,
+    "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=0, name=\"@Internal Flash  /0x08000000/04*016Kg,01*064Kg,03*128Kg\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=1, name=\"@Option Bytes  /0x1FFFC000/01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=2, name=\"@OTP Memory /0x1FFF7800/01*512 e,01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"1-1.2\", alt=3, name=\"@Device Feature/0xFFFF0000/01*004 e\", serial=\"2068336B4731\"\n",
+    "stdout_raw": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-004.stdout.bin",
+      "bytes": 877,
+      "sha256": "3ed85b33374af444ec75588c2f0e86f1455c23bd68e09229c933db0774715e93"
+    },
+    "stderr": "",
+    "stderr_raw": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.listing-004.stderr.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "stdout": "dfu-util 0.11-arduino4\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\nOpening DFU capable USB device...\nDevice ID 0483:df11\nDevice DFU version 011a\nClaiming USB DFU Interface...\nSetting Alternate Interface #0 ...\nDetermining device status...\nDFU state(10) = dfuERROR, status(10) = Device's firmware is corrupt. It cannot return to run-time (non-DFU) operations\nClearing status\nDetermining device status...\nDFU state(2) = dfuIDLE, status(0) = No error condition is present\nDFU mode device DFU version 011a\nDevice returned transfer size 2048\nDfuSe interface name: \"Internal Flash  \"\n\rUpload\t[                         ]   0%            0 bytes\rUpload\t[=                        ]   4%        22528 bytes\rUpload\t[=                        ]   5%        26624 bytes\rUpload\t[==                       ]   8%        43008 bytes\rUpload\t[===                      ]  12%        63488 bytes\rUpload\t[====                     ]  16%        83968 bytes\rUpload\t[=====                    ]  20%       106496 bytes\rUpload\t[======                   ]  24%       126976 bytes\rUpload\t[=======                  ]  28%       147456 bytes\rUpload\t[========                 ]  32%       167936 bytes\rUpload\t[=========                ]  36%       190464 bytes\rUpload\t[==========               ]  40%       210944 bytes\rUpload\t[===========              ]  44%       231424 bytes\rUpload\t[============             ]  48%       251904 bytes\rUpload\t[=============            ]  52%       274432 bytes\rUpload\t[==============           ]  56%       294912 bytes\rUpload\t[===============          ]  60%       315392 bytes\rUpload\t[================         ]  64%       335872 bytes\rUpload\t[=================        ]  68%       358400 bytes\rUpload\t[=================        ]  70%       368640 bytes\rUpload\t[==================       ]  72%       378880 bytes\rUpload\t[===================      ]  76%       399360 bytes\rUpload\t[====================     ]  80%       419840 bytes\rUpload\t[=====================    ]  84%       442368 bytes\rUpload\t[======================   ]  88%       462848 bytes\rUpload\t[=======================  ]  92%       483328 bytes\rUpload\t[======================== ]  96%       503808 bytes\rUpload\t[=========================] 100%       524288 bytes\nUpload done.\nSubmitting leave request...\nTransitioning to dfuMANIFEST state\n",
+  "stdout_raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.stdout.bin",
+    "bytes": 2511,
+    "sha256": "c18c3b12d8b80819915486abb4288340e3d7e6707e0e29fd530d1e76f5559343"
+  },
+  "stderr": "",
+  "stderr_raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6/original-b.transfer.stderr.bin",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "returncode": 0,
+  "bytes": 524288,
+  "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+  "identity": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609"
+  },
+  "health": {
+    "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=439/18 raw(v/t/b)=1492/945/1017 val(mV/dC/mV)=3331/303/3309 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1089988\r\n/> ",
+    "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+    "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=14484 observed_remaining=14484 sram_xn=1\r\n/> ",
+    "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+    "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+    "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+    "pwd": "pwd\r\n/\r\n/> "
+  },
+  "serial_closed": true
+}

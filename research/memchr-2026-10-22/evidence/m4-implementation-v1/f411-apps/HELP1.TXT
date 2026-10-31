@@ -1,0 +1,27 @@
+b2ff6568
+  mv	mv <откуда> <куда>
+  rm	rm [-r] <путь> — удалить файл или дерево
+  del	то же, что rm
+  rmdir	rmdir <путь> — удалить пустой каталог
+  df	ёмкость C6 и число узлов
+  bench	тест чтения C6 без записи
+  fsget	fsget <путь> — машинное чтение файла
+  fsput	fsput begin|data|end|cancel — загрузка файла
+  format	format C6 — форматировать (Y/y)
+  clr	очистить память программ (Y/y)
+  vlog	диагностика импорта USB [clear]
+  usbdisk	запустить режим USB-диска до безопасного извлечения
+  fsls	ls [путь] — показать каталог
+  fsrm	rm [-r] <путь> — удалить файл или дерево
+  fsstat	ёмкость C6 и число узлов
+  fsclean	удалить все пустые записи хранилища
+  disa	включить или выключить дизассемблер
+  prof	prof [start|stop|reset|core|deep <1..5> [циклы]|save] — профиль
+  crash	crash [show|clear|save [путь.txt]] — сбои
+  wdog	wdog [status] — сторожевой таймер
+  mpu	mpu [status] — защита памяти
+  display	display status|reinit|on|off|test <режим>: text/alphabet/symbols/map/ddram/row/cgram/zero/clear/home/cursor/entry/autoshift/sleep/graphics/graphics-read/restore — экран
+  rst	rst [now] — перезапуск; без now просит подтверждение
+  dfu	dfu [status] — войти в ROM DFU или показать состояние
+  R<r>=   R<r>= <число|random|raw 12hex> — записать регистр
+  set$    set$<адрес> <hex> — записать память программ

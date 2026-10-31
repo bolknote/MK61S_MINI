@@ -1,0 +1,69 @@
+{
+  "scope": "Read-only impact of M4 memchr450B vs actual frozen BBS APP containers",
+  "head": "a9a434a188bdd4e89ada9db6c3cd88e1b7fdb4aa",
+  "old_sdk_memchr_body_sha256": "0164e0f86c70994f372df3a64581b4754eb33dd17d5fcd2a3ab73f41a3e07c13",
+  "apps": [
+    {
+      "name": "BASIC",
+      "APP_sha256": "40d66d2acfdf0c956355d837091844681defdb12c776b3feb91934a3d17cfeb4",
+      "memory_bytes": 20436,
+      "headroom": 44,
+      "old_memchr_body_bytes": 28,
+      "old_memchr_exact_matches": 0,
+      "would_add_450_minus_old_if_retained": 422
+    },
+    {
+      "name": "LANGVM",
+      "APP_sha256": "7cfeed64779c7a45e78facc65ec3c5e5569a5498c579a512cab1cd56cc1d5dbf",
+      "memory_bytes": 20468,
+      "headroom": 12,
+      "old_memchr_body_bytes": 28,
+      "old_memchr_exact_matches": 0,
+      "would_add_450_minus_old_if_retained": 422
+    },
+    {
+      "name": "USBDISK",
+      "APP_sha256": "eb5eb28ad3db89fd7377f5cbba5173b9012d60114d2d90bb44c15cb6850c1f55",
+      "memory_bytes": 20468,
+      "headroom": 12,
+      "old_memchr_body_bytes": 28,
+      "old_memchr_exact_matches": 0,
+      "would_add_450_minus_old_if_retained": 422
+    },
+    {
+      "name": "LANGIN",
+      "APP_sha256": "e1fcae6ed859ccd642484b84ff63dac1a0100546562fcd476e9792d94826f00f",
+      "memory_bytes": 20124,
+      "headroom": 356,
+      "old_memchr_body_bytes": 28,
+      "old_memchr_exact_matches": 1,
+      "would_add_450_minus_old_if_retained": 422
+    },
+    {
+      "name": "FOCAL",
+      "APP_sha256": "52cb218486a4569411ef1b16add78487d5b1be4101d076cc3eda9b644d9d6353",
+      "memory_bytes": 17576,
+      "headroom": 2904,
+      "old_memchr_body_bytes": 28,
+      "old_memchr_exact_matches": 0,
+      "would_add_450_minus_old_if_retained": 422
+    }
+  ],
+  "compiler_command": [
+    "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-gcc",
+    "-mcpu=cortex-m4",
+    "-mthumb",
+    "-mfpu=fpv4-sp-d16",
+    "-mfloat-abi=hard",
+    "-Oz",
+    "-fno-builtin",
+    "-fno-lto",
+    "-ffunction-sections",
+    "-DMK61_APP_SHARED_RUNTIME=1",
+    "-I/Users/bolk/Projects/MK61S_MINI/code",
+    "-c",
+    "/Users/bolk/Projects/MK61S_MINI/sdk/portable/memory.c",
+    "-o",
+    "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-implementation-v1/before-sdk.o"
+  ]
+}

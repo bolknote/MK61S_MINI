@@ -87,3 +87,18 @@ M0+ strict PASS/restoration receipt SHA-256:
 `f68a9ac2e74ed6e3cc12cececa187d17a9ccc96d592885fe02519e151e198cec`.
 Frozen plan SHA-256:
 `8a13247fc3c1e1ffa3ef1bc6889d54fab994a41659d348044dca64fed5ba0968`.
+
+
+The 2026-10-31 offline archive adds the historical experiment sources and M4
+evidence without changing these accepted product selections. Its checksum and
+functional checks are recorded in `offline-audit-2026-10-31.json`; the new
+`archive-sha256.json` identifies the exported bytes. Historical pending, HOLD
+and failed outcomes retain their original status. `selection-m4.json` is the
+earlier provisional proposal, not the current product configuration. The M0+
+hardware raw export is not part of this archive.
+
+The early `m4-matrix-v1` export is excluded: all 56 entries disagree with its
+existing checksum manifest. Frozen local `.build` fixtures are also not
+exported, so tests requiring them remain unqualified here. The source runners
+are historical tools with pinned builds, paths and ownership checks; this
+archive does not authorize device access or reuse of those packets.

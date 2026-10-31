@@ -1,0 +1,56 @@
+{
+  "cpu": "m4",
+  "input_address": "0x20040000",
+  "indirect_target": null,
+  "elf_sha256": "57d5b8ee98b869ada98f6d13fe931ca1f8a816cbbf97e9a9f7742203abfe3758",
+  "results": [
+    {
+      "name": "pair16",
+      "cases": 80913,
+      "bytes": 268,
+      "status": "PASS"
+    },
+    {
+      "name": "pair64",
+      "cases": 80913,
+      "bytes": 448,
+      "status": "PASS"
+    },
+    {
+      "name": "fast16",
+      "cases": 80913,
+      "bytes": 268,
+      "status": "PASS"
+    },
+    {
+      "name": "fast64",
+      "cases": 80913,
+      "bytes": 448,
+      "status": "PASS"
+    },
+    {
+      "name": "balanced16",
+      "cases": 80913,
+      "bytes": 270,
+      "status": "PASS"
+    },
+    {
+      "name": "balanced64",
+      "cases": 80913,
+      "bytes": 450,
+      "status": "PASS"
+    },
+    {
+      "name": "dsp16",
+      "cases": 80913,
+      "bytes": 264,
+      "status": "PASS"
+    },
+    {
+      "name": "dsp32",
+      "cases": 80913,
+      "bytes": 320,
+      "status": "PASS"
+    }
+  ]
+}

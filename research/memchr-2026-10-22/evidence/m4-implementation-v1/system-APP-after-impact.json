@@ -1,0 +1,154 @@
+{
+  "f411": {
+    "status": "PASS",
+    "apps": [
+      {
+        "name": "BASIC.APP",
+        "packed_bytes": 14103,
+        "image_bytes": 19974,
+        "memory_bytes": 20028,
+        "margin_bytes": 452
+      },
+      {
+        "name": "CHIP8.APP",
+        "packed_bytes": 2925,
+        "image_bytes": 3796,
+        "memory_bytes": 3820,
+        "margin_bytes": 16660
+      },
+      {
+        "name": "FOCAL.APP",
+        "packed_bytes": 12695,
+        "image_bytes": 17540,
+        "memory_bytes": 17576,
+        "margin_bytes": 2904
+      },
+      {
+        "name": "LANGIN.APP",
+        "packed_bytes": 14382,
+        "image_bytes": 19628,
+        "memory_bytes": 19652,
+        "margin_bytes": 828
+      },
+      {
+        "name": "LANGVM.APP",
+        "packed_bytes": 13843,
+        "image_bytes": 20352,
+        "memory_bytes": 20372,
+        "margin_bytes": 108
+      },
+      {
+        "name": "MARKDOWN.APP",
+        "packed_bytes": 13589,
+        "image_bytes": 17055,
+        "memory_bytes": 17080,
+        "margin_bytes": 3400
+      },
+      {
+        "name": "SETUP.APP",
+        "packed_bytes": 9974,
+        "image_bytes": 13223,
+        "memory_bytes": 13248,
+        "margin_bytes": 7232
+      },
+      {
+        "name": "SRCEDIT.APP",
+        "packed_bytes": 13694,
+        "image_bytes": 18572,
+        "memory_bytes": 18604,
+        "margin_bytes": 1876
+      },
+      {
+        "name": "USBDISK.APP",
+        "packed_bytes": 15303,
+        "image_bytes": 20098,
+        "memory_bytes": 20468,
+        "margin_bytes": 12
+      }
+    ],
+    "whole_resident_APP_gate": "APP RAM: .build/memchr-20261023/m4-implementation-v1/f411/resident.elf: reserve=0 free=92936 system_max=20468 lazy=52564 scoped=3648 placement=224 effective=36480 usbdisk=20468 stage=2560 msc_session=8264 fs_temporary=824 disk_graphics_credit=0 top=0x2001bf00 heap=guarded PASS"
+  },
+  "f401": {
+    "status": "PASS",
+    "apps": [
+      {
+        "name": "BASIC.APP",
+        "packed_bytes": 14103,
+        "image_bytes": 19974,
+        "memory_bytes": 20028,
+        "margin_bytes": 452
+      },
+      {
+        "name": "CHIP8.APP",
+        "packed_bytes": 2925,
+        "image_bytes": 3796,
+        "memory_bytes": 3820,
+        "margin_bytes": 16660
+      },
+      {
+        "name": "CLOCK.APP",
+        "packed_bytes": 4239,
+        "image_bytes": 5488,
+        "memory_bytes": 5524,
+        "margin_bytes": 14956
+      },
+      {
+        "name": "FOCAL.APP",
+        "packed_bytes": 12695,
+        "image_bytes": 17540,
+        "memory_bytes": 17576,
+        "margin_bytes": 2904
+      },
+      {
+        "name": "LANGIN.APP",
+        "packed_bytes": 14382,
+        "image_bytes": 19628,
+        "memory_bytes": 19652,
+        "margin_bytes": 828
+      },
+      {
+        "name": "LANGVM.APP",
+        "packed_bytes": 13843,
+        "image_bytes": 20352,
+        "memory_bytes": 20372,
+        "margin_bytes": 108
+      },
+      {
+        "name": "MARKDOWN.APP",
+        "packed_bytes": 13589,
+        "image_bytes": 17055,
+        "memory_bytes": 17080,
+        "margin_bytes": 3400
+      },
+      {
+        "name": "SETUP.APP",
+        "packed_bytes": 9974,
+        "image_bytes": 13223,
+        "memory_bytes": 13248,
+        "margin_bytes": 7232
+      },
+      {
+        "name": "SRCEDIT.APP",
+        "packed_bytes": 13694,
+        "image_bytes": 18572,
+        "memory_bytes": 18604,
+        "margin_bytes": 1876
+      },
+      {
+        "name": "TERMINAL.APP",
+        "packed_bytes": 11754,
+        "image_bytes": 17162,
+        "memory_bytes": 17220,
+        "margin_bytes": 3260
+      },
+      {
+        "name": "USBDISK.APP",
+        "packed_bytes": 15303,
+        "image_bytes": 20098,
+        "memory_bytes": 20468,
+        "margin_bytes": 12
+      }
+    ],
+    "whole_resident_APP_gate": "APP RAM: .build/memchr-20261023/m4-implementation-v1/f401/resident.elf: reserve=0 free=25440 system_max=20468 lazy=3412 scoped=1152 placement=224 effective=20640 usbdisk=20468 stage=2560 msc_session=0 fs_temporary=0 disk_graphics_credit=3412 top=0x2000d700 heap=guarded PASS"
+  }
+}

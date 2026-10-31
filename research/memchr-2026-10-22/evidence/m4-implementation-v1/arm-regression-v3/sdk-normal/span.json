@@ -1,0 +1,14 @@
+{
+  "cpu": "m4",
+  "input_address": "0x20040000",
+  "indirect_target": null,
+  "elf_sha256": "cbf39bb42b4e86b3c4ba2eea70c61c35787e9e5465e2d9138f533aab14366120",
+  "results": [
+    {
+      "name": "memchr",
+      "cases": 80913,
+      "bytes": 450,
+      "status": "PASS"
+    }
+  ]
+}

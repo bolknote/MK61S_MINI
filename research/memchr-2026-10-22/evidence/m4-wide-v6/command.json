@@ -1,0 +1,12 @@
+[
+  "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+  "/Users/bolk/Projects/MK61S_MINI/research/memchr-2026-10-22/run-wide-fw.py",
+  "--plan",
+  "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/wide-fw-packet-v6/plan.json",
+  "--plan-sha256",
+  "bb09fece88cfdad86f335bd902349346a806401714f9c201ec94f2136b3453b2",
+  "--port",
+  "/dev/cu.usbmodem2068336B47311",
+  "--output",
+  "/Users/bolk/Projects/MK61S_MINI/.build/memchr-20261023/m4-wide-fw-hil-v6"
+]

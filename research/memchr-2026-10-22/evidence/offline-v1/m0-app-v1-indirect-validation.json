@@ -1,0 +1,12 @@
+{
+  "cpu": "m0",
+  "elf_sha256": "bc3e6be21cdcbfdcf48c2b1c911b9736eeaa3ff12c133fe6eb5aaf945c13342e",
+  "results": [
+    {
+      "name": "indirect_search",
+      "cases": 80913,
+      "bytes": 12,
+      "status": "PASS"
+    }
+  ]
+}

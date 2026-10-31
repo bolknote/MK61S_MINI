@@ -1,0 +1,96 @@
+{
+  "cpu": "m4",
+  "status": "PASS",
+  "scope": "Functional ARM shared SDK startup and dispatch, not hardware timing",
+  "elf_sha256": "3f1044a92f8621d66bbc0ae5fbc3767b6ba03c1cc56314938ac3f536aaae2c27",
+  "results": [
+    {
+      "mode": "old26",
+      "initialized": true,
+      "calls": 841,
+      "callbacks": {
+        "query": 2,
+        "cap": 1,
+        "resident": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "mode": "native27",
+      "initialized": true,
+      "calls": 841,
+      "callbacks": {
+        "query": 2,
+        "cap": 1,
+        "resident": 841
+      },
+      "status": "PASS"
+    },
+    {
+      "mode": "null-optional",
+      "initialized": true,
+      "calls": 841,
+      "callbacks": {
+        "query": 2,
+        "cap": 1,
+        "resident": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "mode": "extended26",
+      "initialized": true,
+      "calls": 841,
+      "callbacks": {
+        "query": 2,
+        "cap": 1,
+        "resident": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "mode": "short-count",
+      "initialized": false,
+      "calls": 0,
+      "callbacks": {
+        "query": 1,
+        "cap": 1,
+        "resident": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "mode": "short-services",
+      "initialized": false,
+      "calls": 0,
+      "callbacks": {
+        "query": 1,
+        "cap": 0,
+        "resident": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "mode": "missing-services",
+      "initialized": false,
+      "calls": 0,
+      "callbacks": {
+        "query": 1,
+        "cap": 0,
+        "resident": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "mode": "old-app-prefix",
+      "initialized": false,
+      "calls": 0,
+      "callbacks": {
+        "query": 0,
+        "cap": 0,
+        "resident": 0
+      },
+      "status": "PASS"
+    }
+  ]
+}
