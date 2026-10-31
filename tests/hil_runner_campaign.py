@@ -23,6 +23,7 @@ from hil_portable_system_apps import png
 from runner_game_test import BOARDS, move
 from runner_screen_oracle import board, expected
 from runner_frame_campaign import play_level
+from runner_score_oracle import wait_score_frame
 
 ROUTES = ('66244668666666666484444444444',
           '669666644444444448668667644474484',
@@ -107,8 +108,8 @@ def main():
                 p.pump(.02)
             raise AssertionError(('visual timeout', p.timeline[-3:], p.text[-250:]))
 
-        def save(name, at=None, **extra):
-            png(p.frames[-1], args.output/(name+'.png'))
+        def save(name, at=None, frame=None, **extra):
+            png(p.frames[-1] if frame is None else frame, args.output/(name+'.png'))
             row = dict(case=name, at=round((at or time.monotonic())-start, 4), **extra)
             results.append(row); print(json.dumps(row), flush=True)
             return row
@@ -240,7 +241,9 @@ def main():
                 for digit in (6,6,2,4,4): action(digit)
                 state=state_match(lambda r: r[4]==0 and r[6]==36)
                 save('gold-collected', registers=state)
-                tap(5);p.pump(.7);save('score')
+                score_first=len(p.frames);tap(5)
+                score_frame,score_proof=wait_score_frame(p,score_first,1,state[6])
+                save('score',frame=score_frame,score=score_proof)
                 state_match(lambda r:r[4]==0 and r[6]==36)
                 p.key(37);p.pump(.5);save('help');p.key(39)
                 state_match(lambda r:r[4]==0 and r[6]==36)
