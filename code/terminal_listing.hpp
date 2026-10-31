@@ -17,7 +17,7 @@ inline usize instruction_length(const u8* page, usize address, bool expanded) {
     if(opcode == 0x1F) {
       const u8 next = page[address + 1];
       if(next == 0x56) return 3;
-      if(next == 0x51 || next == 0x53 || (next >= 0x57 && next <= 0x5E))
+      if((next & 0xF0U) == 0x40U || next == 0x51 || next == 0x53 || (next >= 0x57 && next <= 0x5E))
         return 4;
       return 2;
     }

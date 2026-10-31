@@ -13,6 +13,7 @@
 #include <cstring>
 #include <limits>
 #include <initializer_list>
+#include <vector>
 
 #include "mk_math.hpp"       // MK61_MATH_BACKEND == CORE (задаётся через -D)
 #include "mk61emu_core.h"
@@ -2278,6 +2279,254 @@ static void test_segment_sprite_load(void) {
   }
 }
 
+static void set_stack_integer(stack reg, u32 value) {
+  char digits[16] = {};
+  std::snprintf(digits, sizeof(digits), "%u", (unsigned)value);
+  const unsigned length = std::strlen(digits);
+  for(unsigned i=length; i<8; ++i) digits[i]='0';
+  (void)write_stack_register(reg,' ',digits,(isize)length-1);
+}
+
+static void test_program_data_and_segment_points(void) {
+  std::printf("program data tables, immediate registers and segment points:\n");
+  bool reads_ok=true, immediates_ok=true, points_ok=true, invalid_ok=true;
+  core_61::set_expanded_program_mode(true);
+  for(u8 reg=0; reg<16; ++reg) for(u8 width : {u8(1),u8(3)}) {
+    core_61::enable();core_61::clear_extended_program_banks();
+    for(u8 r=0;r<16;++r)set_register_integer(r,100+r);
+    const u16 base=211, index=reg==15?211:4;
+    set_register_integer(15,base);set_register_integer(reg,index);
+    const u32 expected=width==1?255:0xFEDCBA;
+    for(u8 byte=0;byte<width;++byte)
+      core_61::write_absolute_program(base+width*index+byte,(u8)(expected>>(8*byte)));
+    double before[16];
+    for(u8 r=0;r<16;++r)before[r]=read_register_decimal(r);
+    for(u8 r=0;r<5;++r)set_stack_integer((stack)r,200+r);
+    const u8 program[]={0x1F,u8((width==1?0xB0:0xD0)+reg),0x50};
+    run_program(program,sizeof(program));
+    bool case_ok = !core_61::extended_program_error() && read_live_x()==expected;
+    for(u8 r=0;r<16;++r)case_ok &= read_register_decimal(r)==before[r];
+    for(u8 r=0;r<5;++r)if((stack)r!=stack::X)case_ok &= read_live_reg((stack)r)==200+r;
+    if(!case_ok && reads_ok)std::printf("lookup reg=%u width=%u X=%.8g expected=%u stack=%.8g/%.8g/%.8g/%.8g/%.8g\n",reg,width,read_live_x(),expected,read_live_reg((stack)0),read_live_reg((stack)1),read_live_reg((stack)2),read_live_reg((stack)3),read_live_reg((stack)4));
+    reads_ok &= case_ok;
+  }
+  for(u8 width : {u8(1),u8(3)}) for(unsigned value=0;value<256;++value) {
+    core_61::enable();core_61::clear_extended_program_banks();
+    set_register_integer(15,10000-width);set_register_integer(7,0);
+    const u32 expected=width==1?value:((value<<16)|0xFFFFU);
+    for(u8 byte=0;byte<width;++byte)
+      core_61::write_absolute_program(10000-width+byte,(u8)(expected>>(8*byte)));
+    const u8 program[]={0x1F,u8(width==1?0xB7:0xD7),0x50};
+    run_program(program,sizeof(program));
+    reads_ok &= !core_61::extended_program_error() && read_live_x()==expected;
+  }
+  for(u8 reg=0;reg<16;++reg) for(u16 value : {u16(0),u16(9999)}) {
+    core_61::enable();core_61::clear_extended_program_banks();
+    for(u8 r=0;r<16;++r)set_register_integer(r,17);
+    set_stack_integer(stack::X,42);
+    const u8 program[]={0x1F,u8(0x40+reg),u8(value?0x99:0),u8(value?0x99:0),0x50};
+    run_program(program,sizeof(program));
+    immediates_ok &= !core_61::extended_program_error() && read_live_x()==42;
+    for(u8 r=0;r<16;++r)immediates_ok &= read_register_decimal(r)==(r==reg?value:17);
+  }
+  // The lookup result must survive ordinary stores and arithmetic; the new
+  // immediate must win over a preceding ROM write to the same register.
+  core_61::enable();core_61::clear_extended_program_banks();
+  core_61::write_absolute_program(211,35);
+  const u8 mixed[]={7,0x47,0x1F,0x47,0x00,0x00,0x1F,0x4F,0x02,0x11,
+                    0x1F,0xB7,0x4E,0x0E,1,0x10,0x50};
+  run_program(mixed,sizeof(mixed));
+  if(read_register_decimal(14)!=35 || read_live_x()!=36)std::printf("mixed lookup RE=%.8g X=%.8g error=%d\n",read_register_decimal(14),read_live_x(),core_61::extended_program_error());
+  reads_ok &= !core_61::extended_program_error() && read_register_decimal(14)==35 && read_live_x()==36;
+  check_true("byte/24-bit lookups: every register, aliases, seams, all byte values, last address, stack and arithmetic", reads_ok);
+  check_true("immediate register constants: all registers, zero/9999, preserved X and ROM writeback", immediates_ok);
+
+  const u8 publish[]={0x2F,0x53,0x50};
+  for(unsigned mask=0;mask<256;++mask) {
+    core_61::enable();core_61::clear_extended_program_banks();
+    for(u8 r=0;r<4;++r)set_register_integer(r,0x080808);
+    const u8 column=mask%12;
+    set_stack_integer(stack::X,column*256U+mask);
+    const u8 point[]={0x2F,0x50,0x2F,0x2A,0x2F,0x05,0x2F,0x54,0x50};
+    run_program(point,sizeof(point));
+    const u8 blank[12]={};
+    const bool point_ok = !core_61::extended_program_error() && core_61::extended_display_cursor()==5 &&
+        std::memcmp(core_61::segment_display_frame(),blank,12)==0 && read_live_x()==column*256U+mask;
+    if(!point_ok && points_ok)std::printf("point mask=%u col=%u X=%.8g error=%d cursor=%u\n",mask,column,read_live_x(),core_61::extended_program_error(),core_61::extended_display_cursor());
+    points_ok &= point_ok;
+    run_program(publish,sizeof(publish));
+    for(u8 i=0;i<12;++i) {
+      const bool same=core_61::segment_display_frame()[i]==(i==column?mask:8);
+      if(!same && points_ok)std::printf("point published mask=%u col=%u cell=%u actual=%u X=%.8g\n",mask,column,i,core_61::segment_display_frame()[i],read_live_x());
+      points_ok &= same;
+    }
+    const u8 erase[]={0x2F,0x55,0x50};
+    run_program(erase,sizeof(erase));run_program(publish,sizeof(publish));
+    for(u8 i=0;i<12;++i) {
+      const bool same=core_61::segment_display_frame()[i]==(i==column?0:8);
+      if(!same && points_ok)std::printf("point erased mask=%u col=%u cell=%u actual=%u X=%.8g error=%d\n",mask,column,i,core_61::segment_display_frame()[i],read_live_x(),core_61::extended_program_error());
+      points_ok &= same;
+    }
+  }
+  core_61::enable();core_61::clear_extended_program_banks();
+  for(u8 r=0;r<4;++r)set_register_integer(r,0x080808);
+  // 2*256+255 is computed by the ROM immediately before the point strobe.
+  const u8 computed[]={2,0x0E,2,5,6,0x12,0x0E,2,5,5,0x10,0x2F,0x54,0x50};
+  run_program(computed,sizeof(computed));
+  points_ok &= !core_61::extended_program_error() && std::fabs(read_register_decimal(0)-0xFF0808)<0.1;
+  for(u8 opcode : {u8(0x54),u8(0x55)}) {
+    set_stack_integer(stack::X,65535);
+    const u8 transparent[]={0x2F,opcode,0x50};
+    run_program(transparent,sizeof(transparent));
+    points_ok &= !core_61::extended_program_error() && std::fabs(read_register_decimal(0)-0xFF0808)<0.1;
+  }
+  check_true("staged points: every mask, all columns, erase, transparent point, cursor and final ROM writeback",points_ok);
+
+  for(u8 opcode : {u8(0xB7),u8(0xD7)}) for(unsigned bad=0;bad<5;++bad) {
+    core_61::enable();core_61::clear_extended_program_banks();
+    set_register_integer(15,bad==0?9999:112);set_register_integer(7,bad==0?1:0);
+    const usize reg=(bad==4?15:7)*MK61_MEMORY_PAGE_TETRADES;
+    if(bad==1)ringM[reg+24]=9;
+    if(bad==2){set_register_integer(7,1);ringM[reg+27]=1;ringM[reg+33]=9;}
+    if(bad==3 || bad==4)ringM[reg+21]=0xA;
+    set_stack_integer(stack::X,42);
+    const u8 program[]={0x1F,opcode,0x50};
+    run_program(program,sizeof(program));
+    invalid_ok &= core_61::extended_program_error() && read_live_x()==42;
+  }
+  for(u8 opcode : {u8(0x54),u8(0x55)}) for(unsigned bad=0;bad<5;++bad) {
+    core_61::enable();core_61::clear_extended_program_banks();
+    for(u8 r=0;r<4;++r)set_register_integer(r,0x080808);
+    set_stack_integer(stack::X,bad==0?3072:bad==1?65536:1);
+    if(bad==2)(void)write_stack_register(stack::X,'-',"10000000",0);
+    if(bad==3)(void)write_stack_register(stack::X,' ',"10000000",-1);
+    if(bad==4)set_register_integer(3,0x1000000);
+    const u8 program[]={0x2F,opcode,0x50};
+    run_program(program,sizeof(program));
+    invalid_ok &= core_61::extended_program_error() && read_register_decimal(0)==0x080808;
+  }
+  core_61::enable();core_61::clear_extended_program_banks();set_register_integer(7,42);
+  const u8 malformed[]={0x1F,0x47,0xA0,0,0x50};run_program(malformed,sizeof(malformed));
+  invalid_ok &= core_61::extended_program_error() && read_register_decimal(7)==42;
+  for(u8 opcode : {u8(0xB7),u8(0xD7),u8(0x54),u8(0x55),u8(0x47)}) {
+    core_61::enable();core_61::clear_extended_program_banks();
+    for(unsigned bank=2;bank<34;++bank)core_61::write_absolute_program(bank*112,0xAB);
+    for(u8 r=0;r<4;++r)set_register_integer(r,0x080808);
+    set_register_integer(7,opcode==0x47?42:0);set_register_integer(15,448);
+    set_stack_integer(stack::X,42);
+    u8 page[112];std::memset(page,0x50,sizeof(page));
+    const unsigned offset=opcode==0x47?108:110;
+    page[0]=0x1F;page[1]=0x51;page[2]=0x01;page[3]=opcode==0x47?0x08:0x10;
+    page[offset]=opcode==0x54 || opcode==0x55?0x2F:0x1F;page[offset+1]=opcode;
+    if(opcode==0x47){page[offset+2]=0;page[offset+3]=7;}
+    run_program(page,sizeof(page));
+    invalid_ok &= core_61::extended_program_error() && read_live_x()==42 &&
+        read_register_decimal(0)==0x080808 && read_register_decimal(7)==(opcode==0x47?42:0);
+  }
+  check_true("invalid data/points/immediates fail before modifying X or any buffer word", invalid_ok);
+}
+
+static void test_segment_layer_lists(void) {
+  std::printf("atomic indexed segment layers:\n");
+  const u16 list_address=221;
+  const auto write_bytes=[](u16 address,const std::vector<u8>& bytes) {
+    for(unsigned i=0;i<bytes.size();++i)core_61::write_absolute_program(address+i,bytes[i]);
+  };
+  const auto descriptor=[](u8 mode,u8 index,u16 base,u8 row=255,u8 divisor=0,u8 stride=0) {
+    return std::vector<u8>{mode,index,row,divisor,stride,u8(base),u8(base>>8)};
+  };
+  const auto append=[](std::vector<u8>& list,const std::vector<u8>& d) {
+    list.insert(list.end(),d.begin(),d.end());
+  };
+  const u8 compose[]={0x2F,0x50,0x2F,0x2A,0x2F,0x05,0x2F,0x56,0x50};
+  const u8 publish[]={0x2F,0x53,0x50};
+  bool aliases=true, order=true, invalid=true;
+  core_61::set_expanded_program_mode(true);
+  for(u8 reg=0;reg<16;++reg) {
+    core_61::enable();core_61::clear_extended_program_banks();
+    for(u8 r=0;r<16;++r)set_register_integer(r,r<4?0x1000000:100+r);
+    set_register_integer(15,list_address);set_register_integer(reg,reg==15?list_address:0);
+    const unsigned address=1005+12*(reg==15?list_address:0);
+    std::vector<u8> expected(12);
+    for(unsigned i=0;i<12;++i)expected[i]=u8(i*23+reg);
+    write_bytes(address,expected);
+    std::vector<u8> list{1};append(list,descriptor(0,reg,1005));write_bytes(list_address,list);
+    double saved[16];for(u8 r=0;r<16;++r)saved[r]=read_register_decimal(r);
+    for(u8 r=0;r<5;++r)set_stack_integer((stack)r,200+r);
+    run_program(compose,sizeof(compose));
+    aliases &= !core_61::extended_program_error() && core_61::extended_display_cursor()==5;
+    for(u8 r=0;r<5;++r)aliases &= read_live_reg((stack)r)==200+r;
+    for(u8 r=4;r<16;++r)aliases &= read_register_decimal(r)==saved[r];
+    const u8 blank[12]={};
+    aliases &= std::memcmp(core_61::segment_display_frame(),blank,12)==0;
+    run_program(publish,sizeof(publish));
+    aliases &= std::memcmp(core_61::segment_display_frame(),expected.data(),12)==0;
+  }
+  check_true("layer lists preserve stack/cursor/registers, replace invalid buffers, cover every index alias and bank seams",aliases);
+
+  core_61::enable();core_61::clear_extended_program_banks();
+  set_register_integer(15,list_address);set_register_integer(0,0);set_register_integer(4,25);
+  for(u8 r=5;r<10;++r)set_register_integer(r,r+2);
+  write_bytes(600,std::vector<u8>(12,8));
+  // row 25/12 = 2; the record is index + 37*row. Apply a sprite, erase
+  // its cell, skip a transparent sprite, then draw in a different cell.
+  for(unsigned index=7;index<=10;++index) {
+    const u32 point=index==9?65535:index==10?5*256+0xCC:7*256+0xA5;
+    write_bytes(700+3*(index+74),{u8(point),u8(point>>8),u8(point>>16)});
+  }
+  std::vector<u8> layers{5};append(layers,descriptor(0,0,600));
+  append(layers,descriptor(1,5,700,4,12,37));append(layers,descriptor(2,6,700,4,12,37));
+  append(layers,descriptor(1,7,700,4,12,37));append(layers,descriptor(1,8,700,4,12,37));
+  // Registers R5..R8 contain 7..10, independently of frame-buffer aliases.
+  write_bytes(list_address,layers);run_program(compose,sizeof(compose));run_program(publish,sizeof(publish));
+  for(unsigned cell=0;cell<12;++cell)
+    order &= core_61::segment_display_frame()[cell]==(cell==5?0xCC:cell==7?0:8);
+  order &= !core_61::extended_program_error();
+  check_true("two-dimensional layer addressing, replacement order, erasure and transparent points",order);
+
+  for(unsigned bad=0;bad<17;++bad) {
+    core_61::enable();core_61::clear_extended_program_banks();
+    for(u8 r=0;r<4;++r)set_register_integer(r,0x080808);
+    set_register_integer(7,0);set_register_integer(8,0);set_register_integer(9,1);
+    set_register_integer(15,list_address);set_stack_integer(stack::X,42);
+    write_bytes(600,std::vector<u8>(12,0x77));write_bytes(700,{0x55,5,0});
+    std::vector<u8> list{2};append(list,descriptor(0,7,600));append(list,descriptor(1,8,700));
+    if(bad==0)list[0]=0;
+    if(bad==1)list[0]=17;
+    if(bad==2)list[1]=1;
+    if(bad==3)list[8]=3;
+    if(bad==4)list[9]=16;
+    if(bad==5)list[10]=16;
+    if(bad==6){list[10]=9;list[11]=0;}
+    if(bad==7)list[11]=1;
+    if(bad==8)list[12]=1;
+    if(bad==9){list[13]=0x0E;list[14]=0x27;} // 9998, overruns three bytes
+    if(bad==10)write_bytes(700,{0,12,0});
+    if(bad==11)write_bytes(700,{255,255,255});
+    const usize base=8*MK61_MEMORY_PAGE_TETRADES;
+    if(bad==12)ringM[base+24]=9;
+    if(bad==13){set_register_integer(8,1);ringM[base+27]=1;ringM[base+33]=9;}
+    if(bad==14)ringM[base+21]=0xA;
+    if(bad==15){list[10]=9;list[11]=1;list[12]=255;set_register_integer(9,9999);}
+    write_bytes(list_address,list);
+    if(bad==16){set_register_integer(15,9998);write_bytes(9998,{1});}
+    run_program(compose,sizeof(compose));
+    invalid &= core_61::extended_program_error() && read_live_x()==42 &&
+        read_register_decimal(0)==0x080808 && read_register_decimal(3)==0x080808;
+  }
+  check_true("invalid count/descriptor/register/address/late layer rejects the entire frame without partial edits",invalid);
+
+  core_61::enable();core_61::clear_extended_program_banks();
+  set_register_integer(15,list_address);set_register_integer(0,2);
+  std::vector<u8> list{1};append(list,descriptor(0,0,600));write_bytes(list_address,list);
+  write_bytes(600,std::vector<u8>(12,0x6B));write_bytes(624,std::vector<u8>(12,0x77));
+  const u8 after_store[]={0x0D,0x40,0x2F,0x50,0x2F,0x2A,0x2F,0x56,0x2F,0x53,0x50};
+  run_program(after_store,sizeof(after_store));
+  bool writeback=!core_61::extended_program_error();
+  for(unsigned cell=0;cell<12;++cell)writeback &= core_61::segment_display_frame()[cell]==0x6B;
+  check_true("layer list sees the completed preceding ROM register store",writeback);
+}
+
 static double first_random(bool enhanced, u32 seed) {
   const MatrixKey key_k = {10, 9};
   const MatrixKey key_bx = {11, 8};
@@ -2927,6 +3176,8 @@ int main(void) {
   test_extended_opcode_matrix();
   test_packed_segment_frames();
   test_segment_sprite_load();
+  test_program_data_and_segment_points();
+  test_segment_layer_lists();
   test_rom_command_hooks();
   test_mk61_command_lengths();
   test_mk61_command_hooks();

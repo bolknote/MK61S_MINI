@@ -275,7 +275,7 @@ static void prefixes_and_bank_seams() {
     terminal.lasm_mk61_code_page();
     check(line(Serial.text,"0002").find("hlt")!=std::string::npos,"every display subcode is data");
   }
-  for(u8 subcode:{u8{0x51},u8{0x53},u8{0x57},u8{0x58},u8{0x59},u8{0x5A},
+  for(u8 subcode:{u8{0x40},u8{0x4F},u8{0x51},u8{0x53},u8{0x57},u8{0x58},u8{0x59},u8{0x5A},
                   u8{0x5B},u8{0x5C},u8{0x5D},u8{0x5E}}) {
     reset({0x1F,subcode,0,0,0x50});core_61::steps=112;
     terminal.lasm_mk61_code_page();

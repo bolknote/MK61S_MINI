@@ -1380,6 +1380,111 @@ static bool load_segment_sprite(u8 reg) {
   return true;
 }
 
+// Table reads replace only X. The index, RF, lower stack and number-entry
+// latches stay intact; a following ordinary store can retain the result.
+static bool read_program_unsigned(u8 reg, u8 width, u32& value) {
+  u16 base = 0, index = 0;
+  if(!read_register_unsigned(0x0F, core_61::EXTENDED_ADDRESS_LIMIT, base) ||
+     !read_register_unsigned(reg, core_61::EXTENDED_ADDRESS_LIMIT, index))
+    return false;
+  const u32 address = (u32)base + (u32)index * width;
+  if(address + width > core_61::EXTENDED_ADDRESS_LIMIT) return false;
+  value = 0;
+  for(u8 byte = 0; byte < width; ++byte) {
+    u8 part = 0;
+    if(!core_61::read_absolute_program((u16)(address + byte), part)) return false;
+    value |= (u32)part << (8U * byte);
+  }
+  return true;
+}
+
+static bool write_x_unsigned(u32 value) {
+  u8 exponent = 0;
+  for(u32 scaled = value; scaled >= 10U; scaled /= 10U) ++exponent;
+  char digits[8] = {'0','0','0','0','0','0','0','0'};
+  for(int digit = exponent; digit >= 0; --digit) {
+    digits[digit] = (char)('0' + value % 10U);
+    value /= 10U;
+  }
+  return write_stack_register(stack::X, ' ', digits, exponent);
+}
+
+// A point is 256*column + mask, column 0..11. FFFF is a transparent
+// off-screen point. Erasing accepts the same point as drawing its sprite.
+static bool stamp_segment_point(bool erase) {
+  char word[15] = {};
+  u32 point = 0;
+  read_stack_register(stack::X, word, EXTENDED_ASCII_DIGITS);
+  if(!parse_unsigned_mk61_word(word, 65536U, point)) return false;
+  if(point == 65535U) return true;
+  const u32 column = point >> 8;
+  if(column >= core_61::EXTENDED_DISPLAY_CELLS) return false;
+  u8 frame[core_61::EXTENDED_DISPLAY_CELLS];
+  if(!read_packed_segment_frame(frame)) return false;
+  frame[column] = erase ? 0 : (u8)point;
+  const u8 reg = (u8)(column / 3U);
+  const u8* masks = frame + reg * 3U;
+  write_register_unsigned(reg, (u32)masks[0] | ((u32)masks[1] << 8) |
+                                 ((u32)masks[2] << 16));
+  return true;
+}
+
+// A bounded display list starts with a complete sprite, then applies point
+// layers. All descriptors and sources are staged before replacing R0..R3.
+// Descriptor: mode,index-reg,row-reg,divisor,row-stride,base-lo,base-hi.
+// Source record = index + row-stride * floor(row/divisor); FF disables row.
+static bool compose_segment_layers(void) {
+  constexpr u8 width = core_61::EXTENDED_DISPLAY_CELLS;
+  constexpr u8 descriptor_bytes = 7;
+  u16 list = 0;
+  u8 count = 0;
+  if(!read_register_unsigned(15, core_61::EXTENDED_ADDRESS_LIMIT, list) ||
+     !core_61::read_absolute_program(list, count) || !count || count > 16 ||
+     (u32)list + 1U + descriptor_bytes * count > core_61::EXTENDED_ADDRESS_LIMIT)
+    return false;
+  u8 frame[width] = {};
+  for(u8 layer = 0; layer < count; ++layer) {
+    u8 d[descriptor_bytes];
+    for(u8 byte = 0; byte < descriptor_bytes; ++byte)
+      if(!core_61::read_absolute_program((u16)(list + 1U + descriptor_bytes * layer + byte), d[byte]))
+        return false;
+    if(d[0] > 2 || (!layer && d[0] != 0) || d[1] > 15) return false;
+    u16 index = 0, row = 0;
+    if(!read_register_unsigned(d[1], core_61::EXTENDED_ADDRESS_LIMIT, index)) return false;
+    if(d[2] == 0xFF) {
+      if(d[3] || d[4]) return false;
+    } else if(d[2] > 15 || !d[3] ||
+              !read_register_unsigned(d[2], core_61::EXTENDED_ADDRESS_LIMIT, row)) {
+      return false;
+    }
+    const u16 base = (u16)d[5] | ((u16)d[6] << 8);
+    const u8 record_bytes = d[0] == 0 ? width : 3;
+    const u32 record = (u32)index + (d[2] == 0xFF ? 0U : (u32)d[4] * (row / d[3]));
+    const u32 address = (u32)base + record_bytes * record;
+    if(address + record_bytes > core_61::EXTENDED_ADDRESS_LIMIT) return false;
+    if(d[0] == 0) {
+      for(u8 cell = 0; cell < width; ++cell)
+        if(!core_61::read_absolute_program((u16)(address + cell), frame[cell])) return false;
+    } else {
+      u32 point = 0;
+      for(u8 byte = 0; byte < 3; ++byte) {
+        u8 part = 0;
+        if(!core_61::read_absolute_program((u16)(address + byte), part)) return false;
+        point |= (u32)part << (8U * byte);
+      }
+      if(point == 65535U) continue;
+      if(point >= width * 256U) return false;
+      frame[point >> 8] = d[0] == 2 ? 0 : (u8)point;
+    }
+  }
+  for(u8 word = 0; word < 4; ++word) {
+    const u8* masks = frame + word * 3U;
+    write_register_unsigned(word, (u32)masks[0] | ((u32)masks[1] << 8) |
+                                   ((u32)masks[2] << 16));
+  }
+  return true;
+}
+
 static bool read_bcd_absolute_address(u16 address, u16& target) {
   u8 high = 0;
   u8 low = 0;
@@ -1510,6 +1615,26 @@ static bool execute_far_prefix(u16 absolute) {
   if(opcode == MK61_EXCHANGE_PROGRAM_WITH_MS)
     return execute_far_ms_exchange(absolute);
 
+  if((opcode & 0xF0U) == 0x40U) {
+    const u16 next = absolute + 4U;
+    u16 value = 0;
+    if(next >= core_61::EXTENDED_ADDRESS_LIMIT ||
+       !read_bcd_absolute_address(absolute + 2U, value) ||
+       !set_extended_next_pc(next)) return false;
+    write_register_unsigned(opcode & 0x0FU, value);
+    return true;
+  }
+
+  if((opcode & 0xF0U) == 0xB0U || (opcode & 0xF0U) == 0xD0U) {
+    const u16 next = absolute + 2U;
+    u32 value = 0;
+    if(next >= core_61::EXTENDED_ADDRESS_LIMIT ||
+       !read_program_unsigned(opcode & 0x0FU, (opcode & 0xF0U) == 0xB0U ? 1 : 3, value) ||
+       !set_extended_next_pc(next))
+      return false;
+    return write_x_unsigned(value);
+  }
+
   const bool direct = opcode == 0x51 || opcode == 0x53 ||
       opcode == 0x57 || opcode == 0x59 || opcode == 0x5C || opcode == 0x5E;
   const bool indirect = (opcode >= 0x70 && opcode <= 0xAF) ||
@@ -1554,6 +1679,11 @@ static bool execute_display_prefix(u16 absolute) {
   if(next >= core_61::EXTENDED_ADDRESS_LIMIT ||
      !core_61::read_absolute_program((u16) (absolute + 1U), opcode))
     return false;
+  // Reserve both sides before touching a buffer or the published screen.
+  // Otherwise a full slot pool could reject continuation after a partial edit.
+  if(next / core_61::MAX_PROGRAM_STEP != extended_program.active_bank &&
+     (!ensure_extended_bank(extended_program.active_bank) ||
+      !ensure_extended_bank(next / core_61::MAX_PROGRAM_STEP))) return false;
 
   if(opcode <= 0x0BU) {
     extended_program.cursor = opcode;
@@ -1600,6 +1730,12 @@ static bool execute_display_prefix(u16 absolute) {
         break;
       case 0x53: // Publish all twelve masks from R0..R3 as one frame.
         if(!publish_packed_segment_frame()) return false;
+        break;
+      case 0x54: case 0x55: // Stage/erase one packed point, without publishing.
+        if(!stamp_segment_point(opcode == 0x55)) return false;
+        break;
+      case 0x56: // Compose a frame from indexed layers, without publishing.
+        if(!compose_segment_layers()) return false;
         break;
       case 0x2A: // numeric -> segment representation.
         extended_program.segment_display = true;
@@ -1849,6 +1985,9 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
           u8 far_opcode = 0;
           if(core_61::read_absolute_program((u16) (absolute + 1U), far_opcode) &&
              (far_x_condition(far_opcode) ||
+              (far_opcode & 0xF0U) == 0x40U ||
+              (far_opcode & 0xF0U) == 0xB0U ||
+              (far_opcode & 0xF0U) == 0xD0U ||
               far_opcode == MK61_EXCHANGE_PROGRAM_WITH_MS)) {
             // Resolve the three-byte exchange at the next fetch as well:
             // its bank operand must never become a ROM command/operand.
@@ -1865,7 +2004,8 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
               core_61::MAX_PROGRAM_STEP + program_address);
           u8 display_opcode = 0;
           if(core_61::read_absolute_program((u16) (absolute + 1U), display_opcode) &&
-             display_opcode == 0x0E) {
+             (display_opcode == 0x0E || display_opcode == 0x54 || display_opcode == 0x55 ||
+              display_opcode == 0x56)) {
             // X still contains a transient ROM value at prefetch: sqrt(81)
             // can expose 81, INT can expose the original fraction. Reuse the
             // prefix's NOP just as far predicates do, in either display view.
