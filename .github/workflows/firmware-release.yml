@@ -18,13 +18,21 @@ env:
 jobs:
   host-tests:
     name: Host tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Install required Clang 18
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends clang-18
+          /usr/bin/clang++-18 --version
+
       - name: Run CI-strict host test suite
+        env:
+          MK61_CI_CLANGXX: /usr/bin/clang++-18
         run: tests/run_ci_strict.sh
 
   native-f411:
