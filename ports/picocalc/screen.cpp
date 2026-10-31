@@ -149,6 +149,23 @@ void Screen::bitmap(const u8* frame,unsigned width,unsigned height,unsigned left
 void Screen::line(unsigned y) {
     for(unsigned x = 8; x < WIDTH - 8; ++x) set_pixel(x, y);
 }
+void Screen::segment_row(unsigned left,unsigned top,const u8 masks[12]) {
+    // Native 7x13 segments, plus a decimal point, in twelve 12-pixel cells.
+    // Draw every published bit, including masks that have no text equivalent.
+    for(unsigned slot=0;slot<12;++slot) {
+        const unsigned x=left+slot*12;const u8 mask=masks[slot];
+        for(unsigned p=1;p<=5;++p) {
+            if(mask&0x01) set_pixel(x+p,top);
+            if(mask&0x02) set_pixel(x+6,top+p);
+            if(mask&0x04) set_pixel(x+6,top+6+p);
+            if(mask&0x08) set_pixel(x+p,top+12);
+            if(mask&0x10) set_pixel(x,top+6+p);
+            if(mask&0x20) set_pixel(x,top+p);
+            if(mask&0x40) set_pixel(x+p,top+6);
+        }
+        if(mask&0x80) { set_pixel(x+9,top+11);set_pixel(x+9,top+12); }
+    }
+}
 void Screen::calculator(const Snapshot& model, const Ui& ui) {
     text_screen::Grid face_grid;
     face_grid.reset(2);
@@ -238,10 +255,24 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
         for(unsigned i = 0; i < 6; ++i) {
             char raw[INDICATOR_STRING_LENGTH];
             const char* number = i==0 ? read_stack_register(X,raw,nullptr) :
-                i<4 ? model.stack_values[i-1] : i==4 ? read_stack_register(X1,raw,nullptr) : model.indicator;
+                i<4 ? model.stack_values[i-1] : i==4 ? read_stack_register(X1,raw,nullptr) : raw;
             const unsigned y=154+i*20;
             text(18,y,labels[i],16,value_left-4);
-            text(value_left,y,number,16);
+            if(i==5 && model.segmented) segment_row(value_left,y+1,model.segments);
+            else {
+                if(i==5) {
+                    // X2 follows the same published clear/hold state as the
+                    // large face. Its legacy tokens are not M8 text bytes.
+                    unsigned n=0;
+                    for(;model.face_indicator[n] && n<sizeof(raw)-1;++n) {
+                        const u8 token=(u8)model.face_indicator[n];
+                        const u16 cp=token=='O'?'0':token==','?'.':display_symbol::uc1609::unicodeCodepoint(token);
+                        u8 byte='?';(void)mk8::from_codepoint(cp,byte);raw[n]=(char)byte;
+                    }
+                    raw[n]=0;
+                }
+                text(value_left,y,number,16);
+            }
         }
     } else if(ui.view() == View::REGISTERS) {
         const auto style=register_style(ui.settings());

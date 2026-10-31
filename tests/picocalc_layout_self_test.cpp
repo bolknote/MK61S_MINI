@@ -5,6 +5,7 @@
 #include "ui_font_catalog.hpp"
 #include "mk8_codec.hpp"
 #include "mk8_literal.hpp"
+#include "display_symbols.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -121,7 +122,10 @@ void check_choice(const Settings& settings,Calculator& calc) {
     for(unsigned i=0;i<6;++i) {
         char raw[INDICATOR_STRING_LENGTH];
         if(i<5) read_stack_register(slots[i],raw,nullptr);
-        else std::snprintf(raw,sizeof(raw),"%s",model.indicator);
+        else {
+            std::snprintf(raw,sizeof(raw),"%s",model.face_indicator);
+            for(char* p=raw;*p;++p) if(*p=='O') *p='0';
+        }
         const Text number(ui.settings(),raw,16),label(ui.settings(),labels[i],16);
         const unsigned top=154+i*20;
         require(label.matches(screen,18,top),"all six X/Y/Z/T/X1/X2 labels are visible");
@@ -196,6 +200,85 @@ void check_choice(const Settings& settings,Calculator& calc) {
     menu(services,ui,calc,5);
     require(core_values()==before,"rendering and UI navigation preserve X2, all stack and memory registers");
 }
+Snapshot display_sequence(Calculator& calc,std::initializer_list<u8> program) {
+    calc.init(true);unsigned at=0;
+    for(u8 code:program) MK61Emu_SetCode((int)core_61::get_ring_address(at++),code);
+    require(calc.input('r'),"start display control program");
+    for(unsigned n=0;n<4096;++n) {
+        calc.tick();
+        if(calc.idle() && !core_61::is_RUN()) return calc.snapshot();
+    }
+    require(false,"display control program settles");return {};
+}
+void published_x2() {
+    Calculator calc;Ui ui;ui.init();Screen screen;
+    const unsigned left=18+Text(ui.settings(),"X1",16).width+8;
+    const auto blank=[&](const Snapshot& model) {
+        screen.render(model,true,&ui);
+        require(Text(ui.settings(),"X2",16).matches(screen,18,254),"X2 label remains visible when its display is blank");
+        for(unsigned y=254;y<274;++y) for(unsigned x=left;x<312;++x)
+            require(!screen.pixel(x,y),"published clear/hold must not expose the raw indicator in X2");
+    };
+    // Actual expanded core repro: idle after 2F 0D 50, raw latch still 0,
+    // published numeric display blank. Rendering must obey publication.
+    auto model=display_sequence(calc,{0x2F,0x0D,0x50});
+    require(!core_61::extended_display_auto() && !model.running && model.idle && !model.segmented,"numeric clear survives program stop");
+    require(std::strspn(model.face_indicator," ")==std::strlen(model.face_indicator),"core publishes a blank numeric face");
+    require(std::strspn(model.indicator," ")<std::strlen(model.indicator),"repro raw latch is still nonblank");
+    blank(model);preview(screen,"-X2-clear");
+
+    model=display_sequence(calc,{0x2F,0x50,0x07,0x50});
+    require(!core_61::extended_display_auto() && !model.segmented,"numeric hold survives program stop");
+    char raw[INDICATOR_STRING_LENGTH];read_stack_register(X,raw,nullptr);
+    require(std::strchr(raw,'7')!=nullptr && std::strchr(model.face_indicator,'7')==nullptr,"held display differs from changed arithmetic X");
+    char held[INDICATOR_STRING_LENGTH];std::snprintf(held,sizeof(held),"%s",model.face_indicator);
+    for(char* p=held;*p;++p) if(*p=='O') *p='0';
+    screen.render(model,true,&ui);
+    require(Text(ui.settings(),held,16).matches(screen,left,254),"X2 text uses the held publication");
+    preview(screen,"-X2-held");
+
+    model=display_sequence(calc,{0x2F,0x50,0x07,0x2F,0x52,0x08,0x50});
+    require(core_61::extended_display_auto() && std::strchr(model.face_indicator,'8'),"resume publishes later numeric X");
+    char resumed[INDICATOR_STRING_LENGTH];std::snprintf(resumed,sizeof(resumed),"%s",model.face_indicator);
+    for(char* p=resumed;*p;++p) if(*p=='O') *p='0';
+    screen.render(model,true,&ui);
+    require(Text(ui.settings(),resumed,16).matches(screen,left,254),"X2 follows resumed publication");
+
+    model=display_sequence(calc,{0x2F,0x2A,0x2F,0x50,0x07,0x50});
+    require(model.segmented && !core_61::extended_display_auto(),"held segment publication");
+    for(u8 mask:model.segments) require(mask==0,"held segments remain blank after changed X");
+    blank(model);
+    model=display_sequence(calc,{0x2F,0x2A,0x07,0x2F,0x0D,0x50});
+    require(model.segmented,"cleared segment publication");
+    for(u8 mask:model.segments) require(mask==0,"clear removes every published segment and dot");
+    blank(model);
+    model=display_sequence(calc,{0x2F,0x2A,0x2F,0x50,0x07,0x2F,0x52,0x08,0x50});
+    require(model.segmented && core_61::extended_display_auto(),"segment resume mode");
+    bool lit=false;for(u8 mask:model.segments) lit|=mask!=0;
+    require(lit,"segment resume publishes later X");
+
+    // Every 8-bit mask in every physical slot: arbitrary bars and the dot
+    // remain exact even where no digit/letter can represent their shape.
+    for(unsigned value=0;value<256;++value) {
+        for(unsigned slot=0;slot<12;++slot) model.segments[slot]=(u8)(value+17*slot);
+        screen.render(model,true,&ui);
+        for(unsigned slot=0;slot<12;++slot) for(unsigned y=0;y<13;++y) for(unsigned x=0;x<12;++x) {
+            const u8 mask=model.segments[slot];
+            const bool horizontal=x>=1 && x<=5;
+            const bool upper=y>=1 && y<=5,lower=y>=7 && y<=11;
+            const bool expected=(horizontal && ((y==0 && (mask&1)) || (y==6 && (mask&64)) || (y==12 && (mask&8)))) ||
+                (x==6 && ((upper && (mask&2)) || (lower && (mask&4)))) ||
+                (x==0 && ((upper && (mask&32)) || (lower && (mask&16)))) ||
+                (x==9 && y>=11 && (mask&128));
+            require(screen.pixel(left+slot*12+x,255+y)==expected,"exact published mask/dot at every X2 slot");
+        }
+    }
+    preview(screen,"-X2-segments");
+    model.segmented=false;std::snprintf(model.face_indicator,sizeof(model.face_indicator),"%c%c,O",display_symbol::uc1609::CYR_GHE,display_symbol::uc1609::RT_ARROW);
+    screen.render(model,true,&ui);
+    require(Text(ui.settings(),M8("Г→.0"),16).matches(screen,left,254),"legacy indicator tokens are converted to M8 glyphs");
+    std::puts("PicoCalc X2 publication: real core clear/hold/resume and all 256 masks/dots in all 12 slots PASS");
+}
 }
 
 void picocalc_layout_self_test() {
@@ -220,6 +303,7 @@ void picocalc_layout_self_test() {
         if(choice[0]==3) settings.ui_font_key=ui_font_catalog::name_key(("DejaVu-"+std::to_string(choice[1])+".FMK").c_str());
         check_choice(settings,calc);
     }
+    published_x2();
     std::printf("PicoCalc focused UI layout/navigation: PASS (%u assertions; 8 font choices, EN/RU)\n",checks);
 }
 #if defined(MK61_LAYOUT_STANDALONE)

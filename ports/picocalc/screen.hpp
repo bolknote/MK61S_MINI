@@ -57,6 +57,7 @@ private:
     void line(unsigned y);
     void bitmap(const u8* frame,unsigned width,unsigned height,unsigned left=0,unsigned top=0);
     void native_bitmap(const u8* frame);
+    void segment_row(unsigned left,unsigned top,const u8 masks[12]);
     void calculator(const Snapshot& model, const Ui& ui);
 };
 
