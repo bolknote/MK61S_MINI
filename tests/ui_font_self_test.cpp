@@ -102,7 +102,12 @@ void checkFace(ui_font::Face face) {
   assert(font_glyph::pixel(xor_glyph, xor_glyph.width / 2, 1));
   assert(font_glyph::pixel(xor_glyph, xor_glyph.width / 2,
                            xor_glyph.height - 2));
-  for (uint32_t cp : {0U, 0x1FU, 0x7FU, 0xD800U, 0x1F600U, 0xFFFFFFFFU}) {
+  for (uint32_t cp : {0x0401U, 0x0410U, 0x044FU, 0x0451U}) {
+    assert(ui_font::supports(face, cp));
+    assert(!ui_font::glyph(face, cp).fallback);
+  }
+  for (uint32_t cp : {0U, 0x1FU, 0x7FU, 0x0400U, 0x0402U, 0x040FU,
+                     0x0450U, 0x0452U, 0xD800U, 0x1F600U, 0xFFFFFFFFU}) {
     assert(!ui_font::supports(face, cp));
     const ui_font::Glyph missing = ui_font::glyph(face, cp);
     const ui_font::Glyph question = ui_font::glyph(face, '?');

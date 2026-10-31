@@ -10,7 +10,11 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
 fi
 
 python3 "$root/tools/generate_ui_fonts.py" --check
+for lookup in legacy f401; do
+lookup_flags=()
+if [[ "$lookup" == f401 ]]; then lookup_flags=(-DMK61_TEST_FONT_CYRILLIC_RANGE=1); fi
 clang++ -std=c++17 -Wall -Wextra -Werror -pedantic \
+  "${lookup_flags[@]}" \
   "${sanitizer_flags[@]}" -DARDUINO=100 -DMK61_DISPLAY_UC1609 \
   -DMK61_PROPORTIONAL_UI_FONTS=1 \
   -I"$root/code" -I"$root/tests/mk_math_shim" \
@@ -18,6 +22,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror -pedantic \
   -o "$font_test_dir/ui-font-test"
 "$font_test_dir/ui-font-test"
 python3 "$root/tests/ui_font_source_self_test.py" "$font_test_dir/ui-font-test"
+done
 
 for variant in lcd ws0010 f401-uc1609; do
   variant_flags=()

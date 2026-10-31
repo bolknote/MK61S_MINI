@@ -1,0 +1,52 @@
+{
+  "status": "SOURCE_REVIEW_READY_NOT_RELEASE",
+  "base_commit": "8105bd47dab2d45fe6169ea033850ca4527f47f3",
+  "files": {
+    "code/ui_font.cpp": "115ea807a68a10d1c7be6ab66201ff73938b3b57dda4255f21dda98fb872ffb0",
+    "code/ui_font_data.inc": "76fb566da3bbe4d32d0d043e29cc1addcf3366d4609f826e270e90ccc8f2aada",
+    "tools/generate_ui_fonts.py": "d971ee881abb62e02d5cc4982d397ca75e98928d8cf151413fece2c4e1c7d109",
+    "tests/run_ui_font_tests.sh": "d6891ffa7104eded2bdc54bfea61e331f8f4d772aa9b33e9e3a60e525e7aafb5",
+    "tests/ui_font_self_test.cpp": "fa7119bf24d7660e702803d477688784c6739d1673d80bdd83ba514d8baa954e"
+  },
+  "cpp_sha256": "115ea807a68a10d1c7be6ab66201ff73938b3b57dda4255f21dda98fb872ffb0",
+  "target": "STM32F401xC/xE or explicit HOST selector; other targets unchanged",
+  "before_bin_with_DCW": 258792,
+  "after_bin_with_DCW": 258696,
+  "incremental_gain": 96,
+  "free_after": 3448,
+  "minimum_free": 4096,
+  "remaining": 648,
+  "unchanged_bitmap_metrics_records_sha256": "10091028f65bfcb9f80ac9f3a81bd4d4cd386a95ec17bc2bef1febba61fe2dc0",
+  "legacy_preprocessing": [
+    {
+      "case": "f411",
+      "tokens_equal": true,
+      "tokens": 174337
+    },
+    {
+      "case": "actual-pico",
+      "tokens_equal": true,
+      "tokens": 9973
+    },
+    {
+      "case": "actual-pico-host-selector",
+      "tokens_equal": true,
+      "tokens": 9973
+    }
+  ],
+  "preprocess_source_date_epoch": "1793433600",
+  "glyphs_per_format": 543,
+  "source_pixels_per_format": 24845,
+  "tests": [
+    "ASAN/UBSAN legacy and F401 formats; every supported BMP codepoint and exact atlas metrics/pixels",
+    "Explicit supported boundaries0401/0410/044F/0451 and missing0400/0402/040F/0450/0452; outside-BMP fallbacks",
+    "Generator --check reproducibility"
+  ],
+  "logs": [
+    "font-cyrillic-boundaries-asan.log",
+    "f401-cyrillic-index-build.log",
+    "f401-dcw-cyr-ram.log"
+  ],
+  "abi_header_unchanged": true,
+  "hardware_access": false
+}

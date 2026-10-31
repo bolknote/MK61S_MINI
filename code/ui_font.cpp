@@ -13,6 +13,14 @@ struct FaceData {
   Metrics metrics;
 };
 
+// F401 stores only the exceptional codepoints; its 64 Cyrillic glyphs
+// already occupy one consecutive range. Keep other targets' lookup unchanged.
+#if defined(STM32F401xC) || defined(STM32F401xE) || \
+    (!defined(__arm__) && !defined(__thumb__) && defined(MK61_TEST_FONT_CYRILLIC_RANGE))
+#define MK61_UI_FONT_CYRILLIC_RANGE 1
+#else
+#define MK61_UI_FONT_CYRILLIC_RANGE 0
+#endif
 #include "ui_font_data.inc"
 
 unsigned faceIndex(Face face) {
@@ -22,6 +30,23 @@ unsigned faceIndex(Face face) {
   return size;
 }
 
+#if MK61_UI_FONT_CYRILLIC_RANGE
+int glyphIndex(uint32_t codepoint) {
+  if(codepoint >= 0x20U && codepoint <= 0x7EU)
+    return (int)(codepoint - 0x20U);
+  if(codepoint >= 0x0410U && codepoint <= 0x044FU)
+    return (int)(CYRILLIC_GLYPH_INDEX + codepoint - 0x0410U);
+  unsigned first = 0, last = NON_CYRILLIC_GLYPH_COUNT;
+  while(first < last) {
+    const unsigned middle = first + (last-first)/2;
+    if(NON_CYRILLIC_CODEPOINTS[middle] < codepoint) first = middle+1;
+    else last = middle;
+  }
+  return first < NON_CYRILLIC_GLYPH_COUNT && NON_CYRILLIC_CODEPOINTS[first] == codepoint
+      ? (int)(ASCII_GLYPH_COUNT + first + (first >= NON_CYRILLIC_PREFIX_COUNT ? 64U : 0U)) : -1;
+}
+
+#else
 int glyphIndex(uint32_t codepoint) {
   // The common ASCII path avoids even binary search.
   if (codepoint >= 0x20U && codepoint <= 0x7EU) {
@@ -38,6 +63,8 @@ int glyphIndex(uint32_t codepoint) {
          NON_ASCII_CODEPOINTS[first] == codepoint
     ? static_cast<int>(ASCII_GLYPH_COUNT + first) : -1;
 }
+
+#endif
 
 } // namespace
 
