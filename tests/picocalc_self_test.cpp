@@ -1,6 +1,7 @@
 #include "calculator.hpp"
 #include "math_probe.hpp"
 #include "screen.hpp"
+#include "services.hpp"
 #include "ui.hpp"
 #include "settings.hpp"
 #include "menu_model.hpp"
@@ -47,6 +48,66 @@ void preview(const picocalc::Screen& screen, const char* path) {
     std::fprintf(file, "P4\n320 320\n");
     require(std::fwrite(screen.data(), 1, picocalc::Screen::BYTES, file) == picocalc::Screen::BYTES, "preview write");
     std::fclose(file);
+}
+void render_changes_test() {
+    using namespace picocalc;
+    static_assert(sizeof(Screen)<=16*1024,"Raster invalidation must preserve Pico heap headroom");
+    Calculator calc;calc.init();feed(calc,"42");Ui ui;ui.init();Services services;
+    Screen cached,reference;
+    const Services* active=nullptr;
+    unsigned stage=0;
+    const auto check=[&](bool changed) {
+        const auto value=calc.snapshot();
+        const bool rendered=cached.render(value,true,&ui,active);
+        if(rendered!=changed) std::fprintf(stderr,"render stage %u page %u view %u: got %u expected %u\n",stage,(unsigned)ui.page(),(unsigned)ui.view(),rendered,changed);
+        ++stage;require(rendered==changed,"render invalidation");
+        reference.invalidate();reference.render(value,true,&ui,active);
+        require(!std::memcmp(cached.data(),reference.data(),Screen::BYTES),"cached raster differs from forced render");
+    };
+    check(true);
+    require(cached.presentation_pending(),"new raster not scheduled");
+    const auto count=cached.renders();for(unsigned n=0;n<100;++n) check(false);
+    require(cached.presentation_pending(),"busy LCD lost an unsubmitted USB snapshot");
+    cached.presented();check(false);require(!cached.presentation_pending(),"settled raster resubmitted");
+    require(cached.renders()==count && cached.skipped()>=100,"idle screen rerendered");
+    BatteryStatus battery; battery.available=true;battery.percent=70;
+    const auto battery_check=[&](bool changed) {
+        const auto snapshot=calc.snapshot();
+        require(cached.render(snapshot,true,&ui,active,battery)==changed,"battery invalidation");
+        reference.invalidate();reference.render(snapshot,true,&ui,active,battery);
+        require(!std::memcmp(cached.data(),reference.data(),Screen::BYTES),"cached battery raster differs");
+    };
+    battery_check(true);battery_check(false);battery.percent=69;battery_check(true);battery_check(false);
+    check(true); // Removing the battery reading changes both title and clock placement.
+    core_61::bcd_value value{};core_61::get_stack_register(X1,value);
+    value.mantissa=0x23456789;core_61::set_stack_register(X1,&value);check(true);check(false);
+    core_61::get_stack_register(X,value);value.mantissa=0x12345678;
+    core_61::set_stack_register(X,&value);check(true);check(false); // Stack X may change independently of the display latch X2.
+    ui.input(0xB6,calc);check(true);check(false); // Registers.
+    ui.input(0xB6,calc);check(true);
+    MK61Emu_SetCode(core_61::get_ring_address(0),0x12);check(true);check(false); // Direct program mutation, without a key event.
+    ui.input('\t',calc);check(true);ui.input(0xB6,calc);check(true);check(false);
+    auto settings=ui.settings();settings.russian^=1;ui.apply_settings(settings);check(true);check(false);
+    cached.invalidate();check(true);check(false); // Panel reinitialization/wake.
+    services.new_document(Document::TEXT);active=&services;check(true);check(false);
+    services.input('A');check(true);check(false);
+    services.input(0xB4);check(true);check(false); // Cursor alone changes pixels.
+    require(cached.renders()<24,"event renderer performed unexpected work");
+    std::puts("PicoCalc exact render invalidation: idle/menu/settings/X1/program/editor/cursor/wake PASS");
+}
+void hil_ip_restore_test() {
+    picocalc::Calculator calc;calc.init();
+    feed(calc,"42");
+    const auto x=x_value();
+    feed(calc,"g99");require(calc.snapshot().ip==99,"HIL GOTO anchor");
+    feed(calc,"fe");
+    for(unsigned ip=100;ip<105;++ip) {
+        feed(calc,"[");
+        if(calc.snapshot().ip!=ip) std::fprintf(stderr,"HIL IP restore: got %u expected %u\n",calc.snapshot().ip,ip);
+        require(calc.snapshot().ip==ip,"HIL STEP reaches final program cells");
+        equal_x(x);
+    }
+    feed(calc,"fn");require(calc.snapshot().ip==104 && !calc.snapshot().programming,"HIL AUTO preserves high IP");
 }
 void ui_test(picocalc::Calculator& calc, const char* preview_path) {
     using namespace picocalc;
@@ -242,6 +303,8 @@ int main(int argc, char** argv) {
     }
 
     ui_test(calc, argc == 2 ? argv[1] : nullptr);
+    render_changes_test();
+    hil_ip_restore_test();
     picocalc_services_test(argc == 2 ? argv[1] : nullptr);
     picocalc_m61_test();
     extern void picocalc_language_cache_test();

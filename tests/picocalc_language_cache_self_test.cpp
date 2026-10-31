@@ -280,6 +280,35 @@ void picocalc_language_cache_test() {
     }
     assert(external_cache::init());
     std::puts("PicoCalc shared source: 65-KiB PSRAM, 1-KiB STM32 window, page-boundary edits, atomic failed load and M61 snapshot PASS");
+    // The real chess corpus must survive loss of the hot SRAM cache and
+    // registry IDs. Compare every byte of all returned PSRAM images;
+    // no SD lookup or recompilation is allowed during the warm pass.
+    std::vector<std::vector<u8>> chess_images;
+    for(const auto& path:game) {
+        unsigned n=0;assert(files::read_text(path.c_str(),text.data(),text.size(),n));
+        const language_vm::ResourceSource resources{0,0,language_vm::ResourceMode::EMBEDDED};
+        cache::compilation();
+        const auto compiled=language_vm::compile(language_vm::Language::BASIC,text.data(),(u16)n,
+            module.data(),module.size(),true,&resources);
+        assert(compiled.error==language_vm::Error::NONE);
+        language_vm::View view{};
+        assert(language_vm::inspect(module.data(),compiled.size,view)==language_vm::Error::NONE);
+        chess_images.emplace_back(module.begin(),module.begin()+compiled.size);
+        cache::remember(path.c_str(),true,files::revision(),text.data(),(u16)n,view,false);
+    }
+    cache::discard();script::reset_files();start=cache::statistics();
+    for(unsigned i=game.size();i--;) {
+        auto ready=cache::find(game[i].c_str(),language_vm::Language::BASIC,true,module.data(),module.size());
+        assert(ready && ready.view.bytes==module.data() && ready.view.size==chess_images[i].size());
+        assert(!std::memcmp(ready.view.bytes,chess_images[i].data(),chess_images[i].size()));
+        cache::release(ready);
+    }
+    current=cache::statistics();
+    assert(current.psram_hits==start.psram_hits+game.size());
+    assert(current.ram_hits==start.ram_hits && current.disk_hits==start.disk_hits && current.compiles==start.compiles);
+    assert(external_cache::statistics().module_bytes==4U*1024*1024);
+    std::printf("PicoCalc Turochamp PSRAM: %zu/%zu exact images, %u bytecode bytes, zero SD loads/compiles after SRAM discard PASS\n",
+        game.size(),game.size(),corpus_bytes);
     assert(files::mkdir("/Cache Tests/External"));
     for(unsigned i=0;i<48;++i)
         source(("/Cache Tests/External/"+std::to_string(i)+".bas").c_str(),"10 .R3=.R3+1\n20 END\n");

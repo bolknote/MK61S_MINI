@@ -32,6 +32,8 @@ const char* key_label(const char* label,bool russian) {
     return label;
 }
 } // namespace
+// Keep zero-filled rasters in BSS.
+Screen::Screen() {}
 void Screen::logical_frame(const Ui& ui,const Services& services,u8 out[1536]) const {
     if(services.active() && services.graphics()) { std::memcpy(out,services.graphics(),1536);return; }
     if(!services.active() && ui.page()==Page::CALCULATOR) {
@@ -119,7 +121,8 @@ void Screen::line(unsigned y) {
     for(unsigned x = 8; x < WIDTH - 8; ++x) set_pixel(x, y);
 }
 void Screen::calculator(const Snapshot& model, const Ui& ui) {
-    face_grid_.reset(2);
+    text_screen::Grid face_grid;
+    face_grid.reset(2);
     char status[40];
     const bool russian=ui.settings().russian;
     const char* mode = model.running ? (russian?M8("СЧЁТ"):"RUN") :
@@ -129,15 +132,15 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
         model.angle == RADIAN ? (russian?M8("Р"):"RAD") : (russian?M8("ГРД"):"GRD");
     const char* last_key=key_label(model.last_key,russian);
     std::snprintf(status, sizeof(status), "%-5.5s %-3.3s %-6.6s", mode, angle, last_key);
-    for(const char* p = status; *p; ++p) face_grid_.writeCodepoint(mk8::codepoint((u8)*p));
-    face_grid_.setCursor(0, 1);
+    for(const char* p = status; *p; ++p) face_grid.writeCodepoint(mk8::codepoint((u8)*p));
+    face_grid.setCursor(0, 1);
     for(const char* p = model.face_indicator; *p; ++p) {
         const u8 token = (u8)*p;
-        face_grid_.writeCodepoint(token == ',' ? '.' : token);
+        face_grid.writeCodepoint(token == ',' ? '.' : token);
     }
     calculator_face::setFont((calculator_face::Font)ui.settings().calculator_font);
     calculator_face::setSegmentFrame(model.segmented ? model.segments : nullptr);
-    calculator_face::renderFrame(face_grid_, face_);
+    calculator_face::renderFrame(face_grid, face_);
     calculator_face::setSegmentFrame(nullptr);
     // Twelve 26-pixel slots fit the original 16x35 strike with no resampling.
     const auto digit=[&](unsigned slot,u8 mask,u16 token) {
@@ -166,8 +169,8 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
         digit(slot,model.segments[slot],calculator_face::sourceToken(model.segments[slot]&127));
     else {
         unsigned slot=0;
-        for(unsigned col=0;col<face_grid_.cols();++col) {
-            const u16 token=face_grid_.cell(col,1);
+        for(unsigned col=0;col<face_grid.cols();++col) {
+            const u16 token=face_grid.cell(col,1);
             if(token=='.') { if(slot) digit(slot-1,128,0); }
             else if(slot<12) { digit(slot++,calculator_face::sourceSegments(token),token); }
         }
@@ -261,7 +264,70 @@ void Screen::native_bitmap(const u8* frame) {
     bitmap(frame,WIDTH,HEIGHT);
     native_revision_=revision;native_valid_=published;
 }
-void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, const Services* services, BatteryStatus battery) {
+void Screen::RenderKey::data(const void* value,unsigned size) {
+    if(size>sizeof(bytes)-used) { overflow=true;return; }
+    std::memcpy(bytes+used,value,size);used+=size;
+}
+void Screen::RenderKey::number(u32 value) { data(&value,sizeof(value)); }
+void Screen::RenderKey::text(const char* value) { if(!value) value="";data(value,(unsigned)std::strlen(value)+1); }
+bool Screen::RenderKey::same(const RenderKey& other) const {
+    return !overflow && !other.overflow && used==other.used && !std::memcmp(bytes,other.bytes,used);
+}
+Screen::RenderKey Screen::key(const Snapshot& m,bool keyboard,const Ui& ui,const Services* services,BatteryStatus battery) const {
+    RenderKey out;
+    u8 settings[SETTINGS_PAGE_BYTES];encode_settings(ui.settings(),0,settings);out.data(settings,sizeof(settings));
+    out.number((u32)battery.percent);out.number(battery.available);
+    out.number(fonts::revision());out.number(files::revision());out.number(keyboard);
+    out.number((u32)ui.page());out.number((u32)ui.view());out.number(ui.offset());out.number(ui.selected());
+    const bool active=services && services->active();out.number(active);
+    if(active) {
+        char title[64];services->heading(title);out.text(title);out.text(services->footer());out.text(services->path());
+        out.number(services->display_revision());out.number(services->console_revision());out.number(script::frame_revision());
+        out.number(services->fixed_text());out.number(services->editor_cursor());
+        out.number(services->cursor_row());out.number(services->cursor_column());
+        for(unsigned row=0;!services->native_graphics() && row<Services::ROWS;++row) {
+            char text[Services::COLS+1]{};services->row(row,text);out.text(text);
+            u8 selected[5]{};
+            for(unsigned x=0;x<Services::COLS;++x) if(services->selected_text(row,x)) selected[x/8]|=(u8)(1U<<(x%8));
+            out.data(selected,sizeof(selected));
+        }
+    } else if(ui.page()==Page::CALCULATOR) {
+        out.number(m61_text::display_owned());
+        if(m61_text::display_owned()) { out.number(script::frame_revision());return out; }
+        out.text(m.indicator);out.text(m.face_indicator);out.text(m.last_key);
+        for(const auto& value:m.stack_values) out.text(value);
+        out.data(m.segments,sizeof(m.segments));out.number(m.segmented);out.number(m.angle);out.number(m.ip);
+        out.number(m.running);out.number(m.programming);out.number(m.idle);out.number(core_61::program_steps());
+        if(ui.view()==View::STACK) { char text[INDICATOR_STRING_LENGTH];read_stack_register(X,text,nullptr);out.text(text);read_stack_register(X1,text,nullptr);out.text(text); }
+        if(ui.view()==View::REGISTERS) for(unsigned n=0;n<6 && ui.offset()+n<15;++n) {
+            char text[INDICATOR_STRING_LENGTH];MK61Emu_ReadRegister(ui.offset()+n,text,nullptr);out.text(text);
+        }
+        if(ui.view()==View::PROGRAM) for(unsigned n=0;n<6 && ui.offset()+n<core_61::program_steps();++n)
+            out.number(core_61::get_code(core_61::get_ring_address(ui.offset()+n)));
+        out.number(clock::configured());
+        if(m.idle && !m.running && !m.programming && clock::configured()) {
+            const auto date=clock::get();out.number(date.hour*60+date.minute);
+        }
+        out.text(ui.footer());
+    } else {
+        out.text(ui.title());out.text(ui.footer());out.number(ui.count());
+        const unsigned first=menu_model::firstVisible(ui.selected(),ui.count(),8);
+        for(unsigned row=0;row<8;++row) { char text[64]{};ui.row(first+row,text);out.text(text); }
+    }
+    return out;
+}
+bool Screen::render(const Snapshot& model,bool keyboard,const Ui* ui,const Services* services,BatteryStatus battery) {
+    if(services && services->display_deferred()) { ++skipped_;return false; }
+    static const Ui defaults;if(!ui) ui=&defaults;
+    const auto next=key(model,keyboard,*ui,services,battery);
+    if(key_valid_ && key_.same(next)) { ++skipped_;return false; }
+    paint(model,keyboard,ui,services,battery);
+    // Rendering a custom console/graph can publish its completed canvas.
+    // Remember that resulting generation, avoiding a second idle redraw.
+    key_=key(model,keyboard,*ui,services,battery);key_valid_=!key_.overflow;
+    present_pending_=true;++renders_;return true;
+}
+void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, const Services* services, BatteryStatus battery) {
     // CLS begins a BASIC/FOCAL frame. Keep the previous complete picture while
     // the VM builds its replacement; input, WAIT and module completion publish it.
     if(services && services->display_deferred()) return;

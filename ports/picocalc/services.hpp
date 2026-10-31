@@ -60,6 +60,8 @@ public:
     basic_graphics::Result graph_request(basic_graphics::Request& request);
     bool running() const { return running_; }
     unsigned source_size() const { return length_; }
+    u32 display_revision() const;
+    u32 console_revision() const { return console_frame_open_?front_console_revision_:console_revision_; }
     bool dirty() const { return dirty_; }
     bool leave_for_script();
     const char* path() const { return path_; }
@@ -154,6 +156,7 @@ private:
     u16 length_ = 0, cursor_ = 0, top_ = 0, horizontal_ = 0;
     u16 prompt_length_ = 0;
     u32 console_revision_=1;
+    u32 graphics_revision_=0;
     bool console_frame_open_=false;
     unsigned front_console_row_=0;
     u32 front_console_revision_=0;

@@ -37,7 +37,8 @@ private:
 class Panel {
 public:
     void init();
-    void flush(const Screen& screen);
+    bool flush(const Screen& screen);
+    bool needs_refresh() const { return !valid_ || failed_.load(std::memory_order_acquire); }
     void sleep(bool enabled);
     u32 spi_hz() const { return spi_hz_; }
     u32 frames() const { return frames_.load(std::memory_order_relaxed); }
@@ -74,7 +75,7 @@ private:
     std::atomic<u32> last_strips_{0},last_pauses_{0};
     void configure_dma();
     lcd::Stream stream_;
-    bool transfer_chain(const lcd::Rect& rect,u32& pauses,u64& next_i2c);
+    bool transfer_chain(const lcd::Rect& rect,u32& pauses);
     void abort_dma();
     void start_scanline(const u16* pixels,unsigned count);
     bool finish_scanline();

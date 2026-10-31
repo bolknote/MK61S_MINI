@@ -93,6 +93,7 @@ void Services::release_cache() {
 }
 basic_graphics::Result Services::graph_request(basic_graphics::Request& request) {
     const auto result=graph_.apply(request);
+    ++graphics_revision_;
     if(runtime_[0]=='A' && graph_.active()) { if(graph_width_==320) script::show_native_frame(graph_.frame());else script::show_frame(graph_.frame());runtime_graphics_=false; }
     return result;
 }
@@ -604,6 +605,7 @@ u8 Services::view_markdown(const char* path) {
     return 0;
 }
 unsigned Services::rows() const { return external_run_ || m61_text::active() || script::font_active()?script::rows():ROWS; }
+u32 Services::display_revision() const { return markdown_?markdown_->revision():graphics_revision_; }
 bool Services::custom_console() const { return page_==ServicePage::CONSOLE && script::font_active() && !graph_visible_; }
 const u8* Services::native_graphics() const {
     if(markdown_) return markdown_->native_frame();

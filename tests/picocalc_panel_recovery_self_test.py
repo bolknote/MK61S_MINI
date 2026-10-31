@@ -13,7 +13,7 @@ ROOT=Path(__file__).resolve().parents[1]
 
 def run(args, build):
     source=args.source.resolve().read_text()
-    first='void Panel::flush(const Screen& screen) {'
+    first='bool Panel::flush(const Screen& screen) {'
     after='void Panel::configure_dma() {'
     transfer='void Panel::transfer() {'
     end='\n} // namespace picocalc'

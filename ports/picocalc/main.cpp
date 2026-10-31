@@ -204,13 +204,21 @@ void report(unsigned math_failures) {
     std::printf("SD_SINGLE_CMDS=%lu SD_MULTI_CMDS=%lu SD_MULTI_SECTORS=%lu SD_WRITE_FALLBACKS=%lu\n",
         (unsigned long)sd.write_single_commands,(unsigned long)sd.write_multi_commands,
         (unsigned long)sd.write_multi_sectors,(unsigned long)sd.write_fallbacks);
+    std::printf("SD_SPI_HZ=%lu SD_SAFE_HZ=%lu SD_ADVERTISED_HZ=%lu SD_SPEED_FALLBACKS=%lu SD_PROBE_FAILURES=%lu SD_READY_WAITS=%lu SD_READY_SLEEP_US=%lu\n",
+        (unsigned long)sd.spi_hz,(unsigned long)sd.safe_hz,(unsigned long)sd.advertised_hz,
+        (unsigned long)sd.speed_fallbacks,(unsigned long)sd.speed_probe_failures,
+        (unsigned long)sd.ready_waits,(unsigned long)sd.ready_sleep_us);
     std::printf("IDLE_WAITS=%lu IDLE_MS=%lu RTC_IRQS=%lu\n",(unsigned long)idle.waits,
         (unsigned long)(idle.wait_us/1000),(unsigned long)picocalc::clock::alarm_interrupts());
     std::printf("CORE_PARKED=%u\n",calculator.parked());
+    std::printf("UI_RENDERS=%lu UI_SKIPS=%lu\n",(unsigned long)screen.renders(),(unsigned long)screen.skipped());
     const auto io=picocalc::io_worker::statistics();
     std::printf("IO_CORE=%u I2C_TRANSACTIONS=%lu UART_BYTES=%lu LCD_PENDING=%u LCD_FRAME_CRC=%08lX\n",
         io.running?1:0,(unsigned long)io.transactions,(unsigned long)io.uart_bytes,
         picocalc::io_worker::frame_pending(),(unsigned long)panel.frame_crc());
+    std::printf("I2C_IRQ=1 I2C_IRQS=%lu I2C_TIMEOUTS=%lu I2C_ABORTS=%lu I2C_BUSY_US=%lu I2C_SLEEP_HOLDS=%lu\n",
+        (unsigned long)io.i2c_irqs,(unsigned long)io.i2c_timeouts,(unsigned long)io.i2c_aborts,(unsigned long)io.i2c_busy_us,
+        (unsigned long)io.i2c_sleep_holds);
     std::printf("UART_WAIT_US=%lu UART_FLUSH_US=%lu UART_FLUSHES=%lu\n",
         (unsigned long)io.uart_wait_us,(unsigned long)io.uart_flush_us,(unsigned long)io.uart_flushes);
     std::printf("UART_DMA=%u IO_IDLE_US=%lu UART_EVENT_WAITS=%lu UART_SLEEP_HOLDS=%lu UART_BAUD=%lu\n",io.uart_dma,(unsigned long)io.idle_us,
@@ -294,7 +302,7 @@ bool service_pump(void*, u8& key) {
     const u64 now = time_us_64();
     static u64 next = 0;
     if(panel_ready && !remote_screen.holds_frame() && !picocalc::io_worker::frame_pending() && now >= next) {
-        screen.render(display_snapshot(), keyboard.online(), &ui, &services,keyboard.battery()); panel.flush(screen); next = time_us_64() + FRAME_INTERVAL_US;
+        screen.render(display_snapshot(), keyboard.online(), &ui, &services,keyboard.battery()); if((screen.presentation_pending() || panel.needs_refresh()) && panel.flush(screen)) screen.presented(); next = time_us_64() + FRAME_INTERVAL_US;
     }
     picocalc::KeyEvent event{};
     if(key_event(event) && event.pressed()) {
@@ -338,7 +346,7 @@ int main() {
         [](void*,u8* frame) { screen.render(display_snapshot(),keyboard.online(),&ui,&services,keyboard.battery());screen.logical_frame(ui,services,frame); },
         [](void*) {
             screen.render(display_snapshot(),keyboard.online(),&ui,&services,keyboard.battery());
-            if(panel_ready && !power.asleep()) panel.flush(screen);
+            if(panel_ready && !power.asleep()) if((screen.presentation_pending() || panel.needs_refresh()) && panel.flush(screen)) screen.presented();
         },
         [](void*,unsigned x,unsigned page,u8* out,unsigned count) {
             for(unsigned i=0;i<count;++i) {
@@ -476,6 +484,7 @@ int main() {
             applied_lcd = ui.settings().lcd_backlight;
             applied_keys = ui.settings().key_backlight;
             panel.init();
+            screen.invalidate();
             panel_ready = true;
             next_frame = 0;
             std::puts("PICOCALC PANEL INITIALIZED KBD=OK");
@@ -517,7 +526,7 @@ int main() {
                 keyboard.idle(true);sleep_clocks.enter();keyboard.clock_changed();
             } else {
                 sleep_clocks.leave();keyboard.clock_changed();keyboard.idle(false);
-                panel.sleep(false);keyboard.backlight(ui.settings().lcd_backlight,ui.settings().key_backlight);next_frame=0;
+                panel.sleep(false);screen.invalidate();keyboard.backlight(ui.settings().lcd_backlight,ui.settings().key_backlight);next_frame=0;
             }
         }
         if(power.asleep()) {
@@ -599,7 +608,7 @@ int main() {
             if(picocalc::files::usb_active()) { max_usb_gap = 0; last_usb_service = time_us_64(); }
         } else if(action != picocalc::Action::NONE) {
             save_settings();
-            picocalc::psram::prepare_reset();
+            picocalc::io_worker::drain();picocalc::psram::prepare_reset();
             if(action == picocalc::Action::BOOTLOADER) reset_usb_boot(0, 0);
             else watchdog_reboot(0, 0, 10);
             for(;;) tight_loop_contents();
@@ -617,7 +626,7 @@ int main() {
                 }
                 if(panel_ready && !remote_screen.holds_frame() && !picocalc::io_worker::frame_pending()) {
                     screen.render(model, keyboard.online(), &ui, &services,keyboard.battery());
-                    panel.flush(screen);
+                    if((screen.presentation_pending() || panel.needs_refresh()) && panel.flush(screen)) screen.presented();
                 }
                 if(!panel_ready || !picocalc::io_worker::frame_pending()) {
                     drawn_usb = usb; drawn_ejected = ejected; drawn_activity = last_activity;

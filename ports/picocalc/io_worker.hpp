@@ -3,7 +3,8 @@
 #include "rust_types.h"
 
 namespace picocalc::io_worker {
-struct Statistics { bool running;u32 transactions,uart_bytes,uart_wait_us,uart_flush_us,uart_flushes,idle_us;bool uart_dma;u32 uart_event_waits,uart_sleep_holds,uart_baud; };
+struct Statistics { bool running;u32 transactions,uart_bytes,uart_wait_us,uart_flush_us,uart_flushes,idle_us;bool uart_dma;u32 uart_event_waits,uart_sleep_holds,uart_baud;
+    u32 i2c_irqs,i2c_timeouts,i2c_aborts,i2c_busy_us,i2c_sleep_holds; };
 void start();
 bool request_i2c(bool read,const u8* bytes,unsigned length);
 bool take_i2c(int& result,u8* bytes=nullptr);
@@ -13,7 +14,7 @@ bool input_ready();
 bool submit_frame(void* context,void (*transfer)(void*));
 // Core 1 calls this between LCD scanlines; keyboard and UART do not wait
 // for a complete 320x320 RGB565 transfer.
-// UART remains serviced when short LCD windows defer blocking I2C briefly.
+// I2C transfers finish through IRQs; no LCD strip waits for bus clocks.
 void service(bool allow_i2c=true);
 // Core 0 drains outstanding peripheral work before reset/sleep/clock changes.
 void drain();

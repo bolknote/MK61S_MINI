@@ -122,7 +122,7 @@ bool Panel::finish_scanline() {
     if(controller.fail_completion) { controller.fail_completion=false;return false; }
     return true;
 }
-bool Panel::transfer_chain(const lcd::Rect&,u32&,u64&) {
+bool Panel::transfer_chain(const lcd::Rect&,u32&) {
     require(false,"this host fixture uses the ordinary scanline completion boundary");return false;
 }
 
@@ -146,7 +146,10 @@ Screen shifted(const Screen& before,int delta) {
 void recovery(lcd::Region region,bool fail_first) {
     controller=Controller{};Panel panel;Screen frame;frame.region=region;
     for(auto& value:frame.pixels) value=byte();
-    panel.flush(frame);controller.run();require(controller.visible(frame),"initial exact frame");
+    require(panel.flush(frame),"initial frame accepted");
+    require(!panel.flush(frame),"busy panel does not acknowledge an unsubmitted frame");
+    controller.run();require(controller.visible(frame),"initial exact frame");
+    require(panel.flush(frame) && !controller.pending,"identical completed frame acknowledged without DMA");
     if(fail_first) {
         frame=shifted(frame,16);controller.commands.clear();controller.fail_completion=true;
         panel.flush(frame);controller.run();

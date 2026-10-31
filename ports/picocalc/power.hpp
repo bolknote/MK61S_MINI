@@ -3,7 +3,7 @@
 #include "rust_types.h"
 namespace picocalc {
 struct IdleStatistics { u32 waits;u64 wait_us; };
-void idle_until(u64 deadline);
+void idle_until(u64 deadline,bool watch_input=true);
 IdleStatistics idle_statistics();
 // RP2040 SLEEP keeps the XOSC/RTC and polls the stock I2C keyboard. The
 // USB sleep retains the normal SYS/peripheral clocks and both PLLs for E16.

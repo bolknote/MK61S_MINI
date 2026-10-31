@@ -72,6 +72,7 @@ struct GraphicPlatform {
 }
 const u8* MarkdownView::native_frame() const { return canvas::frame(); }
 void MarkdownView::render() {
+  ++revision_;
   program_store::Entry entry{};
   if(!script::register_file(path_,entry)) { std::memset(frame_,0,sizeof(frame_));return; }
   markdown_scroll::Probe compatibility(top);

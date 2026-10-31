@@ -5,6 +5,8 @@
 #include "dma_support.hpp"
 #include "external_cache.hpp"
 #include "sd_multi_write.hpp"
+#include "sd_speed.hpp"
+#include "power.hpp"
 #include "hardware/dma.h"
 #include "hardware/spi.h"
 #include "hardware/watchdog.h"
@@ -54,9 +56,20 @@ bool data_transfer(const u8* source,u8* target,unsigned count,u16& crc) {
 u8 transfer(u8 byte = 0xFF) { u8 in; spi_write_read_blocking(spi0, &byte, &in, 1); return in; }
 void deselect() { gpio_put(CS, 1); transfer(); }
 bool wait_ready(u32 ms = 500) {
-    const u64 end = time_us_64() + ms * 1000ULL;
-    do { if(transfer() == 0xFF) return true; } while(time_us_64() < end);
-    return false;
+    struct Bus {
+        u64 now() { return time_us_64(); }
+        u8 byte() { return transfer(); }
+        void wait(u64 until) {
+            diagnostics::feed_watchdog();const auto start=time_us_64();
+            idle_until(until,false);
+            ++counters.ready_waits;counters.ready_sleep_us+=(u32)(time_us_64()-start);
+        }
+    } bus;
+    return sd::wait_ready(bus,ms*1000ULL);
+}
+bool slow_down() {
+    if(spi_get_baudrate(spi0)<=counters.safe_hz) return false;
+    counters.spi_hz=spi_set_baudrate(spi0,counters.safe_hz);++counters.speed_fallbacks;return true;
 }
 bool select() { gpio_put(CS, 0); transfer(); if(wait_ready()) return true; deselect(); return false; }
 u8 command(u8 op, u32 argument) {
@@ -81,6 +94,11 @@ bool receive(u8* data, unsigned size) {
     const u16 expected = (u16)high << 8 | low;
     if(actual!=expected) { ++counters.crc_errors;return false; }
     return true;
+}
+bool physical_read(u32 sector,u8 out[512]) {
+    ++counters.reads;
+    const bool ok=command(17,block_address?sector:sector*512)==0 && receive(out,512);
+    deselect();return ok;
 }
 }
 bool init() {
@@ -135,8 +153,15 @@ bool init() {
         sector_count = (u32)(((u64)c_size + 1) << shift >> 9);
     }
     deselect();
-    spi_set_baudrate(spi0, 12500000);
-    initialized = sector_count != 0;
+    if(!sector_count) return false;
+    struct Bus {
+        u32 rate(u32 hz) { return spi_set_baudrate(spi0,hz); }
+        bool read(u32 lba,u8* bytes) { return physical_read(lba,bytes); }
+    } bus;
+    const auto speed=qualify_speed(bus,csd[3],sector_count-1);
+    counters.spi_hz=speed.hz;counters.safe_hz=speed.safe_hz;counters.advertised_hz=speed.advertised_hz;
+    if(speed.fallback) { ++counters.speed_probe_failures;++counters.speed_fallbacks; }
+    initialized=speed.ok;
     return initialized;
 }
 bool ready() { return initialized; }
@@ -148,9 +173,9 @@ bool read(u32 sector, u8 out[512]) {
     // repeated file/VM reads. All writes still invalidate cached sectors.
     const bool cached=!files::usb_active();
     if(cached && external_cache::sector(sector,out)) return true;
-    ++counters.reads;
-    const bool ok = command(17, block_address ? sector : sector * 512) == 0 && receive(out, 512);
-    deselect();if(ok && cached) external_cache::store_sector(sector,out);return ok;
+    bool ok=physical_read(sector,out);
+    if(!ok && slow_down()) ok=physical_read(sector,out); // Reads alone are retryable.
+    if(ok && cached) external_cache::store_sector(sector,out);return ok;
 }
 bool read_sectors(u32 sector, u8* out, u32 count) {
     if(!initialized || !count || sector >= sector_count || count > sector_count - sector) return false;
@@ -161,7 +186,9 @@ bool read_sectors(u32 sector, u8* out, u32 count) {
     while(cached && count && external_cache::sector(sector,out)) { ++sector;out+=512;--count; }
     if(!count) return true;
     if(count==1) return read(sector,out);
-    if(command(18, block_address ? sector : sector * 512) != 0) { deselect(); return false; }
+    if(command(18, block_address ? sector : sector * 512) != 0) {
+        deselect();if(slow_down()) return read_sectors(sector,out,count);return false;
+    }
     bool ok = true;
     for(u32 i = 0; i < count; ++i) {
         picocalc::diagnostics::feed_watchdog();
@@ -170,7 +197,10 @@ bool read_sectors(u32 sector, u8* out, u32 count) {
     }
     // Stop even after CRC/token failure, so the next request starts cleanly.
     const bool stopped = command(12, 0) == 0 && wait_ready();
-    deselect(); return ok && stopped;
+    deselect();
+    if(!stopped) { initialized=false;return false; }
+    if(!ok && slow_down()) return read_sectors(sector,out,count);
+    return ok;
 }
 bool write(u32 sector, const u8 data[512]) {
     if(!initialized || sector >= sector_count) return false;
@@ -183,13 +213,15 @@ bool write(u32 sector, const u8 data[512]) {
     if(ok) {
         transfer(); transfer(0xFE);
         u16 crc=0;
-        if(!data_transfer(data,nullptr,512,crc)) { deselect();return false; }
+        if(!data_transfer(data,nullptr,512,crc)) { initialized=false;deselect();return false; }
         transfer((u8)(crc >> 8)); transfer((u8)crc);
         ok = (transfer() & 0x1F) == 5;
         transfer();
-        ok = wait_ready(1000) && ok;
+        const bool stopped=wait_ready(1000);
+        if(!stopped) initialized=false;
+        ok=stopped && ok;
     }
-    deselect(); return ok;
+    deselect();if(!ok) slow_down();return ok; // Never repeat a possibly written block.
 }
 bool write_sectors(u32 sector,const u8* data,u32 count) {
     if(!initialized || !data || !count || sector>=sector_count || count>sector_count-sector || count>UINT32_MAX/512) return false;
@@ -217,10 +249,11 @@ bool write_sectors(u32 sector,const u8* data,u32 count) {
         return true;
     }
     if(result==MultiWriteResult::INCOMPLETE) initialized=false;
+    slow_down(); // Future recovery may use safe clocks; this write is not repeated.
     return false;
 }
 bool sync() { if(!initialized || !select()) return false; const bool ok = wait_ready(1000); deselect(); return ok; }
-Statistics statistics() { return counters; }
+Statistics statistics() { auto value=counters;if(value.spi_hz) value.spi_hz=spi_get_baudrate(spi0);return value; }
 } } // namespace picocalc::sd
 
 extern "C" {

@@ -6,7 +6,8 @@ namespace shared_memory { class Buffer; }
 namespace picocalc {
 namespace sd {
 struct Statistics { bool dma;u32 reads,writes,dma_transfers,hardware_crc,crc_errors;
-    u32 write_single_commands,write_multi_commands,write_multi_sectors,write_fallbacks; };
+    u32 write_single_commands,write_multi_commands,write_multi_sectors,write_fallbacks;
+    u32 spi_hz,safe_hz,advertised_hz,speed_fallbacks,speed_probe_failures,ready_waits,ready_sleep_us; };
 Statistics statistics();
 bool init();
 bool ready();

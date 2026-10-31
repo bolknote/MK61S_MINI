@@ -23,7 +23,7 @@ void uart_clock_changed() {
 #endif
 }
 }
-void idle_until(u64 deadline) {
+void idle_until(u64 deadline,bool watch_input) {
   const u64 started=time_us_64();
   if(deadline<=started) return;
   ++idle_stats.waits;
@@ -45,8 +45,8 @@ void idle_until(u64 deadline) {
 #else
     const bool serial_pending=false;
 #endif
-    if(!io_worker::input_ready() && !clock::alarm_pending() && !usb_pending &&
-       !serial_pending && time_us_64()<deadline) __wfe();
+    const bool pending=watch_input && (io_worker::input_ready() || clock::alarm_pending() || usb_pending || serial_pending);
+    if(!pending && time_us_64()<deadline) __wfe();
     hardware_alarm_cancel((unsigned)idle_alarm);
   } else best_effort_wfe_or_timeout(from_us_since_boot(deadline));
   idle_stats.wait_us+=time_us_64()-started;

@@ -4,15 +4,19 @@
 #include "event_wait.hpp"
 #include "sleep_clock_lease.hpp"
 #include "console_route.hpp"
+#include "i2c_transfer.hpp"
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
 #include "hardware/i2c.h"
+#include "hardware/irq.h"
+#include "hardware/timer.h"
 #include "hardware/uart.h"
 #include "pico/flash.h"
 #include "pico/multicore.h"
 #include "pico/stdlib.h"
 #include <atomic>
 #include <cstring>
+#include <optional>
 #if LIB_PICO_STDIO_UART
 #include "pico/stdio/driver.h"
 #include "pico/stdio_uart.h"
@@ -28,6 +32,65 @@ struct I2cJob {
 std::atomic<bool> ready{false},frame{false};
 std::atomic<bool> uart_active{false};
 std::atomic<u32> transactions{0},uart_bytes{0};
+std::atomic<u32> i2c_irqs{0},i2c_timeouts{0},i2c_aborts{0},i2c_busy_us{0};
+std::atomic<u32> i2c_sleep_holds{0};
+struct WorkerClockRegisters {
+    static u32 read0() { return clocks_hw->sleep_en0; }
+    static u32 read1() { return clocks_hw->sleep_en1; }
+    static void set0(u32 bits) { hw_set_bits(&clocks_hw->sleep_en0,bits); }
+    static void set1(u32 bits) { hw_set_bits(&clocks_hw->sleep_en1,bits); }
+    static void clear0(u32 bits) { hw_clear_bits(&clocks_hw->sleep_en0,bits); }
+    static void clear1(u32 bits) { hw_clear_bits(&clocks_hw->sleep_en1,bits); }
+};
+std::optional<SleepClockLease<WorkerClockRegisters>> i2c_sleep_clocks;
+I2cTransfer i2c_transfer;
+int i2c_alarm=-1;
+struct I2cBus {
+    void prepare(bool read) {
+        auto* hw=i2c_get_hw(i2c1);
+        hw->intr_mask=0;hw->enable=0;hw->tar=0x1F;
+        (void)hw->clr_intr;
+        while(hw->rxflr) (void)hw->data_cmd;
+        hw->rx_tl=0;hw->enable=1;
+        hw->intr_mask=I2C_IC_INTR_MASK_M_STOP_DET_BITS|I2C_IC_INTR_MASK_M_TX_ABRT_BITS|
+            I2C_IC_INTR_MASK_M_RX_OVER_BITS|(read?I2C_IC_INTR_MASK_M_RX_FULL_BITS:0);
+    }
+    void put(unsigned command) { i2c_get_hw(i2c1)->data_cmd=command; }
+    unsigned flags() {
+        const auto flags=i2c_get_hw(i2c1)->raw_intr_stat;
+        return ((flags&I2C_IC_RAW_INTR_STAT_STOP_DET_BITS)?I2cTransfer::STOP:0)|
+            ((flags&I2C_IC_RAW_INTR_STAT_TX_ABRT_BITS)?I2cTransfer::ABORT:0)|
+            ((flags&I2C_IC_RAW_INTR_STAT_RX_OVER_BITS)?I2cTransfer::RX_OVERFLOW:0);
+    }
+    bool available() { return i2c_get_hw(i2c1)->rxflr!=0; }
+    u8 get() { return (u8)i2c_get_hw(i2c1)->data_cmd; }
+    void finish(bool failed) {
+        auto* hw=i2c_get_hw(i2c1);hw->intr_mask=0;(void)hw->clr_intr;
+        // A timed-out/stretched bus must not hold a job alive or leave FIFO
+        // bytes for the next one. Reset only this dedicated master instance.
+        if(failed) {
+            i2c_init(i2c1,10000);
+            // Reset restores TX_EMPTY's interrupt mask too. Keep the idle
+            // master silent until prepare() enables this job's sources.
+            i2c_get_hw(i2c1)->intr_mask=0;
+        }
+    }
+} i2c_bus;
+void finish_i2c() {
+    if(i2c.stage.load(std::memory_order_acquire)!=WORKING ||
+       !i2c_transfer.step(i2c_bus,time_us_64())) return;
+    if(i2c_alarm>=0) hardware_alarm_cancel((unsigned)i2c_alarm);
+    i2c.result=i2c_transfer.result();
+    if(i2c.read && i2c.result>0) std::memcpy(i2c.bytes,i2c_transfer.bytes(),(unsigned)i2c.result);
+    transactions.fetch_add(1,std::memory_order_relaxed);
+    i2c_busy_us.fetch_add(i2c_transfer.elapsed(),std::memory_order_relaxed);
+    if(i2c_transfer.timed_out()) i2c_timeouts.fetch_add(1,std::memory_order_relaxed);
+    if(i2c_transfer.aborted()) i2c_aborts.fetch_add(1,std::memory_order_relaxed);
+    i2c_sleep_clocks.reset();
+    i2c.stage.store(DONE,std::memory_order_release);__sev();
+}
+void i2c_irq() { i2c_irqs.fetch_add(1,std::memory_order_relaxed);finish_i2c(); }
+void i2c_timeout(unsigned) { finish_i2c(); }
 std::atomic<u32> uart_wait_us{0},uart_flush_us{0},uart_flushes{0};
 std::atomic<u32> idle_us{0},uart_event_waits{0};
 std::atomic<u32> uart_sleep_holds{0};
@@ -38,14 +101,6 @@ void* frame_context=nullptr;
 void (*frame_transfer)(void*)=nullptr;
 IoQueue<char,1024> uart_queue;
 #if LIB_PICO_STDIO_UART
-struct UartClockRegisters {
-    static u32 read0() { return clocks_hw->sleep_en0; }
-    static u32 read1() { return clocks_hw->sleep_en1; }
-    static void set0(u32 bits) { hw_set_bits(&clocks_hw->sleep_en0,bits); }
-    static void set1(u32 bits) { hw_set_bits(&clocks_hw->sleep_en1,bits); }
-    static void clear0(u32 bits) { hw_clear_bits(&clocks_hw->sleep_en0,bits); }
-    static void clear1(u32 bits) { hw_clear_bits(&clocks_hw->sleep_en1,bits); }
-};
 auto uart_clocks() {
     // WFE can gate UART before the final stop bit, and DMA can wait for its
     // DREQ. Keep the transport and its striped SRAM source alive only while
@@ -57,7 +112,7 @@ auto uart_clocks() {
     const u32 uart=uart_default==uart0?
         CLOCKS_SLEEP_EN1_CLK_SYS_UART0_BITS | CLOCKS_SLEEP_EN1_CLK_PERI_UART0_BITS:
         CLOCKS_SLEEP_EN1_CLK_SYS_UART1_BITS | CLOCKS_SLEEP_EN1_CLK_PERI_UART1_BITS;
-    return SleepClockLease<UartClockRegisters>(memory,uart);
+    return SleepClockLease<WorkerClockRegisters>(memory,uart);
 }
 #endif
 
@@ -155,6 +210,12 @@ void uart_flush() {
 void uart_stdio_flush() { if(console::routing.uart_output_enabled()) uart_flush(); }
 void worker() {
     flash_safe_execute_core_init();
+    i2c_alarm=hardware_alarm_claim_unused(false);
+    if(i2c_alarm>=0) hardware_alarm_set_callback((unsigned)i2c_alarm,i2c_timeout);
+    // SDK i2c_init leaves the reset interrupt mask (including TX_EMPTY).
+    // An empty FIFO would otherwise interrupt forever before ready=true.
+    i2c_get_hw(i2c1)->intr_mask=0;
+    irq_set_exclusive_handler(I2C1_IRQ,i2c_irq);irq_set_enabled(I2C1_IRQ,true);
     ready.store(true,std::memory_order_release);__sev();
     for(;;) {
         service();
@@ -165,7 +226,10 @@ void worker() {
         if(!frame.load(std::memory_order_acquire) &&
            (uart_queue.empty() || uart_active.load(std::memory_order_acquire)) &&
            i2c.stage.load(std::memory_order_acquire)!=QUEUED) {
-            const u64 started=time_us_64();__wfe();
+            const u64 started=time_us_64();
+            if(i2c.stage.load(std::memory_order_acquire)==WORKING && i2c_alarm<0)
+                best_effort_wfe_or_timeout(make_timeout_time_us(1000));
+            else __wfe();
             idle_us.fetch_add((u32)(time_us_64()-started),std::memory_order_relaxed);
         } else if(!frame.load(std::memory_order_acquire) &&
                   uart_dma_channel.load(std::memory_order_relaxed)<0 &&
@@ -219,15 +283,19 @@ bool submit_frame(void* context,void (*transfer)(void*)) {
 }
 void service(bool allow_i2c) {
     drain_uart();
-    if(!allow_i2c) return;
-    if(i2c.stage.load(std::memory_order_acquire)!=QUEUED) return;
-    i2c.stage.store(WORKING,std::memory_order_release);
-    i2c.result=i2c.read?
-        i2c_read_timeout_us(i2c1,0x1F,i2c.bytes,i2c.length,false,10000):
-        i2c_write_timeout_us(i2c1,0x1F,i2c.bytes,i2c.length,false,10000);
-    transactions.fetch_add(1,std::memory_order_relaxed);
-    i2c.stage.store(DONE,std::memory_order_release);__sev();
-    drain_uart();
+    (void)allow_i2c; // Starting the FIFO is bounded even for tiny LCD windows.
+    const u32 interrupts=save_and_disable_interrupts();
+    finish_i2c();
+    if(i2c.stage.load(std::memory_order_acquire)==QUEUED) {
+        i2c.stage.store(WORKING,std::memory_order_release);
+        // Both cores may WFE while the FIFO shifts. Retain I2C1's clock
+        // until STOP/error cleanup, before publishing DONE to clock changes.
+        i2c_sleep_clocks.emplace(CLOCKS_SLEEP_EN0_CLK_SYS_I2C1_BITS,0);
+        if(i2c_sleep_clocks->temporary()) i2c_sleep_holds.fetch_add(1,std::memory_order_relaxed);
+        i2c_transfer.begin(i2c_bus,i2c.read,i2c.bytes,i2c.length,time_us_64());
+        if(i2c_alarm>=0) hardware_alarm_set_target((unsigned)i2c_alarm,from_us_since_boot(i2c_transfer.deadline()));
+    }
+    restore_interrupts(interrupts);
 }
 void drain() {
     if(!ready.load(std::memory_order_acquire)) return;
@@ -246,6 +314,9 @@ Statistics statistics() {
         uart_bytes.load(std::memory_order_relaxed),uart_wait_us.load(std::memory_order_relaxed),
         uart_flush_us.load(std::memory_order_relaxed),uart_flushes.load(std::memory_order_relaxed),
         idle_us.load(std::memory_order_relaxed),uart_dma_channel.load(std::memory_order_relaxed)>=0,
-        uart_event_waits.load(std::memory_order_relaxed),uart_sleep_holds.load(std::memory_order_relaxed),baud};
+        uart_event_waits.load(std::memory_order_relaxed),uart_sleep_holds.load(std::memory_order_relaxed),baud,
+        i2c_irqs.load(std::memory_order_relaxed),i2c_timeouts.load(std::memory_order_relaxed),
+        i2c_aborts.load(std::memory_order_relaxed),i2c_busy_us.load(std::memory_order_relaxed),
+        i2c_sleep_holds.load(std::memory_order_relaxed)};
 }
 }

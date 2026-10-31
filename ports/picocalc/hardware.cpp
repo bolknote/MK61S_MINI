@@ -174,12 +174,12 @@ void Panel::sleep(bool enabled) {
     if(enabled) { command(0x28);command(0x10); }
     else { command(0x11);sleep_ms(120);command(0x29);valid_=false; }
 }
-void Panel::flush(const Screen& screen) {
-    if(io_worker::frame_pending()) return;
+bool Panel::flush(const Screen& screen) {
+    if(io_worker::frame_pending()) return false;
     if(failed_.exchange(false,std::memory_order_acquire)) valid_=false;
     // The retained BASIC/APP image is usually identical. Avoid walking all
     // dirty tiles at every UI poll while a chess search is computing.
-    if(valid_ && std::memcmp(previous_,screen.data(),Screen::BYTES)==0) return;
+    if(valid_ && std::memcmp(previous_,screen.data(),Screen::BYTES)==0) return true;
     diagnostics::Scope measure(diagnostics::Point::LCD);
     const auto region=screen.scroll_region();
     bool force=!valid_;
@@ -190,9 +190,10 @@ void Panel::flush(const Screen& screen) {
     pending_scroll_rows_=delta<0?-delta:delta;
     if(delta) scroll_.rotate(previous_,delta);
     update_.plan(previous_,screen.data(),force);
-    if(!update_.count && !delta) return;
+    if(!update_.count && !delta) return true;
     std::memcpy(previous_,screen.data(),Screen::BYTES);
     valid_=io_worker::submit_frame(this,[](void* context) { ((Panel*)context)->transfer(); });
+    return valid_;
 }
 void Panel::configure_dma() {
     if(!dma_irq_ready_) {
@@ -239,7 +240,7 @@ void Panel::abort_dma() {
     dma_channel_abort((unsigned)dma_tx_);dma_channel_abort((unsigned)dma_rx_);
     dma_irq_ready_=false;
 }
-bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,u64& next_i2c) {
+bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses) {
     static_assert(sizeof(lcd::Segment)==2*sizeof(u32));
     configure_dma();stream_.reset(rect);
     const auto descriptor=[&](unsigned index) {
@@ -266,11 +267,7 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,u64& next_i2c) {
     dma_channel_set_trans_count((unsigned)dma_rx_,total,false);__dmb();
     dma_start_channel_mask((1U<<dma_rx_) | (1U<<dma_control_));
     const u64 limit=time_us_64()+1000000;
-    const auto service=[&] {
-        const bool i2c=time_us_64()>=next_i2c;
-        io_worker::service(i2c);
-        if(i2c) next_i2c=time_us_64()+2000;
-    };
+    const auto service=[] { io_worker::service(); };
     const auto loaded=[&] {
         return (dma_hw->ch[dma_control_].read_addr-(uintptr_t)stream_.segments)/sizeof(lcd::Segment);
     };
@@ -316,7 +313,6 @@ bool Panel::finish_scanline() {
 }
 void Panel::transfer() {
     const u64 start=time_us_64();
-    u64 next_i2c=start+2000;
     u32 strips=0,pauses=0,windows=0;
     const bool manage_scroll=scroll_configured_ || pending_scroll_rows_;
     const lcd::Region physical=scroll_.region.valid()?scroll_.region:lcd::Region{0,lcd::HEIGHT};
@@ -354,7 +350,7 @@ void Panel::transfer() {
         spi_set_format(spi1,16,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
         bool ok=true;
         if(chained_dma()) {
-            ok=transfer_chain(rect,pauses,next_i2c);strips+=stream_.count;
+            ok=transfer_chain(rect,pauses);strips+=stream_.count;
         } else {
           lcd::scanline(previous_,rect,0,(u8*)scanlines);
           start_scanline(scanlines,rect.width);
