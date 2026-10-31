@@ -2204,7 +2204,20 @@ inline u8* IK1306_M_START(void) {
   return &ringM[expanded_program_mode ? OFFSET_IK1306_EXPANDED : OFFSET_IK1306_CLASSIC];
 }
 
-static  const   u8  IK1302_DCW[68] = {
+// DCW is the existing two-bit destination field of every ROM microinstruction.
+// F401 extracts it from the already loaded word, avoiding a second table load.
+// Keep other targets' decoder and the hot-table/cache interfaces unchanged.
+#if defined(STM32F401xC) || defined(STM32F401xE) || \
+    (!defined(ARDUINO) && !defined(__arm__) && !defined(__thumb__) && \
+     defined(MK61_TEST_DCW_FIELDS))
+#define MK61_CORE_DCW_FROM_MICRO 1
+#define MK61_DCW_CONST constexpr
+#else
+#define MK61_CORE_DCW_FROM_MICRO 0
+#define MK61_DCW_CONST const
+#endif
+
+static MK61_DCW_CONST u8 IK1302_DCW[68] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x02, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00,
@@ -2220,7 +2233,7 @@ static  const   u8  IK1302_DCWA[68] = {
   0x00, 0x00, 0x02, 0x02
 };
 
-static  const   u8  IK1303_DCW[68] = {
+static MK61_DCW_CONST u8 IK1303_DCW[68] = {
   00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 03, 00, 00, 00, 00,
   00, 00, 00, 02, 00, 00, 00, 00, 03, 00, 00, 00, 01, 00, 00, 00,
   00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 03, 00, 01,
@@ -2228,13 +2241,29 @@ static  const   u8  IK1303_DCW[68] = {
   00, 00, 00, 00
 };
 
-static  const   u8  IK1306_DCW[68] = {
+static MK61_DCW_CONST u8 IK1306_DCW[68] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
   0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x02,
   0x02, 0x02, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x02, 0x02, 0x02, 0x00,
   0x02, 0x02, 0x00, 0x00
 };
+
+#undef MK61_DCW_CONST
+#if MK61_CORE_DCW_FROM_MICRO
+constexpr bool dcw_fields_match(const microinstruction_t (&micro)[68],
+                                const u8 (&expected)[68]) {
+  for(unsigned i = 0; i < 68; ++i)
+    if(((micro[i] >> 15) & 3U) != expected[i]) return false;
+  return true;
+}
+static_assert(dcw_fields_match(ROM.IK1302.microinstructions, IK1302_DCW),
+              "IK1302 DCW no longer matches its microinstruction field");
+static_assert(dcw_fields_match(ROM.IK1303.microinstructions, IK1303_DCW),
+              "IK1303 DCW no longer matches its microinstruction field");
+static_assert(dcw_fields_match(ROM.IK1306.microinstructions, IK1306_DCW),
+              "IK1306 DCW no longer matches its microinstruction field");
+#endif
 
 // The historical source spells each nine-byte microprogram as a 16-byte row
 // so it remains auditable against the original ROM transcription. Only the
@@ -3703,7 +3732,12 @@ MK61_CORE_TICK_FUNCTION IK1302_Tick(
   }
 #endif
   IK1302_Execute(signal_I, signal_div3, microinstruction,
-      IK1302_DCW_ACTIVE[m_IK1302.AMK], IK1302_DCWA_ACTIVE[m_IK1302.AMK]);
+#if MK61_CORE_DCW_FROM_MICRO
+      ((microinstruction >> 15) & 3U)
+#else
+      IK1302_DCW_ACTIVE[m_IK1302.AMK]
+#endif
+      , IK1302_DCWA_ACTIVE[m_IK1302.AMK]);
 }
 
 static inline void __attribute__((always_inline)) IK1303_Execute(
@@ -3881,7 +3915,12 @@ MK61_CORE_TICK_FUNCTION IK1303_Tick(
   }
 #endif
   IK1303_Execute(signal_I, signal_div3, microinstruction,
-      IK1303_DCW_ACTIVE[m_IK1303.AMK]);
+#if MK61_CORE_DCW_FROM_MICRO
+      ((microinstruction >> 15) & 3U)
+#else
+      IK1303_DCW_ACTIVE[m_IK1303.AMK]
+#endif
+      );
 }
 
 #if MK61_CORE_PREDECODED_ROM
@@ -4064,7 +4103,12 @@ MK61_CORE_TICK_FUNCTION IK1306_Tick(
   }
 #endif
   IK1306_Execute(signal_I, microinstruction,
-      IK1306_DCW_ACTIVE[m_IK1306.AMK]);
+#if MK61_CORE_DCW_FROM_MICRO
+      ((microinstruction >> 15) & 3U)
+#else
+      IK1306_DCW_ACTIVE[m_IK1306.AMK]
+#endif
+      );
 }
 
 #if MK61_CORE_PREDECODED_ROM

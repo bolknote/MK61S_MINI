@@ -1,0 +1,151 @@
+{
+  "status": "SOURCE_REVIEW_READY_NOT_RELEASE",
+  "base_commit": "8105bd47dab2d45fe6169ea033850ca4527f47f3",
+  "files": {
+    "code/mk61emu_core.cpp": "30703237564563396026d31ecc77cf27348897cf7059b132ba82a3772570ff15",
+    "tests/run_core_native_tests.sh": "879a3e680cdd3d3a170bce28ed36ff8a3e704b82714080bbc017af374898beff",
+    "tests/run_runner_tests.sh": "47e164733fceb93885d7db943f87a68a54b65572252998ea6c53d2e214f33d2f"
+  },
+  "core_sha256": "30703237564563396026d31ecc77cf27348897cf7059b132ba82a3772570ff15",
+  "native_size": {
+    "case": "f401-product-classic-v3",
+    "before": 259016,
+    "after": 258792,
+    "incremental_gain": 224,
+    "free": 3352,
+    "minimum_free": 4096,
+    "remaining": 744
+  },
+  "subsequent_font_candidate": {
+    "bin": 258696,
+    "free": 3448,
+    "remaining": 648,
+    "global_ram": 29844,
+    "global_ram_limit": 52428,
+    "frame": 1304,
+    "frame_limit": 2048
+  },
+  "guards": {
+    "literal_ROM_values_compile_checked": 204,
+    "broken_tables_rejected": 3,
+    "F401_syntax_combinations": 18,
+    "F401_runtime_HOST": "8 configs: legacy/shared x hotRAM0/2 x DCW0/1; DCW1 uses PREDECODED0",
+    "F401_runtime_ARM": "96 microtick probes; packed0/1, all3/pair2, Flash/RAM tables,12 seeds including all8initialL combinations",
+    "PREDECODED1": "Syntax qualified; its constant ROM branch and tables retain their existing values",
+    "F411_legacy_preprocess_cases": 12,
+    "actual_Pico_legacy_cases": 2,
+    "Ms_BBS_and_other_source": "byte-exact after removing only the enumerated DCW qualification/proof and three Tick argument substitutions"
+  },
+  "arm_contexts": {
+    "cases": 96,
+    "bytes_per_context": 896,
+    "all_equal": true,
+    "balanced_SP": true,
+    "instruction_counts_not_device_cycles": true
+  },
+  "instruction_summary": [
+    {
+      "packed": 0,
+      "path": "all3",
+      "before_sum": 933645,
+      "after_sum": 907141,
+      "percent": -2.838766340525578
+    },
+    {
+      "packed": 0,
+      "path": "pair2",
+      "before_sum": 696943,
+      "after_sum": 679287,
+      "percent": -2.5333492122024293
+    },
+    {
+      "packed": 1,
+      "path": "all3",
+      "before_sum": 1150174,
+      "after_sum": 1127694,
+      "percent": -1.9544868863319853
+    },
+    {
+      "packed": 1,
+      "path": "pair2",
+      "before_sum": 916886,
+      "after_sum": 903214,
+      "percent": -1.491134121362958
+    }
+  ],
+  "cumulative_instructions_vs_e151_same8seeds": [
+    {
+      "packed": 0,
+      "path": "all3",
+      "same_seed_cases": 8,
+      "before_e151": 626526,
+      "after_shared_DCW": 625773,
+      "percent": -0.1201865525133794
+    },
+    {
+      "packed": 0,
+      "path": "pair2",
+      "same_seed_cases": 8,
+      "before_e151": 473311,
+      "after_shared_DCW": 464895,
+      "percent": -1.7781120658509897
+    },
+    {
+      "packed": 1,
+      "path": "all3",
+      "same_seed_cases": 8,
+      "before_e151": 767863,
+      "after_shared_DCW": 771735,
+      "percent": 0.5042566186937103
+    },
+    {
+      "packed": 1,
+      "path": "pair2",
+      "same_seed_cases": 8,
+      "before_e151": 611247,
+      "after_shared_DCW": 613935,
+      "percent": 0.4397567595423757
+    }
+  ],
+  "local_stack_bytes": [
+    {
+      "packed": 0,
+      "path": "all3",
+      "before": 52,
+      "after": 44
+    },
+    {
+      "packed": 0,
+      "path": "pair2",
+      "before": 28,
+      "after": 28
+    },
+    {
+      "packed": 1,
+      "path": "all3",
+      "before": 68,
+      "after": 68
+    },
+    {
+      "packed": 1,
+      "path": "pair2",
+      "before": 48,
+      "after": 48
+    }
+  ],
+  "stack_limitations": "Local disassembly nesting only; neither complete runtime peak nor device timing is established",
+  "tests": [
+    "dcw-core-native-asan.log:8 configurations PASS",
+    "dcw-runner-asan.log:native,F401-like,mini full campaigns PASS"
+  ],
+  "details": [
+    "PRESERVATION.json",
+    "arm-counter.json",
+    "stack-before-packed0.txt",
+    "stack-after-packed0.txt",
+    "stack-before-packed1.txt",
+    "stack-after-packed1.txt"
+  ],
+  "hardware_access": false,
+  "main_remote_access": false
+}
