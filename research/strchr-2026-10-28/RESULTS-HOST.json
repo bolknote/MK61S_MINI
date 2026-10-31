@@ -1,0 +1,186 @@
+{
+  "status": "M4_M0_HOST_READY_HARDWARE_NOT_MEASURED",
+  "source_base": "7a01beb4827c05bb2ba34fc0576f85f929b6160f",
+  "physical_IO": 0,
+  "hardware_winner": null,
+  "production_defaults_changed": false,
+  "runtime_count": 26,
+  "strchr_slot": 18,
+  "ARM_calls": 620640,
+  "core_runtime18_calls": 206880,
+  "rejected_bad_ARM_access_probes": 18,
+  "APP_count": 16,
+  "APP_search_checks": 77760,
+  "APP_runtime18_positive_target_calls": 31581,
+  "APP_synthetic_bench_calls": 4263,
+  "APP_synthetic_bench_runs": 87,
+  "APP_initializations": 48,
+  "APP_smoke_runs": 135,
+  "APP_negative_checks": 108,
+  "max_test_APP_bytes": 1096,
+  "max_test_APP_loaded_RAM": 1760,
+  "plan_cases": 1152,
+  "hardware_binding": "UNBOUND: actual image/body/clock/power/qualified timer/operator/window required",
+  "M0_native_baseline": "current GCC newlib surrogate only; actual installed firmware not bound",
+  "body_sizes_and_hashes": {
+    "m4": {
+      "byte1_strchr": {
+        "bytes": 18,
+        "sha256": "a02e16347138c513c279df7507c44d919bddf1766ac9ead65a60136f1cef2b71",
+        "address": 134225920
+      },
+      "byte4_strchr": {
+        "bytes": 58,
+        "sha256": "cf9c04a95af5355a969542b4cdeb8fc58415d686cab2e712a30b6c2b0f84efec",
+        "address": 134225940
+      },
+      "word1_strchr": {
+        "bytes": 84,
+        "sha256": "d63bc96137d89aeb5f086400d25b73a7d0cf6f223ef7a9ebe866d91784147421",
+        "address": 134226000
+      },
+      "word2_strchr": {
+        "bytes": 112,
+        "sha256": "c427726b9b84944622ea69167e382e6ecf0805ac07240d4d8d0cc0b196038e3e",
+        "address": 134226084
+      },
+      "dsp1_strchr": {
+        "bytes": 88,
+        "sha256": "dc40cd363f0cdda16705512fa226a52d6fdaff1a1c87cda752be20aaa5ff99a5",
+        "address": 134226196
+      },
+      "dsp2_strchr": {
+        "bytes": 108,
+        "sha256": "f57fad9df7feab1fae6de3c73d816f9320f8a244ee9a45a2fc60d6fceada7330",
+        "address": 134226284
+      },
+      "sdk_strchr": {
+        "bytes": 24,
+        "sha256": "292c7f8f9d08f2b10e2ecfef72cf06211e4cd491cec778ca36a74a5bef9ddb3b",
+        "address": 134226392
+      },
+      "strchr": {
+        "bytes": 206,
+        "sha256": "3804c29412ddbe9e9a8b6f0534f4ac8ee2be9c96a42eeac63297a69cc62af2d3",
+        "address": 134226440
+      },
+      "native_strchr": {
+        "bytes": 24,
+        "sha256": "f1c28d393759eba886b8f84e3f911fc2730b463740bf1c0d6f1809301ca81882",
+        "address": 134226416
+      }
+    },
+    "m0": {
+      "byte1_strchr": {
+        "bytes": 18,
+        "sha256": "a02e16347138c513c279df7507c44d919bddf1766ac9ead65a60136f1cef2b71",
+        "address": 268443648
+      },
+      "byte4_strchr": {
+        "bytes": 58,
+        "sha256": "cf9c04a95af5355a969542b4cdeb8fc58415d686cab2e712a30b6c2b0f84efec",
+        "address": 268443668
+      },
+      "word1_strchr": {
+        "bytes": 84,
+        "sha256": "d63bc96137d89aeb5f086400d25b73a7d0cf6f223ef7a9ebe866d91784147421",
+        "address": 268443728
+      },
+      "word2_strchr": {
+        "bytes": 112,
+        "sha256": "d52a31f0fce8a2760cfb13f262c76b7f0a9e6a9ed6ecd02e6214380772c49ad0",
+        "address": 268443812
+      },
+      "sdk_strchr": {
+        "bytes": 18,
+        "sha256": "3c29b130e59261354559097d56af1125573644f49c03912a075085d1725904d4",
+        "address": 268443924
+      },
+      "strchr": {
+        "bytes": 196,
+        "sha256": "5da52960626d0a7e1027f6bfb0c3066952195a050c525747536a83b610a9705f",
+        "address": 268443944
+      }
+    }
+  },
+  "timing_claim": false,
+  "evidence": [
+    {
+      "path": "research/strchr-2026-10-28/evidence/app-build.json.gz",
+      "bytes": 4430,
+      "sha256": "eca3a118f9eaf555677274d16f49ec174c6c3cf0d9f85f7681c51b631acd3973"
+    },
+    {
+      "path": "research/strchr-2026-10-28/evidence/app-results.json.gz",
+      "bytes": 3065,
+      "sha256": "322695411201b69061018de7791595a38862c08728f940869dfd72c8851ba6d1"
+    },
+    {
+      "path": "research/strchr-2026-10-28/evidence/core-build.json.gz",
+      "bytes": 9740,
+      "sha256": "8454639056906c3e9a9b6850fe10b49824ff6990e95da5d97c88f017d698c83b"
+    },
+    {
+      "path": "research/strchr-2026-10-28/evidence/core-results.json.gz",
+      "bytes": 595,
+      "sha256": "ceb9c0d02c0de488697df5d5c746932da279afea503813611c736633c2beba09"
+    },
+    {
+      "path": "research/strchr-2026-10-28/evidence/plan.json.gz",
+      "bytes": 15571,
+      "sha256": "15a813fd358ab02df32f667ef9f1664924e8a62b3d7d124fd8743d0fc011f1bb"
+    }
+  ],
+  "sources": [
+    {
+      "path": "research/strchr-2026-10-28/candidates.S",
+      "bytes": 3138,
+      "sha256": "6816b2d3180a3e303acecbb48b265ca801161f6a2df0ae68fbf73b82beabda8b"
+    },
+    {
+      "path": "research/strchr-2026-10-28/APP-CHECK.c",
+      "bytes": 2483,
+      "sha256": "2c5f9c6db07152022eeef5339adc9881372b31d77ce87a1a0ab43d027d0cfbe3"
+    },
+    {
+      "path": "research/strchr-2026-10-28/bench.h",
+      "bytes": 881,
+      "sha256": "56dc6ab49c48db6df6b68042ce3a9a9790c93131f9efd9cb1a9fcdc72488310c"
+    },
+    {
+      "path": "research/strchr-2026-10-28/bench.c",
+      "bytes": 1770,
+      "sha256": "321af07d3d86c0734e2070f9646be7e552f6b023d25ff293c3886b58b1984afa"
+    },
+    {
+      "path": "research/strchr-2026-10-28/bench_self_test.c",
+      "bytes": 2401,
+      "sha256": "e00d315d51a02661beefc66bf0ad1eb12cf84f5110b9fb61495518945c00c325"
+    },
+    {
+      "path": "research/strchr-2026-10-28/prepare.py",
+      "bytes": 5532,
+      "sha256": "633c7651543abdda1b18c83f84fbf053db56f624529d8ac4a0cdf76ad56e6867"
+    },
+    {
+      "path": "research/strchr-2026-10-28/verify_evidence.py",
+      "bytes": 2300,
+      "sha256": "ee64eac1504c429a691c29749efe75cf30f8235f1b40ca9f422f563b51bb1aca"
+    },
+    {
+      "path": "research/strchr-2026-10-28/README.md",
+      "bytes": 9627,
+      "sha256": "706c66a4364fdf576e0502d69cc7a933a47d7b74a771b1cb11e86060d651613f"
+    },
+    {
+      "path": "tests/strchr_arm_self_test.py",
+      "bytes": 18252,
+      "sha256": "d20bbd28cccb2437e8abd52e36e3143d7ca3c3ac96ea9a4c26484be4eef003f3"
+    },
+    {
+      "path": "tests/strchr_app_self_test.py",
+      "bytes": 15623,
+      "sha256": "cb0a5c6e5766bb9841ad685133ef0a30fd5a92314a9d7c3e988b3bc6e46400bf"
+    }
+  ]
+}
