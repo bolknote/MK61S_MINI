@@ -1,0 +1,78 @@
+{
+  "base": 536972864,
+  "delta": 101952,
+  "image_end": 536977540,
+  "memory_end": 536985316,
+  "capacity": 12480,
+  "static_end": 536892472,
+  "guard": 536985344,
+  "pointers": [
+    536973049,
+    536977233,
+    536975961,
+    536975065,
+    536975513,
+    536976225,
+    536976721,
+    536975041
+  ],
+  "bodies": {
+    "baseline": {
+      "bytes": 28,
+      "sha256": "0164e0f86c70994f372df3a64581b4754eb33dd17d5fcd2a3ab73f41a3e07c13",
+      "linked": "0x200000b9",
+      "actual": "0x20018ef9"
+    },
+    "libc_search": {
+      "bytes": 160,
+      "sha256": "aa741c51cc7147792fbfa5cb80b2971e17177a167e348fa85f38ffea23c3d1cc",
+      "linked": "0x20001111",
+      "actual": "0x20019f51"
+    },
+    "dsp16": {
+      "bytes": 264,
+      "sha256": "616298ccb287f426366b6b4705578cc88e3ce6006f3d1ddf4e7ea97988b1cfee",
+      "linked": "0x20000c19",
+      "actual": "0x20019a59"
+    },
+    "pair64": {
+      "bytes": 448,
+      "sha256": "f65116291f35b44142e9c472f4afec873f86fe06cfba361542911bc0ad781ee6",
+      "linked": "0x20000899",
+      "actual": "0x200196d9"
+    },
+    "fast64": {
+      "bytes": 448,
+      "sha256": "01816ba60ba355922c78ee10daefb90c8de254bc320842e9ea93965380d4b961",
+      "linked": "0x20000a59",
+      "actual": "0x20019899"
+    },
+    "dsp32": {
+      "bytes": 320,
+      "sha256": "fa0afeba164e3477b7d0771751d9628af95b3796cd2207e681e5f9dffe159e44",
+      "linked": "0x20000d21",
+      "actual": "0x20019b61"
+    },
+    "memchr": {
+      "bytes": 512,
+      "sha256": "bb53d5b27f6c0a6705feba13b841ff8ccfc650d5f7f512184200915171993b0d",
+      "linked": "0x20000f11",
+      "actual": "0x20019d51"
+    },
+    "byte_search": {
+      "bytes": 22,
+      "sha256": "f20563c6cc916bfb3cea97e86bd59ac06ff8c6754e5840c8404231b5fec3664b",
+      "linked": "0x20000881",
+      "actual": "0x200196c1"
+    }
+  },
+  "sdk_cached_target": 536976721,
+  "sdk_cached_body": {
+    "memchr": {
+      "bytes": 512,
+      "sha256": "bb53d5b27f6c0a6705feba13b841ff8ccfc650d5f7f512184200915171993b0d",
+      "linked": "0x20000f11",
+      "actual": "0x20019d51"
+    }
+  }
+}

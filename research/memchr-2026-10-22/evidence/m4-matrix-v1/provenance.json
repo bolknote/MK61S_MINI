@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "cpu": "m4",
+  "clock_hz": 96000000,
+  "firmware": "3AB3DD45",
+  "timing_rows": 608,
+  "correctness_calls": 198880,
+  "failures": 0,
+  "seven_raw_rounds_retained": true,
+  "public_runtime_present": false,
+  "description": "Standalone and shared SDK APPs on unchanged firmware. Shared memchr caches its APP-local fallback, since host exposes26 slots and services size28. Private indirect is not labeled as public runtime.",
+  "source_receipt_sha256": "4f00b5c2a6d186486c973ccc99708b9e8a96e1d0d6b00c6e5856f178faec6436",
+  "source_plan_sha256": "8562f696e9fb40c5c796ac4e42eb2f0be53db5d34c4bf07befe02df20d14cd2a",
+  "files_preserved": true,
+  "calculator_ip_and_rtc_preserved": true,
+  "serial_closed": true
+}

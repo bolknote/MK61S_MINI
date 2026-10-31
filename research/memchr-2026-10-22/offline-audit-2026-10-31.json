@@ -1,5 +1,5 @@
 {
-  "status": "HOST_VALIDATED_HISTORICAL_RESEARCH_ARCHIVE",
+  "status": "HOST_AUDITED_HISTORICAL_RESEARCH_ARCHIVE",
   "date": "2026-10-31",
   "base_commit": "ed2ac8e892ff1c018345eb5781e00331b33f1f8e",
   "scope": "Read-only audit, GCC builds and functional HOST/Unicorn checks only; no device access or new timing/restoration claims",
@@ -481,7 +481,7 @@
           "actual_sha256": "4f00b5c2a6d186486c973ccc99708b9e8a96e1d0d6b00c6e5856f178faec6436"
         }
       ],
-      "status": "UNVERIFIED_EXCLUDED"
+      "status": "UNVERIFIED_ARCHIVED"
     },
     {
       "group": "m4-sram-v6",
@@ -667,7 +667,7 @@
   },
   "limitations": [
     "Sources are historical experiment/preparation tools, not instructions to execute them on any current device.",
-    "The exported M4 matrix-v1 is excluded because all 56 entries disagree with its existing checksum manifest; its original statuses and bytes were not rewritten.",
+    "The exported M4 matrix-v1 is archived as unverified because all 56 entries disagree with its existing checksum manifest; its original statuses and bytes were not rewritten.",
     "test-sram-runner.py cannot run in the isolated export: required frozen .build/memchr-20261022/m4-app-v1/app/CHRBEN.elf is absent. The test and source are preserved unchanged; no PASS is claimed.",
     "Other tests which require frozen local .build packets were not run.",
     "selection-m4.json and historical evidence retain their original, sometimes provisional, status fields. The accepted product selection is documented in README.md.",

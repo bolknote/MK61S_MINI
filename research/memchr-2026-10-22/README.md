@@ -97,8 +97,10 @@ and failed outcomes retain their original status. `selection-m4.json` is the
 earlier provisional proposal, not the current product configuration. The M0+
 hardware raw export is not part of this archive.
 
-The early `m4-matrix-v1` export is excluded: all 56 entries disagree with its
-existing checksum manifest. Frozen local `.build` fixtures are also not
+The early `m4-matrix-v1` export is preserved as an unverified historical
+snapshot: all 56 entries disagree with its existing checksum manifest.
+`INTEGRITY-AUDIT-2026-10-31.json` records those unresolved differences without
+changing the old manifest, reports or their original status fields. Frozen local `.build` fixtures are also not
 exported, so tests requiring them remain unqualified here. The source runners
 are historical tools with pinned builds, paths and ownership checks; this
 archive does not authorize device access or reuse of those packets.
