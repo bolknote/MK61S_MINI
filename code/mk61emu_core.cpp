@@ -4071,6 +4071,79 @@ MK61_CORE_TICK_FUNCTION IK1306_Tick(
 #undef MK61_CORE_ROM_CASES
 #endif
 
+// F401 shares the 1302/1303 executors between ordinary and native-shortcut
+// ticks. Each caller captures its AMK lanes before any chip changes L.
+// The host-only selector covers this target path without changing firmware flags.
+#if MK61_CORE_MERGED_TICK && MK61_CORE_NATIVE_HOT_PATHS && \
+    (defined(STM32F401xC) || defined(STM32F401xE) || \
+     (!defined(ARDUINO) && !defined(__arm__) && !defined(__thumb__) && \
+      defined(MK61_TEST_SHARED_TICK)))
+#if MK61_CORE_MERGED_TICK
+#if MK61_CORE_NATIVE_HOT_PATHS
+// Keep the existing three-lane AMK selection at each caller; only the two
+// chip executors are shared, with their original order and preselected lanes.
+static void MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))
+IK1302_1303_Execute_All(mtick_t signal_I, usize J_signal_I, mtick_t signal_div3
+#if MK61_CORE_PACKED_AMK
+    , core_packed_amk::Selection selected
+#endif
+) {
+#if MK61_CORE_PACKED_AMK
+  IK1302_Tick(signal_I, J_signal_I, signal_div3,
+      selected.ik1302, IK1302_MICROINSTRUCTIONS_ACTIVE[selected.ik1302]);
+  IK1303_Tick(signal_I, J_signal_I, signal_div3,
+      selected.ik1303, IK1303_MICROINSTRUCTIONS_ACTIVE[selected.ik1303]);
+#else
+  IK1302_Tick(signal_I, J_signal_I, signal_div3);
+  IK1303_Tick(signal_I, J_signal_I, signal_div3);
+#endif
+}
+#endif
+
+static void MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))
+IK130X_Tick_All(mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
+#if MK61_CORE_PACKED_AMK
+  const core_packed_amk::Selection selected = select_amk_lanes(
+      m_IK1302.pAND_AMK[J_signal_I],
+      m_IK1303.pAND_AMK[J_signal_I],
+      m_IK1306.pAND_AMK[J_signal_I]);
+#if MK61_CORE_NATIVE_HOT_PATHS
+  IK1302_1303_Execute_All(signal_I, J_signal_I, signal_div3, selected);
+#else
+  IK1302_Tick(signal_I, J_signal_I, signal_div3,
+      selected.ik1302, IK1302_MICROINSTRUCTIONS_ACTIVE[selected.ik1302]);
+  IK1303_Tick(signal_I, J_signal_I, signal_div3,
+      selected.ik1303, IK1303_MICROINSTRUCTIONS_ACTIVE[selected.ik1303]);
+#endif
+  IK1306_Tick(signal_I, J_signal_I,
+      selected.ik1306, IK1306_MICROINSTRUCTIONS_ACTIVE[selected.ik1306]);
+#else
+#if MK61_CORE_NATIVE_HOT_PATHS
+  IK1302_1303_Execute_All(signal_I, J_signal_I, signal_div3);
+#else
+  IK1302_Tick(signal_I, J_signal_I, signal_div3);
+  IK1303_Tick(signal_I, J_signal_I, signal_div3);
+#endif
+  IK1306_Tick(signal_I, J_signal_I);
+#endif
+}
+
+#if MK61_CORE_NATIVE_HOT_PATHS
+static void MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))
+IK1302_1303_Tick_All(mtick_t signal_I, usize J_signal_I, mtick_t signal_div3) {
+#if MK61_CORE_PACKED_AMK
+  const core_packed_amk::Selection selected = select_amk_lanes_1302_1303(
+      m_IK1302.pAND_AMK[J_signal_I],
+      m_IK1303.pAND_AMK[J_signal_I]);
+  IK1302_1303_Execute_All(signal_I, J_signal_I, signal_div3, selected);
+#else
+  IK1302_1303_Execute_All(signal_I, J_signal_I, signal_div3);
+#endif
+}
+#endif
+#endif
+
+#else
 #if MK61_CORE_MERGED_TICK
 static void MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))
 IK130X_Tick_All(
@@ -4111,6 +4184,8 @@ IK1302_1303_Tick_All(
 #endif
 }
 #endif
+#endif
+
 #endif
 
 /**

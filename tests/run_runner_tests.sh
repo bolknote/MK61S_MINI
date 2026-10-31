@@ -13,10 +13,12 @@ sanitizers=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   sanitizers=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
-for profile in native mini; do
+for profile in native f401 mini; do
   profile_flags=(-DMK61_CORE_NATIVE_HOT_PATHS=1 -DMK61_CORE_PACKED_AMK=1 -DMK61_DISPLAY_UC1609 -DMK61_M61_READ_CACHE_BYTES=1024)
   if [[ "$profile" == mini ]]; then
     profile_flags=(-DMK61_CORE_NATIVE_HOT_PATHS=0 -DMK61_CORE_PACKED_AMK=0 -DMK61_LCD1602_A00)
+  elif [[ "$profile" == f401 ]]; then
+    profile_flags=(-DMK61_CORE_NATIVE_HOT_PATHS=1 -DMK61_CORE_PACKED_AMK=0 -DMK61_CORE_PREDECODED_ROM=0 -DMK61_DISPLAY_UC1609 -DMK61_M61_READ_CACHE_BYTES=64 -DMK61_TEST_SHARED_TICK=1)
   fi
   "${MK61_HOST_CXX:-clang++}" -std=c++17 -O2 -fconstexpr-steps=10000000 \
     "${sanitizers[@]}" -DMK61_CORE_STANDALONE=1 -DMK61_MATH_BACKEND=1 "${profile_flags[@]}" \

@@ -1,0 +1,92 @@
+{
+  "status": "REVIEWED_SOURCE_CHECKPOINT_NOT_RELEASE",
+  "date": "2026-10-31",
+  "baseline_commit": "e151f9651750319bf4434e7447f478fe82175143",
+  "core_sha256": "313f4d1e5390f998db62425366f8a2946c5c776270ad214f6140ec3c3b037f79",
+  "case": "f401-product-classic-v3",
+  "bin_before": 261224,
+  "bin_after": 259464,
+  "flash_limit": 262144,
+  "minimum_free_flash": 4096,
+  "free_after": 2680,
+  "remaining_to_budget": 1416,
+  "global_ram": 29860,
+  "global_ram_limit": 52428,
+  "maximum_function_stack": 1304,
+  "maximum_function_stack_limit": 2048,
+  "arm_probe": {
+    "tool": "Unicorn2.1.4 Cortex-M4 instruction emulation",
+    "cases": 64,
+    "full_context_bytes": 896,
+    "full_contexts_equal": true,
+    "counts": [
+      {
+        "packed": 0,
+        "tick": "all3",
+        "before": 626526,
+        "after": 642813
+      },
+      {
+        "packed": 0,
+        "tick": "pair2",
+        "before": 473311,
+        "after": 475999
+      },
+      {
+        "packed": 1,
+        "tick": "all3",
+        "before": 767863,
+        "after": 786135
+      },
+      {
+        "packed": 1,
+        "tick": "pair2",
+        "before": 611247,
+        "after": 622399
+      }
+    ],
+    "stack_bytes": [
+      {
+        "packed": 0,
+        "tick": "all3",
+        "before": 24,
+        "after": 52
+      },
+      {
+        "packed": 0,
+        "tick": "pair2",
+        "before": 28,
+        "after": 28
+      },
+      {
+        "packed": 1,
+        "tick": "all3",
+        "before": 56,
+        "after": 68
+      },
+      {
+        "packed": 1,
+        "tick": "pair2",
+        "before": 48,
+        "after": 48
+      }
+    ],
+    "limitation": "Instruction counts and local nesting; neither device timing nor complete runtime peak is established."
+  },
+  "preservation": {
+    "scope": "MERGED&&NATIVE on STM32F401xC/xE; explicit host-only selector",
+    "f411_and_actual_pico_tokens_unchanged": true,
+    "outside_tick_block_and_ms_source_unchanged": true,
+    "ms_region_sha256": "3a8a8018f0650902fad464212c67ae4d2d51806257edd044f28dac64d4e789b6"
+  },
+  "host_asan": [
+    "run_core_native_tests.sh: legacy/shared x hotRAM0/2;786432bodycases,1216steps,1996923frames percase",
+    "run_runner_tests.sh: native,F401-like,mini; fullcampaign/input/timer/LOOKUP"
+  ],
+  "outstanding": [
+    "Remaining1416bytes nativeFlash reserve",
+    "Finalfullstrict and allF401case/package/APPgates",
+    "LegacyArduino separately unqualified"
+  ],
+  "hardware_access": false
+}
