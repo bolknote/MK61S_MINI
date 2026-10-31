@@ -1976,12 +1976,26 @@ static void test_key_bind_validation_and_capacity(void) {
   for(unsigned code=0;code<8;++code) {
     char line[40];std::snprintf(line,sizeof(line),"bind %02X run :h\n",code);all+=line;
   }
-  add_script("ALL",all+"bind timer run :h\nret\n:h\nret\n");
+  add_script("ALL",all+"bind timer run :h\nret\n:h\nall_event\nret\n");
   assert(m61_text::load_program("ALL"));
   drain_keys();
   assert(core_61::registered_mk61_command_hook_count()==16);
   for(unsigned code=0;code<m61_keys::COUNT;++code)
     assert(m61_text::captures_key((u8)code)==m61_keys::valid(code));
+  // All40valid keys include SAVE28/LOAD29 in the sixth mask byte. Accept
+  // simultaneous held gestures, suppress duplicate DOWN, then deliver every
+  // reserved UP in order; holes1F/20 never enter the mask or queue.
+  unsigned valid=0;
+  for(unsigned code=0;code<m61_keys::COUNT;++code) if(m61_keys::valid(code)) {
+    ++valid;
+    assert(m61_text::handle_key_event((u8)code,true));
+    assert(m61_text::handle_key_event((u8)code,true));
+  }
+  for(unsigned code=0;code<m61_keys::COUNT;++code) if(m61_keys::valid(code))
+    assert(m61_text::handle_key_event((u8)code,false));
+  drain_keys(1024);
+  assert(occurrences("all_event")==2*valid && valid==40);
+
 }
 
 static void test_key_bind_lifecycle_and_viewer(void) {
@@ -2035,20 +2049,24 @@ static void test_key_bind_can_run_without_event_deadlock(void) {
 }
 
 static void test_key_bind_nested_input_and_opcode_priority(void) {
+  for(u8 logical : {u8(4),m61_keys::LOAD}) {
   reset_host();
-  add_script("GAME", "bind key 04 down run :left\nbind key 04 up run :up\nret\n"
+  char bindings[100];
+  std::snprintf(bindings,sizeof(bindings),"bind key %02X down run :left\nbind key %02X up run :up\nret\n",logical,logical);
+  add_script("GAME", std::string(bindings)+
       ":left\nheld\nopen CHILD\nret\n:up\nreleased\nret\n");
   add_script("CHILD", "wait 500\nret\n");
   assert(m61_text::load_program("GAME"));
-  assert(m61_text::handle_key_event(4,true));
+  assert(m61_text::handle_key_event(logical,true));
   m61_text::service();
-  assert(occurrences("held")==1 && !m61_text::captures_key(4));
-  assert(!m61_text::handle_key_event(4,false));
+  assert(occurrences("held")==1 && !m61_text::captures_key(logical));
+  assert(!m61_text::handle_key_event(logical,false));
   fake_millis=500;
   drain_keys();
-  assert(occurrences("released")==1 && m61_text::captures_key(4));
+  assert(occurrences("released")==1 && m61_text::captures_key(logical));
   assert(!m61_text::calculator_suspended());
 
+  }
   reset_host();
   add_script("GAME", "bind AE run :first\nbind key 04 down run :second\nret\n"
       ":first\nfirst\nret\n:second\nsecond\nret\n");

@@ -10,9 +10,9 @@ p=subprocess.Popen([str(Path(sys.argv[1]).resolve()),str(D)],stdin=subprocess.PI
 state=json.loads(p.stdout.readline());rows=[]
 def send(line):
  p.stdin.write(line+'\n');p.stdin.flush();raw=p.stdout.readline();assert raw,('exit',p.poll());return json.loads(raw)
-def evaluate(command,expected_error=False,dest=None,value=None):
+def evaluate(command,expected_error=False,dest=None,value=None,ending=0):
  global state
- before=state;state=send('eval 0 '+command)
+ before=state;state=send(f'eval {ending} '+command)
  assert state['eval_failed']==expected_error,(command,state)
  if expected_error or dest is None:assert state['regs']==before['regs']
  else:
@@ -26,6 +26,13 @@ try:
  evaluate('if r5==17R5=21',dest=5,value=21)
  evaluate('@R5 10 0',dest=5,value=123)
  evaluate('lookup R5 10 0',dest=5,value=123)
+ # Direct terminal_script::execute retains the legacy token grammar and EOL.
+ for ending in (4,8,12):
+  evaluate('lookup R5 10 0',dest=5,value=123,ending=ending)
+  evaluate('lookup R5 20 0 u24',dest=5,value=0x123456,ending=ending)
+ for command in ('@R5 10R0 0','@R5 10 0R0','@R5 10 - 0','@R5 10 + 0','@R5 10 00000000000000000000'):
+  evaluate(command,True)
+
  state=send('eval 0 R5= 2');evaluate('@ R5 10 R5',dest=5,value=45)
  state=send('eval 0 RF= 20');evaluate('LOOKUP R6 RF 0 u24',dest=6,value=0x123456)
  state=send('eval 0 R0= 2');state=send('eval 0 R1= 3');evaluate('@ R8 100 R0 R1 7',dest=8,value=171)

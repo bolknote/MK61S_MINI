@@ -268,14 +268,18 @@ static constexpr u8 KEY_QUEUE_CAPACITY = 128;
 static u8 key_queue[KEY_QUEUE_CAPACITY];
 static u8 key_queue_head = 0, key_queue_count = 0;
 static u8 key_reserved_count = 0;
-static u64 key_pressed = 0, key_ignored = 0, key_reserved = 0;
+// COUNT spans logical codes 0x00..0x29; MASK_BYTES includes SAVE/LOAD in
+// the sixth byte. Preserve all 40 valid keys and the saved frame bitmap
+// without variable 64-bit shifts on M4/M0.
+struct KeyBits { u8 pressed, ignored, reserved; };
+static KeyBits key_bits[m61_keys::MASK_BYTES] = {};
 static bool key_boundary_ready = false;
 static u8 key_input_blocked = 0;
 
 static void clear_key_runtime() {
   key_queue_head = key_queue_count = 0;
   key_reserved_count = 0;
-  key_pressed = key_ignored = key_reserved = 0;
+  memset(key_bits, 0, sizeof(key_bits));
   key_boundary_ready = false;
 }
 static bool key_event_active(u8 code, u8 event) {
@@ -562,7 +566,7 @@ static void store_current_frame(ScriptFrame& frame) {
   memcpy(frame.active_keys, active_keys, sizeof(active_keys));
   frame.active_timer = timer_bind_active;
   for(u8 i=0;i<m61_keys::MASK_BYTES;++i)
-    frame.held_keys[i]=(u8)((key_pressed & ~key_ignored) >> (8U*i));
+    frame.held_keys[i]=(u8)(key_bits[i].pressed & ~key_bits[i].ignored);
 }
 
 static bool restore_frame(const ScriptFrame& frame) {
@@ -702,26 +706,27 @@ bool keyboard_available(void) { return active() && !key_input_blocked; }
 
 bool handle_key_event(u8 code, bool down) {
   if(!captures_key(code)) return false;
-  const u64 bit = (u64)1U << code;
+  const u8 bit = (u8)(1U << (code & 7U));
+  KeyBits& bits = key_bits[code >> 3];
   if(down) {
-    if(key_pressed & bit) return true; // one DOWN for the whole gesture
-    key_pressed |= bit;
+    if(bits.pressed & bit) return true; // one DOWN for the whole gesture
+    bits.pressed |= bit;
     const bool press = key_event_active(code, 0);
     const bool release = key_event_active(code, 1);
     // Reserve release capacity before accepting a gesture. Under pressure
     // ignore a NEW complete gesture; never lose UP for an accepted DOWN.
     if(KEY_QUEUE_CAPACITY - key_queue_count < key_reserved_count + press + release) {
-      key_ignored |= bit;
+      bits.ignored |= bit;
       return true;
     }
-    if(release) { key_reserved |= bit; ++key_reserved_count; }
+    if(release) { bits.reserved |= bit; ++key_reserved_count; }
     if(press) queue_key(code, 0);
   } else {
-    if(!(key_pressed & bit)) return true;
-    key_pressed &= ~bit;
-    if(key_ignored & bit) { key_ignored &= ~bit; return true; }
-    if(key_reserved & bit) {
-      key_reserved &= ~bit;
+    if(!(bits.pressed & bit)) return true;
+    bits.pressed &= (u8)~bit;
+    if(bits.ignored & bit) { bits.ignored &= (u8)~bit; return true; }
+    if(bits.reserved & bit) {
+      bits.reserved &= (u8)~bit;
       --key_reserved_count;
       queue_key(code, 1);
     }
@@ -1742,7 +1747,7 @@ static ReferencedOpenResult open_referenced_entry(
     explicit InputScope(bool owns) : owns_input(owns) {
       if(!owns_input) return;
       for(u8 code = 0; code < m61_keys::COUNT; ++code)
-        if(key_pressed & ((u64)1U << code)) (void)handle_key_event(code, false);
+        if(key_bits[code >> 3].pressed & (1U << (code & 7U))) (void)handle_key_event(code, false);
       ++key_input_blocked;
     }
     ~InputScope() { if(owns_input && key_input_blocked) --key_input_blocked; }

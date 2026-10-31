@@ -245,6 +245,9 @@ int main(int argc, char** argv) {
     } else if(command == "eval") {
       unsigned trapped = 0; input >> trapped; std::string text; std::getline(input,text);
       while(!text.empty() && text.front()==' ') text.erase(text.begin());
+      // Direct execute() seam: retain CR/LF, which stdin normally consumes.
+      if(trapped & 4) text += '\r';
+      if(trapped & 8) text += '\n';
       const bool saved_expanded = core_61::expanded_program_is_on();
       if(trapped & 2) core_61::set_expanded_program_mode(false);
       const auto result = terminal_script::execute(text.c_str(), (trapped & 1) != 0);
