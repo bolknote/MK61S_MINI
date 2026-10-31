@@ -6,10 +6,13 @@ sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer)
 fi
-for backend in software stm32; do
+for backend in software stm32 words-software words-stm32; do
   backend_flags=()
-  if [[ "$backend" == "stm32" ]]; then
-    backend_flags=(-DMK61_CRC32_EMULATE_STM32)
+  if [[ "$backend" == words-* ]]; then
+    backend_flags+=(-DMK61_MEMORY_TEST_WORDS)
+  fi
+  if [[ "$backend" == *stm32 ]]; then
+    backend_flags+=(-DMK61_CRC32_EMULATE_STM32)
   fi
   clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
     "${backend_flags[@]}" -I"$root/code" \

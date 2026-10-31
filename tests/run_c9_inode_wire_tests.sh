@@ -7,9 +7,12 @@ sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
-for scalar in 0 1; do
+for codec in 0:0 0:1 1:0 1:1; do
+  words=${codec%:*}
+  scalar=${codec#*:}
   flags=()
-  if [[ "$scalar" == 1 ]]; then flags=(-DMK61_C9_SCALAR_CODEC=1); fi
+  if [[ "$words" == 1 ]]; then flags+=(-DMK61_MEMORY_TEST_WORDS); fi
+  if [[ "$scalar" == 1 ]]; then flags+=(-DMK61_C9_SCALAR_CODEC=1); fi
   clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
     "${flags[@]}" "$root/tests/c9_inode_wire_self_test.cpp" -o "$build_dir/test"
   "$build_dir/test"
