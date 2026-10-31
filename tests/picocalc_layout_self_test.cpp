@@ -6,6 +6,7 @@
 #include "mk8_codec.hpp"
 #include "mk8_literal.hpp"
 #include "display_symbols.hpp"
+#include "rtc_idle_clock_core.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -279,6 +280,53 @@ void published_x2() {
     require(Text(ui.settings(),M8("Г→.0"),16).matches(screen,left,254),"legacy indicator tokens are converted to M8 glyphs");
     std::puts("PicoCalc X2 publication: real core clear/hold/resume and all 256 masks/dots in all 12 slots PASS");
 }
+void clock_during_input() {
+    const auto saved=clock::get();
+    require(clock::set({2026,10,31,12,34,0}),"clock entry fixture");
+    Calculator calc;calc.init();Ui ui;ui.init();Services services;Screen screen;
+    Settings clock_font;clock_font.ui_font_family=1;clock_font.ui_font_size=16;
+    BatteryStatus battery;battery.decode(0x0B,73);
+    unsigned busy=0,settled=0;
+    const auto check=[&](const Snapshot& model,const char* time,unsigned hour,unsigned minute) {
+        screen.render(model,true,&ui,nullptr,battery);
+        const Text text(clock_font,time,16);
+        require(text.matches(screen,Screen::WIDTH-44-text.width,9),"native clock remains complete during press and release");
+        u8 frame[1536];screen.logical_frame(ui,services,frame);
+        u32 rows[rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT];
+        require(rtc_idle_clock::build_graphic_clock(hour,minute,rows),"clock oracle");
+        for(unsigned y=0;y<7;++y) for(unsigned x=0;x<rtc_idle_clock::GRAPHIC_CLOCK_WIDTH;++x)
+            require(bool(frame[(18+y)/8*192+165+x]&(1U<<((18+y)%8)))==bool(rows[y]&(1U<<x)),"logical USB clock remains visible during input");
+    };
+    check(calc.snapshot(),"12:34",12,34);
+    for(u8 key:{'1','2','3'}) {
+        require(calc.input(key),"manual clock input key");
+        for(unsigned cycle=0;cycle<4096;++cycle) {
+            const auto model=calc.snapshot();
+            require(!model.running && !model.programming,"ordinary digit remains manual calculator mode");
+            if(model.idle) ++settled;else ++busy;
+            check(model,"12:34",12,34);
+            if(model.idle) break;
+            calc.tick();
+        }
+        require(calc.idle(),"manual key settles");
+    }
+    require(busy && settled,"real key input covered both busy and settled phases");
+    // A minute change must still invalidate the raster while a key is held.
+    require(calc.input('4'),"minute rollover while input busy");
+    auto held=calc.snapshot();require(!held.idle,"rollover occurs during a real queued key");
+    require(clock::set({2026,10,31,12,35,0}),"advance clock minute");
+    require(screen.render(held,true,&ui,nullptr,battery),"minute changes invalidate even during input");
+    check(held,"12:35",12,35);
+    for(bool running:{true,false}) {
+        auto hidden=held;hidden.running=running;hidden.programming=!running;
+        screen.render(hidden,true,&ui,nullptr,battery);
+        u8 frame[1536];screen.logical_frame(ui,services,frame);
+        for(unsigned y=0;y<7;++y) for(unsigned x=0;x<rtc_idle_clock::GRAPHIC_CLOCK_WIDTH;++x)
+            require(!(frame[(18+y)/8*192+165+x]&(1U<<((18+y)%8))),"RUN and programming still hide the idle clock");
+    }
+    require(clock::set(saved),"restore HOST clock fixture");
+    std::puts("PicoCalc clock during real manual press/release: native/logical surfaces, busy minute rollover and RUN/PRG policy PASS");
+}
 }
 
 void picocalc_layout_self_test() {
@@ -303,7 +351,7 @@ void picocalc_layout_self_test() {
         if(choice[0]==3) settings.ui_font_key=ui_font_catalog::name_key(("DejaVu-"+std::to_string(choice[1])+".FMK").c_str());
         check_choice(settings,calc);
     }
-    published_x2();
+    clock_during_input();published_x2();
     std::printf("PicoCalc focused UI layout/navigation: PASS (%u assertions; 8 font choices, EN/RU)\n",checks);
 }
 #if defined(MK61_LAYOUT_STANDALONE)

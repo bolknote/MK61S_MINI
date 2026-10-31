@@ -293,8 +293,9 @@ void picocalc_software_test(const char* preview_path) {
     for(unsigned y=0;y<7;++y) for(unsigned x=0;x<25;++x)
         assert(pixel(with_clock,165+x,18+y)==bool(rows[y]&(1U<<x)));
     locale.russian=1;locale.calculator_font=0;assert(ui.apply_settings(locale));
+    model.idle=true;screen.render(model,true,&ui,&idle);u8 before_key[1536];screen.logical_frame(ui,idle,before_key);
     model.idle=false;screen.render(model,true,&ui,&idle);screen.logical_frame(ui,idle,with_clock);
-    assert(!std::memcmp(no_clock,with_clock,1536));clock_header(screen);
+    assert(!std::memcmp(before_key,with_clock,1536));clock_header(screen,rows);
     model.idle=true;model.running=true;screen.render(model,true,&ui,&idle);screen.logical_frame(ui,idle,with_clock);
     clock_header(screen);
     for(unsigned y=16;y<28;++y) for(unsigned x=0;x<192;++x) assert(!pixel(with_clock,x,y));

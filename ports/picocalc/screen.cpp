@@ -19,6 +19,10 @@
 
 namespace picocalc {
 namespace {
+bool manual_clock_visible(const Snapshot& model) {
+    // A queued/held key is ordinary manual input, not a display mode change.
+    return !model.running && !model.programming && clock::configured();
+}
 const char* key_label(const char* label,bool russian) {
     if(!russian) return label;
     static const struct { const char* en; const char* ru; } labels[] = {
@@ -224,7 +228,7 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
     status_field(8,96,mode);
     status_field(112,96,angle);
     status_field(216,96,last_key);
-    if(model.idle && !model.running && !model.programming && clock::configured()) {
+    if(manual_clock_visible(model)) {
         const auto now=clock::get();
         u32 rows[rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT];
         if(rtc_idle_clock::build_graphic_clock(now.hour,now.minute,rows)) {
@@ -355,7 +359,7 @@ Screen::RenderKey Screen::key(const Snapshot& m,bool keyboard,const Ui& ui,const
         out.text(m.indicator);out.text(m.face_indicator);out.text(m.last_key);
         for(const auto& value:m.stack_values) out.text(value);
         out.data(m.segments,sizeof(m.segments));out.number(m.segmented);out.number(m.angle);out.number(m.ip);
-        out.number(m.running);out.number(m.programming);out.number(m.idle);out.number(core_61::program_steps());
+        out.number(m.running);out.number(m.programming);out.number(core_61::program_steps());
         if(ui.view()==View::STACK) { char text[INDICATOR_STRING_LENGTH];read_stack_register(X,text,nullptr);out.text(text);read_stack_register(X1,text,nullptr);out.text(text); }
         if(ui.view()==View::REGISTERS) for(unsigned n=0;n<Ui::VISIBLE_REGISTERS && ui.offset()+n<Ui::REGISTER_COUNT;++n) {
             char text[INDICATOR_STRING_LENGTH];MK61Emu_ReadRegister(ui.offset()+n,text,nullptr);out.text(text);
@@ -363,7 +367,7 @@ Screen::RenderKey Screen::key(const Snapshot& m,bool keyboard,const Ui& ui,const
         if(ui.view()==View::PROGRAM) for(unsigned n=0;n<6 && ui.offset()+n<core_61::program_steps();++n)
             out.number(core_61::get_code(core_61::get_ring_address(ui.offset()+n)));
         out.number(clock::configured());
-        if(m.idle && !m.running && !m.programming && clock::configured()) {
+        if(manual_clock_visible(m)) {
             const auto date=clock::get();out.number(date.hour*60+date.minute);
         }
         out.text(ui.footer());
@@ -405,7 +409,7 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
     char heading[64];
     if(services && services->active()) services->heading(heading);
     else std::snprintf(heading, sizeof(heading), "%s", ui->title());
-    const bool clock_visible=!service_active && ui->page()==Page::CALCULATOR && model.idle && !model.running && !model.programming && clock::configured();
+    const bool clock_visible=!service_active && ui->page()==Page::CALCULATOR && manual_clock_visible(model);
     const unsigned title_right=clock_visible?(battery_.available?220:254):(battery_.available?278:WIDTH-8);
     text(10,9,heading,16,title_right);
     battery_icon(battery_,[this](unsigned x,unsigned y){set_pixel(x,y);});
