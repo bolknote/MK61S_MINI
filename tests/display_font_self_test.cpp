@@ -201,6 +201,58 @@ static void test_uc1609_display_symbol_tokens(void) {
   assert(raster.width == 3 && raster.height == 5);
 }
 
+static void test_builtin_row_rasters(void) {
+  for(u32 codepoint = 0; codepoint <= 0xFFFF; ++codepoint) {
+    const u8* rows = builtin_font::rows5x8((u16)codepoint);
+    if(!rows) continue;
+    builtin_font::Raster raster;
+    memset(&raster, 0xA5, sizeof(raster));
+    assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8,
+                                (u16)codepoint, raster));
+    assert(raster.width == 5 && raster.height == 8);
+    for(u8 y = 0; y < 8; ++y) {
+      for(u8 x = 0; x < 8; ++x) {
+        const bool expected = x < 5 && (rows[y] & (1U << (4U - x)));
+        assert(((raster.data[y] & (0x80U >> x)) != 0) == expected);
+      }
+    }
+    for(usize i = 8; i < sizeof(raster.data); ++i) assert(raster.data[i] == 0);
+  }
+}
+
+static void test_builtin_scale2x_row_patterns(void) {
+  for(u8 width = 1; width <= 8; ++width) {
+    for(u8 height = 1; height <= 8; ++height) {
+      for(unsigned pattern = 0; pattern < 256; ++pattern) {
+        builtin_font::Raster source = {};
+        source.width = width;
+        source.height = height;
+        for(u8 y = 0; y < height; ++y) source.data[y] = (u8)(pattern + 37U * y);
+        const auto saved_source = source;
+        struct Guarded {
+          u32 before;
+          builtin_font::Raster raster;
+          u32 after;
+        } output = {0x12345678, {}, 0x87654321};
+        memset(&output.raster, 0xA5, sizeof(output.raster));
+        assert(builtin_font::scale2x(source, output.raster));
+        assert(output.raster.width == 2U * width && output.raster.height == 2U * height);
+        u8 expected[sizeof(output.raster.data)] = {};
+        const usize stride = (output.raster.width + 7U) / 8U;
+        for(u8 y = 0; y < output.raster.height; ++y) {
+          for(u8 x = 0; x < output.raster.width; ++x) {
+            if(source.data[y / 2U] & (0x80U >> (x / 2U)))
+              expected[(usize)y * stride + x / 8U] |= (u8)(0x80U >> (x & 7U));
+          }
+        }
+        assert(memcmp(output.raster.data, expected, sizeof(expected)) == 0);
+        assert(memcmp(&source, &saved_source, sizeof(source)) == 0);
+        assert(output.before == 0x12345678 && output.after == 0x87654321);
+      }
+    }
+  }
+}
+
 static void test_builtin_3x5_is_tightly_packed(void) {
   const unsigned char* a = font3x5Bitmap('A');
   const unsigned char* b = font3x5Bitmap('B');
@@ -606,6 +658,8 @@ int main(int argc, char** argv) {
   test_crc_and_padding_are_validated();
   test_lcd_scaling();
   test_uc1609_display_symbol_tokens();
+  test_builtin_row_rasters();
+  test_builtin_scale2x_row_patterns();
   test_builtin_3x5_is_tightly_packed();
   test_m8_special_3x5_glyphs();
   test_no_supplemental_cyrillic_glyphs();

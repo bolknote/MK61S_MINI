@@ -1,0 +1,185 @@
+{
+  "status": "LOCAL_SOURCE_QUALIFICATION; exact combined Linux factory CI remains authoritative",
+  "base": "0c234e33744b58f478cf96f019bc4158cd929aa0",
+  "source_pins": {
+    "code/program_store.cpp": "a707f2e8795fd742565e8eea7fa500be35697823d6000c91334fcad365569810",
+    "code/builtin_font.cpp": "a13aee85ceb45217f2fb21fe48057144c2e3bbdddeb99ebe5a1cf218dac15a90",
+    "code/shared_memory.cpp": "978ea3b8a7103d7810084d478c9e47fdf893c6dfaaf3037ff0d1dbd9a3a30f0d",
+    "tests/program_store_self_test.cpp": "b3b64f71698be4298952f89c93bcaaba7c4662c54e7e1accc61ee20efc1b4f1f",
+    "tests/display_font_self_test.cpp": "565d68862bd85cc96d5f0c99cb7b448ad1510ee4307718c83bd1088e0dc4a871",
+    "tests/run_display_font_tests.sh": "f789855ca7ab6ac7da51da93406defa820724f30ae1dcdee8ba5814e8f86445e",
+    "tests/run_all_tests.sh": "243fc22d998ecd4a7089103c8d0029ac282956f9c96aac57b35e69f069c59ff3"
+  },
+  "patch_sha256": "26e1db2bcd2c50093c677c95563f658dc5a41096efeca7d9a2a4cdb76bc769fd",
+  "toolchain": {
+    "name": "xPack GNU Arm Embedded GCC 14.2.1-1.1",
+    "gcc_sha256": "7d62abde732d61500dd6de2f7ecf69c8943c18c00546168809fcb9c1ba6c4e2e",
+    "gxx_sha256": "ecf62610bbc66191f3b4cd9a683367cc3da70da22f85d3cf9af6fd21c2e0839a",
+    "outside_Arduino15": true
+  },
+  "unchanged_limits": {
+    "APP": 20480,
+    "flash_reserve": 4096,
+    "globals": 52428,
+    "frame": 2048,
+    "graphics": 3412,
+    "m61_runtime": 1472,
+    "placement": 224,
+    "dynamic_top": "0x2000D700"
+  },
+  "native": [
+    {
+      "case": "f401-product-classic-v2",
+      "BIN": 257988,
+      "free_flash": 4156,
+      "globals": 29348,
+      "largest_frame": 1304,
+      "raw_dynamic": 25688,
+      "effective_APP": 20576,
+      "ELF_sha256": "6d9261b8ec1d8a154cb0ba585a15ab111ef21c94d37476b631464c8dd6fcd9ba",
+      "BIN_sha256": "9aa62410355d5b0779e7fb75056f4894d414f57cb82b9cf84175130ed029a4e4",
+      "map_sha256": "265cfc3dad0127b43aff039c498bcf881a697af160e07dac160b607b5a7cf74a",
+      "stack_report_sha256": "32108e6721ba2fdd49b07e20f31261599a3baeaf83de6f6f92871461be2ba904"
+    },
+    {
+      "case": "f401-product-classic-v3",
+      "BIN": 258028,
+      "free_flash": 4116,
+      "globals": 29356,
+      "largest_frame": 1304,
+      "raw_dynamic": 25672,
+      "effective_APP": 20544,
+      "ELF_sha256": "905da147e054cc197c1747636506982879e8cf4d6fe242f8179df0154199c544",
+      "BIN_sha256": "92a91547808bf14719f0ac2a25e38ba1c67f9bf51359c83d05b54fc43cb15325",
+      "map_sha256": "5edb7851bbaf6ad3ada4240a01d67cafeed46bbafb69b8216d0178d153546ffe",
+      "stack_report_sha256": "32108e6721ba2fdd49b07e20f31261599a3baeaf83de6f6f92871461be2ba904"
+    }
+  ],
+  "evidence": {
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/cache016-c9-full-asan.log": {
+      "sha256": "2295cf4d2e6356168b9f11331f9a47d27f264294a7950744992803e153d00b87",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/cache016-c9-shared-temp-asan.log": {
+      "sha256": "4998e5417fa520cc2fe74e23133fe9806b3bfb3e23b764add0dcbb9e80b47d51",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/final-c9-full-clang18.log": {
+      "sha256": "2295cf4d2e6356168b9f11331f9a47d27f264294a7950744992803e153d00b87",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/final-c9-shared-temp-clang18.log": {
+      "sha256": "4998e5417fa520cc2fe74e23133fe9806b3bfb3e23b764add0dcbb9e80b47d51",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/final-font-asan.log": {
+      "sha256": "dd3c54ff0cc6524b76a4ee004a09bb445f0992dc67740c7d9210024b4606b399",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/final-font-clang18.log": {
+      "sha256": "dd3c54ff0cc6524b76a4ee004a09bb445f0992dc67740c7d9210024b4606b399",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/scoped-fragmentation-before.log": {
+      "sha256": "a51f47e06986ed048e47c0bb7d8f3cace591f23a64b37e9465e1d15fbca4a7c9",
+      "expected_status": "RED017 reproduction"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/scoped019-asan.log": {
+      "sha256": "c8cfd284e05497304daa8b5d02fed138d3e82f220ed1b863889b8b84f0a6eec8",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/scoped019-shared-asan.log": {
+      "sha256": "c8cfd284e05497304daa8b5d02fed138d3e82f220ed1b863889b8b84f0a6eec8",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/scoped019-clang18.log": {
+      "sha256": "c8cfd284e05497304daa8b5d02fed138d3e82f220ed1b863889b8b84f0a6eec8",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/scoped019-shared-clang18.log": {
+      "sha256": "c8cfd284e05497304daa8b5d02fed138d3e82f220ed1b863889b8b84f0a6eec8",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/preservation-019/RESULT.json": {
+      "sha256": "d130fd3ae271c422db0f0fe62e4c043bf0b145895d07b7d4c9e5c5b4189e2512",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/read-counts-before-after/RESULT.json": {
+      "sha256": "30862e29267b43fc46c7381a489d22c91681af362912ef59482aae5b0b53783d",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/cache019-classic-v2.log": {
+      "sha256": "a228513358ca6c8faea4814da8d829d68b96be70452a6272788ce6fb97ac708d",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/cache019-classic-v3.log": {
+      "sha256": "59f1f0f4ee1cb63c6d4b03eaa92637fdf635b3cf690e9b917bf8f9291ab50872",
+      "expected_status": "PASS"
+    },
+    ".build/f401-runner-size-20261031-001/app-pool-fix-001/resource-elf-gates-019.log": {
+      "sha256": "29e621f8e9334b952b5216626c5a44e449156e595bee1c82b8fa6b5d19e86bde",
+      "expected_status": "PASS"
+    }
+  },
+  "NOR_counts": {
+    "units": "operations/bytes, not hardware time",
+    "capacities": [
+      524288,
+      16777216
+    ],
+    "before": {
+      "cold": [
+        1,
+        512
+      ],
+      "warm32": [
+        0,
+        0
+      ],
+      "loaded_APP_32": [
+        0,
+        0
+      ],
+      "two_boundaries": [
+        3,
+        1536
+      ]
+    },
+    "after": {
+      "cold": [
+        1,
+        512
+      ],
+      "warm32": [
+        0,
+        0
+      ],
+      "loaded_APP_32": [
+        32,
+        832
+      ],
+      "two_boundaries": [
+        4,
+        52
+      ]
+    }
+  },
+  "tradeoff": "Direct NOR reads for the entire lifetime of every loaded APP, including idle Explorer/USBDISK; hardware timing unknown.",
+  "placement_regression": {
+    "before": "017 failed real allocator APP acquisition",
+    "after": "019 passes; read-cache KEEP refuses placement; LOADABLE_MODULE owner kept",
+    "raw_pool": 25672,
+    "M61": 1472,
+    "graphics": 3412,
+    "APP": 20480,
+    "mandatory_scoped_gates": 2,
+    "source_freeze": "final-review-019"
+  },
+  "test_provenance": {
+    "full_C9": "ordinary/shared host storage, four configurations each; scoped guard excluded; unchanged executed paths",
+    "scoped_delta": "exact019 scoped regressions in ordinary/shared storage, ASan/UBSan and Clang18, four configurations each",
+    "fonts": "exact selected font source and tests, legacy/F401xC/F401xE, ASan/UBSan and Clang18",
+    "non_F401_identity_cases": 24,
+    "F401_unscoped_shared_memory_identity_cases": 4
+  }
+}

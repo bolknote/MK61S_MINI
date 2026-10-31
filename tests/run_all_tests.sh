@@ -118,6 +118,9 @@ fi
 "$root/tests/run_msc_scsi_safety_tests.sh"
 "$root/tests/run_usb_disk_session_tests.sh"
 MK61_TEST_STORAGE_SHARED_TEMP=1 "$root/tests/run_program_store_tests.sh"
+MK61_TEST_SCOPED_RESIDENT_BUFFERS=1 "$root/tests/run_program_store_tests.sh" --inode-cache
+MK61_TEST_SCOPED_RESIDENT_BUFFERS=1 MK61_TEST_STORAGE_SHARED_TEMP=1 \
+  "$root/tests/run_program_store_tests.sh" --inode-cache
 bash "$root/tests/run_catalog_wear_model_tests.sh"
 "$root/tests/run_runtime_peripherals_tests.sh"
 "$root/tests/run_settings_journal_tests.sh"

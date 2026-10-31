@@ -14,7 +14,10 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 
-clang++ -std=c++17 -Wall -Wextra -Werror \
+for profile in legacy STM32F401xC STM32F401xE; do
+profile_flags=()
+if [[ "$profile" != legacy ]]; then profile_flags=(-D"$profile"); fi
+clang++ -std=c++17 -Wall -Wextra -Werror "${profile_flags[@]}" \
   "${sanitizer_flags[@]}" \
   -DARDUINO=100 \
   -DMK61_DISPLAY_UC1609 \
@@ -26,9 +29,10 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/ERM19264_graphics_font.cpp" \
   "$root/code/fmk_font.cpp" \
   "$root/code/text_screen.cpp" \
-  -o "$out"
+  -o "$out-$profile"
 
-"$out" "$@"
+"$out-$profile" "$@"
+done
 
 clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
