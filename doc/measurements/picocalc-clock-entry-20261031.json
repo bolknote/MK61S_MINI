@@ -87,7 +87,9 @@
         87,
         88
       ],
-      "temporary_date_change_restored": true
+      "temporary_date_change_restored": true,
+      "BUSY": 0,
+      "busy_minute_transition_verified_on_hardware": false
     },
     "LCD_DMA_source_CRC_matches": "Stable input control captures, all seven minute captures, and returned display",
     "each_BUSY_frame_individually_LCD_CRC_matched": false,
@@ -194,6 +196,7 @@
   "limits": [
     "Hardware checks cover the current manual decimal calculator on native320; RUN/PRG and logical192 clock policy were tested on HOST",
     "Ten BUSY frame IDs contain four unique rasters; the result does not claim ten independent redraws",
-    "No universal machine-state restoration, optical panel capture, or fresh STM32 build/device run is claimed"
+    "No universal machine-state restoration, optical panel capture, or fresh STM32 build/device run is claimed",
+    "All hardware minute-phase samples had BUSY=0; minute rollover while BUSY is covered only by HOST regression"
   ]
 }
