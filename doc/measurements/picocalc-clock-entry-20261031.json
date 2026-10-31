@@ -1,0 +1,199 @@
+{
+  "schema": 1,
+  "date": "2026-10-31",
+  "profile": "picocalc-pico-h",
+  "status": "COMPOSITE_INPUT_AND_MINUTE_HIL_PASS",
+  "source_commit": "21ddf9d0bbe9df8fe68e7b5c7bae2975493602a2",
+  "firmware": {
+    "version": "0.8.16",
+    "build_id": "E7AC3608",
+    "crc32": "0C1C30D2",
+    "uf2_bytes": 3074560,
+    "uf2_sha256": "85f08ff9aed981199fa4ba3c6e130942f72c6e86be53c0ade1dbe6dc58f9856b",
+    "bin_bytes": 1537056,
+    "bin_sha256": "daade5fd9901281dbd543ab50ef920b40162c7d801a1e705138ba849a70b3f10"
+  },
+  "behavior": {
+    "defect": "Snapshot.idle changes while keys are queued, pressed or released, hiding the clock during manual input",
+    "manual_clock_predicate": "!running && !programming && clock::configured()",
+    "same_predicate_for": [
+      "native/logical clock drawing",
+      "clock minute raster invalidation",
+      "native title space reservation"
+    ],
+    "idle_removed_from_raster_key": true,
+    "RUN_PRG_still_hide_clock": true
+  },
+  "host": {
+    "ASan_UBSan": "PASS",
+    "layout_assertions": 777078,
+    "font_choices": 8,
+    "languages": [
+      "EN",
+      "RU"
+    ],
+    "real_press_release_native_and_logical_clock": "PASS",
+    "busy_minute_rollover": "PASS",
+    "RUN_PRG_policy": "PASS",
+    "old_source_regression_reproduced": true,
+    "unchanged_previous_X1_X2_and_segment_regressions": "PASS"
+  },
+  "STM32": {
+    "shared_source_config_math_font_ABI_changes": false,
+    "F411_case": "f411-classic-v3",
+    "validation": "Reuse previously accepted independent build with byte-identical common source/config inputs",
+    "fresh_build_for_clock_fix": false,
+    "hardware_test_this_stage": false,
+    "previous_build_and_three_independence_gates": "PASS",
+    "previous_F411_proof_sha256": "0797f56887365a821f075a4b22a9399b2b107adcb497dbb794e0846b9d658319"
+  },
+  "hardware": {
+    "input_component_run": "R2",
+    "minute_component_run": "R3-minute-only",
+    "native_resolution": [
+      320,
+      320
+    ],
+    "manual_input": {
+      "passed": true,
+      "phases": 2,
+      "queued_virtual_keys_per_phase": 32,
+      "distinct_BUSY_frame_IDs": 10,
+      "distinct_BUSY_frame_pixel_contents": 4,
+      "HHMM_raster_checks": 13,
+      "clock_region_pixels_per_check": 986,
+      "continuous_RUN0_BUSY1_brackets": true,
+      "entire_frame_transfer_inside_busy_bracket": true,
+      "UI_RENDERS_ranges": [
+        [
+          61,
+          64
+        ],
+        [
+          64,
+          66
+        ]
+      ],
+      "new_render_for_each_transmitted_frame_claimed": false,
+      "repeated_pixel_contents_are_counted_as_transmissions_not_unique_rasters": true
+    },
+    "minute": {
+      "passed": true,
+      "native_frames": 7,
+      "HHMM_raster_checks": 7,
+      "oracle": "Exact complete clock region against actual device date readings before and after each captured frame",
+      "minute_transition_observed": true,
+      "UI_RENDERS_range": [
+        87,
+        88
+      ],
+      "temporary_date_change_restored": true
+    },
+    "LCD_DMA_source_CRC_matches": "Stable input control captures, all seven minute captures, and returned display",
+    "each_BUSY_frame_individually_LCD_CRC_matched": false,
+    "optical_panel_readback": false,
+    "full_flash_readback_bytes": 2097152,
+    "application_and_non_application_tail_verified": true,
+    "settings_journal_preserved": true,
+    "postboot_complete_exports_before_first_mutation": 2,
+    "postboot_and_final_physical_key_count": 0,
+    "unexpected_physical_key_drift": 0,
+    "boot_count_before_install": 27,
+    "boot_count_after_install_and_return": 28,
+    "unexpected_resets_during_qualification": 0,
+    "LCD_DMA_I2C_USB_screen_errors": 0
+  },
+  "run_outcomes": {
+    "R1": {
+      "overall_passed": false,
+      "current_data_return_passed": true,
+      "failure": "HOST sampler required an entire USB frame between adjacent status polls shorter than frame transmission; BUSY frame evidence was not accepted"
+    },
+    "R2": {
+      "overall_passed": false,
+      "manual_input_component_passed": true,
+      "current_data_return_passed": true,
+      "minute_helper_passed": false,
+      "failure": "HOST midpoint anchored requested RTC set value; actual set reply was already one second later. Complete minute glyphs were present but expected time was wrong"
+    },
+    "R3": {
+      "scope": "minute-only; no repeated manual input qualification",
+      "overall_passed": true,
+      "device_date_bracket_oracle": true,
+      "current_data_return_passed": true
+    },
+    "failed_results_preserved_as_failed": true,
+    "firmware_changed_between_runs": false
+  },
+  "restoration": {
+    "fresh_current_values_treated_as_valuable": true,
+    "preflash_complete_exports": 2,
+    "matching_current_full_flash_backups": 2,
+    "all15_memory_and5_stack_registers": "exact current decimal values",
+    "program_IP_cwd_alarm": "returned and checked",
+    "visible_X_and_LASTX": "checked separately against fresh current baseline",
+    "view_fonts_memory_steps_language_speed_random": "original",
+    "settings_writes": 0,
+    "settings_erases": 0,
+    "RTC_SET_preserved": true,
+    "RTC_anchor_observation_interval_seconds": 0.075122,
+    "elapsed_RTC_delta_seconds": [
+      0.072404,
+      0.566221
+    ],
+    "RTC_advancement_verified_seconds": 2,
+    "full_machine_microstate_claimed": false,
+    "not_proven": [
+      "unfinished input continuation",
+      "hidden F/K and other opaque transient flags",
+      "arbitrary held or segment display state"
+    ],
+    "firmware_left_installed": true,
+    "ports_closed_and_lease_released": true,
+    "SD_testfiles_created": 0
+  },
+  "historical_crash": {
+    "stored_build": "1940130E",
+    "sequence": 2,
+    "present_before_flash": true,
+    "unchanged_during_qualification": true,
+    "cleared": false
+  },
+  "source_pins": [
+    {
+      "path": "ports/picocalc/README.md",
+      "sha256": "8144c7362c258921053e3c810d812741b917f2c0a51a18bdc707f46ececac912"
+    },
+    {
+      "path": "ports/picocalc/screen.cpp",
+      "sha256": "b267eaf766c255ffab0252de9f2c75f01fdc7a8e92e76de8f7d92243e19a6edf"
+    },
+    {
+      "path": "tests/picocalc_layout_self_test.cpp",
+      "sha256": "cc002fac5aa07f85866522d4a383f8dabfb7491af41fd9ff4ff5d0bc4d03ae39"
+    },
+    {
+      "path": "tests/picocalc_software_self_test.cpp",
+      "sha256": "8d9defd0e6fc3a4a5da80074db9e4ac2b021df806e52451ce4adb72ed3c0849e"
+    }
+  ],
+  "evidence": {
+    "READY_sha256": "1fb9ab040452e5c3a427ea6722ab106f79683f24d58e8e5cdaadb63dbc7a34fa",
+    "host_ASan_UBSan_log_sha256": "2c1d710f4d92661da8789b9e69ece13e70784c9839af30220df8379c6caa69da",
+    "HIL_complete_sha256": "fc628bd0db4468e015d5d52f9060edf5e892459993b305ebb461170bb8524050",
+    "input_component_sha256": "2da57a6735313849f53d92fb3ffb8c772600c56d8070b6e4a4f9c61bd9c7663e",
+    "R1_failed_result_sha256": "417bd03c1879189ca08eba14ff59bafaaa079f94cf5363a1b469e65d89bb7826",
+    "R2_failed_overall_result_sha256": "1741c526e268adb85318a96825fcfaf8767f9b41b7e3162e47cf6bc3eb740ac3",
+    "R3_minute_pass_result_sha256": "33bdc44d40f163c16168d9777fbd7d0d71eacb69e0247388eeac87f0a4d75ebf",
+    "restore_protocol_sha256": "186ba7c4e6f0187e72d150bf48c4002da683175b1a47438ec6063af982607266",
+    "HOST_restoration_proof_sha256": "df0cfd67298cb954dbd49eb14834db7ad320a09cfa67a3ff314d4faf392a45b7",
+    "final_metadata_sha256": "cc177f0ffd9dd4f93ed3d9b7e6e4e5d7eb0aead0da2282a9a5a64c9b9b21411a",
+    "raw_user_data_or_device_identifier_in_repository": false,
+    "frozen_original_evidence_unchanged": true
+  },
+  "limits": [
+    "Hardware checks cover the current manual decimal calculator on native320; RUN/PRG and logical192 clock policy were tested on HOST",
+    "Ten BUSY frame IDs contain four unique rasters; the result does not claim ten independent redraws",
+    "No universal machine-state restoration, optical panel capture, or fresh STM32 build/device run is claimed"
+  ]
+}
