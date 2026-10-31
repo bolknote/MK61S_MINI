@@ -1,0 +1,108 @@
+{
+  "status": "HOST_ONLY_CARRIER_TEMPLATE_PHYSICAL_ADAPTERS_UNBOUND",
+  "source_base": "7a01beb4827c05bb2ba34fc0576f85f929b6160f",
+  "integration_base": "ed2ac8e892ff1c018345eb5781e00331b33f1f8e",
+  "physical_IO": 0,
+  "hardware_GO": null,
+  "hardware_winner": null,
+  "physical_speed_claim": false,
+  "APP_modes": 4,
+  "placement_calls": 11520,
+  "placement_leaves": 10,
+  "binding_negative_guards": 24,
+  "real_HOST_process_cases": 5,
+  "max_loaded_APP": 15148,
+  "APP_limit": 20480,
+  "ordinary_timed_APP_runs_template": 464,
+  "external_jobs_template": 473,
+  "source_pins": [
+    {
+      "path": "research/strchr-2026-10-28/m4_operator/README.md",
+      "bytes": 7526,
+      "sha256": "fbd62060a63708c2ff1827b9f4840f91c9097f541e2ce9518933e35b154aa3c6"
+    },
+    {
+      "path": "research/strchr-2026-10-28/m4_operator/build.py",
+      "bytes": 5944,
+      "sha256": "6acbb5ede9b8dd191b9220547321430c176093dbceabe0b2dde64ca456c5fee2"
+    },
+    {
+      "path": "research/strchr-2026-10-28/m4_operator/carrier.c",
+      "bytes": 12944,
+      "sha256": "8db33e4bce7c540c5de1300cccd0ad1c97eaab584b7028ad218243625d71476d"
+    },
+    {
+      "path": "research/strchr-2026-10-28/m4_operator/model_test.py",
+      "bytes": 19385,
+      "sha256": "a149749ba3e37648e5c61f79ef3580fc479fbf0be29c6ba5a6be3908afb9c63d"
+    },
+    {
+      "path": "research/strchr-2026-10-28/m4_operator/packet.py",
+      "bytes": 6122,
+      "sha256": "9a707ef60a147581db10c5c7cd083bae79675f714c206dcd438ccc5b8135c5d3"
+    },
+    {
+      "path": "research/strchr-2026-10-28/m4_operator/placement_test.py",
+      "bytes": 6444,
+      "sha256": "44d7e501886336c84fc9ef30aa7198967ccf8e6f168dd07e265e7ce0b7c0cda1"
+    },
+    {
+      "path": "research/strchr-2026-10-28/m4_operator/prepare.py",
+      "bytes": 16149,
+      "sha256": "afb689d2b42b29489d0e2c84dd5de1aded5c0afcf980a713cbce7ae14fead0bb"
+    },
+    {
+      "path": "research/strchr-2026-10-28/m4_operator/supervisor.py",
+      "bytes": 7742,
+      "sha256": "025c809d3a376d2fd674582afd0f51c443c50d4e4542cb97c282af966e2b17d3"
+    },
+    {
+      "path": "research/strchr-2026-10-28/m4_operator/wire.py",
+      "bytes": 10213,
+      "sha256": "dea7705a3dda391edc3fde61bbbf9b304919e80b3f64491218129bd39a0ed919"
+    },
+    {
+      "path": "research/strchr-2026-10-28/m4_operator/workflow.py",
+      "bytes": 10105,
+      "sha256": "612bf8c3c1031da7b0d8c11eb3e47dfd0158274fd9d074ee83b9fe982664f431"
+    },
+    {
+      "path": "research/strchr-2026-10-28/m4_operator/workflow_test.py",
+      "bytes": 9193,
+      "sha256": "9f9e4c2de9f911a25be09967ad0bb1923cb1ed96274e1cf7674710f35a8a8de7"
+    }
+  ],
+  "saved_evidence_refs": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strchr-m4-operator-host-20261030-v1/packet-v2/PACKET.json",
+      "bytes": 13990,
+      "sha256": "1ddf5ab4fcf881955991b41a7575338325c4cad47f34f90bc922d90419c37c8f"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strchr-m4-operator-host-20261030-v1/model-arm-v1/RESULTS.json",
+      "bytes": 4935,
+      "sha256": "08e345b2853e5543d0f81386605e62ad3133efe07debae0dd46a273b0ead13b8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strchr-m4-operator-host-20261030-v1/placement-v1/RESULTS.json",
+      "bytes": 745,
+      "sha256": "7a187077c1c7602f800135cfb9f34a583b9e1f6ac47a08d325019e554da688df"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strchr-m4-operator-host-20261030-v1/workflow-test-v2/RESULTS.json",
+      "bytes": 2999,
+      "sha256": "f43efdd9bd9d808aa30e042f6afdc10717f90b3b75f77dc21475d3436a4e0d7b"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strchr-m4-operator-host-20261030-v1/workflow-v1/WORKFLOW.json",
+      "bytes": 391283,
+      "sha256": "055768580100630ca2f20e5187d8d872a810e25c184b8affcea0f43c25003965"
+    }
+  ],
+  "remaining": [
+    "Fresh actual release and binding",
+    "Physical adapter/argv/timer/context/lease/Root Go acceptance",
+    "Hardware matrix and full original return with independent CLOSED",
+    "Measured implementation selection and final firmware/APP budgets"
+  ]
+}
