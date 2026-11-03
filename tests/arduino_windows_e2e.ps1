@@ -56,8 +56,16 @@ function Assert-DeviceContents {
         }
     }
     foreach ($name in $script:Mk61SystemFiles) {
-        if (-not [IO.File]::Exists((Join-Path $system $name)) -and
-            [IO.File]::Exists((Join-Path $env:MK61_E2E_ROOT "fs/System/$name"))) {
+        if ([IO.File]::Exists((Join-Path $system $name))) { continue }
+        $actual = Join-Path $env:MK61_E2E_ROOT "fs/System/$name"
+        if ($name -in @('autoexec.wbmp', 'VMCache/autoexec.wbmp')) {
+            # Legacy bundles omit icons; the installer preserves existing
+            # artwork exactly as it preserves other user-owned files.
+            if (-not [IO.File]::Exists($actual) -or
+                [IO.File]::ReadAllText($actual) -cne 'stale') {
+                throw "Installer damaged retained folder icon: $name"
+            }
+        } elseif ([IO.File]::Exists($actual)) {
             throw "Installer kept disabled System file: $name"
         }
     }
@@ -185,7 +193,15 @@ try {
         'wrong-profile', 'wrong-build', 'identity-switch', 'multiple',
         'dfu-failure', 'wrong-ack', 'disconnect', 'corrupt-readback',
         'changed-resident', 'changed-system', 'missing-system', 'missing-manifest', 'invalid-port')
+    if ($Fixture) { $cases += 'normal-icons' }
     foreach ($case in $cases) {
+        if ($case -eq 'normal-icons') {
+            foreach ($icon in @(@('autoexec.wbmp', 'system'), @('VMCache/autoexec.wbmp', 'cache'))) {
+                Copy-Item -LiteralPath (Join-Path $root "doc/explorer-icons/$($icon[1]).wbmp") `
+                    -Destination (Join-Path $system $icon[0])
+            }
+            Write-Mk61SystemManifest $stage $bundle $mcu
+        }
         $env:MK61_E2E_ROOT = Join-Path $work $case
         $fs = Join-Path $env:MK61_E2E_ROOT 'fs/System'
         [void][IO.Directory]::CreateDirectory((Join-Path $fs 'VMCache'))
@@ -193,6 +209,11 @@ try {
         foreach ($name in @('USER.TXT', 'VMCache/VMC-0042.APP')) { [IO.File]::WriteAllText((Join-Path $fs $name), 'keep') }
         foreach ($name in $script:Mk61SystemFiles) {
             if (-not [IO.File]::Exists((Join-Path $system $name))) { [IO.File]::WriteAllText((Join-Path $fs $name), 'stale') }
+        }
+        if ($case -eq 'normal-icons') {
+            foreach ($name in @('autoexec.wbmp', 'VMCache/autoexec.wbmp')) {
+                [IO.File]::WriteAllText((Join-Path $fs $name), 'stale')
+            }
         }
         $changed = $null; $original = $null
         if ($case -eq 'changed-resident') { $changed = $resident }
@@ -222,7 +243,7 @@ try {
                 $code = Invoke-TestCommand 'arduino-cli' $argv $log
             }
             $output = [IO.File]::ReadAllText($log)
-            if ($case -in @('normal', 'normal-auto-port', 'legacy-first', 'busy-once', 'delayed-port')) {
+            if ($case -in @('normal', 'normal-auto-port', 'normal-icons', 'legacy-first', 'busy-once', 'delayed-port')) {
                 if ($code -ne 0 -or $output -notmatch 'Resident and System APP upload complete') {
                     $trace = foreach ($name in @('programmer.args', 'opens', 'discoveries', 'identities', 'commands.log')) {
                         $path = Join-Path $env:MK61_E2E_ROOT $name
@@ -272,7 +293,7 @@ try {
             if ($null -ne $changed) { [IO.File]::WriteAllBytes($changed, $original) }
         }
     }
-    Write-Host "arduino_windows_e2e: $mcu OK (18 scenarios and recovery; physical USB boundary simulated)"
+    Write-Host "arduino_windows_e2e: $mcu OK ($($cases.Count) scenarios and recovery; physical USB boundary simulated)"
 } catch {
     # Preserve the actual upload failure even if Windows cleanup also fails.
     [Console]::Error.WriteLine(($_ | Out-String))

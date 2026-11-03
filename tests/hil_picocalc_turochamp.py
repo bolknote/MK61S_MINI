@@ -279,7 +279,7 @@ def main():
             for source in sorted((ROOT / 'programs/games/Turochamp').iterdir()):
                 if not source.is_file():
                     continue
-                binary = source.suffix.lower() == '.fmk'
+                binary = source.suffix.lower() in ('.fmk', '.wbmp')
                 expected = source.read_bytes() if binary else encode(source.read_text())
                 actual = read_file(p, args.game_dir.rstrip('/') + '/' + source.name, m8=not binary)
                 assert actual == expected, ('Installed game differs', source.name)
@@ -298,7 +298,7 @@ def main():
             report['repeat_median_seconds'] = statistics.median(run['seconds'] for run in report['runs'][1:]) if args.runs > 1 else None
             for source in (ROOT / 'programs/games/Turochamp').iterdir():
                 if source.is_file():
-                    binary = source.suffix.lower() == '.fmk'
+                    binary = source.suffix.lower() in ('.fmk', '.wbmp')
                     expected = source.read_bytes() if binary else encode(source.read_text())
                     assert read_file(p, args.game_dir.rstrip('/') + '/' + source.name, m8=not binary) == expected
             report['game_files_unchanged'] = True

@@ -85,9 +85,10 @@ def parse(path: Path) -> tuple[list[str], bytes, list[str]]:
 
 def main() -> None:
     files = {path.name for path in LIBRARY.iterdir() if path.is_file()}
-    assert files == set(EXPECTED_CODE), (
-        f"library contents differ: missing={set(EXPECTED_CODE) - files}, "
-        f"extra={files - set(EXPECTED_CODE)}"
+    expected_files = set(EXPECTED_CODE) | {"autoexec.wbmp"}
+    assert files == expected_files, (
+        f"library contents differ: missing={expected_files - files}, "
+        f"extra={files - expected_files}"
     )
     for name, expected_code in EXPECTED_CODE.items():
         initializers, code, trailers = parse(LIBRARY / name)

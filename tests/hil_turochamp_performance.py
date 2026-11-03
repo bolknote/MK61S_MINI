@@ -243,7 +243,7 @@ def main():
         # Reading/verifying the installed game is outside measured search time.
         for path in sorted((ROOT/'programs/games/Turochamp').iterdir()):
             if not path.is_file():continue
-            payload=path.read_bytes() if path.suffix.lower()=='.fmk' else encode(path.read_text())
+            payload=path.read_bytes() if path.suffix.lower() in ('.fmk','.wbmp') else encode(path.read_text())
             read_file(port,args.game_dir+'/'+path.name,payload)
         report['verified_files']=sum(path.is_file() for path in (ROOT/'programs/games/Turochamp').iterdir())
         if args.reset_before:

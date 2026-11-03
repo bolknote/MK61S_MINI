@@ -272,7 +272,7 @@ def main():
         game=Game(port,font,args.directory,args.output_dir,result)
         try:
             for path in sorted(local.iterdir()):
-                data=path.read_bytes() if path.suffix.lower()==".fmk" else encode(path.read_text())
+                data=path.read_bytes() if path.suffix.lower() in ('.fmk','.wbmp') else encode(path.read_text())
                 read_file(port,args.directory+"/"+path.name,data)
             result["checks"].append("all-installed-files-byte-identical")
             result["before"]=health(port);port.attach();port.pump(.2);game.save("before-game")

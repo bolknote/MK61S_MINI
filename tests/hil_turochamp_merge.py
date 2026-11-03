@@ -38,7 +38,7 @@ def save(path, data):
 
 
 def package(directory):
-    files = {p.name: p.read_bytes() if p.suffix.lower() == '.fmk' else encode(p.read_text())
+    files = {p.name: p.read_bytes() if p.suffix.lower() in ('.fmk', '.wbmp') else encode(p.read_text())
              for p in directory.iterdir() if p.is_file()}
     assert 'autoexec.m61' in files and 'legal.tbi' in files and 'Turochamp.FMK' in files
     assert all('/' not in name and '"' not in name for name in files)

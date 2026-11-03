@@ -388,11 +388,18 @@ def busy_frames(binary):
         g.close()
 
 
-def main():
-    binary = str(Path(sys.argv[1]).resolve())
+def check_assets():
     for path in (ROOT / 'programs/games/Runner').iterdir():
-        payload = path.read_bytes() if path.suffix == '.bin' else encode_m8(path.read_text())
+        payload = path.read_bytes() if path.suffix in ('.bin', '.wbmp') else encode_m8(path.read_text())
         assert len(payload) <= (4096 if path.suffix == '.bin' else 1536), path
+
+
+def main():
+    check_assets()
+    if len(sys.argv) == 2 and sys.argv[1] == '--check-assets':
+        print('Runner package assets: binary WBMP/programs, M8 text and unchanged quotas PASS')
+        return
+    binary = str(Path(sys.argv[1]).resolve())
     total, walk = art_and_transitions(binary)
     clocks_controls_and_loss(binary)
     campaign(binary)
