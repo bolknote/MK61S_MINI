@@ -3,11 +3,14 @@
 param(
     [Parameter(Mandatory = $true)][string]$BuildRoot,
     [string]$ConfigFile,
-    [string]$Sketch = (Join-Path (Split-Path -Parent $PSScriptRoot) 'code')
+    [string]$Sketch
 )
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
+# Windows PowerShell 5.1 leaves PSScriptRoot empty during default-parameter
+# binding. Resolve the optional sketch only after entering the script body.
+if ([string]::IsNullOrWhiteSpace($Sketch)) { $Sketch = Join-Path $root 'code' }
 $cliOptions = @()
 if ($ConfigFile) { $cliOptions = @('--config-file', $ConfigFile) }
 foreach ($revision in @('v2', 'v3')) {

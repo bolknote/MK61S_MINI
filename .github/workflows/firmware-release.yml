@@ -519,6 +519,23 @@ jobs:
       # recipes. Deliberately poison Python and MK61_HOST_CXX: this proves that
       # a normal Windows IDE installation needs neither Python nor
       # Visual Studio/MinGW.
+      - name: Compile full F401 Classic V2 and V3 through the Arduino IDE recipe
+        shell: pwsh
+        run: |
+          $pythonTrap = Join-Path $env:RUNNER_TEMP 'mk61-no-python'
+          [IO.Directory]::CreateDirectory($pythonTrap) | Out-Null
+          foreach ($name in @('python.exe', 'python3.exe', 'py.exe')) {
+            Copy-Item "$env:WINDIR\System32\where.exe" (Join-Path $pythonTrap $name) -Force
+          }
+          $env:PATH = "$pythonTrap;$env:PATH"
+          $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
+          $ideConfig = Join-Path (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
+          $safeCache = (& arduino-cli --config-file $ideConfig config get build_cache.path | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
+            -File ./tests/arduino_classic_compile.ps1 -BuildRoot $safeCache -ConfigFile $ideConfig
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Compile complete F401 mini V2 bundle with saved legacy FQBN
         shell: pwsh
         run: |
@@ -730,23 +747,6 @@ jobs:
                 ".build/firmware/mk61s-M-mini-v2-lcd1602-a00-$mcu/System")
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
-
-      - name: Compile full F401 Classic V2 and V3 through the Arduino IDE recipe
-        shell: pwsh
-        run: |
-          $pythonTrap = Join-Path $env:RUNNER_TEMP 'mk61-no-python'
-          [IO.Directory]::CreateDirectory($pythonTrap) | Out-Null
-          foreach ($name in @('python.exe', 'python3.exe', 'py.exe')) {
-            Copy-Item "$env:WINDIR\System32\where.exe" (Join-Path $pythonTrap $name) -Force
-          }
-          $env:PATH = "$pythonTrap;$env:PATH"
-          $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
-          $ideConfig = Join-Path (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
-          $safeCache = (& arduino-cli --config-file $ideConfig config get build_cache.path | Out-String).Trim()
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
-            -File ./tests/arduino_classic_compile.ps1 -BuildRoot $safeCache -ConfigFile $ideConfig
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       # Python is allowed for artifact analysis, not in any IDE build
       # above. Check the actual calls: successful compilation or merely
