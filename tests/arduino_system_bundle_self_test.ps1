@@ -20,6 +20,8 @@ try {
     [void][IO.Directory]::CreateDirectory((Join-Path $system 'VMCache'))
     Copy-Item (Join-Path $root 'tools/.mkc/mkc.ps1') (Join-Path $stage 'mk61-system-installer.ps1')
     [IO.File]::WriteAllBytes((Join-Path $system 'VMCache/VMSTORE.APP'), [byte[]]::new(64))
+    Copy-Item -LiteralPath (Join-Path $root 'doc/explorer-icons/system.wbmp') -Destination (Join-Path $system 'autoexec.wbmp')
+    Copy-Item -LiteralPath (Join-Path $root 'doc/explorer-icons/cache.wbmp') -Destination (Join-Path $system 'VMCache/autoexec.wbmp')
     $id = New-Mk61TestArduinoBundle $work $bundle f411 -ResidentUsbDisk
     $manifest = Get-VerifiedMk61SystemManifest $stage $bundle f411 $resident
     if ($manifest.profile -cne 'mini-v2-a00' -or $manifest.build_id -cne $id.build_id) {
@@ -64,6 +66,11 @@ try {
     Sync-Mk61PublishedSystem $system $published
     if (-not [IO.File]::Exists((Join-Path $published 'VMCache/VMSTORE.APP'))) {
         throw 'Published System lost the nested VM cache helper'
+    }
+    foreach ($icon in @('autoexec.wbmp','VMCache/autoexec.wbmp')) {
+        if ((Get-Mk61FileSha256 (Join-Path $system $icon)) -ne (Get-Mk61FileSha256 (Join-Path $published $icon))) {
+            throw "Published System lost or changed its folder icon: $icon"
+        }
     }
     [IO.File]::WriteAllText((Join-Path $published 'VMCache/VMC-0042.APP'), 'retained data')
     Remove-Item -LiteralPath (Join-Path $system 'VMCache/VMSTORE.APP')

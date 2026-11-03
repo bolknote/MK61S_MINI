@@ -246,6 +246,9 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
             -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1 `
             -Setup 1 -UsbDisk 1 -Explorer 1
         Assert-True ($LASTEXITCODE -eq 0) 'real unified System APP build failed'
+        Assert-True ((Get-FileHash -Algorithm SHA256 (Join-Path $output 'autoexec.wbmp')).Hash -eq
+            (Get-FileHash -Algorithm SHA256 (Join-Path $root 'doc/explorer-icons/system.wbmp')).Hash) `
+            'System builder lost the folder icon'
 
         Assert-True (-not (Test-Path -LiteralPath (
             Join-Path $output 'WBMP.APP'))) `

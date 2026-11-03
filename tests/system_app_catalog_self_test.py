@@ -179,12 +179,16 @@ class SystemAppCatalogSelfTest(unittest.TestCase):
                 self.assertTrue((output/"VMCache/VMSTORE.APP").is_file())
                 self.assertTrue((output/"TERMINAL.APP").is_file())
                 self.assertTrue((output/"CLOCK.APP").is_file())
+                self.assertEqual((output/'autoexec.wbmp').read_bytes(),(bundle.ROOT/'doc/explorer-icons/system.wbmp').read_bytes())
+                self.assertEqual((output/'VMCache/autoexec.wbmp').read_bytes(),(bundle.ROOT/'doc/explorer-icons/cache.wbmp').read_bytes())
                 owned_data=output/"VMCache/VMC-0042.APP";owned_data.write_bytes(b"keep cache data")
                 enabled=0;result=bundle.build(args)
             self.assertFalse(result["vm_file_cache"])
             self.assertFalse((output/"VMCache/VMSTORE.APP").exists())
             self.assertFalse((output/"TERMINAL.APP").exists())
             self.assertFalse((output/"CLOCK.APP").exists())
+            self.assertFalse((output/'VMCache/autoexec.wbmp').exists())
+            self.assertTrue((output/'autoexec.wbmp').is_file())
             self.assertEqual(owned_data.read_bytes(),b"keep cache data")
 
     def test_vm_variants_do_not_reuse_interpreter_or_math_packages(self) -> None:

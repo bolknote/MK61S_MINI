@@ -5,7 +5,10 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <string>
+#include <vector>
 
 namespace {
 bool glyph(void*,u8 height,u16 cp,explorer_view::Glyph& out) {
@@ -41,6 +44,28 @@ void preview(const char* prefix,const char* suffix,const u8* data,unsigned w,uns
 }
 int main(int argc,char** argv) {
   using namespace explorer_view;
+  unsigned stock_icons=0;
+  const auto artwork=std::filesystem::path(__FILE__).parent_path().parent_path()/"doc/explorer-icons";
+  for(const auto& file:std::filesystem::directory_iterator(artwork)) {
+    if(file.path().extension()!=".wbmp") continue;
+    std::ifstream input(file.path(),std::ios::binary);
+    std::vector<u8> bytes((std::istreambuf_iterator<char>(input)),{});
+    Icon stock{};assert(decode_icon(bytes.data(),bytes.size(),stock));
+    for(const auto geometry:{Geometry{192,64,Mode::ICONS},Geometry{320,320,Mode::ICONS}}) {
+      u8 buffer[12802];std::memset(buffer,0xA5,sizeof(buffer));
+      const bool pages=geometry.width==192;
+      const usize size=(usize)geometry.width*geometry.height/8;
+      Canvas target(buffer+1,size,geometry,pages?Packing::PAGE_LSB:Packing::ROW_MSB,glyph);
+      target.clear();target.item(0,"Icon",Kind::DIRECTORY,&stock,false);
+      const unsigned left=pages?16:44,top=pages?16:52;
+      for(unsigned y=0;y<32;++y) for(unsigned x=0;x<32;++x)
+        assert(pixel(buffer+1,geometry.width,left+x,top+y,pages)==
+            !(bytes[4+y*4+x/8]&(0x80U>>(x&7))));
+      assert(buffer[0]==0xA5 && buffer[size+1]==0xA5);
+    }
+    ++stock_icons;
+  }
+  assert(stock_icons>0);
   u8 wbmp[141];std::memset(wbmp,0xFF,sizeof(wbmp));
   wbmp[0]=wbmp[1]=0;wbmp[2]=wbmp[3]=32;wbmp[4]=0x7F;
   Icon icon{};assert(decode_icon(wbmp,132,icon));assert(icon.pixels[0]==0x80);

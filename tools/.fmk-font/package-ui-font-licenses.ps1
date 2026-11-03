@@ -37,6 +37,12 @@ try {
             [IO.File]::WriteAllBytes(
                 $target, [IO.File]::ReadAllBytes($source))
         }
+        $icons = @{ 'licenses' = 'license'; 'licenses/ui-fonts' = 'font-license' }
+        foreach ($folder in $icons.Keys) {
+            $source = Join-Path $sourceRoot ("../../doc/explorer-icons/" + $icons[$folder] + '.wbmp')
+            [IO.File]::WriteAllBytes((Join-Path $bundlePath "$folder/autoexec.wbmp"),
+                [IO.File]::ReadAllBytes($source))
+        }
     }
     if (-not [string]::IsNullOrWhiteSpace($Archive)) {
         Add-Type -AssemblyName System.IO.Compression

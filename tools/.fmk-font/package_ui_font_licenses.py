@@ -22,6 +22,8 @@ def package(bundle=None, archive=None):
             target = bundle / name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
+        for folder,role in (('licenses','license'),('licenses/ui-fonts','font-license')):
+            (bundle/folder/'autoexec.wbmp').write_bytes((ROOT/'doc/explorer-icons'/(role+'.wbmp')).read_bytes())
     if archive is not None:
         archive.parent.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as output:

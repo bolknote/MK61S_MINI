@@ -109,6 +109,8 @@ try {
     [IO.File]::WriteAllBytes((Join-Path $systemBundle 'USBDISK.APP'), [byte[]]::new(64))
     [void](New-Item -ItemType Directory -Path (Join-Path $systemBundle 'VMCache'))
     [IO.File]::WriteAllBytes((Join-Path $systemBundle 'VMCache/VMSTORE.APP'), [byte[]]::new(64))
+    Copy-Item -LiteralPath (Join-Path $root 'doc/explorer-icons/system.wbmp') -Destination (Join-Path $systemBundle 'autoexec.wbmp')
+    Copy-Item -LiteralPath (Join-Path $root 'doc/explorer-icons/cache.wbmp') -Destination (Join-Path $systemBundle 'VMCache/autoexec.wbmp')
     [IO.File]::WriteAllText((Join-Path $systemBundle 'HELP0.TXT'), "Помощь`n", [Text.UTF8Encoding]::new($false))
     [void](New-Item -ItemType Directory -Path (Join-Path $device 'System'))
     [IO.File]::WriteAllBytes((Join-Path $device 'System/CHIP8.APP'), [byte[]]::new(64))
@@ -121,6 +123,11 @@ try {
         'System bootstrap did not install USBDISK.APP'
     Assert-True ([IO.File]::Exists((Join-Path $device 'System/VMCache/VMSTORE.APP'))) `
         'System bootstrap did not install the nested cache helper'
+    foreach ($icon in @('autoexec.wbmp','VMCache/autoexec.wbmp')) {
+        Assert-True ((Get-FileHash -Algorithm SHA256 (Join-Path $systemBundle $icon)).Hash -eq
+            (Get-FileHash -Algorithm SHA256 (Join-Path $device "System/$icon")).Hash) `
+            "System bootstrap changed the binary folder icon: $icon"
+    }
     [IO.File]::WriteAllBytes((Join-Path $device 'System/VMCache/VMC-0042.APP'), [byte[]](1,2,3))
     Assert-True (-not [IO.File]::Exists((Join-Path $device 'System/CHIP8.APP'))) `
         'System bootstrap did not remove a disabled canonical APP'
@@ -172,6 +179,10 @@ try {
         'disabled cache helper survived System synchronisation'
     Assert-True ([IO.File]::ReadAllBytes((Join-Path $device 'System/VMCache/VMC-0042.APP')).Length -eq 3) `
         'System synchronisation removed retained bytecode data'
+    foreach ($icon in @('autoexec.wbmp','VMCache/autoexec.wbmp')) {
+        Assert-True ([IO.File]::Exists((Join-Path $device "System/$icon"))) `
+            'An older iconless bundle removed a folder icon'
+    }
     $app = Invoke-MkcTool @('--classify', (Join-Path $local 'DEMO.APP'))
     Assert-True ($app.ExitCode -eq 0 -and ($app.Output -join '') -eq 'supported') 'PowerShell classifier rejected APP'
     $chip8 = Invoke-MkcTool @('--classify', (Join-Path $local 'game.ch8'))

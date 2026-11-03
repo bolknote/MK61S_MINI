@@ -13,12 +13,14 @@ import zlib
 
 from build_picocalc_apps import APPS, ASSETS, ROOT
 from seal_picocalc import verify as verify_firmware
+from explorer_icons import install_bundle_icons
 
 README='''MK61S / PicoCalc / Pico H
 
 Copy mk61s-picocalc-pico-h.uf2 to the RPI-RP2 ROM bootloader volume.
 Use the native Micro-USB connector on Pico H. The case USB-C is UART.
-Copy apps/ and games/ to microSD; copy Fonts/ to the card root.
+Copy apps/, games/, examples/ and Fonts/ to the microSD card root,
+including each folder's autoexec.wbmp icon.
 APP images in this bundle target Cortex-M0+ and cannot replace STM32 APPs.
 See README.md for controls, supported formats, clock and power limitations.
 '''
@@ -100,6 +102,12 @@ def main():
     files=[firmware,directory/'manifest.json',directory/'README.txt',directory/'README.md',directory/'sync_picocalc_clock.py',
         *font_files,*game_files,*(directory/name for name in licenses.FILES),
         apps/'manifest.json',*[apps/(name+'.APP') for name in APPS],*[apps/name for name in ASSETS]]
+    folders={parent.relative_to(directory).as_posix() for path in files for parent in path.parents
+             if parent!=directory and parent.is_relative_to(directory)}
+    # Stale directories from an older output must not become new empty folders
+    # in the ZIP merely because they happen to have a stock icon mapping.
+    icon_files=install_bundle_icons(directory,folders)
+    files=list(dict.fromkeys([*files,*icon_files]))
     for report_name in ('hardware-parity-summary.json','hardware-apps-summary.json',
                         'hardware-software-summary.json','hardware-power-summary.json',
                         'hardware-contract-summary.json','hardware-integrity-summary.json','hardware-mkc-summary.json',

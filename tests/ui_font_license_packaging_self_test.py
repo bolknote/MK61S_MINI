@@ -20,6 +20,9 @@ class PackagingTest(unittest.TestCase):
             bundle = target / "bundle"
             archive = target / "licenses.zip"
             licenses.package(bundle, archive)
+            for folder,role in (('licenses','license'),('licenses/ui-fonts','font-license')):
+                self.assertEqual((bundle/folder/'autoexec.wbmp').read_bytes(),
+                                 (ROOT/'doc/explorer-icons'/(role+'.wbmp')).read_bytes())
             original = archive.read_bytes()
             licenses.package(bundle, archive)
             self.assertEqual(archive.read_bytes(), original)

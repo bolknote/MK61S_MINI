@@ -652,6 +652,7 @@ if [ "$ui_fonts" -eq 1 ]; then
   python3 "$root/tools/.fmk-font/package_ui_font_licenses.py" \
     --bundle "$bundle_dir"
 fi
+python3 "$root/tools/explorer_icons.py" --bundle "$bundle_dir"
 printf '%s -DMK61_PORTABLE_UI_FONTS=%s -DMK61_APP_LOCAL_FLOAT_MATH=%s\n' \
   "$compile_flags" "$ui_fonts" "$app_local_float" > "$bundle_dir/build.flags"
 {

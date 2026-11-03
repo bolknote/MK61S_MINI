@@ -3557,6 +3557,7 @@ install_system_unattended() {
   local source=$LOCAL_PATH name kind size remote_name deadline reason
   local canonical=(USBDISK.APP SETUP.APP FOCAL.APP BASIC.APP LANGVM.APP LANGIN.APP SRCEDIT.APP WBMP.APP MARKDOWN.APP
     CHIP8.APP EXPLORER.APP HELP0.TXT HELP1.TXT VMCache/VMSTORE.APP TERMINAL.APP CLOCK.APP)
+  local icons=(autoexec.wbmp VMCache/autoexec.wbmp)
   if [ "$RESIDENT_USBDISK" -eq 0 ] && [ ! -s "$source/USBDISK.APP" ]; then
     STATUS_TEXT='нет обязательного USBDISK.APP'; return 1
   fi
@@ -3564,10 +3565,10 @@ install_system_unattended() {
     STATUS_TEXT='resident USB-диск не должен содержать USBDISK.APP'; return 1
   fi
   # Validate every source before deleting or uploading anything.
-  if [ -e "$source/VMCache/VMSTORE.APP" ] && [ -L "$source/VMCache" ]; then
+  if { [ -e "$source/VMCache/VMSTORE.APP" ] || [ -e "$source/VMCache/autoexec.wbmp" ]; } && [ -L "$source/VMCache" ]; then
     STATUS_TEXT='неверный каталог VMCache'; return 1
   fi
-  for name in "${canonical[@]}"; do
+  for name in "${canonical[@]}" "${icons[@]}"; do
     [ -e "$source/$name" ] || [ -L "$source/$name" ] || continue
     [ -f "$source/$name" ] && [ ! -L "$source/$name" ] || {
       STATUS_TEXT="неверный файл $name"; return 1;
@@ -3622,9 +3623,9 @@ install_system_unattended() {
       done < "$SESSION_DIR/vmcache-list"
     done < "$SESSION_DIR/system-list"
   fi
-  for name in "${canonical[@]}"; do
+  for name in "${canonical[@]}" "${icons[@]}"; do
     [ -f "$source/$name" ] || continue
-    [ "$name" != VMCache/VMSTORE.APP ] || remote_mkdir /System/VMCache || return 1
+    case "$name" in VMCache/*) remote_mkdir /System/VMCache || return 1 ;; esac
     if ! remote_put_file "$source/$name" "/System/$name"; then
       [ -n "$MOCK_ROOT" ] || remote_send 'fsput cancel' || true
       return 1

@@ -33,7 +33,7 @@ $Canonical = @(
     'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
     'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT',
     'LANGVM.APP', 'LANGIN.APP', 'SRCEDIT.APP', 'VMCache/VMSTORE.APP',
-    'TERMINAL.APP', 'CLOCK.APP')
+    'TERMINAL.APP', 'CLOCK.APP', 'autoexec.wbmp', 'VMCache/autoexec.wbmp')
 $Modules = @(
     [pscustomobject]@{ Key = 'terminal'; Name = 'TERMINAL.APP'; System = 'terminal' },
     [pscustomobject]@{ Key = 'terminal-clock'; Name = 'CLOCK.APP'; System = 'terminal-clock' },
@@ -513,6 +513,12 @@ try {
             '-UsbText')
         $built.Add('HELP0.TXT')
         $built.Add('HELP1.TXT')
+        Copy-Item -LiteralPath (Join-Path $ProjectRoot 'doc/explorer-icons/system.wbmp') `
+            -Destination (Join-Path $stage 'autoexec.wbmp')
+        if ([IO.Directory]::Exists((Join-Path $stage 'VMCache'))) {
+            Copy-Item -LiteralPath (Join-Path $ProjectRoot 'doc/explorer-icons/cache.wbmp') `
+                -Destination (Join-Path $stage 'VMCache/autoexec.wbmp')
+        }
 
         foreach ($name in $Canonical) {
             $source = Join-Path $stage $name

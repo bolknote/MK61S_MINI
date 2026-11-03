@@ -28,6 +28,8 @@ grep -q 'Справка' "$work/help"
 
 # The one owned nested helper is synced; bytecode/user data is not deleted.
 mkdir -p "$LOCAL_PATH/VMCache"
+cp "$root/doc/explorer-icons/system.wbmp" "$LOCAL_PATH/autoexec.wbmp"
+cp "$root/doc/explorer-icons/cache.wbmp" "$LOCAL_PATH/VMCache/autoexec.wbmp"
 dd if=/dev/zero of="$LOCAL_PATH/VMCache/VMSTORE.APP" bs=64 count=1 2>/dev/null
 dd if=/dev/zero of="$LOCAL_PATH/TERMINAL.APP" bs=64 count=1 2>/dev/null
 dd if=/dev/zero of="$LOCAL_PATH/CLOCK.APP" bs=64 count=1 2>/dev/null
@@ -35,13 +37,18 @@ install_system_unattended
 cmp "$LOCAL_PATH/TERMINAL.APP" "$MOCK_ROOT/System/TERMINAL.APP"
 cmp "$LOCAL_PATH/CLOCK.APP" "$MOCK_ROOT/System/CLOCK.APP"
 cmp "$LOCAL_PATH/VMCache/VMSTORE.APP" "$MOCK_ROOT/System/VMCache/VMSTORE.APP"
+cmp "$LOCAL_PATH/autoexec.wbmp" "$MOCK_ROOT/System/autoexec.wbmp"
+cmp "$LOCAL_PATH/VMCache/autoexec.wbmp" "$MOCK_ROOT/System/VMCache/autoexec.wbmp"
 printf 'retained-cache' > "$MOCK_ROOT/System/VMCache/VMC-0042.APP"
-rm "$LOCAL_PATH/VMCache/VMSTORE.APP" "$LOCAL_PATH/TERMINAL.APP" "$LOCAL_PATH/CLOCK.APP"
+rm "$LOCAL_PATH/VMCache/VMSTORE.APP" "$LOCAL_PATH/TERMINAL.APP" "$LOCAL_PATH/CLOCK.APP" \
+   "$LOCAL_PATH/autoexec.wbmp" "$LOCAL_PATH/VMCache/autoexec.wbmp"
 install_system_unattended
 test ! -e "$MOCK_ROOT/System/VMCache/VMSTORE.APP"
 test ! -e "$MOCK_ROOT/System/TERMINAL.APP"
 test ! -e "$MOCK_ROOT/System/CLOCK.APP"
 test "$(<"$MOCK_ROOT/System/VMCache/VMC-0042.APP")" = retained-cache
+cmp "$root/doc/explorer-icons/system.wbmp" "$MOCK_ROOT/System/autoexec.wbmp"
+cmp "$root/doc/explorer-icons/cache.wbmp" "$MOCK_ROOT/System/VMCache/autoexec.wbmp"
 
 # A malformed source is rejected before old files can be removed.
 printf x > "$LOCAL_PATH/BASIC.APP"

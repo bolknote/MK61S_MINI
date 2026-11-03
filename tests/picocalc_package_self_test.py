@@ -2,7 +2,7 @@
 """Build a release from a clean directory and reject a validly checksummed M4 APP."""
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path,PurePosixPath
 import shutil
 import struct
 import subprocess
@@ -15,6 +15,7 @@ import zlib
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
 from build_picocalc_apps import APPS,ASSETS
+from explorer_icons import ARTWORK,BUNDLE_FOLDERS
 
 
 class PackageTests(unittest.TestCase):
@@ -25,6 +26,8 @@ class PackageTests(unittest.TestCase):
             for name in ('manifest.json','mk61s-picocalc-pico-h.uf2'):
                 shutil.copy2(source/name,target/name)
             shutil.copytree(source/'apps',target/'apps')
+            (target/'System/VMCache').mkdir(parents=True)
+            (target/'System/old.txt').write_text('stale output, outside this Pico bundle')
             command=[sys.executable,str(ROOT/'tools/package_picocalc.py'),'--directory',str(target)]
             subprocess.run(command,check=True,capture_output=True,text=True)
             version=json.loads((target/'manifest.json').read_text())['prototype_version']
@@ -32,6 +35,17 @@ class PackageTests(unittest.TestCase):
             with zipfile.ZipFile(archive) as reader:
                 prefix='mk61s-picocalc-pico-h/'
                 self.assertIsNone(reader.testzip())
+                self.assertFalse(any(name.startswith(prefix+'System/') for name in reader.namelist()))
+                self.assertFalse((target/'System/autoexec.wbmp').exists())
+                self.assertEqual(len(reader.namelist()),len(set(reader.namelist())))
+                folders={str(parent) for name in reader.namelist()
+                         for parent in PurePosixPath(name[len(prefix):]).parents if str(parent)!='.'}
+                roles={path.casefold():role for path,role in BUNDLE_FOLDERS.items()}
+                for folder in folders:
+                    self.assertIn(folder.casefold(),roles,'Unreviewed distribution folder')
+                    icon=prefix+folder+'/autoexec.wbmp'
+                    self.assertIn(icon,reader.namelist())
+                    self.assertEqual(reader.read(icon),(ARTWORK/(roles[folder.casefold()]+'.wbmp')).read_bytes())
                 expected=[*(f'apps/{name}.APP' for name in APPS),*(f'apps/{name}' for name in ASSETS),
                     'README.txt','README.md','Fonts/DejaVu-12.FMK','Fonts/DejaVu-14.FMK',
                     'licenses/ui-fonts/LICENSE-Ark-Pixel.txt','licenses/ui-fonts/LICENSE-DejaVu.txt']

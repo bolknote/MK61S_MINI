@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 
 from m8_codec import decode as decode_m8
+from explorer_icons import copy_icon
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +27,7 @@ CANONICAL = (
     "SETUP.APP", "USBDISK.APP", "EXPLORER.APP", "HELP0.TXT", "HELP1.TXT",
     "LANGVM.APP", "LANGIN.APP", "SRCEDIT.APP", "VMCache/VMSTORE.APP",
     "TERMINAL.APP", "CLOCK.APP",
+    "autoexec.wbmp", "VMCache/autoexec.wbmp",
 )
 MODULES = (
     ("terminal", "TERMINAL.APP", "terminal"),
@@ -527,6 +529,9 @@ def build(args: argparse.Namespace) -> dict:
              "--resident-elf", resident, "--output-dir", stage])
         prepare_usb_text_resources(stage)
         built += ["HELP0.TXT", "HELP1.TXT"]
+        copy_icon('system',stage/'autoexec.wbmp')
+        if (stage/'VMCache').is_dir():
+            copy_icon('cache',stage/'VMCache/autoexec.wbmp')
 
         # Replace only files owned by this builder. Other /System files, if
         # any, belong to the caller and are deliberately left untouched.

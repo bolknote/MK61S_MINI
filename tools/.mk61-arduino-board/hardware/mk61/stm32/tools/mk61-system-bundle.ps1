@@ -2,7 +2,8 @@
 
 $script:Mk61SystemFiles = @('USBDISK.APP', 'SETUP.APP', 'FOCAL.APP', 'BASIC.APP',
     'LANGVM.APP', 'LANGIN.APP', 'SRCEDIT.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
-    'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT', 'VMCache/VMSTORE.APP', 'TERMINAL.APP', 'CLOCK.APP')
+    'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT', 'VMCache/VMSTORE.APP', 'TERMINAL.APP', 'CLOCK.APP',
+    'autoexec.wbmp', 'VMCache/autoexec.wbmp')
 
 function Get-Mk61FirmwareProfile {
     param([string]$BundleProfile)

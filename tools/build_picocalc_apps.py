@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 from build_picocalc import compiler_bin
+from explorer_icons import copy_icon
 ROOT=Path(__file__).resolve().parents[1]
 APPS={
     'HELLO':(['examples/portable-apps/HELLO/main.c'],None),
@@ -18,7 +19,7 @@ APPS={
     'SHEET':(['examples/portable-apps/SHEET/main.cpp','examples/portable-apps/SHEET/sheet_engine.cpp'],'S1'),
     'WBMP':(['examples/portable-apps/WBMP/main.c','examples/portable-apps/WBMP/viewer.cpp','code/wbmp.cpp'],'I1'),
 }
-ASSETS=('README.txt','ECHO8.ch8','PATTERN.wbmp','BUDGET.mks','CYCLE.mks')
+ASSETS=('README.txt','ECHO8.ch8','PATTERN.wbmp','BUDGET.mks','CYCLE.mks','autoexec.wbmp')
 README='''MK61S PicoCalc / Pico H: native 320x320 APP collection, ABI 6 / Cortex-M0+.
 
 HELLO.APP       C example; checks fresh data/BSS and prints HELLO C APP.
@@ -75,6 +76,7 @@ def main():
     for name in ('BUDGET','CYCLE'):
         shutil.copy2(ROOT/'programs/sheets'/(name+'.mks'),args.output_dir/(name+'.mks'))
     (args.output_dir/'README.txt').write_text(README)
+    copy_icon('applications',args.output_dir/'autoexec.wbmp')
     (args.output_dir/'manifest.json').write_text(json.dumps(reports,indent=2)+'\n')
     print('Pico H APPs: '+str(args.output_dir))
 if __name__=='__main__': main()
