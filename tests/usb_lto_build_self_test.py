@@ -197,6 +197,48 @@ class UsbLtoBuildTest(unittest.TestCase):
                 self.assertEqual(bridge.read_text(), 'strong HAL callbacks in LTO')
                 self.assertEqual(request.read_text(), 'generic control requests')
 
+    def exercise_private(self, powershell=False, missing=False, fail=False):
+        with tempfile.TemporaryDirectory(prefix='mk61 private usb ') as temporary:
+            build = Path(temporary) / 'build with spaces'
+            sketch = build / 'sketch'
+            sketch.mkdir(parents=True)
+            sources = ('stm32f4_usbd_core.c', 'stm32f4_usbd_cdc.c')
+            for source in sources:
+                (sketch/source).touch()
+                (sketch/(source+'.o')).write_text('LTO object')
+            if missing:
+                (sketch/(sources[1]+'.o')).unlink()
+            fake = Path(temporary) / 'fake compiler'
+            shutil.copyfile(HERE, fake); fake.chmod(0o755)
+            suffix = 'ps1' if powershell else 'py'
+            launcher = ([shutil.which('pwsh'), '-NoLogo', '-NoProfile', '-File']
+                        if powershell else [sys.executable])
+            options = ['--fake-compiler', '-c', '-flto', '-DSTM32F401xC',
+                       '-DMK61_ARDUINO_OWNED_USB=1', '-DNAME="space value"']
+            if fail: options += ['--fail']
+            result = subprocess.run([*launcher,
+                str(ROOT/'tools/.mk61-gcc'/('protect-usb-lto.'+suffix)),
+                str(build), str(Path(temporary)/'unused Core library'),
+                str(fake), *options], capture_output=True, text=True)
+            if missing or fail:
+                self.assertNotEqual(result.returncode, 0)
+            else:
+                self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+                for source in sources:
+                    command = json.loads((sketch/(source+'.o')).read_text())
+                    self.assertIn('-fno-lto', command)
+                    self.assertEqual(command[-3:], [str(sketch/source), '-o', str(sketch/(source+'.o'))])
+                self.assertEqual(result.stdout.count('Owned USB LTO barrier:'), 2)
+
+    def test_private_board_owned_engine(self):
+        for missing, fail in ((False,False),(True,False),(False,True)):
+            self.exercise_private(missing=missing, fail=fail)
+
+    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
+    def test_powershell_private_board_owned_engine(self):
+        for missing, fail in ((False,False),(True,False),(False,True)):
+            self.exercise_private(powershell=True, missing=missing, fail=fail)
+
     def test_native(self):
         self.exercise()
 

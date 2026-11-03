@@ -8,9 +8,12 @@ import shutil
 import subprocess
 
 FORBIDDEN = re.compile(r"(?:\banalogRead(?:Resolution)?\b|\bSPI(?:Class|Settings)::|"
-                       r"\bLiquidCrystal::|\bSTM32RTC::|\bPinMap_SPI_|\bPinMap_TIM\b|"
+                       r"\bLiquidCrystal::|\bSTM32RTC::|\bHardwareSerial::|"
+                       r"\bPinMap_(?:SPI|UART)_|\bPinMap_TIM\b|"
                        r"\b(?:Print|Stream|USBSerial)::|gpio_irq_conf|ERM19264_UC1609::CustomshiftOut|\bg_hpcd\b|\bHAL_PCD[A-Za-z_]|"
-                       r"\bHAL_(?:ADC|SPI|DMA|RTC)[A-Za-z_])")
+                       r"\bHAL_(?:ADC|SPI|DMA|RTC|UART|CRC)[A-Za-z_]|\bhcrc\b)")
+
+UART_IRQ = re.compile(r"(?:USART|UART|LPUART)[0-9]+_IRQHandler$")
 
 def check_symbols(text, native_panel=False):
     symbols = []
@@ -27,6 +30,10 @@ def check_symbols(text, native_panel=False):
             if fields[3] == "hUSBD_Device_CDC": usb_handle_size = int(fields[1],16)
             if fields[3] == "_hcdc": cdc_handle_size = int(fields[1],16)
     offenders = [name for _kind, name in symbols if FORBIDDEN.search(name)]
+    # Unused weak startup aliases cost no UART driver code. Strong wrappers
+    # are vector-table roots, so LTO cannot discard the generic UART adapter.
+    offenders += [name for kind, name in symbols if
+                  kind in ("T", "t") and UART_IRQ.fullmatch(name)]
     if native_panel:
         offenders += [name for _kind, name in symbols if
                       "ERM19264_graphics::" in name or
@@ -63,7 +70,7 @@ def main():
         check_symbols(result, args.native_panel)
     except (ValueError, subprocess.CalledProcessError) as error:
         p.exit(1, str(error)+"\n")
-    print("Owned STM32 drivers: no generic ADC/SPI/RTC/PWM/EXTI/PCD adapters; USB handle uses four endpoints")
+    print("Owned STM32 drivers: no generic ADC/SPI/RTC/UART/CRC/PWM/EXTI/PCD adapters; USB handle uses four endpoints")
 
 if __name__ == "__main__":
     main()

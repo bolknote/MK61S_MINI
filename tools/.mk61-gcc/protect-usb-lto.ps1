@@ -32,6 +32,25 @@ try {
     $env:TMP = $safeTemp
     $env:TMPDIR = $safeTemp
     $owned = @($flags | Where-Object { $_ -in @('-DSTM32F401xC','-DSTM32F401xE','-DSTM32F411xE') }).Count -gt 0
+    if ($flags -contains '-DMK61_ARDUINO_OWNED_USB=1') {
+        foreach ($leaf in @('stm32f4_usbd_core.c','stm32f4_usbd_cdc.c')) {
+            $actualSource = Join-Path $buildPath "sketch/$leaf"
+            $object = $actualSource + '.o'
+            if (-not [IO.File]::Exists($actualSource) -or -not [IO.File]::Exists($object)) {
+                throw "Missing owned USB source/object: $leaf"
+            }
+            $command = @($flags) + @('-fno-lto', ('-I' + (Join-Path $buildPath 'sketch')), $actualSource, '-o', $object)
+            $response = Join-Path $safeTemp "$leaf.rsp"
+            $lines = foreach ($argument in $command) {
+                '"' + ([string]$argument).Replace('\','/').Replace('"','\"') + '"'
+            }
+            [IO.File]::WriteAllLines($response, [string[]]$lines, [Text.Encoding]::Default)
+            & $compiler ('@' + $response.Replace('\','/'))
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            Write-Host "Owned USB LTO barrier: $leaf"
+        }
+        exit 0
+    }
     # Keep wrapped middleware definitions outside LTO; replace the F4 bridge below.
     foreach ($source in @('src/cdc/usbd_cdc.c', 'src/usb_device_core.c')) {
         $leaf = [IO.Path]::GetFileName($source)

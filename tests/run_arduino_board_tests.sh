@@ -41,8 +41,8 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ] &&
       -Sketchbook "$shell_sketchbook"
 fi
 grep -q 'Verified uploader: mk61Upload' "$work/install.txt"
-grep -Fq 'MK61s board package version: 1.2.4' "$work/install.txt"
-grep -Fq 'installed 1.2.4; project 1.2.4' "$work/check.txt"
+grep -Fq 'MK61s board package version: 1.2.5' "$work/install.txt"
+grep -Fq 'installed 1.2.5; project 1.2.5' "$work/check.txt"
 cmp "$platform/boards.txt" "$target/boards.txt"
 cmp "$platform/platform.txt" "$target/platform.txt"
 cmp "$platform/tools/mk61_module.ld" "$target/tools/mk61_module.ld"
@@ -101,12 +101,27 @@ grep -Fq \
   "$target/boards.local.txt"
 grep -q 'Accepted obsolete Arduino IDE font options' "$work/reinstall.txt"
 
-grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.4)' "$target/boards.txt"
+grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.5)' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.upload.tool=mk61Upload$' "$target/boards.txt"
-grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.4)' "$target/boards.txt"
-grep -Fxq 'version=1.2.4' "$target/platform.txt"
+grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.5)' "$target/boards.txt"
+grep -Fxq 'version=1.2.5' "$target/platform.txt"
+# A mixed/missing USB shim must fail the same prebuild freshness check as an
+# old platform: otherwise library resolution can silently select Core's ABI.
+for file in library.properties src/USBDevice.h src/USBDevice.cpp; do
+  cmp "$platform/libraries/USBDevice/$file" "$target/libraries/USBDevice/$file"
+done
+printf '\n// stale USB shim\n' >> "$target/libraries/USBDevice/src/USBDevice.h"
+if "$launcher" --check --sketchbook "$shell_sketchbook" \
+    > "$work/stale-usb-check.txt" 2>&1; then
+  echo 'Arduino board check accepted a mixed USB ABI package' >&2
+  exit 1
+fi
+grep -q 'installed but stale' "$work/stale-usb-check.txt"
+"$launcher" --sketchbook "$shell_sketchbook" > "$work/reinstall-usb.txt"
+cmp "$platform/libraries/USBDevice/src/USBDevice.h" \
+  "$target/libraries/USBDevice/src/USBDevice.h"
 grep -q '^mk61_f411.build.product_line=STM32F411xE$' "$target/boards.txt"
 grep -q '^mk61_f411.build.board=BLACKPILL_F411CE$' "$target/boards.txt"
 grep -q '^mk61_f411.upload.maximum_size=524288$' "$target/boards.txt"
@@ -335,7 +350,7 @@ if command -v pwsh >/dev/null 2>&1; then
     exit 1
   fi
   grep -q 'installed but stale' "$work/stale-check-ps.txt"
-  grep -Fq 'installed 1.2.4; project 1.2.4' "$work/stale-check-ps.txt"
+  grep -Fq 'installed 1.2.5; project 1.2.5' "$work/stale-check-ps.txt"
   if run_windows_powershell -NoLogo -NoProfile -File \
       "$ps_sketchbook/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1" \
       check-profile -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code" \
@@ -815,10 +830,15 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   grep -q -- '-DMK61_ENABLE_MARKDOWN_VIEWER=0' "$bundle/build.flags"
   grep -q -- '-DMK61_ENABLE_CHIP8=0' "$bundle/build.flags"
 
-  mkdir -p "$work/build-classic"
-  ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v2,mk61_display=uc1609,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=app,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' \
-    --build-path "$work/build-classic" "$shell_sketchbook/sketches/code"
+  ARDUINO_DIRECTORIES_USER="$shell_sketchbook" pwsh -NoLogo -NoProfile -File \
+    "$root/tests/arduino_classic_compile.ps1" -BuildRoot "$work" \
+    -Sketch "$shell_sketchbook/sketches/code"
+  for revision in v2 v3; do
+    elf="$work/arduino-ide-f401-classic-$revision/code.ino.elf"
+    system="$shell_sketchbook/sketches/.build/firmware/mk61s-M-classic-$revision-uc1609-f401/System"
+    python3 "$root/tests/check_narrow_stm32_drivers_elf.py" --native-panel "$elf"
+    python3 "$root/tests/check_app_memory_elf.py" --system-dir "$system" "$elf"
+  done
   classic_bundle="$shell_sketchbook/sketches/.build/firmware/mk61s-M-classic-v2-uc1609-f401"
   test -s "$classic_bundle/mk61s-M-classic-v2-uc1609-f401.bin"
   test -s "$classic_bundle/System/FOCAL.APP"

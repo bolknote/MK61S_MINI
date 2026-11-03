@@ -731,10 +731,30 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
-      # Python is allowed for artifact analysis, not in either IDE build
+      - name: Compile full F401 Classic V2 and V3 through the Arduino IDE recipe
+        shell: pwsh
+        run: |
+          $pythonTrap = Join-Path $env:RUNNER_TEMP 'mk61-no-python'
+          [IO.Directory]::CreateDirectory($pythonTrap) | Out-Null
+          foreach ($name in @('python.exe', 'python3.exe', 'py.exe')) {
+            Copy-Item "$env:WINDIR\System32\where.exe" (Join-Path $pythonTrap $name) -Force
+          }
+          $env:PATH = "$pythonTrap;$env:PATH"
+          $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
+          $ideConfig = Join-Path (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
+          $safeCache = (& arduino-cli --config-file $ideConfig config get build_cache.path | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
+            -File ./tests/arduino_classic_compile.ps1 -BuildRoot $safeCache -ConfigFile $ideConfig
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      # Python is allowed for artifact analysis, not in any IDE build
       # above. Check the actual calls: successful compilation or merely
       # finding the wrapper symbol does not prove that --wrap survived LTO.
-      - name: Verify USB receive guards in both Arduino IDE ELF files
+      - name: Install ARM emulator for Arduino USB qualification
+        run: python -m pip install unicorn==2.1.4
+
+      - name: Verify USB guards, owned drivers and full APP capacity in Arduino IDE ELF files
         shell: pwsh
         run: |
           $ideConfig = Join-Path `
@@ -757,6 +777,27 @@ jobs:
             & python ./tests/check_usb_cdc_rx_elf.py $elf --objdump $objdump[0].FullName
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
+          $env:ARM_NONE_EABI_NM = Join-Path $objdump[0].DirectoryName 'arm-none-eabi-nm.exe'
+          foreach ($revision in @('v2', 'v3')) {
+            $elf = Join-Path $safeCache "arduino-ide-f401-classic-$revision/code.ino.elf"
+            $system = Join-Path $env:GITHUB_WORKSPACE ".build/firmware/mk61s-M-classic-$revision-uc1609-f401/System"
+            & python ./tests/check_usb_cdc_rx_elf.py $elf --objdump $objdump[0].FullName
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & python ./tests/check_narrow_stm32_drivers_elf.py --native-panel $elf
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & python ./tests/check_app_memory_elf.py --system-dir $system $elf
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & python ./tests/stm32f4_cdc_arm_self_test.py $elf
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & python ./tests/stm32f4_usb_arm_self_test.py $elf
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          & python ./tests/usb_fs_control_arm_self_test.py `
+            (Join-Path $safeCache 'arduino-ide-f401-classic-v3/compile_commands.json')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & python ./tests/usb_state_layout_compile_self_test.py `
+            (Join-Path $safeCache 'arduino-ide-f401-classic-v3/compile_commands.json')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   arduino-compat-linux:
     name: Optional Arduino recipe compatibility

@@ -3,7 +3,7 @@
  * STMicroelectronics, license in STM32_USB_MIDDLEWARE_LICENSE.txt.
  * Only one mutually-exclusive class is active. No composite, HS or ISO path.
  */
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME && defined(USBCON)
+#if MK61_USB_COMPACT_STATE && defined(USBCON)
 #include <usbd_core.h>
 #include <usbd_ctlreq.h>
 #include <usbd_ioreq.h>

@@ -217,7 +217,7 @@ uint8_t *USBD_MSC_GetFSCfgDesc(uint16_t *length)
   return (uint8_t *)USBD_MSC_CfgDesc;
 }
 
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#if MK61_USB_COMPACT_STATE
 const USBD_ClassTypeDef USBD_MSC
 #else
 USBD_ClassTypeDef USBD_MSC

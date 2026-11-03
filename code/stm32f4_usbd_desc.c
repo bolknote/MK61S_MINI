@@ -17,10 +17,13 @@
   ******************************************************************************
   */
 // Fixed Full Speed CDC descriptors; MSC reuses the same string scratch space.
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME && defined(USBCON)
+#if MK61_USB_COMPACT_STATE && defined(USBCON)
 #include <usbd_core.h>
 #include <usbd_ctlreq.h>
 #include <utils.h>
+#if defined(MK61_ARDUINO_OWNED_USB) && MK61_ARDUINO_OWNED_USB
+#include <usbd_desc.h> // STM32duino's UID word addresses; native utils.h supplies them.
+#endif
 #include "stm32f4_usbd_desc.h"
 #ifndef USB_MANUFACTURER_STRING
 #define USB_MANUFACTURER_STRING "STMicroelectronics"

@@ -307,7 +307,8 @@ function Test-InstalledPlatform {
         [IO.File]::Exists((Join-Path $Path 'tools\rust_types.h')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\seal-firmware.ps1')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\seal-firmware-elf.ps1')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\mk61_module.ld'))
+        [IO.File]::Exists((Join-Path $Path 'tools\mk61_module.ld')) -and
+        [IO.File]::Exists((Join-Path $Path 'libraries/USBDevice/src/USBDevice.cpp'))
     )
 }
 
@@ -387,6 +388,12 @@ function Test-InstalledPlatformCurrent {
     )
     foreach ($pair in $files) {
         if (-not (Test-Mk61SameFile $pair[0] $pair[1])) {
+            return $false
+        }
+    }
+    foreach ($file in @('library.properties', 'src/USBDevice.h', 'src/USBDevice.cpp')) {
+        $relative = "libraries/USBDevice/$file"
+        if (-not (Test-Mk61SameFile (Join-Path $SourcePlatform $relative) (Join-Path $Target $relative))) {
             return $false
         }
     }
@@ -511,6 +518,12 @@ try {
         -Destination (Join-Path $target 'boards.txt') -Force
     Copy-Item -LiteralPath (Join-Path $sourcePlatform 'platform.txt') `
         -Destination (Join-Path $target 'platform.txt') -Force
+    $usbTarget = Join-Path $target 'libraries/USBDevice'
+    [IO.Directory]::CreateDirectory((Join-Path $usbTarget 'src')) | Out-Null
+    foreach ($file in @('library.properties', 'src/USBDevice.h', 'src/USBDevice.cpp')) {
+        Copy-Item -LiteralPath (Join-Path $sourcePlatform "libraries/USBDevice/$file") `
+            -Destination (Join-Path $usbTarget $file) -Force
+    }
     foreach ($name in @(
         'mk61_module.ld',
         'mk61-app-postbuild.sh',

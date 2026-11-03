@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Qualify the native and legacy USB layouts in both C and C++ on F401/F411."""
+"""Qualify native, private Arduino and stock USB ABIs in C/C++ on F401/F411."""
 import argparse
 import json
 from pathlib import Path
@@ -64,7 +64,8 @@ def main():
     i = 1
     while i < len(raw):
         value = raw[i]
-        if value.startswith(('-DSTM32F401', '-DSTM32F411', '-DMK61_NATIVE_RUNTIME=')):
+        if value.startswith(('-DSTM32F401', '-DSTM32F411', '-DMK61_NATIVE_RUNTIME=',
+                             '-DMK61_ARDUINO_OWNED_USB=')):
             pass
         elif value.startswith(('-D', '-I', '-mcpu=', '-mthumb', '-mfpu=', '-mfloat-abi=')):
             flags.append(value)
@@ -77,14 +78,16 @@ def main():
         source = Path(folder)/'layout.c'
         source.write_text(PROBE)
         for mcu in ('STM32F401xC', 'STM32F411xE'):
-            for native in (0, 1):
+            for native, owned in ((0, 0), (1, 0), (0, 1)):
                 for language, standard in (('c', 'gnu11'), ('c++', 'gnu++17')):
                     command = [raw[0], *flags, '-D'+mcu,
-                               f'-DMK61_NATIVE_RUNTIME={native}', '-Wall', '-Wextra',
+                               f'-DMK61_NATIVE_RUNTIME={native}',
+                               f'-DMK61_ARDUINO_OWNED_USB={owned}', '-Wall', '-Wextra',
                                '-Werror', '-x', language, '-std='+standard,
                                '-c', str(source), '-o', str(Path(folder)/'layout.o')]
                     subprocess.run(command, check=True, capture_output=True)
-                    result = dict(mcu=mcu, native=native, language=language, status='PASS')
+                    result = dict(mcu=mcu, native=native, arduino_owned=owned,
+                                  language=language, status='PASS')
                     results.append(result)
                     print(result, flush=True)
         for extension in ('USBD_MAX_SUPPORTED_CLASS=2', 'USE_USBD_COMPOSITE=1'):

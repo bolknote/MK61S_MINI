@@ -117,10 +117,15 @@ platform_installed() {
     [ -f "$target/tools/seal-firmware.ps1" ] &&
     [ -f "$target/tools/seal-firmware-elf.ps1" ] &&
     [ -f "$target/tools/seal-firmware-elf.py" ] &&
-    [ -f "$target/tools/mk61_module.ld" ]
+    [ -f "$target/tools/mk61_module.ld" ] &&
+    [ -f "$target/libraries/USBDevice/src/USBDevice.cpp" ]
 }
 
 platform_current() {
+  for file in library.properties src/USBDevice.h src/USBDevice.cpp; do
+    cmp -s "$source_platform/libraries/USBDevice/$file" \
+      "$target/libraries/USBDevice/$file" || return 1
+  done
   cmp -s "$source_platform/boards.txt" "$target/boards.txt" &&
     cmp -s "$source_platform/platform.txt" "$target/platform.txt" &&
     cmp -s "$source_platform/tools/mk61_module.ld" \
@@ -181,6 +186,11 @@ fi
   die 'the board package is incomplete'
 
 mkdir -p "$target/tools"
+mkdir -p "$target/libraries/USBDevice/src"
+for file in library.properties src/USBDevice.h src/USBDevice.cpp; do
+  cp "$source_platform/libraries/USBDevice/$file" \
+    "$target/libraries/USBDevice/$file"
+done
 cp "$source_platform/boards.txt" "$target/boards.txt"
 cp "$source_platform/platform.txt" "$target/platform.txt"
 cp "$source_platform/tools/mk61_module.ld" \
