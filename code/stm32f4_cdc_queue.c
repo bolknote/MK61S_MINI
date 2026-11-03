@@ -35,7 +35,7 @@
   ******************************************************************************
   */
 
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME && defined(USBCON)
+#if MK61_USB_COMPACT_STATE && defined(USBCON)
 #ifdef USBD_USE_CDC
 
 #include "cdc_queue.h"

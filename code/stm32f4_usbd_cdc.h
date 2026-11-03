@@ -152,7 +152,7 @@ typedef struct {
   * @{
   */
 
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#if MK61_USB_COMPACT_STATE
 extern const USBD_ClassTypeDef USBD_CDC;
 #else
 extern USBD_ClassTypeDef USBD_CDC;

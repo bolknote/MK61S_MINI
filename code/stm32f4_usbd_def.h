@@ -34,10 +34,20 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_conf.h"
 
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#if (defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME) || \
+    (defined(MK61_ARDUINO_OWNED_USB) && MK61_ARDUINO_OWNED_USB)
 #define MK61_USB_COMPACT_STATE 1
 #else
 #define MK61_USB_COMPACT_STATE 0
+#endif
+
+// The board-private USBDevice shim selects the same owned units as CMake.
+// Apply this before any public USB header so every C/C++ unit has one ABI.
+#if defined(MK61_ARDUINO_OWNED_USB) && MK61_ARDUINO_OWNED_USB
+#define MK61_USB_BUILD_CDC 1
+#define MK61_USB_BUILD_CDC_IF 1
+#define MK61_USB_BUILD_BRIDGE 1
+#define MK61_USB_BUILD_CTLREQ 1
 #endif
 
 /** @addtogroup STM32_USBD_DEVICE_LIBRARY

@@ -12,6 +12,18 @@ SOURCES = ('src/cdc/usbd_cdc.c', 'src/usb_device_core.c')
 
 
 def protect(build_path: Path, library: Path, command: list[str]) -> None:
+    if '-DMK61_ARDUINO_OWNED_USB=1' in command:
+        # The private board library leaves the complete qualified USB engine
+        # in the sketch. Keep only ld --wrap targets opaque, just as CMake does.
+        for source in ('stm32f4_usbd_core.c', 'stm32f4_usbd_cdc.c'):
+            actual = build_path / 'sketch' / source
+            target = actual.with_suffix(actual.suffix + '.o')
+            if not actual.is_file() or not target.is_file():
+                raise ValueError(f'missing owned USB source/object: {source}')
+            subprocess.run([*command, '-fno-lto', '-I'+str(actual.parent),
+                            str(actual), '-o', str(target)], check=True)
+            print(f'Owned USB LTO barrier: {source}', flush=True)
+        return
     owned = any(flag in command for flag in ('-DSTM32F401xC', '-DSTM32F401xE', '-DSTM32F411xE'))
     for source in SOURCES:
         matches = list((build_path / 'libraries' / 'USBDevice').rglob(Path(source).name + '.o'))

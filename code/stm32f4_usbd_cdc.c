@@ -186,7 +186,7 @@ static uint8_t cdc_data_out(USBD_HandleTypeDef* d,uint8_t ep) {
   interface(d)->Receive(h->RxBuffer,&h->RxLength);
   return USBD_OK;
 }
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#if MK61_USB_COMPACT_STATE
 const USBD_ClassTypeDef USBD_CDC
 #else
 USBD_ClassTypeDef USBD_CDC

@@ -20,7 +20,7 @@
 // One fixed CDC instance. Queue capacities and packet size match the baseline.
 #if defined(MK61_USB_BUILD_CDC_IF)
 #include <usbd_cdc_if.h>
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#if MK61_USB_COMPACT_STATE
 #include "stm32f4_usbd_desc.h"
 #else
 #include <usbd_desc.h>
@@ -79,7 +79,7 @@ static int8_t cdc_if_transmitted(uint8_t* bytes,uint32_t* size,uint8_t ep) {
   (void)bytes;(void)size;(void)ep;
   transmit_started=0;CDC_TransmitQueue_CommitRead(&TransmitQueue);CDC_continue_transmit();return USBD_OK;
 }
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#if MK61_USB_COMPACT_STATE
 static const USBD_CDC_ItfTypeDef mk61_cdc_functions=
 #else
 #define mk61_cdc_functions USBD_CDC_fops

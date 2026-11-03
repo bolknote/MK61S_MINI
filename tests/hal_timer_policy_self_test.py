@@ -44,11 +44,13 @@ class HalTimerPolicyTest(unittest.TestCase):
             # types need no mock implementations. CONFIG avoids unrelated
             # product-profile dependencies while retaining the real drivers.
             common = ('#pragma once\n#define HAL_TIM_MODULE_ENABLED 1\n'
+                      '#define HAL_UART_MODULE_ENABLED 1\n'
                       '#include "hal_conf_extra.h"\n')
             for name in ("Arduino.h", "timer.h", "HardwareTimer.h"):
                 (includes / name).write_text(common)
             for name in ("PeripheralPins.h", "pinmap.h", "core_debug.h", "board.h",
-                         "stm32yyxx_ll_tim.h"):
+                         "stm32yyxx_ll_tim.h", "lock_resource.h", "uart.h",
+                         "PinAF_STM32F1.h", "stm32yyxx_ll_rcc.h"):
                 (includes / name).write_text("#pragma once\n")
             command = [self.compiler, "-std=c++17", "-E", "-x", "c++",
                        "-DCONFIG", "-DTIMER_TONE=1", "-I" + str(includes),
@@ -90,6 +92,7 @@ class HalTimerPolicyTest(unittest.TestCase):
             self.core / "libraries/SrcWrapper/src/stm32/timer.c": "get_timer_obj(",
             self.core / "libraries/SrcWrapper/src/HardwareTimer.cpp":
                 "HardwareTimer::captureCompareCallback(",
+            self.core / "libraries/SrcWrapper/src/stm32/uart.c": "booluart_init(",
         }
         for source, marker in sources.items():
             self.assertTrue(source.is_file(), source)

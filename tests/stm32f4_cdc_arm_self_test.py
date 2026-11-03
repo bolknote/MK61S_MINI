@@ -123,19 +123,34 @@ for oversized in [65,65535,65536,0xffffffff]:
 rx_size=64
 # Fill the real RX queue, require NAK, then drain/rearm without byte loss.
 h=e.symbols['_hcdc'];received=[]
+def dequeue():
+ # A size-LTO Arduino link can inline the entire foreground reader. In that
+ # case model this consumer boundary, keeping the real CDC producer/rearm
+ # code under test. usb_fs_control_arm_self_test separately executes the
+ # actual queue implementation through 50000 transitions against its oracle.
+ if any(n=='CDC_ReceiveQueue_Dequeue' or n.startswith('CDC_ReceiveQueue_Dequeue.') for n in e.symbols):
+  return call('CDC_ReceiveQueue_Dequeue',resolve('ReceiveQueue'))
+ q=resolve('ReceiveQueue')
+ write,read,length=struct.unpack('<HHH',u.mem_read(q+192,6))
+ if read>=length:read=0
+ if write==read:return 0xffffffff
+ value=u.mem_read(q+read,1)[0]
+ read=(read+1)%length
+ u.mem_write(q+194,struct.pack('<H',read))
+ return value
 for first in [0,64]:
  pointer=rx_buffer;assert pointer is not None
  u.mem_write(pointer,bytes(range(first,first+64)));rx_size=64
  events.clear();assert call('cdc_data_out',d,1)==0
  if first==64:assert not any(n=='USBD_LL_PrepareReceive' for n,args in events)
-received.append(call('CDC_ReceiveQueue_Dequeue',resolve('ReceiveQueue')));assert received==[0]
+received.append(dequeue());assert received==[0]
 assert call('CDC_resume_receive')==1
 pointer=rx_buffer;assert pointer is not None;u.mem_write(pointer,bytes(range(128,192)))
 events.clear();assert call('cdc_data_out',d,1)==0
 assert not any(n=='USBD_LL_PrepareReceive' for n,args in events)
 for _ in range(191):
- received.append(call('CDC_ReceiveQueue_Dequeue',resolve('ReceiveQueue')));call('CDC_resume_receive')
-assert received==list(range(192)) and call('CDC_ReceiveQueue_Dequeue',resolve('ReceiveQueue'))==0xFFFFFFFF
+ received.append(dequeue());call('CDC_resume_receive')
+assert received==list(range(192)) and dequeue()==0xFFFFFFFF
 call('CDC_deInit');call('CDC_continue_transmit');assert call('CDC_resume_receive')==0
 assert u.reg_read(UC_ARM_REG_PRIMASK)==0
 print('Owned CDC production ARM model: FS enumeration, readonly descriptor, ACM bounds, persistent EP0 replies and ZLP completion PASS')

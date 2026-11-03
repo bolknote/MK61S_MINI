@@ -94,7 +94,7 @@ typedef struct
 } USBD_MSC_BOT_HandleTypeDef;
 
 /* Structure for MSC process */
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#if MK61_USB_COMPACT_STATE
 extern const USBD_ClassTypeDef USBD_MSC;
 #else
 extern USBD_ClassTypeDef USBD_MSC;

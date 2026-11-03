@@ -6,9 +6,18 @@ class GateTest(unittest.TestCase):
     def test_owned_irqs_and_unrelated_hal_are_allowed(self):
         check_symbols(GOOD + "08000200 00000020 T HAL_RCC_OscConfig\n")
     def test_each_removed_adapter_and_lto_clone_is_rejected(self):
-        for name in ["analogRead.constprop.0", "analogReadResolution", "SPIClass::begin()", "SPISettings::SPISettings()", "LiquidCrystal::begin()", "STM32RTC::getInstance()", "HAL_ADC_Init", "HAL_SPI_Transmit", "HAL_DMA_Init", "HAL_RTC_SetTime", "PinMap_SPI_MOSI"]:
+        for name in ["analogRead.constprop.0", "analogReadResolution", "SPIClass::begin()", "SPISettings::SPISettings()", "LiquidCrystal::begin()", "STM32RTC::getInstance()", "HAL_ADC_Init", "HAL_SPI_Transmit", "HAL_DMA_Init", "HAL_RTC_SetTime", "PinMap_SPI_MOSI", "HardwareSerial::begin(unsigned long)", "HAL_UART_IRQHandler.constprop.0", "PinMap_UART_TX", "HAL_CRC_Init", "hcrc"]:
             with self.subTest(name=name), self.assertRaises(ValueError):
                 check_symbols(GOOD + "08000200 00000020 T " + name + "\n")
+    def test_unused_weak_uart_vectors_are_allowed(self):
+        for name in ("USART1_IRQHandler", "USART2_IRQHandler", "USART6_IRQHandler", "UART4_IRQHandler", "LPUART1_IRQHandler"):
+            with self.subTest(name=name):
+                check_symbols(GOOD + "08000200 00000002 W " + name + "\n")
+    def test_strong_uart_vectors_are_rejected_even_when_hal_is_inlined(self):
+        for name in ("USART1_IRQHandler", "USART2_IRQHandler", "USART6_IRQHandler", "UART4_IRQHandler", "LPUART1_IRQHandler"):
+            for kind in ("T", "t"):
+                with self.subTest(name=name,kind=kind), self.assertRaises(ValueError):
+                    check_symbols(GOOD + "08000200 00000020 " + kind + " " + name + "\n")
     def test_exact_legacy_and_native_layouts(self):
         legacy = "20000000 000000fc B hUSBD_Device_CDC\n20000100 00000024 B _hcdc\n"
         compact = "00000001 A mk61_usb_compact_layout\n20000000 00000060 B hUSBD_Device_CDC\n20000100 0000001c B _hcdc\n"

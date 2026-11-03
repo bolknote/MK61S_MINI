@@ -22,7 +22,10 @@ def main():
     entries=json.loads(args.compile_commands.read_text())
     command=next(e for e in entries if Path(e['file']).name=='stm32f4_usbd_core.c')
     raw=command.get('arguments') or shlex.split(command['command'])
-    flags=[];i=1
+    # Arduino keeps forced ABI includes in @build.opt rather than listing
+    # them in the database. Use the shared public headers on both frontends.
+    flags=['-include',str(root/'code/stm32f4_usbd_def.h'),
+           '-include',str(root/'code/stm32f4_usbd_cdc.h')];i=1
     while i<len(raw):
         if raw[i].startswith(('-D','-I','-mcpu=','-mthumb','-mfpu=','-mfloat-abi=')):
             flags.append(raw[i])

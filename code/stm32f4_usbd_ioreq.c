@@ -1,6 +1,6 @@
 /* Endpoint-zero stages compatible with ST USB Device requests; ST copyright,
  * derived protocol sequencing under STM32_USB_MIDDLEWARE_LICENSE.txt. */
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME && defined(USBCON)
+#if MK61_USB_COMPACT_STATE && defined(USBCON)
 #include <usbd_ioreq.h>
 #include <usbd_core.h>
 USBD_StatusTypeDef USBD_CtlSendData(USBD_HandleTypeDef* d,uint8_t* buffer,uint32_t size) {

@@ -36,6 +36,11 @@ def memory(uc,access,addr,size,value,_):
 callbacks={}
 for name in ['USBD_LL_DataInStage','USBD_LL_DataOutStage','__wrap_USBD_LL_SetupStage','__wrap_USBD_LL_Reset','USBD_LL_SetSpeed','__wrap_USBD_LL_Suspend','__wrap_USBD_LL_Resume','USBD_LL_SOF','__wrap_USBD_LL_DevConnected','__wrap_USBD_LL_DevDisconnected','USBD_SystemClockConfigFromResume']:
  if name in e.symbols:callbacks[e.symbols[name]&~1]=name
+# Clock passage is a boundary of this peripheral model. STM32duino's delay
+# also invokes the application yield loop, which is not booted in this test.
+for name,value in e.symbols.items():
+ if name=='delay' or name.startswith('delay.'):
+  callbacks[value&~1]='delay'
 
 # MMIO writes occur after a Unicorn memory hook; restore W1C values before the next instruction.
 w1c={}
@@ -55,7 +60,13 @@ def code(uc,address,size,_):
    uc.reg_write(UC_ARM_REG_PC,e.symbols['USBD_LL_Transmit']|1)
   else:
    uc.reg_write(UC_ARM_REG_R0,0);uc.reg_write(UC_ARM_REG_PC,uc.reg_read(UC_ARM_REG_LR))
-u.hook_add(UC_HOOK_MEM_READ,memory);u.hook_add(UC_HOOK_MEM_WRITE,memory);u.hook_add(UC_HOOK_MEM_WRITE,write_hook);u.hook_add(UC_HOOK_CODE,code)
+# Observe the peripheral and advancing clock, leaving ordinary SRAM accesses
+# outside the MMIO hooks (including conditional multi-register fill stores).
+u.hook_add(UC_HOOK_MEM_READ,memory,begin=USB,end=USB+0x1ffff)
+u.hook_add(UC_HOOK_MEM_READ,memory,begin=uw,end=uw+3)
+u.hook_add(UC_HOOK_MEM_WRITE,memory,begin=USB,end=USB+0x1ffff)
+u.hook_add(UC_HOOK_MEM_WRITE,write_hook,begin=USB,end=USB+0x1ffff)
+u.hook_add(UC_HOOK_CODE,code)
 def call(name,*args):
  u.reg_write(UC_ARM_REG_XPSR,0x01000000)
  for reg in [UC_ARM_REG_R4,UC_ARM_REG_R5,UC_ARM_REG_R6,UC_ARM_REG_R7,UC_ARM_REG_R8,UC_ARM_REG_R9,UC_ARM_REG_R10,UC_ARM_REG_R11]:u.reg_write(reg,0x12340000+reg)
