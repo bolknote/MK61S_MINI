@@ -14,6 +14,8 @@ static constexpr const char* FILE_NAME = M61_FILE_NAME;
 // The established M61 form wins when both names exist; TinyBASIC is the
 // fallback. Parent directories are intentionally not searched.
 bool find(u16 directory_id, program_store::Entry& out);
+// Data only: this optional image never changes the auto-start decision.
+bool find_icon(u16 directory_id, program_store::Entry& out);
 
 } // namespace explorer_autoexec
 

@@ -134,7 +134,7 @@ def system_app_workspace(output: Path):
 
 def app_variant(system: str, args: argparse.Namespace) -> str:
     parts = ["ui-fonts" if args.ui_fonts else "plain"]
-    if system == "markdown-viewer":
+    if system in ("markdown-viewer", "explorer"):
         parts.append("graphics" if args.graphics else "text")
     if system in ("focal", "tinybasic"):
         parts.append("vm-compiler-v13-stream" if getattr(args,"language_vm_compiler",False)
@@ -502,7 +502,7 @@ def build(args: argparse.Namespace) -> dict:
                 command.append("--focal-trace")
             if not args.ui_fonts:
                 command.append("--no-ui-fonts")
-            if system == "markdown-viewer" and not args.graphics:
+            if system in ("markdown-viewer", "explorer") and not args.graphics:
                 command.append("--text-only")
             if system in ("focal", "tinybasic"):
                 if getattr(args,"language_vm_compiler",False):command.append("--language-vm-compiler")

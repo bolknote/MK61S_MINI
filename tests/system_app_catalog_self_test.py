@@ -201,6 +201,12 @@ class SystemAppCatalogSelfTest(unittest.TestCase):
         self.assertIn("LANGVM.APP", bundle.CANONICAL)
         self.assertIn("LANGIN.APP", bundle.CANONICAL)
 
+    def test_explorer_graphics_and_text_are_separate_catalog_variants(self) -> None:
+        args = arguments(Path("catalog"))
+        graphical = bundle.app_variant("explorer", args)
+        args.graphics = not args.graphics
+        self.assertNotEqual(graphical, bundle.app_variant("explorer", args))
+
     def test_parallel_publish_is_complete_and_readable(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -59,7 +59,7 @@ target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/calculator_contr
     "${MK61_ROOT}/code/chip8.cpp" "${MK61_ROOT}/code/usb_screen_protocol.cpp"
     "${MK61_ROOT}/code/loadable_module_format.cpp" "${MK61_ROOT}/code/zx0.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/markdown_document.cpp" "${MK61_ROOT}/code/wbmp.cpp"
-    "${MK61_ROOT}/code/explorer_autoexec.cpp")
+    "${MK61_ROOT}/code/explorer_autoexec.cpp" "${MK61_ROOT}/code/explorer_view.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/usb_screen_surface.cpp" "${MK61_ROOT}/code/ui_text_renderer.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/crash_dump_format.cpp")
 if(DEFINED MK61_PICOCALC_BUILD_ID)

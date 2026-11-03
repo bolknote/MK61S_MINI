@@ -24,7 +24,7 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-pa
     "$root/code/usb_screen_protocol.cpp" "$root/code/usb_screen_surface.cpp" "$root/code/ui_text_renderer.cpp" "$root/code/loadable_module_format.cpp" \
     "$root/ports/picocalc/ui.cpp" "$root/ports/picocalc/settings.cpp" \
     "$root/ports/picocalc/storage.cpp" "$root/ports/picocalc/storage_journal.cpp" "$root/ports/picocalc/block_transfer.cpp" "$root/ports/picocalc/services.cpp" "$root/ports/picocalc/service_runtime.cpp" \
-    "$root/tests/picocalc_host_disk.cpp" "$root/tests/picocalc_services_self_test.cpp" "$root/tests/picocalc_io_self_test.cpp" "$root/tests/picocalc_layout_self_test.cpp" \
+    "$root/tests/picocalc_host_disk.cpp" "$root/tests/picocalc_services_self_test.cpp" "$root/tests/picocalc_io_self_test.cpp" "$root/tests/picocalc_layout_self_test.cpp" "$root/tests/picocalc_explorer_self_test.cpp" \
     "$root/ports/picocalc/script_files.cpp" "$root/ports/picocalc/script_runtime.cpp" "$root/ports/picocalc/language_cache.cpp" \
     "$root/ports/picocalc/psram.cpp" "$root/ports/picocalc/external_cache.cpp" "$root/ports/picocalc/dma_support.cpp" \
     "$root/ports/picocalc/buffers.cpp" "$root/code/shared_memory_buffer.cpp" \
@@ -32,7 +32,7 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-pa
     "$root/code/terminal_script_runtime.cpp" "$root/code/terminal_catalog.cpp" \
     "$root/code/terminal_key_sequence.cpp" "$root/code/calculator_control.cpp" \
     "$root/code/program_load.cpp" "$root/code/zx0_stream.cpp" \
-    "$root/code/markdown_document.cpp" "$root/code/wbmp.cpp" "$root/code/explorer_autoexec.cpp" \
+    "$root/code/markdown_document.cpp" "$root/code/wbmp.cpp" "$root/code/explorer_autoexec.cpp" "$root/code/explorer_view.cpp" \
     "$root/tests/picocalc_m61_self_test.cpp" "$root/tests/picocalc_language_cache_self_test.cpp" "$root/tests/picocalc_runtime_self_test.cpp" "$root/tests/picocalc_parity_self_test.cpp" "$root/tests/picocalc_software_self_test.cpp" "$root/tests/picocalc_contract_self_test.cpp" "$root/tests/picocalc_firmware_self_test.cpp" "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" \
     "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" "$root/code/language_vm_file_cache.cpp" "$root/code/basic_graphics.cpp" "$root/code/basic_native_io.cpp" "$root/code/app_flow.cpp" \
     "$root/code/calculator_face.cpp" "$root/code/text_screen.cpp" \
@@ -41,6 +41,7 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-pa
     "$root/code/compact_math.cpp" "$build_dir/ff.o" "$build_dir/ffunicode.o" -o "$build_dir/self-test"
 cd "$root"
 if [[ -n "${MK61_TEST_BINARY:-}" ]]; then cp "$build_dir/self-test" "$MK61_TEST_BINARY"; fi
+if [[ "${1:-}" != --explorer-native ]]; then "$build_dir/self-test" --explorer-native; fi
 "$build_dir/self-test" "$@"
 python3 "$root/tests/picocalc_uf2_self_test.py"
 python3 "$root/tests/picocalc_seal_self_test.py"

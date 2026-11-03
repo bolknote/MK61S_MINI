@@ -471,12 +471,13 @@ bool Services::export_program(const char* path) {
     }
     return files::write_text(path, text, at);
 }
-bool Services::enter_directory(const char* path) {
+bool Services::enter_directory(const char* path,bool launch) {
     files::Entry info{};
     if(!path || !files::stat(path, info) || !info.directory) return false;
     std::snprintf(directory_, sizeof(directory_), "%s", path);
     filter_[0]=0;
     skip_ = selection_ = 0; page_ = ServicePage::BROWSER; refresh();
+    if(!launch) return true;
     program_store::Entry directory{}, entry{};
     if(!script::register_file(directory_, directory) ||
        !explorer_autoexec::find(directory.id, entry)) return true;

@@ -43,10 +43,10 @@ struct Text {
             left+=glyph.advance;
         }
     }
-    bool matches(const Screen& screen,unsigned left,unsigned top) const {
+    bool matches(const Screen& screen,unsigned left,unsigned top,bool inverse=false) const {
         if(left+width>312 || top+height>320) return false;
         for(unsigned y=0;y<height;++y) for(unsigned x=0;x<width;++x)
-            if(screen.pixel(left+x,top+y)!=(pixels[y*width+x]!=0)) return false;
+            if(screen.pixel(left+x,top+y)!=((pixels[y*width+x]!=0)!=inverse)) return false;
         return true;
     }
 };
@@ -90,13 +90,20 @@ void preview(const Screen& screen,const char* suffix) {
 }
 void menu(Services& services,Ui& ui,Calculator& calc,unsigned count) {
     Screen screen;int previous=-1;
-    const auto metrics=fonts::info(ui.settings());
+    Settings face=ui.settings();
+    const bool browser=services.browser_actions();
+    if(browser) {face.ui_font_family=1;face.ui_font_size=16;face.ui_font_key=0;}
+    const auto metrics=fonts::info(face);
     for(unsigned i=0;i<count;++i) {
         char row[Services::COLS+1];services.row(i,row);
         require(row[0]=='>',"every menu item is selectable");
         screen.render(calc.snapshot(),true,&ui,&services);
-        const Text text(ui.settings(),row,ui.settings().ui_font_size);
-        const int top=find_y(text,screen);
+        const Text text(face,browser?row+2:row,face.ui_font_size);
+        int top=-1;
+        if(browser) {
+            for(unsigned y=40;y+text.height<282;++y)
+                if(text.matches(screen,16,y,true)) {top=(int)y;break;}
+        } else top=find_y(text,screen);
         require(top>=40,"complete menu item fits between header and footer");
         if(previous>=0) {
             require(top-previous>=27,"selection menu has the same minimum pitch as the main menu");
@@ -198,7 +205,7 @@ void check_choice(const Settings& settings,Calculator& calc) {
     require(services.enter_directory("/LayoutUI"),"RAM-only browser fixture");
     services.input(0xB6);services.input(0x81);
     require(!std::strcmp(services.page_name(),"FILE_ACTIONS"),"F1 opens file actions");
-    menu(services,ui,calc,5);
+    menu(services,ui,calc,6);
     require(core_values()==before,"rendering and UI navigation preserve X2, all stack and memory registers");
 }
 Snapshot display_sequence(Calculator& calc,std::initializer_list<u8> program) {

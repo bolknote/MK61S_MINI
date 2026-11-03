@@ -85,7 +85,7 @@ $Systems = @{
     }
     'explorer' = @{
         Name = 'EXPLORER'; Macro = 'EXPLORER'; Magic = $null
-        Sources = @('explorer_ui.cpp', 'explorer_autoexec.cpp', 'explorer_module_entry.cpp')
+        Sources = @('explorer_ui.cpp', 'explorer_autoexec.cpp', 'explorer_view.cpp', 'wbmp.cpp', 'explorer_module_entry.cpp')
     }
     'language-vm' = @{
         Name = 'LANGVM'; Macro = 'LANGUAGE_VM'; Magic = $null
@@ -303,8 +303,8 @@ try {
     if ($FocalTrace -and $System -notin @('focal', 'language-vm')) {
         throw '-FocalTrace applies only to FOCAL or its shared VM'
     }
-    if ($TextOnly -and $System -ne 'markdown-viewer') {
-        throw '-TextOnly applies to markdown-viewer'
+    if ($TextOnly -and $System -notin @('markdown-viewer', 'explorer')) {
+        throw '-TextOnly applies to markdown-viewer or explorer'
     }
     if ($LocalFloatMath -and $System -notin @('focal', 'tinybasic', 'language-vm')) {
         throw '-LocalFloatMath applies only to FOCAL, TinyBASIC or language-vm'

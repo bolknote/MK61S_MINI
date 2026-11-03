@@ -8,6 +8,7 @@
 #include "app_flow.h"
 #include "loadable_app_services.h"
 #include "source_document.hpp"
+#include "explorer_view.hpp"
 
 namespace picocalc {
 class MarkdownView;
@@ -37,7 +38,7 @@ public:
     void heading(char out[64]) const;
     bool fixed_text() const { return page_ == ServicePage::EDITOR || page_ == ServicePage::CONSOLE || page_ == ServicePage::PROMPT; }
     unsigned selection_menu_rows() const {
-        return page_==ServicePage::FILE_ACTIONS ? 5U : page_==ServicePage::DEVELOPMENT ? 4U :
+        return page_==ServicePage::FILE_ACTIONS ? file_action_count() : page_==ServicePage::DEVELOPMENT ? 4U :
             page_==ServicePage::LANGUAGE ? (tool_==Document::MK61 ? 2U : 4U) : 0U;
     }
     unsigned first_console_row(unsigned visible) const {
@@ -69,7 +70,23 @@ public:
     language_vm::Error last_error() const { return last_error_; }
     // Device/host integration tests use the same public document operations.
     bool load_document(const char* path,bool edit=false);
-    bool enter_directory(const char* path);
+    bool enter_directory(const char* path,bool launch=true);
+    static constexpr unsigned BROWSER_PAGE_SIZE=9;
+    bool browser_display() const { return page_==ServicePage::BROWSER || page_==ServicePage::FILE_ACTIONS; }
+    bool browser_actions() const { return page_==ServicePage::FILE_ACTIONS; }
+    unsigned browser_action_selection() const { return selection_; }
+    bool russian() const { return russian_; }
+    explorer_view::Mode browser_mode() const { return browser_mode_; }
+    unsigned browser_count() const { return used_; }
+    unsigned browser_selection() const { return selection_ ? selection_-1 : 0; }
+    unsigned browser_offset() const { return skip_; }
+    bool browser_more() const { return more_; }
+    bool browser_filtered() const { return filter_[0]!=0; }
+    bool browser_has_parent() const { return directory_[1]!=0; }
+    void browser_title(char out[64]) const;
+    bool browser_label(unsigned index,char out[64]) const;
+    bool browser_directory(unsigned index) const { return entries_ && index<used_ && entries_[index].directory; }
+    bool browser_icon(unsigned index,explorer_view::Icon& out) const;
     void filter_directory(const char* utf8);
     bool save_document(const char* path);
     bool save_program(const char* path,Calculator& calculator) { calculator_=&calculator;return export_program(path); }
@@ -95,6 +112,9 @@ private:
     void message(const char* value, ServicePage parent);
     void browse(ServicePage parent);
     void refresh();
+    void release_browser();
+    void move_browser(int step);
+    unsigned file_action_count() const { return selected_directory_ ? 7U : 6U; }
     bool selected_path(char out[files::PATH_SIZE]) const;
     void parent_directory();
     void prompt(Prompt op, ServicePage parent, const char* initial = "");
@@ -169,7 +189,15 @@ private:
     char selected_file_[files::PATH_SIZE] = {}, prompt_text_[256] = {};
     char filter_[64] = {};
     char status_[96] = {}, console_[ROWS][text_screen::MAX_COLS + 1] = {};
-    files::Entry entries_[7] = {};
+    // Directory names are needed only while browsing. Icons are an optional,
+    // evictable PSRAM cache; there is no new resident framebuffer/icon array.
+    shared_memory::Buffer browser_entries_,browser_icons_;
+    files::Entry* entries_=nullptr;
+    u32 browser_revision_=0;
+    u16 browser_icon_mask_=0;
+    bool selected_directory_=false;
+    unsigned browser_return_selection_=1;
+    explorer_view::Mode browser_mode_=explorer_view::Mode::ICONS;
     shared_memory::Buffer image_;
     language_vm::State state_{};
     language_vm::Value variables_[26]{}, array_[385]{}, stack_[language_vm::MAX_STACK]{};

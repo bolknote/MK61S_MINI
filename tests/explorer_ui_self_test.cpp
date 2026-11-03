@@ -7,6 +7,8 @@
 #include "keyboard_layout.hpp"
 #include "loadable_module_abi.hpp"
 #include "app_flow.hpp"
+#include "explorer_view.hpp"
+#include "builtin_font.hpp"
 
 #include <assert.h>
 #include <stdio.h>
@@ -32,7 +34,16 @@
 static std::vector<program_store::Entry> entries;
 static bool resolve_from_parent;
 static bool directory_tree;
+static u32 fixture_revision=1;
+static unsigned icon_reads=0;
+static u8 icon_file[132];
 namespace program_store {
+u32 catalog_revision() {return fixture_revision;}
+bool read_id(u16 id,u8* out,u16 capacity,u16* copied) {
+  ++icon_reads;
+  if(id!=104 || capacity<sizeof(icon_file)) return false;
+  memcpy(out,icon_file,sizeof(icon_file));*copied=sizeof(icon_file);return true;
+}
 int child_count(u16 directory) {
   int count = 0;
   for(const auto& entry : entries)
@@ -79,10 +90,13 @@ Status resolve_file(u16 directory,const char* name,program_store::ProgramType ty
 }
 }
 
-static u32 now;
+static u32 now,revision_change_at;
 u32 millis() { return now; }
 void delay(u32 duration) { now += duration; }
-void idle_main_process() { now += 10; }
+void idle_main_process() {
+  now += 10;
+  if(revision_change_at && now>=revision_change_at) {++fixture_revision;revision_change_at=0;}
+}
 enum class key_state { RELEASED = 0x40 };
 namespace kbd {
 struct Event {
@@ -121,6 +135,17 @@ struct Surface {
   u8 x = 0, y = 0;
   unsigned cursor_calls = 0;
   std::string lines[4];
+  u8 bitmap[1536]{};
+  unsigned frames=0;
+  bool fullscreen=false;
+  bool supportsFullscreenBitmap() const {return graphical;}
+  u16 fullscreenBitmapWidth() const {return graphical?192:0;}
+  u16 fullscreenBitmapHeight() const {return graphical?64:0;}
+  bool beginFullscreenBitmap() {fullscreen=graphical;return fullscreen;}
+  bool showFullscreenBitmap(const u8* bytes,usize count) {
+    assert(count==sizeof(bitmap));memcpy(bitmap,bytes,count);++frames;return fullscreen;
+  }
+  void endFullscreenBitmap() {fullscreen=false;}
   void beginUiText() {}
   bool uiTextActive() const { return graphical; }
   u8 rows() const { return graphical ? 4 : 2; }
@@ -147,6 +172,21 @@ struct Surface {
   }
 } surface;
 Surface& main_lcd() { return surface; }
+#if MK61_EXPLORER_GRAPHICS
+namespace language_workspace {
+constexpr usize SIZE=8192;
+enum class Owner {IMAGE_VIEWER};
+static bool active=false,available=true;
+static u8 memory[SIZE];
+struct Lease {
+  bool held=false;
+  ~Lease() {if(held) active=false;}
+  bool acquire(Owner,usize size) {if(!available || active || size>SIZE) return false;active=held=true;return true;}
+  bool ok() const {return held;}
+  void* data() {return held?memory:nullptr;}
+};
+}
+#endif
 struct MK61DisplayUpdate { explicit MK61DisplayUpdate(Surface&) {} };
 namespace lcd_ru {
 struct font_map_t {};
@@ -171,6 +211,9 @@ void print_localized_at(u8 col, u8 row, const char*, const char* en, u8 width) {
 }
 }
 namespace portable_system {
+u32 call(u32 operation,u32 a=0,u32=0,u32=0,void* =nullptr) {
+  return operation==MK61_SYS_USBDISK && a==MK61_USBDISK_CATALOG_REVISION ? fixture_revision : 0;
+}
 void text_rows(const char* const* rows, u32 count) {
   for(u32 row = 0; row < count; ++row) surface.lines[row] = rows[row];
 }
@@ -213,6 +256,13 @@ static void test_app_autoexec_uses_basename_and_type() {
   auto directory=entry("autoexec",ProgramType::MK61,true);
   directory.parent_id=17;entries={directory};
   assert(!app::autoexec(17,id));
+  auto icon=entry("autoexec",ProgramType::IMAGE1);icon.id=104;icon.parent_id=17;
+  entries={icon};program_store::Entry image{};
+  assert(explorer_autoexec::find_icon(17,image) && image.id==104);
+  assert(!app::autoexec(17,id)); // An icon by itself must never launch a program.
+  icon.parent_id=22;entries={icon};resolve_from_parent=true;
+  assert(!explorer_autoexec::find_icon(17,image));
+  resolve_from_parent=false;
 }
 
 static void expect_line(u8 row, const std::string& expected) {
@@ -400,9 +450,53 @@ static void test_scrolling(bool graphical) {
   }
 }
 
+#if MK61_EXPLORER_GRAPHICS
+static void test_native_browser() {
+  auto first=entry("Chess",ProgramType::MK61,true);first.id=17;
+  auto second=entry("High Noon",ProgramType::MK61,true);second.id=22;
+  auto third=entry("Eliza",ProgramType::MK61,true);third.id=23;
+  auto fourth=entry("Next page",ProgramType::MK61,true);fourth.id=24;
+  auto icon=entry("autoexec",ProgramType::IMAGE1);icon.id=104;icon.parent_id=17;icon.data_len=132;
+  auto script=entry("autoexec",ProgramType::MK61);script.id=105;script.parent_id=17;
+  entries={first,second,third,fourth,icon,script};directory_tree=true;
+  memset(icon_file,0xFF,sizeof(icon_file));icon_file[0]=icon_file[1]=0;icon_file[2]=icon_file[3]=32;icon_file[4]=0x7F;
+  surface.graphical=true;icon_reads=0;surface.frames=0;
+  loadable_module::ExplorerSession session{};session.size=sizeof(session);session.directory_id=program_store::ROOT_ID;
+  kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_LEFT},{KEY_LEFT},{KEY_ESC}});
+  assert(app::select(session));assert(session.action==loadable_module::ExplorerAction::EXIT);
+  assert(icon_reads==1 && surface.frames>=5 && !surface.fullscreen && !language_workspace::active);
+  assert(surface.bitmap[(16/8)*192+16]&(1U<<(16&7)));
+  for(unsigned x=0;x<192;++x) assert(surface.bitmap[192+x]&8U); // native header, y=11
+  // Page transitions reuse the same foreground allocation, never a resident array.
+  kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_RIGHT},{KEY_ESC}});
+  assert(app::select(session));assert(session.active==3 && !language_workspace::active);
+  // A long OK menu can enter a folder without invoking its autoexec.
+  session.active=0;kbd::events({{KEY_OK,0,true},{KEY_OK|(i32)key_state::RELEASED,1400,false},
+      {KEY_OK,1450,false},{KEY_ESC,1460},{KEY_ESC,1470}});
+  assert(app::select(session));assert(session.action==loadable_module::ExplorerAction::EXIT);
+  assert(session.directory_id==program_store::ROOT_ID && !surface.fullscreen && !language_workspace::active);
+  kbd::events({{KEY_OK}});assert(app::select(session));
+  assert(session.action==loadable_module::ExplorerAction::AUTOEXEC && session.selected_id==105);
+  assert(!surface.fullscreen && !language_workspace::active);
+  // Revision changes invalidate an otherwise identical icon cache page.
+  first.name[0]=0;bounded_string::copy(first.name,"a-very-long-folder-name");entries[0]=first;
+  session.directory_id=program_store::ROOT_ID;session.active=0;icon_reads=0;revision_change_at=500;
+  kbd::events({{KEY_ESC,1100}});assert(app::select(session));assert(icon_reads==2);
+  // Invalid WBMP falls back and a busy shared arena retains the old text UI.
+  icon_file[2]=31;session.active=0;kbd::events({{KEY_ESC}});assert(app::select(session));
+  assert(!(surface.bitmap[(16/8)*192+16]&(1U<<(16&7))));
+  language_workspace::available=false;const unsigned frames=surface.frames;
+  kbd::events({{KEY_ESC}});assert(app::select(session));assert(surface.frames==frames && !language_workspace::active);
+  language_workspace::available=true;directory_tree=false;
+  puts("Explorer native state machine: cached icons/revision, paging, folder bypass, autoexec, modal cleanup and busy-arena fallback PASS");
+}
+#endif
 int main() {
   test_app_autoexec_uses_basename_and_type();
   test_extensions();
+#if MK61_EXPLORER_GRAPHICS
+  test_native_browser();
+#else
   test_browser(false);
   test_scrolling(false);
   test_select_flow(false);
@@ -412,6 +506,7 @@ int main() {
   test_scrolling(true);
   test_select_flow(true);
   test_generic_explorer_flow(true);
+#endif
 #endif
   printf("Explorer labels and selection: resident/APP, graphical=%d OK\n",
          MK61_PROPORTIONAL_UI_FONTS);

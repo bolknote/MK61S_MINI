@@ -331,8 +331,9 @@ void picocalc_contract_test() {
     s.input(0x86);s.input(0x88);s.input(0x1B);s.filter_directory("");
     s.filter_directory("ёж");CHECK(view(s).find(M8("ЁЖ.txt"))!=std::string::npos);
     s.filter_directory("FiNd");CHECK(view(s).find("Find00.txt")!=std::string::npos);
-    for(unsigned i=0;i<8;++i) s.input(0xB6);
-    CHECK(view(s).find("Find07.txt")!=std::string::npos && view(s).find("Find00.txt")==std::string::npos);
+    for(unsigned i=0;i<9;++i) s.input(0xB7);
+    CHECK(s.browser_offset()==9 && s.browser_selection()==0);
+    CHECK(view(s).find("Find09.txt")!=std::string::npos && view(s).find("Find00.txt")==std::string::npos);
     s.input(0x1B);CHECK(std::strcmp(s.page_name(),"BROWSER")==0 && view(s).find("? FiNd")==std::string::npos);
     s.input(0x86);CHECK(std::strcmp(s.page_name(),"PROMPT")==0);type(s,"find17");s.input('\r');
     CHECK(view(s).find("Find17.txt")!=std::string::npos && view(s).find("Find16.txt")==std::string::npos);

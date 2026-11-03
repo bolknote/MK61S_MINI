@@ -229,6 +229,10 @@ void picocalc_software_test(const char* preview_path);
 void picocalc_contract_test();
 void picocalc_firmware_test();
 int main(int argc, char** argv) {
+    if(argc==2 && !std::strcmp(argv[1],"--explorer-native")) {
+        require(picocalc::sd::init() && picocalc::files::format(),"isolated Explorer FAT fixture");
+        extern void picocalc_explorer_test();picocalc_explorer_test();return 0;
+    }
     picocalc::Calculator calc;
     calc.init();
     picocalc::diagnostics::profile_reset();

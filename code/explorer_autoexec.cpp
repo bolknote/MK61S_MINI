@@ -32,4 +32,8 @@ bool find(u16 directory_id, program_store::Entry& out) {
                      program_store::ProgramType::TINYBASIC, out);
 }
 
+bool find_icon(u16 directory_id, program_store::Entry& out) {
+  return find_direct(directory_id,"autoexec.wbmp",program_store::ProgramType::IMAGE1,out);
+}
+
 } // namespace explorer_autoexec

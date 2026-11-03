@@ -15,6 +15,7 @@ namespace {
 std::vector<u8> disk(16 * 1024 * 1024);
 bool initialized = false;
 int fail_after = -1;
+u64 read_count=0;
 }
 namespace picocalc { namespace sd {
 bool init() { initialized = true; return true; }
@@ -22,6 +23,7 @@ bool ready() { return initialized; }
 u32 sectors() { return (u32)disk.size() / 512; }
 bool read(u32 sector, u8 out[512]) {
     if(!initialized || sector >= sectors()) return false;
+    ++read_count;
     std::memcpy(out, disk.data() + sector * 512, 512); return true;
 }
 bool read_sectors(u32 sector, u8* out, u32 count) {
@@ -42,6 +44,7 @@ bool write_sectors(u32 sector,const u8* data,u32 count) {
 }
 } }
 void picocalc_host_fail_write(int after) { fail_after = after; }
+u64 picocalc_host_read_count() {return read_count;}
 bool picocalc_host_make_exfat() {
     f_mount(nullptr, "", 0);
     MKFS_PARM options{}; options.fmt = FM_EXFAT;

@@ -19,6 +19,51 @@
 
 namespace picocalc {
 namespace {
+bool browser_glyph(void*,u8 size,u16 codepoint,explorer_view::Glyph& out) {
+    if(size==8) {
+        builtin_font::Raster glyph{};
+        if(!builtin_font::decode(builtin_font::FaceId::FONT_5X8,codepoint,glyph) &&
+           !builtin_font::decode(builtin_font::FaceId::FONT_5X8,'?',glyph)) return false;
+        out={};out.width=glyph.width;out.height=glyph.height;out.advance=6;out.bearing_y=8;
+        std::memcpy(out.pixels,glyph.data,8);return true;
+    }
+    Settings font{};font.ui_font_family=1;font.ui_font_size=size;
+    mk61_service_ui_glyph glyph{};
+    if(!fonts::glyph(font,codepoint,glyph)) return false;
+    out={};out.width=glyph.width;out.height=glyph.height;out.advance=glyph.advance;
+    out.bearing_x=glyph.bearing_x;out.bearing_y=glyph.bearing_y+size-fonts::info(font).ascent;
+    std::memcpy(out.pixels,glyph.pixels,sizeof(out.pixels));return true;
+}
+void draw_browser(u8* pixels,unsigned bytes,explorer_view::Packing packing,
+                  unsigned width,unsigned height,const Services& services) {
+    const explorer_view::Geometry geometry{(u16)width,(u16)height,
+        services.browser_actions()?explorer_view::Mode::LIST:services.browser_mode()};
+    explorer_view::Canvas canvas(pixels,bytes,geometry,packing,browser_glyph);
+    canvas.clear();
+    char title[64],progress[32]{};services.browser_title(title);
+    if(!services.browser_actions() && (services.browser_offset() || services.browser_more()))
+        std::snprintf(progress,sizeof(progress),"%u%s",services.browser_offset()/Services::BROWSER_PAGE_SIZE+1,
+            services.browser_more()?" >":"");
+    const bool ru=services.russian();
+    canvas.header(title,progress,ru?M8("Файл"):"File",services.browser_has_parent());
+    if(services.browser_actions()) {
+        for(unsigned row=0;row<services.selection_menu_rows();++row) {
+            char value[Services::COLS+1];services.row(row,value);
+            canvas.item((u8)row,value+2,explorer_view::Kind::FILE,nullptr,services.browser_action_selection()==row);
+        }
+        return;
+    }
+    const unsigned selected=services.browser_selection();
+    const unsigned first=geometry.classic()?(selected/geometry.page_size())*geometry.page_size():0;
+    for(unsigned slot=0;slot<geometry.page_size() && first+slot<services.browser_count();++slot) {
+        const unsigned index=first+slot;char name[64];if(!services.browser_label(index,name)) continue;
+        explorer_view::Icon icon{};const bool custom=services.browser_icon(index,icon);
+        canvas.item((u8)slot,name,services.browser_directory(index)?explorer_view::Kind::DIRECTORY:explorer_view::Kind::FILE,
+                    custom?&icon:nullptr,index==selected);
+    }
+    if(!services.browser_count()) canvas.empty(services.browser_filtered()?
+        (ru?M8("Нет совпадений"):"No matches"):(ru?M8("Папка пуста"):"Folder empty"));
+}
 bool manual_clock_visible(const Snapshot& model) {
     // A queued/held key is ordinary manual input, not a display mode change.
     return !model.running && !model.programming && clock::configured();
@@ -68,6 +113,9 @@ RegisterStyle register_style(const Settings& selected) {
 // Keep zero-filled rasters in BSS.
 Screen::Screen() {}
 void Screen::logical_frame(const Ui& ui,const Services& services,u8 out[1536]) const {
+    if(services.browser_display()) {
+        draw_browser(out,1536,explorer_view::Packing::PAGE_LSB,192,64,services);return;
+    }
     if(services.active() && services.graphics()) { std::memcpy(out,services.graphics(),1536);return; }
     if(!services.active() && ui.page()==Page::CALCULATOR) {
         std::memcpy(out,m61_text::display_owned()?script::frame():face_,1536);return;
@@ -343,6 +391,19 @@ Screen::RenderKey Screen::key(const Snapshot& m,bool keyboard,const Ui& ui,const
     out.number((u32)ui.page());out.number((u32)ui.view());out.number(ui.offset());out.number(ui.selected());
     const bool active=services && services->active();out.number(active);
     if(active) {
+        if(services->browser_display()) {
+            out.number(services->display_revision());out.number(services->browser_actions());
+            out.number((u32)services->browser_mode());out.number(services->browser_selection());
+            out.number(services->browser_action_selection());out.number(services->browser_has_parent());
+            out.number(services->browser_offset());out.number(services->browser_more());out.number(services->browser_filtered());
+            char title[64];services->browser_title(title);out.text(title);
+            if(services->browser_actions()) for(unsigned row=0;row<services->selection_menu_rows();++row) {
+                char value[Services::COLS+1];services->row(row,value);out.text(value);
+            } else for(unsigned row=0;row<services->browser_count();++row) {
+                char value[64];services->browser_label(row,value);out.text(value);out.number(services->browser_directory(row));
+            }
+            return out;
+        }
         char title[64];services->heading(title);out.text(title);out.text(services->footer());out.text(services->path());
         out.number(services->display_revision());out.number(services->console_revision());out.number(script::frame_revision());
         out.number(services->fixed_text());out.number(services->editor_cursor());
@@ -398,6 +459,7 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
     if(!ui) ui = &default_ui;
     font_settings_=&ui->settings();battery_=battery;scroll_region_={};
     const bool service_active=services && services->active();
+    if(service_active && services->browser_display()) {browser(*services);return;}
     const u8* graphics=service_active?services->graphics():nullptr;
     const u8* native=graphics?services->native_graphics():nullptr;
     if(native && !services->graphical_document()) { scroll_region_={0,HEIGHT};native_bitmap(native);return; }
@@ -495,5 +557,9 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
     }
     line(280);
     text(10, 295, ui->footer(), 12);
+}
+void Screen::browser(const Services& services) {
+    native_valid_=false;scroll_region_={};
+    draw_browser(pixels_,sizeof(pixels_),explorer_view::Packing::ROW_MSB,WIDTH,HEIGHT,services);
 }
 } // namespace picocalc

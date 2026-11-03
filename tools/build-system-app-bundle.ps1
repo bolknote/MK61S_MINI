@@ -175,7 +175,7 @@ function Get-AppVariant {
     param([string]$SystemName)
     $parts = New-Object 'System.Collections.Generic.List[string]'
     $parts.Add($(if ($UiFonts -eq '1') { 'ui-fonts' } else { 'plain' }))
-    if ($SystemName -eq 'markdown-viewer') {
+    if ($SystemName -in @('markdown-viewer', 'explorer')) {
         $parts.Add($(if ($Graphics -eq '1') { 'graphics' } else { 'text' }))
     }
     if ($SystemName -in @('focal', 'tinybasic')) {
@@ -473,7 +473,7 @@ try {
                     $arguments.Add([string]$value)
                 }
                 if ($UiFonts -ne '1') { $arguments.Add('-NoUiFonts') }
-                if ($module.System -eq 'markdown-viewer' -and
+                if ($module.System -in @('markdown-viewer', 'explorer') -and
                     $Graphics -ne '1') { $arguments.Add('-TextOnly') }
                 if ($module.System -in @('focal', 'tinybasic')) {
                     if ($LanguageVmCompiler -eq '1') {

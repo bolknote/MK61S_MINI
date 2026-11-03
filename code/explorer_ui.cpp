@@ -12,6 +12,13 @@ extern void idle_main_process(void);
 
 #include "explorer_ui.hpp"
 #include "explorer_autoexec.hpp"
+#include "explorer_view_config.hpp"
+#if MK61_EXPLORER_GRAPHICS
+#include "explorer_view.hpp"
+#include "builtin_font.hpp"
+#include "language_workspace.hpp"
+#include "loadable_system_api.h"
+#endif
 
 #include "bounded_string.hpp"
 #include "explorer_label.hpp"
@@ -20,6 +27,7 @@ extern void idle_main_process(void);
 #include "text_editor.hpp"
 
 #include <string.h>
+#include <stdio.h>
 
 namespace explorer_ui {
 namespace {
@@ -40,6 +48,9 @@ static constexpr u16 SCROLL_STEP_MS = 450;
 static constexpr u16 SCROLL_EDGE_MS = 900;
 static constexpr u8 MAX_LINES = MK61_SYSTEM_MAX_ROWS;
 static constexpr usize LINE_BYTES = explorer_label::SIZE;
+// Private UI commands are handled before returning the stable host action.
+static constexpr ExplorerAction OPEN_DIRECTORY = (ExplorerAction)250;
+static constexpr ExplorerAction TOGGLE_VIEW = (ExplorerAction)251;
 
 struct Search {
   char text[program_store::NAME_SIZE];
@@ -496,6 +507,132 @@ static void draw_search_cursor(const char* text, u16 start) {
   main_lcd().cursorOn();
 }
 
+#if MK61_EXPLORER_GRAPHICS
+class GraphicalBrowser {
+  struct CachedIcon { u16 id;bool valid;explorer_view::Icon image; };
+  struct Workspace {
+    u8 frame[1536];CachedIcon icons[3];
+    u16 directory;int top;u32 revision;bool cached;
+  };
+  static_assert(sizeof(Workspace)<=language_workspace::SIZE,"Explorer uses the existing foreground workspace");
+  language_workspace::Lease lease_;
+  bool display_=false;
+  u32 display_revision_=0;
+  explorer_view::Mode mode_=explorer_view::Mode::ICONS;
+  static bool glyph(void*,u8,u16 codepoint,explorer_view::Glyph& output) {
+    builtin_font::Raster value{};
+    if(!builtin_font::decode(builtin_font::FaceId::FONT_5X8,codepoint,value) &&
+       !builtin_font::decode(builtin_font::FaceId::FONT_5X8,'?',value)) return false;
+    output={};output.width=value.width;output.height=value.height;
+    output.advance=6;output.bearing_y=8;memcpy(output.pixels,value.data,8);return true;
+  }
+  static u32 revision() {
+#if defined(MK61_BUILD_EXPLORER_MODULE)
+    return portable_system::call(MK61_SYS_USBDISK,MK61_USBDISK_CATALOG_REVISION);
+#else
+    return program_store::catalog_revision();
+#endif
+  }
+ public:
+  ~GraphicalBrowser() { suspend(); }
+  void suspend() {if(display_) main_lcd().endFullscreenBitmap();display_=false;}
+  void mode(bool list) {
+    const auto next=list?explorer_view::Mode::LIST:explorer_view::Mode::ICONS;
+    if(next!=mode_ && lease_.ok()) ((Workspace*)lease_.data())->cached=false;
+    mode_=next;
+  }
+  bool list() const {return mode_==explorer_view::Mode::LIST;}
+  bool draw(u16 directory,int active,const Search& search,Scroll& scroll,u16& timeout) {
+    if(display_ && display_revision_!=main_lcd().displayModeRevision()) suspend();
+    if(!main_lcd().supportsFullscreenBitmap() || main_lcd().fullscreenBitmapWidth()!=192 ||
+       main_lcd().fullscreenBitmapHeight()!=64) {suspend();return false;}
+    // An older host may expose a bitmap surface without the glyph service.
+    // Keep its established text renderer instead of drawing unlabeled icons.
+    builtin_font::Raster probe{};
+    if(!builtin_font::decode(builtin_font::FaceId::FONT_5X8,'?',probe)) {suspend();return false;}
+    if(!lease_.ok()) {
+      if(!lease_.acquire(language_workspace::Owner::IMAGE_VIEWER,sizeof(Workspace))) return false;
+      memset(lease_.data(),0,sizeof(Workspace));
+    }
+    if(!display_) {
+      if(!main_lcd().beginFullscreenBitmap()) return false;
+      display_=true;display_revision_=main_lcd().displayModeRevision();
+    }
+    auto& work=*(Workspace*)lease_.data();
+    const explorer_view::Geometry geometry{192,64,mode_};
+    explorer_view::Canvas canvas(work.frame,sizeof(work.frame),geometry,explorer_view::Packing::PAGE_LSB,glyph);
+    canvas.clear();
+    const int count=match_count(directory,search.text);
+    int rank=match_position(directory,active,search.text);if(rank<0) rank=0;
+    const int top=(rank/geometry.page_size())*geometry.page_size();
+    const u32 stamp=revision();
+    const bool cache_valid=work.cached && work.directory==directory && work.top==top && work.revision==stamp;
+    char title[48],progress[24]{};
+    if(search_active(search.text)) {
+      title[0]='?';copy_text(title+1,sizeof(title)-1,search.text);
+    } else if(directory==program_store::ROOT_ID) copy_text(title,sizeof(title),library_mk61::language_is_ru()?M8("Программы"):"Programs");
+    else {
+      program_store::Entry current{};
+      if(program_store::entry_by_id(directory,current)) copy_text(title,sizeof(title),current.name);
+      else title[0]=0;
+    }
+    if(count>geometry.page_size()) {
+      const unsigned page=(unsigned)top/geometry.page_size()+1;
+      const unsigned pages=((unsigned)count+geometry.page_size()-1)/geometry.page_size();
+      snprintf(progress,sizeof(progress),"%u/%u",page,pages);
+    }
+    canvas.header(title,progress,library_mk61::language_is_ru()?M8("Файл"):"File",directory!=program_store::ROOT_ID);
+    timeout=0;
+    for(u8 slot=0;slot<geometry.page_size() && top+slot<count;++slot) {
+      const int index=match_at(directory,top+slot,search.text);
+      program_store::Entry entry{};if(!entry_at(directory,index,entry)) continue;
+      char name[explorer_label::SIZE];explorer_label::format(entry,name);
+      if(entry.kind==program_store::NodeKind::DIRECTORY) copy_text(name,sizeof(name),entry.name);
+      const explorer_view::Icon* image=nullptr;
+      if(mode_==explorer_view::Mode::ICONS) {
+        auto& icon=work.icons[slot];
+        if(!cache_valid || icon.id!=entry.id) {
+          icon.id=entry.id;icon.valid=false;
+          program_store::Entry file{};
+          if(entry.kind==program_store::NodeKind::DIRECTORY && explorer_autoexec::find_icon(entry.id,file) &&
+             file.data_len && file.data_len<=explorer_view::MAX_ICON_FILE_BYTES) {
+            u8 bytes[explorer_view::MAX_ICON_FILE_BYTES];u16 read=0;
+            icon.valid=program_store::read_id(file.id,bytes,sizeof(bytes),&read) && read==file.data_len &&
+                explorer_view::decode_icon(bytes,read,icon.image);
+          }
+        }
+        if(icon.valid) image=&icon.image;
+      }
+      if(index==active) {
+        const u32 now=millis();
+        const u8 length=(u8)bounded_length(name,sizeof(name)-1);
+        const u8 chars=(u8)(geometry.label_width()/6);
+        const u8 maximum=length>chars?(u8)(length-chars):0;
+        if(scroll.active!=active || strcmp(scroll.name,name)) {
+          reset_scroll(scroll);scroll.active=active;copy_text(scroll.name,sizeof(scroll.name),name);scroll.next_ms=now+SCROLL_START_MS;
+        }
+        if(scroll.offset>maximum) scroll.offset=maximum;
+        if(maximum && reached(now,scroll.next_ms)) {
+          if(scroll.direction>0 && scroll.offset<maximum) ++scroll.offset;
+          else if(scroll.direction<0 && scroll.offset) --scroll.offset;
+          if(scroll.offset==maximum || scroll.offset==0) {scroll.direction=(i8)-scroll.direction;scroll.next_ms=now+SCROLL_EDGE_MS;}
+          else scroll.next_ms=now+SCROLL_STEP_MS;
+        }
+        if(maximum) {const u32 wait=scroll.next_ms-now;timeout=reached(now,scroll.next_ms)?1:wait>1000?1000:(u16)wait;}
+      }
+      canvas.item(slot,name,entry.kind==program_store::NodeKind::DIRECTORY?explorer_view::Kind::DIRECTORY:explorer_view::Kind::FILE,
+          image,index==active,index==active?scroll.offset:0);
+    }
+    if(!count) canvas.empty(search_active(search.text)?
+        (library_mk61::language_is_ru()?M8("Нет совпадений"):"No matches"):
+        (library_mk61::language_is_ru()?M8("Папка пуста"):"Folder empty"));
+    work.cached=true;work.directory=directory;work.top=top;work.revision=stamp;
+    if(main_lcd().showFullscreenBitmap(work.frame,sizeof(work.frame))) return true;
+    suspend();return false;
+  }
+};
+#endif
+
 static u16 draw_browser(u16 directory, int active, const Search& search,
                         Scroll& scroll) {
   Line lines[MAX_LINES];
@@ -570,6 +707,7 @@ static u16 draw_browser(u16 directory, int active, const Search& search,
 static int make_actions(const program_store::Entry& entry,
                         ExplorerAction* output, int capacity) {
   int count = 0;
+  if(entry.kind==program_store::NodeKind::DIRECTORY && count<capacity) output[count++]=OPEN_DIRECTORY;
 #if defined(MK61_BUILD_EXPLORER_MODULE)
   const u32 mask = program_store::explorer_actions(entry.id);
 #else
@@ -587,11 +725,18 @@ static int make_actions(const program_store::Entry& entry,
   if(count < capacity) output[count++] = ExplorerAction::RENAME;
   if(count < capacity) output[count++] = ExplorerAction::MOVE;
   if(count < capacity) output[count++] = ExplorerAction::DELETE_ENTRY;
+#if MK61_EXPLORER_GRAPHICS
+  if(count < capacity && main_lcd().supportsFullscreenBitmap() &&
+     main_lcd().fullscreenBitmapWidth()==192 && main_lcd().fullscreenBitmapHeight()==64)
+    output[count++] = TOGGLE_VIEW;
+#endif
   return count;
 }
 
 static const char* action_text(ExplorerAction action) {
   const bool ru = library_mk61::language_is_ru();
+  if(action==OPEN_DIRECTORY) return ru?M8("Открыть папку"):"Open folder";
+  if(action==TOGGLE_VIEW) return ru?M8("Значки / список"):"Icons / list";
   switch(action) {
     case ExplorerAction::LOAD: return ru ? M8("Загрузить") : "Load";
     case ExplorerAction::RUN: return ru ? M8("Запуск") : "Run";
@@ -606,8 +751,8 @@ static const char* action_text(ExplorerAction action) {
 }
 
 static void draw_action_menu(const program_store::Entry& entry, int active) {
-  ExplorerAction actions[8];
-  const int count = make_actions(entry, actions, 8);
+  ExplorerAction actions[10];
+  const int count = make_actions(entry, actions, 10);
   Line lines[MAX_LINES];
   clear_lines(lines);
   const int rows = main_lcd().rows() < MAX_LINES ? main_lcd().rows() : MAX_LINES;
@@ -624,8 +769,8 @@ static void draw_action_menu(const program_store::Entry& entry, int active) {
 }
 
 static ExplorerAction choose_action(const program_store::Entry& entry) {
-  ExplorerAction actions[8];
-  const int count = make_actions(entry, actions, 8);
+  ExplorerAction actions[10];
+  const int count = make_actions(entry, actions, 10);
   int active = 0;
   bool initial_release = true;
   while(count > 0) {
@@ -681,6 +826,10 @@ bool select(ExplorerSession& session) {
   Scroll scroll;
   reset_scroll(scroll);
   int active = session.active;
+#if MK61_EXPLORER_GRAPHICS
+  GraphicalBrowser graphics;
+  graphics.mode((session.reserved&1U)!=0);
+#endif
   wait_handoff();
 
   while(true) {
@@ -694,8 +843,11 @@ bool select(ExplorerSession& session) {
       if(first >= 0) active = first;
     }
 
-    const u16 timeout = draw_browser(session.directory_id, active, search,
-                                     scroll);
+    u16 timeout=0;
+#if MK61_EXPLORER_GRAPHICS
+    if(!graphics.draw(session.directory_id,active,search,scroll,timeout))
+#endif
+      timeout=draw_browser(session.directory_id,active,search,scroll);
     const i32 key = wait_key(count > 0, timeout);
     if(key == KEY_TICK || key == KEY_REDRAW) continue;
     if(key == KEY_ESCAPE) {
@@ -771,12 +923,25 @@ bool select(ExplorerSession& session) {
               ? ExplorerAction::RUN : ExplorerAction::VIEW;
     } else if(key == KEY_OK_LONG) {
       cursor_off();
+#if MK61_EXPLORER_GRAPHICS
+      graphics.suspend();
+#endif
       requested = choose_action(entry);
       if(requested == ExplorerAction::NONE) {
         reset_scroll(scroll);
         continue;
       }
     } else continue;
+
+    if(requested==OPEN_DIRECTORY) {
+      session.directory_id=entry.id;active=0;search_reset(search);reset_scroll(scroll);continue;
+    }
+#if MK61_EXPLORER_GRAPHICS
+    if(requested==TOGGLE_VIEW) {
+      graphics.mode(!graphics.list());session.reserved=(u8)((session.reserved&~1U)|(graphics.list()?1U:0U));
+      reset_scroll(scroll);continue;
+    }
+#endif
 
     session.active = active;
     copy_text(session.search, sizeof(session.search), search.text);

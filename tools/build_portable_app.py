@@ -34,7 +34,7 @@ SYSTEM_MODULES = {
     "usbdisk": ("USBDISK", "USBDISK", ["virtual_fat.cpp",
         "virtual_fat_diagnostic.cpp", "usbdisk_module_entry.cpp"], None),
     "explorer": ("EXPLORER", "EXPLORER", ["explorer_ui.cpp",
-        "explorer_autoexec.cpp", "explorer_module_entry.cpp"], None),
+        "explorer_autoexec.cpp", "explorer_view.cpp", "wbmp.cpp", "explorer_module_entry.cpp"], None),
     "language-vm": ("LANGVM", "LANGUAGE_VM", ["language_bytecode.cpp",
         "language_vm.cpp", "language_vm_module_entry.cpp"], None),
     "language-input": ("LANGIN", "LANGUAGE_INPUT", ["language_bytecode.cpp",
@@ -152,8 +152,8 @@ def build(args: argparse.Namespace) -> dict:
     if getattr(args,"linked_vm_poc",False) and not (args.system=="vm-file-cache" or
             (args.system=="language-vm" and args.split_language_vm)):
         raise ValueError("--linked-vm-poc requires the split language-vm or vm-file-cache")
-    if args.text_only and args.system != "markdown-viewer":
-        raise ValueError("--text-only applies to markdown-viewer")
+    if args.text_only and args.system not in ("markdown-viewer", "explorer"):
+        raise ValueError("--text-only applies to markdown-viewer or explorer")
     if args.no_ui_fonts and not system:
         raise ValueError("--no-ui-fonts applies to system APPs")
     if args.local_float_math and args.system not in ("focal", "tinybasic", "language-vm"):
@@ -479,7 +479,7 @@ def main() -> None:
     parser.add_argument("--shared-runtime", action="store_true",
                         help="use resident ARM EABI/string helpers; require runtime service at startup")
     parser.add_argument("--text-only", action="store_true",
-                        help="compact Markdown without graphical rendering or WBMP")
+                        help="compact Markdown or Explorer without graphical rendering or WBMP")
     parser.add_argument("--no-ui-fonts", action="store_true",
                         help="omit the optional proportional UI client from a system APP")
     parser.add_argument("--local-float-math", action="store_true",

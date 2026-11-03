@@ -2,7 +2,11 @@
   #include "config.h"
 #endif
 
+#include "explorer_view_config.hpp"
+
 #if !defined(ARDUINO) || MK61_WBMP_DECODER_IS_BUILTIN || \
+    (MK61_EXPLORER_GRAPHICS && MK61_EXPLORER_IS_BUILTIN) || \
+    defined(MK61_BUILD_EXPLORER_MODULE) || \
     defined(MK61_BUILD_WBMP_MODULE) || \
     (defined(MK61_BUILD_MARKDOWN_MODULE) && MK61_MARKDOWN_USES_WBMP)
 

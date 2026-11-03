@@ -59,11 +59,13 @@ bool Services::leave_for_script() {
     viewing_ = image_viewing_ = waiting_ = pending_run_ = false;
     runtime_graphics_ = graph_visible_ = false;
     graph_.reset();
+    release_browser();
     return true;
 }
 void Services::open(Action action, bool russian, Calculator& calculator) {
     calculator_ = &calculator; russian_ = russian; selection_ = 0;
     script::attach(calculator, *this);
+    if(action!=Action::EXPLORER) release_browser();
     if(action == Action::USB_DISK) {
         if(files::begin_usb()) page_ = ServicePage::USB_DISK;
         else message(files::error(), ServicePage::CLOSED);
@@ -80,14 +82,64 @@ void Services::browse(ServicePage parent) {
     filter_[0]=0;skip_ = selection_ = 0; refresh();
 }
 void Services::refresh() {
-    if(!files::list(directory_, skip_, entries_, 7, used_, more_,filter_)) {
+    if(!browser_entries_.ok() && !browser_entries_.acquire(shared_memory::Owner::APPLICATION,
+            sizeof(files::Entry)*BROWSER_PAGE_SIZE)) {
+        entries_=nullptr;used_=0;message("Explorer memory busy",browser_parent_);return;
+    }
+    entries_=(files::Entry*)browser_entries_.data();
+    if(!files::list(directory_, skip_, entries_, BROWSER_PAGE_SIZE, used_, more_,filter_)) {
         // A directory may disappear while USB or the terminal owns the card.
         // Re-enter a readable root instead of retaining an unusable browser.
-        if(std::strcmp(directory_,"/") && files::list("/",0,entries_,7,used_,more_)) {
+        if(std::strcmp(directory_,"/") && files::list("/",0,entries_,BROWSER_PAGE_SIZE,used_,more_)) {
             std::strcpy(directory_,"/");filter_[0]=0;skip_=selection_=0;status_[0]=0;
-        } else message(files::error(), browser_parent_);
+        } else { release_browser();message(files::error(), browser_parent_);return; }
     }
     if(selection_ > used_) selection_ = used_;
+    if(used_ && !selection_) selection_=1;
+    browser_icon_mask_=0;
+    if(browser_mode_!=explorer_view::Mode::ICONS) (void)browser_icons_.reset();
+    if(browser_mode_==explorer_view::Mode::ICONS && !browser_icons_.ok()) (void)browser_icons_.acquire_cache(shared_memory::Owner::APPLICATION,
+        BROWSER_PAGE_SIZE*explorer_view::ICON_BYTES,[] { return shared_memory::EvictionDecision::RELEASE; });
+    if(browser_icons_.ok()) for(unsigned index=0;index<used_;++index) {
+        if(!entries_[index].directory) continue;
+        char directory[files::PATH_SIZE],path[files::PATH_SIZE];
+        if(!join(directory_,entries_[index].name,directory) || !join(directory,explorer_view::ICON_NAME,path)) continue;
+        u8 bytes[explorer_view::MAX_ICON_FILE_BYTES];unsigned count=0;explorer_view::Icon icon{};
+        if(files::read(path,bytes,sizeof(bytes),count) && explorer_view::decode_icon(bytes,count,icon) &&
+           browser_icons_.write(index*explorer_view::ICON_BYTES,icon.pixels,sizeof(icon.pixels)))
+            browser_icon_mask_|=(u16)(1U<<index);
+    }
+    browser_revision_=files::revision();++graphics_revision_;
+}
+void Services::release_browser() {
+    entries_=nullptr;used_=0;browser_icon_mask_=0;
+    (void)browser_icons_.reset();(void)browser_entries_.reset();
+}
+bool Services::browser_icon(unsigned index,explorer_view::Icon& out) const {
+    return index<used_ && (browser_icon_mask_&(1U<<index)) && browser_icons_.ok() &&
+        browser_icons_.read(index*explorer_view::ICON_BYTES,out.pixels,sizeof(out.pixels));
+}
+void Services::browser_title(char out[64]) const {
+    if(filter_[0]) { char value[62];label(filter_,value,sizeof(value));std::snprintf(out,64,"? %s",value);return; }
+    const char* name=browser_actions()?std::strrchr(selected_file_,'/'):std::strrchr(directory_,'/');
+    label(name && name[1]?name+1:"microSD",out,64);
+}
+bool Services::browser_label(unsigned index,char out[64]) const {
+    if(!entries_ || index>=used_) {out[0]=0;return false;}
+    label(entries_[index].name,out,64);return true;
+}
+void Services::move_browser(int step) {
+    if(!used_) return;
+    const int next=(int)selection_+step;
+    if(next>=1 && next<=(int)used_) selection_=(unsigned)next;
+    else if(next<1 && skip_>=BROWSER_PAGE_SIZE) {
+        skip_-=BROWSER_PAGE_SIZE;refresh();
+        selection_=used_ ? (unsigned)((int)used_+next>0?(int)used_+next:1) : 0;
+    } else if(next>(int)used_ && more_) {
+        skip_+=BROWSER_PAGE_SIZE;refresh();
+        selection_=used_ ? (unsigned)(next-(int)BROWSER_PAGE_SIZE) : 0;
+        if(selection_>used_) selection_=used_;
+    }
 }
 void Services::filter_directory(const char* utf8) {
     std::snprintf(filter_,sizeof(filter_),"%s",utf8?utf8:"");
@@ -98,13 +150,14 @@ bool Services::selected_path(char out[files::PATH_SIZE]) const {
 }
 void Services::parent_directory() {
     filter_[0]=0;
-    if(std::strcmp(directory_, "/") == 0) { page_ = browser_parent_; selection_ = 0; return; }
+    if(std::strcmp(directory_, "/") == 0) { page_ = browser_parent_; selection_ = 0; release_browser();return; }
     char* slash = std::strrchr(directory_, '/');
     if(slash == directory_) directory_[1] = 0;
     else if(slash) *slash = 0;
     skip_ = selection_ = 0; refresh();
 }
 void Services::new_document(Document kind) {
+    release_browser();
     release_cache();
     graph_.reset();graph_visible_=false;
     viewing_=image_viewing_=runtime_graphics_=false;
@@ -113,6 +166,7 @@ void Services::new_document(Document kind) {
     page_ = ServicePage::EDITOR; status_[0] = 0;
 }
 bool Services::load_document(const char* path,bool edit) {
+    release_browser();
     using Type = program_store::ProgramType;
     const Type type = script::file_type(path);
     if((type == Type::MARKDOWN && !edit) || type == Type::SHEET ||
@@ -240,7 +294,10 @@ bool Services::input(u8 code) {
         }
         return true;
     }
-    if(page_ == ServicePage::MESSAGE) { if(cancel || accept) page_ = message_parent_; return true; }
+    if(page_ == ServicePage::MESSAGE) {
+        if(cancel || accept) {page_ = message_parent_;if(page_==ServicePage::BROWSER) refresh();}
+        return true;
+    }
     if(page_ == ServicePage::PROMPT) {
         if(code==0x88) input_russian_=!input_russian_;
         else if(cancel) page_ = prompt_parent_;
@@ -306,23 +363,33 @@ bool Services::input(u8 code) {
     }
     if(page_ == ServicePage::BROWSER) {
         if(cancel && filter_[0]) { filter_directory("");return true; }
-        if(cancel || code == 0xB4) { parent_directory(); return true; }
-        if(code == 0xB5) {
-            if(selection_) --selection_;
-            else if(skip_ >= 7) { skip_ -= 7; refresh(); selection_ = used_; }
-        } else if(code == 0xB6) {
-            if(selection_ < used_) ++selection_;
-            else if(more_) { skip_ += 7; selection_ = 1; refresh(); }
-        } else if(code == 0x82) prompt(Prompt::NEW_FILE, page_, "new.bas");
+        if(cancel) { parent_directory(); return true; }
+        const int vertical=browser_mode_==explorer_view::Mode::ICONS?3:1;
+        if(code == 0xB5) move_browser(-vertical);
+        else if(code == 0xB6) move_browser(vertical);
+        else if(code == 0xB4) move_browser(-1);
+        else if(code == 0xB7) move_browser(1);
+        else if(code == 0x88) {
+            browser_mode_=browser_mode_==explorer_view::Mode::ICONS?explorer_view::Mode::LIST:explorer_view::Mode::ICONS;
+            refresh();
+        }
+        else if(code == 0x82) prompt(Prompt::NEW_FILE, page_, "new.bas");
         else if(code == '/') prompt(Prompt::OPEN, page_);
         else if(code == 0x84) prompt(Prompt::MKDIR, page_, "NewFolder");
         else if(code == 0x85) prompt(Prompt::EXPORT, page_, "program.m61");
         else if(code == 0x86) prompt(Prompt::SEARCH,page_,filter_);
         else if(code == 0x87 && selected_path(selected_file_)) prompt(Prompt::MOVE,page_,directory_);
         else if(accept || code == 0x81 || code == 0x83) {
-            if(!selection_) { parent_directory(); return true; }
+            if(!selection_) {
+                if(!filter_[0]) prompt(Prompt::MKDIR,page_,"NewFolder");
+                return true;
+            }
             if(!selected_path(selected_file_)) { message("Path too long", page_); return true; }
-            if(code == 0x81) { page_ = ServicePage::FILE_ACTIONS; selection_ = 0; }
+            if(code == 0x81) {
+                selected_directory_=entries_[selection_-1].directory;
+                browser_return_selection_=selection_;
+                page_ = ServicePage::FILE_ACTIONS; selection_ = 0;
+            }
             else if(entries_[selection_ - 1].directory) {
                 (void)enter_directory(selected_file_);
             } else {
@@ -333,13 +400,22 @@ bool Services::input(u8 code) {
         return true;
     }
     if(page_ == ServicePage::FILE_ACTIONS) {
-        if(cancel) { page_ = ServicePage::BROWSER; selection_ = 0; refresh(); }
-        else if(code == 0xB5 || code == 0xB6) selection_ = menu_model::step(selection_, 5, code == 0xB5 ? -1 : 1);
+        if(cancel) { page_ = ServicePage::BROWSER; selection_ = browser_return_selection_; refresh(); }
+        else if(code == 0xB5 || code == 0xB6) selection_ = menu_model::step(selection_, file_action_count(), code == 0xB5 ? -1 : 1);
         else if(accept) {
-            if(selection_ < 2) { return_ = ServicePage::BROWSER; if(load_document(selected_file_,selection_==0) && selection_ == 1) pending_run_ = true; }
+            if(selection_ < 2) {
+                return_ = ServicePage::BROWSER;
+                if(selected_directory_) (void)enter_directory(selected_file_);
+                else if(load_document(selected_file_,selection_==0) && selection_ == 1) pending_run_ = true;
+            }
             else if(selection_ == 2) prompt(Prompt::RENAME, ServicePage::BROWSER, std::strrchr(selected_file_, '/') + 1);
             else if(selection_ == 4) prompt(Prompt::MOVE,ServicePage::BROWSER,directory_);
-            else { confirm_ = Confirm::DELETE_FILE; confirm_parent_ = page_; page_ = ServicePage::CONFIRM; }
+            else if(selection_==3) { confirm_ = Confirm::DELETE_FILE; confirm_parent_ = page_; page_ = ServicePage::CONFIRM; }
+            else if(selected_directory_ && selection_==5) (void)enter_directory(selected_file_,false);
+            else {
+                browser_mode_=browser_mode_==explorer_view::Mode::ICONS?explorer_view::Mode::LIST:explorer_view::Mode::ICONS;
+                page_=ServicePage::BROWSER;selection_=browser_return_selection_;refresh();
+            }
         }
         return true;
     }
@@ -367,6 +443,8 @@ bool Services::input(u8 code) {
     return true;
 }
 void Services::tick() {
+    if(page_==ServicePage::BROWSER && (!entries_ || browser_revision_!=files::revision())) refresh();
+    if(page_==ServicePage::CLOSED || page_==ServicePage::DEVELOPMENT || page_==ServicePage::LANGUAGE) release_browser();
     restore_script_editor();
     if(pending_run_) { pending_run_=false;run_document(); }
     restore_script_editor();
@@ -440,12 +518,15 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
         } else if(index == 11 && more_) std::snprintf(out, COLS + 1, "%s", tr("Down: next page", M8("Down: следующая страница")));
         else if(index == 13) std::snprintf(out, COLS + 1, "%s", tr("/: open file by name", M8("/: открыть файл по имени")));
     } else if(page_ == ServicePage::DEVELOPMENT || page_ == ServicePage::LANGUAGE || page_ == ServicePage::FILE_ACTIONS) {
-        if(index < (page_ == ServicePage::FILE_ACTIONS?5U:4U)) {
+        if(index < (page_ == ServicePage::FILE_ACTIONS?file_action_count():4U)) {
             const char* dev[] = {tr("Explorer", M8("Проводник")), tr("MK61 files", M8("Файлы МК-61")), "FOCAL", "TinyBASIC"};
             const char* lang[] = {tr("New source", M8("Новый исходник")), tr("Open file...", M8("Открыть файл...")),
                 tr("Edit source", M8("Редактор")), tr("Run source", M8("Запуск"))};
             const char* actions[] = {tr("Open / edit", M8("Открыть / править")), tr("Run", M8("Запуск")),
-                tr("Rename", M8("Переименовать")), tr("Delete", M8("Удалить")),tr("Move...",M8("Переместить..."))};
+                tr("Rename", M8("Переименовать")), tr("Delete", M8("Удалить")),tr("Move...",M8("Переместить...")),
+                selected_directory_?tr("Open folder",M8("Открыть папку")):
+                    browser_mode_==explorer_view::Mode::ICONS?tr("View: list",M8("Вид: список")):tr("View: icons",M8("Вид: значки")),
+                browser_mode_==explorer_view::Mode::ICONS?tr("View: list",M8("Вид: список")):tr("View: icons",M8("Вид: значки"))};
             if(page_ == ServicePage::LANGUAGE && tool_ == Document::MK61) {
                 if(index < 2) std::snprintf(out, COLS + 1, "%c %s", selection_ == index ? '>' : ' ',
                     index == 0 ? tr("Load MK61", M8("Загрузить МК-61")) : tr("Save MK61", M8("Сохранить МК-61")));

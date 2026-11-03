@@ -60,7 +60,8 @@ def main():
             "static constexpr i32 KEY_ESCAPE", "static constexpr i32 KEY_TICK",
             "static constexpr i32 KEY_REDRAW", "static constexpr u16 SCROLL_START_MS",
             "static constexpr u16 SCROLL_STEP_MS", "static constexpr u16 SCROLL_EDGE_MS",
-            "static constexpr u8 MAX_LINES", "static constexpr usize LINE_BYTES"]) +
+            "static constexpr u8 MAX_LINES", "static constexpr usize LINE_BYTES",
+            "static constexpr ExplorerAction OPEN_DIRECTORY", "static constexpr ExplorerAction TOGGLE_VIEW"]) +
         body(app, "struct Search", True) + body(app, "struct Scroll", True) +
         body(app, "struct Line", True) +
         functions(app, ["static bool reached(", "static usize bounded_length(",
@@ -79,6 +80,11 @@ def main():
             "static void draw_action_menu(", "static ExplorerAction choose_action(",
             "static bool autoexec(", "static void set_result(", "bool select(",
             "uint32_t flow_step("]))
+
+    rendered=out / "app_explorer_ui.inc"
+    rendered.write_text(rendered.read_text().replace("static u16 draw_browser(",
+        "#if MK61_EXPLORER_GRAPHICS\n" + body(app,"class GraphicalBrowser",True) +
+        "#endif\nstatic u16 draw_browser(",1))
 
     resident_source = resident.read_text()
     assert "draw_explorer(" not in resident_source
