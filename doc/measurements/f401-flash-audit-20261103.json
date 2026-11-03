@@ -1,0 +1,215 @@
+{
+  "source_main": "bac3dc945d262cee75683757a9a06d5010e6f3d3",
+  "optimized_source": "7d6eb0d17c092f5816977e567c5e0d26d65ae20e",
+  "source_date_epoch": 1793448000,
+  "toolchain": "GNU Arm GCC 14.2.1-1.1",
+  "case": "f401-product-classic-v2",
+  "measurement": "Complete Flash load extent, including data initializers, alignment and firmware footer. Negative free space is reconstructed from a failed link map. Each state uses the same source path, toolchain, fixed timestamp and release contract.",
+  "chain": [
+    {
+      "commit": "bac3dc945",
+      "bytes": 263120,
+      "free": -976,
+      "gain": null,
+      "status": 1,
+      "seconds": 11.9
+    },
+    {
+      "commit": "403f56a36",
+      "bytes": 262816,
+      "free": -672,
+      "gain": 304,
+      "status": 1,
+      "seconds": 5.3
+    },
+    {
+      "commit": "6e0720971",
+      "bytes": 262608,
+      "free": -464,
+      "gain": 208,
+      "status": 1,
+      "seconds": 5.7
+    },
+    {
+      "commit": "e151f9651",
+      "bytes": 261184,
+      "free": 960,
+      "gain": 1424,
+      "status": 1,
+      "seconds": 11.2
+    },
+    {
+      "commit": "19f0a0136",
+      "bytes": 259440,
+      "free": 2704,
+      "gain": 1744,
+      "status": 1,
+      "seconds": 9.5
+    },
+    {
+      "commit": "8105bd47d",
+      "bytes": 258992,
+      "free": 3152,
+      "gain": 448,
+      "status": 1,
+      "seconds": 9.4
+    },
+    {
+      "commit": "d2006d4f5",
+      "bytes": 258896,
+      "free": 3248,
+      "gain": 96,
+      "status": 1,
+      "seconds": 9.4
+    },
+    {
+      "commit": "aa9ebb60f",
+      "bytes": 258680,
+      "free": 3464,
+      "gain": 216,
+      "status": 1,
+      "seconds": 9.5
+    },
+    {
+      "commit": "0c234e337",
+      "bytes": 257996,
+      "free": 4148,
+      "gain": 684,
+      "status": 0,
+      "seconds": 9.6
+    },
+    {
+      "commit": "97212d3af",
+      "bytes": 257980,
+      "free": 4164,
+      "gain": 16,
+      "status": 0,
+      "seconds": 15.5
+    }
+  ],
+  "native_final": [
+    {
+      "case": "f401-product-classic-v2",
+      "image_bytes": 257980,
+      "free_bytes": 4164,
+      "minimum_free": 4096,
+      "globals": 29348,
+      "effective_app_pool": 20576,
+      "required_app_pool": 20480
+    },
+    {
+      "case": "f401-product-classic-v3",
+      "image_bytes": 258020,
+      "free_bytes": 4124,
+      "minimum_free": 4096,
+      "globals": 29356,
+      "effective_app_pool": 20544,
+      "required_app_pool": 20480
+    }
+  ],
+  "stock_arduino": {
+    "features": "Original stock-linker check: includes WBMP, CHIP8 and extended fonts; differs from native release cases.",
+    "main_before_panel_cleanup": {
+      "overflow_bytes": 3868
+    },
+    "main_after_panel_cleanup": {
+      "overflow_bytes": 2884
+    },
+    "panel_cleanup_gain": 984,
+    "optimized_plus_panel_cleanup": [
+      {
+        "mcu": "f401",
+        "image_bytes": 259768,
+        "free_bytes": 2376,
+        "minimum_free": 1024
+      },
+      {
+        "mcu": "f411",
+        "image_bytes": 375196,
+        "free_bytes": 149092,
+        "minimum_free": 0
+      }
+    ]
+  },
+  "additional_main_only_experiments": {
+    "key_byte_masks": 128,
+    "packed_scaled_segments_increment": 316,
+    "cold_prefetch_increment": 832,
+    "active_key_lut_increment": 88,
+    "shared_decimal_and_frame_increment": 120,
+    "shared_table_read_and_redundant_fits_check_increment": 16,
+    "note": "Incremental experimental-copy effects, not additive to the existing branch. They are not the selected production implementation."
+  },
+  "verification": {
+    "existing_m61_asan": "PASS, 10 runtime configurations +3 keyboard layouts + game manual check",
+    "existing_ui_asan": "PASS, 10 legacy/F401 physical/USB/lifetime configurations, including independent full-frame segment oracle",
+    "existing_runner_asan": "PASS, native/F401-like/mini campaigns, timers, LOOKUP, input, tables and async campaigns",
+    "uc1609_transport_asan": "PASS, both transport fixture variants",
+    "stock_linker": "PASS, F401/F411 with panel-only adapter; narrow driver/panel ELF checks PASS",
+    "native_flash_ram_and_app_pool": "PASS, Classic V2/V3",
+    "full_native9_system_package_ci": "NOT_RERUN for the final combined candidate"
+  },
+  "prior_ci": {
+    "run": 41227999630,
+    "head": "e2150a38c27897f2a6a0ebd1f6610693c6779e67",
+    "result": "HOST strict and Arduino success; native matrix failed APP pool 20064 < 20480. Corrected locally by the later 97212d3af change.",
+    "url": "https://github.com/bolknote/MK61S_MINI/actions/runs/41227999630"
+  },
+  "working_tree_changes": [
+    "code/ERM19264_UC1609.h",
+    "tests/run_stock_linker_compile_check.sh",
+    "doc/measurements/f401-flash-audit-20261103.md",
+    "doc/measurements/f401-flash-audit-20261103.json"
+  ],
+  "device_io": false,
+  "local_evidence": {
+    ".build/flash-savings-20261103/existing-chain.json": {
+      "sha256": "64b5a313788343487919009c188dc0dc24ff0092412ce9a4aac9d8935f212f99",
+      "bytes": 1286
+    },
+    ".build/flash-savings-20261103/existing-branch.log": {
+      "sha256": "48e34bf5d4b2717846c11a078456957568c151c53d57a9fac98da5004146ec6e",
+      "bytes": 29073
+    },
+    ".build/flash-savings-20261103/existing-app-fix.log": {
+      "sha256": "938ed784916f9035abc31281813a161f6c859719379a8756d0761e434328d0f8",
+      "bytes": 1801
+    },
+    ".build/flash-savings-20261103/existing-v3.log": {
+      "sha256": "ac9f7cc96eeb61a70d0f60aa3c925678efb70d0b805479f029c8ae58388820c1",
+      "bytes": 29079
+    },
+    ".build/flash-savings-20261103/existing-m61-complete-asan.log": {
+      "sha256": "05d91b61f252da920a648b4818119194e7043a7667f37053f433ab364872e0d1",
+      "bytes": 561
+    },
+    ".build/flash-savings-20261103/existing-ui-asan.log": {
+      "sha256": "491bde03b376a04f6b76d2a4a1a844ae9ef38d2824d64a67e878fe1fb2309f43",
+      "bytes": 885
+    },
+    ".build/flash-savings-20261103/existing-runner-asan.log": {
+      "sha256": "9eaf412cc777170f0f995047d7d95ce2abc66b4833d3122ff9d90751c11076c2",
+      "bytes": 3774
+    },
+    ".build/flash-savings-20261103/uc1609-transport-asan.log": {
+      "sha256": "67766409b9f3d235624e7047d1cb1fed89ba69507bffee0e11cbd70935f4ab71",
+      "bytes": 62
+    },
+    ".build/flash-savings-20261103/stock-main.log": {
+      "sha256": "4f7f232467336b31e5940d53c768663afc07134e48b565865baebce2575e7a53",
+      "bytes": 2041
+    },
+    ".build/flash-savings-20261103/stock-panel.log": {
+      "sha256": "740b37a14e82f2cc26f0582ffebbad097999a27f420bbded96280873e2b01083",
+      "bytes": 1671
+    },
+    ".build/flash-savings-20261103/stock-existing-panel.log": {
+      "sha256": "f8d7c36db2345fd09cc4fa1155ba69243de80541156c045aec978d23c68846fd",
+      "bytes": 2516
+    },
+    ".build/flash-savings-20261103/existing-ci-failed.log": {
+      "sha256": "ad17ae59aed2a80fb7220390786b6ba2824862e0e1814077bd4d50a93dc7bc4e",
+      "bytes": 874878
+    }
+  }
+}

@@ -79,6 +79,8 @@ compile_case() {
     fail "$label Flash headroom too small: $headroom < $minimum_headroom bytes"
   printf '%s stock linker + LTO: %s/%s bytes (%s free, min %s), no unresolved RAM exports\n' \
     "$label" "$size" "$maximum_size" "$headroom" "$minimum_headroom"
+  python3 "$root/tests/check_narrow_stm32_drivers_elf.py" \
+    "$path/mk61s-M.ino.elf" --native-panel
 }
 
 # Resident proportional UTF-8 flow is shared by loadable BASIC and FOCAL. Keep

@@ -16,7 +16,9 @@
 
 #include "ERM19264_graphics.h"
 #include "spi1_transport.hpp"
-#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#if (defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME) || MK61_SPI1_DIRECT_SUPPORTED
+// MK61Display owns rendering in both native and STM32duino builds. The direct
+// STM32 transport only needs the panel client, without the legacy graphics base.
 #define MK61_UC1609_PANEL_ONLY 1
 #else
 #define MK61_UC1609_PANEL_ONLY 0
