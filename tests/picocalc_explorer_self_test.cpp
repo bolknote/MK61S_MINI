@@ -61,8 +61,7 @@ void picocalc_explorer_test() {
         assert(service.browser_count()==9 && service.browser_more() && service.browser_selection()==0);
         const unsigned good=find(service,"IconOnly"),bad=find(service,"Bad"),launcher=find(service,"Launcher");
         explorer_view::Icon icon{};
-        const bool psram=shared_memory::buffer_statistics().external_capacity!=0;
-        if(psram) {assert(service.browser_icon(good,icon));assert(icon.pixels[0]==0x80);}
+        assert(service.browser_icon(good,icon));assert(icon.pixels[0]==0x80);
         assert(!service.browser_icon(bad,icon));
         Screen screen;screen.render(calculator.snapshot(),true,&ui,&service);
         select(service,good);
@@ -76,11 +75,35 @@ void picocalc_explorer_test() {
             shared_memory::Buffer required;
             assert(required.acquire(shared_memory::Owner::APPLICATION,external.size(),shared_memory::BufferAccess::EXTERNAL_ONLY));
             assert(!service.browser_icon(good,icon)); // eviction revokes the optional cache safely
-            assert(required.reset());service.filter_directory("");
+            // Match the device: VM/SD leases occupy all PSRAM and cannot be
+            // reclaimed. Icons still load into a temporary 1152-byte SRAM lease.
+            service.filter_directory("");
+            assert(service.browser_icon(good,icon) && icon.pixels[0]==0x80);
+            assert(shared_memory::buffer_statistics().internal_used>=9*explorer_view::ICON_BYTES);
+            const auto full_reads=picocalc_host_read_count();
+            service.input(0xB7);screen.render(calculator.snapshot(),true,&ui,&service);
+            service.input(0xB4);screen.render(calculator.snapshot(),true,&ui,&service);
+            assert(picocalc_host_read_count()==full_reads);
+            u8 shipped[132];FILE* asset=std::fopen("programs/games/Turochamp/autoexec.wbmp","rb");assert(asset);
+            assert(std::fread(shipped,1,sizeof(shipped),asset)==sizeof(shipped));std::fclose(asset);
+            assert(files::write("/ExplorerNative/IconOnly/autoexec.wbmp",shipped,sizeof(shipped)));
+            service.tick();explorer_view::Icon expected{};
+            assert(explorer_view::decode_icon(shipped,sizeof(shipped),expected));
+            assert(service.browser_icon(good,icon) && !std::memcmp(icon.pixels,expected.pixels,sizeof(icon.pixels)));
+            select(service,8);service.input(0xB7);assert(service.browser_offset()==9);
+            service.input(0xB4);assert(service.browser_offset()==0);
+            assert(service.browser_icon(good,icon) && !std::memcmp(icon.pixels,expected.pixels,sizeof(icon.pixels)));
+            const auto full=shared_memory::buffer_statistics();
+            assert(full.external_used==external_bytes);
+            assert(full.internal_used==before.internal_used+sizeof(files::Entry)*9+9*explorer_view::ICON_BYTES);
+            service.input(0x1B);service.input(0x1B);service.tick();assert(!service.active());
+            assert(shared_memory::buffer_statistics().internal_used==before.internal_used);
+            assert(required.reset());service.open(Action::EXPLORER,true,calculator);
+            assert(service.enter_directory("/ExplorerNative",false));
             assert(service.browser_icon(good,icon));
         }
         bytes[4]=0xBF;assert(files::write("/ExplorerNative/IconOnly/autoexec.wbmp",bytes,sizeof(bytes)));
-        service.tick();if(psram) {assert(service.browser_icon(good,icon));assert(icon.pixels[0]==0x40);}
+        service.tick();assert(service.browser_icon(good,icon));assert(icon.pixels[0]==0x40);
         bytes[2]=1;assert(files::write("/ExplorerNative/IconOnly/autoexec.wbmp",bytes,sizeof(bytes)));
         service.tick();assert(!service.browser_icon(good,icon));bytes[2]=32;
         assert(files::remove("/ExplorerNative/IconOnly/autoexec.wbmp"));service.tick();assert(!service.browser_icon(good,icon));

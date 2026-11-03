@@ -98,8 +98,13 @@ void Services::refresh() {
     if(used_ && !selection_) selection_=1;
     browser_icon_mask_=0;
     if(browser_mode_!=explorer_view::Mode::ICONS) (void)browser_icons_.reset();
-    if(browser_mode_==explorer_view::Mode::ICONS && !browser_icons_.ok()) (void)browser_icons_.acquire_cache(shared_memory::Owner::APPLICATION,
-        BROWSER_PAGE_SIZE*explorer_view::ICON_BYTES,[] { return shared_memory::EvictionDecision::RELEASE; });
+    if(browser_mode_==explorer_view::Mode::ICONS && !browser_icons_.ok()) {
+        (void)browser_icons_.reset();
+        const usize bytes=BROWSER_PAGE_SIZE*explorer_view::ICON_BYTES;
+        if(!browser_icons_.acquire_cache(shared_memory::Owner::APPLICATION,bytes,
+                [] { return shared_memory::EvictionDecision::RELEASE; }))
+            (void)browser_icons_.acquire(shared_memory::Owner::APPLICATION,bytes);
+    }
     if(browser_icons_.ok()) for(unsigned index=0;index<used_;++index) {
         if(!entries_[index].directory) continue;
         char directory[files::PATH_SIZE],path[files::PATH_SIZE];
