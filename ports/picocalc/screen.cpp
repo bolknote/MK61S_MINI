@@ -296,8 +296,6 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
         text(WIDTH-(battery_.available?44:10)-fonts::text_width(clock_font,time,5),9,time,16);
         font_settings_=saved;
     }
-    // The large face is the IK1302 display latch (X2), not the stack X.
-    text(10,72,"X2",16);
     const unsigned font_size = ui.settings().ui_font_size;
     line(147);
     if(ui.view() == View::STACK) {

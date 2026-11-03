@@ -124,7 +124,6 @@ void check_choice(const Settings& settings,Calculator& calc) {
     const auto before=core_values();const auto model=calc.snapshot();
     Screen screen;BatteryStatus battery;battery.decode(0x0B,73);
     screen.render(model,true,&ui,nullptr,battery);
-    require(Text(ui.settings(),"X2",16).matches(screen,10,72),"large display latch is labelled X2 at readable size");
     static const stack slots[]={X,Y,Z,T,X1};static const char* labels[]={"X","Y","Z","T","X1","X2"};
     int column=-1;
     for(unsigned i=0;i<6;++i) {
