@@ -12,6 +12,9 @@
 /plan-vm.md
 /plan-vm-cache.md
 
+# Локальное исследование команд Ms
+/research/ms-rom-reachability/
+
 # Кэши инструментов Python
 __pycache__/
 *.py[cod]
