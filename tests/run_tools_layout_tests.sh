@@ -46,6 +46,7 @@ expected="$(
     certify_m0_small_sine.py \
     certify_m0_trig_inverse.py \
     certify_m0_trig_table70.py \
+    explorer_icons.py \
     font_preview_study.py \
     generate_compact_math_tables.py \
     generate_compact_math_vectors.py \
@@ -127,13 +128,13 @@ test ! -e "$root/tools/mk61_module_pack"
 
 # programs/Fonts is copied to the public C6 /Fonts directory. Keep host-side
 # documentation and notices out of the device filesystem: only loadable FMK
-# assets belong here.
+# assets and the folder's reviewed Explorer icon belong here.
 unexpected_font_assets="$(
   find "$root/programs/Fonts" -mindepth 1 -maxdepth 1 \
-    ! \( -type f -name '*.FMK' \) -print
+    ! \( -type f \( -name '*.FMK' -o -name 'autoexec.wbmp' \) \) -print
 )"
 if [[ -n "$unexpected_font_assets" ]]; then
-  printf 'Unexpected non-FMK content in programs/Fonts:\n%s\n' \
+  printf 'Unexpected content in programs/Fonts:\n%s\n' \
     "$unexpected_font_assets" >&2
   exit 1
 fi
