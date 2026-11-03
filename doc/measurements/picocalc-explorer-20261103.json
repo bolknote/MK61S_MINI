@@ -301,5 +301,30 @@
       "integration/arduino-o3-fixed.log": "5cb39551b37254ddb613cfdb6c5d4f7fbc76525f84785ac2a40e2a04b6994dad",
       "integration/arduino-fix-explorer-sanitizers.log": "47c3131d589164175c8a7e1ba7514c119b2eb910691a177d70b40b09ebd69046"
     }
+  },
+  "compact_system_explorer": {
+    "policy": "standard loadable System APP retains the previous text browser; built-in PicoCalc and Classic F411 retain icons",
+    "before_app_bytes": 9258,
+    "before_memory_bytes": 12476,
+    "maximum_app_bytes": 8000,
+    "maximum_memory_bytes": 10000,
+    "fixed_app_bytes": 5917,
+    "fixed_memory_bytes": 8092,
+    "python_ci_gate": "PASS",
+    "powershell_ci_gate": "PASS",
+    "abi": 6,
+    "new_services": false,
+    "pico_runtime_unchanged": true,
+    "hardware_reflashed": false,
+    "artifact_sha256": {
+      "compact": "cc6482c7ad6bd3b58af8085c72e6d3ae2f00e7d91d650667c7189cb3efa318b2",
+      "powershell-compact": "cc6482c7ad6bd3b58af8085c72e6d3ae2f00e7d91d650667c7189cb3efa318b2"
+    },
+    "evidence_sha256": {
+      "app-budget-compact.log": "efa4239d6b4ea75f4fe3d0a8115699ce09f9bba8a674d0b0382195e76d698a3d",
+      "app-budget-powershell-compact.log": "47c83fa0659e17c2d70d4f0a1313dfb6f3ad08ba39066bed371aa921931db1c9",
+      "app-budget-explorer-sanitizers.log": "47c3131d589164175c8a7e1ba7514c119b2eb910691a177d70b40b09ebd69046",
+      "app-budget-pico-noop/report.json": "536d3d75f8961ed0e6e1dac03ce246ba29faea4fbe759b8e2145ee507e9bc193"
+    }
   }
 }
