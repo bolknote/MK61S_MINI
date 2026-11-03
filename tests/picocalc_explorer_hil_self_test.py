@@ -12,15 +12,16 @@ UID='0000000000000001'
 DIRECTORY='/MK61S-EXPLORER-20261103-000000'
 
 
-def status(keys=0,service='BROWSER',dirty=0):
-    return f'BUILD={BUILD} FIRMWARE_CRC=valid CRASH=NONE DIRTY={dirty} M61_ACTIVE=0 USB_DISK=0 RUN=0 BUSY=0 SLEEP=0 SERVICE={service} PHYSICAL_KEYS={keys}'
+def status(keys=0,service='BROWSER',dirty=0,steps=105,memory=2):
+    return f'BUILD={BUILD} FIRMWARE_CRC=valid CRASH=NONE DIRTY={dirty} M61_ACTIVE=0 USB_DISK=0 RUN=0 BUSY=0 SLEEP=0 SERVICE={service} PHYSICAL_KEYS={keys} MEMORY={memory} STEPS={steps}'
 
 
-def snapshot():
+def snapshot(steps=105):
     return {
         'reg':''.join(f'R{i:X} =  1.0000000  00\r\n' for i in range(15)),
         'stk':''.join(f'S{i:X} =  1.0000000  00\r\n' for i in range(5)),
-        'hout':'hin 0000 '+'00'*24+'\r\nhin 0024 '+'12'*24+'\r\n',
+        'hout':''.join(f'hin {start:04d} '+bytes(range(start,min(start+24,steps))).hex()+'\r\n'
+                       for start in range(0,steps,24)),
         'pwd':'/\r\nmk61> ',
     }
 
@@ -43,10 +44,10 @@ class FakePort:
 
 
 class GuardTests(unittest.TestCase):
-    def finish(self,port,before=None):
+    def finish(self,port,before=None,initial=None):
         report={'passed':False}
         with patch.object(hil,'calculator') as calculator,patch.object(hil,'restore') as restore:
-            hil.finish(port,snapshot() if before is None else before,status(),BUILD,report,DIRECTORY,True)
+            hil.finish(port,snapshot() if before is None else before,status() if initial is None else initial,BUILD,report,DIRECTORY,True)
         return report,calculator,restore
 
     def test_exception_before_next_check_with_new_physical_input(self):
@@ -129,6 +130,8 @@ class GuardTests(unittest.TestCase):
             bad=snapshot();bad[key]='';cases.append(bad)
         bad=snapshot();bad['hout']='hin garbage';cases.append(bad)
         bad=snapshot();bad['hout']='hin 0024 00\r\n';cases.append(bad)
+        bad=snapshot();bad['hout']='\r\n'.join(bad['hout'].splitlines()[:-1])+'\r\n';cases.append(bad)
+        bad=snapshot();bad['hout']=bad['hout'][:-4]+'\r\n';cases.append(bad)
         bad=snapshot();bad['pwd']='unknown';cases.append(bad)
         for before in cases:
             with self.subTest(before=before):
@@ -136,8 +139,41 @@ class GuardTests(unittest.TestCase):
                 self.assertEqual(port.calls,[])
                 calculator.assert_not_called();restore.assert_not_called()
                 self.assertFalse(report['passed'])
-        self.assertFalse(hil.same_snapshot({},{ }))
-        hil.validate_snapshot(snapshot())
+        self.assertFalse(hil.same_snapshot({},{},105))
+        for steps in (105,112):
+            hil.validate_snapshot(snapshot(steps),steps)
+            self.assertTrue(hil.same_snapshot(snapshot(steps),snapshot(steps),steps))
+
+    def test_unknown_or_inconsistent_program_mode_is_read_only(self):
+        for initial in ('',status(memory=3),status(steps=48),status(memory=0,steps=112),status(memory=1,steps=105)):
+            with self.subTest(initial=initial):
+                port=FakePort();report,calculator,restore=self.finish(port,initial=initial)
+                self.assertEqual(port.calls,[])
+                calculator.assert_not_called();restore.assert_not_called()
+                self.assertFalse(report['passed'])
+
+    def test_real_active_bank_lengths_pass_cleanup(self):
+        for steps in (105,112):
+            with self.subTest(steps=steps):
+                port=FakePort([status(steps=steps)],snapshot(steps))
+                report,calculator,restore=self.finish(port,snapshot(steps),status(steps=steps))
+                calculator.assert_called_once();restore.assert_not_called()
+                self.assertTrue(report['data_unchanged'])
+                self.assertTrue(report['temporary_directory_removed'])
+
+    def test_truncated_initial_bank_stops_before_navigation(self):
+        short=snapshot();short['hout']='\r\n'.join(short['hout'].splitlines()[:-1])+'\r\n'
+        for current,replies in ((status(),short),(status(),snapshot(104)),(status(steps=112),snapshot(111)),(status(memory=7),snapshot())):
+            with self.subTest(current=current,replies=replies),tempfile.TemporaryDirectory() as temporary:
+                port=FakePort([current],replies);output=Path(temporary)/'evidence'
+                argv=['hil','--port','/not-a-device','--uid',UID,'--build-id',BUILD,'--output',str(output)]
+                with patch.object(hil.sys,'argv',argv),patch.object(hil,'connect_checked',return_value=port),\
+                     patch.object(hil,'calculator') as calculator,patch.object(hil,'restore') as restore:
+                    with self.assertRaises(AssertionError):hil.main()
+                calculator.assert_not_called();restore.assert_not_called()
+                self.assertTrue(port.closed)
+                self.assertTrue(all(call in ('status','reg','stk','hout','pwd') for call in port.calls))
+                self.assertFalse(json.loads((output/'report.json').read_text())['passed'])
 
     def test_incomplete_final_snapshot_does_not_trigger_restore(self):
         replies=snapshot();replies['reg']=''

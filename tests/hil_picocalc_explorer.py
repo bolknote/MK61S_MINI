@@ -47,7 +47,18 @@ def connect_checked(path,uid,port_type=AppsPort):
         raise
 
 
-def validate_snapshot(snapshot):
+def expected_program_steps(status):
+    memory=re.search(r'\bMEMORY=(\d+)(?=\s|$)',status)
+    steps=re.search(r'\bSTEPS=(\d+)(?=\s|$)',status)
+    assert memory and steps,'Missing program memory mode/length'
+    memory,steps=int(memory[1]),int(steps[1])
+    assert memory in (0,1,2) and steps in (105,112),'Unknown program memory mode/length'
+    assert memory==2 or steps==(105 if memory==0 else 112),'Inconsistent program memory mode/length'
+    return steps
+
+
+def validate_snapshot(snapshot,steps):
+    assert steps in (105,112),'Unknown active program length'
     for command,prefix,expected in (('reg','R',15),('stk','S',5)):
         entries=saved_numbers(snapshot.get(command,''),prefix)
         assert len(entries)==expected and {name for name,_ in entries}=={
@@ -60,12 +71,13 @@ def validate_snapshot(snapshot):
     for address,data in program:
         assert int(address)==offset and 0<len(data)<=48 and len(data)%2==0,(address,data)
         offset+=len(data)//2
+    assert offset==steps,('Incomplete active program bank',offset,steps)
     paths=re.findall(r'^(/[^\r\n]*)\r?$',snapshot.get('pwd',''),re.M)
     assert len(paths)==1 and len(paths[0])<384 and not any(ord(c)<32 for c in paths[0]),paths
 
 
-def same_snapshot(before,after):
-    try:validate_snapshot(before);validate_snapshot(after)
+def same_snapshot(before,after,steps):
+    try:validate_snapshot(before,steps);validate_snapshot(after,steps)
     except (AssertionError,ValueError,TypeError):return False
     return all(saved_numbers(before[k],prefix)==saved_numbers(after[k],prefix)
                for k,prefix in (('reg','R'),('stk','S'))) and all(
@@ -93,16 +105,16 @@ def cleanup_guard(port,initial,build,report):
 def finish(port,before,initial,build,report,directory,created):
     # An exception can bypass the test's last check(). Nothing below may
     # change the device until a new status and a complete snapshot are valid.
-    try:validate_snapshot(before)
+    try:steps=expected_program_steps(initial);validate_snapshot(before,steps)
     except Exception as error:
         report.update(passed=False,cleanup_skipped='Invalid snapshot: '+str(error));return
     if not cleanup_guard(port,initial,build,report):return
     calculator(port)
     after={key:port.command(key) for key in ('reg','stk','hout','pwd')}
-    try:validate_snapshot(after)
+    try:validate_snapshot(after,steps)
     except Exception as error:
         report.update(passed=False,cleanup_skipped='Invalid final snapshot: '+str(error));return
-    report['data_unchanged']=same_snapshot(before,after)
+    report['data_unchanged']=same_snapshot(before,after,steps)
     if not report['data_unchanged']:
         report['passed']=False
         if not cleanup_guard(port,initial,build,report):return
@@ -172,11 +184,13 @@ def main():
         for marker in ('BUILD='+args.build_id.upper(),'FIRMWARE_CRC=valid','CRASH=NONE','DIRTY=0','M61_ACTIVE=0','USB_DISK=0','RUN=0 BUSY=0'):
             assert marker in initial,(marker,initial)
         assert re.search(r'SERVICE=(?:CLOSED|DEVELOPMENT|BROWSER|FILE_ACTIONS)\b',initial),initial
+        steps=expected_program_steps(initial)
+        captured={key:p.command(key) for key in ('reg','stk','hout','pwd')}
+        validate_snapshot(captured,steps);before=captured
+        (args.output/'before.json').write_text(json.dumps(before,ensure_ascii=False,indent=2)+'\n')
         if 'SLEEP=1' in initial:p.command('display on')
         p.expect('SD=OK','KBD=OK','SLEEP=0')
-        calculator(p);captured={key:p.command(key) for key in ('reg','stk','hout','pwd')}
-        validate_snapshot(captured);before=captured
-        (args.output/'before.json').write_text(json.dumps(before,ensure_ascii=False,indent=2)+'\n')
+        calculator(p)
         assert directory[1:]+'/' not in p.command('ls /')
         assert 'ERROR' not in p.command('mkdir '+directory);created=True
         names=['00Icon','01Launcher',*[f'{i:02d}Plain' for i in range(2,9)],'09Page','10Page']
