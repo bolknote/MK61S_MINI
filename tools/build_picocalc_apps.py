@@ -43,7 +43,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--toolchain',type=Path)
     parser.add_argument('--rustc',type=Path,help='Rust compiler; thumbv6m-none-eabi must be installed')
-    parser.add_argument('--output-dir',type=Path,default=ROOT/'binary/picocalc-pico-h/apps')
+    parser.add_argument('--output-dir',type=Path,default=ROOT/'.build/firmware/picocalc-pico-h/apps')
     parser.add_argument('--build-dir',type=Path,default=ROOT/'.build/picocalc-apps')
     args=parser.parse_args();toolchain=compiler_bin(args.toolchain)
     args.output_dir.mkdir(parents=True,exist_ok=True)

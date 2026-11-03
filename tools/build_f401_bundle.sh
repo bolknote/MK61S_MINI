@@ -7,7 +7,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 build_root=${MK61_F401_BUILD_ROOT:-"$root/.build/mk61-f401"}
-output_root=${MK61_OUTPUT_DIR:-"$root/binary"}
+output_root=${MK61_OUTPUT_DIR:-"$root/.build/firmware"}
 profile=mini-v3-a00
 target_mcu=${MK61_TARGET_MCU:-f401}
 

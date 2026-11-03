@@ -206,6 +206,15 @@ Host-проверка включает все 24 BASIC-модуля Turochamp �
 На Pico H проверены 16 модулей, переполняющих сырой RAM-кеш: повторное
 исполнение использует упаковку, распаковку и SD без повторной компиляции.
 
+## Готовая прошивка
+
+Откройте успешный запуск ветки `main` в
+[PicoCalc Pico H](https://github.com/bolknote/MK61S_MINI/actions/workflows/picocalc.yml)
+и скачайте артефакт `mk61s-picocalc-pico-h` из раздела Artifacts.
+Он содержит UF2 и комплект APP, шрифтов и программ для microSD.
+Коммит исходников указан на странице запуска. Порядок прошивки описан ниже
+в разделе [«Первая загрузка»](#первая-загрузка).
+
 ## Сборка
 
 Нужны Python 3, CMake 3.20+, Ninja и GNU Arm GCC с C++17. Проверено с
@@ -229,7 +238,7 @@ python3 tools/build_picocalc.py --sdk /path/to/pico-sdk --toolchain /path/to/gcc
 Пути также можно задать через `PICO_SDK_PATH` и `MK61_GCC_TOOLCHAIN`.
 `--build-path` и `--output-dir` позволяют выбрать отдельные каталоги.
 
-Результат по умолчанию: `binary/picocalc-pico-h/` с `.uf2`, `.bin`, `.elf`,
+Результат по умолчанию: `.build/firmware/picocalc-pico-h/` с `.uf2`, `.bin`, `.elf`,
 картой компоновки и `manifest.json` с размерами и SHA-256. Сборщик проверяет
 ARMv6-M / soft-float и реконструкцию BIN из UF2. Признак `hardware_verified`
 в манифесте сборки всегда false: одна компиляция не подтверждает работу железа.
@@ -254,7 +263,7 @@ ARMv6-M / soft-float и реконструкцию BIN из UF2. Признак 
 может записать тот же UF2 напрямую в загрузчик:
 
 ```sh
-picotool load -v -x binary/picocalc-pico-h/mk61s-picocalc-pico-h.uf2
+picotool load -v -x .build/firmware/picocalc-pico-h/mk61s-picocalc-pico-h.uf2
 ```
 
 При нескольких устройствах Pico следует задать `--ser` с серийным номером
@@ -417,7 +426,7 @@ python3 tools/build_picocalc_apps.py
 python3 tools/package_picocalc.py
 ```
 
-Результат — `binary/picocalc-pico-h/apps/`: `HELLO.APP` (C), `HELLO_CPP.APP`
+Результат — `.build/firmware/picocalc-pico-h/apps/`: `HELLO.APP` (C), `HELLO_CPP.APP`
 (C++ manifest-пример), `HELLO_RS.APP` (Rust), `SERVICES.APP`, `ELIZA.APP`,
 `SHEET.APP` и `WBMP.APP`. Дополнительно создаются `ECHO8.ch8`, контрольное
 изображение `PATTERN.wbmp` и документы `BUDGET.mks`/`CYCLE.mks`.
@@ -460,7 +469,7 @@ python3 tools/build_portable_app.py --target picocalc-pico-h --name HELLO \
 ```sh
 python3 tests/hil_picocalc_apps.py --port /dev/cu.usbmodem1401 \
   --uid E6657CD423721C35 --install \
-  --output binary/picocalc-pico-h/apps-hil-0.6.0
+  --output .build/firmware/picocalc-pico-h/apps-hil-0.6.0
 ```
 
 UID и порт нужно заменить для своего Pico. Проверка создаёт новую папку;
@@ -597,7 +606,7 @@ C6-операции `USBDISK`, внешние системные роли и LCD
 
 ```sh
 python3 tests/hil_picocalc_parity.py --port /dev/cu.usbmodem1401 \
-  --output binary/picocalc-pico-h/parity-hil-0.7.0
+  --output .build/firmware/picocalc-pico-h/parity-hil-0.7.0
 ```
 
 Она проверяет UID Pico H, создаёт отдельный временный каталог, запускает
@@ -651,7 +660,7 @@ manifest остаётся идентификатором SHA-256 исходни�
 
 ```sh
 python3 tests/hil_picocalc_software.py --port /dev/cu.usbmodem1401 \
-  --uid E6657CD423721C35 --fault-tests --output binary/picocalc-pico-h/software-hil-0.7.0
+  --uid E6657CD423721C35 --fault-tests --output .build/firmware/picocalc-pico-h/software-hil-0.7.0
 ```
 
 Проверка добавляет комплектные FMK в `/Fonts` без замены чужих файлов,
@@ -1149,7 +1158,7 @@ BIND/OK, FMK, CRC32+ZX0 через границу банков, INS с корр�
 Автоматическая проверка на устройстве через его родной USB CDC:
 
 ```sh
-python3 tests/hil_picocalc.py --port /dev/cu.usbmodem1401 --output binary/picocalc-pico-h/hardware-smoke.json
+python3 tests/hil_picocalc.py --port /dev/cu.usbmodem1401 --output .build/firmware/picocalc-pico-h/hardware-smoke.json
 ```
 
 Имя порта следует заменить на порт нужного Pico. Проверка сверяет профиль,
@@ -1159,11 +1168,11 @@ python3 tests/hil_picocalc.py --port /dev/cu.usbmodem1401 --output binary/picoca
 Проверка служб создаёт только новые тестовые исходники с уникальными именами:
 
 ```sh
-python3 tests/hil_picocalc_services.py --port /dev/cu.usbmodem1401 --write-test-files --output binary/picocalc-pico-h/hardware-services-smoke.json
-python3 tests/hil_picocalc_usb_disk.py --port /dev/cu.usbmodem1401 --sources-report binary/picocalc-pico-h/hardware-services-smoke.json --write-test-file --output binary/picocalc-pico-h/hardware-usb-disk-smoke.json
-python3 tests/hil_picocalc_m61.py --port /dev/cu.usbmodem1401 --write-test-files --output binary/picocalc-pico-h/hardware-m61-smoke.json
-python3 tests/hil_picocalc_runtime.py --port /dev/cu.usbmodem1401 --write-test-files --output binary/picocalc-pico-h/runtime-hil
-python3 tests/hil_picocalc_clock.py --port /dev/cu.usbmodem1401 --output binary/picocalc-pico-h/clock-hil
+python3 tests/hil_picocalc_services.py --port /dev/cu.usbmodem1401 --write-test-files --output .build/firmware/picocalc-pico-h/hardware-services-smoke.json
+python3 tests/hil_picocalc_usb_disk.py --port /dev/cu.usbmodem1401 --sources-report .build/firmware/picocalc-pico-h/hardware-services-smoke.json --write-test-file --output .build/firmware/picocalc-pico-h/hardware-usb-disk-smoke.json
+python3 tests/hil_picocalc_m61.py --port /dev/cu.usbmodem1401 --write-test-files --output .build/firmware/picocalc-pico-h/hardware-m61-smoke.json
+python3 tests/hil_picocalc_runtime.py --port /dev/cu.usbmodem1401 --write-test-files --output .build/firmware/picocalc-pico-h/runtime-hil
+python3 tests/hil_picocalc_clock.py --port /dev/cu.usbmodem1401 --output .build/firmware/picocalc-pico-h/clock-hil
 ```
 
 Второй скрипт предназначен для macOS: он сверяет модель USB-носителя,

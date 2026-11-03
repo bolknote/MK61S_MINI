@@ -259,7 +259,7 @@ function Build-Mk61Bundle {
         'MK61_BOARD_CLASSIC|MK61_BOARD_40TH|DISPLAY_UC1609|MK61_ENABLE_USB_SCREEN=1|MK61_WS0010_GRAPHICS_100X16=1') { '1' } else { '0' }
     $uiFonts = if ($CompileFlags -match
         'MK61_BOARD_CLASSIC|MK61_BOARD_40TH|DISPLAY_UC1609') { '1' } else { '0' }
-    $outputRoot = [IO.Path]::GetFullPath((Join-Path $Sketch '..\binary'))
+    $outputRoot = [IO.Path]::GetFullPath((Join-Path $Sketch '..\.build\firmware'))
     Invoke-Mk61Tool $powerShell @(
         '-NoLogo', '-NoProfile', '-File',
         (Join-Path $Sketch '../tools/build-system-app-bundle.ps1'),
@@ -281,9 +281,8 @@ function Build-Mk61Bundle {
     }
     Write-Mk61SystemManifest $script:Stage $Bundle $Mcu
 
-    # Older builders put a same-named BIN directly in binary/.  It is not the
-    # result of this compile and is easily mistaken for the fresh bundle.
-    # Remove only the obsolete flat files for the profile just built.
+    # The profile subdirectory contains this build. Drop old flat aliases from
+    # the selected output root so they cannot be mistaken for its fresh BIN.
     $legacyResident = Join-Path $outputRoot "$Bundle.bin"
     foreach ($legacyPath in @($legacyResident, "$legacyResident.flags")) {
         if ([IO.File]::Exists($legacyPath)) {

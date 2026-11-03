@@ -149,7 +149,7 @@ def main():
         p.step(b' ','SLEEP=0','LCD_BKL=240','KBD_BKL=40');passed('sleep blanks LCD/keyboard and wake restores settings and RAM')
         final=p.status();assert 'SCREEN_ERRORS=0' in final and 'READ_ERROR=0 WRITE_ERROR=0' in final
         (out/'transcript.txt').write_bytes(p.text)
-        (out/'result.json').write_text(json.dumps({'firmware_sha256':hashlib.sha256((ROOT/'binary/picocalc-pico-h/mk61s-picocalc-pico-h.uf2').read_bytes()).hexdigest(),
+        (out/'result.json').write_text(json.dumps({'firmware_sha256':hashlib.sha256((ROOT/'.build/firmware/picocalc-pico-h/mk61s-picocalc-pico-h.uf2').read_bytes()).hexdigest(),
             'directory':'/'+name,'cases':cases,'initial':initial,'asleep':asleep,'final':final},ensure_ascii=False,indent=2)+'\n')
         print('ALL PASS '+str(out),flush=True)
 

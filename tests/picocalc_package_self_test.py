@@ -19,7 +19,7 @@ from build_picocalc_apps import APPS,ASSETS
 
 class PackageTests(unittest.TestCase):
     def test_clean_bundle_and_cpu_guard(self):
-        source=ROOT/'binary/picocalc-pico-h'
+        source=ROOT/'.build/firmware/picocalc-pico-h'
         with tempfile.TemporaryDirectory(prefix='mk61-pico-package-') as temporary:
             target=Path(temporary)/'release';target.mkdir()
             for name in ('manifest.json','mk61s-picocalc-pico-h.uf2'):

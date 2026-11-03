@@ -43,7 +43,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--firmware-directory',type=Path,default=Path(__file__).resolve().parents[1]/'binary/picocalc-pico-h')
+    parser.add_argument('--firmware-directory',type=Path,default=Path(__file__).resolve().parents[1]/'.build/firmware/picocalc-pico-h')
     parser.add_argument('--leave-asleep', action='store_true')
     args = parser.parse_args();args.output.mkdir(parents=True, exist_ok=True)
     cases = [];cycles = []

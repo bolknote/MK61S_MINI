@@ -20,7 +20,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port',required=True);parser.add_argument('--uid',required=True)
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--firmware-directory',type=Path,default=ROOT/'binary/picocalc-pico-h')
+    parser.add_argument('--firmware-directory',type=Path,default=ROOT/'.build/firmware/picocalc-pico-h')
     args=parser.parse_args();assert re.fullmatch(r'[0-9A-F]{16}',args.uid)
     build=json.loads((args.firmware_directory/'manifest.json').read_text())
     assert hashlib.sha256((args.firmware_directory/'mk61s-picocalc-pico-h.uf2').read_bytes()).hexdigest()==build['uf2_sha256']

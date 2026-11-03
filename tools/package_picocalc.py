@@ -49,7 +49,7 @@ def verify_app(path, record):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--directory',type=Path,default=ROOT/'binary/picocalc-pico-h')
+    parser.add_argument('--directory',type=Path,default=ROOT/'.build/firmware/picocalc-pico-h')
     parser.add_argument('--output',type=Path)
     args=parser.parse_args();directory=args.directory.resolve()
     build=json.loads((directory/'manifest.json').read_text())

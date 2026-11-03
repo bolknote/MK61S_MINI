@@ -33,8 +33,8 @@ tools\build-portable-app.ps1 -System focal `
 python3 tools/build_system_app_bundle.py \
   --resident-elf .build/resident.elf \
   --compile-commands .build/compile_commands.json \
-  --output-dir binary/profile/System \
-  --catalog-dir binary/apps/abi6 \
+  --output-dir .build/firmware/profile/System \
+  --catalog-dir .build/firmware/apps/abi6 \
   --graphics 1 --focal 1 --basic 1 --wbmp 1 --markdown 1 --chip8 0
 ```
 
@@ -42,7 +42,7 @@ Windows-вариант полного каталога вызывается че
 оболочка получает toolchain из `compile_commands.json` и использует
 `tools\build-system-app-bundle.ps1`.
 
-`binary/apps/abi6` — общий контентно-адресуемый каталог переносимых APP.
+`.build/firmware/apps/abi6` — общий контентно-адресуемый каталог переносимых APP.
 Одинаковый payload хранится в нём один раз по SHA-256, а `catalog.json`
 сопоставляет каноническое имя и вариант с объектом. Профильные каталоги
 `System` содержат только выбранный для установки состав. Отдельные варианты

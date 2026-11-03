@@ -31,7 +31,7 @@ def main():
     parser.add_argument('--directory',help='Reuse this session test directory without writing the card')
     parser.add_argument('--write-test-files', action='store_true', required=True)
     args = parser.parse_args()
-    firmware=ROOT/'binary/picocalc-pico-h/mk61s-picocalc-pico-h.uf2'
+    firmware=ROOT/'.build/firmware/picocalc-pico-h/mk61s-picocalc-pico-h.uf2'
     firmware_sha256=hashlib.sha256(firmware.read_bytes()).hexdigest()
     fd = os.open(args.port, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
     old = termios.tcgetattr(fd)

@@ -31,7 +31,7 @@ PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 
 ARDUINO_CLI=${MK61_ARDUINO_CLI:-arduino-cli}
 BUILD_ROOT=${MK61_BUILD_ROOT:-"$PROJECT_ROOT/.build/mk61-firmware"}
-OUTPUT_DIR=${MK61_OUTPUT_DIR:-"$PROJECT_ROOT/binary"}
+OUTPUT_DIR=${MK61_OUTPUT_DIR:-"$PROJECT_ROOT/.build/firmware"}
 CONFIG_FILE=${MK61_CONFIG_FILE:-"$PROJECT_ROOT/.mk61-firmware.conf"}
 LEGACY_SELECTION_FILE="$BUILD_ROOT/selected-profile"
 LAST_LOG="$BUILD_ROOT/last.log"
@@ -326,7 +326,7 @@ profile_artifact_path() {
 remove_legacy_flat_artifacts() {
   local artifact
   artifact=$(profile_artifact_name "$1" "$MCU") || return 1
-  # The current format is binary/<profile>/<profile>.bin.  A flat artifact
+  # The current format is .build/firmware/<profile>/<profile>.bin.  A flat artifact
   # with the same name can only be residue from the old output layout.
   rm -f "$OUTPUT_DIR/$artifact" "$OUTPUT_DIR/$artifact.flags"
 }

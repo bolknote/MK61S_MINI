@@ -1,6 +1,10 @@
 # MK61s F401/F411 + APP в Arduino IDE
 
-Версия документа: 16.10.2026
+Версия документа: 03.11.2026
+
+Готовые комплекты STM32 доступны в
+[GitHub Releases](https://github.com/bolknote/MK61S_MINI/releases).
+Ниже описана локальная сборка через Arduino IDE.
 
 Эта инструкция собирает через обычные кнопки Arduino IDE согласованный
 комплект для STM32F401CC или STM32F411CE. Устанавливаются две отдельные
@@ -9,7 +13,7 @@
 опциональными компонентами в режиме APP:
 
 ```text
-binary/mk61s-M-mini-v3-lcd1602-a00-f401/
+.build/firmware/mk61s-M-mini-v3-lcd1602-a00-f401/
 ├── mk61s-M-mini-v3-lcd1602-a00-f401.bin
 ├── build.flags
 ├── build.apps
@@ -213,7 +217,7 @@ WS0010-профиль предназначен для Winstar WEH001602A с ин
 
 ## Verify, Export и Upload
 
-Обычный Verify выполняет всю сборку и создаёт каталог в `binary/`. Имя
+Обычный Verify выполняет всю сборку и создаёт каталог в `.build/firmware/`. Имя
 каталога содержит выбранные платформу и экран. В нём лежат:
 
 - `.bin` resident-прошивки;
@@ -227,10 +231,9 @@ WS0010-профиль предназначен для Winstar WEH001602A с ин
   умолчанию компоненты встроены;
 - `build.flags` с точными compile-time ключами.
 
-Используйте `.bin` **внутри этого каталога**. Старый формат складывал
-одноимённые `.bin` прямо в корень `binary/`; свежий сборщик удаляет такой
-устаревший плоский файл для собранного профиля, чтобы его нельзя было принять
-за новый результат.
+Используйте `.bin` **внутри этого каталога** вместе с `System` той же сборки.
+Arduino IDE сохраняет локальный комплект в `.build/firmware/` после Verify
+или Upload. Итоговый путь выводится в журнале сборки.
 
 `WBMP.APP` и `MARKDOWN.APP` вместе не создаются. Графический
 `MARKDOWN.APP` открывает и Markdown `T2`, и WBMP `I1`; отдельный `WBMP.APP`
@@ -289,14 +292,14 @@ resident уже прошился; повторно прошивать его д�
 `System` своей сборки, а COM9 — на порт своего устройства):
 
 ```bat
-tools\mkc.cmd --install-system "binary\mk61s-M-classic-v2-uc1609-f401\System" --expect-profile classic-v2-uc1609 --port COM9
+tools\mkc.cmd --install-system ".build\firmware\mk61s-M-classic-v2-uc1609-f401\System" --expect-profile classic-v2-uc1609 --port COM9
 ```
 
 Для штатной F411-сборки со встроенным USB-диском добавляется явный ключ,
 разрешающий отсутствие `USBDISK.APP` и удаляющий его старую внешнюю копию:
 
 ```bat
-tools\mkc.cmd --install-system "binary\mk61s-M-mini-v2-lcd1602-a00-f411\System" --expect-profile mini-v2-a00 --resident-usbdisk --port COM9
+tools\mkc.cmd --install-system ".build\firmware\mk61s-M-mini-v2-lcd1602-a00-f411\System" --expect-profile mini-v2-a00 --resident-usbdisk --port COM9
 ```
 
 При ошибке штатного Upload используйте напечатанную им команду восстановления:
@@ -318,7 +321,7 @@ IDE. Проверяются DFU, появление и занятость COM-п
 
 Для ручного восстановления в STM32CubeProgrammer предпочтителен подходящий
 устройству `.elf` из GitHub Release либо свежего каталога
-`binary/<профиль>/`: ELF сам содержит адреса загружаемых секций. Post-link
+`.build/firmware/<профиль>/`: ELF сам содержит адреса загружаемых секций. Post-link
 этап переносит в него ту же CRC, что и в BIN, затем повторно преобразует ELF
 в плоский образ и требует полного побайтового совпадения с запечатанным BIN.
 

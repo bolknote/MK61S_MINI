@@ -141,7 +141,7 @@ Paths:
   -ExternalizeUsbDisk auto|0|1 (default: 1 on F401, 0 on F411)
   -CorePath/-LibrariesPath are deprecated, accepted but unused
   -BuildRoot DIR      default .build\gcc (F401), .build\gcc-f411 (F411)
-  -OutputDirectory DIR default binary
+  -OutputDirectory DIR default .build/firmware
 
 Other:
   -Jobs N
@@ -525,7 +525,7 @@ try {
                 $env:MK61_OUTPUT_DIR)) {
             $env:MK61_OUTPUT_DIR
         } else {
-            Join-Path $script:ProjectRoot 'binary'
+            Join-Path $script:ProjectRoot '.build/firmware'
         }
     }
     $OutputDirectory = Get-FullPath $OutputDirectory
