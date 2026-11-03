@@ -19,8 +19,9 @@ coordinator; this document does not reserve or open the device.
    time with the RTC reading. Require a valid resident CRC, the expected UID,
    `CRASH=NONE`, `DIRTY=0`, `USB_DISK=0`, `M61_ACTIVE=0`, `RUN=0 BUSY=0` and an
    idle calculator/menu. Capture `PHYSICAL_KEYS` before any navigation.
-2. Validate exactly R0..RE and S0..S4, including LAST X, and a complete contiguous
-   program dump. The unqualified Pico `hout` dumps the active 105/112-cell bank;
+2. Validate exactly R0..RE (also RF in the 112-cell mode) and S0..S4, including
+   LAST X, and a complete contiguous program dump. The unqualified Pico `hout`
+   dumps the active 105/112-cell bank;
    its total length must match `STEPS` and the reported `MEMORY` mode. Unknown
    modes and short contiguous prefixes are rejected before navigation or writes.
    Preserve its exact text. For an expanded-memory mode, additionally read the

@@ -59,7 +59,7 @@ def expected_program_steps(status):
 
 def validate_snapshot(snapshot,steps):
     assert steps in (105,112),'Unknown active program length'
-    for command,prefix,expected in (('reg','R',15),('stk','S',5)):
+    for command,prefix,expected in (('reg','R',16 if steps==112 else 15),('stk','S',5)):
         entries=saved_numbers(snapshot.get(command,''),prefix)
         assert len(entries)==expected and {name for name,_ in entries}=={
             prefix+format(i,'X') for i in range(expected)},('incomplete '+command,entries)

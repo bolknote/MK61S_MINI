@@ -2,6 +2,7 @@
 """Build a release from a clean directory and reject a validly checksummed M4 APP."""
 import hashlib
 import json
+import os
 from pathlib import Path,PurePosixPath
 import shutil
 import struct
@@ -20,7 +21,8 @@ from explorer_icons import ARTWORK,BUNDLE_FOLDERS
 
 class PackageTests(unittest.TestCase):
     def test_clean_bundle_and_cpu_guard(self):
-        source=ROOT/'.build/firmware/picocalc-pico-h'
+        # Qualify another sealed candidate without replacing the default bundle.
+        source=Path(os.environ.get('MK61_TEST_PICOCALC_PACKAGE_DIR',ROOT/'.build/firmware/picocalc-pico-h'))
         with tempfile.TemporaryDirectory(prefix='mk61-pico-package-') as temporary:
             target=Path(temporary)/'release';target.mkdir()
             for name in ('manifest.json','mk61s-picocalc-pico-h.uf2'):

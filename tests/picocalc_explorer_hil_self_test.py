@@ -18,7 +18,7 @@ def status(keys=0,service='BROWSER',dirty=0,steps=105,memory=2):
 
 def snapshot(steps=105):
     return {
-        'reg':''.join(f'R{i:X} =  1.0000000  00\r\n' for i in range(15)),
+        'reg':''.join(f'R{i:X} =  1.0000000  00\r\n' for i in range(16 if steps==112 else 15)),
         'stk':''.join(f'S{i:X} =  1.0000000  00\r\n' for i in range(5)),
         'hout':''.join(f'hin {start:04d} '+bytes(range(start,min(start+24,steps))).hex()+'\r\n'
                        for start in range(0,steps,24)),
@@ -160,6 +160,13 @@ class GuardTests(unittest.TestCase):
                 calculator.assert_called_once();restore.assert_not_called()
                 self.assertTrue(report['data_unchanged'])
                 self.assertTrue(report['temporary_directory_removed'])
+
+    def test_expanded_bank_requires_its_additional_RF_register(self):
+        before=snapshot(112);before['reg']='\r\n'.join(before['reg'].splitlines()[:-1])+'\r\n'
+        port=FakePort([status(steps=112)])
+        report,calculator,restore=self.finish(port,before,status(steps=112))
+        calculator.assert_not_called();restore.assert_not_called()
+        self.assertEqual(port.calls,[]);self.assertFalse(report['passed'])
 
     def test_truncated_initial_bank_stops_before_navigation(self):
         short=snapshot();short['hout']='\r\n'.join(short['hout'].splitlines()[:-1])+'\r\n'
