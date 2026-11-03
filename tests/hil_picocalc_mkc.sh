@@ -4,7 +4,7 @@
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 [ "$#" -ge 3 ] && [ "$#" -le 4 ] || { echo 'usage: hil_picocalc_mkc.sh PORT UID OUTPUT [FIRMWARE_DIRECTORY]' >&2;exit 2; }
-test_port=$1 test_uid=$2 test_output=$3 test_firmware=${4:-"$root/binary/picocalc-pico-h"}
+test_port=$1 test_uid=$2 test_output=$3 test_firmware=${4:-"$root/.build/firmware/picocalc-pico-h"}
 [[ "$test_uid" =~ ^[0-9A-F]{16}$ ]] || exit 2
 mkdir -p "$test_output"
 test_output=$(cd "$test_output" && pwd)

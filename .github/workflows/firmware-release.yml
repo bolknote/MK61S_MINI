@@ -563,7 +563,7 @@ jobs:
             }
           }
 
-          $bundle = Join-Path $env:GITHUB_WORKSPACE "binary/$bundleName"
+          $bundle = Join-Path $env:GITHUB_WORKSPACE ".build/firmware/$bundleName"
           foreach ($name in @(
             "$bundleName.bin",
             'build.flags',
@@ -661,7 +661,7 @@ jobs:
             --build-path $buildPath code
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-          $bundle = Join-Path $env:GITHUB_WORKSPACE "binary/$bundleName"
+          $bundle = Join-Path $env:GITHUB_WORKSPACE ".build/firmware/$bundleName"
           foreach ($name in @(
             "$bundleName.bin", 'build.flags', 'build.apps',
             'System/HELP0.TXT', 'System/HELP1.TXT',
@@ -727,7 +727,7 @@ jobs:
               -Fqbn $fqbn -ConfigFile $ideConfig `
               -PlatformToolsDirectory $tools -Stm32ToolsDirectory $stm32 `
               -PublishedSystem (Join-Path $env:GITHUB_WORKSPACE `
-                "binary/mk61s-M-mini-v2-lcd1602-a00-$mcu/System")
+                ".build/firmware/mk61s-M-mini-v2-lcd1602-a00-$mcu/System")
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 

@@ -173,7 +173,7 @@ build_bundle() {
      [[ "$compile_flags" == *DISPLAY_UC1609* ]]; then
     ui_fonts=1
   fi
-  output_root="$(cd "$sketch/.." && pwd)/binary"
+  output_root="$(cd "$sketch/.." && pwd)/.build/firmware"
   python3 "$sketch/../tools/build_system_app_bundle.py" \
     --resident-elf "$resident_elf" \
     --arm-toolchain-bin "$(dirname "$compiler")" \
@@ -192,10 +192,8 @@ build_bundle() {
       die 'resident USB-disk bundle unexpectedly contains USBDISK.APP'
   fi
 
-  # Builds before the unified-bundle layout wrote a same-named BIN directly
-  # into binary/.  Leaving it beside the current directory is dangerous: a
-  # user can quite reasonably pick the stale flat file after a successful
-  # compile.  Remove only the legacy files for the profile just built.
+  # The profile subdirectory contains this build. Drop old flat aliases from
+  # the selected output root so they cannot be mistaken for its fresh BIN.
   legacy_resident="$output_root/$bundle.bin"
   rm -f "$legacy_resident" "$legacy_resident.flags"
   output="$output_root/$bundle"

@@ -106,7 +106,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port',required=True);parser.add_argument('--uid',required=True)
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--firmware-directory',type=Path,default=ROOT/'binary/picocalc-pico-h')
+    parser.add_argument('--firmware-directory',type=Path,default=ROOT/'.build/firmware/picocalc-pico-h')
     parser.add_argument('--directory',default='/MK61S-SOFTWARE-'+time.strftime('%Y%m%d-%H%M%S'))
     parser.add_argument('--fault-tests',action='store_true')
     args=parser.parse_args()

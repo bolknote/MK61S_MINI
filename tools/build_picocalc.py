@@ -75,7 +75,7 @@ def main():
     parser.add_argument("--fetch-sdk", action="store_true", help="Fetch pinned SDK and TinyUSB if missing")
     parser.add_argument("--toolchain", default=os.environ.get("MK61_GCC_TOOLCHAIN"))
     parser.add_argument("--build-path", type=Path, default=ROOT / ".build/picocalc-pico-h")
-    parser.add_argument("--output-dir", type=Path, default=ROOT / "binary/picocalc-pico-h")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / ".build/firmware/picocalc-pico-h")
     parser.add_argument("--jobs", type=int, default=4)
     parser.add_argument("--compiler-runtime", action="store_true",
                         help="Control build using GCC arithmetic instead of the owned M0 runtime")

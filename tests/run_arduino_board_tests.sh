@@ -700,7 +700,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build" "$shell_sketchbook/sketches/code"
 
-  bundle="$shell_sketchbook/sketches/binary/mk61s-M-mini-v2-lcd1602-a00-f401"
+  bundle="$shell_sketchbook/sketches/.build/firmware/mk61s-M-mini-v2-lcd1602-a00-f401"
   resident="$bundle/mk61s-M-mini-v2-lcd1602-a00-f401.bin"
   published_elf="$bundle/mk61s-M-mini-v2-lcd1602-a00-f401.elf"
   resident_elf="$work/build/code.ino.elf"
@@ -760,7 +760,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   # F411 is a first-class Arduino board, not a Generic STM32 workaround.
   # Its menu defaults keep the large system components resident while still
   # producing the same ABI 6 bundle and external help resources.
-  legacy_f411="$shell_sketchbook/sketches/binary/mk61s-M-mini-v2-lcd1602-a00-f411.bin"
+  legacy_f411="$shell_sketchbook/sketches/.build/firmware/mk61s-M-mini-v2-lcd1602-a00-f411.bin"
   mkdir -p "$(dirname "$legacy_f411")"
   printf 'stale flat resident\n' > "$legacy_f411"
   printf 'stale flat flags\n' > "$legacy_f411.flags"
@@ -768,7 +768,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
     --fqbn 'mk61:stm32:mk61_f411:mk61_platform=mini_v2,mk61_display=lcd_a00' \
     --build-path "$work/build-f411" "$shell_sketchbook/sketches/code"
-  f411_bundle="$shell_sketchbook/sketches/binary/mk61s-M-mini-v2-lcd1602-a00-f411"
+  f411_bundle="$shell_sketchbook/sketches/.build/firmware/mk61s-M-mini-v2-lcd1602-a00-f411"
   test ! -e "$legacy_f411"
   test ! -e "$legacy_f411.flags"
   test -s "$f411_bundle/mk61s-M-mini-v2-lcd1602-a00-f411.bin"
@@ -819,7 +819,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
     --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v2,mk61_display=uc1609,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=app,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build-classic" "$shell_sketchbook/sketches/code"
-  classic_bundle="$shell_sketchbook/sketches/binary/mk61s-M-classic-v2-uc1609-f401"
+  classic_bundle="$shell_sketchbook/sketches/.build/firmware/mk61s-M-classic-v2-uc1609-f401"
   test -s "$classic_bundle/mk61s-M-classic-v2-uc1609-f401.bin"
   test -s "$classic_bundle/System/FOCAL.APP"
   test -s "$classic_bundle/System/BASIC.APP"

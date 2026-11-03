@@ -34,7 +34,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port',required=True)
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--firmware-directory',type=Path,default=ROOT/'binary/picocalc-pico-h')
+    parser.add_argument('--firmware-directory',type=Path,default=ROOT/'.build/firmware/picocalc-pico-h')
     parser.add_argument('--directory',default='MK61S-PARITY-'+time.strftime('%Y%m%d-%H%M%S'))
     args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=True)
     assert re.fullmatch(r'MK61S-PARITY-[A-Za-z0-9-]+',args.directory)
@@ -97,7 +97,7 @@ def main():
                 ('вторая.md','Вторая страница\n\n[Назад](main.md)\n'.encode()),
                 *[(name+'.APP',data) for name,data in apps.items()]]:
                 write_file(p,directory+'/'+name,data)
-            passed('shared STM32 command names, CP1251 paths, kbd, fsput/fsget with POSIX CRC and binary/UTF-8 readback')
+            passed('shared STM32 command names, CP1251 paths, kbd, fsput/fsget with POSIX CRC and .build/firmware/UTF-8 readback')
             p.command('uscreen');p.attach_waiting()
             deadline=time.monotonic()+5
             while not p.frames and time.monotonic()<deadline:p.pump(.05)

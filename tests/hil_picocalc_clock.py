@@ -41,7 +41,7 @@ def main():
         assert b'RTC_ALARM=A' in p.text[start:]
         assert re.search(r'X_RAW=\[([^\]]+)\]',asleep).group(1)==expected_x
         assert re.search(r'X_RAW=\[([^\]]+)\]',final).group(1)==expected_x
-        (args.output/'result.json').write_text(json.dumps({'uf2_sha256':hashlib.sha256((Path(__file__).resolve().parents[1]/'binary/picocalc-pico-h/mk61s-picocalc-pico-h.uf2').read_bytes()).hexdigest(),'source':source,'asleep':asleep,'final':final,
+        (args.output/'result.json').write_text(json.dumps({'uf2_sha256':hashlib.sha256((Path(__file__).resolve().parents[1]/'.build/firmware/picocalc-pico-h/mk61s-picocalc-pico-h.uf2').read_bytes()).hexdigest(),'source':source,'asleep':asleep,'final':final,
             'initial':initial,'preserved_x':expected_x,
             'cases':['M61 date sets local RTC','M61 alarm A in 10 seconds','unsaved editor discarded without SD write',
                      'alarm wakes display and both backlights from sleep','arbitrary initial X preserved through the script and alarm wake']},indent=2)+'\n')

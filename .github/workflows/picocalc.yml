@@ -68,7 +68,9 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: mk61s-picocalc-pico-h
-          path: binary/picocalc-pico-h/
+          path: .build/firmware/picocalc-pico-h/
+          include-hidden-files: true
+          if-no-files-found: error
 
   stm32-regression:
     runs-on: ubuntu-latest

@@ -193,7 +193,7 @@ ARM-проверка с Unicorn использует настоящие функ
 
 ```sh
 python3 tests/run_sheet_app_arm_tests.py \
-  --resident-elf binary/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.elf \
+  --resident-elf .build/firmware/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.elf \
   --app programs/app/SHEET.APP
 ```
 
