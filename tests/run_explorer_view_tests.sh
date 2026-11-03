@@ -9,13 +9,14 @@ cat >"$work/policy.cpp" <<'CPP'
 #include "explorer_view_config.hpp"
 static_assert(MK61_EXPLORER_GRAPHICS == EXPECTED_GRAPHICS, "Explorer profile policy");
 CPP
-for profile in classic module character custom-module; do
+for profile in classic module text-module character compact-override; do
   policy_flags=(); expected=0
   case "$profile" in
     classic) policy_flags=(-DMK61_DISPLAY_UC1609=1); expected=1 ;;
-    module) policy_flags=(-DMK61_BUILD_EXPLORER_MODULE=1 -DMK61_PORTABLE_TEXT_ONLY=0) ;;
+    module) policy_flags=(-DMK61_BUILD_EXPLORER_MODULE=1 -DMK61_PORTABLE_TEXT_ONLY=0); expected=1 ;;
+    text-module) policy_flags=(-DMK61_BUILD_EXPLORER_MODULE=1 -DMK61_PORTABLE_TEXT_ONLY=1) ;;
     character) policy_flags=(-DMK61_LCD1602_A00=1) ;;
-    custom-module) policy_flags=(-DMK61_BUILD_EXPLORER_MODULE=1 -DMK61_EXPLORER_GRAPHICS=1); expected=1 ;;
+    compact-override) policy_flags=(-DMK61_BUILD_EXPLORER_MODULE=1 -DMK61_EXPLORER_GRAPHICS=0) ;;
   esac
   clang++ -std=c++17 -Wall -Wextra -Werror -fsyntax-only -I"$root/code" \
     "${policy_flags[@]}" -DEXPECTED_GRAPHICS="$expected" "$work/policy.cpp"

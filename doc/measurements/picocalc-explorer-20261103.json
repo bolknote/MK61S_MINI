@@ -302,8 +302,8 @@
       "integration/arduino-fix-explorer-sanitizers.log": "47c3131d589164175c8a7e1ba7514c119b2eb910691a177d70b40b09ebd69046"
     }
   },
-  "compact_system_explorer": {
-    "policy": "standard loadable System APP retains the previous text browser; built-in PicoCalc and Classic F411 retain icons",
+  "archived_text_only_control": {
+    "policy": "Archived compact control; use --text-only explicitly. Not the shipped graphical default.",
     "before_app_bytes": 9258,
     "before_memory_bytes": 12476,
     "maximum_app_bytes": 8000,
@@ -325,6 +325,73 @@
       "app-budget-powershell-compact.log": "47c83fa0659e17c2d70d4f0a1313dfb6f3ad08ba39066bed371aa921931db1c9",
       "app-budget-explorer-sanitizers.log": "47c3131d589164175c8a7e1ba7514c119b2eb910691a177d70b40b09ebd69046",
       "app-budget-pico-noop/report.json": "536d3d75f8961ed0e6e1dac03ce246ba29faea4fbe759b8e2145ee507e9bc193"
+    },
+    "shipped_default": false
+  },
+  "graphical_system_explorer": {
+    "graphical_app_bytes": 9258,
+    "graphical_module_ram_bytes": 12476,
+    "graphical_ci_ceiling": {
+      "app_bytes": 10000,
+      "memory_bytes": 14000
+    },
+    "text_only_bytes": 5917,
+    "text_only_ram_bytes": 8092,
+    "text_only_ci_ceiling": {
+      "app_bytes": 8000,
+      "memory_bytes": 10000
+    },
+    "hard_loader_limit": 20480,
+    "abi": 6,
+    "workspace_required": 1948,
+    "workspace_capacity": 8192,
+    "owner": "existing IMAGE_VIEWER",
+    "new_abi_or_service": false,
+    "resident_gates": {
+      "f401_product_a00": {
+        "flash_bytes": 222832,
+        "effective_pool": 27392,
+        "app_rounded_bytes": 12480,
+        "remaining_after_app": 14912,
+        "resident_max_stack_frame": 1304,
+        "resident_frame_limit": 2048
+      },
+      "f401_product_classic_v3": {
+        "flash_bytes": 258028,
+        "effective_pool": 20544,
+        "app_rounded_bytes": 12480,
+        "remaining_after_app": 8064,
+        "resident_max_stack_frame": 1304,
+        "resident_frame_limit": 2048
+      }
+    },
+    "app_max_stack_frame": 1144,
+    "app_frame_limit": 5120,
+    "python_and_powershell_graphics_and_text": "PASS",
+    "dispatcher_before_fail_after_pass": "PASS",
+    "ui_and_dispatcher_sanitizers": "PASS",
+    "pico_dispatcher_and_explorer_ui_not_in_target": true,
+    "pico_module_macro_absent": true,
+    "hardware_reflashed": false,
+    "log_sha256": {
+      "graphical-app-python.log": "828114d48c76a787b619648150ab47660118f0b5c34d491c75ff8ff7e0a6b273",
+      "graphical-app-powershell.log": "47a8754e50545644a53b10c4f665e061eac5a75357f359d343d62b230fa09063",
+      "graphical-app-python-text.log": "abde58a05ba09f8a795b4eaaa54b77222e22448ce6b3282810a0a887cd862b84",
+      "graphical-app-powershell-text.log": "c690ae3c118a8787568da4e0e291948afacc4dd9d6cd49a636932a69ba6684a2",
+      "graphical-app-python-budget-contract.log": "0f7e4b97443e54aca647179972594d13bb587afcbf151fab8228148587ea844a",
+      "graphical-app-powershell-contract.log": "39f97fc92fb13ca41c7f24ee87815ac7dfb213813b5fd764351243e6ee97160b",
+      "graphical-app-ui-dispatcher-sanitizers.log": "47db6cc89806f6f98a55d0acf1eee9095177d64c522bdd95971b5051f758b231",
+      "graphical-app-f401-a00.log": "ab133a8ceac80ae49618ad949c3f73db36054c7eee9ad4b79f01ec11ca6ad836",
+      "graphical-app-f401-classic.log": "079909f97295fea2403712c97ca436dcb20dcf5222a7551a339a5f1c9b0f2ac0",
+      "graphical-app-f401-a00-pool.log": "69fe8a9193314efeecc4d1a47d113c5adff39febe06764c09fae23465d1ce763",
+      "graphical-app-f401-classic-pool.log": "c791795c900c41c6761a5e8e60acaabbe691b4a28b47498b5174082cbf022847",
+      "explorer-workspace-regression/report.json": "c7cdb0ae214ccd81ffeb9a467acfe95612bf7f1893e45eda210309ad42ecd755"
+    },
+    "apps_sha256": {
+      "python": "fd2f56a74c013f7c6884918e77b0f2af682014ebda85dc01a132fd75f73a6472",
+      "powershell": "fd2f56a74c013f7c6884918e77b0f2af682014ebda85dc01a132fd75f73a6472",
+      "python-text": "cc6482c7ad6bd3b58af8085c72e6d3ae2f00e7d91d650667c7189cb3efa318b2",
+      "powershell-text": "cc6482c7ad6bd3b58af8085c72e6d3ae2f00e7d91d650667c7189cb3efa318b2"
     }
   }
 }

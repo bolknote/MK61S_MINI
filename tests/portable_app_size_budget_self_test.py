@@ -21,7 +21,8 @@ SPEC.loader.exec_module(BUILDER)
 PROFILES = (
     ("setup", {}, {"app_bytes": 10000, "memory_bytes": 20480}),
     ("focal", {}, {"app_bytes": 12000, "memory_bytes": 17000}),
-    ("explorer", {}, {"app_bytes": 8000, "memory_bytes": 10000}),
+    ("explorer", {}, {"app_bytes": 10000, "memory_bytes": 14000}),
+    ("explorer", {"text_only": True}, {"app_bytes": 8000, "memory_bytes": 10000}),
     ("language-input", {}, {"app_bytes": 16000, "memory_bytes": 20480}),
     ("source-editor", {}, {"app_bytes": 13568, "memory_bytes": 18304}),
     ("focal", {"local_float_math": True},

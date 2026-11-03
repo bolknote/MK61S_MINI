@@ -80,7 +80,7 @@ static language_workspace::Owner owner(u32 kind) {
     case Kind::APPLICATION: return language_workspace::Owner::APPLICATION;
     case Kind::SETUP: return language_workspace::Owner::SETUP;
     case Kind::USBDISK: return language_workspace::Owner::USB_DISK;
-    case Kind::EXPLORER: return language_workspace::Owner::NONE;
+    case Kind::EXPLORER: return language_workspace::Owner::IMAGE_VIEWER;
     default: return language_workspace::Owner::NONE;
   }
 }

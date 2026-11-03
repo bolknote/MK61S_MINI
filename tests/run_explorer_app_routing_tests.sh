@@ -17,6 +17,13 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   flags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 
+python3 "$root/tests/explorer_workspace_surface.py" "$work"
+for cache in 0 1; do
+  clang++ "${flags[@]}" -DMK61_VM_FILE_CACHE="$cache" -I"$root/code" \
+    "$root/tests/explorer_workspace_self_test.cpp" -o "$work/explorer-workspace"
+  "$work/explorer-workspace"
+done
+
 for loader in 0 1; do
   clang++ "${flags[@]}" \
     -DMK61_APP_RUNTIME_AVAILABLE="$loader" \

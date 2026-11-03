@@ -83,7 +83,8 @@ $budgetFunction = $budgetAst.Find({ param($node)
 $budgetCases = @(
     @{ System = 'setup'; app_bytes = 10000; memory_bytes = 20480 },
     @{ System = 'focal'; app_bytes = 13500; memory_bytes = 17000 },
-    @{ System = 'explorer'; app_bytes = 8000; memory_bytes = 10000 },
+    @{ System = 'explorer'; app_bytes = 10000; memory_bytes = 14000 },
+    @{ System = 'explorer'; TextOnly = $true; app_bytes = 8000; memory_bytes = 10000 },
     @{ System = 'language-input'; app_bytes = 17000; memory_bytes = 20480 },
     @{ System = 'source-editor'; app_bytes = 14848; memory_bytes = 18304 },
     @{ System = 'terminal'; app_bytes = 14000; memory_bytes = 18432 },
@@ -110,6 +111,7 @@ try {
         $LanguageVmCompiler = [bool]$case['LanguageVmCompiler']
         $SplitLanguageVm = [bool]$case['SplitLanguageVm']
         $FocalTrace = [bool]$case['FocalTrace']
+        $TextOnly = [bool]$case['TextOnly']
         foreach ($ci in @($null, '', 'false', '0')) {
             $env:CI = $ci
             Assert-SizeBudget @{ app_bytes = 20000; memory_bytes = 20480 }

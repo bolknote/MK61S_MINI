@@ -256,7 +256,11 @@ function Assert-SizeBudget {
     } else {
         if ($System -eq 'setup') { $appLimit = 10000; $memoryLimit = 20480 }
         elseif ($System -eq 'focal') { $appLimit = 13500; $memoryLimit = 17000 }
-        elseif ($System -eq 'explorer') { $appLimit = 8000; $memoryLimit = 10000 }
+        elseif ($System -eq 'explorer') {
+            # Measured graphics growth; the hard 20480-byte loader cap is unchanged.
+            $appLimit = if ($TextOnly) { 8000 } else { 10000 }
+            $memoryLimit = if ($TextOnly) { 10000 } else { 14000 }
+        }
         elseif ($System -eq 'language-input') { $appLimit = 17000; $memoryLimit = 20480 }
         elseif ($System -eq 'source-editor') { $appLimit = 14848; $memoryLimit = 18304 }
         elseif ($System -eq 'terminal') { $appLimit = 14000; $memoryLimit = 18432 }

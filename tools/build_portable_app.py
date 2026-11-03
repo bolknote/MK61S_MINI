@@ -99,11 +99,16 @@ def enforce_system_size_budget(system: str | None, report: dict,
                                local_float_math: bool = False,
                                greedy_packer: bool = False,
                                split_language_vm: bool = False,
-                               language_vm_compiler: bool = False) -> None:
+                               language_vm_compiler: bool = False,
+                               text_only: bool = False) -> None:
     if os.environ.get("CI", "").strip().lower() not in ("true", "1"):
         return
     budgets = LOCAL_FLOAT_SIZE_BUDGETS if local_float_math else SYSTEM_SIZE_BUDGETS
     budget = budgets.get(system)
+    if system == "explorer" and not text_only:
+        # Native icons add measured code to the historical text-only module.
+        # This CI ceiling is separate from the unchanged 20480-byte loader cap.
+        budget = {"app_bytes": 10_000, "memory_bytes": 14_000}
     if language_vm_compiler:
         budget = COMPILER_SIZE_BUDGETS.get(system, budget)
     if system == "language-vm" and split_language_vm:
@@ -450,7 +455,7 @@ def build(args: argparse.Namespace) -> dict:
     (out / (args.name + ".json")).write_text(json.dumps(report, indent=2) + "\n")
     enforce_system_size_budget(args.system, report, args.local_float_math,
                                greedy_packer, getattr(args, "split_language_vm", False),
-                               args.language_vm_compiler)
+                               args.language_vm_compiler, args.text_only)
     return report
 
 
