@@ -33,6 +33,25 @@ def physical(status):
     return int(match[1])
 
 
+def completed_native_frame(port,check,timeout=15):
+    port.pump(.2);start=len(port.frames);port.send(0x16)
+    deadline=time.monotonic()+timeout;previous=None;crc=None;status=''
+    while time.monotonic()<deadline:
+        port.pump(.05)
+        if len(port.frames)<=start:continue
+        frame=bytes(port.frames[-1]);assert len(frame)==12800
+        if frame!=previous:
+            rows=bytearray(12800)
+            for y in range(320):
+                for x in range(320):
+                    if value(frame,x,y):rows[y*40+x//8]|=0x80>>(x&7)
+            crc=f'{zlib.crc32(rows):08X}';previous=frame
+        status=check()
+        if 'LCD_PENDING=0 ' in status and 'LCD_FRAME_CRC='+crc in status:
+            return frame,crc,status
+    raise AssertionError(('No fresh complete native frame matching LCD',crc,status))
+
+
 def connect_checked(path,uid,port_type=AppsPort):
     # Port.__init__ already closes fd/lock on constructor failure. Once the
     # object exists, every handshake/identity failure must close it as well.
@@ -158,20 +177,7 @@ def main():
     def keys(data):
         check();raw(p,data)
     def picture(name):
-        p.pump(.2);start=len(p.frames);p.send(0x16)
-        deadline=time.monotonic()+15
-        while len(p.frames)<start+2 and time.monotonic()<deadline:p.pump(.05)
-        assert len(p.frames)>=start+2,(name,p.status())
-        frame=p.frames[-1];assert len(frame)==12800
-        rows=bytearray(12800)
-        for y in range(320):
-            for x in range(320):
-                if value(frame,x,y):rows[y*40+x//8]|=0x80>>(x&7)
-        crc=f'{zlib.crc32(rows):08X}';deadline=time.monotonic()+8
-        while time.monotonic()<deadline:
-            status=check()
-            if 'LCD_PENDING=0 ' in status and 'LCD_FRAME_CRC='+crc in status:break
-        else:raise AssertionError(('LCD differs from complete native frame',name,crc,status))
+        frame,crc,status=completed_native_frame(p,check)
         png(frame,args.output/(name+'.png'))
         report['screens'][name]=dict(sha256=hashlib.sha256(frame).hexdigest(),lcd_crc=crc,status=status)
         return frame

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import zlib
 from unittest.mock import patch
 import hil_picocalc_explorer as hil
 
@@ -204,6 +205,34 @@ class ConnectTests(unittest.TestCase):
                 with self.assertRaises(type(error) if error else AssertionError):
                     hil.connect_checked('/not-a-device',UID,lambda *a,**k:port)
                 self.assertTrue(port.closed)
+
+
+class FrameTests(unittest.TestCase):
+    def test_one_requested_frame_is_enough_after_lcd_completion(self):
+        frame=bytearray(12800);frame[0]=1
+        rows=bytearray(12800);rows[0]=0x80
+        crc=f'{zlib.crc32(rows):08X}'
+        class Port:
+            frames=[bytes(12800)]
+            def pump(self,*args):pass
+            def send(self,kind):
+                self.kind=kind;self.frames.append(bytes(frame))
+        port=Port();statuses=iter(('LCD_PENDING=1 LCD_FRAME_CRC='+crc,
+                                  'LCD_PENDING=0 LCD_FRAME_CRC='+crc))
+        actual,actual_crc,_=hil.completed_native_frame(port,lambda:next(statuses),timeout=.5)
+        self.assertEqual(actual,frame);self.assertEqual(actual_crc,crc)
+        self.assertEqual(port.kind,0x16);self.assertEqual(len(port.frames),2)
+
+    def test_old_frame_or_wrong_lcd_crc_is_not_accepted(self):
+        for publish in (False,True):
+            with self.subTest(publish=publish):
+                class Port:
+                    frames=[bytes(12800)]
+                    def pump(self,*args):pass
+                    def send(self,kind):
+                        if publish:self.frames.append(bytes(12800))
+                with self.assertRaises(AssertionError):
+                    hil.completed_native_frame(Port(),lambda:'LCD_PENDING=0 LCD_FRAME_CRC=WRONG',timeout=.01)
 
 
 if __name__=='__main__':unittest.main()
