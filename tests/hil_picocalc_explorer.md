@@ -101,3 +101,10 @@ restore an old snapshot over new physical input.
 `picocalc_explorer_hil_self_test.py` tests those failure paths with fake ports;
 it neither enumerates devices nor opens a serial node. Keep
 `hardware_verified=false` until the actual candidate passes hardware testing.
+
+## Completed qualification
+
+The 3 November 2026 hardware run passed on BUILD `88BD99FF`, including full
+PSRAM pressure, exact WBMP pixels and completed LCD CRC. See the
+[measurement and cleanup record](../doc/measurements/picocalc-explorer-20261103.md).
+The tested firmware remained installed at the user's request.

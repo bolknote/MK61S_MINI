@@ -1,0 +1,279 @@
+{
+  "passed": true,
+  "scope": "native Explorer and stock folder icons; not a fresh full-platform parity audit",
+  "date": "2026-11-03",
+  "uid": "E6657CD423721C35",
+  "build_id": "88BD99FF",
+  "uf2_sha256": "4577bd3f9a0cefc409dc9e38e25f69d54461d3a02b225f9bfc327dad821e6651",
+  "bin_sha256": "dbc3f11c29d39c4c8a02a3746f4ee560bb948090b5693ccc0778fcc0aa4f924e",
+  "source_sha256": "3487eb018b05acd31bd1437f6bd97d464c5005abbb499bca4c4775d7d7fd30e1",
+  "firmware_source_commit": "191f7d25bf6a7314b0eaa91b3e7e0f7815cfd6c4",
+  "main_base": "92a0ff0f4d333f3c23af89b12ea60b2be1b2d0c4",
+  "firmware_crc32": "9B32EFA4",
+  "settings_unchanged_during_load": true,
+  "cases": [
+    "exact 32x32 WBMP, 320x320 raster, name-only highlight and completed LCD source CRC",
+    "file menu enters launcher directory without running its script",
+    "page navigation, search and runtime icons/list switch",
+    "empty folder opens the new-folder prompt without leaving its parent"
+  ],
+  "screens": {
+    "icons-native": {
+      "sha256": "bdac30b2b96419bedaf744145da474f30a4aed95d65fb58eb0537e7817b17918",
+      "lcd_crc": "A2B4561B"
+    },
+    "selection": {
+      "sha256": "1083ac2e71e1def64b322ed5076767b7d718f44c5e36a60e9b72da4f03ff24e6",
+      "lcd_crc": "3F27F306"
+    },
+    "file-menu": {
+      "sha256": "a332b95ca06f6dd895e3f17d425d920e76868de398185f8a0e22a6cf55c987f8",
+      "lcd_crc": "21F82F5C"
+    },
+    "folder-without-autoexec": {
+      "sha256": "24ae8a0600035c3310bd818da631c34ffd94fa617d8001df7fb0cc59df912eb5",
+      "lcd_crc": "ACDC363D"
+    },
+    "next-page": {
+      "sha256": "87a32f6b1d421de5bc3f0f90fe74a5252dc6c438a4fbf5f4e0dfd3da50dec8e2",
+      "lcd_crc": "C18BAD8F"
+    },
+    "search": {
+      "sha256": "c78c60df9064e4af724cdade8121dc28c1086e49602b7139d6d000d009a09839",
+      "lcd_crc": "DAC76E64"
+    },
+    "list": {
+      "sha256": "6067a385381c63548a5650052f559ee34f249057c35cdfdfa49b30787223bbe7",
+      "lcd_crc": "CC453332"
+    },
+    "icons-restored": {
+      "sha256": "bdac30b2b96419bedaf744145da474f30a4aed95d65fb58eb0537e7817b17918",
+      "lcd_crc": "A2B4561B"
+    },
+    "empty-folder": {
+      "sha256": "5063dcf0f5e4b56e52624195de1e1f4323d6eee49d96cbb2f551c5989aced4cc",
+      "lcd_crc": "4A446285"
+    }
+  },
+  "games_screen": {
+    "sha256": "f62b7f9ab2f92c2b21153deb033f60697b7e31602720966ed418117d38b3233a",
+    "lcd_crc": "B6D4D3DE"
+  },
+  "memory": {
+    "psram_used": 8388608,
+    "psram_capacity": 8388608,
+    "vm_cache_bytes": 4194304,
+    "sd_cache_bytes": 4194304,
+    "icon_view_sram_bytes": 3528,
+    "list_view_sram_bytes": 2376,
+    "after_exit_sram_bytes": 0,
+    "cache_allocations_unchanged": true
+  },
+  "stock_icons": {
+    "drawings": 27,
+    "source_folders": 23,
+    "pico_bundle_folders": 22,
+    "installed": 18,
+    "absent_directories": 4,
+    "custom_conflicts": 0,
+    "files": [
+      {
+        "relative": "games/Bumblebee/autoexec.wbmp",
+        "expected_sha256": "a6f2f0696f6a9058ca02e418162c7effb7f69237b670e64971342ee41fff678e",
+        "path": "/games/Bumblebee/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "a6f2f0696f6a9058ca02e418162c7effb7f69237b670e64971342ee41fff678e"
+      },
+      {
+        "relative": "games/Bumblebee Fly/autoexec.wbmp",
+        "expected_sha256": "659d3f6428b4281262a044ec963d6b9aacf2945eb32a4b8af9c0d5d4a68385f5",
+        "path": "/games/Bumblebee Fly/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "659d3f6428b4281262a044ec963d6b9aacf2945eb32a4b8af9c0d5d4a68385f5"
+      },
+      {
+        "relative": "games/Chase HQ/autoexec.wbmp",
+        "expected_sha256": "1c6577ac0a7324405cda0e280b0081c40e6cc49726fc5a758748f478a11e8a40",
+        "path": "/games/Chase HQ/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "1c6577ac0a7324405cda0e280b0081c40e6cc49726fc5a758748f478a11e8a40"
+      },
+      {
+        "relative": "games/ELITE/autoexec.wbmp",
+        "expected_sha256": "d283a8e1c7a2a7d96107693ad5ea9d4cad3a9806e71065786580171fef7f22e2",
+        "path": "/games/ELITE/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "d283a8e1c7a2a7d96107693ad5ea9d4cad3a9806e71065786580171fef7f22e2"
+      },
+      {
+        "relative": "games/Fox Hunting/autoexec.wbmp",
+        "expected_sha256": "3d4572a751684353a186f259eb01cc351885fa4743a6f27dab3bbdc6a141682f",
+        "path": "/games/Fox Hunting/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "3d4572a751684353a186f259eb01cc351885fa4743a6f27dab3bbdc6a141682f"
+      },
+      {
+        "relative": "games/High Noon/autoexec.wbmp",
+        "expected_sha256": "f3a06b392ca48bc2dcfac50517c2de7130d8ab5a7731296efc170b2c106cbb44",
+        "path": "/games/High Noon/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "f3a06b392ca48bc2dcfac50517c2de7130d8ab5a7731296efc170b2c106cbb44"
+      },
+      {
+        "relative": "games/Infinity Story/autoexec.wbmp",
+        "expected_sha256": "b8641534687a06ec11bafcf41987a37061bd20d5746297df597514d328b8b3be",
+        "path": "/games/Infinity Story/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "b8641534687a06ec11bafcf41987a37061bd20d5746297df597514d328b8b3be"
+      },
+      {
+        "relative": "games/Lunolet 1/autoexec.wbmp",
+        "expected_sha256": "b90f0d1248f33b99342f4540ad0bb9c3437b02e33f8b34d364d3d3e1ac14e46f",
+        "path": "/games/Lunolet 1/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "b90f0d1248f33b99342f4540ad0bb9c3437b02e33f8b34d364d3d3e1ac14e46f"
+      },
+      {
+        "relative": "games/Mult Lunolet/autoexec.wbmp",
+        "expected_sha256": "afd71d2277e9a5b4df2df5d1bd74595859acab1a82fab02b94be5ab779a7520e",
+        "path": "/games/Mult Lunolet/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "afd71d2277e9a5b4df2df5d1bd74595859acab1a82fab02b94be5ab779a7520e"
+      },
+      {
+        "relative": "games/Naval Battle/autoexec.wbmp",
+        "expected_sha256": "b7f3811a4f23b8768639e1670f9cb3c662a7475e4d322d29972f195235c05c97",
+        "path": "/games/Naval Battle/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "b7f3811a4f23b8768639e1670f9cb3c662a7475e4d322d29972f195235c05c97"
+      },
+      {
+        "relative": "games/Pogonya/autoexec.wbmp",
+        "expected_sha256": "fb7cc063b86813e838389b78ea02f420579b40e0dc79fb8e690eb17eb969566e",
+        "path": "/games/Pogonya/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "fb7cc063b86813e838389b78ea02f420579b40e0dc79fb8e690eb17eb969566e"
+      },
+      {
+        "relative": "games/RACE/autoexec.wbmp",
+        "expected_sha256": "444f93af49aa95a51bc92b7201248311d5871b0957973bfa6a86349556e3a24b",
+        "path": "/games/RACE/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "444f93af49aa95a51bc92b7201248311d5871b0957973bfa6a86349556e3a24b"
+      },
+      {
+        "relative": "games/Runner/autoexec.wbmp",
+        "expected_sha256": "78c37a512e0b8d16b5f385568639aee729e05ac5206883decbdf11430ae6a5e5",
+        "result": "skipped-absent-directory"
+      },
+      {
+        "relative": "games/Samurai/autoexec.wbmp",
+        "expected_sha256": "011143cc9b426f6065be2ea1de8f20436b20c5b159c2ebe47e040fe1808f4293",
+        "path": "/games/Samurai/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "011143cc9b426f6065be2ea1de8f20436b20c5b159c2ebe47e040fe1808f4293"
+      },
+      {
+        "relative": "games/Turochamp/autoexec.wbmp",
+        "expected_sha256": "80c8f2f1a06433ba27d88b065806d7bfc655385ac4b6f5021e593b9f2a09148b",
+        "path": "/games/Turochamp/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "80c8f2f1a06433ba27d88b065806d7bfc655385ac4b6f5021e593b9f2a09148b"
+      },
+      {
+        "relative": "games/Wumpus/autoexec.wbmp",
+        "expected_sha256": "1fb6b8bb6b16af9c6a7629676682331a53e675cd2eceed69694ef8cad6ef99eb",
+        "path": "/games/Wumpus/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "1fb6b8bb6b16af9c6a7629676682331a53e675cd2eceed69694ef8cad6ef99eb"
+      },
+      {
+        "relative": "apps/autoexec.wbmp",
+        "expected_sha256": "7635ec823ba78e2d899dac44fa369d0fc6ad6c9db3f6c2ba6c0e242284496a50",
+        "result": "skipped-absent-directory"
+      },
+      {
+        "relative": "Fonts/autoexec.wbmp",
+        "expected_sha256": "a2d9ec00423a9c9104195dec0539e633bf74a020d25b3ee060f6ac21845bbf11",
+        "path": "/Fonts/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "a2d9ec00423a9c9104195dec0539e633bf74a020d25b3ee060f6ac21845bbf11"
+      },
+      {
+        "relative": "examples/autoexec.wbmp",
+        "expected_sha256": "c56441426a46ba80af0179c3c12fa006a8430e746f437198403f2df38593fad3",
+        "path": "/examples/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "c56441426a46ba80af0179c3c12fa006a8430e746f437198403f2df38593fad3"
+      },
+      {
+        "relative": "games/autoexec.wbmp",
+        "expected_sha256": "8e9d781137f23ee567d55841f2f92dc478f7cfd66e9a9dedba322f025bea53e3",
+        "path": "/games/autoexec.wbmp",
+        "result": "installed-readback",
+        "actual_sha256": "8e9d781137f23ee567d55841f2f92dc478f7cfd66e9a9dedba322f025bea53e3"
+      },
+      {
+        "relative": "licenses/autoexec.wbmp",
+        "expected_sha256": "7c5607c5d3dc161f2ef100d142195024a0776227665ab1c573deaa14cec6078f",
+        "result": "skipped-absent-directory"
+      },
+      {
+        "relative": "licenses/ui-fonts/autoexec.wbmp",
+        "expected_sha256": "5f9671614a62b08dc094284b1bfd71f90aef00d2ddd2ba05834473c161d0289d",
+        "result": "skipped-absent-directory"
+      }
+    ]
+  },
+  "cleanup": {
+    "temporary_directory_removed": true,
+    "test_data_unchanged": true,
+    "physical_input_changed": false,
+    "crash": "NONE",
+    "firmware_crc": "valid",
+    "lcd_errors": 0,
+    "dma_timeouts": 0,
+    "usb_screen": "OFF",
+    "foreground": "CALCULATOR",
+    "service": "CLOSED",
+    "ports_closed": true,
+    "tested_firmware_left_installed": true
+  },
+  "user_authorization": "Old data not needed; test fixtures and current Europe/Moscow clock permitted. Preserve archived backups, leave tested firmware installed.",
+  "raw_reports": {
+    "hil": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-explorer-final-20261103-001/preserved-worktree-build/explorer-native-checks/hil-device-88bd99ff-20261103/report.json",
+      "sha256": "65f28e4b1e5c21f1bb3ca743aed247289e94b74b74e1ec5445976f266993a6a9"
+    },
+    "icons": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-explorer-final-20261103-001/preserved-worktree-build/explorer-native-checks/stock-icons-device-88bd99ff-20261103/report.json",
+      "sha256": "1f47c9751b3890ab5d4ac01f790faee17dad04d6ff4a8a473f9cec261336f852"
+    }
+  },
+  "crc_scope": "CRC of completed LCD source buffer, not an optical panel readback",
+  "package": {
+    "name": "mk61s-picocalc-pico-h-0.8.16.zip",
+    "bytes": 1108153,
+    "sha256": "e8b8b104fee4098e888448b631f196601e24e4c3ad30cb408c00936c60f21f0c"
+  },
+  "local_checks": {
+    "passed": true,
+    "log_sha256": {
+      "icons-full-psram-full-suite.log": "3c06ea7386567eba7b1f76bb0139878ec875d9e3ace44585c1a26302b101c342",
+      "hil-frame-fake-ports.log": "750ac38cb35ab87b0d3f1668b2a22964e8d85ffe2ec853bb2c7fe0d04d9710a1",
+      "classic-host.log": "47c3131d589164175c8a7e1ba7514c119b2eb910691a177d70b40b09ebd69046",
+      "icons-renderer.log": "ef6d9e06038754f5181f1a938a238f7428aed88f4a395591e5488e8c7672e53d",
+      "icons-catalog.log": "b402e25d0d1b8356ad57cc676835aaf29dd68af10f63cdd295d058ea68964ff8",
+      "icons-system-tool-tests.log": "39f97fc92fb13ca41c7f24ee87815ac7dfb213813b5fd764351243e6ee97160b",
+      "icons-system-python.log": "0a8915875bcb5a400ea54126e361d38b70e426e6ae1c1812aca94d2064119971",
+      "icons-system-powershell.log": "d63904cce09235a068943def27297d437a4dc3279a1f36fe885b67ffd4374720",
+      "icons-mkc-shell.log": "7a1f3e020b314c3522c1548111c63fa522af2ff62c68141af649dd62de9da52f",
+      "icons-mkc-powershell.log": "9a8686b33a6281f6b26aa3873839bb10d5d116415ac47395116d5589e60592d7",
+      "icons-arduino-tests.log": "a73af068a73464c918af9498f51cb4f3cbb6ba077260207105301325264e0c56",
+      "final-portable-sanitizers.log": "ec85ebc36bbffb68e23a07d095e3c72bda7bdfc5701f64cee15d398095413a4b",
+      "final-native-recipe.log": "88962506fb9e5ccbeb6c763d4606718e52957b9d40c367bb50777db3ad802a86",
+      "final-native-assets.log": "acfbdf9cd0ed868b5272ee4b266f1b3f38488291750281273dd88023ad466e9f",
+      "final-verified-package-test.log": "8e000481f7ef896489df82c25bebb25d498cc19f24a185cf47970dfddc5af314"
+    }
+  }
+}
