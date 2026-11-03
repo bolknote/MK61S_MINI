@@ -12,10 +12,12 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import sys
 import time
 import zlib
 from hil_c5_stack import read_file, write_file
-from hil_picocalc_software import connect, calculator, raw, restore, saved_numbers
+from hil_picocalc_software import calculator, raw, restore, saved_numbers, number
+from hil_picocalc_apps import AppsPort
 from hil_portable_system_apps import png
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -31,11 +33,91 @@ def physical(status):
     return int(match[1])
 
 
+def connect_checked(path,uid,port_type=AppsPort):
+    # Port.__init__ already closes fd/lock on constructor failure. Once the
+    # object exists, every handshake/identity failure must close it as well.
+    port=port_type(path,keyboard_layout=0)
+    try:
+        port.__enter__();port.commands()
+        identity=port.command('identity')
+        assert re.search(r'\bUID='+re.escape(uid)+r'\b',identity),identity
+        return port
+    except BaseException:
+        port.__exit__(*sys.exc_info())
+        raise
+
+
+def validate_snapshot(snapshot):
+    for command,prefix,expected in (('reg','R',15),('stk','S',5)):
+        entries=saved_numbers(snapshot.get(command,''),prefix)
+        assert len(entries)==expected and {name for name,_ in entries}=={
+            prefix+format(i,'X') for i in range(expected)},('incomplete '+command,entries)
+        for _,raw_value in entries:
+            assert len(raw_value)==14 and re.fullmatch(r'[+-]?\d+(?:\.\d+)?e[+-]?\d{1,3}',number(raw_value)),raw_value
+    program=re.findall(r'^hin ([0-9]{4}) ([0-9A-Fa-f]+)\r?$',snapshot.get('hout',''),re.M)
+    assert program,'Missing valid program dump'
+    offset=0
+    for address,data in program:
+        assert int(address)==offset and 0<len(data)<=48 and len(data)%2==0,(address,data)
+        offset+=len(data)//2
+    paths=re.findall(r'^(/[^\r\n]*)\r?$',snapshot.get('pwd',''),re.M)
+    assert len(paths)==1 and len(paths[0])<384 and not any(ord(c)<32 for c in paths[0]),paths
+
+
 def same_snapshot(before,after):
+    try:validate_snapshot(before);validate_snapshot(after)
+    except (AssertionError,ValueError,TypeError):return False
     return all(saved_numbers(before[k],prefix)==saved_numbers(after[k],prefix)
                for k,prefix in (('reg','R'),('stk','S'))) and all(
         re.findall(pattern,before[k],re.M)==re.findall(pattern,after[k],re.M)
         for k,pattern in (('hout',r'^hin [^\r\n]+'),('pwd',r'^/[^\r\n]*')))
+
+
+def cleanup_guard(port,initial,build,report):
+    try:
+        status=port.status()
+        report['cleanup_guard_status']=status
+        if physical(status)!=physical(initial):
+            report['unexpected_physical_input']=True
+            raise AssertionError('Physical input changed')
+        assert all(marker in status for marker in ('BUILD='+build.upper(),'CRASH=NONE','DIRTY=0',
+            'M61_ACTIVE=0','USB_DISK=0','RUN=0 BUSY=0','SLEEP=0')),'Unsafe device state'
+        assert re.search(r'SERVICE=(?:CLOSED|BROWSER|FILE_ACTIONS|PROMPT|DEVELOPMENT)\b',status),'Unsafe foreground'
+        return True
+    except Exception as error:
+        report['passed']=False
+        report['cleanup_skipped']=type(error).__name__+': '+str(error)
+        return False
+
+
+def finish(port,before,initial,build,report,directory,created):
+    # An exception can bypass the test's last check(). Nothing below may
+    # change the device until a new status and a complete snapshot are valid.
+    try:validate_snapshot(before)
+    except Exception as error:
+        report.update(passed=False,cleanup_skipped='Invalid snapshot: '+str(error));return
+    if not cleanup_guard(port,initial,build,report):return
+    calculator(port)
+    after={key:port.command(key) for key in ('reg','stk','hout','pwd')}
+    try:validate_snapshot(after)
+    except Exception as error:
+        report.update(passed=False,cleanup_skipped='Invalid final snapshot: '+str(error));return
+    report['data_unchanged']=same_snapshot(before,after)
+    if not report['data_unchanged']:
+        report['passed']=False
+        if not cleanup_guard(port,initial,build,report):return
+        restore(port,before)
+    if created:
+        if not cleanup_guard(port,initial,build,report):return
+        assert re.fullmatch(r'/MK61S-EXPLORER-[0-9-]+',directory)
+        assert 'ERROR' not in port.command('rm -r '+directory,timeout=30)
+        report['temporary_directory_removed']=True
+    if not cleanup_guard(port,initial,build,report):return
+    port.send(0x13);port.attached=False;port.pump(.1)
+    if initial and 'USB_SCREEN=OFF ' in initial:
+        if not cleanup_guard(port,initial,build,report):return
+        port.command('uscreen off')
+    if cleanup_guard(port,initial,build,report):report['final']=report['cleanup_guard_status']
 
 
 def main():
@@ -51,7 +133,7 @@ def main():
     menu_items=re.findall(r'^MK61_MAIN_ITEM\((\w+),',(ROOT/'code/main_menu_items.inc').read_text(),re.M)
     explorer=menu_items.index('EXPLORER')
     report=dict(passed=False,uid=args.uid,build_id=args.build_id.upper(),directory=directory,cases=[],screens={})
-    p=connect(args.port,args.uid);p.native_display=True
+    p=connect_checked(args.port,args.uid);p.native_display=True
     before=None;created=False;initial=None;unexpected_input=False
     def check():
         nonlocal unexpected_input
@@ -92,7 +174,8 @@ def main():
         assert re.search(r'SERVICE=(?:CLOSED|DEVELOPMENT|BROWSER|FILE_ACTIONS)\b',initial),initial
         if 'SLEEP=1' in initial:p.command('display on')
         p.expect('SD=OK','KBD=OK','SLEEP=0')
-        calculator(p);before={key:p.command(key) for key in ('reg','stk','hout','pwd')}
+        calculator(p);captured={key:p.command(key) for key in ('reg','stk','hout','pwd')}
+        validate_snapshot(captured);before=captured
         (args.output/'before.json').write_text(json.dumps(before,ensure_ascii=False,indent=2)+'\n')
         assert directory[1:]+'/' not in p.command('ls /')
         assert 'ERROR' not in p.command('mkdir '+directory);created=True
@@ -125,20 +208,19 @@ def main():
     finally:
         try:
             if before and not unexpected_input:
-                calculator(p);after={key:p.command(key) for key in before}
-                report['data_unchanged']=same_snapshot(before,after)
-                if not report['data_unchanged']:report['passed']=False;restore(p,before)
-                if created:
-                    assert 'ERROR' not in p.command('rm -r '+directory,timeout=30)
-                    report['temporary_directory_removed']=True
-                p.send(0x13);p.attached=False;p.pump(.1)
-                if initial and 'USB_SCREEN=OFF ' in initial:p.command('uscreen off')
-                report['final']=check()
+                finish(p,before,initial,args.build_id,report,directory,created)
+        except BaseException as error:
+            report.update(passed=False,cleanup_error=type(error).__name__+': '+str(error))
+            raise
         finally:
-            report['unexpected_physical_input']=unexpected_input
-            (args.output/'transcript.bin').write_bytes(p.text)
-            (args.output/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
-            p.__exit__(None,None,None)
+            report['unexpected_physical_input']=unexpected_input or report.get('unexpected_physical_input',False)
+            # Close even when writing a host report fails (e.g. disk full).
+            try:p.__exit__(None,None,None)
+            except BaseException as error:
+                report.update(passed=False,close_error=type(error).__name__+': '+str(error));raise
+            finally:
+                (args.output/'transcript.bin').write_bytes(p.text)
+                (args.output/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     assert report['passed'] and report.get('data_unchanged') and not unexpected_input,report
     print('PicoCalc native Explorer HIL PASS',flush=True)
 

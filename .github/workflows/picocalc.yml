@@ -33,6 +33,7 @@ jobs:
           python3 tests/picocalc_version_self_test.py
           python3 tests/picocalc_cold_evidence_self_test.py
           python3 tests/picocalc_resources_ci_self_test.py
+          python3 tests/picocalc_explorer_hil_self_test.py
       - name: Verify reviewed native game resources and production decoders
         run: |
           python3 tools/generate_picocalc_game_assets.py --check-inputs
