@@ -1,3 +1,4 @@
+#include "firmware_optimization.hpp"
 #include "explorer_view.hpp"
 #include "wbmp.hpp"
 #include "mk8_codec.hpp"

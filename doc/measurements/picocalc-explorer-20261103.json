@@ -275,5 +275,31 @@
       "final-native-assets.log": "acfbdf9cd0ed868b5272ee4b266f1b3f38488291750281273dd88023ad466e9f",
       "final-verified-package-test.log": "8e000481f7ef896489df82c25bebb25d498cc19f24a185cf47970dfddc5af314"
     }
+  },
+  "arduino_compatibility_fix": {
+    "change": "explorer_view.cpp includes existing firmware_optimization.hpp",
+    "baseline_main": "92a0ff0f4d333f3c23af89b12ea60b2be1b2d0c4",
+    "baseline_bin_bytes": 467816,
+    "before_fix_bin_bytes": 477656,
+    "fixed_bin_bytes": 471792,
+    "fixed_flash_free_bytes": 52496,
+    "required_flash_free_bytes": 49152,
+    "threshold_unchanged": true,
+    "renderer_f411_o3_before_bytes": 9102,
+    "renderer_f411_o3_after_bytes": 2398,
+    "full_local_arduino_gate": "PASS",
+    "explorer_resident_app_sanitizers": "PASS",
+    "pico_shipping_target_preprocessed_sha256": "e31c52a49fd3f229f9cde9291abfa3dea2524195e7feaa3c58606f62ceb91463",
+    "pico_shipping_target_stripped_object_sha256": "e0350e450fd6fe308d24d5e1d09259a4f3fda575487659c7867c66d1f65d336e",
+    "pico_before_after_identical": true,
+    "hardware_reflashed": false,
+    "ci_initial_pico_f401_f411": "https://github.com/bolknote/MK61S_MINI/actions/runs/41685086455",
+    "evidence_sha256": {
+      "integration/arduino-budget-control/baseline-125900423972.log": "8acd22cfb334056a438ca491edf36f467775ce74c21c3ffc2dc0418521c72063",
+      "integration/arduino-budget-control/pico-target-noop.json": "d251ee3987c8f0cd958a0eb0356735883c34aeb4f74d67426974dfac0304b781",
+      "integration/arduino-budget-control/m0-identical.json": "ba905f962df70d4a3b18620424356d50f1dbe86173468d5f8b8f2ae698857abf",
+      "integration/arduino-o3-fixed.log": "5cb39551b37254ddb613cfdb6c5d4f7fbc76525f84785ac2a40e2a04b6994dad",
+      "integration/arduino-fix-explorer-sanitizers.log": "47c3131d589164175c8a7e1ba7514c119b2eb910691a177d70b40b09ebd69046"
+    }
   }
 }
