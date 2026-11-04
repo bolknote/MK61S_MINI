@@ -36,12 +36,14 @@ function Get-Mk61NativeCompiler {
     if ([string]::IsNullOrWhiteSpace($selected) -and [IO.File]::Exists($local)) {
         foreach ($line in [IO.File]::ReadAllLines($local)) {
             if ($line -match '^compiler\.path=(.+)$') {
-                if (-not $Install -or [IO.Directory]::Exists($Matches[1])) { $selected = $Matches[1] }
+                $registered = $Matches[1]
+                $unsafe = $env:OS -eq 'Windows_NT' -and $registered -match '[^\x20-\x7e]'
+                if (-not $Install -or ([IO.Directory]::Exists($registered) -and -not $unsafe)) { $selected = $registered }
             }
         }
     }
     if ([string]::IsNullOrWhiteSpace($selected)) {
-        $installRoot = Join-Path $Target 'tools/toolchains'
+        $installRoot = Get-NativeGnuArmInstallRoot (Join-Path $Target 'tools/toolchains')
         $selected = Join-Path $installRoot "xpack-arm-none-eabi-gcc-$version"
         if (-not [IO.Directory]::Exists($selected)) {
             if (-not $Install) { throw 'native GNU Arm compiler is missing; reinstall the MK61s board' }

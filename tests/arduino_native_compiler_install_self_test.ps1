@@ -4,9 +4,12 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 . (Join-Path $root 'tools/.mk61-arduino-board/payload.ps1')
+. (Join-Path $root 'tools/.mk61-gcc/sdk.ps1')
 $work = Join-Path ([IO.Path]::GetTempPath()) ('mk61 native install ' + [Guid]::NewGuid().ToString('N'))
 $oldBoard = $env:MK61_ARDUINO_TOOLCHAIN
 $oldNative = $env:MK61_GCC_TOOLCHAIN
+$oldPublic = $env:PUBLIC
+$oldOs = $env:OS
 try {
     $env:MK61_ARDUINO_TOOLCHAIN = ''
     $env:MK61_GCC_TOOLCHAIN = ''
@@ -54,9 +57,39 @@ Write-Host "Native SDK: $PSScriptRoot"
     if ($cached.Count -ne 1 -or $cached[0] -cne $expected) {
         throw 'Reinstall did not return the same compiler path'
     }
-    Write-Host 'Native Arduino first install: progress is not compiler.path PASS'
+    $env:PUBLIC = Join-Path $work 'Public'
+    $unicodeTarget = Join-Path $work ('Arduino ' + [char]0x420 + [char]0x43e + [char]0x43c + [char]0x430 + [char]0x43d)
+    $requestedRoot = Join-Path $unicodeTarget 'tools/toolchains'
+    $env:OS = 'Windows_NT'
+    $safeRoot = Get-NativeGnuArmInstallRoot $requestedRoot
+    if ($safeRoot -match '[^\x20-\x7e]' -or $safeRoot -notlike "$($env:PUBLIC)*" -or
+        $safeRoot -cne (Get-NativeGnuArmInstallRoot $requestedRoot)) {
+        throw 'Unicode compiler installation did not select a stable real ASCII cache'
+    }
+    if ((Get-NativeGnuArmInstallRoot (Join-Path $work 'ASCII toolchain')) -cne (Join-Path $work 'ASCII toolchain')) {
+        throw 'ASCII compiler path was unnecessarily relocated'
+    }
+    $rejected = $false
+    try { $null = Get-NativeGnuArmBin $project '14.2.1-1.1' $unicodeTarget }
+    catch { $rejected = $_.Exception.Message -match 'ASCII-only path' }
+    if (-not $rejected) { throw 'Explicit unsafe Windows compiler path was accepted' }
+    $env:OS = $oldOs
+    if ($env:OS -eq 'Windows_NT') {
+        # Reproduce an older package that registered GCC in a Cyrillic folder.
+        $legacy = Join-Path $requestedRoot 'xpack-arm-none-eabi-gcc-14.2.1-1.1/bin'
+        [void][IO.Directory]::CreateDirectory($legacy)
+        [IO.File]::WriteAllText((Join-Path $unicodeTarget 'platform.local.txt'), 'compiler.path=' + $legacy)
+        $migrated = @(Get-Mk61NativeCompiler $project $unicodeTarget '' -Install)
+        $expectedMigration = Join-Path $safeRoot 'xpack-arm-none-eabi-gcc-14.2.1-1.1/bin'
+        if ($migrated.Count -ne 1 -or $migrated[0] -cne $expectedMigration) {
+            throw 'Reinstall did not migrate the registered Unicode compiler'
+        }
+    }
+    Write-Host 'Native Arduino first install: status/path isolation and Windows ASCII migration PASS'
 } finally {
     $env:MK61_ARDUINO_TOOLCHAIN = $oldBoard
     $env:MK61_GCC_TOOLCHAIN = $oldNative
+    $env:PUBLIC = $oldPublic
+    $env:OS = $oldOs
     if ([IO.Directory]::Exists($work)) { Remove-Item -LiteralPath $work -Recurse -Force }
 }

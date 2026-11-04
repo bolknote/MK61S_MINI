@@ -14,6 +14,7 @@ $project = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if ($Help) {
     Write-Host 'Install pinned standalone GNU Arm GCC into .build/toolchains. No Arduino package is used.'
     Write-Host 'Options: -InstallRoot DIR, -ArchivePath FILE (offline, SHA256 checked), -Check, -Help'
+    Write-Host 'Windows selects a separate ASCII compiler cache for Unicode installation paths.'
     Write-Host 'CMake 3.21+, Ninja and PowerShell must be installed separately.'
     exit 0
 }
@@ -27,8 +28,15 @@ try {
     if ($lock.schema -ne 1 -or $lock.version -ne $contract.toolchain.gnu_arm) {
         throw 'GNU Arm lock version does not match the release contract'
     }
+    $explicitInstallRoot = -not [string]::IsNullOrWhiteSpace($InstallRoot)
+    if (-not $explicitInstallRoot) { $InstallRoot = Join-Path $project '.build/toolchains' }
+    $requestedInstallRoot = [IO.Path]::GetFullPath($InstallRoot)
+    $InstallRoot = Get-NativeGnuArmInstallRoot $requestedInstallRoot
+    if ($InstallRoot -cne $requestedInstallRoot) {
+        Write-Host "GNU Arm uses a separate ASCII-only installation directory: $InstallRoot"
+    }
     if ($Check) {
-        $checkTarget = if ([string]::IsNullOrWhiteSpace($InstallRoot)) { ''
+        $checkTarget = if (-not $explicitInstallRoot) { ''
         } else { Join-Path $InstallRoot "xpack-arm-none-eabi-gcc-$($lock.version)" }
         $bin = Get-NativeGnuArmBin $project $lock.version $checkTarget
         Assert-NativeGnuArmVersion $bin $lock.version
@@ -36,10 +44,6 @@ try {
         Write-Host "GNU Arm: $bin"
         exit 0
     }
-    if ([string]::IsNullOrWhiteSpace($InstallRoot)) {
-        $InstallRoot = Join-Path $project '.build/toolchains'
-    }
-    $InstallRoot = [IO.Path]::GetFullPath($InstallRoot)
     $platform = if ($env:OS -eq 'Windows_NT') { 'win32-x64' } else {
         $osName = if ([Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([Runtime.InteropServices.OSPlatform]::OSX)) { 'darwin' } else { 'linux' }
         $arch = [Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()

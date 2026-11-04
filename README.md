@@ -436,6 +436,9 @@ tools\mk61-arduino-board.cmd
 не требуются. Независимый GNU Arm GCC `14.2.1-1.1` устанавливается автоматически
 с проверкой SHA256; для готового компилятора доступны `-ToolchainDirectory`
 на Windows и `--toolchain` на macOS/Linux.
+Для Windows-пакета с Unicode-путём установщик также выбирает отдельный
+ASCII-каталог компилятора под `C:\Users\Public\Documents\MK61Arduino`:
+это устраняет ошибку загрузки `liblto_plugin.dll` в `gcc-ar`, сохраняя LTO.
 На Windows путь sketchbook берётся из конфигурации Arduino IDE 2, включая
 OneDrive и перенесённые каталоги. Для Arduino IDE 1 используется стандартный
 `Documents\Arduino`; нестандартный путь передайте установщику ключом

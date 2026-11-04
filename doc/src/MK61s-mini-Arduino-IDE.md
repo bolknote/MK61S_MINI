@@ -47,6 +47,13 @@ APP, поточный VM и проверка CRC сохраняются.
 `bin` либо его родителя. Поддерживаются также переменные
 `MK61_ARDUINO_TOOLCHAIN` и `MK61_GCC_TOOLCHAIN`.
 
+В Windows сам GCC тоже должен находиться в ASCII-каталоге: закреплённый
+`gcc-ar` не находит `liblto_plugin.dll` в пути с кириллицей. Если sketchbook
+содержит такие символы, установщик размещает компилятор в отдельном реальном
+каталоге `C:\Users\Public\Documents\MK61Arduino\toolchains-...`.
+SDK, исходники и sketchbook сохраняют выбранные пути. Повторная установка
+автоматически заменяет старую регистрацию GCC из Unicode-каталога.
+
 Отдельный `arduino-cli` не требуется. На Windows сборка и установка `/System`
 используют штатные PowerShell 5.1 и .NET; Python, host-компилятор C++ и Bash
 не нужны. На macOS/Linux нужны Python 3 и host-компилятор C++17 для упаковки
@@ -63,17 +70,10 @@ STM32Tools и BusyBox не требуются. На macOS/Linux установи
 
 ## Установка платы
 
-Закройте Arduino IDE и из корня проекта выполните на macOS/Linux:
+Закройте Arduino IDE и из корня проекта выполните команду для своей системы:
 
-```bash
-./tools/mk61-arduino-board.cmd
-```
-
-На Windows из `cmd.exe` или PowerShell:
-
-```bat
-tools\mk61-arduino-board.cmd
-```
+- macOS/Linux: `./tools/mk61-arduino-board.cmd`;
+- Windows, из cmd.exe или PowerShell: `tools\mk61-arduino-board.cmd`.
 
 Это полиглотный launcher: в macOS/Linux он запускает shell-установщик, а в
 Windows - PowerShell. Он копирует пакет платы с нашим SDK в sketchbook
@@ -400,6 +400,7 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 | `app/firmware mismatch` | Старый ABI 2/3/4 нужно пересобрать; для ABI 6 проверьте версию публичных сервисов. |
 | `python.exe`, `python3.exe` или `py.exe failed with exit code ...` | Arduino запускает старую установленную копию пакета платы. Закройте IDE, обновите `main`, из новой папки выполните `tools\mk61-arduino-board.cmd`, затем `tools\mk61-arduino-board.cmd -Check` и перезапустите IDE. Актуальная Windows-сборка и Upload используют PowerShell/.NET. |
 | `C++17 compiler not found` | Установлен старый пакет платы или старые скрипты репозитория. В свежей Windows-сборке APP пакуются PowerShell/.NET-кодом и Visual Studio/LLVM не требуются; обновите `main`, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. |
+| `gcc-ar.exe: Cannot find plugin 'liblto_plugin.dll'` | Сам GCC установлен в Unicode-каталог. Обновите проект, закройте IDE и повторите установщик платы: он выберет отдельный реальный ASCII-каталог компилятора. Для явно заданного `-ToolchainDirectory` используйте ASCII-путь. LTO сохраняется. |
 | `lto1.exe ... sketch\objs.a failed` | Путь сборочного кэша IDE содержит символы, потерянные Windows-версией GNU Arm LTO. Закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Установщик создаст отдельный ASCII-кэш, сохранив LTO. |
 | `STM32CubeProgrammer CLI not found` | Установите STM32CubeProgrammer с USB DFU-драйвером. Для нестандартной установки задайте полный путь к CLI через `MK61_STM32_PROGRAMMER`. STM32 Core и BusyBox не нужны. |
 | `Error missing binary file argument!` | Используется старая копия MK61 uploader, которая передавала Windows-путь STM32 shell-обёртке отдельными короткими аргументами. Обновите `main`, закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd`, перезапустите IDE и повторите Upload. |

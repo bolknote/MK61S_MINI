@@ -22,13 +22,35 @@ function Get-NativeSdkPath {
     }
     return $selected
 }
+# GCC itself accepts Unicode sources, but the pinned Windows gcc-ar cannot
+# locate its LTO plugin when its own installation path contains Unicode.
+function Get-NativeGnuArmInstallRoot {
+    param([string]$Requested)
+    $requestedPath = [IO.Path]::GetFullPath($Requested)
+    if ($env:OS -ne 'Windows_NT' -or $requestedPath -notmatch '[^\x20-\x7e]') { return $requestedPath }
+    $public = [Environment]::GetEnvironmentVariable('PUBLIC')
+    $documents = if ([string]::IsNullOrWhiteSpace($public)) {
+        [Environment]::GetFolderPath('CommonDocuments')
+    } else { Join-Path $public 'Documents' }
+    if ([string]::IsNullOrWhiteSpace($documents) -or $documents -match '[^\x20-\x7e]') {
+        throw 'GNU Arm requires an ASCII-only installation path on Windows; pass an ASCII -InstallRoot or -ToolchainDirectory.'
+    }
+    # Keep independent sketchbooks/projects isolated, with a stable real path.
+    $hasher = [Security.Cryptography.SHA256]::Create()
+    try { $hash = [BitConverter]::ToString($hasher.ComputeHash(
+        [Text.Encoding]::UTF8.GetBytes($requestedPath.ToLowerInvariant()))).Replace('-', '').Substring(0, 12).ToLowerInvariant()
+    } finally { $hasher.Dispose() }
+    return Join-Path $documents "MK61Arduino/toolchains-$hash"
+}
+
 function Get-NativeGnuArmBin {
     param([string]$ProjectRoot, [string]$Version, [string]$Explicit)
     $selected = $Explicit
     if ([string]::IsNullOrWhiteSpace($selected)) { $selected = $env:MK61_GCC_TOOLCHAIN }
     $suffix = if ($env:OS -eq 'Windows_NT') { '.exe' } else { '' }
     if ([string]::IsNullOrWhiteSpace($selected)) {
-        $cached = Join-Path $ProjectRoot ".build/toolchains/xpack-arm-none-eabi-gcc-$Version"
+        $cacheRoot = Get-NativeGnuArmInstallRoot (Join-Path $ProjectRoot '.build/toolchains')
+        $cached = Join-Path $cacheRoot "xpack-arm-none-eabi-gcc-$Version"
         if ([IO.Directory]::Exists($cached)) { $selected = $cached
         } else {
             $gcc = Get-Command "arm-none-eabi-gcc$suffix" -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -39,6 +61,9 @@ function Get-NativeGnuArmBin {
         throw 'GNU Arm GCC is missing; run tools/install_gcc_dependencies.ps1, put arm-none-eabi-gcc on PATH or set MK61_GCC_TOOLCHAIN'
     }
     $selected = [IO.Path]::GetFullPath($selected)
+    if ($env:OS -eq 'Windows_NT' -and $selected -match '[^\x20-\x7e]') {
+        throw 'GNU Arm compiler must use an ASCII-only path on Windows (gcc-ar cannot find liblto_plugin.dll otherwise). Reinstall the MK61s board or select an ASCII -ToolchainDirectory.'
+    }
     if (-not [IO.File]::Exists((Join-Path $selected "arm-none-eabi-gcc$suffix"))) {
         $selected = Join-Path $selected 'bin'
     }
