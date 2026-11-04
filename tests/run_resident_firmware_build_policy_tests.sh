@@ -137,6 +137,11 @@ require_text "$board_install_ps" 'MK61Arduino\build-cache-'
 
 arduino_ide_job="$(sed -n \
   '/^  arduino-ide-windows:/,/^  arduino-compat-linux:/p' "$release_workflow")"
+job_contains() {
+  # Read the complete input: grep -q can close a pipe while printf is still
+  # writing a long job, turning a successful match into SIGPIPE under pipefail.
+  grep -F -- "$1" <<< "$arduino_ide_job" > /dev/null
+}
 for required in \
     'mk61_platform=mini_v2,mk61_display=lcd_a00' \
     'mk61:stm32:mk61_f411:mk61_platform=mini_v2,mk61_display=lcd_a00' \
@@ -156,7 +161,7 @@ for required in \
     '-DMK61_FOCAL_AS_APP=1' \
     '-DMK61_TINYBASIC_AS_APP=1' \
     '-DMK61_MARKDOWN_VIEWER_AS_APP=1'; do
-  printf '%s\n' "$arduino_ide_job" | grep -Fq -- "$required" ||
+  job_contains "$required" ||
     fail "Windows Arduino IDE V2 job is missing: $required"
 done
 for required in \
@@ -164,31 +169,27 @@ for required in \
     '-DMK61_EXTERNALIZE_USBDISK=0' \
     '-DMK61_SETUP_AS_APP=0' \
     '-DMK61_EXPLORER_AS_APP=0'; do
-  printf '%s\n' "$arduino_ide_job" | grep -Fq -- "$required" ||
+  job_contains "$required" ||
     fail "Windows Arduino IDE F411 job is missing: $required"
 done
-printf '%s\n' "$arduino_ide_job" | grep -Fq -- 'build_cache.path' ||
+job_contains 'build_cache.path' ||
   fail 'Windows Arduino IDE job does not verify its ASCII build cache'
-printf '%s\n' "$arduino_ide_job" |
-  grep -Fq -- 'tests/system_app_catalog_powershell_self_test.ps1' ||
+job_contains 'tests/system_app_catalog_powershell_self_test.ps1' ||
   fail 'Windows Arduino IDE job does not exercise the PowerShell APP cache'
-printf '%s\n' "$arduino_ide_job" |
-  grep -Fq -- 'Temp пользователя Роман' ||
+job_contains 'Temp пользователя Роман' ||
   fail 'Windows Arduino IDE job does not compile with a Unicode TEMP path'
-if printf '%s\n' "$arduino_ide_job" |
-    grep -Fq -- 'mk61_documents=disabled'; then
+if job_contains 'mk61_documents=disabled'; then
   fail 'Windows Arduino IDE V2 job disables the document APP'
 fi
-if printf '%s\n' "$arduino_ide_job" |
-    grep -Fq -- 'mk61_font_settings='; then
+if job_contains 'mk61_font_settings='; then
   fail 'Windows Arduino IDE job passes the removed font-settings menu option'
 fi
 
-if printf '%s\n' "$arduino_ide_job" | grep -Fq 'install_arduino_dependencies.ps1'; then
+if job_contains 'install_arduino_dependencies.ps1'; then
   fail 'native Windows Arduino IDE job still installs STM32 Core'
 fi
 for required in 'tools/.mk61-arduino-board/install.ps1' 'check_standalone_sdk_build.py' 'check_native_runtime_libraries.py'; do
-  printf '%s\n' "$arduino_ide_job" | grep -Fq "$required" ||
+  job_contains "$required" ||
     fail "native Windows Arduino IDE job lost dependency isolation: $required"
 done
 
