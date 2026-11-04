@@ -170,7 +170,7 @@ USB-C корпуса предоставляет питание и последо
 
 ## Файлы и переносимость
 
-На **STM32** файлы хранятся в C6 во внешней SPI flash. Режим USB-диска
+На **STM32** файлы хранятся в C9 во внешней SPI flash. Режим USB-диска
 представляет их компьютеру как виртуальный FAT/VFAT-том. Комплект системных
 APP помещается в `/System`, пользовательские программы — в обычные каталоги.
 [Устройство хранилища](doc/src/MK61s-mini-Storage.md).
@@ -196,7 +196,7 @@ resident `.bin` с машинным кодом прошивки STM32.
 | Инструменты сборки и файловый менеджер MKC | [Команды `tools`](tools/README.md) |
 | Самостоятельный STM32 SDK и драйверы | [Сборка](doc/design/STM32-independent-sdk.md), [драйверы](doc/design/STM32-hardware-core.md) |
 | Arduino IDE | [Установка и сборка](doc/src/MK61s-mini-Arduino-IDE.md) |
-| Файлы, C6 и USB-диск | [Хранилище](doc/src/MK61s-mini-Storage.md) |
+| Файлы, C9 и USB-диск | [Хранилище](doc/src/MK61s-mini-Storage.md) |
 | Терминал и сценарии | [Терминал](doc/src/MK61s-mini-Terminal.md), [M61](doc/src/MK61s-mini-M61.md), [trap](doc/src/MK61s-mini-M61-Trap.md) |
 | Языки | [TinyBASIC](doc/src/MK61s-mini-TinyBASIC.md), [FOCAL](doc/src/MK61s-mini-FOCAL.md) |
 | Собственные приложения | [Быстрый старт C/Rust](doc/src/MK61s-mini-APP-Quickstart.md), [C/C++](doc/src/MK61s-mini-APP-Programming.md), [SDK ABI 6](sdk/portable/README.md) |
