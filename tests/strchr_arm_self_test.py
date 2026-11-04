@@ -18,6 +18,11 @@ sys.path.insert(0, str(ROOT / 'tools'))
 from check_stm32_vectors import ElfImage
 
 VARIANTS = ['byte1', 'byte4', 'word1', 'word2', 'dsp1', 'dsp2']
+M4_SELECTED_BODIES = {
+    'sdk_strchr': (288, '039712087ec1e0d66e074780ee8266c4727c2b56e9950c4d13a781bb7e3c59d7'),
+    'native_strchr': (288, '039712087ec1e0d66e074780ee8266c4727c2b56e9950c4d13a781bb7e3c59d7'),
+    'native_compact_strchr': (18, 'a02e16347138c513c279df7507c44d919bddf1766ac9ead65a60136f1cef2b71'),
+}
 
 
 def pin(path):
@@ -34,11 +39,13 @@ def command(argv, log):
     return p.stdout
 
 
-def build(tc, out):
+def build(tc, out, arches=None, public_only=False):
     out.mkdir(parents=True, exist_ok=False)
     logs, products = [], []
     (out / 'runtime-pointer.c').write_text('#include <stdint.h>\nuintptr_t* mk61_app_runtime;\n')
-    for arch, cpu in [('m4', 'cortex-m4'), ('m0', 'cortex-m0plus')]:
+    names_by_arch = {}
+    for arch in arches or ['m4', 'm0']:
+        cpu = {'m4': 'cortex-m4', 'm0': 'cortex-m0plus'}[arch]
         flags = ['-mcpu=' + cpu, '-mthumb', '-mfloat-abi=soft', '-Os', '-fno-lto',
                  '-fno-builtin', '-fno-ipa-icf', '-fno-tree-loop-distribute-patterns',
                  '-ffunction-sections', '-fdata-sections', '-Wall', '-Wextra', '-Werror',
@@ -48,7 +55,10 @@ def build(tc, out):
                    ('sdk', ROOT / 'sdk/portable/memory.c', ['-Dstrchr=sdk_strchr'])]
         if arch == 'm4':
             sources += [('native', ROOT / 'code/system_strings.c',
-                         ['-DMK61_STRING_TEST_BUILD=1', '-Dstrchr=native_strchr'])]
+                         ['-DMK61_STRING_TEST_BUILD=1', '-Dstrchr=native_strchr']),
+                        ('native-compact', ROOT / 'code/system_strings.c',
+                         ['-DMK61_STRING_TEST_BUILD=1', '-DMK61_STRCHR_M4_COMPACT=1',
+                          '-Dstrchr=native_compact_strchr'])]
         else:
             # Pico presently supplies no strchr override: future native baseline
             # must be rebound to the toolchain/body of the actually installed FW.
@@ -56,24 +66,26 @@ def build(tc, out):
         for name, source, defines in sources:
             obj = out / f'{arch}-{name}.o'
             command([tc / 'arm-none-eabi-gcc', *flags, *defines, '-c', source, '-o', obj], logs)
-            if name in ['sdk', 'native']:
+            if name in ['sdk', 'native', 'native-compact']:
                 # Isolate the retained real public body without changing its
                 # instructions or allowing unrelated libc duplicates at link.
-                command([tc / 'arm-none-eabi-objcopy', '--keep-global-symbol=' +
-                         ('sdk_strchr' if name == 'sdk' else 'native_strchr'), obj], logs)
+                symbol = {'sdk': 'sdk_strchr', 'native': 'native_strchr',
+                          'native-compact': 'native_compact_strchr'}[name]
+                command([tc / 'arm-none-eabi-objcopy', '--keep-global-symbol=' + symbol, obj], logs)
             if name != 'pico':
                 objects.append(obj)
             else:
                 names = command([tc / 'arm-none-eabi-nm', '--defined-only', obj], logs)
                 assert not any(x.split()[-1] in ('strchr', '__wrap_strchr') for x in names.splitlines())
-        names = [v + '_strchr' for v in VARIANTS[:6 if arch == 'm4' else 4]]
-        names += ['sdk_strchr', 'strchr'] + (['native_strchr'] if arch == 'm4' else [])
+        names = [] if public_only else [v + '_strchr' for v in VARIANTS[:6 if arch == 'm4' else 4]]
+        names += ['sdk_strchr', 'strchr'] + (['native_strchr', 'native_compact_strchr'] if arch == 'm4' else [])
+        names_by_arch[arch] = names
         flash = 0x08000000 if arch == 'm4' else 0x10000000
         for placement, address in [('flash', flash + 0x2000), ('sram', 0x20002000)]:
             elf = out / f'{arch}-{placement}.elf'
             roots = [x for name in names for x in ['-Wl,-u,' + name]]
             command([tc / 'arm-none-eabi-gcc', *flags, '-nostdlib',
-                     '-Wl,--build-id=none,--gc-sections', '-Wl,-e,byte1_strchr',
+                     '-Wl,--build-id=none,--gc-sections', '-Wl,-e,' + names[0],
                      '-Wl,-Ttext=' + hex(address), *roots, *objects, '-lc', '-lgcc', '-o', elf], logs)
             image = ElfImage(elf)
             bodies = {}
@@ -83,6 +95,8 @@ def build(tc, out):
                             for kind, off, va, pa, n, mem, f, al in image.segments
                             if kind == 1 and va <= addr and addr + size <= va + n)
                 bodies[name] = dict(bytes=size, sha256=hashlib.sha256(body).hexdigest(), address=addr)
+                if arch == 'm4' and name in M4_SELECTED_BODIES:
+                    assert (size, bodies[name]['sha256']) == M4_SELECTED_BODIES[name], (name, 'selected body drift')
             dis = command([tc / 'arm-none-eabi-objdump', '-d', elf], logs)
             (out / f'{arch}-{placement}.dis').write_text(dis)
             products.append(dict(arch=arch, placement=placement, elf=pin(elf), bodies=bodies))
@@ -99,10 +113,11 @@ def build(tc, out):
                  '-Wl,--build-id=none,--gc-sections', '-Wl,-e,strchr', '-Wl,-Ttext=0x20006000',
                  '-Wl,--section-start=.bss=0x20007000', *objs, '-o', elf], logs)
         products.append(dict(arch=arch, placement='runtime', elf=pin(elf)))
-    result = dict(products=products, commands=logs, physical_IO=0,
+    result = dict(products=products, names_by_arch=names_by_arch, commands=logs, physical_IO=0,
                   source_pins=[pin(ROOT / x) for x in ['code/system_strings.c', 'sdk/portable/memory.c',
                       'ports/picocalc/memory.c', 'sdk/portable/system/runtime.S',
-                      'code/loadable_system_runtime.def', 'research/strchr-2026-10-28/candidates.S']])
+                      'code/loadable_system_runtime.def', 'research/strchr-2026-10-28/candidates.S',
+                      'code/memory_strchr_arm.h', 'code/strchr_m4.inc', 'tests/strchr_arm_self_test.py']])
     (out / 'build.json').write_text(json.dumps(result, indent=2) + '\n')
     return result
 
@@ -154,11 +169,11 @@ def run(build_result, out, random_cases):
                   UC_ARM_REG_R8, UC_ARM_REG_R9, UC_ARM_REG_R10, UC_ARM_REG_R11]
     cases = list(corpus(random_cases))
     results = []
-    for arch in ['m4', 'm0']:
+    arches = sorted({p['arch'] for p in build_result['products']})
+    for arch in arches:
         flash = 0x08000000 if arch == 'm4' else 0x10000000
         native = ElfImage(out / f'{arch}-flash.elf')
-        names = [v + '_strchr' for v in VARIANTS[:6 if arch == 'm4' else 4]]
-        names += ['sdk_strchr', 'strchr'] + (['native_strchr'] if arch == 'm4' else [])
+        names = build_result['names_by_arch'][arch]
         for placement in ['flash', 'sram', 'runtime']:
             elf = ElfImage(out / f'{arch}-{placement}.elf')
             u = Uc(UC_ARCH_ARM, UC_MODE_MCLASS | UC_MODE_THUMB)
@@ -230,10 +245,13 @@ def run(build_result, out, random_cases):
                 found = blob.find(bytes([c['c'] & 255]))
                 expected = pointer + found if found >= 0 else 0
                 for name in names:
-                    byte = name.startswith(('byte', 'sdk_', 'native_'))
+                    byte = (name.startswith('byte') or name == 'native_compact_strchr' or
+                            (arch == 'm0' and name == 'sdk_strchr'))
                     # Newlib has its own word-search implementation. Enforce
                     # the same no-prefix, containing-word ceiling here.
                     decisive_end = pointer + (found + 1 if found >= 0 else len(blob))
+                    if arch == 'm4' and name in ['sdk_strchr', 'native_strchr'] and decisive_end - pointer <= 16:
+                        byte = True  # The selected prefix must stop byte-exactly on short strings.
                     end = decisive_end if byte else (decisive_end + 3) & ~3
                     active.update(pointer=pointer, end=end, name=name, case=index, reads=0)
                     saved = {r: 0xa1730000 + i * 0x1011 for i, r in enumerate(saved_regs)}
@@ -289,7 +307,7 @@ def run(build_result, out, random_cases):
             results.append(row)
             print(arch, placement, row['calls'], 'strchr calls PASS', flush=True)
     # Literal relocation may change addresses, not code bodies, across banks.
-    for arch in ['m4', 'm0']:
+    for arch in arches:
         a, b = [next(p for p in build_result['products'] if p['arch'] == arch and p['placement'] == bank)
                 for bank in ['flash', 'sram']]
         for name in a['bodies']:
@@ -309,8 +327,11 @@ def main():
     p.add_argument('--random-cases', type=int, default=256)
     p.add_argument('--build-only', action='store_true')
     p.add_argument('--run-existing', action='store_true')
+    p.add_argument('--arch', action='append', choices=['m4', 'm0'], help='qualify only the changed architecture')
+    p.add_argument('--public-only', action='store_true', help='qualify production bodies without rerunning research candidates')
     a = p.parse_args()
-    data = json.loads((a.output_dir / 'build.json').read_text()) if a.run_existing else build(a.toolchain_bin, a.output_dir)
+    data = (json.loads((a.output_dir / 'build.json').read_text()) if a.run_existing else
+            build(a.toolchain_bin, a.output_dir, a.arch, a.public_only))
     if not a.build_only:
         run(data, a.output_dir, a.random_cases)
 

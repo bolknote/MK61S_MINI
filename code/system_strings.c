@@ -15,6 +15,7 @@
      defined(MK61_BOARD_40TH) || defined(MK61_DISPLAY_UC1609) || \
      defined(DISPLAY_UC1609))
 #define MK61_STRLEN_M4_COMPACT 1
+#define MK61_STRCHR_M4_COMPACT 1
 #endif
 #include "memory_length_arm.h"
 #ifndef MK61_ARM_STRLEN
@@ -25,6 +26,8 @@ size_t strlen(const char* s) {
 size_t strnlen(const char* s,size_t n) {
   size_t i=0;while(i<n && s[i])++i;return i;
 }
+#include "memory_strchr_arm.h"
+#ifndef MK61_ARM_STRCHR
 char* strchr(const char* s,int c) {
   const unsigned char target=(unsigned char)c;
   for(;;++s) {
@@ -33,6 +36,7 @@ char* strchr(const char* s,int c) {
     if(!value)return NULL;
   }
 }
+#endif
 #ifndef MK61_ARM_STRCMP
 int strcmp(const char* a,const char* b) {
   while((unsigned char)*a==(unsigned char)*b && *a) {++a;++b;}

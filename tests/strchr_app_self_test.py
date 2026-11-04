@@ -19,7 +19,7 @@ from check_stm32_vectors import ElfImage
 from strchr_arm_self_test import pin, command, RESEARCH, VARIANTS
 
 
-def build(tc, out, core):
+def build(tc, out, core, arches=None, public_only=False):
     out.mkdir(parents=True, exist_ok=False)
     spec = importlib.util.spec_from_file_location('strchr_app_builder', ROOT / 'tools/build_portable_app.py')
     builder = importlib.util.module_from_spec(spec)
@@ -28,8 +28,10 @@ def build(tc, out, core):
     core_build = json.loads((core / 'build.json').read_text())
     apps = []
     for arch, target, limit in [('m4', 'stm32', 6), ('m0', 'picocalc-pico-h', 4)]:
+        if arches and arch not in arches:
+            continue
         baseline = next(p for p in core_build['products'] if p['arch'] == arch and p['placement'] == 'sram')
-        for route, variants in [('standalone', [0, *range(1, limit + 1), 7]), ('shared', [0])]:
+        for route, variants in [('standalone', [0] if public_only else [0, *range(1, limit + 1), 7]), ('shared', [0])]:
             for variant in variants:
                 folder = out / f'{arch}-{route}-v{variant}'
                 actual = []
@@ -68,6 +70,8 @@ def build(tc, out, core):
                 digest = hashlib.sha256(body).hexdigest()
                 if 1 <= variant <= 6:
                     assert digest == baseline['bodies'][VARIANTS[variant - 1] + '_strchr']['sha256'], ('candidate drift', arch, variant)
+                if variant == 0 and route == 'standalone':
+                    assert digest == baseline['bodies']['sdk_strchr']['sha256'], ('production SDK body drift', arch)
                 apps.append(dict(arch=arch, route=route, variant=variant, APP=pin(folder / 'STCHECK.APP'),
                     ELF=pin(folder / 'STCHECK.elf'), report=report, actual_commands=pin(folder / 'actual-commands.json'),
                     strchr_bytes=size, strchr_sha256=digest))
@@ -77,7 +81,8 @@ def build(tc, out, core):
                   source_pins=[pin(ROOT / x) for x in ['sdk/portable/start.c', 'sdk/portable/shared_runtime.c',
                       'sdk/portable/system/runtime.S', 'sdk/portable/memory.c', 'tools/build_portable_app.py',
                       'research/strchr-2026-10-28/APP-CHECK.c', 'research/strchr-2026-10-28/candidates.S',
-                      'research/strchr-2026-10-28/bench.c', 'research/strchr-2026-10-28/bench.h']])
+                      'research/strchr-2026-10-28/bench.c', 'research/strchr-2026-10-28/bench.h',
+                      'code/memory_strchr_arm.h', 'code/strchr_m4.inc', 'tests/strchr_app_self_test.py']])
     (out / 'build.json').write_text(json.dumps(result, indent=2) + '\n')
     return result
 
@@ -93,7 +98,8 @@ def execute(data, core, out):
     saved_regs = [UC_ARM_REG_R4, UC_ARM_REG_R5, UC_ARM_REG_R6, UC_ARM_REG_R7,
                   UC_ARM_REG_R8, UC_ARM_REG_R9, UC_ARM_REG_R10, UC_ARM_REG_R11]
     readers, logs, results = {}, [], []
-    for arch in ['m4', 'm0']:
+    core_build = json.loads((core / 'build.json').read_text())
+    for arch in sorted({app['arch'] for app in data['apps']}):
         reader = out / ('decode-app-' + arch)
         command(['c++', '-std=c++17', '-O2', *(['-DMK61_CORE_STANDALONE=1'] if arch == 'm0' else []),
                  '-I' + str(ROOT / 'code'), ROOT / 'tests/portable_app_format_self_test.cpp',
@@ -111,6 +117,7 @@ def execute(data, core, out):
         checks = runs = inits = negative = forwarded = bench_runs = bench_search_calls = 0
         backends = [v + '_strchr' for v in VARIANTS[:6 if arch == 'm4' else 4]]
         backends += ['sdk_strchr', 'strchr'] + (['native_strchr'] if arch == 'm4' else [])
+        backends = core_build.get('names_by_arch', {}).get(arch, backends)
         for base in [0x20002000, 0x20006000, 0x2000a000]:
             decoded = out / f"{arch}-{app['route']}-v{app['variant']}-{base:x}.decoded"
             command([readers[arch]['path'], app['APP']['path'], decoded, hex(base)], logs)
@@ -263,8 +270,11 @@ def main():
     p.add_argument('--core-dir', type=Path, required=True)
     p.add_argument('--build-only', action='store_true')
     p.add_argument('--run-existing', action='store_true')
+    p.add_argument('--arch', action='append', choices=['m4', 'm0'])
+    p.add_argument('--public-only', action='store_true', help='qualify only the changed production SDK APP routes')
     a = p.parse_args()
-    data = json.loads((a.output_dir / 'build.json').read_text()) if a.run_existing else build(a.toolchain_bin, a.output_dir, a.core_dir)
+    data = (json.loads((a.output_dir / 'build.json').read_text()) if a.run_existing else
+            build(a.toolchain_bin, a.output_dir, a.core_dir, a.arch, a.public_only))
     if not a.build_only:
         execute(data, a.core_dir, a.output_dir)
 

@@ -69,6 +69,8 @@ int strcmp(const char* left, const char* right) {
 #endif
 
 #ifndef MK61_APP_SHARED_RUNTIME
+#include "memory_strchr_arm.h"
+#ifndef MK61_ARM_STRCHR
 char* strchr(const char* text, int character) {
   const unsigned char wanted = (unsigned char) character;
   do {
@@ -76,4 +78,5 @@ char* strchr(const char* text, int character) {
   } while(*text++ != 0);
   return NULL;
 }
+#endif
 #endif
