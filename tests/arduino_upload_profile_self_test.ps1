@@ -1,9 +1,9 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$uploader = Join-Path $root 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-upload.ps1'
+
 $powerShell = (Get-Process -Id $PID).Path
 $work = Join-Path ([IO.Path]::GetTempPath()) ('mk61 upload profiles ' + [guid]::NewGuid().ToString('N'))
 $oldTool = $env:MK61_TEST_MKC_TOOL
@@ -45,6 +45,11 @@ try {
 
 try {
     [void][IO.Directory]::CreateDirectory($work)
+    $tools = Join-Path $work 'installed/tools'
+    [void][IO.Directory]::CreateDirectory($tools)
+    Copy-Item (Join-Path $root 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/*.ps1') $tools
+    Copy-Item (Join-Path $root 'tools/.mk61-dfu/dfu.ps1') (Join-Path $tools 'mk61-dfu.ps1')
+    $uploader = Join-Path $tools 'mk61-app-upload.ps1'
     $env:MK61_TEST_MKC_TOOL = Join-Path $root 'tools/.mkc/mkc.ps1'
     $profiles = @(
         @('mini-v2-lcd1602-a00', 'mini-v2-a00'),
@@ -94,15 +99,13 @@ try {
     $build = Join-Path $work "$profile-f411"
     $device = Join-Path $build 'wrong-device'
     [void][IO.Directory]::CreateDirectory($device)
-    $stm32Script = Join-Path $work 'stm32CubeProg.sh'
-    [IO.File]::WriteAllText($stm32Script, '    -f | --file)')
     if ($env:OS -eq 'Windows_NT') {
-        $busybox = Join-Path $work 'fake-busybox.cmd'
-        [IO.File]::WriteAllText($busybox, "@exit /b 0`r`n")
+        $programmer = Join-Path $work 'fake-programmer.cmd'
+        [IO.File]::WriteAllText($programmer, "@exit /b 0`r`n")
     } else {
-        $busybox = Join-Path $work 'fake-busybox'
-        [IO.File]::WriteAllText($busybox, "#!/bin/sh`nexit 0`n")
-        & chmod +x $busybox
+        $programmer = Join-Path $work 'fake-programmer'
+        [IO.File]::WriteAllText($programmer, "#!/bin/sh`nexit 0`n")
+        & chmod +x $programmer
         if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare fake DFU tool' }
     }
     $env:MK61_TEST_DEVICE_PROFILE = 'mini-v2-a02'
@@ -110,7 +113,7 @@ try {
     $arguments[([Array]::IndexOf($arguments, '-BuildPath') + 1)] = $build
     $arguments[([Array]::IndexOf($arguments, '-Bundle') + 1)] = "mk61s-M-$profile-f411"
     $arguments[([Array]::IndexOf($arguments, '-TestMockDevice') + 1)] = $device
-    $arguments += @('-Busybox', $busybox, '-Stm32Script', $stm32Script, '-TestMockDfu')
+    $arguments += @('-Programmer', $programmer, '-TestMockDfu')
     $log = Join-Path $work 'wrong-profile.txt'
     $ErrorActionPreference = 'Continue'
     try {

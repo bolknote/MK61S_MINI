@@ -256,7 +256,7 @@ jobs:
           }
 
   arduino-ide-windows:
-    name: Windows Arduino IDE recipe (no host C++)
+    name: Windows native Arduino IDE (no STM32 Core)
     runs-on: windows-latest
 
     steps:
@@ -265,10 +265,6 @@ jobs:
 
       - name: Setup Arduino CLI
         uses: ./.github/actions/setup-arduino-cli
-
-      - name: Install pinned STM32 packages
-        shell: pwsh
-        run: tools/install_arduino_dependencies.ps1
 
       - name: Install MK61 Arduino board
         shell: pwsh
@@ -280,18 +276,10 @@ jobs:
               (Join-Path $pythonTrap $name) -Force
           }
           $env:PATH = "$pythonTrap;$env:PATH"
-          $originalSketchbook = (& arduino-cli config get directories.user |
-            Out-String).Trim()
-          if ($LASTEXITCODE -ne 0 -or
-              [string]::IsNullOrWhiteSpace($originalSketchbook)) {
-            throw 'Cannot read Arduino IDE sketchbook configuration'
-          }
-          $originalData = (& arduino-cli config get directories.data |
-            Out-String).Trim()
-          if ($LASTEXITCODE -ne 0 -or
-              [string]::IsNullOrWhiteSpace($originalData)) {
-            throw 'Cannot read Arduino IDE data-directory configuration'
-          }
+          # Isolated Arduino data: install only CLI builtin tools/indexes.
+          # No vendor package or Arduino libraries are present in this job.
+          $originalData = Join-Path $env:RUNNER_TEMP 'mk61-empty-Arduino15'
+          [IO.Directory]::CreateDirectory($originalData) | Out-Null
           $configuredSketchbook = Join-Path $env:RUNNER_TEMP `
             'Arduino IDE Роман'
           $unsafeBuildCache = Join-Path $env:RUNNER_TEMP `
@@ -330,7 +318,13 @@ jobs:
           # Arduino CLI and Arduino IDE use different default config locations
           # on the runner.  Write the real IDE file that our installer reads.
           Write-IdeConfig $configuredSketchbook
-          & ./tools/mk61-arduino-board.cmd
+          & arduino-cli --config-file $ideConfig core update-index
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # First install uses stock Windows PowerShell, with no compiler
+          # override: the board downloads/verifies its own GNU toolchain.
+          # Its installed path and SDK both contain the Cyrillic sketchbook.
+          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
+            -File ./tools/.mk61-arduino-board/install.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $null = Assert-SafeBuildCache
           $boards = (& arduino-cli --config-file $ideConfig board listall |
@@ -372,12 +366,9 @@ jobs:
           & ./tests/arduino_legacy_fqbn_self_test.ps1 `
             -ConfigFile $ideConfig -Sketchbook $configuredSketchbook
 
-          # Restore the sketchbook containing the pinned libraries before the
-          # full recipe build, and install the board there as an IDE user does.
-          Write-IdeConfig $originalSketchbook
-          & ./tools/mk61-arduino-board.cmd
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $null = Assert-SafeBuildCache
+          if (Test-Path (Join-Path $originalData 'packages/STMicroelectronics')) {
+            throw 'Native board installation unexpectedly installed STM32 Core'
+          }
 
       - name: Verify Windows Upload selects the MK61 compound uploader
         shell: pwsh
@@ -415,7 +406,7 @@ jobs:
             -File ./tests/arduino_upload_profile_self_test.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Reject unsupported STM32 cores before compilation
+      - name: Verify legacy Core metadata never blocks the native board
         shell: powershell
         run: |
           & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
@@ -429,40 +420,11 @@ jobs:
             -File ./tests/arduino_system_bundle_self_test.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Verify STM32Tools 2.4 and 2.5 DFU parsers on Windows PowerShell
+      - name: Verify standalone DFU arguments and failures on Windows PowerShell
         shell: powershell
         run: |
-          $ideConfig = Join-Path `
-            (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
-          $arduinoData = (& arduino-cli --config-file $ideConfig `
-            config get directories.data | Out-String).Trim()
-          if ($LASTEXITCODE -ne 0 -or
-              [string]::IsNullOrWhiteSpace($arduinoData)) {
-            throw 'Cannot locate the Arduino data directory'
-          }
           & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
-            -File ./tests/arduino_dfu_windows_self_test.ps1 `
-            -Stm32ToolsDirectory (Join-Path $arduinoData `
-              'packages\STMicroelectronics\tools\STM32Tools\2.4.0')
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          # 2.5 reassigned -f to SWD frequency and uses -b/--bin for the
-          # image. Test the actual second package, not a rewritten mock.
-          $archive = Join-Path $env:RUNNER_TEMP 'STM32Tools-2.5.0-windows.tar.bz2'
-          Invoke-WebRequest -UseBasicParsing `
-            -Uri 'https://github.com/stm32duino/Arduino_Tools/releases/download/2.5.0/STM32Tools-2.5.0-windows.tar.bz2' `
-            -OutFile $archive
-          if ((Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash -ne
-              'e5d0ef2b2543cdebfa3b6a32e0b4e1ef5dabd80227d970862317f834dfdb5b12') {
-            throw 'STM32Tools 2.5.0 archive checksum mismatch'
-          }
-          $newTools = Join-Path $env:RUNNER_TEMP 'stm32tools-2.5.0'
-          [IO.Directory]::CreateDirectory($newTools) | Out-Null
-          & tar -xf $archive -C $newTools
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
-            -File ./tests/arduino_dfu_windows_self_test.ps1 `
-            -Stm32ToolsDirectory (Join-Path $newTools 'STM32Tools')
+            -File ./tests/arduino_dfu_windows_self_test.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify Windows font-license cleanup preserves its parent
@@ -519,9 +481,7 @@ jobs:
             -Fqbn 'mk61:stm32:mk61_f411:mk61_platform=mini_v2,mk61_display=lcd_a00' `
             -ConfigFile $ideConfig `
             -PlatformToolsDirectory (Join-Path $sketchbook `
-              'hardware/mk61/stm32/tools') `
-            -Stm32ToolsDirectory (Join-Path $arduinoData `
-              'packages/STMicroelectronics/tools/STM32Tools/2.4.0')
+              'hardware/mk61/stm32/tools')
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       # Arduino IDE 2.x and arduino-cli execute the same boards.txt/platform.txt
@@ -739,8 +699,6 @@ jobs:
             config get directories.data | Out-String).Trim()
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $tools = Join-Path $sketchbook 'hardware/mk61/stm32/tools'
-          $stm32 = Join-Path $arduinoData `
-            'packages/STMicroelectronics/tools/STM32Tools/2.4.0'
           foreach ($mcu in @('f401', 'f411')) {
             $fqbn = if ($mcu -eq 'f401') {
               'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core'
@@ -751,7 +709,7 @@ jobs:
               -File ./tests/arduino_windows_e2e.ps1 `
               -BuildPath (Join-Path $safeCache "arduino-ide-$mcu-mini-v2") `
               -Fqbn $fqbn -ConfigFile $ideConfig `
-              -PlatformToolsDirectory $tools -Stm32ToolsDirectory $stm32 `
+              -PlatformToolsDirectory $tools `
               -PublishedSystem (Join-Path $env:GITHUB_WORKSPACE `
                 ".build/firmware/mk61s-M-mini-v2-lcd1602-a00-$mcu/System")
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -774,23 +732,37 @@ jobs:
           $arduinoData = (& arduino-cli --config-file $ideConfig `
             config get directories.data | Out-String).Trim()
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $toolchain = Join-Path $arduinoData `
-            'packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc'
-          $objdump = @(Get-ChildItem -LiteralPath $toolchain -Recurse `
-            -Filter 'arm-none-eabi-objdump.exe' -File)
-          if ($objdump.Count -ne 1) {
-            throw "Expected one pinned ARM objdump, found $($objdump.Count)"
+          if (Test-Path (Join-Path $arduinoData 'packages/STMicroelectronics')) {
+            throw 'Native IDE build unexpectedly depends on STM32 Core'
           }
+          $sketchbook = (& arduino-cli --config-file $ideConfig `
+            config get directories.user | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $local = Join-Path $sketchbook 'hardware/mk61/stm32/platform.local.txt'
+          $registered = @([IO.File]::ReadAllLines($local) | Where-Object { $_.StartsWith('compiler.path=') })
+          if ($registered.Count -ne 1) { throw 'Expected one registered native GNU compiler' }
+          $compilerBin = $registered[0].Substring('compiler.path='.Length)
+          $objdump = Get-Item (Join-Path $compilerBin 'arm-none-eabi-objdump.exe')
           foreach ($mcu in @('f401', 'f411')) {
             $elf = Join-Path $safeCache "arduino-ide-$mcu-mini-v2/code.ino.elf"
-            & python ./tests/check_usb_cdc_rx_elf.py $elf --objdump $objdump[0].FullName
+            & python ./tests/check_standalone_sdk_build.py --arduino `
+              (Join-Path (Split-Path $elf) 'compile_commands.json')
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & python ./tests/check_native_runtime_libraries.py --without-libc ($elf -replace '\.elf$', '.map')
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & python ./tests/check_usb_cdc_rx_elf.py $elf --objdump $objdump.FullName
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
-          $env:ARM_NONE_EABI_NM = Join-Path $objdump[0].DirectoryName 'arm-none-eabi-nm.exe'
+          $env:ARM_NONE_EABI_NM = Join-Path $objdump.DirectoryName 'arm-none-eabi-nm.exe'
           foreach ($revision in @('v2', 'v3')) {
             $elf = Join-Path $safeCache "arduino-ide-f401-classic-$revision/code.ino.elf"
             $system = Join-Path $env:GITHUB_WORKSPACE ".build/firmware/mk61s-M-classic-$revision-uc1609-f401/System"
-            & python ./tests/check_usb_cdc_rx_elf.py $elf --objdump $objdump[0].FullName
+            & python ./tests/check_standalone_sdk_build.py --arduino `
+              (Join-Path (Split-Path $elf) 'compile_commands.json')
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & python ./tests/check_native_runtime_libraries.py --without-libc ($elf -replace '\.elf$', '.map')
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & python ./tests/check_usb_cdc_rx_elf.py $elf --objdump $objdump.FullName
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             & python ./tests/check_narrow_stm32_drivers_elf.py --native-panel $elf
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

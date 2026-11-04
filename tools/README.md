@@ -49,7 +49,8 @@
 - `release-contract.json` — версии зависимостей, профили и ресурсные бюджеты
   всех release/capability-сборок; `release_contract.py` проверяет контракт,
   выдаёт cases сборщикам и формирует отчёты по ELF и запечатанному BIN.
-- `install_gcc_dependencies.ps1` — установка закреплённого GNU Arm GCC с
+- `install_gcc_dependencies.ps1` (Windows, также macOS/Linux) и
+  `install_gcc_dependencies.py` (macOS/Linux без PowerShell) — установка закреплённого GNU Arm GCC с
   проверкой SHA256, в том числе из офлайн-архива; заголовки SDK уже в проекте.
 - `install_arduino_dependencies.ps1` — зависимости отдельного совместимого
   пути Arduino IDE; обычной GCC-сборке они не нужны.

@@ -1,11 +1,10 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 [CmdletBinding()]
 param(
     [string]$BuildPath,
     [string]$Fqbn,
     [string]$ConfigFile,
     [string]$PlatformToolsDirectory,
-    [string]$Stm32ToolsDirectory,
     [string]$PublishedSystem,
     [switch]$Fixture,
     [ValidateSet('f401', 'f411')][string]$FixtureMcu = 'f401'
@@ -19,7 +18,7 @@ $sourceTools = Join-Path $root 'tools/.mk61-arduino-board/hardware/mk61/stm32/to
 $powerShell = (Get-Process -Id $PID).Path
 $windowsHost = $env:OS -eq 'Windows_NT'
 $savedEnvironment = @{}
-foreach ($name in @('PATH', 'MK61_E2E_ROOT', 'MK61_E2E_DEVICE_SOURCE', 'MK61_E2E_ASSEMBLY', 'MK61_E2E_POWERSHELL', 'MK61_HOST_CXX', 'TEMP', 'TMP')) {
+foreach ($name in @('PATH', 'MK61_E2E_ROOT', 'MK61_E2E_DEVICE_SOURCE', 'MK61_E2E_ASSEMBLY', 'MK61_E2E_POWERSHELL', 'MK61_HOST_CXX', 'MK61_STM32_PROGRAMMER', 'TEMP', 'TMP')) {
     $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name)
 }
 $backups = @{}
@@ -97,6 +96,7 @@ try {
             $PlatformToolsDirectory = Join-Path $work 'installed board/tools'
             [void][IO.Directory]::CreateDirectory($PlatformToolsDirectory)
             Copy-Item -Path (Join-Path $sourceTools '*.ps1') $PlatformToolsDirectory
+            Copy-Item (Join-Path $root 'tools/.mk61-dfu/dfu.ps1') (Join-Path $PlatformToolsDirectory 'mk61-dfu.ps1')
         }
     }
     if ((-not $Fixture -or -not [string]::IsNullOrEmpty($Fqbn)) -and
@@ -147,26 +147,22 @@ try {
     $bin = Join-Path $work 'Programmer and blocked Python'
     [void][IO.Directory]::CreateDirectory($bin)
     if ($windowsHost) {
-        if (-not [IO.File]::Exists((Join-Path $Stm32ToolsDirectory 'win/busybox.exe'))) { throw 'Missing real STM32Tools BusyBox' }
         Add-Type -Path $env:MK61_E2E_DEVICE_SOURCE -OutputType ConsoleApplication `
             -OutputAssembly (Join-Path $bin 'STM32_Programmer_CLI.exe')
         $env:MK61_E2E_ASSEMBLY = Join-Path $bin 'STM32_Programmer_CLI.exe'
         foreach ($name in @('python.exe', 'python3.exe', 'py.exe')) {
             Copy-Item "$env:WINDIR/System32/where.exe" (Join-Path $bin $name)
         }
-        $busybox = Join-Path $Stm32ToolsDirectory 'win/busybox.exe'
-        $wrapper = Join-Path $Stm32ToolsDirectory 'stm32CubeProg.sh'
+        $programmerExecutable = Join-Path $bin 'STM32_Programmer_CLI.exe'
     } else {
-        # Local fixture only. CI runs the native BusyBox and STM32 wrapper.
-        $busybox = Join-Path $bin 'busybox'
-        $wrapper = Join-Path $bin 'stm32CubeProg.sh'
+        # Local boundary executable forwards the exact production argv.
+        $programmerExecutable = Join-Path $bin 'STM32_Programmer_CLI'
         $programmer = Join-Path $bin 'programmer.ps1'
         [IO.File]::WriteAllText($programmer, '[void][Reflection.Assembly]::Load([IO.File]::ReadAllBytes($env:MK61_E2E_ASSEMBLY)); exit [Mk61.ArduinoE2E.Device]::Main($args)')
-        $shell = '#!/bin/bash' + "`n" + 'exec "$MK61_E2E_POWERSHELL" -NoLogo -NoProfile -File "' + $programmer + '" --download "${4:2}" 0x8000000 --start 0x8000000' + "`n"
-        [IO.File]::WriteAllText($busybox, $shell, [Text.UTF8Encoding]::new($false))
-        & chmod +x $busybox
+        $shell = '#!/bin/bash' + "`n" + 'exec "$MK61_E2E_POWERSHELL" -NoLogo -NoProfile -File "' + $programmer + '" "$@"' + "`n"
+        [IO.File]::WriteAllText($programmerExecutable, $shell, [Text.UTF8Encoding]::new($false))
+        & chmod +x $programmerExecutable
         $env:MK61_E2E_POWERSHELL = $powerShell
-        [IO.File]::WriteAllText($wrapper, "-b | --bin )`n")
         $env:MK61_E2E_ASSEMBLY = Join-Path $bin 'device.dll'
         Add-Type -Path $env:MK61_E2E_DEVICE_SOURCE -OutputType Library `
             -OutputAssembly $env:MK61_E2E_ASSEMBLY
@@ -175,13 +171,9 @@ try {
     # Child processes load bytes, with no test compiler or locked DLL/EXE.
     [void][Reflection.Assembly]::Load([IO.File]::ReadAllBytes($env:MK61_E2E_ASSEMBLY))
     $env:PATH = "$bin$([IO.Path]::PathSeparator)$($env:PATH)"
-    if ($windowsHost) {
-        $resolved = (& $busybox sh -c 'command -v STM32_Programmer_CLI.exe' | Out-String).Trim()
-        if ($LASTEXITCODE -ne 0 -or $resolved.Replace('\', '/') -ine
-            (Join-Path $bin 'STM32_Programmer_CLI.exe').Replace('\', '/')) {
-            throw "Refusing to use a non-test programmer: $resolved"
-        }
-    }
+    # Both direct script and Arduino CLI upload resolve this exact fake;
+    # no host tool discovery can reach a connected physical device.
+    $env:MK61_STM32_PROGRAMMER = $programmerExecutable
     $env:MK61_HOST_CXX = Join-Path $work 'missing-host-cxx.exe'
     $unicodeTemp = Join-Path $work ('Temp ' + [char]0x420 + [char]0x43E + [char]0x43C + [char]0x430 + [char]0x43D)
     [void][IO.Directory]::CreateDirectory($unicodeTemp)
@@ -231,13 +223,12 @@ try {
                 $argv = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $uploader,
                     '-BuildPath', $BuildPath, '-Project', 'code.ino', '-Bundle', $bundle, '-Profile', $label,
                     '-Mcu', $mcu, '-RequireUsbDisk', $(if ($mcu -eq 'f401') { '1' } else { '0' }),
-                    '-Busybox', $busybox, '-Stm32Script', $wrapper)
+                    '-Programmer', $programmerExecutable)
                 if ($port) { $argv += @('-Port', $port) }
                 else { $argv += @('-Port', 'auto') }
                 $code = Invoke-TestCommand $powerShell $argv $log
             } else {
-                $argv = @('--config-file', $ConfigFile, 'upload', '--fqbn', $Fqbn, '--build-path', $BuildPath,
-                    '--upload-property', "busybox=$busybox", '--upload-property', "runtime.tools.STM32Tools.path=$Stm32ToolsDirectory")
+                $argv = @('--config-file', $ConfigFile, 'upload', '--fqbn', $Fqbn, '--build-path', $BuildPath)
                 if ($port) { $argv += @('--port', $port) }
                 $argv += (Join-Path $root 'code')
                 $code = Invoke-TestCommand 'arduino-cli' $argv $log

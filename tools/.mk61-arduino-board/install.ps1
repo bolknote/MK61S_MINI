@@ -1,6 +1,7 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$Sketchbook,
+    [Alias('Toolchain')][string]$ToolchainDirectory,
     [switch]$Check,
     [Alias('h')]
     [switch]$Help
@@ -8,7 +9,7 @@ param(
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
-$requiredStm32Core = '2.12.0'
+. (Join-Path $PSScriptRoot 'payload.ps1')
 
 function ConvertFrom-ArduinoYamlScalar {
     param([string]$Value)
@@ -251,65 +252,18 @@ function Initialize-Mk61ArduinoBuildCache {
     return $safe
 }
 
-function Write-Stm32CoreStatus {
-    param([string]$DataDirectory)
-
-    if ([string]::IsNullOrWhiteSpace($DataDirectory)) {
-        Write-Host ("WARNING: cannot locate Arduino IDE data directory; " +
-                    "cannot verify STM32 core $requiredStm32Core.")
-        return
-    }
-    $corePath = Join-Path $DataDirectory (
-        "packages\STMicroelectronics\hardware\stm32\$requiredStm32Core")
-    if ([IO.File]::Exists((Join-Path $corePath 'platform.txt'))) {
-        Write-Host "STM32 MCU based boards $requiredStm32Core found in:"
-        Write-Host "  $corePath"
-        return
-    }
-    Write-Host ("WARNING: STM32 MCU based boards $requiredStm32Core was not " +
-                "found in:")
-    Write-Host "  $DataDirectory"
-    Write-Host ('Install that exact version in Arduino IDE Boards Manager ' +
-                'before compiling.')
-}
-
 function Show-Usage {
-    @'
-Install the "MK61s F401 + APP" and "MK61s F411 + APP" boards into an Arduino IDE sketchbook.
-
-Usage:
-  tools\mk61-arduino-board.cmd [-Sketchbook DIR]
-  tools\mk61-arduino-board.cmd -Check [-Sketchbook DIR]
-
-Options:
-  -Sketchbook DIR  Arduino IDE sketchbook directory
-  -Check           check that the current board package is installed
-  -Help            show this help
-
-The installer does not install Arduino CLI.  The STM32 MCU based boards core
-2.12.0 must be installed from Arduino IDE's Boards Manager.  The MK61s board
-itself appears in Board Selector / Tools > Board, not in Boards Manager.
-'@ | Write-Host
+    Write-Host 'Install native MK61s F401 + APP and MK61s F411 + APP boards into Arduino IDE.'
+    Write-Host 'Options: -Sketchbook DIR, -ToolchainDirectory DIR, -Check, -Help'
+    Write-Host 'No STM32 Core, Arduino libraries, Python or host C++ compiler is required.'
+    Write-Host 'Pinned GNU Arm GCC is installed automatically unless an existing compiler is selected.'
+    Write-Host 'This installer does not install Arduino CLI; the MK61s board is not in Boards Manager.'
 }
 
 function Test-InstalledPlatform {
     param([string]$Path)
-    return (
-        [IO.File]::Exists((Join-Path $Path 'boards.txt')) -and
-        [IO.File]::Exists((Join-Path $Path 'platform.txt')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\mk61-app-postbuild.sh')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\mk61-app-postbuild.ps1')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\mk61-app-upload.ps1')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\mk61-system-bundle.ps1')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\mk61-safe-tool.ps1')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\mk61_firmware_seal.cpp')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\resident_firmware_format.hpp')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\rust_types.h')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\seal-firmware.ps1')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\seal-firmware-elf.ps1')) -and
-        [IO.File]::Exists((Join-Path $Path 'tools\mk61_module.ld')) -and
-        [IO.File]::Exists((Join-Path $Path 'libraries/USBDevice/src/USBDevice.cpp'))
-    )
+    return [IO.File]::Exists((Join-Path $Path 'boards.txt')) -and
+        [IO.File]::Exists((Join-Path $Path 'platform.txt'))
 }
 
 function Get-Mk61BoardPackageVersion {
@@ -323,81 +277,9 @@ function Get-Mk61BoardPackageVersion {
     return 'not installed / unknown'
 }
 
-function Test-Mk61SameFile {
-    param(
-        [string]$Source,
-        [string]$Installed
-    )
-
-    if (-not [IO.File]::Exists($Source) -or
-        -not [IO.File]::Exists($Installed)) {
-        return $false
-    }
-    $sourceBytes = [IO.File]::ReadAllBytes($Source)
-    $installedBytes = [IO.File]::ReadAllBytes($Installed)
-    if ($sourceBytes.Length -ne $installedBytes.Length) {
-        return $false
-    }
-    for ($index = 0; $index -lt $sourceBytes.Length; ++$index) {
-        if ($sourceBytes[$index] -ne $installedBytes[$index]) {
-            return $false
-        }
-    }
-    return $true
-}
-
 function Test-InstalledPlatformCurrent {
-    param(
-        [string]$SourcePlatform,
-        [string]$ProjectRoot,
-        [string]$Target
-    )
-
-    if ($env:OS -eq 'Windows_NT' -and [IO.File]::Exists(
-            (Join-Path $Target 'tools\seal-firmware-elf.py'))) {
-        return $false
-    }
-
-    $files = @(
-        @((Join-Path $SourcePlatform 'boards.txt'),
-          (Join-Path $Target 'boards.txt')),
-        @((Join-Path $SourcePlatform 'platform.txt'),
-          (Join-Path $Target 'platform.txt')),
-        @((Join-Path $SourcePlatform 'tools\mk61_module.ld'),
-          (Join-Path $Target 'tools\mk61_module.ld')),
-        @((Join-Path $SourcePlatform 'tools\mk61-app-postbuild.sh'),
-          (Join-Path $Target 'tools\mk61-app-postbuild.sh')),
-        @((Join-Path $SourcePlatform 'tools\mk61-app-postbuild.ps1'),
-          (Join-Path $Target 'tools\mk61-app-postbuild.ps1')),
-        @((Join-Path $SourcePlatform 'tools\mk61-app-upload.ps1'),
-          (Join-Path $Target 'tools\mk61-app-upload.ps1')),
-        @((Join-Path $SourcePlatform 'tools\mk61-system-bundle.ps1'),
-          (Join-Path $Target 'tools\mk61-system-bundle.ps1')),
-        @((Join-Path $SourcePlatform 'tools\mk61-safe-tool.ps1'),
-          (Join-Path $Target 'tools\mk61-safe-tool.ps1')),
-        @((Join-Path $ProjectRoot 'tools/.mk61-firmware-seal/mk61_firmware_seal.cpp'),
-          (Join-Path $Target 'tools\mk61_firmware_seal.cpp')),
-        @((Join-Path $ProjectRoot 'code/resident_firmware_format.hpp'),
-          (Join-Path $Target 'tools\resident_firmware_format.hpp')),
-        @((Join-Path $ProjectRoot 'code/rust_types.h'),
-          (Join-Path $Target 'tools\rust_types.h')),
-        @((Join-Path $ProjectRoot 'tools/seal-firmware.ps1'),
-          (Join-Path $Target 'tools\seal-firmware.ps1')),
-        @((Join-Path $ProjectRoot 'tools/seal-firmware-elf.ps1'),
-          (Join-Path $Target 'tools\seal-firmware-elf.ps1'))
-    )
-    foreach ($pair in $files) {
-        if (-not (Test-Mk61SameFile $pair[0] $pair[1])) {
-            return $false
-        }
-    }
-    foreach ($file in @('library.properties', 'src/USBDevice.h', 'src/USBDevice.cpp')) {
-        $relative = "libraries/USBDevice/$file"
-        if (-not (Test-Mk61SameFile (Join-Path $SourcePlatform $relative) (Join-Path $Target $relative))) {
-            return $false
-        }
-    }
-    return $true
+    param([string]$SourcePlatform, [string]$ProjectRoot, [string]$Target)
+    return Test-Mk61NativePayload $ProjectRoot $Target
 }
 
 function Install-Mk61FontSettingsCompatibility {
@@ -494,7 +376,8 @@ try {
             if (-not [string]::IsNullOrWhiteSpace($buildCacheDirectory)) {
                 Write-Host "Arduino IDE build cache: $buildCacheDirectory"
             }
-            Write-Stm32CoreStatus $dataDirectory
+            Write-Host 'Do not search for this manually installed board in Boards Manager; use Board Selector / Tools > Board.'
+    Write-Host 'Runtime and header SDK belong to MK61s; STM32 Core is not required.'
             exit 0
         }
         [Console]::Error.WriteLine(
@@ -504,94 +387,28 @@ try {
         exit 1
     }
 
-    if (-not [IO.File]::Exists(
-        (Join-Path $sourcePlatform 'boards.txt')) -or
-        -not [IO.File]::Exists(
-            (Join-Path $sourcePlatform 'platform.txt')) -or
-        -not [IO.File]::Exists($fontSettingsCompatibilitySource)) {
-        throw 'The MK61s board package is incomplete.'
-    }
-
-    $targetTools = Join-Path $target 'tools'
-    [IO.Directory]::CreateDirectory($targetTools) | Out-Null
-    Copy-Item -LiteralPath (Join-Path $sourcePlatform 'boards.txt') `
-        -Destination (Join-Path $target 'boards.txt') -Force
-    Copy-Item -LiteralPath (Join-Path $sourcePlatform 'platform.txt') `
-        -Destination (Join-Path $target 'platform.txt') -Force
-    $usbTarget = Join-Path $target 'libraries/USBDevice'
-    [IO.Directory]::CreateDirectory((Join-Path $usbTarget 'src')) | Out-Null
-    foreach ($file in @('library.properties', 'src/USBDevice.h', 'src/USBDevice.cpp')) {
-        Copy-Item -LiteralPath (Join-Path $sourcePlatform "libraries/USBDevice/$file") `
-            -Destination (Join-Path $usbTarget $file) -Force
-    }
-    foreach ($name in @(
-        'mk61_module.ld',
-        'mk61-app-postbuild.sh',
-        'mk61-app-postbuild.ps1',
-        'mk61-app-upload.ps1',
-        'mk61-system-bundle.ps1',
-        'mk61-safe-tool.ps1'
-    )) {
-        Copy-Item -LiteralPath (Join-Path $sourcePlatform "tools\$name") `
-            -Destination (Join-Path $targetTools $name) -Force
-    }
-    Copy-Item -LiteralPath (Join-Path $projectRoot `
-        'tools/.mk61-firmware-seal/mk61_firmware_seal.cpp') `
-        -Destination (Join-Path $targetTools 'mk61_firmware_seal.cpp') -Force
-    Copy-Item -LiteralPath (Join-Path $projectRoot `
-        'code/resident_firmware_format.hpp') `
-        -Destination (Join-Path $targetTools 'resident_firmware_format.hpp') -Force
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'code/rust_types.h') `
-        -Destination (Join-Path $targetTools 'rust_types.h') -Force
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'tools/seal-firmware.ps1') `
-        -Destination (Join-Path $targetTools 'seal-firmware.ps1') -Force
-    Copy-Item -LiteralPath (Join-Path $projectRoot `
-        'tools/seal-firmware-elf.ps1') `
-        -Destination (Join-Path $targetTools 'seal-firmware-elf.ps1') -Force
-
-    if ($env:OS -eq 'Windows_NT') {
-        # Older board packages copied the Python ELF sealer into sketchbook.
-        # Windows now has a single PowerShell/.NET build and upload path.
-        $obsoleteSealer = Join-Path $targetTools 'seal-firmware-elf.py'
-        if ([IO.File]::Exists($obsoleteSealer)) {
-            Remove-Item -LiteralPath $obsoleteSealer -Force
-        }
-    }
-
+    Install-Mk61NativePayload $projectRoot $target $ToolchainDirectory
     if ($installFontSettingsCompatibility) {
-        Install-Mk61FontSettingsCompatibility `
-            $fontSettingsCompatibilitySource $fontSettingsCompatibilityTarget
+        Install-Mk61FontSettingsCompatibility $fontSettingsCompatibilitySource $fontSettingsCompatibilityTarget
     }
-
-    if (-not (Test-InstalledPlatform $target) -or
-        -not (Test-InstalledPlatformCurrent `
-            $sourcePlatform $projectRoot $target)) {
-        throw "Installed board verification failed: $target"
+    if (-not (Test-InstalledPlatformCurrent $sourcePlatform $projectRoot $target)) {
+        throw "installed native board verification failed: $target"
     }
-
     Write-Host 'MK61s F401/F411 boards installed in:'
     Write-Host "  $target"
     Write-Host "MK61s board package version: $sourceVersion"
-    if ($env:OS -eq 'Windows_NT') {
-        Write-Host 'Windows build/upload tools: PowerShell/.NET (no Python).'
-    }
-    Write-Host 'Verified uploader: mk61Upload (DFU + automatic /System install).'
-    if ($installFontSettingsCompatibility) {
-        Write-Host ('Accepted obsolete Arduino IDE font options saved by ' +
-                    'an earlier installation.')
-    }
     Write-Host "Arduino IDE sketchbook source: $sketchbookSource"
     if (-not [string]::IsNullOrWhiteSpace($buildCacheDirectory)) {
         Write-Host "Arduino IDE build cache: $buildCacheDirectory"
     }
-    Write-Stm32CoreStatus $dataDirectory
-    Write-Host 'Close every Arduino IDE window, then start Arduino IDE again.'
-    Write-Host ('Open Board Selector (or Tools > Board > Select Other Board ' +
-                'and Port) and search for the exact name:')
-    Write-Host "  MK61s F401 + APP ($sourceVersion)"
-    Write-Host "  MK61s F411 + APP ($sourceVersion)"
-    Write-Host ('Do not search for this manually installed board in Boards ' +
-                'Manager; only the STM32 core is listed there.')
+    if ($env:OS -eq 'Windows_NT') { Write-Host 'Windows build/upload tools: PowerShell/.NET (no Python).' }
+    Write-Host 'Verified uploader: mk61Upload (standalone DFU + automatic /System install).'
+    if ($installFontSettingsCompatibility) {
+        Write-Host 'Accepted obsolete Arduino IDE font options saved by an earlier installation.'
+    }
+    Write-Host "Restart Arduino IDE, then select MK61s F401 + APP ($sourceVersion) or MK61s F411 + APP ($sourceVersion)."
+    Write-Host 'Do not search for this manually installed board in Boards Manager; use Board Selector / Tools > Board.'
+    Write-Host 'Runtime and header SDK belong to MK61s; STM32 Core is not required.'
 } catch {
     [Console]::Error.WriteLine("MK61s Arduino board: $($_.Exception.Message)")
     exit 1

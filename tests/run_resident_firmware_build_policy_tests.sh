@@ -122,20 +122,21 @@ require_text "$board_hook_ps" 'build-system-app-bundle.ps1'
 if grep -Eiq 'python|\.py' "$board_hook_ps"; then
   fail 'Windows Arduino hook still invokes Python'
 fi
-for installer in "$board_install_sh" "$board_install_ps"; do
-  require_text "$installer" 'mk61_firmware_seal.cpp'
-  require_text "$installer" 'resident_firmware_format.hpp'
-  require_text "$installer" 'rust_types.h'
-  require_text "$installer" 'seal-firmware.ps1'
-  require_text "$installer" 'seal-firmware-elf.ps1'
+# Both installers compose the same shared sealer payload; file ownership is
+# declared once, not duplicated as separate copy lists in the launchers.
+require_text "$board_install_sh" '"$script_dir/payload.py"'
+require_text "$board_install_ps" 'Install-Mk61NativePayload'
+board_payload="$root/tools/.mk61-arduino-board/payload.json"
+for required in mk61_firmware_seal.cpp resident_firmware_format.hpp rust_types.h \
+    seal-firmware.ps1 seal-firmware-elf.ps1 seal-firmware-elf.py; do
+  require_text "$board_payload" "$required"
 done
-require_text "$board_install_sh" 'seal-firmware-elf.py'
 require_text "$board_install_ps" 'build_cache:'
 require_text "$board_install_ps" 'selected a separate ASCII-only directory:'
 require_text "$board_install_ps" 'MK61Arduino\build-cache-'
 
 arduino_ide_job="$(sed -n \
-  '/^  arduino-ide-windows:/,/^  build-release:/p' "$release_workflow")"
+  '/^  arduino-ide-windows:/,/^  arduino-compat-linux:/p' "$release_workflow")"
 for required in \
     'mk61_platform=mini_v2,mk61_display=lcd_a00' \
     'mk61:stm32:mk61_f411:mk61_platform=mini_v2,mk61_display=lcd_a00' \
@@ -182,5 +183,13 @@ if printf '%s\n' "$arduino_ide_job" |
     grep -Fq -- 'mk61_font_settings='; then
   fail 'Windows Arduino IDE job passes the removed font-settings menu option'
 fi
+
+if printf '%s\n' "$arduino_ide_job" | grep -Fq 'install_arduino_dependencies.ps1'; then
+  fail 'native Windows Arduino IDE job still installs STM32 Core'
+fi
+for required in 'tools/.mk61-arduino-board/install.ps1' 'check_standalone_sdk_build.py' 'check_native_runtime_libraries.py'; do
+  printf '%s\n' "$arduino_ide_job" | grep -Fq "$required" ||
+    fail "native Windows Arduino IDE job lost dependency isolation: $required"
+done
 
 printf 'resident_firmware_build_policy_tests: ok\n'

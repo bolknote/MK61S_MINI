@@ -10,3 +10,10 @@
 #endif
 
 #define CONCATS(a,b) a " " b
+#ifndef BOARD_NAME
+#if defined(STM32F411xE)
+#define BOARD_NAME "BLACKPILL_F411CE"
+#else
+#define BOARD_NAME "BLACKPILL_F401CC"
+#endif
+#endif

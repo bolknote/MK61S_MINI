@@ -67,6 +67,9 @@ def main():
         if value.startswith(('-DSTM32F401', '-DSTM32F411', '-DMK61_NATIVE_RUNTIME=',
                              '-DMK61_ARDUINO_OWNED_USB=')):
             pass
+        elif value in ('-I', '-isystem', '-iquote'):
+            flags.extend(raw[i:i+2])
+            i += 1
         elif value.startswith(('-D', '-I', '-mcpu=', '-mthumb', '-mfpu=', '-mfloat-abi=')):
             flags.append(value)
         elif value == '-include':

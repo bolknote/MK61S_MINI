@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "units": [
+    {"source": "stm32f4_usbd_core.c", "flags": ["-fno-lto"], "defines": []},
+    {"source": "stm32f4_usbd_cdc.c", "flags": ["-fno-lto"], "defines": ["MK61_USB_BUILD_CDC=1"]},
+    {"source": "stm32f4_cdc_if.c", "flags": [], "defines": ["MK61_USB_BUILD_CDC_IF=1"]},
+    {"source": "stm32f4_usb_device.cpp", "flags": [], "defines": ["MK61_USB_BUILD_BRIDGE=1"]},
+    {"source": "stm32f4_usbd_ctlreq.c", "flags": [], "defines": ["MK61_USB_BUILD_CTLREQ=1"]},
+    {"source": "system_strings.c", "flags": ["-fno-builtin", "-fno-lto"], "defines": []},
+    {"source": "native_eabi.cpp", "flags": ["-fno-lto"], "defines": []},
+    {"source": "compact_math.cpp", "flags": ["-ffp-contract=off"], "defines": []},
+    {"source": "mk61emu_core.cpp", "mcu": "f411", "flags": ["-fno-lto"], "defines": []}
+  ]
+}

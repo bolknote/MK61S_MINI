@@ -484,8 +484,8 @@ try {
     Assert-True (Test-DfuHardwareId 'USB\VID_0483&PID_DF11\3688388E3233') 'Windows DFU VID/PID was not recognized'
     Assert-True (-not (Test-DfuHardwareId 'USB\VID_0483&PID_5740\3688388E3233')) 'CDC device was mistaken for DFU'
     $upload = Get-UploadInvocation 'C:\firmware\mk61.bin'
-    Assert-True ($upload.Executable -eq $script:ArduinoCli) 'Windows upload does not use Arduino CLI'
-    Assert-True (($upload.Arguments -join '|') -eq "upload|--fqbn|$($script:FqbnF411)|--input-file|C:\firmware\mk61.bin") 'Windows F411 upload arguments differ'
+    Assert-True ($upload.Executable -eq (Get-CurrentPowerShellExecutable)) 'Windows upload does not use PowerShell'
+    Assert-True (($upload.Arguments -join '|') -eq "-NoLogo|-NoProfile|-ExecutionPolicy|Bypass|-File|$(Join-Path $script:ProjectRoot 'tools/.mk61-dfu/upload.ps1')|-InputFile|C:\firmware\mk61.bin|-Programmer|$($script:CubeProgrammerExecutable)") 'Windows F411 upload arguments differ'
     $script:State.Mcu = 'f401'
     $f401MenuItems = @(Get-MainMenuItems)
     Assert-True ('install_apps' -in @($f401MenuItems.Tag)) 'F401 main menu is missing the System APP action'
@@ -542,7 +542,7 @@ try {
         $env:MK61_APP_MANIFESTS = $oldManifests
     }
     $f401Upload = Get-UploadInvocation 'C:\firmware\mk61-f401.bin'
-    Assert-True (($f401Upload.Arguments -join '|') -eq "upload|--fqbn|$($script:FqbnF401)|--input-file|C:\firmware\mk61-f401.bin") 'Windows F401 upload arguments differ'
+    Assert-True (($f401Upload.Arguments -join '|') -eq "-NoLogo|-NoProfile|-ExecutionPolicy|Bypass|-File|$(Join-Path $script:ProjectRoot 'tools/.mk61-dfu/upload.ps1')|-InputFile|C:\firmware\mk61-f401.bin|-Programmer|$($script:CubeProgrammerExecutable)") 'Windows F401 upload arguments differ'
 
     # Windows packages APP with the repository's PowerShell/.NET ZX0
     # implementation. Missing Python and desktop C++ must neither block F411
@@ -577,6 +577,12 @@ try {
         'Windows dependency report still demands a native host compiler'
 
     function Test-CommandAvailable { return $false }
+    function Find-Stm32CubeProgrammer {
+        $script:CubeProgrammerExecutable = 'C:\ST\STM32_Programmer_CLI.exe'
+        return $true
+    }
+    function Configure-Stm32CubeProgrammer { return $true }
+    Assert-True (Configure-DfuUploader) 'direct Windows DFU configuration requires Arduino CLI'
     $missingCliReport = Get-DependencyReport
     Assert-True ($missingCliReport -notmatch
         'STM32 Arduino Core: нужен|Библиотеки: нужны') `
@@ -585,8 +591,8 @@ try {
         'APP/ZX0 packer: PowerShell/\.NET') `
         'native dependency report omits the independent Windows APP packer'
     Assert-True ($missingCliReport -match
-        'DFU uploader: .*arduino-cli') `
-        'missing Arduino CLI is hidden by an installed CubeProgrammer'
+        'DFU uploader: .*STM32_Programmer_CLI') `
+        'independent Windows upload incorrectly requires Arduino CLI'
 } finally {
     $env:MK61_POWERSHELL_IMPORT_ONLY = $oldImportOnly
 }

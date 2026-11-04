@@ -137,10 +137,7 @@ function Check-Mk61Profile {
     }
     if (-not [string]::IsNullOrWhiteSpace($VariantLd)) {
         [IO.Directory]::CreateDirectory($BuildPath) | Out-Null
-        Invoke-Mk61Tool (Get-Mk61PowerShell) @(
-            '-NoLogo', '-NoProfile', '-File',
-            (Join-Path $Sketch '../tools/.mk61-gcc/portable-layout.ps1'),
-            $VariantLd, (Join-Path $BuildPath 'mk61-portable.ld'))
+        Copy-Item -LiteralPath $VariantLd -Destination (Join-Path $BuildPath 'mk61-portable.ld') -Force
     }
 }
 

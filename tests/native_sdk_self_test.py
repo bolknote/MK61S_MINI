@@ -117,4 +117,11 @@ with tempfile.TemporaryDirectory(prefix="mk61 native SDK Юникод ") as temp
         result = subprocess.run([pwsh, "-NoLogo", "-NoProfile", "-File", str(ROOT / "tools/install_gcc_dependencies.ps1"), "-InstallRoot", str(install), "-ArchivePath", str(bad)], capture_output=True, text=True)
         assert result.returncode != 0 and "checksum mismatch" in result.stdout + result.stderr, result.stdout + result.stderr
         assert not list(install.glob(".install-*")) and not list(install.glob("xpack-*"))
+    if os.name != 'nt':
+        bad = work / "corrupt-native.tar.gz"; bad.write_bytes(b"invalid archive")
+        install = work / "Unix install"
+        result = subprocess.run([sys.executable, str(ROOT / "tools/install_gcc_dependencies.py"),
+            "--install-root", str(install), "--archive-path", str(bad)], capture_output=True, text=True)
+        assert result.returncode != 0 and "checksum mismatch" in result.stderr, result.stdout + result.stderr
+        assert not list(install.glob(".install-*")) and not list(install.glob("xpack-*"))
 print("Native SDK: exact manifest/licenses, corruption/missing/traversal, Unicode/spaces, no home/Core discovery, tool precedence, header-path gate, autocrlf Git checkout and corrupt installer rollback PASS")

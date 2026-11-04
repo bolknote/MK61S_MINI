@@ -179,28 +179,36 @@ target_compile_options(user_settings INTERFACE
   "$<$<COMPILE_LANGUAGE:C,CXX>:SHELL:-include \"${MK61_PROJECT_ROOT}/code/stm32f4_usbd_def.h\">"
   "$<$<COMPILE_LANGUAGE:C,CXX>:SHELL:-include \"${MK61_PROJECT_ROOT}/code/stm32f4_usbd_cdc.h\">")
 
-# Preserve the real middleware call boundaries needed by GNU ld --wrap.
-set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_core.c"
-  PROPERTIES COMPILE_OPTIONS "-fno-lto")
-set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_cdc.c"
-  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CDC=1" COMPILE_OPTIONS "-fno-lto")
-set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_cdc_if.c"
-  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CDC_IF=1")
-set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usb_device.cpp"
-  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_BRIDGE=1")
-set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_ctlreq.c"
-  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CTLREQ=1")
-set_source_files_properties("${MK61_PROJECT_ROOT}/code/system_strings.c"
-  PROPERTIES COMPILE_OPTIONS "-fno-builtin;-fno-lto")
-set_source_files_properties("${MK61_PROJECT_ROOT}/code/native_eabi.cpp"
-  PROPERTIES COMPILE_OPTIONS "-fno-lto")
-set_source_files_properties("${MK61_PROJECT_ROOT}/code/compact_math.cpp"
-  PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
-if(MK61_TARGET_MCU STREQUAL "f411")
-  # The measured emulator policy matches the Arduino control image exactly.
-  set_source_files_properties("${MK61_PROJECT_ROOT}/code/mk61emu_core.cpp"
-    PROPERTIES COMPILE_OPTIONS "-fno-lto")
-endif()
+# One source policy is used by native GCC and the Arduino platform.
+set(_mk61_policy "${CMAKE_CURRENT_SOURCE_DIR}/native_compile_policy.json")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_mk61_policy}")
+file(READ "${_mk61_policy}" _mk61_policy_json)
+string(JSON _mk61_units LENGTH "${_mk61_policy_json}" units)
+math(EXPR _mk61_last "${_mk61_units} - 1")
+foreach(_mk61_index RANGE 0 ${_mk61_last})
+  string(JSON _mk61_unit GET "${_mk61_policy_json}" units ${_mk61_index})
+  string(JSON _mk61_source GET "${_mk61_unit}" source)
+  string(JSON _mk61_mcu ERROR_VARIABLE _mk61_no_mcu GET "${_mk61_unit}" mcu)
+  if(NOT _mk61_no_mcu AND NOT _mk61_mcu STREQUAL MK61_TARGET_MCU)
+    continue()
+  endif()
+  foreach(_mk61_field flags defines)
+    set(_mk61_values)
+    string(JSON _mk61_count LENGTH "${_mk61_unit}" ${_mk61_field})
+    if(_mk61_count GREATER 0)
+      math(EXPR _mk61_field_last "${_mk61_count} - 1")
+      foreach(_mk61_flag_index RANGE 0 ${_mk61_field_last})
+        string(JSON _mk61_value GET "${_mk61_unit}" ${_mk61_field} ${_mk61_flag_index})
+        list(APPEND _mk61_values "${_mk61_value}")
+      endforeach()
+    endif()
+    if(_mk61_field STREQUAL "flags")
+      set_property(SOURCE "${MK61_PROJECT_ROOT}/code/${_mk61_source}" APPEND PROPERTY COMPILE_OPTIONS ${_mk61_values})
+    else()
+      set_property(SOURCE "${MK61_PROJECT_ROOT}/code/${_mk61_source}" APPEND PROPERTY COMPILE_DEFINITIONS ${_mk61_values})
+    endif()
+  endforeach()
+endforeach()
 
 file(GLOB _mk61_project_sources CONFIGURE_DEPENDS
   "${MK61_PROJECT_ROOT}/code/*.c"

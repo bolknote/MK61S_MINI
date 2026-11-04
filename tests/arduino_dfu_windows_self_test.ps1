@@ -1,9 +1,4 @@
-[CmdletBinding()]
-param(
-    [Parameter(Mandatory = $true)]
-    [string]$Stm32ToolsDirectory
-)
-
+﻿#requires -Version 5.1
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 if ($env:OS -ne 'Windows_NT') { throw 'This test requires Windows PowerShell' }
@@ -11,24 +6,20 @@ if ($env:OS -ne 'Windows_NT') { throw 'This test requires Windows PowerShell' }
 $root = Split-Path -Parent $PSScriptRoot
 $work = Join-Path ([IO.Path]::GetTempPath()) (
     'mk61-dfu-test-' + [Guid]::NewGuid().ToString('N'))
-$fakeData = Join-Path $work 'Arduino15'
-$fakeTools = Join-Path $fakeData 'packages/STMicroelectronics/tools/STM32Tools/2.4.0'
 $fakeBin = Join-Path $work 'Programmer with spaces'
 $oldPath = $env:PATH
-$oldData = $env:MK61_ARDUINO_DATA_DIR
 $oldLog = $env:MK61_TEST_CUBE_LOG
 $oldExit = $env:MK61_TEST_CUBE_EXIT
 . (Join-Path $PSScriptRoot 'fixtures/arduino_bundle.ps1')
 
 try {
-    [IO.Directory]::CreateDirectory((Join-Path $fakeTools 'win')) | Out-Null
     [IO.Directory]::CreateDirectory($fakeBin) | Out-Null
-    # Keep both real components of STM32Tools: the native BusyBox and the
-    # shell wrapper/getopt parser. Only the final hardware programmer is fake.
-    Copy-Item -LiteralPath (Join-Path $Stm32ToolsDirectory 'win/busybox.exe') `
-        -Destination (Join-Path $fakeTools 'win/busybox.exe')
-    Copy-Item -LiteralPath (Join-Path $Stm32ToolsDirectory 'stm32CubeProg.sh') `
-        -Destination (Join-Path $fakeTools 'stm32CubeProg.sh')
+    $installed = Join-Path $work 'native board/tools'
+    [IO.Directory]::CreateDirectory($installed) | Out-Null
+    Copy-Item (Join-Path $root 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/*.ps1') $installed
+    Copy-Item (Join-Path $root 'tools/.mk61-dfu/dfu.ps1') (Join-Path $installed 'mk61-dfu.ps1')
+    # Only the hardware programmer is fake; direct PowerShell invocation,
+    # sealed bundle validation, System installation and recovery are real.
     Add-Type -Language CSharp -OutputType ConsoleApplication `
         -OutputAssembly (Join-Path $fakeBin 'STM32_Programmer_CLI.exe') `
         -TypeDefinition @'
@@ -44,18 +35,11 @@ public static class FakeProgrammer {
 }
 '@
     $env:PATH = "$fakeBin;$oldPath"
-    $env:MK61_ARDUINO_DATA_DIR = $fakeData
     $env:MK61_TEST_CUBE_LOG = Join-Path $work 'programmer-args.txt'
     $env:MK61_TEST_CUBE_EXIT = '0'
-    $resolvedProgrammer = (& (Join-Path $fakeTools 'win/busybox.exe') sh -c `
-        'command -v STM32_Programmer_CLI.exe' | Out-String).Trim()
-    if ($LASTEXITCODE -ne 0 -or $resolvedProgrammer.Replace('\', '/') -ne
-        (Join-Path $fakeBin 'STM32_Programmer_CLI.exe').Replace('\', '/')) {
-        throw "Refusing to use a non-test programmer: $resolvedProgrammer"
-    }
+    $programmer = Join-Path $fakeBin 'STM32_Programmer_CLI.exe'
     $powerShell = (Get-Process -Id $PID).Path
-    $uploader = Join-Path $root `
-        'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-upload.ps1'
+    $uploader = Join-Path $installed 'mk61-app-upload.ps1'
 
     foreach ($directory in @('build', 'build with spaces')) {
         $build = Join-Path $work $directory
@@ -74,8 +58,7 @@ public static class FakeProgrammer {
         $arguments = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
             '-File', $uploader, '-BuildPath', $build, '-Project', 'code.ino',
             '-Bundle', $bundle, '-Profile', 'classic-v2-uc1609',
-            '-Busybox', '{busybox}',
-            '-Stm32Script', '{runtime.tools.STM32Tools.path}/stm32CubeProg.sh',
+            '-Programmer', $programmer,
             '-TestMockDevice', $device, '-TestMockDfu')
         & $powerShell @arguments
         if ($LASTEXITCODE -ne 0) { throw "DFU/System upload failed: $directory" }
@@ -86,10 +69,11 @@ public static class FakeProgrammer {
             $received[$download + 1] -ne $resident.Replace('\', '/') -or
             $received[$download + 2] -ne '0x8000000' -or
             $received[$start + 1] -ne '0x8000000' -or
+            $received -notcontains '--verify' -or
             $received -notcontains 'port=usb1' -or
             $received -notcontains 'VID=0x0483' -or
             $received -notcontains 'PID=0xdf11') {
-            throw "STM32 wrapper passed incorrect programmer arguments: $received"
+            throw "Direct DFU passed incorrect programmer arguments: $received"
         }
         if (-not [IO.File]::Exists((Join-Path $device 'System/USBDISK.APP'))) {
             throw 'DFU completed without the following System installation'
@@ -118,10 +102,9 @@ public static class FakeProgrammer {
         throw "Uploader continued after failed DFU: $failure"
     }
     $global:LASTEXITCODE = 0
-    Write-Host 'arduino_dfu_windows_self_test: ok (real STM32Tools, fake hardware)'
+    Write-Host 'arduino_dfu_windows_self_test: ok (standalone DFU, fake hardware)'
 } finally {
     $env:PATH = $oldPath
-    $env:MK61_ARDUINO_DATA_DIR = $oldData
     $env:MK61_TEST_CUBE_LOG = $oldLog
     $env:MK61_TEST_CUBE_EXIT = $oldExit
     if ([IO.Directory]::Exists($work)) {

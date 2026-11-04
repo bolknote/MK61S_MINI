@@ -15,5 +15,6 @@ for library in ('libgcc', 'libm', 'libstdc++') + (('libc_nano','libc','libnosys'
 if not a.app:
     for symbol in ('__aeabi_ddiv','__aeabi_uldivmod'):
         assert symbol in s,('export missing',symbol)
-    assert 'native_eabi_fixed.S.obj' in s and 'native_eabi.cpp.obj' in s
+    for source in ('native_eabi_fixed.S', 'native_eabi.cpp'):
+        assert re.search(re.escape(source)+r'\.(?:obj|o)(?:\W|$)',s), ('owned runtime object missing',source)
 print('Native runtime archive gate: no libgcc/libm/libstdc++'+('/libc/libnosys' if a.without_libc or a.app else '')+' members PASS')

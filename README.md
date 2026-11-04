@@ -162,8 +162,8 @@ PowerShell-порт поддерживает те же профили, отде�
 DFU-загрузку. Он использует тот же `.mk61-firmware.conf`, поэтому формат
 сохранённых настроек у Bash- и PowerShell-версий одинаковый. На Windows 10
 DFU-устройство ищется через системный PnP по VID/PID `0483:df11`, а загрузка
-выполняется официальным recipe STM32 Core через `arduino-cli` и
-STM32CubeProgrammer. Поэтому отдельный `dfu-util.exe` на Windows не требуется.
+выполняется прямым вызовом STM32CubeProgrammer из PowerShell,
+без `arduino-cli`, STM32 Core и BusyBox. Поэтому отдельный `dfu-util.exe` на Windows не требуется.
 Путь к `STM32_Programmer_CLI.exe` ищется в `PATH` и стандартном каталоге ST;
 если его там нет, меню попросит указать путь и сохранит выбор в локальной конфигурации.
 В старой консоли Windows маркеры используют однозначные `>`, `( )`, `(*)`,
@@ -206,7 +206,7 @@ endpoint'а вместо шестнадцати. CMake применяет ту �
 разворачивание кода переполняет его 256 КиБ Flash. CI требует именно смешанный
 профиль и одновременно контролирует остаток Flash.
 
-На F411 можно вручную выбрать в Arduino `-O2` или `-O3`: холодные парсеры,
+В контрольных F411-сборках с `-O2` или `-O3` холодные парсеры,
 меню и диагностические форматтеры всё равно компилируются с `-Os`, а единица
 трансляции ядра сохраняет выбранную оптимизацию скорости. CI отдельно собирает
 самый крупный Classic V3 с `-O3` и требует не менее 48 КиБ остатка Flash.
@@ -236,8 +236,8 @@ V2/UC1609, следует выбирать `CORE`.
 
 `BINARY64` — режим IEEE double (`MK61_MATH_BACKEND=0`), а не название
 внешней библиотеки. В штатной самостоятельной прошивке он использует наше
-`compact_math`; GNU libm доступна только в контрольном варианте и внешнем
-Arduino backend. Прежнее название режима `LIBM` заменено на `BINARY64`,
+`compact_math`, как и наш пакет для Arduino IDE. GNU libm доступна только
+в контрольном варианте и совместимом Generic STM32 backend. Прежнее название режима `LIBM` заменено на `BINARY64`,
 числовые настройки `0`/`1` сохранены. В Arduino заново выберите `BINARY64`
 в меню математики; ключ FQBN теперь `mk61_math=binary64`.
 
@@ -300,10 +300,9 @@ pwsh -NoProfile -File tools/install_gcc_dependencies.ps1
 Путь с `MK61_APP_MANIFESTS` также собирает resident обычным GCC; для
 пользовательских APP ему дополнительно нужны Bash, Python 3 и host C++17.
 
-Загрузка — отдельная операция: Windows DFU пока использует `arduino-cli`,
-recipe установленного STM32 Core и STM32CubeProgrammer; macOS/Linux —
-`dfu-util`. Это не зависимости команды `--build`. Сборка через Arduino IDE
-сохраняется как отдельный совместимый путь и требует её пакета плат.
+Загрузка - отдельная операция: Windows DFU использует STM32CubeProgrammer
+напрямую из PowerShell; macOS/Linux - `dfu-util`. Сборка через Arduino IDE
+использует тот же нативный runtime и наш пакет плат, без STM32 Core.
 
 Есть и неинтерактивный режим:
 
@@ -432,17 +431,17 @@ tools\mk61-arduino-board.cmd
 `arduino-cli`. Если Windows-профиль содержит не-ASCII символы, он также
 задаёт в конфигурации IDE отдельный каталог сборочного кэша под
 `C:\Users\Public\Documents\MK61Arduino`: это обходит ошибку GNU Arm LTO при открытии
-`objs.a`, не отключая LTO и не меняя имя пользователя. В Boards Manager
-самой Arduino IDE должен быть установлен
-`STM32 MCU based boards 2.12.0`. Сборки F401/F411 не требуют внешних
-аппаратных библиотек из Library Manager.
+`objs.a`, не отключая LTO и не меняя имя пользователя. Пакет платы 2.0.0
+использует наш нативный runtime и SDK. STM32 Core и внешние Arduino-библиотеки
+не требуются. Независимый GNU Arm GCC `14.2.1-1.1` устанавливается автоматически
+с проверкой SHA256; для готового компилятора доступны `-ToolchainDirectory`
+на Windows и `--toolchain` на macOS/Linux.
 На Windows путь sketchbook берётся из конфигурации Arduino IDE 2, включая
 OneDrive и перенесённые каталоги. Для Arduino IDE 1 используется стандартный
 `Documents\Arduino`; нестандартный путь передайте установщику ключом
 `-Sketchbook`. Закройте IDE перед установкой и запустите её заново после.
 `MK61s F401 + APP` и `MK61s F411 + APP` ищутся в Board Selector/
-`Tools > Board`, а не в Boards Manager: там отображается только зависимый
-STM32 core.
+`Tools > Board`, а не в Boards Manager.
 
 После перезапуска Arduino IDE:
 
@@ -455,9 +454,9 @@ STM32 core.
    выключенном Markdown;
 5. нажмите Verify или Upload.
 
-На F401 системные компоненты по умолчанию являются APP. На F411 FOCAL,
-TinyBASIC, Markdown, SETUP, Проводник и USB-диск по умолчанию встроены, но
-меню позволяют явно вынести поддерживаемый компонент в APP; для USB-диска
+На F401 системные компоненты по умолчанию являются APP. На F411 FOCAL и
+TinyBASIC также являются APP, а Markdown, SETUP, Проводник и USB-диск встроены.
+Меню позволяют явно вынести поддерживаемый компонент в APP; для USB-диска
 есть отдельный выбор `Встроен`/`APP`. Обычная кнопка Arduino собирает
 согласованный каталог в `.build/firmware/`: resident `.bin` и `.elf`, только выбранные APP и
 справку `System/HELP0.TXT`, `HELP1.TXT`. На Windows Upload сначала пишет resident
@@ -467,7 +466,7 @@ TinyBASIC, Markdown, SETUP, Проводник и USB-диск по умолча
 `build.source.path`; USB-диск открывать не требуется. На macOS/Linux после Upload
 каталог `System` пока копируется отдельно в `/System` диска `MK61S C6`.
 
-IDE-вариант использует ARM-инструменты установленного STM32 Core. На
+IDE-вариант компилирует открытый sketch независимым GNU Arm GCC. На
 macOS/Linux post-build запускается через системный shell и применяет
 нативный C++17-паковщик. На Windows отдельные Visual Studio, LLVM или MinGW не
 нужны: тот же ABI 6 и ZX0 формирует встроенный PowerShell/.NET-паковщик.

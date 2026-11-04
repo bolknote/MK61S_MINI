@@ -57,8 +57,7 @@ check_profile() {
   fi
   [ -n "$variant_ld" ] || return 0
   mkdir -p "$build_path"
-  python3 "$sketch/../tools/.mk61-gcc/portable-layout.py" \
-    "$variant_ld" "$build_path/mk61-portable.ld"
+  cp "$variant_ld" "$build_path/mk61-portable.ld"
 }
 
 seal_resident() {

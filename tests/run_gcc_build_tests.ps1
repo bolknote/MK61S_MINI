@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
@@ -398,7 +398,7 @@ Assert-True ($arduinoSetupScriptText -match
     'local Arduino CLI setup does not verify its downloaded archive'
 Assert-True (([regex]::Matches(
     $releaseWorkflowText,
-    'run:\s+tools/install_arduino_dependencies\.ps1')).Count -eq 2) `
+    'run:\s+tools/install_arduino_dependencies\.ps1')).Count -eq 1) `
     'legacy compatibility jobs lost their explicit Arduino dependency installer'
 Assert-True (([regex]::Matches($releaseWorkflowText, 'uses:\s+\./\.github/actions/setup-native-gcc')).Count -eq 3) `
     'native F401/F411 jobs do not share the independent GNU Arm installer'

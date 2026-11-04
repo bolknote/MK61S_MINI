@@ -11,6 +11,31 @@ work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-arduino-board-test.XXXXXX")"
 work="$(cd "$work" && pwd -P)"
 trap 'rm -rf "$work"' EXIT
 
+# Contract/install tests use a version-only compiler fixture. Integration uses
+# the real independently installed GNU Arm toolchain, never a vendor Core.
+mkdir -p "$work/toolchain/bin"
+for tool in gcc g++ ar ranlib objcopy size nm objdump c++filt gcc-ar; do
+  for suffix in '' .exe; do
+    printf '%s\n' '#!/bin/sh' \
+      'if [ "$1" = -dumpfullversion ]; then echo 14.2.1; exit 0; fi' \
+      'exit 91' > "$work/toolchain/bin/arm-none-eabi-$tool$suffix"
+    chmod +x "$work/toolchain/bin/arm-none-eabi-$tool$suffix"
+  done
+done
+if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" != 1 ]; then
+  export MK61_ARDUINO_TOOLCHAIN="$work/toolchain/bin"
+else
+  export MK61_ARDUINO_TOOLCHAIN="${MK61_ARDUINO_TOOLCHAIN:-${MK61_GCC_TOOLCHAIN:?independent GNU Arm toolchain is required}}"
+  if [ -z "${ARDUINO_DIRECTORIES_DATA:-}" ]; then
+    export ARDUINO_DIRECTORIES_DATA="$work/empty-Arduino15"
+    arduino-cli core update-index
+  fi
+  if [ -d "$ARDUINO_DIRECTORIES_DATA/packages/STMicroelectronics" ]; then
+    echo 'Native Arduino integration requires an Arduino data directory without STM32 Core' >&2
+    exit 1
+  fi
+fi
+
 test -x "$launcher"
 test -x "$package/install.sh"
 test -x "$hook"
@@ -41,8 +66,8 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ] &&
       -Sketchbook "$shell_sketchbook"
 fi
 grep -q 'Verified uploader: mk61Upload' "$work/install.txt"
-grep -Fq 'MK61s board package version: 1.2.6' "$work/install.txt"
-grep -Fq 'installed 1.2.6; project 1.2.6' "$work/check.txt"
+grep -Fq 'MK61s board package version: 2.0.0' "$work/install.txt"
+grep -Fq 'installed 2.0.0; project 2.0.0' "$work/check.txt"
 cmp "$platform/boards.txt" "$target/boards.txt"
 cmp "$platform/platform.txt" "$target/platform.txt"
 cmp "$platform/tools/mk61_module.ld" "$target/tools/mk61_module.ld"
@@ -101,27 +126,37 @@ grep -Fq \
   "$target/boards.local.txt"
 grep -q 'Accepted obsolete Arduino IDE font options' "$work/reinstall.txt"
 
-grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.6)' "$target/boards.txt"
-grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
+grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (2.0.0)' "$target/boards.txt"
+grep -q '^mk61_f401_app.build.core=mk61$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.upload.tool=mk61Upload$' "$target/boards.txt"
-grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.6)' "$target/boards.txt"
-grep -Fxq 'version=1.2.6' "$target/platform.txt"
-# A mixed/missing USB shim must fail the same prebuild freshness check as an
-# old platform: otherwise library resolution can silently select Core's ABI.
-for file in library.properties src/USBDevice.h src/USBDevice.cpp; do
-  cmp "$platform/libraries/USBDevice/$file" "$target/libraries/USBDevice/$file"
+grep -Fxq 'mk61_f411.name=MK61s F411 + APP (2.0.0)' "$target/boards.txt"
+grep -Fxq 'version=2.0.0' "$target/platform.txt"
+# Mixed compatibility headers, SDK files and policy must fail freshness checks.
+for pair in 'Arduino.h:cores/mk61/Arduino.h' 'utils.h:cores/mk61/utils.h'; do
+  cmp "$root/tools/.mk61-gcc/standalone/${pair%%:*}" "$target/${pair#*:}"
 done
-printf '\n// stale USB shim\n' >> "$target/libraries/USBDevice/src/USBDevice.h"
-if "$launcher" --check --sketchbook "$shell_sketchbook" \
-    > "$work/stale-usb-check.txt" 2>&1; then
-  echo 'Arduino board check accepted a mixed USB ABI package' >&2
+cmp "$root/third_party/stm32f4/manifest.json" "$target/system/stm32f4/manifest.json"
+for relative in cores/mk61/Arduino.h system/stm32f4/cmsis/include/core_cm4.h tools/native_compile_policy.json; do
+  printf '\n// stale native payload\n' >> "$target/$relative"
+  if "$launcher" --check --sketchbook "$shell_sketchbook" > "$work/stale-native-check.txt" 2>&1; then
+    echo "Arduino board check accepted a mixed native package: $relative" >&2
+    exit 1
+  fi
+  grep -q 'installed but stale' "$work/stale-native-check.txt"
+  "$launcher" --sketchbook "$shell_sketchbook" > "$work/reinstall-native.txt"
+done
+test ! -e "$target/libraries/USBDevice/src/USBDevice.h"
+# --check must inspect the registered compiler, even with a valid env override.
+cp "$target/platform.local.txt" "$work/current-platform.local.txt"
+printf 'compiler.path=%s/missing-toolchain/\n' "$work" > "$target/platform.local.txt"
+if "$launcher" --check --sketchbook "$shell_sketchbook" > "$work/missing-compiler-check.txt" 2>&1; then
+  echo 'Arduino board check hid its missing registered compiler behind the environment' >&2
   exit 1
 fi
-grep -q 'installed but stale' "$work/stale-usb-check.txt"
-"$launcher" --sketchbook "$shell_sketchbook" > "$work/reinstall-usb.txt"
-cmp "$platform/libraries/USBDevice/src/USBDevice.h" \
-  "$target/libraries/USBDevice/src/USBDevice.h"
+grep -q 'installed but stale' "$work/missing-compiler-check.txt"
+cp "$work/current-platform.local.txt" "$target/platform.local.txt"
+
 grep -q '^mk61_f411.build.product_line=STM32F411xE$' "$target/boards.txt"
 grep -q '^mk61_f411.build.board=BLACKPILL_F411CE$' "$target/boards.txt"
 grep -q '^mk61_f411.upload.maximum_size=524288$' "$target/boards.txt"
@@ -331,7 +366,14 @@ if command -v pwsh >/dev/null 2>&1; then
     chmod +x "$launcher_dir/$alias"
   done
   run_windows_powershell() {
-    MK61_TEST_PY_LOG="$launcher_log" PATH="$launcher_dir:$PATH" pwsh "$@"
+    if [ "${OS:-}" = Windows_NT ]; then
+      # Simulated Windows installer contracts on a Unix host need .exe names.
+      # Real Windows firmware compilation is qualified separately in CI.
+      MK61_ARDUINO_TOOLCHAIN="$work/toolchain/bin" MK61_TEST_PY_LOG="$launcher_log" \
+        PATH="$launcher_dir:$PATH" pwsh "$@"
+    else
+      MK61_TEST_PY_LOG="$launcher_log" PATH="$launcher_dir:$PATH" pwsh "$@"
+    fi
   }
   run_windows_powershell -NoLogo -NoProfile -File \
     "$root/tests/arduino_upload_profile_self_test.ps1"
@@ -364,7 +406,7 @@ if command -v pwsh >/dev/null 2>&1; then
     exit 1
   fi
   grep -q 'installed but stale' "$work/stale-check-ps.txt"
-  grep -Fq 'installed 1.2.6; project 1.2.6' "$work/stale-check-ps.txt"
+  grep -Fq 'installed 2.0.0; project 2.0.0' "$work/stale-check-ps.txt"
   if run_windows_powershell -NoLogo -NoProfile -File \
       "$ps_sketchbook/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1" \
       check-profile -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code" \
@@ -401,10 +443,7 @@ if command -v pwsh >/dev/null 2>&1; then
   ps_config_data="$work/Arduino15 Роман"
   ps_config_cache="$work/Arduino сборка"
   ps_public="$work/Public"
-  mkdir -p \
-    "$ps_config_data/packages/STMicroelectronics/hardware/stm32/2.12.0" \
-    "$ps_config_cache" "$ps_public"
-  : > "$ps_config_data/packages/STMicroelectronics/hardware/stm32/2.12.0/platform.txt"
+  mkdir -p "$ps_config_data" "$ps_config_cache" "$ps_public"
   cat > "$ps_config" <<EOF
 directories:
     data: $ps_config_data
@@ -422,7 +461,7 @@ EOF
   grep -Fq 'Arduino IDE sketchbook source:' \
       "$work/install-configured-ps.txt"
   grep -Fq 'arduino-cli.yaml' "$work/install-configured-ps.txt"
-  grep -Fq 'STM32 MCU based boards 2.12.0 found in:' \
+  grep -Fq 'STM32 Core is not required.' \
       "$work/install-configured-ps.txt"
   grep -Fq 'selected a separate ASCII-only directory:' \
       "$work/install-configured-ps.txt"
@@ -489,87 +528,58 @@ EOF
   cmp "$mock_system/USBDISK.APP" "$mock_device/System/USBDISK.APP"
   grep -q 'Resident and System APP upload complete' "$work/mock-upload.txt"
 
-  # Arduino IDE 1.x can leave the inherited {busybox} and
-  # {runtime.tools.STM32Tools.path} properties unexpanded for a manually
-  # installed platform. The uploader must recover the package from Arduino15.
-  mock_arduino_data="$work/mock-arduino15"
-  mock_stm32_tools="$mock_arduino_data/packages/STMicroelectronics/tools/STM32Tools/2.4.0"
+  # Direct programmer discovery/argv mapping, without Arduino15 or BusyBox.
+  mock_programmer="$work/Programmer with spaces/STM32_Programmer_CLI.exe"
   mock_dfu_log="$work/mock-dfu.log"
-  mkdir -p "$mock_stm32_tools/win"
-  printf '%s\n' \
-    '#!/usr/bin/env bash' \
-    'printf "%s\\n" "$*" > "$MK61_TEST_DFU_LOG"' \
-    'exit 0' > "$mock_stm32_tools/win/busybox.exe"
-  chmod +x "$mock_stm32_tools/win/busybox.exe"
-  # Tool discovery and argv mapping only. Windows CI additionally executes
-  # the real wrappers from STM32Tools 2.4 and 2.5 with native BusyBox.
-  for binary_option in f b; do
-    if [ "$binary_option" = f ]; then
-      printf '%s\n' '    -f | --file)' > "$mock_stm32_tools/stm32CubeProg.sh"
-    else
-      printf '%s\n' '    -b | --bin)' > "$mock_stm32_tools/stm32CubeProg.sh"
-    fi
-    MK61_ARDUINO_DATA_DIR="$mock_arduino_data" \
-      MK61_TEST_DFU_LOG="$mock_dfu_log" \
-      run_windows_powershell -NoLogo -NoProfile -File \
-        "$platform/tools/mk61-app-upload.ps1" \
-        -BuildPath "$mock_build" -Project code.ino \
-        -Bundle mk61s-M-classic-v2-uc1609-f401 \
-        -Profile classic-v2-uc1609 \
-        -Busybox '{busybox}' \
-        -Stm32Script '{runtime.tools.STM32Tools.path}/stm32CubeProg.sh' \
-        -TestMockDevice "$mock_device" -TestMockDfu \
-        > "$work/mock-upload-dfu-fallback.txt"
-    grep -Fq 'stm32CubeProg.sh -idfu' "$mock_dfu_log"
-    grep -Fq -- "-$binary_option$mock_build/code.ino.bin" "$mock_dfu_log"
-    grep -q 'Resident and System APP upload complete' \
-      "$work/mock-upload-dfu-fallback.txt"
+  mkdir -p "$(dirname "$mock_programmer")"
+  printf '%s\n' '#!/bin/sh' \
+    'printf "%s\n" "$@" > "$MK61_TEST_DFU_LOG"' 'exit 0' > "$mock_programmer"
+  chmod +x "$mock_programmer"
+  MK61_TEST_DFU_LOG="$mock_dfu_log" \
+    run_windows_powershell -NoLogo -NoProfile -File \
+      "$configured_platform/tools/mk61-app-upload.ps1" \
+      -BuildPath "$mock_build" -Project code.ino \
+      -Bundle mk61s-M-classic-v2-uc1609-f401 -Profile classic-v2-uc1609 \
+      -Programmer "$mock_programmer" -TestMockDevice "$mock_device" -TestMockDfu \
+      > "$work/mock-upload-dfu.txt"
+  for argument in --connect port=usb1 VID=0x0483 PID=0xdf11 --download \
+      "$mock_build/code.ino.bin" 0x8000000 --verify --start; do
+    grep -Fxq -- "$argument" "$mock_dfu_log"
   done
-
-  missing_arduino_data="$work/missing-arduino15"
-  mkdir -p "$missing_arduino_data"
-  if MK61_ARDUINO_DATA_DIR="$missing_arduino_data" \
-      LOCALAPPDATA="$work/missing-local-data" USERPROFILE="$work/missing-profile" \
-      run_windows_powershell -NoLogo -NoProfile -File \
-        "$platform/tools/mk61-app-upload.ps1" \
-        -BuildPath "$mock_build" -Project code.ino \
-        -Bundle mk61s-M-classic-v2-uc1609-f401 \
-        -Profile classic-v2-uc1609 \
-        -Busybox '{busybox}' \
-        -Stm32Script '{runtime.tools.STM32Tools.path}/stm32CubeProg.sh' \
-        -TestMockDevice "$mock_device" -TestMockDfu \
-        > "$work/missing-dfu-tools.txt" 2>&1; then
-    echo 'Arduino uploader accepted missing STM32 DFU tools' >&2
+  grep -q 'Resident and System APP upload complete' "$work/mock-upload-dfu.txt"
+  if run_windows_powershell -NoLogo -NoProfile -File \
+      "$configured_platform/tools/mk61-app-upload.ps1" \
+      -BuildPath "$mock_build" -Project code.ino \
+      -Bundle mk61s-M-classic-v2-uc1609-f401 -Profile classic-v2-uc1609 \
+      -Programmer "$work/missing-programmer.exe" -TestMockDevice "$mock_device" -TestMockDfu \
+      > "$work/missing-dfu-tools.txt" 2>&1; then
+    echo 'Arduino uploader accepted a missing explicit DFU programmer' >&2
     exit 1
   fi
-  grep -Fq "BusyBox from Arduino: '{busybox}'" \
-    "$work/missing-dfu-tools.txt"
-  grep -Fq 'Install STM32 MCU based boards 2.12.0' \
-    "$work/missing-dfu-tools.txt"
-  grep -Fq 'Resident firmware was not uploaded' \
-    "$work/missing-dfu-tools.txt"
+  grep -Fq 'STM32CubeProgrammer CLI not found' "$work/missing-dfu-tools.txt"
+  grep -Fq 'Resident firmware was not uploaded' "$work/missing-dfu-tools.txt"
   if grep -Fq 'Recovery without reflashing' "$work/missing-dfu-tools.txt"; then
     echo 'Arduino uploader offered System-only recovery before DFU succeeded' >&2
     exit 1
   fi
   if ! grep -Fq 'Close every program using the MK61s COM port' \
-      "$platform/tools/mk61-app-upload.ps1"; then
+      "$configured_platform/tools/mk61-app-upload.ps1"; then
     echo 'Arduino uploader lacks the generic busy COM-port instruction' >&2
     exit 1
   fi
   if ! grep -Fq 'Wait-Mk61SerialPortAccess' \
-      "$platform/tools/mk61-app-upload.ps1"; then
+      "$configured_platform/tools/mk61-app-upload.ps1"; then
     echo 'Arduino uploader does not wait for exclusive COM-port access' >&2
     exit 1
   fi
   if ! grep -Fq -- "'--wait-ready', '45'" \
-      "$platform/tools/mk61-app-upload.ps1"; then
+      "$configured_platform/tools/mk61-app-upload.ps1"; then
     echo 'Arduino uploader does not wait for MK61s terminal readiness' >&2
     exit 1
   fi
   mv "$mock_system/USBDISK.APP" "$work/missing-usbdisk.app"
   if run_windows_powershell -NoLogo -NoProfile -File \
-      "$platform/tools/mk61-app-upload.ps1" \
+      "$configured_platform/tools/mk61-app-upload.ps1" \
       -BuildPath "$mock_build" -Project code.ino \
       -Bundle mk61s-M-classic-v2-uc1609-f401 \
       -Profile classic-v2-uc1609 \
@@ -579,7 +589,7 @@ EOF
   fi
   mv "$work/missing-usbdisk.app" "$mock_system/USBDISK.APP"
   if run_windows_powershell -NoLogo -NoProfile -File \
-      "$platform/tools/mk61-app-upload.ps1" \
+      "$configured_platform/tools/mk61-app-upload.ps1" \
       -BuildPath "$mock_build" -Project code.ino \
       -Bundle mk61s-M-classic-v2-uc1609-f401 \
       -Profile mini-v2-lcd1602-a00 \
@@ -600,7 +610,7 @@ EOF
     '
   printf 'stale APP' > "$mock_device/System/USBDISK.APP"
   run_windows_powershell -NoLogo -NoProfile -File \
-    "$platform/tools/mk61-app-upload.ps1" \
+    "$configured_platform/tools/mk61-app-upload.ps1" \
     -BuildPath "$mock_build" -Project code.ino \
     -Bundle mk61s-M-mini-v2-lcd1602-a00-f411 \
     -Profile mini-v2-lcd1602-a00 -Mcu f411 -RequireUsbDisk 0 \
@@ -635,19 +645,14 @@ EOF
   # invoking the blocked launchers, just like installation and Upload above.
   launcher_build="$work/python-launcher-build"
   mkdir -p "$launcher_build"
-  printf '%s\n' \
-    'SECTIONS' \
-    '{' \
-    '  PROVIDE ( _end = . );' \
-    '    *(.bss)' \
-    '}' > "$work/variant.ld"
+  cp "$root/tools/.mk61-gcc/standalone/resident.ld" "$work/variant.ld"
   OS=Windows_NT PUBLIC="$ps_public" \
     MK61_ARDUINO_CONFIG_FILE="$ps_config" \
     run_windows_powershell -NoLogo -NoProfile -File \
       "$configured_platform/tools/mk61-app-postbuild.ps1" check-profile \
       -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code" \
       -BuildPath "$launcher_build" -VariantLd "$work/variant.ld"
-  test -s "$launcher_build/mk61-portable.ld"
+  cmp "$work/variant.ld" "$launcher_build/mk61-portable.ld"
   test ! -e "$launcher_log"
 
   # STM32's Windows platform passes compiler.cpp.cmd without `.exe`, even
@@ -704,18 +709,15 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     { echo 'arduino-cli is required for integration test' >&2; exit 1; }
   command -v pwsh >/dev/null 2>&1 ||
     { echo 'pwsh is required for System APP integration test' >&2; exit 1; }
-  library_root=${MK61_ARDUINO_LIBRARY_ROOT:-}
-  if [ -z "$library_root" ] && [ -d "$HOME/Documents/Arduino/libraries" ]; then
-    library_root="$HOME/Documents/Arduino/libraries"
-  fi
-  [ -d "$library_root/LiquidCrystal" ] &&
-    [ -d "$library_root/STM32duino_RTC" ] ||
-    { echo 'Arduino integration libraries were not found' >&2; exit 1; }
-
-  ln -s "$library_root" "$shell_sketchbook/libraries"
+  compiler_bin=$(sed -n 's/^compiler.path=//p' "$target/platform.local.txt")
+  export PATH="$compiler_bin:$PATH"
+  export ARM_NONE_EABI_NM="${compiler_bin%/}/arm-none-eabi-nm"
+  export ARM_NONE_EABI_OBJDUMP="${compiler_bin%/}/arm-none-eabi-objdump"
   mkdir -p "$shell_sketchbook/sketches/code" "$work/build"
   cp -R "$root/code/." "$shell_sketchbook/sketches/code/"
-  ln -s "$root/tools" "$shell_sketchbook/sketches/tools"
+  for directory in tools third_party doc; do
+    ln -s "$root/$directory" "$shell_sketchbook/sketches/$directory"
+  done
   for legacy_font_setting in disabled enabled; do
     ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli board details \
       --fqbn "mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_font_settings=$legacy_font_setting" \
@@ -852,6 +854,9 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   for revision in v2 v3; do
     elf="$work/arduino-ide-f401-classic-$revision/code.ino.elf"
     system="$shell_sketchbook/sketches/.build/firmware/mk61s-M-classic-$revision-uc1609-f401/System"
+    python3 "$root/tests/check_standalone_sdk_build.py" --arduino \
+      "$work/arduino-ide-f401-classic-$revision/compile_commands.json"
+    python3 "$root/tests/check_native_runtime_libraries.py" --without-libc "${elf%.elf}.map"
     python3 "$root/tests/check_narrow_stm32_drivers_elf.py" --native-panel "$elf"
     python3 "$root/tests/check_app_memory_elf.py" --system-dir "$system" "$elf"
   done

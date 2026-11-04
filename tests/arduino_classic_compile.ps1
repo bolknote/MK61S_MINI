@@ -36,7 +36,7 @@ foreach ($revision in @('v2', 'v3')) {
         (Join-Path $root 'tools/seal-firmware.ps1') check -InputFile $image -MaxSize 262144
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $flags = [IO.File]::ReadAllText((Join-Path $bundle 'build.flags'))
-    foreach ($flag in @('-DMK61_REQUIRE_RESIDENT_CRC=1', '-DMK61_ARDUINO_OWNED_USB=1',
+    foreach ($flag in @('-DMK61_REQUIRE_RESIDENT_CRC=1', '-DMK61_NATIVE_RUNTIME=1', '-DMK61_USE_NATIVE_LIBC=1', '-DMK61_USE_NATIVE_EABI=1', '-DMK61_USE_COMPACT_LIBM=1',
         '-DMK61_MATH_BACKEND=1', '-DMK61_APP_LOCAL_FLOAT_MATH=0',
         '-DMK61_FOCAL_AS_APP=1', '-DMK61_TINYBASIC_AS_APP=1',
         '-DMK61_CHIP8_AS_APP=1', '-DMK61_MARKDOWN_VIEWER_AS_APP=1')) {

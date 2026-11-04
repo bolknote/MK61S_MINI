@@ -17,7 +17,7 @@ for ($index = 2; $index -lt $args.Count; ++$index) {
     # -File consumes the drive colon in attached native options, e.g.
     # -LC:/build or -Wl,--script=C:/core.ld. They arrive as two arguments.
     # Rejoin only those linker path options; separate -L C:/build is intact.
-    if ($argument -cmatch '^-(?:L|Wl,.*[,=])[A-Za-z]$' -and
+    if ($argument -cmatch '^-(?:[IL]|Wl,.*[,=])[A-Za-z]$' -and
         $index + 1 -lt $args.Count -and
         [string]$args[$index + 1] -match '^[\\/]') {
         $argument += ':' + [string]$args[++$index]
@@ -40,7 +40,7 @@ $responseLines = foreach ($argument in $toolArguments) {
     '"' + $normalized.Replace('"', '\"') + '"'
 }
 [IO.File]::WriteAllLines(
-    $responseFile, $responseLines, [Text.Encoding]::Default)
+    $responseFile, $responseLines, (New-Object Text.UTF8Encoding($false)))
 
 $responseArgument = '@' + $responseFile.Replace('\', '/')
 & $tool $responseArgument

@@ -10,7 +10,7 @@ u=Uc(UC_ARCH_ARM,UC_MODE_THUMB|UC_MODE_MCLASS);u.ctl_set_cpu_model(UC_CPU_ARM_CO
 for base,size in [(0x08000000,0x100000),(0x20000000,0x20000),(0x40000000,0x30000),(0x50000000,0x20000),(0xE000E000,0x2000)]:u.mem_map(base,size)
 u.reg_write(UC_ARM_REG_C1_C0_2,0xF00000);u.reg_write(UC_ARM_REG_FPEXC,1<<30);e.load(u)
 stop=0x080FF000;u.mem_write(stop,b'\x70\x47');sp=0x2001FFF0
-mock_names=['USBD_LL_Init','USBD_LL_Start','USBD_LL_Stop','USBD_LL_DeInit','USBD_LL_OpenEP','USBD_LL_CloseEP',
+mock_names=['delay','USBD_LL_Init','USBD_LL_Start','USBD_LL_Stop','USBD_LL_DeInit','USBD_LL_OpenEP','USBD_LL_CloseEP',
  'USBD_LL_PrepareReceive','USBD_LL_Transmit','USBD_LL_GetRxDataSize','USBD_LL_SetUSBAddress',
  'USBD_CtlSendData','USBD_CtlPrepareRx','USBD_CtlSendStatus','USBD_CtlError']
 mocks={value&~1:name for name,value in e.symbols.items() if any(name==n or name.startswith(n+'.') for n in mock_names)}
@@ -59,7 +59,13 @@ u.reg_write(UC_ARM_REG_PRIMASK,1)
 call('CDC_continue_transmit');assert call('CDC_resume_receive')==0
 assert u.reg_read(UC_ARM_REG_PRIMASK)==1
 u.reg_write(UC_ARM_REG_PRIMASK,0)
-call('CDC_init');call('USBD_LL_SetSpeed',d,1)
+# Native size-LTO inlines CDC_init into the real terminal mode handoff.
+# Enter that retained production caller; only elapsed time/MMIO are mocked.
+if any(n=='CDC_init' or n.startswith('CDC_init.') for n in e.symbols):
+ call('CDC_init')
+else:
+ call('_Z23usb_start_terminal_modev')
+call('USBD_LL_SetSpeed',d,1)
 def standard(bm,request,value,index,length):
  u.mem_write(r,struct.pack('<BBHHH',bm,request,value,index,length))
  return call('USBD_StdDevReq',d,r)

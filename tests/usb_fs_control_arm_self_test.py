@@ -27,7 +27,9 @@ def main():
     flags=['-include',str(root/'code/stm32f4_usbd_def.h'),
            '-include',str(root/'code/stm32f4_usbd_cdc.h')];i=1
     while i<len(raw):
-        if raw[i].startswith(('-D','-I','-mcpu=','-mthumb','-mfpu=','-mfloat-abi=')):
+        if raw[i] in ('-I', '-isystem', '-iquote'):
+            flags.extend(raw[i:i+2]);i+=1
+        elif raw[i].startswith(('-D','-I','-mcpu=','-mthumb','-mfpu=','-mfloat-abi=')):
             flags.append(raw[i])
         elif raw[i]=='-include':flags.extend(raw[i:i+2]);i+=1
         i+=1

@@ -96,21 +96,115 @@ class CoreLtoBuildTest(unittest.TestCase):
         self.exercise(powershell=True, fail=True)
         self.exercise(powershell=True, missing=True)
 
-    def test_arduino_compatibility_installs_core_hook(self):
+    def test_native_arduino_installs_shared_policy_hook(self):
         text = (ROOT / 'tools/.mk61-arduino-board/hardware/mk61/stm32/platform.txt').read_text()
-        self.assertTrue('recipe.hooks.linking.prelink.30.pattern' in text)
-        self.assertTrue('protect-core-lto.' in text)
+        self.assertIn('recipe.hooks.linking.prelink.20.pattern=', text)
+        self.assertIn('mk61-native-prelink.py', text)
+        self.assertIn('mk61-native-prelink.ps1', text)
 
     def test_native_frontends_use_shared_cmake_barriers(self):
         cmake = (ROOT / 'tools/.mk61-gcc/CMakeLists.txt').read_text()
-        self.assertRegex(cmake, r'(?s)if\(MK61_TARGET_MCU STREQUAL "f411"\).*?code/mk61emu_core\.cpp.*?COMPILE_OPTIONS "-fno-lto"')
-        for source in ('stm32f4_usbd_core.c', 'stm32f4_usbd_cdc.c'):
-            self.assertRegex(cmake, r'(?s)code/' + source.replace('.', r'\.') + r'.*?COMPILE_OPTIONS "-fno-lto"')
+        self.assertIn('native_compile_policy.json', cmake)
+        self.assertIn('COMPILE_OPTIONS ${_mk61_values}', cmake)
+        self.assertIn('NOT _mk61_mcu STREQUAL MK61_TARGET_MCU', cmake)
+        policy = json.loads((ROOT / 'tools/.mk61-gcc/native_compile_policy.json').read_text())
+        units = {v['source']: v for v in policy['units']}
+        self.assertEqual(units['mk61emu_core.cpp']['mcu'], 'f411')
+        for source in ('mk61emu_core.cpp', 'stm32f4_usbd_core.c', 'stm32f4_usbd_cdc.c'):
+            self.assertIn('-fno-lto', units[source]['flags'])
         for name, destination in (
                 ('tools/.mk61-firmware/mk61-firmware.sh', 'tools/build-gcc.cmd'),
                 ('tools/.mk61-firmware/mk61-firmware.ps1', 'Invoke-F401GccBundleBuild'),
                 ('tests/run_f411_release_matrix.sh', 'build-standalone.py')):
             self.assertTrue(destination in (ROOT / name).read_text(), name)
+
+
+class NativeArduinoPolicyTest(unittest.TestCase):
+    def exercise(self, powershell=False, mcu='f401', failure=None):
+        with tempfile.TemporaryDirectory(prefix='mk61 native prelink ') as temporary:
+            base = Path(temporary)
+            tools = base / 'installed board/tools'
+            tools.mkdir(parents=True)
+            original = ROOT / 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools'
+            for name in ('mk61-native-prelink.py', 'mk61-native-prelink.ps1', 'mk61-safe-tool.ps1'):
+                shutil.copy2(original / name, tools / name)
+            shutil.copy2(ROOT / 'tools/.mk61-gcc/native_compile_policy.json', tools)
+            policy = json.loads((tools / 'native_compile_policy.json').read_text())
+            build, sketch = base / 'build with spaces', base / 'original sketch'
+            snapshot = build / 'sketch'
+            snapshot.mkdir(parents=True)
+            sketch.mkdir()
+            entries = []
+            for unit in policy['units']:
+                source = snapshot / unit['source']
+                source.touch()
+                obj = source.with_name(source.name + '.o')
+                if failure != 'metadata':
+                    obj.write_text('original LTO object')
+                entries.append({'file': str(source), 'arguments': ['original'], 'directory': str(build)})
+            cold = snapshot / 'terminal.cpp.o'
+            if failure != 'metadata':
+                cold.write_text('cold LTO object')
+            if failure == 'missing':
+                (snapshot / 'native_eabi.cpp.o').unlink()
+            (build / 'compile_commands.json').write_text(json.dumps(entries))
+            fake = base / 'fake compiler'
+            shutil.copyfile(HERE, fake)
+            fake.chmod(0o755)
+            options = ['--fake-compiler', '-c', '-flto', '-Os', '-std=gnu++17',
+                       '-fno-exceptions', '-DMK61_NATIVE_RUNTIME=1',
+                       '-DSTM32F411xE' if mcu == 'f411' else '-DSTM32F401xC',
+                       '-DNAME="space value"', '-I', str(sketch)]
+            if failure == 'compiler':
+                options.append('--fail')
+            suffix = 'ps1' if powershell else 'py'
+            launcher = ([shutil.which('pwsh'), '-NoLogo', '-NoProfile', '-File']
+                        if powershell else [sys.executable])
+            result = subprocess.run([*launcher, str(tools / ('mk61-native-prelink.' + suffix)),
+                str(build), str(sketch), str(fake), *options], capture_output=True, text=True)
+            if failure in ('missing', 'compiler'):
+                self.assertNotEqual(result.returncode, 0)
+                return
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            if failure == 'metadata':
+                self.assertFalse(list(snapshot.glob('*.o')))
+                return
+            self.assertEqual(cold.read_text(), 'cold LTO object')
+            updated = json.loads((build / 'compile_commands.json').read_text())
+            for unit, entry in zip(policy['units'], updated):
+                obj = snapshot / (unit['source'] + '.o')
+                if unit.get('mcu') and unit['mcu'] != mcu:
+                    self.assertEqual(obj.read_text(), 'original LTO object')
+                    continue
+                actual = json.loads(obj.read_text())
+                self.assertEqual(actual[-3:], [str(snapshot / unit['source']), '-o', str(obj)])
+                self.assertIn(str(sketch), actual)
+                for flag in unit['flags']:
+                    self.assertIn(flag, actual)
+                for definition in unit['defines']:
+                    self.assertIn('-D' + definition, actual)
+                if unit['source'].endswith('.c'):
+                    self.assertIn('-std=gnu17', actual)
+                    self.assertNotIn('-std=gnu++17', actual)
+                    self.assertNotIn('-fno-exceptions', actual)
+                self.assertEqual(entry['arguments'][2:], actual)  # executable and fixture switch
+
+    def test_python_policy(self):
+        for mcu in ('f401', 'f411'):
+            with self.subTest(mcu=mcu):
+                self.exercise(mcu=mcu)
+        for failure in ('missing', 'compiler', 'metadata'):
+            with self.subTest(failure=failure):
+                self.exercise(failure=failure)
+
+    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
+    def test_powershell_policy(self):
+        for mcu in ('f401', 'f411'):
+            with self.subTest(mcu=mcu):
+                self.exercise(powershell=True, mcu=mcu)
+        for failure in ('missing', 'compiler', 'metadata'):
+            with self.subTest(failure=failure):
+                self.exercise(powershell=True, failure=failure)
 
 
 class UsbLtoBuildTest(unittest.TestCase):

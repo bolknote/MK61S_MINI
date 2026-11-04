@@ -1,42 +1,59 @@
-name=MK61s F401/F411
-version=1.2.6
+name=MK61s native F401/F411
+version=2.0.0
 
-# DFU has no serial port before the resident starts. Keep this property
-# defined so Arduino CLI can launch the compound uploader without --port.
-# PowerShell 5.1 drops empty native arguments, so use an explicit sentinel.
-# A port selected in IDE/CLI overrides this default as usual.
+# No referenced Core, variant, Arduino library or tool package is used.
+compiler.path={runtime.platform.path}/tools/toolchains/xpack-arm-none-eabi-gcc-14.2.1-1.1/bin/
+compiler.c.cmd=arm-none-eabi-gcc
+compiler.cpp.cmd=arm-none-eabi-g++
+compiler.ar.cmd=arm-none-eabi-gcc-ar
+compiler.objcopy.cmd=arm-none-eabi-objcopy
+compiler.size.cmd=arm-none-eabi-size
+compiler.c.cmd.windows=arm-none-eabi-gcc.exe
+compiler.cpp.cmd.windows=arm-none-eabi-g++.exe
+compiler.ar.cmd.windows=arm-none-eabi-gcc-ar.exe
+compiler.objcopy.cmd.windows=arm-none-eabi-objcopy.exe
+compiler.size.cmd.windows=arm-none-eabi-size.exe
+compiler.c.extra_flags=
+compiler.cpp.extra_flags=
+compiler.S.extra_flags=
+compiler.c.elf.extra_flags=
+build.extra_flags=
+build.native_flags=-DMK61_NATIVE_RUNTIME=1 -DMK61_USE_COMPACT_LIBM=1 -DMK61_USE_NATIVE_EABI=1 -DMK61_USE_NATIVE_LIBC=1 -DMK61_ENABLE_LTO=1 -DUSE_FULL_LL_DRIVER -DHAL_PCD_MODULE_ENABLED -DUSBD_VID=0x0483 -DUSBD_PID=0x5740 -DVECT_TAB_OFFSET=0x0 -DMK61_USB_BUILD_CDC=1 -DMK61_USB_BUILD_CDC_IF=1 -DMK61_USB_BUILD_BRIDGE=1 -DMK61_USB_BUILD_CTLREQ=1
+compiler.arch.flags=-mcpu={build.mcu} -mthumb {build.fpu} {build.float-abi}
+compiler.common.flags={compiler.arch.flags} {build.flags.optimize} -ffunction-sections -fdata-sections -Wa,--noexecstack -DNDEBUG -DARDUINO={runtime.ide.version} -DARDUINO_ARCH_STM32 -DARDUINO_{build.board} -DSTM32F4xx -DF_CPU={build.f_cpu} {build.st_extra_flags} {build.extra_flags}
+compiler.native.includes=-I "{build.source.path}" -I "{build.core.path}" -I "{runtime.platform.path}/system/stm32f4/cmsis/include" -I "{runtime.platform.path}/system/stm32f4/device/include" -I "{runtime.platform.path}/system/stm32f4/hal/include" -I "{runtime.platform.path}/system/stm32f4/usb-interface/include" -I "{runtime.platform.path}/system/stm32f4/usb/include"
+compiler.native.abi=-include "{build.source.path}/stm32f4_usbd_def.h" -include "{build.source.path}/stm32f4_usbd_cdc.h"
+compiler.c.flags={compiler.common.flags} -c -std=gnu17 -MMD -Wall -Wextra -Werror -Wno-error=cpp {compiler.native.abi}
+compiler.cpp.flags={compiler.common.flags} -c -std=gnu++17 -MMD -fno-rtti -fno-exceptions -fno-use-cxa-atexit -fno-threadsafe-statics --param=max-inline-insns-single=500 -Wall -Wextra -Werror -Wno-error=cpp {compiler.native.abi}
+compiler.S.flags={compiler.common.flags} -c -x assembler-with-cpp -MMD
+recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {compiler.c.extra_flags} {compiler.native.includes} {includes} "{source_file}" -o "{object_file}"
+recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {compiler.cpp.extra_flags} {compiler.native.includes} {includes} "{source_file}" -o "{object_file}"
+recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.S.flags} {compiler.S.extra_flags} {compiler.native.includes} {includes} "{source_file}" -o "{object_file}"
+recipe.preproc.macros="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} -w -x c++ -E -CC {compiler.cpp.extra_flags} {compiler.native.includes} {includes} "{source_file}" -o "{preprocessed_file_path}"
+recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" rcs "{archive_file_path}" "{object_file}"
+
+recipe.hooks.prebuild.20.pattern="{runtime.platform.path}/tools/mk61-app-postbuild.sh" check-profile --platform "{build.mk61_platform_id}" --display "{build.mk61_display_id}" --usb-screen "{build.mk61_usb_screen}" --chip8 "{build.mk61_chip8}" --sketch "{build.source.path}" --build-path "{build.path}" --variant-ld "{build.variant.path}/resident.ld"
+recipe.hooks.prebuild.20.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-app-postbuild.ps1" check-profile -Platform "{build.mk61_platform_id}" -Display "{build.mk61_display_id}" -UsbScreen "{build.mk61_usb_screen}" -Chip8 "{build.mk61_chip8}" -Sketch "{build.source.path}" -BuildPath "{build.path}" -VariantLd "{build.variant.path}/resident.ld"
+recipe.hooks.linking.prelink.20.pattern=python3 "{runtime.platform.path}/tools/mk61-native-prelink.py" "{build.path}" "{build.source.path}" "{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {compiler.cpp.extra_flags} {compiler.native.includes} -I "{build.source.path}"
+recipe.hooks.linking.prelink.20.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-native-prelink.ps1" "{build.path}" "{build.source.path}" "{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {compiler.cpp.extra_flags} {compiler.native.includes} -I "{build.source.path}"
+
+compiler.link.flags={compiler.arch.flags} {build.flags.optimize} -nostdlib -nostartfiles --specs=nano.specs --specs=nosys.specs -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--defsym=LD_FLASH_OFFSET=0 -Wl,--defsym=LD_MAX_SIZE={upload.maximum_size} -Wl,--defsym=LD_MAX_DATA_SIZE={upload.maximum_data_size} "-Wl,--default-script={build.path}/mk61-portable.ld" "-Wl,-Map,{build.path}/{build.project_name}.map" -Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected
+recipe.c.combine.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.link.flags} {compiler.c.elf.extra_flags} -o "{build.path}/{build.project_name}.elf" {object_files} "{archive_file_path}"
+recipe.c.combine.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-safe-tool.ps1" "{build.path}/mk61-tool-temp" "{compiler.path}{compiler.cpp.cmd}" {compiler.link.flags} {compiler.c.elf.extra_flags} -o "{build.path}/{build.project_name}.elf" {object_files} "{archive_file_path}"
+recipe.objcopy.bin.pattern="{compiler.path}{compiler.objcopy.cmd}" -O binary "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.bin"
+recipe.objcopy.hex.pattern="{compiler.path}{compiler.objcopy.cmd}" -O ihex "{build.path}/{build.project_name}.elf" "{build.path}/{build.project_name}.hex"
+recipe.size.pattern="{compiler.path}{compiler.size.cmd}" -A "{build.path}/{build.project_name}.elf"
+recipe.size.regex=^(?:\.isr_vector|\.text|\.rodata|\.ARM(?:\.extab|\.exidx)?|\.preinit_array|\.init_array|\.fini_array|\.data|\.mk61_firmware_footer)\s+([0-9]+).*
+recipe.size.regex.data=^(?:\.data|\.bss|\.noinit)\s+([0-9]+).*
+recipe.size.regex.eeprom=^__no_eeprom_section__\s+([0-9]+).*
+recipe.output.tmp_file={build.project_name}.bin
+recipe.output.save_file={build.project_name}.{build.variant}.bin
+
 serial.port=auto
-
-# The rest of platform.txt is inherited from the referenced
-# STMicroelectronics:arduino core. These hooks add MK61s F401/F411 profile
-# validation and System APP packaging.
-recipe.hooks.prebuild.20.pattern="{runtime.platform.path}/tools/mk61-app-postbuild.sh" check-profile --platform "{build.mk61_platform_id}" --display "{build.mk61_display_id}" --usb-screen "{build.mk61_usb_screen}" --chip8 "{build.mk61_chip8}" --sketch "{build.source.path}" --build-path "{build.path}" --variant-ld "{build.variant.path}/{build.ldscript}" --core-path "{build.core.path}"
-recipe.hooks.prebuild.20.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-app-postbuild.ps1" check-profile -Platform "{build.mk61_platform_id}" -Display "{build.mk61_display_id}" -UsbScreen "{build.mk61_usb_screen}" -Chip8 "{build.mk61_chip8}" -Sketch "{build.source.path}" -BuildPath "{build.path}" -VariantLd "{build.variant.path}/{build.ldscript}" -CorePath "{build.core.path}"
-
-# LTO can resolve the STM32 USB calls before GNU ld applies --wrap. Keep
-# only the two USB implementation units opaque, as in the direct GCC build.
-recipe.hooks.linking.prelink.20.pattern=python3 "{build.source.path}/../tools/.mk61-gcc/protect-usb-lto.py" "{build.path}" "{build.core.path}/../../libraries/USBDevice" "{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} "-I{build.core.path}" "-I{build.variant.path}"
-recipe.hooks.linking.prelink.30.pattern=python3 "{build.source.path}/../tools/.mk61-gcc/protect-core-lto.py" "{build.path}" "{build.source.path}" "{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {build.info.flags} {compiler.cpp.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} "-I{build.core.path}" "-I{build.variant.path}"
-recipe.hooks.linking.prelink.20.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{build.source.path}/../tools/.mk61-gcc/protect-usb-lto.ps1" "{build.path}" "{build.core.path}/../../libraries/USBDevice" "{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} "-I{build.core.path}" "-I{build.variant.path}"
-recipe.hooks.linking.prelink.30.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{build.source.path}/../tools/.mk61-gcc/protect-core-lto.ps1" "{build.path}" "{build.source.path}" "{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {build.info.flags} {compiler.cpp.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} "-I{build.core.path}" "-I{build.variant.path}"
-
 recipe.hooks.objcopy.postobjcopy.20.pattern="{runtime.platform.path}/tools/mk61-app-postbuild.sh" build --compiler "{compiler.path}{compiler.cpp.cmd}" --build-path "{build.path}" --sketch "{build.source.path}" --project "{build.project_name}" --bundle "mk61s-M-{build.mk61_platform_id}-{build.mk61_display_id}-{build.mk61_mcu_id}" --mcu "{build.mk61_mcu_id}" --max-size "{upload.maximum_size}" --focal "{build.mk61_focal_app}" --basic "{build.mk61_basic_app}" --wbmp "{build.mk61_wbmp_app}" --markdown "{build.mk61_markdown_app}" --chip8 "{build.mk61_chip8_app}" --setup "{build.mk61_setup_app}" --usbdisk "{build.mk61_usbdisk_app}" --explorer "{build.mk61_explorer_app}" --local-float-math "{build.mk61_app_math}" --compile-flags "{build.st_extra_flags}"
 recipe.hooks.objcopy.postobjcopy.20.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-app-postbuild.ps1" build -Compiler "{compiler.path}{compiler.cpp.cmd}" -BuildPath "{build.path}" -Sketch "{build.source.path}" -Project "{build.project_name}" -Bundle "mk61s-M-{build.mk61_platform_id}-{build.mk61_display_id}-{build.mk61_mcu_id}" -Mcu "{build.mk61_mcu_id}" -MaxSize "{upload.maximum_size}" -Focal "{build.mk61_focal_app}" -Basic "{build.mk61_basic_app}" -Wbmp "{build.mk61_wbmp_app}" -Markdown "{build.mk61_markdown_app}" -Chip8 "{build.mk61_chip8_app}" -Setup "{build.mk61_setup_app}" -UsbDisk "{build.mk61_usbdisk_app}" -Explorer "{build.mk61_explorer_app}" -LocalFloatMath "{build.mk61_app_math}" -CompileFlags "{build.st_extra_flags}"
 
-# Arduino has build hooks but no post-Upload hook. Use a board-private upload
-# tool name instead of overriding STM32duino's shared stm32CubeProg recipe:
-# platform inheritance order must never be able to bypass APP installation.
-# Non-Windows hosts retain the ordinary resident-only DFU command. Windows
-# flashes resident and then installs this build's System APP through the MKC
-# CDC protocol (USB disk is not required).
 tools.mk61Upload.upload.params.verbose=
 tools.mk61Upload.upload.params.quiet=
-tools.mk61Upload.upload.pattern="{busybox}" sh "{runtime.tools.STM32Tools.path}/stm32CubeProg.sh" -i {upload.protocol} -f "{build.path}/{build.project_name}.bin" -o {build.flash_offset} {upload.options}
-tools.mk61Upload.upload.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-app-upload.ps1" -Busybox "{busybox}" -Stm32Script "{runtime.tools.STM32Tools.path}/stm32CubeProg.sh" -BuildPath "{build.path}" -Project "{build.project_name}" -Bundle "mk61s-M-{build.mk61_platform_id}-{build.mk61_display_id}-{build.mk61_mcu_id}" -Profile "{build.mk61_platform_id}-{build.mk61_display_id}" -Mcu "{build.mk61_mcu_id}" -RequireUsbDisk "{build.mk61_usbdisk_app}" -Protocol "{upload.protocol}" -FlashOffset "{build.flash_offset}" -Vid "{upload.vid}" -UsbPid "{upload.pid}" -Address "{upload.address}" -Start "{upload.start}" -Port "{serial.port}"
-
-# GCC 14's Windows LTO linker still uses TEMP even with -pipe. Run only the
-# Windows link command with an ASCII build-local TEMP so Cyrillic Windows user
-# names cannot break collect2/lto-wrapper temporary files.
-recipe.c.combine.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-safe-tool.ps1" "{build.path}" "{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} "-Wl,--default-script={build.variant.path}/{build.ldscript}" "-Wl,--script={build.system.path}/ldscript.ld" "-Wl,-Map,{build.path}/{build.project_name}.map" {compiler.c.elf.extra_flags} {compiler.ldflags} -o "{build.path}/{build.project_name}.elf" -Wl,--start-group {object_files} {compiler.libraries.ldflags} "{archive_file_path}" -lc -Wl,--end-group -lm -lgcc -lstdc++
-
-compiler.c.elf.extra_flags="-Wl,--default-script={build.path}/mk61-portable.ld" -Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected
+tools.mk61Upload.upload.pattern="{runtime.platform.path}/tools/mk61-dfu.sh" "{build.path}/{build.project_name}.bin"
+tools.mk61Upload.upload.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-app-upload.ps1" -BuildPath "{build.path}" -Project "{build.project_name}" -Bundle "mk61s-M-{build.mk61_platform_id}-{build.mk61_display_id}-{build.mk61_mcu_id}" -Profile "{build.mk61_platform_id}-{build.mk61_display_id}" -Mcu "{build.mk61_mcu_id}" -RequireUsbDisk "{build.mk61_usbdisk_app}" -Port "{serial.port}"

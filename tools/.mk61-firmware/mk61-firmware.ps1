@@ -1464,21 +1464,15 @@ function Get-DependencyReport {
         $lines.Add('Custom APP: native GCC; дополнительно нужны Bash, Python 3 и host C++17')
     }
     if ($script:IsWindowsHost) {
-        $arduinoCliReady = Test-CommandAvailable $script:ArduinoCli
-        $cubeProgrammerReady = Find-Stm32CubeProgrammer
-        if ($arduinoCliReady -and $cubeProgrammerReady) {
-            $lines.Add("DFU uploader: arduino-cli → $script:CubeProgrammerExecutable")
-        } elseif (-not $arduinoCliReady -and $cubeProgrammerReady) {
-            $lines.Add('DFU uploader: STM32CubeProgrammer найден; нужен arduino-cli')
-        } elseif ($arduinoCliReady) {
-            $lines.Add('DFU uploader: нужен STM32CubeProgrammer')
+        if (Find-Stm32CubeProgrammer) {
+            $lines.Add("DFU uploader: $script:CubeProgrammerExecutable")
         } else {
-            $lines.Add('DFU uploader: нужны arduino-cli и STM32CubeProgrammer')
+            $lines.Add('DFU uploader: нужен STM32CubeProgrammer')
         }
     } elseif (Find-DfuUtil) {
         $lines.Add("DFU uploader: $script:DfuExecutable")
     } else {
-        $lines.Add('DFU uploader: dfu-util не найден (появится вместе с STM32 Core)')
+        $lines.Add('DFU uploader: установите dfu-util')
     }
     return $lines -join [Environment]::NewLine
 }
@@ -1508,9 +1502,8 @@ function Set-Stm32CubeProgrammer {
         [IO.Path]::GetFileName($resolved) -notmatch '^(?i:STM32_Programmer_CLI\.exe)$') { return $false }
     $script:CubeProgrammerExecutable = $resolved
 
-    # Рецепт загрузки STM32 Core запускает вспомогательную программу в дочернем
-    # процессе и ищет STM32_Programmer_CLI.exe через PATH. Так выбранный
-    # пользователем путь становится доступен и этой программе.
+    # Сохраняем выбранный CLI также в PATH для ручных команд пользователя.
+    # Нативный загрузчик получает его полный путь отдельным аргументом.
     $directory = Split-Path -Parent $resolved
     $processPath = [Environment]::GetEnvironmentVariable('Path', 'Process')
     $entries = if ([string]::IsNullOrEmpty($processPath)) { @() } else { @($processPath -split [regex]::Escape([string][IO.Path]::PathSeparator)) }
@@ -1709,15 +1702,11 @@ function Configure-DfuUtil {
 
 function Configure-DfuUploader {
     if ($script:IsWindowsHost) {
-        $hasCli = Test-CommandAvailable $script:ArduinoCli
-        $hasProgrammer = Configure-Stm32CubeProgrammer
-        if ($hasCli -and $hasProgrammer) {
-            $script:State.DfuStatus = 'Arduino CLI · STM32CubeProgrammer'
+        if (Configure-Stm32CubeProgrammer) {
+            $script:State.DfuStatus = 'STM32CubeProgrammer'
             return $true
         }
-        if (-not $hasCli -and -not $hasProgrammer) { $script:State.DfuStatus = 'нужны arduino-cli и STM32CubeProgrammer' }
-        elseif (-not $hasCli) { $script:State.DfuStatus = 'arduino-cli не найден' }
-        else { $script:State.DfuStatus = 'STM32CubeProgrammer не найден' }
+        $script:State.DfuStatus = 'STM32CubeProgrammer не найден'
         return $false
     }
     return Configure-DfuUtil
@@ -2460,22 +2449,15 @@ function Wait-ForDfu {
 }
 
 function Ensure-DfuReady {
-    if ($script:IsWindowsHost -and -not (Test-CommandAvailable $script:ArduinoCli)) {
-        $message = 'На Windows для DFU-загрузки нужен arduino-cli.exe.'
-        Write-LastLog $message
-        if ($script:State.Interactive) { Show-Message 'Arduino CLI' $message }
-        else { [Console]::Error.WriteLine($message) }
-        return $false
-    }
     if ($script:IsWindowsHost -and -not (Find-Stm32CubeProgrammer)) {
-        $message = "STM32CubeProgrammer не найден. Установите его с сайта ST; Arduino CLI использует официальный DFU recipe STM32 Core.`nhttps://www.st.com/en/development-tools/stm32cubeprog.html"
+        $message = "STM32CubeProgrammer не найден. Установите его с USB DFU-драйвером с сайта ST.`nhttps://www.st.com/en/development-tools/stm32cubeprog.html"
         Write-LastLog $message
         if ($script:State.Interactive) { Show-Message 'DFU uploader' $message }
         else { [Console]::Error.WriteLine($message) }
         return $false
     }
     if (-not $script:IsWindowsHost -and -not (Find-DfuUtil)) {
-        $message = "dfu-util не найден. Укажите путь при запуске меню или установите STM32 Arduino Core $($script:Stm32CoreVersion)."
+        $message = "dfu-util не найден. Укажите путь при запуске меню или установите dfu-util."
         Write-LastLog $message
         if ($script:State.Interactive) { Show-Message 'DFU uploader' $message }
         else { [Console]::Error.WriteLine($message) }
@@ -2514,8 +2496,10 @@ function Get-UploadInvocation {
     param([string]$Artifact)
     if ($script:IsWindowsHost) {
         return [pscustomobject]@{
-            Executable = $script:ArduinoCli
-            Arguments = [string[]]@('upload', '--fqbn', (Get-Fqbn), '--input-file', $Artifact)
+            Executable = Get-CurrentPowerShellExecutable
+            Arguments = [string[]]@('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+                '-File', (Join-Path $script:ProjectRoot 'tools/.mk61-dfu/upload.ps1'),
+                '-InputFile', $Artifact, '-Programmer', $script:CubeProgrammerExecutable)
         }
     }
     return [pscustomobject]@{

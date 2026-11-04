@@ -12,8 +12,7 @@ param(
     # Arduino IDE may expand build.source.path relative to its own directory
     # during Upload, so it must not be used to locate host-side tools.
     [string]$Sketch,
-    [string]$Busybox,
-    [string]$Stm32Script,
+    [string]$Programmer,
     [string]$Protocol = 'dfu',
     [string]$FlashOffset = '0x0',
     [string]$Vid = '0x0483',
@@ -36,109 +35,7 @@ function Stop-Mk61Upload {
     throw "MK61s Arduino upload: $Message"
 }
 
-function Add-Mk61UniquePath {
-    param(
-        [Collections.Generic.List[string]]$Paths,
-        [Collections.Generic.HashSet[string]]$Seen,
-        [string]$Path
-    )
-    if ([string]::IsNullOrWhiteSpace($Path)) { return }
-    try { $full = [IO.Path]::GetFullPath($Path) } catch { return }
-    if ($Seen.Add($full)) { $Paths.Add($full) }
-}
-
-function Find-Mk61Stm32DfuTools {
-    param([string]$RequestedBusybox, [string]$RequestedScript)
-
-    $resolvedBusybox = $RequestedBusybox
-    $resolvedScript = $RequestedScript
-
-    # When Arduino expanded only one of the inherited STM32 platform
-    # properties, derive the other path from the same STM32Tools package.
-    if ([IO.File]::Exists($resolvedScript) -and
-        -not [IO.File]::Exists($resolvedBusybox)) {
-        $candidate = Join-Path (Split-Path -Parent $resolvedScript) `
-            'win\busybox.exe'
-        if ([IO.File]::Exists($candidate)) { $resolvedBusybox = $candidate }
-    }
-    if ([IO.File]::Exists($resolvedBusybox) -and
-        -not [IO.File]::Exists($resolvedScript)) {
-        $busyboxDirectory = Split-Path -Parent $resolvedBusybox
-        $candidate = Join-Path (Split-Path -Parent $busyboxDirectory) `
-            'stm32CubeProg.sh'
-        if ([IO.File]::Exists($candidate)) { $resolvedScript = $candidate }
-    }
-    if ([IO.File]::Exists($resolvedBusybox) -and
-        [IO.File]::Exists($resolvedScript)) {
-        return [pscustomobject]@{
-            Busybox = [IO.Path]::GetFullPath($resolvedBusybox)
-            Script = [IO.Path]::GetFullPath($resolvedScript)
-            Searched = @()
-        }
-    }
-
-    # Arduino IDE 1.x does not reliably export inherited runtime.tools.*
-    # properties to a manually installed hardware platform. Locate the exact
-    # package that Boards Manager installed instead of requiring that property.
-    $dataDirectories = New-Object 'Collections.Generic.List[string]'
-    $seenDataDirectories = New-Object `
-        'Collections.Generic.HashSet[string]' `
-        ([StringComparer]::OrdinalIgnoreCase)
-    Add-Mk61UniquePath $dataDirectories $seenDataDirectories `
-        $env:MK61_ARDUINO_DATA_DIR
-    $localData = [Environment]::GetFolderPath('LocalApplicationData')
-    if (-not [string]::IsNullOrWhiteSpace($localData)) {
-        Add-Mk61UniquePath $dataDirectories $seenDataDirectories `
-            (Join-Path $localData 'Arduino15')
-    }
-    $profile = [Environment]::GetFolderPath('UserProfile')
-    if (-not [string]::IsNullOrWhiteSpace($profile)) {
-        Add-Mk61UniquePath $dataDirectories $seenDataDirectories `
-            (Join-Path $profile '.arduino15')
-    }
-
-    $searched = New-Object 'Collections.Generic.List[string]'
-    foreach ($dataDirectory in $dataDirectories) {
-        $toolsDirectory = Join-Path $dataDirectory `
-            'packages\STMicroelectronics\tools\STM32Tools'
-        $searched.Add($toolsDirectory)
-        if (-not [IO.Directory]::Exists($toolsDirectory)) { continue }
-        $versions = @(Get-ChildItem -LiteralPath $toolsDirectory `
-            -Directory -ErrorAction SilentlyContinue |
-            Sort-Object LastWriteTimeUtc -Descending)
-        foreach ($version in $versions) {
-            $candidateScript = Join-Path $version.FullName `
-                'stm32CubeProg.sh'
-            $candidateBusybox = Join-Path $version.FullName `
-                'win\busybox.exe'
-            if ([IO.File]::Exists($candidateScript) -and
-                [IO.File]::Exists($candidateBusybox)) {
-                return [pscustomobject]@{
-                    Busybox = $candidateBusybox
-                    Script = $candidateScript
-                    Searched = $searched.ToArray()
-                }
-            }
-        }
-    }
-
-    $busyboxDescription = if (
-        [string]::IsNullOrWhiteSpace($RequestedBusybox)) {
-        '<empty>'
-    } else { $RequestedBusybox }
-    $scriptDescription = if (
-        [string]::IsNullOrWhiteSpace($RequestedScript)) {
-        '<empty>'
-    } else { $RequestedScript }
-    $searchedDescription = if ($searched.Count -eq 0) {
-        '<no Arduino data directory found>'
-    } else { $searched -join '; ' }
-    Stop-Mk61Upload (
-        "STM32 DFU tools not found. BusyBox from Arduino: " +
-        "'$busyboxDescription'; STM32 script from Arduino: " +
-        "'$scriptDescription'; searched: $searchedDescription. " +
-        'Install STM32 MCU based boards 2.12.0 in Boards Manager')
-}
+. (Join-Path $PSScriptRoot 'mk61-dfu.ps1')
 
 function Get-Mk61UploadSerialPorts {
     return @([IO.Ports.SerialPort]::GetPortNames())
@@ -191,17 +88,6 @@ function Wait-Mk61SerialPortAccess {
         "$closePortMessage Retry Upload after the port is released")
 }
 
-function Get-Mk61Stm32BinaryOption {
-    param([string]$ScriptPath)
-    $wrapper = [IO.File]::ReadAllText($ScriptPath)
-    # STM32Tools 2.5 renamed -f/--file to -b/--bin and reassigned -f to
-    # SWD frequency. Inspect the selected wrapper, not its directory name:
-    # Arduino may resolve a newer tools package than the one we installed.
-    if ($wrapper -match '(?m)^\s*-b\s*\|\s*--bin\s*\)') { return '-b' }
-    if ($wrapper -match '(?m)^\s*-f\s*\|\s*--file\s*\)') { return '-f' }
-    Stop-Mk61Upload "cannot identify the binary-file option in STM32 wrapper: $ScriptPath"
-}
-
 $system = ''
 $residentUploaded = $false
 try {
@@ -252,33 +138,10 @@ try {
         if (-not [IO.File]::Exists($resident)) {
             Stop-Mk61Upload "resident image not found: $resident"
         }
-        $dfuTools = Find-Mk61Stm32DfuTools $Busybox $Stm32Script
-        $binaryOption = Get-Mk61Stm32BinaryOption $dfuTools.Script
         Write-Host 'System APP installation needs exclusive COM-port access.'
         Write-Host $closePortMessage
-        Write-Host "Uploading resident via STM32 DFU: $resident"
-        Write-Host "STM32 DFU wrapper: $($dfuTools.Script); binary option: $binaryOption"
-        # Keep every option and its value in one native argument, including
-        # paths with spaces under Windows PowerShell 5.1.
-        # Forward slashes also keep the subsequent shell eval from treating
-        # backslashes in C:\Users\... as escapes.
-        $scriptForShell = $dfuTools.Script.Replace('\', '/')
-        $residentForShell = $resident.Replace('\', '/')
-        $dfuArguments = @(
-            'sh',
-            $scriptForShell,
-            "-i$Protocol",
-            "$binaryOption$residentForShell",
-            "-o$FlashOffset",
-            "-v$Vid",
-            "-p$UsbPid",
-            "-a$Address",
-            "-s$Start"
-        )
-        & $dfuTools.Busybox @dfuArguments
-        if ($LASTEXITCODE -ne 0) {
-            Stop-Mk61Upload "STM32 DFU failed with exit code $LASTEXITCODE"
-        }
+        Invoke-Mk61ResidentDfu -InputFile $resident -Programmer $Programmer `
+            -Vid $Vid -UsbPid $UsbPid -Address $Address -Start $Start
         $residentUploaded = $true
     }
     if ([string]::IsNullOrEmpty($TestMockDevice)) {

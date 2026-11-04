@@ -31,5 +31,5 @@ done
 
 cmake="$root/tools/.mk61-gcc/CMakeLists.txt"
 grep -Fq -- 'LINKER:--wrap=USBD_CDC_ClearBuffer' "$cmake"
-grep -Fq -- 'code/stm32f4_usbd_cdc.c' "$cmake"
-grep -Fq -- 'PROPERTIES COMPILE_OPTIONS "-fno-lto"' "$cmake"
+# usb_lto_build_self_test above checks and executes the shared per-unit policy.
+grep -Fq -- 'native_compile_policy.json' "$cmake"
