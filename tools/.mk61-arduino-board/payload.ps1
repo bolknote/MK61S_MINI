@@ -95,16 +95,22 @@ function Install-Mk61NativePayload {
 function Test-Mk61NativePayload {
     param([string]$ProjectRoot, [string]$Target)
     try {
-        if ($env:OS -eq 'Windows_NT' -and [IO.File]::Exists((Join-Path $Target 'tools/seal-firmware-elf.py'))) { return $false }
+        if ($env:OS -eq 'Windows_NT' -and [IO.File]::Exists((Join-Path $Target 'tools/seal-firmware-elf.py'))) {
+            throw 'Retired Python sealer remains in the Windows board package'
+        }
         foreach ($pair in Get-Mk61NativePayloadPairs $ProjectRoot $Target) {
-            if (-not [IO.File]::Exists($pair.Target) -or
-                (Get-FileHash -Algorithm SHA256 -LiteralPath $pair.Source).Hash -ne
-                (Get-FileHash -Algorithm SHA256 -LiteralPath $pair.Target).Hash) { return $false }
+            if (-not [IO.File]::Exists($pair.Target)) { throw "Installed native package file is missing: $($pair.Target)" }
+            if ((Get-FileHash -Algorithm SHA256 -LiteralPath $pair.Source).Hash -ne
+                (Get-FileHash -Algorithm SHA256 -LiteralPath $pair.Target).Hash) {
+                throw "Installed native package file differs from this checkout: $($pair.Target)"
+            }
         }
         $null = Get-Mk61NativeCompiler $ProjectRoot $Target ''
         return $true
     } catch {
-        Write-Host $_.Exception.Message
+        # Arduino suppresses ordinary hook stdout unless verbose is selected.
+        # Keep the underlying reason alongside the reinstall instruction.
+        [Console]::Error.WriteLine('MK61s native package check: ' + $_.Exception.Message)
         return $false
     }
 }
