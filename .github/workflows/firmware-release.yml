@@ -75,9 +75,9 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          # The ARM pool has repeatedly cancelled jobs before assigning a
-          # runner. Keep the complete macOS frontend gate on the Intel pool.
-          - macos-15-intel
+          # Run the complete macOS shell/PowerShell frontend gate on a
+          # current Intel image, with the same independently pinned GNU Arm.
+          - macos-26-intel
           - windows-latest
 
     steps:
