@@ -376,6 +376,8 @@ if command -v pwsh >/dev/null 2>&1; then
     fi
   }
   run_windows_powershell -NoLogo -NoProfile -File \
+    "$root/tests/arduino_native_compiler_install_self_test.ps1"
+  run_windows_powershell -NoLogo -NoProfile -File \
     "$root/tests/arduino_upload_profile_self_test.ps1"
   run_windows_powershell -NoLogo -NoProfile -File \
     "$root/tests/arduino_system_bundle_self_test.ps1"

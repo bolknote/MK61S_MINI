@@ -47,7 +47,7 @@ function Get-Mk61NativeCompiler {
             if (-not $Install) { throw 'native GNU Arm compiler is missing; reinstall the MK61s board' }
             $powerShell = (Get-Process -Id $PID).Path
             & $powerShell -NoLogo -NoProfile -ExecutionPolicy Bypass -File `
-                (Join-Path $ProjectRoot 'tools/install_gcc_dependencies.ps1') -InstallRoot $installRoot
+                (Join-Path $ProjectRoot 'tools/install_gcc_dependencies.ps1') -InstallRoot $installRoot | Out-Host
             if ($LASTEXITCODE -ne 0) { throw "GNU Arm installation failed ($LASTEXITCODE)" }
         }
     }
