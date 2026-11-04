@@ -3,7 +3,7 @@
 import argparse
 import json
 from pathlib import Path
-import shlex
+from analyze_stack_usage import entry_arguments
 import subprocess
 import tempfile
 from unicorn import Uc, UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS
@@ -19,9 +19,9 @@ def main():
     p.add_argument('--json',type=Path)
     args=p.parse_args()
     root=Path(__file__).resolve().parents[1]
-    entries=json.loads(args.compile_commands.read_text())
+    entries=json.loads(args.compile_commands.read_text(encoding='utf-8-sig'))
     command=next(e for e in entries if Path(e['file']).name=='stm32f4_usbd_core.c')
-    raw=command.get('arguments') or shlex.split(command['command'])
+    raw=entry_arguments(command)
     # Arduino keeps forced ABI includes in @build.opt rather than listing
     # them in the database. Use the shared public headers on both frontends.
     flags=['-include',str(root/'code/stm32f4_usbd_def.h'),

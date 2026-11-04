@@ -3,7 +3,7 @@
 import argparse
 import json
 from pathlib import Path
-import shlex
+from analyze_stack_usage import entry_arguments
 import subprocess
 import tempfile
 
@@ -57,9 +57,9 @@ def main():
     parser.add_argument('compile_commands', type=Path)
     parser.add_argument('--json', type=Path)
     args = parser.parse_args()
-    entries = json.loads(args.compile_commands.read_text())
+    entries = json.loads(args.compile_commands.read_text(encoding='utf-8-sig'))
     entry = next(x for x in entries if Path(x['file']).name == 'stm32f4_usbd_core.c')
-    raw = entry.get('arguments') or shlex.split(entry['command'])
+    raw = entry_arguments(entry)
     flags = []
     i = 1
     while i < len(raw):

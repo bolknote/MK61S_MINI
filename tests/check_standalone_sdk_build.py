@@ -40,7 +40,7 @@ def make_dependencies(text):
 
 
 def check(database, dependencies=True, arduino=False):
-    entries = json.loads(Path(database).read_text())
+    entries = json.loads(Path(database).read_text(encoding='utf-8-sig'))
     assert entries, "compile database is empty"
     sdk = None
     for entry in entries:
@@ -52,7 +52,7 @@ def check(database, dependencies=True, arduino=False):
         if sdk is None:
             sdk = candidates[0]
         assert candidates[0] == sdk, "translation units use different SDKs"
-        assert (sdk / "manifest.json").is_file(), "native SDK manifest missing"
+        assert (sdk / "manifest.json").is_file(), f"native SDK manifest missing: {sdk} (source {entry['file']})"
         assert not any("CMSIS_DSP" in str(v) for v in includes), "unused external DSP path returned"
     if dependencies and arduino:
         headers = []
@@ -68,7 +68,7 @@ def check(database, dependencies=True, arduino=False):
                 source = str(entry['file']).replace('\\', '/')
                 assert source.endswith('/cores/mk61/core.cpp'), ('native header dependency missing', dependency)
                 continue
-            headers += make_dependencies(dependency.read_text())
+            headers += make_dependencies(dependency.read_text(encoding='utf-8'))
         assert headers, 'Arduino header dependencies are missing'
         check_paths(headers)
     elif dependencies:

@@ -400,7 +400,7 @@ Assert-True (([regex]::Matches(
     $releaseWorkflowText,
     'run:\s+tools/install_arduino_dependencies\.ps1')).Count -eq 1) `
     'legacy compatibility jobs lost their explicit Arduino dependency installer'
-Assert-True (([regex]::Matches($releaseWorkflowText, 'uses:\s+\./\.github/actions/setup-native-gcc')).Count -eq 3) `
+Assert-True (([regex]::Matches($releaseWorkflowText, 'uses:\s+\./\.github/actions/setup-native-gcc')).Count -eq 4) `
     'native F401/F411 jobs do not share the independent GNU Arm installer'
 Assert-True ($dependencyInstallerText -match
     'release-contract\.json[\s\S]+toolchain\.libraries') `
