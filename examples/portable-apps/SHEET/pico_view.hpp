@@ -130,11 +130,12 @@ void table() {
     }
   }
   for(int col=0;col<=count;++col) box(LEFT+col*cell_width-1,GRID_TOP,1,(row_count+1)*height);
-  const char* first=app.mode==Mode::REFERENCE?M8("OK:ВСТАВИТЬ  USER:ФИКСАЦИЯ"):
-      (picking?M8("OK:ЗАПИСАТЬ  ESC:НАЗАД"):M8("OK:ПРАВКА  USER:МЕНЮ"));
+  const char* first=app.mode==Mode::REFERENCE?M8("Enter:ВСТАВИТЬ  Tab:ФИКСАЦИЯ  Esc:НАЗАД"):
+      (picking?M8("Enter:ЗАПИСАТЬ  Esc:НАЗАД"):M8("Enter:ПРАВКА  Tab:МЕНЮ"));
   if(app.message!=Error::OK) first=error_label(app.message);
   if(app.io_error) first=M8("ОШИБКА ЧТЕНИЯ/ЗАПИСИ");
-  footer(first,picking?nullptr:M8("←→:СТОЛБЕЦ  ↑↓:СТРОКА"));
+  footer(first,app.mode==Mode::REFERENCE?M8("←→↑↓:ЯЧЕЙКА"):
+      (picking?nullptr:M8("←→:СТОЛБЕЦ  ↑↓:СТРОКА")));
 }
 
 void editor() {
@@ -145,7 +146,7 @@ void editor() {
   const char* input_mode=app.phone.layout==phone_input::RUSSIAN?
       (app.phone.lowercase?M8("рус"):M8("РУС")):
       (app.phone.layout==phone_input::LATIN?(app.phone.lowercase?"abc":"ABC"):"123");
-  header(title,app.edit_kind==Kind::TEXT?input_mode:(app.prefix==1?"F":app.prefix==2?"K":angle_label()));
+  header(title,app.edit_kind==Kind::TEXT?input_mode:(app.prefix==1?"F1":app.prefix==2?"F2":angle_label()));
   box(4,36,312,166,false);
   if(app.edit_kind==Kind::TEXT) {
     const unsigned caret=app.cursor-(app.phone.key && app.cursor?1:0);
@@ -157,7 +158,7 @@ void editor() {
       group[end]=0;text(8,214,group);
     } else text(8,214,app.phone.layout==phone_input::DIGITS?M8("0..9:ЦИФРЫ"):
         M8("2..9:БУКВЫ  0:ПРОБЕЛ  1:ЗНАКИ"));
-    text(8,242,M8("K:РУС/ЛАТ/123  F:РЕГИСТР"));text(8,264,M8("Cx:СТЕРЕТЬ  ←→:КУРСОР"));
+    text(8,242,M8("F2:РУС/ЛАТ/123  F1:РЕГИСТР"));text(8,264,M8("Backspace/Del:СТЕРЕТЬ  ←→:КУРСОР"));
   } else {
     char display[128];formula_text(app.edit,app.edit_length,display,sizeof(display));
     uint16_t cursor=0,displayed=0,first=length(display),last=first;sheet::Token token={};
@@ -174,9 +175,9 @@ void editor() {
     char value[40];sheet::format(app.preview_value,value,sizeof(value));
     const bool valid=app.preview_error==Error::OK;text(8,214,valid?"X = ":M8("ОШИБКА: "));
     text(valid?40:112,214,valid?value:error_label(app.preview_error));
-    text(8,242,M8("USER:ССЫЛКА  Cx:УДАЛИТЬ"));text(8,264,M8("←→:КУРСОР  F/K:ФУНКЦИИ"));
+    text(8,242,M8("Tab:ССЫЛКА  Backspace/Del:УДАЛИТЬ"));text(8,264,M8("←→:КУРСОР  F1/F2:ФУНКЦИИ"));
   }
-  footer(app.message==Error::OK?M8("OK:ЗАПИСАТЬ  ESC:ОТМЕНА"):error_label(app.message));
+  footer(app.message==Error::OK?M8("Enter:ЗАПИСАТЬ  Esc:ОТМЕНА"):error_label(app.message));
 }
 
 void menu_draw() {
@@ -189,7 +190,7 @@ void menu_draw() {
     if(index==app.menu) {box(4,y,312,26);text(8,y+5,M8("→"),true);}
     text(32,y+5,menu_label(app.mode,(uint8_t)index),index==app.menu);
   }
-  footer(M8("OK:ВЫБОР  ESC:НАЗАД"),M8("↑↓:ВЫБРАТЬ ПУНКТ"));
+  footer(M8("Enter:ВЫБОР  Esc:НАЗАД"),M8("↑↓:ВЫБРАТЬ ПУНКТ"));
 }
 
 void help() {
@@ -209,17 +210,17 @@ void help() {
       } else if((Kind)cell.kind!=Kind::TEXT) {sheet::format(cell.value,value,sizeof(value),14);text(8,66,value);}
       sheet::source(app.book,app.selected,value);flow(value,140,0,0,false,6);
     }
-    footer(M8("OK/ESC:НАЗАД"));
+    footer(M8("Enter/Esc:НАЗАД"));
   } else {
     const char* lines[5];
     if(!app.page) {
-      lines[0]=M8("←→:СТОЛБЕЦ  ↑↓:СТРОКА");lines[1]=M8("OK:ПРАВКА  USER:ДЕЙСТВИЯ");
-      lines[2]=M8("В ФОРМУЛЕ USER:ССЫЛКА");lines[3]=M8("В↑ ОТДЕЛЯЕТ ОПЕРАНДЫ");lines[4]=M8("USER В ССЫЛКЕ:ФИКСАЦИЯ $");
+      lines[0]=M8("←→:СТОЛБЕЦ  ↑↓:СТРОКА");lines[1]=M8("Enter:ПРАВКА  Tab:ДЕЙСТВИЯ");
+      lines[2]=M8("В ФОРМУЛЕ Tab:ССЫЛКА");lines[3]=M8("В↑: F1 → Tab → Enter");lines[4]=M8("Tab В ССЫЛКЕ:ФИКСАЦИЯ $");
     } else {
       lines[0]=M8("16×32 ЯЧЕЕК, 64 ЗАПОЛНЕННЫХ");lines[1]=M8("1536 БАЙТ ДАННЫХ ЛИСТА");
-      lines[2]=M8("F USER:СПИСОК ОПЕРАЦИЙ");lines[3]=M8("ФАЙЛЫ .MKS / S1 С CRC32");lines[4]=M8("С/П:ПЕРЕСЧЁТ  ESC:ВЫХОД");
+      lines[2]=M8("F1/F2 → Tab:СПИСОК ОПЕРАЦИЙ");lines[3]=M8("ФАЙЛЫ .MKS / S1 С CRC32");lines[4]=M8("F3:ПЕРЕСЧЁТ  Esc:ВЫХОД");
     }
     for(unsigned i=0;i<5;++i) flow(lines[i],40+(int)i*46,0,0,false,2);
-    footer(M8("OK:СТРАНИЦА  ESC:НАЗАД"));
+    footer(M8("Enter:СТРАНИЦА  Esc:НАЗАД"));
   }
 }

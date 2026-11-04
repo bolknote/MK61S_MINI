@@ -22,6 +22,7 @@ from build_sheet_app import document
 from m8_codec import decode
 
 OK,ESC,USER,LEFT,RIGHT,UP,DOWN,CLEAR=29,39,19,34,24,32,33,0
+F1,F2,F3=38,37,30  # MINI alpha, k, run; 9/4/14 select angle units.
 
 
 class SheetFont:
@@ -56,11 +57,20 @@ class SheetFont:
             fitted+=char
         return fitted+'>'
     def has(self,frame,text,x,y,size=16,inverse=False):
-        expected=bytearray(12800);width=self.width(text,size)
-        if inverse:self.box(expected,x,y,width,size+3)
+        expected=bytearray([255 if inverse else 0])*12800;width=self.width(text,size)
         self.text(expected,text,x,y,size,inverse)
+        ink=[(10 if size==12 else 14)-self.glyph(char,size)['bearing_y']+dy
+             for char in text for dy,row in enumerate(self.glyph(char,size)['rows']) if '1' in row]
+        top=y+min(ink,default=0);bottom=y+max(ink,default=size-1)+1
         return all(bool(frame[row//8*320+col]&(1<<(row%8)))==bool(expected[row//8*320+col]&(1<<(row%8)))
-                   for row in range(y,y+size+3) for col in range(x,x+width))
+                   for row in range(max(0,top),min(bottom,320)) for col in range(x,min(x+width,320)))
+    def footer(self,frame,first,second=None):
+        # Adjacent 18px baselines share a row of tall glyphs. Compare both
+        # lines together instead of treating the neighbour's ink as noise.
+        expected=bytearray(12800);self.text(expected,first,8,286)
+        if second:self.text(expected,second,8,304)
+        return all(bool(frame[y//8*320+x]&(1<<(y%8)))==bool(expected[y//8*320+x]&(1<<(y%8)))
+                   for y in range(284,320) for x in range(8,316))
     def table(self,cells,selected='A1',compact=False,modified=False,top=0,left=0):
         f=bytearray(12800);status='DEG'+(' *' if modified else '')
         self.box(f,0,0,320,28);sx=312-self.width(status)
@@ -89,17 +99,17 @@ class SheetFont:
                 self.box(f,x,y+pitch-1,cw,1)
         for col in range(cols+1):self.box(f,31+col*cw,56,1,(rows+1)*pitch)
         self.box(f,0,282,320,1)
-        self.text(f,'OK:ПРАВКА  USER:МЕНЮ',8,286);self.text(f,'←→:СТОЛБЕЦ  ↑↓:СТРОКА',8,304)
+        self.text(f,'Enter:ПРАВКА  Tab:МЕНЮ',8,286);self.text(f,'←→:СТОЛБЕЦ  ↑↓:СТРОКА',8,304)
         return bytes(f)
-    def editor(self,frame,text,cursor):
+    def editor(self,frame,text,cursor,selection=1):
         expected=bytearray(12800);positions=[];x=8;row=0
         for char in text+' ':
             step=self.width(char)
             if x+step>312:x=8;row+=1
             positions.append((x,row,step));x+=step
         for char,(x,row,_) in zip(text,positions):self.text(expected,char,x,44+24*row)
-        x,row,step=positions[cursor]
-        for col in range(x,x+step):self.pixel(expected,col,44+24*row+18)
+        for x,row,step in positions[cursor:cursor+selection]:
+            for col in range(x,x+step):self.pixel(expected,col,44+24*row+18)
         return all(bool(frame[y//8*320+col]&(1<<(y%8)))==bool(expected[y//8*320+col]&(1<<(y%8)))
                    for y in range(40,200) for col in range(8,312))
 
@@ -136,6 +146,18 @@ def main():
         (args.output/'before.json').write_text(json.dumps(before,indent=2)+'\n')
         def keys(sequence):
             for key in sequence:p.key(key)
+        def hints(frame,first,second=None):
+            for text in (first,second):
+                if text is not None:
+                    assert font.width(text)<=308,('Hint exceeds the native panel',text)
+            return font.footer(frame,first,second)
+        def editor_hints(frame,label=False):
+            return hints(frame,'Enter:ЗАПИСАТЬ  Esc:ОТМЕНА') and all(
+                font.has(frame,text,8,y) for text,y in (
+                    ('F2:РУС/ЛАТ/123  F1:РЕГИСТР' if label else 'Tab:ССЫЛКА  Backspace/Del:УДАЛИТЬ',242),
+                    ('Backspace/Del:СТЕРЕТЬ  ←→:КУРСОР' if label else '←→:КУРСОР  F1/F2:ФУНКЦИИ',264)))
+        def menu_hints(frame):
+            return hints(frame,'Enter:ВЫБОР  Esc:НАЗАД','↑↓:ВЫБРАТЬ ПУНКТ')
         def shot(name,predicate):
             p.pump(.2);first=len(p.frames);p.send(0x16);deadline=time.monotonic()+15
             while time.monotonic()<deadline:
@@ -171,26 +193,40 @@ def main():
             p.command('uscreen on');p.attach_waiting();start=len(p.text);p.open(path);p.expect('RUNTIME=APP')
             grid('table-native');keys([RIGHT,RIGHT]);grid('formula-selected',selected='C1')
             formula='B1 В↑ 125 ×'
-            keys([OK]);shot('formula-editor',lambda f:font.editor(f,formula,len(formula)-1) and font.has(f,'250',40,214))
-            keys([USER,LEFT,USER]);shot('reference',lambda f:font.has(f,'ССЫЛКА: $B1',8,6,inverse=True))
-            keys([ESC,ESC,LEFT,LEFT,DOWN,OK]);shot('long-label',lambda f:font.editor(f,'Ж'*95,95))
+            keys([OK]);shot('formula-editor',lambda f:font.editor(f,formula,len(formula)-1) and font.has(f,'250',40,214) and editor_hints(f))
+            keys([F1]);shot('prefix-f1',lambda f:font.has(f,'F1',312-font.width('F1'),6,inverse=True) and editor_hints(f))
+            keys([USER]);shot('operations-f1',lambda f:font.has(f,'ОПЕРАЦИИ',8,6,inverse=True) and menu_hints(f))
+            keys([OK]);shot('operand-separator',lambda f:font.editor(f,formula+' В↑',len(formula)+1,2) and editor_hints(f))
+            keys([ESC,OK,F2]);shot('prefix-f2',lambda f:font.has(f,'F2',312-font.width('F2'),6,inverse=True) and editor_hints(f))
+            keys([USER]);shot('operations-f2',lambda f:font.has(f,'ОПЕРАЦИИ',8,6,inverse=True) and menu_hints(f))
+            keys([ESC,USER,LEFT,USER]);shot('reference',lambda f:font.has(f,'ССЫЛКА: $B1',8,6,inverse=True) and hints(f,'Enter:ВСТАВИТЬ  Tab:ФИКСАЦИЯ  Esc:НАЗАД','←→↑↓:ЯЧЕЙКА'))
+            keys([ESC,ESC,LEFT,LEFT,DOWN,OK]);shot('long-label',lambda f:font.editor(f,'Ж'*95,95) and editor_hints(f,True))
+            keys([F1]);shot('label-case',lambda f:font.has(f,'рус',312-font.width('рус'),6,inverse=True) and editor_hints(f,True))
+            keys([F2]);shot('label-layout',lambda f:font.has(f,'abc',312-font.width('abc'),6,inverse=True) and editor_hints(f,True))
+            keys([F2,F2,F1])
             keys([LEFT,CLEAR]);shot('long-label-edited',lambda f:font.editor(f,'Ж'*94,93))
             keys([OK]);cells['A2']=(2,'Ж'*94,'Ж'*94);grid('label-committed',selected='A2',modified=True)
             passed('native 3x8 pixels, Russian/long labels, formula preview, anchored reference and cursor/delete')
-            keys([USER]);shot('actions',lambda f:font.has(f,'ДЕЙСТВИЯ',8,6,inverse=True))
-            keys([RIGHT]*6+[OK]);shot('sheet-menu',lambda f:font.has(f,'СПРАВКА',32,246))
+            keys([F3]);grid('recalculated',selected='A2',modified=True)
+            keys([USER,RIGHT,OK]);shot('copy-target',lambda f:font.has(f,'КОПИЯ: A2',8,6,inverse=True) and hints(f,'Enter:ЗАПИСАТЬ  Esc:НАЗАД'));keys([ESC])
+            keys([USER,RIGHT,RIGHT,OK]);shot('fill-target',lambda f:font.has(f,'ВНИЗ: A2',8,6,inverse=True) and hints(f,'Enter:ЗАПИСАТЬ  Esc:НАЗАД'));keys([ESC])
+            keys([USER]+[RIGHT]*4+[OK]);shot('cell-type',lambda f:font.has(f,'ТИП ЯЧЕЙКИ',8,6,inverse=True) and menu_hints(f));keys([ESC])
+            keys([USER]);shot('actions',lambda f:font.has(f,'ДЕЙСТВИЯ',8,6,inverse=True) and menu_hints(f))
+            keys([RIGHT]*6+[OK]);shot('sheet-menu',lambda f:font.has(f,'СПРАВКА',32,246) and menu_hints(f))
             keys([RIGHT]*4+[OK]);grid('table-overview',selected='A2',compact=True,modified=True)
             keys([RIGHT]*15+[DOWN]*30);grid('corner-overview',selected='P32',compact=True,modified=True,top=21,left=12)
             keys([USER]+[RIGHT]*6+[OK]+[RIGHT]*4+[OK]);grid('corner-normal',selected='P32',modified=True,top=24,left=13)
             passed('native 4x11 overview, P32 scrolling and density change clamp without cells beyond the sheet')
-            keys([USER]+[RIGHT]*5+[OK]);shot('details',lambda f:font.has(f,'314159',8,66));keys([ESC])
-            keys([USER]+[RIGHT]*6+[OK]+[RIGHT]*7+[OK]);shot('help-1',lambda f:font.has(f,'SHEET / СПРАВКА',8,6,inverse=True))
-            keys([OK]);shot('help-2',lambda f:font.has(f,'F USER:СПИСОК ОПЕРАЦИЙ',8,132));keys([ESC,ESC])
-            shot('save-confirmation',lambda f:font.has(f,'ЛИСТ ИЗМЕНЁН',8,6,inverse=True));keys([OK]);ended(start)
+            keys([USER]+[RIGHT]*5+[OK]);shot('details',lambda f:font.has(f,'314159',8,66) and hints(f,'Enter/Esc:НАЗАД'));keys([ESC])
+            keys([USER]+[RIGHT]*6+[OK]+[RIGHT]*7+[OK]);shot('help-1',lambda f:font.has(f,'SHEET / СПРАВКА',8,6,inverse=True) and hints(f,'Enter:СТРАНИЦА  Esc:НАЗАД') and all(
+                font.has(f,text,8,40+i*46) for i,text in enumerate(('←→:СТОЛБЕЦ  ↑↓:СТРОКА','Enter:ПРАВКА  Tab:ДЕЙСТВИЯ','В ФОРМУЛЕ Tab:ССЫЛКА','В↑: F1 → Tab → Enter','Tab В ССЫЛКЕ:ФИКСАЦИЯ $'))))
+            keys([OK]);shot('help-2',lambda f:font.has(f,'F1/F2 → Tab:СПИСОК ОПЕРАЦИЙ',8,132) and font.has(f,'F3:ПЕРЕСЧЁТ  Esc:ВЫХОД',8,224) and hints(f,'Enter:СТРАНИЦА  Esc:НАЗАД'));keys([ESC,ESC])
+            shot('save-confirmation',lambda f:font.has(f,'ЛИСТ ИЗМЕНЁН',8,6,inverse=True) and menu_hints(f));keys([OK]);ended(start)
             saved=read_file(p,path);(args.output/'edited.mks').write_bytes(saved)
             assert cells_in(saved)=={a:(k,s) for a,(k,s,v) in cells.items()};assert saved[8]==0
             start=len(p.text);p.open(path);p.expect('RUNTIME=APP');grid('reopened');keys([ESC]);ended(start)
             passed('eight visible sheet menu items, details/help, valid S1 save and reopen with values/sources preserved')
+            passed('physical PicoCalc key hints on every view; F1/F2 prefixes and palette, operand separator, text case/layout and F3 recalculation')
             # Existing bundled documents exercise the normal Explorer/S1 route,
             # without saving or replacing either document.
             values={'A2':'2','B2':'125','C2':'250','D2':'50','A3':'3','B3':'80','C3':'240','D3':'48',
