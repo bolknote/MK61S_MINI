@@ -4,7 +4,8 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 . (Join-Path $root 'tools/.mk61-arduino-board/payload.ps1')
-. (Join-Path $root 'tools/.mk61-gcc/sdk.ps1')
+# Reproduce the Arduino-launched 5.1 process without its optional hash function.
+function Get-FileHash { throw 'Get-FileHash is deliberately unavailable' }
 $work = Join-Path ([IO.Path]::GetTempPath()) ('mk61 native install ' + [Guid]::NewGuid().ToString('N'))
 $oldBoard = $env:MK61_ARDUINO_TOOLCHAIN
 $oldNative = $env:MK61_GCC_TOOLCHAIN
@@ -57,6 +58,30 @@ Write-Host "Native SDK: $PSScriptRoot"
     if ($cached.Count -ne 1 -or $cached[0] -cne $expected) {
         throw 'Reinstall did not return the same compiler path'
     }
+    Install-Mk61NativePayload $root $target $expected
+    if (-not (Test-Mk61NativePayload $root $target)) {
+        throw 'A fresh native board package requires Get-FileHash'
+    }
+    $header = Join-Path $target 'cores/mk61/Arduino.h'
+    $original = [IO.File]::ReadAllBytes($header)
+    [IO.File]::AppendAllText($header, '// changed installed header')
+    if (Test-Mk61NativePayload $root $target) {
+        throw 'A changed installed header passed the native package check'
+    }
+    [IO.File]::WriteAllBytes($header, $original)
+    [IO.File]::Delete($header)
+    if (Test-Mk61NativePayload $root $target) {
+        throw 'A missing installed header passed the native package check'
+    }
+    [IO.File]::WriteAllBytes($header, $original)
+    . (Join-Path $root 'tools/.mk61-gcc/sdk.ps1')
+    $sdkCopy = Join-Path $work 'SDK checksum fixture'
+    Copy-Item (Join-Path $root 'third_party/stm32f4') $sdkCopy -Recurse
+    [IO.File]::AppendAllText((Join-Path $sdkCopy 'device/include/stm32f411xe.h'), '// changed SDK')
+    $sdkRejected = $false
+    try { $null = Get-NativeSdkPath $root $sdkCopy }
+    catch { $sdkRejected = $_.Exception.Message -match 'checksum mismatch' }
+    if (-not $sdkRejected) { throw 'SDK checksum verification requires Get-FileHash' }
     $env:PUBLIC = Join-Path $work 'Public'
     $unicodeTarget = Join-Path $work ('Arduino ' + [char]0x420 + [char]0x43e + [char]0x43c + [char]0x430 + [char]0x43d)
     $requestedRoot = Join-Path $unicodeTarget 'tools/toolchains'
@@ -85,7 +110,7 @@ Write-Host "Native SDK: $PSScriptRoot"
             throw 'Reinstall did not migrate the registered Unicode compiler'
         }
     }
-    Write-Host 'Native Arduino first install: status/path isolation and Windows ASCII migration PASS'
+    Write-Host 'Native Arduino first install: status/path isolation, module-independent SHA256 checks and Windows ASCII migration PASS'
 } finally {
     $env:MK61_ARDUINO_TOOLCHAIN = $oldBoard
     $env:MK61_GCC_TOOLCHAIN = $oldNative

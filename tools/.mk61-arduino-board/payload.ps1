@@ -95,13 +95,14 @@ function Install-Mk61NativePayload {
 function Test-Mk61NativePayload {
     param([string]$ProjectRoot, [string]$Target)
     try {
+        . (Join-Path $ProjectRoot 'tools/.mk61-gcc/sdk.ps1')
         if ($env:OS -eq 'Windows_NT' -and [IO.File]::Exists((Join-Path $Target 'tools/seal-firmware-elf.py'))) {
             throw 'Retired Python sealer remains in the Windows board package'
         }
         foreach ($pair in Get-Mk61NativePayloadPairs $ProjectRoot $Target) {
             if (-not [IO.File]::Exists($pair.Target)) { throw "Installed native package file is missing: $($pair.Target)" }
-            if ((Get-FileHash -Algorithm SHA256 -LiteralPath $pair.Source).Hash -ne
-                (Get-FileHash -Algorithm SHA256 -LiteralPath $pair.Target).Hash) {
+            if ((Get-NativeFileSha256 $pair.Source) -ne
+                (Get-NativeFileSha256 $pair.Target)) {
                 throw "Installed native package file differs from this checkout: $($pair.Target)"
             }
         }

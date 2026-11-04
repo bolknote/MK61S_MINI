@@ -1,4 +1,19 @@
 # Shared native SDK/toolchain discovery. No installed board package is queried.
+function Get-NativeFileSha256 {
+    param([string]$Path)
+    # Arduino can start Windows PowerShell with a different PSModulePath.
+    # Hashing must not depend on the optional Get-FileHash module function.
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    $stream = $null
+    try {
+        $stream = [IO.File]::OpenRead($Path)
+        return [BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-', '').ToLowerInvariant()
+    } finally {
+        if ($null -ne $stream) { $stream.Dispose() }
+        $algorithm.Dispose()
+    }
+}
+
 function Get-NativeSdkPath {
     param([string]$ProjectRoot, [string]$Explicit)
     $selected = if (-not [string]::IsNullOrWhiteSpace($Explicit)) { $Explicit
@@ -16,7 +31,7 @@ function Get-NativeSdkPath {
         if ($name -match '(^/|(^|/)\.\.(/|$)|\\|:)' ) { throw "Invalid native SDK file path: $name" }
         $path = Join-Path $selected $name
         if (-not [IO.File]::Exists($path)) { throw "Native SDK file is missing: $name" }
-        if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne [string]$entry.Value) {
+        if ((Get-NativeFileSha256 $path) -ne [string]$entry.Value) {
             throw "Native SDK checksum mismatch: $name"
         }
     }

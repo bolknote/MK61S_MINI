@@ -71,7 +71,7 @@ try {
             Invoke-WebRequest -UseBasicParsing -Uri $asset.url -OutFile $archive
         } else { $archive = [IO.Path]::GetFullPath($ArchivePath) }
         Write-Host 'Checking compiler archive SHA256'
-        $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+        $hash = Get-NativeFileSha256 $archive
         if ($hash -ne $asset.sha256) { throw "GNU Arm archive checksum mismatch: $archive" }
         $unpack = Join-Path $stage 'unpack'
         [void][IO.Directory]::CreateDirectory($unpack)
