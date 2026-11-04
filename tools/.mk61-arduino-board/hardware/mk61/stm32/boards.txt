@@ -11,7 +11,7 @@ menu.mk61_usb_screen=USB-экран
 menu.mk61_explorer=Быстрый Explorer
 menu.mk61_math=Математика
 
-mk61_f401_app.name=MK61s F401 + APP (1.2.5)
+mk61_f401_app.name=MK61s F401 + APP (1.2.6)
 
 # Reuse the installed STM32duino 2.12.0 core and BlackPill F401CC variant.
 mk61_f401_app.build.core=STMicroelectronics:arduino
@@ -184,9 +184,10 @@ mk61_f401_app.menu.mk61_explorer.disabled.build.mk61_explorer=0
 mk61_f401_app.menu.mk61_math.core=CORE
 mk61_f401_app.menu.mk61_math.core.build.mk61_math=1
 mk61_f401_app.menu.mk61_math.core.build.mk61_app_math=0
-mk61_f401_app.menu.mk61_math.core_app_float=CORE + APP FLOAT
+# Keep saved FQBNs usable after the shared language runtime retired APP libm.
+mk61_f401_app.menu.mk61_math.core_app_float=CORE (старое значение «CORE + APP FLOAT»)
 mk61_f401_app.menu.mk61_math.core_app_float.build.mk61_math=1
-mk61_f401_app.menu.mk61_math.core_app_float.build.mk61_app_math=1
+mk61_f401_app.menu.mk61_math.core_app_float.build.mk61_app_math=0
 mk61_f401_app.menu.mk61_math.binary64=BINARY64
 mk61_f401_app.menu.mk61_math.binary64.build.mk61_math=0
 mk61_f401_app.menu.mk61_math.binary64.build.mk61_app_math=0
@@ -194,7 +195,7 @@ mk61_f401_app.menu.mk61_math.binary64.build.mk61_app_math=0
 
 # STM32F411CE keeps the same MK61s menus, while resident implementations
 # are the defaults made possible by its 512 KiB internal Flash.
-mk61_f411.name=MK61s F411 + APP (1.2.5)
+mk61_f411.name=MK61s F411 + APP (1.2.6)
 
 mk61_f411.build.core=STMicroelectronics:arduino
 mk61_f411.build.variant=STMicroelectronics:STM32F4xx/F411C(C-E)(U-Y)
@@ -359,6 +360,6 @@ mk61_f411.menu.mk61_math.binary64.build.mk61_app_math=0
 mk61_f411.menu.mk61_math.core=CORE
 mk61_f411.menu.mk61_math.core.build.mk61_math=1
 mk61_f411.menu.mk61_math.core.build.mk61_app_math=0
-mk61_f411.menu.mk61_math.core_app_float=CORE + APP FLOAT
+mk61_f411.menu.mk61_math.core_app_float=CORE (старое значение «CORE + APP FLOAT»)
 mk61_f411.menu.mk61_math.core_app_float.build.mk61_math=1
-mk61_f411.menu.mk61_math.core_app_float.build.mk61_app_math=1
+mk61_f411.menu.mk61_math.core_app_float.build.mk61_app_math=0

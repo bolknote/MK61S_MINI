@@ -172,10 +172,10 @@ send -- "7"
 expect "Enter переключает ключ"
 send -- "\033OF\033OA\r"
 expect "Выберите точность и размер математической библиотеки"
-send -- "\033OB\r"
-expect "Математика: CORE + APP FLOAT"
+send -- "\033OH\r"
+expect "Математика: CORE"
 send -- "\033OF\r"
-expect "MATH CORE + APP FLOAT"
+expect "MATH CORE"
 send -- q
 set timeout 2
 expect {
@@ -186,8 +186,7 @@ expect {
   }
 }
 
-# The renamed binary64 selection must still persist the original numeric
-# backend and turn off the hybrid APP override.
+# Binary64 must still persist its original numeric backend without APP libm.
 file copy -force $env(MK61_TEST_NESTED_CONFIG) $env(MK61_TEST_BINARY64_CONFIG)
 set env(MK61_CONFIG_FILE) $env(MK61_TEST_BINARY64_CONFIG)
 spawn $env(MK61_TEST_LAUNCHER)
@@ -242,7 +241,7 @@ expect {
 log_file
 EXPECT
   grep -q '^MK61_MATH_BACKEND=1$' "$nested_config"
-  grep -q '^MK61_APP_LOCAL_FLOAT_MATH=1$' "$nested_config"
+  grep -q '^MK61_APP_LOCAL_FLOAT_MATH=0$' "$nested_config"
   grep -q '^MK61_MATH_BACKEND=0$' "$binary64_config"
   grep -q '^MK61_APP_LOCAL_FLOAT_MATH=0$' "$binary64_config"
   if grep -Eq '\^\[\[[AB]' "$detect_log"; then
@@ -299,7 +298,7 @@ printf '%s\n' \
   'MK61_APP_LOCAL_FLOAT_MATH=1' > "$hybrid_config"
 hybrid=$(MK61_CONFIG_FILE="$hybrid_config" "$tool" --show-config)
 grep -q '^MK61_MATH_BACKEND=1$' <<< "$hybrid"
-grep -q '^MK61_APP_LOCAL_FLOAT_MATH=1$' <<< "$hybrid"
+grep -q '^MK61_APP_LOCAL_FLOAT_MATH=0$' <<< "$hybrid"
 grep -q '^MK61_FOCAL_AS_APP=1$' <<< "$hybrid"
 grep -q '^MK61_TINYBASIC_AS_APP=1$' <<< "$hybrid"
 grep -q '^MK61_WBMP_VIEWER_AS_APP=1$' <<< "$hybrid"
@@ -308,7 +307,7 @@ grep -q '^MK61_CHIP8_AS_APP=1$' <<< "$hybrid"
 grep -q '^MK61_ENABLE_SETUP=1$' <<< "$hybrid"
 grep -q '^MK61_SETUP_AS_APP=1$' <<< "$hybrid"
 grep -q '^MK61_EXPLORER_AS_APP=1$' <<< "$hybrid"
-grep -q -- 'COMPILE_FLAGS=.*-DMK61_MATH_BACKEND=1 -DMK61_APP_LOCAL_FLOAT_MATH=1 ' <<< "$hybrid"
+grep -q -- 'COMPILE_FLAGS=.*-DMK61_MATH_BACKEND=1 -DMK61_APP_LOCAL_FLOAT_MATH=0 ' <<< "$hybrid"
 grep -q -- "-LocalFloatMath.*State.AppLocalFloat" "$root/tools/.mk61-firmware/mk61-firmware.ps1"
 grep -q -- '-LocalFloatMath "$APP_LOCAL_FLOAT"' "$tool"
 grep -qFx '/.mk61-firmware.conf' "$root/.gitignore"

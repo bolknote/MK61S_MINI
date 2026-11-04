@@ -41,8 +41,8 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ] &&
       -Sketchbook "$shell_sketchbook"
 fi
 grep -q 'Verified uploader: mk61Upload' "$work/install.txt"
-grep -Fq 'MK61s board package version: 1.2.5' "$work/install.txt"
-grep -Fq 'installed 1.2.5; project 1.2.5' "$work/check.txt"
+grep -Fq 'MK61s board package version: 1.2.6' "$work/install.txt"
+grep -Fq 'installed 1.2.6; project 1.2.6' "$work/check.txt"
 cmp "$platform/boards.txt" "$target/boards.txt"
 cmp "$platform/platform.txt" "$target/platform.txt"
 cmp "$platform/tools/mk61_module.ld" "$target/tools/mk61_module.ld"
@@ -101,12 +101,12 @@ grep -Fq \
   "$target/boards.local.txt"
 grep -q 'Accepted obsolete Arduino IDE font options' "$work/reinstall.txt"
 
-grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.5)' "$target/boards.txt"
+grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.6)' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.upload.tool=mk61Upload$' "$target/boards.txt"
-grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.5)' "$target/boards.txt"
-grep -Fxq 'version=1.2.5' "$target/platform.txt"
+grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.6)' "$target/boards.txt"
+grep -Fxq 'version=1.2.6' "$target/platform.txt"
 # A mixed/missing USB shim must fail the same prebuild freshness check as an
 # old platform: otherwise library resolution can silently select Core's ABI.
 for file in library.properties src/USBDevice.h src/USBDevice.cpp; do
@@ -246,8 +246,12 @@ done
 ! grep -q '^mk61_f401_app.menu.mk61_math.float=' "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_math.core_app_float.build.mk61_math=1$' \
   "$target/boards.txt"
-grep -q '^mk61_f401_app.menu.mk61_math.core_app_float.build.mk61_app_math=1$' \
+grep -q '^mk61_f401_app.menu.mk61_math.core_app_float.build.mk61_app_math=0$' \
   "$target/boards.txt"
+for board in mk61_f401_app mk61_f411; do
+  grep -Fq "$board.menu.mk61_math.core_app_float=CORE (старое значение «CORE + APP FLOAT»)" "$target/boards.txt"
+  ! grep -q "^$board.menu.mk61_math.*.build.mk61_app_math=1$" "$target/boards.txt"
+done
 grep -q -- '--local-float-math "{build.mk61_app_math}"' \
   "$target/platform.txt"
 grep -q -- '-LocalFloatMath "{build.mk61_app_math}"' \
@@ -262,6 +266,27 @@ grep -q -- '--usbdisk "{build.mk61_usbdisk_app}"' "$target/platform.txt"
 grep -q -- '--explorer "{build.mk61_explorer_app}"' "$target/platform.txt"
 grep -q -- '--mcu "{build.mk61_mcu_id}"' "$target/platform.txt"
 grep -q -- '--max-size "{upload.maximum_size}"' "$target/platform.txt"
+
+mkdir -p "$work/core with spaces/cores/arduino"
+for version in 2.12.0 3.0.0 2.11.0 ''; do
+  printf 'version=%s\r\n' "$version" > "$work/core with spaces/platform.txt"
+  if "$hook" check-profile --platform classic-v2 --display uc1609 \
+      --sketch "$root/code" --core-path "$work/core with spaces/cores/arduino" \
+      > "$work/core-version.txt" 2>&1; then
+    test "$version" = 2.12.0
+  else
+    test "$version" != 2.12.0
+    grep -Fq 'MK61s requires 2.12.0' "$work/core-version.txt"
+  fi
+done
+rm "$work/core with spaces/platform.txt"
+if "$hook" check-profile --platform classic-v2 --display uc1609 \
+    --sketch "$root/code" --core-path "$work/core with spaces/cores/arduino" \
+    > "$work/missing-core-version.txt" 2>&1; then
+  echo 'Arduino prebuild accepted missing core metadata' >&2
+  exit 1
+fi
+grep -Fq 'STM32 core platform.txt' "$work/missing-core-version.txt"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
   --sketch "$root/code"
@@ -350,7 +375,7 @@ if command -v pwsh >/dev/null 2>&1; then
     exit 1
   fi
   grep -q 'installed but stale' "$work/stale-check-ps.txt"
-  grep -Fq 'installed 1.2.5; project 1.2.5' "$work/stale-check-ps.txt"
+  grep -Fq 'installed 1.2.6; project 1.2.6' "$work/stale-check-ps.txt"
   if run_windows_powershell -NoLogo -NoProfile -File \
       "$ps_sketchbook/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1" \
       check-profile -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code" \
@@ -595,6 +620,8 @@ EOF
   test -s "$mock_device/System/HELP0.TXT"
   grep -q 'Resident and System APP upload complete' \
     "$work/mock-upload-f411.txt"
+  run_windows_powershell -NoLogo -NoProfile -File \
+    "$root/tests/arduino_core_version_self_test.ps1"
   run_windows_powershell -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-postbuild.ps1" check-profile \
     -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code"

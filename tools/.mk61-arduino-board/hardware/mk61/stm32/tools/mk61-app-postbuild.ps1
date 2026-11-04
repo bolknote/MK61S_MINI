@@ -10,6 +10,7 @@ param(
     [string]$Compiler,
     [string]$BuildPath,
     [string]$VariantLd,
+    [string]$CorePath,
     [string]$Project,
     [string]$Bundle,
     [ValidateSet('f401', 'f411')]
@@ -105,6 +106,20 @@ function Remove-Mk61BundledUiFontLicenses {
 }
 
 function Check-Mk61Profile {
+    if (-not [string]::IsNullOrWhiteSpace($CorePath)) {
+        $corePlatform = Join-Path $CorePath '../../platform.txt'
+        Test-RequiredFile $corePlatform 'STM32 core platform.txt'
+        $coreVersion = ''
+        foreach ($line in [IO.File]::ReadAllLines($corePlatform)) {
+            if ($line -match '^version=(.*)$') { $coreVersion = $Matches[1].Trim() }
+        }
+        if ($coreVersion -cne '2.12.0') {
+            Stop-Mk61Build (
+                "STM32 core $coreVersion is selected; MK61s requires 2.12.0. " +
+                'In Arduino IDE Boards Manager select STM32 MCU based boards ' +
+                'version 2.12.0, install it, then restart Arduino IDE.')
+        }
+    }
     if (-not (Test-Mk61Profile $Platform $Display)) {
         Stop-Mk61Build "incompatible platform/display pair: $Platform + $Display"
     }

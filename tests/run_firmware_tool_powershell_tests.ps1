@@ -151,8 +151,8 @@ try {
     $hybridText = $hybrid.Output -join "`n"
     Assert-True ($hybridText -match '(?m)^MK61_MATH_BACKEND=1$') `
         'hybrid did not keep resident CORE'
-    Assert-True ($hybridText -match '(?m)^MK61_APP_LOCAL_FLOAT_MATH=1$') `
-        'hybrid APP float flag was lost'
+    Assert-True ($hybridText -match '(?m)^MK61_APP_LOCAL_FLOAT_MATH=0$') `
+        'saved hybrid config was not migrated to the shared language runtime'
     foreach ($name in @(
         'MK61_FOCAL_AS_APP', 'MK61_TINYBASIC_AS_APP',
         'MK61_WBMP_VIEWER_AS_APP', 'MK61_MARKDOWN_VIEWER_AS_APP',
@@ -161,8 +161,8 @@ try {
         Assert-True ($hybridText -match "(?m)^${name}=1$") `
             "fresh F401 config did not default ${name} to APP"
     }
-    Assert-True ($hybridText -match 'COMPILE_FLAGS=.*MK61_MATH_BACKEND=1 -DMK61_APP_LOCAL_FLOAT_MATH=1 ') `
-        'hybrid flags were not forwarded to the resident build'
+    Assert-True ($hybridText -match 'COMPILE_FLAGS=.*MK61_MATH_BACKEND=1 -DMK61_APP_LOCAL_FLOAT_MATH=0 ') `
+        'retired hybrid flag reached the resident build'
 
     [IO.File]::WriteAllLines($config, @('PLATFORM=classic-v3','SCREEN=lcd1602-a00'))
     $incompatible = Invoke-Tool @('--show-config')
@@ -444,8 +444,8 @@ try {
     Assert-True ($script:Glyphs.RadioOff -eq '( )' -and $script:Glyphs.RadioOn -eq '(*)') 'Windows radio glyphs are ambiguous'
     Assert-True ($script:Glyphs.MenuNext -eq '>') 'Windows submenu marker is not conhost-safe'
     Assert-True ((Get-Checkbox 0) -eq '[ ]' -and (Get-Checkbox 1) -eq '[x]') 'Windows option summary still uses unsupported checkbox glyphs'
-    Assert-True ((Get-MathBackendLabelFor 1 1) -eq 'CORE + APP FLOAT') `
-        'staged math selection has the wrong label'
+    Assert-True ((Get-MathBackendLabelFor 1 1) -eq 'CORE') `
+        'retired hybrid selection was advertised instead of resident CORE'
     Assert-True ((Get-MathBackendLabelFor 0 0) -eq 'BINARY64') `
         'binary64 math still uses the obsolete library label'
     Assert-True ((Get-MathBackendLabelFor 1 0) -eq 'CORE') `

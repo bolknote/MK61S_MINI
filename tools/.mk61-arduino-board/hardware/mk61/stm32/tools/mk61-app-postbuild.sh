@@ -20,7 +20,7 @@ profile_valid() {
 }
 
 check_profile() {
-  local platform= display= sketch= build_path= variant_ld=
+  local platform= display= sketch= build_path= variant_ld= core_path=
   local usb_screen=0 chip8=0
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -31,9 +31,16 @@ check_profile() {
       --sketch) require_value "$@"; sketch=$2; shift 2 ;;
       --build-path) require_value "$@"; build_path=$2; shift 2 ;;
       --variant-ld) require_value "$@"; variant_ld=$2; shift 2 ;;
+      --core-path) require_value "$@"; core_path=$2; shift 2 ;;
       *) die "unknown check-profile option: $1" ;;
     esac
   done
+  if [ -n "$core_path" ]; then
+    local core_platform="$core_path/../../platform.txt" core_version
+    [ -f "$core_platform" ] || die 'STM32 core platform.txt was not found'
+    core_version=$(sed -n 's/^version=//p' "$core_platform" | tr -d '\r')
+    [ "$core_version" = 2.12.0 ] || die "STM32 core $core_version is selected; MK61s requires 2.12.0. In Arduino IDE Boards Manager select STM32 MCU based boards version 2.12.0, install it, then restart Arduino IDE."
+  fi
   profile_valid "$platform" "$display" ||
     die "incompatible platform/display pair: $platform + $display"
   case "$usb_screen:$chip8" in

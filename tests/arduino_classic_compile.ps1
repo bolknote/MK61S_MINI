@@ -15,7 +15,10 @@ $cliOptions = @()
 if ($ConfigFile) { $cliOptions = @('--config-file', $ConfigFile) }
 foreach ($revision in @('v2', 'v3')) {
     $build = Join-Path $BuildRoot "arduino-ide-f401-classic-$revision"
-    $fqbn = "mk61:stm32:mk61_f401_app:mk61_platform=classic_$revision,mk61_display=uc1609,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=app,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core"
+    # V2 reproduces the reporter's saved menu choice through the real recipe;
+    # V3 also covers the current CORE choice. Both must produce a full bundle.
+    $math = if ($revision -eq 'v2') { 'core_app_float' } else { 'core' }
+    $fqbn = "mk61:stm32:mk61_f401_app:mk61_platform=classic_$revision,mk61_display=uc1609,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=app,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=$math"
     & arduino-cli @cliOptions compile --fqbn $fqbn --build-path $build $Sketch
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $bundleName = "mk61s-M-classic-$revision-uc1609-f401"
@@ -34,9 +37,13 @@ foreach ($revision in @('v2', 'v3')) {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $flags = [IO.File]::ReadAllText((Join-Path $bundle 'build.flags'))
     foreach ($flag in @('-DMK61_REQUIRE_RESIDENT_CRC=1', '-DMK61_ARDUINO_OWNED_USB=1',
+        '-DMK61_MATH_BACKEND=1', '-DMK61_APP_LOCAL_FLOAT_MATH=0',
         '-DMK61_FOCAL_AS_APP=1', '-DMK61_TINYBASIC_AS_APP=1',
         '-DMK61_CHIP8_AS_APP=1', '-DMK61_MARKDOWN_VIEWER_AS_APP=1')) {
         if (-not $flags.Contains($flag)) { throw "Classic $revision missing $flag" }
+    }
+    if ($flags.Contains('-DMK61_APP_LOCAL_FLOAT_MATH=1')) {
+        throw "Classic $revision retained retired local APP math"
     }
     foreach ($file in @('BASIC.APP', 'FOCAL.APP', 'CHIP8.APP', 'MARKDOWN.APP',
         'LANGVM.APP', 'LANGIN.APP', 'SETUP.APP', 'EXPLORER.APP', 'USBDISK.APP',

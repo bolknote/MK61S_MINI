@@ -1293,9 +1293,9 @@ normalize_viewer_selection() {
 }
 
 normalize_math_selection() {
-  if [ "$MATH_BACKEND" -ne 1 ]; then
-    APP_LOCAL_FLOAT=0
-  fi
+  # Shared language APPs use resident math. Migrate saved hybrid configs
+  # before they can reach the APP packager with an unsupported libm request.
+  APP_LOCAL_FLOAT=0
 }
 
 load_config() {
@@ -1496,7 +1496,6 @@ math_option_state_for() {
   case "$choice" in
     binary64) [ "$backend" -eq 0 ] ;;
     core) [ "$backend" -eq 1 ] && [ "$app_float" -eq 0 ] ;;
-    hybrid) [ "$backend" -eq 1 ] && [ "$app_float" -eq 1 ] ;;
     *) return 1 ;;
   esac && printf 'on' || printf 'off'
 }
@@ -1510,13 +1509,7 @@ math_backend_label_for() {
   local app_float=$2
   case "$backend" in
     0) printf 'BINARY64' ;;
-    1)
-      if [ "$app_float" -eq 1 ]; then
-        printf 'CORE + APP FLOAT'
-      else
-        printf 'CORE'
-      fi
-      ;;
+    1) printf 'CORE' ;;
   esac
 }
 
@@ -1795,14 +1788,11 @@ choose_compile_options() {
           'Выберите точность и размер математической библиотеки:' \
           core   'CORE · ядро МК-61, около 8 цифр' \
             "$(math_option_state_for core "$math_backend" "$app_float")" \
-          hybrid 'CORE + APP FLOAT · быстрые ln/lg/exp/sqrt в FOCAL/BASIC' \
-            "$(math_option_state_for hybrid "$math_backend" "$app_float")" \
           binary64 'BINARY64 · полная double-точность, больше Flash' \
             "$(math_option_state_for binary64 "$math_backend" "$app_float")") || continue
         case "$math_choice" in
           binary64) math_backend=0; app_float=0 ;;
           core) math_backend=1; app_float=0 ;;
-          hybrid) math_backend=1; app_float=1 ;;
         esac
         ;;
       save)

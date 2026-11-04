@@ -1,5 +1,5 @@
 name=MK61s F401/F411
-version=1.2.5
+version=1.2.6
 
 # DFU has no serial port before the resident starts. Keep this property
 # defined so Arduino CLI can launch the compound uploader without --port.
@@ -10,8 +10,8 @@ serial.port=auto
 # The rest of platform.txt is inherited from the referenced
 # STMicroelectronics:arduino core. These hooks add MK61s F401/F411 profile
 # validation and System APP packaging.
-recipe.hooks.prebuild.20.pattern="{runtime.platform.path}/tools/mk61-app-postbuild.sh" check-profile --platform "{build.mk61_platform_id}" --display "{build.mk61_display_id}" --usb-screen "{build.mk61_usb_screen}" --chip8 "{build.mk61_chip8}" --sketch "{build.source.path}" --build-path "{build.path}" --variant-ld "{build.variant.path}/{build.ldscript}"
-recipe.hooks.prebuild.20.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-app-postbuild.ps1" check-profile -Platform "{build.mk61_platform_id}" -Display "{build.mk61_display_id}" -UsbScreen "{build.mk61_usb_screen}" -Chip8 "{build.mk61_chip8}" -Sketch "{build.source.path}" -BuildPath "{build.path}" -VariantLd "{build.variant.path}/{build.ldscript}"
+recipe.hooks.prebuild.20.pattern="{runtime.platform.path}/tools/mk61-app-postbuild.sh" check-profile --platform "{build.mk61_platform_id}" --display "{build.mk61_display_id}" --usb-screen "{build.mk61_usb_screen}" --chip8 "{build.mk61_chip8}" --sketch "{build.source.path}" --build-path "{build.path}" --variant-ld "{build.variant.path}/{build.ldscript}" --core-path "{build.core.path}"
+recipe.hooks.prebuild.20.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-app-postbuild.ps1" check-profile -Platform "{build.mk61_platform_id}" -Display "{build.mk61_display_id}" -UsbScreen "{build.mk61_usb_screen}" -Chip8 "{build.mk61_chip8}" -Sketch "{build.source.path}" -BuildPath "{build.path}" -VariantLd "{build.variant.path}/{build.ldscript}" -CorePath "{build.core.path}"
 
 # LTO can resolve the STM32 USB calls before GNU ld applies --wrap. Keep
 # only the two USB implementation units opaque, as in the direct GCC build.
