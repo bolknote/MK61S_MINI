@@ -147,6 +147,18 @@ for relative in cores/mk61/Arduino.h system/stm32f4/cmsis/include/core_cm4.h too
   "$launcher" --sketchbook "$shell_sketchbook" > "$work/reinstall-native.txt"
 done
 test ! -e "$target/libraries/USBDevice/src/USBDevice.h"
+# Upgrade must not leave an empty, invalid library in Arduino's discovery.
+mkdir -p "$target/libraries/USBDevice/src"
+for legacy in library.properties src/USBDevice.cpp src/USBDevice.h; do
+  printf 'obsolete owned shim\n' > "$target/libraries/USBDevice/$legacy"
+done
+"$launcher" --sketchbook "$shell_sketchbook" > "$work/remove-shim.txt"
+test ! -d "$target/libraries/USBDevice"
+mkdir -p "$target/libraries/USBDevice/src"
+printf 'keep user file\n' > "$target/libraries/USBDevice/USER.txt"
+"$launcher" --sketchbook "$shell_sketchbook" > "$work/retain-user-file.txt"
+test -s "$target/libraries/USBDevice/USER.txt"
+
 # --check must inspect the registered compiler, even with a valid env override.
 cp "$target/platform.local.txt" "$work/current-platform.local.txt"
 printf 'compiler.path=%s/missing-toolchain/\n' "$work" > "$target/platform.local.txt"
@@ -481,6 +493,10 @@ EOF
   # Upgrade the package Arduino kept outside the checkout. Updating the ZIP
   # alone leaves this legacy Python hook and its copied ELF sealer intact.
   configured_platform="$ps_config_sketchbook/hardware/mk61/stm32"
+  mkdir -p "$configured_platform/libraries/USBDevice/src"
+  for legacy in library.properties src/USBDevice.cpp src/USBDevice.h; do
+    printf 'obsolete owned shim\n' > "$configured_platform/libraries/USBDevice/$legacy"
+  done
   printf 'obsolete ELF sealer\n' > \
     "$configured_platform/tools/seal-firmware-elf.py"
   if OS=Windows_NT PUBLIC="$ps_public" \
@@ -501,6 +517,7 @@ EOF
   cmp "$platform/tools/mk61-app-postbuild.ps1" \
     "$configured_platform/tools/mk61-app-postbuild.ps1"
   test ! -e "$configured_platform/tools/seal-firmware-elf.py"
+  test ! -d "$configured_platform/libraries/USBDevice"
   grep -Fq 'Windows build/upload tools: PowerShell/.NET (no Python).' \
     "$work/legacy-python-upgrade.txt"
   OS=Windows_NT PUBLIC="$ps_public" \

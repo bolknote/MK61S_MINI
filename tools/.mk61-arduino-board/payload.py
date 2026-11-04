@@ -1,5 +1,6 @@
 """Compose/check the Arduino native platform from shared repository sources."""
 import argparse
+import errno
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -89,6 +90,16 @@ def main():
                 old = target / 'libraries/USBDevice' / name
                 if old.is_file():
                     old.unlink()
+            # Arduino scans directories as libraries even after their owned
+            # headers are gone. Remove empty containers, retaining user files.
+            for name in ('libraries/USBDevice/src', 'libraries/USBDevice', 'libraries'):
+                old = target / name
+                if old.is_dir():
+                    try:
+                        old.rmdir()
+                    except OSError as error:
+                        if error.errno not in (errno.ENOTEMPTY, errno.EEXIST, errno.ENOENT):
+                            raise
         print('Native GNU Arm: ' + str(binary))
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
         parser.exit(1, str(error) + '\n')

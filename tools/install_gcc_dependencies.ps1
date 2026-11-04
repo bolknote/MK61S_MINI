@@ -8,6 +8,8 @@ param(
 )
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
+# Rendering a progress event for each download chunk makes Windows PS 5.1 slow.
+$ProgressPreference = 'SilentlyContinue'
 $project = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if ($Help) {
     Write-Host 'Install pinned standalone GNU Arm GCC into .build/toolchains. No Arduino package is used.'
@@ -64,10 +66,12 @@ try {
             Write-Host "Downloading $($asset.archive)"
             Invoke-WebRequest -UseBasicParsing -Uri $asset.url -OutFile $archive
         } else { $archive = [IO.Path]::GetFullPath($ArchivePath) }
+        Write-Host 'Checking compiler archive SHA256'
         $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
         if ($hash -ne $asset.sha256) { throw "GNU Arm archive checksum mismatch: $archive" }
         $unpack = Join-Path $stage 'unpack'
         [void][IO.Directory]::CreateDirectory($unpack)
+        Write-Host 'Extracting verified GNU Arm compiler archive'
         if ($asset.archive.EndsWith('.zip')) {
             Expand-Archive -LiteralPath $archive -DestinationPath $unpack
         } else {

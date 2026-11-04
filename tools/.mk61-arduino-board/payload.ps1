@@ -74,6 +74,17 @@ function Install-Mk61NativePayload {
         $old = Join-Path $Target "libraries/USBDevice/$name"
         if ([IO.File]::Exists($old)) { Remove-Item -LiteralPath $old -Force }
     }
+    # An empty retired shim still appears as an invalid Arduino library.
+    foreach ($name in @('libraries/USBDevice/src', 'libraries/USBDevice', 'libraries')) {
+        $old = Join-Path $Target $name
+        if ([IO.Directory]::Exists($old) -and [IO.Directory]::GetFileSystemEntries($old).Length -eq 0) {
+            try { [IO.Directory]::Delete($old, $false) }
+            catch [IO.DirectoryNotFoundException] { }
+            catch [IO.IOException] {
+                if ([IO.Directory]::Exists($old) -and [IO.Directory]::GetFileSystemEntries($old).Length -eq 0) { throw }
+            }
+        }
+    }
     $oldPython = Join-Path $Target 'tools/seal-firmware-elf.py'
     if ($env:OS -eq 'Windows_NT' -and [IO.File]::Exists($oldPython)) { Remove-Item -LiteralPath $oldPython -Force }
     Write-Host "Native GNU Arm: $binary"

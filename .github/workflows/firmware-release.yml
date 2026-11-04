@@ -725,8 +725,30 @@ jobs:
       # Python is allowed for artifact analysis, not in any IDE build
       # above. Check the actual calls: successful compilation or merely
       # finding the wrapper symbol does not prove that --wrap survived LTO.
-      - name: Install ARM emulator for Arduino USB qualification
-        run: python -m pip install unicorn==2.1.4
+      # Python is a test client only. All real IDE recipes above ran with
+      # blocked Python launchers; the gRPC compile below keeps them blocked.
+      - name: Setup Python for IDE service and ARM qualification
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install IDE test client and ARM emulator
+        run: python -m pip install unicorn==2.1.4 grpcio==1.76.0 protobuf==6.33.0
+
+      - name: Compile Classic F401 through the actual IDE gRPC service
+        shell: pwsh
+        run: |
+          $testPython = (Get-Command python).Source
+          $pythonTrap = Join-Path $env:RUNNER_TEMP 'mk61-no-python'
+          $env:PATH = "$pythonTrap;$env:PATH"
+          $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
+          $ideConfig = Join-Path (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
+          $safeCache = (& arduino-cli --config-file $ideConfig config get build_cache.path | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $testPython ./tests/arduino_daemon_compile.py --config-file $ideConfig `
+            --sketch code --build-path (Join-Path $safeCache 'arduino-grpc-f401-classic-v2') `
+            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v2,mk61_display=uc1609,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=app,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core_app_float'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify USB guards, owned drivers and full APP capacity in Arduino IDE ELF files
         shell: pwsh
