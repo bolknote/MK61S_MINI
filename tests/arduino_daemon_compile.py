@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import queue
 import subprocess
+import sys
 import threading
 import time
 
@@ -180,6 +181,10 @@ def run(args):
 
 
 if __name__ == '__main__':
+    # Windows pipes otherwise use the ANSI code page, which cannot print the
+    # deliberately Cyrillic sketchbook returned by the UTF-8 gRPC stream.
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding='utf-8', errors='backslashreplace')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cli', default='arduino-cli')
     parser.add_argument('--config-file', required=True, type=Path)
