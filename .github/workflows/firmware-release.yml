@@ -75,9 +75,9 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          # Run the complete macOS shell/PowerShell frontend gate on a
-          # current Intel image, with the same independently pinned GNU Arm.
-          - macos-26-intel
+          # The standard Apple Silicon image uses the pinned darwin-arm64
+          # GNU Arm toolchain and runs both complete frontend build paths.
+          - macos-26
           - windows-latest
 
     steps:
