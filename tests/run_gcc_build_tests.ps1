@@ -303,8 +303,11 @@ Assert-True ($releaseWorkflowText -match
 Assert-True ($releaseWorkflowText -match
     'mk61-firmware\.cmd[\s\S]+--mcu f401') `
     'platform matrix does not exercise the public F401 frontend'
-Assert-True ($releaseWorkflowText -match
-    'macos-latest[\s\S]+windows-latest') `
+$platformJob = [regex]::Match($releaseWorkflowText,
+    '(?ms)^  f401-gcc-platforms:\r?\n(?<job>.*?)(?=^  [a-z][a-z0-9-]*:|\z)').Groups['job'].Value
+Assert-True ($platformJob -match
+    '(?m)^\s+- macos-(?:latest|[0-9]+(?:-intel)?)\s*$' -and
+    $platformJob -match '(?m)^\s+- windows-latest\s*$') `
     'direct F401 GCC build is not checked on macOS and Windows'
 foreach ($setting in @(
     'MK61_ENABLE_FOCAL=1',
