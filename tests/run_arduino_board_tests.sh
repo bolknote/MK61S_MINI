@@ -270,23 +270,12 @@ grep -q -- '--max-size "{upload.maximum_size}"' "$target/platform.txt"
 mkdir -p "$work/core with spaces/cores/arduino"
 for version in 2.12.0 3.0.0 2.11.0 ''; do
   printf 'version=%s\r\n' "$version" > "$work/core with spaces/platform.txt"
-  if "$hook" check-profile --platform classic-v2 --display uc1609 \
-      --sketch "$root/code" --core-path "$work/core with spaces/cores/arduino" \
-      > "$work/core-version.txt" 2>&1; then
-    test "$version" = 2.12.0
-  else
-    test "$version" != 2.12.0
-    grep -Fq 'MK61s requires 2.12.0' "$work/core-version.txt"
-  fi
+  "$hook" check-profile --platform classic-v2 --display uc1609 \
+    --sketch "$root/code" --core-path "$work/core with spaces/cores/arduino"
 done
 rm "$work/core with spaces/platform.txt"
-if "$hook" check-profile --platform classic-v2 --display uc1609 \
-    --sketch "$root/code" --core-path "$work/core with spaces/cores/arduino" \
-    > "$work/missing-core-version.txt" 2>&1; then
-  echo 'Arduino prebuild accepted missing core metadata' >&2
-  exit 1
-fi
-grep -Fq 'STM32 core platform.txt' "$work/missing-core-version.txt"
+"$hook" check-profile --platform classic-v2 --display uc1609 \
+  --sketch "$root/code" --core-path "$work/core with spaces/cores/arduino"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
   --sketch "$root/code"

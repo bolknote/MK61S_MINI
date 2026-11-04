@@ -17,10 +17,8 @@ try {
             -CorePath $core 2>&1
         $status = $LASTEXITCODE
         $ErrorActionPreference = $previousAction
-        if ($version -eq '2.12.0') {
-            if ($status -ne 0) { throw "Pinned core rejected: $output" }
-        } elseif ($status -eq 0 -or ($output -join "`n") -notmatch 'MK61s requires 2.12.0') {
-            throw "Unqualified core '$version' was not rejected before compilation: $output"
+        if ($status -ne 0) {
+            throw "Core version '$version' caused an unsupported prebuild rejection: $output"
         }
     }
     Remove-Item -LiteralPath (Join-Path $work 'platform.txt')
@@ -30,8 +28,8 @@ try {
         -CorePath $core 2>&1
     $status = $LASTEXITCODE
     $ErrorActionPreference = 'Stop'
-    if ($status -eq 0 -or ($output -join "`n") -notmatch 'STM32 core platform.txt') {
-        throw "Missing core metadata was not rejected: $output"
+    if ($status -ne 0) {
+        throw "Legacy CorePath metadata caused a prebuild rejection: $output"
     }
     Write-Host 'arduino_core_version_self_test: OK'
 } finally {
