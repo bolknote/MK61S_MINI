@@ -85,6 +85,9 @@ C++-функцию замедлял все531 оценки примерно на
 python3 -B dev/tools/certify_m0_rounding_corrections.py --source-root . --json /tmp/atan-exp-certificate.json
 ```
 
+Для воспроизведения35725 оценок остатка нужен параметр `--samples 2000`;
+значение по умолчанию —1000.
+
 ARM-проверки: `tests/m0_atan_residual_arm_self_test.py`,
 `tests/m0_atan_exp_boundaries_arm_self_test.py`, существующие
 `tests/qualify_m0_rounding.py --operations atan exp` и
