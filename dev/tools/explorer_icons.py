@@ -26,6 +26,9 @@ PROGRAM_FOLDERS={
 }
 # These directories are produced by builders rather than copied from programs/.
 BUNDLE_FOLDERS={**PROGRAM_FOLDERS, 'apps':'applications', 'System':'system',
+    'apps/SPECTRUM':'applications','apps/SPECTRUM/licenses':'license',
+    'apps/SPECTRUM/games':'games','apps/SPECTRUM/games/Ianna':'games',
+    'apps/SPECTRUM/games/ulaplus':'games',
     'urq':'games','apps/URQ':'games',
     'Games/URQ':'games','licenses/ryu':'license','licenses/urq':'license',
     'System/VMCache':'cache', 'licenses':'license', 'licenses/ui-fonts':'font-license'}
