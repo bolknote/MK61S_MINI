@@ -3850,7 +3850,12 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               }
               if(*args != 0 && address_parse == terminal_core::RunAddressParse::NOT_ADDRESS) {
                 if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
-                if(!OpenStoredFile(current_directory, args)) {
+                const bool opened = OpenStoredFile(current_directory, args);
+                // Interactive open has no enclosing menu to repaint the
+                // calculator after a viewer/APP releases its display.
+                extern void lcd_std_display_redraw(void);
+                lcd_std_display_redraw();
+                if(!opened) {
                   Serial.println("Open failed!");
                   return terminal_protocol::Result::error();
                 }
@@ -3881,7 +3886,10 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 return terminal_protocol::Result::error();
               }
               if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
-              if(!OpenStoredFile(current_directory, args)) {
+              const bool opened = OpenStoredFile(current_directory, args);
+              extern void lcd_std_display_redraw(void);
+              lcd_std_display_redraw();
+              if(!opened) {
                 Serial.println("Open failed!");
                 return terminal_protocol::Result::error();
               }

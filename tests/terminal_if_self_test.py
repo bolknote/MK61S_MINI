@@ -40,6 +40,8 @@ static const char* regtext=" 0.0000000  00";static unsigned reads=0;
 static unsigned cancellations=0,idle_resets=0,dispatches=0;
 static std::vector<std::string> opens;
 static bool open_succeeds=true;
+static unsigned redraws=0;
+void lcd_std_display_redraw(){++redraws;}
 bool OpenStoredFile(u16,const char* args){opens.emplace_back(args);return open_succeeds;}
 void idle_signal_reset(){++idle_resets;}
 int HexdecimalDigit(char c){if(c>='0'&&c<='9')return c-'0';if((c|32)>='a'&&(c|32)<='f')return (c|32)-'a'+10;return -1;}
@@ -124,7 +126,7 @@ static Snapshot run(std::string line,bool legacy,bool script,bool trap,bool alia
  for(unsigned i=0;i<MAX_INPUT_CHAR;++i)t.input_buffer[i]=(u8)(0x80+i%97);
  const char* input=line.c_str();
  if(alias){assert(line.size()<MAX_INPUT_CHAR);std::memcpy(t.input_buffer,input,line.size()+1);input=(const char*)t.input_buffer;}
- Serial.text.clear();reads=0;cancellations=0;idle_resets=0;dispatches=0;opens.clear();Result result;
+ Serial.text.clear();reads=0;cancellations=0;idle_resets=0;dispatches=0;redraws=0;opens.clear();Result result;
  if(script){
   terminal_script::PreparedIf condition={};u8 tail=0;
   if(prepared&&t.prepare_script_if(input,condition,tail)){
@@ -178,9 +180,18 @@ int main(){
   }
  }
  m61_text::suspended=false;
+ for(bool succeeds:{false,true}){
+  open_succeeds=succeeds;
+  const auto result=run("open x",false,false,false,false);
+  assert(result.kind==(succeeds?ResultKind::OK:ResultKind::ERROR));
+  assert(result.opens==std::vector<std::string>{"x"}&&redraws==1);
+ }
  for(const char* line:{"open x","open\t\"some file.tbi\"","if 0==0 open x","if 0==0 if 1<2 open ../x"}){
   const auto result=run(line,false,true,false,false);
-  assert(result.kind==ResultKind::OPEN_FILE&&result.dispatches==0&&result.opens.empty());
+  assert(result.kind==ResultKind::OPEN_FILE&&result.dispatches==0&&result.opens.empty()&&redraws==0);
+ }
+ for(const char* line:{"open","open ","open\t\r"}){
+  assert(run(line,false,false,false,false).kind==ResultKind::ERROR&&redraws==0);
  }
  for(const char* line:{"open","open ","open\t\r","OPEN x","openx x"})assert(run(line,false,true,false,false).dispatches==1);
  assert(run("open x",false,true,true,false).dispatches==1);
