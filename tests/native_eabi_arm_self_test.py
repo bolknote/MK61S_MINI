@@ -6,7 +6,8 @@ import math
 from pathlib import Path
 import random
 import struct
-from unicorn import Uc, UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB, UC_HOOK_MEM_WRITE, UC_HOOK_CODE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB, UC_HOOK_MEM_WRITE, UC_HOOK_CODE
 from unicorn.arm_const import *
 from check_stm32_vectors import ElfImage
 

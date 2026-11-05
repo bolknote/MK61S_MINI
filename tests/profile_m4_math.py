@@ -10,7 +10,8 @@ import statistics
 import struct
 import subprocess
 import sys
-from unicorn import Uc,UC_ARCH_ARM,UC_MODE_MCLASS,UC_MODE_THUMB,UC_HOOK_MEM_WRITE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM,UC_MODE_MCLASS,UC_MODE_THUMB,UC_HOOK_MEM_WRITE
 from unicorn.arm_const import *
 from check_stm32_vectors import ElfImage
 from compact_math_arm_self_test import MathMachine,NAMES,bits,value,distance

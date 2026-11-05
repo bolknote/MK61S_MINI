@@ -6,7 +6,8 @@ from pathlib import Path
 from analyze_stack_usage import entry_arguments
 import subprocess
 import tempfile
-from unicorn import Uc, UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS
 from unicorn.arm_const import (UC_ARM_REG_SP, UC_ARM_REG_LR, UC_ARM_REG_PC,
     UC_ARM_REG_R0, UC_ARM_REG_C1_C0_2, UC_ARM_REG_FPEXC,
     UC_CPU_ARM_CORTEX_M4)

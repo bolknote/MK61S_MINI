@@ -11,7 +11,8 @@ import struct
 from pathlib import Path
 
 from run_portable_system_arm_tests import Elf, ROOT
-from unicorn import Uc, UC_ARCH_ARM, UC_HOOK_CODE, UC_MODE_MCLASS, UC_MODE_THUMB
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM, UC_HOOK_CODE, UC_MODE_MCLASS, UC_MODE_THUMB
 from unicorn.arm_const import (UC_ARM_REG_C1_C0_2, UC_ARM_REG_FPEXC,
                                UC_ARM_REG_IPSR, UC_ARM_REG_LR, UC_ARM_REG_PC,
                                UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2,

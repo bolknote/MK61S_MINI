@@ -2,7 +2,8 @@
 """Exercise the actual linked CDC class with protocol/MMIO boundaries mocked."""
 import argparse, struct
 from pathlib import Path
-from unicorn import Uc, UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS, UC_HOOK_CODE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS, UC_HOOK_CODE
 from unicorn.arm_const import *
 from run_portable_system_arm_tests import Elf
 p=argparse.ArgumentParser();p.add_argument('elf',type=Path);a=p.parse_args();e=Elf(a.elf)

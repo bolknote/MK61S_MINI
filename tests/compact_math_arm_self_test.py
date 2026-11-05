@@ -6,7 +6,8 @@ import json
 import math
 import struct
 from pathlib import Path
-from unicorn import Uc, UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB, UC_HOOK_CODE, UC_HOOK_MEM_WRITE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB, UC_HOOK_CODE, UC_HOOK_MEM_WRITE
 from unicorn.arm_const import *
 from run_portable_system_arm_tests import Elf
 

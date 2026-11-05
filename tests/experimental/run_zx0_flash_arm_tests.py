@@ -10,7 +10,8 @@ import sys
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'tests'))
 from check_stm32_vectors import ElfImage
-from unicorn import Uc,UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS,UC_HOOK_MEM_READ,UC_HOOK_MEM_WRITE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS,UC_HOOK_MEM_READ,UC_HOOK_MEM_WRITE
 from unicorn.arm_const import UC_CPU_ARM_CORTEX_M4,UC_ARM_REG_SP,UC_ARM_REG_LR,UC_ARM_REG_PC,UC_ARM_REG_R0,UC_ARM_REG_R4,UC_ARM_REG_R11,UC_ARM_REG_XPSR
 
 parser=argparse.ArgumentParser(description='Validate actual normal Flash ELF prepare/emit, bounds, bytes and ABI; no cycle claim.')

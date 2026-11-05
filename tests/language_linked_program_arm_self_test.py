@@ -10,7 +10,8 @@ import struct
 import subprocess
 import sys
 import tempfile
-from unicorn import Uc,UC_ARCH_ARM,UC_MODE_MCLASS,UC_MODE_THUMB,UC_HOOK_MEM_WRITE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM,UC_MODE_MCLASS,UC_MODE_THUMB,UC_HOOK_MEM_WRITE
 from unicorn.arm_const import *
 
 ROOT=Path(__file__).resolve().parents[1]

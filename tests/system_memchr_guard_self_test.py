@@ -10,7 +10,8 @@ import json
 from pathlib import Path
 
 from check_stm32_vectors import ElfImage
-from unicorn import (Uc, UcError, UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS,
+from unicorn_runtime import Uc
+from unicorn import (UcError, UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS,
                      UC_HOOK_MEM_READ, UC_HOOK_MEM_WRITE,
                      UC_HOOK_MEM_READ_UNMAPPED, UC_MEM_WRITE)
 from unicorn.arm_const import (UC_CPU_ARM_CORTEX_M0, UC_CPU_ARM_CORTEX_M4,

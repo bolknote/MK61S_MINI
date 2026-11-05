@@ -3,7 +3,8 @@
 import argparse,json,struct,subprocess
 from pathlib import Path
 from run_portable_system_arm_tests import Elf
-from unicorn import Uc,UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS,UC_HOOK_CODE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS,UC_HOOK_CODE
 from unicorn.arm_const import (UC_ARM_REG_C1_C0_2,UC_ARM_REG_FPEXC,UC_ARM_REG_SP,
                               UC_ARM_REG_LR,UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2,UC_ARM_REG_PC)
 ROOT=Path(__file__).resolve().parents[1]

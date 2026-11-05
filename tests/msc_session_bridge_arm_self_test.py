@@ -2,7 +2,8 @@
 """Run the real foreground MSC resource lifecycle on an emulated Cortex-M4."""
 import argparse,json,shlex,subprocess,tempfile
 from pathlib import Path
-from unicorn import Uc,UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS
 from unicorn.arm_const import UC_ARM_REG_SP,UC_ARM_REG_LR,UC_ARM_REG_PC,UC_ARM_REG_R0,UC_CPU_ARM_CORTEX_M4
 from check_stm32_vectors import ElfImage
 

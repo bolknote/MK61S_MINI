@@ -4,7 +4,8 @@ import re,struct,sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from run_portable_system_arm_tests import Elf
-from unicorn import Uc,UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS
 from unicorn.arm_const import *
 owner_names=re.findall(r'MK61_SHARED_MEMORY_OWNER\(\s*([A-Z_]+)',Path(str(Path(__file__).resolve().parents[1]/"code/shared_memory_owner_catalog.inc")).read_text())
 owner={n:i for i,n in enumerate(owner_names)}

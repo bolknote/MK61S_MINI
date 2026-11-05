@@ -27,7 +27,8 @@ import struct
 import sys
 import tempfile
 from pathlib import Path
-from unicorn import Uc, UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB, UC_HOOK_CODE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB, UC_HOOK_CODE
 from unicorn.arm_const import *
 from run_portable_app_arm_tests import CALLBACKS, ROOT, BASE, OVERLAY, run, wbmp, oracle
 sys.path.insert(0, str(ROOT / "tools"))

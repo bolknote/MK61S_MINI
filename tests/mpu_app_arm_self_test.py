@@ -2,7 +2,8 @@
 """Execute the production MPU configuration and decode its exact permissions."""
 import argparse,json,random,struct
 from pathlib import Path
-from unicorn import Uc,UC_ARCH_ARM,UC_MODE_MCLASS,UC_MODE_THUMB,UC_HOOK_MEM_WRITE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM,UC_MODE_MCLASS,UC_MODE_THUMB,UC_HOOK_MEM_WRITE
 from unicorn.arm_const import *
 from check_stm32_vectors import ElfImage
 P=argparse.ArgumentParser(description=__doc__);P.add_argument('elf',type=Path);P.add_argument('--json',type=Path);a=P.parse_args()

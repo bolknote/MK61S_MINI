@@ -2,7 +2,8 @@
 """Exercise Pico's heap initialization with the actual ARM newlib allocator."""
 import argparse,json,subprocess,sys,tempfile
 from pathlib import Path
-from unicorn import Uc,UC_ARCH_ARM,UC_MODE_MCLASS,UC_MODE_THUMB,UC_HOOK_MEM_WRITE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM,UC_MODE_MCLASS,UC_MODE_THUMB,UC_HOOK_MEM_WRITE
 from unicorn.arm_const import UC_CPU_ARM_CORTEX_M0,UC_ARM_REG_R0,UC_ARM_REG_SP,UC_ARM_REG_LR,UC_ARM_REG_PC,UC_ARM_REG_XPSR
 from check_stm32_vectors import ElfImage
 

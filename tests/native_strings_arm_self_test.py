@@ -3,7 +3,8 @@
 import argparse
 import random
 from pathlib import Path
-from unicorn import Uc,UC_ARCH_ARM,UC_MODE_MCLASS,UC_MODE_THUMB,UC_HOOK_MEM_READ,UC_HOOK_MEM_WRITE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM,UC_MODE_MCLASS,UC_MODE_THUMB,UC_HOOK_MEM_READ,UC_HOOK_MEM_WRITE
 from unicorn.arm_const import *
 from check_stm32_vectors import ElfImage
 STOP=0x080FF000;SP=0x2001FFF0;A=0x20001000;B=0x20001800;D=0x20003000

@@ -2,7 +2,8 @@
 """Differentially run old/new production ARM snprintf, including nano-specific ABI."""
 import argparse,struct,random
 from pathlib import Path
-from unicorn import Uc,UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS
 from unicorn.arm_const import *
 from run_portable_system_arm_tests import Elf
 p=argparse.ArgumentParser();p.add_argument('baseline',type=Path);p.add_argument('candidate',type=Path);a=p.parse_args()

@@ -7,7 +7,8 @@ Reset_Handler, preinit, C++ constructors and time/STOP functions execute as ARM.
 import argparse
 import struct
 from pathlib import Path
-from unicorn import Uc, UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB
 from unicorn import UC_HOOK_CODE, UC_HOOK_MEM_READ, UC_HOOK_MEM_WRITE
 from unicorn.arm_const import *
 from run_portable_system_arm_tests import Elf

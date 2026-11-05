@@ -5,7 +5,8 @@ import json
 from pathlib import Path
 import random
 import struct
-from unicorn import Uc, UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS, UC_HOOK_MEM_READ, UC_HOOK_MEM_WRITE
+from unicorn_runtime import Uc
+from unicorn import UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS, UC_HOOK_MEM_READ, UC_HOOK_MEM_WRITE
 from unicorn.arm_const import *
 from run_portable_system_arm_tests import Elf
 p=argparse.ArgumentParser(description=__doc__)
