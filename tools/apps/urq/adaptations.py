@@ -1,12 +1,14 @@
-"""Reviewed source adaptations of two pinned CC0 games; no JS interpreter.
+"""Reviewed source adaptations of pinned licensed games; no JS interpreter.
 
 Only the exact revisions in adaptations.json are accepted. Generated URQL is
 also playable in UrqW, so both the port and the original game can be compared.
 """
 import hashlib
+import html
 import json
 from pathlib import Path
 import re
+import unicodedata
 
 LOCK = json.loads(Path(__file__).with_name("adaptations.json").read_text())
 
@@ -120,6 +122,78 @@ end
     return text, manifest
 
 
+def jim(texts):
+    """Keep all story branches; static optional URQL notes replace JSON/DOM."""
+    text = texts["main.qst"]
+    first,last=text.index(":start\n"),text.index(":init\n")
+    about=text[first:last].replace(":start\n",":mk_about\n",1)
+    at=about.rfind("\nend")
+    about=about[:at]+"\nbtn start, Назад"+about[at:]
+    intro=(":start\nvarkill\npln Джим из Космоса\n"
+           "pln Космический полицейский Джим получает задание перед концом смены.\n"
+           "btn init, Начать игру\nbtn mk_about, Об игре и авторах\nend\n\n")
+    text=text[:first]+intro+about+text[last:]
+    start, end = text.index(":notes_section\n"), text.index(":1\n")
+    text = text[:start] + text[end:]
+    notes = []
+
+    def note(match):
+        # URQL source escapes the JSON backslashes once for its string value.
+        raw = "".join(line.removeprefix("_") for line in match[1].splitlines())
+        values = json.loads(raw.replace("\\\\", "\\"))
+        index = len(notes) + 1
+        notes.append(f":mk_note_{index}\npln Примечания переводчика\n" +
+                     "\n".join("pln " + value for value in values) + "\nend\n")
+        return f"btn proc mk_note_{index}, Примечания переводчика\n"
+
+    text, count = re.subn(r"(?m)^notes_text = '(\[[\s\S]*?\n_\])'\n(?:proc notes_section\n)?", note, text)
+    if count != 33:
+        raise ValueError(f"Jim: unexpected note section count {count}")
+    # Keep plot choices first, optional notes last. A procedure command keeps
+    # the original buttons, current_loc, previous_loc and return links intact.
+    blocks = re.split(r"(?m)(?=^:)", text)
+    for i, block in enumerate(blocks):
+        match = re.search(r"(?m)^btn proc mk_note_\d+[^\n]*\n", block)
+        if match:
+            button = match[0]
+            block = block[:match.start()] + block[match.end():]
+            at = block.rfind("\nend")
+            if at < 0:
+                raise ValueError("Jim: note outside a location")
+            blocks[i] = block[:at] + "\n" + button.rstrip() + block[at:]
+    text = "".join(blocks) + "\n" + "\n".join(notes)
+    # Browser-only media never conveys an otherwise missing plot clue.
+    text = re.sub(r"(?m)^(?:image(?:_caption)?\s.*|music\s.*|play\s.*)\n", "", text)
+    text = re.sub(r"<[^>]*>", "", text)
+    text = html.unescape(text)
+    replacements = {"猛龍過江": "Meng long guo jiang", "アニメ80日間世界一周": "Anime 80 nichikan sekai isshu",
+                    "⏪": "←", "😉": ";)", "™": "(TM)", "⁴": "[4]", "¹": "[1]", "²": "[2]", "³": "[3]",
+                    "ŋ": "ng", "¡": "", "\u0301": "", "\u202f": " ", "\u00a0": " "}
+    for before, after in replacements.items():
+        text = text.replace(before, after)
+    # Only Latin accents are transliterated; Russian Ё and Й stay intact.
+    text = "".join("".join(c for c in unicodedata.normalize("NFD", ch) if not unicodedata.combining(c))
+                   if "LATIN" in unicodedata.name(ch, "") else ch for ch in text)
+    # Split long narrative paragraphs without changing their printed content.
+    lines = []
+    for line in text.splitlines():
+        if line.startswith("pln ") and len(line) > 480:
+            value = line[4:]
+            while len(value) > 480:
+                at = value.rfind(" ", 0, 480)
+                if at < 1:
+                    raise ValueError("Jim: unbreakable narrative word")
+                lines.append("p " + value[:at + 1])
+                value = value[at + 1:]
+            lines.append("pln " + value)
+        else:
+            lines.append(line)
+    manifest = {"manifest_version": 1, "urq_mode": "urqw", "game_encoding": "UTF-8",
+                "urqw_title": "Джим из Космоса", "urqw_game_lang": "ru",
+                "urqw_game_ifid": "C2AF99B7-84E9-4C89-9CA1-F60FE853A7D7"}
+    return "\n".join(lines) + "\n", manifest
+
+
 def adapt(key, folder):
     if key not in LOCK:
         return None
@@ -131,7 +205,8 @@ def adapt(key, folder):
             raise ValueError("Unreviewed adaptation source: " + key + "/" + name)
         if name.endswith(".qst"):
             texts[Path(name).name] = data.decode("utf-8-sig")
-    text, manifest = (house if key == "house_that_jack_built" else trapped)(texts)
+    text, manifest = {"house_that_jack_built": house, "trapped_in_time_ru": trapped,
+                      "jim_from_outer_space_ru": jim}[key](texts)
     return text, manifest, {"version": 1, "repository": entry["repository"],
         "revision": entry["revision"], "files": entry["files"], "changes": entry["changes"],
         "verification": "tests/urq_library_self_test.py"}

@@ -125,6 +125,9 @@ def main():
 
         def choose(model, target):
             index = next(i for i, a in enumerate(model.state["actions"]) if a["command"] == target)
+            # Classic separates reading from choosing, so the first OK opens
+            # the action list and cannot accidentally activate its first item.
+            p.key(OK)
             if index < 10:
                 before, previous = len(p.frames), p.frames[-1]
                 p.key(DIGITS[(index + 1) % 10])

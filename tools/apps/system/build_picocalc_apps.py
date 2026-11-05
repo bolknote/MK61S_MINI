@@ -37,7 +37,7 @@ SERVICES.APP    Math/formatting example; sqrt(3^2+4^2)=5; any key exits.
 ELIZA.APP       DOCTOR 1966; optional 256-KiB PSRAM memory, SRAM fallback.
 SHEET.APP       Spreadsheet; up to 128 undo steps with PSRAM, single undo otherwise.
 URQ.APP         Russian text adventures; DOS/Rip/Ak/UrqW, F8 RU/EN, colored text.
-URQ/            Ready-to-open Russian CC0 text games; licenses in licenses/urq/.
+URQ/            Russian text quests (CC0 / CC-BY-NC-SA); licenses in licenses/urq/.
 WBMP.APP        Image handler up to 4 MiB; PSRAM storage or a small SD read cache.
 ECHO8.ch8       CHIP-8 example; this is a ROM, not a native APP.
 PATTERN.wbmp    Native 320x320 WBMP pixel-check example.

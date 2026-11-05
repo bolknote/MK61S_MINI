@@ -32,8 +32,8 @@ bool run(mk61_service_menu_source& source, const mk61_app_api& api, Display disp
     const int key = api.key_wait();
     if(key == MK61_APP_KEY_OK) return true;
     if(key == MK61_APP_KEY_ESC || key == MK61_APP_KEY_USER) return false;
-    if((key == MK61_APP_KEY_SHIFT_LEFT || key == MK61_APP_KEY_BACKWARD) && source.selected) --source.selected;
-    if((key == MK61_APP_KEY_SHIFT_RIGHT || key == MK61_APP_KEY_FORWARD) && source.selected + 1 < source.count) ++source.selected;
+    if((key == MK61_APP_KEY_LEFT || key == MK61_APP_KEY_SHIFT_LEFT || key == MK61_APP_KEY_BACKWARD) && source.selected) --source.selected;
+    if((key == MK61_APP_KEY_RIGHT || key == MK61_APP_KEY_SHIFT_RIGHT || key == MK61_APP_KEY_FORWARD) && source.selected + 1 < source.count) ++source.selected;
   }
 }
 }

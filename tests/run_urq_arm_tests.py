@@ -123,20 +123,32 @@ def main():
         files,_=make_package(source,'urqw','UTF-8',resources={'intro.txt':'Русский текст ресурса'})
         for address in ([args.address] if args.address is not None else range(3)):
             m=UrqMachine(args.resident_elf,True,address)
+            m.graphics=False # overlay/state test; pixel UI is qualified separately
             m.files={40:(8,'URQ.APP',b''),41:(8,'URQUI.APP',b''),42:(13,'game.urq',files['game.urq']),43:(14,'p0000.uqd',files['p0000.uqd'])}
+            # A helper from this release must reject the earlier shell layout
+            # before dereferencing its differently laid-out App object.
+            context,flow=m.input+768,m.input+1024
+            m.uc.mem_write(flow,bytes(48));m.put(flow,48,1,context,64)
+            m.uc.mem_write(flow+16,struct.pack('<HBBI',41,4,0,1))
+            m.put(context,0x31515255,m.workspace,0)
+            m.load_overlay(packages[1]);assert m.call(4,flow)==0
             m.load_overlay(packages[0]);assert m.call(5)==0x31574C46
             m.uc.mem_write(m.input+768,bytes(64));m.put(m.input+768,42)
             assert step(m,packages[0],40,2)[:2]==(2,1)
+            assert step(m,packages[1],41,5)[0]==3 # cold initialization
+            assert step(m,packages[0],40,1)[:2]==(2,1) # resource request
             assert step(m,packages[1],41,3)[0]==3
-            assert step(m,packages[0],40,1,[1,23,2,16,24,2,2,25])[:2]==(2,1)
-            assert step(m,packages[1],41,1,menus=[1,1])[0]==3
+            assert step(m,packages[0],40,1,[1])[:2]==(2,1)
+            assert step(m,packages[1],41,6,[23,2,16,24,2,2,25,19],menus=[1,1])[0]==3
             input_save=m.files[max(m.files)][2];assert input_save[:6]==b'URQS\x04\0'
             assert b'Ab' in input_save
-            assert step(m,packages[0],40,1,[19])[:2]==(2,1) # save inside inner
+            assert step(m,packages[0],40,1)[:2]==(2,1) # save inside inner
             assert step(m,packages[1],41,2)[0]==3
             assert step(m,packages[0],40,1,[25])[:2]==(2,1)
             assert step(m,packages[1],41,1,menus=[2,1])[0]==3 # restore input/draft
-            assert step(m,packages[0],40,1,[19])[:2]==(2,1)
+            assert step(m,packages[0],40,1)[:2]==(2,1) # return to cold input editor
+            assert step(m,packages[1],41,6,[19])[0]==3
+            assert step(m,packages[0],40,1)[:2]==(2,1)
             assert step(m,packages[1],41,2)[0]==3
             assert step(m,packages[0],40,1,[1])[:2]==(2,1)
             assert step(m,packages[1],41,1,menus=[5,0])[0]==3
