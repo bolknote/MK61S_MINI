@@ -52,9 +52,9 @@ def main():
     with (out/'build.log').open('w') as log:
         subprocess.run(command,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
     binary=out/'build/mk61s-M.ino.bin';elf=out/'build/mk61s-M.ino.elf'
-    subprocess.run(['bash',ROOT/'tools/seal-firmware.sh','seal','--max-size','524288',binary],env=env,check=True)
-    subprocess.run(['bash',ROOT/'tools/seal-firmware.sh','check','--max-size','524288',binary],env=env,check=True)
-    subprocess.run([sys.executable,ROOT/'tools/seal-firmware-elf.py','--bin',binary,'--elf',elf,
+    subprocess.run(['bash',ROOT/'dev/lib/seal-firmware.sh','seal','--max-size','524288',binary],env=env,check=True)
+    subprocess.run(['bash',ROOT/'dev/lib/seal-firmware.sh','check','--max-size','524288',binary],env=env,check=True)
+    subprocess.run([sys.executable,ROOT/'dev/lib/seal-firmware-elf.py','--bin',binary,'--elf',elf,
         '--compile-commands',out/'build/compile_commands.json'],env=env,check=True)
     hashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sketch.iterdir() if p.is_file()}
     result={'variant':args.variant,'baseline_scope':args.baseline_scope,'firmware':firmware_info(binary),'source_hashes':hashes,'flags':flags}

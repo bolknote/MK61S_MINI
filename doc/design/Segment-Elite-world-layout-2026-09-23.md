@@ -125,7 +125,7 @@ if world < 0: world += 16777216
 возврата и при проходе из предыдущего кода, а также точного заполнения банка.
 
 ```sh
-python3 tools/elite/build.py --check
+python3 dev/tools/elite/build.py --check
 bash tests/run_elite_tests.sh
 ```
 

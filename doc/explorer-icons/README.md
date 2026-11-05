@@ -12,12 +12,12 @@ generated `apps`/`Apps`, `System`, `System/VMCache`, `licenses` and
 `apps` and `Apps`. Every game has its own drawing. The previously reviewed
 Turochamp, High Noon and Runner bitmaps remain byte-for-byte unchanged.
 
-`tools/explorer_icons.py` contains the integer-pixel drawing recipes and the
+`dev/tools/explorer_icons.py` contains the integer-pixel drawing recipes and the
 explicit directory-to-icon map. To regenerate or check the committed assets:
 
 ```sh
-python3 tools/explorer_icons.py --generate
-python3 tools/explorer_icons.py --check
+python3 dev/tools/explorer_icons.py --generate
+python3 dev/tools/explorer_icons.py --check
 python3 tests/explorer_icons_self_test.py
 ```
 

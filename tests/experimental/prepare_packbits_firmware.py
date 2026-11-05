@@ -160,9 +160,9 @@ def main():
     (out/'build-command.json').write_text(json.dumps([str(x) for x in command],indent=2)+'\n')
     run(command, env)
     firmware = out/'build/mk61s-M.ino.bin'
-    run(['bash', ROOT/'tools/seal-firmware.sh', 'seal', '--max-size', maximum, firmware], env)
-    run(['bash', ROOT/'tools/seal-firmware.sh', 'check', '--max-size', maximum, firmware], env)
-    run(['python3', ROOT/'tools/seal-firmware-elf.py', '--bin', firmware,
+    run(['bash', ROOT/'dev/lib/seal-firmware.sh', 'seal', '--max-size', maximum, firmware], env)
+    run(['bash', ROOT/'dev/lib/seal-firmware.sh', 'check', '--max-size', maximum, firmware], env)
+    run(['python3', ROOT/'dev/lib/seal-firmware-elf.py', '--bin', firmware,
          '--elf', out/'build/mk61s-M.ino.elf',
          '--compile-commands', out/'build/compile_commands.json'], env)
     hashes = {p.name:hashlib.sha256(p.read_bytes()).hexdigest()

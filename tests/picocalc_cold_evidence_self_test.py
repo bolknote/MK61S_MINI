@@ -9,7 +9,7 @@ import sys
 import tempfile
 import unittest
 
-TOOL = Path(__file__).resolve().parents[1] / 'tools/picocalc_cold_evidence.py'
+TOOL = Path(__file__).resolve().parents[1] / 'dev/tools/picocalc_cold_evidence.py'
 spec = importlib.util.spec_from_file_location('picocalc_cold_evidence', TOOL)
 evidence = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(evidence)

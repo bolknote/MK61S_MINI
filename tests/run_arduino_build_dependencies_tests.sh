@@ -8,8 +8,8 @@ helper="$root/tests/check_arduino_build_dependencies.sh"
 fake_cli="$work/fake arduino-cli"
 export MK61_TEST_CLI_VERSION
 export MK61_TEST_CORE_VERSION
-MK61_TEST_CLI_VERSION="$(python3 "$root/tools/release_contract.py" toolchain --field arduino_cli)"
-MK61_TEST_CORE_VERSION="$(python3 "$root/tools/release_contract.py" toolchain --field stm32_core)"
+MK61_TEST_CLI_VERSION="$(python3 "$root/dev/lib/release_contract.py" toolchain --field arduino_cli)"
+MK61_TEST_CORE_VERSION="$(python3 "$root/dev/lib/release_contract.py" toolchain --field stm32_core)"
 cat > "$fake_cli" <<'EOF'
 #!/usr/bin/env bash
 case "$*" in

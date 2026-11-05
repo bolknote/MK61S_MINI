@@ -38,7 +38,7 @@ clang++ "${flags[@]}" \
   "$root/code/loadable_module_format.cpp" "$root/code/zx0.cpp" \
   -o "$work/format"
 "$work/format"
-MK61_MODULE_PACK_BIN="$work/packer" bash "$root/tools/build_mk61_module_pack.sh" \
+MK61_MODULE_PACK_BIN="$work/packer" bash "$root/dev/lib/build_mk61_module_pack.sh" \
   --help >/dev/null
 python3 "$root/tests/portable_app_package_self_test.py" \
   "$work/packer" "$work/format"

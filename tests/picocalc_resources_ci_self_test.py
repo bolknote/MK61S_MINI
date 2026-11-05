@@ -21,10 +21,10 @@ class ResourceCiTests(unittest.TestCase):
         for paths in triggers:
             for path in ('programs/games/Bumblebee/scene-320.wbmp','doc/game-artwork/native/recipe.json',
                 'doc/game-artwork/bumblebee.svg','programs/examples/Graphics.foc',
-                'tools/generate_picocalc_game_assets.py','tools/m8_codec.py','tools/.fmk-font/ui-atlases/pixel-16.json',
+                'dev/tools/generate_picocalc_game_assets.py','dev/lib/m8_codec.py','tools/.fmk-font/ui-atlases/pixel-16.json',
                 'tests/run_picocalc_recovery_tests.sh','tests/basic_graphics_self_test.cpp'):
                 self.assertTrue(any(fnmatch.fnmatchcase(path,p) for p in paths),path)
-        for command in ('python3 tools/generate_picocalc_game_assets.py --check-inputs',
+        for command in ('python3 dev/tools/generate_picocalc_game_assets.py --check-inputs',
             'python3 tests/picocalc_native_assets_self_test.py','python3 tests/picocalc_version_self_test.py',
             'bash tests/run_picocalc_recovery_tests.sh','bash tests/run_basic_graphics_tests.sh'):
             self.assertIn(command,workflow)
@@ -36,7 +36,7 @@ class ResourceCiTests(unittest.TestCase):
             target=Path(directory)
             for name in {*recipe['inputs_sha256'],*recipe['outputs_sha256'],str(receipt.relative_to(ROOT))}:
                 dest=target/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/name,dest)
-            command=[sys.executable,str(target/'tools/generate_picocalc_game_assets.py'),'--check-inputs']
+            command=[sys.executable,str(target/'dev/tools/generate_picocalc_game_assets.py'),'--check-inputs']
             result=subprocess.run(command,capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stderr)
             for name in ('doc/game-artwork/bumblebee.svg','programs/games/Bumblebee/scene-320.wbmp'):

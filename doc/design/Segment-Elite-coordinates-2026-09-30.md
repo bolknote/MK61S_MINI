@@ -129,7 +129,7 @@ X, игровой режим, удержание экрана при вводе,
 читают неизменяемый BIN; проверяются расстояние и оба ID каждого результата.
 
 ```sh
-python3 tools/elite/build.py --check
+python3 dev/tools/elite/build.py --check
 bash tests/run_elite_tests.sh
 python3 tests/elite_game_test.py /tmp/mk61_elite_core_runner coordinate_pairs
 ```

@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 """Pure pixel/profile tests for the chess HIL benchmark, without devices."""
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 from hil_turochamp_performance import Font, ROOT, profile, completed_board, board_pixels
 from m8_codec import encode
 from pathlib import Path

@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 """Prepare source-matched full compiler APPs, without modifying firmware code."""
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[2]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 import hashlib
 import json

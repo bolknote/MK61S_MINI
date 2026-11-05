@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Independent opening-table legality and shipping BASIC book integration."""
 from __future__ import annotations
+
 import argparse
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -10,7 +11,7 @@ import chess
 from turochamp_rules_test import Basic, ROOT
 from turochamp_game_test import getv, setv
 
-sys.path.insert(0,str(ROOT/'tools/turochamp'))
+sys.path.insert(0,str(ROOT/'dev/tools/turochamp'))
 from layout import MODULES
 from opening_book import OPENINGS
 

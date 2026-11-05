@@ -5,6 +5,12 @@ No firmware or card writes. Verify the complete game, read native 320x320
 CRC-checked USB frames, and restore the calculator data and terminal directory.
 The first run is a session-first run, not a claim of empty caches after reset.
 """
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 from datetime import datetime, timezone
 import hashlib

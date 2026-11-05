@@ -5,6 +5,12 @@ Only BASIC.APP/FOCAL.APP are switched, then restored to their verified
 baseline. One new FOCAL fixture is removed. Compiler self-time excludes
 nested source/Flash/APP loads, but includes the real frontend/sizing/EMIT.
 """
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 import binascii
 from dataclasses import asdict

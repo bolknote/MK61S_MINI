@@ -97,9 +97,9 @@ require_text "$gcc_cmake" 'analyze_stack_usage.py'
 require_text "$gcc_cmake" 'analyze-stack-usage.ps1'
 require_text "$gcc_cmake" 'CMAKE_HOST_WIN32'
 require_text "$gcc_ps" "'-DMK61_REQUIRE_RESIDENT_CRC=1'"
-require_text "$gcc_ps" "'tools/seal-firmware.ps1'"
-require_text "$gcc_ps" "'tools/seal-firmware-elf.ps1'"
-require_text "$gcc_ps" "'tools/release-contract.ps1'"
+require_text "$gcc_ps" "'dev/lib/seal-firmware.ps1'"
+require_text "$gcc_ps" "'dev/lib/seal-firmware-elf.ps1'"
+require_text "$gcc_ps" "'dev/lib/release-contract.ps1'"
 require_order "$gcc_ps" "'seal'," "'System APP builder'"
 require_text "$gcc_ps" "'--change-addresses', '0x08000000'"
 require_text "$root/system_apps/.tool/build.ps1" 'build_system_app_bundle.py'

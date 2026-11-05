@@ -12,7 +12,7 @@ fi
 
 "$cxx" -std=c++17 -Wall -Wextra -Werror -pedantic \
   "${sanitizer_flags[@]}" -I"$root/code" \
-  "$root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" \
+  "$root/dev/lib/.mk61-firmware-seal/mk61_firmware_seal.cpp" \
   -o "$work/seal"
 "$cxx" -std=c++17 -Wall -Wextra -Werror -pedantic \
   "${sanitizer_flags[@]}" -I"$root/code" \
@@ -45,7 +45,7 @@ printf 'FAKEELF\000' > "$work/unsealed.elf"
 dd if=/dev/zero bs=1 count=56 status=none >> "$work/unsealed.elf"
 cat "$work/unsealed.bin" >> "$work/unsealed.elf"
 dd if=/dev/zero bs=1 count=32 status=none >> "$work/unsealed.elf"
-python3 "$root/tools/seal-firmware-elf.py" \
+python3 "$root/dev/lib/seal-firmware-elf.py" \
   --bin "$work/sealed.bin" --elf "$work/unsealed.elf" \
   --output "$work/sealed.elf" \
   --objcopy "$root/tests/fake_firmware_objcopy.py" >/dev/null
@@ -56,7 +56,7 @@ cmp "$work/sealed.bin" "$work/from-elf.bin"
 cp "$work/unsealed.elf" "$work/mismatched.elf"
 printf '\001' | dd of="$work/mismatched.elf" bs=1 seek=81 conv=notrunc \
   status=none
-if python3 "$root/tools/seal-firmware-elf.py" \
+if python3 "$root/dev/lib/seal-firmware-elf.py" \
     --bin "$work/sealed.bin" --elf "$work/mismatched.elf" \
     --output "$work/rejected.elf" \
     --objcopy "$root/tests/fake_firmware_objcopy.py" >/dev/null 2>&1; then
@@ -104,11 +104,11 @@ fi
 
 if command -v pwsh >/dev/null 2>&1; then
   "$work/fixture" "$work/powershell-input.bin"
-  pwsh -NoLogo -NoProfile -File "$root/tools/seal-firmware.ps1" seal \
+  pwsh -NoLogo -NoProfile -File "$root/dev/lib/seal-firmware.ps1" seal \
     -InputFile "$work/powershell-input.bin" \
     -OutputFile "$work/powershell-sealed.bin" -MaxSize 512 \
     > "$work/powershell-seal.log"
-  pwsh -NoLogo -NoProfile -File "$root/tools/seal-firmware.ps1" check \
+  pwsh -NoLogo -NoProfile -File "$root/dev/lib/seal-firmware.ps1" check \
     -InputFile "$work/powershell-sealed.bin" -MaxSize 512 \
     > "$work/powershell-check.log"
   cmp "$work/sealed.bin" "$work/powershell-sealed.bin"

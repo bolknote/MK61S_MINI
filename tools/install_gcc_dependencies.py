@@ -18,7 +18,7 @@ from native_sdk import toolchain_bin, validate_sdk, verify_toolchain_version
 
 def install(project, install_root, archive_path=None):
     lock = json.loads((project / 'tools/.mk61-gcc/toolchain-lock.json').read_text())
-    contract = json.loads((project / 'tools/release-contract.json').read_text())
+    contract = json.loads((project / 'dev/lib/release-contract.json').read_text())
     validate_sdk(project / 'third_party/stm32f4')
     if lock['schema'] != 1 or lock['version'] != contract['toolchain']['gnu_arm']:
         raise ValueError('GNU Arm lock version does not match the release contract')

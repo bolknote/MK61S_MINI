@@ -141,7 +141,7 @@ SHA-256 принятого BIN:
   сверяются с независимой манхэттенской формулой, проверяются имена,
   координатные кеши и кадры.
 - Готовый BIN побайтово совпадает с испытанным `speed_pruned`;
-  `python3 tools/elite/build.py --check` и `git diff --check` проходят.
+  `python3 dev/tools/elite/build.py --check` и `git diff --check` проходят.
 
 Старый host-адаптер ELITE не собирался с текущим M61: отсутствовали
 `m61_text_host_resolve_file` и `m61_text_host_open_entry`. Адаптер дополнен

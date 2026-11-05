@@ -1,4 +1,5 @@
 """Compare automatic literal lift with explicit ENTER on the actual ROM."""
+
 import json
 from pathlib import Path
 import subprocess
@@ -6,7 +7,7 @@ import sys
 from tempfile import TemporaryDirectory
 
 ROOT=Path(__file__).resolve().parents[1]
-sys.path[:0]=[str(ROOT/'tools/elite'),str(ROOT/'tools')]
+sys.path[:0]=[str(ROOT/'dev/tools/elite'),str(ROOT/'tools')]
 from assembler import Assembler
 from program_pack import program_binary
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Adjudication, historic evaluation, search and actual keyboard-driven BASIC."""
 from __future__ import annotations
+
 import argparse
 import math
 import random
@@ -9,7 +10,7 @@ from pathlib import Path
 import chess
 from turochamp_rules_test import Basic, ROOT
 
-sys.path.insert(0, str(ROOT/'tools/turochamp'))
+sys.path.insert(0, str(ROOT/'dev/tools/turochamp'))
 from layout import FIELDS, MODULES
 
 

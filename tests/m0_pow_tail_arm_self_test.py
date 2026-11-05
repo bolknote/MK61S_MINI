@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 """Check pow tail approximations against exact products and their global error bounds."""
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 from pathlib import Path
 from fractions import Fraction as F
 import argparse,hashlib,itertools,json,random,subprocess,sys

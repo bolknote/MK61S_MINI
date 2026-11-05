@@ -5,6 +5,7 @@ Resets the game, buys one unit of food, jumps, then returns to the title.
 Uploads and removes one temporary loader; never flashes firmware or replaces
 the installed game. Requires explicit --confirm-game-reset and a pinned ID.
 """
+
 import argparse
 from decimal import Decimal
 import json
@@ -22,7 +23,7 @@ from hil_portable_system_apps import png
 from hil_usb_disk_transaction import listing_entries
 
 ROOT=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(ROOT/'tools/elite'))
+sys.path.insert(0,str(ROOT/'dev/tools/elite'))
 from assembler import pack_number
 
 

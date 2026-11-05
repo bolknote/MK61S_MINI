@@ -43,7 +43,7 @@ python3 tools/.mk61-gcc/build-standalone.py \
 
 `--define NAME=VALUE` меняет поддерживаемые функции. `--sdk` и `--toolchain`
 задают пути manifest SDK и независимого GNU Arm. Перед установкой resident.bin нужно
-подписать tools/seal-firmware.sh; ELF и System APP готовятся существующими
+подписать dev/lib/seal-firmware.sh; ELF и System APP готовятся существующими
 инструментами. Обычные frontend обоих MCU используют tools/build-gcc.cmd;
 Arduino IDE сохранена как отдельный совместимый путь.
 

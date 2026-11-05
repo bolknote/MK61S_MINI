@@ -1,7 +1,7 @@
 // Real, unmodified chess sources. Both routes use precompiled, validated LBV2;
 // this is NOT a comparison with recompiling every module on the host.
 #include "vm_program_builder.hpp"
-#include "../tools/turochamp/layout.hpp"
+#include "../dev/tools/turochamp/layout.hpp"
 #include <chrono>
 #include <fstream>
 #include <iostream>

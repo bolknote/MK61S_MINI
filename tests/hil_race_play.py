@@ -8,6 +8,7 @@ The controller follows the published guide. Physics and all game
 state remain ROM bytecode; no register fixtures. The temporary launcher is
 removed afterwards. This is not an uninstrumented frame-rate measurement.
 """
+
 import argparse
 import hashlib
 import json
@@ -28,7 +29,7 @@ from hil_usb_disk_transaction import listing_entries
 from hil_c6_programs_deploy import payload_for
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'tools/race'))
+sys.path.insert(0, str(ROOT / 'dev/tools/race'))
 from game import packed, screen, SECTION_FRAMES, create_game
 
 

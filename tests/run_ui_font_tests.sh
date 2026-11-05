@@ -9,7 +9,7 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 
-python3 "$root/tools/generate_ui_fonts.py" --check
+python3 "$root/dev/tools/generate_ui_fonts.py" --check
 for lookup in legacy f401; do
 lookup_flags=()
 if [[ "$lookup" == f401 ]]; then lookup_flags=(-DMK61_TEST_FONT_CYRILLIC_RANGE=1); fi

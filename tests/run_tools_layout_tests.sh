@@ -9,103 +9,28 @@ actual="$(
 expected="$(
   printf '%s\n' \
     README.md \
+    build-gcc.cmd \
+    build-portable-app.ps1 \
+    build-system-app-bundle.ps1 \
     build_f401_bundle.sh \
     build_fmk_font.sh \
     build_fmk_from_ui_atlas.py \
-    build_mk61_module_pack.sh \
     build_mk61_program_pack.sh \
     build_picocalc.py \
     build_picocalc_apps.py \
-    build-portable-app.ps1 \
     build_portable_app.py \
-    build_sheet_app.py \
-    build-system-app-bundle.ps1 \
     build_system_app_bundle.py \
-    build_vm_program.cpp \
-    build_vm_program.py \
-    build-gcc.cmd \
-    certify_m0_asin_fast.py \
-    certify_m0_asin_nearest_root.py \
-    certify_m0_atan_fast.py \
-    certify_m0_cos70.py \
-    certify_m0_exp_fast.py \
-    certify_m0_ln_refine.py \
-    certify_m0_log10_fast.py \
-    certify_m0_near77.py \
-    certify_m0_pow_boundary.py \
-    certify_m0_pow_exact_small.py \
-    certify_m0_pow_fast.py \
-    certify_m0_pow_first_seed.py \
-    certify_m0_pow_integer128.py \
-    certify_m0_pow_interval.py \
-    certify_m0_pow_near.py \
-    certify_m0_pow_short.py \
-    certify_m0_pow_tiny.py \
-    certify_m0_pow_tiny32.py \
-    certify_m0_rounding_corrections.py \
-    certify_m0_small_sine.py \
-    certify_m0_trig_inverse.py \
-    certify_m0_trig_table70.py \
-    explorer_icons.py \
     font_preview_study.py \
-    generate_compact_math_tables.py \
-    generate_compact_math_vectors.py \
-    generate_eliza_doctor.py \
-    generate_highnoon_font.py \
-    generate_m0_exp_table.py \
-    generate_m0_log10_constants.py \
-    generate_m0_log10_table.py \
-    generate_m0_log70_table.py \
-    generate_m0_log_table.py \
-    generate_m0_pow_interval_table.py \
-    generate_m0_refine_tables.py \
-    generate_m0_rsqrt_table.py \
-    generate_m0_sqrt64_table.py \
-    generate_m0_sqrt_table.py \
-    generate_m0_trig_table.py \
-    generate_m0_trig_checked_table.py \
-    generate_picocalc_game_assets.py \
-    generate_ui_fonts.py \
     install_arduino_dependencies.ps1 \
     install_gcc_dependencies.ps1 \
     install_gcc_dependencies.py \
-    language_vm_cache_replay.cpp \
-    language_vm_cache_codec_probe.cpp \
-    language_vm_mixed_cache_replay.cpp \
-    language_vm_probe.cpp \
-    m8_codec.py \
-    measure_app_flow.py \
-    measure_language_vm.py \
-    measure_overlay_language_vm.py \
-    measure_resident_language_vm.py \
-    measure_vm_cache.py \
-    measure_vm_cache_codec_arm.py \
-    measure_vm_cache_storage.py \
     mk61-arduino-board.cmd \
     mk61-firmware.cmd \
     mkc.cmd \
-    model_vm_cache_packing.py \
     package_picocalc.py \
-    picocalc_cold_evidence.py \
-    profile_qfplib_ln_checked.py \
     program_pack.py \
-    qualify_vm_cache_trace.py \
-    release-contract.json \
-    release-contract.ps1 \
-    release_contract.py \
-    replay_vm_cache.py \
-    replay_vm_mixed_cache.py \
-    vfat_diagnostic.py \
-    seal-firmware-elf.py \
-    seal-firmware-elf.ps1 \
-    seal-firmware.ps1 \
-    seal-firmware.sh \
-    seal_picocalc.py \
-    select_m0_pow_refinement_corpus.py \
     sync_picocalc_clock.py \
-    vendor_m0_core_math.py \
-    vm_program_builder.hpp |
-    LC_ALL=C sort
+    vfat_diagnostic.py | LC_ALL=C sort
 )"
 
 if [[ "$actual" != "$expected" ]]; then
@@ -123,7 +48,7 @@ test -f "$root/tools/.mk61-app/build-terminal-help.ps1"
 test -f "$root/tools/.mk61-gcc/portable-layout.ps1"
 test -f "$root/tools/.fmk-font/package-ui-font-licenses.ps1"
 test -f "$root/tools/.fmk-font/fmk_font.cpp"
-test -f "$root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp"
+test -f "$root/dev/lib/.mk61-firmware-seal/mk61_firmware_seal.cpp"
 test ! -e "$root/tools/fmk_font"
 test ! -e "$root/tools/mk61_module_pack"
 

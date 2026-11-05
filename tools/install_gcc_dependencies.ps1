@@ -24,7 +24,7 @@ try {
     $lock = ConvertFrom-Json -InputObject ([IO.File]::ReadAllText(
         (Join-Path $PSScriptRoot '.mk61-gcc/toolchain-lock.json')))
     $contract = ConvertFrom-Json -InputObject ([IO.File]::ReadAllText(
-        (Join-Path $PSScriptRoot 'release-contract.json')))
+        (Join-Path $project 'dev/lib/release-contract.json')))
     if ($lock.schema -ne 1 -or $lock.version -ne $contract.toolchain.gnu_arm) {
         throw 'GNU Arm lock version does not match the release contract'
     }

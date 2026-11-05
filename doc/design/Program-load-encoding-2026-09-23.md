@@ -83,7 +83,7 @@ M61. Вложенная часть может закончиться посер�
 Воспроизведение:
 
 ```sh
-python3 tools/elite/build.py --check
+python3 dev/tools/elite/build.py --check
 bash tests/run_program_load_tests.sh
 MK61_TEST_SANITIZERS=1 bash tests/run_m61_text_tests.sh
 bash tests/run_terminal_tests.sh

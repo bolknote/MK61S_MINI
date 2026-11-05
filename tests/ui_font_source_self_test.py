@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location("generator", ROOT / "tools/generate_ui_fonts.py")
+spec = importlib.util.spec_from_file_location("generator", ROOT / "dev/tools/generate_ui_fonts.py")
 generator = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(generator)
 

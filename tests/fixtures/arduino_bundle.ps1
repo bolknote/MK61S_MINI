@@ -29,7 +29,7 @@ function New-Mk61TestArduinoBundle {
     }
     $resident = Join-Path $BuildPath 'code.ino.bin'
     [IO.File]::WriteAllBytes($resident, $bytes)
-    & (Get-Process -Id $PID).Path -NoLogo -NoProfile -File (Join-Path $fixtureRoot 'tools/seal-firmware.ps1') seal -InputFile $resident | Out-Null
+    & (Get-Process -Id $PID).Path -NoLogo -NoProfile -File (Join-Path $fixtureRoot 'dev/lib/seal-firmware.ps1') seal -InputFile $resident | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Cannot seal the test resident' }
     Copy-Item -LiteralPath $resident -Destination (Join-Path $stage "$Bundle.bin") -Force
     Copy-Item -LiteralPath $resident -Destination (Join-Path $stage "$Bundle.elf") -Force

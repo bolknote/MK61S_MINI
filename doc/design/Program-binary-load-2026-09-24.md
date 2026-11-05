@@ -71,7 +71,7 @@ M8/UTF-8 преобразования и прозрачного сжатия C6 
 
 ```sh
 python3 tools/program_pack.py raw-image.bin program.bin
-python3 tools/elite/build.py --check
+python3 dev/tools/elite/build.py --check
 ```
 
 Python-обёртка автоматически собирает и вызывает оптимальный C++ ZX0.

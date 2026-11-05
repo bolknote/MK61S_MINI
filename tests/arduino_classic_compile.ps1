@@ -33,7 +33,7 @@ foreach ($revision in @('v2', 'v3')) {
         throw "Classic $revision sealed Flash reserve: $free < 2048 bytes"
     }
     & (Get-Process -Id $PID).Path -NoLogo -NoProfile -File `
-        (Join-Path $root 'tools/seal-firmware.ps1') check -InputFile $image -MaxSize 262144
+        (Join-Path $root 'dev/lib/seal-firmware.ps1') check -InputFile $image -MaxSize 262144
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $flags = [IO.File]::ReadAllText((Join-Path $bundle 'build.flags'))
     foreach ($flag in @('-DMK61_REQUIRE_RESIDENT_CRC=1', '-DMK61_NATIVE_RUNTIME=1', '-DMK61_USE_NATIVE_LIBC=1', '-DMK61_USE_NATIVE_EABI=1', '-DMK61_USE_COMPACT_LIBM=1',

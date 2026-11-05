@@ -39,8 +39,8 @@ adjacent `README-preview.md`, then export the `latin` BDF files:
 font_preview ark-pixel-10px-proportional-latin.bdf pixel-12.json --height 12
 font_preview ark-pixel-12px-proportional-latin.bdf pixel-14.json --height 14
 font_preview ark-pixel-16px-proportional-latin.bdf pixel-16.json --height 17
-python3 tools/generate_ui_fonts.py
-python3 tools/generate_ui_fonts.py --check
+python3 dev/tools/generate_ui_fonts.py
+python3 dev/tools/generate_ui_fonts.py --check
 bash tests/run_ui_font_tests.sh
 ```
 

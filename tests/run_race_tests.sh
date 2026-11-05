@@ -2,7 +2,7 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="${TMPDIR:-/tmp}/mk61_race_core_runner"
-python3 "$root/tools/race/build.py" --check
+python3 "$root/dev/tools/race/build.py" --check
 for profile in native mini; do
   target="$out"
   profile_flags=(-DMK61_CORE_NATIVE_HOT_PATHS=1 -DMK61_CORE_PACKED_AMK=1 -DMK61_DISPLAY_UC1609)

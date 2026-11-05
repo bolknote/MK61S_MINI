@@ -52,7 +52,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$out"
 
 for part in intro player bart reward; do
-  python3 "$root/tools/m8_codec.py" encode \
+  python3 "$root/dev/lib/m8_codec.py" encode \
     "$root/programs/games/High Noon/$part.tbi" "$work/$part.tbi"
 done
 

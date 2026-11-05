@@ -6,6 +6,12 @@ permit temporary BASIC.APP/VMSTORE.APP replacements. No flashing, formatting or 
 changes. Byte-exact filesystem/calculator
 restoration is required even after a failed stage.
 """
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 import hashlib
 import json

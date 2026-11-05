@@ -6,6 +6,7 @@ temporarily redirected to a STOP in unused program RAM so each complete frame
 can be compared, including collisions and the finish without a 45-minute race.
 The ordinary loader is reopened on exit; all temporary RAM code is discarded.
 """
+
 import argparse
 from decimal import Decimal
 import json
@@ -21,7 +22,7 @@ from hil_portable_apps import ScreenPort
 from hil_portable_system_apps import png
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'tools/race'))
+sys.path.insert(0, str(ROOT / 'dev/tools/race'))
 from game import create_game, SECTION_FRAMES, THUNK_BANK, THUNK_STRIDE, SPRITES_PER_RIVAL
 
 FIELDS = dict(lateral=4, phase=5, completed=6, lives=7, recovery=8, bend=9, rival=10)

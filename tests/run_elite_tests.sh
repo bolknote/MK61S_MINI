@@ -2,7 +2,7 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="${TMPDIR:-/tmp}/mk61_elite_core_runner"
-python3 "$root/tools/elite/build.py" --check
+python3 "$root/dev/tools/elite/build.py" --check
 clang++ -std=c++17 -O2 -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-cpp \
   -DMK61_MATH_BACKEND=1 -DMK61_CORE_HOT_TABLES_IN_SRAM=0 \
   -DMK61_CORE_NATIVE_HOT_PATHS=1 -DMK61_CORE_PACKED_AMK=1 -DMK61_DISPLAY_UC1609 -DM61_TEXT_HOST_TEST \

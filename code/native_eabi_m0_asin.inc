@@ -1,7 +1,7 @@
 // Checked binary64 asin/acos for ARMv6-M. Exact dyadic unit-vector
 // geometry avoids composing rounded double arithmetic. Taylor and table
 // paths return only if their complete interval rounds to one binary64.
-// tools/certify_m0_asin_fast.py proves the arithmetic/rounding bounds.
+// dev/tools/certify_m0_asin_fast.py proves the arithmetic/rounding bounds.
 // Unresolved or guarded cases use the existing CORE-MATH functions.
 // Exact normalized geometry primitive, X=x*2^63 in[2^57,2^63).
 __attribute__((optimize("Os"),noinline,cold,section(".m0_asin_refine_extension"))) static U asin_root_normalized(U X,unsigned &scale) {

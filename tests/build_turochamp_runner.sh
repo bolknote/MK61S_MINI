@@ -2,7 +2,7 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="${1:-${TMPDIR:-/tmp}/mk61-turochamp-runner}"
-python3 "$root/tools/turochamp/assemble.py" --check
+python3 "$root/dev/tools/turochamp/assemble.py" --check
 extra=()
 if [[ "${MK61_LANGUAGE_VM_TEST:-0}" == 1 ]]; then
   extra=(-DMK61_LANGUAGE_VM_TEST "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp")

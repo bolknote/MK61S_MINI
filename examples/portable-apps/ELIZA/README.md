@@ -60,7 +60,7 @@ keeps its existing text and graphical layouts.
 ```sh
 bash tests/run_eliza_app_tests.sh
 
-python3 tools/generate_eliza_doctor.py --check
+python3 dev/tools/generate_eliza_doctor.py --check
 
 python3 tools/build_portable_app.py --name ELIZA \
   --source examples/portable-apps/ELIZA/main.c \

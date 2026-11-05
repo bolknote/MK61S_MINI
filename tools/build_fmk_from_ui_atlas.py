@@ -8,6 +8,12 @@ record to width, advance and pixels only. No scaling or hinting happens here.
 
 from __future__ import annotations
 
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+
 import argparse
 import json
 from pathlib import Path

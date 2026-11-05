@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-contract="$root/tools/release_contract.py"
+contract="$root/dev/lib/release_contract.py"
 
 fail() {
   printf 'F411 USB suspend compile check: %s\n' "$1" >&2
@@ -78,8 +78,8 @@ PYTOOLS
   [[ -s "$bin" ]] || fail "$name BIN is missing"
   python3 "$root/tests/check_usb_cdc_rx_elf.py" "$elf" \
     --compile-commands "$compile_path/compile_commands.json"
-  "$root/tools/seal-firmware.sh" seal --max-size "$flash_capacity" "$bin"
-  "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" "$bin"
+  "$root/dev/lib/seal-firmware.sh" seal --max-size "$flash_capacity" "$bin"
+  "$root/dev/lib/seal-firmware.sh" check --max-size "$flash_capacity" "$bin"
   python3 "$contract" resource-report \
     --case "$case_id" --elf "$elf" --bin "$bin" \
     --compile-commands "$compile_path/compile_commands.json" \

@@ -394,7 +394,7 @@ def build(args: argparse.Namespace) -> dict:
         configured = os.environ.get("MK61_MODULE_PACK_BIN")
         packer = (Path(configured).expanduser() if configured else
                   ROOT / (".build/tools/mk61_module_pack" + suffix))
-        run(["bash", ROOT / "tools/build_mk61_module_pack.sh", "--help"])
+        run(["bash", ROOT / "dev/lib/build_mk61_module_pack.sh", "--help"])
     greedy_packer = packer.resolve() == python_packer
     command = [packer]
     if pico_target and greedy_packer:

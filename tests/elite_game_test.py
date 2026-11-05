@@ -1,4 +1,5 @@
 """Golden game scenarios run by the real ROM/core, never a host game model."""
+
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -9,7 +10,7 @@ from threading import Lock
 import zlib
 
 ROOT=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(ROOT/'tools/elite'))
+sys.path.insert(0,str(ROOT/'dev/tools/elite'))
 from assembler import ALPHABET, GLYPHS, Assembler, screen
 from game import create_game, check_layout
 

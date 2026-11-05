@@ -125,7 +125,7 @@ DRONES; обе ветки оставляют корпус в X/RD. Только 
   исполнении; выбор и отказ не расходуют время или боезапас.
 
 Прошли `bash tests/run_elite_tests.sh` (5736 состояний и два опыта
-самомодификации), `python3 tools/elite/build.py --check`, `git diff --check`.
+самомодификации), `python3 dev/tools/elite/build.py --check`, `git diff --check`.
 BIN и карта побайтно совпадают с измеренным вариантом `target-far`.
 Снимки и сравнения сохранены в `/private/tmp/elite-combat-20260929`.
 

@@ -19,7 +19,7 @@ with tempfile.TemporaryDirectory(prefix='mk61-linked-cli-') as temporary:
         {'symbol':2,'language':'focal','path':focal.name},
         {'symbol':3,'language':'basic','path':basic.name}]}
     manifest.write_text(json.dumps(data))
-    command=[sys.executable,str(ROOT/'tools/build_vm_program.py'),str(manifest),'-o',str(output),'--compiler','clang++']
+    command=[sys.executable,str(ROOT/'dev/tools/build_vm_program.py'),str(manifest),'-o',str(output),'--compiler','clang++']
     subprocess.run(command,check=True)
     image=output.read_bytes()
     assert image[:4]==b'LVP1' and struct.unpack_from('<H',image,6)[0]==3

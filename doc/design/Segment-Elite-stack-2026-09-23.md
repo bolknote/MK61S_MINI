@@ -113,7 +113,7 @@ ROM NOP. Сравниваются результат, отказ для недо
 ## Повторяемые проверки
 
 ```sh
-python3 tools/elite/build.py --check
+python3 dev/tools/elite/build.py --check
 bash tests/run_elite_tests.sh
 bash tests/run_mk_math_tests.sh
 ```

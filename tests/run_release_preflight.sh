@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-contract="$root/tools/release_contract.py"
+contract="$root/dev/lib/release_contract.py"
 preflight_root="$(mktemp -d "${TMPDIR:-/tmp}/mk61-release-preflight.XXXXXX")"
 cleanup() {
   rm -rf "$preflight_root"
@@ -51,7 +51,7 @@ while IFS=$'\t' read -r \
       "$artifact" >&2
     exit 1
   }
-  "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" "$image"
+  "$root/dev/lib/seal-firmware.sh" check --max-size "$flash_capacity" "$image"
   [[ -s "$elf" ]] || {
     printf 'Missing F411 preflight artifact: %s-preflight.elf\n' \
       "$artifact" >&2

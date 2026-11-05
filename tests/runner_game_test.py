@@ -3,6 +3,12 @@
 
 Fixtures cover art and edge transitions; complete campaigns use only keys.
 """
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 from collections import deque
 import json
 import os
@@ -21,7 +27,7 @@ BOARDS = (
     dict(links=({2, 10}, {4, 8}), start=17, enemies=(0, 35), gold=(11, 12, 30), period=1000),
     dict(links=({1, 12}, {5, 9}), start=18, enemies=(5, 35), gold=(6, 22, 24), period=1000),
 )
-MAPS = json.loads((ROOT / 'tools/runner/runner.map.json').read_text())['levels']
+MAPS = json.loads((ROOT / 'dev/tools/runner/runner.map.json').read_text())['levels']
 
 
 def move(board, cell, key):

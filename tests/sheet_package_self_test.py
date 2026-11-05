@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
-spec=importlib.util.spec_from_file_location('sheet_builder',ROOT/'tools/build_sheet_app.py')
+spec=importlib.util.spec_from_file_location('sheet_builder',ROOT/'dev/tools/build_sheet_app.py')
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 for name in ('BUDGET.mks','CYCLE.mks'):
     data=(ROOT/'programs/sheets'/name).read_bytes()

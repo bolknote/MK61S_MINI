@@ -181,12 +181,12 @@ initial r = 9
 отдельный целочисленный тест, не 65536 запусков на ПЗУ.
 
 ```sh
-python3 tools/elite/build.py --check
+python3 dev/tools/elite/build.py --check
 bash tests/run_elite_tests.sh
 ```
 
-Изменения: [`economy.py`](../../tools/elite/economy.py),
-[`game.py`](../../tools/elite/game.py),
+Изменения: [`economy.py`](../../dev/tools/elite/economy.py),
+[`game.py`](../../dev/tools/elite/game.py),
 [`elite_game_test.py`](../../tests/elite_game_test.py), карта и части M61.
 Временные воспроизводимые опыты находятся в
 `/private/tmp/elite-economy-20260924`: `experiment.py`, `golden-original.py`,

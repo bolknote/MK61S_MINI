@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-contract="$root/tools/release_contract.py"
+contract="$root/dev/lib/release_contract.py"
 
 fail() {
   printf 'F401 release matrix: %s\n' "$1" >&2
@@ -121,7 +121,7 @@ PYTOOLS
       esac
       [[ -s "$resident" ]] || fail "missing product BIN: $resident"
       [[ -s "$resident_elf" ]] || fail "missing product ELF: $resident_elf"
-      "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" \
+      "$root/dev/lib/seal-firmware.sh" check --max-size "$flash_capacity" \
         "$resident"
       for file in build.flags build.apps System/FOCAL.APP System/BASIC.APP \
           System/MARKDOWN.APP System/SETUP.APP System/USBDISK.APP \

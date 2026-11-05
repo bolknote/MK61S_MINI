@@ -79,16 +79,16 @@ cmp "$platform/tools/mk61-app-upload.ps1" \
     "$target/tools/mk61-app-upload.ps1"
 cmp "$platform/tools/mk61-system-bundle.ps1" \
     "$target/tools/mk61-system-bundle.ps1"
-cmp "$root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" \
+cmp "$root/dev/lib/.mk61-firmware-seal/mk61_firmware_seal.cpp" \
     "$target/tools/mk61_firmware_seal.cpp"
 cmp "$root/code/resident_firmware_format.hpp" \
     "$target/tools/resident_firmware_format.hpp"
 cmp "$root/code/rust_types.h" "$target/tools/rust_types.h"
-cmp "$root/tools/seal-firmware.ps1" \
+cmp "$root/dev/lib/seal-firmware.ps1" \
     "$target/tools/seal-firmware.ps1"
-cmp "$root/tools/seal-firmware-elf.ps1" \
+cmp "$root/dev/lib/seal-firmware-elf.ps1" \
     "$target/tools/seal-firmware-elf.ps1"
-cmp "$root/tools/seal-firmware-elf.py" \
+cmp "$root/dev/lib/seal-firmware-elf.py" \
     "$target/tools/seal-firmware-elf.py"
 
 # Presence alone is not enough: an old copied platform silently falls back to

@@ -175,4 +175,4 @@ HOLD вкладывается внутрь: покупка проверяет в
 - проверка, что `far=True` сохраняет дальнюю команду внутри одного банка
   и после повторной сборки.
 
-`tools/elite/build.py --check` и `git diff --check` также проходят.
+`dev/tools/elite/build.py --check` и `git diff --check` также проходят.

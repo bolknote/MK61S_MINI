@@ -5,6 +5,12 @@
 observes automatic ROM UF2 fallback, then restores the supplied valid firmware
 and calculator state. No card writes or STM32 operations are performed.
 """
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse,hashlib,json,re,subprocess,sys,time
 from datetime import datetime,timezone
 from pathlib import Path

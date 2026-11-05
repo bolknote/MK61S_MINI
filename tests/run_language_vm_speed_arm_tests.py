@@ -56,7 +56,7 @@ def main():
        ROOT/'tests/language_vm_speed_arm_probe.cpp',root/'code/language_vm.cpp',root/'code/language_bytecode.cpp',
        '-Wl,--start-group','-lc','-lgcc','-Wl,--end-group','-o',target])
   run(['clang++','-std=c++17','-O2','-DMK61_MATH_BACKEND='+str(args.math_backend),
-       '-I'+str(root/'code'),ROOT/'tools/language_vm_probe.cpp',
+       '-I'+str(root/'code'),ROOT/'dev/tools/language_vm_probe.cpp',
        root/'code/language_vm.cpp',root/'code/language_bytecode.cpp',root/'code/zx0_encode.cpp','-o',probe])
   elf=Elf(target)
   segments=[(sec[3],bytes(sec[5]) if sec[1]==8 else elf.data[sec[4]:sec[4]+sec[5]])

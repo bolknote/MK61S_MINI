@@ -32,7 +32,7 @@ class FixtureBytecode(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="mk61-hil-language-") as work:
             directory=Path(work);probe=directory/"probe"
             subprocess.run([compiler,"-std=c++17","-O2","-I"+str(ROOT/"code"),
-                str(ROOT/"tools/language_vm_probe.cpp"),
+                str(ROOT/"dev/tools/language_vm_probe.cpp"),
                 str(ROOT/"code/language_bytecode.cpp"),str(ROOT/"code/language_vm.cpp"),
                 str(ROOT/"code/zx0_encode.cpp"),"-o",str(probe)],check=True)
             for name,data in {**FIXTURES,**EXTENDED_FIXTURES}.items():

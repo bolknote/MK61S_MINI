@@ -17,7 +17,7 @@ for backend in 0 1; do
     done
   fi
   clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
-    -DMK61_MATH_BACKEND="$backend" -I"$root/code" -I"$root/tools" \
+    -DMK61_MATH_BACKEND="$backend" -I"$root/code" -I"$root/dev/lib" \
     "$root/tests/turochamp_linked_program_self_test.cpp" "$root/code/language_linked_program.cpp" \
     "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" "${extra[@]}" -o "$work/test-$backend"
   "$work/test-$backend" "$root/programs/games/Turochamp"

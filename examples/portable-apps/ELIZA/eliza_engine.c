@@ -3,7 +3,7 @@
 /*
  * Compact interpreter for Joseph Weizenbaum's 1966 CACM DOCTOR script.
  *
- * The script is compiled by tools/generate_eliza_doctor.py. Runtime rule
+ * The script is compiled by dev/tools/generate_eliza_doctor.py. Runtime rule
  * semantics follow the recovered MAD-SLIP ELIZA: ranked keyword stacks,
  * word substitution, decomposition/reassembly, =KEY, NEWKEY, PRE, DLIST,
  * rotating responses, the LIMIT counter, and the Hollerith memory hash.

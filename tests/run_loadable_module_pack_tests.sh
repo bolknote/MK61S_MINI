@@ -10,9 +10,9 @@ out="$work/loadable_module_pack_self_test"
 wrapper_packer="$work/wrapper/mk61_module_pack"
 default_packer="$root/.build/tools/mk61_module_pack"
 MK61_MODULE_PACK_BIN="$wrapper_packer" \
-  "$root/tools/build_mk61_module_pack.sh" --help >/dev/null 2>&1
+  "$root/dev/lib/build_mk61_module_pack.sh" --help >/dev/null 2>&1
 test -x "$wrapper_packer"
-"$root/tools/build_mk61_module_pack.sh" --help >/dev/null 2>&1
+"$root/dev/lib/build_mk61_module_pack.sh" --help >/dev/null 2>&1
 test -x "$default_packer"
 test ! -e "$root/tools/mk61_module_pack"
 

@@ -62,7 +62,7 @@ def main():
     if args.jobs < 1:
         parser.error('--jobs must be positive')
     root = args.source_root.resolve()
-    contract = json.loads((root / 'tools/release-contract.json').read_text())
+    contract = json.loads((root / 'dev/lib/release-contract.json').read_text())
     versions = contract['toolchain']
     release_case = None
     if args.release_case:

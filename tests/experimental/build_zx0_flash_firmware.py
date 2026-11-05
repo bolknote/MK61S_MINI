@@ -44,9 +44,9 @@ def main():
     (out/'build-command.json').write_text(json.dumps(list(map(str,command)),indent=2)+'\n')
     run(command,env)
     binary=out/'build/resident.bin';elf=out/'build/resident.elf'
-    run(['bash',source/'tools/seal-firmware.sh','seal','--max-size','524288',binary],env)
-    run(['bash',source/'tools/seal-firmware.sh','check','--max-size','524288',binary],env)
-    run([sys.executable,source/'tools/seal-firmware-elf.py','--bin',binary,'--elf',elf,
+    run(['bash',source/'dev/lib/seal-firmware.sh','seal','--max-size','524288',binary],env)
+    run(['bash',source/'dev/lib/seal-firmware.sh','check','--max-size','524288',binary],env)
+    run([sys.executable,source/'dev/lib/seal-firmware-elf.py','--bin',binary,'--elf',elf,
         '--compile-commands',out/'build/compile_commands.json'],env)
     hashes={str(p.relative_to(source)):hashlib.sha256(p.read_bytes()).hexdigest()
         for p in (source/'code').rglob('*') if p.is_file()}

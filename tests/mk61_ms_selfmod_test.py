@@ -1,4 +1,5 @@
 """Run literal and branch self-modification through the unchanged ROM/core."""
+
 import json
 from pathlib import Path
 import subprocess
@@ -7,7 +8,7 @@ from tempfile import TemporaryDirectory
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = sys.argv[1]
-sys.path[:0] = [str(ROOT/'tools/elite'), str(ROOT/'tools')]
+sys.path[:0] = [str(ROOT/'dev/tools/elite'), str(ROOT/'tools')]
 from assembler import Assembler, pack_number
 from program_pack import program_binary
 

@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+"""Assemble readable BASIC parts, preserving the device's actual grammar."""
+
+from __future__ import annotations
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[3]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+
+import argparse
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "tools"))
+from m8_codec import encode
+from layout import FIELDS, MODULES, LOCAL_ONLY, SOURCE_BUDGET, CLUSTERS, PACKAGES
+from opening_book import data_statements
+
+DEST = ROOT / "programs/games/Turochamp"
+TEMPLATES = Path(__file__).parent / "basic"
+BASES = {"HIST", "STACK", "RETURNS", "E_UNDO", "G_UNDO", "RP_META", "RP_KEY",
+         "ROOTTMP", "DIRN", "DIRS"}
+
+
+def aliases(code: str) -> str:
+    # Quotes are opaque; Russian labels and glyph codes are not identifiers.
+    spans = re.split(r'("[^"]*"|\'[^\']*\')', code)
+    for i in range(0, len(spans), 2):
+        spans[i] = re.sub(r"&([A-Z_][A-Z_0-9]*)",
+                          lambda m: str(FIELDS[m[1]]), spans[i])
+        spans[i] = re.sub(r"\b[A-Z_][A-Z_0-9]*\b",
+                          lambda m: (str(FIELDS[m[0]]) if m[0] in BASES else
+                                     f"@({FIELDS[m[0]]})") if m[0] in FIELDS else m[0],
+                          spans[i])
+    return "".join(spans)
+
+
+def assemble(name: str, template: str) -> str:
+    if name == 'board':
+        from large_font import pair
+        def large_pair(match):
+            c = match[1]
+            selected = ord(c) >= 0x430
+            index = ord(c)-(0x430 if selected else ord('A'))
+            return f'IF V P."{pair(index,selected)}"; ELSE P."{c}";\nR.'
+        template = re.sub(r'^P\."([A-Zа-щ])";:R\.$', large_pair, template, flags=re.M)
+    module = MODULES[name]
+    statements: list[tuple[list[str], str]] = []
+    labels: list[str] = []
+    phases: dict[str, int] = {}
+    source = []
+    for line in template.splitlines():
+        source += data_statements() if line.strip() == 'BOOKDATA' else [line]
+    # Leaf BASIC services can run as local GOSUBs. Their FOR/RETURN stacks
+    # must finish before another M61 part is loaded.
+    local = list(dict.fromkeys(re.findall(r'^LOCAL (\w+)$', template, re.M)))
+    for callee in local:
+        body = (TEMPLATES / f'{callee}.bas').read_text()
+        if re.search(r'^(CALL|JUMP|LOCAL)\b', body, re.M):
+            raise ValueError(f'{name}: non-leaf local service {callee}')
+        body = re.sub(r':([a-z][a-z0-9_]*)',
+                      lambda m: f':local_{callee}_{m[1]}', body)
+        source += [f':local_{callee}'] + [
+            'R.' if line.strip() == 'RET' else line for line in body.splitlines()]
+    for line in source:
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith(":"):
+            labels.append(line[1:])
+            continue
+        if line.startswith("LOCAL "):
+            line = f'GOS.:local_{line[6:]}'
+        elif line.startswith("CALL "):
+            callee, resume = line[5:].split()
+            resume = resume.removeprefix(":")
+            phases.setdefault(resume, len(phases) + 1)
+            line = (f"@(RETURNS+SP)={module*256+phases[resume]};SP=SP+1;"
+                    f"PHASE=0;.RE={MODULES[callee]};E.")
+        elif line == "RET":
+            line = "SP=SP-1;A=@(RETURNS+SP);PHASE=A MOD 256;.RE=INT(A/256);E."
+        elif line.startswith("JUMP "):
+            callee = line[5:]
+            line = f"PHASE=0;.RE={MODULES[callee]};E."
+        statements.append((labels, line))
+        labels = []
+    if labels:
+        statements.append((labels, "E."))
+
+    # Phase zero starts the part; CALL assigns contiguous one-based phases.
+    head = [([], "ON PHASE G." + ",".join(f":{label}" for label in phases))] if phases else []
+    entries = head + statements
+    numbers: dict[str, int] = {}
+    for number, (labels, _) in enumerate(entries, 1):
+        for label in labels:
+            if label in numbers:
+                raise ValueError(f"{name}: duplicate label {label}")
+            numbers[label] = number
+    emitted = []
+    for number, (_, code) in enumerate(entries, 1):
+        code = re.sub(r":([a-z][a-z0-9_]*)", lambda m: str(numbers[m[1]]), code)
+        emitted.append(f"{number} {aliases(code)}")
+    result = "\n".join(emitted) + "\n"
+    if len(entries) > 192:
+        raise ValueError(f"{name}: {len(entries)} lines exceeds 192")
+    m8 = encode(result)
+    if len(m8) + result.count("\n") > SOURCE_BUDGET:
+        raise ValueError(f"{name}: {len(m8)} M8 bytes exceeds streamed-source quota")
+    return result
+
+
+def assemble_cluster(root: str) -> str:
+    """Fuse coroutines; never keep native GOSUB frames across external OPEN.
+
+    Logical IDs and PHASE retain their original meaning, including after a
+    return from an external callee. Leaf LOCAL services share one copy.
+    Internal calls/returns use the original RETURNS/SP array only.
+    """
+    members = (root, *CLUSTERS[root])
+    entries: list[tuple[list[str], str]] = []
+    local: list[str] = []
+    for name in members:
+        if name != root:
+            entries.append((["cluster_dispatch"] if not entries else [],
+                            f"IF .RE={MODULES[name]} G.:{name}_dispatch"))
+    for name in members:
+        template = (TEMPLATES / f"{name}.bas").read_text()
+        phases: dict[str, int] = {}
+        body: list[tuple[list[str], str]] = []
+        labels: list[str] = []
+        for line in template.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line == "BOOKDATA":
+                raise ValueError("opening-book data is not a coroutine cluster")
+            line = re.sub(r":([a-z][a-z0-9_]*)", lambda m: f":{name}_{m[1]}", line)
+            if line.startswith(":"):
+                labels.append(line[1:])
+                continue
+            if line.startswith("LOCAL "):
+                callee = line[6:]
+                if callee not in local:
+                    local.append(callee)
+                line = f"GOS.:local_{callee}"
+            elif line.startswith("CALL "):
+                callee, resume = line[5:].split()
+                resume = resume.removeprefix(":")
+                phases.setdefault(resume, len(phases) + 1)
+                tail = "G.:cluster_dispatch" if callee in members else "E."
+                line = (f"@(RETURNS+SP)={MODULES[name]*256+phases[resume]};SP=SP+1;"
+                        f"PHASE=0;.RE={MODULES[callee]};{tail}")
+            elif line.startswith("JUMP "):
+                callee = line[5:]
+                tail = "G.:cluster_dispatch" if callee in members else "E."
+                line = f"PHASE=0;.RE={MODULES[callee]};{tail}"
+            elif line == "RET":
+                same = " OR ".join(f"(.RE={MODULES[member]})" for member in members)
+                line = ("SP=SP-1;A=@(RETURNS+SP);PHASE=A MOD 256;.RE=INT(A/256);"
+                        f"IF {same} G.:cluster_dispatch")
+                body.append((labels, line))
+                labels = []
+                line = "E."
+            body.append((labels, line))
+            labels = []
+        if labels:
+            body.append((labels, "E."))
+        if phases:
+            entries.append(([f"{name}_dispatch"], "ON PHASE G." + ",".join(f":{label}" for label in phases)))
+        else:
+            body[0][0].insert(0, f"{name}_dispatch")
+        entries += body
+    for callee in local:
+        body = (TEMPLATES / f"{callee}.bas").read_text()
+        if re.search(r"^(CALL|JUMP|LOCAL)\b", body, re.M):
+            raise ValueError(f"{root}: non-leaf local service {callee}")
+        labels = [f"local_{callee}"]
+        for line in body.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            line = re.sub(r":([a-z][a-z0-9_]*)", lambda m: f":local_{callee}_{m[1]}", line)
+            if line.startswith(":"):
+                labels.append(line[1:])
+                continue
+            entries.append((labels, "R." if line == "RET" else line))
+            labels = []
+        if labels:
+            raise ValueError(f"{root}: dangling local label in {callee}")
+    if len(entries) > 192:
+        raise ValueError(f"{root}: {len(entries)} lines exceeds 192")
+    numbers = {}
+    for number, (labels, _) in enumerate(entries, 1):
+        for label in labels:
+            if label in numbers:
+                raise ValueError(f"{root}: duplicate label {label}")
+            numbers[label] = number
+    emitted = []
+    for number, (_, code) in enumerate(entries, 1):
+        code = re.sub(r":([a-z][a-z0-9_]*)", lambda m: str(numbers[m[1]]), code)
+        emitted.append(f"{number} {aliases(code)}")
+    result = "\n".join(emitted) + "\n"
+    m8 = encode(result)
+    if len(m8) + result.count("\n") > SOURCE_BUDGET:
+        raise ValueError(f"{root}: source exceeds streamed-source quota")
+    return result
+
+
+def driver() -> str:
+    commands = ["reinit", "open display.tbi", "if re==0 run :compact",
+                "loadfont Turochamp320 Turochamp", "run :ready", ":compact",
+                "loadfont Turochamp", ":ready", "open init.tbi", ":dispatch"]
+    commands += [f"if re=={i} open {PACKAGES[name]}.tbi" for name, i in MODULES.items()]
+    commands += ["if re==99 ret", "run :dispatch"]
+    result = "\n".join(commands) + "\n"
+    if len(result.encode()) > 1536:
+        raise ValueError("M61 dispatcher exceeds its filesystem quota")
+    return result
+
+
+def header() -> str:
+    out = ["// Generated by dev/tools/turochamp/assemble.py; test wire addresses.",
+           "#pragma once", "namespace tc {"]
+    out += [f"constexpr int {name}={value};" for name, value in FIELDS.items()]
+    out += [f"constexpr int M_{name.upper()}={value};" for name, value in MODULES.items()]
+    out += ["struct Module { int id; const char* name; };", "constexpr Module MODULES[] = {"]
+    out += [f'  {{M_{name.upper()}, "{PACKAGES[name]}"}},' for name in MODULES]
+    out += ["};", "}"]
+    return "\n".join(out)+"\n"
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true")
+    args = parser.parse_args()
+    DEST.mkdir(parents=True, exist_ok=True)
+    templates = {p.stem for p in TEMPLATES.glob("*.bas")}
+    if templates != set(MODULES) | LOCAL_ONLY:
+        raise SystemExit("BASIC templates differ from module/local-service registry")
+    outputs = {DEST / f"{name}.tbi": assemble_cluster(name) if name in CLUSTERS else
+               assemble(name, (TEMPLATES / f"{name}.bas").read_text())
+               for name in dict.fromkeys(PACKAGES.values())}
+    outputs[DEST / "autoexec.m61"] = driver()
+    outputs[DEST / "display.tbi"] = "1 .RE=(GW>=320) AND (GH>=320)\n2 END\n"
+    outputs[Path(__file__).parent / "layout.hpp"] = header()
+    obsolete = set(DEST.glob("*.tbi")) - outputs.keys()
+    if args.check and obsolete:
+        raise SystemExit("obsolete generated game parts: " + ", ".join(p.name for p in sorted(obsolete)))
+    if not args.check:
+        for path in obsolete:
+            path.unlink()
+    for path, data in outputs.items():
+        if args.check:
+            if not path.is_file() or path.read_text() != data:
+                raise SystemExit(f"stale generated game part: {path}")
+        else:
+            path.write_text(data)
+    print(f"Turochamp BASIC: {sum(p.suffix == '.tbi' for p in outputs)} files / {len(MODULES)} entries, array @(0)..@(351)")
+
+
+if __name__ == "__main__":
+    main()

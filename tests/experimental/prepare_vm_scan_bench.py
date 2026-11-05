@@ -4,6 +4,12 @@
 Only a private compiler copy is instrumented. Records are deduplicated with
 their original call weights; the generated fixture uses the real M8 bytes.
 """
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[2]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 import hashlib
 import json

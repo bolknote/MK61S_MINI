@@ -3,10 +3,11 @@
 Decisions receive only decoded masks and the level. No phase/RD/RE, hidden
 guards, native-step timing or timer values are exposed to this policy.
 """
+
 from pathlib import Path
 import sys
 from runner_game_test import BOARDS,move,ROOT
-sys.path.insert(0,str(ROOT/'tools/elite'))
+sys.path.insert(0,str(ROOT/'dev/tools/elite'))
 from assembler import screen
 
 

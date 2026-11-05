@@ -557,8 +557,8 @@ python3 "$root/tests/analyze_stack_usage.py" \
 
 resident_elf="$resident_build/resident.elf"
 resident_bin="$resident_build/resident.bin"
-"$root/tools/seal-firmware.sh" seal --max-size "$maximum_flash" "$resident_bin"
-"$root/tools/seal-firmware.sh" check --max-size "$maximum_flash" "$resident_bin"
+"$root/dev/lib/seal-firmware.sh" seal --max-size "$maximum_flash" "$resident_bin"
+"$root/dev/lib/seal-firmware.sh" check --max-size "$maximum_flash" "$resident_bin"
 compiler=$(python3 - "$resident_build/compile_commands.json" "$root/tools" <<'PYCOMPILER'
 from pathlib import Path
 import sys
@@ -570,7 +570,7 @@ PYCOMPILER
 objcopy="$(dirname "$compiler")/arm-none-eabi-objcopy"
 python3 "$root/tests/check_usb_cdc_rx_elf.py" "$resident_elf" \
   --compile-commands "$resident_build/compile_commands.json"
-python3 "$root/tools/seal-firmware-elf.py" \
+python3 "$root/dev/lib/seal-firmware-elf.py" \
   --bin "$resident_bin" --elf "$resident_elf" --objcopy "$objcopy"
 
 build_custom_app() {
@@ -652,7 +652,7 @@ if [ "$ui_fonts" -eq 1 ]; then
   python3 "$root/tools/.fmk-font/package_ui_font_licenses.py" \
     --bundle "$bundle_dir"
 fi
-python3 "$root/tools/explorer_icons.py" --bundle "$bundle_dir"
+python3 "$root/dev/tools/explorer_icons.py" --bundle "$bundle_dir"
 printf '%s -DMK61_PORTABLE_UI_FONTS=%s -DMK61_APP_LOCAL_FLOAT_MATH=%s\n' \
   "$compile_flags" "$ui_fonts" "$app_local_float" > "$bundle_dir/build.flags"
 {

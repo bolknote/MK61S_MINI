@@ -91,9 +91,9 @@ python3 "$root/tests/check_app_memory_elf.py" \
 "$root/tests/check_no_resident_fmk_decoder_elf.sh" --allow-fmk \
   --allow-usbdisk \
   "$compile_path/mk61s-M.ino.elf"
-"$root/tools/seal-firmware.sh" seal --max-size 524288 \
+"$root/dev/lib/seal-firmware.sh" seal --max-size 524288 \
   "$compile_path/mk61s-M.ino.bin"
-"$root/tools/seal-firmware.sh" check --max-size 524288 \
+"$root/dev/lib/seal-firmware.sh" check --max-size 524288 \
   "$compile_path/mk61s-M.ino.bin"
 
 sealed_size="$(wc -c < "$compile_path/mk61s-M.ino.bin" | tr -d '[:space:]')"

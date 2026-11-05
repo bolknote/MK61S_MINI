@@ -120,7 +120,7 @@
 шагов; игровое ядро остаётся настоящим.
 
 Прошли `bash tests/run_elite_tests.sh` (5368 состояний и два опыта
-самомодификации), `python3 tools/elite/build.py --check`, `git diff --check`.
+самомодификации), `python3 dev/tools/elite/build.py --check`, `git diff --check`.
 BIN и карта в рабочей папке побайтно совпадают с измеренным кандидатом.
 Снимки, варианты и сравнения сохранены локально в
 `/private/tmp/elite-dispatch-20260929`.

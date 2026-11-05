@@ -176,7 +176,7 @@ C6 type=12, magic=`S1`, расширение `.mks`, непрозрачные б
 ## Сборка и проверка
 
 ```sh
-python3 tools/build_sheet_app.py --copy-to-programs
+python3 dev/tools/build_sheet_app.py --copy-to-programs
 MK61_TEST_SANITIZERS=1 bash tests/run_sheet_app_tests.sh
 ```
 

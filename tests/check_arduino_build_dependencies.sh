@@ -3,7 +3,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 arduino_cli="${MK61_ARDUINO_CLI:-arduino-cli}"
-contract="$root/tools/release_contract.py"
+contract="$root/dev/lib/release_contract.py"
 
 fail() {
   printf 'Arduino compatibility dependencies: %s\n' "$1" >&2

@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Build the canonical /System directory with the unified current APP ABI."""
 
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+
 import argparse
 from contextlib import contextmanager
 import errno
@@ -185,7 +191,7 @@ def catalog_source_inputs() -> list[Path]:
                    path.suffix in build_suffixes]
     inputs += [Path(__file__).resolve(),
                ROOT / "tools/build_portable_app.py",
-               ROOT / "tools/build_mk61_module_pack.sh",
+               ROOT / "dev/lib/build_mk61_module_pack.sh",
                ROOT / "tests/analyze_stack_usage.py",
                ROOT / "tests/check_stack_usage.py"]
     return sorted(set(inputs), key=lambda item: item.as_posix())

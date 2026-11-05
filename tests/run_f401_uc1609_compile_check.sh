@@ -3,7 +3,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 arduino_cli="${MK61_ARDUINO_CLI:-arduino-cli}"
-contract="$root/tools/release_contract.py"
+contract="$root/dev/lib/release_contract.py"
 
 fail() {
   printf 'F401 UC1609 compile check: %s\n' "$1" >&2
@@ -109,9 +109,9 @@ printf 'F401 RAM budget: %d/%d bytes\n' "$ram_used" "$ram_limit"
 
 test -s "$compile_path/mk61s-M.ino.elf" || fail 'missing ELF'
 test -s "$compile_path/mk61s-M.ino.bin" || fail 'missing BIN'
-"$root/tools/seal-firmware.sh" seal --max-size "$flash_capacity" \
+"$root/dev/lib/seal-firmware.sh" seal --max-size "$flash_capacity" \
   "$compile_path/mk61s-M.ino.bin"
-"$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" \
+"$root/dev/lib/seal-firmware.sh" check --max-size "$flash_capacity" \
   "$compile_path/mk61s-M.ino.bin"
 
 # Merely fitting below 256 KiB is not a release criterion: sealing appends a

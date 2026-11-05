@@ -2,8 +2,8 @@
 
 ## Один контракт сборки
 
-`tools/release-contract.json` задаёт зависимости, профили, capability cases и
-бюджеты. `tools/release_contract.py` валидирует данные и отдаёт выбранные cases
+`dev/lib/release-contract.json` задаёт зависимости, профили, capability cases и
+бюджеты. `dev/lib/release_contract.py` валидирует данные и отдаёт выбранные cases
 Bash/PowerShell-сборщикам; GitHub Actions вызывает те же entry points.
 `tests/run_release_preflight.sh` — полный локальный проход. Отдельно
 `tests/run_ci_strict.sh` проверяет host-код тем же Clang 18, что CI, и ASan/UBSan.

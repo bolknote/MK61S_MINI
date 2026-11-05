@@ -7,7 +7,7 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$manifestPath = Join-Path $root 'tools/release-contract.json'
+$manifestPath = Join-Path $root 'dev/lib/release-contract.json'
 if (-not [IO.File]::Exists($manifestPath)) {
     throw "Release contract is missing: $manifestPath"
 }

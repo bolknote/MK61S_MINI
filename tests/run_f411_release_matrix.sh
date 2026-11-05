@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-contract="$root/tools/release_contract.py"
+contract="$root/dev/lib/release_contract.py"
 
 fail() {
   printf 'F411 release matrix: %s\n' "$1" >&2
@@ -245,11 +245,11 @@ PYTOOLS
   python3 "$root/tests/check_usb_cdc_rx_elf.py" \
     "$build_path/mk61s-M.ino.elf" \
     --compile-commands "$build_path/compile_commands.json"
-  "$root/tools/seal-firmware.sh" seal --max-size "$flash_capacity" \
+  "$root/dev/lib/seal-firmware.sh" seal --max-size "$flash_capacity" \
     "$build_path/mk61s-M.ino.bin"
-  "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" \
+  "$root/dev/lib/seal-firmware.sh" check --max-size "$flash_capacity" \
     "$build_path/mk61s-M.ino.bin"
-  python3 "$root/tools/seal-firmware-elf.py" \
+  python3 "$root/dev/lib/seal-firmware-elf.py" \
     --bin "$build_path/mk61s-M.ino.bin" \
     --elf "$build_path/mk61s-M.ino.elf" \
     --compile-commands "$build_path/compile_commands.json"

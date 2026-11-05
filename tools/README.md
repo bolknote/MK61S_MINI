@@ -1,97 +1,65 @@
-# Инструменты MK61s
+# Пользовательские инструменты MK61S
 
-В корне `tools` находятся только поддерживаемые пользовательские команды:
+В `tools/` находятся команды для работы с калькулятором, сборки прошивки
+и создания собственных программ. Профилирование, исследования и генераторы
+штатных ресурсов находятся в [`dev/tools`](../dev/tools/README.md), общие
+внутренние модули — в [`dev/lib`](../dev/lib/README.md).
 
-- `mk61-firmware.cmd` — сборка, DFU-загрузка и автоматическая установка
-  System APP через COM/CDC с обратным чтением и проверкой файлов;
-- `build-gcc.cmd` — каноническая прямая GCC-сборка STM32F401/F411 без пакета STM32duino;
-- `mk61-arduino-board.cmd` — установка плат `MK61s F401 + APP` и
-  `MK61s F411 + APP` в Arduino IDE;
-- `mkc.cmd` — двухпанельный файловый менеджер устройства; калькуляторные
-  `.bin` размером 5…4096 байт копируются побайтно, F3 показывает hex,
-  F4 оставляет их доступными только для чтения;
-- `build_f401_bundle.sh` — F401-комплект с System и custom manifest APP;
-- `build_system_app_bundle.py` — общий для F401/F411/Arduino сборщик
-  канонического каталога `/System`;
-- `build_portable_app.py` — C/C++/Rust SDK и сборщик всех видов APP: единый ABI 6
-  с автоматическим выбором ZX0 или BCJ + ZX0; инструкция в
-  [`sdk/portable/README.md`](../sdk/portable/README.md);
-- `build_fmk_font.sh` — конвертер шрифтов FMK;
-- `build_fmk_from_ui_atlas.py` — упаковка уже проверенного однобитного
-  JSON-атласа в FMK без повторного рендеринга или изменения пикселей;
-- `generate_highnoon_font.py` — воспроизводимая сборка узкого игрового
-  `programs/games/High Noon/HighNoon.FMK`: базовый public-domain растр 3×5
-  дополнен читаемыми русскими буквами шириной до пяти пикселей. Также собирает
-  `HighNoon320.FMK`: родной Ark Pixel 12px с отдельно вписанными широкими
-  буквами в ячейках 8×24, без растягивания;
-- `turochamp/assemble.py`, `turochamp/font.py` — сборка BASIC-частей
-  и шахматного шрифта игры Turochamp; [исходники и проверки](turochamp/README.md);
-- `generate_eliza_doctor.py` — воспроизводимая компиляция оригинального
-  сценария DOCTOR 1966 года в компактные таблицы точного ELIZA-движка;
-  `--check` проверяет соответствие таблиц исходному сценарию;
-- `generate_ui_fonts.py` — воспроизводимая сборка встроенных пропорциональных
-  шрифтов UC1609 из проверенных растров; `--check` проверяет актуальность таблиц.
-- `explorer_icons.py` — воспроизводимая сборка значков штатных папок для
-  PicoCalc и Classic: `--check` сверяет 32×32 WBMP с исходными рисунками;
-  [карта папок и команды](../doc/explorer-icons/README.md).
-- `font_preview_study.py` — сравнение реальных монохромных растров шрифтов
-  на компьютере; [инструкция](.fmk-font/README-preview.md).
-- `build_mk61_module_pack.sh` — низкоуровневый ZX0-упаковщик APP.
-- `build_mk61_program_pack.sh` — сборка нативного упаковщика больших программ
-  МК-61 в бинарный формат CRC32 + ZX0 для `load <адрес> <путь.bin>`.
-- `program_pack.py` — Python-обёртка с автоматической сборкой этого упаковщика:
-  `python3 tools/program_pack.py raw-image.bin program.bin`.
-- `seal-firmware.sh`, `seal-firmware.ps1` — post-link запечатывание и
-  независимая проверка CRC/content ID resident BIN для release-сборщиков.
-- `seal-firmware-elf.py`, `seal-firmware-elf.ps1` — переносят проверенный
-  footer в ELF и доказывают обратным `objcopy`, что ELF и запечатанный BIN
-  описывают одни байты Flash; PowerShell-вариант используется на Windows.
-- `release-contract.json` — версии зависимостей, профили и ресурсные бюджеты
-  всех release/capability-сборок; `release_contract.py` проверяет контракт,
-  выдаёт cases сборщикам и формирует отчёты по ELF и запечатанному BIN.
-- `install_gcc_dependencies.ps1` (Windows, также macOS/Linux) и
-  `install_gcc_dependencies.py` (macOS/Linux без PowerShell) — установка закреплённого GNU Arm GCC с
-  проверкой SHA256, в том числе из офлайн-архива; заголовки SDK уже в проекте.
-- `install_arduino_dependencies.ps1` — зависимости отдельного совместимого
-  пути Arduino IDE; обычной GCC-сборке они не нужны.
-- `vfat_diagnostic.py` — расшифровка числовой причины `vlog` на компьютере;
-  словарь объяснений не занимает Flash микроконтроллера.
-- `measure_vm_cache.py` — воспроизводимое сравнение SOURCE/owned VM-образов,
-  общего RAM-бюджета и вместимости High Noon/Turochamp. Собирает только host
-  probe, пишет отчёт в `tmp/vm-cache/measure`, не прошивает устройство;
-  [контракт и ограничения](../sdk/portable/VM-CACHE.md).
-- `certify_m0_pow_*.py` — офлайн-проверки точных рациональных границ и
-  эквивалентности преобразований `pow`; источник кандидата задаётся явно,
-  JSON-отчёт сохраняет его SHA-256. Проверки `near`, `short`, `tiny`,
-  `tiny32`, `integer128` и `first_seed` также используются для отдельных
-  исследовательских кандидатов: успешный сертификат сам по себе не включает
-  их в прошивку и не подтверждает скорость на оборудовании;
-- `select_m0_pow_refinement_corpus.py` — исчерпывающе выбирает затронутые
-  целые, двоично-рациональные и близкие к единице входы из сохранённого
-  корпуса `pow`. Сохраняет SHA-256 полного корпуса и поднабора; численные
-  результаты отдельно проверяются ARM/MPFR-тестами.
+## Устройство и прошивка
 
-Как написать и собрать своё приложение:
-[короткий Hello World на C и Rust](../doc/src/MK61s-mini-APP-Quickstart.md) и
-[полное руководство по C/C++ APP](../doc/src/MK61s-mini-APP-Programming.md).
+| Команда | Назначение |
+| --- | --- |
+| `mkc.cmd` | Двухпанельный файловый менеджер: копирование, просмотр и работа с файлами устройства |
+| `mk61-firmware.cmd` | Выбор профиля, сборка, DFU-загрузка и установка System APP через COM/CDC с проверкой чтением |
+| `build-gcc.cmd` | Прямая сборка STM32F401/F411 собственным GCC SDK проекта |
+| `mk61-arduino-board.cmd` | Установка проектных плат в Arduino IDE |
+| `install_gcc_dependencies.ps1`, `install_gcc_dependencies.py` | Установка закреплённого GNU Arm GCC с проверкой SHA-256; Python-вариант работает без PowerShell |
+| `install_arduino_dependencies.ps1` | Зависимости совместимого пути Arduino IDE |
+| `build_picocalc.py` | Сборка прошивки Pico H; `--fetch-sdk` скачивает закреплённые зависимости |
+| `build_picocalc_apps.py` | Сборка нативных APP для Pico H |
+| `package_picocalc.py` | Упаковка проверенной прошивки и содержимого microSD в комплект PicoCalc |
+| `sync_picocalc_clock.py` | Синхронизация часов PicoCalc |
+| `vfat_diagnostic.py` | Расшифровка диагностики виртуального USB-диска |
 
-После «Собрать и прошить» инструмент ждёт появления последовательного порта
-и устанавливает состав `System` текущей сборки. Открывать USB-диск не нужно:
-это работает и на чистом F401, где ещё нет `USBDISK.APP`.
-Закройте другие программы, использующие порт, и оставьте подключённым
-только нужный калькулятор. Профиль прошивки проверяется до изменения файлов.
-Повторить установку без перепрошивки можно через `--install-apps`.
-На macOS/Linux используется Bash-клиент `mkc` с `arduino-cli`, Perl и
-`iconv`, без PowerShell; на Windows — PowerShell-клиент.
-Удаляются только выключенные канонические файлы System; пользовательские
-APP и остальные каталоги сохраняются.
+Например, из корня проекта:
 
-Полный локальный выпуск проверяется `tests/run_release_preflight.sh`. GitHub
-Actions вызывает те же repository-owned матрицы. При добавлении профиля или
-изменении лимита сначала обновляется контракт, а не отдельный workflow.
-Каждый case сохраняет JSON/Markdown с секциями, статической RAM, резервом
-heap/stack, максимальным frame и крупнейшими символами. Адреса build-каталогов
-и время генерации в сравнении отчётов не участвуют.
+```sh
+./tools/mkc.cmd --help
+./tools/mk61-firmware.cmd --list-profiles
+./tools/mk61-firmware.cmd --mcu f411 --profile classic-v3 --build
+python3 tools/build_picocalc.py --fetch-sdk
+python3 tools/build_picocalc_apps.py
+python3 tools/package_picocalc.py
+```
+
+После «Собрать и прошить» инструмент ждёт последовательный порт и устанавливает
+состав `System` текущей сборки. USB-диск для этого не требуется.
+Профиль прошивки проверяется до изменения файлов; повторная установка доступна
+через `--install-apps`. Пользовательские APP и остальные каталоги сохраняются.
+На macOS/Linux используется Bash-клиент MKC с `arduino-cli`, Perl и `iconv`,
+на Windows — PowerShell-клиент. Другие программы должны освободить порт.
+
+## Собственные приложения, программы и шрифты
+
+| Команда | Назначение |
+| --- | --- |
+| `build_portable_app.py`, `build-portable-app.ps1` | Сборка APP на C/C++/Rust, ABI 6; STM32 и Pico H имеют отдельные целевые сборки |
+| `build_system_app_bundle.py`, `build-system-app-bundle.ps1` | Подготовка согласованного каталога `/System` для выбранного STM32-профиля |
+| `build_f401_bundle.sh` | Комплект F401 с System APP и пользовательским manifest |
+| `build_fmk_font.sh` | Конвертация шрифтов в FMK |
+| `build_fmk_from_ui_atlas.py` | Упаковка монохромного JSON-атласа в FMK без изменения пикселей |
+| `font_preview_study.py` | Просмотр и сравнение монохромных шрифтов на компьютере |
+| `program_pack.py` | Упаковка программы МК-61 в CRC32 + ZX0 для команды `load` |
+| `build_mk61_program_pack.sh` | Сборка нативного упаковщика программ, используемого Python-обёрткой |
+
+[Быстрый старт C/Rust](../doc/src/MK61s-mini-APP-Quickstart.md) ·
+[Руководство C/C++](../doc/src/MK61s-mini-APP-Programming.md) ·
+[SDK](../sdk/portable/README.md) · [FMK](../doc/src/MK61s-mini-FMK.md).
+
+Калькуляторные `.bin` размером 5…4096 байт MKC копирует побайтно;
+F3 показывает hex, F4 оставляет их доступными только для чтения.
+
+## Диагностика USB-диска
 
 При ошибке USB-диска экран показывает `USB E12xx`. После выхода из режима
 диска команда `vlog` возвращает последнюю причину, например:
@@ -111,27 +79,11 @@ VFAT v=1 code=1221 phase=3 flags=0 actual=7492 limit=1536 subject=524541444D45
 Wire version и номера причин заданы в `code/virtual_fat_diagnostic.hpp`;
 неизвестные версии нельзя молча разбирать как версию 1.
 
-Каталоги с точкой в имени — внутренние реализации этих команд. Они не являются
-дополнительными способами собрать одну и ту же прошивку:
+## Внутренние реализации
 
-- `.mk61-gcc` — общий F401/F411 GCC-бэкенд;
-- `.mk61-firmware`, `.mk61-arduino-board`, `.mkc` — реализации публичных
-  полиглотных лаунчеров;
-- `.mk61-app` — общий APP linker script, нативный упаковщик и ZX0-кодек;
-- `.mk61-firmware-seal` — единая C++-реализация post-link sealer;
-- `.fmk-font` — исходники конвертера, экспортёра и исследования FMK.
+Каталоги `.mkc`, `.mk61-firmware`, `.mk61-arduino-board`, `.mk61-gcc`,
+`.mk61-dfu`, `.mk61-app` и `.fmk-font` — реализации пользовательских команд.
+Их не нужно запускать вместо соответствующего лаунчера.
 
-Скомпилированные host-утилиты кэшируются в `.build/tools`, а не рядом с
-исходниками. Каталог `.build` можно удалить целиком без потери исходных данных.
-
-Родные иллюстрации PicoCalc и FMK демонстрации «Шмель» воспроизводятся командой
-`python3 tools/generate_picocalc_game_assets.py --check` (или без `--check`
-для записи). Нужны `rsvg-convert` и ImageMagick `magick`. Векторные схемы
-перерастеризуются, сканы только уменьшаются, надписи используют родные
-пиксели проверенного атласа Ark. Список источников, размеров и SHA-256 лежит
-в `doc/game-artwork/native/manifest.json`. Production-декодеры проверяет
-`python3 tests/picocalc_native_assets_self_test.py`.
-
-`package_picocalc.py` включает все папки игр с autoexec, оригинальные и
-родные WBMP, шрифты, графические примеры BASIC/FOCAL и manifest иллюстраций.
-Версия прошивки в `build_picocalc.py` читается из `ports/picocalc/version.hpp`.
+Общие кодеки, запечатывание прошивок и релизный контракт находятся в `dev/lib`.
+Собранные утилиты и комплекты сохраняются в `.build`, отдельно от исходников.

@@ -15,7 +15,7 @@
 #ifdef MK61_LANGUAGE_VM_TEST
 #include "language_bytecode.hpp"
 #endif
-#include "../tools/turochamp/layout.hpp"
+#include "../dev/tools/turochamp/layout.hpp"
 
 extern "C" void TinyBasicTestReset();
 extern "C" TinyBasicRunStatus TinyBasicTestRunSource(const char*);

@@ -4,7 +4,7 @@
 // Bounded integer argument reduction for 1/64 <= |x| <= 64. The exact
 // dyadic geometry is shared with the independent refinement. No rounded
 // binary64 reciprocal, multiplication, addition or division is needed.
-// tools/certify_m0_atan_fast.py certifies the complete Q70 error interval.
+// dev/tools/certify_m0_atan_fast.py certifies the complete Q70 error interval.
 __attribute__((optimize("Os"),noinline)) static U atan_fast_reciprocal(U d) {
   const uint32_t high=uint32_t(d>>32);
   uint32_t r=mk61_m0_math_udiv32(1U<<30,uint32_t(d>>48))<<16;

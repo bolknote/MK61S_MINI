@@ -6,7 +6,7 @@
 Замер 06.09.2026: исходная точка `ba34cf65` (прошивка `a1a3b23`), текущие
 изменения ABI 4. ARM GCC 14.2.1; resident `-Os -flto`, System APP
 `-Oz -flto -fipa-pta -mword-relocations`. Сравниваются те же восемь
-профилей и ключей из `tools/release-contract.json`. Числа — байты.
+профилей и ключей из `dev/lib/release-contract.json`. Числа — байты.
 
 ## Стоимость изменения
 

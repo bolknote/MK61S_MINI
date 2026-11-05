@@ -32,7 +32,7 @@ def main():
             manifest['members'].append({'symbol':i+1,'language':'focal' if i==1 else 'basic','path':path.name})
         (work/'members.json').write_text(json.dumps(manifest))
         package=work/'program.lvp'
-        subprocess.run([sys.executable,str(ROOT/'tools/build_vm_program.py'),str(work/'members.json'),'-o',str(package),'--compiler','clang++'],check=True)
+        subprocess.run([sys.executable,str(ROOT/'dev/tools/build_vm_program.py'),str(work/'members.json'),'-o',str(package),'--compiler','clang++'],check=True)
         flags=['-std=c++17','-Os','-mcpu=cortex-m4','-mthumb','-mfpu=fpv4-sp-d16','-mfloat-abi=hard',
             '-fno-builtin','-fno-exceptions','-fno-rtti','-fno-lto','-fno-unwind-tables','-fno-asynchronous-unwind-tables',
             '-ffunction-sections','-fdata-sections','-DMK61_NATIVE_RUNTIME=1','-DMK61_USE_NATIVE_EABI=1',

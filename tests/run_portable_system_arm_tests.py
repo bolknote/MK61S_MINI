@@ -14,6 +14,12 @@ run_mk_math_tests.sh.
 --ui-only qualifies UI on exact product residents without the transcendental
 probe; all display, editor, settings, ABI and ordinary arithmetic checks remain.
 """
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 import binascii
 import json

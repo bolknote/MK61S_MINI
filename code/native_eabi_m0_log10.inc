@@ -4,7 +4,7 @@ __attribute__((optimize("Os"),noinline,cold,section(".m0_math_extension"))) stat
 // Use a direct base10 Q70 table for ordinary inputs; near-one paths scale
 // the certified logarithm enclosure before binary64 rounding.
 // Quantization, omitted products and Q94 refinements are bounded by
-// tools/certify_m0_log10_fast.py. An undecided enclosure uses CORE-MATH.
+// dev/tools/certify_m0_log10_fast.py. An undecided enclosure uses CORE-MATH.
 // Separate flash sections preserve the addresses and bytes of earlier math.
 __attribute__((always_inline)) inline double log10_pack70(U low,uint32_t high,U sign,uint32_t error,double x) {
   const U p0=wide32(high,uint32_t(log10_inverse));

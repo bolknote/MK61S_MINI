@@ -174,7 +174,7 @@ jobs:
               throw "Missing F401 build artifact: $name"
             }
           }
-          & ./tools/seal-firmware.ps1 check `
+          & ./dev/lib/seal-firmware.ps1 check `
             -InputFile (Join-Path $buildPath 'resident.bin') `
             -MaxSize 262144
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -950,7 +950,7 @@ jobs:
       - name: Write release checksums
         run: |
           test -s firmware/UI_FONT_LICENSES.zip
-          python3 tools/release_contract.py aggregate-reports \
+          python3 dev/lib/release_contract.py aggregate-reports \
             --reports-below "$RUNNER_TEMP/f411-release" \
             --reports-below "$RUNNER_TEMP/f401-release" \
             --output-prefix firmware/RESOURCE_REPORT

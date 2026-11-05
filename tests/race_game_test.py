@@ -1,4 +1,5 @@
 """Drive actual RACE bytecode through the real ROM and M61 binary loader."""
+
 import json
 from pathlib import Path
 import subprocess
@@ -6,9 +7,9 @@ import sys
 import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'tools/elite'))
+sys.path.insert(0, str(ROOT / 'dev/tools/elite'))
 from assembler import screen
-sys.path.insert(0, str(ROOT / 'tools/race'))
+sys.path.insert(0, str(ROOT / 'dev/tools/race'))
 from game import (create_game, check_layout, scene_frame, SECTION_FRAMES, RECOVERY,
                   THUNK_BANK, THUNK_STRIDE, SPRITES_PER_RIVAL)
 

@@ -89,7 +89,7 @@ if(CMAKE_HOST_WIN32)
 else()
   execute_process(
     COMMAND "${Python3_EXECUTABLE}"
-      "${MK61_PROJECT_ROOT}/tools/release_contract.py"
+      "${MK61_PROJECT_ROOT}/dev/lib/release_contract.py"
       profile --id "${MK61_PROFILE}" --format cmake
     RESULT_VARIABLE _mk61_profile_result
     OUTPUT_VARIABLE _mk61_profile_definitions

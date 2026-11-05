@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Offline C6 quotas, dispatcher, call depth and actual FMK raster checks."""
 from __future__ import annotations
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import binascii
 import re
 import subprocess
@@ -9,11 +15,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
-sys.path.insert(0, str(ROOT/'tools/turochamp'))
+sys.path.insert(0, str(ROOT/'dev/tools/turochamp'))
 from m8_codec import encode
 from layout import MODULES, LOCAL_ONLY, MAX_ARRAY_INDEX, SOURCE_BUDGET, PACKAGES, CLUSTERS
 GAME = ROOT/'programs/games/Turochamp'
-SOURCE = ROOT/'tools/turochamp/basic'
+SOURCE = ROOT/'dev/tools/turochamp/basic'
 
 
 def decode_font(data, width=7, height=7):
@@ -41,7 +47,7 @@ def decode_font(data, width=7, height=7):
 
 def main():
     for tool in ('assemble.py', 'font.py'):
-        subprocess.run([sys.executable, ROOT/'tools/turochamp'/tool, '--check'], check=True)
+        subprocess.run([sys.executable, ROOT/'dev/tools/turochamp'/tool, '--check'], check=True)
     assert {p.stem for p in GAME.glob('*.tbi')} == set(PACKAGES.values()) | {'display'}
     assert {p.stem for p in SOURCE.glob('*.bas')} == set(MODULES) | LOCAL_ONLY
     storage = (ROOT/'code/program_store.hpp').read_text()

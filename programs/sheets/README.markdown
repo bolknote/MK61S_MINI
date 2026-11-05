@@ -6,6 +6,6 @@
 - `BUDGET.mks`: количество × цена, налог 20%, итог 840 и налог 168.
 - `CYCLE.mks`: A1 <-> B1 образуют цикл; C1=42 продолжает вычисляться.
 
-Файлы воспроизводятся командой `python3 tools/build_sheet_app.py`.
+Файлы воспроизводятся командой `python3 dev/tools/build_sheet_app.py`.
 Описание клавиш и бинарного формата:
 [`SHEET.APP`](../../examples/portable-apps/SHEET/README.md).

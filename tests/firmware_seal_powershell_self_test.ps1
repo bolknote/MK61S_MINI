@@ -46,8 +46,8 @@ try {
     $sealedElf = Join-Path $work 'sealed.elf'
     $rebuiltBin = Join-Path $work 'rebuilt.bin'
     $fakeObjcopy = Join-Path $work 'fake-objcopy.ps1'
-    $binSealer = Join-Path $root 'tools/seal-firmware.ps1'
-    $elfSealer = Join-Path $root 'tools/seal-firmware-elf.ps1'
+    $binSealer = Join-Path $root 'dev/lib/seal-firmware.ps1'
+    $elfSealer = Join-Path $root 'dev/lib/seal-firmware-elf.ps1'
 
     [byte[]]$image = New-Object byte[] 512
     $footer = 128

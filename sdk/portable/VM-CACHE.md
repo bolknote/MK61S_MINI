@@ -709,7 +709,7 @@ Density сохраняет горячие небольшие модули цен
 bash tests/run_dwt_profiler_tests.sh
 MK61_TEST_SANITIZERS=1 MK61_VM_CACHE_DENSITY_TEST=1 bash tests/run_language_vm_image_cache_tests.sh
 python3 tests/vm_cache_replay_self_test.py
-python3 tools/replay_vm_cache.py --trace TRACE.json --images-dir OWNED_IMAGES --output REPLAY.json
+python3 dev/tools/replay_vm_cache.py --trace TRACE.json --images-dir OWNED_IMAGES --output REPLAY.json
 ```
 
 ## Бюджет и lifetime
@@ -1020,8 +1020,8 @@ bash tests/run_language_vm_overlay_tests.sh
 bash tests/run_language_vm_resident_tests.sh
 bash tests/run_app_flow_tests.sh
 bash tests/run_high_noon_equivalence_tests.sh
-python3 tools/measure_vm_cache.py
-python3 tools/measure_app_flow.py --directory tmp/vm-cache \
+python3 dev/tools/measure_vm_cache.py
+python3 dev/tools/measure_app_flow.py --directory tmp/vm-cache \
   --baseline-ref f8133db68 --candidate-label universal_cache
 ```
 

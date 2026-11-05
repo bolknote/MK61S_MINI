@@ -17,7 +17,7 @@ else:
         work = Path(tmp)
         reference = work / "packer"
         env = dict(os.environ, MK61_MODULE_PACK_BIN=str(reference))
-        subprocess.run(["bash", str(ROOT / "tools/build_mk61_module_pack.sh"),
+        subprocess.run(["bash", str(ROOT / "dev/lib/build_mk61_module_pack.sh"),
                         "--help"], env=env, check=True,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         fixtures = [bytes(bits) for length in range(1, 7)

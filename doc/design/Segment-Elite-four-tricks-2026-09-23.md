@@ -129,7 +129,7 @@
 Принятая сборка проверяется командами:
 
 ```sh
-python3 tools/elite/build.py --check
+python3 dev/tools/elite/build.py --check
 bash tests/run_elite_tests.sh
 ```
 

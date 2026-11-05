@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 """Build the isolated PicoCalc/Pico H prototype with the shared MK61S core."""
+
+# Resolve shared host helpers independently of the current command directory.
+import sys as _tool_sys
+from pathlib import Path as _ToolPath
+_tool_root = _ToolPath(__file__).resolve().parents[1]
+_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 import hashlib
 import json
@@ -95,7 +101,7 @@ def main():
         build = args.build_path.expanduser().resolve()
         output = args.output_dir.expanduser().resolve()
         source_hash = hashlib.sha256()
-        for source in sorted([ROOT / 'tools/build_picocalc.py', ROOT / 'tools/seal_picocalc.py',
+        for source in sorted([ROOT / 'tools/build_picocalc.py', ROOT / 'dev/lib/seal_picocalc.py',
                               *(p for folder in ('code', 'ports/picocalc', 'third_party/fatfs', 'third_party/core_math')
                                 for p in (ROOT / folder).rglob('*')
                                 if p.is_file() and (p.suffix in ('.c', '.cpp', '.h', '.hpp', '.S', '.inc', '.ld', '.pio')

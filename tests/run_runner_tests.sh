@@ -8,7 +8,7 @@ else
   build_dir="$(mktemp -d "${TMPDIR:-/tmp}/mk61-runner.XXXXXX")"
   trap 'rm -rf "$build_dir"' EXIT
 fi
-python3 "$root/tools/runner/build.py" --check
+python3 "$root/dev/tools/runner/build.py" --check
 sanitizers=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   sanitizers=(-fsanitize=address,undefined -fno-omit-frame-pointer)

@@ -22,7 +22,7 @@ manifest = json.loads((original / "manifest.json").read_text())
 assert set(manifest["files"]) == {p.relative_to(original).as_posix() for p in original.rglob("*") if p.is_file() and p.name not in ("manifest.json", "README.md")}
 assert all(not name.endswith((".c", ".cpp", ".S")) for name in manifest["files"])
 lock = json.loads((ROOT / "tools/.mk61-gcc/toolchain-lock.json").read_text())
-contract = json.loads((ROOT / "tools/release-contract.json").read_text())
+contract = json.loads((ROOT / "dev/lib/release-contract.json").read_text())
 assert lock["version"] == contract["toolchain"]["gnu_arm"]
 assert set(lock["assets"]) == {"darwin-arm64", "darwin-x64", "linux-arm", "linux-arm64", "linux-x64", "win32-x64"}
 for asset in lock["assets"].values():

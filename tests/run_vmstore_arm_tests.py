@@ -136,7 +136,7 @@ def main():
         work = Path(directory); reader = work/'reader'; probe = work/'probe'
         run(['c++','-std=c++17','-O2','-I'+str(ROOT/'code'), ROOT/'tests/portable_app_format_self_test.cpp',
              ROOT/'code/loadable_module_format.cpp', ROOT/'code/zx0.cpp', '-o', reader])
-        run(['c++','-std=c++17','-O2','-I'+str(ROOT/'code'), ROOT/'tools/language_vm_probe.cpp',
+        run(['c++','-std=c++17','-O2','-I'+str(ROOT/'code'), ROOT/'dev/tools/language_vm_probe.cpp',
              ROOT/'code/language_bytecode.cpp', ROOT/'code/language_vm.cpp', ROOT/'code/zx0_encode.cpp', '-o', probe])
         packed = package(reader, args.app, Elf(args.resident_elf), work, 'application')
         for language in (1,2):

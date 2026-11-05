@@ -108,8 +108,8 @@ Arduino IDE and arduino-cli are not invoked.
 Usage:
   tools\build-gcc.cmd [-Profile ID] [options]
 
-Profiles and release budgets are defined by tools/release-contract.json.
-Run `powershell -File tools/release-contract.ps1 profiles` to list profile IDs.
+Profiles and release budgets are defined by dev/lib/release-contract.json.
+Run `powershell -File dev/lib/release-contract.ps1 profiles` to list profile IDs.
 
 System APP:
   -Focal 0|1       default 1
@@ -152,7 +152,7 @@ Other:
 Required in PATH: CMake 3.21 or newer and Ninja. When at least one System APP
 is enabled, macOS/Linux also requires a host C++17 compiler; Windows uses the
 repository's PowerShell/.NET APP packer and needs neither Python nor host C++.
-Required versions are read from tools/release-contract.json.
+Required versions are read from dev/lib/release-contract.json.
 
 Environment overrides:
   MK61_GCC_SDK, MK61_GCC_TOOLCHAIN,
@@ -337,13 +337,13 @@ if ($Help) {
 }
 
 try {
-    $manifestPath = Join-Path $script:ProjectRoot 'tools/release-contract.json'
+    $manifestPath = Join-Path $script:ProjectRoot 'dev/lib/release-contract.json'
     Test-RequiredFile $manifestPath 'release contract manifest'
     $python = $null
     $contractTool = $null
     $powerShell = Get-CurrentPowerShell
     $powerShellContractTool = Join-Path $script:ProjectRoot `
-        'tools/release-contract.ps1'
+        'dev/lib/release-contract.ps1'
     if ($env:OS -eq 'Windows_NT') {
         Test-RequiredFile $powerShellContractTool `
             'PowerShell release contract tool'
@@ -352,7 +352,7 @@ try {
             'validate', '-Manifest', $manifestPath)
     } else {
         $contractTool = Join-Path $script:ProjectRoot `
-            'tools/release_contract.py'
+            'dev/lib/release_contract.py'
         Test-RequiredFile $contractTool 'release contract tool'
         $python = Get-CommandPath 'python3' 'Python 3'
         Invoke-GccTool $python @($contractTool, 'validate')
@@ -591,7 +591,7 @@ try {
     Test-RequiredFile $compileCommands 'CMake compile database'
 
     $powerShell = Get-CurrentPowerShell
-    $sealer = Join-Path $script:ProjectRoot 'tools/seal-firmware.ps1'
+    $sealer = Join-Path $script:ProjectRoot 'dev/lib/seal-firmware.ps1'
     Test-RequiredFile $sealer 'resident firmware sealer'
     Invoke-GccTool $powerShell @(
         '-NoLogo', '-NoProfile', '-File', $sealer, 'seal',
@@ -602,7 +602,7 @@ try {
 
     $objcopy = Join-Path $toolchainBin "arm-none-eabi-objcopy$toolSuffix"
     Test-RequiredFile $objcopy 'GNU Arm objcopy'
-    $elfSealer = Join-Path $script:ProjectRoot 'tools/seal-firmware-elf.ps1'
+    $elfSealer = Join-Path $script:ProjectRoot 'dev/lib/seal-firmware-elf.ps1'
     Test-RequiredFile $elfSealer 'resident ELF sealer'
     Invoke-GccTool $powerShell @(
         '-NoLogo', '-NoProfile', '-File', $elfSealer,

@@ -17,9 +17,9 @@ $firmwareShell = Join-Path $root `
     'tools/.mk61-firmware/mk61-firmware.sh'
 $releaseWorkflow = Join-Path $root `
     '.github/workflows/firmware-release.yml'
-$releaseManifest = Join-Path $root 'tools/release-contract.json'
-$releaseContract = Join-Path $root 'tools/release_contract.py'
-$releaseContractPowerShell = Join-Path $root 'tools/release-contract.ps1'
+$releaseManifest = Join-Path $root 'dev/lib/release-contract.json'
+$releaseContract = Join-Path $root 'dev/lib/release_contract.py'
+$releaseContractPowerShell = Join-Path $root 'dev/lib/release-contract.ps1'
 $f401ReleaseMatrix = Join-Path $root 'tests/run_f401_release_matrix.sh'
 $arduinoSetupAction = Join-Path $root `
     '.github/actions/setup-arduino-cli/action.yml'
@@ -108,7 +108,7 @@ $helpText = $help.Output -join "`n"
 Assert-True ($help.ExitCode -eq 0) 'direct GCC help failed'
 Assert-True ($helpText -match 'Arduino IDE and arduino-cli are not invoked') `
     'help does not state that the build is direct'
-Assert-True ($helpText -match 'tools/release-contract\.json') `
+Assert-True ($helpText -match 'dev/lib/release-contract\.json') `
     'help does not identify the canonical profile source'
 Assert-True ($helpText -match '-Check\s+validate dependencies') `
     'help does not expose dependency preflight'
@@ -190,7 +190,7 @@ Assert-True ($releaseWorkflowText -match
     'Windows direct GCC CI does not prove that no host C++ compiler is needed'
 Assert-True ($releaseWorkflowText -match 'mk61-no-python') `
     'Windows build CI does not prove that Python is absent from the build path'
-Assert-True ($backendText -match 'tools/release-contract\.ps1') `
+Assert-True ($backendText -match 'dev/lib/release-contract\.ps1') `
     'Windows direct GCC build does not use the PowerShell release contract'
 Assert-True ($backendText -match 'package-ui-font-licenses\.ps1') `
     'Windows direct GCC build does not use the PowerShell font packager'
