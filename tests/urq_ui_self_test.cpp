@@ -1,5 +1,6 @@
 // Exercise the shipping shell's streaming saves on both platform profiles.
 #include <cassert>
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -30,6 +31,7 @@ bool fail_psram = false;
 bool classic = false;
 std::vector<std::vector<uint8_t>> frames;
 std::vector<int> keys;
+std::vector<std::string> text_rows(24);
 unsigned live_leases = 0;
 uint32_t file_size_mock(uint32_t id) { return files.count(id)?uint32_t(files[id].bytes.size()):UINT32_MAX; }
 uint32_t file_read_mock(uint32_t id,uint32_t offset,uint8_t* out,uint32_t size) {
@@ -100,6 +102,8 @@ uint32_t mock_call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* p) {
     return ecma_number::parse(r.input,r.value);
   }
   if(op==MK61_SERVICE_DISPLAY) {
+    if(a==MK61_SERVICE_DISPLAY_CLEAR) std::fill(text_rows.begin(),text_rows.end(),std::string());
+    if(a==MK61_SERVICE_DISPLAY_UI_LINE) {assert(b<text_rows.size());text_rows[b]=(char*)p;}
     if(a==MK61_SERVICE_DISPLAY_UI_TEXT_WIDTH) return 320;
     if(a==MK61_SERVICE_DISPLAY_MEASURE_UI_TEXT) return uint32_t(std::strlen((char*)p))*5;
     return 1;
@@ -189,6 +193,18 @@ int main(int argc,char** argv) {
   assert(engine.state().status==urq::Status::ANYKEY);
   game_key(MK61_APP_KEY_OK);engine.run();assert(engine.state().status==urq::Status::CHOICE);
   assert(engine.get("answer").type==1 && !std::strcmp(engine.get("answer").text,M8("Ёж 12?!")));
+#if defined(MK61_TARGET_PICOCALC)
+  draw_game();std::string displayed;
+  for(unsigned row=app.body;row+1<app.rows;++row) {
+    auto text=text_rows[row];if(text.rfind("2 ",0)==0) break;
+    if(text.rfind("1 ",0)==0) text.erase(0,2);
+    displayed+=text;
+  }
+  auto without_spaces=[](std::string value) {value.erase(std::remove(value.begin(),value.end(),' '),value.end());return value;};
+  assert(without_spaces(displayed)==without_spaces(engine.text(engine.state().actions[0].caption)));
+  game_key(MK61_APP_KEY_SHIFT_RIGHT);draw_game();assert(app.selected==1 && !app.menu);
+  assert(text_rows[app.body].find(M8("Второе действие"))!=std::string::npos);
+#endif
 #if !defined(MK61_TARGET_PICOCALC)
   if(classic) {
     draw_game();assert(!app.actions);
