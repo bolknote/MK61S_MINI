@@ -1,0 +1,368 @@
+{
+  "status": "HOST_QUALIFIED_NO_PHYSICAL_TIMING",
+  "base_commit": "8579e072685daf614ceb2b46f00a3eb932b77aef",
+  "compiler": "GNU Arm GCC14.2.1 -Os cortex-m0plus soft",
+  "unicorn": "2.1.4",
+  "MPFR_version": "4.2.2",
+  "ELF_SHA256": {
+    "base": "5a9ed7f52f87a176f966f9d91c5dce924b8cb171676c9ca3aab279483b924e0e",
+    "next": "ae4f4d44c14344fdeb32d9eb356dfb755d277020817cfbeb1de9122c32df88dd",
+    "qfp": "552624fbed5173366c80e13cda356b71f65ad0bc8147dcc0b1690410fe11a586"
+  },
+  "Qfplib_source_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654",
+  "groups": [
+    {
+      "operation": "atan",
+      "stream": "saved_ordinary",
+      "cases": 512,
+      "wrong": {
+        "base": 0,
+        "next": 0,
+        "qfp": 9
+      },
+      "vs_base": {
+        "equal": 511,
+        "faster": 1
+      },
+      "raw_mean_instructions": {
+        "base": 1308.33984375,
+        "next": 1307.634765625,
+        "qfp": 1808.001953125
+      },
+      "correct_reference_cases": 503,
+      "correct_reference_means": {
+        "base": 1307.6640159045726,
+        "next": 1307.6640159045726,
+        "qfp": 1808.0834990059643
+      },
+      "largest_regressions": []
+    },
+    {
+      "operation": "atan",
+      "stream": "saved_reduced",
+      "cases": 512,
+      "wrong": {
+        "base": 0,
+        "next": 0,
+        "qfp": 23
+      },
+      "vs_base": {
+        "equal": 510,
+        "faster": 2
+      },
+      "raw_mean_instructions": {
+        "base": 1266.44921875,
+        "next": 1266.22265625,
+        "qfp": 1790.6953125
+      },
+      "correct_reference_cases": 489,
+      "correct_reference_means": {
+        "base": 1274.2167689161554,
+        "next": 1273.9795501022495,
+        "qfp": 1790.314928425358
+      },
+      "largest_regressions": []
+    },
+    {
+      "operation": "atan",
+      "stream": "saved_normal_exponents",
+      "cases": 512,
+      "wrong": {
+        "base": 0,
+        "next": 0,
+        "qfp": 246
+      },
+      "vs_base": {
+        "equal": 512
+      },
+      "raw_mean_instructions": {
+        "base": 55.9296875,
+        "next": 55.9296875,
+        "qfp": 1803.685546875
+      },
+      "correct_reference_cases": 4,
+      "correct_reference_means": {
+        "base": 1211,
+        "next": 1211,
+        "qfp": 1796.5
+      },
+      "largest_regressions": []
+    },
+    {
+      "operation": "atan",
+      "stream": "previous_slow",
+      "cases": 2,
+      "wrong": {
+        "base": 0,
+        "next": 0,
+        "qfp": 0
+      },
+      "vs_base": {
+        "faster": 2
+      },
+      "raw_mean_instructions": {
+        "base": 1643,
+        "next": 1585,
+        "qfp": 1796
+      },
+      "correct_reference_cases": 2,
+      "correct_reference_means": {
+        "base": 1643,
+        "next": 1585,
+        "qfp": 1796
+      },
+      "largest_regressions": []
+    },
+    {
+      "operation": "exp",
+      "stream": "legacy",
+      "cases": 19,
+      "wrong": {
+        "base": 0,
+        "next": 0,
+        "qfp": 0
+      },
+      "vs_base": {
+        "faster": 19
+      },
+      "raw_mean_instructions": {
+        "base": 546.0526315789474,
+        "next": 545.0526315789474,
+        "qfp": 648.4736842105264
+      },
+      "correct_reference_cases": 19,
+      "correct_reference_means": {
+        "base": 546.0526315789474,
+        "next": 545.0526315789474,
+        "qfp": 648.4736842105264
+      },
+      "largest_regressions": []
+    },
+    {
+      "operation": "exp",
+      "stream": "small_range",
+      "cases": 256,
+      "wrong": {
+        "base": 0,
+        "next": 0,
+        "qfp": 0
+      },
+      "vs_base": {
+        "faster": 256
+      },
+      "raw_mean_instructions": {
+        "base": 547.58984375,
+        "next": 546.58984375,
+        "qfp": 634.5625
+      },
+      "correct_reference_cases": 256,
+      "correct_reference_means": {
+        "base": 547.58984375,
+        "next": 546.58984375,
+        "qfp": 634.5625
+      },
+      "largest_regressions": []
+    },
+    {
+      "operation": "exp",
+      "stream": "normal_exponents",
+      "cases": 256,
+      "wrong": {
+        "base": 0,
+        "next": 0,
+        "qfp": 7
+      },
+      "vs_base": {
+        "faster": 256
+      },
+      "raw_mean_instructions": {
+        "base": 546.765625,
+        "next": 545.765625,
+        "qfp": 638.19921875
+      },
+      "correct_reference_cases": 249,
+      "correct_reference_means": {
+        "base": 546.7710843373494,
+        "next": 545.7710843373494,
+        "qfp": 638.5461847389558
+      },
+      "largest_regressions": []
+    },
+    {
+      "operation": "atan",
+      "stream": "random_1.0",
+      "cases": 2048,
+      "wrong": {
+        "base": 0,
+        "next": 0,
+        "qfp": 98
+      },
+      "vs_base": {
+        "equal": 2043,
+        "faster": 5
+      },
+      "raw_mean_instructions": {
+        "base": 1276.94921875,
+        "next": 1276.5078125,
+        "qfp": 1791.05517578125
+      },
+      "correct_reference_cases": 1950,
+      "correct_reference_means": {
+        "base": 1274.1251282051282,
+        "next": 1274.065641025641,
+        "qfp": 1790.6953846153847
+      },
+      "largest_regressions": []
+    },
+    {
+      "operation": "atan",
+      "stream": "random_64.0",
+      "cases": 2048,
+      "wrong": {
+        "base": 0,
+        "next": 0,
+        "qfp": 33
+      },
+      "vs_base": {
+        "equal": 2047,
+        "faster": 1
+      },
+      "raw_mean_instructions": {
+        "base": 1307.65673828125,
+        "next": 1307.62841796875,
+        "qfp": 1807.7509765625
+      },
+      "correct_reference_cases": 2015,
+      "correct_reference_means": {
+        "base": 1307.7488833746897,
+        "next": 1307.7488833746897,
+        "qfp": 1807.6357320099255
+      },
+      "largest_regressions": []
+    },
+    {
+      "operation": "exp",
+      "stream": "random_8.0",
+      "cases": 2048,
+      "wrong": {
+        "base": 0,
+        "next": 0,
+        "qfp": 2
+      },
+      "vs_base": {
+        "faster": 2048
+      },
+      "raw_mean_instructions": {
+        "base": 554.685546875,
+        "next": 553.52734375,
+        "qfp": 636.99853515625
+      },
+      "correct_reference_cases": 2046,
+      "correct_reference_means": {
+        "base": 552.9692082111437,
+        "next": 551.8108504398826,
+        "qfp": 637.0009775171065
+      },
+      "largest_regressions": []
+    },
+    {
+      "operation": "exp",
+      "stream": "random_700.0",
+      "cases": 2048,
+      "wrong": {
+        "base": 0,
+        "next": 0,
+        "qfp": 77
+      },
+      "vs_base": {
+        "faster": 2048
+      },
+      "raw_mean_instructions": {
+        "base": 553.39697265625,
+        "next": 552.39697265625,
+        "qfp": 636.046875
+      },
+      "correct_reference_cases": 1971,
+      "correct_reference_means": {
+        "base": 551.7052257737189,
+        "next": 550.7052257737189,
+        "qfp": 635.878741755454
+      },
+      "largest_regressions": []
+    }
+  ],
+  "entries": {
+    "base": {
+      "atan_round_correct": 11,
+      "exp_round_decide": 38,
+      "atan_refine": 1,
+      "mk61_m0_cr_atan": 1,
+      "exp_refine": 17
+    },
+    "next": {
+      "atan_round_correct": 8,
+      "exp_round_decide": 34,
+      "atan_refine": 1,
+      "mk61_m0_cr_atan": 1,
+      "exp_refine": 17
+    },
+    "qfp": {}
+  },
+  "public_candidate_ARM_calls": {
+    "broad_MPFR": 80597,
+    "atan_edges": 46230,
+    "exp_atan_boundaries": 16117,
+    "comparison_profile": 10261
+  },
+  "candidate_wrong_rounding": 0,
+  "residual_integer_cases": 35725,
+  "residual_interrupted_SIO_checks": 562,
+  "public_interrupted_SIO_checks": 252,
+  "mode_pairs": [
+    {
+      "mode": "genericM0",
+      "bytes": 280624,
+      "sha256": "2955bf9236af6cef44cb10c749be350efe6469093c47b9012eda7257a60973b5",
+      "byteexact": true
+    },
+    {
+      "mode": "M4soft",
+      "bytes": 259708,
+      "sha256": "ba747a305db71726b09e8f27cda7757e3ac37c620e65f48eeb66be0314aa46ef",
+      "byteexact": true
+    },
+    {
+      "mode": "M4hard",
+      "bytes": 260012,
+      "sha256": "34a3189feb1020f50a986849a1f807f78e29c13c7e683b1e5de3269af8bdf880",
+      "byteexact": true
+    },
+    {
+      "mode": "M4soft_disabled",
+      "bytes": 720,
+      "sha256": "27eba77c911504ceae3d1d42fe7a0f9fbfed02f7b07d5d9ac6f376ec58283c8b",
+      "byteexact": true
+    },
+    {
+      "mode": "M4hard_disabled",
+      "bytes": 728,
+      "sha256": "faf93cd522aa92bd3704b7adef38f3b87c287d85430952ae26cb6ecb58a18957",
+      "byteexact": true
+    }
+  ],
+  "raw_unchanged_pow_sections": [
+    ".m0_pow_extension",
+    ".scratch_y.m0_pow_hot",
+    ".m0_pow_refine_extension",
+    ".m0_pow_dispatch_extension",
+    ".m0_pow_extension_data"
+  ],
+  "raw_unchanged_readonly_sections": 16,
+  "allocated_M0_object_readonly_delta": -126,
+  "new_tables": 0,
+  "new_RAM_bytes": 0,
+  "hardware_IO": 0,
+  "ROM_or_SDK_timing": false,
+  "physical_gaps_claimed_closed": false,
+  "scope": "Counts include repeated inputs and contexts. Complete raw profile retained locally. Correct Qfplib answers in the common finite domain define primary averages; diagnostic and adverse rows remain. This is not measured Pico timing or an exhaustive all-binary64 proof."
+}

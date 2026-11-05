@@ -630,10 +630,22 @@ MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_ex
   const U significand=(m&D::Fraction)|D::Hidden;
   uint32_t n=0;
   if(e>=-11) {
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+    // Like Qfplib's split constants, keep only the high word needed here.
+    // 0x3B29+0xB8AA<2^16, so even the complete carry sum fits uint32.
+    // This is exactly high32(significand_head*0xB8AA3B29), with no
+    // discarded term or change to the existing segment selection.
+    const uint32_t head=uint32_t(significand>>21),lo=head&65535U,hi=head>>16;
+    const uint32_t low=lo*0x3B29U;
+    const uint32_t cross=hi*0x3B29U+lo*0xB8AAU+(low>>16);
+    const uint32_t high=hi*0xB8AAU+(cross>>16);
+    n=((high>>unsigned(20-e))+1U)>>1;
+#else
     const U p=wide32(uint32_t(significand>>21),0xB8AA3B29U);
     // -11 <= e <= 9: the rounding bit is in p's upper word. Round that
     // word directly, avoiding two variable 64-bit shifts on ARMv6-M.
     n=((uint32_t(p>>32)>>unsigned(20-e))+1U)>>1;
+#endif
   }
   const int shift=e+12;
   const U scaled=shift<0?significand>>unsigned(-shift):significand<<unsigned(shift);
@@ -680,15 +692,22 @@ MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_ex
   const U correction=exp_high_product(q,below?U(0)-delta:delta)+1;
 #endif
   q=below?q-correction:q+correction;
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  // Strict error<5 (or<10 after normalization) permits integer
+  // midpoint rejection radii4 and9 without weakening the enclosure.
+  unsigned error=4;
+  if(q<(U(1)<<62)) {q<<=1;--k;error=9;}
+#else
   unsigned error=5;
   if(q<(U(1)<<62)) {q<<=1;--k;error*=2;}
+#endif
   if(k>=-1022 && k<=1023) {
-    // The complete interval [q-error,q+error] must lie in one rounding
-    // cell. Ambiguous results are evaluated by the correctly rounded path.
+    // The certified interval must lie in one rounding cell. Ambiguous
+    // results retain the independent correctly rounded refinement.
     const uint32_t tail=uint32_t(q)&1023U;
     if(uint32_t(tail-(512U-error))<=2*error) {
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-      const unsigned decision=exp_round_decide(index,n,final_magnitude,tail|(error==10?1024U:0U)|(below?2048U:0U));
+      const unsigned decision=exp_round_decide(index,n,final_magnitude,tail|(error==9?1024U:0U)|(below?2048U:0U));
       if(!decision) return exp_refine(x,n);
       return real((U(k+1022)<<52)+(q>>10)+(decision-1U));
 #else

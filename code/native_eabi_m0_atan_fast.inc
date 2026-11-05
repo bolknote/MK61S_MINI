@@ -77,7 +77,9 @@ __attribute__((optimize("Os"),noinline)) static double atan_fast(double original
   if(invert) q=r96_sub({(U(refine_atan_half_pi[1])<<32)|refine_atan_half_pi[0],refine_atan_half_pi[2]},q);
   U result;
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-  result=atan_pack70(q,sign,64);
+  // The full rational enclosure is <54 Q70. An integer midpoint
+  // distance>=54 is therefore safe; reject only distances<=53.
+  result=atan_pack70(q,sign,53);
   if(result) return real(result);
   result=atan_round_correct(sign,q,numerator,denominator,h,z,c7,negative!=invert);
   if(result) return real(result);

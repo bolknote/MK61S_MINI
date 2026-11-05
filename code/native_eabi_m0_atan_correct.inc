@@ -1,15 +1,17 @@
-// The fast atan domain yields 2^58 <= denominator < 2^64. Recover its
-// bounded signed ratio error from the exact128-bit residual. Keeping
-// bits40+ of numerator and denominator changes the short quotient by
-// <35/2^18; flooring adds <1. No iterative quotient correction is needed.
+// The fast atan domain yields 2^58 <= denominator < 2^64. Only residual
+// bits40..71 are needed for its short correction, as in Qfplib's narrow
+// residual division. Recover those bits modulo2^32 instead of forming
+// the full128-bit product. The signed head is ceil(residual/2^40).
+// Its quotient error stays below1+35/2^18; no iterative correction.
 __attribute__((optimize("Os"),noinline,cold))
 static int32_t atan_ratio_adjust(U numerator,U denominator,U estimate) {
-  const Product product=multiply(estimate,denominator);
-  U low=U(0)-product.low;
-  U high=numerator-product.high-U(product.low!=0);
-  const bool negative=bool(high>>63);
-  if(negative) {low=U(0)-low;high=~high+U(!low);}
-  const uint32_t head=uint32_t((high<<24)|(low>>40));
+  const uint32_t al=uint32_t(estimate),ah=uint32_t(estimate>>32);
+  const uint32_t bl=uint32_t(denominator),bh=uint32_t(denominator>>32);
+  const U low=wide32(al,bl);
+  const U middle=wide32(ah,bl)+(low>>32)+wide32(al,bh)+(U(ah*bh)<<32);
+  const int32_t residual=int32_t((uint32_t(numerator)<<24)-uint32_t(middle>>8));
+  const bool negative=residual<0;
+  const uint32_t head=negative?0U-uint32_t(residual):uint32_t(residual);
   const uint32_t correction=mk61_m0_math_udiv32(head,uint32_t(denominator>>40));
   return negative?-int32_t(correction):int32_t(correction);
 }
@@ -37,6 +39,7 @@ static U atan_round_correct(U sign,Refine96 q,U numerator,U denominator,U estima
   const int32_t delta=change+int32_t(term);
   const int32_t signed_delta=subtract?-delta:delta;
   q=signed_delta<0?r96_sub_low(q,U(0)-U(int64_t(signed_delta))):r96_add_low(q,U(signed_delta));
-  // The rational certificate includes the residual quotient quantization.
-  return atan_pack70(q,sign,12);
+  // The rational certificate includes the residual quotient quantization
+  // and proves error<11 Q70: integer midpoint distances>=11 are safe.
+  return atan_pack70(q,sign,10);
 }

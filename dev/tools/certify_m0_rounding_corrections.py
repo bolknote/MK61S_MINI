@@ -23,6 +23,15 @@ from generate_m0_log70_table import certificate as ln_certificate
 
 def certify(source_root):
     exp=exp_certificate();atan=atan_certificate();ln=ln_certificate()
+    # Exact high32(a*0xB8AA3B29) with a uint32 carry sum. Exp's RP
+    # segment selection changes its evaluation, never its integer value.
+    constant_lo,constant_hi=0x3B29,0xB8AA
+    maximum_cross=65535*(constant_lo+constant_hi)+((65535*constant_lo)>>16)
+    assert maximum_cross<1<<32
+    assert 65535*constant_hi+(maximum_cross>>16)<1<<32
+    exp_error=F(exp['scaled_error'])
+    assert exp_error<5 and 2*exp_error<10
+    assert F(atan['polynomial_error'])<54
     real_h=F(1,1400);reduction=F(exp['split_reduction_error'])
     old_exp=F(exp['scaled_error'])
     polynomial=2*(old_exp-2-F(1,2)/(1-real_h))-reduction/(1-real_h)
@@ -65,11 +74,18 @@ def certify(source_root):
     old_argument=F(atan['ratio_error'])+half
     derivative=35*h*h
     quotient_error=1+F(35,1<<18)
+    # R=n*2^64-estimate*d, |R/d|<33. The exact middle product
+    # returns ceil(R/2^40) modulo2^32; its signed value fits int32.
+    # Truncating its quotient adds<1; both head and denominator
+    # quantization together add<(1+33)/2^18, below the old allowance.
+    assert F(atan['ratio_error'])<33
+    assert 33*(1<<24)+1<1<<31
+    assert 1+F(34,1<<18)<quotient_error
     corrected=(F(atan['polynomial_error'])-old_argument-old_tail+
                quotient_error+half+derivative+ninth_term+new_tail)
     assert F(atan['ratio_error'])<33
     assert derivative<F(1,256)
-    assert corrected<12
+    assert corrected<11
     assert 35*(1<<24)<1<<32
     assert 35*F(1,1<<18)<F(1,7000)
     assert scale*h**7+seventh<1<<22
@@ -88,12 +104,16 @@ def certify(source_root):
                 exp=dict(parent=exp,exact_final_absolute_error=str(exact_final),exact_final_absolute_error_float=float(exact_final),
                          tightened_absolute_error=str(tightened),tightened_absolute_error_float=float(tightened),
                          checked_Q94_table_rows=512,strict_error_bounds=[4,3],midpoint_reject_radii=[3,2],
+                         first_pass_strict_error_bounds=[5,10],first_pass_reject_radii=[4,9],
+                         exact_segment_high32=dict(low=constant_lo,high=constant_hi,maximum_cross=maximum_cross),
                          input_precondition='Tightened mode uses n!=0, which implies e>=-11 and exact input scaling; known table/reduction fractions bound the uncertainty sum below27/32.',
                          error_argument='One half unit for final-product half-up rounding plus<2^-15 from dropping low16-bit partial products; the existing polynomial bound; Q94-derived table distance and exact reduction low word. The uncertainty sum includes outward integer rounding and n/4 step error.'),
                 atan=dict(parent=atan,quotient_estimate_error_exclusive=33,corrected_quotient_error_exclusive=str(quotient_error),
                           ninth_error=str(ninth_term),derivative_correction_error=str(derivative),
-                          corrected_error=str(corrected),corrected_error_float=float(corrected),guard=12,
-                          error_argument='Correct the approximate ratio using the exact128-bit remainder and a24-bit denominator head. Ratio error is below1+35/2^18; reuse the polynomial, compensate the linear term, add r^9/9. The old table/rounding bounds remain, with a new r^11 tail.'),
+                          corrected_error=str(corrected),corrected_error_float=float(corrected),guard=10,
+                          first_pass_error=str(atan['polynomial_error']),first_pass_guard=53,
+                          residual_product_bits=[40,71],
+                          error_argument='Recover the signed ceil of the exact128-bit remainder divided by2^40 from product bits40..71. Modulo2^32 is unambiguous under the existing<33 ratio bound. Head quantization and denominator truncation keep ratio error below1+35/2^18; reuse the polynomial, compensate the linear term, add r^9/9. Strict corrected error<11 and first-pass error<54 permit midpoint rejection radii10 and53.'),
                 ln=dict(parent=ln,RP_main_error=str(ln_main),RP_main_error_float=float(ln_main),parent_Q70_near_error=str(ln_near),
                         strict_main_error_bound=8,main_midpoint_reject_radius=7,
                         argument='RP2040 exact dyadic residual plus one has error<=1, replacing generic reciprocal/product error. Integer midpoint distances>=8 are safe. n*ln2 adds n/2 to the bound. The final RP2040 near-one implementation has a separate Q77 certificate; parent Q70 near bounds are retained only for provenance.'),
