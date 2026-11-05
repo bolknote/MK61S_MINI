@@ -39,6 +39,7 @@ SHEET.APP       Spreadsheet; up to 128 undo steps with PSRAM, single undo otherw
 URQ.APP         Russian text adventures; DOS/Rip/Ak/UrqW, F8 RU/EN, colored text.
 URQ/            Russian text quests (CC0 / CC-BY-NC-SA); licenses in licenses/urq/.
 WBMP.APP        Image handler up to 4 MiB; PSRAM storage or a small SD read cache.
+SPECTRUM/      Spectrum/Pentagon 512K APP; PSRAM, AY/TurboSound, disk images.
 ECHO8.ch8       CHIP-8 example; this is a ROM, not a native APP.
 PATTERN.wbmp    Native 320x320 WBMP pixel-check example.
 BUDGET.mks   Spreadsheet with formulas and Russian headings.
@@ -56,6 +57,8 @@ def main():
     parser.add_argument('--rustc',type=Path,help='Rust compiler; thumbv6m-none-eabi must be installed')
     parser.add_argument('--output-dir',type=Path,default=ROOT/'.build/firmware/picocalc-pico-h/apps')
     parser.add_argument('--build-dir',type=Path,default=ROOT/'.build/picocalc-apps')
+    parser.add_argument('--spectrum-device-assets',type=Path)
+    parser.add_argument('--fetch-spectrum-devices',action='store_true')
     args=parser.parse_args();toolchain=compiler_bin(args.toolchain)
     args.output_dir.mkdir(parents=True,exist_ok=True)
     reports=[]
@@ -73,7 +76,14 @@ def main():
         report['sources']=sources
         report['app_sha256']=hashlib.sha256((build/(name+'.APP')).read_bytes()).hexdigest()
         reports.append(report)
-    # Publish only after every compiler succeeded, including Rust.
+    spectrum_dir=args.build_dir/'SPECTRUM-sd'
+    spectrum_command=[sys.executable,str(ROOT/'tools/apps/spectrum/build_spectrum_app.py'),
+        '--toolchain',str(toolchain),'--build-dir',str(args.build_dir/'SPECTRUM'),'--output-dir',str(spectrum_dir)]
+    if args.spectrum_device_assets:spectrum_command+=['--device-assets',str(args.spectrum_device_assets)]
+    if args.fetch_spectrum_devices:spectrum_command+=['--fetch-devices']
+    subprocess.run(spectrum_command,check=True)
+    # Publish only after every compiler succeeded, including Rust and Spectrum.
+    shutil.copytree(spectrum_dir,args.output_dir/'SPECTRUM',dirs_exist_ok=True)
     copy_device_library(args.output_dir/'URQ')
     copy_licenses(args.output_dir.parent/'licenses/urq')
     shutil.copytree(ROOT/'third_party/ryu',args.output_dir.parent/'licenses/ryu',

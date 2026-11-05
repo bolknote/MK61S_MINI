@@ -50,6 +50,7 @@ PowerShell. Другие программы должны освободить п
 | `arduino/` | `mk61-arduino-board.cmd` и установщики плат; `install_arduino_dependencies.ps1` — зависимости STM32duino; payload и IDE-хуки |
 | `arduino/compat/` | `portable-layout.py` — SRAM/linker-разметка; `protect-core-lto.py`, `protect-usb-lto.py` — LTO-барьеры для проверок совместимого STM32duino-пути |
 | `device/` | `sync_picocalc_clock.py` — чтение/синхронизация RTC; `vfat_diagnostic.py` — расшифровка USB-диска |
+| `apps/spectrum/` | `build_spectrum_app.py` — эмулятор; `build_spectrum_library.py` — игры; `fetch_spectrum_devices.py` — закреплённые ROM; `spectrum_media.py` — образы носителей; `spectrum_rom_cache.py` — ROM-кэш RP2040 |
 | `apps/urq/` | `build_urq_app.py` — проигрыватель; `qst2urq.py` — конвертер; `build_urq_library.py` — библиотека; адаптации, исходники и лицензии; `oracle.js` — эталонный интерпретатор для сравнительных тестов |
 
 Исследования, профилирование и генераторы штатных ресурсов находятся в

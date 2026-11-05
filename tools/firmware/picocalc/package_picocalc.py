@@ -21,6 +21,7 @@ from tools.apps.system.build_picocalc_apps import APPS, ASSETS, ROOT
 from seal_picocalc import verify as verify_firmware
 from explorer_icons import install_bundle_icons
 from tools.apps.urq.library import copy_device_library, copy_licenses
+from tools.apps.spectrum.spectrum_rom_cache import validate_uf2 as verify_spectrum_rom_cache
 
 README='''MK61S / PicoCalc / Pico H
 
@@ -108,6 +109,18 @@ def main():
         *font_files,*game_files,*(directory/name for name in licenses.FILES),
         apps/'manifest.json',*[apps/(name+'.APP') for name in APPS],*[apps/name for name in ASSETS]]
     files=list(dict.fromkeys(files))
+    spectrum=apps/'SPECTRUM'
+    if spectrum.exists():
+        record=json.loads((spectrum/'manifest.json').read_text())
+        verify_app(spectrum/'SPECTRUM.APP',record)
+        for name,digest in record['files'].items():
+            path=spectrum/name
+            if not path.resolve().is_relative_to(spectrum.resolve()) or sha256(path)!=digest:
+                raise ValueError('Spectrum asset/manifest mismatch: '+name)
+        cache=spectrum/'ROMCACHE.uf2'
+        if cache.exists():
+            verify_spectrum_rom_cache(cache.read_bytes(),build['flash_bytes'])
+        files += sorted(path for path in spectrum.rglob('*') if path.is_file())
     files += copy_device_library(apps/'URQ')
     files += copy_licenses(directory/'licenses/urq')
     files += sorted(path for path in (directory/'licenses/ryu').rglob('*') if path.is_file())
@@ -167,7 +180,7 @@ def main():
         temporary.replace(output)
     finally:
         temporary.unlink(missing_ok=True)
-    print(f'{output}: {len(records)} native APPs, {output.stat().st_size} bytes')
+    print(f'{output}: {len(records)+int(spectrum.exists())} native APPs, {output.stat().st_size} bytes')
 
 
 if __name__=='__main__':main()

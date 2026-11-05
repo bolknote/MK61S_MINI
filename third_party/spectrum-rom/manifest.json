@@ -1,0 +1,26 @@
+{
+  "upstream": "https://github.com/libretro/fuse-libretro",
+  "commit": "e997e2bc32c888348f862f69f2c53babfedf7791",
+  "files": {
+    "48.rom": {
+      "url": "https://raw.githubusercontent.com/libretro/fuse-libretro/e997e2bc32c888348f862f69f2c53babfedf7791/fuse/roms/48.rom",
+      "sha256": "d55daa439b673b0e3f5897f99ac37ecb45f974d1862b4dadb85dec34af99cb42",
+      "bytes": 16384
+    },
+    "README.copyright": {
+      "url": "https://raw.githubusercontent.com/libretro/fuse-libretro/e997e2bc32c888348f862f69f2c53babfedf7791/fuse/roms/README.copyright",
+      "sha256": "9eb83f17fe6c607c8facce5cece1ffddefaa86f106ed4de9bb4552148fa791e1",
+      "bytes": 2477
+    },
+    "128-0.rom": {
+      "url": "https://raw.githubusercontent.com/libretro/fuse-libretro/e997e2bc32c888348f862f69f2c53babfedf7791/fuse/roms/128-0.rom",
+      "sha256": "3ba308f23b9471d13d9ba30c23030059a9ce5d4b317b85b86274b132651d1425",
+      "bytes": 16384
+    },
+    "128-1.rom": {
+      "url": "https://raw.githubusercontent.com/libretro/fuse-libretro/e997e2bc32c888348f862f69f2c53babfedf7791/fuse/roms/128-1.rom",
+      "sha256": "8d93c3342321e9d1e51d60afcd7d15f6a7afd978c231b43435a7c0757c60b9a3",
+      "bytes": 16384
+    }
+  }
+}

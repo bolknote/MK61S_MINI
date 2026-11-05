@@ -1,0 +1,148 @@
+#include "memory.h"
+#include <string.h>
+static int cached(const spectrum_memory* m,unsigned tag) {
+    for(unsigned i=0;i<m->page_count;++i) if(m->tag[i]==tag) return (int)i;
+    return -1;
+}
+static uint8_t* fixed(spectrum_memory* m,unsigned bank) {
+    return bank==5?m->cache:bank==2?m->cache+16384:NULL;
+}
+static unsigned bank_value(const spectrum_memory* m,uint8_t paging) {
+    unsigned bank=paging&7;
+    if(!m->extended) bank|=(paging>>3)&24;
+    else if(!(m->control&4)) bank|=((paging>>3)&24)|(paging&32);
+    return bank;
+}
+static bool flush_slot(spectrum_memory* m,unsigned slot) {
+    if(m->dirty[slot]) {
+        if(!m->io.write(m->io.context,m->tag[slot]*SPECTRUM_CACHE_PAGE_BYTES,
+            m->pages+slot*SPECTRUM_CACHE_PAGE_BYTES,SPECTRUM_CACHE_PAGE_BYTES)) { m->fault=true;return false; }
+        ++m->writebacks;m->dirty[slot]=false;
+    }
+    return true;
+}
+bool spectrum_memory_flush_pages(spectrum_memory* m) {
+    for(unsigned i=0;i<m->page_count;++i) {
+        if(!flush_slot(m,i)) return false;
+        m->tag[i]=65535;
+    }
+    return true;
+}
+uint8_t* spectrum_memory_mapped(spectrum_memory* m,bool writing) {
+    const unsigned bank=bank_value(m,m->paging);uint8_t* direct=fixed(m,bank);
+    if(direct) return direct;
+    /* Reads may use any contiguous bank; stores may bypass traps only
+     * after every page has been marked dirty. */
+    if(!m->window) return NULL;
+    for(unsigned i=0;i<16;++i) if(m->tag[i]!=bank*16+i || (writing && !m->dirty[i])) return NULL;
+    return m->window;
+}
+void spectrum_memory_map_pages(spectrum_memory* m,const uint8_t* read[32],uint8_t* write[32]) {
+    memset(read,0,32*sizeof(*read));memset(write,0,32*sizeof(*write));
+    if(!m) return;
+    const unsigned upper=bank_value(m,m->paging);
+    const bool ram0=m->extended && (m->control&8) && !m->overlay;
+    /* Walk the cache once. Repeated tag searches for every guest page make
+     * rebuilding the CPU view needlessly expensive at every 7FFD OUT. */
+    for(unsigned slot=0;slot<m->page_count;++slot) {
+        const unsigned tag=m->tag[slot],bank=tag/16,page=tag&15;
+        uint8_t* bytes=m->pages+slot*SPECTRUM_CACHE_PAGE_BYTES;
+        if(ram0 && bank==0) { read[page]=bytes;if(m->dirty[slot]) write[page]=bytes; }
+        if(bank==upper) { read[16+page]=bytes;if(m->dirty[slot]) write[16+page]=bytes; }
+    }
+}
+static uint8_t* page(spectrum_memory* m,unsigned tag) {
+    int active=cached(m,tag);
+    if(active<0) {
+        /* Natural placement permits a full direct view for flat 48K RAM;
+         * mixed banks retain their pages across 7FFD changes. */
+        unsigned slot=tag&(m->page_count-1);
+        if(m->tag[slot]!=65535) {
+            for(slot=0;slot<m->page_count && m->tag[slot]!=65535;++slot) {}
+            if(slot==m->page_count) { slot=m->victim;m->victim=(m->victim+1)&(m->page_count-1); }
+        }
+        active=(int)slot;uint8_t* bytes=m->pages+slot*SPECTRUM_CACHE_PAGE_BYTES;
+        if(!flush_slot(m,slot) || !m->io.read(m->io.context,tag*SPECTRUM_CACHE_PAGE_BYTES,bytes,SPECTRUM_CACHE_PAGE_BYTES)) goto fault;
+        m->tag[slot]=(uint16_t)tag;++m->loads;
+    }
+    m->recent=(uint8_t)active;return m->pages+(unsigned)active*SPECTRUM_CACHE_PAGE_BYTES;
+fault:
+    m->fault=true;m->dummy=255;return &m->dummy;
+}
+uint8_t* spectrum_memory_byte(spectrum_memory* m,uint16_t address,bool writing) {
+    const bool low=address<0x4000;
+    if(low && !(m->extended && (m->control&8) && !m->overlay)) return (uint8_t*)m->rom+address;
+    if(!low && address<0xC000) return m->cache+address-0x4000;
+    const unsigned bank=low?0:bank_value(m,m->paging),offset=address&16383;
+    uint8_t* direct=fixed(m,bank);if(direct) return direct+offset;
+    uint8_t* bytes=page(m,bank*16+offset/SPECTRUM_CACHE_PAGE_BYTES);
+    if(m->fault) return &m->dummy;
+    if(writing) m->dirty[m->recent]=true;
+    return bytes+offset%SPECTRUM_CACHE_PAGE_BYTES;
+}
+bool spectrum_memory_page(spectrum_memory* m,uint8_t value) {
+    if(m->fault) return false;
+    if(m->locked) return true;
+    if(m->rom_banks[0]) m->rom=m->rom_banks[(value>>4)&1];
+    else if((!m->overlay || m->overlay_cached) && ((value^m->paging)&16)) {
+        if(!m->io.read(m->io.context,SPECTRUM_ROM_BASE+((value&16)?16384:0),(uint8_t*)m->rom,16384)) { m->fault=true;return false; }
+    }
+    m->paging=value;
+    if(!m->extended || (m->control&4)) m->locked=(value&32)!=0;
+    return true;
+}
+bool spectrum_memory_control(spectrum_memory* m,uint8_t value) {
+    if(m->fault) return false;
+    if(m->extended && !m->locked) m->control=value;
+    return true;
+}
+bool spectrum_memory_reset(spectrum_memory* m) {
+    m->fault=false;m->overlay=m->overlay_cached=false;m->paging=m->extended?16:0;m->control=0;m->locked=false;m->loads=m->writebacks=0;m->recent=m->victim=0;
+    if(!m->io.clear(m->io.context,0,m->banks*16384U)) { m->fault=true;return false; }
+    if(m->rom_banks[0]) m->rom=m->rom_banks[m->extended?1:0];
+    else if(!m->io.read(m->io.context,SPECTRUM_ROM_BASE+(m->extended?16384:0),(uint8_t*)m->rom,16384)) { m->fault=true;return false; }
+    memset(m->cache,0,SPECTRUM_FIXED_BYTES);memset(m->pages,0,m->page_count*SPECTRUM_CACHE_PAGE_BYTES);memset(m->dirty,0,sizeof(m->dirty));
+    for(unsigned i=0;i<16;++i) m->tag[i]=65535;
+    return true;
+}
+bool spectrum_memory_init(spectrum_memory* m,uint8_t cache[SPECTRUM_CACHE_BYTES],uint8_t rom[16384],spectrum_memory_io io) {
+    if(!cache) return false;
+    return spectrum_memory_init_pages(m,cache,cache+SPECTRUM_FIXED_BYTES,rom,io);
+}
+bool spectrum_memory_init_pages(spectrum_memory* m,uint8_t fixed_cache[SPECTRUM_FIXED_BYTES],uint8_t pages[2*SPECTRUM_CACHE_PAGE_BYTES],uint8_t rom[16384],spectrum_memory_io io) {
+    if(!m || !fixed_cache || !pages || !rom || !io.read || !io.write || !io.clear) return false;
+    memset(m,0,sizeof(*m));m->cache=fixed_cache;m->pages=pages;m->page_count=2;m->rom=rom;m->io=io;m->banks=32;return spectrum_memory_reset(m);
+}
+bool spectrum_memory_init_mapped(spectrum_memory* m,uint8_t fixed_cache[SPECTRUM_FIXED_BYTES],uint8_t pages[2*SPECTRUM_CACHE_PAGE_BYTES],uint8_t window[16384],const uint8_t* rom0,const uint8_t* rom1,spectrum_memory_io io) {
+    if(!m || !fixed_cache || !pages || !window || !rom0 || !rom1 || !io.read || !io.write || !io.clear) return false;
+    memset(m,0,sizeof(*m));m->cache=fixed_cache;m->pages=window;m->window=window;m->page_count=16;
+    m->rom_banks[0]=rom0;m->rom_banks[1]=rom1;m->rom=rom0;m->io=io;m->banks=32;return spectrum_memory_reset(m);
+}
+bool spectrum_bank_read(spectrum_memory* m,unsigned bank,unsigned offset,uint8_t* out,unsigned bytes) {
+    if(m->fault || bank>=m->banks || offset>16384 || bytes>16384-offset || (!out && bytes)) return false;
+    uint8_t* direct=fixed(m,bank);
+    if(direct) { memcpy(out,direct+offset,bytes);return true; }
+    while(bytes) {
+        const unsigned left=SPECTRUM_CACHE_PAGE_BYTES-offset%SPECTRUM_CACHE_PAGE_BYTES;
+        const unsigned n=bytes<left?bytes:left,tag=bank*16+offset/SPECTRUM_CACHE_PAGE_BYTES;
+        const int active=cached(m,tag);
+        if(active>=0) memcpy(out,m->pages+(unsigned)active*SPECTRUM_CACHE_PAGE_BYTES+offset%SPECTRUM_CACHE_PAGE_BYTES,n);
+        else if(!m->io.read(m->io.context,bank*16384U+offset,out,n)) { m->fault=true;return false; }
+        offset+=n;out+=n;bytes-=n;
+    }
+    return true;
+}
+bool spectrum_bank_write(spectrum_memory* m,unsigned bank,unsigned offset,const uint8_t* in,unsigned bytes) {
+    if(m->fault || bank>=m->banks || offset>16384 || bytes>16384-offset || (!in && bytes)) return false;
+    uint8_t* direct=fixed(m,bank);
+    if(direct) { memcpy(direct+offset,in,bytes);return true; }
+    while(bytes) {
+        const unsigned left=SPECTRUM_CACHE_PAGE_BYTES-offset%SPECTRUM_CACHE_PAGE_BYTES;
+        const unsigned n=bytes<left?bytes:left,tag=bank*16+offset/SPECTRUM_CACHE_PAGE_BYTES;
+        const int active=cached(m,tag);
+        if(active>=0) { memcpy(m->pages+(unsigned)active*SPECTRUM_CACHE_PAGE_BYTES+offset%SPECTRUM_CACHE_PAGE_BYTES,in,n);m->dirty[active]=true; }
+        else if(!m->io.write(m->io.context,bank*16384U+offset,in,n)) { m->fault=true;return false; }
+        offset+=n;in+=n;bytes-=n;
+    }
+    return true;
+}

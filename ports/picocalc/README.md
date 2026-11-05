@@ -16,6 +16,23 @@ F8 переключает RU/EN, Shift задаёт регистр, Enter под
 Подробности, лимиты, конвертер, лицензии каталога и статус приёмки:
 [URQ-IF-port.md](../../doc/design/URQ-IF-port.md).
 
+## Spectrum / Pentagon как APP
+
+`SPECTRUM.APP` запускается с microSD и реализует Spectrum 48K, Pentagon 512K/1024K
+через PSRAM, AY/TurboSound с beeper, Covox/SpecDrum, ULAplus, Beta Disk
+и DivMMC/esxDOS. Первое ядро выполняет Z80/банки/диски, второе синтезирует
+звук по очереди событий рядом с LCD/I²C/UART. Подготовка SD-каталога:
+`python3 tools/apps/spectrum/build_spectrum_app.py`. [Установка, клавиши и ограничения](../../examples/portable-apps/SPECTRUM/README.md).
+
+Прошивка предоставляет необязательные общие сервисы палитрового LCD,
+физических байтов файлов, полного состояния клавиш и PCM 25 кГц.
+[Контракт для приложений](../../sdk/portable/PICOCALC-MEDIA.md).
+Проверки ROM, 32 банков, снимков, AY и цветного вывода:
+`MK61_TEST_SANITIZERS=1 bash tests/run_spectrum_tests.sh`.
+На Pico H при 125 МГц Snow Trap Dizzy выполняется с 3,499828 МГц
+при целевых 3,5 МГц, со включённым звуком. Это результат одного сценария;
+[методика и ограничения](../../doc/measurements/spectrum-picocalc-20261106.md).
+
 Первый самостоятельный аппаратный профиль: ClockworkPi PicoCalc v2.0 с
 Raspberry Pi Pico H, RP2040 / Cortex-M0+. Версия — 0.8.16.
 
@@ -444,7 +461,9 @@ python3 tools/firmware/picocalc/package_picocalc.py
 
 Результат — `.build/firmware/picocalc-pico-h/apps/`: `HELLO.APP` (C), `HELLO_CPP.APP`
 (C++ manifest-пример), `HELLO_RS.APP` (Rust), `SERVICES.APP`, `ELIZA.APP`,
-`SHEET.APP`, `URQ.APP` и `WBMP.APP`. Дополнительно создаются `ECHO8.ch8`, контрольное
+`SHEET.APP`, `URQ.APP`, `WBMP.APP` и каталог `SPECTRUM/`. Дисковые ROM/образы добавляются
+флагом `--fetch-spectrum-devices` или `--spectrum-device-assets DIR`.
+Дополнительно создаются `ECHO8.ch8`, контрольное
 изображение `PATTERN.wbmp` и документы `BUDGET.mks`/`CYCLE.mks`.
 Это те же S1/`.mks`, что на STM32; прежнее расширение `.sheet` также принимается.
 `manifest.json` содержит исходники, версии компиляторов и SHA-256 каждого APP.

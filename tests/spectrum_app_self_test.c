@@ -1,0 +1,178 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "../examples/portable-apps/SPECTRUM/rom_cache.h"
+static const uint8_t* app_rom_cache_find(unsigned,uint32_t*);
+#define spectrum_rom_cache_find app_rom_cache_find
+#define main spectrum_app_main
+#include "../examples/portable-apps/SPECTRUM/main.c"
+#undef main
+#undef spectrum_rom_cache_find
+
+/* Execute the actual APP UI and core against a bounded resident ABI fixture.
+ * Electrical timing, SRAM residency and multicore IRQs require the device. */
+static const char* asset_dir;
+static uint8_t* cache_image;
+static unsigned cache_bytes;
+static bool cache_mismatch,expect_mapped;
+static uint32_t cache_word(unsigned at) {
+    return cache_image[at]|((uint32_t)cache_image[at+1]<<8)|((uint32_t)cache_image[at+2]<<16)|((uint32_t)cache_image[at+3]<<24);
+}
+static const uint8_t* app_rom_cache_find(unsigned id,uint32_t* crc) {
+    if(!cache_image || id>=SPECTRUM_ROM_COUNT) return NULL;
+    if(crc) *crc=cache_word(32+id*32+12)^(cache_mismatch && id==SPECTRUM_ROM_128_0);
+    return cache_image+cache_word(32+id*32+4);
+}
+static char ui[600];
+static uint32_t micros_now,frames_shown,session_frames,calls,audio_opens,audio_closes;
+static unsigned palette_calls;
+static uint8_t canvas[12800],*psram;
+static unsigned psram_bytes,action;
+static bool released=true;
+static unsigned held_key,held_scans;
+static unsigned graphics_ends;
+static mk61_service_audio_synth generator;
+typedef struct { const char* screen;unsigned key,frames; } action_item;
+static const action_item script[]={
+    {"Spectrum",13,0},{NULL,27,80},
+    {"Spectrum",'p',0},{"Options",'j',0},
+    {"Options",'1',0},{"Options",'1',0},
+    {"Options",'d',0},{"Beta Disk",13,0},
+    {"Options",'w',0},{"Options",27,0},
+    {"Spectrum",'r',0},{NULL,27,80},{"Spectrum",'t',0},{NULL,27,60},
+    {"Spectrum",'p',0},{"Options",'i',0},{"DivMMC",13,0},
+    {"Options",'w',0},{"Options",27,0},
+    {"Spectrum",'r',0},{NULL,27,100},{"Spectrum",'n',0},{NULL,27,40},
+    {"Spectrum",'o',0},{"Snapshot",13,0},{NULL,27,10},
+    {"Spectrum",'m',0},{"Machine",0xB6,0},{"Machine",13,0},
+    {"Spectrum",'r',0},{NULL,27,50},
+    {"Spectrum",'m',0},{"Machine",0xB5,0},{"Machine",13,0},
+    {"Spectrum",'q',0},
+};
+/* The menu renderer is exercised on the physical RGB panel; this fixture
+ * supplies its titles to the scripted input while testing the real APP. */
+bool spectrum_ui_begin(spectrum_ui* u,const mk61_app_services* api,const spectrum* s,bool running) {
+    (void)s;(void)running;u->api=api;return true;
+}
+void spectrum_ui_window(spectrum_ui* u,unsigned x,unsigned y,unsigned width,const char* title,
+                        const char* const* labels,unsigned count,unsigned selected) {
+    (void)u;(void)x;(void)y;(void)width;(void)labels;assert(selected<=count);
+    snprintf(ui,sizeof(ui),"%s",title);
+}
+void spectrum_ui_footer(spectrum_ui* u,const char* text) { (void)u;(void)text; }
+bool spectrum_ui_present(spectrum_ui* u) { (void)u;return true; }
+static void pump(void) {
+    if(generator.sample) for(unsigned i=0;i<64 && (int32_t)(atomic_load(&machine.sound.produced)-(machine.sound.time+140))>=0;++i)
+        (void)generator.sample(generator.context);
+}
+static void delay(uint32_t n) { micros_now+=n*1000;pump(); }
+static uint32_t clear_screen(void) { return 1; }
+static uint32_t graphics_begin(void) { ui[0]=0;session_frames=0;return 1; }
+static void graphics_end(void) { assert(!generator.sample);++graphics_ends;memset(canvas,0,sizeof(canvas)); }
+static int format(char* out,uint32_t n,const char* f,va_list args) { return vsnprintf(out,n,f,args); }
+static void path(char out[1024],const char* name) {
+    while(name[0]=='.' && name[1]=='/') name+=2;
+    assert(snprintf(out,1024,"%s/%s",asset_dir,name)<1024);
+}
+static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload) {
+    if(++calls>2000000) { fprintf(stderr,"APP stalled action=%u screen=%s\n",action,ui);abort(); }
+    if(op==MK61_SERVICE_CAPABILITIES) return MK61_SERVICE_CAP_MEMORY|MK61_SERVICE_CAP_COLOR_DISPLAY|
+        MK61_SERVICE_CAP_FILE_BYTES|MK61_SERVICE_CAP_UI|MK61_SERVICE_CAP_AUDIO_STREAM|
+        MK61_SERVICE_CAP_BUFFERS|MK61_SERVICE_CAP_EXTERNAL_BUFFERS;
+    if(op==MK61_SERVICE_MICROS) { micros_now+=100;return micros_now; }
+    if(op==MK61_SERVICE_MEMORY_ACQUIRE) {
+        mk61_service_lease* r=payload;r->data=calloc(1,c);assert(r->data);r->size=c;r->fresh=1;
+        assert((a==0 && c==SPECTRUM_FIXED_BYTES) || (a==1 && c==16384));return 1;
+    }
+    if(op==MK61_SERVICE_MEMORY_RELEASE) { mk61_service_lease* r=payload;free(r->data);r->data=NULL;return 1; }
+    if(op==MK61_SERVICE_BUFFER) {
+        mk61_service_buffer* r=payload;
+        if(a==MK61_BUFFER_ACQUIRE) { assert(!psram);psram_bytes=r->size;psram=calloc(1,r->size);assert(psram);r->handle=1;return 1; }
+        assert(r->handle==1 && psram);
+        if(a==MK61_BUFFER_RELEASE) { free(psram);psram=NULL;return 1; }
+        assert(r->offset<=psram_bytes && r->size<=psram_bytes-r->offset);
+        if(a==MK61_BUFFER_READ) memcpy(r->data,psram+r->offset,r->size);
+        else if(a==MK61_BUFFER_WRITE) memcpy(psram+r->offset,r->data,r->size);
+        else if(a==MK61_BUFFER_FILL) memset(psram+r->offset,0,r->size);
+        else assert(false);
+        return 1;
+    }
+    if(op==MK61_SERVICE_FILE_BYTES) {
+        mk61_service_file_bytes* r=payload;char filename[1024];path(filename,r->path);
+        if(a==MK61_FILE_BYTES_CHILD) {
+            const char* names[]={"DEMO128.sna","BLANK.trd","ESXDOS.img"};
+            if(r->offset>=3) return 0;
+            mk61_service_file_info* info=r->data;memset(info,0,sizeof(*info));strcpy(info->name,names[r->offset]);return 1;
+        }
+        FILE* f=fopen(filename,a==MK61_FILE_BYTES_WRITE?"r+b":"rb");if(!f) return 0;
+        fseek(f,0,SEEK_END);const long length=ftell(f);bool ok=true;
+        if(a==MK61_FILE_BYTES_STAT) { mk61_service_file_info* info=r->data;memset(info,0,sizeof(*info));info->size=(uint32_t)length; }
+        else {
+            assert(r->size<=4096);ok=r->offset<=(unsigned)length && r->size<=(unsigned)length-r->offset;
+            if(ok) { assert(!fseek(f,r->offset,SEEK_SET));ok=(a==MK61_FILE_BYTES_WRITE?fwrite(r->data,1,r->size,f):fread(r->data,1,r->size,f))==r->size; }
+        }
+        fclose(f);return ok;
+    }
+    if(op==MK61_SERVICE_DISPLAY) {
+        if(a==MK61_SERVICE_DISPLAY_PRINT) { assert(!generator.sample);snprintf(ui,sizeof(ui),"%s",(char*)payload);return 1; }
+        if(a==MK61_SERVICE_DISPLAY_FRAMEBUFFER) {
+            mk61_service_framebuffer* f=payload;f->pixels=canvas;f->bytes=sizeof(canvas);f->width=f->height=320;return 1;
+        }
+        assert(false);
+    }
+    if(op==MK61_SERVICE_COLOR_DISPLAY) {
+        if(a==MK61_COLOR_END) return 1;
+        if(a==MK61_COLOR_PALETTE64) { assert(c==128 && payload);return ++palette_calls%5?1:2; }
+        assert(a==MK61_COLOR_PRESENT);mk61_service_color_frame* f=payload;
+        assert(f->pixel_bytes==6144 && f->tile_bytes==1536 && f->format==MK61_COLOR_TILE8);
+        assert(f->pixels==canvas && f->tiles==canvas+6144);++frames_shown;++session_frames;
+        assert(mapped_roms==expect_mapped);
+        assert((machine.memory->window!=NULL)==expect_mapped);
+        if(expect_mapped) {
+            assert(machine.memory->window==bank_window);
+            assert(machine.rom>=cache_image && machine.rom<cache_image+cache_bytes);
+        }
+        assert((machine.keys[6]&1) && (machine.keys[2]&8)); // Menu Enter/R never leak into the guest.
+        return frames_shown%3?1:2;
+    }
+    if(op==MK61_SERVICE_AUDIO_STREAM) {
+        if(a==MK61_AUDIO_SYNTH_OPEN) { generator=*(mk61_service_audio_synth*)payload;assert(generator.rate==25000);++audio_opens;return 1; }
+        assert(a==MK61_AUDIO_CLOSE);generator.sample=NULL;++audio_closes;return 1;
+    }
+    if(op==MK61_SERVICE_KEYBOARD) {
+        assert(a==MK61_SERVICE_KEY_BITMAP && b==32);memset(payload,0,32);pump();
+        if(!released) {
+            if(held_scans) { ((uint8_t*)payload)[held_key/8]|=1U<<(held_key&7);--held_scans; }
+            else released=true;
+            return 1;
+        }
+        assert(action<sizeof(script)/sizeof(*script));const action_item step=script[action];
+        const bool ready=step.screen?!strncmp(ui,step.screen,strlen(step.screen)):!ui[0] && session_frames>=step.frames;
+        if(ready) { ((uint8_t*)payload)[step.key/8]|=1U<<(step.key&7);++action;released=false;held_key=step.key;held_scans=2; }
+        return 1;
+    }
+    assert(false);return 0;
+}
+static const mk61_app_services common={MK61_APP_SERVICES_MAGIC,MK61_APP_SERVICES_VERSION,sizeof(mk61_app_services),NULL,call,NULL,format,NULL};
+static const void* query(uint32_t id,uint32_t version) { assert(id==MK61_APP_SERVICE_COMMON && version==MK61_APP_SERVICES_VERSION);return &common; }
+static const mk61_app_api api={.magic=MK61_APP_API_MAGIC,.version=MK61_APP_API_VERSION,.struct_size=sizeof(mk61_app_api),
+    .service=pump,.delay_ms=delay,.display_clear=clear_screen,.graphics_begin=graphics_begin,.graphics_end=graphics_end,.query_service=query};
+const mk61_app_api* mk61_api=&api;
+int main(int argc,char** argv) {
+    assert(argc==2 || argc==3);asset_dir=argv[1];
+    if(argc==3) {
+        cache_mismatch=!strcmp(argv[2],"mismatch");expect_mapped=!cache_mismatch;
+        char filename[1024];path(filename,"ROMCACHE.bin");FILE* f=fopen(filename,"rb");assert(f);
+        assert(!fseek(f,0,SEEK_END));cache_bytes=(unsigned)ftell(f);rewind(f);
+        cache_image=malloc(cache_bytes);assert(cache_image);
+        assert(fread(cache_image,1,cache_bytes,f)==cache_bytes);fclose(f);
+        assert(spectrum_rom_cache_valid(cache_image,cache_bytes));
+    }
+    assert(!spectrum_app_main());
+    assert(action==sizeof(script)/sizeof(*script) && !psram && !generator.sample);
+    assert(audio_opens==7 && audio_closes==7 && frames_shown>350 && graphics_ends==1);
+    if(cache_image) { assert(spectrum_rom_cache_valid(cache_image,cache_bytes));free(cache_image); }
+    printf("Actual APP menus, PSRAM bounds, Beta/DivMMC, snapshots, key handoff and exit (%s): PASS\n",
+        expect_mapped?"Flash ROM / retained RAM pages":cache_mismatch?"custom ROM fallback":"SD ROM / small pages");return 0;
+}
