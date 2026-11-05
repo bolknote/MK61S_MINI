@@ -41,6 +41,8 @@ def main():
         wrong = compiler(data / 'packages/arduino/tools/arm-none-eabi-gcc/14.2.1-1.1', '13.3.1')
         incomplete = compiler(data / 'packages/arduino/tools/arm-none-eabi-gcc/99-incomplete')
         (incomplete / 'arm-none-eabi-gcc-ar').unlink()
+        broken_headers = compiler(data / 'packages/arduino/tools/arm-none-eabi-gcc/98-broken-headers')
+        (broken_headers / 'arm-none-eabi-g++').write_text('#!/bin/sh\nexit 93\n')
         compiler(data / 'packages/arduino/hardware/stm32/14.2.1-1.1')
         downloads = []
 
@@ -63,6 +65,8 @@ def main():
             assert payload.compiler_path(ROOT, target, None, False) == good
             (target / 'platform.local.txt').write_text('compiler.path=' + str(incomplete) + '\n')
             rejected(lambda: payload.compiler_path(ROOT, target, None, False))
+            assert payload.compiler_path(ROOT, target, None, True) == good
+            (target / 'platform.local.txt').write_text('compiler.path=' + str(broken_headers) + '\n')
             assert payload.compiler_path(ROOT, target, None, True) == good
             explicit = compiler(work / 'explicit compiler')
             assert payload.compiler_path(ROOT, target, explicit, True) == explicit

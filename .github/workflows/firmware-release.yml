@@ -861,8 +861,6 @@ jobs:
   arduino-ide-classic-windows:
     name: Windows IDE 2.3.10 backend (Classic V2, CHIP-8 off)
     runs-on: windows-latest
-    env:
-      MK61_CLASSIC_WINDOWS_ROOT: ${{ github.workspace }}/.build/ci-classic-windows
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -877,6 +875,10 @@ jobs:
       - name: Prepare official IDE 2.3.10 backend and ASCII user profile
         shell: powershell
         run: |
+          $env:MK61_CLASSIC_WINDOWS_ROOT = Join-Path $env:RUNNER_TEMP 'mk61-ide'
+          [IO.File]::AppendAllText($env:GITHUB_ENV,
+            "MK61_CLASSIC_WINDOWS_ROOT=$env:MK61_CLASSIC_WINDOWS_ROOT`n",
+            (New-Object Text.UTF8Encoding($false)))
           & ./tests/arduino_classic_windows.ps1 -Phase Prepare `
             -WorkRoot $env:MK61_CLASSIC_WINDOWS_ROOT
       - name: Compile reported Classic F401 options through bundled CLI 1.5.1 gRPC
