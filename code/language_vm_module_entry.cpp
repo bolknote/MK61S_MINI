@@ -45,9 +45,9 @@ static bool format_number(double value, u8 digits, char* output, usize size) {
 static bool resource_read(void* raw, uint16_t offset, uint8_t* output, uint16_t length) {
   const auto* image = (const uint8_t*)raw;
   mk61_service_resource r = {};
-  r.id = language_vm::resource_word(image + 24); r.offset = offset;
-  r.revision = (uint32_t)language_vm::resource_word(image + 26) |
-               ((uint32_t)language_vm::resource_word(image + 28) << 16);
+  r.id = language_vm::resource_word(image + 32); r.offset = offset;
+  r.revision = (uint32_t)language_vm::resource_word(image + 34) |
+               ((uint32_t)language_vm::resource_word(image + 36) << 16);
   r.output = output; r.length = length;
   return call(MK61_SYS_RESOURCE_READ, 1, 0, 0, &r) != 0;
 }

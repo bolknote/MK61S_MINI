@@ -17,6 +17,8 @@
 #include "focal_compiler.hpp"
 #include "language_flash_program.hpp"
 #include "language_integer_spans.hpp"
+#include "language_compact.hpp"
+#include "language_source_map.hpp"
 
 #include <string.h>
 #include <new>
@@ -26,7 +28,7 @@
 namespace language_vm {
 void mark_integer_spans(uint8_t* bytes,uint16_t code,uint16_t end) {
   detail::integer_spans(code,end,[&](uint32_t pc){return bytes[pc];},
-      [&](uint32_t pc){return instruction_end(bytes,end,uint16_t(pc));},
+      [&](uint32_t pc,Op){return instruction_end(bytes,end,uint16_t(pc));},
       [&](uint32_t pc,Op op){bytes[pc]=uint8_t(op);});
 }
 
@@ -140,7 +142,7 @@ struct Target {
   uint8_t kind, index;
 };  // 0 variable, 1 reference, 2 array
 
-template <Language Lang,bool Paged=false>
+template <Language Lang,bool Paged=false,bool Expression=false>
 class Compiler {
   using Text = source::Cursor;
   const source::Reader* input_;
@@ -151,7 +153,7 @@ class Compiler {
     // A shared cold initializer avoids duplicating dozens of zero stores for
     // every bounded resource-workspace specialization in the compiler APP.
     static_assert((unsigned)Error::NONE==0 && (unsigned)Op::HALT==0,"zero compiler state changed");
-    memset(static_cast<void*>(this),0,sizeof(*this));
+    __builtin_memset(static_cast<void*>(this),0,sizeof(*this));
     input_=&input;source_=p_=end_=Text(input);length_=length;out_=out;capacity_=capacity;
     flash_=flash;lines_=lines;rf_available_=rf_available;resources_=resources;resource_data_=workspace;
   }
@@ -166,15 +168,24 @@ class Compiler {
     const uint32_t code = HEADER_SIZE + uint32_t(count_) * stride();
     // Labels and instruction lengths are determined before emission; source
     // may be unordered and every forward reference gets its final offset.
-    for (pass_ = 0; pass_ < 2 && error_ == Error::NONE; ++pass_) {
-      if(pass_ && Paged && !flash_->begin_image()) {fail(Error::IO);break;}
+    for (pass_ = 0; pass_ < (Paged?3:2) && error_ == Error::NONE; ++pass_) {
+      emitting_=pass_==1;
+      if constexpr(Paged) {
+        emitting_=pass_==2 || (pass_==1 && flash_->reserve_positions(positions_.bytes));
+        if(pass_ && !(emitting_?flash_->begin_image():flash_->begin_positions())) {fail(Error::IO);break;}
+      }
       pc_ = code;
+      positions_.reset(code);
       resource_size_ = 0;
-      sp_ = maximum_ = depth_ = 0;
+      sp_ = maximum_ = depth_ = 0;compact_.barrier();
       for (line_ = 0; line_ < count_ && error_ == Error::NONE; ++line_) {
         if (!pass_) set_line_pc(line_,pc_);
-        p_ = source_ + line_at(line_).begin;
-        end_ = source_ + line_at(line_).end;
+        const auto current=line_at(line_);
+        p_ = source_ + current.begin;
+        end_ = source_ + current.end;
+        Text physical=p_;
+        while(physical>source_ && physical[-1]!='\n' && physical[-1]!='\r')--physical;
+        line_start_=uint16_t(physical-source_);
         if (basic())
           commands(0);
         else
@@ -183,7 +194,12 @@ class Compiler {
         emit(Op::LINE);
       }
       emit(Op::HALT);
-      if (!pass_) image_end_ = pc_ - 1;
+      if(!positions_.flush(SourceOutput{this}))fail(Error::FULL);
+      if (!pass_) {
+        image_end_ = pc_ - 1;
+        source_map_at_=pc_+(resource_data_.first?resource_size_:0);
+      }
+      if(Paged && pass_==1 && emitting_)break;
     }
     const uint32_t code_end = pc_;
     if (error_ == Error::NONE && resource_size_ && resource_data_.first) {
@@ -199,12 +215,20 @@ class Compiler {
       }
     }
     if(Paged) {
-      if(error_==Error::NONE && !flash_->finish(Lang,pc_,parameter_calls_?MAX_STACK:maximum_,rf_required_))error_=Error::IO;
+      if(error_==Error::NONE && !flash_->finish(Lang,pc_,parameter_calls_?MAX_STACK:maximum_,rf_required_,positions_.count,positions_.bytes))error_=Error::IO;
       if(flash_->error()!=Error::NONE)error_=flash_->error();
+      if(error_==Error::NONE)pc_=flash_->size();
+    } else if(error_==Error::NONE && positions_.count) {
+      const uint32_t limit=owned_resources()?MAX_MODULE:MAX_IMAGE;
+      if(pc_>capacity_ || positions_.bytes+4U>capacity_-pc_ || pc_>limit || positions_.bytes+4U>limit-pc_)fail(Error::FULL);
+      else {
+        if(out_)put_dword(out_+pc_+positions_.bytes,positions_.bytes);
+        pc_+=positions_.bytes+4U;
+      }
     }
     if (error_ == Error::NONE && out_) {
       memset(out_, 0, HEADER_SIZE);
-      memcpy(out_, "LBV1", 4);
+      memcpy(out_, "LBV2", 4);
       out_[4] = (uint8_t)VERSION;
       out_[5] = (uint8_t)Lang;
       out_[6] = parameter_calls_ ? MAX_STACK : maximum_ ? maximum_ : 1;
@@ -212,26 +236,25 @@ class Compiler {
                   RESOURCE_FLAG | (owned_resources() ? OWNED_RESOURCE_FLAG : 0) : 0);
       if (resource_size_ && resource_data_.first) {
         if(!owned_resources()) {
-          put_word(out_ + 24, resources_->id);
-          put_dword(out_ + 26, resources_->revision);
+          put_word(out_ + 32, resources_->id);
+          put_dword(out_ + 34, resources_->revision);
         }
-        put_word(out_ + 30, code_end);
+        put_dword(out_ + 28, code_end);
       }
-      put_word(out_ + 8, pc_);
-      put_word(out_ + 10, code);
-      put_word(out_ + 12, count_);
-      put_word(out_ + 14, length_);
-      put_dword(out_ + 16, input_->checksum());
+      put_dword(out_ + 28, code_end);
+      put_dword(out_ + 8, pc_);
+      put_dword(out_ + 12, code);
+      put_word(out_ + 18, count_);
+      put_word(out_ + 16, length_);
+      put_word(out_ + 38, positions_.count);
+      put_dword(out_ + 20, input_->checksum());
       for (uint16_t i = 0; i < count_; ++i) {
         uint8_t* record = out_ + HEADER_SIZE + i * stride();
-        if (basic())
-          put_word(record, (uint16_t)line_at(i).number);
-        else
-          put_dword(record, line_at(i).number);
-        put_word(record + stride() - 2, line_at(i).pc);
+        put_dword(record, line_at(i).number);
+        put_dword(record + 4, line_at(i).pc);
       }
       mark_integer_spans(out_,code,code_end);
-      put_dword(out_ + 20, checksum(out_ + HEADER_SIZE, pc_ - HEADER_SIZE));
+      put_dword(out_ + 24, checksum(out_ + HEADER_SIZE, pc_ - HEADER_SIZE));
     }
     if(!input_->good()) error_=Error::IO;
     uint16_t offset =
@@ -241,15 +264,15 @@ class Compiler {
   }
   uint16_t resource_reservation() const { return resource_size_; }
   CompileResult expression_only() {
-    expression_only_ = true;
     if (!source_ || !length_ || length_ > (basic() ? 64 : 111) ||
-        input_->contains_nul())
+        input_->template contains_nul<true>())
       return {Error::SYNTAX, 0, 0, 0, 0};
     for (pass_ = 0; pass_ < 2 && error_ == Error::NONE; ++pass_) {
       p_ = source_;
       end_ = source_ + length_;
       pc_ = HEADER_SIZE;
-      sp_ = maximum_ = depth_ = 0;
+      emitting_=pass_==1;
+      sp_ = maximum_ = depth_ = 0;compact_.barrier();
       expression();
       skip();
       if (p_ != end_) fail(Error::SYNTAX);
@@ -257,16 +280,17 @@ class Compiler {
     }
     if (error_ == Error::NONE && out_) {
       memset(out_, 0, HEADER_SIZE);
-      memcpy(out_, "LBV1", 4);
+      memcpy(out_, "LBV2", 4);
       out_[4] = VERSION;
       out_[5] = (uint8_t)Lang;
       out_[6] = maximum_;
       out_[7] = rf_required_ ? 3 : 1;
-      put_word(out_ + 8, pc_);
-      put_word(out_ + 10, HEADER_SIZE);
-      put_word(out_ + 14, length_);
-      put_dword(out_ + 16, input_->checksum());
-      put_dword(out_ + 20, checksum(out_ + HEADER_SIZE, pc_ - HEADER_SIZE));
+      put_dword(out_ + 28, pc_);
+      put_dword(out_ + 8, pc_);
+      put_dword(out_ + 12, HEADER_SIZE);
+      put_word(out_ + 16, length_);
+      put_dword(out_ + 20, input_->checksum());
+      put_dword(out_ + 24, checksum(out_ + HEADER_SIZE, pc_ - HEADER_SIZE));
     }
     return {error_, error_ == Error::NONE ? pc_ : (uint16_t)0, 0,
             (uint16_t)(p_ - source_), maximum_};
@@ -291,19 +315,36 @@ class Compiler {
   uint16_t count_;
   uint32_t pc_;
   uint8_t sp_, maximum_, depth_;
-  uint16_t line_;
+  uint16_t line_,line_start_;
   uint8_t pass_;
+  bool emitting_=false;
+  bool emitting() const {return emitting_;}
   uint32_t image_end_;
-  bool rf_available_, rf_required_, expression_only_, parameter_calls_, graph_expression_;
+  bool rf_available_, rf_required_, parameter_calls_, graph_expression_;
   const ResourceSource* resources_;
   uint16_t resource_size_;
   ResourceWorkspace resource_data_;
-  Op last_op_;
-  uint32_t last_at_;
-  // Two previous short instructions: pc:16, opcode:8, first operand:8.
-  // Emission metadata works without an output buffer in the sizing pass.
-  uint64_t previous_[2];
-  uint8_t last_operand_;
+#if !MK61_VM_COMPACT_OPERANDS || defined(LANGUAGE_VM_TEST_NO_FUSION)
+  compact::History<!Expression> compact_;
+#else
+  compact::Tail compact_;
+#endif
+  uint32_t comparison_block_;
+  source_map::Positions positions_;
+  uint32_t source_map_at_;
+  bool source_bytes(uint32_t at,const uint8_t* data,uint16_t n) {
+    if(Paged)return pass_!=1 || flash_->source_bytes(at,data,n);
+    if(!pass_)return true;
+    const uint32_t limit=owned_resources()?MAX_MODULE:MAX_IMAGE;
+    if(source_map_at_>capacity_ || at>capacity_-source_map_at_ || n>capacity_-source_map_at_-at ||
+       source_map_at_>limit || at>limit-source_map_at_ || n>limit-source_map_at_-at)return false;
+    if(out_)memcpy(out_+source_map_at_+at,data,n);
+    return true;
+  }
+  struct SourceOutput {
+    Compiler* compiler;
+    bool operator()(uint32_t at,const uint8_t* data,uint16_t n) const {return compiler->source_bytes(at,data,n);}
+  };
   bool owned_resources() const { return !Paged && resources_ && resources_->mode == ResourceMode::EMBEDDED; }
   bool resource_literals() const { return !Paged && resources_ && (owned_resources() || resources_->id != 0xFFFF); }
   uint16_t intern_resource(Text text, uint16_t length) {
@@ -381,7 +422,7 @@ class Compiler {
     return at;
   }
   static constexpr bool basic() { return Lang == Language::BASIC; }
-  uint8_t stride() const { return Paged ? 8 : basic() ? 4 : 6; }
+  uint8_t stride() const { return 8; }
   void fail(Error e) {
     if (error_ == Error::NONE) error_ = e;
   }
@@ -401,47 +442,38 @@ class Compiler {
       fail(Error::FULL);
       return;
     }
-    if(pc_==last_at_+1) last_operand_=v;
-    if(pass_ && (out_ || Paged))put_byte(pc_,v);
+    if(emitting() && (out_ || Paged))put_byte(pc_,v);
     if(Paged && flash_->error()!=Error::NONE)fail(flash_->error());
     ++pc_;
   }
   void emit(Op op) {
 #if !defined(LANGUAGE_VM_TEST_NO_COMPILED_BLOCKS)
-    // Mark the first original instruction; its width and every following PC
-    // stay unchanged. Sizing needs no output buffer or extra metadata. These
-    // marks select a proven block, rather than probing ordinary LOAD/CONST at
-    // every execution. Scalar execution remains valid at every interior PC.
-    uint32_t block_at=0; Op block=Op::HALT;
-    if(index_block_shape(op,pc_,(Op)((previous_[1]>>8)&255),
-                         (uint32_t)(previous_[1]>>16),last_op_,last_at_)) {
-      block_at=(uint32_t)(previous_[1]>>16);block=Op::BLOCK_INDEX;
+    if constexpr(!Expression) {
+      const auto& last=compact_.last;const auto& before=compact_.before;
+      uint32_t block_at=0;Op block=Op::HALT;
+      if(index_block_shape(op,pc_,before.op,before.pc,last.op,last.pc)) {
+        block_at=before.pc;block=Op::BLOCK_INDEX;
+      }
+      if(op==Op::COMPARE_FALSE && pc_==last.pc && comparison_block_) {
+        block_at=comparison_block_;block=Op::BLOCK_COMPARE;
+      }
+      comparison_block_=(op>=Op::EQ && op<=Op::GE && before.op==Op::LOAD &&
+          last.pc==before.pc+2U && last.op>=Op::CONST_0 && last.op<=Op::CONST_15 &&
+          pc_==last.pc+1U)?before.pc:0;
+      if(block!=Op::HALT && emitting() && (out_ || Paged))put_byte(block_at,uint8_t(block));
     }
-    if(op==Op::COMPARE_FALSE && pc_==last_at_) {
-      const uint32_t lhs=(uint32_t)(previous_[0]>>16),rhs=(uint32_t)(previous_[1]>>16);
-      const Op right=(Op)((previous_[1]>>8)&255);
-      const unsigned width=right>=Op::CONST_0 && right<=Op::CONST_15 ? 1 : 0;
-      if(((previous_[0]>>8)&255)==(unsigned)Op::LOAD && rhs==lhs+2U &&
-         width && pc_==rhs+width) {block_at=lhs;block=Op::BLOCK_COMPARE;}
-    }
-    if(block!=Op::HALT && pass_ && (out_ || Paged))put_byte(block_at,(uint8_t)block);
 #endif
-    if(op != Op::SOURCE_POS) {
-      previous_[0]=previous_[1];
-      previous_[1]=((uint64_t)last_at_<<16)|((uint32_t)last_op_<<8)|last_operand_;
-      last_op_=op;last_at_=pc_;
-    }
-    byte((uint8_t)op);
+    compact_.begin(op,pc_);byte(uint8_t(op));
   }
   void u16(uint16_t v) {
     byte((uint8_t)v);
     byte((uint8_t)(v >> 8));
   }
   void patch(uint32_t at, uint16_t v) {
-    if(pass_ && (out_ || Paged) && at<=capacity_ && capacity_-at>=2) {put_byte(at,uint8_t(v));put_byte(at+1,uint8_t(v>>8));}
+    if(emitting() && (out_ || Paged) && at<=capacity_ && capacity_-at>=2) {put_byte(at,uint8_t(v));put_byte(at+1,uint8_t(v>>8));}
   }
-  void emit_address(uint32_t value) {u16(uint16_t(value));if(Paged)u16(uint16_t(value>>16));}
-  void patch_address(uint32_t at,uint32_t value) {patch(at,uint16_t(value));if(Paged)patch(at+2,uint16_t(value>>16));}
+  void emit_address(uint32_t value) {u16(uint16_t(value));u16(uint16_t(value>>16));}
+  void patch_address(uint32_t at,uint32_t value) {patch(at,uint16_t(value));patch(at+2,uint16_t(value>>16));}
   void stack(int effect) {
     const int n = sp_ + effect;
     if (n < 0 || n > MAX_STACK) {
@@ -452,36 +484,42 @@ class Compiler {
     if (sp_ > maximum_) maximum_ = sp_;
   }
   void operation(Op op, int effect) {
-    emit(op);
-    stack(effect);
+#if MK61_VM_COMPACT_OPERANDS && !defined(LANGUAGE_VM_TEST_NO_FUSION)
+    // The existing CONST_I16/local index block is already smaller than a
+    // stack operand followed by BINARY_PAIR, and has a guarded integer path.
+    if(!Expression && index_block_shape(op,pc_,compact_.before.op,compact_.before.pc,
+        compact_.last.op,compact_.last.pc)) {emit(op);stack(effect);return;}
+    compact::Rewrite r;
+    if(effect==-1 && sp_>=2 && compact_.rewrite(op,pc_,r)) {
+      pc_=r.begin;compact_.barrier();
+      if(r.folded) {sp_-=2;constant(r.value);return;}
+      emit(Op::BINARY_PAIR);byte(uint8_t(op));byte(r.left);byte(r.right);
+      compact_.last.arguments=uint32_t(op)|(uint32_t(r.left)<<8)|(uint32_t(r.right)<<16);
+      stack(-1);return;
+    }
+#endif
+    emit(op);stack(effect);
   }
   void constant(double value, Text literal = nullptr,
                 Text finish = nullptr) {
-    if (value >= 0 && value <= 15 && value == (int)value) {
-      emit((Op)((uint8_t)Op::CONST_0 + (uint8_t)value));
-    } else if (value >= -128 && value <= 127 && value == (int)value) {
-      emit(Op::CONST_I8);
-      byte((uint8_t)(int8_t)value);
-    } else if (value >= -32768 && value <= 32767 && value == (int)value) {
-      emit(Op::CONST_I16);
-      u16((uint16_t)(int16_t)value);
+    const Value number(value);
+    if(number.integer()) {
+      const int32_t n=number.integer_value();
+      if(n>=0 && n<=15)emit(Op(unsigned(Op::CONST_0)+unsigned(n)));
+      else if(n>=-128 && n<=127) {emit(Op::CONST_I8);byte(uint8_t(n));}
+      else if(n>=-32768 && n<=32767) {emit(Op::CONST_I16);u16(uint16_t(n));}
+      else {emit(Op::CONST_I32);for(uint8_t i=0;i<4;++i)byte(uint8_t(uint32_t(n)>>(i*8)));}
+      compact_.last.arguments=uint32_t(n);
+    } else if(literal && decimal(value,literal,finish)) {
+      // Exact decimal recipe avoids turning a three-byte .1 into F64+opcode.
     } else {
-      const Value number(value);
-      if(number.integer()) {
-        emit(Op::CONST_I32);
-        const uint32_t n=(uint32_t)number.integer_value();
-        for(uint8_t i=0;i<4;++i) byte((uint8_t)(n>>(i*8)));
-      } else if(literal && decimal(value,literal,finish)) {
-        // Exact decimal recipe avoids turning a three-byte .1 into F64+opcode.
-      } else {
-        emit(Op::CONST_F64);
-        const uint64_t bits=mk_math::bit_copy<uint64_t>(value);
-        for(uint8_t i=0;i<8;++i) byte((uint8_t)(bits>>(i*8)));
-      }
+      emit(Op::CONST_F64);
+      const uint64_t bits=mk_math::bit_copy<uint64_t>(value);
+      for(uint8_t i=0;i<8;++i)byte(uint8_t(bits>>(i*8)));
     }
     stack(1);
   }
-  bool decimal(double value, Text begin, Text end) {
+  __attribute__((noinline)) bool decimal(double value, Text begin, Text end) {
 #if defined(LANGUAGE_VM_TEST_NO_DECIMAL_RECIPE)
     (void)value; (void)begin; (void)end;
     return false;
@@ -633,7 +671,7 @@ class Compiler {
     for (uint16_t i = 0; i < count_; ++i)
       if (group ? line_at(i).number / 1000 == number / 1000 : line_at(i).number == number)
         return line_at(i).pc;
-    return 0xFFFF;
+    return UINT32_MAX;
   }
   bool direct_basic_branch(bool sub) {
     skip();
@@ -898,7 +936,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
           fail(Error::FUNCTION);
           return;
         }
-        emit(Op::LOAD);
+        emit(Op::LOAD);compact_.last.arguments=var;
         byte(var);
         stack(1);
         return;
@@ -914,7 +952,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
         operation(Op::GRAPHICS,-1);byte((uint8_t)basic_graphics::Operation::POINT);byte(2);return;
       }
       if (fn == CALL_FUNCTION || fn == ARG_FUNCTION) {
-        if (!basic() || expression_only_ || !match('(')) { fail(Error::FUNCTION); return; }
+        if (!basic() || Expression || !match('(')) { fail(Error::FUNCTION); return; }
         if (fn == CALL_FUNCTION) basic_call(true);
         else { expression(); source_position(primary_start); emit(Op::LOAD_PARAMETER); }
         if (!match(')')) fail(Error::EXPECTED_PAREN);
@@ -925,7 +963,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
         return;
       }
       if (fn == KEY_INPUT_FUNCTION) {
-        if (!match('(') || !match(')') || expression_only_) {
+        if (!match('(') || !match(')') || Expression) {
           fail(Error::FUNCTION);
           return;
         }
@@ -956,12 +994,12 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
       }
       if (!match(')')) fail(Error::EXPECTED_PAREN);
       if (f == Function::RND && !basic()) fail(Error::FUNCTION);
-      const bool floor_div = f == Function::INT && last_op_ == Op::DIV;
-      const uint32_t division = last_at_;
+      const bool floor_div = f == Function::INT && compact_.last.op == Op::DIV;
+      const uint32_t division = compact_.last.pc;
       if (basic()) source_position(primary_start);
       if(floor_div) {
-        if(pass_ && (out_ || Paged))put_byte(division,(uint8_t)Op::FLOOR_DIV);
-        last_op_=Op::FLOOR_DIV; last_at_=division;
+        if(emitting() && (out_ || Paged))put_byte(division,(uint8_t)Op::FLOOR_DIV);
+        compact_.last={division,0,Op::FLOOR_DIV};
       } else {
         emit(Op::FUNCTION);
         byte(f == Function::RND ? (uint8_t)Function::RND_LIMIT : fn);
@@ -1099,40 +1137,49 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
       const uint32_t save_pc = pc_;
       const uint8_t save_sp = sp_;
       const Error save_error = error_;
+      const auto save_positions=positions_;
       Target next = target();
-      if (error_ == Error::NONE && match('='))
-        t = next;
+      if(error_==Error::NONE && match('='))t=next;
       else {
-        p_ = saved;
-        pc_ = save_pc;
-        sp_ = save_sp;
-        error_ = save_error;
-        if (t.kind != 0 || t.index == 25)
-          fail(Error::VARIABLE);
-        else
-          ++t.index;
+        p_=saved;pc_=save_pc;sp_=save_sp;error_=save_error;
+        positions_=save_positions;compact_.barrier();
+        if(t.kind!=0 || t.index==25)fail(Error::VARIABLE);
+        else ++t.index;
       }
     } while (error_ == Error::NONE);
   }
-  bool fuse_assignment(uint8_t index,uint32_t begin) {
-    if((last_op_!=Op::ADD && last_op_!=Op::SUB) || pc_!=last_at_+1) return false;
-    const uint64_t second=previous_[1];
-    if(previous_[0]!=(((uint64_t)begin<<16)|((uint32_t)Op::LOAD<<8)|index) ||
-       (second>>16)!=begin+2U) return false;
-    const Op op=(Op)((second>>8)&255);
-    uint8_t rhs=(uint8_t)second;
-    if(op>=Op::CONST_0 && op<=Op::CONST_15) {
-      if(last_at_!=begin+3) return false;
-      rhs=(uint8_t)op-(uint8_t)Op::CONST_0;
-    } else {
-      if(op!=Op::LOAD || last_at_!=begin+4) return false;
-      rhs|=0x40;
+  __attribute__((noinline)) bool fuse_assignment(uint8_t index,uint32_t begin) {
+#if MK61_VM_COMPACT_OPERANDS && !defined(LANGUAGE_VM_TEST_NO_FUSION)
+    const auto tail=compact_.last;
+    uint8_t source=0;
+    if(tail.pc+tail.width()==pc_ && (tail.op==Op::BINARY_PAIR ||
+        (tail.pc==begin && tail.operand(source)))) {
+      const auto operation=Op(uint8_t(tail.arguments));
+      const uint8_t left=uint8_t(tail.arguments>>8),right=uint8_t(tail.arguments>>16);
+      pc_=tail.pc;compact_.barrier();
+      if(tail.op!=Op::BINARY_PAIR) {emit(Op::MOVE_LOCAL);byte(source);byte(index);}
+      else if(left==index && (operation==Op::ADD || operation==Op::SUB) &&
+              (right<26 || (right>=128 && compact::literal(right)>=0))) {
+        emit(Op::UPDATE_LOCAL);byte(index);
+        byte(uint8_t((right<26?right|64:compact::literal(right)) | (operation==Op::SUB?128:0)));
+      } else {emit(Op::BINARY_STORE);byte(uint8_t(operation));byte(left);byte(right);byte(index);}
+      stack(-1);return true;
     }
-    // Exactly LOAD lhs, LOAD/CONST rhs, ADD/SUB, STORE lhs. Never cross
-    // diagnostics, extra arithmetic, references, arrays or I/O.
-    rhs|=(uint8_t)(((unsigned)last_op_-(unsigned)Op::ADD)<<7);
-    pc_=begin;operation(Op::UPDATE_LOCAL,-1);byte(index);byte(rhs);return true;
+    return false;
+#else
+    const auto& lhs=compact_.earlier;const auto& rhs=compact_.before;const auto& last=compact_.last;
+    if((last.op!=Op::ADD && last.op!=Op::SUB) || pc_!=last.pc+1 ||
+       lhs.pc!=begin || lhs.op!=Op::LOAD || lhs.arguments!=index || rhs.pc!=begin+2U)return false;
+    uint8_t source=0;
+    if(rhs.op>=Op::CONST_0 && rhs.op<=Op::CONST_15 && last.pc==begin+3U)
+      source=uint8_t(rhs.op)-uint8_t(Op::CONST_0);
+    else if(rhs.op==Op::LOAD && last.pc==begin+4U)source=uint8_t(rhs.arguments)|64;
+    else return false;
+    source|=uint8_t((unsigned(last.op)-unsigned(Op::ADD))<<7);
+    pc_=begin;compact_.barrier();operation(Op::UPDATE_LOCAL,-1);byte(index);byte(source);return true;
+#endif
   }
+
   void print() {
     emit(Op::PRINT_BEGIN);
     const bool positioned=basic() && keyword("AT",2);
@@ -1326,12 +1373,11 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
     }
     if (!any && basic()) fail(Error::VARIABLE);
   }
-  void source_position(Text at) {
+  __attribute__((noinline)) void source_position(Text at) {
+    if constexpr(Expression)return;
     if (!count_) return;  // INPUT expressions have no statement/source map.
-    Text line = at;
-    while (line > source_ && line[-1] != '\n' && line[-1] != '\r') --line;
-    emit(Op::SOURCE_POS);
-    u16((uint16_t)(at - line + 1));
+    compact_.barrier();
+    if(!positions_.note(pc_,uint16_t(at-source_-line_start_+1),SourceOutput{this}))fail(Error::FULL);
   }
   bool number(double& value, Text& after) {
     char token[64]; unsigned n=0;
@@ -1471,10 +1517,10 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
         expression();
         (void)keyword("THEN", 1);
 #if !defined(LANGUAGE_VM_TEST_NO_FUSION)
-        if(last_op_>=Op::EQ && last_op_<=Op::GE && pc_==last_at_+1) {
+        if(compact_.last.op>=Op::EQ && compact_.last.op<=Op::GE && pc_==compact_.last.pc+1) {
           // Fuse only the final comparison, never an earlier operand or an
           // operation across a source prefix. Sizing and EMIT take this path.
-          const Op comparison=last_op_;pc_=last_at_;
+          const Op comparison=compact_.last.op;pc_=compact_.last.pc;
           operation(Op::COMPARE_FALSE,-1);byte(comparison_mask(comparison));
         } else
 #endif
@@ -1671,7 +1717,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
         emit(Op::DO_FOCAL);
         u16(target_pc(number, group));
         uint16_t finish = 0xFFFF;
-        if (pass_)
+        if (emitting())
           for (uint16_t i = 0; i < count_; ++i)
             if (line_at(i).pc == target_pc(number, group)) {
               uint16_t j = (uint16_t)(i + 1);
@@ -1716,7 +1762,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
             ++commas;
         }
         three = commas == 2;
-        if(pass_ && (out_ || Paged) && body<capacity_)put_byte(body,three?1:0);
+        if(emitting() && (out_ || Paged) && body<capacity_)put_byte(body,three?1:0);
         if (!match(';')) fail(Error::FOR);
         focal_statement((uint8_t)(nesting + 1));
         emit(Op::NEXT_FOCAL);
@@ -1794,7 +1840,7 @@ CompileResult compile_flash_source(Language language,const source::Reader& sourc
   auto& program=*new(scratch) flash::Program(source,io);
   struct ProgramLifetime {
     flash::Program& value;
-    ~ProgramLifetime(){value.~Program();memset(static_cast<void*>(&value),0,sizeof(value));}
+    __attribute__((noinline)) ~ProgramLifetime(){value.~Program();memset(static_cast<void*>(&value),0,sizeof(value));}
   } lifetime{program};
   if(!program.prepare(language))return {program.error(),0,0,0,0};
   if(language==Language::FOCAL)return focal_next::compile_flash_program(source,program,rf_available);
@@ -1848,11 +1894,11 @@ CompileResult compile_expression(Language language, const char* source, uint16_t
   source::CursorScope cursor_scope(input);
   if (capacity < HEADER_SIZE) return {Error::FULL, 0, 0, 0, 0};
   if (language == Language::BASIC) {
-    Compiler<Language::BASIC> compiler(input, length, output, capacity, nullptr);
+    Compiler<Language::BASIC,false,true> compiler(input, length, output, capacity, nullptr);
     return compiler.expression_only();
   }
   if (language == Language::FOCAL) {
-    Compiler<Language::FOCAL> compiler(input, length, output, capacity, nullptr);
+    Compiler<Language::FOCAL,false,true> compiler(input, length, output, capacity, nullptr);
     return compiler.expression_only();
   }
   return {Error::SYNTAX, 0, 0, 0, 0};

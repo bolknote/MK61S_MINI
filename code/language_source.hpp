@@ -23,7 +23,7 @@ class Reader {
   mutable uint16_t begin_ = 0, end_ = 0;
   mutable bool good_ = true;
   // Fits the old Reader's trailing padding; no additional page allocation.
-  uint16_t window_size_ = PAGE_SIZE;
+  mutable uint16_t window_size_ = PAGE_SIZE;
   // A span is consumed synchronously, before any subsequent cache refill.
   const uint8_t* span(uint16_t at) const {
     if(!good_ || at >= size()) return nullptr;
@@ -51,14 +51,26 @@ public:
     good_ = input.read != nullptr && input.size <= MAX_SIZE;
     if(buffer && (input.size <= capacity || capacity > PAGE_SIZE)) {
       memory_ = static_cast<const char*>(buffer);
+      window_size_ = uint16_t(capacity>MAX_SIZE?MAX_SIZE:capacity);
       if(input.size <= capacity) {
         good_ = good_ && input.read(input.context,0,static_cast<uint8_t*>(buffer),input.size);
         end_ = input.size;
-      } else window_size_ = uint16_t(capacity);
+      }
     }
   }
   uint16_t size() const { return input_.size; }
   bool good() const { return good_; }
+  uint8_t* borrow_tail(uint16_t bytes,uint16_t& previous) const {
+    previous=0;
+    // Only the writable caller loan is lendable, never a raw source string
+    // or the Reader's fallback page. Retain a complete source page below it.
+    if(!memory_ || !input_.read || bytes>window_size_ ||
+       unsigned(window_size_-bytes)<PAGE_SIZE)return nullptr;
+    previous=window_size_;window_size_=uint16_t(window_size_-bytes);
+    if(end_-begin_>window_size_)begin_=end_=0;
+    return reinterpret_cast<uint8_t*>(const_cast<char*>(memory_))+window_size_;
+  }
+  void restore_window(uint16_t previous) const {window_size_=previous;}
   bool read(uint16_t at, void* output, size_t count) const {
     if(!good_ || at > size() || count > unsigned(size()-at) || (!output && count)) return false;
     auto* bytes = static_cast<uint8_t*>(output);
@@ -76,12 +88,15 @@ public:
     const auto* value = span(position);
     return value ? char(*value) : 0;
   }
-  bool contains_nul() const {
+  // Short expression sources need the same bounded validation without
+  // linking the large, unrolled memchr body into the cold INPUT APP.
+  template<bool Short=false> bool contains_nul() const {
     for(unsigned at=0;at<size();) {
       const auto* bytes=span(uint16_t(at));
       if(!bytes) return true;
       const unsigned n=end_-at;
-      if(memchr(bytes,0,n)) return true;
+      if constexpr(Short) {for(unsigned i=0;i<n;++i)if(!bytes[i])return true;}
+      else if(memchr(bytes,0,n))return true;
       at+=n;
     }
     return false;

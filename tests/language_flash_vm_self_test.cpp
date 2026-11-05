@@ -50,10 +50,10 @@ struct Fixture {
     if(compiled.error!=Error::NONE)fprintf(stderr,"compile: %s at %u: %.100s\n",error_name(compiled.error),compiled.source_offset,source.c_str());
     assert(compiled.error==Error::NONE);
 #if defined(MK61_BUILD_LANGUAGE_VM_MODULE)
-    uint8_t header[32],row[8];pcs.clear();lines.clear();
+    uint8_t header[HEADER_SIZE],row[8];pcs.clear();lines.clear();
     assert(Disk::read(&disk,IMAGE,0,header,sizeof(header)));
     for(unsigned i=0;i<flash::word(header+18);++i) {
-      assert(Disk::read(&disk,IMAGE,32+i*8,row,sizeof(row)));
+      assert(Disk::read(&disk,IMAGE,HEADER_SIZE+i*8,row,sizeof(row)));
       const uint32_t number=flash::dword(row),pc=flash::dword(row+4);
       pcs[number]=pc;lines[pc]=number;
     }
@@ -112,8 +112,8 @@ static std::string large(Language language,const char* tail) {
   const bool basic=language==Language::BASIC;
   std::string source=basic?"1 GOTO 30000\n":"1.0 G 9.0\n";
   for(unsigned i=0;i<5000;++i) {
-    char line[48];if(basic)snprintf(line,sizeof(line),"%u A=1\n",i+2);
-    else snprintf(line,sizeof(line),"%u.%u S A=1\n",2+i/1000,i%1000);
+    char line[48];if(basic)snprintf(line,sizeof(line),"%u PRINT 1\n",i+2);
+    else snprintf(line,sizeof(line),"%u.%u P 1\n",2+i/1000,i%1000);
     source+=line;
   }
   source+=tail;assert(source.size()<source::MAX_SIZE);return source;
@@ -223,7 +223,8 @@ static void arithmetic_hints() {
       bool found=false;
       {flash::Reader image(f.input());const View view=f.view(image);
         for(uint32_t pc=view.code;pc<view.end;pc=instruction_end(view,pc)) {
-          if(Op(view.byte(pc))==(short_block?Op::INTEGER_SHORT:Op::INTEGER_SPAN)) {
+          if(Op(view.byte(pc))==(short_block?Op::INTEGER_SHORT:Op::INTEGER_SPAN) ||
+             (!short_block && Op(view.byte(pc))==Op::BINARY_PAIR)) {
             assert(pc>65536);found=true;
           }
         }
@@ -248,7 +249,7 @@ static void wide_compare_layout() {
     assert(block);
     auto crc=[&]() {
       uint32_t state=0xFFFFFFFF;uint8_t bytes[256];
-      for(uint32_t at=32;at<f.compiled.size;) {
+      for(uint32_t at=HEADER_SIZE;at<f.compiled.size;) {
         const uint16_t n=uint16_t(f.compiled.size-at<sizeof(bytes)?f.compiled.size-at:sizeof(bytes));
         assert(Disk::read(&f.disk,IMAGE,at,bytes,n));
         for(unsigned j=0;j<n;++j){state^=bytes[j];for(unsigned k=0;k<8;++k)state=(state>>1)^(0xEDB88320U&(0U-(state&1)));}at+=n;
@@ -272,10 +273,11 @@ static void strings_data_and_failures() {
   // A validated image losing a later page must stop with IO, before the
   // destination register changes. A fresh reader models an APP replacement.
   Fixture missing;missing.compile(Language::BASIC,large(Language::BASIC,"30000 .RA=42;END\n"));
-  {flash::Reader image(missing.input());(void)missing.view(image);}
-  missing.disk.pages[IMAGE].erase((missing.compiled.size-1)/WRITE_BYTES);
-  flash::Reader image(missing.input());uint8_t h[32];assert(image.read(0,h,sizeof(h)));
-  View v={nullptr,missing.compiled.size,flash::dword(h+12),flash::word(h+18),flash::word(h+16),h[6],Language(h[5]),false,false,missing.compiled.size,&image,true};
+  uint32_t last_code;
+  {flash::Reader image(missing.input());last_code=missing.view(image).end-1;}
+  missing.disk.pages[IMAGE].erase(last_code/WRITE_BYTES);
+  flash::Reader image(missing.input());uint8_t h[HEADER_SIZE];assert(image.read(0,h,sizeof(h)));
+  View v={nullptr,missing.compiled.size,flash::dword(h+12),flash::word(h+18),flash::word(h+16),h[6],Language(h[5]),false,false,flash::dword(h+28),&image,true};
   missing.bind_lookup(v);
   auto result=language_vm::run(v,missing.state.control,missing.bindings(),missing.services(),100);
   assert(result.error==Error::IO && missing.refs[14]==0);

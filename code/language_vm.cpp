@@ -2,6 +2,7 @@
 #include <initializer_list>
 
 #include "language_bytecode.hpp"
+#include "language_compact.hpp"
 #include <new>
 #include "basic_graphics_protocol.hpp"
 #include "mk_math.hpp"
@@ -57,6 +58,15 @@ void integer_short_block_applied(uint16_t);
 void trace_instruction(const View&, uint16_t, uint32_t);
 #endif
 namespace {
+inline bool trusted_execution(const View& v) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && defined(MK61_BUILD_LANGUAGE_VM_MODULE)
+  // This private APP entry only receives resident-owned certified images and
+  // continuations. Public raw kernel clients retain their mutable-image path.
+  (void)v;return true;
+#else
+  return v.verified;
+#endif
+}
 uint16_t word(const uint8_t* p) { return (uint16_t)(p[0] | ((uint16_t)p[1] << 8)); }
 uint32_t dword(const uint8_t* p) {
   return (uint32_t)word(p) | ((uint32_t)word(p + 2) << 16);
@@ -66,13 +76,13 @@ uint32_t dword(const uint8_t* p) {
 __attribute__((noinline)) uint16_t image_word(const View& v,uint32_t at) {
   uint8_t bytes[2]={};(void)v.read(at,bytes,sizeof(bytes));return word(bytes);
 }
-uint8_t stride(const View& v) { return v.wide_code()?8:v.language == Language::BASIC ? 4 : 6; }
+uint8_t stride(const View&) { return 8; }
 uint32_t record_pc(const View& v, uint16_t i) {
   return v.address(v.at(HEADER_SIZE + uint32_t(i) * stride(v) + stride(v) - v.address_bytes()));
 }
 uint32_t record_number(const View& v, uint16_t i) {
   const auto p = v.at(HEADER_SIZE + uint32_t(i) * stride(v));
-  return !v.wide_code() && v.language == Language::BASIC ? word(p) : dword(p);
+  return dword(p);
 }
 // Total wire widths: zero denotes an invalid opcode, 255 a bounded variable
 // record. A single indexed read replaces a second opcode switch in the hot loop.
@@ -154,25 +164,19 @@ __attribute__((noinline)) bool comparison(Value a,Value b,uint8_t mask) {
   }
   return (mask&(1U<<order))!=0;
 }
-Error update_local(Value* variables,uint8_t index,uint8_t encoded) {
-  const uint8_t rhs=encoded&0x3F;
-  if(index>=26 || ((encoded&0x40) && rhs>=26)) return Error::INVALID_IMAGE;
-  const Value a=variables[index];
-  if(!a.finite()) return Error::MATH;
-  Value b=rhs;
-  if(encoded&0x40) {b=variables[rhs];if(!b.finite()) return Error::MATH;}
-  const Value result=(encoded&0x80) ? a-b : a+b;
-  if(!result.finite()) return Error::MATH;
-  variables[index]=result;return Error::NONE;
+[[maybe_unused]] bool compact_integer(const Bindings& data,uint8_t id,int32_t& value,bool trusted) {
+  if(id>=128) {value=compact::literal(id);return true;}
+  if((!trusted && id>=26) || !data.variables[id].integer())return false;
+  value=data.variables[id].integer_value();return true;
+}
+bool compact_source(const Bindings& data,uint8_t id,Value& value,bool trusted) {
+  if(!trusted && !compact::source(id))return false;
+  value=id<26?data.variables[id]:Value(compact::literal(id));return true;
 }
 #if MK61_VM_INTEGER_BLOCK || MK61_VM_INTEGER_SPAN || \
     ((MK61_VM_INTEGER_BLOCK || MK61_VM_COMPARE_BLOCK) && defined(LANGUAGE_VM_TRACE))
 uint32_t block_next(const View& v,uint32_t pc) {
-  while(pc<v.end && (Op)v.byte(pc)==Op::SOURCE_POS) {
-    if(v.end-pc<3)return 0;
-    pc=(pc+3);
-  }
-  return pc;
+  (void)v;return pc;
 }
 #endif
 #if MK61_VM_INTEGER_BLOCK || MK61_VM_COMPARE_BLOCK || MK61_VM_INTEGER_SPAN
@@ -327,6 +331,9 @@ __attribute__((noinline)) uint8_t integer_span
   Value* const bottom=data.stack;
   Value* const ceiling=bottom+data.stack_capacity;
   Value* top=bottom+s.sp;
+  bool pending=false;
+  const bool trusted=trusted_execution(v),hold_ok=trusted && !v.reader;
+  int32_t accumulator=0;
   uint32_t remaining=budget;
 #if !defined(LANGUAGE_VM_TRACE)
 #if MK61_PICO_SPECIALIZED_SPAN
@@ -336,6 +343,7 @@ __attribute__((noinline)) uint8_t integer_span
 #endif
   const uintptr_t origin=reinterpret_cast<uintptr_t>(raw);
 #else
+  [[maybe_unused]] constexpr const uint8_t* raw=nullptr;
   constexpr uintptr_t origin=0;
 #endif
   const uintptr_t end=origin+end_offset;
@@ -372,50 +380,17 @@ __attribute__((noinline)) uint8_t integer_span
       }
     }
     Op op=Op(operands[0]);
-    if(op==Op::SOURCE_POS) {
-      // Ordinary instructions fetch exactly once. Only a diagnostic prefix
-      // needs lookahead; leave PC at its first byte on a truncated tail/HALT,
-      // matching the old post-instruction scan and scalar error location.
-      uintptr_t following=pc;
-      Op next_op;
-      do {
-        if(end-following<3)goto done;
-        following+=3;
-        if(following>=end)goto done;
-        next_op=Op(
-#if defined(LANGUAGE_VM_TRACE)
-            v.byte(following)
-#else
-#if MK61_PICO_SPECIALIZED_SPAN
-            Raw?*reinterpret_cast<const uint8_t*>(following):v.byte(uint32_t(following))
-#else
-            raw?*reinterpret_cast<const uint8_t*>(following):v.byte(uint32_t(following))
-#endif
-#endif
-            );
-      } while(next_op==Op::SOURCE_POS);
-      if(next_op==Op::HALT)goto done;
-      pc=following;
-#if !defined(LANGUAGE_VM_TRACE)
-#if MK61_PICO_SPECIALIZED_SPAN
-      if constexpr(Raw) {
-#else
-      if(raw) {
-#endif
-        // No callback or write occurs after lookahead. Reuse its opcode and
-        // raw operand address instead of fetching the same instruction again.
-        operands=reinterpret_cast<const uint8_t*>(pc);op=next_op;
-      } else
-#endif
-      continue;
-    }
     // Only supported fixed-width handlers advance PC. Multi-byte handlers
     // check their operands before reading; unsupported/variable records leave
     // the stream untouched for the scalar decoder.
     uintptr_t width=1;
     const uint8_t* p=operands+1;
+    const bool register_op=op==Op::BINARY_PAIR || op==Op::BINARY_STORE;
+    if(pending && !register_op) {top[-1]=accumulator;pending=false;}
     Value result;
     int32_t x,y,z;
+    bool direct=false,left_stack=false;
+    uint8_t destination=compact::STACK;
     const uint8_t small=uint8_t(uint8_t(op)-uint8_t(Op::CONST_0));
     if(small<16) {
       if(top>=ceiling)break;
@@ -496,45 +471,63 @@ __attribute__((noinline)) uint8_t integer_span
         }
         SPAN_TRACE();top-=consumed;break;
       }
+#if !defined(LANGUAGE_VM_TRACE)
+      case Op::MOVE_LOCAL:
+        width=3;
+        if((!trusted && (width>unsigned(end-pc) || p[1]>=26)) || !compact_integer(data,p[0],x,trusted))goto done;
+        data.variables[p[1]]=x;break;
+      case Op::BINARY_PAIR:case Op::BINARY_STORE: {
+        const Op encoded=op;
+        width=encoded==Op::BINARY_PAIR?4:5;
+        if(!trusted && (width>unsigned(end-pc) || !compact::binary(Op(p[0]))))goto done;
+        const uint8_t left=p[1];left_stack=left==compact::STACK;
+        destination=encoded==Op::BINARY_STORE?p[3]:compact::STACK;
+        if(!trusted && destination!=compact::STACK && destination>=26)goto done;
+        if(left_stack) {
+          if(top==bottom)goto done;
+          if(pending)x=accumulator;
+          else {if(!top[-1].integer())goto done;x=top[-1].integer_value();}
+        } else if(!compact_integer(data,left,x,trusted))goto done;
+        if(destination==compact::STACK && !left_stack && top>=ceiling)goto done;
+        if(left==p[2])y=x;
+        else if(!compact_integer(data,p[2],y,trusted))goto done;
+        direct=true;op=Op(p[0]);goto integer_operands_ready;
+      }
+#endif
       case Op::ADD: case Op::SUB: case Op::MUL: case Op::DIV:
       case Op::FLOOR_DIV: case Op::MOD:
       case Op::EQ: case Op::NE: case Op::LT: case Op::LE: case Op::GT: case Op::GE:
       case Op::AND: case Op::OR: case Op::XOR:
         if((unsigned)(top-bottom)<2 || !top[-2].integer() || !top[-1].integer())goto done;
         x=top[-2].integer_value();y=top[-1].integer_value();
-        switch(op) {
-          case Op::ADD:if(__builtin_add_overflow(x,y,&z))goto done;break;
-          case Op::SUB:if(__builtin_sub_overflow(x,y,&z))goto done;break;
-          case Op::MUL:
-            if((!x && y<0) || (!y && x<0) || __builtin_mul_overflow(x,y,&z))goto done;
-            break;
-          case Op::DIV:
-            if(!y || (x==INT32_MIN && y==-1) || (!x && y<0) || x%y)goto done;
-            z=x/y;break;
-          case Op::FLOOR_DIV:
-            if(!y || (x==INT32_MIN && y==-1))goto done;
-            z=x/y;if(x%y && ((x<0)!=(y<0)))--z;break;
-          case Op::MOD:
-            if(!y)goto done;
-            if(x==INT32_MIN && y==-1)z=0;
-            else {z=x%y;if(z && ((z<0)!=(y<0)))z+=y;}
-            break;
-          case Op::EQ:z=x==y;break;case Op::NE:z=x!=y;break;
-          case Op::LT:z=x<y;break;case Op::LE:z=x<=y;break;
-          case Op::GT:z=x>y;break;case Op::GE:z=x>=y;break;
-          case Op::AND:z=x && y;break;case Op::OR:z=x || y;break;
-          default:z=(x!=0)!=(y!=0);break;
+#if !defined(LANGUAGE_VM_TRACE)
+integer_operands_ready:
+#endif
+        if(!compact::integer(op,x,y,z))goto done;
+        SPAN_TRACE();
+        if(!direct) {top[-2]=z;--top;break;}
+        if(destination!=compact::STACK) {
+          if(pending) {top[-1]=accumulator;pending=false;}
+          if(left_stack)--top;
+          data.variables[destination]=z;break;
         }
-        SPAN_TRACE();top[-2]=z;--top;break;
+        if(!left_stack) {
+          if(pending) {top[-1]=accumulator;pending=false;}
+          ++top;
+        }
+        if(hold_ok) {accumulator=z;pending=true;}else top[-1]=z;
+        break;
       default:goto done;
     }
     last=pc;pc=(pc+width);--remaining;
   }
 done:
+  if(pending)top[-1]=accumulator;
   const uint8_t count=uint8_t(budget-remaining);
   if(count) {
 #if defined(LANGUAGE_VM_TEST_INTEGER_SPAN)
-    if(first_hint==Op::INTEGER_SPAN || first_hint==Op::INTEGER_SHORT)
+    if(first_hint==Op::INTEGER_SPAN || first_hint==Op::INTEGER_SHORT || first_hint==Op::BINARY_PAIR ||
+       first_hint==Op::BINARY_STORE || first_hint==Op::MOVE_LOCAL)
       integer_span_applied(instruction,count);
 #endif
 #if defined(LANGUAGE_VM_TEST_INTEGER_BLOCK) && MK61_VM_INTEGER_BLOCK
@@ -574,41 +567,22 @@ uint16_t trace_following(const View& v,uint16_t pc) {return uint16_t(next(v,pc))
 #endif
 
 namespace {
-uint32_t instruction_after(const View& v,uint32_t pc,uint8_t op) {
-  if(pc>=v.end)return 0;
-  if(op>=sizeof(wire_widths))return 0;
-  static_assert([]() constexpr {
-    for(uint8_t width:wire_widths)if(width>14 && width!=255)return false;
-    return true;
-  }(),"fixed instruction width exceeds its packed nibble");
-  static constexpr auto wide_widths=[]() constexpr {
-    uint8_t widths[sizeof(wire_widths)]={};
-    for(unsigned i=0;i<sizeof(wire_widths);++i)widths[i]=wire_widths[i];
-    for(Op code:{Op::JUMP,Op::JUMP_FALSE,Op::GOTO_DIRECT,Op::GOSUB_DIRECT,Op::GRAPH_BEGIN,Op::GRAPH_NEXT})widths[unsigned(code)]=5;
-    widths[unsigned(Op::COMPARE_FALSE)]=6;widths[unsigned(Op::DO_FOCAL)]=9;
-    widths[unsigned(Op::BRANCH)]=13;widths[unsigned(Op::CALL_PARAMS)]=11;
-    widths[unsigned(Op::FOR_FOCAL)]=7;
-    // Widths are 0..13; 15 denotes a variable record. Two per byte recover
-    // space for hot-path guards without changing any bytecode encoding.
-    struct Table {uint8_t bytes[(sizeof(wire_widths)+1)/2];} table={};
-    for(unsigned i=0;i<sizeof(wire_widths);++i)
-      table.bytes[i>>1]|=uint8_t((widths[i]==255?15:widths[i])<<((i&1)*4));
-    return table;
-  }();
-  const unsigned width=v.wide_code()?((wide_widths.bytes[op>>1]>>((op&1)*4))&15):wire_widths[op];
+uint32_t instruction_after(const View& v,uint32_t pc,uint8_t op,bool trusted) {
+  if(!trusted && (pc>=v.end || op>=sizeof(wire_widths)))return 0;
+  const unsigned width=wire_widths[op];
   const uint32_t remaining=v.end-pc;
-  if(width!=(v.wide_code()?15:255))return width && width<=remaining?pc+width:0;
-  const unsigned prefix=v.wide && Op(op)==Op::DATA?5:3;
-  if(remaining<prefix)return 0;
+  if(width!=255)return trusted || (width && width<=remaining)?pc+width:0;
+  const unsigned prefix=Op(op)==Op::DATA?5:3;
+  if(!trusted && remaining<prefix)return 0;
   const uint32_t count=prefix==5?dword(v.at(pc+1)):word(v.at(pc+1));
   if(Op(op)==Op::ON_GOTO || Op(op)==Op::ON_GOSUB)
-    return count && count<=(remaining-3)/2?pc+3+count*2:0;
-  if(Op(op)==Op::DATA && !count)return 0;
-  return count<=remaining-prefix?pc+prefix+count:0;
+    return trusted || (count && count<=(remaining-3)/2)?pc+3+count*2:0;
+  if(!trusted && Op(op)==Op::DATA && !count)return 0;
+  return trusted || count<=remaining-prefix?pc+prefix+count:0;
 }
 }
 uint32_t instruction_end(const View& v,uint32_t pc) {
-  return pc<v.end?instruction_after(v,pc,v.byte(pc)):0;
+  return pc<v.end?instruction_after(v,pc,v.byte(pc),v.verified):0;
 }
 namespace {
 class Boundaries {
@@ -656,8 +630,29 @@ public:
   bool good() const {return good_;}
   bool poll() const {return io_.poll();}
 };
+bool source_map_bounds(const View& v,uint32_t& begin,uint32_t& end,uint16_t& count) {
+  count=word(v.at(38));begin=end=v.size;
+  if(!count)return true;
+  if(v.size-v.end<4)return false;
+  end=v.size-4;const uint32_t bytes=dword(v.at(end));
+  if(!bytes || bytes>end-v.end)return false;
+  begin=end-bytes;return true;
+}
+bool source_map_number(const View& v,uint32_t& at,uint32_t end,uint32_t& value) {
+  value=0;
+  for(unsigned shift=0;shift<=28;shift+=7) {
+    if(at>=end)return false;
+    const uint8_t b=v.byte(at++);
+    if(shift==28 && (b&240))return false;
+    value|=uint32_t(b&127)<<shift;
+    if(!(b&128))return true;
+  }
+  return false;
+}
 Error verify(const View& v, Boundaries& boundaries) {
-  const uint32_t length=v.size;
+  uint32_t length,map_end;uint16_t positions;
+  if(!source_map_bounds(v,length,map_end,positions))return Error::INVALID_IMAGE;
+  if(!(v.byte(7)&RESOURCE_FLAG) && length!=v.end)return Error::INVALID_IMAGE;
   unsigned service_budget=0;
   auto poll=[&]() {return (++service_budget&31U)!=0 || boundaries.poll();};
   if(!boundaries.prepare(v.end))return Error::IO;
@@ -700,7 +695,7 @@ Error verify(const View& v, Boundaries& boundaries) {
     if (v.expression && op != Op::HALT && op != Op::CONST_I8 &&
         op != Op::CONST_I16 && op != Op::BLOCK_INDEX && op != Op::CONST_I32 && op != Op::CONST_F64 && op != Op::CONST_DEC8 &&
         op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::INTEGER_SPAN && op != Op::INTEGER_SHORT && op != Op::LOAD_REF &&
-        op != Op::LOAD_ARRAY && op != Op::ARRAY_CELL && op != Op::LOAD_ARRAY_FIXED && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
+        op != Op::LOAD_ARRAY && op != Op::ARRAY_CELL && op != Op::LOAD_ARRAY_FIXED && op!=Op::BINARY_PAIR && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
         !(op >= Op::CONST_0 && op <= Op::CONST_15) &&
         !(op==Op::GRAPHICS && v.byte(pc+1)==(uint8_t)basic_graphics::Operation::POINT)) return Error::INVALID_IMAGE;
     if(op==Op::BLOCK_INDEX && (v.end-pc<6 ||
@@ -724,9 +719,15 @@ Error verify(const View& v, Boundaries& boundaries) {
             ((v.byte(pc+2)&0x40) && (v.byte(pc+2)&0x3F)>=26))) ||
         (op == Op::FOR_FOCAL && v.byte(pc + 2 + v.address_bytes()) > 1))
       return Error::INVALID_IMAGE;
-    if(op>=Op::GRAPHICS && v.expression &&
+    if(op>=Op::GRAPHICS && op!=Op::BINARY_PAIR && v.expression &&
        !(op==Op::GRAPHICS && v.byte(pc+1)==(uint8_t)basic_graphics::Operation::POINT))
       return Error::INVALID_IMAGE;
+    if(op==Op::MOVE_LOCAL && (!compact::source(v.byte(pc+1)) || v.byte(pc+2)>=26))return Error::INVALID_IMAGE;
+    if(op==Op::BINARY_PAIR || op==Op::BINARY_STORE) {
+      const uint8_t left=v.byte(pc+2);
+      if(!compact::binary(Op(v.byte(pc+1))) || (left!=compact::STACK && !compact::source(left)))return Error::INVALID_IMAGE;
+      if(!compact::source(v.byte(pc+3)) || (op==Op::BINARY_STORE && v.byte(pc+4)>=26))return Error::INVALID_IMAGE;
+    }
     if(op==Op::GRAPHICS) {
       const auto operation=(basic_graphics::Operation)v.byte(pc+1);
       if((operation!=basic_graphics::Operation::PSET && operation!=basic_graphics::Operation::POINT &&
@@ -761,8 +762,6 @@ Error verify(const View& v, Boundaries& boundaries) {
         at = following;
       }
     }
-    if (op == Op::SOURCE_POS && (!word(v.at(pc + 1)) || word(v.at(pc + 1)) > v.source_size))
-      return Error::INVALID_IMAGE;
     if (op == Op::ON_GOTO || op == Op::ON_GOSUB)
       for (uint16_t i = 0; i < word(v.at(pc + 1)); ++i) {
         if(!poll())return Error::IO;
@@ -772,6 +771,17 @@ Error verify(const View& v, Boundaries& boundaries) {
     pc = following;
   }
   if(!boundaries.flush())return Error::IO;
+  uint32_t map_at=length,map_pc=v.code;
+  for(uint16_t i=0;i<positions;++i) {
+    uint32_t delta,column;
+    if(!poll())return Error::IO;
+    if(!source_map_number(v,map_at,map_end,delta) || (!delta && i) || delta>v.end-map_pc ||
+       !source_map_number(v,map_at,map_end,column) || !column || column>v.source_size)
+      return Error::INVALID_IMAGE;
+    map_pc+=delta;
+    if(map_pc>=v.end || !boundaries.test(map_pc))return Error::INVALID_IMAGE;
+  }
+  if(map_at!=map_end)return Error::INVALID_IMAGE;
   auto target = [&](uint32_t pc) {
     return pc == v.missing() || (pc >= v.code && pc < v.end && boundaries.test(pc));
   };
@@ -802,7 +812,8 @@ Error verify(const View& v, Boundaries& boundaries) {
         const bool allowed=(inner>=Op::CONST_I8 && inner<=Op::LOAD_REF) ||
             inner==Op::LOAD_ARRAY || (inner>=Op::NEG && inner<=Op::FUNCTION) ||
             inner==Op::CONST_DEC8 || inner==Op::CONST_DEC16 || inner==Op::CONST_I32 ||
-            inner==Op::FLOOR_DIV || inner==Op::LOAD_ARRAY_FIXED || inner==Op::SOURCE_POS ||
+            inner==Op::FLOOR_DIV || inner==Op::LOAD_ARRAY_FIXED ||
+            inner==Op::BINARY_PAIR ||
             inner==Op::LOAD_PARAMETER || inner==Op::BLOCK_INDEX || inner==Op::INTEGER_SPAN || inner==Op::INTEGER_SHORT ||
             (inner>=Op::CONST_0 && inner<=Op::CONST_15) ||
             (inner==Op::GRAPHICS && v.byte(at+1)==(uint8_t)basic_graphics::Operation::POINT);
@@ -832,44 +843,34 @@ Error verify(const View& v, Boundaries& boundaries) {
   return v.good() && boundaries.good()?Error::NONE:Error::IO;
 }
 } // namespace
+namespace {
+Error decode_header(const uint8_t* h,uint32_t size,View& v) {
+  if(memcmp(h,"LBV2",4) || h[4]!=VERSION || (h[5]!=1 && h[5]!=2) ||
+     !h[6] || h[6]>MAX_STACK || h[7]>15 || dword(h+8)!=size)return Error::INVALID_IMAGE;
+  v={nullptr,size,dword(h+12),word(h+18),word(h+16),h[6],Language(h[5]),
+      (h[7]&1)!=0,(h[7]&2)!=0,dword(h+28),nullptr,true};
+  if(!v.source_size || v.source_size>source::MAX_SIZE ||
+     v.code!=HEADER_SIZE+uint32_t(v.lines)*8 || v.code>=v.end || v.end>size ||
+     (v.expression ? v.lines || v.source_size>(v.language==Language::BASIC?64:111) : !v.lines) ||
+     ((h[7]&OWNED_RESOURCE_FLAG) && !(h[7]&RESOURCE_FLAG)) ||
+     (v.expression && word(h+38)) ||
+     ((h[7]&RESOURCE_FLAG) ? v.expression || v.end==size : !word(h+38) && v.end!=size))return Error::INVALID_IMAGE;
+  if((h[7]&RESOURCE_FLAG) && !(h[7]&OWNED_RESOURCE_FLAG)) {
+    if(word(h+32)==0xFFFF)return Error::INVALID_IMAGE;
+  } else for(unsigned i=32;i<38;++i)if(h[i])return Error::INVALID_IMAGE;
+  return Error::NONE;
+}
+}
 Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
-  out = {};
-  if (!bytes || length < HEADER_SIZE || length > MAX_MODULE ||
-      memcmp(bytes, "LBV1", 4) || bytes[4] != VERSION ||
-      (bytes[5] != (uint8_t)Language::BASIC && bytes[5] != (uint8_t)Language::FOCAL) ||
-      bytes[6] == 0 || bytes[6] > MAX_STACK || bytes[7] > 15 ||
-      word(bytes + 8) != length)
-    return Error::INVALID_IMAGE;
-  if (bytes[7] & 4) {
-    if ((bytes[7] & 1) || (!(bytes[7] & OWNED_RESOURCE_FLAG) && word(bytes + 24) == 0xFFFF))
-      return Error::INVALID_IMAGE;
-    if(bytes[7] & OWNED_RESOURCE_FLAG)
-      for(uint8_t i=24;i<30;++i) if(bytes[i]) return Error::INVALID_IMAGE;
-  } else for (uint8_t i = 24; i < HEADER_SIZE; ++i)
-    if (bytes[i]) return Error::INVALID_IMAGE;
-  View v = {bytes,
-            length,
-            word(bytes + 10),
-            word(bytes + 12),
-            word(bytes + 14),
-            bytes[6],
-            (Language)bytes[5],
-            (bytes[7] & 1) != 0,
-            (bytes[7] & 2) != 0};
-  v.end = (bytes[7] & 4) ? word(bytes + 30) : length;
-  if (v.end > MAX_IMAGE || v.end > length || ((bytes[7] & 4) && v.end == length) ||
-      ((bytes[7] & OWNED_RESOURCE_FLAG) && !(bytes[7] & RESOURCE_FLAG)) ||
-      (!(bytes[7] & OWNED_RESOURCE_FLAG) && length > MAX_IMAGE)) return Error::INVALID_IMAGE;
-  if ((v.expression
-           ? v.lines != 0 || v.source_size > (v.language == Language::BASIC ? 64 : 111)
-           : !v.lines) ||
-      v.lines > (v.language == Language::BASIC ? 192 : 80) ||
-      v.code != HEADER_SIZE + uint32_t(v.lines) * stride(v) || v.code >= v.end ||
-      !v.source_size || v.source_size > source::MAX_SIZE ||
-      checksum(bytes + HEADER_SIZE, length - HEADER_SIZE) != dword(bytes + 20))
-    return Error::INVALID_IMAGE;
-  Boundaries boundaries(false,{});
-  const Error error=verify(v,boundaries);
+  out={};
+  if(!bytes || length<HEADER_SIZE || length>MAX_MODULE)return Error::INVALID_IMAGE;
+  View v;const auto header=decode_header(bytes,length,v);
+  if(header!=Error::NONE)return header;
+  v.bytes=bytes;
+  if(v.end>MAX_IMAGE || (!(bytes[7]&OWNED_RESOURCE_FLAG) && length>MAX_IMAGE) ||
+     v.lines>(v.language==Language::BASIC?192:80) ||
+     checksum(bytes+HEADER_SIZE,length-HEADER_SIZE)!=dword(bytes+24))return Error::INVALID_IMAGE;
+  Boundaries boundaries(false,{});const Error error=verify(v,boundaries);
   if(error==Error::NONE)out=v;
   return error;
 }
@@ -878,11 +879,9 @@ Error inspect_flash(const flash::Reader& reader,flash::IO io,View& out) {
   if(!io.read || !io.write || !io.truncate)return Error::IO;
   if(reader.size()<HEADER_SIZE)return Error::INVALID_IMAGE;
   if(!reader.read(0,h,sizeof(h)))return Error::IO;
-  if(memcmp(h,"LBV2",4) || h[4]!=14 || (h[5]!=1 && h[5]!=2) ||
-     !h[6] || h[6]>MAX_STACK || (h[7]&~2) || dword(h+8)!=reader.size())return Error::INVALID_IMAGE;
-  View v={nullptr,reader.size(),dword(h+12),word(h+18),word(h+16),h[6],Language(h[5]),false,(h[7]&2)!=0,dword(h+28),&reader,true};
-  if(!v.lines || !v.source_size || v.source_size>source::MAX_SIZE ||
-     v.code!=HEADER_SIZE+uint32_t(v.lines)*8 || v.code>=v.end || v.end!=v.size)return Error::INVALID_IMAGE;
+  View v;const auto header=decode_header(h,reader.size(),v);
+  if(header!=Error::NONE)return header;
+  v.reader=&reader;
   uint32_t crc=0xFFFFFFFF;
   uint8_t page[64];
   for(uint32_t at=HEADER_SIZE;at<v.size;) {
@@ -937,13 +936,17 @@ uint32_t source_line(const View& v, uint32_t pc) {
 }
 
 uint16_t source_column(const View& v, uint32_t pc) {
-  uint16_t column = 0;
-  for (uint32_t at = v.code; at <= pc && at < v.end;) {
-    const uint32_t following = next(v, at);
-    if (!following) return 0;
-    if ((Op)v.byte(at) == Op::SOURCE_POS) column = word(v.at(at + 1));
-    if ((Op)v.byte(at) == Op::LINE) column = 0;
-    at = following;
+  if(pc<v.code || pc>=v.end || pc==v.end-1 || Op(v.byte(pc))==Op::LINE)return 0;
+  uint32_t at,end;uint16_t count;
+  if(!source_map_bounds(v,at,end,count))return 0;
+  uint32_t instruction=v.code;uint16_t column=0;
+  for(uint16_t i=0;i<count;++i) {
+    uint32_t delta,value;
+    if(!source_map_number(v,at,end,delta) || delta>v.end-instruction ||
+       !source_map_number(v,at,end,value))return 0;
+    instruction+=delta;
+    if(instruction>pc)break;
+    column=uint16_t(value);
   }
   return column;
 }
@@ -1012,6 +1015,7 @@ __attribute__((section(".time_critical.mk61_vm_run"),optimize("O2")))
 #endif
 RunResult run(const View& v, Continuation& s, const Bindings& data,
               const Services& host, uint32_t limit, bool resume) {
+  const bool trusted=trusted_execution(v);
   if ((!v.bytes && !v.reader) || !data.variables || !data.stack || data.stack_capacity < v.stack ||
       data.stack_capacity > MAX_STACK)
     return {Error::INVALID_IMAGE, 0, 0, 0};
@@ -1026,7 +1030,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
              s.loop_count > MAX_LOOPS || s.data_pc < v.code || s.data_pc > v.end) {
     return {Error::INVALID_IMAGE, 0, 0, 0};
   }
-  if(resume && !valid_resume(v,s,data))return {v.good()?Error::INVALID_IMAGE:Error::IO,0,0,0};
+  if(resume && !trusted && !valid_resume(v,s,data))return {v.good()?Error::INVALID_IMAGE:Error::IO,0,0,0};
   Error error = Error::NONE;
   struct RestoreGraph {
     Continuation& state;const Bindings& data;
@@ -1115,23 +1119,14 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         s.sp=frame.base;
       }
     }
-    // SOURCE_POS is a diagnostic prefix, not work for the evaluator. Its
-    // bytes remain available to source_column() even after a jump/resume.
-    // Skip it before dispatch/service accounting; useful instructions still
-    // poll at most 32 apart, and this bounded scan never follows a branch.
     Op op=Op::HALT;
-    while(s.pc<v.end && (op=Op(v.reader?v.byte(s.pc):v.bytes[s.pc]))==Op::SOURCE_POS) {
-      instruction=s.pc;
-      if(v.end-s.pc<3) {error=Error::INVALID_IMAGE;break;}
-      s.pc=(s.pc+3);
-    }
-    if(error!=Error::NONE) break;
     if (s.pc >= v.end) {
       error = Error::INVALID_IMAGE;
       break;
     }
     if(!v.good()){error=Error::IO;break;}
     instruction = s.pc;
+    op=Op(v.reader?v.byte(s.pc):v.bytes[s.pc]);
     if (limit && steps == limit) {
       error = Error::LIMIT;
       break;
@@ -1142,7 +1137,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         break;
       }
       // A service callback can modify a raw image through shared banks.
-      // Otherwise the prefix scan has already fetched this opcode.
+      // Otherwise this iteration has already fetched this opcode.
       op=Op(v.byte(s.pc));
     }
     VM_OPCODE_SAMPLE(scalar_op(op), s, data);
@@ -1168,7 +1163,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
 #if MK61_VM_INTEGER_SPAN
     // The span validates every supported start itself, before the generic
     // operand decoder/snapshot. Keep disabled hints on their scalar fallback.
-    if(op==Op::INTEGER_SPAN ||
+    if(op==Op::INTEGER_SPAN || op==Op::BINARY_PAIR || op==Op::BINARY_STORE || op==Op::MOVE_LOCAL ||
 #if (defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE) || defined(LANGUAGE_VM_TEST_PICO_ENTRY)
        // Pico's SRAM span also handles these ordinary loads. Enter before
        // operand decoding; its int32 guard retains the scalar fallback.
@@ -1192,7 +1187,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     }
     // Share width/bounds checks with the cold verifier, but reuse the opcode
     // already fetched by dispatch. Only variable records decode their count.
-    const uint32_t after=instruction_after(v,s.pc,uint8_t(op));
+    const uint32_t after=instruction_after(v,s.pc,uint8_t(op),trusted);
     if (!after) {
       error = Error::INVALID_IMAGE;
       break;
@@ -1200,15 +1195,16 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     // The opcode is already known. Read only the aligned operand payload;
     // variable records need just their two-byte count here.
     alignas(4) uint8_t operands[12];
+    const uint8_t* p=operands;
     const uint8_t operand_bytes=uint8_t(after-instruction-1<=sizeof(operands)?after-instruction-1:2);
-    if(operand_bytes) {
+    if(trusted && !v.reader)p=v.bytes+instruction+1;
+    else if(operand_bytes) {
       // Copy a bounded raw snapshot with a compile-time size. Near the code
       // end and for paged images retain the original exact-sized I/O.
       if(!v.reader && v.end-instruction-1>=sizeof(operands))
         __builtin_memcpy(operands,v.bytes+instruction+1,sizeof(operands));
       else if(!v.read(instruction+1,operands,operand_bytes)){error=Error::IO;break;}
     }
-    const uint8_t* p=operands;
     s.pc = after;
     Value a = 0, b = 0, value = 0;
     switch (op) {
@@ -1325,20 +1321,31 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
 #endif
         [[fallthrough]];
       case Op::LOAD:
-        if (*p >= 26)
+        if (!trusted && *p >= 26)
           error = Error::INVALID_IMAGE;
         else
           push(data.variables[*p]);
         break;
       case Op::STORE:
         value = pop();
-        if (*p >= 26)
+        if (!trusted && *p >= 26)
           error = Error::INVALID_IMAGE;
         else if (error == Error::NONE)
           data.variables[*p] = value;
         break;
-      case Op::UPDATE_LOCAL:
-        error=update_local(data.variables,*p,p[1]);
+      case Op::UPDATE_LOCAL: {
+        const uint8_t index=p[0],rhs=p[1]&63;
+        if(!trusted && (index>=26 || ((p[1]&64) && rhs>=26))) {error=Error::INVALID_IMAGE;break;}
+        const Value left=data.variables[index],right=p[1]&64?data.variables[rhs]:Value(rhs);
+        if(!left.finite() || !right.finite()) {error=Error::MATH;break;}
+        const Value result=p[1]&128?left-right:left+right;
+        if(!result.finite())error=Error::MATH;else data.variables[index]=result;
+        break;
+      }
+      case Op::MOVE_LOCAL:
+        if(!trusted && (p[1]>=26 || !compact::source(*p)))error=Error::INVALID_IMAGE;
+        else if(!compact_source(data,*p,value,trusted) || !value.finite())error=Error::MATH;
+        else data.variables[p[1]]=value;
         break;
       case Op::LOAD_REF:
       case Op::STORE_REF:
@@ -1464,10 +1471,33 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       case Op::GE:
       case Op::AND:
       case Op::OR:
-      case Op::XOR: {
-        if(s.sp<2) {error=Error::STACK;break;}
-        b=data.stack[s.sp-1];a=data.stack[s.sp-2];
-        s.sp=(uint8_t)(s.sp-2);
+      case Op::XOR:
+      case Op::BINARY_STORE:
+      case Op::BINARY_PAIR: {
+        const bool direct=op==Op::BINARY_PAIR || op==Op::BINARY_STORE;
+        uint8_t destination=compact::STACK;
+        if(direct) {
+          destination=op==Op::BINARY_STORE?p[3]:compact::STACK;
+          const uint8_t left=p[1];
+          if(!trusted && (!compact::binary(Op(p[0])) || (destination!=compact::STACK && destination>=26) ||
+             (left!=compact::STACK && !compact::source(left)))) {error=Error::INVALID_IMAGE;break;}
+          if(left==compact::STACK) {
+            if(!s.sp) {error=Error::STACK;break;}
+            a=data.stack[s.sp-1];
+          } else {
+            (void)compact_source(data,left,a,trusted);
+            if(!a.finite()) {error=Error::MATH;break;}
+          }
+          if(!trusted && !compact::source(p[2])) {error=Error::INVALID_IMAGE;break;}
+          if(p[2]==left)b=a;else (void)compact_source(data,p[2],b,trusted);
+          if(!b.finite()) {error=Error::MATH;break;}
+          if(destination==compact::STACK && left!=compact::STACK && s.sp>=data.stack_capacity) {error=Error::STACK;break;}
+          if(left==compact::STACK)--s.sp;
+          op=Op(p[0]);
+        } else {
+          if(s.sp<2) {error=Error::STACK;break;}
+          b=data.stack[s.sp-1];a=data.stack[s.sp-2];s.sp=(uint8_t)(s.sp-2);
+        }
         switch (op) {
           case Op::ADD:
             value = a + b;
@@ -1521,6 +1551,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           // Two existing stack cells guarantee room for one result. Keep
           // The finite check, but do not pop/pop/push with three bounds.
           if(!value.finite()) error=Error::MATH;
+          else if(direct && destination!=compact::STACK)data.variables[destination]=value;
           else data.stack[s.sp++]=value;
         }
         break;

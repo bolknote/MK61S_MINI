@@ -18,9 +18,9 @@ struct Host {
   std::vector<const char*> handles;
   static bool read(void* raw, uint16_t offset, uint8_t* out, uint16_t length) {
     auto& h = *(Host*)raw;
-    const uint32_t stamp = (uint32_t)resource_word(h.image+26) |
-                          ((uint32_t)resource_word(h.image+28)<<16);
-    if(stamp != h.revision || resource_word(h.image+24) != 42 ||
+    const uint32_t stamp = (uint32_t)resource_word(h.image+34) |
+                          ((uint32_t)resource_word(h.image+36)<<16);
+    if(stamp != h.revision || resource_word(h.image+32) != 42 ||
        offset > h.source->size() || length > h.source->size()-offset) return false;
     ++h.reads; h.maximum_read = std::max(h.maximum_read, (unsigned)length);
     memcpy(out, h.source->data()+offset, length); return true;
@@ -63,9 +63,17 @@ struct Program {
     for(unsigned i=0;i<8;++i) assert(staging[i]==0xA5 && staging[sized.size+8+i]==0xA5);
     image.assign(staging.begin()+8,staging.end()-8); // native/compiler storage disappears
     std::fill(staging.begin(),staging.end(),0xCD);
-    assert(inspect(image.data(),(uint16_t)image.size(),view) == Error::NONE);
+    const auto checked=inspect(image.data(),(uint16_t)image.size(),view);
+    if(checked!=Error::NONE)std::fprintf(stderr,"inspect %s language=%u resources=%u mode=%u source=%zu image=%zu\n%s\n",
+        error_name(checked),unsigned(lang),unsigned(resources),unsigned(mode),source.size(),image.size(),source.c_str());
+    assert(checked == Error::NONE);
     state.variables=variables; state.array=array; state.array_count=385;
     state.stack=stack; state.stack_capacity=MAX_STACK;
+  }
+  uint32_t pool_size() const {
+    const uint32_t end=resource_word(image.data()+38)?
+        uint32_t(image.size()-4)-flash::dword(image.data()+image.size()-4):uint32_t(image.size());
+    return end-view.end;
   }
   RunResult run(Host& h, bool yield=false, bool resume=false) {
     h.image=image.data(); Services services = {}; services.context=&h;
@@ -74,7 +82,7 @@ struct Program {
   }
   void crc() {
     const uint32_t crc=checksum(image.data()+HEADER_SIZE,image.size()-HEADER_SIZE);
-    for(unsigned i=0;i<4;++i) image[20+i]=(uint8_t)(crc>>(8*i));
+    for(unsigned i=0;i<4;++i) image[24+i]=(uint8_t)(crc>>(8*i));
   }
 };
 void equivalent(const std::string& source, Language lang=Language::BASIC) {
@@ -93,7 +101,7 @@ void test_semantics_and_dedup() {
   Program p(source,Language::BASIC,true); Host h={&source,nullptr};
   assert(p.run(h).error==Error::NONE);
   assert(h.handles.size()==3 && h.handles[0]==h.handles[1] && h.handles[1]==h.handles[2]);
-  assert(p.image.size()-p.view.end==6); // exactly one source-backed recipe
+  assert(p.pool_size()==6); // exactly one source-backed recipe
   const std::string needle="SAME RESOURCE STRING";
   assert(std::search(p.image.begin(),p.image.end(),needle.begin(),needle.end())==p.image.end());
   equivalent(source);
@@ -113,7 +121,7 @@ void test_pool_crosses_scratch_slabs() {
   }
   source += "\n";
   Program p(source,Language::BASIC,true); Host h={&source,nullptr};
-  assert(p.image.size()-p.view.end==520*6 && p.image.size()<=MAX_IMAGE);
+  assert(p.pool_size()==520*6 && p.image.size()<=MAX_IMAGE);
   assert(p.run(h).error==Error::NONE && h.text.size()==520);
   for(unsigned i=0;i<520;++i) assert(h.text[i]==std::string({(char)('A'+i/26),(char)('A'+i%26)}));
 }
@@ -146,7 +154,7 @@ void test_invalid_recipes() {
   for(uint16_t pc=p.view.code;pc<p.view.end;++pc) if((Op)p.image[pc]==Op::PRINT_RESOURCE) {
     p.image[pc+1]=1;p.image[pc+2]=0;reject();break;
   }
-  p.image[30]=(uint8_t)p.image.size();p.image[31]=(uint8_t)(p.image.size()>>8);reject();
+  for(unsigned i=0;i<4;++i)p.image[28+i]=(uint8_t)(p.image.size()>>(i*8));reject();
   uint8_t guarded[112];memset(guarded,0xA5,sizeof(guarded));
   const uint8_t corrupt[]={96,0,0};
   Host h={&source,p.image.data()}; assert(!resource_prompt(corrupt,(char*)guarded+8,Host::read,&h));
@@ -167,7 +175,7 @@ void test_owned_resources() {
     Program p(source,lang,true,ResourceMode::EMBEDDED);
     Host h={nullptr,nullptr};h.revision=999;
     assert(p.image[7]&OWNED_RESOURCE_FLAG);
-    assert(lang==Language::FOCAL ? p.image.size()-p.view.end>=6 : p.image.size()-p.view.end==6);
+    assert(lang==Language::FOCAL ? p.pool_size()>=6 : p.pool_size()==6);
     assert(p.run(h).error==Error::NONE && !h.reads && h.text.size()==2);
     assert(h.text[0]=="SAME" && h.text[1]=="SAME" && h.handles[0]==h.handles[1]);
     if(lang==Language::BASIC) assert(h.prompts[0]=="SAME" && h.handles[0]==h.handles[2]);
@@ -175,7 +183,7 @@ void test_owned_resources() {
     p.image[p.view.end]=255;p.crc();View bad;
     assert(inspect(p.image.data(),(uint16_t)p.image.size(),bad)==Error::INVALID_IMAGE);
     p.image=good;
-    p.image[24]=42;
+    p.image[32]=42;
     assert(inspect(p.image.data(),(uint16_t)p.image.size(),bad)==Error::INVALID_IMAGE);
     p.image=good;p.image[4]=1;
     assert(inspect(p.image.data(),(uint16_t)p.image.size(),bad)==Error::INVALID_IMAGE);
@@ -194,8 +202,8 @@ void test_owned_resources() {
   const uint16_t padding=(uint16_t)(MAX_IMAGE-4-large.view.end);
   large.image.insert(large.image.begin()+large.view.end-1,padding,(uint8_t)Op::LINE);
   const uint16_t end=(uint16_t)(large.view.end+padding),size=(uint16_t)large.image.size();
-  large.image[8]=(uint8_t)size;large.image[9]=(uint8_t)(size>>8);
-  large.image[30]=(uint8_t)end;large.image[31]=(uint8_t)(end>>8);large.crc();
+  for(unsigned i=0;i<4;++i)large.image[8+i]=(uint8_t)(uint32_t(size)>>(i*8));
+  for(unsigned i=0;i<4;++i)large.image[28+i]=(uint8_t)(uint32_t(end)>>(i*8));large.crc();
   assert(size>MAX_IMAGE && size<=MAX_MODULE && inspect(large.image.data(),size,large.view)==Error::NONE);
   Host out={nullptr,nullptr};assert(large.run(out).error==Error::NONE && out.text[0]==std::string(900,'X'));
 }

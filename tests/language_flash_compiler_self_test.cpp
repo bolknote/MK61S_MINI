@@ -9,8 +9,8 @@ static void compile_many(Language language) {
   std::string text=basic?"1 GOTO 32000\n":"1.0 G 9.0\n";
   for(unsigned i=0;i<5000;++i) {
     char line[64];
-    if(basic)snprintf(line,sizeof(line),"%u A=1\n",i+2);
-    else snprintf(line,sizeof(line),"%u.%u S A=1\n",2+i/1000,i%1000);
+    if(basic)snprintf(line,sizeof(line),"%u%sPRINT 1\n",i+2,i%4?" ":"  ");
+    else snprintf(line,sizeof(line),"%u.%u%sP 1\n",2+i/1000,i%1000,i%4?" ":"  ");
     text+=line;
   }
   text+=basic?"32000 .RA=42;END\n":"9.0 S .RB=42;E\n";
@@ -22,15 +22,14 @@ static void compile_many(Language language) {
   for(unsigned i=8+FLASH_COMPILER_WORKSPACE_SIZE;i<sizeof(scratch);++i)assert(scratch[i]==0xA5);
   if(result.error!=Error::NONE)fprintf(stderr,"compile %u: %s at %u/%u\n",unsigned(language),error_name(result.error),result.line,result.source_offset);
   assert(result.error==Error::NONE && result.size>65536);
-  uint8_t header[32];assert(Disk::read(&disk,IMAGE,0,header,sizeof(header)));
-  assert(!memcmp(header,"LBV2",4) && header[4]==14);
+  uint8_t header[HEADER_SIZE];assert(Disk::read(&disk,IMAGE,0,header,sizeof(header)));
+  assert(!memcmp(header,"LBV2",4) && header[4]==VERSION);
   assert(flash::word(header+18)==5002 && flash::dword(header+8)==result.size);
   const uint32_t code=flash::dword(header+12);
   uint8_t first[16];assert(Disk::read(&disk,IMAGE,code,first,sizeof(first)));
-  // SOURCE_POS precedes the first statement in both frontends.
-  assert(first[0]==uint8_t(Op::SOURCE_POS));
-  assert(first[3]==uint8_t(basic?Op::GOTO_DIRECT:Op::JUMP));
-  const uint32_t target=flash::dword(first+4);
+  // Provenance is outside the executed stream in both frontends.
+  assert(first[0]==uint8_t(basic?Op::GOTO_DIRECT:Op::JUMP));
+  const uint32_t target=flash::dword(first+1);
   assert(target>65536 && target<result.size);
   flash::Reader image({&disk,[](void* raw,uint32_t at,uint8_t* out,uint16_t n){return Disk::read(raw,IMAGE,at,out,n);},result.size});
   View view;

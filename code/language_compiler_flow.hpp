@@ -22,7 +22,7 @@ struct CompilerStage {
   PersistentValues* values;
   uint32_t command, argument0, argument1;
   // Optional file-cache handoff lives in the previously unused union tail.
-  // Existing frontend/request/transfer offsets and the 240-byte root stay fixed.
+  // Existing frontend/request/transfer offsets and the 312-byte root stay fixed.
   file_cache::Key file_key;
   ValidatedImage file_validated;
   uint16_t file_id, file_reserved;

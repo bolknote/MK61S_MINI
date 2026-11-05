@@ -85,7 +85,7 @@ void discard(mk61_app_flow* flow) {
 }
 bool executable(const uint8_t* image,uint16_t bytes,const file_cache::Key& key,View& view) {
   uint32_t source_crc=0;
-  if(bytes>=HEADER_SIZE)memcpy(&source_crc,image+16,4);
+  if(bytes>=HEADER_SIZE)memcpy(&source_crc,image+20,4);
   return inspect(image,bytes,view)==Error::NONE && !view.expression &&
       view.language==key.language && view.source_size==key.source_size && source_crc==key.source_crc &&
       (!(image[7]&RESOURCE_FLAG) || (image[7]&OWNED_RESOURCE_FLAG));
@@ -159,7 +159,7 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
        r.image_size+128<=buffer.lease.size) {
       mk61_service_file driver={},old={};char filename[9];name(c.source_id,filename);
       file_cache::Key key={};key.source_id=c.source_id;key.source_size=p.validated->source_size;key.language=c.language;
-      memcpy(&key.source_crc,r.image+16,4);
+      memcpy(&key.source_crc,r.image+20,4);
       uint16_t length=0;
       const bool located=resolve(file_cache::DRIVER_PATH,driver);
       const bool existing=located && find((uint16_t)driver.parent,filename,old);
@@ -251,7 +251,7 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
   }
   memcpy(stage.transfer.image,image,bytes);
   stage.file_validated={VALIDATED_MAGIC,view.size,view.code,view.source_size,view.end,
-      (uint8_t)view.lines,view.stack,(uint8_t)((view.requires_rf?2:0)|(image[7]&12)),view.language,false};
+      view.lines,view.stack,(uint8_t)((view.requires_rf?2:0)|(image[7]&12)),view.language,view.wide};
   stage.values->selected[c.language==Language::BASIC?0:1]=c.source_id;
   stage.transfer.next=mk61_app_flow_to(MK61_APP_KIND_APPLICATION,
       flow->current.file_id,file_cache::START_LOADED);

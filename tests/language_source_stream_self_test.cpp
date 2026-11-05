@@ -40,13 +40,88 @@ static void compare(Language lang,const std::string& text,const ResourceSource* 
   assert(v.source_size==text.size());
   if(resources && resources->mode==ResourceMode::SOURCE) {
     bool found=false;
-    for(unsigned at=v.end;at<made.size;) {
+    const unsigned pool_end=resource_word(actual.data()+38)?
+        made.size-4-flash::dword(actual.data()+made.size-4):made.size;
+    for(unsigned at=v.end;at<pool_end;) {
       const auto* r=actual.data()+at;
-      assert(valid_resource_recipe(r,(uint16_t)(made.size-at),v.source_size));
+      assert(valid_resource_recipe(r,(uint16_t)(pool_end-at),v.source_size));
       for(unsigned i=0;i<r[2];++i)if(r[5+i*3] && resource_word(r+3+i*3)>32767)found=true;
       at+=3+3*r[2];
     }
     if(text.size()>40000)assert(found);
+  }
+}
+static void borrowed_tail() {
+  for(unsigned length:{111U,511U,1023U,1025U,4096U}) {
+    File file{std::string(length,'x')};uint8_t storage[1026];memset(storage,0x5A,sizeof(storage));
+    source::Reader input(file.input(),storage+1,1024);
+    uint16_t previous=0;auto* tail=input.borrow_tail(512,previous);
+    assert(tail==storage+513 && previous==1024);
+    memset(tail,0,512); // Zero metadata must never become source bytes.
+    std::string actual(length,' ');assert(input.read(0,actual.data(),length) && actual==file.text);
+    assert(!input.contains_nul() && input.good());
+    for(unsigned i=0;i<512;++i)assert(tail[i]==0);
+    input.restore_window(previous);
+    assert(input.read(0,actual.data(),length) && actual==file.text && input.good());
+    assert(storage[0]==0x5A && storage[1025]==0x5A);
+    uint16_t failed=123;assert(!input.borrow_tail(769,failed) && !failed);
+    source::Reader raw(file.text.data(),uint16_t(length));
+    assert(!raw.borrow_tail(1,failed) && !failed);
+    source::Reader fallback(file.input());assert(!fallback.borrow_tail(1,failed) && !failed);
+  }
+}
+static void fragment_checks() {
+  // The editor's syntax sink shares the grammar but does not lower bytecode.
+  // Compare it with ordinary full compilation, including the 64..111 range
+  // that is intentionally longer than a keyboard INPUT expression.
+  std::vector<std::string> expressions={"", " ", "1", "-0", "1/0", "(A+3)*(B-2)",
+      "ABS(-.25)", "SQRT(-1)", "INT(A/16)", "1E309", "A+", "(1", "1)",
+      "SIN()", "ABS(1,2)", "A B", "@(.5)", "2^-3", "ARG(1)"};
+  for(unsigned n=1;n<=111;++n) {
+    std::string sum="1";while(sum.size()+2<=n)sum+="+1";
+    sum.resize(n,' ');expressions.push_back(sum);
+    expressions.emplace_back(n,'-');
+  }
+  for(const auto& expression:expressions) {
+    const bool valid=validate_focal_expression(expression.data(),uint16_t(expression.size()),true);
+    const auto source="1.01 S A="+expression+"\n";
+    uint8_t image[MAX_IMAGE];
+    const auto compiled=compile(Language::FOCAL,source.data(),uint16_t(source.size()),image,sizeof(image));
+    assert(valid==(compiled.error==Error::NONE));
+    if(expression.size()<=64) {
+      const auto input=compile_expression(Language::FOCAL,expression.data(),uint16_t(expression.size()),image,sizeof(image));
+      if(expression=="ARG(1)")assert(valid && input.error==Error::FUNCTION); // Only program frames have arguments.
+      else assert(valid==(input.error==Error::NONE));
+    }
+  }
+  assert(!validate_focal_expression(nullptr,1,true));
+  assert(!validate_focal_expression(std::string(112,'1').data(),112,true));
+}
+static void nul_scans() {
+  // Zero guards are outside the half-open input; both scan policies must
+  // observe the same bytes in raw, paged, full-loan and windowed readers.
+  for(unsigned length:{0U,1U,31U,64U,111U,255U,256U,257U,767U})
+    for(unsigned zero=0;zero<=length;++zero) {
+      std::string text(length,'x');if(zero<length)text[zero]=0;
+      std::vector<char> guarded(length+2,0);
+      memcpy(guarded.data()+1,text.data(),length);
+      source::Reader direct(guarded.data()+1,uint16_t(length));
+      assert(direct.contains_nul()==(zero<length));
+      assert(direct.contains_nul<true>()==(zero<length) && direct.good());
+      for(unsigned loan:{0U,257U,768U}) {
+        File file{text};std::vector<uint8_t> storage(loan+2,0x5A);
+        source::Reader input(file.input(),loan?storage.data()+1:nullptr,loan);
+        assert(input.contains_nul()==(zero<length));
+        assert(input.contains_nul<true>()==(zero<length) && input.good());
+        assert(storage.front()==0x5A && storage.back()==0x5A);
+      }
+    }
+  for(bool short_scan:{false,true})for(bool late:{false,true}) {
+    File file{std::string(767,'x')};file.fail=256;file.late_failure=late;
+    source::Reader input(file.input());
+    assert(short_scan?input.contains_nul<true>():input.contains_nul());
+    const auto reads=file.calls;assert(!input.good());
+    assert(input.contains_nul() && input.contains_nul<true>() && file.calls==reads);
   }
 }
 static void compact_source() {
@@ -188,6 +263,9 @@ static void borrowed_window() {
   assert(!no_callback.good());
 }
 int main() {
+  nul_scans();
+  borrowed_tail();
+  fragment_checks();
   borrowed_source();
   borrowed_window();
   distant_equal_spans();

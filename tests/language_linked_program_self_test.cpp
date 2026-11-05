@@ -154,7 +154,7 @@ void invalid_images() {
 }
 void large_paged_and_failures() {
   std::string text="1 A=32000;GOTO A\n";
-  for(unsigned i=2;i<5002;++i)text+=std::to_string(i)+" A=1\n";
+  for(unsigned i=2;i<5002;++i)text+=std::to_string(i)+" PRINT 1\n";
   text+="32000 B=42;.RE=0;END\n";
   auto bytes=package({compile_image(Language::BASIC,text.c_str(),true)});
   assert(bytes.size()>65536);
@@ -295,5 +295,5 @@ int main() {
     basics(true,paged,true);isolation(true,paged,true);errors(true,paged,true);callbacks(true,paged,true);
   }
   whole_contract();
-  std::puts("linked VM: unchanged LBV1/LBV2, shared banks, BASIC/FOCAL isolation, INPUT/budgets, epoch/ESC/errors and corrupt containers PASS");
+  std::puts("linked VM: single LBV2 wire, shared banks, BASIC/FOCAL isolation, INPUT/budgets, epoch/ESC/errors and corrupt containers PASS");
 }

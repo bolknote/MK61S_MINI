@@ -180,6 +180,7 @@ RuntimeStatus overlay(Kind kind,Command command,void* payload,uint32_t& result) 
   language_vm_file_cache_test::before_step((mk61_app_flow*)payload);
   if(kind==Kind::APPLICATION) {
     result=mk61_app_flow_step((mk61_app_flow*)payload);
+    if(!result)std::fprintf(stderr,"VMSTORE rejected phase=%u\n",((mk61_app_flow*)payload)->current.phase);
     return RuntimeStatus::OK;
   }
 #endif
@@ -189,6 +190,7 @@ RuntimeStatus overlay(Kind kind,Command command,void* payload,uint32_t& result) 
   }
   result=kind==Kind::LANGUAGE_VM ? flow_vm((mk61_app_flow*)payload,execute_image)
                                : flow_input((mk61_app_flow*)payload,validate,input,finish);
+  if(!result)std::fprintf(stderr,"VM rejected kind=%u phase=%u\n",unsigned(kind),((mk61_app_flow*)payload)->current.phase);
   return RuntimeStatus::OK;
 }
 }
@@ -302,20 +304,20 @@ int main() {
 #endif
   ImageCache<256,2> small;
   static_assert(sizeof(small)<=256,"cache metadata outside its budget");
-  ValidatedImage cert={VALIDATED_MAGIC,32,32,4,32,0,1,0,Language::BASIC,false};
-  auto one=small.reserve({1,1,Language::BASIC,0},32);
-  assert(one);memset(small.building(one),1,32);assert(small.publish(one,cert));assert(small.release(one));
-  auto two=small.reserve({1,2,Language::BASIC,0},32);
-  assert(two);memset(small.building(two),2,32);assert(small.publish(two,cert));assert(small.release(two));
+  ValidatedImage cert={VALIDATED_MAGIC,language_vm::HEADER_SIZE,language_vm::HEADER_SIZE,4,language_vm::HEADER_SIZE,0,1,0,Language::BASIC,true};
+  auto one=small.reserve({1,1,Language::BASIC,0},language_vm::HEADER_SIZE);
+  assert(one);memset(small.building(one),1,language_vm::HEADER_SIZE);assert(small.publish(one,cert));assert(small.release(one));
+  auto two=small.reserve({1,2,Language::BASIC,0},language_vm::HEADER_SIZE);
+  assert(two);memset(small.building(two),2,language_vm::HEADER_SIZE);assert(small.publish(two,cert));assert(small.release(two));
   one=small.find({1,1,Language::BASIC,0});assert(one);
   const auto* pinned=small.image(one);
-  auto three=small.reserve({1,3,Language::BASIC,0},32);
+  auto three=small.reserve({1,3,Language::BASIC,0},language_vm::HEADER_SIZE);
   assert(three && small.image(one)==pinned && pinned[0]==1);
-  memset(small.building(three),3,32);assert(small.publish(three,cert));assert(small.release(three));
+  memset(small.building(three),3,language_vm::HEADER_SIZE);assert(small.publish(three,cert));assert(small.release(three));
   assert(!small.find({1,2,Language::BASIC,0}));assert(small.image(one)[0]==1);
   small.synchronize(2);assert(small.image(one)==pinned && pinned[0]==1);
   assert(!small.find({2,1,Language::BASIC,0}));assert(small.release(one));assert(small.used()==0);
-  auto bad=small.reserve({2,4,Language::BASIC,0},32);
+  auto bad=small.reserve({2,4,Language::BASIC,0},language_vm::HEADER_SIZE);
   cert.flags=RESOURCE_FLAG;assert(!small.publish(bad,cert));assert(small.release(bad));
   CacheDiagnostics diagnostic={};assert(cache_diagnostics(diagnostic));
   assert(diagnostic.budget==MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES && diagnostic.payload<diagnostic.budget && diagnostic.publications);
