@@ -31,6 +31,8 @@ trap cleanup EXIT HUP INT TERM
 sketch="$build_root/mk61s-M"
 mkdir -p "$sketch"
 cp -R "$root/code/." "$sketch/"
+mkdir -p "$build_root/third_party"
+cp -R "$root/third_party/ryu" "$build_root/third_party/ryu"
 
 # Deliberately omit compiler.c.elf.extra_flags and therefore
 # mk61-portable.ld.  This is the direct Generic STM32F4 Arduino IDE path that

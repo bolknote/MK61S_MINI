@@ -196,7 +196,10 @@ jobs:
             'System/USBDISK.APP',
             'System/EXPLORER.APP',
             'System/HELP0.TXT',
-            'System/HELP1.TXT'
+            'System/HELP1.TXT',
+            'Apps/URQ.APP',
+            'Apps/URQUI.APP',
+            'Apps/urq-build.json'
           ) | ForEach-Object {
             $path = Join-Path $bundle $_
             if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or
@@ -236,6 +239,39 @@ jobs:
           if (Test-Path -LiteralPath (
               Join-Path $bundle 'System/WBMP.APP')) {
             throw 'WBMP.APP must be folded into MARKDOWN.APP'
+          }
+          # The Windows frontend must deliver the same URQ players, ready
+          # games and attribution as Unix while Python launchers are blocked.
+          $reports = @(Get-Content (Join-Path $bundle 'Apps/urq-build.json') -Raw | ConvertFrom-Json)
+          if ((($reports.name | Sort-Object) -join ',') -ne 'URQ,URQUI') {
+            throw 'Incomplete URQ APP set'
+          }
+          foreach ($report in $reports) {
+            $app = Join-Path $bundle "Apps/$($report.name).APP"
+            if ($report.memory_bytes -gt 20480 -or
+                $report.resources.maximum_frame -gt 5120 -or
+                (Get-FileHash $app -Algorithm SHA256).Hash.ToLowerInvariant() -ne $report.app_sha256) {
+              throw "Invalid URQ APP report: $($report.name)"
+            }
+          }
+          foreach ($pair in @(
+            @('programs/urq', 'Games/URQ', @('.urq', '.uqd', '.wbmp')),
+            @('tools/apps/urq/sources', 'licenses/urq', @('.txt'))
+          )) {
+            $source = (Resolve-Path $pair[0]).Path
+            $destination = Join-Path $bundle $pair[1]
+            $expected = @(Get-ChildItem $source -Recurse -File | Where-Object {
+              $_.Extension -cin $pair[2]
+            } | ForEach-Object {
+              $relative = $_.FullName.Substring($source.Length).TrimStart([char[]]'\/')
+              $copied = Join-Path $destination $relative
+              if ((Get-FileHash $_.FullName).Hash -ne (Get-FileHash $copied).Hash) {
+                throw "URQ payload differs: $relative"
+              }
+              $relative
+            })
+            $actual = @(Get-ChildItem $destination -Recurse -File)
+            if ($actual.Count -ne $expected.Count) { throw "Unexpected URQ payload in $destination" }
           }
 
       - name: Build F411 through native PowerShell without Python or host C++

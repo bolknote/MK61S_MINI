@@ -13,7 +13,7 @@ ROOT=Path(__file__).resolve().parents[2]
 ARTWORK=ROOT/'doc/explorer-icons'
 PROGRAM_FOLDERS={
     'CHIP8':'chip8', 'Fonts':'fonts', 'app':'applications', 'examples':'examples',
-    'games':'games', 'library':'library', 'sheets':'sheets',
+    'games':'games', 'library':'library', 'sheets':'sheets', 'spectrum':'games',
     'games/Bumblebee':'bumblebee', 'games/Bumblebee Fly':'bee-flight',
     'games/Chase HQ':'chase', 'games/ELITE':'elite', 'games/Fox Hunting':'fox',
     'games/High Noon':'cowboy', 'games/Infinity Story':'story',

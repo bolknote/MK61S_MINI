@@ -17,7 +17,7 @@ namespace mk61_ryu {
 }
 
 namespace ecma_number {
-bool fractional(double value,char* out,size_t capacity) {
+__attribute__((noinline)) bool fractional(double value,char* out,size_t capacity) {
   if(!out || capacity<32) return false;
   uint64_t bits;memcpy(&bits,&value,8);const unsigned raw=unsigned((bits>>52)&2047);
   if(raw==2047 || value==0) return format(value,out,capacity);
@@ -43,14 +43,22 @@ bool fractional(double value,char* out,size_t capacity) {
 bool format(double value,char* out,size_t capacity) {
   if(!out || capacity<32) return false;
   if(value==0) { out[0]='0';out[1]=0;return true; }
-  char scientific[32];const unsigned length=unsigned(mk61_ryu::d2s_buffered_n(value,scientific));
-  scientific[length]=0;
-  char* end=strchr(scientific,'E');
-  if(!end) { memcpy(out,scientific,length+1);return true; }
-  const bool negative=scientific[0]=='-';unsigned count=0;char digits[20];
-  for(const char* p=scientific+(negative?1:0);p<end;++p) if(*p!='.') digits[count++]=*p;
-  const char* p=end+1;bool minus=*p=='-';if(minus || *p=='+') ++p;
-  int exponent=0;while(*p) exponent=exponent*10+(*p++-'0');if(minus) exponent=-exponent;
+  uint64_t bits;memcpy(&bits,&value,sizeof(bits));
+  const bool negative=bool(bits>>63);
+  const uint32_t raw=uint32_t((bits>>52)&2047);
+  const uint64_t mantissa=bits&UINT64_C(0xfffffffffffff);
+  if(raw==2047) {
+    strcpy(out,mantissa?"NaN":negative?"-Infinity":"Infinity");
+    return true;
+  }
+  // Use Ryu's exact decimal result directly. Formatting scientific text and
+  // parsing it back duplicates a decimal formatter in the resident image.
+  const auto decimal=mk61_ryu::d2d(mantissa,raw);
+  uint64_t integer=decimal.mantissa;
+  char reverse[20];unsigned count=0;
+  do { reverse[count++]=char('0'+integer%10);integer/=10; } while(integer);
+  char digits[20];for(unsigned i=0;i<count;++i) digits[i]=reverse[count-i-1];
+  const int exponent=decimal.exponent+int(count)-1;
   unsigned n=0;if(negative) out[n++]='-';
   if(exponent>=-6 && exponent<21) {
     const int point=exponent+1;
@@ -73,7 +81,7 @@ bool format(double value,char* out,size_t capacity) {
   }
   out[n]=0;return true;
 }
-bool parse(const char* text,double& value) {
+__attribute__((noinline)) bool parse(const char* text,double& value) {
   while(*text==' ' || *text=='\t' || *text=='\r' || *text=='\n') ++text;
   unsigned size=unsigned(strlen(text));
   while(size && (text[size-1]==' ' || text[size-1]=='\t' || text[size-1]=='\r' || text[size-1]=='\n')) --size;

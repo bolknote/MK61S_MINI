@@ -6,7 +6,7 @@ param(
     [ValidateSet('setup', 'focal', 'tinybasic', 'wbmp-viewer',
                  'markdown-viewer', 'chip8', 'usbdisk', 'explorer',
                  'language-vm', 'language-input', 'vm-file-cache', 'source-editor',
-                 'terminal', 'terminal-clock')]
+                 'terminal', 'terminal-clock', 'urq', 'urq-ui')]
     [string]$System,
     [Parameter(Mandatory = $true)]
     [string]$ArmToolchainBin,
@@ -28,6 +28,16 @@ $Utf8NoBom = New-Object Text.UTF8Encoding($false)
 $DefaultLocalFloatMask = 0x3C0
 
 $Systems = @{
+    'urq' = @{
+        Name = 'URQ'; Macro = 'URQ'; Magic = 'C2'
+        Sources = @('../examples/portable-apps/URQ/main.cpp',
+            'urq/engine.cpp', 'urq/pack.cpp', 'zx0.cpp')
+    }
+    'urq-ui' = @{
+        Name = 'URQUI'; Macro = 'URQ'; Magic = $null
+        Sources = @('../examples/portable-apps/URQ/cold.cpp',
+            'urq/engine.cpp', 'urq/pack.cpp', 'zx0.cpp')
+    }
     'terminal' = @{
         Name = 'TERMINAL'; Macro = 'TERMINAL'; Magic = $null
         Sources = @('terminal_command_module.cpp', 'crash_dump_format.cpp',
@@ -291,6 +301,7 @@ function Assert-SizeBudget {
 try {
     # FOCAL is a compiler frontend; execution belongs to the matched VM.
     if ($System -eq 'focal') { $LanguageVmCompiler = $true }
+    $portableUser = $System -in @('urq', 'urq-ui')
     if ($LanguageVmCompiler -and $System -notin @('focal', 'tinybasic')) {
         throw '-LanguageVmCompiler applies only to BASIC/FOCAL'
     }
@@ -335,8 +346,10 @@ try {
 
     $sources = New-Object 'System.Collections.Generic.List[string]'
     $sources.Add((Join-Path $ProjectRoot 'sdk/portable/start.c'))
-    $sources.Add((Join-Path $ProjectRoot `
-        'sdk/portable/system/system_compat.cpp'))
+    if (-not $portableUser) {
+        $sources.Add((Join-Path $ProjectRoot `
+            'sdk/portable/system/system_compat.cpp'))
+    }
     foreach ($source in $definition.Sources) {
         $sources.Add((Join-Path (Join-Path $ProjectRoot 'code') $source))
     }
@@ -359,7 +372,10 @@ try {
     }
     $sources.Add((Join-Path $ProjectRoot 'sdk/portable/memory.c'))
     $sharedSystemRuntime = $System -in @('focal', 'tinybasic', 'language-vm',
-        'language-input', 'usbdisk', 'setup', 'markdown-viewer', 'vm-file-cache', 'source-editor', 'terminal')
+        'language-input', 'usbdisk', 'setup', 'markdown-viewer', 'vm-file-cache', 'source-editor', 'terminal') -or $portableUser
+    if ($portableUser) {
+        $sources.Add((Join-Path $ProjectRoot 'sdk/portable/shared_runtime.c'))
+    }
     if ($sharedSystemRuntime) {
         $sources.Add((Join-Path $ProjectRoot `
             'sdk/portable/system/runtime.S'))
@@ -375,10 +391,17 @@ try {
         '-mfloat-abi=hard', '-Oz', '-flto', '-fipa-pta',
         '-mword-relocations', '-fno-builtin', '-ffunction-sections',
         '-fdata-sections', '-Wall', '-Wextra', '-Werror')
+    if ($portableUser) {
+        $flags += @('-ffreestanding', '-DMK61_APP_SHARED_RUNTIME=1',
+            '-DMK61_RUNTIME_POINTER=mk61_app_runtime')
+    }
     if ($FocalTrace) { $flags += '-DMK61_FOCAL_TRACE=1' }
     if ($System -eq 'terminal-clock') { $flags += '-DMK61_TERMINAL_CLOCK_ONLY=1' }
-    $includes = @(
-        ('-I' + (Join-Path $ProjectRoot 'sdk/portable/system')),
+    $includes = @()
+    if (-not $portableUser) {
+        $includes += '-I' + (Join-Path $ProjectRoot 'sdk/portable/system')
+    }
+    $includes += @(
         ('-I' + (Join-Path $ProjectRoot 'sdk/portable/include')),
         ('-I' + (Join-Path $ProjectRoot 'code')))
     $objects = New-Object 'System.Collections.Generic.List[string]'
@@ -403,11 +426,13 @@ try {
             }
         }
         if ($cpp) {
-            foreach ($flag in @('-DMK61_BUILD_PORTABLE_SYSTEM',
-                "-DMK61_BUILD_$($definition.Macro)_MODULE",
-                '-include', (Join-Path $ProjectRoot `
-                    'sdk/portable/system/system_compat.hpp'))) {
-                $arguments.Add($flag)
+            if (-not $portableUser) {
+                foreach ($flag in @('-DMK61_BUILD_PORTABLE_SYSTEM',
+                    "-DMK61_BUILD_$($definition.Macro)_MODULE",
+                    '-include', (Join-Path $ProjectRoot `
+                        'sdk/portable/system/system_compat.hpp'))) {
+                    $arguments.Add($flag)
+                }
             }
             if ($LanguageVmCompiler) {
                 $arguments.Add('-DMK61_LANGUAGE_VM_COMPILER=1')
@@ -505,7 +530,7 @@ try {
     $imageSize = [int](Get-Item -LiteralPath $image).Length
     $relocationCount = [Mk61.Build.AppPacker]::ExtractRelocations(
         $elf, $base, $imageSize, $memorySize, $relocations)
-    $kind = if ($System -in @('vm-file-cache', 'source-editor', 'terminal', 'terminal-clock')) { 'app' } else { $System }
+    $kind = if ($portableUser -or $System -in @('vm-file-cache', 'source-editor', 'terminal', 'terminal-clock')) { 'app' } else { $System }
     $packed = [Mk61.Build.AppPacker]::PackFile(
         $kind, $image, $relocations, $memorySize, $entryOffset,
         $base, $definition.Magic, $app)
