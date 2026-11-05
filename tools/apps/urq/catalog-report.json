@@ -16,6 +16,7 @@
   },
   "verification": "Conversion and startup; complete adaptation walkthroughs are in tests/urq_library_self_test.py. Other paths are not certified.",
   "published": [
+    "jim_from_outer_space_ru",
     "trapped_in_time_ru",
     "house_that_jack_built"
   ],
@@ -87,11 +88,47 @@
       "source_files": {
         "main.qst": "531dfe9a25f3b980f3610ce1f3ec5d525fec0f3cc13c5cf1e8b70e5e67127037"
       },
-      "published": false,
-      "reasons": [
-        "JavaScript dependency; game logic is not removed",
-        "'m8' codec can't encode character '\\xed' in position 51: character 'í' is not representable in M8"
-      ]
+      "adaptation": {
+        "version": 1,
+        "repository": "https://github.com/tseykovets/jim_from_outer_space_ru",
+        "revision": "cf238d064dd145baba9fc09873d14377c86027a1",
+        "files": {
+          "urqw/main.qst": "531dfe9a25f3b980f3610ce1f3ec5d525fec0f3cc13c5cf1e8b70e5e67127037",
+          "urqw/script.js": "e57508b211f5e24e08fd0cf83d291ef52699b8f4f518ea8c560267e11eb41ea6",
+          "urqw/manifest.json": "2e4408411c94e591d20e2c42b6cf0a6ee029cdbfff9ebae41779dfd64ad6d805",
+          "LICENSE.txt": "e66c269d4819aaab34b49ef5220c4ddab6756f21bb5180761a4eb8561f2b7bbd"
+        },
+        "changes": [
+          "All story locations and choices are preserved; no JavaScript executes.",
+          "Static JSON notes become optional URQL procedure buttons, retaining the current location, original actions and return links.",
+          "Browser markup, music and illustrations are omitted; they are not required for choices.",
+          "Latin accents and Japanese titles in translator notes are transliterated for M8; Russian Ё/Й are preserved.",
+          "Long narrative paragraphs are split into consecutive print statements without truncation.",
+          "A brief launch screen links to the complete original preface, author credits, license and acknowledgments under About."
+        ],
+        "verification": "tests/urq_library_self_test.py"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "4e27225418a6ee679513c1789a0e610a",
+        "source_sha256": "b1dd7db9ee279483c1cac336a7dadbbe69893a66681394beb174f454f77fedc3",
+        "logical_bytes": 188001,
+        "lines": 1490,
+        "labels": 127,
+        "parts": 3,
+        "stored_bytes": 171941,
+        "title": "Джим из Космоса",
+        "ifid": "C2AF99B7-84E9-4C89-9CA1-F60FE853A7D7",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 2,
+        "actions": 2
+      },
+      "published": true,
+      "reasons": []
     },
     {
       "title": "Гэд",

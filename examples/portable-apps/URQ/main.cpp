@@ -7,6 +7,9 @@
 #include "urq/engine.hpp"
 #include <string.h>
 #include <new>
+#if !defined(MK61_TARGET_PICOCALC)
+#include "classic_view.hpp"
+#endif
 #if defined(MK61_TARGET_PICOCALC)
 #include "color.hpp"
 #endif
@@ -104,7 +107,7 @@ struct History {
   }
 };
 enum class Screen : uint8_t { GAME, MENU, SAVE, LOAD, INVENTORY, CONFIRM };
-enum class Request : uint8_t { NONE, MENU, SAVE, CONTENT, URL };
+enum class Request : uint8_t { NONE, MENU, SAVE, CONTENT, URL, INIT, INPUT };
 struct App {
   const mk61_app_services* services = nullptr;
   urq::Engine engine;
@@ -114,12 +117,17 @@ struct App {
   History history;
   uint32_t file = MK61_SERVICE_INVALID_ID, parent = MK61_SERVICE_ROOT_ID;
   uint32_t view = 0, scene = 0, next = 0, last_ms = 0;
-  uint16_t part = 0xFFFF, part_id = 0xFFFF, selected = 0, menu = 0;
+  uint16_t part = 0xFFFF, part_id = 0xFFFF, selected = 0, menu = 0, action_next = 0;
   uint16_t length = 0, cursor = 0;
   char draft[256]{};
   char* input = nullptr; // draft lives in the shell across menus and cold APP swaps
   phone_input::State phone{};
   bool dirty = true, quitting = false, russian = true, typing = false, paging = false;
+  bool actions = false;
+#if !defined(MK61_TARGET_PICOCALC)
+  bool compact = false;
+  uint8_t* bitmap = nullptr;
+#endif
   char notice[32]{};
   Request request = Request::NONE;
 #if defined(MK61_TARGET_PICOCALC)
@@ -142,6 +150,18 @@ uint32_t display(uint32_t operation, uint32_t b = 0, uint32_t c = 0, void* p = n
 }
 void line(unsigned row, const char* text, char marker = 0, uint32_t color = 0x10000,
           const uint16_t* colors = nullptr, unsigned count = 0) {
+#if !defined(MK61_TARGET_PICOCALC)
+  if(app.bitmap) {
+    classic_view::Canvas canvas{app.services,app.bitmap};
+    if(row==app.rows-1) canvas.hint(text);
+    else {
+      const unsigned y=row*classic_view::PITCH;const bool selected=marker=='>' && !app.typing;
+      if(marker=='>') canvas.box(1,y,190,14,selected);
+      canvas.text(marker?9:3,y+1,text,selected);
+    }
+    return;
+  }
+#endif
 #if defined(MK61_TARGET_PICOCALC)
   if(app.colored) display(MK61_SERVICE_DISPLAY_UI_COLORS,
       color < 0x10000 ? color : ((app.background & 0x7E0) > 0x3E0 ? 0 : 0xFFFF), app.background);
@@ -154,15 +174,23 @@ void line(unsigned row, const char* text, char marker = 0, uint32_t color = 0x10
 #endif
 }
 void geometry() {
+#if !defined(MK61_TARGET_PICOCALC)
+  if(app.compact) {
+    app.rows=5;app.width=186;app.body=app.engine.state().status==urq::Status::INPUT?3:4;return;
+  }
+#endif
   display(MK61_SERVICE_DISPLAY_BEGIN_UI_TEXT);
   app.rows = mk61_api->display_rows(); if(app.rows < 2) app.rows = 2;
   app.width = display(MK61_SERVICE_DISPLAY_UI_TEXT_WIDTH);
   if(!app.width) app.width = mk61_api->display_columns();
-  app.body = app.rows > 8 ? app.rows - 7 : app.rows > 4 ? app.rows - 3 : 1;
+  app.body = app.rows > 8 ? app.rows - 6 : app.rows > 3 ? app.rows - 2 : 1;
   if(app.body > 12) app.body = 12;
   if(!app.history.external.handle && app.body > 7) app.body = 7;
 }
 unsigned advance(char ch) {
+#if !defined(MK61_TARGET_PICOCALC)
+  if(app.compact) return classic_view::Canvas{app.services,nullptr}.advance(uint8_t(ch));
+#endif
   char text[2] = {ch, 0};
   const uint32_t size = display(MK61_SERVICE_DISPLAY_MEASURE_UI_TEXT, 0, 0, text);
   return size ? size : 1;
@@ -170,7 +198,7 @@ unsigned advance(char ch) {
 uint32_t wrap(uint32_t at, char* out, unsigned limit) {
   unsigned used = 0, pixels = 0, last_space = 0;
   char ch;
-  const unsigned columns = mk61_api->display_columns();
+  const unsigned columns = 126;
   while(app.history.get(at + used, ch) && ch != '\n' && ch != '\r' && used < 126 && used < columns) {
     const unsigned size = advance(ch);
     if(used && pixels + size > limit) break;
@@ -196,9 +224,9 @@ uint32_t page(uint32_t at, bool draw) {
     char unused;app.history.get(at, unused, &color);uint16_t colors[64];unsigned count = strlen(buffer);
     if(count > 64) count = 64;
     for(unsigned i=0;i<count;++i) { colors[i]=color;app.history.get(at+i,unused,&colors[i]); }
-    if(draw) line((app.rows > 2 ? 1 : 0) + row, buffer, 0, color, colors, count);
+    if(draw) line(row, buffer, 0, color, colors, count);
 #else
-    if(draw) line((app.rows > 2 ? 1 : 0) + row, buffer, 0, color);
+    if(draw) line(row, buffer, 0, color);
 #endif
     if(next == at) break;
     at = next;
@@ -218,7 +246,7 @@ void end_typing() {
 #endif
   app.typing = false;
 }
-void begin_typing(bool reset) {
+[[maybe_unused]] void begin_typing(bool reset) {
   if(reset) { app.length = app.cursor = 0; app.input[0] = 0; phone_input::finish(app.phone); }
   if(!app.length) app.input[0] = 0;
 #if defined(MK61_TARGET_PICOCALC)
@@ -230,25 +258,25 @@ void begin_typing(bool reset) {
   app.typing = true;
 }
 void draw_game() {
-  geometry(); display(MK61_SERVICE_DISPLAY_BEGIN_UPDATE);
+  geometry();
+#if !defined(MK61_TARGET_PICOCALC)
+  uint8_t pixels[classic_view::BYTES]{};
+  if(app.compact) { mk61_api->graphics_begin();app.bitmap=pixels; }
+  else
+#endif
+  display(MK61_SERVICE_DISPLAY_BEGIN_UPDATE);
 #if defined(MK61_TARGET_PICOCALC)
   app.background = urq_color::parse(app.engine.get("style_backcolor"), 0);
   app.foreground = urq_color::parse(app.engine.get("style_textcolor"), 0xFFFF);
   if(app.colored) display(MK61_SERVICE_DISPLAY_UI_COLORS, (app.background & 0x7E0) > 0x3E0 ? 0 : 0xFFFF, app.background);
 #endif
+#if !defined(MK61_TARGET_PICOCALC)
+  if(!app.compact)
+#endif
   display(MK61_SERVICE_DISPLAY_CLEAR);
   const auto status = app.engine.state().status;
-  const char* title = status == urq::Status::INPUT ?
-      (app.russian ? "URQ / RU" : "URQ / EN") : "URQ";
-#if !defined(MK61_TARGET_PICOCALC)
-  if(status == urq::Status::INPUT) {
-    static const char* const layouts[] = {"RU", "ABC", "123"};
-    title = layouts[app.phone.layout];
-  }
-#endif
-  if(app.rows > 2) line(0, title);
   app.next = page(app.view, true);
-  const unsigned first = app.body + (app.rows > 2 ? 1 : 0);
+  const unsigned first = app.body;
   if(status == urq::Status::INPUT && !app.paging) {
     char visible[128]; unsigned start = app.cursor, pixels = advance('|');
     while(start && pixels + advance(app.input[start - 1]) < app.width - advance('>')) {
@@ -263,6 +291,24 @@ void draw_game() {
   } else if(!app.paging) {
     uint16_t indices[urq::ACTIONS]; const unsigned count = action_indices(indices);
     if(app.selected >= count) app.selected = count ? uint16_t(count - 1) : 0;
+#if !defined(MK61_TARGET_PICOCALC)
+    if(app.compact && app.actions && count) {
+      memset(pixels,0,sizeof(pixels));
+      classic_view::Canvas canvas{app.services,pixels};unsigned index=app.selected,offset=app.menu;
+      app.action_next=0;
+      for(unsigned row=0;row<4 && index<count;++row) {
+        const char* caption=app.engine.text(app.engine.state().actions[indices[index]].caption);
+        char text[128],numbered[128];
+        const unsigned next=canvas.wrap(caption,offset,text,160);
+        if(offset && row) urq::copy_string(numbered,text);
+        else mk61_app_snprintf(app.services,numbered,sizeof(numbered),"%u %s",index+1,text);
+        line(row,numbered,index==app.selected?'>':' ');
+        if(caption[next]) {offset=next;if(index==app.selected) app.action_next=uint16_t(next);}
+        else {if(index==app.selected) app.action_next=0;++index;offset=0;}
+      }
+    } else if(!app.compact)
+#endif
+    {
     const unsigned available = app.rows > first + 1 ? app.rows - first - 1 : 1;
     const unsigned top = app.selected >= available ? app.selected - available + 1 : 0;
     for(unsigned row = 0; row < available && top + row < count; ++row) {
@@ -272,15 +318,50 @@ void draw_game() {
                         app.engine.text(a.caption));
       line(first + row, caption, top + row == app.selected ? '>' : ' ');
     }
+    }
   }
-  const char* footer = app.paging ? M8("Далее:OK") :
-      *app.notice ? app.notice : status == urq::Status::ANYKEY ? M8("Любая клавиша") :
+  const char* footer = *app.notice ? app.notice : app.paging ? M8("Далее:OK") :
+      status == urq::Status::ANYKEY ? M8("Любая клавиша") :
       status == urq::Status::PAUSE ? M8("Пауза") : "OK / USER";
-  if(app.rows > 3) line(app.rows - 1, footer);
-  display(MK61_SERVICE_DISPLAY_END_UPDATE); app.dirty = false;
+#if defined(MK61_TARGET_PICOCALC)
+  if(status==urq::Status::INPUT && !app.paging && !*app.notice)
+    footer=app.russian?M8("RU Enter:ввод Tab:меню F8:язык"):M8("EN Enter:ввод Tab:меню F8:язык");
+#endif
+#if !defined(MK61_TARGET_PICOCALC)
+  if(app.compact && !*app.notice) {
+    footer=app.paging?M8("OK/→:далее ESC:выход"):
+        app.actions?M8("←→:пункт OK:выбор USER:меню"):
+        status==urq::Status::CHOICE?M8("OK:действия ←→:текст USER:меню"):
+        status==urq::Status::INPUT?M8("OK:ввод K:язык F:аА USER"):footer;
+    if(status==urq::Status::INPUT && !app.paging) {
+      static const char* const layouts[]={M8("РУС"),"ABC","123"};
+      char hint[48];mk61_app_snprintf(app.services,hint,sizeof(hint),"%s %s",layouts[app.phone.layout],footer);
+      line(app.rows-1,hint);footer=nullptr;
+    }
+  }
+#endif
+  if(app.rows > 3 && footer) line(app.rows - 1, footer);
+#if !defined(MK61_TARGET_PICOCALC)
+  if(app.compact) { mk61_api->graphics_present(pixels,sizeof(pixels));app.bitmap=nullptr; }
+  else
+#endif
+  display(MK61_SERVICE_DISPLAY_END_UPDATE);
+  app.dirty = false;
 }
 bool up(int key) { return key == MK61_APP_KEY_SHIFT_LEFT || key == MK61_APP_KEY_BACKWARD; }
 bool down(int key) { return key == MK61_APP_KEY_SHIFT_RIGHT || key == MK61_APP_KEY_FORWARD; }
+bool screen_changed(uint32_t& previous) {
+  const uint32_t current=mk61_api->graphics_revision?mk61_api->graphics_revision():0;
+  const bool changed=current!=previous;previous=current;return changed;
+}
+int wait_reading_key() {
+  uint32_t revision=UINT32_MAX;
+  for(;;) {
+    if(screen_changed(revision)) draw_game();
+    const int key=mk61_api->key_poll();if(key>=0) return key;
+    mk61_api->delay_ms(1);
+  }
+}
 void print(void*, const char* text, bool newline) {
 #if defined(MK61_TARGET_PICOCALC)
   app.history.current_color = urq_color::parse(app.engine.get("style_textcolor"), 0xFFFF);
@@ -291,10 +372,11 @@ void print(void*, const char* text, bool newline) {
     text += n; geometry();
     while(page(app.view, false) < app.history.end && !app.quitting) {
       app.paging = true; draw_game();
-      int key = mk61_api->key_wait();
+      int key = wait_reading_key();
       if(key == MK61_APP_KEY_ESC || key == MK61_APP_KEY_USER) {
-        line(app.rows - 1, M8("OK:читать ESC:выйти"));
-        key = mk61_api->key_wait();
+        notice(M8("OK:читать ESC:выйти"));draw_game();
+        key = wait_reading_key();
+        app.notice[0]=0;
         if(key == MK61_APP_KEY_ESC) { app.quitting = true; break; }
       }
       if(key == MK61_APP_KEY_OK || down(key) || key == MK61_APP_KEY_RIGHT)
@@ -307,7 +389,7 @@ void print(void*, const char* text, bool newline) {
 void clear(void*, bool text, bool) {
   if(text) {
     app.history.append("\n", 1); app.view = app.scene = app.history.end;
-    app.selected = 0;
+    app.selected = app.menu = 0;app.actions=false;
   }
   app.dirty = true;
 }
@@ -439,7 +521,7 @@ bool load_slot(unsigned slot) {
       const auto& source=((Inner*)raw)->source;return source.read(source.context,48+at,out,n);
     },engine_size})) return false;
   app.history.begin = app.history.end = 0; app.history.cached = UINT32_MAX;
-  app.view = app.scene = 0;
+  app.view = app.scene = 0;app.actions=false;app.menu=0;
   const auto& state = app.engine.state();
 #if defined(MK61_TARGET_PICOCALC)
   app.history.current_color = urq_color::parse(app.engine.get("style_textcolor"), 0xFFFF);
@@ -506,8 +588,12 @@ int menu_label(void* raw, uint32_t index, char* text, uint32_t capacity) {
 }
 int menu_choose(Screen kind, uint32_t count) {
   mk61_service_menu_source request{kind == Screen::SAVE ? M8("СОХРАНИТЬ") :
-      kind == Screen::LOAD ? M8("ЗАГРУЗИТЬ") : kind == Screen::INVENTORY ? M8("ИНВЕНТАРЬ") : "URQ",
+      kind == Screen::LOAD ? M8("ЗАГРУЗИТЬ") : kind == Screen::INVENTORY ? M8("ИНВЕНТАРЬ") :
+      kind == Screen::CONFIRM ? M8("ВЫЙТИ ИЗ ИГРЫ?") : M8("МЕНЮ ИГРЫ"),
       (void*)(uintptr_t)kind, count, 0, menu_label};
+#if !defined(MK61_TARGET_PICOCALC)
+  if(app.compact) return classic_view::menu(app.services,request);
+#endif
   return app.services->call(MK61_SERVICE_MENU, 0, 0, sizeof(request), &request) ? int(request.selected) : -1;
 }
 #endif
@@ -520,7 +606,7 @@ void open_menu() {
   if(app.engine.state().status==urq::Status::ERROR) {
     char error[64];mk61_app_snprintf(app.services,error,sizeof(error),"URQ E%u / L%lu",
         unsigned(app.engine.state().error),(unsigned long)app.engine.state().pc);
-    geometry();line(0,error);line(app.rows-1,M8("OK:меню"));mk61_api->key_wait();
+    notice(error);draw_game();mk61_api->key_wait();app.notice[0]=0;
   }
   const int selected = menu_choose(Screen::MENU, 6);
   if(selected == 1 || selected == 2) {
@@ -528,7 +614,9 @@ void open_menu() {
     if(slot >= 0) notice((selected == 1 ? save_slot(unsigned(slot)) : load_slot(unsigned(slot))) ?
         M8("Готово") : M8("Ошибка файла"));
   } else if(selected == 3) {
-    const int item = menu_choose(Screen::INVENTORY, inventory(UINT32_MAX));
+    const unsigned count=inventory(UINT32_MAX);
+    if(!count) notice(M8("Инвентарь пуст"));
+    const int item = menu_choose(Screen::INVENTORY, count);
     if(item >= 0) { char name[128], caption[128]; inventory(unsigned(item), caption, name); if(*name) app.engine.use(name); }
   } else if(selected == 4) {
     app.engine.start(); app.history.begin = app.history.end = app.view = app.scene = 0;
@@ -577,7 +665,8 @@ void input_event(unsigned kind, uint8_t value = 0) {
   }
   app.dirty = true;
 }
-void input_key(int key) {
+[[maybe_unused]] void input_key(int key) {
+  app.notice[0]=0;
 #if !defined(MK61_TARGET_PICOCALC)
   const bool pending = app.phone.key != 0;
   if(key >= 0 && key <= 9) {
@@ -599,7 +688,27 @@ void input_key(int key) {
   else if(down(key)) input_event(MK61_TEXT_END_LINE);
 }
 void game_key(int key) {
+  app.notice[0]=0;
   if(key == MK61_APP_KEY_ESC || key == MK61_APP_KEY_USER) { open_menu(); return; }
+#if !defined(MK61_TARGET_PICOCALC)
+  if(app.compact && app.engine.state().status==urq::Status::CHOICE) {
+    if(key==MK61_APP_KEY_OK && !app.actions) {app.actions=true;app.dirty=true;return;}
+    if(!app.actions && key>=0 && key<=9) return;
+    if(app.actions) {
+      uint16_t indices[urq::ACTIONS];const unsigned count=action_indices(indices);
+      if(up(key) || key==MK61_APP_KEY_LEFT) {
+        if(app.menu) app.menu=0;else if(app.selected) --app.selected;
+      } else if(down(key) || key==MK61_APP_KEY_RIGHT) {
+        if(app.action_next) app.menu=app.action_next;
+        else if(unsigned(app.selected)+1<count) {++app.selected;app.menu=0;}
+      } else if(key==MK61_APP_KEY_OK || (key>=0 && key<=9)) {
+        const unsigned index=key==MK61_APP_KEY_OK?app.selected:key?unsigned(key-1):9;
+        if(index<count) {app.engine.choose(app.engine.state().actions[indices[index]].id);app.actions=false;app.menu=0;}
+      }
+      app.dirty=true;return;
+    }
+  }
+#endif
   if(key == MK61_APP_KEY_LEFT
 #if defined(MK61_TARGET_PICOCALC)
      || key == MK61_APP_KEY_RAW_BASE + 0xD6
@@ -675,6 +784,9 @@ void finish_session();
                      MK61_SERVICE_OWNER_APP, sizeof(App), &shell_lease)) return MK61_APP_BUSY;
   app_state = ::new(shell_lease.data) App{};
   app.services = services; app.shell_lease = shell_lease;
+#if !defined(MK61_TARGET_PICOCALC)
+  app.compact=classic_view::available(services);
+#endif
 #if defined(MK61_TARGET_PICOCALC)
   app.colored = (services->call(MK61_SERVICE_CAPABILITIES, 0, 0, 0, nullptr) & MK61_SERVICE_CAP_TEXT_COLORS) != 0;
 #endif
@@ -701,6 +813,7 @@ void finish_session();
 }
 [[maybe_unused]] void run_session() {
   auto& state = app.engine.state();
+  uint32_t revision=UINT32_MAX;
   app.last_ms = mk61_api->millis_ms();
   while(!app.quitting && app.request == Request::NONE) {
     mk61_api->service();
@@ -710,10 +823,17 @@ void finish_session();
       if(state.status == urq::Status::RUNNING) { app.engine.run(64); app.dirty = true; }
       if(state.status == urq::Status::ERROR) {
         open_menu();
-      } else if(state.status == urq::Status::INPUT && !app.typing) begin_typing(false);
+      } else if(state.status == urq::Status::INPUT && !app.typing) {
+#if defined(MK61_URQ_SPLIT) && !defined(MK61_URQ_COLD)
+        app.request=Request::INPUT;
+#else
+        begin_typing(false);
+#endif
+      }
       else if(state.status == urq::Status::QUIT) open_menu();
     }
     if(app.request != Request::NONE) break;
+    if(screen_changed(revision)) app.dirty=true;
     if(app.dirty) draw_game();
 #if defined(MK61_TARGET_PICOCALC)
     if(app.typing) {
@@ -727,8 +847,10 @@ void finish_session();
     {
       const int key = mk61_api->key_poll();
       if(key >= 0) {
-        if(app.typing) input_key(key);
-        else game_key(key);
+#if !defined(MK61_URQ_SPLIT) || defined(MK61_URQ_COLD)
+        if(app.typing) input_key(key);else
+#endif
+        game_key(key);
       }
     }
     if(phone_input::expire(app.phone, now)) app.dirty = true;
@@ -738,7 +860,11 @@ void finish_session();
 [[maybe_unused]] void finish_session() {
   const auto* services = app.services;
   mk61_service_lease shell_lease = app.shell_lease;
-  end_typing(); app.history.close(); display(MK61_SERVICE_DISPLAY_END_UI_TEXT);
+  end_typing(); app.history.close();
+#if !defined(MK61_TARGET_PICOCALC)
+  if(app.compact) mk61_api->graphics_end();
+#endif
+  display(MK61_SERVICE_DISPLAY_END_UI_TEXT);
   app.services->call(MK61_SERVICE_MEMORY_RELEASE, MK61_SERVICE_WORKSPACE, 0, 0, &app.lease);
   services->call(MK61_SERVICE_MEMORY_RELEASE, MK61_SERVICE_SCRATCH, 0, 0, &shell_lease);
   app_state = nullptr;
@@ -755,9 +881,10 @@ void finish_session();
 struct FlowContext {
   uint32_t magic;
   App* state;
-  uint16_t root, helper;
+  uint16_t root, helper, file;
 };
-constexpr uint32_t FLOW_CONTEXT_MAGIC = 0x31515255;
+// Version the private shared shell layout independently of public APP ABI 6.
+constexpr uint32_t FLOW_CONTEXT_MAGIC = 0x32515255;
 static_assert(sizeof(FlowContext) <= MK61_APP_FLOW_USER_CONTEXT_SIZE, "URQ flow context");
 #endif
 }
@@ -766,11 +893,30 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
   if(!mk61_app_flow_compatible(flow) || flow->context_size < sizeof(FlowContext)) return 0;
   auto& context = *(FlowContext*)flow->context;
 #if defined(MK61_URQ_COLD)
+  if(context.magic == FLOW_CONTEXT_MAGIC && flow->current.phase == uint32_t(Request::INIT)) {
+    const uint32_t result=begin_session(context.file);
+    if(!result) context.state=app_state;
+    mk61_app_flow_return(flow,result,MK61_FLOW_OK);return 1;
+  }
   if(context.magic != FLOW_CONTEXT_MAGIC || !context.state) return 0;
   app_state = context.state;
   if(!bind_session()) { mk61_app_flow_return(flow, MK61_APP_IO_ERROR, MK61_FLOW_OK); return 1; }
   const auto request = Request(flow->current.phase); app.request = Request::NONE;
   if(request == Request::MENU) open_menu();
+  else if(request == Request::INPUT) {
+    begin_typing(false);
+    uint32_t revision=UINT32_MAX;
+    while(app.typing && !app.quitting) {
+      mk61_api->service();
+      if(screen_changed(revision)) app.dirty=true;
+      if(app.dirty) draw_game();
+      const int key=mk61_api->key_poll();if(key>=0) input_key(key);
+      if(phone_input::expire(app.phone,mk61_api->millis_ms())) app.dirty=true;
+      if(app.engine.state().status!=urq::Status::INPUT) end_typing();
+      else if(!app.typing && !app.quitting) begin_typing(false);
+      mk61_api->delay_ms(1);
+    }
+  }
   else if(request == Request::SAVE) {
     const bool ok=save_slot(0);notice(ok?M8("Готово"):M8("Ошибка файла"));
     mk61_app_flow_return(flow,ok?MK61_APP_OK:MK61_APP_IO_ERROR,MK61_FLOW_OK);return 1;
@@ -788,20 +934,20 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
     const uint32_t file = flow->current.phase == MK61_APP_FLOW_FILE_PHASE ?
         *(const uint32_t*)flow->context : choose_file();
     if(file == MK61_SERVICE_INVALID_ID) { mk61_app_flow_exit(flow, 0, MK61_FLOW_OK); return 1; }
-    context = {}; context.root = flow->current.file_id;
-    const uint32_t result = begin_session(file);
-    if(result) { mk61_app_flow_exit(flow, result, MK61_FLOW_OK); return 1; }
-    context.state = app_state; context.magic = FLOW_CONTEXT_MAGIC;
+    context = {}; context.root = flow->current.file_id;context.file=uint16_t(file);
+    const auto* services=mk61_app_get_services(mk61_api,MK61_SERVICE_CAP_FILES);
     mk61_service_file parent{}, helper{};
-    const bool found = app.services->call(MK61_SERVICE_FILE_ENTRY, 0, context.root, 0, &parent) &&
-        app.services->call(MK61_SERVICE_FILE_RESOLVE, parent.parent, MK61_SERVICE_FILE_APP,
+    const bool found = services && services->call(MK61_SERVICE_FILE_ENTRY, 0, context.root, 0, &parent) &&
+        services->call(MK61_SERVICE_FILE_RESOLVE, parent.parent, MK61_SERVICE_FILE_APP,
             uint32_t(uintptr_t("URQUI.APP")), &helper) == 0;
     if(!found) {
-      line(0, "URQUI.APP?"); mk61_api->key_wait(); finish_session();
       mk61_app_flow_exit(flow, MK61_APP_INVALID_FILE, MK61_FLOW_OK); return 1;
     }
-    context.helper = uint16_t(helper.id);
+    context.helper = uint16_t(helper.id);context.magic=FLOW_CONTEXT_MAGIC;
+    mk61_app_flow_call(flow,mk61_app_flow_to(MK61_APP_KIND_APPLICATION,context.helper,uint32_t(Request::INIT)),1);
+    return 1;
   } else {
+    if(!context.state) {mk61_app_flow_exit(flow,flow->result?flow->result:uint32_t(MK61_APP_IO_ERROR),MK61_FLOW_OK);context={};return 1;}
     app_state = context.state;
     if(!bind_session()) {
       finish_session(); mk61_app_flow_exit(flow, MK61_APP_IO_ERROR, MK61_FLOW_OK); return 1;

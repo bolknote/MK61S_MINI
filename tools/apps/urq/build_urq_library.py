@@ -90,7 +90,7 @@ def build(upstream, host, output, audit_all=False, source_output=None, report_pa
             record["source_files"] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
             if license_id not in PERMITTED:
                 reasons.append("no explicit redistributable license for every QST source")
-            adaptation = adapt(key, folder) if license_id == "CC0-1.0" else None
+            adaptation = adapt(key, folder) if license_id in PERMITTED else None
             if adaptation:
                 text, manifest, details = adaptation
                 record["adaptation"] = details
@@ -127,7 +127,8 @@ def build(upstream, host, output, audit_all=False, source_output=None, report_pa
                     credits = ("Никита Цейковец; переводы: Самуил Маршак, Геннадий Аминов, "
                                "Игорь Родин, Светлана Сергеева, Екатерина Зеленина" if key == "house_that_jack_built"
                                else "Симон Кристиансен; перевод и портирование: Никита Цейковец"
-                               if key == "trapped_in_time_ru" else record["author"])
+                               if key == "trapped_in_time_ru" else "Даниэль Родригес Риверо; перевод и портирование: Никита Цейковец"
+                               if key == "jim_from_outer_space_ru" else record["author"])
                     origin = record.get("adaptation", {}).get("repository", record["source"])
                     (source_target / "AUTHORS.txt").write_text(f"{record['title']}\n{credits}\n{origin}\nRevision: {record['revision']}\nLicense: {license_id}\nText/M8 adaptation for MK61S and PicoCalc; media omitted.\n", encoding="utf-8")
                     published.append(key)

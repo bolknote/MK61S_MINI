@@ -32,7 +32,7 @@ const context = {
     title: '', getElementById() { return {setAttribute() {}}; },
     getElementsByTagName() { return [{getAttribute() { return 'ru'; }}]; }
   },
-  Audio: function() { this.paused = true; this.pause = () => {}; },
+  Audio: function() { this.paused = true; this.pause = () => {}; this.play = () => {}; },
   Math: Object.create(Math),
   localStorage: {setItem() {}}, Date,
   resetAudio() {}, dosColorToHex() { return ''; },
@@ -63,7 +63,13 @@ if (adaptation) {
   if (crypto.createHash('sha256').update(helper).digest('hex') !== lock.files['urqw/script.js'])
     throw Error('Unreviewed game helper');
   vm.runInContext('window=this;', context);
-  vm.runInContext(helper.toString('utf8'), context, {filename: adaptation + '/script.js', timeout: 1000});
+  let code = helper.toString('utf8');
+  if (adaptation === 'jim_from_outer_space_ru') {
+    // Only its pure JSON note formatter is needed by the unmodified game.
+    // DOM typography/visited-button hooks have no role in this headless oracle.
+    code = code.slice(code.indexOf('window.notesList = function'), code.indexOf('// When clicked'));
+  }
+  vm.runInContext(code, context, {filename: adaptation + '/script.js', timeout: 1000});
 } else vm.runInContext("Player.prototype.javaScript=function(){throw Error('Game JavaScript is excluded');};", context);
 vm.runInContext("Player.prototype.image=function(){};Player.prototype.playMusic=function(){};", context);
 const originalPrint = context.Player.prototype.print;

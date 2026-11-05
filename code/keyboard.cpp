@@ -103,7 +103,7 @@ static  u32            scan_line_started_us;
 static  keyboard_core::ExternalKeyState external_keys;
 static  keyboard_core::PressEdgeLatch immediate_presses;
 static keyboard_core::DeferredHoldRelease deferred_hold_release;
-static u8 scan_state; // 0 before init, 1 ready, 2 inside a scan/UI callback.
+static u8 scan_state; // 0 before init, 1 ready, 2 while sampling the matrix.
 
 #if MK61_KEYBOARD_STOP_WAKE_SUPPORTED
 static volatile bool stop_wake_armed;
@@ -539,16 +539,11 @@ __attribute__((noinline,noclone))
 #else
 __attribute__((noinline))
 #endif
-static isize scan_impl(bool dispatch_actions) {
+static isize scan_impl() {
   if(scan_state!=1)return -1;
   struct ScanScope {ScanScope(){scan_state=2;}~ScanScope(){scan_state=1;}} scope;
   MK61_SERVICE_GAP(KEYBOARD_POLL);
-  if(dispatch_actions) {
-    i32 key,quant;
-    if(deferred_hold_release.take(key,quant))event_unhold_key(key,quant);
-  }
   if((u32) (micros() - scan_line_started_us) < TIME_SCAN_SETTLE_US) {
-    if(dispatch_actions)check_hold_key();
     return -1;
   }
 
@@ -574,7 +569,6 @@ static isize scan_impl(bool dispatch_actions) {
           key_fifo.released(key);
       }
     }
-    if(dispatch_actions)check_hold_key();
     return -1;
   }
 
@@ -607,8 +601,7 @@ static isize scan_impl(bool dispatch_actions) {
       dbg(KBD, "scan_code #", scan_code, ", ms ", millis());
       if(hold_quant_counter >= 0) {
         dbgln(KBD, " <<UNHOLD>>");
-        if(dispatch_actions)event_unhold_key(holded_scan_code, hold_quant_counter);
-        else (void)deferred_hold_release.defer(holded_scan_code,hold_quant_counter);
+        (void)deferred_hold_release.defer(holded_scan_code,hold_quant_counter);
         hold_quant_counter  = -1;   // снимаем счетчик квантов удержания
       }
       holded_scan_code    = -1;   // снимаем удержание
@@ -618,8 +611,20 @@ static isize scan_impl(bool dispatch_actions) {
   return (isize) scan_code;
 }
 
-isize scan(void) {return scan_impl(true);}
-isize scan_during_storage(void) {return scan_impl(false);}
+isize scan(void) {
+  if(scan_state!=1)return -1;
+  i32 key,quant;
+  // Drain a storage-deferred release before sampling a later gesture.
+  if(deferred_hold_release.take(key,quant))event_unhold_key(key,quant);
+  const isize result=scan_impl();
+  // UI callbacks may enter a modal screen which polls this same keyboard.
+  // The row and hold state are committed, and the sampling guard is released,
+  // before handing control to them. Storage scans still dispatch no callbacks.
+  if(deferred_hold_release.take(key,quant))event_unhold_key(key,quant);
+  check_hold_key();
+  return result;
+}
+isize scan_during_storage(void) {return scan_impl();}
 
 isize scan_m61_controls(void) {
   // Keep ESC/angle, OK and the long-Cx escape available while a handler

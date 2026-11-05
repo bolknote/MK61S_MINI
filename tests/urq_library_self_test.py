@@ -10,6 +10,8 @@ from pathlib import Path as _RepoPath
 _repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import json
 import os
+import collections
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -106,6 +108,8 @@ class Player:
         return "\n".join(e["text"] for e in self.events if e["event"] == "text")
 
     def close(self):
+        if getattr(self,"closed",False):return
+        self.closed=True
         self.process.stdin.close()
         self.process.wait(timeout=5)
         error = self.process.stderr.read()
@@ -143,7 +147,7 @@ class LibraryTests(unittest.TestCase):
 
     def test_packages_are_reproducible_and_javascript_free(self):
         report = json.loads((ROOT / "tools/apps/urq/catalog-report.json").read_text())
-        self.assertEqual(set(report["published"]), {"house_that_jack_built", "trapped_in_time_ru"})
+        self.assertEqual(set(report["published"]), {"house_that_jack_built", "trapped_in_time_ru", "jim_from_outer_space_ru"})
         for key in report["published"]:
             with self.subTest(game=key):
                 folder = LIBRARY / key
@@ -156,9 +160,10 @@ class LibraryTests(unittest.TestCase):
                     self.assertEqual(data, (folder / name).read_bytes())
                     self.assertLessEqual(len(data), 61440)
                 self.assertNotRegex(source.decode(), r"(?i)javascript|<script")
-                self.assertEqual({p.name for p in folder.iterdir()}, {"game.urq", "p0000.uqd", "autoexec.wbmp"})
+                self.assertEqual({p.name for p in folder.iterdir()}, {*files, "autoexec.wbmp"})
                 self.assertTrue((metadata / "AUTHORS.txt").is_file())
-                self.assertIn("CC0", (metadata / "LICENSE.txt").read_text())
+                self.assertIn("Attribution-NonCommercial-ShareAlike" if key=="jim_from_outer_space_ru" else "CC0",
+                              (metadata / "LICENSE.txt").read_text())
                 if UPSTREAM:
                     text, generated_manifest, _ = adapt(key, UPSTREAM / "games" / key)
                     self.assertEqual(source, text.encode())
@@ -166,15 +171,63 @@ class LibraryTests(unittest.TestCase):
 
     def test_device_library_contains_only_games_and_icons(self):
         self.assertEqual({p.name for p in LIBRARY.iterdir()},
-                         {"README.markdown", "autoexec.wbmp", "house_that_jack_built", "trapped_in_time_ru"})
+                         {"README.markdown", "autoexec.wbmp", "house_that_jack_built", "trapped_in_time_ru", "jim_from_outer_space_ru"})
         with tempfile.TemporaryDirectory(prefix="urq-distribution-") as directory:
             target = Path(directory)
             payload = copy_device_library(target / "URQ")
             licenses = copy_licenses(target / "licenses/urq")
-            self.assertEqual(len(payload), 7)
-            self.assertEqual(len(licenses), 4)
+            self.assertEqual(len(payload), 12)
+            self.assertEqual(len(licenses), 6)
             self.assertTrue(all(p.suffix in {".urq", ".uqd", ".wbmp"} for p in payload))
             self.assertTrue(all(p.is_relative_to(target / "licenses") for p in licenses))
+
+    def test_jim_all_story_locations_endings_and_optional_notes(self):
+        source=(SOURCES/"jim_from_outer_space_ru/source.qst").read_text()
+        blocks={m[1]:m[2] for m in re.finditer(r"^:([^\n]+)\n([\s\S]*?)(?=^:|\Z)",source,re.M)}
+        paths={"1":[]};todo=collections.deque(["1"])
+        while todo:
+            current=todo.popleft()
+            for target in re.findall(r"^btn (\d+),",blocks[current],re.M):
+                if target not in paths:
+                    paths[target]=paths[current]+[target];todo.append(target)
+        self.assertEqual(set(paths),{key for key in blocks if key.isdigit()})
+        endings=notes=0
+        for location,route in paths.items():
+            with self.subTest(location=location):
+                player=self.player("jim_from_outer_space_ru")
+                player.route(["init"]+route)
+                self.assertEqual(player.state["vars"]["current_loc"],location)
+                if UPSTREAM:
+                    reference=self.player("jim_from_outer_space_ru",True)
+                    reference.route(["init"]+route)
+                    plot=lambda p:[a["command"] for a in p.state["actions"]
+                                   if not a["command"].startswith("proc mk_note_")]
+                    self.assertEqual(plot(player),plot(reference))
+                    for name in ("current_loc","previous_loc","return_loc",f"count_{location}"):
+                        self.assertEqual(player.state["vars"].get(name),reference.state["vars"].get(name),name)
+                    reference.close()
+                if "proc final_loc" in blocks[location]:
+                    endings+=1
+                    self.assertIn("КОНЕЦ",player.text())
+                    self.assertTrue(any("return_loc" not in a["command"] and a["command"].isdigit()
+                                        for a in player.state["actions"]))
+                for action in list(player.state["actions"]):
+                    if not action["command"].startswith("proc mk_note_"):continue
+                    notes+=1
+                    before=dict(player.state["vars"])
+                    choices=[a for a in player.state["actions"] if a!=action]
+                    player.choose(action["command"])
+                    self.assertEqual(player.state["vars"]["current_loc"],location)
+                    self.assertEqual(player.state["vars"]["previous_loc"],before["previous_loc"])
+                    self.assertEqual(player.state["vars"].get("return_loc"),before.get("return_loc"))
+                    self.assertEqual(player.state["actions"],choices)
+                    self.assertIn("Примечания переводчика",player.text())
+                player.close()
+        self.assertGreater(endings,20)
+        self.assertEqual(notes,33) # one shared note procedure serves locations 73 and 74
+        comment=self.player("jim_from_outer_space_ru");comment.choose("mk_about");comment.choose("comment")
+        comment.choose(next(a["command"] for a in comment.state["actions"] if a["command"].startswith("proc mk_note_")))
+        self.assertEqual(comment.state["vars"]["current_loc"],"comment")
 
     def test_house_all_six_translations_complete_and_partial_scores(self):
         for version, answers in enumerate(ANSWERS):

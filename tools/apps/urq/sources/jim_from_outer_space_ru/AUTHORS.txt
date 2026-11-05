@@ -1,0 +1,6 @@
+Джим из Космоса
+Даниэль Родригес Риверо; перевод и портирование: Никита Цейковец
+https://github.com/tseykovets/jim_from_outer_space_ru
+Revision: cf238d064dd145baba9fc09873d14377c86027a1
+License: CC-BY-NC-SA-4.0
+Text/M8 adaptation for MK61S and PicoCalc; media omitted.

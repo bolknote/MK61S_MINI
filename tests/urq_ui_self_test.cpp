@@ -15,6 +15,10 @@
 #include "../examples/portable-apps/URQ/main.cpp"
 #undef main
 #include "../code/ecma_number.hpp"
+#include "../code/ui_font.hpp"
+#include "../code/builtin_font.hpp"
+#include "../code/menu_source.hpp"
+#include "../code/keyboard_layout.hpp"
 
 const mk61_app_api* mk61_api = nullptr;
 uint32_t mk61_app_image_crc = 1, mk61_app_current_kind = 4;
@@ -23,6 +27,9 @@ struct File { unsigned type; std::string name; std::vector<uint8_t> bytes; };
 std::map<unsigned, File> files;
 bool fail_write = false;
 bool fail_psram = false;
+bool classic = false;
+std::vector<std::vector<uint8_t>> frames;
+std::vector<int> keys;
 unsigned live_leases = 0;
 uint32_t file_size_mock(uint32_t id) { return files.count(id)?uint32_t(files[id].bytes.size()):UINT32_MAX; }
 uint32_t file_read_mock(uint32_t id,uint32_t offset,uint8_t* out,uint32_t size) {
@@ -37,6 +44,19 @@ uint32_t entry(unsigned id,void* raw) {
   std::snprintf(out.name,sizeof(out.name),"%s",f.name.c_str());return 1;
 }
 uint32_t mock_call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* p) {
+  if(op==MK61_SERVICE_FONT) {
+    builtin_font::Raster g{};assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8,uint16_t(b),g));
+    auto& out=*(mk61_service_glyph*)p;out.width=g.width;out.height=g.height;memcpy(out.pixels,g.data,8);return 1;
+  }
+  if(op==MK61_SERVICE_UI_FONT) {
+    assert(a==MK61_UI_FONT_GLYPH);auto& out=*(mk61_service_ui_glyph*)p;
+    const auto g=ui_font::glyph({ui_font::Family::PIXEL,ui_font::Size::PX12},b);
+    out.width=g.width;out.height=g.height;out.bearing_x=g.bearing_x;out.bearing_y=g.bearing_y;out.advance=g.advance;
+    memset(out.pixels,0,sizeof(out.pixels));
+    for(unsigned y=0;y<g.height;++y) for(unsigned x=0;x<g.width;++x)
+      if(font_glyph::pixel(g,x,y)) out.pixels[y*((g.width+7)/8)+x/8]|=uint8_t(0x80U>>(x&7));
+    return 1;
+  }
   if(op==MK61_SERVICE_CAPABILITIES) return fail_psram?UINT32_MAX:~uint32_t(MK61_SERVICE_CAP_EXTERNAL_BUFFERS);
   if(op==MK61_SERVICE_BUFFER) {
     auto& r=*(mk61_service_buffer*)p;
@@ -100,7 +120,15 @@ const void* query(uint32_t,uint32_t) { return &service_table; }
 uint32_t columns() { return 64; }
 uint32_t rows() { return 20; }
 uint32_t milliseconds() { return 1000; }
-int32_t no_key() { return -1; }
+int32_t poll_key() { if(keys.empty()) return -1;int key=keys.front();keys.erase(keys.begin());return key; }
+int32_t wait_key() { assert(!keys.empty());int key=keys.front();keys.erase(keys.begin());return key; }
+uint32_t available_graphics() { return classic; }
+uint32_t graph_width() {return 192;}
+uint32_t graph_height() {return 64;}
+uint32_t graph_begin() {return 1;}
+uint32_t present(const uint8_t* pixels,uint32_t size) {
+  assert(size==1536);frames.emplace_back(pixels,pixels+size);return 1;
+}
 void idle() {}
 std::vector<uint8_t> read_file(const std::string& path) {
   std::ifstream input(path,std::ios::binary);assert(input);
@@ -112,7 +140,10 @@ int main(int argc,char** argv) {
   api.magic=MK61_APP_API_MAGIC;api.version=MK61_APP_API_VERSION;api.struct_size=sizeof(api);
   api.query_service=query;api.file_size=file_size_mock;api.file_read=file_read_mock;
   api.millis_ms=milliseconds;api.display_columns=columns;api.display_rows=rows;
-  api.key_wait=no_key;api.key_poll=no_key;api.service=idle;mk61_api=&api;
+  classic=std::getenv("URQ_TEST_CLASSIC")!=nullptr;
+  api.key_wait=wait_key;api.key_poll=poll_key;api.service=idle;api.delay_ms=[](uint32_t){};mk61_api=&api;
+  api.graphics_available=available_graphics;api.graphics_width=graph_width;api.graphics_height=graph_height;
+  api.graphics_begin=graph_begin;api.graphics_present=present;api.graphics_end=idle;
   files[2]={MK61_SERVICE_FILE_URQ,"game.urq",read_file(std::string(argv[1])+"/game.urq")};
   files[3]={MK61_SERVICE_FILE_URQ_DATA,"p0000.uqd",read_file(std::string(argv[1])+"/p0000.uqd")};
   assert(begin_session(2)==MK61_APP_OK);app.body=12;app.rows=20;
@@ -120,6 +151,23 @@ int main(int argc,char** argv) {
   assert(!app.history.external.handle && app.history.end>=2);
   assert(engine.state().depth==2);
   begin_typing(false);
+  if(classic) {
+    draw_game();assert(app.rows==5 && app.body==3 && !frames.empty());
+    const auto input=frames.back();
+    keys={MK61_APP_KEY_RIGHT,MK61_APP_KEY_SHIFT_RIGHT,MK61_APP_KEY_LEFT,MK61_APP_KEY_OK};
+    assert(menu_choose(Screen::MENU,6)==1 && keys.empty());
+    assert(frames.back()!=input);
+    draw_game();assert(frames.back()==input); // restoring the input frame keeps the draft
+    keys={MK61_APP_KEY_SHIFT_RIGHT,MK61_APP_KEY_ESC};assert(menu_choose(Screen::MENU,6)==-1 && keys.empty());
+    for(const auto& mapping:{keyboard_layout::CLASSIC,keyboard_layout::MINI}) {
+      keys={keyboard_layout::logical_key(mapping,mapping.right),keyboard_layout::logical_key(mapping,mapping.shg_right),
+            keyboard_layout::logical_key(mapping,mapping.left),MK61_APP_KEY_OK};
+      mk61_service_menu_source request{M8("МЕНЮ"),nullptr,6,0,
+        [](void*,uint32_t i,char* label,uint32_t)->int {label[0]=char('1'+i);label[1]=0;return 1;}};
+      assert(menu_source::run(request,api,[](uint32_t,uint32_t,uint32_t,void*){return 1;}));
+      assert(request.selected==1 && keys.empty());
+    }
+  }
   for(unsigned char ch:std::string(M8("Ёж 12,!"))) input_event(MK61_TEXT_CHAR,ch);
   input_event(MK61_TEXT_LEFT);input_event(MK61_TEXT_BACKSPACE);input_event(MK61_TEXT_CHAR,'?');
   assert(!std::strcmp(app.draft,M8("Ёж 12?!")));
@@ -141,6 +189,18 @@ int main(int argc,char** argv) {
   assert(engine.state().status==urq::Status::ANYKEY);
   game_key(MK61_APP_KEY_OK);engine.run();assert(engine.state().status==urq::Status::CHOICE);
   assert(engine.get("answer").type==1 && !std::strcmp(engine.get("answer").text,M8("Ёж 12?!")));
+#if !defined(MK61_TARGET_PICOCALC)
+  if(classic) {
+    draw_game();assert(!app.actions);
+    game_key(MK61_APP_KEY_DIGIT_2);assert(engine.state().status==urq::Status::CHOICE && !app.actions);
+    game_key(MK61_APP_KEY_OK);draw_game();assert(app.actions && app.selected==0 && app.action_next);
+    const auto choices=frames.back();
+    game_key(MK61_APP_KEY_RIGHT);draw_game();assert(app.menu && app.selected==0 && frames.back()!=choices);
+    game_key(MK61_APP_KEY_LEFT);draw_game();assert(!app.menu && frames.back()==choices);
+    for(unsigned i=0;app.selected==0 && i<20;++i) {game_key(MK61_APP_KEY_RIGHT);draw_game();}
+    assert(app.selected==1);game_key(MK61_APP_KEY_LEFT);draw_game();assert(app.selected==0);
+  }
+#endif
   finish_session();assert(!live_leases);
   std::puts("URQ shell: nested input, edited draft, non-monotonic streamed save, atomic write failure, CRC rejection and cross-profile restore PASS");
 }
