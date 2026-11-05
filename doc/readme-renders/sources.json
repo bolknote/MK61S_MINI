@@ -1,0 +1,38 @@
+{
+  "mini-shield.GTO": {
+    "author": "UN7FGO",
+    "archive_url": "https://raw.githubusercontent.com/UN7FGO/MK61S_MINI/main/gerbers/Gerber_MK61S_MINI_V3_SHIELD.zip",
+    "archive_git_blob": "46d6c50295df45a7d518279bbfbf4a685be80241",
+    "archive_sha256": "2828ac8c35215155322e95ae6b7a18cd379d7f9c2b7b6998d6a03df1a6459058",
+    "archive_member": "Gerber_TopSilkscreenLayer.GTO",
+    "saved_sha256": "44d9451c60d0d87053e5685e05c399f0231f48db611e39dca0ae4c938776b7de",
+    "selection": "unmodified archive member"
+  },
+  "classic-keyboard.GTO": {
+    "author": "UN7FGO",
+    "archive_url": "https://raw.githubusercontent.com/UN7FGO/MK-61s-Classic/main/Gerber_MK61S_MINI_V3_Classic_Keyboard.zip",
+    "archive_git_blob": "3070a79bb63bded74c5d80397808794411f4e3ad",
+    "archive_sha256": "253cdd5f4fd1ef59b4b4ee0d0d2625417a709319c0fcdb43beff69b226c49d49",
+    "archive_member": "Gerber_TopSilkscreenLayer.GTO",
+    "saved_sha256": "8e19e539645d8e9206290537e50739afdfca2f83a1efd9d4723943cfa6b8e74c",
+    "selection": "unmodified archive member"
+  },
+  "40th-shield.GTO": {
+    "author": "UN7FGO",
+    "archive_url": "https://raw.githubusercontent.com/UN7FGO/MK52S/main/gerber/Gerber_MK_52s_40_Th_shield.zip",
+    "archive_git_blob": "e1d8132006f87b98c69e912792362be1e0b7890f",
+    "archive_sha256": "c91f577d0bce21b162cfe0087c2603ae394cc883934e36dec6b5586e33a31878",
+    "archive_member": "Gerber_TopSilkscreenLayer.GTO",
+    "saved_sha256": "4c25a1170fcc79971cc0dba0b3d2441c49f4d991f3759e5ffb7ce3374e2735d2",
+    "selection": "unmodified archive member"
+  },
+  "classic-brand.GTO": {
+    "author": "UN7FGO",
+    "archive_url": "https://raw.githubusercontent.com/UN7FGO/MK-61s-Classic/main/Gerber_MK61S_MINI_V3_Classic_MainBoard.zip",
+    "archive_git_blob": "2244dd56d3af8d5359c56f322d8e848b35997c50",
+    "archive_sha256": "b99ce3fa5c0a7fff616cc529f74ac0ce72263a77ae45062acfb0661326f14940",
+    "archive_member": "Gerber_TopSilkscreenLayer.GTO",
+    "saved_sha256": "15e91ae8c0bcbfdf452252d0a574ac8b6cc814a7b8af4dada06237915b6f5f93",
+    "selection": "only original G36 polygon blocks inside x=(0,66), y=(-115,-108), with SVG Y flipped"
+  }
+}
