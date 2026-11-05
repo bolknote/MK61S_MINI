@@ -24,6 +24,17 @@ function Get-Mk61NativePayloadPairs {
     }
 }
 
+function Assert-Mk61CompilerHeaders {
+    param([string]$Bin)
+    # A relocated or incomplete GCC can report the right version while
+    # failing to find its target C++ headers, particularly on Windows.
+    $suffix = if ($env:OS -eq 'Windows_NT') { '.exe' } else { '' }
+    "#include <cstdlib>`n#include <cstdint>" | & (Join-Path $Bin "arm-none-eabi-g++$suffix") `
+        -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard `
+        -x c++ -std=gnu++17 -fsyntax-only - 2>$null | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "GNU Arm C++ header probe failed: $Bin" }
+}
+
 function Find-Mk61ArduinoCompiler {
     param([string]$ProjectRoot, [string]$Version, [string]$DataDirectory)
     if ([string]::IsNullOrWhiteSpace($DataDirectory)) {
@@ -43,6 +54,7 @@ function Find-Mk61ArduinoCompiler {
                 try {
                     $bin = Get-NativeGnuArmBin $ProjectRoot $Version $candidate.FullName
                     Assert-NativeGnuArmVersion $bin $Version 2>$null
+                    Assert-Mk61CompilerHeaders $bin
                     return $bin
                 } catch {
                     # Wrong version, incomplete tools, unsafe Windows path or
@@ -72,6 +84,7 @@ function Get-Mk61NativeCompiler {
                     try {
                         $registeredBin = Get-NativeGnuArmBin $ProjectRoot $version $registered
                         Assert-NativeGnuArmVersion $registeredBin $version 2>$null
+                        Assert-Mk61CompilerHeaders $registeredBin
                         $selected = $registeredBin
                     } catch { }
                 }

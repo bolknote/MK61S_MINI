@@ -56,10 +56,16 @@ def arduino_data_directory():
     return Path.home() / '.arduino15'
 
 
-def compatible_compiler(candidate, version):
+def compatible_compiler(candidate, version, check_headers=False):
     from native_sdk import toolchain_bin, verify_toolchain_version
     binary = toolchain_bin(candidate)
     verify_toolchain_version(binary, version)
+    if check_headers:
+        subprocess.run([str(binary / 'arm-none-eabi-g++'), '-mcpu=cortex-m4', '-mthumb',
+                        '-mfpu=fpv4-sp-d16', '-mfloat-abi=hard', '-x', 'c++',
+                        '-std=gnu++17', '-fsyntax-only', '-'],
+                       input='#include <cstdlib>\n#include <cstdint>\n', text=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
     return binary
 
 
@@ -70,7 +76,7 @@ def find_arduino_compiler(data_directory, version):
         if not candidate.is_dir():
             continue
         try:
-            return compatible_compiler(candidate, version)
+            return compatible_compiler(candidate, version, check_headers=True)
         except (ValueError, OSError, subprocess.CalledProcessError):
             continue
 
@@ -88,7 +94,7 @@ def compiler_path(project, target, selected, install, data_directory=None):
                     selected = candidate
                 else:
                     try:
-                        selected = compatible_compiler(candidate, version)
+                        selected = compatible_compiler(candidate, version, check_headers=True)
                     except (ValueError, OSError, subprocess.CalledProcessError):
                         pass
     if not selected and install:

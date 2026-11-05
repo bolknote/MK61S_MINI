@@ -86,7 +86,8 @@ Write-Host "Native SDK: $PSScriptRoot"
     $good = Join-Path $data 'packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/0.0.0/bin'
     $wrong = Join-Path $data 'packages/Arduino/tools/arm-none-eabi-gcc/14.2.1-1.1/bin'
     $incomplete = Join-Path $data 'packages/Arduino/tools/arm-none-eabi-gcc/99-incomplete/bin'
-    foreach ($bin in @($good, $wrong, $incomplete)) {
+    $brokenHeaders = Join-Path $data 'packages/Arduino/tools/arm-none-eabi-gcc/98-broken-headers/bin'
+    foreach ($bin in @($good, $wrong, $incomplete, $brokenHeaders)) {
         [void][IO.Directory]::CreateDirectory((Split-Path -Parent $bin))
         Copy-Item -LiteralPath $expected -Destination $bin -Recurse
     }
@@ -104,6 +105,18 @@ public static class OldGnuFixture {
         & chmod +x $wrongGcc
     }
     Remove-Item -LiteralPath (Join-Path $incomplete "arm-none-eabi-gcc-ar$suffix")
+    $brokenCxx = Join-Path $brokenHeaders "arm-none-eabi-g++$suffix"
+    Remove-Item -LiteralPath $brokenCxx
+    if ($suffix) {
+        Add-Type -Language CSharp -OutputType ConsoleApplication -OutputAssembly $brokenCxx -TypeDefinition @'
+public static class BrokenCxxFixture {
+    public static int Main() { return 93; }
+}
+'@
+    } else {
+        [IO.File]::WriteAllText($brokenCxx, "#!/bin/sh`nexit 93`n")
+        & chmod +x $brokenCxx
+    }
     $counter = Join-Path $project 'tools/compiler-installs.txt'
     $reuseTarget = Join-Path $work 'reuse/hardware/mk61/stm32'
     $reused = @(Get-Mk61NativeCompiler $project $reuseTarget '' -Install)
@@ -126,6 +139,10 @@ public static class OldGnuFixture {
     $repaired = @(Get-Mk61NativeCompiler $project $reuseTarget '' -Install)
     if ($repaired.Count -ne 1 -or $repaired[0] -cne $good) {
         throw 'Reinstall did not replace the incomplete registered compiler'
+    }
+    [IO.File]::WriteAllText((Join-Path $reuseTarget 'platform.local.txt'), 'compiler.path=' + $brokenHeaders)
+    if ((Get-Mk61NativeCompiler $project $reuseTarget '' -Install) -cne $good) {
+        throw 'Reinstall retained a compiler with broken C++ headers'
     }
     $explicit = Get-Mk61NativeCompiler $project $reuseTarget $expected -Install
     if ($explicit -cne $expected) { throw 'Discovery overrode an explicit compiler' }
