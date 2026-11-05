@@ -60,7 +60,7 @@ jobs:
           .build/arm-tests/bin/python tests/picocalc_heap_arm_self_test.py --json .build/arm-tests/heap.json
       - name: Verify memory operation bounds, ABI and linked Pico ROM memset bridge
         run: |
-          MEMORY_TEST_TOOLCHAIN=$(python3 -c 'import sys; sys.path.insert(0,"tools"); from build_picocalc import compiler_bin; print(compiler_bin(None))')
+          MEMORY_TEST_TOOLCHAIN=$(python3 -c 'import sys; from tools.firmware.picocalc.build_picocalc import compiler_bin; print(compiler_bin(None))')
           .build/arm-tests/bin/python tests/system_memcpy_arm_self_test.py --arm-toolchain-bin "$MEMORY_TEST_TOOLCHAIN" --output .build/arm-tests/memcpy.json
           .build/arm-tests/bin/python tests/system_memmove_arm_self_test.py --arm-toolchain-bin "$MEMORY_TEST_TOOLCHAIN" --output .build/arm-tests/memmove.json
           .build/arm-tests/bin/python tests/system_memcmp_arm_self_test.py --arm-toolchain-bin "$MEMORY_TEST_TOOLCHAIN" --output .build/arm-tests/memcmp.json
