@@ -174,7 +174,8 @@ bool Services::load_document(const char* path,bool edit) {
     release_browser();
     using Type = program_store::ProgramType;
     const Type type = script::file_type(path);
-    if((type == Type::MARKDOWN && !edit) || type == Type::SHEET ||
+    if((type == Type::MARKDOWN && !edit) || type == Type::SHEET || type == Type::URQ ||
+       type == Type::URQ_DATA || type == Type::URQ_SAVE ||
        type == Type::APP || type == Type::CHIP8 || type == Type::IMAGE1 ||
        type == Type::FONT || type == Type::MK61_BINARY) {
         const u8 result = run_external(path);

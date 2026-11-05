@@ -18,6 +18,9 @@ bool submit_frame(void* context,void (*transfer)(void*));
 void service(bool allow_i2c=true);
 // Core 0 drains outstanding peripheral work before reset/sleep/clock changes.
 void drain();
+// Synchronous bounded setup/teardown on core 1, serialized with LCD work.
+// Used to bind timer IRQ ownership; callbacks must not wait for core 0.
+void invoke(void* context,void (*function)(void*));
 Statistics statistics();
 }
 #endif

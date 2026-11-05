@@ -139,7 +139,7 @@ Keys:
   Ctrl-O    last MK61s output
 
 The left command line runs through cmd.exe; the right one is sent to MK61s.
-Supported device files: .m61, .bin, .foc, .tbi, .txt, .md, .state.txt, .fmk, .wbmp, .ch8, .mks, .app
+Supported device files: .m61, .bin, .foc, .tbi, .txt, .md, .state.txt, .fmk, .wbmp, .ch8, .mks, .urq, .uqd, .urs, .app
 System apps include /System/MARKDOWN.APP; other APP containers may live in any directory.
 '@
 }
@@ -1060,6 +1060,7 @@ function Get-UnsupportedReason {
         elseif ($lower.EndsWith('.wbmp')) { $base = $name.Substring(0, $name.Length - 5); $limit = 1600 }
         elseif ($lower.EndsWith('.ch8')) { $base = $name.Substring(0, $name.Length - 4); $limit = 3584; $minimum = 1 }
         elseif ($lower.EndsWith('.mks')) { $base = $name.Substring(0, $name.Length - 4); $limit = 2048; $minimum = 20 }
+        elseif ($lower -match '\.(urq|uqd|urs)$') { $base = $name.Substring(0, $name.Length - 4); $limit = 61440; $minimum = 32 }
         elseif ($lower -match '\.(t1|m2)$') { $base = $name.Substring(0, $name.Length - 3) }
         elseif ($lower.EndsWith('.wbm')) { $base = $name.Substring(0, $name.Length - 4); $limit = 1600 }
         else { return 'формат не поддерживается' }

@@ -24,6 +24,7 @@ __attribute__((weak)) uint32_t mk61_app_open_file(uint32_t file_id) {
   (void) file_id;
   return MK61_APP_INVALID_FILE;
 }
+__attribute__((weak)) uint32_t mk61_app_file_flow(void) { return 0; }
 
 __attribute__((weak)) uint32_t mk61_app_command(
     uint32_t command, uint32_t argument0, uint32_t argument1,
@@ -35,6 +36,7 @@ __attribute__((weak)) uint32_t mk61_app_command(
     return mk61_app_flow_step != mk61_app_no_flow ? MK61_APP_FLOW_MAGIC : 0;
   if(command == MK61_APP_FLOW_STEP)
     return mk61_app_flow_step((mk61_app_flow*)(uintptr_t)argument0);
+  if(command == MK61_APP_FLOW_FILE_INFO) return mk61_app_file_flow();
   if(command == MK61_APP_RUN)
     return (uint32_t)main();
   if(command == MK61_APP_FILE_OPEN)

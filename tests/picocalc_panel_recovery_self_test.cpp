@@ -37,6 +37,7 @@ void require(bool condition,const char* message) {
 struct Command { u8 op;std::vector<u8> data; };
 struct Controller {
     std::array<u8,lcd::BYTES> gram{};
+    std::array<u16,lcd::WIDTH*lcd::HEIGHT> colors{};
     std::vector<Command> commands;
     lcd::Region region{0,lcd::HEIGHT};
     unsigned origin=0,x0=0,x1=319,y0=0,y1=319,cursor=0;
@@ -65,7 +66,7 @@ struct Controller {
         for(unsigned i=0;i<count;++i,++cursor) {
             const unsigned x=x0+cursor%width,y=y0+cursor/width;
             const u8 bit=(u8)(0x80U>>(x%8));
-            require(source[i]==0 || source[i]==0xFFFF,"black/white RGB565");
+            colors[y*lcd::WIDTH+x]=source[i];
             auto& target=gram[y*lcd::STRIDE+x/8];
             target=source[i]?(u8)(target|bit):(u8)(target&~bit);
         }
@@ -111,6 +112,7 @@ bool submit_frame(void* context,void (*transfer)(void*)) {
     controller.context=context;controller.transfer=transfer;controller.pending=true;return true;
 }
 void service() {}
+void drain() { if(controller.pending) controller.run(); }
 }
 namespace dma_support {
 u32 crc32(const u8* bytes,unsigned size) {
@@ -236,6 +238,45 @@ void changed_view_before_retry(lcd::Region initial,lcd::Region failed,bool ordin
     std::printf("Panel changed-view retry: initial=%u/%u failed=%u/%u target=%u/%u actual_definition origin fixed_pixels PASS\n",
                 initial.top,initial.height,failed.top,failed.height,expected.top,expected.height);
 }
+void color_session() {
+    controller=Controller{};Panel panel;Screen mono;
+    mono.region={40,240};for(auto& value:mono.pixels) value=byte();
+    panel.flush(mono);controller.run();mono=shifted(mono,16);panel.flush(mono);controller.run();
+    std::array<u8,6144> bits{};std::array<u8,768> tiles{};tiles.fill(0x12);
+    mk61_service_color_frame f{};f.pixels=bits.data();f.tiles=tiles.data();f.pixel_bytes=bits.size();f.tile_bytes=tiles.size();
+    f.width=256;f.height=192;f.x=32;f.y=64;f.format=MK61_COLOR_TILE1;f.background=0x1234;
+    f.palette[1]=0x001F;f.palette[2]=0xF800;
+    require(panel.color(MK61_COLOR_PRESENT,&f)==1,"color accepted");
+    bits.fill(255);require(panel.color(MK61_COLOR_PRESENT,&f)==2,"in-flight color rejects without copying");
+    require(!panel.flush(mono),"ordinary UI cannot overwrite color session");controller.run();
+    require(controller.region==lcd::Region{0,320} && controller.origin==0,"color resets scrolled coordinates");
+    for(unsigned y=0;y<320;++y) for(unsigned x=0;x<320;++x)
+        require(controller.colors[y*320+x]==(x>=32 && x<288 && y>=64 && y<256?0x001F:0x1234),"immutable copied palette pixels and border");
+    require(panel.color(MK61_COLOR_PRESENT,&f)==1,"changed color accepted");controller.run();
+    require(controller.colors[64*320+32]==0xF800,"changed tile pixels");
+    const auto frames=panel.frames();require(panel.color(MK61_COLOR_PRESENT,&f)==1 && !controller.pending && panel.frames()==frames,"identical color skips LCD");
+    f.background=0x5678;require(panel.color(MK61_COLOR_PRESENT,&f)==1,"border-only change");controller.run();
+    require(controller.colors[0]==0x5678 && controller.colors[64*320+32]==0xF800,"border preserves image");
+    bits[0]=0;controller.fail_completion=true;panel.color(MK61_COLOR_PRESENT,&f);controller.run();
+    require(panel.errors()==1,"color completion failure recorded");
+    require(panel.color(MK61_COLOR_PRESENT,&f)==1,"color full retry");
+    controller.run();
+    std::array<u8,1536> pairs{};pairs.fill(61);pairs[1]=52;
+    std::array<u16,64> clut{};clut[61]=0xAFAF;clut[52]=0xBCBC;
+    require(panel.color_palette(clut.data())==1,"64-color palette accepted");
+    f.format=MK61_COLOR_TILE8;f.tiles=pairs.data();f.tile_bytes=pairs.size();bits[0]=0x80;
+    require(panel.color(MK61_COLOR_PRESENT,&f)==1,"64-color tile frame accepted");
+    clut[61]=0x5555;require(panel.color_palette(clut.data())==2,"busy palette rejects without mutation");
+    controller.run();require(controller.colors[64*320+32]==0xBCBC && controller.colors[64*320+33]==0xAFAF,"copied 64-color palette used");
+    require(panel.color_palette(clut.data())==1,"palette update accepted");
+    require(panel.color(MK61_COLOR_PRESENT,&f)==1,"palette-only redraw accepted");
+    controller.run();require(controller.colors[64*320+33]==0x5555 && controller.colors[0]==0x5678,"palette redraw preserves border");
+    bits[0]^=1;require(panel.color(MK61_COLOR_PRESENT,&f)==1,"queue last color transfer");
+    require(panel.color(MK61_COLOR_END)==1 && !controller.pending && !panel.color_active(),"end drains transfer before APP buffer release");
+    mono.region={};require(panel.flush(mono),"mono restoration accepted");controller.run();
+    require(controller.visible(mono),"complete mono snapshot restored after color");
+    std::puts("Panel color session: copy/busy, scrolling, palette/border, dirty retry, drain and mono restoration PASS");
+}
 }
 int main() {
     unsigned failed=0;
@@ -256,5 +297,6 @@ int main() {
             }
         }
     }
+    try { color_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel color FAIL: %s\n",error.what()); }
     return failed?1:0;
 }

@@ -8,7 +8,7 @@ namespace picocalc {
 class NativeKeyboard {
 public:
     void event(KeyEvent event,u32 now) {
-        if(!event.code || (event.state!=1 && event.state!=3)) return;
+        if(!event.code || (event.state!=1 && event.state!=3 && !(text_ && event.state==2))) return;
         const int raw=controls::native_key(event);
         if(event.state==3 && controls::raw_pressed(raw,now)) return;
         const u64 bit=raw>=0 && raw<40?u64(1)<<raw:0;
@@ -31,6 +31,14 @@ public:
         return -1;
     }
     int last() const { return last_; }
+    void text_session(bool enabled) { text_=enabled; }
+    bool text_event(KeyEvent& out) {
+        while(count_) {
+            const auto e=pop();
+            if(e.state==1 || e.state==2) { out=e;return true; }
+        }
+        return false;
+    }
     bool immediate(int key) {
         if(key<0 || key>=40) return false;
         const u64 bit=u64(1)<<key;const bool present=(immediate_&bit) && !(suppressed_&bit);
@@ -62,6 +70,7 @@ private:
     }
     KeyEvent queue_[32]{};
     u8 head_=0,count_=0;
+    bool text_=false;
     int last_=-1;
     u64 immediate_=0,suppressed_=0;
 };

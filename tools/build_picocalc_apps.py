@@ -15,6 +15,7 @@ import subprocess
 import sys
 from build_picocalc import compiler_bin
 from explorer_icons import copy_icon
+from urq.library import copy_device_library, copy_licenses
 ROOT=Path(__file__).resolve().parents[1]
 APPS={
     'HELLO':(['examples/portable-apps/HELLO/main.c'],None),
@@ -23,6 +24,7 @@ APPS={
     'SERVICES':(['examples/portable-apps/SERVICES/main.c'],None),
     'ELIZA':(['examples/portable-apps/ELIZA/main.c','examples/portable-apps/ELIZA/eliza_engine.c'],None),
     'SHEET':(['examples/portable-apps/SHEET/main.cpp','examples/portable-apps/SHEET/sheet_engine.cpp'],'S1'),
+    'URQ':(['examples/portable-apps/URQ/main.cpp','code/urq/engine.cpp','code/urq/pack.cpp','code/zx0.cpp'],'C2'),
     'WBMP':(['examples/portable-apps/WBMP/main.c','examples/portable-apps/WBMP/viewer.cpp','code/wbmp.cpp'],'I1'),
 }
 ASSETS=('README.txt','ECHO8.ch8','PATTERN.wbmp','BUDGET.mks','CYCLE.mks','autoexec.wbmp')
@@ -34,6 +36,8 @@ HELLO_RS.APP    no_std Rust example; prints HELLO, MK61S!; any key exits.
 SERVICES.APP    Math/formatting example; sqrt(3^2+4^2)=5; any key exits.
 ELIZA.APP       DOCTOR 1966; optional 256-KiB PSRAM memory, SRAM fallback.
 SHEET.APP       Spreadsheet; up to 128 undo steps with PSRAM, single undo otherwise.
+URQ.APP         Russian text adventures; DOS/Rip/Ak/UrqW, F8 RU/EN, colored text.
+URQ/            Ready-to-open Russian CC0 text games; licenses in licenses/urq/.
 WBMP.APP        Image handler up to 4 MiB; PSRAM storage or a small SD read cache.
 ECHO8.ch8       CHIP-8 example; this is a ROM, not a native APP.
 PATTERN.wbmp    Native 320x320 WBMP pixel-check example.
@@ -63,12 +67,17 @@ def main():
         if args.rustc and any(source.endswith('.rs') for source in sources):
             command+=['--rustc',str(args.rustc)]
         if magic: command+=['--handled-magic',magic]
+        if name=='URQ': command+=['--optimize-size']
         subprocess.run(command,check=True)
         report=json.loads((build/(name+'.json')).read_text())
         report['sources']=sources
         report['app_sha256']=hashlib.sha256((build/(name+'.APP')).read_bytes()).hexdigest()
         reports.append(report)
     # Publish only after every compiler succeeded, including Rust.
+    copy_device_library(args.output_dir/'URQ')
+    copy_licenses(args.output_dir.parent/'licenses/urq')
+    shutil.copytree(ROOT/'third_party/ryu',args.output_dir.parent/'licenses/ryu',
+                    ignore=shutil.ignore_patterns('ryu'),dirs_exist_ok=True)
     for name in APPS:
         shutil.copy2(args.build_dir/name/(name+'.APP'),args.output_dir/(name+'.APP'))
     subprocess.run([sys.executable,str(ROOT/'examples/chip8/ECHO-8/assemble.py'),

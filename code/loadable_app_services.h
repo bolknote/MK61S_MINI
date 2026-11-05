@@ -39,7 +39,16 @@ enum mk61_service_capability {
   MK61_SERVICE_CAP_DEBUG_IO = 1U << 19,
   MK61_SERVICE_CAP_BASIC_GRAPHICS = 1U << 20,
   MK61_SERVICE_CAP_BUFFERS = 1U << 21,
-  MK61_SERVICE_CAP_EXTERNAL_BUFFERS = 1U << 22
+  MK61_SERVICE_CAP_EXTERNAL_BUFFERS = 1U << 22,
+  MK61_SERVICE_CAP_COLOR_DISPLAY = 1U << 23,
+  MK61_SERVICE_CAP_FILE_BYTES = 1U << 24,
+  MK61_SERVICE_CAP_TEXT_INPUT = 1U << 25,
+  MK61_SERVICE_CAP_FILE_WRITE_SOURCE = 1U << 26,
+  MK61_SERVICE_CAP_MENU_SOURCE = 1U << 28,
+  MK61_SERVICE_CAP_NUMBER_FIXED = 1U << 29,
+  MK61_SERVICE_CAP_TEXT_COLORS = 1U << 30,
+  MK61_SERVICE_CAP_ECMA_NUMBERS = 1U << 31,
+  MK61_SERVICE_CAP_AUDIO_STREAM = 1U << 27
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
@@ -57,7 +66,9 @@ enum mk61_service_file_type {
   MK61_SERVICE_FILE_STATE = 5, MK61_SERVICE_FILE_FONT = 6,
   MK61_SERVICE_FILE_WBMP = 7, MK61_SERVICE_FILE_APP = 8,
   MK61_SERVICE_FILE_CHIP8 = 9, MK61_SERVICE_FILE_MARKDOWN = 10,
-  MK61_SERVICE_FILE_MK61_BINARY = 11, MK61_SERVICE_FILE_SHEET = 12
+  MK61_SERVICE_FILE_MK61_BINARY = 11, MK61_SERVICE_FILE_SHEET = 12,
+  MK61_SERVICE_FILE_URQ = 13, MK61_SERVICE_FILE_URQ_DATA = 14,
+  MK61_SERVICE_FILE_URQ_SAVE = 15
 };
 enum mk61_service_ref_kind {
   MK61_SERVICE_REF_X = 0, MK61_SERVICE_REF_Y, MK61_SERVICE_REF_Z,
@@ -105,8 +116,111 @@ enum mk61_service_operation {
   /* Optional block buffers: a=mk61_buffer_operation, b=0,
    * c=sizeof(mk61_service_buffer), payload=request. Returns 1/0.
    * Existing pointer-based MEMORY operations retain their original ABI. */
-  MK61_SERVICE_BUFFER
+  MK61_SERVICE_BUFFER,
+  /* Optional paletted LCD presentation. a=mk61_color_operation, b=0,
+   * c=sizeof(mk61_service_color_frame) for PRESENT, otherwise zero.
+   * PRESENT copies the source before returning: 1=accepted, 2=busy,
+   * 0=invalid/unsupported. END drains transfers and restores normal output.
+   * The host also ends the session automatically on APP return. */
+  MK61_SERVICE_COLOR_DISPLAY,
+  /* Physical bytes, independent of file type and M8 text decoding.
+   * a=mk61_file_bytes_operation, b=0, c=sizeof(mk61_service_file_bytes).
+   * Paths are M8, relative to the running APP's directory, or absolute.
+   * STAT/CHILD use data=mk61_service_file_info, size=sizeof(info).
+   * READ copies exactly size bytes (<=4096), with a 32-bit file offset.
+   * WRITE replaces an existing range (<=4096); it cannot extend/create a file.
+   * CHILD uses offset as the zero-based directory index. Returns 1/0. */
+  MK61_SERVICE_FILE_BYTES,
+  MK61_SERVICE_TEXT_INPUT,
+  MK61_SERVICE_FILE_WRITE_SOURCE,
+  /* Mono signed 16-bit PCM. a=mk61_audio_operation,b=0,c=sizeof(request).
+   * OPEN: rate=25000, volume=0..100. WRITE: samples/count in, accepted
+   * count out (nonblocking, <=1024). STATUS returns queue/underrun counts.
+   * CLOSE also accepts c=0,payload=NULL. APP return closes automatically. */
+  MK61_SERVICE_AUDIO_STREAM
 };
+enum mk61_audio_operation { MK61_AUDIO_OPEN, MK61_AUDIO_WRITE, MK61_AUDIO_STATUS, MK61_AUDIO_CLOSE,
+  /* c=sizeof(mk61_service_audio_synth). Callback runs on core 1's timer IRQ;
+   * it must not call resident services, allocate, block or use core-0 state
+   * without synchronization. Returns signed L/R packed in low/high 16 bits.
+   * CLOSE waits until no callback can execute before APP memory is freed. */
+  MK61_AUDIO_SYNTH_OPEN
+};
+typedef struct mk61_service_audio_synth {
+  uint32_t (*sample)(void*);
+  void* context;
+  uint32_t rate,volume;
+} mk61_service_audio_synth;
+typedef struct mk61_service_audio {
+  const int16_t* samples;
+  uint32_t count,rate,volume,queued,underruns;
+} mk61_service_audio;
+/* Optional APP-owned text session. BEGIN receives layout (0 EN,1 RU);
+ * POLL consumes one original keyboard event as an M8 character or editing
+ * command. END releases the session. c=sizeof(mk61_service_text_event),
+ * except END also accepts c=0,payload=NULL. No duplicate keyboard queue. */
+enum mk61_text_input_operation { MK61_TEXT_BEGIN, MK61_TEXT_POLL, MK61_TEXT_END };
+enum mk61_text_input_kind {
+  MK61_TEXT_NONE, MK61_TEXT_CHAR, MK61_TEXT_LEFT, MK61_TEXT_RIGHT,
+  MK61_TEXT_BACKSPACE, MK61_TEXT_DELETE, MK61_TEXT_HOME, MK61_TEXT_END_LINE,
+  MK61_TEXT_UP, MK61_TEXT_DOWN, MK61_TEXT_PAGE_UP, MK61_TEXT_PAGE_DOWN,
+  MK61_TEXT_SUBMIT, MK61_TEXT_CANCEL, MK61_TEXT_MENU, MK61_TEXT_LAYOUT
+};
+typedef struct mk61_service_text_event {
+  uint32_t kind, value, layout, reserved;
+} mk61_service_text_event;
+/* FILE_WRITE_SOURCE: a=parent,b=preferred,c=file type. The synchronous reader
+ * can be called repeatedly/out of order and must return the exact immutable
+ * range requested. No callback/address survives the call. Atomic publication
+ * sets id only on success. Query CAP_FILE_WRITE_SOURCE before use. */
+typedef struct mk61_service_write_source {
+  const char* name;
+  void* context;
+  int (*read)(void*, uint32_t offset, uint8_t* output, uint32_t size);
+  uint32_t size, id;
+} mk61_service_write_source;
+enum mk61_file_bytes_operation { MK61_FILE_BYTES_STAT, MK61_FILE_BYTES_READ, MK61_FILE_BYTES_CHILD,
+  /* Bounded overwrite of an existing file, <=4096 bytes. Journaled on Pico;
+   * never extends the file. Same request as READ; data is the source. */
+  MK61_FILE_BYTES_WRITE
+};
+typedef struct mk61_service_file_bytes {
+  const char* path;
+  void* data;
+  uint32_t offset,size;
+} mk61_service_file_bytes;
+typedef struct mk61_service_file_info {
+  uint32_t size,directory;
+  char name[256];
+} mk61_service_file_info;
+enum mk61_color_operation { MK61_COLOR_AVAILABLE, MK61_COLOR_PRESENT, MK61_COLOR_END,
+  /* c=128,payload=64 native RGB565 words. Copy while LCD idle; 1/2/0.
+   * TILE8 uses this palette. The original frame descriptor is unchanged. */
+  MK61_COLOR_PALETTE64
+};
+enum mk61_color_format {
+  /* Horizontal, high nibble first; each row occupies ceil(width/2) bytes. */
+  MK61_COLOR_INDEX4,
+  /* Horizontal MSB-first bits plus one byte per 8x8 tile: high nibble is
+   * the zero-bit color, low nibble the one-bit color. Dimensions are /8. */
+  MK61_COLOR_TILE1,
+  /* Same bitmap; two bytes per 8x8 tile: zero-bit index, one-bit index.
+   * Indices are 0..63 in the separately copied 64-color palette. */
+  MK61_COLOR_TILE8
+};
+#define MK61_COLOR_SNAPSHOT_BYTES 12800U
+/* With CAP_TEXT_COLORS, rectangle updates can retain pixels outside the
+ * rectangle. Other frames retain the original background-fill behavior. */
+#define MK61_COLOR_PRESERVE_OUTSIDE 0x8000U
+typedef struct mk61_service_color_frame {
+  const uint8_t* pixels;
+  const uint8_t* tiles;
+  uint32_t pixel_bytes, tile_bytes;
+  uint16_t palette[16]; /* Native RGB565 words. */
+  uint16_t x, y, width, height;
+  uint16_t background; /* Fill outside the image when geometry/color changes. */
+  uint16_t format;
+} mk61_service_color_frame;
 enum mk61_buffer_operation {
   MK61_BUFFER_ACQUIRE, MK61_BUFFER_RELEASE, MK61_BUFFER_INFO,
   MK61_BUFFER_READ, MK61_BUFFER_WRITE, MK61_BUFFER_FILL,
@@ -335,7 +449,13 @@ enum mk61_service_display_operation {
   MK61_SERVICE_DISPLAY_BLINK_ON,
   /* Optional borrowed page-major bitmap, valid only until GRAPHICS_END.
    * b=sizeof(mk61_service_framebuffer), payload=output; unsupported returns 0. */
-  MK61_SERVICE_DISPLAY_FRAMEBUFFER
+  MK61_SERVICE_DISPLAY_FRAMEBUFFER,
+  /* Optional RGB565 UI row colors: b=foreground, c=background, payload=NULL.
+   * Applies to subsequent UI_LINE/WRITE calls. Query CAP_TEXT_COLORS. */
+  MK61_SERVICE_DISPLAY_UI_COLORS,
+  /* Optional per-character RGB565 colors for an existing UI row.
+   * b=row, c=count (<=64), payload=uint16_t[count], copied synchronously. */
+  MK61_SERVICE_DISPLAY_UI_RUN_COLORS
 };
 typedef struct mk61_service_framebuffer {
   uint8_t* pixels;
@@ -354,7 +474,11 @@ enum mk61_service_keyboard_operation {
   MK61_SERVICE_KEY_POLL, MK61_SERVICE_KEY_GET, MK61_SERVICE_KEY_WAIT,
   MK61_SERVICE_KEY_PRESSED, MK61_SERVICE_KEY_IMMEDIATE, MK61_SERVICE_KEY_CLEAR_IMMEDIATE,
   MK61_SERVICE_KEY_SCAN, MK61_SERVICE_KEY_HANDOFF, MK61_SERVICE_KEY_HANDOFF_PENDING,
-  MK61_SERVICE_KEY_ANY, MK61_SERVICE_KEY_CLEAR_HOLD, MK61_SERVICE_KEY_LAST
+  MK61_SERVICE_KEY_ANY, MK61_SERVICE_KEY_CLEAR_HOLD, MK61_SERVICE_KEY_LAST,
+  /* Snapshot of physical/QWERTY wire keys, without consuming the event
+   * queue. b=32, payload=256-bit map, bit N means wire code N is down.
+   * Returns 1 if supported, 0 otherwise. Also includes USB/serial pulses. */
+  MK61_SERVICE_KEY_BITMAP
 };
 enum mk61_service_setting { MK61_SERVICE_LANGUAGE, MK61_SERVICE_VOLUME,
                            MK61_SERVICE_ANGLE, MK61_SERVICE_REGISTER_F };
@@ -405,7 +529,10 @@ enum mk61_setup_operation {
   /* Resolve a catalog key without recursively invoking SETUP. */
   MK61_SETUP_UI_FONT_SOURCE,
   /* Independent calculator face selection; gated by CALCULATOR_FONT. */
-  MK61_SETUP_CALCULATOR_FONT_READ, MK61_SETUP_CALCULATOR_FONT_APPLY
+  MK61_SETUP_CALCULATOR_FONT_READ, MK61_SETUP_CALCULATOR_FONT_APPLY,
+  /* b=0: local seconds since midnight; b=1: civil days since 1970-01-01.
+   * c=0,payload=NULL. Query SETUP_FEATURE_RTC_VALUE before use. */
+  MK61_SETUP_RTC_VALUE
 };
 enum mk61_setup_feature {
   MK61_SETUP_FEATURE_TEXT_PROFILE = 1u << 0,
@@ -416,7 +543,8 @@ enum mk61_setup_feature {
   MK61_SETUP_FEATURE_UI_FONT_CATALOG = 1u << 5,
   MK61_SETUP_FEATURE_CLASSIC_UI_FONT = 1u << 6,
   MK61_SETUP_FEATURE_COMPACT_UI_FONT = 1u << 7,
-  MK61_SETUP_FEATURE_CALCULATOR_FONT = 1u << 8
+  MK61_SETUP_FEATURE_CALCULATOR_FONT = 1u << 8,
+  MK61_SETUP_FEATURE_RTC_VALUE = 1u << 9
 };
 enum mk61_calculator_font {
   MK61_CALCULATOR_FONT_MK61 = 0,
@@ -488,6 +616,13 @@ typedef struct mk61_service_number_format {
   char* output;
   uint32_t capacity, significant_digits;
 } mk61_service_number_format;
+/* NUMBER_FORMAT a=0: significant digits (existing contract).
+ * a=1 with CAP_NUMBER_FIXED: decimal places, retaining trailing zeroes. */
+enum mk61_number_format_operation { MK61_NUMBER_GENERAL, MK61_NUMBER_FIXED, MK61_NUMBER_FRACTIONAL,
+  MK61_NUMBER_ECMA_GENERAL, MK61_NUMBER_ECMA_FRACTIONAL };
+/* NUMBER_PARSE a=1 with CAP_ECMA_NUMBERS: whole-string numeric conversion.
+ * NUMBER_FORMAT ECMA_FRACTIONAL: integers use shortest form, fractions have
+ * exactly two decimal places, matching URQL substitutions. */
 typedef struct mk61_service_number_parse {
   double value;
   const char* input;
@@ -502,6 +637,17 @@ typedef struct mk61_service_menu_item {
   bool (*action)(void);
   uint32_t display_size;
 } mk61_service_menu_item;
+/* Optional bounded, synchronous scrolling menu. MENU: a=b=0,
+ * c=sizeof(request), payload=request. label writes a NUL-terminated M8 row.
+ * Returns 1 on confirmation, selected out; 0 on cancel/error. Callbacks
+ * remain valid only until the service returns. Existing c=0 menus retain
+ * their original contract. Query CAP_MENU_SOURCE before calling. */
+typedef struct mk61_service_menu_source {
+  const char* title;
+  void* context;
+  uint32_t count, selected;
+  int (*label)(void*, uint32_t index, char*, uint32_t capacity);
+} mk61_service_menu_source;
 typedef struct mk61_service_glyph {
   uint32_t width, height;
   uint8_t pixels[8]; /* canonical row-major MSB, at most 8x8 */

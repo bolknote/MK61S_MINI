@@ -2277,6 +2277,8 @@ u16 class_terminal::file_capacity(program_store::ProgramType type) {
       if(type == program_store::ProgramType::SHEET) {
         return program_store::MAX_SHEET_SIZE;
       }
+      if(type == program_store::ProgramType::URQ || type == program_store::ProgramType::URQ_DATA ||
+         type == program_store::ProgramType::URQ_SAVE) return program_store::MAX_URQ_FILE_SIZE;
       if(type == program_store::ProgramType::APP) {
         return program_store::MAX_APP_FILE_SIZE;
       }

@@ -189,6 +189,24 @@ bool read_range(const char* path, u32 offset, u8* out, unsigned count, unsigned&
     const FRESULT closed = f_close(&file);
     return fail(result == FR_OK ? closed : result);
 }
+bool write_range(const char* path,u32 offset,const u8* data,unsigned count) {
+    diagnostics::Scope measure(diagnostics::Point::STORAGE);
+    if(!path || !data || !count || count>4096 || storage_journal::reserved(path)) return fail(FR_INVALID_PARAMETER);
+    if(!start_transaction()) return false;
+    FIL file;FRESULT result=f_open(&file,path,FA_READ|FA_WRITE);
+    if(result!=FR_OK) { fail(result);return finish_transaction(false); }
+    if(offset>f_size(&file) || count>f_size(&file)-offset) result=FR_INVALID_PARAMETER;
+    if(result==FR_OK) result=f_lseek(&file,offset);
+    UINT written=0;
+    if(result==FR_OK) result=f_write(&file,data,count,&written);
+    if(result==FR_OK && written!=count) result=FR_DISK_ERR;
+    if(result==FR_OK) result=f_sync(&file);
+    const FRESULT closed=f_close(&file);if(result==FR_OK) result=closed;
+    if(result!=FR_OK) { fail(result);return finish_transaction(false); }
+    const bool ok=finish_transaction(true);
+    if(ok) { ++generation;text_cache.valid=false; }
+    return ok;
+}
 bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more,const char* filter) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     used = 0; more = false;

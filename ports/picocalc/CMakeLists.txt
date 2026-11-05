@@ -27,12 +27,13 @@ option(MK61_PICOCALC_PSRAM_QPI "Use four-bit PSRAM; OFF is the SPI timing contro
 add_executable(mk61s-picocalc-pico-h
     main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp storage_journal.cpp usb_device.cpp services.cpp service_runtime.cpp
-    dma_support.cpp psram.cpp external_cache.cpp buffers.cpp
+    dma_support.cpp psram.cpp external_cache.cpp buffers.cpp audio_stream.cpp
     script_files.cpp script_runtime.cpp language_cache.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
     "${MK61_ROOT}/third_party/fatfs/ff.c"
     "${MK61_ROOT}/third_party/fatfs/ffunicode.c"
     "${MK61_ROOT}/code/mk61emu_core.cpp"
     "${MK61_ROOT}/code/compact_math.cpp"
+    "${MK61_ROOT}/code/ecma_number.cpp"
     "${MK61_ROOT}/code/native_eabi_m0.cpp"
     "${MK61_ROOT}/code/native_eabi_m0_cr.cpp"
     "${MK61_ROOT}/code/native_eabi_m0.S"
@@ -76,6 +77,9 @@ target_compile_definitions(mk61s-picocalc-pico-h PRIVATE
     PICO_MALLOC_PANIC=0
     MK61_ENABLE_RTC_ALARM_TERMINAL=1
     MK61_ENABLE_USB_SCREEN=1
+    # Explicit public bundle capabilities for the native resident services.
+    MK61_ENABLE_FOCAL=1 MK61_ENABLE_TINYBASIC=1 MK61_ENABLE_CHIP8=1
+    MK61_ENABLE_MARKDOWN_VIEWER=1 MK61_ENABLE_WBMP_VIEWER=1 MK61_PORTABLE_UI_FONTS=1
     MK61_M61_READ_CACHE_BYTES=2048
     MK61_USE_COMPACT_LIBM=1 MK61_MATH_BACKEND=0 MK61_USE_NATIVE_EABI=0
     MK61_USE_M0_EABI=$<BOOL:${MK61_PICOCALC_M0_EABI}>

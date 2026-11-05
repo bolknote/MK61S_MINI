@@ -56,6 +56,25 @@ static inline uint32_t mk61_app_buffer_release(const mk61_app_services* services
   return mk61_app_buffer_call(services,MK61_BUFFER_RELEASE,&r);
 }
 
+/* One consumer owns the keyboard until TEXT_END. POLL returns 1 for a copied
+ * M8/editing event, 0 for no event. Begin/end discard the causal handoff key. */
+static inline uint32_t mk61_app_text_input(const mk61_app_services* services,
+    uint32_t operation, uint32_t russian, mk61_service_text_event* event) {
+  if(!services || !services->call ||
+      !(services->call(MK61_SERVICE_CAPABILITIES,0,0,0,NULL)&MK61_SERVICE_CAP_TEXT_INPUT)) return 0;
+  if(operation == MK61_TEXT_BEGIN && event) { event->layout=russian;event->reserved=0; }
+  return services->call(MK61_SERVICE_TEXT_INPUT,operation,russian,
+      event ? sizeof(*event) : 0,event);
+}
+/* Synchronous and atomic. Callback data/context must remain valid until return.
+ * On failure the previous file is retained; no RAM-sized copy is required. */
+static inline uint32_t mk61_app_file_write_source(const mk61_app_services* services,
+    uint32_t parent,uint32_t preferred,uint32_t type,mk61_service_write_source* source) {
+  if(!services || !services->call || !source ||
+      !(services->call(MK61_SERVICE_CAPABILITIES,0,0,0,NULL)&MK61_SERVICE_CAP_FILE_WRITE_SOURCE)) return 0;
+  return services->call(MK61_SERVICE_FILE_WRITE_SOURCE,parent,preferred,type,source);
+}
+
 enum mk61_app_command {
   MK61_APP_INITIALIZE = 0,
   MK61_APP_RUN = 1,
@@ -76,6 +95,7 @@ uint32_t mk61_app_open_file(uint32_t file_id);
 /* Optional: defining this hook advertises cooperative APP flow support.
  * Return 1 after filling the next action; 0 rejects a malformed request. */
 uint32_t mk61_app_flow_step(mk61_app_flow* flow);
+uint32_t mk61_app_file_flow(void);
 
 /* Advanced hooks shared by ordinary and canonical System APP. The SDK owns
  * mk61_module_entry and validates/binds the host before either hook runs.

@@ -227,6 +227,9 @@ static const Extension EXTENSIONS[] = {
   { ".ch8",       program_store::ProgramType::CHIP8 },
   { ".bin",       program_store::ProgramType::MK61_BINARY },
   { ".mks",       program_store::ProgramType::SHEET },
+  { ".urq",       program_store::ProgramType::URQ },
+  { ".uqd",       program_store::ProgramType::URQ_DATA },
+  { ".urs",       program_store::ProgramType::URQ_SAVE },
   { ".wbmp",      program_store::ProgramType::IMAGE1 },
   // Старые терминальные псевдонимы по-прежнему принимаются, но каноническая
   // запись использует расширения из program_store::file_extension().

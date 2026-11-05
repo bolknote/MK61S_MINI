@@ -30,7 +30,7 @@ inline void copy(char* output, usize capacity, const char* text) {
   output[i] = 0;
 }
 
-inline void fixed(double value, int decimals, char* output, usize capacity) {
+inline void fixed(double value, int decimals, char* output, usize capacity, bool trim = true) {
   if(capacity == 0) return;
   if(decimals < 0) decimals = 0;
   if(decimals > 17) decimals = 17;
@@ -48,7 +48,7 @@ inline void fixed(double value, int decimals, char* output, usize capacity) {
   char buffer[48];
   char* cursor = buffer;
   char* const end = buffer + sizeof(buffer) - 1;
-  if(negative && scaled != 0) append_char(cursor, end, '-');
+  if(negative && (scaled != 0 || !trim)) append_char(cursor, end, '-');
   append_uint(cursor, end, integer);
   if(decimals != 0) {
     append_char(cursor, end, '.');
@@ -60,11 +60,22 @@ inline void fixed(double value, int decimals, char* output, usize capacity) {
     for(int i = 0; i < decimals; i++) {
       append_char(cursor, end, fractional[i]);
     }
-    while(cursor > buffer && cursor[-1] == '0') cursor--;
-    if(cursor > buffer && cursor[-1] == '.') cursor--;
+    if(trim) {
+      while(cursor > buffer && cursor[-1] == '0') cursor--;
+      if(cursor > buffer && cursor[-1] == '.') cursor--;
+    }
   }
   *cursor = 0;
   copy(output, capacity, buffer);
+}
+inline bool fixed_request(double value, u32 decimals, char* output, usize capacity, bool fractional = false) {
+  if(!output || !capacity || decimals > 9 || mk_math::is_nan(value) || mk_math::is_inf(value)) return false;
+  double scale = 1;
+  for(u32 i = 0; i < decimals; ++i) scale *= 10;
+  if(mk_math::fabs(value) >= 1.8e19 / scale) return false;
+  const double absolute = mk_math::fabs(value);
+  if(fractional && absolute == (double)(unsigned long long)absolute) decimals = 0;
+  fixed(value, (int)decimals, output, capacity, false); return true;
 }
 
 // Format like printf("%.*g") for the precision range used by the embedded

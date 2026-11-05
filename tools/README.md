@@ -19,6 +19,9 @@
 | `build_picocalc_apps.py` | Сборка нативных APP для Pico H |
 | `package_picocalc.py` | Упаковка проверенной прошивки и содержимого microSD в комплект PicoCalc |
 | `sync_picocalc_clock.py` | Синхронизация часов PicoCalc |
+| `build_urq_app.py` | Сборка URQ/URQUI для STM32 или URQ для PicoCalc, проверка размеров APP и стека |
+| `qst2urq.py` | Конвертация QST/manifest и UTF-8 текстовых ресурсов в переносимый C2/R1 пакет |
+| `build_urq_library.py` | Проверка каталога UrqW и воспроизводимая сборка двух CC0-адаптаций без JS |
 | `vfat_diagnostic.py` | Расшифровка диагностики виртуального USB-диска |
 
 Например, из корня проекта:

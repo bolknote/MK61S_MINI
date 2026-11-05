@@ -178,6 +178,9 @@ const char* file_extension(ProgramType type) {
     case ProgramType::MARKDOWN: return "md";
     case ProgramType::MK61_BINARY: return "bin";
     case ProgramType::SHEET: return "mks";
+    case ProgramType::URQ: return "urq";
+    case ProgramType::URQ_DATA: return "uqd";
+    case ProgramType::URQ_SAVE: return "urs";
   }
   return "bin";
 }

@@ -1,0 +1,6 @@
+В ловушке времени
+Симон Кристиансен; перевод и портирование: Никита Цейковец
+https://github.com/tseykovets/trapped_in_time_ru
+Revision: 75718abb334f812d5d8190d7897d3b2029ae57d4
+License: CC0-1.0
+Text/M8 adaptation for MK61S and PicoCalc; media omitted.

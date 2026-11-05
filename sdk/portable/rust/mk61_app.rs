@@ -60,6 +60,114 @@ pub const SERVICE_CAP_TEXT_FONT: u32 = 1 << 13;
 pub const SERVICE_CAP_FLOAT_CONVERT: u32 = 1 << 14;
 pub const SERVICE_CAP_BUFFERS: u32 = 1 << 21;
 pub const SERVICE_CAP_EXTERNAL_BUFFERS: u32 = 1 << 22;
+pub const SERVICE_CAP_COLOR_DISPLAY: u32 = 1 << 23;
+pub const SERVICE_CAP_FILE_BYTES: u32 = 1 << 24;
+pub const SERVICE_CAP_AUDIO_STREAM: u32 = 1 << 27;
+pub const SERVICE_COLOR_DISPLAY: u32 = 44;
+pub const SERVICE_FILE_BYTES: u32 = 45;
+pub const SERVICE_AUDIO_STREAM: u32 = 48;
+pub const COLOR_AVAILABLE: u32 = 0;
+pub const COLOR_PRESENT: u32 = 1;
+pub const COLOR_END: u32 = 2;
+pub const COLOR_PALETTE64: u32 = 3;
+pub const COLOR_INDEX4: u16 = 0;
+pub const COLOR_TILE1: u16 = 1;
+pub const COLOR_TILE8: u16 = 2;
+pub const FILE_BYTES_STAT: u32 = 0;
+pub const FILE_BYTES_READ: u32 = 1;
+pub const FILE_BYTES_CHILD: u32 = 2;
+pub const FILE_BYTES_WRITE: u32 = 3;
+pub const AUDIO_OPEN: u32 = 0;
+pub const AUDIO_WRITE: u32 = 1;
+pub const AUDIO_STATUS: u32 = 2;
+pub const AUDIO_CLOSE: u32 = 3;
+pub const AUDIO_SYNTH_OPEN: u32 = 4;
+pub const KEY_BITMAP: u32 = 12;
+#[repr(C)]
+pub struct ServiceColorFrame {
+    pub pixels: *const u8, pub tiles: *const u8,
+    pub pixel_bytes: u32, pub tile_bytes: u32,
+    pub palette: [u16; 16],
+    pub x: u16, pub y: u16, pub width: u16, pub height: u16,
+    pub background: u16, pub format: u16,
+}
+#[repr(C)]
+pub struct ServiceFileBytes {
+    pub path: *const u8, pub data: *mut c_void, pub offset: u32, pub size: u32,
+}
+#[repr(C)]
+pub struct ServiceFileInfo { pub size: u32, pub directory: u32, pub name: [u8; 256] }
+#[repr(C)]
+pub struct ServiceAudio {
+    pub samples: *const i16, pub count: u32, pub rate: u32,
+    pub volume: u32, pub queued: u32, pub underruns: u32,
+}
+#[repr(C)]
+pub struct ServiceAudioSynth {
+    pub sample: Option<unsafe extern "C" fn(*mut c_void) -> u32>,
+    pub context: *mut c_void, pub rate: u32, pub volume: u32,
+}
+pub const SERVICE_CAP_TEXT_INPUT: u32 = 1 << 25;
+pub const SERVICE_CAP_FILE_WRITE_SOURCE: u32 = 1 << 26;
+pub const SERVICE_CAP_MENU_SOURCE: u32 = 1 << 28;
+pub const SERVICE_CAP_NUMBER_FIXED: u32 = 1 << 29;
+pub const SERVICE_CAP_TEXT_COLORS: u32 = 1 << 30;
+pub const SERVICE_CAP_ECMA_NUMBERS: u32 = 1 << 31;
+pub const SERVICE_TEXT_INPUT: u32 = 46;
+pub const SERVICE_FILE_WRITE_SOURCE: u32 = 47;
+pub const TEXT_BEGIN: u32 = 0;
+pub const TEXT_POLL: u32 = 1;
+pub const TEXT_END: u32 = 2;
+pub const TEXT_NONE: u32 = 0;
+pub const TEXT_CHAR: u32 = 1;
+pub const TEXT_LEFT: u32 = 2;
+pub const TEXT_RIGHT: u32 = 3;
+pub const TEXT_BACKSPACE: u32 = 4;
+pub const TEXT_DELETE: u32 = 5;
+pub const TEXT_HOME: u32 = 6;
+pub const TEXT_END_LINE: u32 = 7;
+pub const TEXT_UP: u32 = 8;
+pub const TEXT_DOWN: u32 = 9;
+pub const TEXT_PAGE_UP: u32 = 10;
+pub const TEXT_PAGE_DOWN: u32 = 11;
+pub const TEXT_SUBMIT: u32 = 12;
+pub const TEXT_CANCEL: u32 = 13;
+pub const TEXT_MENU: u32 = 14;
+pub const TEXT_LAYOUT: u32 = 15;
+pub const SERVICE_FILE_URQ: u32 = 13;
+pub const SERVICE_FILE_URQ_DATA: u32 = 14;
+pub const SERVICE_FILE_URQ_SAVE: u32 = 15;
+#[repr(C)]
+pub struct ServiceTextEvent {
+    pub kind: u32, pub value: u32, pub layout: u32, pub reserved: u32,
+}
+pub type FileSourceRead = unsafe extern "C" fn(*mut c_void, u32, *mut u8, u32) -> i32;
+#[repr(C)]
+pub struct ServiceWriteSource {
+    pub name: *const u8,
+    pub context: *mut c_void,
+    pub read: Option<FileSourceRead>,
+    pub size: u32,
+    pub id: u32,
+}
+#[repr(C)]
+pub struct ServiceMenuSource {
+    pub title: *const u8, pub context: *mut c_void,
+    pub count: u32, pub selected: u32,
+    pub label: Option<unsafe extern "C" fn(*mut c_void,u32,*mut u8,u32) -> i32>,
+}
+pub const NUMBER_GENERAL: u32 = 0;
+pub const NUMBER_FIXED: u32 = 1;
+pub const NUMBER_FRACTIONAL: u32 = 2;
+pub const NUMBER_ECMA_GENERAL: u32 = 3;
+pub const NUMBER_ECMA_FRACTIONAL: u32 = 4;
+pub const DISPLAY_UI_COLORS: u32 = 25;
+pub const DISPLAY_UI_RUN_COLORS: u32 = 26;
+pub const COLOR_PRESERVE_OUTSIDE: u16 = 0x8000;
+pub const APP_FLOW_FILE_INFO: u32 = 5;
+pub const APP_FLOW_FILE_PHASE: u32 = 2;
+pub const SETUP_RTC_VALUE: u32 = 26;
+pub const SETUP_FEATURE_RTC_VALUE: u32 = 1 << 9;
 pub const SERVICE_BUFFER: u32 = 43;
 pub const BUFFER_ACQUIRE: u32 = 0;
 pub const BUFFER_RELEASE: u32 = 1;

@@ -23,6 +23,10 @@ public:
     bool bitmap_present(const u8* frame,unsigned size);
     void bitmap_end();
     u32 revision() const { return revision_; }
+    using ColorSink=u32(*)(void*,u32,const mk61_service_color_frame*);
+    void color_sink(ColorSink sink,void* context,void(*wait)(void*),void* wait_context) {
+        color_sink_=sink;color_context_=context;color_wait_=wait;color_wait_context_=wait_context;
+    }
 private:
     void layout();
     bool load_text_font();
@@ -33,6 +37,16 @@ private:
     unsigned native_advance(u16 cp) const;
     unsigned native_measure(const char* text,unsigned length) const;
     u32 native_call(u32 operation,u32 b,u32 c,void* payload);
+    void color_flush();
+    u32 color_rect(unsigned x,unsigned y,unsigned width,unsigned height);
+    u16 color_row(unsigned y,u16* foreground);
+    ColorSink color_sink_=nullptr;
+    void* color_context_=nullptr;
+    void(*color_wait_)(void*)=nullptr;
+    void* color_wait_context_=nullptr;
+    u16 color_fore_[20]{},color_back_[20]{},foreground_=0xFFFF,background_=0;
+    bool colored_=false,color_presenting_=false;
+    std::unique_ptr<u16[]> color_cells_;
     bool native_=false,native_dirty_=true,native_cursor_=false,native_blink_=false,native_phase_=false;
     unsigned nx_=0,ny_=0,ncols_=32,nrows_=18,npitch_=18,ncell_=8,update_=0;
     u32 blink_at_=0,gutters_=0,tails_=0;

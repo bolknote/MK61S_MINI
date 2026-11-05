@@ -616,6 +616,13 @@ python3 "$root/tools/build_system_app_bundle.py" \
 for index in "${!custom_app_names[@]}"; do
   build_custom_app "$index"
 done
+python3 "$root/tools/build_urq_app.py" --target stm32 \
+  --toolchain "$(dirname "$compiler")" --build-dir "$work/urq" \
+  --output-dir "$bundle_stage/Apps" --library-output "$bundle_stage/Games/URQ" \
+  --licenses-output "$bundle_stage/licenses/urq"
+mkdir -p "$bundle_stage/licenses/ryu"
+cp "$root/third_party/ryu/LICENSE-Apache2" "$root/third_party/ryu/LICENSE-Boost" \
+  "$root/third_party/ryu/README.md" "$bundle_stage/licenses/ryu/"
 
 bundle_name=${firmware_name%.bin}
 bundle_dir="$output_root/$bundle_name"
@@ -658,6 +665,7 @@ printf '%s -DMK61_PORTABLE_UI_FONTS=%s -DMK61_APP_LOCAL_FLOAT_MATH=%s\n' \
 {
   printf 'format 1\n'
   printf 'abi 6\n'
+  printf 'app Apps/URQ.APP\napp Apps/URQUI.APP\n'
   for index in "${!custom_app_names[@]}"; do
     printf 'app Apps/%s.APP\n' "${custom_app_names[$index]}"
   done

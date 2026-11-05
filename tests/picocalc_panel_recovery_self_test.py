@@ -14,7 +14,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def run(args, build):
     source=args.source.resolve().read_text()
     first='bool Panel::flush(const Screen& screen) {'
-    after='void Panel::configure_dma() {'
+    after='void Panel::configure_dma(bool chain) {'
     transfer='void Panel::transfer() {'
     end='\n} // namespace picocalc'
     for marker in (first,after,transfer,end):

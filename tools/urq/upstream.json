@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/urqw/UrqW.git",
+  "commit": "37e03b65efc58af70e8811a119f25b1ab5fda5a5",
+  "license": "GPL-2.0-or-later",
+  "purpose": "Text-semantics oracle and source catalog; only explicit hash-pinned adaptation tests execute game JavaScript on the host"
+}

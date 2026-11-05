@@ -69,6 +69,7 @@ def capabilities(flags, profile, mcu, firmware):
     features['graphics'] = features['usb_screen'] or any(name in definitions for name in schema['graphics_defines'])
     features['bitmap'] = features['graphics'] or (definitions.get('MK61_OLED1602_WS0010') == '1' and definitions.get('MK61_WS0010_GRAPHICS_100X16') == '1')
     features.update(apps=True, s1=True, math=features['focal'] or features['basic'])
+    features['urq'] = (firmware.parent/'Apps/URQ.APP').is_file() and (firmware.parent/'Apps/URQUI.APP').is_file()
     required = {}
     for feature, (placement, name) in schema['system_apps'].items():
         if features[feature] and bit(placement) and not (feature == 'wbmp' and features['markdown']):
@@ -120,17 +121,21 @@ def resolved_build_flags(database):
 
 
 def compiled_pico_features(database):
-    flags = resolved_build_flags(database)
+    entries = json.loads(database.read_text())
+    entry = next(e for e in entries if str(e['file']).endswith('/script_runtime.cpp'))
+    command = entry.get('arguments') or shlex.split(entry['command'])
+    flags = ' '.join(arg for arg in command if arg.startswith('-D'))
     schema = json.loads(Path(__file__).with_name('program-capabilities.json').read_text())
     values = dict(re.findall(r'-D(\w+)=([01])', flags))
     features = {key: values[name] == '1' for key, name in schema['features'].items()}
-    features.update(graphics=True, bitmap=True, apps=True, s1=True, math=True)
+    features.update(graphics=True, bitmap=True, apps=True, s1=True, math=True,urq=True)
     return features
 
 
 def file_limit(cap, extension):
     pico = cap['platform'] == 'picocalc'
     return {'.m61':1536, '.txt':1536, '.md':1536, '.bin':4096,
+            '.urq':61440, '.uqd':61440, '.urs':61440,
             '.tbi':65534, '.foc':65534, '.mks':2048, '.ch8':3584,
             '.fmk':1536 if cap['mcu'] == 'f401' else 8192,
             '.wbmp':16384 if pico else 1600,
@@ -178,7 +183,7 @@ def frozen_plan(directory, cap):
     for record in manifest['files']:
         name = record['path']
         path = safe_path(name)
-        if path.parts[0] not in ('app','apps','games','library','examples','sheets','CHIP8','Fonts'):
+        if path.parts[0] not in ('app','apps','games','library','examples','sheets','urq','CHIP8','Fonts'):
             raise ValueError('unexpected distribution destination: ' + name)
         source = directory/name
         if source.is_symlink() or not source.resolve().is_relative_to(directory.resolve()) or not source.is_file():
@@ -228,8 +233,11 @@ def plan(bundle, root=ROOT, *, prefer_bundle=True):
         data = logical(raw, destination)
         files.append(dict(path=destination, source=str(source.resolve()), size=wire_size(data, destination), sha256=sha(data), package=package))
     for name, spec in catalog['apps'].items():
+        if spec.get('platform') and spec['platform'] != cap['platform']:
+            continue
         need = missing(spec['requires'])
-        source = (bundle / 'apps' / (name + '.APP') if cap['platform'] == 'picocalc' else root / 'programs/app' / (name + '.APP'))
+        source = (bundle / 'apps' / (name + '.APP') if cap['platform'] == 'picocalc' else
+                  bundle / 'Apps' / (name + '.APP') if spec.get('built') else root / 'programs/app' / (name + '.APP'))
         if need:
             skipped.append(dict(package='app/' + name, reason='requires ' + ', '.join(need)))
         else:

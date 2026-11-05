@@ -1602,6 +1602,7 @@ static bool entry_can_run(const program_store::Entry& entry) {
     case program_store::ProgramType::CHIP8:
     case program_store::ProgramType::MARKDOWN:
     case program_store::ProgramType::SHEET:
+    case program_store::ProgramType::URQ:
       return file_handlers::available(entry);
     default:
       return false;
@@ -1615,7 +1616,8 @@ static bool run_entry(const program_store::Entry& entry) {
       entry.type == program_store::ProgramType::IMAGE1 ||
       entry.type == program_store::ProgramType::CHIP8 ||
       entry.type == program_store::ProgramType::MARKDOWN ||
-      entry.type == program_store::ProgramType::SHEET;
+      entry.type == program_store::ProgramType::SHEET ||
+      entry.type == program_store::ProgramType::URQ;
   bool ok;
   if(entry.type == program_store::ProgramType::FONT) ok = apply_font_entry(entry);
   else if(file_handler) {

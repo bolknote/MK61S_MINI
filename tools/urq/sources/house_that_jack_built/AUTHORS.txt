@@ -1,0 +1,6 @@
+Дом, который построил Джек
+Никита Цейковец; переводы: Самуил Маршак, Геннадий Аминов, Игорь Родин, Светлана Сергеева, Екатерина Зеленина
+https://github.com/tseykovets/house_that_jack_built
+Revision: 77d7e0980cb1c3ed63dce20126b247b740aa528c
+License: CC0-1.0
+Text/M8 adaptation for MK61S and PicoCalc; media omitted.

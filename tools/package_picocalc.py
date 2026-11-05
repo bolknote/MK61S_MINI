@@ -20,6 +20,7 @@ import zlib
 from build_picocalc_apps import APPS, ASSETS, ROOT
 from seal_picocalc import verify as verify_firmware
 from explorer_icons import install_bundle_icons
+from urq.library import copy_device_library, copy_licenses
 
 README='''MK61S / PicoCalc / Pico H
 
@@ -99,11 +100,17 @@ def main():
     spec=importlib.util.spec_from_file_location('pico_font_licenses',ROOT/'tools/.fmk-font/package_ui_font_licenses.py')
     licenses=importlib.util.module_from_spec(spec);spec.loader.exec_module(licenses)
     licenses.package(bundle=directory)
+    ryu=directory/'licenses/ryu';ryu.mkdir(parents=True,exist_ok=True)
+    for name in ('LICENSE-Apache2','LICENSE-Boost','README.md'):
+        shutil.copy2(ROOT/'third_party/ryu'/name,ryu/name)
     shutil.copy2(ROOT/'tools/sync_picocalc_clock.py',directory/'sync_picocalc_clock.py')
     files=[firmware,directory/'manifest.json',directory/'README.txt',directory/'README.md',directory/'sync_picocalc_clock.py',
         *font_files,*game_files,*(directory/name for name in licenses.FILES),
         apps/'manifest.json',*[apps/(name+'.APP') for name in APPS],*[apps/name for name in ASSETS]]
     files=list(dict.fromkeys(files))
+    files += copy_device_library(apps/'URQ')
+    files += copy_licenses(directory/'licenses/urq')
+    files += sorted(path for path in (directory/'licenses/ryu').rglob('*') if path.is_file())
     folders={parent.relative_to(directory).as_posix() for path in files for parent in path.parents
              if parent!=directory and parent.is_relative_to(directory)}
     # Stale directories from an older output must not become new empty folders

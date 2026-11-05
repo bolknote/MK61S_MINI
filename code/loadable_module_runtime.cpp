@@ -531,6 +531,12 @@ RuntimeStatus open_file(const FileHandler& handler, u16 file_id, u32& result) {
   if(g_active_entry == nullptr || g_active_kind != handler.kind) {
     return RuntimeStatus::INVALID_MODULE;
   }
+  if(call_entry(MK61_APP_FLOW_FILE_INFO, 0, 0, 0, 0) == MK61_APP_FLOW_MAGIC) {
+    alignas(8) u8 context[MK61_APP_FLOW_USER_CONTEXT_SIZE] = {};
+    memcpy(context, &file_id, sizeof(file_id));
+    return run_flow(mk61_app_flow_to((u8)handler.kind, handler.module_file_id,
+                        MK61_APP_FLOW_FILE_PHASE), context, sizeof(context), result);
+  }
   result = call_entry(
       (u32) Command::FILE_OPEN,
       entry_api_argument(),

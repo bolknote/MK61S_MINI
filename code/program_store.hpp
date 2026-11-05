@@ -38,6 +38,7 @@ static constexpr u16 MAX_CHIP8_SIZE = 3584;
 static constexpr u16 MAX_MK61_BINARY_SIZE = 4096;
 // S1 sheets are bounded binary documents; fit even the smallest FAT cluster.
 static constexpr u16 MAX_SHEET_SIZE = 2048;
+static constexpr u16 MAX_URQ_FILE_SIZE = 60U * 1024U;
 // Контейнер APP: 64-байтовый заголовок и не более 20 КиБ образа SRAM.
 // Хранилище читает его блоками и не требует такого же буфера в ОЗУ.
 static constexpr u16 MAX_APP_FILE_SIZE = 20U * 1024U + 64U;
@@ -67,7 +68,10 @@ enum class ProgramType : u8 {
   // массив счётчиков каталога.
   MARKDOWN = 10,
   MK61_BINARY = 11,
-  SHEET = 12
+  SHEET = 12,
+  URQ = 13,
+  URQ_DATA = 14,
+  URQ_SAVE = 15
 };
 
 constexpr bool text_content(ProgramType type) {
@@ -85,6 +89,9 @@ constexpr bool text_content(ProgramType type) {
     case ProgramType::CHIP8:
     case ProgramType::MK61_BINARY:
     case ProgramType::SHEET:
+    case ProgramType::URQ:
+    case ProgramType::URQ_DATA:
+    case ProgramType::URQ_SAVE:
       return false;
   }
   return false;
@@ -107,6 +114,9 @@ constexpr bool transparent_compression_enabled(ProgramType type) {
     case ProgramType::APP:
     case ProgramType::MK61_BINARY:
     case ProgramType::SHEET:
+    case ProgramType::URQ:
+    case ProgramType::URQ_DATA:
+    case ProgramType::URQ_SAVE:
       return false;
   }
   return false;
@@ -124,6 +134,7 @@ static constexpr TypeMagic TYPE_MAGIC_CHIP8 = make_type_magic('C', '1');
 static constexpr TypeMagic TYPE_MAGIC_MARKDOWN = make_type_magic('T', '2');
 static constexpr TypeMagic TYPE_MAGIC_MK61_BINARY = make_type_magic('M', '3');
 static constexpr TypeMagic TYPE_MAGIC_SHEET = make_type_magic('S', '1');
+static constexpr TypeMagic TYPE_MAGIC_URQ = make_type_magic('C', '2');
 
 enum class NodeKind : u8 {
   FILE = 0,
@@ -185,7 +196,10 @@ enum class WriteFailureDetail : u8 {
   CHAIN = 8,
   ROOT_TARGET_CAPACITY = 9,
   REPLACED_NAME = 10,
-  REPLACED_EXTENTS = 11
+  REPLACED_EXTENTS = 11,
+  FAT_CLUSTER_COUNT = 12,
+  FAT_EXTENT_POINTER = 13,
+  FAT_EXTENT_COUNT = 14
 };
 
 enum class MountStatus : u8 {

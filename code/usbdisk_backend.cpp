@@ -394,6 +394,10 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
           return program_store::MAX_MK61_BINARY_SIZE;
         case program_store::ProgramType::SHEET:
           return program_store::MAX_SHEET_SIZE;
+        case program_store::ProgramType::URQ:
+        case program_store::ProgramType::URQ_DATA:
+        case program_store::ProgramType::URQ_SAVE:
+          return program_store::MAX_URQ_FILE_SIZE;
         case program_store::ProgramType::APP:
           return program_store::MAX_APP_FILE_SIZE;
         default:

@@ -504,6 +504,9 @@ def build(args: argparse.Namespace) -> dict:
                 "--arm-toolchain-bin", toolchain,
                 "--output-dir", work / key,
             ]
+            # Binary file types share the fixed 20-KiB USBDISK overlay.
+            if system == "usbdisk":
+                command.append("--optimize-size")
             if args.packer:
                 command += ["--packer", args.packer.resolve()]
             if getattr(args,"focal_trace",False) and system in ("focal","language-vm"):

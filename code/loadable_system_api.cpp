@@ -17,6 +17,7 @@
 #include "cross_hal.h"
 #include "development.hpp"
 #include "menu.hpp"
+#include "menu_source.hpp"
 #include "entropy_pool.hpp"
 #include "language_workspace.hpp"
 #include "shared_scratch.hpp"
@@ -33,6 +34,7 @@
 #include "usb_mass_storage.hpp"
 #if MK61_NUMBER_IO_SERVICE_ENABLED
 #include "number_format.hpp"
+#include "ecma_number.hpp"
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS
 #include "ui_font_service.hpp"
@@ -284,7 +286,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
 #if defined(MK61_FOCAL_TRACE) && MK61_FOCAL_TRACE
           MK61_SERVICE_CAP_DEBUG_IO |
 #endif
-          MK61_SERVICE_CAP_MEMORY |
+          MK61_SERVICE_CAP_MEMORY | MK61_SERVICE_CAP_FILE_WRITE_SOURCE | MK61_SERVICE_CAP_MENU_SOURCE |
 #if MK61_ENABLE_SETUP
           MK61_SERVICE_CAP_SETUP |
 #endif
@@ -301,7 +303,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
           | MK61_SERVICE_CAP_FLOAT_CONVERT
 #endif
 #if MK61_NUMBER_IO_SERVICE_ENABLED
-          | MK61_SERVICE_CAP_NUMBER_IO
+          | MK61_SERVICE_CAP_NUMBER_IO | MK61_SERVICE_CAP_NUMBER_FIXED | MK61_SERVICE_CAP_ECMA_NUMBERS
 #endif
 #if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
           | MK61_SERVICE_CAP_FONT
@@ -525,6 +527,9 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
     case MK61_SYS_NUMBER_FORMAT: {
       if(!payload) return 0;
       auto& request = *(mk61_system_number_format*) payload;
+      if(a == MK61_NUMBER_ECMA_GENERAL) return ecma_number::format(request.value,request.output,request.capacity);
+      if(a == MK61_NUMBER_ECMA_FRACTIONAL) return ecma_number::fractional(request.value,request.output,request.capacity);
+      if(a == MK61_NUMBER_FIXED || a == MK61_NUMBER_FRACTIONAL) return number_format::fixed_request(request.value, request.significant_digits, request.output, request.capacity, a == MK61_NUMBER_FRACTIONAL);
       if(request.significant_digits == 0 ||
          request.significant_digits > 14) return 0;
       return number_format::general(
@@ -535,6 +540,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       if(!payload) return 0;
       auto& request = *(mk61_system_number_parse*) payload;
       if(!request.input) return 0;
+      if(a==1) { const bool ok=ecma_number::parse(request.input,request.value);request.consumed=ok?strlen(request.input):0;return ok; }
       const char* end = nullptr;
       const double value = mk_math::strtod(request.input, &end);
       if(end == request.input) return 0;
@@ -595,6 +601,8 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
     case MK61_SYS_EDITOR_KEY:
       return payload ? system_editor::handle(*(mk61_system_edit_key*) payload) : 0;
     case MK61_SYS_MENU: {
+      if(payload && !a && !b && c == sizeof(mk61_service_menu_source))
+        return menu_source::run(*(mk61_service_menu_source*)payload, loadable_app::resident_api(), display_call);
       if(!payload || a == 0 || a > 4) return 0;
       const auto* source = (const mk61_system_menu_item*) payload;
       alignas(t_punct) u8 storage[4][offsetof(t_punct, text) + 32];
@@ -635,6 +643,24 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
 // File writes already have a deep C6 call chain. Dispatch them before reserving
 // the unrelated menu, editor and font buffers in other_system_call.
 static u32 system_call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
+  if(operation == MK61_SERVICE_FILE_WRITE_SOURCE) {
+    if(!payload || a > 0xFFFFU || b > 0xFFFFU) return 0;
+    auto& request = *(mk61_service_write_source*) payload;
+    request.id = MK61_SERVICE_INVALID_ID;
+    if(!request.read || request.size > 65534U) return 0;
+    const program_store::FileSource source = {&request,
+      [](void* raw, u32 offset, u8* out, usize size) {
+        auto& r = *(mk61_service_write_source*)raw;
+        return offset <= r.size && size <= r.size - offset &&
+               r.read(r.context, offset, out, (u32)size) != 0;
+      }};
+    u16 id = program_store::INVALID_ID;
+    const bool ok = program_store::write_file_from_source((u16)a, (u16)b,
+        (program_store::ProgramType)c, request.name, (u16)request.size,
+        source, nullptr, 0, &id);
+    if(ok) request.id = id;
+    return ok;
+  }
   if(operation != MK61_SYS_FILE_WRITE)
     return other_system_call(operation, a, b, c, payload);
   if(!payload || a > 0xFFFFU || b > 0xFFFFU) return 0;

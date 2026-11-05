@@ -55,6 +55,7 @@ constexpr Extension extensions[] = {
     {".wbmp", Type::IMAGE1},   {".bin", Type::MK61_BINARY},
     {".ch8", Type::CHIP8},     {".app", Type::APP},
     {".c8", Type::CHIP8},      {".mks", Type::SHEET},
+    {".urq", Type::URQ},      {".uqd", Type::URQ_DATA}, {".urs", Type::URQ_SAVE},
     {".sheet", Type::SHEET},   {".wbm", Type::IMAGE1},
     {".t1", Type::TEXT},       {".m2", Type::MK61_STATE}};
 bool ends(const char *text, const char *suffix) {

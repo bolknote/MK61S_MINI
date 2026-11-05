@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "repository": "https://github.com/tseykovets/house_that_jack_built",
+  "revision": "77d7e0980cb1c3ed63dce20126b247b740aa528c",
+  "files": {
+    "urqw/_main.qst": "ed5c66d8e5572540bc7e57aec35e213ff0ca282826007771f9ca5bad2e091bec",
+    "urqw/ru_v0.qst": "7dfaffad1447b9265270e0a493a23fdaf55d802f8f9f0d0b6518ad6d1c1758dc",
+    "urqw/ru_v1.qst": "1be25c93872717f52899891687e44c9810537bdfe3f1fe77c2cfc758d30b10b8",
+    "urqw/ru_v2.qst": "a177b09d624d6088063b5e7dd2e45db92289ff8e7278df481bae1113d7d7f404",
+    "urqw/ru_v3.qst": "fc36319900e29c1ae80da1a0c9b6a484e67aea13965030e942e90fa6a0704629",
+    "urqw/ru_v4.qst": "5d23d952735b6951996c661c4d98f5f8e8f53dcf012be76ecc0fc7963212537d",
+    "urqw/ru_v5.qst": "210cd585f18816cc09c4189b3e03ed53b52e208c302ac06044b47a3b740b6e79",
+    "LICENSE.txt": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+    "urqw/script.js": "4747c626322e62e011e82289dec7a960782f44285751685451bba0459081fe11",
+    "urqw/manifest.json": "e271be41570c02f1e262fdaf542f78c18fdac48ecf49422a1c54cde3268765cf"
+  },
+  "changes": [
+    "Six Russian translations; English and Ukrainian menu entries omitted.",
+    "Case-insensitive URQL comparisons replace toLowerCase on answers, including Ё/ё.",
+    "Exact bounded integer percentage table replaces percentageRatio.",
+    "Cover image omitted; plain Russian translation menu.",
+    "Input is assigned as a value, preserving quotes and punctuation instead of interpolating executable URQL.",
+    "The malformed insert_var link for кот in ru_v5_5 is repaired."
+  ],
+  "verification": "tests/urq_library_self_test.py"
+}

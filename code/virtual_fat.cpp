@@ -488,21 +488,11 @@ static const char* visible_extension(program_store::ProgramType type) {
 }
 
 static const char* short_extension(program_store::ProgramType type) {
-  switch(type) {
-    case program_store::ProgramType::MK61: return "M61";
-    case program_store::ProgramType::FOCAL: return "FOC";
-    case program_store::ProgramType::TINYBASIC: return "TBI";
-    case program_store::ProgramType::TEXT: return "T1 ";
-    case program_store::ProgramType::MK61_STATE: return "M2 ";
-    case program_store::ProgramType::FONT: return "FMK";
-    case program_store::ProgramType::IMAGE1: return "WBM";
-    case program_store::ProgramType::APP: return "APP";
-    case program_store::ProgramType::CHIP8: return "CH8";
-    case program_store::ProgramType::MARKDOWN: return "MD ";
-    case program_store::ProgramType::MK61_BINARY: return "BIN";
-    case program_store::ProgramType::SHEET: return "MKS";
-  }
-  return "BIN";
+  // Fixed rows avoid a pointer/relocation per type in the 20-KiB USB overlay.
+  static const char extensions[][4] = {"M61", "BIN", "FOC", "TBI", "T1 ", "M2 ",
+      "FMK", "WBM", "APP", "CH8", "MD ", "BIN", "MKS", "URQ", "UQD", "URS"};
+  const unsigned index = unsigned(type);
+  return extensions[index < sizeof(extensions)/sizeof(extensions[0]) ? index : 1];
 }
 
 static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
@@ -529,6 +519,9 @@ static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
     {".ch8", program_store::ProgramType::CHIP8},
     {".bin", program_store::ProgramType::MK61_BINARY},
     {".mks", program_store::ProgramType::SHEET},
+    {".urq", program_store::ProgramType::URQ},
+    {".uqd", program_store::ProgramType::URQ_DATA},
+    {".urs", program_store::ProgramType::URQ_SAVE},
     {".wbmp", program_store::ProgramType::IMAGE1},
     // Псевдоним нужен при чтении записи без LFN: 8.3-проекция WBMP — WBM.
     {".wbm", program_store::ProgramType::IMAGE1}
@@ -573,6 +566,8 @@ static u32 maximum_file_size(program_store::ProgramType type) {
   if(type == program_store::ProgramType::SHEET) {
     return program_store::MAX_SHEET_SIZE;
   }
+  if(type == program_store::ProgramType::URQ || type == program_store::ProgramType::URQ_DATA ||
+     type == program_store::ProgramType::URQ_SAVE) return program_store::MAX_URQ_FILE_SIZE;
   if(type == program_store::ProgramType::APP) {
     return program_store::MAX_APP_FILE_SIZE;
   }

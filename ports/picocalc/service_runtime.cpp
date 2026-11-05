@@ -502,6 +502,9 @@ u8 Services::run_external(const char* path) {
     case Type::APP: return run_native(path);
     case Type::MARKDOWN: return view_markdown(path);
     case Type::SHEET: return run_handled(path, program_store::TYPE_MAGIC_SHEET);
+    case Type::URQ: return run_handled(path, program_store::TYPE_MAGIC_URQ);
+    case Type::URQ_DATA:
+    case Type::URQ_SAVE: return 2;
     case Type::CHIP8: return run_chip8(path);
     case Type::IMAGE1: return view_image(path);
     case Type::FONT:

@@ -4806,6 +4806,44 @@ static void test_streamed_language_sources() {
   puts("Streamed source storage: BASIC/FOCAL 16/64 KiB, ranges, remount, limit and torn replacement PASS");
 }
 
+static void test_urq_binary_types() {
+  const char* extensions[]={"urq","uqd","urs"};
+  const char* magics[]={"C2","R1","S2"};
+  struct Source {
+    bool fail=false;
+    static bool read(void* raw,u32 offset,u8* out,usize n) {
+      if(((Source*)raw)->fail && offset>512) return false;
+      for(usize i=0;i<n;++i) out[i]=(u8)((offset+i)*73U);
+      return true;
+    }
+  } source;
+  const program_store::FileSource input{&source,Source::read};
+  for(unsigned index=0;index<3;++index) {
+    fresh(512U*1024U);const auto type=(ProgramType)((unsigned)ProgramType::URQ+index);
+    assert(!program_store::text_content(type) && !program_store::transparent_compression_enabled(type));
+    assert(strcmp(program_store::file_extension(type),extensions[index])==0);
+    assert(program_store::type_magic(type)==program_store::make_type_magic(magics[index][0],magics[index][1]));
+    u16 id=program_store::INVALID_ID;
+    assert(program_store::write_file_from_source(program_store::ROOT_ID,id,type,"URQ",61440,input,nullptr,0,&id));
+    u16 stored=0;bool large=false,compressed=true;
+    assert(program_store::test_file_storage_info(id,stored,large,compressed) && stored==61440 && large && !compressed);
+    // Invalid streamed mapping requests must identify the rejected argument
+    // without replacing the existing game/save or consuming payload bytes.
+    assert(!program_store::write_file_from_source(program_store::ROOT_ID,id,type,"URQ",61440,input,nullptr,1));
+    assert(program_store::last_write_failure()==program_store::WriteFailure::EXTENT_SHAPE);
+    assert(program_store::last_write_failure_detail()==program_store::WriteFailureDetail::FAT_EXTENT_POINTER);
+    const u16 bad_extent=2;
+    assert(!program_store::write_file_from_source(program_store::ROOT_ID,id,type,"URQ",61440,input,&bad_extent,1));
+    assert(program_store::last_write_failure_detail()==program_store::WriteFailureDetail::FAT_EXTENT_COUNT);
+    assert(!program_store::write_file_from_source(program_store::ROOT_ID,id,type,"URQ",61441,input));
+    source.fail=true;assert(!program_store::write_file_from_source(program_store::ROOT_ID,id,type,"URQ",61440,input));source.fail=false;
+    program_store::init();u8 bytes[128],expected[128];u16 got=0;
+    assert(program_store::read_range_id(id,61312,bytes,sizeof(bytes),&got) && got==sizeof(bytes));
+    assert(Source::read(&source,61312,expected,sizeof(expected)) && !memcmp(bytes,expected,sizeof(bytes)));
+  }
+  puts("URQ binary C2/R1/S2: 60 KiB C9 ranges/remount, no recompression, quota and atomic failed-source replacement PASS");
+}
+
 static void test_source_draft_banks_on_small_flash() {
   for(u32 capacity:{512U*1024U,1024U*1024U}) {
     fresh(capacity);u8 page[512];
@@ -4846,6 +4884,7 @@ int main(int argc, char** argv) {
 #endif
   test_catalog_only_child_lookup();
   test_streamed_language_sources();
+  test_urq_binary_types();
   test_source_draft_banks_on_small_flash();
   test_catalog_sector_reference_checks_full_width();
   test_fs_temporaries_with_pinned_usb_app_and_stage();

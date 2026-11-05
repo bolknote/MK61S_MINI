@@ -1,0 +1,1648 @@
+{
+  "upstream": {
+    "repository": "https://github.com/urqw/UrqW.git",
+    "commit": "37e03b65efc58af70e8811a119f25b1ab5fda5a5",
+    "license": "GPL-2.0-or-later",
+    "purpose": "Text-semantics oracle and source catalog; only explicit hash-pinned adaptation tests execute game JavaScript on the host"
+  },
+  "profile": {
+    "workspace_bytes": 8192,
+    "line_bytes": 1023,
+    "variables": 128,
+    "items": 64,
+    "actions": 48,
+    "frames": 24,
+    "string_pool_bytes": 2560
+  },
+  "verification": "Conversion and startup; complete adaptation walkthroughs are in tests/urq_library_self_test.py. Other paths are not certified.",
+  "published": [
+    "trapped_in_time_ru",
+    "house_that_jack_built"
+  ],
+  "games": [
+    {
+      "title": "Ночь мертвецов",
+      "author": "NecRabbit",
+      "lang": "ru",
+      "id": "night_of_dead",
+      "revision": "c8a46ca215d78acfe160a5b5c571c826451714ea",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/night_of_dead",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "night.qst": "609293d9fa5d5f60b57fe5fc4c9d660f1b1e4f4d3e29fa0101f120423cd2a720"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "d1e6047e58cbaaead4c56d466443b802",
+        "source_sha256": "e21e6c2905aecf9590dd792c583412e1696c01bf56ba4da9cff656b82f331328",
+        "logical_bytes": 121900,
+        "lines": 2495,
+        "labels": 257,
+        "parts": 2,
+        "stored_bytes": 91066,
+        "title": "Ночь мертвецов",
+        "ifid": "EB943722-00C6-4F64-B02B-7D370706A1EE",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 62,
+        "actions": 1
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Живым или мёртвым",
+      "author": "Пётр Косых",
+      "lang": "ru",
+      "id": "dead_or_alive",
+      "revision": "809039fe624b425aae5a6a91974d1ebd7c0b2484",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/dead_or_alive",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "main.qst": "7df386a6b057d0469f7a6221f366ede25aea207afdd956b72a785381f2bfdba2"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "JavaScript dependency; game logic is not removed",
+        "JavaScript is outside the text profile"
+      ]
+    },
+    {
+      "title": "Джим из Космоса",
+      "author": "Даниэль Родригес Риверо",
+      "lang": "ru",
+      "id": "jim_from_outer_space_ru",
+      "revision": "cf238d064dd145baba9fc09873d14377c86027a1",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/jim_from_outer_space_ru",
+      "license": "CC-BY-NC-SA-4.0",
+      "mode": "urqw",
+      "source_files": {
+        "main.qst": "531dfe9a25f3b980f3610ce1f3ec5d525fec0f3cc13c5cf1e8b70e5e67127037"
+      },
+      "published": false,
+      "reasons": [
+        "JavaScript dependency; game logic is not removed",
+        "'m8' codec can't encode character '\\xed' in position 51: character 'í' is not representable in M8"
+      ]
+    },
+    {
+      "title": "Гэд",
+      "author": "Davarg, Nunhan и Никита Цейковец",
+      "lang": "ru",
+      "id": "gad",
+      "revision": "cbb6599d2e54a71e685764bc0017c0e84dcc5650",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/gad",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "game.qst": "2e94159e97105e348ded0f7ca13603915601d20296c2b09000a83a0a944983c1"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "3b6eec548d143e9d6b2efc15907ef554",
+        "source_sha256": "2e94159e97105e348ded0f7ca13603915601d20296c2b09000a83a0a944983c1",
+        "logical_bytes": 55299,
+        "lines": 791,
+        "labels": 155,
+        "parts": 1,
+        "stored_bytes": 44141,
+        "title": "Гэд",
+        "ifid": "5E0C49F4-362A-4BEE-9465-7372D61C504C",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 5,
+        "actions": 1
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "В ловушке времени",
+      "author": "Симон Кристиансен",
+      "lang": "ru",
+      "id": "trapped_in_time_ru",
+      "revision": "75718abb334f812d5d8190d7897d3b2029ae57d4",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/trapped_in_time_ru",
+      "license": "CC0-1.0",
+      "mode": "urqw",
+      "source_files": {
+        "game.qst": "3f26f7c15c9a69b84078be7fa279217b98969d0a75403ec43f52991e305644e8"
+      },
+      "adaptation": {
+        "version": 1,
+        "repository": "https://github.com/tseykovets/trapped_in_time_ru",
+        "revision": "75718abb334f812d5d8190d7897d3b2029ae57d4",
+        "files": {
+          "urqw/game.qst": "3f26f7c15c9a69b84078be7fa279217b98969d0a75403ec43f52991e305644e8",
+          "LICENSE.txt": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+          "urqw/script.js": "fa03eb7148cf8a44f9c3b658f3ec32dc486d187a0fb524b0a668e58a6ced7315",
+          "urqw/manifest.json": "69be4c73fd97906d609e1d7cd5bdbb93dd4276fa77df49891709b519f87da915"
+        },
+        "changes": [
+          "TOKENS slots and an index replace JSON arrays and slicing.",
+          "URQL Fisher-Yates consumes the same RNG draws as the original JavaScript.",
+          "The initial five-way shuffle, appended return home and six-way reshuffles are preserved.",
+          "Nær og Fjern is transliterated to Naer og Fjern in the historical note."
+        ],
+        "verification": "tests/urq_library_self_test.py"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "07c546ad4c2f61f11b1741f8c5372144",
+        "source_sha256": "1668d75554ea6fdfc16a26f263c549152c5532833dbafeae1c50e1b95b6e8405",
+        "logical_bytes": 56533,
+        "lines": 648,
+        "labels": 95,
+        "parts": 1,
+        "stored_bytes": 50095,
+        "title": "В ловушке времени",
+        "ifid": "5CED8A6C-E644-419A-9A26-EFFF3B610BE9",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 5,
+        "actions": 2
+      },
+      "published": true,
+      "reasons": []
+    },
+    {
+      "title": "Дом, который построил Джек",
+      "author": "Nikita Tseykovets",
+      "lang": "ru",
+      "id": "house_that_jack_built",
+      "revision": "77d7e0980cb1c3ed63dce20126b247b740aa528c",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/house_that_jack_built",
+      "license": "CC0-1.0",
+      "mode": "urqw",
+      "source_files": {
+        "_main.qst": "ed5c66d8e5572540bc7e57aec35e213ff0ca282826007771f9ca5bad2e091bec",
+        "en.qst": "e530292c864f2ea06387b1350a6b0efc9588f145b5bbaad757edc2635f8f5339",
+        "ru_v0.qst": "7dfaffad1447b9265270e0a493a23fdaf55d802f8f9f0d0b6518ad6d1c1758dc",
+        "ru_v1.qst": "1be25c93872717f52899891687e44c9810537bdfe3f1fe77c2cfc758d30b10b8",
+        "ru_v2.qst": "a177b09d624d6088063b5e7dd2e45db92289ff8e7278df481bae1113d7d7f404",
+        "ru_v3.qst": "fc36319900e29c1ae80da1a0c9b6a484e67aea13965030e942e90fa6a0704629",
+        "ru_v4.qst": "5d23d952735b6951996c661c4d98f5f8e8f53dcf012be76ecc0fc7963212537d",
+        "ru_v5.qst": "210cd585f18816cc09c4189b3e03ed53b52e208c302ac06044b47a3b740b6e79",
+        "uk.qst": "2a659444616fc4278457437264d699464d3159a94e63590f089743fccfb449dc"
+      },
+      "adaptation": {
+        "version": 1,
+        "repository": "https://github.com/tseykovets/house_that_jack_built",
+        "revision": "77d7e0980cb1c3ed63dce20126b247b740aa528c",
+        "files": {
+          "urqw/_main.qst": "ed5c66d8e5572540bc7e57aec35e213ff0ca282826007771f9ca5bad2e091bec",
+          "urqw/ru_v0.qst": "7dfaffad1447b9265270e0a493a23fdaf55d802f8f9f0d0b6518ad6d1c1758dc",
+          "urqw/ru_v1.qst": "1be25c93872717f52899891687e44c9810537bdfe3f1fe77c2cfc758d30b10b8",
+          "urqw/ru_v2.qst": "a177b09d624d6088063b5e7dd2e45db92289ff8e7278df481bae1113d7d7f404",
+          "urqw/ru_v3.qst": "fc36319900e29c1ae80da1a0c9b6a484e67aea13965030e942e90fa6a0704629",
+          "urqw/ru_v4.qst": "5d23d952735b6951996c661c4d98f5f8e8f53dcf012be76ecc0fc7963212537d",
+          "urqw/ru_v5.qst": "210cd585f18816cc09c4189b3e03ed53b52e208c302ac06044b47a3b740b6e79",
+          "LICENSE.txt": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+          "urqw/script.js": "4747c626322e62e011e82289dec7a960782f44285751685451bba0459081fe11",
+          "urqw/manifest.json": "e271be41570c02f1e262fdaf542f78c18fdac48ecf49422a1c54cde3268765cf"
+        },
+        "changes": [
+          "Six Russian translations; English and Ukrainian menu entries omitted.",
+          "Case-insensitive URQL comparisons replace toLowerCase on answers, including Ё/ё.",
+          "Exact bounded integer percentage table replaces percentageRatio.",
+          "Cover image omitted; plain Russian translation menu.",
+          "Input is assigned as a value, preserving quotes and punctuation instead of interpolating executable URQL.",
+          "The malformed insert_var link for кот in ru_v5_5 is repaired."
+        ],
+        "verification": "tests/urq_library_self_test.py"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "f9c6490c9e096984284375fdf255e5a6",
+        "source_sha256": "5eeb19a6783563181b819a257121e9ceb0ff477d21e8ed76c2e0f3e1193f99fb",
+        "logical_bytes": 41340,
+        "lines": 954,
+        "labels": 68,
+        "parts": 1,
+        "stored_bytes": 25393,
+        "title": "Дом, который построил Джек",
+        "ifid": "13E7A453-31A8-4EC9-8AAB-C8E98F2C8CBD",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 5,
+        "actions": 6
+      },
+      "published": true,
+      "reasons": []
+    },
+    {
+      "title": "Рыцари математики (2019)",
+      "author": "Мария Лис (Lemurqa)",
+      "lang": "ru",
+      "id": "knights",
+      "revision": "f4d27a580a56e190b4981344336ee048dd54488f",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/knights",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "game.qst": "1b605de8faa0286288a3158864f3eede1f5ff5839034bfbed0e59aec18097864"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "07ab20848740064028ffe08645b91bba",
+        "source_sha256": "fca11056ce7c9421216e7e1c8a3924d8ad7c93ebec8e8aabd22ce6ed805ad42c",
+        "logical_bytes": 62007,
+        "lines": 1134,
+        "labels": 148,
+        "parts": 1,
+        "stored_bytes": 49017,
+        "title": "Рыцари математики (2019)",
+        "ifid": "6509EF7FF1E28BD6169AD3CE87FE8418",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 15,
+        "actions": 2
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "«Френсис Спейт»",
+      "author": "Никита Цейковец",
+      "lang": "ru",
+      "id": "francis_spaight",
+      "revision": "232e160c897e6b50aceba571b8aa026774c19301",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/francis_spaight",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "game.qst": "57daa31ba5b833aed9563ca906dd01c574776283865053ce57edf79cac1f43dc"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "ce3f0cefbe1e2e37c8ccdbbdcc8dfee5",
+        "source_sha256": "e3da6ebdfe0de6516bc3f9a8da201199b8f0157870e8e9fe4f39982b666abcb1",
+        "logical_bytes": 47931,
+        "lines": 555,
+        "labels": 125,
+        "parts": 1,
+        "stored_bytes": 41710,
+        "title": "«Френсис Спейт»",
+        "ifid": "526F46C4-C9EB-44D5-86F5-CD642E4816F6",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 2,
+        "actions": 1
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Чумной доктор",
+      "author": "Шушкарт",
+      "lang": "ru",
+      "id": "plague_doctor",
+      "revision": "e0e6535c01a40254417c6ca67279f89505dce86d",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/plague_doctor",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "Plague doctor.qst": "cfc3a98e955588384c3295ade59918f71a8e8fa53d80c31863acc50d683fa8b5"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "NUL in source"
+      ]
+    },
+    {
+      "title": "Спойлер",
+      "author": "Шушкарт",
+      "lang": "ru",
+      "id": "spoiler",
+      "revision": "b2b94b9d1440b4752a9c5561a9d4597a4b513113",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/spoiler",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "quest.qst": "e8867d74a2047bf6578cfa8acdb4fccbd36a069830c0ec214d016537e5178e49"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "NUL in source"
+      ]
+    },
+    {
+      "title": "Мария Целеста",
+      "author": "Акела",
+      "lang": "ru",
+      "id": "mary_celeste",
+      "revision": "f132a6c88947cee332257ed09bf8aa6c53572a9c",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/mary_celeste",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "q.qst": "795b20e6efcd5b6a023490c9b17203bd64696d2bd204c4b5d13bbb3174bc25f6"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "7524ac4a93464a71901f718d1f13ceef",
+        "source_sha256": "abdfbe3dd15f4d8e4f87f8fe99ea7f4b202cac2ef7e8638514db3baa514c5e24",
+        "logical_bytes": 42155,
+        "lines": 707,
+        "labels": 125,
+        "parts": 1,
+        "stored_bytes": 32791,
+        "title": "Мария Целеста",
+        "ifid": "4A33EC64B80D58E0FAF7C8035A7F128D",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 5,
+        "actions": 2
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Драконий остров",
+      "author": "Шушкарт",
+      "lang": "ru",
+      "id": "support",
+      "revision": "d7a3abe081cde7e6273e2f68d760d4f5528b4de9",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/support",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "support.qst": "5d4d548dd0be7d3db4971597f1dabe83eb30f5f33d8032e15665dae275dc9b38"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "NUL in source"
+      ]
+    },
+    {
+      "title": "Остров Хйфич",
+      "author": "Юрий Павленко (Goraph)",
+      "lang": "ru",
+      "id": "99999",
+      "revision": "0c8b92098d5efdf0857217e33ddc45e818b6dd65",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/99999",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "99999.qst": "7e9286f639435bf45e088efd7175fcb3a9476606b226ba44427f1f1daaf835cd"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "source line exceeds the 1023-M8-byte execution limit"
+      ]
+    },
+    {
+      "title": "Золушка",
+      "author": "Юрий Павленко (Goraph)",
+      "lang": "ru",
+      "id": "zolushka",
+      "revision": "d04d450f380190decaf5a4994fb06eed81fd2681",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/zolushka",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "quest.qst": "691640b4823c51e70b0f18eb9448d2a218b5c42947eb75a15fdcfc1da8923f10"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "3676209211880ab6de116c93a8524bd0",
+        "source_sha256": "e80247299611be528bf7a1b95ed73da6a671b08b6af8a80b25921521c7310259",
+        "logical_bytes": 13155,
+        "lines": 177,
+        "labels": 23,
+        "parts": 1,
+        "stored_bytes": 11280,
+        "title": "Золушка",
+        "ifid": "773E64DD0F1EC91B41D36B15240C9B19",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 6,
+        "actions": 1
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Как я стал пиратом",
+      "author": "Шушкарт",
+      "lang": "ru",
+      "id": "how_i_became_a_pirate",
+      "revision": "8735be0c0d2d21f1e8b83f5a5e0235241271a79d",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/how_i_became_a_pirate",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "how_i_became_a_pirate.qst": "b757ae9e41cea6a58601387327fb83e445247d2c40adee380eef7c92bf15e85a"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "e1a12750d3e8028e61a97ff3f2267009",
+        "source_sha256": "86374c7ba2523317d9047d15c0bbccb40d955cad67b4beaa4475200b18dc0af0",
+        "logical_bytes": 37911,
+        "lines": 467,
+        "labels": 62,
+        "parts": 1,
+        "stored_bytes": 32294,
+        "title": "Как я стал пиратом",
+        "ifid": "079519D19AD818CB848EEBB2DC07EE05",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 6,
+        "actions": 2
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Латунный череп. Глава Первая: Быкомедведь",
+      "author": "Юрий Павленко (Goraph)",
+      "lang": "ru",
+      "id": "brass_skull1",
+      "revision": "7e4d2e179c3c9d14ea5b2a5fddb412aca83d659e",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/brass_skull1",
+      "license": null,
+      "mode": "akurq",
+      "source_files": {
+        "quest.qst": "88829be111ab6e171b4c273e59d0453ab95e0044f6163d1e2e4c6f55c9ae352b"
+      },
+      "package": {
+        "format": 1,
+        "mode": "akurq",
+        "id": "a48c78f216493c3ad33ae02004e2144e",
+        "source_sha256": "25ad556931b4d95c9f6d9df0f606bc2a938faac8660f23f30c4eab6839b57388",
+        "logical_bytes": 52265,
+        "lines": 650,
+        "labels": 71,
+        "parts": 1,
+        "stored_bytes": 41895,
+        "title": "Латунный череп. Глава первая: Быкомедведь",
+        "ifid": "EE5883F4FB43739C61793BBCB0AC8B99",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 5,
+        "actions": 1
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Похождения отважного хомяка Семёна 5: На дороге",
+      "author": "Apromix",
+      "lang": "ru",
+      "id": "hamster5",
+      "revision": "3fe2da32431b3bfef6d9c915a6daa6a42ee2a361",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/hamster5",
+      "license": null,
+      "mode": "akurq",
+      "source_files": {
+        "hamster5.qst": "1c9b4dea9662f84ef290727099b6d2d71b73d2b8633aff9788ccdabae628e0ec"
+      },
+      "package": {
+        "format": 1,
+        "mode": "akurq",
+        "id": "e242ca3478b12cc0807fc4cb6bf6279d",
+        "source_sha256": "89a6efc58aef66c08cddd07d7a8ac1c7d25898652819fff371749c9b20e675c0",
+        "logical_bytes": 14873,
+        "lines": 298,
+        "labels": 46,
+        "parts": 1,
+        "stored_bytes": 11821,
+        "title": "Похождения отважного хомяка Семёна 5: На дороге",
+        "ifid": "22705170430595B1709E736D81BCDC1F",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 6,
+        "actions": 3
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Та девушка с четырнадцатого этажа и дождь",
+      "author": "Chicago1920",
+      "lang": "ru",
+      "id": "girl_from_14",
+      "revision": "4c477e07867bc79e0d00ba5b8545dfd947d95b5c",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/girl_from_14",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "14.qst": "5450d0679a4c873c43a6cb1a0a31600d8bbefb868982ef8b1ebb3957a307299a"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "c468198a0fdc4ca8ef380c5a4ecff458",
+        "source_sha256": "f49b35f9e79093ba891cb514940b2ab2a4658588a45881ded0624855971f2c5a",
+        "logical_bytes": 19735,
+        "lines": 262,
+        "labels": 32,
+        "parts": 1,
+        "stored_bytes": 17425,
+        "title": "Та девушка с четырнадцатого этажа и дождь",
+        "ifid": "4F2DF7AB3185C0C00F1F30C329416517",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 6,
+        "actions": 1
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Зеркальный космонавт",
+      "author": "Евгений Туголуков (Korwin)",
+      "lang": "ru",
+      "id": "mirrored_spaceman",
+      "revision": "e80ea71ef2a9f4d22c148294e0cc5bfe0c45b339",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/mirrored_spaceman",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "main.qst": "d70d614ef0198da12239ef7d36cdf347be3fdce2448e0d688d9e64aaf80f152a"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "a2ba8bbe4b3c80085f465f98b709af82",
+        "source_sha256": "93b731df451ab9f1afea4bdb7149ad65d0de73ef83c14fed31024d819cb38ed6",
+        "logical_bytes": 62266,
+        "lines": 843,
+        "labels": 135,
+        "parts": 1,
+        "stored_bytes": 52913,
+        "title": "Зеркальный космонавт",
+        "ifid": "2001EC444DBA38EC8EEB6A6FF856D88E",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 5,
+        "actions": 2
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "На волосок от смерти",
+      "author": "Евгений Туголуков (Korwin) и Дженни",
+      "lang": "ru",
+      "id": "hair_s_breadth_from_death",
+      "revision": "37cd150665b7493fa123939bbe839440d6df5b9d",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/hair_s_breadth_from_death",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "main.qst": "15c9dd0849e3725dd58e9d40a44d10a7d21fd17b6495ea5a974e565b0701a790"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "d2fed81569feb62eee53a725a2818844",
+        "source_sha256": "4b40060feb2b725d91197be0b49921a1cbdb0a3ca4642cf376f3daa0a17f2809",
+        "logical_bytes": 39301,
+        "lines": 598,
+        "labels": 94,
+        "parts": 1,
+        "stored_bytes": 33463,
+        "title": "На волосок от смерти",
+        "ifid": "C7B9E28C17A3588BD512D1E0403E2E2F",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 5,
+        "actions": 2
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Похождения отважного хомяка Семёна 6: В роще",
+      "author": "Apromix и Simple",
+      "lang": "ru",
+      "id": "hamster6",
+      "revision": "4a73ebf6a58726b2887c682d8fe306da00b1cd1d",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/hamster6",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "hamster6.qst": "7ad674f987b1145d024c640f8ba39c4542a007c8c1bc4822c9f8b03c1f1cd1cd"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "955348178bbf5e634e7f7e3a473aea76",
+        "source_sha256": "40da82a10bfed1f4c6206aa03b40b8972028a832be622fad150bfd970da9d27e",
+        "logical_bytes": 8171,
+        "lines": 166,
+        "labels": 27,
+        "parts": 1,
+        "stored_bytes": 6933,
+        "title": "Похождения отважного хомяка Семёна 6: В роще",
+        "ifid": "CD45957F5A1C1D7E32106F1E46135395",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 6,
+        "actions": 3
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Баллада о рыцаре слова и о его невесте",
+      "author": "Евгений Туголуков (Korwin) и Дженни",
+      "lang": "ru",
+      "id": "ballad_of_knight",
+      "revision": "f049a163c6cb3e67ba7e0a949e69e677d27f272b",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/ballad_of_knight",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "ballad_of_knight.qst": "0fc30fe582d2f7ad41159d1192b5f7ea8f8bc97c614884c2c71f0d1c5ba028c1"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "source line exceeds the 1023-M8-byte execution limit"
+      ]
+    },
+    {
+      "title": "Приключения Сары Фаерман 2: Тёмная тайна тёмного хлева",
+      "author": "Юрий Павленко (Goraph)",
+      "lang": "ru",
+      "id": "sarah_faerman2",
+      "revision": "000bc540826905b5966bab9a0e78a5b7f9e530ce",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/sarah_faerman2",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "quest.qst": "7072952560ada39dd182c06b26b0bff6887f2e14ae922077d1aeccc94ba5d2be"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "dcf848fabd9bb7ed082ac9647481b2fc",
+        "source_sha256": "79336ebeda41481c4319f9927c137a767e87c8e4ed5a96d5b7a72e1e078f561b",
+        "logical_bytes": 15246,
+        "lines": 384,
+        "labels": 29,
+        "parts": 1,
+        "stored_bytes": 12510,
+        "title": "Приключения Сары Фаерман 2: Тёмная тайна тёмного хлева",
+        "ifid": "141603A6943D2AADB4B267D6096166CB",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 10,
+        "actions": 2
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Контакт 1.0: Вторжение",
+      "author": "Chicago1920",
+      "lang": "ru",
+      "id": "contact_1.0",
+      "revision": "ed2af2005ed2eb89c5d9c0fff0397d25227645c7",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/contact_1.0",
+      "license": null,
+      "mode": "akurq",
+      "source_files": {
+        "game.qst": "742131da9a510803aee0892a1cdf3ffb0d0bbda9dfdefdf92dac48bc6ef892ca"
+      },
+      "package": {
+        "format": 1,
+        "mode": "akurq",
+        "id": "782b8e8cb4a661d826512a107ea8b21a",
+        "source_sha256": "742131da9a510803aee0892a1cdf3ffb0d0bbda9dfdefdf92dac48bc6ef892ca",
+        "logical_bytes": 47884,
+        "lines": 1501,
+        "labels": 140,
+        "parts": 1,
+        "stored_bytes": 28630,
+        "title": "Контакт 1.0: Вторжение",
+        "ifid": "E5AFCE4671BACF97757223F0411E89CA",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 24,
+        "actions": 5
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Королевство Кеперлейс",
+      "author": "Глеб Гадяцкий (Logger)",
+      "lang": "ru",
+      "id": "keperleys",
+      "revision": "6371c99481280680678b6ba0b6343a32af8b1df7",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/keperleys",
+      "license": null,
+      "mode": "ripurq",
+      "source_files": {
+        "keperleys.qst": "58fa5ae9e243aac3885327af5613205428b8a3601a0ae51bda9f53f4cbcca1d7"
+      },
+      "package": {
+        "format": 1,
+        "mode": "ripurq",
+        "id": "6896f7e93a47371553d55b30011e1c31",
+        "source_sha256": "181f71012d0ddf726ea598b60d2cf2db949e018cd4f698001fa212ccf2fc9238",
+        "logical_bytes": 258679,
+        "lines": 7309,
+        "labels": 732,
+        "parts": 4,
+        "stored_bytes": 204691,
+        "title": "Королевство Кеперлейс",
+        "ifid": "69E132F31BA3FAF0239E7961F7079C3B",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 7,
+        "actions": 2
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Непредвиденный пассажир",
+      "author": "Глеб Гадяцкий (Logger)",
+      "lang": "ru",
+      "id": "unexpected_passenger",
+      "revision": "549e4b69c25f096cd1e559998efbdac19d106806",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/unexpected_passenger",
+      "license": null,
+      "mode": "ripurq",
+      "source_files": {
+        "game.qst": "bc2ebe9a60aaa7587b3069196aeade05d4899ae1e3f19e47057b68a48d183de4"
+      },
+      "package": {
+        "format": 1,
+        "mode": "ripurq",
+        "id": "5c0e79ac528b4dc123753e310feac915",
+        "source_sha256": "3584adc851b33998570557f7d3c01180ff3b43a006aef90827f83f1cfb2e78f2",
+        "logical_bytes": 133157,
+        "lines": 3501,
+        "labels": 282,
+        "parts": 2,
+        "stored_bytes": 109449,
+        "title": "Непредвиденный пассажир",
+        "ifid": "4AAE5FC67729D289089F7E49E7B6768D",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 7,
+        "actions": 2
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Приключения Сары Фаерман 1: Мрачная тайна Катакомб Мрака",
+      "author": "Юрий Павленко (Goraph)",
+      "lang": "ru",
+      "id": "sarah_faerman1",
+      "revision": "fa81adafea69601194ca9fc797976c1a5e7064c6",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/sarah_faerman1",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "fireman1.qst": "5c779fc73fabafcc9ad92863a873d1a20407c6f5f5a24dbcce9820732c9974d9"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "07d31da93bb980373feaa6576fe3080f",
+        "source_sha256": "8d6964675ae83f99abbc3aa3b5975a141743bf3892bad739f062ff125593daa5",
+        "logical_bytes": 11404,
+        "lines": 354,
+        "labels": 40,
+        "parts": 1,
+        "stored_bytes": 8539,
+        "title": "Приключения Сары Фаерман 1: Мрачная тайна Катакомб Мрака",
+        "ifid": "9A0A196BFFC7B01B53BE9D42B5B83491",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 7,
+        "actions": 1
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Последнее дело",
+      "author": "Антон Жучков (Fireton)",
+      "lang": "ru",
+      "id": "last_deal",
+      "revision": "34fc3669505d3e977ecfd0b15e79617385f2e56b",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/last_deal",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "lastdeal.qst": "c0d9732ac114838ed632da71cbe5668f96661721df2ae712318b29488f9db5b9"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "c461c39046328b38b5ccf64046b45387",
+        "source_sha256": "6c9238fcb03693575e95c5c55b5d80ff4c0e9df41e6557edde6f4672b7ad058e",
+        "logical_bytes": 9743,
+        "lines": 155,
+        "labels": 23,
+        "parts": 1,
+        "stored_bytes": 8592,
+        "title": "Последнее дело",
+        "ifid": "8B8FD046EC412677F33FD3ACAF234AEB",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 2,
+        "variables": 7,
+        "actions": 0
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Кукла Лолиты",
+      "author": "Юрий Павленко (Goraph)",
+      "lang": "ru",
+      "id": "doll_of_lolita",
+      "revision": "c2d7fd2ab9b10d9c113d32f5f2c2bcfdf4b925bb",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/doll_of_lolita",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "_disclaimer.qst": "dcbde167b7e825bbaa774e5ad67e50497c1d426138e0710258539e16a34d53c9",
+        "game.qst": "8cf6caf19021de228dcdadbe75457abc63159985dd838a1f5ad4baae550a4c58"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "4141e2757f6b0119478bd4b24df76e5f",
+        "source_sha256": "5a458ccc1b592caa6721d5384231ea3eedd06cf4bf9268e1258e99897e4bfa86",
+        "logical_bytes": 16894,
+        "lines": 283,
+        "labels": 46,
+        "parts": 1,
+        "stored_bytes": 13763,
+        "title": "Кукла Лолиты",
+        "ifid": "A9CE8E373FB4815E76BCEB6231526E5B",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 7,
+        "actions": 2
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "«Сыны Свободы» или последний полёт Егора Станенко",
+      "author": "Атаман Платов",
+      "lang": "ru",
+      "id": "sons_of_freedom",
+      "revision": "ace1b7d854d4d66f26f777c539c0735b8af76ebb",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/sons_of_freedom",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "main.qst": "4029e3a5833b5e9a81e3d0c3e554fdaaa8a419ed12c5ccb391c2c8a9a58151d9"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "source line exceeds the 1023-M8-byte execution limit"
+      ]
+    },
+    {
+      "title": "Alice's Adventures in Urqland",
+      "author": "Акела",
+      "lang": "ru",
+      "id": "alice_urqland",
+      "revision": "0dd92954022a2b78ed6d4a610edcb002aae5b00f",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/alice_urqland",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "quest.qst": "4e5344aecdc33bd4323d14c639e3543f7ec74b17068325a494e5816a05b6a324"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "55f4f1275509bee6041ec3f32dda9bd6",
+        "source_sha256": "c3338dd1cf430118718aacf67c5a191d2627ea9792d1200fddbc54ba0c43755e",
+        "logical_bytes": 38039,
+        "lines": 573,
+        "labels": 85,
+        "parts": 1,
+        "stored_bytes": 31045,
+        "title": "Alice's Adventures in Urqland",
+        "ifid": "CB13BADDB440FD92B573C31A16199353",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 10,
+        "actions": 2
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Хозяйка Сэри",
+      "author": "Chicago1920",
+      "lang": "ru",
+      "id": "mistress_sary",
+      "revision": "7944f513f30cce6dcb4044347f717824c48f2723",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/mistress_sary",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "quest.qst": "3cfca0cbe2ed9afba064a5aafa6dcf81d58db5b836d9806cdc6447ad394dd5d1"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "1a835013684f318a7a33541fcf789f75",
+        "source_sha256": "c50051c5277f806f261f5796fa4d68676d36241697aea06e20c2806dfdf69e61",
+        "logical_bytes": 37248,
+        "lines": 692,
+        "labels": 71,
+        "parts": 1,
+        "stored_bytes": 30822,
+        "title": "Хозяйка Сэри",
+        "ifid": "9573B37ADE9E3AF0B695A6237212DA5B",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 3,
+        "variables": 23,
+        "actions": 0
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Cursed City (Проклятый город)",
+      "author": "Никита Беляев (Nikitoz)",
+      "lang": "ru",
+      "id": "cursed_city",
+      "revision": "ad3136b173a7dd1c56a1913e4970a15fce1a28ed",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/cursed_city",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "cursed_city.qst": "814fc075b8a1c37e6572378faa028db87a6736e53aa202509b17d609a7b4849a"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "a570ce609e6bbbd18210645c3f5fdeee",
+        "source_sha256": "5f8705a7ea6f0e6c094230eda8b01d728a66e953220d513d598cd5729f98d1ca",
+        "logical_bytes": 62606,
+        "lines": 1688,
+        "labels": 190,
+        "parts": 1,
+        "stored_bytes": 44835,
+        "title": "Cursed City (Проклятый город)",
+        "ifid": "66FE0567EA56113CA48E77B38E0DF6F9",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 6,
+        "actions": 3
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Джинн из машины",
+      "author": "Евгений Туголуков (Korwin)",
+      "lang": "ru",
+      "id": "genie_from_machine",
+      "revision": "6359d0af0c2193728ed4914bcdbc1e6304f51983",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/genie_from_machine",
+      "license": null,
+      "mode": "akurq",
+      "source_files": {
+        "quest.qst": "4d25b31da8ce1f24ee38a8ae430f6a816b91ff895a14066a6764d670fc37e09b"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "source line exceeds the 1023-M8-byte execution limit"
+      ]
+    },
+    {
+      "title": "Холм фей",
+      "author": "Belial",
+      "lang": "ru",
+      "id": "fairy_mound",
+      "revision": "b76467d1f16fe5af45fcf4cf9966dad8eb286a02",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/fairy_mound",
+      "license": null,
+      "mode": "akurq",
+      "source_files": {
+        "quest.qst": "65115bb716a1cd0ec61d486c7a30acc83f60559eedcf2d99fec1682104cdc585"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "source line exceeds the 1023-M8-byte execution limit"
+      ]
+    },
+    {
+      "title": "Похождения отважного хомяка Семёна 4: Жизнь жуков",
+      "author": "Mikhail",
+      "lang": "ru",
+      "id": "hamster4",
+      "revision": "5c3574f498640062a1b39a72027c18782916fe62",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/hamster4",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "hamster4.qst": "30ce9f73c1909514191e2d914e9b28f390060abf01e4212e42ecb36ea3c869d7"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "08ffeb19c8a5a7dc50bc7757e7368ccc",
+        "source_sha256": "eb8b2807fa81098d532eaf05773a6dec056a27eedc1a9e6afe21ecb1b580d60c",
+        "logical_bytes": 9840,
+        "lines": 219,
+        "labels": 40,
+        "parts": 1,
+        "stored_bytes": 7486,
+        "title": "Похождения отважного хомяка Семёна 4: Жизнь жуков",
+        "ifid": "9911B31B65D2602D5EE65F4C43A39293",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 4,
+        "actions": 3
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Тень над Риверкроссом",
+      "author": "Алексей Сидорчук (AlSid) и Тарас Охмакевич (CaINE)",
+      "lang": "ru",
+      "id": "shadow_over_rivercross",
+      "revision": "a4cb69ae9b4aebbceb17783b903477bc7bddf32b",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/shadow_over_rivercross",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "sor.qst": "a7b7045e0bc93f6663f55eb1c5dd16b756b442b2a464065aa31bc52b0ad02e25"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "source line exceeds the 1023-M8-byte execution limit"
+      ]
+    },
+    {
+      "title": "Адская суббота",
+      "author": "Юрий Павленко (Goraph)",
+      "lang": "ru",
+      "id": "hellish_saturday",
+      "revision": "9e093f5520c0e8ef695bf6c89eac79a76fd4f669",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/hellish_saturday",
+      "license": null,
+      "mode": "urqw",
+      "source_files": {
+        "quest.qst": "f1a5be55b8319158a00c0f2e74ceeeb8521b940a6040991d434401c9bb4ea922"
+      },
+      "package": {
+        "format": 1,
+        "mode": "urqw",
+        "id": "eb648c2b0891a35e3adf77e136ff46a3",
+        "source_sha256": "97fd56004496aa34e23e73276a3904c65f8fc1a71cb131e44d64957f41cb0c41",
+        "logical_bytes": 43496,
+        "lines": 817,
+        "labels": 82,
+        "parts": 1,
+        "stored_bytes": 27461,
+        "title": "Адская суббота",
+        "ifid": "CFFAA95ACE458FD709DA7B2F3A417ECD",
+        "text_resources": 0
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "Startup error 9 at line 12 (status 6)"
+      ]
+    },
+    {
+      "title": "Золотой ключик, или… Как всё было на самом деле",
+      "author": "Акела, Шушкарт и неизвестный соавтор",
+      "lang": "ru",
+      "id": "golden_key",
+      "revision": "5c98d591fbb80302bc86263dd73fa1fd25989288",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/golden_key",
+      "license": null,
+      "mode": "ripurq",
+      "source_files": {
+        "quest.qst": "6f1a6d0ed5d7ca6165ee7efb20cfa2a1870c2b8f1721479227d69a6a97e4d39f"
+      },
+      "package": {
+        "format": 1,
+        "mode": "ripurq",
+        "id": "dec78fa92ed15ee14f8ceb54e3b9e0d6",
+        "source_sha256": "182505bc003aa3defc962ef59a44ae3bb4487414121c63dbc9bff43049ff209e",
+        "logical_bytes": 65950,
+        "lines": 1299,
+        "labels": 204,
+        "parts": 1,
+        "stored_bytes": 48573,
+        "title": "Золотой ключик, или… Как всё было на самом деле",
+        "ifid": "1F5890B34BA69059255FAF00DD24AC01",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 8,
+        "actions": 5
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Магический родник: Становление",
+      "author": "Олег Мушта (сэр Ольгерд)",
+      "lang": "ru",
+      "id": "magic_spring",
+      "revision": "a1ac9ac5be3666cc5b46aef67e27552b6545d6b7",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/magic_spring",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "main.qst": "0dbc0954f4dd64ed418787b085fb2221dc81e63c63d4c072e583cc4a4e040206"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "source line exceeds the 1023-M8-byte execution limit"
+      ]
+    },
+    {
+      "title": "Демоны тёмной стороны: Чёрный маг Ностромо",
+      "author": "Юрий Павленко (Goraph)",
+      "lang": "ru",
+      "id": "dods",
+      "revision": "8e48d874e3a2a578686b1074ca53953a37bf26d8",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/dods",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "dods.qst": "7ed95d6da5f9f3f6a499339629157d2c209b4f0831672f88bbac073726217d11"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "ab5b9112766db40212c89c9ec30a737f",
+        "source_sha256": "e0107a4dfaec3a3e171325f6986f013ecc02ca3f65a5e2b50eb043c945fe9d45",
+        "logical_bytes": 62273,
+        "lines": 1188,
+        "labels": 115,
+        "parts": 1,
+        "stored_bytes": 49867,
+        "title": "Демоны тёмной стороны: Чёрный маг Ностромо",
+        "ifid": "D3050329EC4F547965F2BB6FB8D44D14",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 7,
+        "actions": 1
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Рисовая Биржа. Осака. XVIII век",
+      "author": "Юрий Павленко (Goraph)",
+      "lang": "ru",
+      "id": "rice_exchange",
+      "revision": "623aa2c04961dd23831f575acb21848c23264963",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/rice_exchange",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "game.qst": "1bde8f54b4f8217e150bf43ad2e4e26ecbeb0032787791bd5b8ba998bceb9e7a"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "5c3867ad5e40b7c9f69a470e952c8b63",
+        "source_sha256": "a85ac50d330a12d722a623097f94d1aaf2d8286c4f74f2844f60880c2149377b",
+        "logical_bytes": 15712,
+        "lines": 360,
+        "labels": 34,
+        "parts": 1,
+        "stored_bytes": 10304,
+        "title": "Рисовая Биржа. Осака. XVIII век",
+        "ifid": "878DDFF29E19B52D2E2F6464803C8F5A",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 19,
+        "actions": 1
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Хроники капитана Блуда: Тайна левой ягодицы",
+      "author": "Юрий Павленко (Goraph)",
+      "lang": "ru",
+      "id": "blud1",
+      "revision": "d45710072008007ee7adc658aaf00b02a6611ad6",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/blud1",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "quest.qst": "7a413929ad3d1da0b8ee3ac4fa123c0f6c8a21b6cdddc0d5c25ba8421bc2569d"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "source line exceeds the 1023-M8-byte execution limit"
+      ]
+    },
+    {
+      "title": "Винни-Пух и другие звери",
+      "author": "Евгений Туголуков (Korwin)",
+      "lang": "ru",
+      "id": "winnie-the-pooh",
+      "revision": "fe88f3ad73fa8b4d6199f2f91befa7349a19367c",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/winnie-the-pooh",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "quest.qst": "9cf7becbd62680c18f8cf0a9c5d6622bae10288f578796670105e3288157e9bb"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "source line exceeds the 1023-M8-byte execution limit"
+      ]
+    },
+    {
+      "title": "Вирус",
+      "author": "Terracon",
+      "lang": "ru",
+      "id": "virus",
+      "revision": "b528a295b6c272d1c7bc07a211e46f191aec65af",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/virus",
+      "license": null,
+      "mode": "ripurq",
+      "source_files": {
+        "virus.qst": "c9ee22bccd66ae062d158098cc2c1eb38f2020d29cbb09f34c04760c17d6f4ac"
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source",
+        "source line exceeds the 1023-M8-byte execution limit"
+      ]
+    },
+    {
+      "title": "Похождения отважного хомяка Семёна 3: На полу",
+      "author": "DroZ",
+      "lang": "ru",
+      "id": "hamster3",
+      "revision": "603396d2683604e95bf5d5068b3eb010a16865ff",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/hamster3",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "hamster3.qst": "765810de0163df8da4d7c71cfc21a3cefa600333700b3622bebcd7383947eb0b"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "7c6df2045c1dbaa163b704b3754ba908",
+        "source_sha256": "2c5802b9bc85c6526ac61c23311c71f447d337516edbfb92d499563c9cbbd0ee",
+        "logical_bytes": 11578,
+        "lines": 254,
+        "labels": 38,
+        "parts": 1,
+        "stored_bytes": 9213,
+        "title": "Похождения отважного хомяка Семёна 3: На полу",
+        "ifid": "234591A7BF84DD97295201DBEBAFB46B",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 7,
+        "actions": 3
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Колодец",
+      "author": "Demon",
+      "lang": "ru",
+      "id": "well",
+      "revision": "b10dd7d6c77bbe179dddf93ef7c448de69673de2",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/well",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "well.qst": "beb66788bfd9b6396a9b7b45ca1449a32edafbb0d723e378219a2707b531e949"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "f5dd86f43f71a404cacc16c88c0bb1f7",
+        "source_sha256": "592a4009aa558e83904a3028c0db483cb5a3e0ab4ff3df72447af08e59eacf8c",
+        "logical_bytes": 27666,
+        "lines": 685,
+        "labels": 89,
+        "parts": 1,
+        "stored_bytes": 21870,
+        "title": "Колодец",
+        "ifid": "7D15F018573B7F988A2374797DEAF7B4",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 7,
+        "actions": 1
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "В глубине",
+      "author": "VoVka Sмерть",
+      "lang": "ru",
+      "id": "in_depths",
+      "revision": "fa2516136b51eb67948834daaab184bd2f3f3991",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/in_depths",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "game.qst": "122ad8485b308779c0afdb058433b9eeedb18ad274d5b05a4b6dabf9ff48acc1"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "5d6e2933e843229835f50761b67fb5f8",
+        "source_sha256": "f0d7ad22ab0b22ca99ca829cd947fb359c1af472a0c84f22ad07eb406b5db1aa",
+        "logical_bytes": 98285,
+        "lines": 1340,
+        "labels": 205,
+        "parts": 2,
+        "stored_bytes": 84493,
+        "title": "В глубине",
+        "ifid": "7689FD96B66DFF84CA04204F054CB7DD",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 4,
+        "actions": 6
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Похождения отважного хомяка Семёна 2: Крутой спуск",
+      "author": "Triangle",
+      "lang": "ru",
+      "id": "hamster2",
+      "revision": "c5185c2ea094ebd3bc01362955475b2c15da6493",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/hamster2",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "hamster2.qst": "ceaac496f119a2e5574b2afbd8c5e904e61931bdbd76982f9cb63d8c8284e1cd"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "9ab5435931bf8852f3a5ede73e21277c",
+        "source_sha256": "e54f77d947d0ba1726b9ade09016649dbeb7b7cbb9650f9dc6e1d2b59113d2e1",
+        "logical_bytes": 5312,
+        "lines": 106,
+        "labels": 18,
+        "parts": 1,
+        "stored_bytes": 4493,
+        "title": "Похождения отважного хомяка Семёна 2: Крутой спуск",
+        "ifid": "20CCEF59118FD55D597323741C29507E",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 7,
+        "actions": 3
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Похождения отважного хомяка Семёна 1: Побег",
+      "author": "Triangle",
+      "lang": "ru",
+      "id": "hamster1",
+      "revision": "5c3edc3df3ef013e45a98941331e90f4e98fe813",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/hamster1",
+      "license": null,
+      "mode": "dosurq",
+      "source_files": {
+        "hamster1.qst": "062db8af386d9e416b10639e3fe1360042dff9ee096627fbd84c058bf9c93bc5"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "6039ed491f239ddfec5434c9e21f60a3",
+        "source_sha256": "04f2650098e4c71526dc0d9ca9d5a27759a250a1d53f069450306d44435286b5",
+        "logical_bytes": 6601,
+        "lines": 128,
+        "labels": 21,
+        "parts": 1,
+        "stored_bytes": 5507,
+        "title": "Похождения отважного хомяка Семёна 1: Побег",
+        "ifid": "529E98B0F00755B12833C13329E1C8EB",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 7,
+        "actions": 3
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Древний кинжал 2",
+      "author": "Кащей",
+      "lang": "ru",
+      "id": "ancient_dagger2",
+      "revision": "a67297fa83b7cfae39cebaa45f92a8fe4d7550c7",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/ancient_dagger2",
+      "license": null,
+      "mode": "ripurq",
+      "source_files": {
+        "game.qst": "e1f18aca5c9218691cc12163710ee60756bce92512493e5a4b193508473043d9"
+      },
+      "package": {
+        "format": 1,
+        "mode": "ripurq",
+        "id": "da2c33a277ee846bc1008f83c184f48c",
+        "source_sha256": "12bc5c979fc39add3f50ab2b27a006134653aa27d562ce829a24b51b1ed0ed9b",
+        "logical_bytes": 61644,
+        "lines": 1069,
+        "labels": 167,
+        "parts": 1,
+        "stored_bytes": 50246,
+        "title": "Древний кинжал 2",
+        "ifid": "473975B7277F7CA6FE65E109C21272F3",
+        "text_resources": 0
+      },
+      "startup": {
+        "status": 1,
+        "variables": 2,
+        "actions": 6
+      },
+      "published": false,
+      "reasons": [
+        "no explicit redistributable license for every QST source"
+      ]
+    },
+    {
+      "title": "Древний кинжал 1",
+      "author": "Кащей",
+      "lang": "ru",
+      "id": "ancient_dagger1",
+      "revision": "bf59dad96ea9fd6f8fa96f803ca20e96f203449f",
+      "source": "https://github.com/urqw/UrqW/tree/37e03b65efc58af70e8811a119f25b1ab5fda5a5/games/ancient_dagger1",
+      "published": false,
+      "reasons": [
+        "No QST source (encrypted or absent)"
+      ]
+    }
+  ]
+}

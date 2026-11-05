@@ -6,6 +6,7 @@
     "examples": {"requires": []},
     "app": {"requires": ["apps"]},
     "sheets": {"requires": ["sheet"]},
+    "urq": {"requires": ["urq"]},
     "CHIP8": {"requires": ["chip8", "graphics"]},
     "Fonts": {"requires": ["fonts", "graphics"]}
   },
@@ -15,11 +16,14 @@
   },
   "apps": {
     "ELIZA": {"requires": ["apps"]},
-    "SHEET": {"requires": ["apps", "graphics", "math", "s1"]}
+    "SHEET": {"requires": ["apps", "graphics", "math", "s1"]},
+    "URQ": {"requires": ["apps", "urq"], "built": true},
+    "URQUI": {"requires": ["apps", "urq"], "built": true, "platform": "stm32"}
   },
   "extensions": {
     ".m61": [], ".bin": [], ".tbi": ["basic"], ".foc": ["focal"],
     ".md": ["markdown"], ".txt": [], ".wbmp": ["bitmap"],
-    ".fmk": ["graphics"], ".ch8": ["chip8", "graphics"], ".mks": ["sheet"]
+    ".fmk": ["graphics"], ".ch8": ["chip8", "graphics"], ".mks": ["sheet"],
+    ".urq": ["urq"], ".uqd": ["urq"], ".urs": ["urq"]
   }
 }

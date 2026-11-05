@@ -84,7 +84,11 @@ unsigned NativeDisplay::columns() { flush();return native_?ncols_:surface_.cols(
 unsigned NativeDisplay::rows() { flush();return native_?nrows_:surface_.rows(); }
 u32 NativeDisplay::clear() {
     script::clear_text_record();
-    if(native_) { std::memset(cells_,0,sizeof(cells_));nx_=ny_=0;gutters_=tails_=0;native_dirty_=true; }
+    if(native_) {
+        std::memset(cells_,0,sizeof(cells_));nx_=ny_=0;gutters_=tails_=0;native_dirty_=true;
+        for(unsigned row=0;row<20;++row) { color_fore_[row]=foreground_;color_back_[row]=background_; }
+        if(color_cells_) for(unsigned i=0;i<20*64;++i) color_cells_[i]=foreground_;
+    }
     else surface_.clear();flush();return 1;
 }
 bool NativeDisplay::put(u16 cp) {
@@ -201,6 +205,8 @@ void NativeDisplay::native_layout() {
     nrows_=320/npitch_;if(nrows_>20) nrows_=20;if(!nrows_) nrows_=1;
     ncols_=ui_?64:316/ncell_;if(ncols_>64) ncols_=64;if(!ncols_) ncols_=1;
     std::memset(cells_,0,sizeof(cells_));native_dirty_=true;
+    for(unsigned row=0;row<20;++row) { color_fore_[row]=foreground_;color_back_[row]=background_; }
+    if(color_cells_) for(unsigned i=0;i<20*64;++i) color_cells_[i]=foreground_;
     font_revision_=script::font_revision();ui_font_revision_=fonts::revision();native_flush();
 }
 unsigned NativeDisplay::native_advance(u16 cp) const {
@@ -217,7 +223,9 @@ void NativeDisplay::native_put(u16 cp) {
     if(ui_) for(unsigned col=0;col<nx_ && col<ncols_;++col)
         width+=native_advance(cells_[ny_][col]?cells_[ny_][col]:' ');
     if(nx_>=ncols_ || (ui_ && nx_ && width+native_advance(cp)>316)) { nx_=0;ny_=(ny_+1)%nrows_; }
+    if(color_cells_) color_cells_[ny_*64+nx_]=foreground_;
     cells_[ny_][nx_++]=cp;native_dirty_=true;
+    color_fore_[ny_]=foreground_;color_back_[ny_]=background_;
     script::record_codepoint(nx_-1,ny_,cp);
 }
 void NativeDisplay::native_flush() {
@@ -226,7 +234,7 @@ void NativeDisplay::native_flush() {
     if(native_blink_ && (i32)(now-blink_at_)>=0) {
         native_phase_=!native_phase_;blink_at_=now+500;native_dirty_=true;
     }
-    if(bitmap_ || update_ || !native_dirty_) return;
+    if(bitmap_ || update_ || color_presenting_ || !native_dirty_) return;
     canvas::clear();
     for(unsigned row=0;row<nrows_;++row) {
         unsigned x=2;const unsigned top=row*npitch_;
@@ -254,11 +262,86 @@ void NativeDisplay::native_flush() {
         }
     }
     script::show_native_frame(canvas::frame());native_dirty_=false;++revision_;
+    if(colored_) color_flush();
+}
+void NativeDisplay::color_flush() {
+    // A bounded strip is converted from the existing glyph raster. No second
+    // framebuffer or alternate font renderer is needed for colored text.
+    color_presenting_=true;
+    for(unsigned top=0;top<320;top+=8) {
+        struct Span { unsigned x,width; } pending[12];unsigned used=1;pending[0]={0,320};
+        while(used) {
+            const auto span=pending[--used];
+            const u32 result=color_rect(span.x,top,span.width,8);
+            if(result==2 && span.width>1 && used+2<=12) {
+                const unsigned half=span.width/2;
+                pending[used++]={span.x,half};pending[used++]={span.x+half,span.width-half};
+            } else if(result!=1) {
+                colored_=false;color_sink_(color_context_,MK61_COLOR_END,nullptr);
+                script::show_native_frame(canvas::frame());color_presenting_=false;return;
+            }
+        }
+    }
+    color_presenting_=false;
+}
+u16 NativeDisplay::color_row(unsigned y,u16* foreground) {
+    const unsigned row=y/npitch_;
+    for(unsigned x=0;x<320;++x) foreground[x]=foreground_;
+    if(row>=nrows_) return background_;
+    unsigned x=2;
+    for(unsigned col=0;col<ncols_;++col) {
+        const unsigned advance=native_advance(cells_[row][col]?cells_[row][col]:' ');
+        if(ui_ && (gutters_&(1U<<row)) && col==1) {
+            const unsigned marker=native_advance(cells_[row][0]);x=2+(marker>12?marker:12);
+        }
+        if(ui_ && (tails_&(1U<<row)) && col==ncols_-1) x=318-advance;
+        if(x+advance<=320) for(unsigned dx=0;dx<advance;++dx)
+            foreground[x+dx]=color_cells_?color_cells_[row*64+col]:color_fore_[row];
+        x+=advance;
+    }
+    return color_back_[row];
+}
+u32 NativeDisplay::color_rect(unsigned left,unsigned top,unsigned width,unsigned height) {
+    u8 pixels[320*8/2];u16 foreground[320];mk61_service_color_frame frame{};unsigned count=0;
+    const unsigned stride=(width+1)/2;
+    for(unsigned y=0;y<height;++y) {
+        const u16 background=color_row(top+y,foreground);
+        const auto* mono=canvas::frame()+((top+y)/8)*320;
+        for(unsigned dx=0;dx<width;++dx) {
+            const unsigned x=left+dx;
+            const u16 color=((mono[x]>>((top+y)%8))&1U)?foreground[x]:background;
+            unsigned index=0;while(index<count && frame.palette[index]!=color) ++index;
+            if(index==count) { if(count==16) return 2;frame.palette[count++]=color; }
+            auto& packed=pixels[y*stride+dx/2];if(dx&1U) packed|=(u8)index;else packed=(u8)(index<<4);
+        }
+    }
+    frame.pixels=pixels;frame.pixel_bytes=stride*height;frame.width=(u16)width;frame.height=(u16)height;
+    frame.x=(u16)left;frame.y=(u16)top;frame.format=MK61_COLOR_INDEX4|MK61_COLOR_PRESERVE_OUTSIDE;
+    frame.background=background_;
+    u32 result;
+    do {
+        result=color_sink_(color_context_,MK61_COLOR_PRESENT,&frame);
+        if(result==2 && color_wait_) color_wait_(color_wait_context_);
+    } while(result==2 && color_wait_);
+    return result==1?1:0;
 }
 u32 NativeDisplay::native_call(u32 op,u32 b,u32 c,void* payload) {
     switch(op) {
+    case MK61_SERVICE_DISPLAY_UI_COLORS:
+        if(!color_sink_ || b>65535 || c>65535 || payload) return 0;
+        if(!color_cells_) {
+            color_cells_.reset(new(std::nothrow) u16[20*64]);if(!color_cells_) return 0;
+            for(unsigned i=0;i<20*64;++i) color_cells_[i]=foreground_;
+        }
+        foreground_=(u16)b;background_=(u16)c;colored_=true;return 1;
+    case MK61_SERVICE_DISPLAY_UI_RUN_COLORS:
+        if(!colored_ || b>=nrows_ || c>ncols_ || (!payload && c)) return 0;
+        if(c) std::memcpy(color_cells_.get()+b*64,payload,c*sizeof(u16));native_dirty_=true;break;
     case MK61_SERVICE_DISPLAY_BEGIN_UI_TEXT:
     case MK61_SERVICE_DISPLAY_END_UI_TEXT:
+        if(op==MK61_SERVICE_DISPLAY_END_UI_TEXT && colored_) {
+            color_sink_(color_context_,MK61_COLOR_END,nullptr);colored_=false;
+        }
         if(ui_!=(op==MK61_SERVICE_DISPLAY_BEGIN_UI_TEXT)) { ui_=!ui_;native_layout(); }return 1;
     case MK61_SERVICE_DISPLAY_UI_TEXT_ACTIVE:return ui_;
     case MK61_SERVICE_DISPLAY_UI_TEXT_WIDTH:return ui_?316:0;

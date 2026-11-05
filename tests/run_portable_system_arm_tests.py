@@ -220,7 +220,7 @@ class Machine:
         if '_ZN13program_store14media_revisionEv' in elf.symbols:
             self.callbacks[elf.symbol('_ZN13program_store14media_revisionEv') & ~1] = 'media_revision'
         self.stop = 0x080FF000
-        self.uc.hook_add(UC_HOOK_CODE, self.hook)
+        self.hook_handle = self.uc.hook_add(UC_HOOK_CODE, self.hook)
         self.graphics = graphics
         self.graphics_dimensions = (192,64)
         self.files, self.snapshots, self.stamps, self.leases = {}, {}, {}, {}

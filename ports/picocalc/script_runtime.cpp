@@ -27,6 +27,7 @@
 #if defined(PICO_ON_DEVICE)
 #include "hardware/clocks.h"
 #include "hardware/pwm.h"
+#include "audio_stream.hpp"
 #include "pico/rand.h"
 #include "pico/stdlib.h"
 #else
@@ -509,6 +510,9 @@ void show_lines(const char *lines, unsigned stride, unsigned count,
 }
 audio::Plan tone_status() { return current_tone; }
 void tone(unsigned frequency, unsigned milliseconds, unsigned percent) {
+#if defined(PICO_ON_DEVICE)
+  if(audio_stream::active()) return;
+#endif
   const unsigned volume=services ? services->sound_volume() : 10;
   tone_pending=frequency && milliseconds && volume && percent;
   tone_deadline=millis()+milliseconds;

@@ -35,6 +35,10 @@ printf 'ABCDE' > "$work/editor/printable.bin"
 printf '\000\001\177\200\377' > "$work/local/binary.wbmp"
 printf '\000\000\010\002\017\360' > "$work/local/preview.wbmp"
 printf '\000\340\240\000' > "$work/local/game.ch8"
+for suffix in urq uqd urs; do
+  dd if=/dev/zero of="$work/local/quest.$suffix" bs=1 count=32 2>/dev/null
+  test "$("$root/tools/mkc.cmd" --classify "$work/local/quest.$suffix")" = supported
+done
 awk 'BEGIN { for(i = 0; i < 1537; i++) printf "x" }' > "$work/local/large.tbi"
 awk 'BEGIN { for(i = 0; i < 65535; i++) printf "x" }' > "$work/local/huge.tbi"
 cp "$work/local/huge.tbi" "$work/local/huge.foc"

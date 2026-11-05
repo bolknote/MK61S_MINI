@@ -13,6 +13,10 @@
 #define MK61_APP_FLOW_VERSION 1U
 #define MK61_APP_FLOW_INFO 3U
 #define MK61_APP_FLOW_STEP 4U
+#define MK61_APP_FLOW_FILE_INFO 5U
+/* Opt-in FILE_OPEN flow: context starts with the document's u32 file id.
+ * FILE_INFO returns FLOW_MAGIC when this entry convention is supported. */
+#define MK61_APP_FLOW_FILE_PHASE 2U
 #define MK61_APP_FLOW_HOST 0U
 #define MK61_APP_FLOW_SYSTEM_FILE 0xFFFFU
 #define MK61_APP_FLOW_MAX_DEPTH 4U

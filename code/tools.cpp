@@ -99,8 +99,12 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
       return program_store_view_entry(entry);
     case program_store::ProgramType::MARKDOWN:
     case program_store::ProgramType::SHEET:
+    case program_store::ProgramType::URQ:
       return file_handlers::open(entry) ==
              loadable_module::FileOpenResult::OK;
+    case program_store::ProgramType::URQ_DATA:
+    case program_store::ProgramType::URQ_SAVE:
+      return false;
     case program_store::ProgramType::FONT:
       return program_store_apply_font(entry);
     case program_store::ProgramType::IMAGE1:

@@ -3,6 +3,7 @@
 #include "cross_hal.h"
 #include "hardware_info.hpp"
 #include "rtc_clock.hpp"
+#include "rtc_value.hpp"
 #include "menu.hpp"
 #include "lcd_ru.hpp"
 #include "crash_dump.hpp"
@@ -36,7 +37,7 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
   switch(operation) {
     case MK61_SETUP_VERSION: return MK61_SETUP_API_VERSION;
     case MK61_SETUP_FEATURES:
-      return (MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+      return MK61_SETUP_FEATURE_RTC_VALUE | (MK61_HAS_GRAPHICAL_TEXT_SETTINGS
                  ? (u32) MK61_SETUP_FEATURE_TEXT_PROFILE : 0U) |
              (MK61_ENABLE_EXTENDED_FONT_SETTINGS
                  ? (u32) MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE : 0U)
@@ -82,6 +83,11 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
       *(mk61_setup_datetime*) payload = {value.year, value.month, value.day,
                                         value.hour, value.minute, value.second};
       return 1;
+    }
+    case MK61_SETUP_RTC_VALUE: {
+      if(a>1 || b || payload) return 0;
+      mk61_setup_datetime value{};
+      return service(MK61_SETUP_RTC_READ,0,0,&value)?rtc_value::get(value,a!=0):0;
     }
     case MK61_SETUP_RTC_WRITE: {
       if(!payload) return 0;

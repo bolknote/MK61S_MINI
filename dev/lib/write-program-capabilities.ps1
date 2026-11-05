@@ -23,6 +23,8 @@ $features.graphics = $features.usb_screen
 foreach ($name in $schema.graphics_defines) { if ($definitions.ContainsKey($name)) { $features.graphics = $true } }
 $features.bitmap = $features.graphics -or ($definitions.ContainsKey('MK61_OLED1602_WS0010') -and $definitions['MK61_WS0010_GRAPHICS_100X16'] -eq '1')
 $features.apps = $true; $features.s1 = $true; $features.math = $features.focal -or $features.basic
+$features.urq = (Test-Path -LiteralPath (Join-Path $Bundle 'Apps/URQ.APP')) -and `
+                (Test-Path -LiteralPath (Join-Path $Bundle 'Apps/URQUI.APP'))
 $system = [ordered]@{}
 foreach ($feature in $schema.system_apps.PSObject.Properties) {
     if ($features[$feature.Name] -and (Get-Bit $feature.Value[0]) -and -not ($feature.Name -eq 'wbmp' -and $features.markdown)) { $system[$feature.Name] = $feature.Value[1] }

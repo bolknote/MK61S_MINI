@@ -1,0 +1,1063 @@
+/*
+The file encoding is UTF-8 without BOM; the newline format is LF
+This file is part of "This Is the House That Jack Built" for UrqW.
+SPDX-License-Identifier: CC0-1.0
+*/
+
+:main
+pln Дом, который построил Джек
+pln Выберите русский перевод:
+btn ru_v0_0, Самуил Маршак (1923)
+btn ru_v1_0, Самуил Маршак (1936)
+btn ru_v2_0, Геннадий Аминов
+btn ru_v3_0, Игорь Родин
+btn ru_v4_0, Светлана Сергеева
+btn ru_v5_0, Екатерина Зеленина
+end
+
+:buttons
+if check_show <> 1 and number = last then check_show=1
+if check_show = 1 then btn check, #check$
+next_label=label + (number + 1)
+back_label=label + (number - 1)
+if number < last then btn #next_label$, #next$
+if number > 1 then btn #back_label$, #back$
+end
+
+:insert
+cls
+pln #insert_msg$ #(#insert_var$)$:
+input insert_val
+cls
+#insert_var$=insert_val
+current_label=label + number
+goto #current_label$
+
+:check
+check_label=label + "_check"
+goto #check_label$
+
+/*
+The file encoding is UTF-8 without BOM; the newline format is LF
+This file is part of "This Is the House That Jack Built" for UrqW.
+SPDX-License-Identifier: CC0-1.0
+*/
+
+:ru_v0_0
+perkill
+urqw_game_lang="ru"
+urqw_title="Дом, который построил Джек"
+pln <h1>#urqw_title$</h1>
+pln Кумулятивная интерактивная литература
+pln Разработка: Никита Цейковец
+pln Перевод с английского: Самуил Маршак (1923)
+next="Далее"
+back="Назад"
+check="Проверить"
+insert_msg="Введите замену для "
+last=9
+words=9
+рис="***"
+крыс="****"
+кот="***"
+пёс="***"
+коров="*****"
+пса="***"
+девиц="*****"
+пастух="******"
+петуха="******"
+label=urqw_game_lang + "_v0_"
+start_label=label + 1
+btn #start_label$, #next$
+end
+
+:ru_v0_1
+number=1
+pln Вот дом,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v0_2
+number=2
+pln Вот [[#рис$|insert_var="рис" & goto insert]],
+pln Который был спрятан в чулане от [[#крыс$|insert_var="крыс" & goto insert]],
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v0_3
+number=3
+pln Вот несколько [[#крыс$|insert_var="крыс" & goto insert]],
+pln Забравшихся в [[#рис$|insert_var="рис" & goto insert]],
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v0_4
+number=4
+pln Вот [[#кот$|insert_var="кот" & goto insert]],
+pln Напавший на [[#крыс$|insert_var="крыс" & goto insert]],
+pln Забравшихся в [[#рис$|insert_var="рис" & goto insert]],
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v0_5
+number=5
+pln Вот [[#пёс$|insert_var="пёс" & goto insert]] без хвоста,
+pln Который пугает и треплет [[#кот$|insert_var="кот" & goto insert]]а,
+pln Поймавшего [[#крыс$|insert_var="крыс" & goto insert]],
+pln Забравшихся в [[#рис$|insert_var="рис" & goto insert]],
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v0_6
+number=6
+pln А это - [[#коров$|insert_var="коров" & goto insert]]а безрогая,
+pln Лягнувшая старого [[#пса$|insert_var="пса" & goto insert]] без хвоста,
+pln Который пугает и треплет [[#кот$|insert_var="кот" & goto insert]]а,
+pln Поймавшего [[#крыс$|insert_var="крыс" & goto insert]],
+pln Забравшихся в [[#рис$|insert_var="рис" & goto insert]],
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v0_7
+number=7
+pln А это - [[#девиц$|insert_var="девиц" & goto insert]]а, худая и строгая,
+pln Которая доит [[#коров$|insert_var="коров" & goto insert]]у безрогую,
+pln Лягнувшую старого [[#пса$|insert_var="пса" & goto insert]] без хвоста,
+pln Который пугает и треплет [[#кот$|insert_var="кот" & goto insert]]а,
+pln Поймавшего [[#крыс$|insert_var="крыс" & goto insert]],
+pln Забравшихся в [[#рис$|insert_var="рис" & goto insert]],
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v0_8
+number=8
+pln А это - ленивый и толстый [[#пастух$|insert_var="пастух" & goto insert]],
+pln Который бранится с [[#девиц$|insert_var="девиц" & goto insert]]ей строгою,
+pln Которая доит [[#коров$|insert_var="коров" & goto insert]]у безрогую,
+pln Лягнувшую старого [[#пса$|insert_var="пса" & goto insert]] без хвоста,
+pln Который пугает и треплет [[#кот$|insert_var="кот" & goto insert]]а,
+pln Поймавшего [[#крыс$|insert_var="крыс" & goto insert]],
+pln Забравшихся в [[#рис$|insert_var="рис" & goto insert]],
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v0_9
+number=9
+pln Вот два [[#петуха$|insert_var="петуха" & goto insert]],
+pln Которые будят того [[#пастух$|insert_var="пастух" & goto insert]]а,
+pln Который бранится с [[#девиц$|insert_var="девиц" & goto insert]]ей строгою,
+pln Которая доит [[#коров$|insert_var="коров" & goto insert]]у безрогую,
+pln Лягнувшую старого [[#пса$|insert_var="пса" & goto insert]] без хвоста,
+pln Который пугает и треплет [[#кот$|insert_var="кот" & goto insert]]а,
+pln Поймавшего [[#крыс$|insert_var="крыс" & goto insert]],
+pln Забравшихся в [[#рис$|insert_var="рис" & goto insert]],
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v0__check
+correct=0
+if рис = "рис" then correct = correct + 1
+if крыс = "крыс" then correct = correct + 1
+if кот = "кот" then correct = correct + 1
+if пёс = "пёс" or пёс = "пес" then correct = correct + 1
+if коров = "коров" then correct = correct + 1
+if пса = "пса" then correct = correct + 1
+if девиц = "девиц" or девиц = "молочниц" then correct = correct + 1
+if пастух = "пастух" then correct = correct + 1
+if петуха = "петуха" then correct = correct + 1
+if correct = words then pln Всё верно. Это победа! & quit
+if correct = 0 then pln У вас 0 правильных вариантов. Это провал!
+if correct = 1 then percentage = 11
+if correct = 2 then percentage = 22
+if correct = 3 then percentage = 33
+if correct = 4 then percentage = 44
+if correct = 5 then percentage = 56
+if correct = 6 then percentage = 67
+if correct = 7 then percentage = 78
+if correct = 8 then percentage = 89
+if correct > 0 then pln У вас #percentage$% правильных вариантов. Надо ещё поработать!
+current_label=label + number
+btn #current_label$, Продолжить
+end
+
+/*
+The file encoding is UTF-8 without BOM; the newline format is LF
+This file is part of "This Is the House That Jack Built" for UrqW.
+SPDX-License-Identifier: CC0-1.0
+*/
+
+:ru_v1_0
+perkill
+urqw_game_lang="ru"
+urqw_title="Дом, который построил Джек"
+pln <h1>#urqw_title$</h1>
+pln Кумулятивная интерактивная литература
+pln Разработка: Никита Цейковец
+pln Перевод с английского: Самуил Маршак (1936)
+next="Далее"
+back="Назад"
+check="Проверить"
+insert_msg="Введите замену для "
+last=9
+words=10
+пшениц="******"
+чулане="******"
+синиц="*****"
+кот="***"
+пёс="***"
+коров="*****"
+пса="***"
+старушк="*******"
+пастух="******"
+петуха="******"
+label=urqw_game_lang + "_v1_"
+start_label=label + 1
+btn #start_label$, #next$
+end
+
+:ru_v1_1
+number=1
+pln Вот дом,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v1_2
+number=2
+pln А это [[#пшениц$|insert_var="пшениц" & goto insert]]а,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v1_3
+number=3
+pln А это весёлая птица-[[#синиц$|insert_var="синиц" & goto insert]]а,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v1_4
+number=4
+pln Вот [[#кот$|insert_var="кот" & goto insert]],
+pln Который пугает и ловит [[#синиц$|insert_var="синиц" & goto insert]]у,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v1_5
+number=5
+pln Вот [[#пёс$|insert_var="пёс" & goto insert]] без хвоста,
+pln Который за шиворот треплет [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который пугает и ловит [[#синиц$|insert_var="синиц" & goto insert]]у,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v1_6
+number=6
+pln А это [[#коров$|insert_var="коров" & goto insert]]а безрогая,
+pln Лягнувшая старого [[#пса$|insert_var="пса" & goto insert]] без хвоста,
+pln Который за шиворот треплет [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который пугает и ловит [[#синиц$|insert_var="синиц" & goto insert]]у,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v1_7
+number=7
+pln А это [[#старушк$|insert_var="старушк" & goto insert]]а, седая и строгая,
+pln Которая доит [[#коров$|insert_var="коров" & goto insert]]у безрогую,
+pln Лягнувшую старого [[#пса$|insert_var="пса" & goto insert]] без хвоста,
+pln Который за шиворот треплет [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который пугает и ловит [[#синиц$|insert_var="синиц" & goto insert]]у,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v1_8
+number=8
+pln А это ленивый и толстый [[#пастух$|insert_var="пастух" & goto insert]],
+pln Который бранится с [[#старушк$|insert_var="старушк" & goto insert]]ою строгою,
+pln Которая доит [[#коров$|insert_var="коров" & goto insert]]у безрогую,
+pln Лягнувшую старого [[#пса$|insert_var="пса" & goto insert]] без хвоста,
+pln Который за шиворот треплет [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который пугает и ловит [[#синиц$|insert_var="синиц" & goto insert]]у,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v1_9
+number=9
+pln Вот два [[#петуха$|insert_var="петуха" & goto insert]],
+pln Которые будят того [[#пастух$|insert_var="пастух" & goto insert]]а,
+pln Который бранится с [[#старушк$|insert_var="старушк" & goto insert]]ою строгою,
+pln Которая доит [[#коров$|insert_var="коров" & goto insert]]у безрогую,
+pln Лягнувшую старого [[#пса$|insert_var="пса" & goto insert]] без хвоста,
+pln Который за шиворот треплет [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который пугает и ловит [[#синиц$|insert_var="синиц" & goto insert]]у,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v1__check
+correct=0
+if пшениц = "пшениц" then correct = correct + 1
+if чулане = "чулане" then correct = correct + 1
+if синиц = "синиц" then correct = correct + 1
+if кот = "кот" then correct = correct + 1
+if пёс = "пёс" or пёс = "пес" then correct = correct + 1
+if коров = "коров" then correct = correct + 1
+if пса = "пса" then correct = correct + 1
+if старушк = "старушк" then correct = correct + 1
+if пастух = "пастух" then correct = correct + 1
+if петуха = "петуха" then correct = correct + 1
+if correct = words then pln Всё верно. Это победа! & quit
+if correct = 0 then pln У вас 0 правильных вариантов. Это провал!
+if correct = 1 then percentage = 10
+if correct = 2 then percentage = 20
+if correct = 3 then percentage = 30
+if correct = 4 then percentage = 40
+if correct = 5 then percentage = 50
+if correct = 6 then percentage = 60
+if correct = 7 then percentage = 70
+if correct = 8 then percentage = 80
+if correct = 9 then percentage = 90
+if correct > 0 then pln У вас #percentage$% правильных вариантов. Надо ещё поработать!
+current_label=label + number
+btn #current_label$, Продолжить
+end
+
+/*
+The file encoding is UTF-8 without BOM; the newline format is LF
+This file is part of "This Is the House That Jack Built" for UrqW.
+SPDX-License-Identifier: CC0-1.0
+*/
+
+:ru_v2_0
+perkill
+urqw_game_lang="ru"
+urqw_title="Это - тот дом, где Джэк жил"
+pln <h1>#urqw_title$</h1>
+pln Кумулятивная интерактивная литература
+pln Разработка: Никита Цейковец
+pln Перевод с английского: Геннадий Аминов
+next="Далее"
+back="Назад"
+check="Проверить"
+insert_msg="Введите замену для "
+last=12
+words=14
+зерно="*****"
+крыс="****"
+кот="***"
+пёс="***"
+коров="*****"
+пса="***"
+девиц="*****"
+мужчин="******"
+поп="***"
+петух="*****"
+крестьянин="**********"
+цыплята="*******"
+овечки="******"
+бараны="******"
+label=urqw_game_lang + "_v2_"
+start_label=label + 1
+btn #start_label$, #next$
+end
+
+:ru_v2_1
+number=1
+pln Это - тот дом, где Джэк жил.
+proc buttons
+end
+
+:ru_v2_2
+number=2
+pln Это - [[#зерно$|insert_var="зерно" & goto insert]], что лежало давно
+pln В доме, где Джэк жил.
+proc buttons
+end
+
+:ru_v2_3
+number=3
+pln Это - та [[#крыс$|insert_var="крыс" & goto insert]]а, что ела [[#зерно$|insert_var="зерно" & goto insert]],
+pln Что лежало давно
+pln В доме, где Джэк жил.
+proc buttons
+end
+
+:ru_v2_4
+number=4
+pln Это - тот [[#кот$|insert_var="кот" & goto insert]], что выгнал всех [[#крыс$|insert_var="крыс" & goto insert]],
+pln Что ели [[#зерно$|insert_var="зерно" & goto insert]],
+pln Что лежало давно
+pln В доме, где Джэк жил.
+proc buttons
+end
+
+:ru_v2_5
+number=5
+pln Это - тот [[#пёс$|insert_var="пёс" & goto insert]], что облаял [[#кот$|insert_var="кот" & goto insert]]а,
+pln Что выгнал всех [[#крыс$|insert_var="крыс" & goto insert]],
+pln Что ели [[#зерно$|insert_var="зерно" & goto insert]],
+pln Что лежало давно
+pln В доме, где Джэк жил.
+proc buttons
+end
+
+:ru_v2_6
+number=6
+pln Это - [[#коров$|insert_var="коров" & goto insert]]а, лягнувшая [[#пса$|insert_var="пса" & goto insert]],
+pln Что облаял [[#кот$|insert_var="кот" & goto insert]]а,
+pln Что выгнал всех [[#крыс$|insert_var="крыс" & goto insert]],
+pln Что ели [[#зерно$|insert_var="зерно" & goto insert]],
+pln Что лежало давно
+pln В доме, где Джэк жил.
+proc buttons
+end
+
+:ru_v2_7
+number=7
+pln Это - [[#девиц$|insert_var="девиц" & goto insert]]а, худая, как спица,
+pln Что доит [[#коров$|insert_var="коров" & goto insert]]у, лягнувшую [[#пса$|insert_var="пса" & goto insert]],
+pln Что облаял [[#кот$|insert_var="кот" & goto insert]]а,
+pln Что выгнал всех [[#крыс$|insert_var="крыс" & goto insert]],
+pln Что ели [[#зерно$|insert_var="зерно" & goto insert]],
+pln Что лежало давно
+pln В доме, где Джэк жил.
+proc buttons
+end
+
+:ru_v2_8
+number=8
+pln Это - [[#мужчин$|insert_var="мужчин" & goto insert]]а с трёхдневной щетиной,
+pln Что чмокнул [[#девиц$|insert_var="девиц" & goto insert]]у, худую, как спица,
+pln Что доит [[#коров$|insert_var="коров" & goto insert]]у, лягнувшую [[#пса$|insert_var="пса" & goto insert]],
+pln Что облаял [[#кот$|insert_var="кот" & goto insert]]а,
+pln Что выгнал всех [[#крыс$|insert_var="крыс" & goto insert]],
+pln Что ели [[#зерно$|insert_var="зерно" & goto insert]],
+pln Что лежало давно
+pln В доме, где Джэк жил.
+proc buttons
+end
+
+:ru_v2_9
+number=9
+pln Это - злой [[#поп$|insert_var="поп" & goto insert]], румяный, как клоп,
+pln Женивший [[#мужчин$|insert_var="мужчин" & goto insert]]у с трёхдневной щетиной,
+pln Что чмокнул [[#девиц$|insert_var="девиц" & goto insert]]у, худую, как спица,
+pln Что доит [[#коров$|insert_var="коров" & goto insert]]у, лягнувшую [[#пса$|insert_var="пса" & goto insert]],
+pln Что облаял [[#кот$|insert_var="кот" & goto insert]]а,
+pln Что выгнал всех [[#крыс$|insert_var="крыс" & goto insert]],
+pln Что ели [[#зерно$|insert_var="зерно" & goto insert]],
+pln Что лежало давно
+pln В доме, где Джэк жил.
+proc buttons
+end
+
+:ru_v2_10
+number=10
+pln Это - [[#петух$|insert_var="петух" & goto insert]], часто евший за двух,
+pln Так же, как [[#поп$|insert_var="поп" & goto insert]], румяный, как клоп,
+pln Женивший [[#мужчин$|insert_var="мужчин" & goto insert]]у с трёхдневной щетиной,
+pln Что чмокнул [[#девиц$|insert_var="девиц" & goto insert]]у, худую, как спица,
+pln Что доит [[#коров$|insert_var="коров" & goto insert]]у, лягнувшую [[#пса$|insert_var="пса" & goto insert]],
+pln Что облаял [[#кот$|insert_var="кот" & goto insert]]а,
+pln Что выгнал всех [[#крыс$|insert_var="крыс" & goto insert]],
+pln Что ели [[#зерно$|insert_var="зерно" & goto insert]],
+pln Что лежало давно
+pln В доме, где Джэк жил.
+proc buttons
+end
+
+:ru_v2_11
+number=11
+pln Это - [[#крестьянин$|insert_var="крестьянин" & goto insert]] с походкою странной,
+pln У кого жил [[#петух$|insert_var="петух" & goto insert]], часто евший за двух,
+pln Так же, как [[#поп$|insert_var="поп" & goto insert]], румяный, как клоп,
+pln Женивший [[#мужчин$|insert_var="мужчин" & goto insert]]у с трёхдневной щетиной,
+pln Что чмокнул [[#девиц$|insert_var="девиц" & goto insert]]у, худую, как спица,
+pln Что доит [[#коров$|insert_var="коров" & goto insert]]у, лягнувшую [[#пса$|insert_var="пса" & goto insert]],
+pln Что облаял [[#кот$|insert_var="кот" & goto insert]]а,
+pln Что выгнал всех [[#крыс$|insert_var="крыс" & goto insert]],
+pln Что ели [[#зерно$|insert_var="зерно" & goto insert]],
+pln Что лежало давно
+pln В доме, где Джэк жил.
+proc buttons
+end
+
+:ru_v2_12
+number=12
+pln Это - [[#цыплята$|insert_var="цыплята" & goto insert]], [[#овечки$|insert_var="овечки" & goto insert]], [[#бараны$|insert_var="бараны" & goto insert]],
+pln Что держит [[#крестьянин$|insert_var="крестьянин" & goto insert]] с походкою странной,
+pln У кого жил [[#петух$|insert_var="петух" & goto insert]], часто евший за двух,
+pln Так же, как [[#поп$|insert_var="поп" & goto insert]], румяный, как клоп,
+pln Женивший [[#мужчин$|insert_var="мужчин" & goto insert]]у с трёхдневной щетиной,
+pln Что чмокнул [[#девиц$|insert_var="девиц" & goto insert]]у, худую, как спица,
+pln Что доит [[#коров$|insert_var="коров" & goto insert]]у, лягнувшую [[#пса$|insert_var="пса" & goto insert]],
+pln Что облаял [[#кот$|insert_var="кот" & goto insert]]а,
+pln Что выгнал всех [[#крыс$|insert_var="крыс" & goto insert]],
+pln Что ели [[#зерно$|insert_var="зерно" & goto insert]],
+pln Что лежало давно
+pln В доме, где Джэк жил.
+proc buttons
+end
+
+:ru_v2__check
+correct=0
+if зерно = "зерно" then correct = correct + 1
+if крыс = "крыс" then correct = correct + 1
+if кот = "кот" then correct = correct + 1
+if пёс = "пёс" or пёс = "пес" then correct = correct + 1
+if коров = "коров" then correct = correct + 1
+if пса = "пса" then correct = correct + 1
+if девиц = "девиц" then correct = correct + 1
+if мужчин = "мужчин" then correct = correct + 1
+if поп = "поп" then correct = correct + 1
+if петух = "петух" then correct = correct + 1
+if крестьянин = "крестьянин" then correct = correct + 1
+if цыплята = "цыплята" or цыплята = "цыплятки" then correct = correct + 1
+if овечки = "овечки" or овечки = "овцы" then correct = correct + 1
+if бараны = "бараны" or бараны = "барашки" then correct = correct + 1
+if correct = words then pln Всё верно. Это победа! & quit
+if correct = 0 then pln У вас 0 правильных вариантов. Это провал!
+if correct = 1 then percentage = 7
+if correct = 2 then percentage = 14
+if correct = 3 then percentage = 21
+if correct = 4 then percentage = 29
+if correct = 5 then percentage = 36
+if correct = 6 then percentage = 43
+if correct = 7 then percentage = 50
+if correct = 8 then percentage = 57
+if correct = 9 then percentage = 64
+if correct = 10 then percentage = 71
+if correct = 11 then percentage = 79
+if correct = 12 then percentage = 86
+if correct = 13 then percentage = 93
+if correct > 0 then pln У вас #percentage$% правильных вариантов. Надо ещё поработать!
+current_label=label + number
+btn #current_label$, Продолжить
+end
+
+/*
+The file encoding is UTF-8 without BOM; the newline format is LF
+This file is part of "This Is the House That Jack Built" for UrqW.
+SPDX-License-Identifier: CC0-1.0
+*/
+
+:ru_v3_0
+perkill
+urqw_game_lang="ru"
+urqw_title="Вот дом, который построил Джек"
+pln <h1>#urqw_title$</h1>
+pln Кумулятивная интерактивная литература
+pln Разработка: Никита Цейковец
+pln Перевод: Игорь Родин
+next="Далее"
+back="Назад"
+check="Проверить"
+insert_msg="Введите замену для "
+last=11
+words=11
+пшениц="******"
+чулане="******"
+крыс="****"
+кот="***"
+собак="*****"
+коров="*****"
+недотрог="********"
+бездельник="**********"
+священник="*********"
+петух="*****"
+крестьянин="**********"
+label=urqw_game_lang + "_v3_"
+start_label=label + 1
+btn #start_label$, #next$
+end
+
+:ru_v3_1
+number=1
+pln Вот дом,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v3_2
+number=2
+pln А это [[#пшениц$|insert_var="пшениц" & goto insert]]а,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v3_3
+number=3
+pln А это противная толстая [[#крыс$|insert_var="крыс" & goto insert]]а
+pln С повадками старого хитрого лиса,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v3_4
+number=4
+pln Вот [[#кот$|insert_var="кот" & goto insert]]. Он ужасно собою гордится
+pln За то, что его, как пожара, боится
+pln Та самая толстая серая [[#крыс$|insert_var="крыс" & goto insert]]а
+pln С повадками старого хитрого лиса,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v3_5
+number=5
+pln А вот и [[#собак$|insert_var="собак" & goto insert]]а — сама простота,
+pln Но только вот что-то не любит [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который ужасно собою гордится
+pln За то, что его, как пожара, боится
+pln Та самая толстая серая [[#крыс$|insert_var="крыс" & goto insert]]а
+pln С повадками старого хитрого лиса,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v3_6
+number=6
+pln А вот и [[#коров$|insert_var="коров" & goto insert]]а без правого рога,
+pln Она на [[#собак$|insert_var="собак" & goto insert]]у сердита немного
+pln За то, что [[#собак$|insert_var="собак" & goto insert]]а — сама простота,
+pln Но все-таки очень не любит [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который ужасно собою гордится
+pln За то, что его, как пожара, боится
+pln Та самая толстая серая [[#крыс$|insert_var="крыс" & goto insert]]а
+pln С повадками старого хитрого лиса,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v3_7
+number=7
+pln А вот и девчонка идёт — [[#недотрог$|insert_var="недотрог" & goto insert]]а!
+pln Она-то и доит [[#коров$|insert_var="коров" & goto insert]]у без рога,
+pln Которая зла на [[#собак$|insert_var="собак" & goto insert]]у немного
+pln За то, что [[#собак$|insert_var="собак" & goto insert]]а — сама простота
+pln Но все-таки очень не любит [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который ужасно собою гордится
+pln За то, что его, как пожара, боится
+pln Та самая толстая серая [[#крыс$|insert_var="крыс" & goto insert]]а
+pln С повадками старого хитрого лиса,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v3_8
+number=8
+pln А это пастух, лентяй и [[#бездельник$|insert_var="бездельник" & goto insert]],
+pln Который не далее как в понедельник
+pln Во ржи целовал свою [[#недотрог$|insert_var="недотрог" & goto insert]]у,
+pln Которая доит [[#коров$|insert_var="коров" & goto insert]]у без рога,
+pln Которая зла на [[#собак$|insert_var="собак" & goto insert]]у немного
+pln За то, что [[#собак$|insert_var="собак" & goto insert]]а — сама простота,
+pln Но все-таки очень не любит [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который ужасно собою гордится
+pln За то, что его, как пожара, боится
+pln Та самая толстая серая [[#крыс$|insert_var="крыс" & goto insert]]а
+pln С повадками старого хитрого лиса,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v3_9
+number=9
+pln А это [[#священник$|insert_var="священник" & goto insert]], венчавший в сочельник
+pln Того пастуха, что, хотя и [[#бездельник$|insert_var="бездельник" & goto insert]],
+pln Но все же не далее как в понедельник
+pln Во ржи целовал свою [[#недотрог$|insert_var="недотрог" & goto insert]]у,
+pln Которая доит [[#коров$|insert_var="коров" & goto insert]]у без рога,
+pln Которая зла на [[#собак$|insert_var="собак" & goto insert]]у немного
+pln За то, что [[#собак$|insert_var="собак" & goto insert]]а — сама простота.
+pln Но все-таки очень не любит [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который ужасно собою гордится
+pln За то, что его, как пожара, боится
+pln Та самая толстая серая [[#крыс$|insert_var="крыс" & goto insert]]а
+pln С повадками старого хитрого лиса,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v3_10
+number=10
+pln А это [[#петух$|insert_var="петух" & goto insert]]. Он песни поёт
+pln И этим [[#священник$|insert_var="священник" & goto insert]]у спать не даёт,
+pln Который венчал в позапрошлый сочельник
+pln Того пастуха, что, хотя и [[#бездельник$|insert_var="бездельник" & goto insert]],
+pln Но все же не далее как в понедельник
+pln Во ржи целовал свою [[#недотрог$|insert_var="недотрог" & goto insert]]у,
+pln Которая доит [[#коров$|insert_var="коров" & goto insert]]у без рога,
+pln Которая зла на [[#собак$|insert_var="собак" & goto insert]]у немного
+pln За то, что [[#собак$|insert_var="собак" & goto insert]]а — сама простота,
+pln Но все-таки очень не любит [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который ужасно собою гордится
+pln За то, что его, как пожара, боится
+pln Та самая толстая серая [[#крыс$|insert_var="крыс" & goto insert]]а
+pln С повадками старого хитрого лиса,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v3_11
+number=11
+pln А вот и [[#крестьянин$|insert_var="крестьянин" & goto insert]], в чьём доме живёт
+pln Тот самый [[#петух$|insert_var="петух" & goto insert]], что песни поёт
+pln И этим [[#священник$|insert_var="священник" & goto insert]]у спать не даёт,
+pln Который венчал в позапрошлый сочельник
+pln Того пастуха, что, хотя и [[#бездельник$|insert_var="бездельник" & goto insert]],
+pln Но все же не далее как в понедельник
+pln Во ржи целовал свою [[#недотрог$|insert_var="недотрог" & goto insert]]у,
+pln Которая доит [[#коров$|insert_var="коров" & goto insert]]у без рога,
+pln Которая зла на [[#собак$|insert_var="собак" & goto insert]]у немного
+pln За то, что [[#собак$|insert_var="собак" & goto insert]]а — сама простота,
+pln Но все-таки очень не любит [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который ужасно собою гордится
+pln За то, что его, как пожара, боится
+pln Та самая толстая серая [[#крыс$|insert_var="крыс" & goto insert]]а
+pln С повадками старого хитрого лиса,
+pln Которая часто ворует [[#пшениц$|insert_var="пшениц" & goto insert]]у,
+pln Которая в тёмном [[#чулане$|insert_var="чулане" & goto insert]] хранится
+pln В доме,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v3__check
+correct=0
+if пшениц = "пшениц" then correct = correct + 1
+if чулане = "чулане" then correct = correct + 1
+if крыс = "крыс" then correct = correct + 1
+if кот = "кот" then correct = correct + 1
+if собак = "собак" then correct = correct + 1
+if коров = "коров" then correct = correct + 1
+if недотрог = "недотрог" then correct = correct + 1
+if бездельник = "бездельник" then correct = correct + 1
+if священник = "священник" then correct = correct + 1
+if петух = "петух" then correct = correct + 1
+if крестьянин = "крестьянин" then correct = correct + 1
+if correct = words then pln Всё верно. Это победа! & quit
+if correct = 0 then pln У вас 0 правильных вариантов. Это провал!
+if correct = 1 then percentage = 9
+if correct = 2 then percentage = 18
+if correct = 3 then percentage = 27
+if correct = 4 then percentage = 36
+if correct = 5 then percentage = 45
+if correct = 6 then percentage = 55
+if correct = 7 then percentage = 64
+if correct = 8 then percentage = 73
+if correct = 9 then percentage = 82
+if correct = 10 then percentage = 91
+if correct > 0 then pln У вас #percentage$% правильных вариантов. Надо ещё поработать!
+current_label=label + number
+btn #current_label$, Продолжить
+end
+
+/*
+The file encoding is UTF-8 without BOM; the newline format is LF
+This file is part of "This Is the House That Jack Built" for UrqW.
+SPDX-License-Identifier: CC0-1.0
+*/
+
+:ru_v4_0
+perkill
+urqw_game_lang="ru"
+urqw_title="Дом, который построил Джек"
+pln <h1>#urqw_title$</h1>
+pln Кумулятивная интерактивная литература
+pln Разработка: Никита Цейковец
+pln Перевод: Светлана Сергеева
+next="Далее"
+back="Назад"
+check="Проверить"
+insert_msg="Введите замену для "
+last=6
+words=6
+пшениц="******"
+крыс="****"
+кот="***"
+собак="*****"
+коров="*****"
+леди="****"
+label=urqw_game_lang + "_v4_"
+start_label=label + 1
+btn #start_label$, #next$
+end
+
+:ru_v4_1
+number=1
+pln Этот дом построил Джек -
+pln Крыша, стены, фундамент-гранит,
+pln Стоять дому не один век.
+pln Джек в доме [[#пшениц$|insert_var="пшениц" & goto insert]]у хранит.
+proc buttons
+end
+
+:ru_v4_2
+number=2
+pln Но в доме есть [[#крыс$|insert_var="крыс" & goto insert]]а искусная,
+pln Ей нравится есть [[#пшениц$|insert_var="пшениц" & goto insert]]у.
+pln У Джека в доме не сохранится
+pln [[#пшениц$|insert_var="пшениц" & goto insert]]а уж очень вкусная.
+proc buttons
+end
+
+:ru_v4_3
+number=3
+pln Однако в доме [[#кот$|insert_var="кот" & goto insert]]ишка есть,
+pln Он может вполне эту [[#крыс$|insert_var="крыс" & goto insert]]у съесть,
+pln Да, да, эту [[#крыс$|insert_var="крыс" & goto insert]]у искусную,
+pln Да ту, что [[#пшениц$|insert_var="пшениц" & goto insert]]у ест вкусную,
+pln В подвале дома лежащую,
+pln У Джека весьма работящего.
+proc buttons
+end
+
+:ru_v4_4
+number=4
+pln Эта [[#собак$|insert_var="собак" & goto insert]]а живёт у Джека,
+pln [[#кот$|insert_var="кот" & goto insert]]у она враг, но друг человеку,
+pln Тому коту, что [[#крыс$|insert_var="крыс" & goto insert]]у пугает,
+pln А [[#крыс$|insert_var="крыс" & goto insert]]а с испугу [[#пшениц$|insert_var="пшениц" & goto insert]]у съедает,
+pln В подвале дома лежащую,
+pln У Джека весьма работящего.
+proc buttons
+end
+
+:ru_v4_5
+number=5
+pln Но часто бодает [[#собак$|insert_var="собак" & goto insert]]у [[#коров$|insert_var="коров" & goto insert]]а,
+pln Рогом кривым, но [[#собак$|insert_var="собак" & goto insert]]а здорова.
+pln Она продолжает трепать [[#кот$|insert_var="кот" & goto insert]]а,
+pln А [[#крыс$|insert_var="крыс" & goto insert]]а с испугу в подвале спасаясь,
+pln Одною [[#пшениц$|insert_var="пшениц" & goto insert]]ей всё время питаясь,
+pln Готова, однако, уйти навсегда
+pln От Джека, [[#коров$|insert_var="коров" & goto insert]]ы, [[#собак$|insert_var="собак" & goto insert]]и, [[#кот$|insert_var="кот" & goto insert]]а.
+proc buttons
+end
+
+:ru_v4_6
+number=6
+pln Вот юная [[#леди$|insert_var="леди" & goto insert]], совсем одинока,
+pln Доит [[#коров$|insert_var="коров" & goto insert]]у с кривым рогом,
+pln Жаль часто бодает [[#собак$|insert_var="собак" & goto insert]]у [[#коров$|insert_var="коров" & goto insert]]а,
+pln Однако [[#собак$|insert_var="собак" & goto insert]]а жива и здорова.
+pln И треплет всё крепче [[#собак$|insert_var="собак" & goto insert]]а [[#кот$|insert_var="кот" & goto insert]]а,
+pln А бедная [[#крыс$|insert_var="крыс" & goto insert]]а уйти навсегда
+pln Готова от Джека, [[#коров$|insert_var="коров" & goto insert]]ы, [[#собак$|insert_var="собак" & goto insert]]и,
+pln От [[#леди$|insert_var="леди" & goto insert]] доящей, [[#кот$|insert_var="кот" & goto insert]]а-забияки,
+pln [[#пшениц$|insert_var="пшениц" & goto insert]]ы хрустящей - еды настоящей,
+pln И даже от дома, который на век,
+pln Построил весьма работящий Джек.
+proc buttons
+end
+
+:ru_v4__check
+correct=0
+if пшениц = "пшениц" then correct = correct + 1
+if крыс = "крыс" then correct = correct + 1
+if кот = "кот" then correct = correct + 1
+if собак = "собак" then correct = correct + 1
+if коров = "коров" then correct = correct + 1
+if леди = "леди" then correct = correct + 1
+if correct = words then pln Всё верно. Это победа! & quit
+if correct = 0 then pln У вас 0 правильных вариантов. Это провал!
+if correct = 1 then percentage = 17
+if correct = 2 then percentage = 33
+if correct = 3 then percentage = 50
+if correct = 4 then percentage = 67
+if correct = 5 then percentage = 83
+if correct > 0 then pln У вас #percentage$% правильных вариантов. Надо ещё поработать!
+current_label=label + number
+btn #current_label$, Продолжить
+end
+
+/*
+The file encoding is UTF-8 without BOM; the newline format is LF
+This file is part of "This Is the House That Jack Built" for UrqW.
+SPDX-License-Identifier: CC0-1.0
+*/
+
+:ru_v5_0
+perkill
+urqw_game_lang="ru"
+urqw_title="Дом, который построил Джек"
+pln <h1>#urqw_title$</h1>
+pln Кумулятивная интерактивная литература
+pln Разработка: Никита Цейковец
+pln Перевод: Екатерина Зеленина
+next="Далее"
+back="Назад"
+check="Проверить"
+insert_msg="Введите замену для "
+last=5
+words=6
+лепёшк="******"
+крыс="****"
+кот="***"
+пёс="***"
+подвал="******"
+коров="*****"
+label=urqw_game_lang + "_v5_"
+start_label=label + 1
+btn #start_label$, #next$
+end
+
+:ru_v5_1
+number=1
+pln Это злой дом, его строил Джек.
+pln Есть здесь [[#лепёшк$|insert_var="лепёшк" & goto insert]]а, [[#крыс$|insert_var="крыс" & goto insert]]а и [[#кот$|insert_var="кот" & goto insert]], [[#пёс$|insert_var="пёс" & goto insert]] и [[#коров$|insert_var="коров" & goto insert]]а.
+pln И все, кто живёт в этом не очень добром домишке,
+pln Знают, какие творились делишки.
+pln Итак, начинаю рассказ.
+pln Вся правда только сейчас, только для вас.
+proc buttons
+end
+
+:ru_v5_2
+number=2
+pln В доме [[#подвал$|insert_var="подвал" & goto insert]], в [[#подвал$|insert_var="подвал" & goto insert]]е [[#лепёшк$|insert_var="лепёшк" & goto insert]]а.
+pln [[#крыс$|insert_var="крыс" & goto insert]]а придёт и откусит немножко,
+pln Буквально кусочек от этой [[#лепёшк$|insert_var="лепёшк" & goto insert]]и, но дело не в ней.
+pln Следи за рассказом дальше скорей.
+proc buttons
+end
+
+:ru_v5_3
+number=3
+pln [[#кот$|insert_var="кот" & goto insert]]ик и [[#крыс$|insert_var="крыс" & goto insert]]ка с детства дружили,
+pln Между собой всегда всё делили.
+pln [[#кот$|insert_var="кот" & goto insert]]ику стало очень обидно –
+pln От слёз глазам ничего не видно.
+pln [[#кот$|insert_var="кот" & goto insert]]ик решил проучить эту [[#крыс$|insert_var="крыс" & goto insert]]ку.
+pln [[#крыс$|insert_var="крыс" & goto insert]]ку меж прочим, звали Лариска.
+pln Слопал он [[#крыс$|insert_var="крыс" & goto insert]]ку.
+pln [[#крыс$|insert_var="крыс" & goto insert]]ку Лариску, которая съела [[#лепёшк$|insert_var="лепёшк" & goto insert]]у в [[#подвал$|insert_var="подвал" & goto insert]]е дома.
+pln Дома, который построил Джек.
+proc buttons
+end
+
+:ru_v5_4
+number=4
+pln Следуем дальше, не отвлекайся.
+pln Ладно, хотя бы просто старайся.
+pln Сытенький [[#кот$|insert_var="кот" & goto insert]]ик на солнце лежал,
+pln Глаза чуть открыты, он явно устал.
+pln Вот показался [[#пёс$|insert_var="пёс" & goto insert]] без хвоста,
+pln Который любил трепать [[#кот$|insert_var="кот" & goto insert]]а.
+pln [[#кот$|insert_var="кот" & goto insert]] испугался и быстро встал,
+pln Запрыгнул в трубу, оттуда в [[#подвал$|insert_var="подвал" & goto insert]].
+pln В [[#подвал$|insert_var="подвал" & goto insert]], где лежала [[#лепёшк$|insert_var="лепёшк" & goto insert]]а,
+pln Которую [[#крыс$|insert_var="крыс" & goto insert]]а, ни с кем не делясь, запихала в рот,
+pln Которую затем съел обиженный [[#кот$|insert_var="кот" & goto insert]].
+proc buttons
+end
+
+:ru_v5_5
+number=5
+pln Так-с, продолжаем, однако быстрей.
+pln Стоял [[#пёс$|insert_var="пёс" & goto insert]] без хвоста, поджидая [[#кот$|insert_var="кот" & goto insert]]а.
+pln И вдруг, откуда ни возьмись,
+pln [[#коров$|insert_var="коров" & goto insert]]а безрогая возьми-появись.
+pln И [[#пёс$|insert_var="пёс" & goto insert]] её вздумал куснуть.
+pln [[#коров$|insert_var="коров" & goto insert]]а за это решила лягнуть.
+pln Завыл от боли бесхвостый [[#пёс$|insert_var="пёс" & goto insert]],
+pln И на бегу забор чуть не снёс,
+pln И вспомнил [[#пёс$|insert_var="пёс" & goto insert]] тогда [[#кот$|insert_var="кот" & goto insert]]а,
+pln Который съел [[#крыс$|insert_var="крыс" & goto insert]]у,
+pln Которая съела [[#лепёшк$|insert_var="лепёшк" & goto insert]]у одна
+pln В тёмном [[#подвал$|insert_var="подвал" & goto insert]]е дома,
+pln Который построил Джек.
+proc buttons
+end
+
+:ru_v5__check
+correct=0
+if лепёшк = "лепёшк" or лепёшк = "лепешк" then correct = correct + 1
+if крыс = "крыс" then correct = correct + 1
+if кот = "кот" then correct = correct + 1
+if пёс = "пёс" or пёс = "пес" then correct = correct + 1
+if подвал = "подвал" then correct = correct + 1
+if коров = "коров" then correct = correct + 1
+if correct = words then pln Всё верно. Это победа! & quit
+if correct = 0 then pln У вас 0 правильных вариантов. Это провал!
+if correct = 1 then percentage = 17
+if correct = 2 then percentage = 33
+if correct = 3 then percentage = 50
+if correct = 4 then percentage = 67
+if correct = 5 then percentage = 83
+if correct > 0 then pln У вас #percentage$% правильных вариантов. Надо ещё поработать!
+current_label=label + number
+btn #current_label$, Продолжить
+end

@@ -126,6 +126,11 @@ class ScreenPort(Port):
                     elif self.packet:
                         self.receive_packet(self.packet); self.packet = None
                 elif self.packet is None: self.text.append(byte)
+                elif not self.packet and byte != 5:
+                    # Packet flags are zero: COBS always starts 05,'M','S',02.
+                    # An empty abort delimiter may precede ordinary terminal
+                    # output after a slow transfer/detach; do not swallow it.
+                    self.packet = None; self.text.append(byte)
                 else: self.packet.append(byte)
 
     def command(self, command, timeout=5):

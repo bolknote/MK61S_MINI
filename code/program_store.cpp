@@ -691,7 +691,7 @@ static int type_index(ProgramType type) {
 
 static bool supported_type(ProgramType type) {
   const u8 value = (u8) type;
-  return value <= (u8) ProgramType::SHEET && value != 1;
+  return value <= (u8) ProgramType::URQ_SAVE && value != 1;
 }
 
 static u16 maximum_data_len(ProgramType type) {
@@ -702,6 +702,8 @@ static u16 maximum_data_len(ProgramType type) {
   if(type == ProgramType::CHIP8) return MAX_CHIP8_SIZE;
   if(type == ProgramType::MK61_BINARY) return MAX_MK61_BINARY_SIZE;
   if(type == ProgramType::SHEET) return MAX_SHEET_SIZE;
+  if(type == ProgramType::URQ || type == ProgramType::URQ_DATA ||
+     type == ProgramType::URQ_SAVE) return MAX_URQ_FILE_SIZE;
   if(type == ProgramType::APP) return MAX_APP_FILE_SIZE;
   return MAX_MK61_TEXT_SIZE;
 }
@@ -720,6 +722,9 @@ static const char* extension_for_type(ProgramType type) {
     case ProgramType::MARKDOWN: return "md";
     case ProgramType::MK61_BINARY: return "bin";
     case ProgramType::SHEET: return "mks";
+    case ProgramType::URQ: return "urq";
+    case ProgramType::URQ_DATA: return "uqd";
+    case ProgramType::URQ_SAVE: return "urs";
   }
   return "bin";
 }
@@ -738,6 +743,9 @@ static const char* magic_for_type(ProgramType type) {
     case ProgramType::MARKDOWN: return "T2";
     case ProgramType::MK61_BINARY: return "M3";
     case ProgramType::SHEET: return "S1";
+    case ProgramType::URQ: return "C2";
+    case ProgramType::URQ_DATA: return "R1";
+    case ProgramType::URQ_SAVE: return "S2";
   }
   return "??";
 }
@@ -3312,7 +3320,8 @@ bool type_from_magic(TypeMagic magic, ProgramType& type) {
     ProgramType::CHIP8,
     ProgramType::MARKDOWN,
     ProgramType::MK61_BINARY,
-    ProgramType::SHEET
+    ProgramType::SHEET,
+    ProgramType::URQ, ProgramType::URQ_DATA, ProgramType::URQ_SAVE
   };
   for(const ProgramType candidate : TYPES) {
     if(type_magic(candidate) != magic) continue;
@@ -3807,6 +3816,10 @@ C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferr
   if(required_clusters > MAX_FAT_EXTENTS_PER_FILE + 1U ||
      (fat_extents == NULL && fat_extent_count != 0) ||
      (fat_extents != NULL && fat_extent_count != required_clusters)) {
+    g_last_write_failure_detail = required_clusters > MAX_FAT_EXTENTS_PER_FILE + 1U
+        ? WriteFailureDetail::FAT_CLUSTER_COUNT
+        : fat_extents == NULL ? WriteFailureDetail::FAT_EXTENT_POINTER
+                              : WriteFailureDetail::FAT_EXTENT_COUNT;
     return false;
   }
 
@@ -3888,6 +3901,8 @@ C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferr
       (type == ProgramType::APP || type == ProgramType::CHIP8 ||
        type == ProgramType::TINYBASIC || type == ProgramType::FOCAL ||
        type == ProgramType::MK61_BINARY ||
+       type == ProgramType::URQ || type == ProgramType::URQ_DATA ||
+       type == ProgramType::URQ_SAVE ||
        (MAX_FONT_SIZE > MAX_IMAGE1_SIZE && type == ProgramType::FONT)) &&
       stored_len > MAX_IMAGE1_SIZE;
 

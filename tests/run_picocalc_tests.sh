@@ -38,7 +38,7 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-pa
     "$root/code/calculator_face.cpp" "$root/code/text_screen.cpp" \
     "$root/code/builtin_font.cpp" "$root/code/ui_font.cpp" "$root/code/fmk_font.cpp" "$root/code/prepared_font.cpp" "$root/code/fmk_prepare.cpp" \
     "$root/code/mk61emu_core.cpp" "$root/code/ERM19264_graphics_font.cpp" \
-    "$root/code/compact_math.cpp" "$build_dir/ff.o" "$build_dir/ffunicode.o" -o "$build_dir/self-test"
+    "$root/code/compact_math.cpp" "$root/code/ecma_number.cpp" "$build_dir/ff.o" "$build_dir/ffunicode.o" -o "$build_dir/self-test"
 cd "$root"
 if [[ -n "${MK61_TEST_BINARY:-}" ]]; then cp "$build_dir/self-test" "$MK61_TEST_BINARY"; fi
 if [[ "${1:-}" != --explorer-native ]]; then "$build_dir/self-test" --explorer-native; fi

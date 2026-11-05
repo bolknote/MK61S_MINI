@@ -230,7 +230,7 @@ def build(args: argparse.Namespace) -> dict:
     cpu_flags = (["-mcpu=cortex-m0plus","-mthumb","-mfloat-abi=soft"] if pico_target else
                  ["-mcpu=cortex-m4","-mthumb","-mfpu=fpv4-sp-d16","-mfloat-abi=hard"])
     rust_target = "thumbv6m-none-eabi" if pico_target else "thumbv7em-none-eabihf"
-    flags = [*cpu_flags, "-Oz" if system else "-Os", "-flto", "-fipa-pta",
+    flags = [*cpu_flags, "-Oz" if system or getattr(args, "optimize_size", False) else "-Os", "-flto", "-fipa-pta",
              "-mword-relocations", "-fno-builtin", "-ffunction-sections", "-fdata-sections",
              "-Wall", "-Wextra", "-Werror"]
     if args.system in ("terminal", "terminal-clock"): flags.append("-DMK61_BUILD_TERMINAL_MODULE=1")
@@ -351,9 +351,9 @@ def build(args: argparse.Namespace) -> dict:
             compile_commands.append({"directory": str(ROOT), "file": str(source),
                                      "arguments": [str(x) for x in command]})
         objects.append(obj)
+    database = out / "compile_commands.json"
+    database.write_text(json.dumps(compile_commands, indent=2) + "\n")
     if system:
-        database = out / "compile_commands.json"
-        database.write_text(json.dumps(compile_commands, indent=2) + "\n")
         stack_command = [sys.executable, ROOT / "tests/analyze_stack_usage.py",
                          "--compile-commands", database, "--max-frame", "5120", "--top", "1",
                          "--summary-json", out / "stack-usage.json"]
@@ -499,6 +499,7 @@ def main() -> None:
                         help="rustc executable; required only for .rs sources if not on PATH")
     parser.add_argument("--packer", type=Path)
     parser.add_argument("--handled-magic")
+    parser.add_argument("--optimize-size", action="store_true", help="Use GCC -Oz for a tightly bounded user APP")
     args = parser.parse_args()
     if args.local_float_math_mask is not None and not args.local_float_math:
         parser.error("--local-float-math-mask requires --local-float-math")

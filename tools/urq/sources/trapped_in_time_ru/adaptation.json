@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "repository": "https://github.com/tseykovets/trapped_in_time_ru",
+  "revision": "75718abb334f812d5d8190d7897d3b2029ae57d4",
+  "files": {
+    "urqw/game.qst": "3f26f7c15c9a69b84078be7fa279217b98969d0a75403ec43f52991e305644e8",
+    "LICENSE.txt": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+    "urqw/script.js": "fa03eb7148cf8a44f9c3b658f3ec32dc486d187a0fb524b0a668e58a6ced7315",
+    "urqw/manifest.json": "69be4c73fd97906d609e1d7cd5bdbb93dd4276fa77df49891709b519f87da915"
+  },
+  "changes": [
+    "TOKENS slots and an index replace JSON arrays and slicing.",
+    "URQL Fisher-Yates consumes the same RNG draws as the original JavaScript.",
+    "The initial five-way shuffle, appended return home and six-way reshuffles are preserved.",
+    "Nær og Fjern is transliterated to Naer og Fjern in the historical note."
+  ],
+  "verification": "tests/urq_library_self_test.py"
+}

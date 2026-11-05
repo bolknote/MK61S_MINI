@@ -34,6 +34,9 @@ class PackageTests(unittest.TestCase):
             for name in ('manifest.json','program-capabilities.json','mk61s-picocalc-pico-h.uf2'):
                 shutil.copy2(source/name,target/name)
             shutil.copytree(source/'apps',target/'apps')
+            stale_urq=target/'apps/URQ/demo'
+            stale_urq.mkdir(parents=True,exist_ok=True)
+            (stale_urq/'catalog-report.json').write_text('{}')
             (target/'System/VMCache').mkdir(parents=True)
             (target/'System/old.txt').write_text('stale output, outside this Pico bundle')
             command=[sys.executable,str(ROOT/'tools/package_picocalc.py'),'--directory',str(target)]
@@ -46,6 +49,14 @@ class PackageTests(unittest.TestCase):
                 self.assertFalse(any(name.startswith(prefix+'System/') for name in reader.namelist()))
                 self.assertFalse((target/'System/autoexec.wbmp').exists())
                 self.assertEqual(len(reader.namelist()),len(set(reader.namelist())))
+                for game_root in ('urq/', 'apps/URQ/'):
+                    payload = [name for name in reader.namelist() if name.startswith(prefix + game_root)]
+                    self.assertTrue(payload)
+                    self.assertTrue(all(PurePosixPath(name).suffix in ('.urq','.uqd','.wbmp') for name in payload))
+                    self.assertFalse(any('/demo/' in name for name in payload))
+                for game in ('house_that_jack_built','trapped_in_time_ru'):
+                    for name in ('AUTHORS.txt','LICENSE.txt'):
+                        self.assertIn(prefix+'licenses/urq/'+game+'/'+name,reader.namelist())
                 folders={str(parent) for name in reader.namelist()
                          for parent in PurePosixPath(name[len(prefix):]).parents if str(parent)!='.'}
                 roles={path.casefold():role for path,role in BUNDLE_FOLDERS.items()}

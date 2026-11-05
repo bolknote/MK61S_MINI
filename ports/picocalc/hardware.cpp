@@ -175,6 +175,7 @@ void Panel::sleep(bool enabled) {
     else { command(0x11);sleep_ms(120);command(0x29);valid_=false; }
 }
 bool Panel::flush(const Screen& screen) {
+    if(color_active_) return false;
     if(io_worker::frame_pending()) return false;
     if(failed_.exchange(false,std::memory_order_acquire)) valid_=false;
     // The retained BASIC/APP image is usually identical. Avoid walking all
@@ -195,8 +196,42 @@ bool Panel::flush(const Screen& screen) {
     valid_=io_worker::submit_frame(this,[](void* context) { ((Panel*)context)->transfer(); });
     return valid_;
 }
-void Panel::configure_dma() {
-    if(!dma_irq_ready_) {
+u32 Panel::color_palette(const u16* colors) {
+    if(!colors) return 0;
+    if(io_worker::frame_pending()) return 2;
+    if(std::memcmp(colors,color_palette_,sizeof(color_palette_))) {
+        std::memcpy(color_palette_,colors,sizeof(color_palette_));palette_dirty_=true;
+    }
+    return 1;
+}
+u32 Panel::color(u32 operation,const mk61_service_color_frame* frame) {
+    if(operation==MK61_COLOR_PALETTE64) return color_palette((const u16*)frame);
+    if(operation==MK61_COLOR_AVAILABLE) return 1;
+    if(operation==MK61_COLOR_END) {
+        if(color_active_) {
+            io_worker::drain();color_active_=false;valid_=false;color_frame_={};
+        }
+        return 1;
+    }
+    if(operation!=MK61_COLOR_PRESENT || !frame || !lcd::valid_color(*frame)) return 0;
+    if(io_worker::frame_pending()) return 2;
+    const bool failed=failed_.exchange(false,std::memory_order_acquire);
+    const bool geometry=!color_active_ || failed || !lcd::same_color_view(color_frame_,*frame);
+    const bool force=geometry || ((frame->format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_TILE8 && palette_dirty_);
+    color_clear_=!(frame->format&MK61_COLOR_PRESERVE_OUTSIDE) && (geometry || color_frame_.background!=frame->background);
+    lcd::plan_color(update_,color_frame_,*frame,force);
+    if(!update_.count && !color_clear_) return 1;
+    lcd::copy_color(color_frame_,*frame,previous_);
+    palette_dirty_=false;
+    color_active_=true;valid_=false;
+    if(!io_worker::submit_frame(this,[](void* context) { ((Panel*)context)->transfer_color(); })) {
+        failed_.store(true,std::memory_order_release);return 2;
+    }
+    return 1;
+}
+void Panel::configure_dma(bool chain) {
+    const bool use_chain=chain && chained_dma();
+    if(!dma_irq_ready_ || dma_chain_configured_!=use_chain) {
         // Transfer runs on core 1, independently of the core which claimed
         // the channels during panel initialization.
         dma_support::enable_irq((unsigned)dma_tx_);dma_support::enable_irq((unsigned)dma_rx_);
@@ -205,7 +240,7 @@ void Panel::configure_dma() {
         channel_config_set_dreq(&tx,spi_get_dreq(spi1,true));
         channel_config_set_read_increment(&tx,true);
         channel_config_set_write_increment(&tx,false);
-        if(chained_dma()) {
+        if(use_chain) {
             channel_config_set_chain_to(&tx,(unsigned)dma_control_);
             channel_config_set_irq_quiet(&tx,true);
         }
@@ -219,11 +254,12 @@ void Panel::configure_dma() {
         dma_channel_configure((unsigned)dma_rx_,&rx,&discard_,&spi_get_hw(spi1)->dr,0,false);
         dma_channel_configure((unsigned)dma_tx_,&tx,&spi_get_hw(spi1)->dr,nullptr,0,false);
         dma_irq_ready_=true;
+        dma_chain_configured_=use_chain;
     }
 }
 void Panel::start_scanline(const u16* pixels,unsigned count) {
     if(!dma()) { spi_write16_blocking(spi1,pixels,count);return; }
-    configure_dma();
+    configure_dma(false);
     dma_channel_set_read_addr((unsigned)dma_tx_,pixels,false);
     dma_channel_set_trans_count((unsigned)dma_rx_,count,false);
     dma_channel_set_trans_count((unsigned)dma_tx_,count,false);
@@ -385,6 +421,63 @@ void Panel::transfer() {
     last_rectangles_.store(windows,std::memory_order_relaxed);
     if(update_.bytes==Screen::WIDTH*Screen::HEIGHT*2) full_frames_.fetch_add(1,std::memory_order_relaxed);
     frame_crc_.store(dma_support::crc32(previous_,sizeof(previous_)),std::memory_order_relaxed);
+    frames_.fetch_add(1,std::memory_order_relaxed);
+}
+
+bool Panel::transfer_color_rect(const lcd::Rect& rect,bool background) {
+    const unsigned right=rect.x+rect.width-1,bottom=rect.y+rect.height-1;
+    const u8 columns[]={(u8)(rect.x>>8),(u8)rect.x,(u8)(right>>8),(u8)right};
+    const u8 rows[]={(u8)(rect.y>>8),(u8)rect.y,(u8)(bottom>>8),(u8)bottom};
+    command(0x2A,columns,sizeof(columns));command(0x2B,rows,sizeof(rows));
+    gpio_put(DC,0);gpio_put(CS,0);busy_wait_us(1);
+    const u8 ram_write=0x2C;spi_write_blocking(spi1,&ram_write,1);
+    busy_wait_us(1);gpio_put(DC,1);busy_wait_us(1);
+    spi_set_format(spi1,16,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
+    const auto prepare=[&](unsigned row) {
+        u16* out=scanlines+(row&1U)*Screen::WIDTH;
+        if(background) for(unsigned x=0;x<rect.width;++x) out[x]=color_frame_.background;
+        else lcd::color_scanline(color_frame_,rect,row,out,color_palette_);
+    };
+    bool ok=true;prepare(0);start_scanline(scanlines,rect.width);
+    for(unsigned row=1;row<=rect.height;++row) {
+        if(row<rect.height) prepare(row);
+        if(!finish_scanline()) { ok=false;break; }
+        if(row<rect.height) start_scanline(scanlines+(row&1U)*Screen::WIDTH,rect.width);
+        io_worker::service();
+    }
+    busy_wait_us(1);gpio_put(CS,1);busy_wait_us(1);
+    spi_set_format(spi1,8,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
+    return ok;
+}
+void Panel::transfer_color() {
+    const u64 start=time_us_64();
+    // A color image uses ordinary, unscrolled LCD coordinates. The next
+    // monochrome frame likewise starts from a fresh snapshot after END.
+    if(scroll_configured_) {
+        const u8 definition[]={0,0,1,64,0,0},origin[]={0,0};
+        command(0x33,definition,sizeof(definition));command(0x37,origin,sizeof(origin));
+        scroll_configured_=false;
+    }
+    scroll_={};pending_scroll_rows_=0;
+    bool ok=true;unsigned border_bytes=0,border_windows=0;
+    if(color_clear_) {
+        const auto& f=color_frame_;
+        const lcd::Rect borders[]={
+            {0,0,Screen::WIDTH,f.y},
+            {0,(u16)(f.y+f.height),Screen::WIDTH,(u16)(Screen::HEIGHT-f.y-f.height)},
+            {0,f.y,f.x,f.height},
+            {(u16)(f.x+f.width),f.y,(u16)(Screen::WIDTH-f.x-f.width),f.height}};
+        for(const auto& r:borders) if(r.width && r.height && ok) {
+            ok=transfer_color_rect(r,true);border_bytes+=r.width*r.height*2;++border_windows;
+        }
+    }
+    for(unsigned i=0;i<update_.count && ok;++i) ok=transfer_color_rect(update_.rectangles[i],false);
+    if(!ok) { errors_.fetch_add(1);failed_.store(true,std::memory_order_release);return; }
+    last_us_.store((u32)(time_us_64()-start),std::memory_order_relaxed);
+    last_bytes_.store(update_.bytes+border_bytes,std::memory_order_relaxed);
+    last_rectangles_.store(update_.count+border_windows,std::memory_order_relaxed);
+    last_strips_.store(0,std::memory_order_relaxed);last_pauses_.store(0,std::memory_order_relaxed);
+    frame_crc_.store(dma_support::crc32(previous_,color_frame_.pixel_bytes+color_frame_.tile_bytes),std::memory_order_relaxed);
     frames_.fetch_add(1,std::memory_order_relaxed);
 }
 

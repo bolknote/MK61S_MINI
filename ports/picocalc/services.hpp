@@ -25,9 +25,11 @@ public:
     SourceDocument::Statistics source_memory_statistics() const { return source_.statistics(); }
     static constexpr unsigned COLS = 38, ROWS = 14, SOURCE_CAPACITY = 65535;
     using Pump = bool (*)(void*, u8&);
+    using ColorDisplay = u32 (*)(void*,u32,const mk61_service_color_frame*);
     Services();
     ~Services();
     void set_pump(Pump callback, void* context) { pump_ = callback; pump_context_ = context; }
+    void set_color_display(ColorDisplay callback,void* context) { color_display_=callback;color_context_=context; }
     void set_ui(Ui& ui) { ui_ = &ui; }
     unsigned sound_volume() const { return ui_ ? ui_->settings().volume : 10; }
     bool active() const { return page_ != ServicePage::CLOSED; }
@@ -106,6 +108,8 @@ public:
     bool take_calculator_request() { const bool value=calculator_requested_;calculator_requested_=false;return value; }
 private:
     friend class NativeHost;
+    ColorDisplay color_display_=nullptr;
+    void* color_context_=nullptr;
     enum class Prompt : u8 { SAVE, RENAME, MKDIR, NEW_FILE, EXPORT, OPEN, SEARCH, MOVE };
     enum class Confirm : u8 { DELETE_FILE, DISCARD, FORMAT, OVERWRITE };
     const char* tr(const char* en, const char* ru) const { return russian_ ? ru : en; }

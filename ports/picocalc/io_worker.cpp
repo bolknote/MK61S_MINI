@@ -303,6 +303,12 @@ void drain() {
           i2c.stage.load(std::memory_order_acquire)==WORKING) { __sev();tight_loop_contents(); }
     uart_flush();
 }
+void invoke(void* context,void (*function)(void*)) {
+    if(get_core_num()==1) { function(context);return; }
+    start();drain();
+    while(!submit_frame(context,function)) drain();
+    drain();
+}
 Statistics statistics() {
     u32 baud=0;
 #if LIB_PICO_STDIO_UART

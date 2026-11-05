@@ -24,6 +24,49 @@ namespace {
 }
 #define CHECK(test) ((test)?(void)0:failed(#test,__LINE__))
 using namespace picocalc;
+struct ColorCalls { unsigned frames=0,ends=0; };
+void color_file_contract(void* context,const mk61_app_api&,const mk61_app_services& s) {
+    auto& calls=*(ColorCalls*)context;
+    const auto caps=s.call(MK61_SERVICE_CAPABILITIES,0,0,0,nullptr);
+    CHECK(caps&MK61_SERVICE_CAP_COLOR_DISPLAY);CHECK(caps&MK61_SERVICE_CAP_FILE_BYTES);
+    mk61_service_color_frame f{};
+    CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PRESENT,0,sizeof(f),&f)==2);
+    CHECK(calls.frames==1);
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PRESENT,0,sizeof(f)-1,&f));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PRESENT,1,sizeof(f),&f));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_END,0,sizeof(f),&f));
+    CHECK(calls.frames==1 && !calls.ends);
+    std::vector<u8> raw(70000);for(unsigned i=0;i<raw.size();++i) raw[i]=(u8)(i*37);
+    CHECK(files::write("/Contract/raw.rom",raw.data(),raw.size()));
+    mk61_service_file_info info{};mk61_service_file_bytes r{"raw.rom",&info,0,sizeof(info)};
+    const auto io=[&](u32 operation) { return s.call(MK61_SERVICE_FILE_BYTES,operation,0,sizeof(r),&r); };
+    CHECK(io(MK61_FILE_BYTES_STAT) && info.size==raw.size() && !info.directory);
+    u8 bytes[512]{};r.data=bytes;r.offset=65534;r.size=sizeof(bytes);
+    CHECK(io(MK61_FILE_BYTES_READ) && !std::memcmp(bytes,raw.data()+65534,sizeof(bytes)));
+    r.offset=69999;CHECK(!io(MK61_FILE_BYTES_READ));
+    r.size=4097;CHECK(!io(MK61_FILE_BYTES_READ));
+    CHECK(!s.call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_READ,1,sizeof(r),&r));
+    // Sector writes preserve all bytes outside the requested existing range.
+    r.offset=65534;r.size=512;std::memset(bytes,0xA5,sizeof(bytes));
+    CHECK(io(MK61_FILE_BYTES_WRITE));std::memset(bytes,0,sizeof(bytes));
+    CHECK(io(MK61_FILE_BYTES_READ));for(u8 value:bytes) CHECK(value==0xA5);
+    r.offset=65533;r.size=1;CHECK(io(MK61_FILE_BYTES_READ) && bytes[0]==raw[65533]);
+    r.offset=66046;CHECK(io(MK61_FILE_BYTES_READ) && bytes[0]==raw[66046]);
+    r.offset=69999;r.size=2;CHECK(!io(MK61_FILE_BYTES_WRITE));
+    r.offset=0;r.size=4097;CHECK(!io(MK61_FILE_BYTES_WRITE));
+    r.path="missing.img";r.size=1;CHECK(!io(MK61_FILE_BYTES_WRITE));
+    // A complete bitmap includes simultaneous modifiers/letters and releases
+    // while leaving the ordinary event queue available to the APP.
+    controls::clear();controls::event({1,'j'});controls::event({1,0xA5});
+    u8 keys[32]{};
+    CHECK(s.call(MK61_SERVICE_KEYBOARD,MK61_SERVICE_KEY_BITMAP,32,0,keys));
+    CHECK((keys['j'/8]&(1U<<('j'&7))) && (keys[0xA5/8]&(1U<<(0xA5&7))));
+    controls::event({3,'j'});controls::event({3,0xA5});
+    CHECK(s.call(MK61_SERVICE_KEYBOARD,MK61_SERVICE_KEY_BITMAP,32,0,keys));
+    for(u8 value:keys) CHECK(!value);
+    CHECK(!s.call(MK61_SERVICE_KEYBOARD,MK61_SERVICE_KEY_BITMAP,31,0,keys));
+    CHECK(files::remove("/Contract/raw.rom"));
+}
 void type(Services& s,const char* value) { while(*value) CHECK(s.input((u8)*value++)); }
 void replace_prompt(Services& s,const char* value) {
     for(unsigned i=0;i<256;++i) s.input(8);
@@ -98,6 +141,24 @@ void native_contract(void* context,const mk61_app_api& api,const mk61_app_servic
     CHECK(api.file_read(id,0,nullptr,0)==0);
     CHECK(api.file_read(id,0,nullptr,1)==UINT32_MAX);
     CHECK(api.file_read(id,0x10000,bytes,1)==UINT32_MAX);
+    // Binary streamed writes must not pass through UTF-8 conversion. Failure
+    // after the first block preserves the previously published file.
+    {
+    std::vector<u8> binary(4097);for(unsigned i=0;i<binary.size();++i) binary[i]=(u8)(i*73);
+    struct Stream { std::vector<u8>* bytes;bool fail; } stream{&binary,false};
+    mk61_service_write_source source{"save",&stream,[](void* raw,u32 at,u8* out,u32 n)->int {
+        auto& r=*(Stream*)raw;if(r.fail && at>=256) return 0;
+        if(at>r.bytes->size() || n>r.bytes->size()-at) return 0;
+        std::memcpy(out,r.bytes->data()+at,n);return 1;
+    },(u32)binary.size(),MK61_SERVICE_INVALID_ID};
+    CHECK(s.call(MK61_SERVICE_FILE_WRITE_SOURCE,parent.id,MK61_SERVICE_INVALID_ID,MK61_SERVICE_FILE_URQ_SAVE,&source));
+    const u32 save_id=source.id;CHECK(api.file_size(save_id)==binary.size());
+    std::vector<u8> copied(binary.size());CHECK(api.file_read(save_id,0,copied.data(),copied.size())==copied.size() && copied==binary);
+    stream.fail=true;binary[0]^=1;
+    CHECK(!s.call(MK61_SERVICE_FILE_WRITE_SOURCE,parent.id,save_id,MK61_SERVICE_FILE_URQ_SAVE,&source));
+    CHECK(source.id==MK61_SERVICE_INVALID_ID && api.file_read(save_id,0,copied.data(),copied.size())==copied.size());
+    binary[0]^=1;CHECK(copied==binary);stream.fail=false;
+    }
     unsigned used=0;
     CHECK(files::read("/Contract/текст.txt",bytes,sizeof(bytes),used));
     CHECK(used==std::strlen("Привет, ёж!\n") && !std::memcmp(bytes,"Привет, ёж!\n",used));
@@ -190,6 +251,8 @@ void native_contract(void* context,const mk61_app_api& api,const mk61_app_servic
     CHECK(s.call(MK61_SERVICE_EDITOR_DRAW,0,0,0,&editor) && editor.top==36);
     editor.top=0x10000;CHECK(!s.call(MK61_SERVICE_EDITOR_SCROLL,0,0,0,&editor));
     const auto key=[&](u32 op,u32 value=0) { return s.call(MK61_SERVICE_KEYBOARD,op,value,0,nullptr); };
+    // The streamed-write pump may have delivered preceding fixture events.
+    while(api.key_poll()!=MK61_APP_KEY_NONE) {}
     controls::clear();
     controls::event({1,'1'});
     CHECK(key(MK61_SERVICE_KEY_ANY) && key(MK61_SERVICE_KEY_PRESSED,keyboard_layout::MINI.digit[1]));
@@ -249,6 +312,23 @@ void native_contract(void* context,const mk61_app_api& api,const mk61_app_servic
         CHECK(key(MK61_SERVICE_KEY_GET,keyboard_core::RELEASE_MASK)==(scan|keyboard_core::RELEASE_MASK));
         CHECK(!key(MK61_SERVICE_KEY_PRESSED,scan));
     }
+    mk61_service_text_event text{};text.layout=1;
+    const auto text_call=[&](u32 op){return s.call(MK61_SERVICE_TEXT_INPUT,op,0,sizeof(text),&text);};
+    CHECK(text_call(MK61_TEXT_BEGIN));CHECK(!text_call(MK61_TEXT_BEGIN));
+    for(const auto pair:{std::pair<u8,u8>{'`',0xB8},{'~',0xA8},{'q',0xE9},{'Q',0xC9},{'1','1'},{'!','!'}}) {
+        controls::event({1,pair.first});CHECK(text_call(MK61_TEXT_POLL));
+        CHECK(text.kind==MK61_TEXT_CHAR && text.value==pair.second && text.layout==1);
+        controls::event({3,pair.first});CHECK(!text_call(MK61_TEXT_POLL));
+    }
+    controls::event({1,0x88});CHECK(text_call(MK61_TEXT_POLL) && text.kind==MK61_TEXT_LAYOUT && !text.layout);
+    controls::event({2,0x88});CHECK(!text_call(MK61_TEXT_POLL));controls::event({3,0x88});
+    controls::event({1,';'});CHECK(text_call(MK61_TEXT_POLL) && text.value==';');controls::event({3,';'});
+    controls::event({1,'\r'});controls::event({2,'\r'});controls::event({1,'A'});controls::event({3,'\r'});
+    CHECK(text_call(MK61_TEXT_POLL) && text.kind==MK61_TEXT_SUBMIT);
+    CHECK(text_call(MK61_TEXT_POLL) && text.kind==MK61_TEXT_CHAR && text.value=='A');
+    controls::event({3,'A'});CHECK(!text_call(MK61_TEXT_POLL));
+    CHECK(text_call(MK61_TEXT_END) && !text_call(MK61_TEXT_POLL));
+    CHECK(api.key_poll()==MK61_APP_KEY_NONE);
 }
 void filename_contract(void*,const mk61_app_api& base,const mk61_app_services& api) {
     char name[32];std::strcpy(name,M8("ёж"));mk61_service_save_target target{name,MK61_SERVICE_ROOT_ID};
@@ -261,8 +341,51 @@ void cancelled_filename_contract(void*,const mk61_app_api& base,const mk61_app_s
     CHECK(!api.call(MK61_SERVICE_FILE_SAVE_TARGET,MK61_SERVICE_FILE_TEXT,0,sizeof(name),&target));
     CHECK(!std::strcmp(name,"KEEP") && base.key_poll()==MK61_APP_KEY_NONE);
 }
+void colored_text_contract() {
+    struct Capture {
+        std::vector<u16> pixels=std::vector<u16>(320*320,0x1234);
+        unsigned frames=0,waits=0,ends=0;bool busy=true;
+    } capture;
+    Settings settings{};settings.ui_font_family=1;settings.ui_font_size=12;
+    NativeDisplay display(settings,true);
+    display.color_sink([](void* raw,u32 operation,const mk61_service_color_frame* f)->u32 {
+        auto& c=*(Capture*)raw;
+        if(operation==MK61_COLOR_END) { ++c.ends;return 1; }
+        CHECK(operation==MK61_COLOR_PRESENT && f);
+        if(c.busy) { c.busy=false;return 2; }
+        CHECK(f->format==(MK61_COLOR_INDEX4|MK61_COLOR_PRESERVE_OUTSIDE));
+        CHECK(f->width && f->height==8 && f->pixel_bytes==((f->width+1)/2)*f->height);
+        for(unsigned y=0;y<f->height;++y) for(unsigned x=0;x<f->width;++x) {
+            const u8 packed=f->pixels[y*((f->width+1)/2)+x/2];
+            const unsigned index=(x&1)?packed&15:packed>>4;
+            c.pixels[(f->y+y)*320+f->x+x]=f->palette[index];
+        }
+        ++c.frames;return 1;
+    },&capture,[](void* raw){++((Capture*)raw)->waits;},&capture);
+    CHECK(display.call(MK61_SERVICE_DISPLAY_BEGIN_UI_TEXT,0,0,nullptr));
+    display.call(MK61_SERVICE_DISPLAY_BEGIN_UPDATE,0,0,nullptr);
+    display.call(MK61_SERVICE_DISPLAY_CLEAR,0,0,nullptr);
+    CHECK(display.call(MK61_SERVICE_DISPLAY_UI_COLORS,0xFFFF,0x001F,nullptr));
+    char text[33];std::memset(text,'W',32);text[32]=0;
+    display.call(MK61_SERVICE_DISPLAY_UI_LINE,0,0,text);
+    u16 colors[32];for(unsigned i=0;i<32;++i) colors[i]=(u16)(0x8000+i*67);
+    CHECK(display.call(MK61_SERVICE_DISPLAY_UI_RUN_COLORS,0,32,colors));
+    display.call(MK61_SERVICE_DISPLAY_END_UPDATE,0,0,nullptr);display.flush();
+    CHECK(capture.frames>40 && capture.waits==1); // >16 foreground colors split a strip
+    mk61_service_ui_glyph glyph{};CHECK(fonts::glyph(settings,'W',glyph));const unsigned advance=glyph.advance;
+    std::vector<bool> found(32);
+    for(unsigned y=0;y<12;++y) for(unsigned x=2;x<2+advance*32 && x<320;++x) {
+        const bool ink=(canvas::frame()[y/8*320+x]>>(y%8))&1;
+        const unsigned index=(x-2)/advance;
+        CHECK(capture.pixels[y*320+x]==(ink?colors[index]:0x001F));
+        if(ink) found[index]=true;
+    }
+    for(bool value:found) CHECK(value);
+    display.call(MK61_SERVICE_DISPLAY_END_UI_TEXT,0,0,nullptr);CHECK(capture.ends==1);
+}
 }
 void picocalc_contract_test() {
+    colored_text_contract();
     {
         Settings settings{};settings.ui_font_family=1;settings.ui_font_size=16;
         CHECK(script::text_profile({8,5,8,0}));
@@ -376,6 +499,15 @@ void picocalc_contract_test() {
         x+=g.advance;
     }
     CHECK(script::text_profile({8,5,8,0}));s.test_native_contract(native_contract,&ui);
+    ColorCalls color_calls;
+    s.set_color_display([](void* raw,u32 operation,const mk61_service_color_frame*) -> u32 {
+        auto& c=*(ColorCalls*)raw;
+        if(operation==MK61_COLOR_PRESENT) { ++c.frames;return 2; }
+        if(operation==MK61_COLOR_END) ++c.ends;
+        return 1;
+    },&color_calls);
+    s.test_native_contract(color_file_contract,&color_calls,true);
+    CHECK(color_calls.ends==1);s.set_color_display(nullptr,nullptr);
     const auto active_buffers=shared_memory::buffer_statistics().active;u32 stale_buffer=0;
     s.test_native_contract(buffers_contract,&stale_buffer,true);s.test_native_contract(buffers_contract,&stale_buffer,true);
     CHECK(shared_memory::buffer_statistics().active==active_buffers && !shared_memory::buffer_statistics().pinned);

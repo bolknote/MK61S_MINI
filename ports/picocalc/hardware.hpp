@@ -5,6 +5,7 @@
 #include "battery.hpp"
 #include "lcd_update.hpp"
 #include "lcd_chain.hpp"
+#include "lcd_color.hpp"
 #include <atomic>
 
 namespace picocalc {
@@ -38,6 +39,9 @@ class Panel {
 public:
     void init();
     bool flush(const Screen& screen);
+    u32 color(u32 operation,const mk61_service_color_frame* frame=nullptr);
+    u32 color_palette(const u16* colors);
+    bool color_active() const { return color_active_; }
     bool needs_refresh() const { return !valid_ || failed_.load(std::memory_order_acquire); }
     void sleep(bool enabled);
     u32 spi_hz() const { return spi_hz_; }
@@ -63,7 +67,11 @@ private:
     std::atomic<u32> last_bytes_{0},last_rectangles_{0},last_us_{0},full_frames_{0};
     std::atomic<u32> errors_{0};
     std::atomic<bool> failed_{false};
-    bool dma_irq_ready_=false;
+    bool dma_irq_ready_=false,dma_chain_configured_=false;
+    bool color_active_=false,color_clear_=false;
+    mk61_service_color_frame color_frame_{};
+    u16 color_palette_[64]{};
+    bool palette_dirty_=false;
     lcd::Update update_;
     lcd::Scroll scroll_;
     lcd::Region configured_region_;
@@ -73,13 +81,15 @@ private:
     u16 discard_=0;
     int dma_tx_=-1,dma_rx_=-1,dma_control_=-1;
     std::atomic<u32> last_strips_{0},last_pauses_{0};
-    void configure_dma();
+    void configure_dma(bool chain=true);
     lcd::Stream stream_;
     bool transfer_chain(const lcd::Rect& rect,u32& pauses);
     void abort_dma();
     void start_scanline(const u16* pixels,unsigned count);
     bool finish_scanline();
     void transfer();
+    void transfer_color();
+    bool transfer_color_rect(const lcd::Rect& rect,bool background);
 };
 
 } // namespace picocalc
