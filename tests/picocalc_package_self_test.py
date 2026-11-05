@@ -31,7 +31,7 @@ class PackageTests(unittest.TestCase):
         source=Path(os.environ.get('MK61_TEST_PICOCALC_PACKAGE_DIR',ROOT/'.build/firmware/picocalc-pico-h'))
         with tempfile.TemporaryDirectory(prefix='mk61-pico-package-') as temporary:
             target=Path(temporary)/'release';target.mkdir()
-            for name in ('manifest.json','mk61s-picocalc-pico-h.uf2'):
+            for name in ('manifest.json','program-capabilities.json','mk61s-picocalc-pico-h.uf2'):
                 shutil.copy2(source/name,target/name)
             shutil.copytree(source/'apps',target/'apps')
             (target/'System/VMCache').mkdir(parents=True)

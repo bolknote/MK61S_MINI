@@ -749,6 +749,8 @@ try {
         (Join-Path $outputBundle 'build.flags'),
         ($flagValues -join ' ') + [Environment]::NewLine,
         $script:Utf8NoBom)
+    & (Join-Path $script:ProjectRoot 'dev/lib/write-program-capabilities.ps1') `
+        -Bundle $outputBundle -Firmware (Join-Path $outputBundle $residentName) -Profile $Profile -Mcu $Mcu
     [IO.File]::WriteAllText(
         (Join-Path $outputBundle 'build.apps'),
         'format 1' + [Environment]::NewLine +

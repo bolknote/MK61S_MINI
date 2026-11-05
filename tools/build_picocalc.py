@@ -195,6 +195,10 @@ def main():
             "firmware_integrity": integrity,
         }
         (output / "manifest.json").write_text(json.dumps(metadata, indent=2) + "\n")
+        from program_collection import compiled_pico_features, pico_capabilities
+        program_cap = pico_capabilities(metadata, output / (TARGET + '.uf2'),
+                                        compiled_pico_features(build / 'compile_commands.json'))
+        (output / 'program-capabilities.json').write_text(json.dumps(program_cap, indent=2) + '\n')
         print(sizes, end="")
         print(f"UF2: {output / (TARGET + '.uf2')}")
         print(f"Flash: {len(image)} / {metadata['flash_limit']} bytes; static RAM: {metadata['static_ram_bytes']} bytes")

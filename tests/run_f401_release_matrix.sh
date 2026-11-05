@@ -218,6 +218,10 @@ if [[ "${MK61_PACKAGE_RELEASE:-0}" == 1 ]]; then
   command -v zip >/dev/null 2>&1 || fail 'zip is required for packaging'
   while IFS=$'\t' read -r \
       _case_id _profile _optimization _defines artifact _rest; do
+    # Programs is generated alongside firmware, never on a user filesystem.
+    rm -rf "$output_dir/$artifact/Programs"
+    python3 "$root/tools/program_bundle.py" --bundle "$output_dir/$artifact" \
+      --export "$output_dir/$artifact/Programs"
     (cd "$output_dir" && zip -qr "$artifact.zip" "$artifact")
   done < <(python3 "$contract" cases --group f401-product --format tsv)
 fi

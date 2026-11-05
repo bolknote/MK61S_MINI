@@ -82,25 +82,20 @@ def main():
     for record in records:verify_app(apps/(record['name']+'.APP'),record)
     (directory/'README.txt').write_text(README)
     shutil.copy2(ROOT/'ports/picocalc/README.md',directory/'README.md')
-    (directory/'Fonts').mkdir(exist_ok=True)
-    font_files=[]
-    for source in sorted((ROOT/'programs/Fonts').glob('*.FMK')):
-        target=directory/'Fonts'/source.name;shutil.copy2(source,target);font_files.append(target)
-    game_files=[]
-    for game in sorted((ROOT/'programs/games').iterdir()):
-        if not game.is_dir() or not any((game/name).exists() for name in ('autoexec.m61','autoexec.tbi')):continue
-        for source in sorted(game.iterdir()):
-            if not source.is_file():continue
-            target=directory/'games'/game.name/source.name
-            target.parent.mkdir(parents=True,exist_ok=True)
-            shutil.copy2(source,target);game_files.append(target)
-    for name in ('README.markdown','SOURCES.markdown'):
-        target=directory/'games'/name;shutil.copy2(ROOT/'programs/games'/name,target);game_files.append(target)
-    target=directory/'games/native-artwork.json'
-    shutil.copy2(ROOT/'doc/game-artwork/native/manifest.json',target);game_files.append(target)
-    for name in ('Graphics.tbi','Graphics.foc','Graph.tbi'):
-        target=directory/'examples'/name;target.parent.mkdir(parents=True,exist_ok=True)
-        shutil.copy2(ROOT/'programs/examples'/name,target);game_files.append(target)
+    from program_collection import plan as program_plan, distribution_manifest
+    selection = program_plan(directory, prefer_bundle=False)
+    program_files = []
+    for record in selection['files']:
+        source = Path(record['source'])
+        target = directory / record['path']
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if source.resolve() != target.resolve():
+            shutil.copy2(source, target)
+        program_files.append(target)
+    program_manifest = directory / 'programs-manifest.json'
+    program_manifest.write_text(json.dumps(distribution_manifest(selection), ensure_ascii=False, indent=2) + '\n')
+    font_files = []
+    game_files = program_files + [program_manifest, directory/'program-capabilities.json']
     spec=importlib.util.spec_from_file_location('pico_font_licenses',ROOT/'tools/.fmk-font/package_ui_font_licenses.py')
     licenses=importlib.util.module_from_spec(spec);spec.loader.exec_module(licenses)
     licenses.package(bundle=directory)
@@ -108,6 +103,7 @@ def main():
     files=[firmware,directory/'manifest.json',directory/'README.txt',directory/'README.md',directory/'sync_picocalc_clock.py',
         *font_files,*game_files,*(directory/name for name in licenses.FILES),
         apps/'manifest.json',*[apps/(name+'.APP') for name in APPS],*[apps/name for name in ASSETS]]
+    files=list(dict.fromkeys(files))
     folders={parent.relative_to(directory).as_posix() for path in files for parent in path.parents
              if parent!=directory and parent.is_relative_to(directory)}
     # Stale directories from an older output must not become new empty folders

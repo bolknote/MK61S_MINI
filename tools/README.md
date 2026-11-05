@@ -10,7 +10,7 @@
 | Команда | Назначение |
 | --- | --- |
 | `mkc.cmd` | Двухпанельный файловый менеджер: копирование, просмотр и работа с файлами устройства |
-| `mk61-firmware.cmd` | Выбор профиля, сборка, DFU-загрузка и установка System APP через COM/CDC с проверкой чтением |
+| `mk61-firmware.cmd` | Выбор профиля, сборка, DFU-загрузка, установка System и совместимого комплекта программ |
 | `build-gcc.cmd` | Прямая сборка STM32F401/F411 собственным GCC SDK проекта |
 | `mk61-arduino-board.cmd` | Установка проектных плат в Arduino IDE |
 | `install_gcc_dependencies.ps1`, `install_gcc_dependencies.py` | Установка закреплённого GNU Arm GCC с проверкой SHA-256; Python-вариант работает без PowerShell |
@@ -38,6 +38,31 @@ python3 tools/package_picocalc.py
 через `--install-apps`. Пользовательские APP и остальные каталоги сохраняются.
 На macOS/Linux используется Bash-клиент MKC с `arduino-cli`, Perl и `iconv`,
 на Windows — PowerShell-клиент. Другие программы должны освободить порт.
+
+## Установка комплекта программ
+
+`mk61-firmware.cmd` умеет показать состав, установить программы отдельно или
+вместе с System по фактическим возможностям готовой сборки:
+
+```sh
+./tools/mk61-firmware.cmd --mcu f401 --profile classic-v2 --preview-programs
+./tools/mk61-firmware.cmd --mcu f401 --profile classic-v2 --install-all
+```
+
+Подбор включает требования интерпретаторов, экрана, CPU/ABI и ограничения
+файлов. Листы идут вместе с SHEET.APP. Изменённые листы и пользовательские
+сохранения не заменяются. Протокол проверяет размер и CRC при загрузке;
+дополнительное скачивание включается `--verify-programs`. Подбор требует
+Python 3.10+. Старая сборка без `program-capabilities.json` требует пересборки.
+
+`program_bundle.py` предоставляет тот же просмотр, установку и экспорт для
+готовых STM32/PicoCalc-комплектов; по умолчанию ничего на устройство не пишет:
+
+```sh
+python3 tools/program_bundle.py --bundle .build/firmware/picocalc-pico-h
+```
+
+[Подробности обновления и команды](../doc/design/Program-bundle-installation.md).
 
 ## Собственные приложения, программы и шрифты
 

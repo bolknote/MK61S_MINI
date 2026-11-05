@@ -46,6 +46,7 @@ REMOTE_PATH=/
 MOCK_ROOT=
 CLASSIFY_ONLY=
 INSTALL_SYSTEM_DIR=
+BUNDLE_SESSION=0
 EXPECTED_PROFILE=
 EXPECTED_BUILD_ID=
 RESIDENT_USBDISK=0
@@ -3553,6 +3554,45 @@ main_loop() {
   done
 }
 
+# Private framed interface used by program_bundle.py. The ordinary MKC upload
+# protocol already validates length and CRC; no implicit readback is performed.
+bundle_session() {
+  local deadline operation remote local_file extra ok
+  if [ -z "$MOCK_ROOT" ]; then
+    deadline=$((SECONDS + READY_WAIT_SECONDS))
+    until select_mk61_port; do
+      [ "$SECONDS" -lt "$deadline" ] || { STATUS_TEXT=$SELECT_ERROR; return 1; }
+      sleep 0.5
+    done
+    [ "$DETECTED_PROFILE" = "$EXPECTED_PROFILE" ] &&
+      [ "$(uppercase "$DETECTED_BUILD_ID")" = "$EXPECTED_BUILD_ID" ] || {
+        STATUS_TEXT='program bundle does not match firmware profile/build'; return 1;
+      }
+  fi
+  start_monitor || return 1
+  printf '@BUNDLE READY\n'
+  while IFS=$'\t' read -r operation remote local_file extra; do
+    [ -z "$extra" ] || return 1
+    case "$remote" in /*) ;; *) return 1 ;; esac
+    case "$remote" in *'..'*|*'"'*|*'\\'*) return 1 ;; esac
+    ok=0
+    case "$operation" in
+      LIST) remote_list_raw "$remote" "$local_file" && ok=1 ;;
+      GET) remote_get_file "$remote" "$local_file" && ok=1 ;;
+      PUT) remote_put_file "$local_file" "$remote" && ok=1 ;;
+      MKDIR) remote_mkdir "$remote" && ok=1 ;;
+      REMOVE) remote_delete "$remote" && ok=1 ;;
+      *) return 1 ;;
+    esac
+    if [ "$ok" -eq 1 ]; then
+      printf '@BUNDLE OK\n'
+    else
+      printf '@BUNDLE ERROR %s\n' "${STATUS_TEXT//$'\n'/ }"
+      return 1
+    fi
+  done
+}
+
 install_system_unattended() {
   local source=$LOCAL_PATH name kind size remote_name deadline reason
   local canonical=(USBDISK.APP SETUP.APP FOCAL.APP BASIC.APP LANGVM.APP LANGIN.APP SRCEDIT.APP WBMP.APP MARKDOWN.APP
@@ -3649,6 +3689,7 @@ install_system_unattended() {
 parse_args() {
   while [ "$#" -gt 0 ]; do
     case "$1" in
+      --bundle-session) BUNDLE_SESSION=1; shift ;;
       --install-system) [ "$#" -ge 2 ] || die 'после --install-system нужен каталог'; INSTALL_SYSTEM_DIR=$2; shift 2 ;;
       --expect-profile) [ "$#" -ge 2 ] || die 'после --expect-profile нужен профиль'; EXPECTED_PROFILE=$2; shift 2 ;;
       --expect-build) [ "$#" -ge 2 ] && valid_hex_id "$2" 8 || die '--expect-build requires eight hexadecimal digits'; EXPECTED_BUILD_ID=$(uppercase "$2"); shift 2 ;;
@@ -3680,10 +3721,10 @@ main() {
   load_config
   # Unattended installation must not inherit a port/device from a past TUI.
   parse_args "$@"
-  if [ -n "$INSTALL_SYSTEM_DIR" ]; then
+  if [ -n "$INSTALL_SYSTEM_DIR" ] || [ "$BUNDLE_SESSION" -eq 1 ]; then
     [ "$PORT_EXPLICIT" -eq 1 ] || PORT=
     [ "$DEVICE_SELECTOR_EXPLICIT" -eq 1 ] || DEVICE_SELECTOR=
-    LOCAL_PATH=$INSTALL_SYSTEM_DIR
+    [ -z "$INSTALL_SYSTEM_DIR" ] || LOCAL_PATH=$INSTALL_SYSTEM_DIR
   fi
   # Явный порт — самостоятельный selector пользователя. Сохранённый ID от
   # прежней сессии не должен запрещать открыть указанную legacy-прошивку;
@@ -3710,6 +3751,11 @@ main() {
   fi
   SESSION_DIR=$(mktemp -d "${TMPDIR:-/tmp}/mkc.XXXXXX") || die 'не удалось создать временный каталог'
   shopt -s nullglob dotglob
+
+  if [ "$BUNDLE_SESSION" -eq 1 ]; then
+    bundle_session || die "${STATUS_TEXT:-Program session failed}"
+    return 0
+  fi
 
   if [ -n "$INSTALL_SYSTEM_DIR" ]; then
     install_system_unattended || die "${STATUS_TEXT:-System installation failed}"

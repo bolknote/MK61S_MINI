@@ -663,5 +663,8 @@ printf '%s -DMK61_PORTABLE_UI_FONTS=%s -DMK61_APP_LOCAL_FLOAT_MATH=%s\n' \
   done
 } > "$bundle_dir/build.apps"
 
+python3 "$root/tools/program_bundle.py" --bundle "$bundle_dir" --write-capabilities \
+  --profile "$profile" --mcu "$target_mcu" --firmware "$bundle_dir/$firmware_name"
+
 printf 'Built F401 bundle: %s\n' "$bundle_dir"
 find "$bundle_dir" -maxdepth 2 -type f -print | sort

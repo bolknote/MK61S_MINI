@@ -2,6 +2,9 @@
 
 Этот каталог используется пользовательскими сборщиками, CI и тестами:
 
+- `program_collection.py`, `program-catalog.json`, `program-capabilities.json`,
+  `write-program-capabilities.ps1` — подбор, экспорт и безопасное обновление
+  программ для конкретной сборки; [контракт](../../doc/design/Program-bundle-installation.md);
 - `m8_codec.py` — кодек файловых/терминальных данных M8;
 - `build_mk61_module_pack.sh` — сборка нативного упаковщика APP;
 - `build_vm_program.cpp`, `vm_program_builder.hpp` — сборка исследовательских VM-образов;

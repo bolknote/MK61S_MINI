@@ -63,6 +63,7 @@ $script:RemotePath = '/'
 $script:MockRoot = ''
 $script:ClassifyOnly = ''
 $script:ListPortsOnly = $false
+$script:BundleSession = $false
 $script:InstallSystemDir = ''
 $script:CheckSystemDir = ''
 $script:ExpectedProfile = ''
@@ -170,6 +171,7 @@ function Parse-Arguments {
                 if (++$i -ge $Arguments.Count) { throw '--classify requires a value' }
                 $script:ClassifyOnly = [string]$Arguments[$i]
             }
+            '--bundle-session' { $script:BundleSession = $true }
             '--install-system' {
                 if (++$i -ge $Arguments.Count) { throw '--install-system requires a directory' }
                 $script:InstallSystemDir = [string]$Arguments[$i]
@@ -624,7 +626,7 @@ function Start-DirectSerial {
                 }
                 $identity = Get-DirectSerialMk61Identity `
                     $serial $probeMilliseconds 24 -RequireStructured:(
-                        -not [string]::IsNullOrEmpty($script:InstallSystemDir))
+                        $script:BundleSession -or -not [string]::IsNullOrEmpty($script:InstallSystemDir))
                 if ($null -ne $identity) { break }
                 $lastFailure = 'нет ответа identity'
             } catch {
@@ -1429,6 +1431,43 @@ function Get-ValidatedSystemBundle {
         throw 'System requires both LANGVM.APP and LANGIN.APP'
     }
     return $system
+}
+
+function Invoke-ProgramBundleSession {
+    if ([string]::IsNullOrEmpty($script:MockRoot) -and
+        ($script:DetectedProfile -cne $script:ExpectedProfile -or
+         $script:DetectedBuildId -ine $script:ExpectedBuildId)) {
+        throw 'program bundle does not match firmware profile/build'
+    }
+    [Console]::WriteLine('@BUNDLE READY')
+    while ($null -ne ($line = [Console]::ReadLine())) {
+        $parts = $line.Split([char]9)
+        if ($parts.Length -ne 3 -or -not $parts[1].StartsWith('/') -or
+            $parts[1].Contains('..') -or $parts[1].Contains('"') -or $parts[1].Contains('\')) {
+            throw 'invalid program bundle request'
+        }
+        $operation, $remote, $localFile = $parts
+        $ok = $false
+        try {
+            switch ($operation) {
+                'LIST' {
+                    $rows = @(Get-RemoteEntries $remote | ForEach-Object { "$($_.Kind)`t$($_.Size)`t$($_.Name)" })
+                    [IO.File]::WriteAllLines($localFile, [string[]]$rows, $script:Utf8NoBom)
+                    $ok = $true
+                }
+                'GET' { $ok = Receive-RemoteFile $remote $localFile }
+                'PUT' { $ok = Send-RemoteFile $localFile $remote }
+                'MKDIR' { $ok = New-RemoteDirectory $remote }
+                'REMOVE' { $ok = Remove-RemoteItem $remote }
+                default { throw 'unknown program bundle operation' }
+            }
+            if (-not $ok) { throw $script:StatusText }
+            [Console]::WriteLine('@BUNDLE OK')
+        } catch {
+            [Console]::WriteLine('@BUNDLE ERROR ' + $_.Exception.Message.Replace("`n", ' '))
+            throw
+        }
+    }
 }
 
 function Install-SystemBundle {
@@ -3495,8 +3534,8 @@ function Invoke-MkcApplication {
         [Console]::WriteLine("unsupported: $reason")
         return 1
     }
-    if (-not [string]::IsNullOrEmpty($script:InstallSystemDir)) {
-        $script:LocalPath = $script:InstallSystemDir
+    if (($script:BundleSession -or -not [string]::IsNullOrEmpty($script:InstallSystemDir))) {
+        if (-not [string]::IsNullOrEmpty($script:InstallSystemDir)) { $script:LocalPath = $script:InstallSystemDir }
         if (-not $script:PortExplicit) { $script:Port = '' }
         if (-not $script:DeviceSelectorExplicit) { $script:DeviceSelector = '' }
     }
@@ -3525,18 +3564,18 @@ function Invoke-MkcApplication {
             do {
                 $ports = @(Get-CdcPorts)
                 if ($ports.Count -gt 0 -or
-                    [string]::IsNullOrEmpty($script:InstallSystemDir) -or
+                    ([string]::IsNullOrEmpty($script:InstallSystemDir) -and -not $script:BundleSession) -or
                     [DateTime]::UtcNow -ge $deadline) { break }
                 Start-Sleep -Milliseconds 500
             } while ($true)
-            if (-not [string]::IsNullOrEmpty($script:InstallSystemDir) -and
+            if (($script:BundleSession -or -not [string]::IsNullOrEmpty($script:InstallSystemDir)) -and
                 -not $script:DeviceSelectorExplicit -and $ports.Count -gt 1) {
                 throw 'Найдено несколько CDC-устройств; оставьте подключённым только нужный MK61s.'
             }
             if ($ports.Count -gt 0) { $script:Port = $ports[0] }
         }
         if ([string]::IsNullOrEmpty($script:Port)) {
-            if (-not [string]::IsNullOrEmpty($script:InstallSystemDir)) {
+            if (($script:BundleSession -or -not [string]::IsNullOrEmpty($script:InstallSystemDir))) {
                 throw 'CDC-порт не найден; укажите --port COMx'
             }
             $script:Port = Read-Host 'MKC: устройство 0483:5740 / CAFE:4003 не найдено. Укажите COM-порт'
@@ -3545,13 +3584,14 @@ function Invoke-MkcApplication {
     }
     $script:SessionDir = Join-Path ([IO.Path]::GetTempPath()) ('mkc.' + [guid]::NewGuid().ToString('N'))
     [void](New-Item -ItemType Directory -Path $script:SessionDir)
-    $script:AllowDevicePrompt = [string]::IsNullOrEmpty($script:InstallSystemDir) -and
+    $script:AllowDevicePrompt = ([string]::IsNullOrEmpty($script:InstallSystemDir) -and -not $script:BundleSession) -and
         -not [Console]::IsInputRedirected
     if (-not (Start-Monitor)) {
         if ([string]::IsNullOrWhiteSpace($script:StatusText)) { throw "не удалось открыть $($script:Port)" }
         throw $script:StatusText
     }
-    if (-not [string]::IsNullOrEmpty($script:InstallSystemDir)) {
+    if (($script:BundleSession -or -not [string]::IsNullOrEmpty($script:InstallSystemDir))) {
+        if ($script:BundleSession) { Invoke-ProgramBundleSession; return 0 }
         Install-SystemBundle $script:InstallSystemDir
         return 0
     }

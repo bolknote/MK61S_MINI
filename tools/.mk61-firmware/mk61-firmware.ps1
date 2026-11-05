@@ -15,6 +15,9 @@ try {
     $OutputEncoding = $script:Utf8NoBom
 } catch {}
 
+$script:ProgramPort = ''
+$script:ProgramVerify = $false
+
 function Get-EnvironmentOrDefault {
     param([string]$Name, [string]$Default)
     $value = [Environment]::GetEnvironmentVariable($Name)
@@ -2401,6 +2404,38 @@ function Test-SystemBundleReady {
     return $true
 }
 
+function Invoke-ProgramBundle {
+    param([ValidateSet('preview','install','all')][string]$Action)
+    if (-not (Ensure-HardwareProfile)) { return $false }
+    if (-not (Test-SystemBundleReady)) { Show-LastLogTail 20; return $false }
+    $bundle = Get-ProfileBundleDir $script:State.Profile
+    if (-not (Test-Path -LiteralPath (Join-Path $bundle 'program-capabilities.json'))) {
+        [Console]::Error.WriteLine('Rebuild the firmware bundle: program capabilities are missing.')
+        return $false
+    }
+    $python = Get-Python3Command
+    if ($null -eq $python) { [Console]::Error.WriteLine('Program selection requires Python 3.10+.'); return $false }
+    $arguments = @($python.PrefixArguments) + @((Join-Path $script:ProjectRoot 'tools/program_bundle.py'), '--bundle', $bundle)
+    if ($script:ProgramVerify) { $arguments += '--verify' }
+    if ($script:ProgramPort) { $arguments += @('--port', $script:ProgramPort) }
+    if ($Action -eq 'all') {
+        & $python.Executable @arguments | Out-Host
+        if ($LASTEXITCODE -ne 0) { return $false }
+        if (-not (Install-SystemApps)) { return $false }
+    }
+    if ($Action -ne 'preview') { $arguments += '--install' }
+    if ($env:MK61_TEST_MKC_DEVICE) { $arguments += @('--mock', $env:MK61_TEST_MKC_DEVICE) }
+    if ($script:State.Interactive) {
+        $success = Invoke-ExternalWithProgress 'Комплект программ' `
+            'Подбор и передача совместимых файлов' $script:LastLog `
+            'indeterminate' $python.Executable ([string[]]$arguments)
+        Show-Log 'Комплект программ' $script:LastLog
+        return $success
+    }
+    & $python.Executable @arguments | Out-Host
+    return $LASTEXITCODE -eq 0
+}
+
 function Install-SystemApps {
     if (-not (Ensure-HardwareProfile)) { return $false }
     if (-not (Test-SystemBundleReady)) {
@@ -2414,6 +2449,12 @@ function Install-SystemApps {
         '-File', (Join-Path $script:ProjectRoot 'tools/.mkc/mkc.ps1'),
         '--install-system', (Join-Path (Get-ProfileBundleDir $script:State.Profile) 'System'),
         '--expect-profile', $identity, '--wait-ready', '45')
+    $capabilityPath = Join-Path (Get-ProfileBundleDir $script:State.Profile) 'program-capabilities.json'
+    if (Test-Path -LiteralPath $capabilityPath) {
+        $metadata = Get-Content -LiteralPath $capabilityPath -Raw | ConvertFrom-Json
+        $installerArgs += @('--expect-build', [string]$metadata.build_id, '--expect-profile', [string]$metadata.device_profile)
+    }
+    if ($script:ProgramPort) { $installerArgs += @('--port', $script:ProgramPort) }
     if ((Get-ExternalizeUsbDiskValue) -eq 0) { $installerArgs += '--resident-usbdisk' }
     if (-not [string]::IsNullOrEmpty($env:MK61_TEST_MKC_DEVICE)) {
         $installerArgs += @('--mock', $env:MK61_TEST_MKC_DEVICE)
@@ -2592,6 +2633,9 @@ function Get-MainMenuItems {
         [pscustomobject]@{ Tag = 'deps'; Label = "$($script:Glyphs.MenuCheck) Проверить зависимости" }
         [pscustomobject]@{ Tag = 'setup'; Label = "$($script:Glyphs.MenuInstall) Установить GNU Arm GCC" }
         [pscustomobject]@{ Tag = 'log'; Label = "$($script:Glyphs.MenuLog) Последний журнал" }
+        [pscustomobject]@{ Tag = 'preview_programs'; Label = '≡ Состав совместимых программ' }
+        [pscustomobject]@{ Tag = 'install_programs'; Label = '↓ Установить программы' }
+        [pscustomobject]@{ Tag = 'install_all'; Label = '↓ Установить System и программы' }
         [pscustomobject]@{ Tag = 'quit'; Label = "$($script:Glyphs.MenuQuit) Выход" }
     )
     return $items
@@ -2620,6 +2664,9 @@ function Invoke-InteractiveMain {
             'upload' { [void](Upload-Selected) }
             'build' { [void](Build-Selected) }
             'install_apps' { [void](Install-SystemApps) }
+            'preview_programs' { [void](Invoke-ProgramBundle preview) }
+            'install_programs' { [void](Invoke-ProgramBundle install) }
+            'install_all' { [void](Invoke-ProgramBundle all) }
             'mcu' { [void](Choose-Mcu) }
             'platform' { [void](Choose-Platform) }
             'screen' { [void](Choose-Screen) }
@@ -2646,6 +2693,9 @@ Usage:
   tools\mk61-firmware.cmd --mcu MCU --profile ID --build
   tools\mk61-firmware.cmd --mcu MCU --profile ID --upload
   tools\mk61-firmware.cmd --mcu MCU --profile ID --install-apps
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --preview-programs
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --install-programs [--verify-programs]
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --install-all [--verify-programs]
   tools\mk61-firmware.cmd --detect
   tools\mk61-firmware.cmd --setup
   tools\mk61-firmware.cmd --list-profiles
@@ -2660,6 +2710,10 @@ MCU:
   f411 (512 KiB Flash, components resident by default) or f401
   (256 KiB Flash, components as /System APP by default)
 
+Installation options:
+  --port COMx        explicit serial port
+  --verify-programs  additionally download and compare program files
+
 Environment overrides:
   MK61_ARDUINO_CLI, MK61_DFU_UTIL, MK61_STM32_PROGRAMMER, MK61_BUILD_ROOT,
   MK61_OUTPUT_DIR, MK61_CONFIG_FILE, MK61_APP_MANIFESTS,
@@ -2672,6 +2726,8 @@ The Bash and PowerShell tools share .mk61-firmware.conf.
 function Invoke-Application {
     param([string[]]$CliArguments)
     $action = 'tui'
+    $script:ProgramVerify = $false
+    $script:ProgramPort = ''
     for ($index = 0; $index -lt $CliArguments.Count; $index++) {
         $argument = $CliArguments[$index]
         switch -Regex ($argument) {
@@ -2696,6 +2752,14 @@ function Invoke-Application {
             '^(--build|-Build)$' { $action = 'build' }
             '^(--upload|-Upload)$' { $action = 'upload' }
             '^(--install-apps|-InstallApps)$' { $action = 'install-apps' }
+            '^--preview-programs$' { $action = 'preview-programs' }
+            '^--install-programs$' { $action = 'install-programs' }
+            '^--install-all$' { $action = 'install-all' }
+            '^--verify-programs$' { $script:ProgramVerify = $true }
+            '^--port$' {
+                if (++$index -ge $CliArguments.Count) { throw '--port requires a value' }
+                $script:ProgramPort = $CliArguments[$index]
+            }
             '^(--detect|-Detect)$' { $action = 'detect' }
             '^(--setup|-Setup)$' { $action = 'setup' }
             '^(--list-profiles|-ListProfiles)$' { $action = 'list-profiles' }
@@ -2741,6 +2805,12 @@ function Invoke-Application {
             $script:State.Interactive = $false
             Load-Config
             if (Upload-Selected) { return 0 } else { return 1 }
+        }
+        { $_ -in @('preview-programs','install-programs','install-all') } {
+            $script:State.Interactive = $false
+            Load-Config
+            $mode = @{ 'preview-programs'='preview'; 'install-programs'='install'; 'install-all'='all' }[$action]
+            if (Invoke-ProgramBundle $mode) { return 0 } else { return 1 }
         }
         'install-apps' {
             $script:State.Interactive = $false

@@ -1,0 +1,25 @@
+{
+  "format": 1,
+  "groups": {
+    "library": {"requires": []},
+    "games": {"requires": []},
+    "examples": {"requires": []},
+    "app": {"requires": ["apps"]},
+    "sheets": {"requires": ["sheet"]},
+    "CHIP8": {"requires": ["chip8", "graphics"]},
+    "Fonts": {"requires": ["fonts", "graphics"]}
+  },
+  "games": {
+    "High Noon": ["basic", "graphics"],
+    "Turochamp": ["basic", "graphics"]
+  },
+  "apps": {
+    "ELIZA": {"requires": ["apps"]},
+    "SHEET": {"requires": ["apps", "graphics", "math", "s1"]}
+  },
+  "extensions": {
+    ".m61": [], ".bin": [], ".tbi": ["basic"], ".foc": ["focal"],
+    ".md": ["markdown"], ".txt": [], ".wbmp": ["bitmap"],
+    ".fmk": ["graphics"], ".ch8": ["chip8", "graphics"], ".mks": ["sheet"]
+  }
+}

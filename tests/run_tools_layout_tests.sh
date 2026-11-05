@@ -29,6 +29,7 @@ expected="$(
     mkc.cmd \
     package_picocalc.py \
     program_pack.py \
+    program_bundle.py \
     sync_picocalc_clock.py \
     vfat_diagnostic.py | LC_ALL=C sort
 )"

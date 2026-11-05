@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "abi": 6,
+  "features": {
+    "focal": "MK61_ENABLE_FOCAL",
+    "basic": "MK61_ENABLE_TINYBASIC",
+    "chip8": "MK61_ENABLE_CHIP8",
+    "markdown": "MK61_ENABLE_MARKDOWN_VIEWER",
+    "wbmp": "MK61_ENABLE_WBMP_VIEWER",
+    "usb_screen": "MK61_ENABLE_USB_SCREEN",
+    "fonts": "MK61_PORTABLE_UI_FONTS"
+  },
+  "graphics_defines": ["MK61_DISPLAY_UC1609", "DISPLAY_UC1609", "MK61_BOARD_CLASSIC_V2", "MK61_BOARD_CLASSIC_V3", "MK61_BOARD_40TH"],
+  "system_apps": {
+    "focal": ["MK61_FOCAL_AS_APP", "FOCAL.APP"],
+    "basic": ["MK61_TINYBASIC_AS_APP", "BASIC.APP"],
+    "chip8": ["MK61_CHIP8_AS_APP", "CHIP8.APP"],
+    "markdown": ["MK61_MARKDOWN_VIEWER_AS_APP", "MARKDOWN.APP"],
+    "wbmp": ["MK61_WBMP_VIEWER_AS_APP", "WBMP.APP"]
+  }
+}

@@ -183,6 +183,11 @@ assert len(data) == 64 + stored and memory <= 20 * 1024, "container size"
 assert 0 < code_size <= stored and relocations <= stored - code_size, "relocation tail"
 PY
   done
+  python3 "$root/tools/program_bundle.py" --bundle "$bundle" --write-capabilities \
+    --profile "$profile" --mcu f411 --firmware "$bundle/$bundle_name.bin" \
+    --compile-commands "$build_path/compile_commands.json"
+  rm -rf "$bundle/Programs"
+  python3 "$root/tools/program_bundle.py" --bundle "$bundle" --export "$bundle/Programs"
   (cd "$output_dir" && zip -qr "$bundle_name.zip" "$bundle_name")
 }
 

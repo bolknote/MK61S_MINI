@@ -136,6 +136,9 @@ Usage:
   tools/mk61-firmware.cmd --mcu MCU --profile ID --build
   tools/mk61-firmware.cmd --mcu MCU --profile ID --upload
   tools/mk61-firmware.cmd --mcu MCU --profile ID --install-apps
+  tools/mk61-firmware.cmd --mcu MCU --profile ID --preview-programs
+  tools/mk61-firmware.cmd --mcu MCU --profile ID --install-programs [--verify-programs]
+  tools/mk61-firmware.cmd --mcu MCU --profile ID --install-all [--verify-programs]
   tools/mk61-firmware.cmd --detect                detect MK61s/STM32 DFU
   tools/mk61-firmware.cmd --setup                 install standalone GNU Arm build dependencies
   tools/mk61-firmware.cmd --list-profiles         print supported profiles
@@ -147,6 +150,8 @@ Options:
   --profile ID    mini-v3-a00, mini-v3-a02, mini-v3-ws0010,
                   mini-v2-a00, mini-v2-a02,
                   classic-v2, classic-v3, or 40th
+  --port PATH     explicit serial port for software installation
+  --verify-programs  additionally download and compare program files
   --plain         use the built-in shell UI even when dialog/whiptail exists
   -h, --help      show this help
 
@@ -2408,6 +2413,41 @@ validate_system_bundle() {
   done
 }
 
+program_bundle_command() {
+  local action=$1 bundle
+  ensure_hardware_profile || return 1
+  validate_system_bundle || return 1
+  bundle=$(profile_bundle_dir "$PROFILE")
+  if [ ! -f "$bundle/program-capabilities.json" ]; then
+    printf 'Rebuild the firmware bundle: program capabilities are missing.\n' >&2
+    return 1
+  fi
+  local arguments=("$PROJECT_ROOT/tools/program_bundle.py" --bundle "$bundle")
+  [ -z "$PROGRAM_PORT" ] || arguments+=(--port "$PROGRAM_PORT")
+  [ "$PROGRAM_VERIFY" -eq 0 ] || arguments+=(--verify)
+  case "$action" in
+    preview) ;;
+    install) arguments+=(--install) ;;
+    all)
+      # Selection and all source checks must succeed before changing /System.
+      python3 "${arguments[@]}" >/dev/null || return 1
+      install_system_apps || return 1
+      arguments+=(--install)
+      ;;
+    *) return 1 ;;
+  esac
+  [ -z "${MK61_TEST_MKC_DEVICE:-}" ] || arguments+=(--mock "$MK61_TEST_MKC_DEVICE")
+  if [ "$INTERACTIVE" -eq 1 ]; then
+    local result=0
+    mkdir -p "$(dirname "$LAST_LOG")" || return 1
+    run_with_progress 'Комплект программ' 'Подбор и передача совместимых файлов' \
+      "$LAST_LOG" indeterminate python3 "${arguments[@]}" || result=$?
+    ui_log 'Комплект программ' "$LAST_LOG"
+    return "$result"
+  fi
+  python3 "${arguments[@]}"
+}
+
 install_system_apps_worker() {
   local artifact identity
   artifact=$(profile_artifact_name "$PROFILE" "$MCU") || return 1
@@ -2417,6 +2457,15 @@ install_system_apps_worker() {
   local arguments=(
     --install-system "$(profile_bundle_dir "$PROFILE")/System"
     --expect-profile "$identity" --wait-ready 45)
+  if [ -f "$(profile_bundle_dir "$PROFILE")/program-capabilities.json" ]; then
+    local build_id
+    build_id=$(sed -n 's/.*"build_id": *"\([0-9A-Fa-f]*\)".*/\1/p' "$(profile_bundle_dir "$PROFILE")/program-capabilities.json")
+    arguments+=(--expect-build "$build_id")
+    local bundle_identity
+    bundle_identity=$(sed -n 's/.*"device_profile": *"\([a-z0-9-]*\)".*/\1/p' "$(profile_bundle_dir "$PROFILE")/program-capabilities.json")
+    arguments+=(--expect-profile "$bundle_identity")
+  fi
+  [ -z "$PROGRAM_PORT" ] || arguments+=(--port "$PROGRAM_PORT")
   [ "$(externalize_usbdisk_value)" -ne 0 ] || arguments+=(--resident-usbdisk)
   if [ -n "${MK61_TEST_MKC_DEVICE:-}" ]; then
     arguments+=(--mock "$MK61_TEST_MKC_DEVICE")
@@ -2570,6 +2619,9 @@ interactive_main() {
       deps     '✓ Проверить зависимости'
       setup    '↓ Установить GNU Arm GCC'
       log      '≡ Последний журнал'
+      preview_programs '≡ Состав совместимых программ'
+      install_programs '↓ Установить программы'
+      install_all '↓ Установить System и программы'
       quit     '× Выход'
     )
     if platform_valid "$HARDWARE_PLATFORM" && screen_valid "$SCREEN_KIND" && \
@@ -2588,6 +2640,9 @@ DFU: $DFU_STATUS
       upload) upload_selected || true ;;
       build) build_selected || true ;;
       install_apps) install_system_apps || true ;;
+      preview_programs) program_bundle_command preview || true ;;
+      install_programs) program_bundle_command install || true ;;
+      install_all) program_bundle_command all || true ;;
       mcu) choose_mcu || true ;;
       platform) choose_platform || true ;;
       screen) choose_screen || true ;;
@@ -2608,6 +2663,8 @@ DFU: $DFU_STATUS
 
 ACTION=tui
 FORCE_PLAIN=0
+PROGRAM_VERIFY=0
+PROGRAM_PORT=
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --mcu)
@@ -2622,10 +2679,12 @@ while [ "$#" -gt 0 ]; do
       CLI_PROFILE=1
       shift 2
       ;;
-    --build|--upload|--install-apps|--detect|--setup|--list-profiles|--show-config)
+    --build|--upload|--install-apps|--preview-programs|--install-programs|--install-all|--detect|--setup|--list-profiles|--show-config)
       ACTION=${1#--}
       shift
       ;;
+    --port) [ "$#" -ge 2 ] || { printf 'Error: --port needs a value.\n' >&2; exit 2; }; PROGRAM_PORT=$2; shift 2 ;;
+    --verify-programs) PROGRAM_VERIFY=1; shift ;;
     --plain)
       FORCE_PLAIN=1
       shift
@@ -2676,6 +2735,16 @@ case "$ACTION" in
     select_ui
     load_config
     upload_selected
+    ;;
+  preview-programs|install-programs|install-all)
+    INTERACTIVE=0
+    select_ui
+    load_config
+    case "$ACTION" in
+      preview-programs) program_bundle_command preview ;;
+      install-programs) program_bundle_command install ;;
+      install-all) program_bundle_command all ;;
+    esac
     ;;
   install-apps)
     INTERACTIVE=0
