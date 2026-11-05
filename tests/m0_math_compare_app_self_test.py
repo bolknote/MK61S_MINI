@@ -52,8 +52,13 @@ def main():
     p.add_argument('--kinds',type=int,nargs='+',help='Explicit ABI kinds for a restricted benchmark; default requires all 13 kinds.')
     p.add_argument('--rom',type=Path,help='Captured factory ROM, required only by direct-ROM experiments.')
     p.add_argument('--rom-metadata',type=Path)
+    p.add_argument('--bootrom',type=Path,help='Execute actual SDK ROM bit/memory helpers')
+    p.add_argument('--bounded-warmup',action='store_true')
+    p.add_argument('--warmup-pairs-cap',type=int,default=32768)
     a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
     assert bool(a.rom)==bool(a.rom_metadata),'ROM bytes and verified metadata must be supplied together'
+    assert not (a.rom and a.bootrom)
+    assert 0<a.warmup_pairs_cap<=32768 and (not a.bounded_warmup or a.cache_counters)
     frozen=a.benchmark/'TIMING-fixture.c'
     source_fixture=a.fixture or (frozen if frozen.is_file() else ROOT/'tests/fixtures/m0_math_compare_benchmark.c')
     round_definition=re.search(r'^#define ROUNDS (\d+)U$',source_fixture.read_text(),re.MULTILINE)
@@ -69,6 +74,8 @@ def main():
     has_warmup='MK61_M0_TIMING_WARMUP_US' in source_fixture.read_text()
     if has_warmup:flags+=['-DMK61_M0_TIMING_WARMUP_US=1000']
     if a.cache_counters:flags+=['-DMK61_M0_TIMING_CACHE=1']
+    if a.bounded_warmup:flags+=['-DMK61_M0_TIMING_BOUNDED_WARMUP=1',
+        '-DMK61_M0_TIMING_WARMUP_PAIRS_CAP='+str(a.warmup_pairs_cap)]
     objects=[]
     for source in (source_fixture,ROOT/'sdk/portable/memory.c',shim):
         obj=a.output/(source.name+'.o');objects.append(obj)
@@ -101,7 +108,7 @@ def main():
             uc.mem_write(x,bytes([y&255])*n if operation=='memset' else bytes(uc.mem_read(y,n)))
             uc.reg_write(UC_ARM_REG_PC,uc.reg_read(UC_ARM_REG_LR))
     m=(AppMachine(a.benchmark/'firmware/mk61s-picocalc-pico-h.elf',a.rom,a.rom_metadata) if a.rom else
-       AppMachine(a.benchmark/'firmware/mk61s-picocalc-pico-h.elf',True))
+       AppMachine(a.benchmark/'firmware/mk61s-picocalc-pico-h.elf',True,bootrom=a.bootrom))
     fixture.load(m.uc)
     if a.cache_counters:
         m.uc.mem_map(0x14000000,4096)
@@ -160,19 +167,30 @@ def main():
                 for h in hooks:m.uc.hook_del(h)
             assert status==0 and result is not None,(kind,status)
             version=(2 if a.cache_counters else 1)+(2 if rounds==12 else 0)
-            result_offset=40+16*rounds+(32*rounds if a.cache_counters else 0)
+            if a.bounded_warmup:version=5
+            header_bytes=48 if a.bounded_warmup else 40
+            result_offset=header_bytes+16*rounds+(32*rounds if a.cache_counters else 0)
             h=struct.unpack_from('<10I',result);assert h[:7]==(0x4D305250,version,header[2],kind,count,1,rounds),h
             assert h[7]==int(negative) and h[8]==(0 if negative else 0xFFFFFFFF),h
             assert len(result)==result_offset+16*count
             # The synthetic timer advances100 us per read: the1000-us
             # warm-up has9passes, in addition to verification and timed rounds.
             passes=1+(9 if has_warmup else 0)+rounds
-            assert reached==[count*passes,count*passes],(kind,reached)
+            expected_calls=count*passes
+            if a.bounded_warmup:
+                pairs=min(count*9,a.warmup_pairs_cap)
+                assert struct.unpack_from('<2I',result,40)==(pairs,0)
+                expected_calls=count*(1+rounds)+pairs
+            assert reached==[expected_calls,expected_calls],(kind,reached)
             assert h[9]==(1000 if has_warmup else 0),h
-            assert struct.unpack_from('<'+'I'*(4*rounds),result,40)==(100,)*(4*rounds)
+            assert struct.unpack_from('<'+'I'*(4*rounds),result,header_bytes)==(100,)*(4*rounds)
             for i in range(count):assert struct.unpack_from('<Q',result,result_offset+16*i)[0]==struct.unpack_from('<Q',original,32+24*i+16)[0]
             if not negative:
-                parsed=decode(result,dict(chunk,cases=count,loops=1),original)
+                if a.bounded_warmup:
+                    from m0_sincos_timing import decode_v5
+                    parsed=decode_v5(result,dict(chunk,cases=count,loops=1),original,
+                        minimum_warmup_us=1000,pairs_cap=a.warmup_pairs_cap)
+                else:parsed=decode(result,dict(chunk,cases=count,loops=1),original)
                 if a.cache_counters:
                     assert all(v['cache']['median_misses_per_call']==0 and v['cache']['median_accesses_per_call']==0 for v in parsed['timings'].values())
             rows.append(dict(kind=kind,operation=chunk['operation'],negative=negative,calls=reached))
@@ -180,6 +198,7 @@ def main():
     report=dict(status='PASS',cases=rows,cache_counters=a.cache_counters,warmup_tested=has_warmup,
         rounds=rounds,wire_version=version,
         tested_kinds=sorted(selected),all_abi_kinds_tested=expected_kinds==set(range(13)),
+        bounded_warmup=a.bounded_warmup,warmup_pairs_cap=a.warmup_pairs_cap if a.bounded_warmup else None,
         scope='Real ARM math and timing APP source. Timer/storage/UI/XIP counters mocked; this is a protocol and ABI test, not a cycle benchmark.')
     if a.rom:
         report['rom_sha256']=hashlib.sha256(a.rom.read_bytes()).hexdigest()

@@ -244,24 +244,51 @@ __attribute__((optimize("Os"),noinline)) static U checked_trig_table(CheckedTrig
   unsigned error=1+a.error;
   if(h) {
     const bool negative=bool(h>>63);const U linear=negative?U(0)-h:h,magnitude=linear>>8;
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+    if(linear<(U(1)<<32)) {
+      // Near a table center, the nonlinear remainder is <1/128 Q70.
+      // One narrow first-order correction has error <4.5+2^-30 Q70;
+      // table flooring still leaves the complete bound below six units.
+      const U odd=(wide32(uint32_t((op?s:c)>>32),uint32_t(linear))+(1U<<29))>>30;
+      value=negative!=bool(op)?r96_sub_low(value,odd):r96_add_low(value,odd);
+      error=6+a.error;
+    } else
+#endif
+    {
     const uint32_t t=uint32_t(magnitude>>20);
     const U square=wide32(t,t),cross=wide32(t,uint32_t(magnitude)&0xFFFFFU);
     const uint32_t fraction=((uint32_t(square)&0x3FFFU)<<10)+(uint32_t(cross>>9)&0xFFFFFFU);
     const U z=(square>>14)+(cross>>33)+((fraction+(1U<<23))>>24);
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+    // Qfplib's short residual corrections motivate bounded limb products
+    // here. Retain the Q70 tail and reuse our six-MULS product, error <35/64.
+    // The one possible z==2^48 endpoint is an exact rounded shift.
+    const U cube=z<(U(1)<<48)?mk61_m0_log_cube70(linear,z):(linear+(1U<<21))>>22;
+#else
     const U cube=math62_product(z,magnitude);
+#endif
     const uint32_t zr=uint32_t((z+(1U<<17))>>18);
     const uint32_t fourth=uint32_t((wide32(zr,zr)+(U(1)<<33))>>34);
     const uint32_t fifth=uint32_t((wide32(fourth,t)+(U(1)<<41))>>42);
     const U sh=linear-((math62_third(cube)+1)>>1)+
       (wide32(fifth+60,0x88888889U)>>38);
     const U ch=((z+1)>>1)-(wide32(fourth+12,0xAAAAAAABU)>>36);
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+    // ch<2^47: dropping eight coefficient bits adds <255/32768 Q70.
+    // The narrow product contributes <17/32+2^-22, the odd product <=6.5.
+    // Together with the tighter cube this still fits the existing guard.
+    const U even=mk61_m0_log_product54(ch,base>>8);
+    const U odd=mk61_m0_trig_product62(op?s:c,sh);
+#else
     const U even=math62_product(base,ch),odd=math62_product(op?s:c,sh);
+#endif
     value=r96_sub_low(value,even);
     value=negative!=bool(op)?r96_sub_low(value,odd):r96_add_low(value,odd);
     // Square <0.751, cube <2.501, fourth <0.563, fifth <0.501
     // Q70 units; the complete evaluation error is below twelve units.
     // |sin'|,|cos'| <= 1 adds at most the Q70 argument error.
     error=12+a.error;
+    }
   }
   // On this path |r| >= 1/64; sin(r) can be just below 1/64,
   // giving a 64-bit value, and all other results have 65..71 bits.

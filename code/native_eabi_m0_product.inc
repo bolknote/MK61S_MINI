@@ -41,7 +41,7 @@
  adcs r7,r3
 .endm
 
-function mk61_m0_product62
+.macro bounded_product62_body
  push {r4-r7,lr}
  mov r4,r8
  mov r5,r9
@@ -105,7 +105,25 @@ function mk61_m0_product62
  mov r10,r6
  mov r11,r7
  pop {r4-r7,pc}
+.endm
+
+function mk61_m0_product62
+ bounded_product62_body
 end mk61_m0_product62
+
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+// Sin/cos need a private placement of this unchanged body: its original
+// cache indices overlap argument code, leaving no way for some table rows.
+// Keep the shared entry and all its existing users at their original address.
+.section .m0_trig_product,"ax",%progbits
+.p2align 2
+.global mk61_m0_trig_product62
+.type mk61_m0_trig_product62,%function
+.thumb_func
+mk61_m0_trig_product62:
+ bounded_product62_body
+end mk61_m0_trig_product62
+#endif
 
 // For a <= 2^48 only three digits from a are needed. At the endpoint,
 // the top digit is 0x10000 and each 32-bit MULS still fits exactly.

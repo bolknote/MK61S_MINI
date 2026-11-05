@@ -1,5 +1,9 @@
 // Private tangent product with a separately certified <=6.5-unit enclosure.
 __attribute__((const)) U mk61_m0_product62(U a,U b);
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+// Identical product body placed with sin/cos to avoid XIP set conflicts.
+__attribute__((const)) U mk61_m0_trig_product62(U a,U b);
+#endif
 // Logarithm residual products: a <= 2^41 (Q46) or a <= 2^48 (Q54).
 // Enclosures are certified by generate_m0_log70_table.py.
 __attribute__((const)) U mk61_m0_log_product46(U a,U b);

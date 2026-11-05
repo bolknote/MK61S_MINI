@@ -13,13 +13,25 @@
 #ifndef MK61_M0_TIMING_WARMUP_US
 #define MK61_M0_TIMING_WARMUP_US 1000000U
 #endif
+#ifdef MK61_M0_TIMING_BOUNDED_WARMUP
+#define REPORT_HEADER_BYTES 48U
+#ifndef MK61_M0_TIMING_WARMUP_PAIRS_CAP
+#define MK61_M0_TIMING_WARMUP_PAIRS_CAP 32768U
+#endif
+#else
+#define REPORT_HEADER_BYTES 40U
+#endif
 #ifdef MK61_M0_TIMING_CACHE
+#ifdef MK61_M0_TIMING_BOUNDED_WARMUP
+#define REPORT_VERSION 5U
+#else
 #define REPORT_VERSION 4U
-#define RESULTS_OFFSET (40U+48U*ROUNDS)
+#endif
+#define RESULTS_OFFSET (REPORT_HEADER_BYTES+48U*ROUNDS)
 static uint32_t last_hits,last_accesses;
 #else
 #define REPORT_VERSION 3U
-#define RESULTS_OFFSET (40U+16U*ROUNDS)
+#define RESULTS_OFFSET (REPORT_HEADER_BYTES+16U*ROUNDS)
 #endif
 
 typedef union { uint64_t bits;double number; } D;
@@ -28,6 +40,9 @@ typedef struct { uint64_t a,b,expected; } Vector;
 enum { BINARY,UNARY,I32_D,U32_D,I64_D,U64_D,D_I32,D_U32,D_I64,D_U64,F_D,D_F,COMPARE };
 static struct {
     uint32_t magic,version,group,kind,cases,loops,rounds,failures,first,warmup_us;
+#ifdef MK61_M0_TIMING_BOUNDED_WARMUP
+    uint32_t warmup_pairs,warmup_reserved;
+#endif
     uint32_t raw[2][ROUNDS],control[2][ROUNDS];
 #ifdef MK61_M0_TIMING_CACHE
     uint32_t hits[2][ROUNDS],accesses[2][ROUNDS];
@@ -124,6 +139,9 @@ NO_TABLES int main(void) {
     if(mk61_api->file_read(file.id,sizeof(h),(uint8_t*)inputs,h[4]*sizeof(Vector))!=h[4]*sizeof(Vector)) return MK61_APP_IO_ERROR;
     output.magic=UINT32_C(0x4D305250);output.version=REPORT_VERSION;output.group=h[2];output.kind=h[3];
     output.cases=h[4];output.loops=h[5];output.rounds=ROUNDS;output.failures=0;output.first=UINT32_MAX;output.warmup_us=0;
+#ifdef MK61_M0_TIMING_BOUNDED_WARMUP
+    output.warmup_pairs=0;output.warmup_reserved=0;
+#endif
     for(unsigned i=0;i<h[4];++i) {
         output.results[i][0]=invoke(h[6],h[3],inputs[i]);
         output.results[i][1]=invoke(h[7],h[3],inputs[i]);
@@ -139,10 +157,19 @@ NO_TABLES int main(void) {
     const uint32_t warmup_begin=micros();
     while((output.warmup_us=micros()-warmup_begin)<MK61_M0_TIMING_WARMUP_US) {
         for(unsigned i=0;i<h[4];++i) {
+#ifdef MK61_M0_TIMING_BOUNDED_WARMUP
+            if(output.warmup_pairs>=MK61_M0_TIMING_WARMUP_PAIRS_CAP) break;
+#endif
             sink=invoke(h[6],h[3],inputs[i]);
             sink=invoke(h[7],h[3],inputs[i]);
+#ifdef MK61_M0_TIMING_BOUNDED_WARMUP
+            ++output.warmup_pairs;
+#endif
             if(!(i&31)) mk61_api->service();
         }
+#ifdef MK61_M0_TIMING_BOUNDED_WARMUP
+        if(output.warmup_pairs>=MK61_M0_TIMING_WARMUP_PAIRS_CAP) mk61_api->service();
+#endif
     }
     for(unsigned round=0;round<ROUNDS;++round) {
         /* Each consecutive pair contains both library orders. Keep the

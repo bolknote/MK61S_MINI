@@ -66,6 +66,18 @@ SECTIONS {
         *(.m0_trig_table)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
     } > FLASH
+    /* The shared product at cache offset0xc8 aliases argument code.
+     * A table row at that offset then causes three-way contention.
+     * Place a byte-identical private entry in the unused sin/cos span;
+     * shared products and pow keep their original addresses and bytes. */
+    .m0_trig_product_extension 0x10171c00 : {
+        *(.m0_trig_product)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(ADDR(.m0_trig_core_extension) + SIZEOF(.m0_trig_core_extension) <= ADDR(.m0_trig_product_extension),
+           "Sin/cos hot code overlaps its private bounded product")
+    ASSERT(ADDR(.m0_trig_product_extension) + SIZEOF(.m0_trig_product_extension) <= ADDR(.m0_trig_core_extension) + 0x2000,
+           "Sin/cos bounded product exceeds its8KiB cache index span")
     .m0_trig_tangent_extension 0x10172a00 : {
         *(.m0_trig_inverse)
         *(.m0_trig_tan_small)
