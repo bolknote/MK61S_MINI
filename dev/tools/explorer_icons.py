@@ -27,10 +27,10 @@ PROGRAM_FOLDERS={
 # These directories are produced by builders rather than copied from programs/.
 BUNDLE_FOLDERS={**PROGRAM_FOLDERS, 'apps':'applications', 'System':'system',
     'urq':'games','apps/URQ':'games',
-    'Games/URQ':'games','licenses/ryu':'license','licenses/urq':'license',
+    'games/URQ':'games','licenses/ryu':'license','licenses/urq':'license',
     'System/VMCache':'cache', 'licenses':'license', 'licenses/ui-fonts':'font-license'}
 for _urq_game in ('house_that_jack_built', 'trapped_in_time_ru'):
-    for _urq_prefix in ('apps/URQ', 'Games/URQ'):
+    for _urq_prefix in ('apps/URQ', 'games/URQ'):
         BUNDLE_FOLDERS[_urq_prefix + '/' + _urq_game] = 'games'
     BUNDLE_FOLDERS['licenses/urq/' + _urq_game] = 'license'
 
