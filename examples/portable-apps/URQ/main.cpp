@@ -367,7 +367,7 @@ void draw_game() {
 #if !defined(MK61_TARGET_PICOCALC)
   if(app.compact && !*app.notice) {
     footer=app.paging?M8("OK/→:далее ESC:выход"):
-        app.actions?M8("←→:пункт OK:выбор USER:меню"):
+        app.actions?M8("←→ OK:выбор ESC:текст USER:меню"):
         status==urq::Status::CHOICE?M8("OK:действия ←→:текст USER:меню"):
         status==urq::Status::INPUT?M8("OK:ввод K:язык F:аА USER"):footer;
     if(status==urq::Status::INPUT && !app.paging) {
@@ -726,6 +726,11 @@ void input_event(unsigned kind, uint8_t value = 0) {
 }
 void game_key(int key) {
   app.notice[0]=0;
+#if !defined(MK61_TARGET_PICOCALC)
+  if(app.compact && app.actions && key==MK61_APP_KEY_ESC) {
+    app.actions=false;app.dirty=true;return;
+  }
+#endif
   if(key == MK61_APP_KEY_ESC || key == MK61_APP_KEY_USER) { open_menu(); return; }
 #if defined(MK61_TARGET_PICOCALC)
   if(app.engine.state().status==urq::Status::CHOICE) {

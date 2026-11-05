@@ -156,6 +156,11 @@ int main(int argc,char** argv) {
   assert(engine.state().depth==2);
   begin_typing(false);
   if(classic) {
+#if !defined(MK61_TARGET_PICOCALC)
+    classic_view::Canvas canvas{app.services,nullptr};
+    const auto dash=canvas.glyph(0x97),minus=canvas.glyph('-');
+    assert(dash.advance==minus.advance && !memcmp(dash.pixels,minus.pixels,sizeof(dash.pixels)));
+#endif
     draw_game();assert(app.rows==5 && app.body==3 && !frames.empty());
     const auto input=frames.back();
     keys={MK61_APP_KEY_RIGHT,MK61_APP_KEY_SHIFT_RIGHT,MK61_APP_KEY_LEFT,MK61_APP_KEY_OK};
@@ -208,6 +213,7 @@ int main(int argc,char** argv) {
 #if !defined(MK61_TARGET_PICOCALC)
   if(classic) {
     draw_game();assert(!app.actions);
+    const auto reading=frames.back();
     game_key(MK61_APP_KEY_DIGIT_2);assert(engine.state().status==urq::Status::CHOICE && !app.actions);
     game_key(MK61_APP_KEY_OK);draw_game();assert(app.actions && app.selected==0 && app.action_next);
     const auto choices=frames.back();
@@ -215,6 +221,7 @@ int main(int argc,char** argv) {
     game_key(MK61_APP_KEY_LEFT);draw_game();assert(!app.menu && frames.back()==choices);
     for(unsigned i=0;app.selected==0 && i<20;++i) {game_key(MK61_APP_KEY_RIGHT);draw_game();}
     assert(app.selected==1);game_key(MK61_APP_KEY_LEFT);draw_game();assert(app.selected==0);
+    game_key(MK61_APP_KEY_ESC);draw_game();assert(!app.actions && frames.back()==reading);
   }
 #endif
   finish_session();assert(!live_leases);
