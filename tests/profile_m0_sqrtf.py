@@ -75,7 +75,7 @@ def corpus():
 
 
 def exhaustive(path,directory,toolchain,subnormals=False):
-    sys.path.insert(0,str(ROOT/'tools'));from build_picocalc import compiler_bin
+    sys.path.insert(0,str(ROOT));from tools.firmware.picocalc.build_picocalc import compiler_bin
     directory.mkdir(parents=True,exist_ok=True)
     source=directory/'sqrt-block.c';target=directory/'sqrt-block.elf'
     source.write_text('''#include <stdint.h>
