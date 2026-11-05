@@ -198,7 +198,12 @@ unsigned advance(char ch) {
 uint32_t wrap(uint32_t at, char* out, unsigned limit) {
   unsigned used = 0, pixels = 0, last_space = 0;
   char ch;
-  const unsigned columns = 126;
+  const unsigned columns =
+#if defined(MK61_TARGET_PICOCALC)
+      mk61_api->display_columns();
+#else
+      126;
+#endif
   while(app.history.get(at + used, ch) && ch != '\n' && ch != '\r' && used < 126 && used < columns) {
     const unsigned size = advance(ch);
     if(used && pixels + size > limit) break;
@@ -257,6 +262,23 @@ void end_typing() {
 #endif
   app.typing = true;
 }
+#if defined(MK61_TARGET_PICOCALC)
+unsigned caption_line(const char* text,unsigned at,char* out) {
+  unsigned n=0,pixels=0,space=0;
+  const unsigned width=app.width-advance('>')-3*advance('9');
+  while(text[at+n] && text[at+n]!='\n' && text[at+n]!='\r' && n+4<mk61_api->display_columns() && n<120) {
+    const unsigned step=advance(text[at+n]);
+    if(n && pixels+step>width) break;
+    if(text[at+n]==' ') space=n;
+    pixels+=step;++n;
+  }
+  if(text[at+n] && text[at+n]!=' ' && space) n=space;
+  memcpy(out,text+at,n);out[n]=0;at+=n;
+  while(text[at]==' ' || text[at]=='\r') ++at;
+  if(text[at]=='\n') ++at;
+  return at;
+}
+#endif
 void draw_game() {
   geometry();
 #if !defined(MK61_TARGET_PICOCALC)
@@ -310,6 +332,18 @@ void draw_game() {
 #endif
     {
     const unsigned available = app.rows > first + 1 ? app.rows - first - 1 : 1;
+#if defined(MK61_TARGET_PICOCALC)
+    unsigned index=app.selected,offset=app.menu;app.action_next=0;
+    for(unsigned row=0;row<available && index<count;++row) {
+      const char* caption=app.engine.text(app.engine.state().actions[indices[index]].caption);
+      char text[128],numbered[128];const unsigned next=caption_line(caption,offset,text);
+      if(offset && row) urq::copy_string(numbered,text);
+      else mk61_app_snprintf(app.services,numbered,sizeof(numbered),"%u %s",index+1,text);
+      line(first+row,numbered,index==app.selected?'>':' ');
+      if(caption[next]) {offset=next;if(index==app.selected) app.action_next=uint16_t(next);}
+      else {if(index==app.selected) app.action_next=0;++index;offset=0;}
+    }
+#else
     const unsigned top = app.selected >= available ? app.selected - available + 1 : 0;
     for(unsigned row = 0; row < available && top + row < count; ++row) {
       const auto& a = app.engine.state().actions[indices[top + row]];
@@ -318,6 +352,7 @@ void draw_game() {
                         app.engine.text(a.caption));
       line(first + row, caption, top + row == app.selected ? '>' : ' ');
     }
+#endif
     }
   }
   const char* footer = *app.notice ? app.notice : app.paging ? M8("Далее:OK") :
@@ -326,6 +361,8 @@ void draw_game() {
 #if defined(MK61_TARGET_PICOCALC)
   if(status==urq::Status::INPUT && !app.paging && !*app.notice)
     footer=app.russian?M8("RU Enter:ввод Tab:меню F8:язык"):M8("EN Enter:ввод Tab:меню F8:язык");
+  else if(status==urq::Status::CHOICE && app.action_next && !*app.notice)
+    footer=M8("→:дочитать Enter:выбор Tab:меню");
 #endif
 #if !defined(MK61_TARGET_PICOCALC)
   if(app.compact && !*app.notice) {
@@ -690,6 +727,13 @@ void input_event(unsigned kind, uint8_t value = 0) {
 void game_key(int key) {
   app.notice[0]=0;
   if(key == MK61_APP_KEY_ESC || key == MK61_APP_KEY_USER) { open_menu(); return; }
+#if defined(MK61_TARGET_PICOCALC)
+  if(app.engine.state().status==urq::Status::CHOICE) {
+    if(key==MK61_APP_KEY_RIGHT && app.action_next) {app.menu=app.action_next;app.dirty=true;return;}
+    if(key==MK61_APP_KEY_LEFT && app.menu) {app.menu=0;app.dirty=true;return;}
+    if(up(key) || down(key)) app.menu=0;
+  }
+#endif
 #if !defined(MK61_TARGET_PICOCALC)
   if(app.compact && app.engine.state().status==urq::Status::CHOICE) {
     if(key==MK61_APP_KEY_OK && !app.actions) {app.actions=true;app.dirty=true;return;}
