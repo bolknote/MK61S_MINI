@@ -4,17 +4,17 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$launcher = Join-Path $root 'tools/build-gcc.cmd'
-$backend = Join-Path $root 'tools/.mk61-gcc/build.ps1'
-$cmakeProject = Join-Path $root 'tools/.mk61-gcc/CMakeLists.txt'
-$ramCheck = Join-Path $root 'tools/.mk61-gcc/check-ram.cmake'
-$flashCheck = Join-Path $root 'tools/.mk61-gcc/check-flash.cmake'
-$toolchain = Join-Path $root 'tools/.mk61-gcc/arm-none-eabi.cmake'
-$firmwareMain = Join-Path $root 'tools/.mk61-gcc/firmware_main.cpp.in'
+$launcher = Join-Path $root 'tools/firmware/stm32/build-gcc.cmd'
+$backend = Join-Path $root 'tools/firmware/stm32/build.ps1'
+$cmakeProject = Join-Path $root 'tools/firmware/stm32/CMakeLists.txt'
+$ramCheck = Join-Path $root 'tools/firmware/stm32/check-ram.cmake'
+$flashCheck = Join-Path $root 'tools/firmware/stm32/check-flash.cmake'
+$toolchain = Join-Path $root 'tools/firmware/stm32/arm-none-eabi.cmake'
+$firmwareMain = Join-Path $root 'tools/firmware/stm32/firmware_main.cpp.in'
 $firmwarePowerShell = Join-Path $root `
-    'tools/.mk61-firmware/mk61-firmware.ps1'
+    'tools/firmware/cli/mk61-firmware.ps1'
 $firmwareShell = Join-Path $root `
-    'tools/.mk61-firmware/mk61-firmware.sh'
+    'tools/firmware/cli/mk61-firmware.sh'
 $releaseWorkflow = Join-Path $root `
     '.github/workflows/firmware-release.yml'
 $releaseManifest = Join-Path $root 'dev/lib/release-contract.json'
@@ -25,7 +25,7 @@ $arduinoSetupAction = Join-Path $root `
     '.github/actions/setup-arduino-cli/action.yml'
 $arduinoSetupScript = Join-Path $root `
     '.github/actions/setup-arduino-cli/install.ps1'
-$dependencyInstaller = Join-Path $root 'tools/install_arduino_dependencies.ps1'
+$dependencyInstaller = Join-Path $root 'tools/arduino/install_arduino_dependencies.ps1'
 $pwsh = (Get-Process -Id $PID).Path
 
 function Assert-True {
@@ -97,7 +97,7 @@ Assert-True ($parseErrors.Count -eq 0) (
 
 $launcherText = [IO.File]::ReadAllText($launcher)
 Assert-True ($launcherText -match
-    '\A:; exec pwsh -NoLogo -NoProfile -File "\$\(dirname "\$0"\)/\.mk61-gcc/build\.ps1" "\$@"') `
+    '\A:; exec pwsh -NoLogo -NoProfile -File "\$\(dirname "\$0"\)/build\.ps1" "\$@"') `
     'direct GCC launcher is not a shell/batch polyglot'
 Assert-True ($launcherText -match
     '(?i)powershell\.exe -NoLogo -NoProfile -ExecutionPolicy Bypass') `
@@ -262,7 +262,7 @@ Assert-True ($cmakeText -match
 Assert-True ($cmakeText -notmatch '--export-dynamic-symbol-list') `
     'resident still exports C++ symbols to a private System APP ABI'
 Assert-True (-not (Test-Path -LiteralPath (
-    Join-Path $root 'tools/.mk61-gcc/system-app-exports.list'))) `
+    Join-Path $root 'tools/firmware/stm32/system-app-exports.list'))) `
     'obsolete resident symbol export list is still present'
 Assert-True ($cmakeText -match 'native-sdk\.cmake') `
     'CMake does not verify the pinned project SDK'
@@ -288,7 +288,7 @@ Assert-True ($cmakeText -match
 Assert-True ($firmwarePowerShellText -notmatch '--show-properties=expanded') `
     'PowerShell native frontend still resolves an Arduino board recipe'
 Assert-True ($firmwareShellText -match
-    'tools/build-gcc\.cmd[\s\S]+-BuildRoot') `
+    'tools/firmware/stm32/build-gcc\.cmd[\s\S]+-BuildRoot') `
     'macOS/Linux firmware frontend does not use the direct GCC backend'
 Assert-True ($firmwareShellText -match '-ProductBuild "\$product_build"') `
     'macOS/Linux firmware frontend does not request the F401 product policy'
@@ -398,7 +398,7 @@ Assert-True ($arduinoSetupScriptText -match
     'local Arduino CLI setup does not verify its downloaded archive'
 Assert-True (([regex]::Matches(
     $releaseWorkflowText,
-    'run:\s+tools/install_arduino_dependencies\.ps1')).Count -eq 1) `
+    'run:\s+tools/arduino/install_arduino_dependencies\.ps1')).Count -eq 1) `
     'legacy compatibility jobs lost their explicit Arduino dependency installer'
 Assert-True (([regex]::Matches($releaseWorkflowText, 'uses:\s+\./\.github/actions/setup-native-gcc')).Count -eq 4) `
     'native F401/F411 jobs do not share the independent GNU Arm installer'
@@ -417,7 +417,7 @@ Assert-True ($f401Job.Groups['body'].Value -notmatch
     '(?m)^\s+needs:') `
     'direct F401 GCC matrix is hidden when an unrelated host job fails'
 Assert-True (-not (Test-Path -LiteralPath (
-    Join-Path $root 'tools/.mk61-firmware/build-f401-native.ps1'))) `
+    Join-Path $root 'tools/firmware/cli/build-f401-native.ps1'))) `
     'obsolete Arduino-CLI F401 worker is still present'
 
 [Console]::WriteLine('gcc_build_tests: ok')

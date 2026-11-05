@@ -67,7 +67,7 @@ USB-сеанса запуск APP всё равно недопустим; кро
 
 ## Manifest-сборка
 
-`tools/build_f401_bundle.sh` умеет добавить собственные APP в полный комплект.
+`tools/firmware/stm32/build_f401_bundle.sh` умеет добавить собственные APP в полный комплект.
 Manifest задаёт имя, исходники и необязательный magic обработчика файла:
 
 ```text
@@ -96,19 +96,19 @@ magic C2
 Проверка manifest без сборки firmware:
 
 ```sh
-./tools/build_f401_bundle.sh --check-app-manifests \
+./tools/firmware/stm32/build_f401_bundle.sh --check-app-manifests \
   --app-manifest path/to/MYAPP/app.mk61
 ```
 
 Сборка комплекта:
 
 ```sh
-./tools/build_f401_bundle.sh --profile mini-v3-a00 \
+./tools/firmware/stm32/build_f401_bundle.sh --profile mini-v3-a00 \
   --app-manifest path/to/MYAPP/app.mk61
 ```
 
 В результате обычный APP всё равно собирается через
-`tools/build_portable_app.py` и получает ABI 6. Manifest не включает другой
+`tools/apps/portable/build_portable_app.py` и получает ABI 6. Manifest не включает другой
 ABI и не открывает приватные символы resident.
 
 ## Общий API

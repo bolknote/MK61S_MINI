@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Profile and qualify all remaining resident M0+ conversions, comparisons, ln and atan."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -23,7 +27,7 @@ p.add_argument('--require-no-gaps',action='store_true')
 args=p.parse_args();WORK=args.output_dir.resolve();WORK.mkdir(parents=True,exist_ok=True)
 sys.path[:0]=[str(ROOT/'tests'),str(ROOT/'tools')]
 from native_eabi_m0_arm_self_test import Machine,bits,real,f_bits,f_real
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 own_path=args.owned_elf.resolve()

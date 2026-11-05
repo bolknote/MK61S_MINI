@@ -5,7 +5,7 @@
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[1]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import hashlib
 import json
 import os
@@ -21,7 +21,7 @@ import zlib
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from build_picocalc_apps import APPS,ASSETS
+from tools.apps.system.build_picocalc_apps import APPS,ASSETS
 from explorer_icons import ARTWORK,BUNDLE_FOLDERS
 
 
@@ -39,7 +39,7 @@ class PackageTests(unittest.TestCase):
             (stale_urq/'catalog-report.json').write_text('{}')
             (target/'System/VMCache').mkdir(parents=True)
             (target/'System/old.txt').write_text('stale output, outside this Pico bundle')
-            command=[sys.executable,str(ROOT/'tools/package_picocalc.py'),'--directory',str(target)]
+            command=[sys.executable,str(ROOT/'tools/firmware/picocalc/package_picocalc.py'),'--directory',str(target)]
             subprocess.run(command,check=True,capture_output=True,text=True)
             version=json.loads((target/'manifest.json').read_text())['prototype_version']
             archive=target/f'mk61s-picocalc-pico-h-{version}.zip'

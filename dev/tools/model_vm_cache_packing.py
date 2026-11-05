@@ -12,7 +12,7 @@ Codec latencies and a viable production metadata layout remain separate gates.
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[2]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 from collections import Counter, OrderedDict
 from dataclasses import dataclass

@@ -59,8 +59,8 @@ printf 'remote\n' > "$work/device/edit.txt"
 printf '\033unsafe\n' > "$work/editor/control.txt"
 
 test -x "$root/tools/mkc.cmd"
-test -x "$root/tools/.mkc/mkc.sh"
-test -f "$root/tools/.mkc/mkc.ps1"
+test -x "$root/tools/mkc/mkc.sh"
+test -f "$root/tools/mkc/mkc.ps1"
 test ! -e "$root/tools/mkc.sh"
 test ! -e "$root/tools/mkc.ps1"
 test "$("$root/tools/mkc.cmd" --classify "$work/local/demo.foc")" = supported
@@ -115,7 +115,7 @@ case "$("$root/tools/mkc.cmd" --classify "$work/chip8-limits/HUGE.CH8" || true)"
   *) echo 'mkc: oversized CHIP-8 ROM was accepted' >&2; exit 1 ;;
 esac
 
-MKC_SOURCE_ONLY=1 MKC_CONFIG_FILE="$work/config" source "$root/tools/.mkc/mkc.sh"
+MKC_SOURCE_ONLY=1 MKC_CONFIG_FILE="$work/config" source "$root/tools/mkc/mkc.sh"
 SESSION_DIR="$work/session"
 MOCK_ROOT="$work/device"
 shopt -s nullglob dotglob
@@ -123,7 +123,7 @@ shopt -s nullglob dotglob
 # The terminal wire encoding is fixed.  Reintroducing the historical
 # `encoding utf-8` negotiation leaves its "Unknown command" response queued;
 # the following `ls` then reports a false connection failure.
-if grep -Eq 'encoding[[:space:]]+(utf-8|cp1251)' "$root/tools/.mkc/mkc.sh"; then
+if grep -Eq 'encoding[[:space:]]+(utf-8|cp1251)' "$root/tools/mkc/mkc.sh"; then
   echo 'mkc: obsolete terminal encoding negotiation was restored' >&2
   exit 1
 fi
@@ -826,7 +826,7 @@ if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1 &
       }
     }
     spawn env TERM=xterm-256color MKC_CONFIG_FILE=/dev/null \
-      pwsh -NoLogo -NoProfile -File "'"$root"'/tools/.mkc/mkc.ps1" \
+      pwsh -NoLogo -NoProfile -File "'"$root"'/tools/mkc/mkc.ps1" \
       --mock $env(MKC_TEST_DEVICE) --local $env(MKC_TEST_LOCAL)
     after 500
 
@@ -865,7 +865,7 @@ if [ "${MKC_SKIP_EXPECT_TESTS:-0}" != 1 ] && command -v expect >/dev/null 2>&1 &
       }
     }
     spawn env TERM=xterm-256color MKC_CONFIG_FILE=/dev/null \
-      pwsh -NoLogo -NoProfile -File "'"$root"'/tools/.mkc/mkc.ps1" \
+      pwsh -NoLogo -NoProfile -File "'"$root"'/tools/mkc/mkc.ps1" \
       --mock $env(MKC_TEST_DEVICE) --local $env(MKC_TEST_LOCAL)
     after 500
     send "\033\[B"

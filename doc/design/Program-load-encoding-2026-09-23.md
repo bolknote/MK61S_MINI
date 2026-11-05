@@ -90,7 +90,7 @@ bash tests/run_terminal_tests.sh
 bash tests/run_elite_tests.sh
 ```
 
-Общий настольный упаковщик: `tools/program_pack.py input.bin --address 0`.
+Общий настольный упаковщик: `tools/programs/program_pack.py input.bin --address 0`.
 Аппаратный тест: `tests/hil_program_load.py` с портом, public ID, build ID и
 явным `--confirm-ram-overwrite`. Логи, резервные файлы, PNG и аппаратные замеры
 текущего испытания: `/private/tmp/mk61-zin-20260923/hardware/`.
@@ -145,7 +145,7 @@ bash tests/run_elite_tests.sh
 | --- | ---: |
 | Встроенный bounded-optimal ZX0, каждый банк отдельно | 2882 |
 | Встроенный bounded-optimal ZX0, весь образ, окно 256 байт | 2474 |
-| Настольный оптимальный ZX0 из tools/.mk61-app/third_party/zx0, весь образ | 2144 |
+| Настольный оптимальный ZX0 из tools/apps/packer/third_party/zx0, весь образ | 2144 |
 | Raw DEFLATE, zlib level 9 | 2062 |
 | LZMA с заголовком FORMAT_ALONE | 2062 |
 | bzip2 | 2101 |

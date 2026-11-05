@@ -133,17 +133,17 @@ ABI 2 и ABI 3 **на исходниках после переноса**. Для
 из корня репозитория выполните:
 
 ```sh
-./tools/build-gcc.cmd -Profile mini-v3-a00 \
+./tools/firmware/stm32/build-gcc.cmd -Profile mini-v3-a00 \
   -Focal 1 -Basic 1 -Wbmp auto -Markdown 1 -Chip8 0 \
   -UsbScreen 0 -MathBackend 1 \
   -BuildRoot .build/size-mini -OutputDirectory .build/size-mini-output
 
-./tools/build-gcc.cmd -Profile classic-v3 \
+./tools/firmware/stm32/build-gcc.cmd -Profile classic-v3 \
   -Focal 1 -Basic 1 -Wbmp auto -Markdown 1 -Chip8 1 \
   -UsbScreen 0 -MathBackend 1 \
   -BuildRoot .build/size-classic -OutputDirectory .build/size-classic-output
 
-./tools/build-gcc.cmd -Profile classic-v3 \
+./tools/firmware/stm32/build-gcc.cmd -Profile classic-v3 \
   -Focal 1 -Basic 1 -Wbmp auto -Markdown 0 -Chip8 1 \
   -UsbScreen 0 -MathBackend 1 \
   -BuildRoot .build/size-wbmp -OutputDirectory .build/size-wbmp-output

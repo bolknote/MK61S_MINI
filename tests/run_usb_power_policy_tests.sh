@@ -24,7 +24,7 @@ wrappers=(
   USBD_LL_DevDisconnected
 )
 builders=(
-  "$root/tools/.mk61-arduino-board/hardware/mk61/stm32/platform.txt"
+  "$root/tools/arduino/hardware/mk61/stm32/platform.txt"
   "$root/tests/run_f401_uc1609_compile_check.sh"
 )
 for wrapper in "${wrappers[@]}"; do
@@ -32,5 +32,5 @@ for wrapper in "${wrappers[@]}"; do
     grep -Fq -- "--wrap=$wrapper" "$builder"
   done
   grep -Fq -- "LINKER:--wrap=$wrapper" \
-    "$root/tools/.mk61-gcc/CMakeLists.txt"
+    "$root/tools/firmware/stm32/CMakeLists.txt"
 done

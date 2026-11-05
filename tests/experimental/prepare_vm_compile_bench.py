@@ -5,7 +5,7 @@
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[2]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 import hashlib
 import json
@@ -104,7 +104,7 @@ def main():
                     ','.join(str(x) for x in (len(case['data']),case['image_bytes'],case['image_crc']))+'},')
             header+=['};',f'static constexpr unsigned compile_source_count={len(selected)};']
             (app_dir/'vm_compile_fixture.hpp').write_text('\n'.join(header)+'\n')
-            subprocess.run([sys.executable,ROOT/'tools/build_portable_app.py',
+            subprocess.run([sys.executable,ROOT/'tools/apps/portable/build_portable_app.py',
                 '--name','VMCOMP','--shared-runtime','--source',ROOT/'tests/experimental/vm_compile_hil.cpp',
                 '--source',compiler,'--source',ROOT/'tests/experimental/vm_compile_support.c',
                 '--include',ROOT/'tests/experimental','--include',app_dir,

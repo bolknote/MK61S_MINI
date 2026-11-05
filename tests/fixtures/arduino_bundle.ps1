@@ -2,7 +2,7 @@ function New-Mk61TestArduinoBundle {
     param([string]$BuildPath, [string]$Bundle, [string]$Mcu = 'f401',
         [switch]$ResidentUsbDisk)
     $fixtureRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
-    . (Join-Path $fixtureRoot 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-system-bundle.ps1')
+    . (Join-Path $fixtureRoot 'tools/arduino/hardware/mk61/stm32/tools/mk61-system-bundle.ps1')
     $stage = Join-Path (Join-Path $BuildPath 'mk61-system-apps') $Bundle
     $system = Join-Path $stage 'System'
     [void][IO.Directory]::CreateDirectory($system)

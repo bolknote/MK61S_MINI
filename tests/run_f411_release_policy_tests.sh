@@ -55,9 +55,9 @@ grep -Fq -- '--system-dir "$build_path/bundle/System"' "$f401_matrix"
 grep -Fq 'MK61_REQUIRE_RESIDENT_CRC=1' "$matrix"
 grep -Fq 'analyze_stack_usage.py' "$matrix"
 grep -Fq 'usb=CDCgen,opt=oslto' \
-  "$root/tools/.mk61-firmware/mk61-firmware.sh"
+  "$root/tools/firmware/cli/mk61-firmware.sh"
 grep -Fq 'usb=CDCgen,opt=oslto' \
-  "$root/tools/.mk61-firmware/mk61-firmware.ps1"
+  "$root/tools/firmware/cli/mk61-firmware.ps1"
 # Every direct Generic STM32 recipe must install the owned USB bridge too.
 for script in "$o3_build" "$stock_linker_build" \
     "$root/tests/run_f401_uc1609_compile_check.sh"; do
@@ -112,11 +112,11 @@ grep -Fq 'MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))' \
   "$hot_core"
 grep -Fq '#ifndef MK61_F401_PRODUCT_BUILD' "$mixed_policy"
 grep -Fq 'MK61_REQUIRE_F411_SELECTIVE_O3=1' "$matrix"
-grep -Fq 'MK61_REQUIRE_F411_SELECTIVE_O3=1' "$root/tools/.mk61-gcc/CMakeLists.txt"
+grep -Fq 'MK61_REQUIRE_F411_SELECTIVE_O3=1' "$root/tools/firmware/stm32/CMakeLists.txt"
 grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3=1' \
   "$root/tests/run_f401_uc1609_compile_check.sh"
 grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3=1' \
-  "$root/tools/.mk61-gcc/CMakeLists.txt"
+  "$root/tools/firmware/stm32/CMakeLists.txt"
 grep -Fq 'MK61_F401_PRODUCT_BUILD=$product' \
   "$root/tests/run_f401_uc1609_compile_check.sh"
 grep -Fq 'check_core_native_hot_paths_elf.sh" "$elf"' "$f401_matrix"
@@ -128,7 +128,7 @@ grep -Fq 'check_no_resident_fmk_decoder_elf.sh' "$f401_matrix"
 grep -Fq 'check_no_resident_fmk_decoder_elf.sh' "$matrix"
 grep -Fq 'check_no_resident_fmk_decoder_elf.sh' "$o3_build"
 grep -Fq 'portable-layout.py' "$o3_build"
-grep -Fq 'standalone/resident.ld' "$root/tools/.mk61-gcc/CMakeLists.txt"
+grep -Fq 'standalone/resident.ld' "$root/tools/firmware/stm32/CMakeLists.txt"
 
 # Production STOP is selected by expected behavior in the manifest, not by a
 # second board-definition ladder in shell.

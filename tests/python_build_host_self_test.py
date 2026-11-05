@@ -11,7 +11,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 
 def load(name):
-    spec = importlib.util.spec_from_file_location(name, ROOT / "tools" / f"{name}.py")
+    spec = importlib.util.spec_from_file_location(name, ROOT / {"build_portable_app": "tools/apps/portable/build_portable_app.py",
+        "build_system_app_bundle": "tools/apps/system/build_system_app_bundle.py"}[name])
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -30,7 +31,7 @@ class PythonBuildHostTests(TestCase):
                         module.build(None)
                     message = str(error.exception)
                     self.assertIn(replacement, message)
-                    self.assertIn("tools/mk61-arduino-board.cmd", message)
+                    self.assertIn("tools/arduino/mk61-arduino-board.cmd", message)
                     self.assertIn("restart Arduino IDE", message)
                     run.assert_not_called()
 

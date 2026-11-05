@@ -49,7 +49,7 @@ jobs:
         uses: ./.github/actions/setup-native-gcc
       - name: Build native firmware
         run: |
-          python3 tools/.mk61-gcc/build-standalone.py \
+          python3 tools/firmware/stm32/build-standalone.py \
             --profile "${{ matrix.profile }}" --mcu f411 \
             --build-path ".build/no-arduino/${{ matrix.profile }}"
           python3 tests/check_standalone_sdk_build.py \
@@ -60,7 +60,7 @@ jobs:
             ".build/no-arduino/${{ matrix.profile }}/resident.map" --without-libc
       - name: Build matching portable System APPs
         run: |
-          python3 tools/build_system_app_bundle.py \
+          python3 tools/apps/system/build_system_app_bundle.py \
             --resident-elf ".build/no-arduino/${{ matrix.profile }}/resident.elf" \
             --compile-commands ".build/no-arduino/${{ matrix.profile }}/compile_commands.json" \
             --output-dir ".build/no-arduino/${{ matrix.profile }}/System"
@@ -245,7 +245,7 @@ jobs:
           $pythonTrap = Join-Path $env:RUNNER_TEMP 'mk61-no-python'
           $env:PATH = "$pythonTrap;$env:PATH"
           $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
-          & ./tools/build-gcc.cmd -Mcu f411 -Profile classic-v3 `
+          & ./tools/firmware/stm32/build-gcc.cmd -Mcu f411 -Profile classic-v3 `
             -BuildRoot (Join-Path $env:RUNNER_TEMP 'f411-native') `
             -OutputDirectory (Join-Path $env:RUNNER_TEMP 'f411-output')
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -331,7 +331,7 @@ jobs:
           # override: the board downloads/verifies its own GNU toolchain.
           # Its installed path and SDK both contain the Cyrillic sketchbook.
           & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
-            -File ./tools/.mk61-arduino-board/install.ps1
+            -File ./tools/arduino/install.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $safeCache = Assert-SafeBuildCache
           "MK61_IDE_TEST_CACHE=$safeCache" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -364,12 +364,12 @@ jobs:
             (Join-Path $installedTools 'mk61-app-postbuild.ps1'),
             '& py.exe -3 build_system_app_bundle.py')
           & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
-            -File ./tools/.mk61-arduino-board/install.ps1
+            -File ./tools/arduino/install.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if (Test-Path -LiteralPath $obsoleteSealer) {
             throw 'Windows upgrade retained the obsolete Python ELF sealer'
           }
-          & ./tools/mk61-arduino-board.cmd -Check
+          & ./tools/arduino/mk61-arduino-board.cmd -Check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & ./tests/arduino_legacy_fqbn_self_test.ps1 `
             -ConfigFile $ideConfig -Sketchbook $configuredSketchbook
@@ -439,7 +439,7 @@ jobs:
         shell: pwsh
         run: |
           $env:MK61_TEST_HOOK = Join-Path $env:GITHUB_WORKSPACE `
-            'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1'
+            'tools/arduino/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1'
           $env:MK61_TEST_SKETCH = Join-Path $env:GITHUB_WORKSPACE 'code'
           $env:MK61_TEST_BUNDLE = Join-Path $env:RUNNER_TEMP 'mk61-license-cleanup'
           $oldNotices = Join-Path $env:MK61_TEST_BUNDLE 'licenses/ui-fonts'
@@ -835,7 +835,7 @@ jobs:
         uses: ./.github/actions/setup-arduino-cli
       - name: Install compatibility board package
         shell: pwsh
-        run: tools/install_arduino_dependencies.ps1
+        run: tools/arduino/install_arduino_dependencies.ps1
       - name: Verify STM32F411 mixed O3 compatibility
         run: |
           MK61_F411_O3_BUILD_ROOT="$RUNNER_TEMP/f411-o3" \

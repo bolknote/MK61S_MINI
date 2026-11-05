@@ -8,7 +8,7 @@ import unittest
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location("licenses", ROOT / "tools/.fmk-font/package_ui_font_licenses.py")
+spec = importlib.util.spec_from_file_location("licenses", ROOT / "tools/fonts/package_ui_font_licenses.py")
 licenses = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(licenses)
 
@@ -35,11 +35,11 @@ class PackagingTest(unittest.TestCase):
                     self.assertEqual(reader.read(name), expected)
 
     def test_release_builders_include_notices(self):
-        self.assertIn("tools/.fmk-font/package_ui_font_licenses.py",
+        self.assertIn("tools/fonts/package_ui_font_licenses.py",
                       (ROOT / "tests/run_f411_release_matrix.sh").read_text())
         shell_builders = (
-            "tools/build_f401_bundle.sh",
-            "tools/.mk61-arduino-board/hardware/mk61/stm32/tools/"
+            "tools/firmware/stm32/build_f401_bundle.sh",
+            "tools/arduino/hardware/mk61/stm32/tools/"
             "mk61-app-postbuild.sh",
         )
         for name in shell_builders:
@@ -47,8 +47,8 @@ class PackagingTest(unittest.TestCase):
             self.assertIn("package_ui_font_licenses.py", text)
             self.assertIn("MK61_PORTABLE_UI_FONTS=", text)
         powershell_builders = (
-            "tools/.mk61-gcc/build.ps1",
-            "tools/.mk61-arduino-board/hardware/mk61/stm32/tools/"
+            "tools/firmware/stm32/build.ps1",
+            "tools/arduino/hardware/mk61/stm32/tools/"
             "mk61-app-postbuild.ps1",
         )
         for name in powershell_builders:
@@ -58,7 +58,7 @@ class PackagingTest(unittest.TestCase):
         wrapper = (ROOT / "system_apps/.tool/build.ps1").read_text()
         self.assertIn("'--ui-fonts', $UiFonts", wrapper)
         self.assertIn("--no-ui-fonts",
-                      (ROOT / "tools/build_portable_app.py").read_text())
+                      (ROOT / "tools/apps/portable/build_portable_app.py").read_text())
         workflow = (ROOT / ".github/workflows/firmware-release.yml").read_text()
         self.assertIn("test -s firmware/UI_FONT_LICENSES.zip", workflow)
         self.assertIn("firmware/*.zip", workflow)

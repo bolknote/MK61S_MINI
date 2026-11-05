@@ -6,6 +6,10 @@ precondition: it is called only when the original 128-bit rounding test was
 ambiguous. For resolved cases we force the 256-bit calculation directly.
 No production approximation, coefficient or final interval test is changed.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -18,7 +22,7 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'tools'),str(ROOT/'tests')]
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 import native_eabi_m0_arm_self_test as arm
 from m0_mpfr_oracle import Oracle
 from unicorn import UC_HOOK_CODE

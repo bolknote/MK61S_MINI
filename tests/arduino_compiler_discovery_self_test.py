@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('arduino_payload', ROOT / 'tools/.mk61-arduino-board/payload.py')
+spec = importlib.util.spec_from_file_location('arduino_payload', ROOT / 'tools/arduino/payload.py')
 payload = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(payload)
 
@@ -55,7 +55,7 @@ def main():
         config = work / 'IDE settings.yaml'
         with mock.patch.dict(os.environ, {'ARDUINO_DIRECTORIES_DATA': str(data),
                                          'MK61_ARDUINO_CONFIG_FILE': str(config)}), \
-                mock.patch.dict(sys.modules, {'install_gcc_dependencies': SimpleNamespace(install=install)}):
+                mock.patch.dict(sys.modules, {'tools.firmware.stm32.install_gcc_dependencies': SimpleNamespace(install=install)}):
             target = work / 'sketchbook/hardware/mk61/stm32'
             assert payload.arduino_data_directory() == data
             assert payload.compiler_path(ROOT, target, None, True) == good

@@ -1,0 +1,787 @@
+#requires -Version 5.1
+
+[CmdletBinding()]
+param(
+    [ValidateSet('f401', 'f411')]
+    [string]$Mcu = 'f401',
+
+    [string]$Profile = 'mini-v3-a00',
+
+    [ValidatePattern('^[a-z0-9][a-z0-9-]*$')]
+    [string]$ReleaseCase,
+
+    [ValidateSet('0', '1')]
+    [string]$Focal = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$Basic = '1',
+
+    [ValidateSet('auto', '0', '1')]
+    [string]$Wbmp = 'auto',
+
+    [ValidateSet('0', '1')]
+    [string]$Markdown = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$Chip8 = '0',
+
+    [ValidateSet('0', '1')]
+    [string]$Setup = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$FocalAsApp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$BasicAsApp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$WbmpAsApp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$MarkdownAsApp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$Chip8AsApp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$SetupAsApp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$ExplorerAsApp = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$UsbScreen = '0',
+
+    [ValidateSet('0', '1')]
+    [string]$Ws0010Graphics = '0',
+
+    [ValidateSet('0', '1')]
+    [string]$ExtendedFontSettings = '0',
+
+    [ValidateSet('0', '1')]
+    [string]$UserExplorer = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$MathBackend = '0',
+
+    [ValidateSet('0', '1')]
+    [string]$LocalFloatMath = '0',
+
+    [ValidateSet('0', '1')]
+    [string]$Lto = '1',
+
+    [ValidateSet('0', '1')]
+    [string]$ProductBuild = '0',
+
+    [string]$SdkPath,
+    [string]$CorePath,
+    [ValidateSet('auto', '0', '1')]
+    [string]$ExternalizeUsbDisk = 'auto',
+    [string]$ToolchainPath,
+    [string]$LibrariesPath,
+    [string]$BuildRoot,
+    [string]$OutputDirectory,
+
+    [ValidateRange(1, 128)]
+    [int]$Jobs = [Environment]::ProcessorCount,
+
+    [switch]$Clean,
+    [switch]$Check,
+    [switch]$Help
+)
+
+Set-StrictMode -Version 2.0
+$ErrorActionPreference = 'Stop'
+
+$script:BackendRoot = $PSScriptRoot
+$script:ProjectRoot = [IO.Path]::GetFullPath(
+    (Join-Path $script:BackendRoot '../../..'))
+$script:Utf8NoBom = New-Object Text.UTF8Encoding($false)
+$script:ReleaseManifest = $null
+$script:ToolchainVersion = $null
+
+function Show-Usage {
+    @'
+Build matched STM32F401/F411 firmware and System APP with GNU Arm GCC.
+Arduino IDE and arduino-cli are not invoked.
+
+Usage:
+  tools\firmware\stm32\build-gcc.cmd [-Profile ID] [options]
+
+Profiles and release budgets are defined by dev/lib/release-contract.json.
+Run `powershell -File dev/lib/release-contract.ps1 profiles` to list profile IDs.
+
+System APP:
+  -Focal 0|1       default 1
+  -Basic 0|1       default 1
+  -Wbmp auto|0|1   default auto; standalone viewer when Markdown=0
+  -Markdown 0|1    default 1; handles both T2 and I1 on graphics
+  -Chip8 0|1       default 0
+  -Setup 0|1       default 1
+  -FocalAsApp 0|1, -BasicAsApp 0|1, -WbmpAsApp 0|1,
+  -MarkdownAsApp 0|1, -Chip8AsApp 0|1
+                     0 embeds an enabled component; 1 packages it as APP
+  -SetupAsApp 0|1, -ExplorerAsApp 0|1
+                     placement for Settings and Explorer frontends
+
+Firmware options:
+  -UsbScreen 0|1
+  -Ws0010Graphics 0|1  WEH001602A 100x16 Markdown/WBMP qualification
+  -ExtendedFontSettings 0|1
+  -UserExplorer 0|1
+  -MathBackend 0|1    BINARY64 | CORE
+  -LocalFloatMath 0|1 local float ln/lg/exp/sqrt in FOCAL/BASIC APP
+  -Lto 0|1          default 1
+  -ProductBuild 0|1 omit qualification-only resident diagnostics; default 0
+
+Paths:
+  -Mcu f401|f411     default f401
+  -SdkPath DIR        pinned project header SDK (default third_party/stm32f4)
+  -ToolchainPath DIR  pinned xPack GNU Arm directory or its bin directory
+  -ExternalizeUsbDisk auto|0|1 (default: 1 on F401, 0 on F411)
+  -CorePath/-LibrariesPath are deprecated, accepted but unused
+  -BuildRoot DIR      default .build\gcc (F401), .build\gcc-f411 (F411)
+  -OutputDirectory DIR default .build/firmware
+
+Other:
+  -Jobs N
+  -Clean
+  -Check             validate dependencies without building
+  -Help
+
+Required in PATH: CMake 3.21 or newer and Ninja. When at least one System APP
+is enabled, macOS/Linux also requires a host C++17 compiler; Windows uses the
+repository's PowerShell/.NET APP packer and needs neither Python nor host C++.
+Required versions are read from dev/lib/release-contract.json.
+
+Environment overrides:
+  MK61_GCC_SDK, MK61_GCC_TOOLCHAIN,
+  MK61_GCC_BUILD_ROOT, MK61_OUTPUT_DIR, MK61_HOST_CXX
+'@ | Write-Host
+}
+
+function Stop-GccBuild {
+    param([Parameter(Mandatory = $true)][string]$Message)
+    throw "MK61s GCC build: $Message"
+}
+
+function Get-FullPath {
+    param([string]$Path, [string]$Base = $script:ProjectRoot)
+    if ([IO.Path]::IsPathRooted($Path)) {
+        return [IO.Path]::GetFullPath($Path)
+    }
+    return [IO.Path]::GetFullPath((Join-Path $Base $Path))
+}
+
+function Test-RequiredFile {
+    param([string]$Path, [string]$Description)
+    if ([string]::IsNullOrWhiteSpace($Path) -or
+        -not [IO.File]::Exists($Path)) {
+        Stop-GccBuild "$Description not found: $Path"
+    }
+}
+
+function Test-RequiredDirectory {
+    param([string]$Path, [string]$Description)
+    if ([string]::IsNullOrWhiteSpace($Path) -or
+        -not [IO.Directory]::Exists($Path)) {
+        Stop-GccBuild "$Description not found: $Path"
+    }
+}
+
+function Get-CommandPath {
+    param([string]$Name, [string]$Description)
+    $command = Get-Command $Name -CommandType Application `
+        -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($null -eq $command) {
+        Stop-GccBuild "$Description is not in PATH: $Name"
+    }
+    return $command.Source
+}
+
+function Invoke-GccTool {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string[]]$Arguments
+    )
+    & $Path @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        Stop-GccBuild (
+            "$([IO.Path]::GetFileName($Path)) failed with exit code " +
+            "$LASTEXITCODE")
+    }
+}
+
+function Get-FirstExistingDirectory {
+    param([string[]]$Candidates)
+    foreach ($candidate in $Candidates) {
+        if (-not [string]::IsNullOrWhiteSpace($candidate) -and
+            [IO.Directory]::Exists($candidate)) {
+            return [IO.Path]::GetFullPath($candidate)
+        }
+    }
+    return $null
+}
+
+function Get-ProfileInfo {
+    param([string]$Id)
+    $matches = @($script:ReleaseManifest.profiles | Where-Object {
+        $_.id -eq $Id
+    })
+    if ($matches.Count -ne 1) {
+        Stop-GccBuild "unsupported profile: $Id"
+    }
+    $selected = $matches[0]
+    return @{
+        Bundle = [string]$selected.artifacts.PSObject.Properties[$Mcu].Value
+        Flags = @($selected.defines | ForEach-Object { "-D$_" })
+        Definitions = @($selected.defines | ForEach-Object { [string]$_ })
+        Graphics = [bool]$selected.graphics
+        UiFonts = [bool]$selected.graphics
+    }
+}
+
+function Get-ReleaseCase {
+    param([string]$Id)
+    if ([string]::IsNullOrWhiteSpace($Id)) {
+        return $null
+    }
+    $matches = @($script:ReleaseManifest.cases | Where-Object {
+        $_.id -eq $Id
+    })
+    if ($matches.Count -ne 1) {
+        Stop-GccBuild "unknown release case: $Id"
+    }
+    $selected = $matches[0]
+    if ($Mcu -eq 'f411') {
+        Stop-GccBuild 'F411 release cases use build-standalone.py --release-case; this frontend accepts F411 direct profiles'
+    }
+    if ($selected.mcu -ne $Mcu -or $selected.builder -ne 'gcc') {
+        Stop-GccBuild "release case does not target $($Mcu): $Id"
+    }
+    if ($selected.profile -ne $Profile) {
+        Stop-GccBuild (
+            "release case $Id requires profile $($selected.profile), " +
+            "not $Profile")
+    }
+    return $selected
+}
+
+function Test-SafeBuildDirectory {
+    param([string]$Directory, [string]$Root)
+    $directoryValue = [IO.Path]::GetFullPath($Directory).TrimEnd(
+        [IO.Path]::DirectorySeparatorChar,
+        [IO.Path]::AltDirectorySeparatorChar)
+    $rootValue = [IO.Path]::GetFullPath($Root).TrimEnd(
+        [IO.Path]::DirectorySeparatorChar,
+        [IO.Path]::AltDirectorySeparatorChar)
+    $prefix = $rootValue + [IO.Path]::DirectorySeparatorChar
+    if (-not $directoryValue.StartsWith(
+            $prefix, [StringComparison]::OrdinalIgnoreCase)) {
+        Stop-GccBuild "unsafe build directory: $Directory"
+    }
+}
+
+function Remove-GeneratedBundleFiles {
+    param([string]$Directory, [string]$ResidentName)
+    $residentElfName = [IO.Path]::ChangeExtension($ResidentName, '.elf')
+    foreach ($name in @(
+            $ResidentName, $residentElfName, 'build.flags', 'build.apps')) {
+        $path = Join-Path $Directory $name
+        if ([IO.File]::Exists($path)) {
+            Remove-Item -LiteralPath $path -Force
+        }
+    }
+    $uiFontLicenses = Join-Path $Directory 'licenses/ui-fonts'
+    if ([IO.Directory]::Exists($uiFontLicenses)) {
+        Remove-Item -LiteralPath $uiFontLicenses -Recurse -Force
+    }
+    $licenses = Join-Path $Directory 'licenses'
+    if ([IO.Directory]::Exists($licenses) -and
+        @(Get-ChildItem -LiteralPath $licenses -Force).Count -eq 0) {
+        Remove-Item -LiteralPath $licenses -Force
+    }
+    $system = Join-Path $Directory 'System'
+    foreach ($name in @(
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT', 'LANGVM.APP', 'LANGIN.APP', 'SRCEDIT.APP', 'VMCache/VMSTORE.APP', 'TERMINAL.APP', 'CLOCK.APP'
+    )) {
+        $path = Join-Path $system $name
+        if ([IO.File]::Exists($path)) {
+            Remove-Item -LiteralPath $path -Force
+        }
+    }
+    if ([IO.Directory]::Exists($system) -and
+        @(Get-ChildItem -LiteralPath $system -Force).Count -eq 0) {
+        Remove-Item -LiteralPath $system
+    }
+    $customApps = Join-Path $Directory 'Apps'
+    if ([IO.Directory]::Exists($customApps)) {
+        Remove-Item -LiteralPath $customApps -Recurse -Force
+    }
+}
+
+function Get-CurrentPowerShell {
+    if ($PSVersionTable.PSEdition -eq 'Desktop') {
+        $candidate = Join-Path $PSHOME 'powershell.exe'
+        Test-RequiredFile $candidate 'Windows PowerShell'
+        return $candidate
+    }
+    $candidate = (Get-Process -Id $PID).Path
+    Test-RequiredFile $candidate 'PowerShell'
+    return $candidate
+}
+
+if ($Help) {
+    Show-Usage
+    exit 0
+}
+
+try {
+    $manifestPath = Join-Path $script:ProjectRoot 'dev/lib/release-contract.json'
+    Test-RequiredFile $manifestPath 'release contract manifest'
+    $python = $null
+    $contractTool = $null
+    $powerShell = Get-CurrentPowerShell
+    $powerShellContractTool = Join-Path $script:ProjectRoot `
+        'dev/lib/release-contract.ps1'
+    if ($env:OS -eq 'Windows_NT') {
+        Test-RequiredFile $powerShellContractTool `
+            'PowerShell release contract tool'
+        Invoke-GccTool $powerShell @(
+            '-NoLogo', '-NoProfile', '-File', $powerShellContractTool,
+            'validate', '-Manifest', $manifestPath)
+    } else {
+        $contractTool = Join-Path $script:ProjectRoot `
+            'dev/lib/release_contract.py'
+        Test-RequiredFile $contractTool 'release contract tool'
+        $python = Get-CommandPath 'python3' 'Python 3'
+        Invoke-GccTool $python @($contractTool, 'validate')
+    }
+    $script:ReleaseManifest = ConvertFrom-Json -InputObject (
+        [IO.File]::ReadAllText($manifestPath))
+    $script:ToolchainVersion = [string]$script:ReleaseManifest.toolchain.gnu_arm
+
+    if ($Mcu -eq 'f411') {
+        foreach ($entry in @{
+            Chip8='1'; UsbScreen='1'; MarkdownAsApp='0'; Chip8AsApp='0';
+            SetupAsApp='0'; ExplorerAsApp='0'
+        }.GetEnumerator()) {
+            if (-not $PSBoundParameters.ContainsKey($entry.Key)) {
+                Set-Variable -Name $entry.Key -Value $entry.Value
+            }
+        }
+    }
+    if ($ExternalizeUsbDisk -eq 'auto') {
+        $ExternalizeUsbDisk = if ($Mcu -eq 'f401') { '1' } else { '0' }
+    }
+    if ($Mcu -eq 'f401' -and $ExternalizeUsbDisk -ne '1') {
+        Stop-GccBuild 'F401 requires external USBDISK.APP'
+    }
+    $profileInfo = Get-ProfileInfo $Profile
+    $ws0010Bitmap = $Profile -eq 'mini-v3-ws0010' -and
+        $Ws0010Graphics -eq '1'
+    $fullGraphics = $profileInfo.Graphics -or $UsbScreen -eq '1'
+    $uiFonts = if ($profileInfo.UiFonts) { '1' } else { '0' }
+    $wbmpGraphics = $fullGraphics -or $ws0010Bitmap
+    if ($Wbmp -eq 'auto') {
+        $Wbmp = if ($wbmpGraphics -and $Markdown -ne '1') {
+            '1'
+        } else {
+            '0'
+        }
+    }
+    if ($Markdown -eq '1' -and $wbmpGraphics) {
+        $Wbmp = '0'
+    }
+    if (-not $wbmpGraphics -and $Wbmp -eq '1') {
+        Stop-GccBuild (
+            'WBMP requires UC1609, -UsbScreen 1, or WS0010 with ' +
+            '-Ws0010Graphics 1')
+    }
+    if (-not $fullGraphics -and $Chip8 -eq '1') {
+        Stop-GccBuild (
+            'CHIP-8 requires a UC1609 profile or -UsbScreen 1')
+    }
+    if ($Ws0010Graphics -eq '1' -and $Profile -ne 'mini-v3-ws0010') {
+        Stop-GccBuild (
+            '-Ws0010Graphics 1 requires profile mini-v3-ws0010')
+    }
+    if ($LocalFloatMath -eq '1' -and $MathBackend -ne '1') {
+        Stop-GccBuild '-LocalFloatMath 1 requires -MathBackend 1 (CORE)'
+    }
+    $focalApp = if ($Focal -eq '1' -and $FocalAsApp -eq '1') { '1' } else { '0' }
+    $basicApp = if ($Basic -eq '1' -and $BasicAsApp -eq '1') { '1' } else { '0' }
+    $wbmpApp = if ($Wbmp -eq '1' -and $WbmpAsApp -eq '1') { '1' } else { '0' }
+    $markdownApp = if ($Markdown -eq '1' -and $MarkdownAsApp -eq '1') { '1' } else { '0' }
+    $chip8App = if ($Chip8 -eq '1' -and $Chip8AsApp -eq '1') { '1' } else { '0' }
+    $setupApp = if ($Setup -eq '1' -and $SetupAsApp -eq '1') { '1' } else { '0' }
+    $systemRequested = $true
+    $releaseCaseInfo = Get-ReleaseCase $ReleaseCase
+    $caseDefinitions = @()
+    if ($null -ne $releaseCaseInfo) {
+        $caseDefineProperty = $releaseCaseInfo.PSObject.Properties['defines']
+        if ($null -ne $caseDefineProperty) {
+            $caseDefinitions = @($caseDefineProperty.Value)
+        }
+    }
+    $productBuild = if ($null -ne $releaseCaseInfo -and
+            [int]$releaseCaseInfo.product -eq 1) { '1' } else { $ProductBuild }
+    if ($null -ne $releaseCaseInfo) {
+        $actualFeatures = @{
+            focal = $Focal
+            basic = $Basic
+            wbmp = $Wbmp
+            markdown = $Markdown
+            chip8 = $Chip8
+            usb_screen = $UsbScreen
+            ws0010_graphics = $Ws0010Graphics
+            extended_font_settings = $ExtendedFontSettings
+            user_explorer = $UserExplorer
+            math_backend = $MathBackend
+            lto = $Lto
+        }
+        foreach ($name in $actualFeatures.Keys) {
+            $expected = [string](
+                $releaseCaseInfo.features.PSObject.Properties[$name].Value)
+            if ($actualFeatures[$name] -ne $expected) {
+                Stop-GccBuild (
+                    "release case $ReleaseCase requires $name=$expected, " +
+                    "not $($actualFeatures[$name])")
+            }
+        }
+        $flashCapacity = [string]$releaseCaseInfo.budgets.flash_capacity
+        $flashHeadroom = [string](
+            $releaseCaseInfo.budgets.flash_min_headroom)
+        $ramLimit = [string]$releaseCaseInfo.budgets.ram_limit
+        $stackFrameLimit = [string](
+            $releaseCaseInfo.budgets.stack_frame_limit)
+    } else {
+        $flashCapacity = if ($Mcu -eq 'f411') { '524288' } else { '262144' }
+        $flashHeadroom = '512'
+        $ramLimit = if ($Mcu -eq 'f411') { '104857' } elseif ($Lto -eq '1' -and $UsbScreen -ne '1') {
+            '52428'
+        } else {
+            '65536'
+        }
+        $stackFrameLimit = if ($Mcu -eq 'f411') { '3072' } else { '5120' }
+    }
+
+    . (Join-Path $script:BackendRoot 'sdk.ps1')
+    $sdkRoot = Get-NativeSdkPath $script:ProjectRoot $SdkPath
+    $toolchainBin = Get-NativeGnuArmBin $script:ProjectRoot $script:ToolchainVersion $ToolchainPath
+    Assert-NativeGnuArmVersion $toolchainBin $script:ToolchainVersion
+    $toolSuffix = if ($env:OS -eq 'Windows_NT') { '.exe' } else { '' }
+    if (-not [string]::IsNullOrWhiteSpace($CorePath) -or
+        -not [string]::IsNullOrWhiteSpace($LibrariesPath)) {
+        Write-Warning '-CorePath and -LibrariesPath are unused; use -SdkPath for the native SDK'
+    }
+
+    $cmake = Get-CommandPath 'cmake' 'CMake 3.21 or newer'
+    $ninja = Get-CommandPath 'ninja' 'Ninja'
+    $cmakeVersion = @(& $cmake '--version')[0]
+    if ($LASTEXITCODE -ne 0 -or
+        $cmakeVersion -notmatch 'cmake version ([0-9.]+)' -or
+        [version]$Matches[1] -lt [version]'3.21') {
+        Stop-GccBuild 'CMake 3.21 or newer is required'
+    }
+    # Windows packages APP with the repository's dependency-free
+    # PowerShell/.NET implementation. A native host C++ compiler is only
+    # required by the optimal packer used on macOS/Linux.
+    if ($systemRequested -and $env:OS -ne 'Windows_NT') {
+        $hostPackerBuilder = Join-Path $script:ProjectRoot `
+            'tools/apps/packer/build.ps1'
+        Test-RequiredFile $hostPackerBuilder 'MK61 APP host packer builder'
+        & $hostPackerBuilder -Check | Out-Host
+    }
+
+    if ($Check) {
+        [Console]::WriteLine('MK61s direct GCC dependencies: ready')
+        [Console]::WriteLine("  Native SDK: $sdkRoot")
+        [Console]::WriteLine("  GNU Arm: $toolchainBin")
+        [Console]::WriteLine("  CMake: $cmakeVersion")
+        [Console]::WriteLine("  Ninja: $ninja")
+        exit 0
+    }
+
+    if ([string]::IsNullOrWhiteSpace($BuildRoot)) {
+        $BuildRoot = if (-not [string]::IsNullOrWhiteSpace(
+                $env:MK61_GCC_BUILD_ROOT)) {
+            $env:MK61_GCC_BUILD_ROOT
+        } else {
+            $defaultRoot = if ($Mcu -eq 'f411') { '.build/gcc-f411' } else { '.build/gcc' }
+            Join-Path $script:ProjectRoot $defaultRoot
+        }
+    }
+    $BuildRoot = Get-FullPath $BuildRoot
+    $buildDirectory = Join-Path $BuildRoot $Profile
+    Test-SafeBuildDirectory $buildDirectory $BuildRoot
+    if ($Clean -and [IO.Directory]::Exists($buildDirectory)) {
+        Remove-Item -LiteralPath $buildDirectory -Recurse -Force
+    }
+    [IO.Directory]::CreateDirectory($buildDirectory) | Out-Null
+
+    if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
+        $OutputDirectory = if (-not [string]::IsNullOrWhiteSpace(
+                $env:MK61_OUTPUT_DIR)) {
+            $env:MK61_OUTPUT_DIR
+        } else {
+            Join-Path $script:ProjectRoot '.build/firmware'
+        }
+    }
+    $OutputDirectory = Get-FullPath $OutputDirectory
+
+    $toolchainFile = Join-Path $script:BackendRoot 'arm-none-eabi.cmake'
+    Test-RequiredFile $toolchainFile 'GNU Arm CMake toolchain'
+    $configureArguments = @(
+        '-S', $script:BackendRoot,
+        '-B', $buildDirectory,
+        '-G', 'Ninja',
+        "-DCMAKE_MAKE_PROGRAM=$ninja",
+        "-DCMAKE_TOOLCHAIN_FILE=$toolchainFile",
+        "-DMK61_ARM_TOOLCHAIN_BIN=$toolchainBin",
+        "-DMK61_PROJECT_ROOT=$script:ProjectRoot",
+        "-DMK61_SDK_ROOT=$sdkRoot",
+        "-DMK61_TARGET_MCU=$Mcu",
+        "-DMK61_PROFILE=$Profile",
+        "-DMK61_ENABLE_FOCAL=$Focal",
+        "-DMK61_ENABLE_TINYBASIC=$Basic",
+        "-DMK61_ENABLE_WBMP_VIEWER=$Wbmp",
+        "-DMK61_ENABLE_MARKDOWN_VIEWER=$Markdown",
+        "-DMK61_ENABLE_CHIP8=$Chip8",
+        "-DMK61_ENABLE_SETUP=$Setup",
+        "-DMK61_FOCAL_AS_APP=$FocalAsApp",
+        "-DMK61_TINYBASIC_AS_APP=$BasicAsApp",
+        "-DMK61_WBMP_VIEWER_AS_APP=$WbmpAsApp",
+        "-DMK61_MARKDOWN_VIEWER_AS_APP=$MarkdownAsApp",
+        "-DMK61_CHIP8_AS_APP=$Chip8AsApp",
+        "-DMK61_SETUP_AS_APP=$SetupAsApp",
+        "-DMK61_EXPLORER_AS_APP=$ExplorerAsApp",
+        "-DMK61_ENABLE_USB_SCREEN=$UsbScreen",
+        "-DMK61_EXTERNALIZE_USBDISK=$ExternalizeUsbDisk",
+        "-DMK61_WS0010_GRAPHICS_100X16=$Ws0010Graphics",
+        "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
+        "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
+        "-DMK61_MATH_BACKEND=$MathBackend",
+        "-DMK61_APP_LOCAL_FLOAT_MATH=$LocalFloatMath",
+        "-DMK61_F401_PRODUCT_BUILD=$productBuild",
+        '-DMK61_REQUIRE_RESIDENT_CRC=1',
+        "-DMK61_ENABLE_LTO=$Lto",
+        "-DMK61_FLASH_MIN_HEADROOM=$flashHeadroom",
+        "-DMK61_GLOBAL_RAM_LIMIT=$ramLimit",
+        "-DMK61_STACK_FRAME_LIMIT=$stackFrameLimit"
+    )
+    $configureArguments += "-DMK61_CASE_DEFINITIONS=$($caseDefinitions -join ';')"
+    if ($env:OS -eq 'Windows_NT') {
+        $configureArguments += @(
+            "-DMK61_POWERSHELL=$powerShell",
+            "-DMK61_PROFILE_DEFINITIONS=$($profileInfo.Definitions -join ';')")
+    }
+    Invoke-GccTool $cmake $configureArguments
+    Invoke-GccTool $cmake @(
+        '--build', $buildDirectory,
+        '--target', 'resident',
+        '--parallel', [string]$Jobs)
+
+    $residentElf = Join-Path $buildDirectory 'resident.elf'
+    $residentBin = Join-Path $buildDirectory 'resident.bin'
+    $residentHex = Join-Path $buildDirectory 'resident.hex'
+    $compileCommands = Join-Path $buildDirectory 'compile_commands.json'
+    Test-RequiredFile $residentElf 'resident ELF'
+    Test-RequiredFile $residentBin 'resident BIN'
+    Test-RequiredFile $compileCommands 'CMake compile database'
+
+    $powerShell = Get-CurrentPowerShell
+    $sealer = Join-Path $script:ProjectRoot 'dev/lib/seal-firmware.ps1'
+    Test-RequiredFile $sealer 'resident firmware sealer'
+    Invoke-GccTool $powerShell @(
+        '-NoLogo', '-NoProfile', '-File', $sealer, 'seal',
+        '-InputFile', $residentBin, '-MaxSize', $flashCapacity)
+    Invoke-GccTool $powerShell @(
+        '-NoLogo', '-NoProfile', '-File', $sealer, 'check',
+        '-InputFile', $residentBin, '-MaxSize', $flashCapacity)
+
+    $objcopy = Join-Path $toolchainBin "arm-none-eabi-objcopy$toolSuffix"
+    Test-RequiredFile $objcopy 'GNU Arm objcopy'
+    $elfSealer = Join-Path $script:ProjectRoot 'dev/lib/seal-firmware-elf.ps1'
+    Test-RequiredFile $elfSealer 'resident ELF sealer'
+    Invoke-GccTool $powerShell @(
+        '-NoLogo', '-NoProfile', '-File', $elfSealer,
+        '-InputFile', $residentBin, '-ElfFile', $residentElf,
+        '-Objcopy', $objcopy, '-MaxSize', $flashCapacity)
+
+    if ($null -ne $releaseCaseInfo) {
+        $sizeTool = Join-Path $toolchainBin "arm-none-eabi-size$toolSuffix"
+        $nmTool = Join-Path $toolchainBin "arm-none-eabi-nm$toolSuffix"
+        Test-RequiredFile $sizeTool 'GNU Arm size tool'
+        Test-RequiredFile $nmTool 'GNU Arm nm tool'
+        if ($env:OS -eq 'Windows_NT') {
+            Invoke-GccTool $powerShell @(
+                '-NoLogo', '-NoProfile', '-File', $powerShellContractTool,
+                'resource-report', '-Manifest', $manifestPath,
+                '-Case', $ReleaseCase,
+                '-Elf', $residentElf,
+                '-Bin', $residentBin,
+                '-SizeTool', $sizeTool,
+                '-NmTool', $nmTool,
+                '-StackSummary', (Join-Path $buildDirectory 'stack-usage.json'),
+                '-OutputPrefix', (Join-Path $buildDirectory 'resource-report'))
+        } else {
+            Invoke-GccTool $python @(
+                $contractTool, 'resource-report',
+                '--case', $ReleaseCase,
+                '--elf', $residentElf,
+                '--bin', $residentBin,
+                '--size-tool', $sizeTool,
+                '--nm-tool', $nmTool,
+                '--stack-summary', (Join-Path $buildDirectory 'stack-usage.json'),
+                '--output-prefix', (Join-Path $buildDirectory 'resource-report'))
+        }
+    }
+
+    # CMake emitted HEX before the post-link footer was sealed. Regenerate it
+    # from the authoritative sealed BIN so neither public format can bypass
+    # the startup integrity check.
+    Invoke-GccTool $objcopy @(
+        '-I', 'binary', '-O', 'ihex', '--change-addresses', '0x08000000',
+        $residentBin, $residentHex)
+    Test-RequiredFile $residentHex 'sealed resident HEX'
+
+    $stage = Join-Path $buildDirectory 'bundle'
+    if ([IO.Directory]::Exists($stage)) {
+        Remove-Item -LiteralPath $stage -Recurse -Force
+    }
+    [IO.Directory]::CreateDirectory($stage) | Out-Null
+    if ($systemRequested) {
+        $systemBuilder = Join-Path $script:ProjectRoot `
+            'system_apps/.tool/build.ps1'
+        Test-RequiredFile $systemBuilder 'System APP builder'
+        $powerShell = Get-CurrentPowerShell
+        Invoke-GccTool $powerShell @(
+            '-NoLogo',
+            '-NoProfile',
+            '-File', $systemBuilder,
+            '-BuildPath', $buildDirectory,
+            '-ResidentElf', $residentElf,
+            '-CompileCommands', $compileCommands,
+            '-OutputDirectory', (Join-Path $stage 'System'),
+            '-CatalogDirectory', (Join-Path $OutputDirectory 'apps/abi6'),
+            '-Focal', $focalApp,
+            '-Basic', $basicApp,
+            '-Wbmp', $wbmpApp,
+            '-Markdown', $markdownApp,
+            '-Chip8', $chip8App,
+            '-Setup', $setupApp,
+            '-Explorer', $ExplorerAsApp,
+            '-UsbDisk', '1',
+            '-LocalFloatMath', $LocalFloatMath,
+            '-Graphics', $(if ($wbmpGraphics) { '1' } else { '0' }),
+            '-UiFonts', $uiFonts)
+    }
+
+    $bundle = [string]$profileInfo.Bundle
+    if ($ws0010Bitmap) {
+        $variant = if ($Markdown -eq '1') {
+            'graphics-markdown'
+        } elseif ($Wbmp -eq '1') {
+            'graphics-wbmp'
+        } else {
+            'graphics'
+        }
+        $bundle = $bundle -replace '-f401$', "-$variant-f401"
+    }
+    $residentName = "$bundle.bin"
+    [IO.Directory]::CreateDirectory($OutputDirectory) | Out-Null
+    $outputBundle = Join-Path $OutputDirectory $bundle
+    [IO.Directory]::CreateDirectory($outputBundle) | Out-Null
+    Remove-GeneratedBundleFiles $outputBundle $residentName
+    Copy-Item -LiteralPath $residentBin `
+        -Destination (Join-Path $outputBundle $residentName)
+    Copy-Item -LiteralPath $residentElf `
+        -Destination (Join-Path $outputBundle `
+            ([IO.Path]::ChangeExtension($residentName, '.elf')))
+    if ([IO.Directory]::Exists((Join-Path $stage 'System'))) {
+        Copy-Item -LiteralPath (Join-Path $stage 'System') `
+            -Destination $outputBundle -Recurse -Force
+    }
+    if (-not $python) { $python = Get-CommandPath 'python3' 'Python 3' }
+    Invoke-GccTool $python @(
+        (Join-Path $script:ProjectRoot 'tools/apps/urq/build_urq_app.py'),
+        '--target', 'stm32', '--toolchain', $toolchainBin,
+        '--build-dir', (Join-Path $buildDirectory 'urq'),
+        '--output-dir', (Join-Path $outputBundle 'Apps'),
+        '--library-output', (Join-Path $outputBundle 'Games/URQ'),
+        '--licenses-output', (Join-Path $outputBundle 'licenses/urq'))
+    $ryuLicenses = Join-Path $outputBundle 'licenses/ryu'
+    [IO.Directory]::CreateDirectory($ryuLicenses) | Out-Null
+    foreach ($license in @('LICENSE-Apache2', 'LICENSE-Boost', 'README.md')) {
+        Copy-Item -LiteralPath (Join-Path $script:ProjectRoot "third_party/ryu/$license") `
+            -Destination $ryuLicenses -Force
+    }
+    if ($uiFonts -eq '1') {
+        Invoke-GccTool $powerShell @(
+            '-NoLogo', '-NoProfile', '-File',
+            (Join-Path $script:ProjectRoot `
+                'tools/fonts/package-ui-font-licenses.ps1'),
+            '-Bundle', $outputBundle)
+    }
+
+    $flagValues = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($flag in $profileInfo.Flags) {
+        $flagValues.Add([string]$flag)
+    }
+    $flagValues.Add("-DMK61_ENABLE_FOCAL=$Focal")
+    $flagValues.Add("-DMK61_ENABLE_TINYBASIC=$Basic")
+    $flagValues.Add("-DMK61_ENABLE_WBMP_VIEWER=$Wbmp")
+    $flagValues.Add("-DMK61_ENABLE_MARKDOWN_VIEWER=$Markdown")
+    $flagValues.Add("-DMK61_ENABLE_CHIP8=$Chip8")
+    $flagValues.Add("-DMK61_ENABLE_SETUP=$Setup")
+    $flagValues.Add("-DMK61_FOCAL_AS_APP=$FocalAsApp")
+    $flagValues.Add("-DMK61_TINYBASIC_AS_APP=$BasicAsApp")
+    $flagValues.Add("-DMK61_WBMP_VIEWER_AS_APP=$WbmpAsApp")
+    $flagValues.Add("-DMK61_MARKDOWN_VIEWER_AS_APP=$MarkdownAsApp")
+    $flagValues.Add("-DMK61_CHIP8_AS_APP=$Chip8AsApp")
+    $flagValues.Add("-DMK61_SETUP_AS_APP=$SetupAsApp")
+    $flagValues.Add("-DMK61_EXPLORER_AS_APP=$ExplorerAsApp")
+    $flagValues.Add("-DMK61_ENABLE_USB_SCREEN=$UsbScreen")
+    $flagValues.Add("-DMK61_EXTERNALIZE_USBDISK=$ExternalizeUsbDisk")
+    $flagValues.Add("-DMK61_WS0010_GRAPHICS_100X16=$Ws0010Graphics")
+    $flagValues.Add(
+        "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings")
+    $flagValues.Add("-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer")
+    $flagValues.Add("-DMK61_MATH_BACKEND=$MathBackend")
+    $flagValues.Add("-DMK61_APP_LOCAL_FLOAT_MATH=$LocalFloatMath")
+    $flagValues.Add("-DMK61_F401_PRODUCT_BUILD=$productBuild")
+    $flagValues.Add('-DMK61_ENABLE_LOADABLE_MODULES=1')
+    $flagValues.Add("-DMK61_PORTABLE_UI_FONTS=$uiFonts")
+    $flagValues.Add('-DMK61_REQUIRE_RESIDENT_CRC=1')
+    $flagValues.Add("-DMK61_REQUIRE_$($Mcu.ToUpperInvariant())_SELECTIVE_O3=1")
+    $flagValues.Add("-DMK61_ENABLE_LTO=$Lto")
+    foreach ($definition in $caseDefinitions) {
+        $flagValues.Add("-D$definition")
+    }
+    [IO.File]::WriteAllText(
+        (Join-Path $outputBundle 'build.flags'),
+        ($flagValues -join ' ') + [Environment]::NewLine,
+        $script:Utf8NoBom)
+    & (Join-Path $script:ProjectRoot 'dev/lib/write-program-capabilities.ps1') `
+        -Bundle $outputBundle -Firmware (Join-Path $outputBundle $residentName) -Profile $Profile -Mcu $Mcu
+    [IO.File]::WriteAllText(
+        (Join-Path $outputBundle 'build.apps'),
+        'format 1' + [Environment]::NewLine +
+            'abi 6' + [Environment]::NewLine +
+            'app Apps/URQ.APP' + [Environment]::NewLine +
+            'app Apps/URQUI.APP' + [Environment]::NewLine,
+        $script:Utf8NoBom)
+
+    [Console]::WriteLine('')
+    [Console]::WriteLine('MK61s GNU Arm GCC bundle built:')
+    [Console]::WriteLine("  $outputBundle")
+    [Console]::WriteLine("  resident: $residentName")
+    if ($systemRequested) {
+        [Console]::WriteLine(
+            '  APP: unified standalone ABI 6, ZX0/BCJ + relocations')
+    }
+} catch {
+    [Console]::Error.WriteLine($_.Exception.Message)
+    exit 1
+}

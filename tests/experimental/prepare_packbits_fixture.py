@@ -53,7 +53,7 @@ def main():
     source.write_text('#define PACKBITS_QUALIFIED_CALLBACKS 1\n#include "'+
                       str(ROOT/'tests/experimental/packbits_frame_hil.c')+'"\n')
     (out/'callbacks.json').write_text(json.dumps(evidence,indent=2)+'\n')
-    subprocess.run([sys.executable,str(ROOT/'tools/build_portable_app.py'),
+    subprocess.run([sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),
         '--name','PACKCHK','--source',str(source),'--include',str(out),
         '--arm-toolchain-bin',str(args.arm_toolchain_bin),
         '--output-dir',str(out/'build')],check=True)

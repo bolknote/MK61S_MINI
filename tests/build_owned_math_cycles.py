@@ -23,7 +23,7 @@ run([a.arm_toolchain_bin/'arm-none-eabi-gcc',*flags,'-c',ROOT/'tests/fixtures/ma
      '-o',out/'native-eabi-arm.o'])
 archive=out/'libnative-eabi.a'
 run([a.arm_toolchain_bin/'arm-none-eabi-ar','rcs',archive,out/'native-eabi.o',out/'native-eabi-arm.o'])
-run([sys.executable,ROOT/'tools/build_portable_app.py','--name','SEGGD',
+run([sys.executable,ROOT/'tools/apps/portable/build_portable_app.py','--name','SEGGD',
      '--source',ROOT/'tests/fixtures/math_cycles_double.cpp','--library',archive,
      '--output-dir',out,'--arm-toolchain-bin',a.arm_toolchain_bin])
 (out/'native-eabi-build.json').write_text(json.dumps({'commands':commands,'source_sha256':{

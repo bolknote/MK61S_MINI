@@ -9,7 +9,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location("qst2urq", ROOT / "tools/qst2urq.py")
+spec = importlib.util.spec_from_file_location("qst2urq", ROOT / "tools/apps/urq/qst2urq.py")
 packer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(packer)
 HOST = Path(sys.argv.pop(1))

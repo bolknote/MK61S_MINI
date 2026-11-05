@@ -6,7 +6,7 @@
 в стиле Norton Commander. Левая панель показывает каталог компьютера, правая —
 файловую систему C6 калькулятора через его USB-терминал. На macOS/Linux этот
 файл запускает Bash-порт, на Windows — PowerShell-порт; реализации спрятаны в
-`tools/.mkc/`.
+`tools/mkc/`.
 
 ```bash
 tools/mkc.cmd

@@ -14,14 +14,14 @@ import struct
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT / 'tests'), str(ROOT / 'tools'), str(ROOT / 'tools/.mk61-app')]
+sys.path[:0] = [str(ROOT / 'tests'), str(ROOT / 'tools'), str(ROOT / 'tools/apps/packer')]
 from check_stm32_vectors import ElfImage
 from strchr_arm_self_test import pin, command, RESEARCH, VARIANTS
 
 
 def build(tc, out, core, arches=None, public_only=False):
     out.mkdir(parents=True, exist_ok=False)
-    spec = importlib.util.spec_from_file_location('strchr_app_builder', ROOT / 'tools/build_portable_app.py')
+    spec = importlib.util.spec_from_file_location('strchr_app_builder', ROOT / 'tools/apps/portable/build_portable_app.py')
     builder = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(builder)
     normal_run = builder.run
@@ -54,7 +54,7 @@ def build(tc, out, core, arches=None, public_only=False):
                     shared_runtime=route == 'shared', text_only=False, no_ui_fonts=False,
                     local_float_math=False, local_float_math_mask=None, language_vm_compiler=False,
                     split_language_vm=False, include=[], library=[Path('-lc')] if variant == 7 else [],
-                    output_dir=folder, arm_toolchain_bin=tc, packer=ROOT / 'tools/.mk61-app/mk61_module_pack.py',
+                    output_dir=folder, arm_toolchain_bin=tc, packer=ROOT / 'tools/apps/packer/mk61_module_pack.py',
                     rustc=None, handled_magic=None)
                 output = io.StringIO()
                 with contextlib.redirect_stdout(output):
@@ -79,7 +79,7 @@ def build(tc, out, core, arches=None, public_only=False):
     builder.run = normal_run
     result = dict(apps=apps, physical_IO=0, runtime_count=26, strchr_slot=18,
                   source_pins=[pin(ROOT / x) for x in ['sdk/portable/start.c', 'sdk/portable/shared_runtime.c',
-                      'sdk/portable/system/runtime.S', 'sdk/portable/memory.c', 'tools/build_portable_app.py',
+                      'sdk/portable/system/runtime.S', 'sdk/portable/memory.c', 'tools/apps/portable/build_portable_app.py',
                       'research/strchr-2026-10-28/APP-CHECK.c', 'research/strchr-2026-10-28/candidates.S',
                       'research/strchr-2026-10-28/bench.c', 'research/strchr-2026-10-28/bench.h',
                       'code/memory_strchr_arm.h', 'code/strchr_m4.inc', 'tests/strchr_app_self_test.py']])

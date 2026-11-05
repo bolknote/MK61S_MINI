@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Build all three Runner levels; --check verifies the generated files."""
 
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[3]))
+
 import argparse
 import json
 from pathlib import Path
@@ -9,7 +13,7 @@ from game import create_game, launcher, check_layout, campaign, LEVELS
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'tools'))
-from program_pack import program_binary
+from tools.programs.program_pack import program_binary
 
 
 def outputs():

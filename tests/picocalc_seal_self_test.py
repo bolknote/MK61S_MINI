@@ -4,7 +4,7 @@
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[1]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import sys,struct,unittest,zlib
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))

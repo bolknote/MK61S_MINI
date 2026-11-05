@@ -19,9 +19,9 @@ USB-декларации и шесть прежних USB interface-заголо
 GNU Arm `14.2.1-1.1` устанавливается отдельно:
 
 ```powershell
-pwsh -NoProfile -File tools/install_gcc_dependencies.ps1
-./tools/build-gcc.cmd -Mcu f411 -Profile classic-v3
-./tools/build-gcc.cmd -Mcu f401 -Profile mini-v3-a00
+pwsh -NoProfile -File tools/firmware/stm32/install_gcc_dependencies.ps1
+./tools/firmware/stm32/build-gcc.cmd -Mcu f411 -Profile classic-v3
+./tools/firmware/stm32/build-gcc.cmd -Mcu f401 -Profile mini-v3-a00
 ```
 
 На Windows достаточно `powershell.exe` 5.1. Установщик выбирает официальный

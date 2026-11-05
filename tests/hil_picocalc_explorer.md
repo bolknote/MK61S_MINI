@@ -80,7 +80,7 @@ elapsed monotonic time. The CLOCK_SYNC packet (0x40) accepts mode 2 and
 `<BH5B>`: mode, year, month, day, hour, minute, second; confirm the CLOCK_STATE
 reply (0x41). Do not replace it with host time in another timezone. If RTC_SET
 was zero, leave it unset. Check saved alarms and calibration after the test.
-The RTC protocol and exclusive-port handling are in `tools/sync_picocalc_clock.py`.
+The RTC protocol and exclusive-port handling are in `tools/device/sync_picocalc_clock.py`.
 
 Only after the restored baseline is validated, run:
 

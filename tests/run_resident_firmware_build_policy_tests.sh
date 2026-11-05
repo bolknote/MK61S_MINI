@@ -26,16 +26,16 @@ require_order() {
 f411_matrix="$root/tests/run_f411_release_matrix.sh"
 f411_o3_check="$root/tests/run_f411_o3_compile_check.sh"
 f401_check="$root/tests/run_f401_uc1609_compile_check.sh"
-f401_bundle="$root/tools/build_f401_bundle.sh"
-firmware_sh="$root/tools/.mk61-firmware/mk61-firmware.sh"
-firmware_ps="$root/tools/.mk61-firmware/mk61-firmware.ps1"
-gcc_cmake="$root/tools/.mk61-gcc/CMakeLists.txt"
-gcc_ps="$root/tools/.mk61-gcc/build.ps1"
-board="$root/tools/.mk61-arduino-board/hardware/mk61/stm32/boards.txt"
-board_hook_sh="$root/tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-postbuild.sh"
-board_hook_ps="$root/tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1"
-board_install_sh="$root/tools/.mk61-arduino-board/install.sh"
-board_install_ps="$root/tools/.mk61-arduino-board/install.ps1"
+f401_bundle="$root/tools/firmware/stm32/build_f401_bundle.sh"
+firmware_sh="$root/tools/firmware/cli/mk61-firmware.sh"
+firmware_ps="$root/tools/firmware/cli/mk61-firmware.ps1"
+gcc_cmake="$root/tools/firmware/stm32/CMakeLists.txt"
+gcc_ps="$root/tools/firmware/stm32/build.ps1"
+board="$root/tools/arduino/hardware/mk61/stm32/boards.txt"
+board_hook_sh="$root/tools/arduino/hardware/mk61/stm32/tools/mk61-app-postbuild.sh"
+board_hook_ps="$root/tools/arduino/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1"
+board_install_sh="$root/tools/arduino/install.sh"
+board_install_ps="$root/tools/arduino/install.ps1"
 release_workflow="$root/.github/workflows/firmware-release.yml"
 sketch="$root/code/mk61s-M.ino"
 
@@ -85,11 +85,11 @@ fi
 require_order "$f401_bundle" 'seal-firmware.sh" seal' 'build_system_app_bundle.py'
 
 require_text "$firmware_sh" "RESIDENT_RELEASE_FLAGS='-DMK61_REQUIRE_RESIDENT_CRC=1'"
-require_text "$firmware_sh" 'tools/build-gcc.cmd'
+require_text "$firmware_sh" 'tools/firmware/stm32/build-gcc.cmd'
 require_text "$gcc_ps" 'seal-firmware-elf.ps1'
 require_text "$firmware_ps" 'Invoke-F401GccBundleBuild'
 require_text "$firmware_ps" "ResidentReleaseFlags = '-DMK61_REQUIRE_RESIDENT_CRC=1'"
-require_text "$firmware_ps" "'tools/build-system-app-bundle.ps1'"
+require_text "$firmware_ps" "'tools/apps/system/build-system-app-bundle.ps1'"
 
 require_text "$gcc_cmake" 'MK61_REQUIRE_RESIDENT_CRC=${MK61_REQUIRE_RESIDENT_CRC}'
 require_text "$gcc_cmake" 'MK61_REQUIRE_F401_SELECTIVE_O3=1'
@@ -104,10 +104,10 @@ require_order "$gcc_ps" "'seal'," "'System APP builder'"
 require_text "$gcc_ps" "'--change-addresses', '0x08000000'"
 require_text "$root/system_apps/.tool/build.ps1" 'build_system_app_bundle.py'
 require_text "$root/system_apps/.tool/build.ps1" 'build-system-app-bundle.ps1'
-require_text "$root/tools/build_system_app_bundle.py" 'build_portable_app.py'
-require_text "$root/tools/build-system-app-bundle.ps1" 'build-portable-app.ps1'
-require_text "$root/tools/build_portable_app.py" 'analyze_stack_usage.py'
-require_text "$root/tools/build_portable_app.py" '"-fipa-pta"'
+require_text "$root/tools/apps/system/build_system_app_bundle.py" 'build_portable_app.py'
+require_text "$root/tools/apps/system/build-system-app-bundle.ps1" 'build-portable-app.ps1'
+require_text "$root/tools/apps/portable/build_portable_app.py" 'analyze_stack_usage.py'
+require_text "$root/tools/apps/portable/build_portable_app.py" '"-fipa-pta"'
 
 require_text "$board" 'MK61_REQUIRE_RESIDENT_CRC=1'
 require_text "$board" 'mk61_f401_app.build.st_extra_flags=-pipe '
@@ -126,7 +126,7 @@ fi
 # declared once, not duplicated as separate copy lists in the launchers.
 require_text "$board_install_sh" '"$script_dir/payload.py"'
 require_text "$board_install_ps" 'Install-Mk61NativePayload'
-board_payload="$root/tools/.mk61-arduino-board/payload.json"
+board_payload="$root/tools/arduino/payload.json"
 for required in mk61_firmware_seal.cpp resident_firmware_format.hpp rust_types.h \
     seal-firmware.ps1 seal-firmware-elf.ps1 seal-firmware-elf.py; do
   require_text "$board_payload" "$required"
@@ -188,7 +188,7 @@ fi
 if job_contains 'install_arduino_dependencies.ps1'; then
   fail 'native Windows Arduino IDE job still installs STM32 Core'
 fi
-for required in 'tools/.mk61-arduino-board/install.ps1' 'check_standalone_sdk_build.py' 'check_native_runtime_libraries.py'; do
+for required in 'tools/arduino/install.ps1' 'check_standalone_sdk_build.py' 'check_native_runtime_libraries.py'; do
   job_contains "$required" ||
     fail "native Windows Arduino IDE job lost dependency isolation: $required"
 done

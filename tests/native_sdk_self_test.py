@@ -12,7 +12,7 @@ import tempfile
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location("native_sdk", ROOT / "tools/.mk61-gcc/native_sdk.py")
+spec = importlib.util.spec_from_file_location("native_sdk", ROOT / "tools/firmware/stm32/native_sdk.py")
 sdk = importlib.util.module_from_spec(spec); spec.loader.exec_module(sdk)
 gate_spec = importlib.util.spec_from_file_location("sdk_gate", ROOT / "tests/check_standalone_sdk_build.py")
 gate = importlib.util.module_from_spec(gate_spec); gate_spec.loader.exec_module(gate)
@@ -21,7 +21,7 @@ assert sdk.validate_sdk(original) == original.resolve()
 manifest = json.loads((original / "manifest.json").read_text())
 assert set(manifest["files"]) == {p.relative_to(original).as_posix() for p in original.rglob("*") if p.is_file() and p.name not in ("manifest.json", "README.md")}
 assert all(not name.endswith((".c", ".cpp", ".S")) for name in manifest["files"])
-lock = json.loads((ROOT / "tools/.mk61-gcc/toolchain-lock.json").read_text())
+lock = json.loads((ROOT / "tools/firmware/stm32/toolchain-lock.json").read_text())
 contract = json.loads((ROOT / "dev/lib/release-contract.json").read_text())
 assert lock["version"] == contract["toolchain"]["gnu_arm"]
 assert set(lock["assets"]) == {"darwin-arm64", "darwin-x64", "linux-arm", "linux-arm64", "linux-x64", "win32-x64"}
@@ -31,7 +31,7 @@ for asset in lock["assets"].values():
 
 # Native cases are explicit; a legacy Arduino case must fail before tool lookup.
 legacy = next(case["id"] for case in contract["cases"] if case["builder"] == "arduino")
-result = subprocess.run([sys.executable, str(ROOT / "tools/.mk61-gcc/build-standalone.py"),
+result = subprocess.run([sys.executable, str(ROOT / "tools/firmware/stm32/build-standalone.py"),
                          "--release-case", legacy, "--build-path", "/unused", "--check"],
                         capture_output=True, text=True)
 assert result.returncode != 0 and "requires a native GCC case" in result.stderr
@@ -60,7 +60,7 @@ with tempfile.TemporaryDirectory(prefix="mk61 native SDK Юникод ") as temp
     copy = work / "SDK with spaces"
     shutil.copytree(original, copy)
     def cmake(ok, message=""):
-        result = subprocess.run(["cmake", "-DMK61_PROJECT_ROOT=" + str(ROOT), "-DMK61_SDK_ROOT=" + str(copy), "-P", str(ROOT / "tools/.mk61-gcc/native-sdk.cmake")], capture_output=True, text=True)
+        result = subprocess.run(["cmake", "-DMK61_PROJECT_ROOT=" + str(ROOT), "-DMK61_SDK_ROOT=" + str(copy), "-P", str(ROOT / "tools/firmware/stm32/native-sdk.cmake")], capture_output=True, text=True)
         assert (result.returncode == 0) == ok, result.stdout + result.stderr
         if message:
             assert message in result.stdout + result.stderr, result.stdout + result.stderr
@@ -123,13 +123,13 @@ with tempfile.TemporaryDirectory(prefix="mk61 native SDK Юникод ") as temp
     if pwsh:
         bad = work / "corrupt.tar.gz"; bad.write_bytes(b"invalid archive")
         install = work / "install"
-        result = subprocess.run([pwsh, "-NoLogo", "-NoProfile", "-File", str(ROOT / "tools/install_gcc_dependencies.ps1"), "-InstallRoot", str(install), "-ArchivePath", str(bad)], capture_output=True, text=True)
+        result = subprocess.run([pwsh, "-NoLogo", "-NoProfile", "-File", str(ROOT / "tools/firmware/stm32/install_gcc_dependencies.ps1"), "-InstallRoot", str(install), "-ArchivePath", str(bad)], capture_output=True, text=True)
         assert result.returncode != 0 and "checksum mismatch" in result.stdout + result.stderr, result.stdout + result.stderr
         assert not list(install.glob(".install-*")) and not list(install.glob("xpack-*"))
     if os.name != 'nt':
         bad = work / "corrupt-native.tar.gz"; bad.write_bytes(b"invalid archive")
         install = work / "Unix install"
-        result = subprocess.run([sys.executable, str(ROOT / "tools/install_gcc_dependencies.py"),
+        result = subprocess.run([sys.executable, str(ROOT / "tools/firmware/stm32/install_gcc_dependencies.py"),
             "--install-root", str(install), "--archive-path", str(bad)], capture_output=True, text=True)
         assert result.returncode != 0 and "checksum mismatch" in result.stderr, result.stdout + result.stderr
         assert not list(install.glob(".install-*")) and not list(install.glob("xpack-*"))

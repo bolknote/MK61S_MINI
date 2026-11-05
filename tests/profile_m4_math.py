@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Build/qualify Cortex-M4 hard-float math and compare executed instructions."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -44,7 +48,7 @@ class Machine(MathMachine):
 
 def build(source_root,out):
     sys.path.insert(0,str(ROOT/'tools'))
-    from build_picocalc import compiler_bin
+    from tools.firmware.picocalc.build_picocalc import compiler_bin
     tc=compiler_bin(None);out.mkdir(parents=True,exist_ok=True)
     flags=['-mcpu=cortex-m4','-mthumb','-mfpu=fpv4-sp-d16','-mfloat-abi=hard','-Os',
         '-fno-builtin','-ffunction-sections','-fdata-sections','-DMK61_NATIVE_RUNTIME=1',

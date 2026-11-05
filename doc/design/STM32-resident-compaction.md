@@ -254,5 +254,5 @@ python3 tests/hil_resident_lifetimes.py --port PORT --public-id ID \
 For a matched permanent-buffer comparison, use a **fresh** build directory with
 `CXXFLAGS=-DMK61_SCOPED_RESIDENT_BUFFERS=0` and
 `CFLAGS=-DMK61_SCOPED_RESIDENT_BUFFERS=0` in the environment of
-`tools/.mk61-gcc/build-standalone.py`. These CMake initial flags must not leak
+`tools/firmware/stm32/build-standalone.py`. These CMake initial flags must not leak
 into the default build directory.

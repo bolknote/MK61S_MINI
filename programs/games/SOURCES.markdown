@@ -234,7 +234,7 @@ by Tricks, Public Domain, с русскими дополнениями. Это �
 семь широких букв отдельно вписаны в семь пикселей с пустым столбцом между
 символами. Оба FMK воспроизводит тот же генератор. Ark Pixel Font —
 Copyright (c) 2021, TakWolf, SIL Open Font License 1.1; полный текст лицензии
-сохранён в `tools/.fmk-font/ui-atlases/LICENSE-Ark-Pixel.txt` и включён
+сохранён в `tools/fonts/ui-atlases/LICENSE-Ark-Pixel.txt` и включён
 в комплект PicoCalc как `licenses/ui-fonts/LICENSE-Ark-Pixel.txt`.
 
 ## Turochamp

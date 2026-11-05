@@ -16,8 +16,8 @@ try {
     [IO.Directory]::CreateDirectory($fakeBin) | Out-Null
     $installed = Join-Path $work 'native board/tools'
     [IO.Directory]::CreateDirectory($installed) | Out-Null
-    Copy-Item (Join-Path $root 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/*.ps1') $installed
-    Copy-Item (Join-Path $root 'tools/.mk61-dfu/dfu.ps1') (Join-Path $installed 'mk61-dfu.ps1')
+    Copy-Item (Join-Path $root 'tools/arduino/hardware/mk61/stm32/tools/*.ps1') $installed
+    Copy-Item (Join-Path $root 'tools/firmware/dfu/dfu.ps1') (Join-Path $installed 'mk61-dfu.ps1')
     # Only the hardware programmer is fake; direct PowerShell invocation,
     # sealed bundle validation, System installation and recovery are real.
     Add-Type -Language CSharp -OutputType ConsoleApplication `
@@ -52,7 +52,7 @@ public static class FakeProgrammer {
         [IO.File]::WriteAllText((Join-Path $system 'USBDISK.APP'), 'APP')
         $resident = Join-Path $build 'code.ino.bin'
         [IO.File]::WriteAllText($resident, 'resident')
-        Copy-Item -LiteralPath (Join-Path $root 'tools/.mkc/mkc.ps1') `
+        Copy-Item -LiteralPath (Join-Path $root 'tools/mkc/mkc.ps1') `
             -Destination (Join-Path $stage 'mk61-system-installer.ps1')
         [void](New-Mk61TestArduinoBundle $build $bundle)
         $arguments = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',

@@ -104,7 +104,7 @@ int main(void) {
 macOS/Linux:
 
 ```sh
-python3 tools/build_portable_app.py --name HELLO \
+python3 tools/apps/portable/build_portable_app.py --name HELLO \
   --source my-app/main.c \
   --output-dir .build/my-app
 ```
@@ -112,7 +112,7 @@ python3 tools/build_portable_app.py --name HELLO \
 Windows, PowerShell или cmd, одной строкой:
 
 ```text
-python tools/build_portable_app.py --name HELLO --source my-app/main.c --output-dir .build/my-app
+python tools/apps/portable/build_portable_app.py --name HELLO --source my-app/main.c --output-dir .build/my-app
 ```
 
 На Windows упаковщик запускается тем же Python, что и общий сборщик; отдельный
@@ -149,7 +149,7 @@ python tools/build_portable_app.py --name HELLO --source my-app/main.c --output-
 Готовый смешанный проект — [пример WBMP](../../examples/portable-apps/WBMP/):
 
 ```sh
-python3 tools/build_portable_app.py --name WBMP \
+python3 tools/apps/portable/build_portable_app.py --name WBMP \
   --source examples/portable-apps/WBMP/main.c \
   --source examples/portable-apps/WBMP/viewer.cpp \
   --source code/wbmp.cpp --handled-magic I1 \
@@ -349,7 +349,7 @@ double root = services->math(MK61_SERVICE_SQRT, 144.0, 0.0);
 в текущих компактных сборках не включён.
 
 ```sh
-python3 tools/build_portable_app.py --name SERVICES \
+python3 tools/apps/portable/build_portable_app.py --name SERVICES \
   --source examples/portable-apps/SERVICES/main.c --shared-runtime \
   --output-dir .build/portable-apps/services
 ```

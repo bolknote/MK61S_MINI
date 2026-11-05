@@ -78,8 +78,8 @@ STM32Tools и BusyBox не требуются. На macOS/Linux установи
 
 Закройте Arduino IDE и из корня проекта выполните команду для своей системы:
 
-- macOS/Linux: `./tools/mk61-arduino-board.cmd`;
-- Windows, из cmd.exe или PowerShell: `tools\mk61-arduino-board.cmd`.
+- macOS/Linux: `./tools/arduino/mk61-arduino-board.cmd`;
+- Windows, из cmd.exe или PowerShell: `tools\arduino\mk61-arduino-board.cmd`.
 
 Это полиглотный launcher: в macOS/Linux он запускает shell-установщик, а в
 Windows - PowerShell. Он копирует пакет платы с нашим SDK в sketchbook
@@ -100,21 +100,21 @@ GNU Arm LTO получает доступный путь к `sketch\objs.a`; LTO
 Если sketchbook перенесён из стандартного каталога:
 
 ```bash
-./tools/mk61-arduino-board.cmd --sketchbook /path/to/Arduino
+./tools/arduino/mk61-arduino-board.cmd --sketchbook /path/to/Arduino
 ```
 
 ```powershell
-tools\mk61-arduino-board.cmd -Sketchbook D:\Arduino
+tools\arduino\mk61-arduino-board.cmd -Sketchbook D:\Arduino
 ```
 
 Проверить установку без изменения файлов:
 
 ```bash
-./tools/mk61-arduino-board.cmd --check
+./tools/arduino/mk61-arduino-board.cmd --check
 ```
 
 ```powershell
-tools\mk61-arduino-board.cmd -Check
+tools\arduino\mk61-arduino-board.cmd -Check
 ```
 
 После обновления репозитория запустите установщик ещё раз: установленная плата
@@ -136,7 +136,7 @@ runtime и драйверами. Заголовки SDK, linker script и пар
 
 Начиная с пакета 1.2.0 перед компиляцией проверяется совпадение его файлов с
 проектом. При несовпадении сборка просит закрыть IDE, запустить
-`tools\mk61-arduino-board.cmd` **из обновлённой папки проекта** и открыть IDE
+`tools\arduino\mk61-arduino-board.cmd` **из обновлённой папки проекта** и открыть IDE
 заново. Для более старой установки сначала выполните обновление вручную.
 Если Arduino останавливается ещё раньше с `Неверный FQBN`,
 переустановите пакет той же командой: проверка параметров FQBN происходит
@@ -152,8 +152,8 @@ Python-сборщики на Windows больше не собирают APP: п�
 После обновления ZIP нужно заменить и установленный пакет платы:
 
 ```powershell
-.\tools\mk61-arduino-board.cmd
-.\tools\mk61-arduino-board.cmd -Check
+.\tools\arduino\mk61-arduino-board.cmd
+.\tools\arduino\mk61-arduino-board.cmd -Check
 ```
 
 Запускайте команды из новой папки проекта при закрытой Arduino IDE.
@@ -285,7 +285,7 @@ Windows-сборка кладёт `mk61-system-installer.ps1` рядом с вр
 передаётся непосредственно STM32CubeProgrammer. Даже если STM32 Core
 не установлен, после успешного DFU выполняется тот же второй этап через CDC.
 После обновления исходников повторно установите плату командой
-`tools\mk61-arduino-board.cmd` и перезапустите IDE: старая копия `platform.txt`
+`tools\arduino\mk61-arduino-board.cmd` и перезапустите IDE: старая копия `platform.txt`
 в sketchbook сама не обновится. Команда с `-Check` не ограничивается наличием
 файлов: она сравнивает установленный пакет с текущим репозиторием и завершится
 ошибкой `installed but stale`, если IDE всё ещё получила бы старый uploader.
@@ -365,9 +365,9 @@ A00/A02 меняют набор символов, но не электричес
 
 ## Самостоятельные APP и сжатие
 
-Legacy-путь `tools/build_f401_bundle.sh` запускает отдельные Arduino-сборки с
-LTO и host-упаковщик ZX0. Он оставлен для пользовательских manifest APP, где
-пока нужны `arduino-cli`, Bash и отдельный C++17-компилятор.
+`tools/firmware/stm32/build_f401_bundle.sh` собирает native-комплект GCC с
+System и пользовательскими manifest APP через общий SDK ABI 6. Для этого
+пути нужны Bash, Python 3 и host-компилятор C++17 для упаковщика ZX0.
 
 Платы `MK61s F401 + APP` и `MK61s F411 + APP` вызывают тот же
 самостоятельный SDK ABI 6, что
@@ -381,7 +381,7 @@ RAM, ниже защиты стека. Постоянного 20-КиБ резе
 нужно пересобрать; готовые ABI 6 продолжают работать без изменений.
 
 Канонический путь `tools/mk61-firmware.cmd` на Windows и macOS/Linux вызывает
-`tools/build-gcc.cmd` и собирает все включённые модули через общий SDK с тем же выбором сжатия.
+`tools/firmware/stm32/build-gcc.cmd` и собирает все включённые модули через общий SDK с тем же выбором сжатия.
 SETUP содержит экраны платы, RTC и шрифта. Справка терминала извлекается
 из секции ELF, которая не занимает Flash устройства; копируйте весь `System`.
 Написание собственных
@@ -393,30 +393,30 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 | Сообщение | Что проверить |
 | --- | --- |
 | Плата не видна | Закрыть все окна IDE, повторить установщик и сверить напечатанный sketchbook с `File → Preferences → Sketchbook location`; после запуска искать `MK61s F401 + APP` или `MK61s F411 + APP` в Board Selector/`Tools → Board`, а не в Boards Manager. |
-| `Invalid FQBN` / `недопустимый параметр 'mk61_font_settings'` | Arduino IDE сохранила в FQBN удалённую настройку старой версии платы. Закрыть все окна IDE, обновить репозиторий, повторно выполнить `tools\mk61-arduino-board.cmd` и запустить IDE. Установщик добавит безвредную совместимость со старыми `disabled`/`enabled`; сбрасывать все настройки IDE не нужно. |
+| `Invalid FQBN` / `недопустимый параметр 'mk61_font_settings'` | Arduino IDE сохранила в FQBN удалённую настройку старой версии платы. Закрыть все окна IDE, обновить репозиторий, повторно выполнить `tools\arduino\mk61-arduino-board.cmd` и запустить IDE. Установщик добавит безвредную совместимость со старыми `disabled`/`enabled`; сбрасывать все настройки IDE не нужно. |
 | `LiquidCrystal.h: No such file` / не найден `STM32duino RTC` | Выбрана старая плата или её установленная копия. Обновить проект, закрыть IDE, повторить установщик и выбрать MK61s F401/F411 + APP версии 2.0.0. |
-| `language APPs use the resident runtime; local libm is disabled` | Выберите «Математика → CORE». Обновите проект, закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Пакет `2.0.0` исправляет старый сохранённый выбор автоматически. |
-| `STM32 core ... is selected; MK61s requires 2.12.0` | Сработал устаревший запрет установленной копии пакета. Закройте IDE, обновите проект, повторите `tools\mk61-arduino-board.cmd` и перезапустите IDE. Понижать версию Core не нужно: пакет 2.0.0 от него не зависит. |
+| `language APPs use the resident runtime; local libm is disabled` | Выберите «Математика → CORE». Обновите проект, закройте IDE, повторно выполните `tools\arduino\mk61-arduino-board.cmd` и перезапустите IDE. Пакет `2.0.0` исправляет старый сохранённый выбор автоматически. |
+| `STM32 core ... is selected; MK61s requires 2.12.0` | Сработал устаревший запрет установленной копии пакета. Закройте IDE, обновите проект, повторите `tools\arduino\mk61-arduino-board.cmd` и перезапустите IDE. Понижать версию Core не нужно: пакет 2.0.0 от него не зависит. |
 | `lto-wrapper ... serial compilation` / `missing .note.GNU-stack` | Это предупреждения; итоговую причину остановки ищите дальше в логе. Созданный BIN и успешная CRC подтверждают только готовность resident, весь комплект должен закончиться сообщением `unified ABI 6 bundle built by Arduino IDE`. |
-| `read ECONNRESET` | Соединение IDE оборвалось, но эта строка не объясняет причину. Закройте IDE, обновите проект, повторите `tools\mk61-arduino-board.cmd`, затем `-Check` и запустите IDE заново. При повторении запустите IDE из PowerShell и сохраните её вывод со строками `daemon`, `panic` и `Daemon exited`; отдельно укажите версию IDE. Один готовый BIN не подтверждает сборку `/System`. |
+| `read ECONNRESET` | Соединение IDE оборвалось, но эта строка не объясняет причину. Закройте IDE, обновите проект, повторите `tools\arduino\mk61-arduino-board.cmd`, затем `-Check` и запустите IDE заново. При повторении запустите IDE из PowerShell и сохраните её вывод со строками `daemon`, `panic` и `Daemon exited`; отдельно укажите версию IDE. Один готовый BIN не подтверждает сборку `/System`. |
 | `incompatible platform/display pair` | Выбрать LCD для mini либо UC1609 для Classic/40th. |
 | OLED включается, но текст неверный | Выбрать `OLED1602 · WS0010 FT=10`, затем проверить `display test map 0..7`. |
 | `WBMP/CHIP-8 requires UC1609 or USB Screen` | Включить USB-экран для mini либо выключить графические APP. |
 | `exceeds the 20 KiB APP image limit` | Выбранный APP вырос сверх лимита одного образа; это не постоянный резерв SRAM и не ошибка DFU. |
 | `app/firmware mismatch` | Старый ABI 2/3/4 нужно пересобрать; для ABI 6 проверьте версию публичных сервисов. |
-| `python.exe`, `python3.exe` или `py.exe failed with exit code ...` | Arduino запускает старую установленную копию пакета платы. Закройте IDE, обновите `main`, из новой папки выполните `tools\mk61-arduino-board.cmd`, затем `tools\mk61-arduino-board.cmd -Check` и перезапустите IDE. Актуальная Windows-сборка и Upload используют PowerShell/.NET. |
-| `C++17 compiler not found` | Установлен старый пакет платы или старые скрипты репозитория. В свежей Windows-сборке APP пакуются PowerShell/.NET-кодом и Visual Studio/LLVM не требуются; обновите `main`, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. |
+| `python.exe`, `python3.exe` или `py.exe failed with exit code ...` | Arduino запускает старую установленную копию пакета платы. Закройте IDE, обновите `main`, из новой папки выполните `tools\arduino\mk61-arduino-board.cmd`, затем `tools\arduino\mk61-arduino-board.cmd -Check` и перезапустите IDE. Актуальная Windows-сборка и Upload используют PowerShell/.NET. |
+| `C++17 compiler not found` | Установлен старый пакет платы или старые скрипты репозитория. В свежей Windows-сборке APP пакуются PowerShell/.NET-кодом и Visual Studio/LLVM не требуются; обновите `main`, повторно выполните `tools\arduino\mk61-arduino-board.cmd` и перезапустите IDE. |
 | `gcc-ar.exe: Cannot find plugin 'liblto_plugin.dll'` | Сам GCC установлен в Unicode-каталог. Обновите проект, закройте IDE и повторите установщик платы: он выберет отдельный реальный ASCII-каталог компилятора. Для явно заданного `-ToolchainDirectory` используйте ASCII-путь. LTO сохраняется. |
-| `lto1.exe ... sketch\objs.a failed` | Путь сборочного кэша IDE содержит символы, потерянные Windows-версией GNU Arm LTO. Закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Установщик создаст отдельный ASCII-кэш, сохранив LTO. |
+| `lto1.exe ... sketch\objs.a failed` | Путь сборочного кэша IDE содержит символы, потерянные Windows-версией GNU Arm LTO. Закройте IDE, повторно выполните `tools\arduino\mk61-arduino-board.cmd` и перезапустите IDE. Установщик создаст отдельный ASCII-кэш, сохранив LTO. |
 | `STM32CubeProgrammer CLI not found` | Установите STM32CubeProgrammer с USB DFU-драйвером. Для нестандартной установки задайте полный путь к CLI через `MK61_STM32_PROGRAMMER`. STM32 Core и BusyBox не нужны. |
-| `Error missing binary file argument!` | Используется старая копия MK61 uploader, которая передавала Windows-путь STM32 shell-обёртке отдельными короткими аргументами. Обновите `main`, закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd`, перезапустите IDE и повторите Upload. |
+| `Error missing binary file argument!` | Используется старая копия MK61 uploader, которая передавала Windows-путь STM32 shell-обёртке отдельными короткими аргументами. Обновите `main`, закройте IDE, повторно выполните `tools\arduino\mk61-arduino-board.cmd`, перезапустите IDE и повторите Upload. |
 | Upload не находит устройство | Проверить, что выбрана плата для реально установленного F401/F411, перевести контроллер в системный DFU и повторить Upload. |
-| `MKC terminal installer not found: C:\Program Files\Arduino IDE\tools\.mkc\mkc.ps1` | Используется старый uploader, который ошибочно полагается на `build.source.path` во время Upload. Обновите `main`, закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd`, перезапустите IDE и заново соберите проект. Если resident уже прошит, достаточно приведённой выше команды `mkc.cmd --install-system`; повторный DFU не нужен. |
+| `MKC terminal installer not found: C:\Program Files\Arduino IDE\tools\mkc\mkc.ps1` | Используется старый uploader, который ошибочно полагается на `build.source.path` во время Upload. Обновите `main`, закройте IDE, повторно выполните `tools\arduino\mk61-arduino-board.cmd`, перезапустите IDE и заново соберите проект. Если resident уже прошит, достаточно приведённой выше команды `mkc.cmd --install-system`; повторный DFU не нужен. |
 | `System APP installation failed` | Resident уже может быть прошит. Проверьте COM-порт и закройте все программы, использующие его, затем выполните показанную выше команду `mkc.cmd --install-system` без повторного DFU. |
 
 ### Обновление старых пакетов
 
-При сообщении `прошивка mini-v2-a00 не соответствует пакету mini-v2-lcd1602-a00` в пакете платы до `1.2.2` загрузчик смешивал имя каталога сборки и ID прошивки. Закройте IDE, обновите проект, повторно выполните `tools\mk61-arduino-board.cmd`, перезапустите IDE и выберите плату `2.0.0`. Если resident уже прошит, в команде восстановления замените только `--expect-profile mini-v2-lcd1602-a00` на `--expect-profile mini-v2-a00` и укажите настоящий COM-порт. Каталог `System` переименовывать не нужно.
+При сообщении `прошивка mini-v2-a00 не соответствует пакету mini-v2-lcd1602-a00` в пакете платы до `1.2.2` загрузчик смешивал имя каталога сборки и ID прошивки. Закройте IDE, обновите проект, повторно выполните `tools\arduino\mk61-arduino-board.cmd`, перезапустите IDE и выберите плату `2.0.0`. Если resident уже прошит, в команде восстановления замените только `--expect-profile mini-v2-lcd1602-a00` на `--expect-profile mini-v2-a00` и укажите настоящий COM-порт. Каталог `System` переименовывать не нужно.
 
 В пакете платы 1.2.4 служебные команды F401 загружаются из
 `/System/TERMINAL.APP` и `/System/CLOCK.APP`. Они собираются и устанавливаются

@@ -4,6 +4,10 @@
 Writes only /URQTEST; firmware flashing is a separate explicit action. Keys
 are USB-injected matrix events, not a claim of human physical-key testing.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import binascii
 import hashlib
@@ -13,7 +17,7 @@ import re
 import sys
 import time
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
-from qst2urq import make_package
+from tools.apps.urq.qst2urq import make_package
 from hil_c6_system_bootstrap import write_file,read_file
 from hil_portable_apps import ScreenPort
 from hil_portable_system_apps import png

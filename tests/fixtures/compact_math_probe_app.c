@@ -1,7 +1,7 @@
 /* Diagnostic user APP: exercise resident binary64 services against independent
  * vectors, then time identical 1024-call batches. It changes only reserved
  * test files; the host runner installs/removes them and verifies preservation.
- * Build with tools/build_portable_app.py --name MATHCHK --source this-file.
+ * Build with tools/apps/portable/build_portable_app.py --name MATHCHK --source this-file.
  */
 #include "mk61_app.h"
 #include <stdint.h>

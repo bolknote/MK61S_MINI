@@ -56,7 +56,7 @@ def main():
         ''.join(f'#define {macro} 0x{fixture["symbols"][name]["address"]:08X}U\n'
                 for macro, name in defines))
     (output / 'resident.json').write_text(json.dumps(fixture, indent=2) + '\n')
-    subprocess.run([sys.executable, str(ROOT / 'tools/build_portable_app.py'),
+    subprocess.run([sys.executable, str(ROOT / 'tools/apps/portable/build_portable_app.py'),
                     '--name', 'MEMAUX', '--shared-runtime', '--source',
                     str(ROOT / 'tests/experimental/memory_aux_hil.cpp'),
                     '--include', str(output), '--arm-toolchain-bin', str(toolchain),

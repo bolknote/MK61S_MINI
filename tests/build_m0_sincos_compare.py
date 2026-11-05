@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Prepare sin/cos-only diagnostic firmware and bounded timing APP; no USB."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse,collections,gzip,hashlib,json,math,shutil,struct,subprocess,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'tests'),str(ROOT/'tools')]
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 from check_stm32_vectors import ElfImage
 from check_m0_math_layout import verify,symbol_types
 from m0_mpfr_oracle import Oracle,real
@@ -65,7 +69,7 @@ def main():
     fixture=out/'TIMING-fixture.c';shutil.copy2(ROOT/'tests/fixtures/m0_math_compare_benchmark.c',fixture)
     wrapper=out/'TIMING.c';wrapper.write_text('#define MK61_M0_TIMING_CACHE 1\n#define MK61_M0_TIMING_BOUNDED_WARMUP 1\n'+
         f'#define MK61_MATH_COMPARE_ROOT "/{a.directory}"\n#include "{fixture}"\n')
-    argv=[sys.executable,'-B',str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h',
+    argv=[sys.executable,'-B',str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h',
           '--name','TIMING','--source',str(wrapper),'--shared-runtime',
           '--arm-toolchain-bin',str(compiler_bin(None)),'--output-dir',str(out/'app')]
     with (out/'app-build.log').open('x') as f:subprocess.run(argv,check=True,stdout=f,stderr=subprocess.STDOUT)

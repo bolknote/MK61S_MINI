@@ -5,7 +5,7 @@
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[1]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import importlib.util
 import os
 from pathlib import Path
@@ -16,10 +16,10 @@ import tempfile
 import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
-import build_system_app_bundle as bundle
+from tools.apps.system import build_system_app_bundle as bundle
 from m8_codec import encode as encode_m8
 from hil_c6_system_bootstrap import bundle_payload
-spec = importlib.util.spec_from_file_location('help_export', ROOT/'tools/.mk61-app/build_terminal_help.py')
+spec = importlib.util.spec_from_file_location('help_export', ROOT/'tools/apps/system/build_terminal_help.py')
 export = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(export)
 

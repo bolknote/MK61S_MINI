@@ -1100,7 +1100,7 @@ outlined helper имеет собственные 56 байт, без роста
 
 `MK61_VM_FILE_CACHE=1` в resident включает необязательный обычный APP
 `/System/VMCache/VMSTORE.APP`, собираемый через
-`tools/build_portable_app.py --system vm-file-cache`. Флаг по умолчанию **0**:
+`tools/apps/portable/build_portable_app.py --system vm-file-cache`. Флаг по умолчанию **0**:
 автоматической установки или включения в штатные bundles пока нет.
 Отсутствие helper сохраняет прежний RAM-кеш/компиляцию.
 

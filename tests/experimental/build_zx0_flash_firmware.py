@@ -38,7 +38,7 @@ def main():
         (source/'code/zx0_encode.cpp').write_bytes(original)
     epoch=subprocess.check_output(['git','show','-s','--format=%ct',commit],cwd=ROOT,text=True).strip()
     env=dict(os.environ,SOURCE_DATE_EPOCH=epoch)
-    command=[sys.executable,source/'tools/.mk61-gcc/build-standalone.py',
+    command=[sys.executable,source/'tools/firmware/stm32/build-standalone.py',
         '--source-root',source,'--build-path',out/'build','--profile','classic-v3','--mcu','f411',
         '--jobs',a.jobs]
     (out/'build-command.json').write_text(json.dumps(list(map(str,command)),indent=2)+'\n')

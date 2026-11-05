@@ -5,13 +5,13 @@
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[1]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 from pathlib import Path
 from fractions import Fraction as F
 import argparse,hashlib,itertools,json,random,subprocess,sys
 root=Path(__file__).resolve().parents[1];sys.path[:0]=[str(root/'tests'),str(root/'tools')]
 from native_eabi_m0_arm_self_test import Machine
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 parser=argparse.ArgumentParser(description='Certify and execute the compact normal-pow log tail on ARM.')
 parser.add_argument('--source-root',type=Path,default=root)
 parser.add_argument('--toolchain')

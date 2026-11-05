@@ -4,7 +4,7 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$builder = Join-Path $root 'tools/build-system-app-bundle.ps1'
+$builder = Join-Path $root 'tools/apps/system/build-system-app-bundle.ps1'
 $temporary = Join-Path ([IO.Path]::GetTempPath()) (
     'mk61-app-catalog-ps-' + [guid]::NewGuid().ToString('N'))
 $catalog = Join-Path $temporary 'catalog'

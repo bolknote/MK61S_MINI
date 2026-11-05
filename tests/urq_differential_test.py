@@ -9,12 +9,12 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location("qst2urq", ROOT / "tools/qst2urq.py")
+spec = importlib.util.spec_from_file_location("qst2urq", ROOT / "tools/apps/urq/qst2urq.py")
 packer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(packer)
 HOST, UPSTREAM = map(Path, sys.argv[1:3])
 del sys.argv[1:3]
-LOCK = json.loads((ROOT / "tools/urq/upstream.json").read_text())
+LOCK = json.loads((ROOT / "tools/apps/urq/upstream.json").read_text())
 
 STORIES = [
     (":start\nx=-2^2\ny=2^3^2\nz=1=2<3\na=not 1+2\n"
@@ -70,7 +70,7 @@ class DifferentialTests(unittest.TestCase):
                     files, _ = packer.make_package(source.encode(), mode, "UTF-8")
                     for name, data in files.items():
                         (directory / name).write_bytes(data)
-                    reference = subprocess.run(["node", str(ROOT / "tools/urq/oracle.js"),
+                    reference = subprocess.run(["node", str(ROOT / "tools/apps/urq/oracle.js"),
                                                 str(UPSTREAM), str(qst), mode, *commands],
                                                capture_output=True, text=True, timeout=15)
                     self.assertEqual(reference.returncode, 0, reference.stderr)

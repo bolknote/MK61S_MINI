@@ -1,0 +1,2900 @@
+﻿#requires -Version 5.1
+
+<#
+  Interactive firmware builder/uploader for MK61S_MINI.
+  The UI is implemented with System.Console; no dialog module is required.
+#>
+
+Set-StrictMode -Version 2.0
+$ErrorActionPreference = 'Stop'
+
+$script:Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+$script:Escape = [char]27
+try {
+    [Console]::OutputEncoding = $script:Utf8NoBom
+    $OutputEncoding = $script:Utf8NoBom
+} catch {}
+
+$script:ProgramPort = ''
+$script:ProgramVerify = $false
+
+function Get-EnvironmentOrDefault {
+    param([string]$Name, [string]$Default)
+    $value = [Environment]::GetEnvironmentVariable($Name)
+    if ([string]::IsNullOrWhiteSpace($value)) { return $Default }
+    return $value
+}
+
+$script:ScriptDir = $PSScriptRoot
+$script:ProjectRoot = (Resolve-Path (Join-Path $script:ScriptDir '../../..')).Path
+$script:ArduinoCli = Get-EnvironmentOrDefault 'MK61_ARDUINO_CLI' 'arduino-cli'
+$script:BuildRoot = Get-EnvironmentOrDefault 'MK61_BUILD_ROOT' (Join-Path $script:ProjectRoot '.build/mk61-firmware')
+$script:OutputDir = Get-EnvironmentOrDefault 'MK61_OUTPUT_DIR' (Join-Path $script:ProjectRoot '.build/firmware')
+$script:ConfigFile = Get-EnvironmentOrDefault 'MK61_CONFIG_FILE' (Join-Path $script:ProjectRoot '.mk61-firmware.conf')
+$script:LegacySelectionFile = Join-Path $script:BuildRoot 'selected-profile'
+$script:LastLog = Join-Path $script:BuildRoot 'last.log'
+
+$script:Stm32CoreVersion = '2.12.0'
+$script:Stm32PackageUrl = 'https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json'
+$script:FqbnF411 = 'STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
+$script:FqbnF401 = 'STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+$script:PlatformRamFlags = '-DHAL_UART_MODULE_ONLY -DHAL_TIM_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+$script:ResidentReleaseFlags = '-DMK61_REQUIRE_RESIDENT_CRC=1'
+
+$script:IsWindowsHost = $env:OS -eq 'Windows_NT'
+$script:IsMacHost = $false
+try {
+    $script:IsWindowsHost = [Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
+        [Runtime.InteropServices.OSPlatform]::Windows)
+    $script:IsMacHost = [Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
+        [Runtime.InteropServices.OSPlatform]::OSX)
+} catch {
+    $script:IsMacHost = -not $script:IsWindowsHost -and (uname -s 2>$null) -eq 'Darwin'
+}
+
+function Initialize-TuiGlyphs {
+    if ($script:IsWindowsHost) {
+        # conhost Windows 10 со шрифтом Consolas заменяет несколько значков
+        # выбора одинаковым квадратом с вопросом. Сохраняем однозначность
+        # интерфейса в стиле Norton и в Windows PowerShell 5.1, и в PowerShell 7.
+        $script:Glyphs = @{
+            Selector = '>'; RadioOff = '( )'; RadioOn = '(*)'; RadioDisabled = '(-)'
+            CheckOff = '[ ]'; CheckOn = '[x]'
+            MenuUpload = '^'; MenuBuild = '#'; MenuChoice = 'o'; MenuOptions = '[x]'
+            MenuDetect = '?'; MenuCheck = '+'; MenuInstall = 'v'; MenuLog = '='; MenuQuit = 'x'
+            MenuNext = '>'
+        }
+    } else {
+        $script:Glyphs = @{
+            Selector = '▶'; RadioOff = '○'; RadioOn = '◉'; RadioDisabled = '⊘'
+            CheckOff = '☐'; CheckOn = '☑'
+            MenuUpload = '▲'; MenuBuild = '⚒'; MenuChoice = '◉'; MenuOptions = '☑'
+            MenuDetect = '⌕'; MenuCheck = '✓'; MenuInstall = '↓'; MenuLog = '≡'; MenuQuit = '×'
+            MenuNext = '›'
+        }
+    }
+}
+
+Initialize-TuiGlyphs
+
+$script:State = [ordered]@{
+    Profile = ''
+    Platform = ''
+    Screen = ''
+    Mcu = 'f411'
+    CliProfile = $false
+    CliMcu = $false
+    EnableFocal = 1
+    EnableTinyBasic = 1
+    EnableWbmp = 0
+    EnableMarkdown = 1
+    EnableChip8 = 0
+    EnableSetup = 1
+    FocalAsApp = -1
+    TinyBasicAsApp = -1
+    WbmpAsApp = -1
+    MarkdownAsApp = -1
+    Chip8AsApp = -1
+    SetupAsApp = -1
+    ExplorerAsApp = -1
+    EnableUsbScreen = 0
+    ExternalizeUsbDisk = 0
+    EnableFonts = 0
+    EnableExplorer = 1
+    MathBackend = 0
+    AppLocalFloat = 0
+    DeviceStatus = 'не проверялось'
+    DfuPath = ''
+    CubeProgrammerPath = ''
+    DfuStatus = 'не найден'
+    DetectedPort = ''
+    DetectedVersion = ''
+    Interactive = $false
+}
+
+$script:ActiveJob = $null
+$script:ScreenActive = $false
+$script:ListFirstRow = 0
+$script:ProgressTitle = ''
+$script:ProgressVisible = $false
+$script:OriginalForeground = [ConsoleColor]::Gray
+$script:OriginalBackground = [ConsoleColor]::Black
+$script:OriginalCursorVisible = $true
+$script:ConsoleColumns = 80
+$script:ConsoleRows = 24
+$script:WindowWidth = 78
+$script:TextWidth = 74
+$script:MarginWidth = 1
+$script:UseColor = (Get-EnvironmentOrDefault 'MK61_COLOR' 'always') -ne 'never'
+
+$script:Styles = @{
+    Outside  = @([ConsoleColor]::Gray,     [ConsoleColor]::Black)
+    Window   = @([ConsoleColor]::White,    [ConsoleColor]::DarkBlue)
+    Border   = @([ConsoleColor]::Cyan,     [ConsoleColor]::DarkBlue)
+    Muted    = @([ConsoleColor]::DarkCyan, [ConsoleColor]::DarkBlue)
+    Selected = @([ConsoleColor]::Black,    [ConsoleColor]::Cyan)
+    Yellow   = @([ConsoleColor]::Yellow,   [ConsoleColor]::DarkBlue)
+    Red      = @([ConsoleColor]::Red,      [ConsoleColor]::DarkBlue)
+    White    = @([ConsoleColor]::White,    [ConsoleColor]::DarkBlue)
+    Cyan     = @([ConsoleColor]::Cyan,     [ConsoleColor]::DarkBlue)
+}
+$script:AnsiStyles = @{
+    Outside  = '[0m'
+    Window   = '[0;37;44m'
+    Border   = '[1;36;44m'
+    Muted    = '[0;36;44m'
+    Selected = '[30;46m'
+    Yellow   = '[1;33;44m'
+    Red      = '[1;31;44m'
+    White    = '[1;37;44m'
+    Cyan     = '[1;36;44m'
+}
+
+$script:Profiles = [ordered]@{
+    'mini-v3-a00' = @{
+        Label = 'mini V3 · LCD1602 A00'; Platform = 'mini-v3'; Screen = 'lcd1602-a00'
+        Flags = '-DMK61_LCD1602_A00'; Artifact = 'mk61s-M-mini-v3-lcd1602-a00-f411.bin'
+    }
+    'mini-v3-a02' = @{
+        Label = 'mini V3 · LCD1602 A02'; Platform = 'mini-v3'; Screen = 'lcd1602-a02'
+        Flags = '-DMK61_LCD1602_A02'; Artifact = 'mk61s-M-mini-v3-lcd1602-a02-f411.bin'
+    }
+    'mini-v3-ws0010' = @{
+        Label = 'mini V3 · OLED1602 WS0010'; Platform = 'mini-v3'; Screen = 'oled1602-ws0010'
+        Flags = '-DMK61_OLED1602_WS0010'; Artifact = 'mk61s-M-mini-v3-oled1602-ws0010-f411.bin'
+    }
+    'mini-v2-a00' = @{
+        Label = 'mini V2 · LCD1602 A00'; Platform = 'mini-v2'; Screen = 'lcd1602-a00'
+        Flags = '-DREVISION_V2 -DMK61_LCD1602_A00'; Artifact = 'mk61s-M-mini-v2-lcd1602-a00-f411.bin'
+    }
+    'mini-v2-a02' = @{
+        Label = 'mini V2 · LCD1602 A02'; Platform = 'mini-v2'; Screen = 'lcd1602-a02'
+        Flags = '-DREVISION_V2 -DMK61_LCD1602_A02'; Artifact = 'mk61s-M-mini-v2-lcd1602-a02-f411.bin'
+    }
+    'classic-v2' = @{
+        Label = 'Classic V2 · UC1609 192×64'; Platform = 'classic-v2'; Screen = 'uc1609'
+        Flags = '-DMK61_BOARD_CLASSIC_V2'; Artifact = 'mk61s-M-classic-v2-uc1609-f411.bin'
+    }
+    'classic-v3' = @{
+        Label = 'Classic V3 · UC1609 192×64'; Platform = 'classic-v3'; Screen = 'uc1609'
+        Flags = '-DMK61_BOARD_CLASSIC_V3'; Artifact = 'mk61s-M-classic-v3-uc1609-f411.bin'
+    }
+    '40th' = @{
+        Label = 'MK61s 40th · UC1609 192×64'; Platform = '40th'; Screen = 'uc1609'
+        Flags = '-DMK61_BOARD_40TH'; Artifact = 'mk61s-M-40th-f411.bin'
+    }
+}
+
+$script:PlatformLabels = [ordered]@{
+    'mini-v3' = 'mini V3'
+    'mini-v2' = 'mini V2'
+    'classic-v2' = 'Classic V2'
+    'classic-v3' = 'Classic V3'
+    '40th' = 'MK61s 40th'
+}
+
+$script:ScreenLabels = [ordered]@{
+    'lcd1602-a00' = 'LCD1602 · CGROM A00'
+    'lcd1602-a02' = 'LCD1602 · CGROM A02'
+    'oled1602-ws0010' = 'OLED1602 · WS0010 FT=10'
+    'uc1609' = 'UC1609 · 192×64'
+}
+
+function Test-Profile { param([string]$Id) return $script:Profiles.Contains($Id) }
+function Test-Platform { param([string]$Id) return $script:PlatformLabels.Contains($Id) }
+function Test-Screen { param([string]$Id) return $script:ScreenLabels.Contains($Id) }
+function Test-Mcu { param([string]$Id) return $Id -eq 'f411' -or $Id -eq 'f401' }
+
+function Get-McuLabel {
+    param([string]$Id)
+    switch ($Id) {
+        'f411' { return 'STM32F411CE · 512 KiB Flash · встроено по умолчанию' }
+        'f401' { return 'STM32F401CC · 256 KiB Flash · APP по умолчанию' }
+    }
+    return 'не выбран'
+}
+
+function Get-Fqbn {
+    param([string]$Mcu = $script:State.Mcu)
+    if ($Mcu -eq 'f401') { return $script:FqbnF401 }
+    if ($Mcu -eq 'f411') { return $script:FqbnF411 }
+    throw "Unsupported MCU: $Mcu"
+}
+
+function Get-ProfileArtifactName {
+    param([string]$Profile, [string]$Mcu = $script:State.Mcu)
+    if (-not (Test-Profile $Profile)) { throw "Unsupported profile: $Profile" }
+    if (-not (Test-Mcu $Mcu)) { throw "Unsupported MCU: $Mcu" }
+    $name = [string]$script:Profiles[$Profile].Artifact
+    if ($Mcu -eq 'f401') { return $name.Replace('-f411.bin', '-f401.bin') }
+    return $name
+}
+
+function Get-ProfileBundleDir {
+    param([string]$Profile)
+    $name = Get-ProfileArtifactName $Profile $script:State.Mcu
+    return Join-Path $script:OutputDir $name.Substring(0, $name.Length - 4)
+}
+
+function Get-ProfileArtifactPath {
+    param([string]$Profile)
+    $name = Get-ProfileArtifactName $Profile $script:State.Mcu
+    return Join-Path (Get-ProfileBundleDir $Profile) $name
+}
+
+function Remove-LegacyFlatArtifacts {
+    param([string]$Profile)
+    $name = Get-ProfileArtifactName $Profile $script:State.Mcu
+    $legacy = Join-Path $script:OutputDir $name
+    foreach ($path in @($legacy, "$legacy.flags")) {
+        if ([IO.File]::Exists($path)) {
+            Remove-Item -LiteralPath $path -Force
+        }
+    }
+}
+
+function Test-HardwareCompatible {
+    param([string]$Platform, [string]$Screen)
+    switch ("$Platform`:$Screen") {
+        'mini-v3:lcd1602-a00' { return $true }
+        'mini-v3:lcd1602-a02' { return $true }
+        'mini-v3:oled1602-ws0010' { return $true }
+        'mini-v2:lcd1602-a00' { return $true }
+        'mini-v2:lcd1602-a02' { return $true }
+        'classic-v2:uc1609' { return $true }
+        'classic-v3:uc1609' { return $true }
+        '40th:uc1609' { return $true }
+    }
+    return $false
+}
+
+function Get-ProfileFromHardware {
+    param([string]$Platform, [string]$Screen)
+    foreach ($id in $script:Profiles.Keys) {
+        $item = $script:Profiles[$id]
+        if ($item.Platform -eq $Platform -and $item.Screen -eq $Screen) { return $id }
+    }
+    return ''
+}
+
+function Set-HardwareFromProfile {
+    param([string]$Profile)
+    if (-not (Test-Profile $Profile)) { return $false }
+    $script:State.Platform = $script:Profiles[$Profile].Platform
+    $script:State.Screen = $script:Profiles[$Profile].Screen
+    return $true
+}
+
+function Sync-ProfileFromHardware {
+    $script:State.Profile = Get-ProfileFromHardware $script:State.Platform $script:State.Screen
+}
+
+function Get-PlatformLabel {
+    param([string]$Id)
+    if (Test-Platform $Id) { return $script:PlatformLabels[$Id] }
+    return 'не выбрана'
+}
+
+function Get-ScreenLabel {
+    param([string]$Id)
+    if (Test-Screen $Id) { return $script:ScreenLabels[$Id] }
+    return 'не выбран'
+}
+
+function Get-ProfileLabel {
+    param([string]$Id)
+    if (Test-Profile $Id) { return $script:Profiles[$Id].Label }
+    return 'не выбрано'
+}
+
+function Get-CompileOptionFlags {
+    return @(
+        "-DMK61_ENABLE_FOCAL=$($script:State.EnableFocal)"
+        "-DMK61_ENABLE_TINYBASIC=$($script:State.EnableTinyBasic)"
+        "-DMK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)"
+        "-DMK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
+        "-DMK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
+        "-DMK61_ENABLE_SETUP=$($script:State.EnableSetup)"
+        "-DMK61_FOCAL_AS_APP=$($script:State.FocalAsApp)"
+        "-DMK61_TINYBASIC_AS_APP=$($script:State.TinyBasicAsApp)"
+        "-DMK61_WBMP_VIEWER_AS_APP=$($script:State.WbmpAsApp)"
+        "-DMK61_MARKDOWN_VIEWER_AS_APP=$($script:State.MarkdownAsApp)"
+        "-DMK61_CHIP8_AS_APP=$($script:State.Chip8AsApp)"
+        "-DMK61_SETUP_AS_APP=$($script:State.SetupAsApp)"
+        "-DMK61_EXPLORER_AS_APP=$($script:State.ExplorerAsApp)"
+        "-DMK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
+        "-DMK61_EXTERNALIZE_USBDISK=$(Get-ExternalizeUsbDiskValue)"
+        "-DMK61_ENABLE_LOADABLE_MODULES=1"
+        "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
+        "-DMK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
+        "-DMK61_MATH_BACKEND=$($script:State.MathBackend)"
+        "-DMK61_APP_LOCAL_FLOAT_MATH=$($script:State.AppLocalFloat)"
+    ) -join ' '
+}
+
+function Get-AllCompileFlags {
+    param([string]$Profile)
+    if (-not (Test-Profile $Profile)) { throw "Unsupported profile: $Profile" }
+    return "$($script:Profiles[$Profile].Flags) $(Get-CompileOptionFlags) $script:ResidentReleaseFlags $script:PlatformRamFlags"
+}
+
+function Get-Checkbox {
+    param([int]$Value)
+    if ($Value -eq 1) { return $script:Glyphs.CheckOn }
+    return $script:Glyphs.CheckOff
+}
+
+function Get-ComponentModeLabel {
+    param([int]$Enabled, [int]$AsApp)
+    if ($Enabled -eq 0) { return 'выкл' }
+    if ($AsApp -eq 1) { return 'APP' }
+    return 'встроен'
+}
+
+function Get-NextComponentMode {
+    param([int]$Enabled, [int]$AsApp)
+    if ($Enabled -eq 1 -and $AsApp -eq 0) {
+        return [pscustomobject]@{ Enabled = 1; AsApp = 1 }
+    }
+    if ($Enabled -eq 1) {
+        return [pscustomobject]@{ Enabled = 0; AsApp = 0 }
+    }
+    return [pscustomobject]@{ Enabled = 1; AsApp = 0 }
+}
+
+function Normalize-ComponentPlacements {
+    $default = if ($script:State.Mcu -eq 'f411') { 0 } else { 1 }
+    foreach ($name in @(
+        'FocalAsApp', 'TinyBasicAsApp', 'WbmpAsApp',
+        'MarkdownAsApp', 'Chip8AsApp', 'SetupAsApp', 'ExplorerAsApp')) {
+        if ($script:State[$name] -notin @(0, 1)) {
+            $script:State[$name] = if ($script:State.EnableFocal -eq 1 -and
+                $name -in @('FocalAsApp', 'TinyBasicAsApp')) { 1 } else { $default }
+        }
+    }
+}
+
+function Set-DefaultComponentPlacements {
+    param([string]$Mcu)
+    $default = if ($Mcu -eq 'f411') { 0 } else { 1 }
+    $languageDefault = if ($script:State.EnableFocal -eq 1) { 1 } else { $default }
+    $script:State.FocalAsApp = $languageDefault
+    $script:State.TinyBasicAsApp = $languageDefault
+    $script:State.WbmpAsApp = $default
+    $script:State.MarkdownAsApp = $default
+    $script:State.Chip8AsApp = $default
+    $script:State.SetupAsApp = $default
+    $script:State.ExplorerAsApp = $default
+}
+
+function Get-ExternalizeUsbDiskValue {
+    if ($script:State.Mcu -eq 'f401') { return 1 }
+    return [int]$script:State.ExternalizeUsbDisk
+}
+
+function Get-CompileOptionsSummary {
+    return ('FOCAL:{0} · BASIC:{1} · WBMP:{2} · MD:{3} · CHIP-8:{4} · SETUP:{5} · EXPL:{6} · {7} USB · {8} MSCAPP · {9} FONT · {10} USER · MATH {11}' -f
+        (Get-ComponentModeLabel $script:State.EnableFocal $script:State.FocalAsApp),
+        (Get-ComponentModeLabel $script:State.EnableTinyBasic $script:State.TinyBasicAsApp),
+        (Get-ComponentModeLabel $script:State.EnableWbmp $script:State.WbmpAsApp),
+        (Get-ComponentModeLabel $script:State.EnableMarkdown $script:State.MarkdownAsApp),
+        (Get-ComponentModeLabel $script:State.EnableChip8 $script:State.Chip8AsApp),
+        (Get-ComponentModeLabel $script:State.EnableSetup $script:State.SetupAsApp),
+        (Get-ComponentModeLabel 1 $script:State.ExplorerAsApp),
+        (Get-Checkbox $script:State.EnableUsbScreen),
+        (Get-Checkbox (Get-ExternalizeUsbDiskValue)),
+        (Get-Checkbox $script:State.EnableFonts),
+        (Get-Checkbox $script:State.EnableExplorer),
+        (Get-MathBackendLabel))
+}
+
+function Get-MathBackendLabel {
+    return (Get-MathBackendLabelFor $script:State.MathBackend $script:State.AppLocalFloat)
+}
+
+function Get-MathBackendLabelFor {
+    param([int]$MathBackend, [int]$AppLocalFloat)
+    switch ($MathBackend) {
+        0 { return 'BINARY64' }
+        1 { return 'CORE' }
+    }
+}
+
+function Get-CompileOptionsDetails {
+    $mathText = "Математика: $(Get-MathBackendLabel) (MK61_MATH_BACKEND=$($script:State.MathBackend), MK61_APP_LOCAL_FLOAT_MATH=$($script:State.AppLocalFloat))"
+    return @(
+        "FOCAL: $(Get-ComponentModeLabel $script:State.EnableFocal $script:State.FocalAsApp) (MK61_ENABLE_FOCAL, MK61_FOCAL_AS_APP)"
+        "TinyBASIC: $(Get-ComponentModeLabel $script:State.EnableTinyBasic $script:State.TinyBasicAsApp) (MK61_ENABLE_TINYBASIC, MK61_TINYBASIC_AS_APP)"
+        "WBMP viewer без Markdown: $(Get-ComponentModeLabel $script:State.EnableWbmp $script:State.WbmpAsApp) (MK61_ENABLE_WBMP_VIEWER, MK61_WBMP_VIEWER_AS_APP)"
+        "Markdown + WBMP viewer: $(Get-ComponentModeLabel $script:State.EnableMarkdown $script:State.MarkdownAsApp) (MK61_ENABLE_MARKDOWN_VIEWER, MK61_MARKDOWN_VIEWER_AS_APP)"
+        "CHIP-8: $(Get-ComponentModeLabel $script:State.EnableChip8 $script:State.Chip8AsApp) (MK61_ENABLE_CHIP8, MK61_CHIP8_AS_APP)"
+        "Настройки: $(Get-ComponentModeLabel $script:State.EnableSetup $script:State.SetupAsApp) (MK61_ENABLE_SETUP, MK61_SETUP_AS_APP)"
+        "Проводник: $(Get-ComponentModeLabel 1 $script:State.ExplorerAsApp) (MK61_EXPLORER_AS_APP)"
+        "$(Get-Checkbox $script:State.EnableUsbScreen) USB-экран (MK61_ENABLE_USB_SCREEN)"
+        "$(Get-Checkbox (Get-ExternalizeUsbDiskValue)) USB-диск как USBDISK.APP (MK61_EXTERNALIZE_USBDISK)"
+        "$($script:Glyphs.CheckOn) единый APP runtime ABI 6 (MK61_ENABLE_LOADABLE_MODULES)"
+        "$(Get-Checkbox $script:State.EnableFonts) расширенные шрифты (MK61_ENABLE_EXTENDED_FONT_SETTINGS)"
+        "$(Get-Checkbox $script:State.EnableExplorer) USER → Explorer (MK61_USER_EXPLORER_SHORTCUT)"
+        $mathText
+    ) -join [Environment]::NewLine
+}
+
+function Test-BooleanValue { param([string]$Value) return $Value -eq '0' -or $Value -eq '1' }
+function Test-MathBackendValue { param([string]$Value) return $Value -match '^[01]$' }
+
+function Normalize-ViewerSelection {
+    if ($script:State.EnableMarkdown -eq 1) {
+        $script:State.EnableWbmp = 0
+    }
+}
+
+function Normalize-MathSelection {
+    # The shared language runtime retired local APP libm. Keep old config
+    # files usable by resolving their hybrid setting before any build starts.
+    $script:State.AppLocalFloat = 0
+}
+
+function Save-Config {
+    Normalize-ComponentPlacements
+    Normalize-ViewerSelection
+    Normalize-MathSelection
+    Sync-ProfileFromHardware
+    $parent = Split-Path -Parent $script:ConfigFile
+    if (-not [string]::IsNullOrEmpty($parent)) { [void](New-Item -ItemType Directory -Force -Path $parent) }
+    $temporary = "$($script:ConfigFile).tmp"
+    $lines = @(
+        '# Создано tools/mk61-firmware.cmd. Можно редактировать, пока инструмент закрыт.'
+        "MCU=$($script:State.Mcu)"
+        "PLATFORM=$($script:State.Platform)"
+        "SCREEN=$($script:State.Screen)"
+        "DFU_UTIL_PATH=$($script:State.DfuPath)"
+        "STM32_CUBE_PROGRAMMER_PATH=$($script:State.CubeProgrammerPath)"
+        "MK61_ENABLE_FOCAL=$($script:State.EnableFocal)"
+        "MK61_ENABLE_TINYBASIC=$($script:State.EnableTinyBasic)"
+        "MK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)"
+        "MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)"
+        "MK61_ENABLE_CHIP8=$($script:State.EnableChip8)"
+        "MK61_ENABLE_SETUP=$($script:State.EnableSetup)"
+        "MK61_FOCAL_AS_APP=$($script:State.FocalAsApp)"
+        "MK61_TINYBASIC_AS_APP=$($script:State.TinyBasicAsApp)"
+        "MK61_WBMP_VIEWER_AS_APP=$($script:State.WbmpAsApp)"
+        "MK61_MARKDOWN_VIEWER_AS_APP=$($script:State.MarkdownAsApp)"
+        "MK61_CHIP8_AS_APP=$($script:State.Chip8AsApp)"
+        "MK61_SETUP_AS_APP=$($script:State.SetupAsApp)"
+        "MK61_EXPLORER_AS_APP=$($script:State.ExplorerAsApp)"
+        "MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)"
+        "MK61_EXTERNALIZE_USBDISK=$($script:State.ExternalizeUsbDisk)"
+        'MK61_ENABLE_LOADABLE_MODULES=1'
+        "MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)"
+        "MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)"
+        "MK61_MATH_BACKEND=$($script:State.MathBackend)"
+        "MK61_APP_LOCAL_FLOAT_MATH=$($script:State.AppLocalFloat)"
+    )
+    [IO.File]::WriteAllLines($temporary, $lines, $script:Utf8NoBom)
+    Move-Item -LiteralPath $temporary -Destination $script:ConfigFile -Force
+}
+
+function Load-Config {
+    if (-not (Test-Path -LiteralPath $script:ConfigFile -PathType Leaf)) {
+        if ($script:State.CliProfile) {
+            [void](Set-HardwareFromProfile $script:State.Profile)
+        } elseif (Test-Path -LiteralPath $script:LegacySelectionFile -PathType Leaf) {
+            $legacy = ([IO.File]::ReadAllText($script:LegacySelectionFile)).Trim()
+            if (Test-Profile $legacy) {
+                $script:State.Profile = $legacy
+                [void](Set-HardwareFromProfile $legacy)
+            }
+        }
+        Normalize-ComponentPlacements
+        if ((Test-Platform $script:State.Platform) -or (Test-Screen $script:State.Screen)) {
+            Save-Config
+        }
+        return
+    }
+
+    $savedProfile = ''
+    $savedPlatform = ''
+    $savedScreen = ''
+    $savedMcu = 'f411'
+    foreach ($line in [IO.File]::ReadAllLines($script:ConfigFile)) {
+        $index = $line.IndexOf('=')
+        if ($index -lt 1) { continue }
+        $key = $line.Substring(0, $index)
+        $value = $line.Substring($index + 1).TrimEnd("`r")
+        switch ($key) {
+            'PROFILE' { if (Test-Profile $value) { $savedProfile = $value } }
+            'PLATFORM' { if (Test-Platform $value) { $savedPlatform = $value } }
+            'SCREEN' { if (Test-Screen $value) { $savedScreen = $value } }
+            'MCU' { if (Test-Mcu $value) { $savedMcu = $value } }
+            'DFU_UTIL_PATH' { $script:State.DfuPath = $value }
+            'STM32_CUBE_PROGRAMMER_PATH' { $script:State.CubeProgrammerPath = $value }
+            'MK61_ENABLE_FOCAL' { if (Test-BooleanValue $value) { $script:State.EnableFocal = [int]$value } }
+            'MK61_ENABLE_TINYBASIC' { if (Test-BooleanValue $value) { $script:State.EnableTinyBasic = [int]$value } }
+            'MK61_ENABLE_WBMP_VIEWER' { if (Test-BooleanValue $value) { $script:State.EnableWbmp = [int]$value } }
+            'MK61_ENABLE_MARKDOWN_VIEWER' { if (Test-BooleanValue $value) { $script:State.EnableMarkdown = [int]$value } }
+            'MK61_ENABLE_CHIP8' { if (Test-BooleanValue $value) { $script:State.EnableChip8 = [int]$value } }
+            'MK61_ENABLE_SETUP' { if (Test-BooleanValue $value) { $script:State.EnableSetup = [int]$value } }
+            'MK61_FOCAL_AS_APP' { if (Test-BooleanValue $value) { $script:State.FocalAsApp = [int]$value } }
+            'MK61_TINYBASIC_AS_APP' { if (Test-BooleanValue $value) { $script:State.TinyBasicAsApp = [int]$value } }
+            'MK61_WBMP_VIEWER_AS_APP' { if (Test-BooleanValue $value) { $script:State.WbmpAsApp = [int]$value } }
+            'MK61_MARKDOWN_VIEWER_AS_APP' { if (Test-BooleanValue $value) { $script:State.MarkdownAsApp = [int]$value } }
+            'MK61_CHIP8_AS_APP' { if (Test-BooleanValue $value) { $script:State.Chip8AsApp = [int]$value } }
+            'MK61_SETUP_AS_APP' { if (Test-BooleanValue $value) { $script:State.SetupAsApp = [int]$value } }
+            'MK61_EXPLORER_AS_APP' { if (Test-BooleanValue $value) { $script:State.ExplorerAsApp = [int]$value } }
+            'MK61_ENABLE_USB_SCREEN' { if (Test-BooleanValue $value) { $script:State.EnableUsbScreen = [int]$value } }
+            'MK61_EXTERNALIZE_USBDISK' { if (Test-BooleanValue $value) { $script:State.ExternalizeUsbDisk = [int]$value } }
+            'MK61_ENABLE_LOADABLE_MODULES' { }
+            'MK61_ENABLE_USER_APPS' { } # legacy setting: APP runtime is always enabled
+            'MK61_ENABLE_EXTENDED_FONT_SETTINGS' { if (Test-BooleanValue $value) { $script:State.EnableFonts = [int]$value } }
+            'MK61_USER_EXPLORER_SHORTCUT' { if (Test-BooleanValue $value) { $script:State.EnableExplorer = [int]$value } }
+            'MK61_MATH_BACKEND' { if (Test-MathBackendValue $value) { $script:State.MathBackend = [int]$value } }
+            'MK61_APP_LOCAL_FLOAT_MATH' { if (Test-BooleanValue $value) { $script:State.AppLocalFloat = [int]$value } }
+        }
+    }
+
+    if (-not $script:State.CliMcu) { $script:State.Mcu = $savedMcu }
+    Normalize-ComponentPlacements
+    Normalize-ViewerSelection
+    Normalize-MathSelection
+    if ($script:State.CliProfile) {
+        [void](Set-HardwareFromProfile $script:State.Profile)
+        return
+    }
+
+    $script:State.Platform = $savedPlatform
+    $script:State.Screen = $savedScreen
+    if ([string]::IsNullOrEmpty($savedPlatform) -and [string]::IsNullOrEmpty($savedScreen) -and
+        (Test-Profile $savedProfile)) {
+        $script:State.Profile = $savedProfile
+        [void](Set-HardwareFromProfile $savedProfile)
+        Sync-ProfileFromHardware
+        Save-Config
+        return
+    }
+    Sync-ProfileFromHardware
+}
+
+function Set-ConsoleStyle {
+    param([string]$Name)
+    if (-not $script:UseColor) {
+        return
+    }
+    [Console]::Write("$($script:Escape)$($script:AnsiStyles[$Name])")
+}
+
+function Write-Styled {
+    param([string]$Text, [string]$Style = 'Window')
+    Set-ConsoleStyle $Style
+    [Console]::Write($Text)
+}
+
+function Update-Layout {
+    try {
+        $script:ConsoleColumns = [Console]::WindowWidth
+        $script:ConsoleRows = [Console]::WindowHeight
+    } catch {
+        $script:ConsoleColumns = 80
+        $script:ConsoleRows = 24
+    }
+    if ($script:ConsoleColumns -ge 42) {
+        $script:WindowWidth = [Math]::Min(92, $script:ConsoleColumns - 2)
+        $script:WindowWidth = [Math]::Max(38, $script:WindowWidth)
+    } else {
+        $script:WindowWidth = [Math]::Max(20, $script:ConsoleColumns - 1)
+    }
+    $script:TextWidth = [Math]::Max(16, $script:WindowWidth - 4)
+    $script:MarginWidth = [Math]::Max(0, [int](($script:ConsoleColumns - $script:WindowWidth) / 2))
+}
+
+function Set-RowStart {
+    param([int]$Row)
+    try { [Console]::SetCursorPosition(0, $Row) } catch {}
+    Write-Styled (' ' * $script:MarginWidth) 'Outside'
+}
+
+function Complete-Row {
+    $used = $script:MarginWidth + $script:WindowWidth
+    $rest = [Math]::Max(0, $script:ConsoleColumns - $used)
+    Write-Styled (' ' * $rest) 'Outside'
+}
+
+function Clip-Text {
+    param([string]$Text, [int]$Width)
+    if ($null -eq $Text) { return '' }
+    if ($Text.Length -le $Width) { return $Text }
+    if ($Width -le 1) { return '' }
+    return $Text.Substring(0, $Width - 1) + '…'
+}
+
+function Clear-View {
+    Update-Layout
+    Set-ConsoleStyle 'Outside'
+    try { [Console]::Clear() } catch {
+        [Console]::Write("$($script:Escape)[2J$($script:Escape)[H")
+    }
+    $script:ProgressVisible = $false
+    $script:ProgressTitle = ''
+}
+
+function Enter-Tui {
+    if ($script:ScreenActive) { return }
+    try {
+        $script:OriginalForeground = [Console]::ForegroundColor
+        $script:OriginalBackground = [Console]::BackgroundColor
+        $script:OriginalCursorVisible = [Console]::CursorVisible
+    } catch {}
+    [Console]::Write("$($script:Escape)[?1049h$($script:Escape)[?25l")
+    try { [Console]::CursorVisible = $false } catch {}
+    $script:ScreenActive = $true
+    Clear-View
+}
+
+function Exit-Tui {
+    if (-not $script:ScreenActive) { return }
+    try {
+        [Console]::ForegroundColor = $script:OriginalForeground
+        [Console]::BackgroundColor = $script:OriginalBackground
+        [Console]::CursorVisible = $script:OriginalCursorVisible
+    } catch {}
+    [Console]::Write("$($script:Escape)[0m$($script:Escape)[?25h$($script:Escape)[?1049l")
+    $script:ScreenActive = $false
+}
+
+function Write-TopBorder {
+    param([string]$Title)
+    $titleText = Clip-Text $Title ($script:WindowWidth - 6)
+    $rest = [Math]::Max(0, $script:WindowWidth - $titleText.Length - 5)
+    Set-RowStart 0
+    Write-Styled '┌─ ' 'Border'
+    Write-Styled $titleText 'White'
+    Write-Styled (' ' + ('─' * $rest) + '┐') 'Border'
+    Complete-Row
+}
+
+function Write-BottomBorder {
+    param([int]$Row, [string]$Hint)
+    $hintText = Clip-Text $Hint ($script:WindowWidth - 6)
+    $rest = [Math]::Max(0, $script:WindowWidth - $hintText.Length - 5)
+    Set-RowStart $Row
+    Write-Styled '└─ ' 'Border'
+    Write-Styled $hintText 'Muted'
+    Write-Styled (' ' + ('─' * $rest) + '┘') 'Border'
+    Complete-Row
+}
+
+function Write-BoxLine {
+    param([int]$Row, [string]$Text = '', [string]$Style = 'White')
+    $shown = Clip-Text $Text $script:TextWidth
+    $padding = [Math]::Max(0, $script:TextWidth - $shown.Length)
+    Set-RowStart $Row
+    Write-Styled '│' 'Border'
+    Write-Styled ' ' 'Window'
+    Write-Styled $shown $Style
+    Write-Styled ((' ' * $padding) + ' ') 'Window'
+    Write-Styled '│' 'Border'
+    Complete-Row
+}
+
+function Get-TextStyle {
+    param([string]$Text)
+    if ($Text -match 'Ошибка|НЕ НАЙДЕН|не найден|несовместим') { return 'Red' }
+    if ($Text -match '^(Платформа|Экран|Оборудование|Профиль):') { return 'Cyan' }
+    if ($Text -match '^Ключи:') { return 'Yellow' }
+    if ($Text -match '^(Цель|Контроллер|Метод):') { return 'Muted' }
+    if ($Text -match '^DFU:') { return 'Yellow' }
+    if ($Text -match '^Устройство:.*не проверялось') { return 'Muted' }
+    if ($Text -match '^Устройство:|Готово') { return 'Yellow' }
+    return 'White'
+}
+
+function Split-WrappedText {
+    param([string]$Text, [int]$Width)
+    $result = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($sourceLine in [regex]::Split([string]$Text, "\r?\n")) {
+        $line = $sourceLine
+        if ($line.Length -eq 0) {
+            $result.Add('')
+            continue
+        }
+        while ($line.Length -gt $Width) {
+            $split = $line.LastIndexOf(' ', $Width - 1, $Width)
+            if ($split -le 0) { $split = $Width }
+            $result.Add($line.Substring(0, $split).TrimEnd())
+            $line = $line.Substring($split).TrimStart()
+        }
+        $result.Add($line)
+    }
+    return $result.ToArray()
+}
+
+function Write-BoxText {
+    param([int]$StartRow, [string]$Text)
+    $rendered = New-Object 'System.Collections.Generic.List[object]'
+    foreach ($sourceLine in [regex]::Split([string]$Text, "\r?\n")) {
+        $style = Get-TextStyle $sourceLine
+        foreach ($line in @(Split-WrappedText $sourceLine $script:TextWidth)) {
+            $rendered.Add([pscustomobject]@{ Text = $line; Style = $style })
+        }
+    }
+    for ($index = 0; $index -lt $rendered.Count; $index++) {
+        Write-BoxLine ($StartRow + $index) $rendered[$index].Text $rendered[$index].Style
+    }
+    return $rendered.Count
+}
+
+function Get-MenuStyle {
+    param([string]$Label)
+    foreach ($prefix in @($script:Glyphs.MenuChoice, $script:Glyphs.MenuOptions, $script:Glyphs.MenuDetect)) {
+        if ($Label.StartsWith("$prefix ")) { return 'Cyan' }
+    }
+    if ($Label.StartsWith("$($script:Glyphs.MenuInstall) ")) { return 'Yellow' }
+    if ($Label.StartsWith("$($script:Glyphs.MenuQuit) ")) { return 'Red' }
+    return 'White'
+}
+
+function Draw-MenuItem {
+    param([int]$Index, [int]$Selected, [object[]]$Items)
+    $item = $Items[$Index]
+    if ($Index -eq $Selected) {
+        Write-BoxLine ($script:ListFirstRow + $Index) ("$($script:Glyphs.Selector) " + $item.Label) 'Selected'
+    } else {
+        Write-BoxLine ($script:ListFirstRow + $Index) ("  " + $item.Label) (Get-MenuStyle $item.Label)
+    }
+}
+
+function Draw-MenuPage {
+    param([string]$Title, [string]$Text, [int]$Selected, [object[]]$Items)
+    Clear-View
+    Write-TopBorder $Title
+    Write-BoxLine 1
+    $count = Write-BoxText 2 $Text
+    Write-BoxLine (2 + $count)
+    $script:ListFirstRow = 3 + $count
+    for ($index = 0; $index -lt $Items.Count; $index++) {
+        Draw-MenuItem $index $Selected $Items
+    }
+    Write-BoxLine ($script:ListFirstRow + $Items.Count)
+    Write-BottomBorder ($script:ListFirstRow + $Items.Count + 1) '↑↓ выбрать · Enter подтвердить · Esc назад'
+}
+
+function Get-MenuInitialIndex {
+    param([object[]]$Items, [string]$InitialTag)
+    for ($index = 0; $index -lt $Items.Count; $index++) {
+        if ($Items[$index].Tag -eq $InitialTag) { return $index }
+    }
+    return 0
+}
+
+function Show-Menu {
+    param([string]$Title, [string]$Text, [object[]]$Items, [string]$InitialTag = '')
+    $selected = Get-MenuInitialIndex $Items $InitialTag
+    Draw-MenuPage $Title $Text $selected $Items
+    while ($true) {
+        $key = [Console]::ReadKey($true)
+        $previous = $selected
+        switch ($key.Key) {
+            'UpArrow' { $selected--; if ($selected -lt 0) { $selected = $Items.Count - 1 } }
+            'DownArrow' { $selected++; if ($selected -ge $Items.Count) { $selected = 0 } }
+            'Home' { $selected = 0 }
+            'End' { $selected = $Items.Count - 1 }
+            'Enter' { return $Items[$selected].Tag }
+            'Spacebar' { return $Items[$selected].Tag }
+            'Escape' { return $null }
+            'Q' { return $null }
+        }
+        if ([char]::IsDigit($key.KeyChar)) {
+            $number = [int][string]$key.KeyChar
+            if ($number -ge 1 -and $number -le $Items.Count) { return $Items[$number - 1].Tag }
+        }
+        if ($selected -ne $previous) {
+            Draw-MenuItem $previous $selected $Items
+            Draw-MenuItem $selected $selected $Items
+        }
+    }
+}
+
+function Draw-RadioItem {
+    param([int]$Index, [int]$Selected, [int]$Current, [object[]]$Items)
+    $item = $Items[$Index]
+    $marker = $script:Glyphs.RadioOff
+    $style = 'Yellow'
+    if ($item.State -eq 'disabled') { $marker = $script:Glyphs.RadioDisabled; $style = 'Red' }
+    elseif ($Index -eq $Current) { $marker = $script:Glyphs.RadioOn; $style = 'Yellow' }
+    $text = "$marker  $($item.Label)"
+    if ($Index -eq $Selected) { Write-BoxLine ($script:ListFirstRow + $Index) ("$($script:Glyphs.Selector) " + $text) 'Selected' }
+    else { Write-BoxLine ($script:ListFirstRow + $Index) ("  " + $text) $style }
+}
+
+function Show-RadioList {
+    param([string]$Title, [string]$Text, [object[]]$Items)
+    $current = -1
+    for ($i = 0; $i -lt $Items.Count; $i++) { if ($Items[$i].State -eq 'on') { $current = $i } }
+    $selected = $current
+    if ($selected -lt 0 -or $Items[$selected].State -eq 'disabled') {
+        $selected = 0
+        while ($selected -lt $Items.Count -and $Items[$selected].State -eq 'disabled') { $selected++ }
+    }
+    if ($selected -ge $Items.Count) { return $null }
+
+    Clear-View
+    Write-TopBorder $Title
+    Write-BoxLine 1
+    $count = Write-BoxText 2 $Text
+    Write-BoxLine (2 + $count)
+    $script:ListFirstRow = 3 + $count
+    for ($i = 0; $i -lt $Items.Count; $i++) { Draw-RadioItem $i $selected $current $Items }
+    Write-BoxLine ($script:ListFirstRow + $Items.Count)
+    Write-BottomBorder ($script:ListFirstRow + $Items.Count + 1) '↑↓ выбрать · Space отметить · Enter сохранить · Esc назад'
+
+    while ($true) {
+        $key = [Console]::ReadKey($true)
+        $oldSelected = $selected
+        $oldCurrent = $current
+        switch ($key.Key) {
+            'UpArrow' {
+                do { $selected--; if ($selected -lt 0) { $selected = $Items.Count - 1 } }
+                while ($Items[$selected].State -eq 'disabled')
+            }
+            'DownArrow' {
+                do { $selected++; if ($selected -ge $Items.Count) { $selected = 0 } }
+                while ($Items[$selected].State -eq 'disabled')
+            }
+            'Home' {
+                $selected = 0
+                while ($Items[$selected].State -eq 'disabled') { $selected++ }
+            }
+            'End' {
+                $selected = $Items.Count - 1
+                while ($Items[$selected].State -eq 'disabled') { $selected-- }
+            }
+            'Spacebar' { if ($Items[$selected].State -ne 'disabled') { $current = $selected } }
+            'Enter' { if ($Items[$selected].State -ne 'disabled') { return $Items[$selected].Tag } }
+            'Escape' { return $null }
+            'Q' { return $null }
+        }
+        if ($selected -ne $oldSelected -or $current -ne $oldCurrent) {
+            $redraw = @($oldSelected, $oldCurrent, $selected, $current) | Where-Object { $_ -ge 0 } | Select-Object -Unique
+            foreach ($index in $redraw) { Draw-RadioItem $index $selected $current $Items }
+        }
+    }
+}
+
+function Draw-CheckItem {
+    param([int]$Index, [int]$Selected, [object[]]$Items, [bool[]]$Checked)
+    $marker = if ($Checked[$Index]) { $script:Glyphs.CheckOn } else { $script:Glyphs.CheckOff }
+    $style = 'Yellow'
+    $text = "$marker  $($Items[$Index].Label)"
+    if ($Index -eq $Selected) { Write-BoxLine ($script:ListFirstRow + $Index) ("$($script:Glyphs.Selector) " + $text) 'Selected' }
+    else { Write-BoxLine ($script:ListFirstRow + $Index) ("  " + $text) $style }
+}
+
+function Get-TuiKeyName {
+    param([ConsoleKeyInfo]$Key)
+    if ($Key.KeyChar -eq ' ') { return 'Spacebar' }
+    return [string]$Key.Key
+}
+
+function Show-Checklist {
+    param([string]$Title, [string]$Text, [object[]]$Items)
+    [bool[]]$checked = @($Items | ForEach-Object { $_.State -eq 'on' })
+    $selected = 0
+    Clear-View
+    Write-TopBorder $Title
+    Write-BoxLine 1
+    $count = Write-BoxText 2 $Text
+    Write-BoxLine (2 + $count)
+    $script:ListFirstRow = 3 + $count
+    for ($i = 0; $i -lt $Items.Count; $i++) { Draw-CheckItem $i $selected $Items $checked }
+    Write-BoxLine ($script:ListFirstRow + $Items.Count)
+    Write-BottomBorder ($script:ListFirstRow + $Items.Count + 1) '↑↓ выбрать · Space переключить · Enter сохранить · Esc назад'
+
+    while ($true) {
+        $key = [Console]::ReadKey($true)
+        $keyName = Get-TuiKeyName $key
+        $previous = $selected
+        switch ($keyName) {
+            'UpArrow' { $selected--; if ($selected -lt 0) { $selected = $Items.Count - 1 } }
+            'DownArrow' { $selected++; if ($selected -ge $Items.Count) { $selected = 0 } }
+            'Home' { $selected = 0 }
+            'End' { $selected = $Items.Count - 1 }
+            'Spacebar' { $checked[$selected] = -not $checked[$selected]; Draw-CheckItem $selected $selected $Items $checked }
+            'X' { $checked[$selected] = -not $checked[$selected]; Draw-CheckItem $selected $selected $Items $checked }
+            'Enter' {
+                $values = New-Object 'System.Collections.Generic.List[string]'
+                for ($i = 0; $i -lt $Items.Count; $i++) { if ($checked[$i]) { $values.Add($Items[$i].Tag) } }
+                return [pscustomobject]@{ Cancelled = $false; Values = $values.ToArray() }
+            }
+            'Escape' { return [pscustomobject]@{ Cancelled = $true; Values = @() } }
+            'Q' { return [pscustomobject]@{ Cancelled = $true; Values = @() } }
+        }
+        if ($selected -ne $previous) {
+            Draw-CheckItem $previous $selected $Items $checked
+            Draw-CheckItem $selected $selected $Items $checked
+        }
+    }
+}
+
+function Show-YesNo {
+    param([string]$Title, [string]$Text)
+    $selected = 1
+    Clear-View
+    Write-TopBorder $Title
+    Write-BoxLine 1
+    $count = Write-BoxText 2 $Text
+    Write-BoxLine (2 + $count)
+    $first = 3 + $count
+    Write-BoxLine $first '  Да, продолжить' 'White'
+    Write-BoxLine ($first + 1) "$($script:Glyphs.Selector) Отмена" 'Selected'
+    Write-BoxLine ($first + 2)
+    Write-BottomBorder ($first + 3) '←→ выбрать · Enter подтвердить · Esc отменить'
+    while ($true) {
+        $key = [Console]::ReadKey($true)
+        $previous = $selected
+        switch ($key.Key) {
+            { $_ -in @('UpArrow','DownArrow','LeftArrow','RightArrow') } { $selected = 1 - $selected }
+            'Y' { return $true }
+            'N' { return $false }
+            'Escape' { return $false }
+            'Q' { return $false }
+            'Enter' { return $selected -eq 0 }
+            'Spacebar' { return $selected -eq 0 }
+        }
+        if ($selected -ne $previous) {
+            if ($selected -eq 0) {
+                Write-BoxLine $first "$($script:Glyphs.Selector) Да, продолжить" 'Selected'
+                Write-BoxLine ($first + 1) '  Отмена' 'White'
+            } else {
+                Write-BoxLine $first '  Да, продолжить' 'White'
+                Write-BoxLine ($first + 1) "$($script:Glyphs.Selector) Отмена" 'Selected'
+            }
+        }
+    }
+}
+
+function Show-Message {
+    param([string]$Title, [string]$Text)
+    Clear-View
+    Write-TopBorder $Title
+    Write-BoxLine 1
+    $count = Write-BoxText 2 $Text
+    Write-BoxLine (2 + $count)
+    Write-BoxLine (3 + $count) '                         [  OK  ]' 'Selected'
+    Write-BoxLine (4 + $count)
+    Write-BottomBorder (5 + $count) 'Enter или Esc закрыть'
+    while ($true) {
+        $key = [Console]::ReadKey($true)
+        if ($key.Key -in @('Enter','Escape','Spacebar')) { return }
+    }
+}
+
+function Draw-InputValue {
+    param([int]$Row, [string]$Value)
+    $limit = [Math]::Max(8, $script:TextWidth - 7)
+    $shown = $Value
+    if ($shown.Length -gt $limit) { $shown = '…' + $shown.Substring($shown.Length - $limit + 1) }
+    Write-BoxLine $Row ("Путь: $shown" + '█') 'Selected'
+}
+
+function Show-InputDialog {
+    param([string]$Title, [string]$Text, [string]$Initial = '')
+    $value = $Initial
+    Clear-View
+    Write-TopBorder $Title
+    Write-BoxLine 1
+    $count = Write-BoxText 2 $Text
+    Write-BoxLine (2 + $count)
+    $inputRow = 3 + $count
+    Draw-InputValue $inputRow $value
+    Write-BoxLine ($inputRow + 1)
+    Write-BottomBorder ($inputRow + 2) 'Вставьте полный путь · Enter сохранить · Esc пропустить'
+    while ($true) {
+        $key = [Console]::ReadKey($true)
+        switch ($key.Key) {
+            'Enter' { return [pscustomobject]@{ Cancelled = $false; Value = $value } }
+            'Escape' { return [pscustomobject]@{ Cancelled = $true; Value = '' } }
+            'Backspace' { if ($value.Length -gt 0) { $value = $value.Substring(0, $value.Length - 1) } }
+            default {
+                if (-not [char]::IsControl($key.KeyChar)) { $value += $key.KeyChar }
+            }
+        }
+        Draw-InputValue $inputRow $value
+    }
+}
+
+function Show-Log {
+    param([string]$Title, [string]$Path)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf) -or (Get-Item -LiteralPath $Path).Length -eq 0) {
+        Show-Message $Title 'Журнал пуст.'
+        return
+    }
+    $text = [IO.File]::ReadAllText($Path).Replace("`r", "`n")
+    $text = [regex]::Replace($text, "$($script:Escape)\[[0-9;?]*[ -/]*[@-~]", '?')
+    $lines = @($text -split "`n")
+    $visible = [Math]::Min(18, [Math]::Max(6, $script:ConsoleRows - 7))
+    $offset = [Math]::Max(0, $lines.Count - $visible)
+    while ($true) {
+        Clear-View
+        Write-TopBorder $Title
+        Write-BoxLine 1
+        for ($i = 0; $i -lt $visible; $i++) {
+            $index = $offset + $i
+            if ($index -lt $lines.Count) { Write-BoxLine (2 + $i) $lines[$index] 'White' }
+            else { Write-BoxLine (2 + $i) }
+        }
+        Write-BoxLine (2 + $visible)
+        $last = [Math]::Min($lines.Count, $offset + $visible)
+        Write-BottomBorder (3 + $visible) "↑↓ прокрутка · $($offset + 1)–$last из $($lines.Count) · Esc закрыть"
+        $key = [Console]::ReadKey($true)
+        switch ($key.Key) {
+            'UpArrow' { if ($offset -gt 0) { $offset-- } }
+            'DownArrow' { if ($offset + $visible -lt $lines.Count) { $offset++ } }
+            'Home' { $offset = 0 }
+            'End' { $offset = [Math]::Max(0, $lines.Count - $visible) }
+            { $_ -in @('Enter','Escape','Q') } { return }
+        }
+    }
+}
+
+function Draw-Progress {
+    param([string]$Title, [string]$Message, [int]$Percent)
+    $Percent = [Math]::Max(0, [Math]::Min(100, $Percent))
+    if (-not $script:ProgressVisible -or $script:ProgressTitle -ne $Title) {
+        Clear-View
+        Write-TopBorder $Title
+        Write-BoxLine 1
+        Write-BoxLine 2 $Message (Get-TextStyle $Message)
+        Write-BoxLine 3
+        $script:ProgressVisible = $true
+        $script:ProgressTitle = $Title
+    } else {
+        Write-BoxLine 2 $Message (Get-TextStyle $Message)
+    }
+    $barWidth = [Math]::Max(12, $script:TextWidth - 7)
+    $filled = [int][Math]::Floor($barWidth * $Percent / 100)
+    $empty = $barWidth - $filled
+    $bar = '[' + ('█' * $filled) + ('░' * $empty) + ('] {0,3}%' -f $Percent)
+    Write-BoxLine 4 $bar 'Yellow'
+    Write-BoxLine 5
+    $hint = if ($Percent -eq 100) { '✓ Готово' }
+        elseif ($Message -match '^Ошибка') { '× Ошибка · подробности в журнале' }
+        else { 'Операция выполняется…' }
+    Write-BottomBorder 6 $hint
+}
+
+function Resolve-Executable {
+    param([string]$Command)
+    if ([string]::IsNullOrWhiteSpace($Command)) { return '' }
+    if (Test-Path -LiteralPath $Command -PathType Leaf) {
+        return (Resolve-Path -LiteralPath $Command).Path
+    }
+    $resolved = Get-Command $Command -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($null -eq $resolved) { return '' }
+    return $resolved.Source
+}
+
+function Get-CurrentPowerShellExecutable {
+    if ($PSVersionTable.PSEdition -eq 'Desktop') {
+        return Resolve-Executable (Join-Path $PSHOME 'powershell.exe')
+    }
+    try {
+        return Resolve-Executable (Get-Process -Id $PID).Path
+    } catch {
+        return Resolve-Executable 'pwsh'
+    }
+}
+
+function Test-CommandAvailable {
+    param([string]$Command)
+    return -not [string]::IsNullOrEmpty((Resolve-Executable $Command))
+}
+
+function Invoke-NativeCapture {
+    param([string]$Executable, [string[]]$Arguments = @())
+    $resolved = Resolve-Executable $Executable
+    if ([string]::IsNullOrEmpty($resolved)) {
+        return [pscustomobject]@{ ExitCode = 127; Output = "Executable not found: $Executable" }
+    }
+    try {
+        $output = & $resolved @Arguments 2>&1 | Out-String
+        $exitCode = $LASTEXITCODE
+        if ($null -eq $exitCode) { $exitCode = if ($?) { 0 } else { 1 } }
+        return [pscustomobject]@{ ExitCode = [int]$exitCode; Output = [string]$output }
+    } catch {
+        return [pscustomobject]@{ ExitCode = 1; Output = $_.Exception.Message }
+    }
+}
+
+function Get-Python3Command {
+    $candidates = @(
+        [pscustomobject]@{ Executable = 'python3'; PrefixArguments = [string[]]@() }
+        [pscustomobject]@{ Executable = 'python'; PrefixArguments = [string[]]@() }
+        [pscustomobject]@{ Executable = 'py'; PrefixArguments = [string[]]@('-3') }
+    )
+    foreach ($candidate in $candidates) {
+        $arguments = @($candidate.PrefixArguments) + @('--version')
+        $result = Invoke-NativeCapture $candidate.Executable $arguments
+        if ($result.ExitCode -eq 0 -and $result.Output -match '(?m)^Python 3\.') {
+            return $candidate
+        }
+    }
+    return $null
+}
+
+function Get-ArmToolchainFromDatabase {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "compile database not found: $Path"
+    }
+    $entries = @(ConvertFrom-Json -InputObject (
+        [IO.File]::ReadAllText($Path, [Text.Encoding]::UTF8)))
+    foreach ($entry in $entries) {
+        $compiler = $null
+        $argumentsProperty = $entry.PSObject.Properties['arguments']
+        $commandProperty = $entry.PSObject.Properties['command']
+        if ($null -ne $argumentsProperty -and
+            @($argumentsProperty.Value).Count -gt 0) {
+            $compiler = [string]@($argumentsProperty.Value)[0]
+        } elseif ($null -ne $commandProperty -and
+                  -not [string]::IsNullOrWhiteSpace(
+                      [string]$commandProperty.Value)) {
+            $command = [string]$commandProperty.Value
+            if ($command -match '^"([^"]+)"') {
+                $compiler = $Matches[1]
+            } elseif ($command -match '^(\S+)') {
+                $compiler = $Matches[1]
+            }
+        }
+        if ([string]::IsNullOrWhiteSpace($compiler)) { continue }
+        $candidate = $compiler
+        if (-not [IO.File]::Exists($candidate) -and
+            [IO.File]::Exists("$candidate.exe")) {
+            $candidate = "$candidate.exe"
+        }
+        if ([IO.File]::Exists($candidate) -and
+            [IO.Path]::GetFileName($candidate) -match
+                '^arm-none-eabi-(?:gcc|g\+\+)(?:\.exe)?$') {
+            return [IO.Path]::GetDirectoryName(
+                [IO.Path]::GetFullPath($candidate))
+        }
+    }
+    throw "ARM compiler is missing from compile database: $Path"
+}
+
+function Get-LogPercent {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return -1 }
+    try { $text = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop } catch { return -1 }
+    if ($null -eq $text) { return -1 }
+    $matches = [regex]::Matches([string]$text, '(\d+)%')
+    if ($matches.Count -eq 0) { return -1 }
+    return [int]$matches[$matches.Count - 1].Groups[1].Value
+}
+
+function Invoke-ExternalWithProgress {
+    param(
+        [string]$Title,
+        [string]$Message,
+        [string]$LogFile,
+        [string]$Mode,
+        [string]$Executable,
+        [string[]]$Arguments,
+        [switch]$Append
+    )
+    $resolved = Resolve-Executable $Executable
+    $parent = Split-Path -Parent $LogFile
+    if (-not [string]::IsNullOrEmpty($parent)) { [void](New-Item -ItemType Directory -Force -Path $parent) }
+    if (-not $Append) { [IO.File]::WriteAllText($LogFile, '', $script:Utf8NoBom) }
+    if ([string]::IsNullOrEmpty($resolved)) {
+        [IO.File]::AppendAllText($LogFile, "Executable not found: $Executable`n", $script:Utf8NoBom)
+        return $false
+    }
+
+    $worker = {
+        param([string]$NativeExecutable, [object[]]$NativeArguments, [string]$NativeLog, [bool]$AppendLog)
+        $ErrorActionPreference = 'Continue'
+        if ($AppendLog) { & $NativeExecutable @NativeArguments *>> $NativeLog }
+        else { & $NativeExecutable @NativeArguments *> $NativeLog }
+        $successful = $?
+        $nativeExit = $LASTEXITCODE
+        if ($null -eq $nativeExit) { if ($successful) { return 0 } else { return 1 } }
+        return [int]$nativeExit
+    }
+
+    try {
+        $script:ActiveJob = Start-Job -ScriptBlock $worker -ArgumentList @(
+            $resolved, [object[]]$Arguments, $LogFile, [bool]$Append)
+    } catch {
+        [IO.File]::AppendAllText($LogFile, $_.Exception.Message + "`n", $script:Utf8NoBom)
+        return $false
+    }
+
+    $percent = 5
+    if ($script:State.Interactive) { Draw-Progress $Title $Message $percent }
+    else { [Console]::Error.WriteLine("$Message…") }
+
+    while ($script:ActiveJob.State -in @('NotStarted','Running')) {
+        if ($Mode -eq 'measured') {
+            $measured = Get-LogPercent $LogFile
+            if ($measured -ge 0 -and $measured -le 95) { $percent = $measured }
+        } elseif ($percent -lt 90) {
+            $percent = [Math]::Min(90, $percent + 2)
+        }
+        if ($script:State.Interactive) { Draw-Progress $Title $Message $percent }
+        Start-Sleep -Milliseconds 200
+    }
+
+    [void](Wait-Job -Job $script:ActiveJob)
+    $result = @(Receive-Job -Job $script:ActiveJob -ErrorAction SilentlyContinue)
+    $exitCode = 1
+    if ($result.Count -gt 0) {
+        try { $exitCode = [int]$result[$result.Count - 1] } catch { $exitCode = 1 }
+    }
+    Remove-Job -Job $script:ActiveJob -Force -ErrorAction SilentlyContinue
+    $script:ActiveJob = $null
+
+    if ($script:State.Interactive) {
+        if ($exitCode -eq 0) { Draw-Progress $Title 'Готово' 100 }
+        else { Draw-Progress $Title 'Ошибка — подробности в журнале' $percent }
+        Start-Sleep -Milliseconds 350
+    }
+    return $exitCode -eq 0
+}
+
+function Test-ArduinoCoreReady {
+    if (-not (Test-CommandAvailable $script:ArduinoCli)) { return $false }
+    $result = Invoke-NativeCapture $script:ArduinoCli @('core','list')
+    if ($result.ExitCode -ne 0) { return $false }
+    return $result.Output -match "(?m)^STMicroelectronics:stm32\s+$([regex]::Escape($script:Stm32CoreVersion))(\s|$)"
+}
+
+function Test-ArduinoLibrariesReady {
+    if (-not (Test-CommandAvailable $script:ArduinoCli)) { return $false }
+    $result = Invoke-NativeCapture $script:ArduinoCli @('lib','list')
+    if ($result.ExitCode -ne 0) { return $false }
+    return ($result.Output -match '(?m)^LiquidCrystal\s+1\.0\.7(\s|$)') -and
+        ($result.Output -match '(?m)^STM32duino RTC\s+1\.9\.0(\s|$)')
+}
+
+function Test-SystemAppsEnabled {
+    # Terminal help is external on both MCUs. F401 also needs SETUP and
+    # USBDISK; F411 can explicitly externalize USBDISK.
+    return $true
+}
+
+function Test-AnyAppsRequested {
+    return (Test-SystemAppsEnabled) -or
+        (Test-CustomAppsRequested)
+}
+
+function Test-CustomAppsRequested {
+    return -not [string]::IsNullOrWhiteSpace(
+        [Environment]::GetEnvironmentVariable('MK61_APP_MANIFESTS'))
+}
+
+function Get-ExpectedSystemAppNames {
+    $names = New-Object 'System.Collections.Generic.List[string]'
+    if ($script:State.EnableSetup -eq 1 -and
+        $script:State.SetupAsApp -eq 1) {
+        $names.Add('SETUP.APP')
+    }
+    if ((Get-ExternalizeUsbDiskValue) -eq 1) { $names.Add('USBDISK.APP') }
+    if ($script:State.ExplorerAsApp -eq 1) { $names.Add('EXPLORER.APP') }
+    foreach ($name in @('HELP0.TXT', 'HELP1.TXT')) { $names.Add($name) }
+    if ($script:State.EnableFocal -eq 1 -and $script:State.FocalAsApp -eq 1) {
+        $names.Add('FOCAL.APP')
+    }
+    if ($script:State.EnableTinyBasic -eq 1 -and
+        $script:State.TinyBasicAsApp -eq 1) { $names.Add('BASIC.APP') }
+    if ($script:State.EnableFocal -eq 1 -and $script:State.FocalAsApp -eq 1) {
+        $names.Add('LANGVM.APP')
+        $names.Add('LANGIN.APP')
+    }
+    if ($script:State.EnableWbmp -eq 1 -and
+        $script:State.WbmpAsApp -eq 1 -and
+        $script:State.EnableMarkdown -eq 0) {
+        $names.Add('WBMP.APP')
+    }
+    if ($script:State.EnableMarkdown -eq 1 -and
+        $script:State.MarkdownAsApp -eq 1) { $names.Add('MARKDOWN.APP') }
+    if ($script:State.EnableChip8 -eq 1 -and
+        $script:State.Chip8AsApp -eq 1) { $names.Add('CHIP8.APP') }
+    return $names.ToArray()
+}
+
+function Get-AllSystemAppNames {
+    return [string[]]@(
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
+        'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT',
+        'LANGVM.APP', 'LANGIN.APP', 'VMCache/VMSTORE.APP')
+}
+
+function Find-BashExecutable {
+    $resolved = Resolve-Executable 'bash'
+    if (-not [string]::IsNullOrEmpty($resolved)) { return $resolved }
+    if ($script:IsWindowsHost) {
+        foreach ($rootName in @('ProgramFiles', 'ProgramW6432', 'LocalAppData')) {
+            $root = [Environment]::GetEnvironmentVariable($rootName)
+            if ([string]::IsNullOrWhiteSpace($root)) { continue }
+            foreach ($relative in @('Git/bin/bash.exe', 'Git/usr/bin/bash.exe', 'Programs/Git/bin/bash.exe')) {
+                $resolved = Resolve-Executable (Join-Path $root $relative)
+                if (-not [string]::IsNullOrEmpty($resolved)) { return $resolved }
+            }
+        }
+    }
+    return ''
+}
+
+function Convert-ToBashPath {
+    param([string]$Bash, [string]$Path)
+    if (-not $script:IsWindowsHost) { return $Path }
+    $result = Invoke-NativeCapture $Bash @('-lc', 'cygpath -u "$1"', '--', $Path)
+    if ($result.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($result.Output)) {
+        return $result.Output.Trim()
+    }
+    return $Path
+}
+
+function Get-F401GccBuilderPath {
+    return Join-Path (
+        Join-Path $script:ProjectRoot 'tools/firmware/stm32'
+    ) 'build.ps1'
+}
+
+function Get-F401GccOptionArguments {
+    param([string]$Profile)
+    if ([string]::IsNullOrWhiteSpace($Profile)) {
+        $Profile = 'mini-v3-a00'
+    }
+    return [string[]]@(
+        '-Mcu', $script:State.Mcu,
+        '-Profile', $Profile,
+        '-ExternalizeUsbDisk', [string](Get-ExternalizeUsbDiskValue),
+        '-Focal', [string]$script:State.EnableFocal,
+        '-Basic', [string]$script:State.EnableTinyBasic,
+        '-Wbmp', [string]$script:State.EnableWbmp,
+        '-Markdown', [string]$script:State.EnableMarkdown,
+        '-Chip8', [string]$script:State.EnableChip8,
+        '-Setup', [string]$script:State.EnableSetup,
+        '-FocalAsApp', [string]$script:State.FocalAsApp,
+        '-BasicAsApp', [string]$script:State.TinyBasicAsApp,
+        '-WbmpAsApp', [string]$script:State.WbmpAsApp,
+        '-MarkdownAsApp', [string]$script:State.MarkdownAsApp,
+        '-Chip8AsApp', [string]$script:State.Chip8AsApp,
+        '-SetupAsApp', [string]$script:State.SetupAsApp,
+        '-ExplorerAsApp', [string]$script:State.ExplorerAsApp,
+        '-UsbScreen', [string]$script:State.EnableUsbScreen,
+        '-ExtendedFontSettings', [string]$script:State.EnableFonts,
+        '-UserExplorer', [string]$script:State.EnableExplorer,
+        '-MathBackend', [string]$script:State.MathBackend,
+        '-LocalFloatMath', [string]$script:State.AppLocalFloat,
+        '-ProductBuild', $(if ($script:State.Mcu -eq 'f401') { '1' } else { '0' }))
+}
+
+function Get-F401GccPowerShellArguments {
+    param([string[]]$BuilderArguments)
+    $arguments = New-Object 'System.Collections.Generic.List[string]'
+    $arguments.Add('-NoLogo')
+    $arguments.Add('-NoProfile')
+    if ($script:IsWindowsHost) {
+        $arguments.Add('-ExecutionPolicy')
+        $arguments.Add('Bypass')
+    }
+    $arguments.Add('-File')
+    $arguments.Add((Get-F401GccBuilderPath))
+    foreach ($argument in $BuilderArguments) {
+        $arguments.Add([string]$argument)
+    }
+    return $arguments.ToArray()
+}
+
+function Invoke-F401GccPreflight {
+    $powerShell = Get-CurrentPowerShellExecutable
+    if ([string]::IsNullOrEmpty($powerShell)) {
+        return [pscustomobject]@{
+            ExitCode = 127
+            Output = 'PowerShell 5.1 or newer was not found'
+        }
+    }
+    $options = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($argument in (Get-F401GccOptionArguments `
+            $script:State.Profile)) {
+        $options.Add($argument)
+    }
+    $options.Add('-Check')
+    return Invoke-NativeCapture $powerShell (
+        Get-F401GccPowerShellArguments $options.ToArray())
+}
+
+function Test-F401HostToolsReady {
+    if (-not (Test-Path -LiteralPath (Get-F401GccBuilderPath) -PathType Leaf) -or
+        (Invoke-F401GccPreflight).ExitCode -ne 0) { return $false }
+    if (Test-CustomAppsRequested) {
+        $bash = Find-BashExecutable
+        if ([string]::IsNullOrEmpty($bash)) { return $false }
+        $result = Invoke-NativeCapture $bash @('-lc',
+            'command -v c++ >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1')
+        return $result.ExitCode -eq 0
+    }
+    return $true
+}
+
+function Test-BuildDependenciesReady {
+    return Test-F401HostToolsReady
+}
+
+function Get-DependencyReport {
+    $lines = New-Object 'System.Collections.Generic.List[string]'
+    $preflight = Invoke-F401GccPreflight
+    if ($preflight.ExitCode -eq 0) {
+        foreach ($line in @($preflight.Output -split "\r?\n")) {
+            if (-not [string]::IsNullOrWhiteSpace($line)) {
+                $lines.Add($line.TrimEnd())
+            }
+        }
+        $lines.Add('Arduino IDE, CLI и STM32duino: для native-сборки не нужны')
+    } else {
+        $lines.Add('Native GCC backend: НЕ ГОТОВ')
+        foreach ($line in @($preflight.Output -split "\r?\n")) {
+            if (-not [string]::IsNullOrWhiteSpace($line)) {
+                $lines.Add($line.TrimEnd())
+            }
+        }
+    }
+    if ($script:IsWindowsHost -and -not (Test-CustomAppsRequested)) {
+        $lines.Add('APP/ZX0 packer: PowerShell/.NET (Python и host C++ не нужны)')
+    }
+    if (Test-CustomAppsRequested) {
+        $lines.Add('Custom APP: native GCC; дополнительно нужны Bash, Python 3 и host C++17')
+    }
+    if ($script:IsWindowsHost) {
+        if (Find-Stm32CubeProgrammer) {
+            $lines.Add("DFU uploader: $script:CubeProgrammerExecutable")
+        } else {
+            $lines.Add('DFU uploader: нужен STM32CubeProgrammer')
+        }
+    } elseif (Find-DfuUtil) {
+        $lines.Add("DFU uploader: $script:DfuExecutable")
+    } else {
+        $lines.Add('DFU uploader: установите dfu-util')
+    }
+    return $lines -join [Environment]::NewLine
+}
+
+function Install-ArduinoDependencies {
+    $powerShell = Get-CurrentPowerShellExecutable
+    if ([string]::IsNullOrWhiteSpace($powerShell)) {
+        [Console]::Error.WriteLine('PowerShell 5.1 or newer is required.')
+        return $false
+    }
+    $arguments = @('-NoLogo','-NoProfile','-File',
+        (Join-Path $script:ProjectRoot 'tools/firmware/stm32/install_gcc_dependencies.ps1'))
+    $ok = Invoke-ExternalWithProgress 'Зависимости' 'Устанавливаю GNU Arm GCC' $script:LastLog 'indeterminate' $powerShell $arguments
+    if ($ok -and $script:State.Interactive) {
+        Show-Message 'Зависимости' 'GNU Arm GCC установлен; SDK включён в проект.'
+    }
+    return $ok
+}
+
+$script:DfuExecutable = ''
+$script:CubeProgrammerExecutable = ''
+
+function Set-Stm32CubeProgrammer {
+    param([string]$Candidate)
+    $resolved = Resolve-Executable $Candidate
+    if ([string]::IsNullOrEmpty($resolved) -or
+        [IO.Path]::GetFileName($resolved) -notmatch '^(?i:STM32_Programmer_CLI\.exe)$') { return $false }
+    $script:CubeProgrammerExecutable = $resolved
+
+    # Сохраняем выбранный CLI также в PATH для ручных команд пользователя.
+    # Нативный загрузчик получает его полный путь отдельным аргументом.
+    $directory = Split-Path -Parent $resolved
+    $processPath = [Environment]::GetEnvironmentVariable('Path', 'Process')
+    $entries = if ([string]::IsNullOrEmpty($processPath)) { @() } else { @($processPath -split [regex]::Escape([string][IO.Path]::PathSeparator)) }
+    if (-not @($entries | Where-Object { $_.TrimEnd('\','/') -ieq $directory.TrimEnd('\','/') }).Count) {
+        [Environment]::SetEnvironmentVariable('Path', "$directory$([IO.Path]::PathSeparator)$processPath", 'Process')
+    }
+    return $true
+}
+
+function Find-Stm32CubeProgrammer {
+    if (-not [string]::IsNullOrEmpty($script:CubeProgrammerExecutable) -and
+        (Test-Path -LiteralPath $script:CubeProgrammerExecutable -PathType Leaf)) { return $true }
+    $script:CubeProgrammerExecutable = ''
+    $override = [Environment]::GetEnvironmentVariable('MK61_STM32_PROGRAMMER')
+    if (-not [string]::IsNullOrWhiteSpace($override) -and (Set-Stm32CubeProgrammer $override)) { return $true }
+    if (-not [string]::IsNullOrWhiteSpace($script:State.CubeProgrammerPath) -and
+        (Set-Stm32CubeProgrammer $script:State.CubeProgrammerPath)) { return $true }
+    $candidates = New-Object 'System.Collections.Generic.List[string]'
+    $candidates.Add('STM32_Programmer_CLI.exe')
+    foreach ($rootName in @('ProgramW6432', 'ProgramFiles', 'ProgramFiles(x86)')) {
+        $root = [Environment]::GetEnvironmentVariable($rootName)
+        if (-not [string]::IsNullOrWhiteSpace($root)) {
+            $candidates.Add((Join-Path $root 'STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32_Programmer_CLI.exe'))
+        }
+    }
+    foreach ($candidate in $candidates) {
+        if (Set-Stm32CubeProgrammer $candidate) { return $true }
+    }
+    return $false
+}
+
+function Configure-Stm32CubeProgrammer {
+    if (Find-Stm32CubeProgrammer) {
+        if ([string]::IsNullOrEmpty([Environment]::GetEnvironmentVariable('MK61_STM32_PROGRAMMER')) -and
+            $script:State.CubeProgrammerPath -ne $script:CubeProgrammerExecutable) {
+            $script:State.CubeProgrammerPath = $script:CubeProgrammerExecutable
+            Save-Config
+        }
+        return $true
+    }
+
+    $help = "STM32CubeProgrammer не найден. Укажите полный путь к STM32_Programmer_CLI.exe.`n`nОбычно: C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer\bin\STM32_Programmer_CLI.exe."
+    while ($true) {
+        $answer = Show-InputDialog 'DFU uploader' $help
+        if ($answer.Cancelled -or [string]::IsNullOrWhiteSpace($answer.Value)) { return $false }
+        $expanded = Expand-EnteredPath $answer.Value
+        if (Set-Stm32CubeProgrammer $expanded) {
+            $script:State.CubeProgrammerPath = $script:CubeProgrammerExecutable
+            Save-Config
+            Show-Message 'DFU uploader' "STM32CubeProgrammer найден и сохранён:`n`n$($script:State.CubeProgrammerPath)"
+            return $true
+        }
+        Show-Message 'DFU uploader' "Ожидался файл STM32_Programmer_CLI.exe:`n`n$expanded"
+    }
+}
+
+function Get-DfuLocationLabel {
+    param([string]$Executable)
+    $match = [regex]::Match($Executable, 'STM32Tools[\\/](?<version>[^\\/]+)')
+    if ($match.Success) {
+        $hostName = if ($Executable -match '[\\/]win[\\/]') { 'Windows' }
+            elseif ($Executable -match '[\\/]macosx[\\/]') { 'macOS' }
+            elseif ($Executable -match '[\\/]linux') { 'Linux' }
+            elseif ($script:IsWindowsHost) { 'Windows' }
+            elseif ($script:IsMacHost) { 'macOS' }
+            else { 'Linux' }
+        return "Arduino STM32Tools $($match.Groups['version'].Value) · $hostName"
+    }
+    if ($Executable -match '(homebrew|linuxbrew|\.linuxbrew)') {
+        if ($Executable -match '(linuxbrew|\.linuxbrew)') { return 'Linuxbrew' }
+        return 'Homebrew'
+    }
+    return $Executable
+}
+
+function Set-DfuExecutable {
+    param([string]$Candidate)
+    $resolved = Resolve-Executable $Candidate
+    if ([string]::IsNullOrEmpty($resolved)) { return $false }
+    $name = [IO.Path]::GetFileName($resolved)
+    if ($name -notmatch '^(?i:dfu-util(?:\.exe|\.sh)?)$') { return $false }
+    $script:DfuExecutable = $resolved
+    $script:State.DfuStatus = "найден · $(Get-DfuLocationLabel $resolved)"
+    return $true
+}
+
+function Find-DfuUtil {
+    if (-not [string]::IsNullOrEmpty($script:DfuExecutable) -and
+        (Test-Path -LiteralPath $script:DfuExecutable -PathType Leaf)) { return $true }
+    $script:DfuExecutable = ''
+    $script:State.DfuStatus = 'не найден'
+
+    $override = [Environment]::GetEnvironmentVariable('MK61_DFU_UTIL')
+    if (-not [string]::IsNullOrWhiteSpace($override) -and (Set-DfuExecutable $override)) { return $true }
+    if (-not [string]::IsNullOrWhiteSpace($script:State.DfuPath) -and (Set-DfuExecutable $script:State.DfuPath)) { return $true }
+    if (Set-DfuExecutable 'dfu-util') { return $true }
+    if (Set-DfuExecutable 'dfu-util.exe') { return $true }
+
+    $fixed = @(
+        '/opt/homebrew/bin/dfu-util'
+        '/opt/homebrew/opt/dfu-util/bin/dfu-util'
+        '/usr/local/bin/dfu-util'
+        '/usr/local/opt/dfu-util/bin/dfu-util'
+        '/opt/local/bin/dfu-util'
+        '/usr/bin/dfu-util'
+        '/bin/dfu-util'
+        '/home/linuxbrew/.linuxbrew/bin/dfu-util'
+        '/home/linuxbrew/.linuxbrew/opt/dfu-util/bin/dfu-util'
+        'C:\ProgramData\chocolatey\bin\dfu-util.exe'
+    )
+    $userHome = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
+    if (-not [string]::IsNullOrEmpty($userHome)) {
+        $fixed += (Join-Path $userHome 'scoop/shims/dfu-util.exe')
+        $fixed += (Join-Path $userHome '.linuxbrew/bin/dfu-util')
+        $fixed += (Join-Path $userHome '.linuxbrew/opt/dfu-util/bin/dfu-util')
+    }
+    foreach ($candidate in $fixed) { if (Set-DfuExecutable $candidate) { return $true } }
+
+    $patterns = New-Object 'System.Collections.Generic.List[string]'
+    if (-not [string]::IsNullOrEmpty($env:LOCALAPPDATA)) {
+        $patterns.Add((Join-Path $env:LOCALAPPDATA 'Arduino*/packages/STMicroelectronics/tools/STM32Tools/*/win/dfu-util.exe'))
+    }
+    if (-not [string]::IsNullOrEmpty($userHome)) {
+        foreach ($relative in @(
+            'AppData/Local/Arduino*/packages/STMicroelectronics/tools/STM32Tools/*/win/dfu-util.exe'
+            '.arduino*/packages/STMicroelectronics/tools/STM32Tools/*/win/dfu-util.exe'
+            'Library/Arduino*/packages/STMicroelectronics/tools/STM32Tools/*/macosx/dfu-util'
+            'Library/Arduino*/packages/STMicroelectronics/tools/STM32Tools/*/dfu-util.sh'
+            '.arduino*/packages/STMicroelectronics/tools/STM32Tools/*/dfu-util.sh'
+            '.arduino*/packages/STMicroelectronics/tools/STM32Tools/*/linux*/dfu-util'
+            '.arduino*/packages/STMicroelectronics/tools/STM32Tools/*/linux*/*/dfu-util'
+            '.local/share/arduino*/packages/STMicroelectronics/tools/STM32Tools/*/linux*/dfu-util'
+            '.local/share/arduino*/packages/STMicroelectronics/tools/STM32Tools/*/linux*/*/dfu-util'
+            '.var/app/*/data/arduino*/packages/STMicroelectronics/tools/STM32Tools/*/dfu-util.sh'
+            '.var/app/*/data/arduino*/packages/STMicroelectronics/tools/STM32Tools/*/linux*/*/dfu-util'
+            'snap/arduino*/current/.arduino*/packages/STMicroelectronics/tools/STM32Tools/*/dfu-util.sh'
+            'snap/arduino*/current/.arduino*/packages/STMicroelectronics/tools/STM32Tools/*/linux*/*/dfu-util'
+        )) { $patterns.Add((Join-Path $userHome $relative)) }
+    }
+
+    $matches = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($pattern in $patterns) {
+        try {
+            foreach ($file in @(Get-ChildItem -Path $pattern -File -ErrorAction SilentlyContinue)) {
+                $matches.Add($file.FullName)
+            }
+        } catch {}
+    }
+    foreach ($candidate in @($matches | Sort-Object)) {
+        [void](Set-DfuExecutable $candidate)
+    }
+    if (-not [string]::IsNullOrEmpty($script:DfuExecutable)) { return $true }
+    return $false
+}
+
+function Expand-EnteredPath {
+    param([string]$Path)
+    $expanded = [Environment]::ExpandEnvironmentVariables($Path.Trim())
+    if ($expanded.StartsWith('~/') -or $expanded.StartsWith('~\')) {
+        $userHomePath = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
+        $expanded = Join-Path $userHomePath $expanded.Substring(2)
+    }
+    return $expanded
+}
+
+function Configure-DfuUtil {
+    if (Find-DfuUtil) {
+        if ([string]::IsNullOrEmpty([Environment]::GetEnvironmentVariable('MK61_DFU_UTIL')) -and
+            $script:State.DfuPath -ne $script:DfuExecutable) {
+            $script:State.DfuPath = $script:DfuExecutable
+            Save-Config
+        }
+        return $true
+    }
+
+    $help = if ($script:IsWindowsHost) {
+        "Утилита dfu-util не найдена. Укажите полный путь к исполняемому файлу.`n`nWindows: %LOCALAPPDATA%\Arduino15\packages\STMicroelectronics\tools\STM32Tools\<version>\win\dfu-util.exe. Также проверяются PATH, Scoop и Chocolatey."
+    } elseif ($script:IsMacHost) {
+        "Утилита dfu-util не найдена. Укажите полный путь к исполняемому файлу.`n`nmacOS: /opt/homebrew/bin/dfu-util, /usr/local/bin/dfu-util или ~/Library/Arduino15/packages/STMicroelectronics/tools/STM32Tools/<version>/macosx/dfu-util."
+    } else {
+        "Утилита dfu-util не найдена. Укажите полный путь к исполняемому файлу.`n`nLinux: /usr/bin/dfu-util, /usr/local/bin/dfu-util или ~/.arduino15/packages/STMicroelectronics/tools/STM32Tools/<version>/linux/<arch>/dfu-util."
+    }
+    while ($true) {
+        $answer = Show-InputDialog 'DFU uploader' $help
+        if ($answer.Cancelled -or [string]::IsNullOrWhiteSpace($answer.Value)) { return $false }
+        $expanded = Expand-EnteredPath $answer.Value
+        if (Set-DfuExecutable $expanded) {
+            $script:State.DfuPath = $script:DfuExecutable
+            Save-Config
+            Show-Message 'DFU uploader' "dfu-util найден и сохранён:`n`n$($script:State.DfuPath)"
+            return $true
+        }
+        Show-Message 'DFU uploader' "Это не исполняемый dfu-util или dfu-util.exe:`n`n$expanded"
+    }
+}
+
+function Configure-DfuUploader {
+    if ($script:IsWindowsHost) {
+        if (Configure-Stm32CubeProgrammer) {
+            $script:State.DfuStatus = 'STM32CubeProgrammer'
+            return $true
+        }
+        $script:State.DfuStatus = 'STM32CubeProgrammer не найден'
+        return $false
+    }
+    return Configure-DfuUtil
+}
+
+function Get-DfuListing {
+    if (-not (Find-DfuUtil)) { return '' }
+    $result = Invoke-NativeCapture $script:DfuExecutable @('-l')
+    return $result.Output
+}
+
+function Get-ObjectPropertyValue {
+    param([object]$Object, [string]$Name)
+    if ($null -eq $Object) { return $null }
+    $property = $Object.PSObject.Properties[$Name]
+    if ($null -eq $property) { return $null }
+    return $property.Value
+}
+
+function Test-DfuHardwareId {
+    param([string]$InstanceId)
+    return -not [string]::IsNullOrWhiteSpace($InstanceId) -and
+        $InstanceId -match '(?i)VID_0483&PID_DF11'
+}
+
+function Get-WindowsDfuDevices {
+    if (-not $script:IsWindowsHost) { return @() }
+    $candidates = @()
+    $enumerated = $false
+
+    if ($null -ne (Get-Command Get-PnpDevice -CommandType Cmdlet -ErrorAction SilentlyContinue)) {
+        try {
+            $candidates = @(Get-PnpDevice -PresentOnly -ErrorAction Stop)
+            $enumerated = $true
+        } catch {}
+    }
+    if (-not $enumerated -and
+        $null -ne (Get-Command Get-CimInstance -CommandType Cmdlet -ErrorAction SilentlyContinue)) {
+        try {
+            $candidates = @(Get-CimInstance -ClassName Win32_PnPEntity -ErrorAction Stop)
+            $enumerated = $true
+        } catch {}
+    }
+    if (-not $enumerated -and
+        $null -ne (Get-Command Get-WmiObject -CommandType Cmdlet -ErrorAction SilentlyContinue)) {
+        try {
+            $candidates = @(Get-WmiObject -Class Win32_PnPEntity -ErrorAction Stop)
+            $enumerated = $true
+        } catch {}
+    }
+
+    $found = New-Object 'System.Collections.Generic.List[object]'
+    $seen = @{}
+    foreach ($device in $candidates) {
+        $instanceId = [string](Get-ObjectPropertyValue $device 'InstanceId')
+        if ([string]::IsNullOrEmpty($instanceId)) {
+            $instanceId = [string](Get-ObjectPropertyValue $device 'PNPDeviceID')
+        }
+        if (-not (Test-DfuHardwareId $instanceId) -or $seen.ContainsKey($instanceId)) { continue }
+        $present = Get-ObjectPropertyValue $device 'Present'
+        if ($null -ne $present -and -not [bool]$present) { continue }
+        $errorCode = Get-ObjectPropertyValue $device 'ConfigManagerErrorCode'
+        if ($null -ne $errorCode -and [int]$errorCode -eq 45) { continue }
+        $name = [string](Get-ObjectPropertyValue $device 'FriendlyName')
+        if ([string]::IsNullOrWhiteSpace($name)) { $name = [string](Get-ObjectPropertyValue $device 'Name') }
+        if ([string]::IsNullOrWhiteSpace($name)) { $name = 'STM32 BOOTLOADER' }
+        $seen[$instanceId] = $true
+        $found.Add([pscustomobject]@{
+            InstanceId = $instanceId
+            Name = $name
+            Status = [string](Get-ObjectPropertyValue $device 'Status')
+        })
+    }
+    return $found.ToArray()
+}
+
+function Test-DfuPresent {
+    if ($script:IsWindowsHost) {
+        return @(Get-WindowsDfuDevices).Count -gt 0
+    }
+    $listing = Get-DfuListing
+    return $listing -match '(?i)(\[0483:df11\]|0483:df11)'
+}
+
+function Get-CdcPorts {
+    $ports = New-Object 'System.Collections.Generic.List[string]'
+    if (-not (Test-CommandAvailable $script:ArduinoCli)) { return $ports.ToArray() }
+    $result = Invoke-NativeCapture $script:ArduinoCli @('board','list','--format','json')
+    if ($result.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($result.Output)) { return $ports.ToArray() }
+    try { $data = $result.Output | ConvertFrom-Json } catch { return $ports.ToArray() }
+    $detectedPorts = Get-ObjectPropertyValue $data 'detected_ports'
+    foreach ($entry in @($detectedPorts)) {
+        $port = Get-ObjectPropertyValue $entry 'port'
+        if ($null -eq $port) { continue }
+        $properties = Get-ObjectPropertyValue $port 'properties'
+        $vendorId = [string](Get-ObjectPropertyValue $properties 'vid')
+        $productId = [string](Get-ObjectPropertyValue $properties 'pid')
+        $address = [string](Get-ObjectPropertyValue $port 'address')
+        $vendorId = $vendorId -replace '^0[xX]', ''
+        $productId = $productId -replace '^0[xX]', ''
+        if ($vendorId -ieq '0483' -and $productId -ieq '5740' -and -not [string]::IsNullOrEmpty($address)) {
+            $ports.Add($address)
+        }
+    }
+    return $ports.ToArray()
+}
+
+function ConvertTo-NativeCommandLine {
+    param([string[]]$Arguments)
+    $quoted = foreach ($argument in $Arguments) {
+        if ($argument -notmatch '[\s"]') { $argument }
+        else { '"' + ($argument -replace '(\\*)"', '$1$1\"' -replace '(\\+)$', '$1$1') + '"' }
+    }
+    return $quoted -join ' '
+}
+
+function New-NativeProcessStartInfo {
+    param([string]$Executable, [string[]]$Arguments)
+    $info = New-Object Diagnostics.ProcessStartInfo
+    $info.FileName = Resolve-Executable $Executable
+    $info.UseShellExecute = $false
+    $info.CreateNoWindow = $true
+    if ($null -ne $info.PSObject.Properties['ArgumentList']) {
+        foreach ($argument in $Arguments) { [void]$info.ArgumentList.Add($argument) }
+    } else {
+        $info.Arguments = ConvertTo-NativeCommandLine $Arguments
+    }
+    return $info
+}
+
+function Invoke-MonitorExchange {
+    param([string]$Port, [string]$Command)
+    if (-not (Test-CommandAvailable $script:ArduinoCli)) { return '' }
+    $info = New-NativeProcessStartInfo $script:ArduinoCli @(
+        'monitor','--quiet','--port',$Port,'--config','baudrate=115200')
+    $info.RedirectStandardInput = $true
+    $info.RedirectStandardOutput = $true
+    $info.RedirectStandardError = $true
+    $process = New-Object Diagnostics.Process
+    $process.StartInfo = $info
+    try {
+        [void]$process.Start()
+        $stdout = $process.StandardOutput.ReadToEndAsync()
+        $stderr = $process.StandardError.ReadToEndAsync()
+        # Opening USB CDC may reset the resident. Its startup path can wait
+        # up to 1.8 s for the host before printing the banner and serving `ver`.
+        Start-Sleep -Milliseconds 350
+        $process.StandardInput.WriteLine($Command)
+        $process.StandardInput.Flush()
+        # Keep the monitor alive long enough to receive the startup banner and
+        # the command response before closing its input.
+        Start-Sleep -Milliseconds 2500
+        $process.StandardInput.Close()
+        if (-not $process.WaitForExit(4000)) { $process.Kill() }
+        $process.WaitForExit()
+        return ([string]$stdout.Result) + ([string]$stderr.Result)
+    } catch {
+        try { if (-not $process.HasExited) { $process.Kill() } } catch {}
+        return ''
+    } finally {
+        $process.Dispose()
+    }
+}
+
+function Get-RecognizedProfile {
+    param([string]$VersionText)
+    if ($VersionText -match 'MK61s-Classic-V2') { return 'classic-v2' }
+    if ($VersionText -match 'MK61s-Classic-V3') { return 'classic-v3' }
+    if ($VersionText -match 'MK61s-40th') { return '40th' }
+    return ''
+}
+
+function Detect-Device {
+    $script:State.DetectedPort = ''
+    $script:State.DetectedVersion = ''
+    if ($script:IsWindowsHost) {
+        $dfuDevices = @(Get-WindowsDfuDevices)
+        if ($dfuDevices.Count -gt 0) {
+            $script:State.DeviceStatus = "STM32 DFU 0483:df11 · Windows · $($dfuDevices[0].Name)"
+            return $true
+        }
+    } elseif (Test-DfuPresent) {
+        $script:State.DeviceStatus = 'STM32 DFU 0483:df11 · готов к загрузке'
+        return $true
+    }
+    foreach ($port in @(Get-CdcPorts)) {
+        if ([string]::IsNullOrWhiteSpace($port)) { continue }
+        $response = Invoke-MonitorExchange $port 'ver'
+        if ($response -notmatch 'MK61s') { continue }
+        $script:State.DetectedPort = $port
+        $lines = @($response -split "\r?\n" | Where-Object { $_ -match 'MK61s' })
+        if ($lines.Count -gt 0) { $script:State.DetectedVersion = $lines[$lines.Count - 1] }
+        $profile = Get-RecognizedProfile $response
+        if (-not [string]::IsNullOrEmpty($profile)) {
+            $script:State.Profile = $profile
+            [void](Set-HardwareFromProfile $profile)
+            Save-Config
+            $script:State.DeviceStatus = "MK61s на $port · $(Get-ProfileLabel $profile)"
+        } else {
+            $script:State.DeviceStatus = "MK61s на $port · mini-профиль не кодируется в ver"
+        }
+        return $true
+    }
+    $script:State.DeviceStatus = 'устройство не найдено'
+    return $false
+}
+
+function Choose-Platform {
+    $items = foreach ($id in $script:PlatformLabels.Keys) {
+        [pscustomobject]@{
+            Tag = $id
+            Label = $script:PlatformLabels[$id]
+            State = if ($script:State.Platform -eq $id) { 'on' } else { 'off' }
+        }
+    }
+    $chosen = Show-RadioList 'Платформа' 'Выберите ревизию платы. Экран выбирается отдельно:' @($items)
+    if ([string]::IsNullOrEmpty($chosen)) { return $false }
+    $script:State.Platform = $chosen
+    Sync-ProfileFromHardware
+    Save-Config
+    return $true
+}
+
+function Choose-Mcu {
+    $items = @(
+        [pscustomobject]@{
+            Tag = 'f411'
+            Label = 'STM32F411CE · 512 KiB Flash · встроено по умолчанию'
+            State = if ($script:State.Mcu -eq 'f411') { 'on' } else { 'off' }
+        }
+        [pscustomobject]@{
+            Tag = 'f401'
+            Label = 'STM32F401CC · 256 KiB Flash · APP по умолчанию'
+            State = if ($script:State.Mcu -eq 'f401') { 'on' } else { 'off' }
+        }
+    )
+    $chosen = Show-RadioList 'Контроллер' `
+        'Выберите MCU; размещение каждого компонента можно изменить в ключах компиляции:' $items
+    if ([string]::IsNullOrEmpty($chosen)) { return $false }
+    if ($chosen -ne $script:State.Mcu) {
+        Set-DefaultComponentPlacements $chosen
+    }
+    $script:State.Mcu = $chosen
+    Save-Config
+    return $true
+}
+
+function Choose-Screen {
+    $items = foreach ($id in $script:ScreenLabels.Keys) {
+        $state = 'off'
+        if ((Test-Platform $script:State.Platform) -and
+            -not (Test-HardwareCompatible $script:State.Platform $id)) { $state = 'disabled' }
+        elseif ($script:State.Screen -eq $id) { $state = 'on' }
+        [pscustomobject]@{ Tag = $id; Label = $script:ScreenLabels[$id]; State = $state }
+    }
+    $chosen = Show-RadioList 'Экран' "Выберите дисплей. Символ $($script:Glyphs.RadioDisabled) означает, что экран не совместим с выбранной платформой:" @($items)
+    if ([string]::IsNullOrEmpty($chosen)) { return $false }
+    if ((Test-Platform $script:State.Platform) -and
+        -not (Test-HardwareCompatible $script:State.Platform $chosen)) {
+        Show-Message 'Несовместимая пара' "$(Get-PlatformLabel $script:State.Platform) не поддерживает $(Get-ScreenLabel $chosen)."
+        return $false
+    }
+    $script:State.Screen = $chosen
+    Sync-ProfileFromHardware
+    Save-Config
+    return $true
+}
+
+function Choose-CompileOptions {
+    [int]$focal = $script:State.EnableFocal
+    [int]$tinyBasic = $script:State.EnableTinyBasic
+    [int]$wbmp = $script:State.EnableWbmp
+    [int]$markdown = $script:State.EnableMarkdown
+    [int]$chip8 = $script:State.EnableChip8
+    [int]$setup = $script:State.EnableSetup
+    [int]$focalAsApp = $script:State.FocalAsApp
+    [int]$tinyBasicAsApp = $script:State.TinyBasicAsApp
+    [int]$wbmpAsApp = $script:State.WbmpAsApp
+    [int]$markdownAsApp = $script:State.MarkdownAsApp
+    [int]$chip8AsApp = $script:State.Chip8AsApp
+    [int]$setupAsApp = $script:State.SetupAsApp
+    [int]$explorerAsApp = $script:State.ExplorerAsApp
+    [int]$usbScreen = $script:State.EnableUsbScreen
+    [int]$externalizeUsbDisk = $script:State.ExternalizeUsbDisk
+    [int]$fonts = $script:State.EnableFonts
+    [int]$explorerShortcut = $script:State.EnableExplorer
+    [int]$mathBackend = $script:State.MathBackend
+    [int]$appLocalFloat = $script:State.AppLocalFloat
+    $selected = 'focal'
+
+    while ($true) {
+        $usbDiskAppValue = if ($script:State.Mcu -eq 'f401') {
+            1
+        } else {
+            $externalizeUsbDisk
+        }
+        $items = @(
+            [pscustomobject]@{ Tag = 'focal'; Label = "FOCAL · $(Get-ComponentModeLabel $focal $focalAsApp)" }
+            [pscustomobject]@{ Tag = 'tinybasic'; Label = "TinyBASIC · $(Get-ComponentModeLabel $tinyBasic $tinyBasicAsApp)" }
+            [pscustomobject]@{ Tag = 'wbmp'; Label = "WBMP viewer без Markdown · $(Get-ComponentModeLabel $wbmp $wbmpAsApp)" }
+            [pscustomobject]@{ Tag = 'markdown'; Label = "Markdown + WBMP viewer · $(Get-ComponentModeLabel $markdown $markdownAsApp)" }
+            [pscustomobject]@{ Tag = 'chip8'; Label = "CHIP-8 · $(Get-ComponentModeLabel $chip8 $chip8AsApp)" }
+            [pscustomobject]@{ Tag = 'setup'; Label = "Настройки · $(Get-ComponentModeLabel $setup $setupAsApp)" }
+            [pscustomobject]@{ Tag = 'explorer_app'; Label = "Проводник · $(Get-ComponentModeLabel 1 $explorerAsApp)" }
+            [pscustomobject]@{ Tag = 'usb_screen'; Label = "$(Get-Checkbox $usbScreen) USB-экран" }
+            [pscustomobject]@{ Tag = 'usbdisk_app'; Label = "$(Get-Checkbox $usbDiskAppValue) USB-диск как USBDISK.APP" }
+            [pscustomobject]@{ Tag = 'fonts'; Label = "$(Get-Checkbox $fonts) Расширенные настройки шрифта" }
+            [pscustomobject]@{ Tag = 'explorer_shortcut'; Label = "$(Get-Checkbox $explorerShortcut) Клавиша USER открывает Explorer" }
+            [pscustomobject]@{ Tag = 'math'; Label = "$($script:Glyphs.MenuChoice) Математика: $(Get-MathBackendLabelFor $mathBackend $appLocalFloat)  $($script:Glyphs.MenuNext)" }
+            [pscustomobject]@{ Tag = 'save'; Label = "$($script:Glyphs.MenuCheck) Сохранить и вернуться" }
+        )
+        $choice = Show-Menu 'Ключи компиляции' `
+            'Enter меняет режим: встроен → APP → выкл, или открывает вложенное меню. Изменения применяются пунктом «Сохранить».' `
+            $items $selected
+        if ([string]::IsNullOrEmpty($choice)) { return $false }
+        $selected = $choice
+
+        switch ($choice) {
+            'focal' {
+                $next = Get-NextComponentMode $focal $focalAsApp
+                $focal = $next.Enabled; $focalAsApp = $next.AsApp
+            }
+            'tinybasic' {
+                $next = Get-NextComponentMode $tinyBasic $tinyBasicAsApp
+                $tinyBasic = $next.Enabled; $tinyBasicAsApp = $next.AsApp
+            }
+            'wbmp' {
+                $next = Get-NextComponentMode $wbmp $wbmpAsApp
+                $wbmp = $next.Enabled; $wbmpAsApp = $next.AsApp
+                if ($wbmp -eq 1) { $markdown = 0 }
+            }
+            'markdown' {
+                $next = Get-NextComponentMode $markdown $markdownAsApp
+                $markdown = $next.Enabled; $markdownAsApp = $next.AsApp
+                if ($markdown -eq 1) { $wbmp = 0 }
+            }
+            'chip8' {
+                $next = Get-NextComponentMode $chip8 $chip8AsApp
+                $chip8 = $next.Enabled; $chip8AsApp = $next.AsApp
+            }
+            'setup' {
+                $next = Get-NextComponentMode $setup $setupAsApp
+                $setup = $next.Enabled; $setupAsApp = $next.AsApp
+            }
+            'explorer_app' { $explorerAsApp = 1 - $explorerAsApp }
+            'usb_screen' { $usbScreen = 1 - $usbScreen }
+            'usbdisk_app' {
+                if ($script:State.Mcu -eq 'f401') {
+                    Show-Message 'USBDISK.APP обязателен' `
+                        'На F401 USB-диск всегда внешний: во Flash resident для него недостаточно места.'
+                } else {
+                    $externalizeUsbDisk = 1 - $externalizeUsbDisk
+                }
+            }
+            'fonts' { $fonts = 1 - $fonts }
+            'explorer_shortcut' { $explorerShortcut = 1 - $explorerShortcut }
+            'math' {
+                $mathItems = @(
+                    [pscustomobject]@{ Tag = 'core'; Label = 'CORE · ядро МК-61, около 8 цифр'; State = if ($mathBackend -eq 1 -and $appLocalFloat -eq 0) { 'on' } else { 'off' } }
+                    [pscustomobject]@{ Tag = 'binary64'; Label = 'BINARY64 · полная double-точность, больше Flash'; State = if ($mathBackend -eq 0) { 'on' } else { 'off' } }
+                )
+                $mathChoice = Show-RadioList 'Математика' 'Выберите точность и размер математической библиотеки:' $mathItems
+                if (-not [string]::IsNullOrEmpty($mathChoice)) {
+                    $mathBackend = if ($mathChoice -eq 'binary64') { 0 } else { 1 }
+                    $appLocalFloat = 0
+                }
+            }
+            'save' {
+                $script:State.EnableFocal = $focal
+                $script:State.EnableTinyBasic = $tinyBasic
+                $script:State.EnableWbmp = $wbmp
+                $script:State.EnableMarkdown = $markdown
+                $script:State.EnableChip8 = $chip8
+                $script:State.EnableSetup = $setup
+                $script:State.FocalAsApp = $focalAsApp
+                $script:State.TinyBasicAsApp = $tinyBasicAsApp
+                $script:State.WbmpAsApp = $wbmpAsApp
+                $script:State.MarkdownAsApp = $markdownAsApp
+                $script:State.Chip8AsApp = $chip8AsApp
+                $script:State.SetupAsApp = $setupAsApp
+                $script:State.ExplorerAsApp = $explorerAsApp
+                $script:State.EnableUsbScreen = $usbScreen
+                $script:State.ExternalizeUsbDisk = $externalizeUsbDisk
+                $script:State.EnableFonts = $fonts
+                $script:State.EnableExplorer = $explorerShortcut
+                $script:State.MathBackend = $mathBackend
+                $script:State.AppLocalFloat = $appLocalFloat
+                Save-Config
+                return $true
+            }
+        }
+    }
+}
+
+function Ensure-HardwareProfile {
+    if (-not (Test-Platform $script:State.Platform)) {
+        if ($script:State.Interactive) { if (-not (Choose-Platform)) { return $false } }
+        else { [Console]::Error.WriteLine('Error: select hardware with --profile ID.'); return $false }
+    }
+    if (-not (Test-Screen $script:State.Screen)) {
+        if ($script:State.Interactive) { if (-not (Choose-Screen)) { return $false } }
+        else { [Console]::Error.WriteLine('Error: select hardware with --profile ID.'); return $false }
+    }
+    Sync-ProfileFromHardware
+    if (Test-Profile $script:State.Profile) { return $true }
+    if ($script:State.Interactive) {
+        Show-Message 'Несовместимое оборудование' "Платформа: $(Get-PlatformLabel $script:State.Platform)`nЭкран: $(Get-ScreenLabel $script:State.Screen)`n`nВыберите совместимый экран."
+        if (-not (Choose-Screen)) { return $false }
+        Sync-ProfileFromHardware
+        return Test-Profile $script:State.Profile
+    }
+    [Console]::Error.WriteLine('Error: incompatible platform/screen selection.')
+    return $false
+}
+
+function Get-FlagsSignature {
+    param([string]$Flags)
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [Text.Encoding]::UTF8.GetBytes($Flags)
+        $hash = $sha.ComputeHash($bytes)
+        return ([BitConverter]::ToString($hash).Replace('-', '').Substring(0, 12).ToLowerInvariant())
+    } finally { $sha.Dispose() }
+}
+
+function Write-LastLog {
+    param([string]$Text, [switch]$Append)
+    $parent = Split-Path -Parent $script:LastLog
+    if (-not [string]::IsNullOrEmpty($parent)) { [void](New-Item -ItemType Directory -Force -Path $parent) }
+    if ($Append) { [IO.File]::AppendAllText($script:LastLog, $Text + [Environment]::NewLine, $script:Utf8NoBom) }
+    else { [IO.File]::WriteAllText($script:LastLog, $Text + [Environment]::NewLine, $script:Utf8NoBom) }
+}
+
+function Show-LastLogTail {
+    param([int]$Count = 60)
+    if (-not (Test-Path -LiteralPath $script:LastLog -PathType Leaf)) { return }
+    foreach ($line in @(Get-Content -LiteralPath $script:LastLog -Tail $Count)) { [Console]::Error.WriteLine($line) }
+}
+
+function Invoke-F401CustomBundleBuild {
+    param([string]$Profile)
+    $bash = Find-BashExecutable
+    if ([string]::IsNullOrEmpty($bash)) {
+        Write-LastLog 'Bash is required for tools/firmware/stm32/build_f401_bundle.sh.'
+        return $false
+    }
+    $builder = Convert-ToBashPath $bash (Join-Path $script:ProjectRoot 'tools/firmware/stm32/build_f401_bundle.sh')
+    $output = Convert-ToBashPath $bash $script:OutputDir
+    $build = Convert-ToBashPath $bash (Join-Path $script:BuildRoot "$($script:State.Mcu)-custom/$Profile")
+    $values = [ordered]@{
+        MK61_TARGET_MCU = $script:State.Mcu
+        MK61_EXTERNALIZE_USBDISK = [string](Get-ExternalizeUsbDiskValue)
+        MK61_ENABLE_FOCAL = [string]$script:State.EnableFocal
+        MK61_ENABLE_TINYBASIC = [string]$script:State.EnableTinyBasic
+        MK61_ENABLE_WBMP_VIEWER = [string]$script:State.EnableWbmp
+        MK61_ENABLE_MARKDOWN_VIEWER = [string]$script:State.EnableMarkdown
+        MK61_ENABLE_CHIP8 = [string]$script:State.EnableChip8
+        MK61_ENABLE_SETUP = [string]$script:State.EnableSetup
+        MK61_FOCAL_AS_APP = [string]$script:State.FocalAsApp
+        MK61_TINYBASIC_AS_APP = [string]$script:State.TinyBasicAsApp
+        MK61_WBMP_VIEWER_AS_APP = [string]$script:State.WbmpAsApp
+        MK61_MARKDOWN_VIEWER_AS_APP = [string]$script:State.MarkdownAsApp
+        MK61_CHIP8_AS_APP = [string]$script:State.Chip8AsApp
+        MK61_SETUP_AS_APP = [string]$script:State.SetupAsApp
+        MK61_EXPLORER_AS_APP = [string]$script:State.ExplorerAsApp
+        MK61_ENABLE_USB_SCREEN = [string]$script:State.EnableUsbScreen
+        MK61_ENABLE_LOADABLE_MODULES = '1'
+        MK61_ENABLE_EXTENDED_FONT_SETTINGS = [string]$script:State.EnableFonts
+        MK61_USER_EXPLORER_SHORTCUT = [string]$script:State.EnableExplorer
+        MK61_MATH_BACKEND = [string]$script:State.MathBackend
+        MK61_APP_LOCAL_FLOAT_MATH = [string]$script:State.AppLocalFloat
+    }
+    $previous = @{}
+    foreach ($name in $values.Keys) {
+        $previous[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
+        [Environment]::SetEnvironmentVariable($name, $values[$name], 'Process')
+    }
+    try {
+        $arguments = [string[]]@(
+            $builder, '--profile', $Profile,
+            '--output-dir', $output,
+            '--build-root', $build)
+        return Invoke-ExternalWithProgress 'Сборка комплекта F401' `
+            "Собираю resident и System APP: $(Get-ProfileLabel $Profile)" `
+            $script:LastLog 'indeterminate' $bash $arguments
+    } finally {
+        foreach ($name in $values.Keys) {
+            [Environment]::SetEnvironmentVariable($name, $previous[$name], 'Process')
+        }
+    }
+}
+
+function Invoke-F401GccBundleBuild {
+    param([string]$Profile)
+    $powerShell = Get-CurrentPowerShellExecutable
+    if ([string]::IsNullOrEmpty($powerShell)) {
+        Write-LastLog (
+            'PowerShell 5.1 or newer is required for the direct F401 ' +
+            'GCC builder.')
+        return $false
+    }
+    $builderArguments = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($argument in (Get-F401GccOptionArguments $Profile)) {
+        $builderArguments.Add([string]$argument)
+    }
+    foreach ($argument in @(
+        '-BuildRoot', (Join-Path $script:BuildRoot "$($script:State.Mcu)-gcc"),
+        '-OutputDirectory', $script:OutputDir
+    )) {
+        $builderArguments.Add([string]$argument)
+    }
+    $arguments = Get-F401GccPowerShellArguments `
+        $builderArguments.ToArray()
+    return Invoke-ExternalWithProgress 'Прямая GCC-сборка' `
+        "Собираю GCC resident и System APP: $(Get-ProfileLabel $Profile)" `
+        $script:LastLog 'indeterminate' $powerShell $arguments
+}
+
+function Invoke-F401BundleBuild {
+    param([string]$Profile)
+    if (Test-CustomAppsRequested) {
+        return Invoke-F401CustomBundleBuild $Profile
+    }
+    return Invoke-F401GccBundleBuild $Profile
+}
+
+function Invoke-SystemAppBundleBuild {
+    param([string]$Profile, [string]$BuildDirectory, [string]$Bundle)
+    $graphics = if ($Profile -in @(
+            'classic-v2', 'classic-v3', '40th', 'mini-v3-ws0010') -or
+            $script:State.EnableUsbScreen -eq 1) { '1' } else { '0' }
+    $uiFonts = if ($Profile -in @(
+            'classic-v2', 'classic-v3', '40th')) { '1' } else { '0' }
+    if ($script:IsWindowsHost) {
+        try {
+            $compileCommands = Join-Path $BuildDirectory `
+                'compile_commands.json'
+            $toolchain = Get-ArmToolchainFromDatabase $compileCommands
+        } catch {
+            Write-LastLog $_.Exception.Message -Append
+            return $false
+        }
+        $powerShell = Get-CurrentPowerShellExecutable
+        if ([string]::IsNullOrEmpty($powerShell)) {
+            Write-LastLog 'PowerShell 5.1 or newer is required to build System APP.' -Append
+            return $false
+        }
+        $arguments = @(
+            '-NoLogo', '-NoProfile', '-File',
+            (Join-Path $script:ProjectRoot 'tools/apps/system/build-system-app-bundle.ps1'),
+            '-ResidentElf', (Join-Path $BuildDirectory 'mk61s-M.ino.elf'),
+            '-ArmToolchainBin', $toolchain,
+            '-OutputDirectory', (Join-Path $Bundle 'System'),
+            '-Graphics', $graphics,
+            '-Setup', $(if ($script:State.EnableSetup -eq 1 -and $script:State.SetupAsApp -eq 1) { '1' } else { '0' }),
+            '-UsbDisk', [string](Get-ExternalizeUsbDiskValue),
+            '-Explorer', [string]$script:State.ExplorerAsApp,
+            '-UiFonts', $uiFonts,
+            '-Focal', $(if ($script:State.EnableFocal -eq 1 -and $script:State.FocalAsApp -eq 1) { '1' } else { '0' }),
+            '-Basic', $(if ($script:State.EnableTinyBasic -eq 1 -and $script:State.TinyBasicAsApp -eq 1) { '1' } else { '0' }),
+            '-Wbmp', $(if ($script:State.EnableWbmp -eq 1 -and $script:State.WbmpAsApp -eq 1) { '1' } else { '0' }),
+            '-Markdown', $(if ($script:State.EnableMarkdown -eq 1 -and $script:State.MarkdownAsApp -eq 1) { '1' } else { '0' }),
+            '-Chip8', $(if ($script:State.EnableChip8 -eq 1 -and $script:State.Chip8AsApp -eq 1) { '1' } else { '0' }),
+            '-LocalFloatMath', [string]$script:State.AppLocalFloat,
+            '-CatalogDirectory', (Join-Path $script:OutputDir 'apps/abi6'))
+        return Invoke-ExternalWithProgress 'System APP' `
+            'Собираю единый ABI 6 комплект' $script:LastLog `
+            'indeterminate' $powerShell $arguments -Append
+    }
+    $python = Get-Python3Command
+    if ($null -eq $python) {
+        Write-LastLog 'Python 3 is required to build ABI 6 System APP.' -Append
+        return $false
+    }
+    $arguments = [string[]](
+        @($python.PrefixArguments) + @(
+            (Join-Path $script:ProjectRoot 'tools/apps/system/build_system_app_bundle.py'),
+            '--resident-elf', (Join-Path $BuildDirectory 'mk61s-M.ino.elf'),
+            '--compile-commands', (Join-Path $BuildDirectory 'compile_commands.json'),
+            '--output-dir', (Join-Path $Bundle 'System'),
+            '--graphics', $graphics,
+            '--setup', $(if ($script:State.EnableSetup -eq 1 -and $script:State.SetupAsApp -eq 1) { '1' } else { '0' }),
+            '--usbdisk', [string](Get-ExternalizeUsbDiskValue),
+            '--explorer', [string]$script:State.ExplorerAsApp,
+            '--ui-fonts', $uiFonts,
+            '--focal', $(if ($script:State.EnableFocal -eq 1 -and $script:State.FocalAsApp -eq 1) { '1' } else { '0' }),
+            '--basic', $(if ($script:State.EnableTinyBasic -eq 1 -and $script:State.TinyBasicAsApp -eq 1) { '1' } else { '0' }),
+            '--wbmp', $(if ($script:State.EnableWbmp -eq 1 -and $script:State.WbmpAsApp -eq 1) { '1' } else { '0' }),
+            '--markdown', $(if ($script:State.EnableMarkdown -eq 1 -and $script:State.MarkdownAsApp -eq 1) { '1' } else { '0' }),
+            '--chip8', $(if ($script:State.EnableChip8 -eq 1 -and $script:State.Chip8AsApp -eq 1) { '1' } else { '0' }),
+            '--local-float-math', [string]$script:State.AppLocalFloat,
+            '--catalog-dir', (Join-Path $script:OutputDir 'apps/abi6')))
+    return Invoke-ExternalWithProgress 'System APP' `
+        'Собираю единый ABI 6 комплект' $script:LastLog 'indeterminate' `
+        $python.Executable $arguments -Append
+}
+
+function Build-Selected {
+    if (-not (Ensure-HardwareProfile)) { return $false }
+    if (-not (Test-BuildDependenciesReady)) {
+        $report = Get-DependencyReport
+        if ($script:State.Interactive) { Show-Message 'Не хватает зависимостей' $report }
+        else { [Console]::Error.WriteLine($report) }
+        return $false
+    }
+
+    $profile = $script:State.Profile
+    Remove-LegacyFlatArtifacts $profile
+    if (-not (Invoke-F401BundleBuild $profile)) {
+        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+        else { Show-LastLogTail }
+        return $false
+    }
+    $artifact = Get-ProfileArtifactPath $profile
+    if (-not (Test-Path -LiteralPath $artifact -PathType Leaf) -or
+        (Get-Item -LiteralPath $artifact).Length -eq 0) {
+        Write-LastLog "Build succeeded but $artifact was not created." -Append
+        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+        else { Show-LastLogTail }
+        return $false
+    }
+    $bundle = Get-ProfileBundleDir $profile
+    $size = (Get-Item -LiteralPath $artifact).Length
+    $apps = @(Get-ExpectedSystemAppNames)
+    if ($script:State.Interactive) {
+        if ($apps.Count -gt 0) {
+            $appText = $apps -join [Environment]::NewLine
+            Show-Message 'Комплект собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`nSystem APP:`n$appText`n`n«Собрать и прошить» установит System автоматически. Для повтора: «Установить System APP»."
+        } else {
+            Show-Message 'Комплект собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`n`nВсе System APP выключены. На чистом C6 второй шаг не требуется; если там остались прежние системные APP, второй шаг удалит только их."
+        }
+    } else {
+        [Console]::WriteLine("Built $($script:State.Mcu.ToUpperInvariant()) bundle: $bundle")
+        [Console]::WriteLine("Resident: $artifact ($size bytes)")
+        if ($apps.Count -gt 0) {
+            [Console]::WriteLine('System APP:')
+            foreach ($app in $apps) { [Console]::WriteLine($app) }
+            [Console]::WriteLine('After firmware upload, run --install-apps to synchronize System through CDC.')
+        } else {
+            [Console]::WriteLine('All System APP are disabled; step 2 is only needed to remove previously installed canonical System APP.')
+        }
+    }
+    return $true
+}
+
+function Test-SystemBundleReady {
+    $profile = $script:State.Profile
+    $bundle = Get-ProfileBundleDir $profile
+    $artifact = Get-ProfileArtifactPath $profile
+    $flagsFile = Join-Path $bundle 'build.flags'
+    $appsFile = Join-Path $bundle 'build.apps'
+    if (-not (Test-Path -LiteralPath $artifact -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $flagsFile -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $appsFile -PathType Leaf) -or
+        (Get-Item -LiteralPath $artifact).Length -eq 0) {
+        Write-LastLog "Bundle is missing. Build the selected profile first: $bundle"
+        return $false
+    }
+    $appMetadata = @([IO.File]::ReadAllLines($appsFile))
+    if ($appMetadata.Count -lt 2 -or $appMetadata[0] -ne 'format 1' -or
+        $appMetadata[1] -ne 'abi 6') {
+        Write-LastLog 'Bundle APP metadata is not current ABI 6.'
+        return $false
+    }
+    $lines = [IO.File]::ReadAllLines($flagsFile)
+    $actual = if ($lines.Count -gt 0) { $lines[0] } else { '' }
+    $expected = Get-AllCompileFlags $profile
+    if ($actual -ne $expected) {
+        Write-LastLog 'Bundle flags do not match the current selection. Rebuild it first.'
+        return $false
+    }
+    $source = Join-Path $bundle 'System'
+    $expectedApps = @(Get-ExpectedSystemAppNames)
+    foreach ($app in $expectedApps) {
+        $path = Join-Path $source $app
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or
+            (Get-Item -LiteralPath $path).Length -eq 0) {
+            Write-LastLog "Bundle is incomplete: $path is missing."
+            return $false
+        }
+    }
+    foreach ($app in @(Get-AllSystemAppNames)) {
+        $path = Join-Path $source $app
+        if ($app -eq 'VMCache/VMSTORE.APP' -and $script:State.Mcu -eq 'f411' -and
+            $script:State.EnableFocal -eq 1 -and $script:State.FocalAsApp -eq 1) { continue }
+        if ($app -notin $expectedApps -and
+            (Test-Path -LiteralPath $path)) {
+            Write-LastLog "Bundle contains stale disabled file: $path. Rebuild it first."
+            return $false
+        }
+    }
+    return $true
+}
+
+function Invoke-ProgramBundle {
+    param([ValidateSet('preview','install','all')][string]$Action)
+    if (-not (Ensure-HardwareProfile)) { return $false }
+    if (-not (Test-SystemBundleReady)) { Show-LastLogTail 20; return $false }
+    $bundle = Get-ProfileBundleDir $script:State.Profile
+    if (-not (Test-Path -LiteralPath (Join-Path $bundle 'program-capabilities.json'))) {
+        [Console]::Error.WriteLine('Rebuild the firmware bundle: program capabilities are missing.')
+        return $false
+    }
+    $python = Get-Python3Command
+    if ($null -eq $python) { [Console]::Error.WriteLine('Program selection requires Python 3.10+.'); return $false }
+    $arguments = @($python.PrefixArguments) + @((Join-Path $script:ProjectRoot 'tools/programs/program_bundle.py'), '--bundle', $bundle)
+    if ($script:ProgramVerify) { $arguments += '--verify' }
+    if ($script:ProgramPort) { $arguments += @('--port', $script:ProgramPort) }
+    if ($Action -eq 'all') {
+        & $python.Executable @arguments | Out-Host
+        if ($LASTEXITCODE -ne 0) { return $false }
+        if (-not (Install-SystemApps)) { return $false }
+    }
+    if ($Action -ne 'preview') { $arguments += '--install' }
+    if ($env:MK61_TEST_MKC_DEVICE) { $arguments += @('--mock', $env:MK61_TEST_MKC_DEVICE) }
+    if ($script:State.Interactive) {
+        $success = Invoke-ExternalWithProgress 'Комплект программ' `
+            'Подбор и передача совместимых файлов' $script:LastLog `
+            'indeterminate' $python.Executable ([string[]]$arguments)
+        Show-Log 'Комплект программ' $script:LastLog
+        return $success
+    }
+    & $python.Executable @arguments | Out-Host
+    return $LASTEXITCODE -eq 0
+}
+
+function Install-SystemApps {
+    if (-not (Ensure-HardwareProfile)) { return $false }
+    if (-not (Test-SystemBundleReady)) {
+        Show-LastLogTail 20
+        return $false
+    }
+    $artifact = Get-ProfileArtifactName $script:State.Profile $script:State.Mcu
+    $identity = $artifact -replace '^mk61s-M-', '' -replace '-f40[1]\.bin$', '' -replace '-f411\.bin$', ''
+    if ($script:State.Profile -eq '40th') { $identity = '40th-uc1609' }
+    $installerArgs = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+        '-File', (Join-Path $script:ProjectRoot 'tools/mkc/mkc.ps1'),
+        '--install-system', (Join-Path (Get-ProfileBundleDir $script:State.Profile) 'System'),
+        '--expect-profile', $identity, '--wait-ready', '45')
+    $capabilityPath = Join-Path (Get-ProfileBundleDir $script:State.Profile) 'program-capabilities.json'
+    if (Test-Path -LiteralPath $capabilityPath) {
+        $metadata = Get-Content -LiteralPath $capabilityPath -Raw | ConvertFrom-Json
+        $installerArgs += @('--expect-build', [string]$metadata.build_id, '--expect-profile', [string]$metadata.device_profile)
+    }
+    if ($script:ProgramPort) { $installerArgs += @('--port', $script:ProgramPort) }
+    if ((Get-ExternalizeUsbDiskValue) -eq 0) { $installerArgs += '--resident-usbdisk' }
+    if (-not [string]::IsNullOrEmpty($env:MK61_TEST_MKC_DEVICE)) {
+        $installerArgs += @('--mock', $env:MK61_TEST_MKC_DEVICE)
+    }
+    [Console]::WriteLine('Installing System through CDC. Close all programs using the serial port; USB Disk mode is not needed.')
+    $hostPowerShell = (Get-Process -Id $PID).Path
+    [void](New-Item -ItemType Directory -Force -Path (Split-Path -Parent $script:LastLog))
+    & $hostPowerShell @installerArgs 2>&1 | Tee-Object -FilePath $script:LastLog | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+        if ($script:State.Interactive) { Show-Log 'Ошибка установки APP' $script:LastLog }
+        return $false
+    }
+    $script:State.DeviceStatus = 'System APP синхронизированы и проверены'
+    if ($script:State.Interactive) {
+        Show-Message 'System APP' 'System установлен и проверен через COM/CDC. Другие файлы не изменялись.'
+    }
+    return $true
+}
+
+function Wait-ForDfu {
+    param([int]$Seconds = 30)
+    $attempts = $Seconds * 2
+    for ($attempt = 0; $attempt -lt $attempts; $attempt++) {
+        if (Test-DfuPresent) { return $true }
+        if ($script:State.Interactive) {
+            $percent = [Math]::Min(90, [int](90 * ($attempt + 1) / $attempts))
+            Draw-Progress 'Поиск DFU' 'Жду STM32 DFU 0483:df11' $percent
+        }
+        Start-Sleep -Milliseconds 500
+    }
+    Write-LastLog "STM32 DFU 0483:df11 was not found within $Seconds seconds."
+    return $false
+}
+
+function Ensure-DfuReady {
+    if ($script:IsWindowsHost -and -not (Find-Stm32CubeProgrammer)) {
+        $message = "STM32CubeProgrammer не найден. Установите его с USB DFU-драйвером с сайта ST.`nhttps://www.st.com/en/development-tools/stm32cubeprog.html"
+        Write-LastLog $message
+        if ($script:State.Interactive) { Show-Message 'DFU uploader' $message }
+        else { [Console]::Error.WriteLine($message) }
+        return $false
+    }
+    if (-not $script:IsWindowsHost -and -not (Find-DfuUtil)) {
+        $message = "dfu-util не найден. Укажите путь при запуске меню или установите dfu-util."
+        Write-LastLog $message
+        if ($script:State.Interactive) { Show-Message 'DFU uploader' $message }
+        else { [Console]::Error.WriteLine($message) }
+        return $false
+    }
+    if (Test-DfuPresent) { return $true }
+
+    [void](Detect-Device)
+    if (-not [string]::IsNullOrEmpty($script:State.DetectedPort)) {
+        if (-not $script:State.Interactive) {
+            [Console]::WriteLine("Requesting DFU mode on $($script:State.DetectedPort)…")
+        }
+        [void](Invoke-MonitorExchange $script:State.DetectedPort 'dfu')
+        for ($attempt = 0; $attempt -lt 20; $attempt++) {
+            if (Test-DfuPresent) { return $true }
+            Start-Sleep -Milliseconds 250
+        }
+    }
+
+    if ($script:State.Interactive) {
+        Show-Message 'Нужен режим DFU' 'Зажмите ESC на калькуляторе и нажмите RESET (или подключите USB с зажатым ESC). Затем отпустите ESC. Меню будет ждать загрузчик 30 секунд.'
+    } else {
+        [Console]::WriteLine('Enter DFU: hold ESC and press RESET (waiting 30 seconds).')
+    }
+    if (Wait-ForDfu 30) {
+        $script:State.DeviceStatus = 'STM32 DFU 0483:df11 · готов к загрузке'
+        if ($script:State.Interactive) { Draw-Progress 'Поиск DFU' 'Готово' 100; Start-Sleep -Milliseconds 350 }
+        return $true
+    }
+    if ($script:State.Interactive) { Show-Log 'DFU не найден' $script:LastLog }
+    else { Show-LastLogTail 20 }
+    return $false
+}
+
+function Get-UploadInvocation {
+    param([string]$Artifact)
+    if ($script:IsWindowsHost) {
+        return [pscustomobject]@{
+            Executable = Get-CurrentPowerShellExecutable
+            Arguments = [string[]]@('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+                '-File', (Join-Path $script:ProjectRoot 'tools/firmware/dfu/upload.ps1'),
+                '-InputFile', $Artifact, '-Programmer', $script:CubeProgrammerExecutable)
+        }
+    }
+    return [pscustomobject]@{
+        Executable = $script:DfuExecutable
+        Arguments = [string[]]@('-d', '0483:df11', '-a', '0', '-s', '0x08000000:leave', '-D', $Artifact)
+    }
+}
+
+function Upload-Selected {
+    if (-not (Ensure-HardwareProfile)) { return $false }
+    if ($script:State.Interactive) {
+        $question = "Профиль: $(Get-ProfileLabel $script:State.Profile)`nКонтроллер: $(Get-McuLabel $script:State.Mcu)`nМетод: USB DFU`n`n$(Get-CompileOptionsDetails)`n`nСобрать согласованный комплект и загрузить resident-прошивку в устройство?"
+        if (-not (Show-YesNo 'Собрать и прошить' $question)) { return $false }
+    }
+    if (-not (Build-Selected)) { return $false }
+    if (-not (Ensure-DfuReady)) { return $false }
+    $artifact = Get-ProfileArtifactPath $script:State.Profile
+    $upload = Get-UploadInvocation $artifact
+    if (Invoke-ExternalWithProgress 'Загрузка прошивки' 'Записываю и перезапускаю STM32' `
+        $script:LastLog 'measured' $upload.Executable $upload.Arguments) {
+        $script:State.DeviceStatus = 'прошивка загружена; устройство перезапущено'
+        if (-not (Install-SystemApps)) { return $false }
+        return $true
+    }
+    if ($script:State.Interactive) { Show-Log 'Ошибка загрузки' $script:LastLog }
+    else { Show-LastLogTail }
+    return $false
+}
+
+function Show-Dependencies {
+    Show-Message 'Зависимости' (Get-DependencyReport)
+}
+
+function Show-Config {
+    Sync-ProfileFromHardware
+    [Console]::WriteLine("CONFIG_FILE=$($script:ConfigFile)")
+    [Console]::WriteLine("MCU=$($script:State.Mcu)")
+    [Console]::WriteLine("PLATFORM=$($script:State.Platform)")
+    [Console]::WriteLine("SCREEN=$($script:State.Screen)")
+    [Console]::WriteLine("PROFILE=$($script:State.Profile)")
+    [Console]::WriteLine("DFU_UTIL_PATH=$($script:State.DfuPath)")
+    [Console]::WriteLine("STM32_CUBE_PROGRAMMER_PATH=$($script:State.CubeProgrammerPath)")
+    [Console]::WriteLine("MK61_ENABLE_FOCAL=$($script:State.EnableFocal)")
+    [Console]::WriteLine("MK61_ENABLE_TINYBASIC=$($script:State.EnableTinyBasic)")
+    [Console]::WriteLine("MK61_ENABLE_WBMP_VIEWER=$($script:State.EnableWbmp)")
+    [Console]::WriteLine("MK61_ENABLE_MARKDOWN_VIEWER=$($script:State.EnableMarkdown)")
+    [Console]::WriteLine("MK61_ENABLE_CHIP8=$($script:State.EnableChip8)")
+    [Console]::WriteLine("MK61_ENABLE_SETUP=$($script:State.EnableSetup)")
+    [Console]::WriteLine("MK61_FOCAL_AS_APP=$($script:State.FocalAsApp)")
+    [Console]::WriteLine("MK61_TINYBASIC_AS_APP=$($script:State.TinyBasicAsApp)")
+    [Console]::WriteLine("MK61_WBMP_VIEWER_AS_APP=$($script:State.WbmpAsApp)")
+    [Console]::WriteLine("MK61_MARKDOWN_VIEWER_AS_APP=$($script:State.MarkdownAsApp)")
+    [Console]::WriteLine("MK61_CHIP8_AS_APP=$($script:State.Chip8AsApp)")
+    [Console]::WriteLine("MK61_SETUP_AS_APP=$($script:State.SetupAsApp)")
+    [Console]::WriteLine("MK61_EXPLORER_AS_APP=$($script:State.ExplorerAsApp)")
+    [Console]::WriteLine("MK61_ENABLE_USB_SCREEN=$($script:State.EnableUsbScreen)")
+    [Console]::WriteLine("MK61_EXTERNALIZE_USBDISK=$(Get-ExternalizeUsbDiskValue)")
+    [Console]::WriteLine('MK61_ENABLE_LOADABLE_MODULES=1')
+    [Console]::WriteLine("MK61_ENABLE_EXTENDED_FONT_SETTINGS=$($script:State.EnableFonts)")
+    [Console]::WriteLine("MK61_USER_EXPLORER_SHORTCUT=$($script:State.EnableExplorer)")
+    [Console]::WriteLine("MK61_MATH_BACKEND=$($script:State.MathBackend)")
+    [Console]::WriteLine("MK61_APP_LOCAL_FLOAT_MATH=$($script:State.AppLocalFloat)")
+    $flags = if (Test-Profile $script:State.Profile) { Get-AllCompileFlags $script:State.Profile }
+        else { Get-CompileOptionFlags }
+    [Console]::WriteLine("COMPILE_FLAGS=$flags")
+}
+
+function Show-Profiles {
+    foreach ($id in $script:Profiles.Keys) {
+        [Console]::WriteLine("$id`t$($script:Profiles[$id].Label)`t$($script:Profiles[$id].Flags)")
+    }
+}
+
+function Get-MainMenuItems {
+    $uploadLabel = "$($script:Glyphs.MenuUpload) Шаг 1 · Собрать и прошить"
+    $items = @(
+        [pscustomobject]@{ Tag = 'upload'; Label = $uploadLabel }
+        [pscustomobject]@{ Tag = 'build'; Label = "$($script:Glyphs.MenuBuild) Только собрать" }
+    )
+    $items += [pscustomobject]@{
+        Tag = 'install_apps'
+        Label = "$($script:Glyphs.MenuInstall) Установить System APP"
+    }
+    $items += @(
+        [pscustomobject]@{ Tag = 'mcu'; Label = "$($script:Glyphs.MenuChoice) Контроллер" }
+        [pscustomobject]@{ Tag = 'platform'; Label = "$($script:Glyphs.MenuChoice) Платформа" }
+        [pscustomobject]@{ Tag = 'screen'; Label = "$($script:Glyphs.MenuChoice) Экран" }
+        [pscustomobject]@{ Tag = 'options'; Label = "$($script:Glyphs.MenuOptions) Ключи компиляции" }
+        [pscustomobject]@{ Tag = 'detect'; Label = "$($script:Glyphs.MenuDetect) Найти устройство" }
+        [pscustomobject]@{ Tag = 'deps'; Label = "$($script:Glyphs.MenuCheck) Проверить зависимости" }
+        [pscustomobject]@{ Tag = 'setup'; Label = "$($script:Glyphs.MenuInstall) Установить GNU Arm GCC" }
+        [pscustomobject]@{ Tag = 'log'; Label = "$($script:Glyphs.MenuLog) Последний журнал" }
+        [pscustomobject]@{ Tag = 'preview_programs'; Label = '≡ Состав совместимых программ' }
+        [pscustomobject]@{ Tag = 'install_programs'; Label = '↓ Установить программы' }
+        [pscustomobject]@{ Tag = 'install_all'; Label = '↓ Установить System и программы' }
+        [pscustomobject]@{ Tag = 'quit'; Label = "$($script:Glyphs.MenuQuit) Выход" }
+    )
+    return $items
+}
+
+function Invoke-InteractiveMain {
+    $script:State.Interactive = $true
+    Enter-Tui
+    Load-Config
+    [void](Configure-DfuUploader)
+    $script:State.DeviceStatus = 'не проверялось · пункт «Найти устройство»'
+    $mainSelection = 'upload'
+    while ($true) {
+        $items = @(Get-MainMenuItems)
+        $platformText = Get-PlatformLabel $script:State.Platform
+        $screenText = Get-ScreenLabel $script:State.Screen
+        if ((Test-Platform $script:State.Platform) -and (Test-Screen $script:State.Screen) -and
+            -not (Test-HardwareCompatible $script:State.Platform $script:State.Screen)) {
+            $screenText += ' · несовместим'
+        }
+        $text = "Платформа: $platformText`nЭкран: $screenText`nКлючи: $(Get-CompileOptionsSummary)`nЦель: $(Get-McuLabel $script:State.Mcu) · USB DFU`nDFU: $($script:State.DfuStatus)`nУстройство: $($script:State.DeviceStatus)"
+        $selection = Show-Menu 'MK61s · прошивка' $text $items $mainSelection
+        if ([string]::IsNullOrEmpty($selection)) { break }
+        $mainSelection = $selection
+        switch ($selection) {
+            'upload' { [void](Upload-Selected) }
+            'build' { [void](Build-Selected) }
+            'install_apps' { [void](Install-SystemApps) }
+            'preview_programs' { [void](Invoke-ProgramBundle preview) }
+            'install_programs' { [void](Invoke-ProgramBundle install) }
+            'install_all' { [void](Invoke-ProgramBundle all) }
+            'mcu' { [void](Choose-Mcu) }
+            'platform' { [void](Choose-Platform) }
+            'screen' { [void](Choose-Screen) }
+            'options' { [void](Choose-CompileOptions) }
+            'detect' {
+                if (Detect-Device) { Show-Message 'Устройство' $script:State.DeviceStatus }
+                else { Show-Message 'Устройство' 'MK61s и STM32 DFU не найдены.' }
+            }
+            'deps' { Show-Dependencies }
+            'setup' { [void](Install-ArduinoDependencies) }
+            'log' { Show-Log 'Последний журнал' $script:LastLog }
+            'quit' { return 0 }
+        }
+    }
+    return 0
+}
+
+function Show-Usage {
+    [Console]::WriteLine(@'
+MK61s firmware builder and DFU uploader
+
+Usage:
+  tools\mk61-firmware.cmd
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --build
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --upload
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --install-apps
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --preview-programs
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --install-programs [--verify-programs]
+  tools\mk61-firmware.cmd --mcu MCU --profile ID --install-all [--verify-programs]
+  tools\mk61-firmware.cmd --detect
+  tools\mk61-firmware.cmd --setup
+  tools\mk61-firmware.cmd --list-profiles
+  tools\mk61-firmware.cmd --show-config
+
+Targets:
+  --target NAME   stm32 (default) or picocalc-pico-h; target --help lists its options
+  --list-targets  print build targets
+
+Profiles:
+  mini-v3-a00, mini-v3-a02, mini-v3-ws0010,
+  mini-v2-a00, mini-v2-a02,
+  classic-v2, classic-v3, 40th
+
+MCU:
+  f411 (512 KiB Flash, components resident by default) or f401
+  (256 KiB Flash, components as /System APP by default)
+
+Installation options:
+  --port COMx        explicit serial port
+  --verify-programs  additionally download and compare program files
+
+Environment overrides:
+  MK61_ARDUINO_CLI, MK61_DFU_UTIL, MK61_STM32_PROGRAMMER, MK61_BUILD_ROOT,
+  MK61_OUTPUT_DIR, MK61_CONFIG_FILE, MK61_APP_MANIFESTS,
+  MK61_COLOR
+
+The Bash and PowerShell tools share .mk61-firmware.conf.
+'@)
+}
+
+function Invoke-Application {
+    param([string[]]$CliArguments)
+    $target = 'stm32'
+    $remaining = New-Object 'System.Collections.Generic.List[string]'
+    for ($index = 0; $index -lt $CliArguments.Count; $index++) {
+        $argument = $CliArguments[$index]
+        if ($argument -eq '--target') {
+            if (++$index -ge $CliArguments.Count) {
+                [Console]::Error.WriteLine('Error: --target needs stm32 or picocalc-pico-h.')
+                return 2
+            }
+            $target = $CliArguments[$index]
+        } elseif ($argument.StartsWith('--target=')) {
+            $target = $argument.Substring(9)
+        } elseif ($argument -eq '--list-targets') {
+            [Console]::WriteLine("stm32`tSTM32F401/F411")
+            [Console]::WriteLine("picocalc-pico-h`tPicoCalc / Pico H (RP2040)")
+            return 0
+        } else {
+            $remaining.Add($argument)
+        }
+    }
+    $CliArguments = @($remaining.ToArray())
+    if ($target -eq 'picocalc-pico-h') {
+        $python = Get-Python3Command
+        if ($null -eq $python) {
+            [Console]::Error.WriteLine('PicoCalc builds require Python 3.')
+            return 1
+        }
+        $arguments = @($python.PrefixArguments) + @(
+            (Join-Path $script:ProjectRoot 'tools/firmware/picocalc/firmware.py')) + $CliArguments
+        & $python.Executable @arguments | Out-Host
+        return $LASTEXITCODE
+    }
+    if ($target -ne 'stm32') {
+        [Console]::Error.WriteLine("Error: unsupported target: $target")
+        return 2
+    }
+    $action = 'tui'
+    $script:ProgramVerify = $false
+    $script:ProgramPort = ''
+    for ($index = 0; $index -lt $CliArguments.Count; $index++) {
+        $argument = $CliArguments[$index]
+        switch -Regex ($argument) {
+            '^(--mcu|-Mcu)$' {
+                if ($index + 1 -ge $CliArguments.Count) {
+                    [Console]::Error.WriteLine('Error: --mcu needs f411 or f401.')
+                    return 2
+                }
+                $index++
+                $script:State.Mcu = $CliArguments[$index]
+                $script:State.CliMcu = $true
+            }
+            '^(--profile|-Profile)$' {
+                if ($index + 1 -ge $CliArguments.Count) {
+                    [Console]::Error.WriteLine('Error: --profile needs an ID.')
+                    return 2
+                }
+                $index++
+                $script:State.Profile = $CliArguments[$index]
+                $script:State.CliProfile = $true
+            }
+            '^(--build|-Build)$' { $action = 'build' }
+            '^(--upload|-Upload)$' { $action = 'upload' }
+            '^(--install-apps|-InstallApps)$' { $action = 'install-apps' }
+            '^--preview-programs$' { $action = 'preview-programs' }
+            '^--install-programs$' { $action = 'install-programs' }
+            '^--install-all$' { $action = 'install-all' }
+            '^--verify-programs$' { $script:ProgramVerify = $true }
+            '^--port$' {
+                if (++$index -ge $CliArguments.Count) { throw '--port requires a value' }
+                $script:ProgramPort = $CliArguments[$index]
+            }
+            '^(--detect|-Detect)$' { $action = 'detect' }
+            '^(--setup|-Setup)$' { $action = 'setup' }
+            '^(--list-profiles|-ListProfiles)$' { $action = 'list-profiles' }
+            '^(--show-config|-ShowConfig)$' { $action = 'show-config' }
+            '^(--plain|-Plain)$' { }
+            '^(-h|--help|-Help)$' { Show-Usage; return 0 }
+            default {
+                [Console]::Error.WriteLine("Error: unknown option: $argument")
+                Show-Usage
+                return 2
+            }
+        }
+    }
+
+    if (-not (Test-Mcu $script:State.Mcu)) {
+        [Console]::Error.WriteLine("Error: unsupported MCU: $($script:State.Mcu) (expected f411 or f401).")
+        return 2
+    }
+
+    if (-not [string]::IsNullOrEmpty($script:State.Profile) -and
+        -not (Test-Profile $script:State.Profile)) {
+        [Console]::Error.WriteLine("Error: unsupported profile: $($script:State.Profile)")
+        return 2
+    }
+
+    switch ($action) {
+        'tui' {
+            try { $redirected = [Console]::IsInputRedirected } catch { $redirected = $false }
+            if ($redirected) {
+                [Console]::Error.WriteLine('Error: interactive mode needs a terminal. Use --build/--upload/--install-apps/--detect.')
+                return 2
+            }
+            return Invoke-InteractiveMain
+        }
+        'list-profiles' { Show-Profiles; return 0 }
+        'show-config' { Load-Config; Show-Config; return 0 }
+        'build' {
+            $script:State.Interactive = $false
+            Load-Config
+            if (Build-Selected) { return 0 } else { return 1 }
+        }
+        'upload' {
+            $script:State.Interactive = $false
+            Load-Config
+            if (Upload-Selected) { return 0 } else { return 1 }
+        }
+        { $_ -in @('preview-programs','install-programs','install-all') } {
+            $script:State.Interactive = $false
+            Load-Config
+            $mode = @{ 'preview-programs'='preview'; 'install-programs'='install'; 'install-all'='all' }[$action]
+            if (Invoke-ProgramBundle $mode) { return 0 } else { return 1 }
+        }
+        'install-apps' {
+            $script:State.Interactive = $false
+            Load-Config
+            if (Install-SystemApps) { return 0 } else { return 1 }
+        }
+        'detect' {
+            $script:State.Interactive = $false
+            Load-Config
+            $found = Detect-Device
+            [Console]::WriteLine($script:State.DeviceStatus)
+            if (-not [string]::IsNullOrEmpty($script:State.DetectedVersion)) {
+                [Console]::WriteLine($script:State.DetectedVersion)
+            }
+            if ($found) { return 0 } else { return 1 }
+        }
+        'setup' {
+            $script:State.Interactive = $false
+            if (Install-ArduinoDependencies) {
+                [Console]::WriteLine((Get-DependencyReport))
+                return 0
+            }
+            Show-LastLogTail
+            return 1
+        }
+    }
+    return 2
+}
+
+if ([Environment]::GetEnvironmentVariable('MK61_POWERSHELL_IMPORT_ONLY') -eq '1') { return }
+
+$script:ExitCode = 1
+try {
+    $script:ExitCode = Invoke-Application @($args)
+} catch {
+    if ($script:ScreenActive) { Exit-Tui }
+    [Console]::Error.WriteLine("Error: $($_.Exception.Message)")
+    $script:ExitCode = 1
+} finally {
+    if ($null -ne $script:ActiveJob) {
+        Stop-Job -Job $script:ActiveJob -ErrorAction SilentlyContinue
+        Remove-Job -Job $script:ActiveJob -Force -ErrorAction SilentlyContinue
+        $script:ActiveJob = $null
+    }
+    Exit-Tui
+}
+exit $script:ExitCode

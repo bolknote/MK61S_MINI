@@ -19,7 +19,7 @@ probe; all display, editor, settings, ABI and ordinary arithmetic checks remain.
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[1]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 import binascii
 import json
@@ -105,7 +105,7 @@ def preview_font():
 def ui_font_oracle(family, size, text):
     """Reference first paragraph using the reviewed native source pixels."""
     del family  # wire family 2 remains a compatibility alias for Pixel
-    font_dir = ROOT / 'tools/.fmk-font/ui-atlases'
+    font_dir = ROOT / 'tools/fonts/ui-atlases'
     atlas = json.loads((font_dir / f'pixel-{size}.json').read_text())
     glyphs = {g['codepoint']: g for g in atlas['glyphs']}
     supplement = json.loads((font_dir / 'm8-supplement.json').read_text())

@@ -120,7 +120,7 @@ try {
                 'packer is built in')
         }
         $builder = Join-Path $projectRoot `
-            'tools/build-system-app-bundle.ps1'
+            'tools/apps/system/build-system-app-bundle.ps1'
         $toolchain = Get-ArmToolchainFromDatabase `
             ([IO.Path]::GetFullPath($CompileCommands))
         $arguments = @(
@@ -141,7 +141,7 @@ try {
         & $powerShell @arguments
     } else {
         $arguments = @(
-            (Join-Path $projectRoot 'tools/build_system_app_bundle.py'),
+            (Join-Path $projectRoot 'tools/apps/system/build_system_app_bundle.py'),
             '--resident-elf', [IO.Path]::GetFullPath($ResidentElf),
             '--compile-commands', [IO.Path]::GetFullPath($CompileCommands),
             '--output-dir', [IO.Path]::GetFullPath($OutputDirectory),

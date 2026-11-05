@@ -99,7 +99,7 @@ The original libm chapter records matched 51-input GNU/owned RAM measurements.
 MK61_TEST_SANITIZERS=1 MK61_EABI_SAMPLES=10000000 tests/run_native_eabi_tests.sh
 python3 tests/native_eabi_arm_self_test.py --elf BUILD/resident.elf
 python3 tests/check_native_runtime_libraries.py BUILD/resident.map
-python3 tools/build_portable_app.py --name ALUBENCH \
+python3 tools/apps/portable/build_portable_app.py --name ALUBENCH \
   --source tests/fixtures/eabi_cycles_probe.c --output-dir BUILD/alu
 python3 tests/hil_eabi_cycles.py --port PORT --public-id ID \
   --expected-build CRC --app BUILD/alu/ALUBENCH.APP --output-dir BUILD/times

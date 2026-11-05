@@ -386,7 +386,7 @@ WEH001602A гарантирует символьный экран 16x2. Поэт
 Для отдельной квалификационной прошивки с просмотром WBMP:
 
 ```powershell
-tools/build-gcc.cmd -Profile mini-v3-ws0010 -Ws0010Graphics 1 -Markdown 1 -Wbmp 1
+tools/firmware/stm32/build-gcc.cmd -Profile mini-v3-ws0010 -Ws0010Graphics 1 -Markdown 1 -Wbmp 1
 ```
 
 Для F411 передайте сборке

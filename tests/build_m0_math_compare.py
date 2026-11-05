@@ -5,6 +5,10 @@ Does not access hardware. A full relink uses the supplied source snapshot.
 Preserving the production link copies only reference-build metadata; the
 identified production ELF supplies all owned code and RAM initializers.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -17,7 +21,7 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'tools'),str(ROOT/'tests')]
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 from check_stm32_vectors import ElfImage
 from m0_mpfr_oracle import Oracle
 from native_eabi_m0_arm_self_test import bits,real
@@ -200,7 +204,7 @@ def main():
     text+='target_link_options(mk61s-picocalc-pico-h PRIVATE\n'+''.join(f'    "-Wl,-u,{name}"\n' for name in names)+')\n'
     text+='target_link_options(mk61s-picocalc-pico-h PRIVATE "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/m0_reference.ld")\n'
     cmake.write_text(text)
-    command=[sys.executable,str(source/'tools/build_picocalc.py'),'--sdk',str(a.sdk.resolve()),
+    command=[sys.executable,str(source/'tools/firmware/picocalc/build_picocalc.py'),'--sdk',str(a.sdk.resolve()),
         '--build-path',str(out/'build'),'--output-dir',str(out/'firmware'),'--jobs','4']
     if a.preserve_production_link:
         from m0_reference_image import join_reference
@@ -243,7 +247,7 @@ def main():
     assert '#define ROUNDS 12U' in fixture.read_text(),'Update the wire/estimator contract when changing round count'
     wrapper=out/'TIMING.c';wrapper.write_text(('#define MK61_M0_TIMING_CACHE 1\n' if a.cache_counters else '')+
         f'#define MK61_MATH_COMPARE_ROOT "/{a.directory}"\n#include "{fixture}"\n')
-    command=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--name','TIMING',
+    command=[sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h','--name','TIMING',
         '--source',str(wrapper),'--shared-runtime','--arm-toolchain-bin',str(compiler_bin(None)),'--output-dir',str(out/'app')]
     with (out/'app-build.log').open('w') as log:subprocess.run(command,check=True,stdout=log,stderr=subprocess.STDOUT)
     app=out/'app/TIMING.APP'

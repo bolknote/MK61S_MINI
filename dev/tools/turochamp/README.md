@@ -32,7 +32,7 @@ the old 26/27-column 192x64 layouts retain their single-glyph squares.
 Native text copies the reviewed Ark Pixel 12px bitmap strike without
 resampling; chess silhouettes are original artwork. Ark Pixel Font is
 Copyright (c) 2021, TakWolf, SIL Open Font License 1.1. The complete notice
-is in `tools/.fmk-font/ui-atlases/LICENSE-Ark-Pixel.txt` and the PicoCalc
+is in `tools/fonts/ui-atlases/LICENSE-Ark-Pixel.txt` and the PicoCalc
 bundle's `licenses/ui-fonts/LICENSE-Ark-Pixel.txt`.
 Legal-move testing embeds both make and unmake. Positions with fewer than
 four reversible plies skip repetition scans, since a cycle needs two moves

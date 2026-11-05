@@ -42,7 +42,7 @@ foreach ($image in Get-ChildItem -LiteralPath $Fixtures -Filter '*.bin') {
 }
 ''')
         subprocess.run(["pwsh", "-NoLogo", "-NoProfile", "-File", str(script),
-                        str(ROOT / "tools/.mk61-app/Mk61AppPacker.cs"), str(work)],
+                        str(ROOT / "tools/apps/packer/Mk61AppPacker.cs"), str(work)],
                        check=True)
         for index, payload in enumerate(fixtures):
             image = work / f"{index:03}.bin"

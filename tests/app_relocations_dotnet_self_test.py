@@ -32,5 +32,5 @@ foreach ($name in @('valid','undefined','foreign','absolute')) {
 }
 ''')
         subprocess.run(['pwsh','-NoLogo','-NoProfile','-File',script,
-                        ROOT/'tools/.mk61-app/Mk61AppPacker.cs',work],check=True)
+                        ROOT/'tools/apps/packer/Mk61AppPacker.cs',work],check=True)
     print('.NET Thumb-2 conditional branch: internal accepted, undefined/foreign/absolute rejected PASS')

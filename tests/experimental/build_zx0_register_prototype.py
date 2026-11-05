@@ -62,7 +62,7 @@ bool decode_register(const zx0::Input& input,u32 size,u8* output,u32 capacity,u3
         'zx0_prototypes::encode_scalar};')
     bench=replace_once(bench,'const unsigned count=c.family==3?2:3;','const unsigned count=3;')
     (folder/'benchmark.cpp').write_text(bench)
-    command=[sys.executable,ROOT/'tools/build_portable_app.py','--name','ZX0REG','--shared-runtime',
+    command=[sys.executable,ROOT/'tools/apps/portable/build_portable_app.py','--name','ZX0REG','--shared-runtime',
         '--source',folder/'benchmark.cpp','--include',ROOT/'tests/experimental','--include',folder,
         '--arm-toolchain-bin',args.arm_toolchain_bin,'--output-dir',folder/'build']
     for variant in ('scalar','word','register'):command+=['--source',out/'variants'/(variant+'.cpp')]

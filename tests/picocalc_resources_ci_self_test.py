@@ -21,7 +21,7 @@ class ResourceCiTests(unittest.TestCase):
         for paths in triggers:
             for path in ('programs/games/Bumblebee/scene-320.wbmp','doc/game-artwork/native/recipe.json',
                 'doc/game-artwork/bumblebee.svg','programs/examples/Graphics.foc',
-                'dev/tools/generate_picocalc_game_assets.py','dev/lib/m8_codec.py','tools/.fmk-font/ui-atlases/pixel-16.json',
+                'dev/tools/generate_picocalc_game_assets.py','dev/lib/m8_codec.py','tools/fonts/ui-atlases/pixel-16.json',
                 'tests/run_picocalc_recovery_tests.sh','tests/basic_graphics_self_test.cpp'):
                 self.assertTrue(any(fnmatch.fnmatchcase(path,p) for p in paths),path)
         for command in ('python3 dev/tools/generate_picocalc_game_assets.py --check-inputs',

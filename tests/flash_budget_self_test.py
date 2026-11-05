@@ -9,7 +9,7 @@ import unittest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-CHECK = ROOT / "tools" / ".mk61-gcc" / "check-flash.cmake"
+CHECK = ROOT / 'tools/firmware/stm32' / "check-flash.cmake"
 
 
 class FlashBudgetTest(unittest.TestCase):

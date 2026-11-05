@@ -10,7 +10,7 @@ joined image; all other original flash bytes and every RAM initializer remain.
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[1]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import hashlib
 import json
 from pathlib import Path
@@ -20,7 +20,7 @@ import sys
 
 from check_stm32_vectors import ElfImage
 from check_m0_math_layout import symbol_types
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 from seal_picocalc import seal, verify, BASE, FOOTER
 
 REFERENCE_BASE=0x10180000

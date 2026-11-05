@@ -32,7 +32,7 @@ def main():
     (out/'resident_lifetime.hpp').write_text('// Exact sealed diagnostic image; never distribute this APP.\n'+
         ''.join(f'#define LIFE_PROBE_{k} 0x{v:08X}U\n' for k,v in values.items()))
     info['probe']=values;(out/'resident.json').write_text(json.dumps(info,indent=2)+'\n')
-    subprocess.run([sys.executable,str(ROOT/'tools/build_portable_app.py'),'--name','LIFERAM','--shared-runtime',
+    subprocess.run([sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--name','LIFERAM','--shared-runtime',
         '--source',str(ROOT/'tests/experimental/resident_lifetime_hil.cpp'),'--include',str(out),
         '--arm-toolchain-bin',str(a.arm_toolchain_bin),'--output-dir',str(out)],check=True)
 if __name__=='__main__':main()

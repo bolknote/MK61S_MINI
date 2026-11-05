@@ -22,9 +22,9 @@ with tempfile.TemporaryDirectory(prefix='mk61-sheet-package-') as directory:
     module.examples(work)
     for name in ('BUDGET.mks','CYCLE.mks'):
         assert (work/name).read_bytes()==(ROOT/'programs/sheets'/name).read_bytes()
-    commands=[['bash',str(ROOT/'tools/.mkc/mkc.sh')]]
+    commands=[['bash',str(ROOT/'tools/mkc/mkc.sh')]]
     if shutil.which('pwsh'):
-        commands.append(['pwsh','-NoLogo','-NoProfile','-File',str(ROOT/'tools/.mkc/mkc.ps1')])
+        commands.append(['pwsh','-NoLogo','-NoProfile','-File',str(ROOT/'tools/mkc/mkc.ps1')])
     for size in (19,20,2048,2049):
         path=work/f'TEST-{size}.MKS';path.write_bytes(bytes(range(20))*(size//20)+bytes(range(size%20)))
         for command in commands:

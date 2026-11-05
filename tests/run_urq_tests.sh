@@ -10,7 +10,7 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-missing-field-initializers \
 python3 "$root/tests/urq_self_test.py" "$work/urq-host"
 python3 "$root/tests/urq_library_self_test.py" "$work/urq-host"
 printf ':start\npln X\nproc outer\nanykey code\nend\n:outer\nproc inner\nend\n:inner\ninput answer\nend\n' > "$work/ui.qst"
-python3 "$root/tools/qst2urq.py" "$work/ui.qst" --mode urqw --encoding UTF-8 --output "$work/ui" >/dev/null
+python3 "$root/tools/apps/urq/qst2urq.py" "$work/ui.qst" --mode urqw --encoding UTF-8 --output "$work/ui" >/dev/null
 for profile in stm32 picocalc; do
   extra=()
   if [ "$profile" = picocalc ]; then extra+=(-DMK61_TARGET_PICOCALC=1); fi

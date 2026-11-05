@@ -19,7 +19,7 @@ test ! -e "$root/tools/mk61_module_pack"
 if command -v pwsh >/dev/null 2>&1; then
   powershell_packer="$work/powershell/mk61_module_pack"
   MK61_HOST_CXX=clang++ pwsh -NoLogo -NoProfile -File \
-    "$root/tools/.mk61-app/build.ps1" \
+    "$root/tools/apps/packer/build.ps1" \
     -OutputPath "$powershell_packer" >/dev/null
   test -x "$powershell_packer"
   "$powershell_packer" --help >/dev/null 2>&1
@@ -27,12 +27,12 @@ fi
 
 clang++ -x c++ -std=c++17 -Wall -Wextra -Werror -O2 \
   -I"$root/code" \
-  "$root/tools/.mk61-app/mk61_module_pack.cpp" \
+  "$root/tools/apps/packer/mk61_module_pack.cpp" \
   "$root/code/loadable_module_format.cpp" \
   "$root/code/zx0.cpp" \
-  "$root/tools/.mk61-app/third_party/zx0/optimize.c" \
-  "$root/tools/.mk61-app/third_party/zx0/compress.c" \
-  "$root/tools/.mk61-app/third_party/zx0/memory.c" \
+  "$root/tools/apps/packer/third_party/zx0/optimize.c" \
+  "$root/tools/apps/packer/third_party/zx0/compress.c" \
+  "$root/tools/apps/packer/third_party/zx0/memory.c" \
   -o "$packer"
 
 clang++ -std=c++17 -Wall -Wextra -Werror \
