@@ -3,8 +3,16 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 work="$root/.build/urq-tests"
 mkdir -p "$work"
+sanitizers=()
+if [[ "${MK61_TEST_SANITIZERS:-1}" != 0 ]]; then
+  sanitizers=(-fsanitize=address,undefined -fno-omit-frame-pointer)
+fi
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror \
+  "${sanitizers[@]}" \
+  "$root/tests/ecma_number_self_test.cpp" "$root/code/ecma_number.cpp" -o "$work/ecma-number-test"
+"$work/ecma-number-test"
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-missing-field-initializers \
-  -fsanitize=address,undefined -fno-omit-frame-pointer \
+  "${sanitizers[@]}" \
   "$root/tests/urq_host.cpp" "$root/code/urq/engine.cpp" \
   "$root/code/urq/pack.cpp" "$root/code/zx0.cpp" "$root/code/ecma_number.cpp" -o "$work/urq-host"
 python3 "$root/tests/urq_self_test.py" "$work/urq-host"
@@ -15,7 +23,7 @@ for profile in stm32 picocalc; do
   extra=()
   if [ "$profile" = picocalc ]; then extra+=(-DMK61_TARGET_PICOCALC=1); fi
   clang++ -std=c++17 -O1 -Wall -Wextra -Werror -Wno-missing-field-initializers \
-    -fsanitize=address,undefined -fno-omit-frame-pointer "${extra[@]}" \
+    "${sanitizers[@]}" "${extra[@]}" \
     -I"$root/sdk/portable/include" -I"$root/code" \
     "$root/tests/urq_ui_self_test.cpp" "$root/code/urq/engine.cpp" \
     "$root/code/urq/pack.cpp" "$root/code/zx0.cpp" "$root/code/ecma_number.cpp" -o "$work/urq-ui-$profile"

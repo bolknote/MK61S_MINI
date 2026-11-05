@@ -20,6 +20,7 @@ enum class ProgramType {
   APP,
   CHIP8,
   SHEET,
+  URQ,
 };
 
 struct Entry {
@@ -99,4 +100,9 @@ int main() {
   assert(!entry_can_run(sheet));
   file_handlers::handler_available = true;
   assert(entry_can_run(sheet));
+  const Entry urq = {NodeKind::FILE, ProgramType::URQ};
+  file_handlers::handler_available = false;
+  assert(!entry_can_run(urq));
+  file_handlers::handler_available = true;
+  assert(entry_can_run(urq));
 }
