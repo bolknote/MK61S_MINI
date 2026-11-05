@@ -1,0 +1,18 @@
+The Sword of Ianna (ZX Spectrum), ESXDOS version 1.1
+Copyright (c) Retroworks 2017
+
+Idea and code: Fco. Javier Pena (utopian)
+Graphics, level design and art: Fco. Javier Velasco (pagantipaco)
+Music and sound effects: Alberto J. Gonzalez (McAlby)
+Loading screen: Marco Antonio del Campo (MAC)
+
+Source and license: https://github.com/fjpena/sword-of-ianna-zx
+Source revision: 05f5ddbf53bb76b4a5c5680dcea2e2339c32652e
+The author's README identifies this repository as the full source, including artwork.
+The repository is distributed under Apache License 2.0; see LICENSE.txt.
+No upstream NOTICE file is present in that source archive.
+
+The unmodified ESXDOS release archive was obtained from the Spectrum Computing
+ZXDB mirror. Its upstream changelog identifies it as version 1.1.
+Original readme.txt, leeme.txt and changelog.txt accompany the game in the ZIP.
+MK61S has not modified the game code, graphics, music or loader.
