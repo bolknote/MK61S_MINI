@@ -282,9 +282,27 @@ def build_story(markdown: str, source_dir: Path, styles, render_inline=inline) -
         if line.startswith("```"):
             flush_blocks()
             if in_code:
+                code_style = styles["DocCode"]
+                # Fit short command lines instead of splitting an option or
+                # path at an arbitrary character count. SimpleDocTemplate's
+                # frame has six points of padding on each side.
+                available = DOC_WIDTH - 12 - code_style.leftIndent - code_style.rightIndent
+                widest = max((pdfmetrics.stringWidth(value, code_style.fontName, code_style.fontSize)
+                              for value in code), default=0)
+                fitted_size = min(code_style.fontSize,
+                                  code_style.fontSize * available / widest) if widest else code_style.fontSize
+                line_limit = 92
+                if fitted_size >= 6.5:
+                    if fitted_size < code_style.fontSize:
+                        code_style = ParagraphStyle(
+                            "DocCodeFit", parent=code_style,
+                            fontSize=fitted_size,
+                            leading=code_style.leading * fitted_size / code_style.fontSize,
+                        )
+                    line_limit = None
                 # Keep a short example on one page; oversized listings may split.
                 story.append(KeepTogether([
-                    Preformatted("\n".join(code), styles["DocCode"], maxLineLength=92),
+                    Preformatted("\n".join(code), code_style, maxLineLength=line_limit),
                     Spacer(1, 5),
                 ]))
                 code.clear()

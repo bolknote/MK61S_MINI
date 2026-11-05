@@ -65,6 +65,14 @@ class PdfBuildTests(unittest.TestCase):
         last = next(i for i, text in enumerate(pages) if "int last_line;" in text)
         self.assertEqual(first, last)
 
+    def test_long_command_keeps_paths_and_options_on_one_line(self):
+        command = (
+            "python3 tools/apps/portable/build_portable_app.py --name HELLO "
+            "--source my-app/main.c --output-dir .build/my-app"
+        )
+        pdf = self.render("# Build\n\n```sh\n" + command + "\n```\n")
+        self.assertIn(command, pdf.pages[0].extract_text())
+
     def test_explicit_page_break(self):
         pdf = self.render(
             "# First page\n\nBefore.\n\n"
