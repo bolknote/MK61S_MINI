@@ -30,7 +30,9 @@ struct Canvas {
   }
   mk61_service_ui_glyph glyph(uint8_t ch) const {
     mk61_service_ui_glyph g{};g.family=1;g.size=12;
-    services->call(MK61_SERVICE_UI_FONT,MK61_UI_FONT_GLYPH,mk8::codepoint(ch),sizeof(g),&g);
+    // The compact strike uses an ASCII dash for the M8 en/em dash variants.
+    const unsigned cp=(ch==0x96 || ch==0x97)?unsigned('-'):mk8::codepoint(ch);
+    services->call(MK61_SERVICE_UI_FONT,MK61_UI_FONT_GLYPH,cp,sizeof(g),&g);
     return g;
   }
   unsigned advance(uint8_t ch) const { return glyph(ch).advance; }
