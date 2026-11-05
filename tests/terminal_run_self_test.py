@@ -27,10 +27,12 @@ bool blocked(){return failed;} const char* error(){return "load blocked";} }
 namespace kbd { static std::vector<i8> keys; void push(i8 key){keys.push_back(key);} }
 static std::vector<u8> starts;
 static std::vector<std::string> opens;
-static int start_hooks=0;
+static int start_hooks=0,redraws=0;
+static bool open_succeeds=true;
+void lcd_std_display_redraw(){++redraws;}
 void hidden_start_loaded_program(u8 address){starts.push_back(address);core_61::running=true;}
 void mk61_program_started(){assert(core_61::running);++start_hooks;}
-bool OpenStoredFile(u16,const char* args){opens.emplace_back(args);return true;}
+bool OpenStoredFile(u16,const char* args){opens.emplace_back(args);return open_succeeds;}
 struct {std::string text;void println(const char* s){text+=s;text+='\n';}} Serial;
 class class_terminal {
  public:
@@ -42,7 +44,7 @@ class class_terminal {
 postlude=r'''
 }return Result::ok();}
 };
-static void reset(){core_61::steps=105;core_61::running=false;program_load::failed=false;kbd::keys.clear();starts.clear();opens.clear();start_hooks=0;Serial.text.clear();}
+static void reset(){core_61::steps=105;core_61::running=false;program_load::failed=false;kbd::keys.clear();starts.clear();opens.clear();start_hooks=redraws=0;open_succeeds=true;Serial.text.clear();}
 static Result dispatch(const char* arg,bool script=false,bool trap=false){class_terminal terminal;terminal.args=arg;return terminal.execute(script,trap);}
 int main(){
   reset();assert(dispatch("").kind==ResultKind::OK);
@@ -64,9 +66,10 @@ int main(){
   reset();core_61::steps=112;r=dispatch("111",true);assert(r.kind==ResultKind::RUN_PROGRAM && r.key==111);
   assert(dispatch("112",true).kind==ResultKind::ERROR);
   for(const char* name:{"GAME","8.m61","dir/8"}){
-    reset();assert(dispatch(name).kind==ResultKind::OK && opens==std::vector<std::string>{name});
+    reset();assert(dispatch(name).kind==ResultKind::OK && opens==std::vector<std::string>{name} && redraws==1);
+    reset();open_succeeds=false;assert(dispatch(name).kind==ResultKind::ERROR && redraws==1);
     reset();r=dispatch(name,true);assert(r.kind==ResultKind::OPEN_FILE && std::strcmp(r.args,name)==0);
-    assert(starts.empty() && opens.empty());
+    assert(starts.empty() && opens.empty() && redraws==0);
   }
   reset();r=dispatch(":loop",true);assert(r.kind==ResultKind::GOTO_LABEL && std::strcmp(r.args,"loop")==0);
   assert(dispatch(":loop").kind==ResultKind::ERROR);
