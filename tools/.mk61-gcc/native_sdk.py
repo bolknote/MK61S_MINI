@@ -32,7 +32,7 @@ def toolchain_bin(path):
     suffix = ".exe" if os.name == "nt" else ""
     if not (path / ("arm-none-eabi-gcc" + suffix)).is_file():
         path /= "bin"
-    for name in ("gcc", "g++", "ar", "ranlib", "objcopy", "size", "nm", "objdump", "c++filt"):
+    for name in ("gcc", "g++", "ar", "ranlib", "objcopy", "size", "nm", "objdump", "c++filt", "gcc-ar"):
         if not (path / ("arm-none-eabi-" + name + suffix)).is_file():
             raise ValueError(f"GNU Arm tool not found: {path}/arm-none-eabi-{name}{suffix}")
     return path

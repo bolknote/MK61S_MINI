@@ -197,6 +197,9 @@ function Get-ArduinoIdeConfigPath {
 function Get-DefaultArduinoDataDirectory {
     param([string]$ConfigPath)
 
+    if (-not [string]::IsNullOrWhiteSpace($env:ARDUINO_DIRECTORIES_DATA)) {
+        return [IO.Path]::GetFullPath($env:ARDUINO_DIRECTORIES_DATA)
+    }
     $configured = Get-ArduinoConfigDirectory $ConfigPath 'data'
     if (-not [string]::IsNullOrWhiteSpace($configured)) {
         return [IO.Path]::GetFullPath($configured)
@@ -256,7 +259,7 @@ function Show-Usage {
     Write-Host 'Install native MK61s F401 + APP and MK61s F411 + APP boards into Arduino IDE.'
     Write-Host 'Options: -Sketchbook DIR, -ToolchainDirectory DIR, -Check, -Help'
     Write-Host 'No STM32 Core, Arduino libraries, Python or host C++ compiler is required.'
-    Write-Host 'Pinned GNU Arm GCC is installed automatically unless an existing compiler is selected.'
+    Write-Host 'Compatible GNU Arm GCC in Arduino15 is reused; the pinned compiler is downloaded only when needed.'
     Write-Host 'This installer does not install Arduino CLI; the MK61s board is not in Boards Manager.'
 }
 
@@ -387,7 +390,7 @@ try {
         exit 1
     }
 
-    Install-Mk61NativePayload $projectRoot $target $ToolchainDirectory
+    Install-Mk61NativePayload $projectRoot $target $ToolchainDirectory $dataDirectory
     if ($installFontSettingsCompatibility) {
         Install-Mk61FontSettingsCompatibility $fontSettingsCompatibilitySource $fontSettingsCompatibilityTarget
     }

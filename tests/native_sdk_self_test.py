@@ -85,7 +85,7 @@ with tempfile.TemporaryDirectory(prefix="mk61 native SDK Юникод ") as temp
     tool_root = work / "GNU Arm"
     tool_bin = tool_root / "bin"; tool_bin.mkdir(parents=True)
     suffix = ".exe" if os.name == "nt" else ""
-    for name in ("gcc", "g++", "ar", "ranlib", "objcopy", "size", "nm", "objdump", "c++filt"):
+    for name in ("gcc", "g++", "ar", "ranlib", "objcopy", "size", "nm", "objdump", "c++filt", "gcc-ar"):
         (tool_bin / ("arm-none-eabi-" + name + suffix)).write_bytes(b"fixture")
     with mock.patch.dict(os.environ, {"MK61_GCC_CORE": "/poisoned/package", "MK61_GCC_TOOLCHAIN": str(tool_root)}):
         with mock.patch.object(Path, "home", side_effect=AssertionError("must not inspect a user Arduino installation")):
@@ -108,6 +108,15 @@ with tempfile.TemporaryDirectory(prefix="mk61 native SDK Юникод ") as temp
     for path in ("/x/Arduino15/packages/s.h", r"C:\Users\a\AppData\Local\Arduino15\packages\x.h", "/x/.arduino15/core.h", "/x/cores/arduino/a.c", "/x/libraries/SrcWrapper/x.c"):
         failed(lambda p=path: gate.check_paths([p]), "Installed Arduino package")
     gate.check_paths([str(original / "device/include/stm32f411xe.h"), "-DARDUINO=10607"])
+    compiler_root = '/x/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1'
+    compiler = compiler_root + '/bin/arm-none-eabi-g++'
+    assert gate.arduino_compiler_root([compiler, '-c', 'code.cpp']) == compiler_root
+    builtin = compiler_root + '/lib/gcc/arm-none-eabi/14.2.1/include/stddef.h'
+    gate.check_paths([compiler, builtin, '-I' + compiler_root + '/arm-none-eabi/include'], [compiler_root])
+    for path in (builtin.replace('14.2.1-1.1/', '13.3.1/'),
+                 '/x/Arduino15/packages/STMicroelectronics/hardware/stm32/3.0.0/cores/arduino/Arduino.h',
+                 compiler_root + '/arm-none-eabi/include/../../../../hardware/stm32/Arduino.h'):
+        failed(lambda p=path: gate.check_paths([p], [compiler_root]), 'Installed Arduino package')
 
     # Exercise the actual PowerShell installer without a network request.
     pwsh = shutil.which("pwsh") or shutil.which("powershell")
